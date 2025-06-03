@@ -12,17 +12,18 @@
                         "builtins.bool"
                     ],
                     "scope": {
-                        "FixedConnection": "semantic_world.connections.FixedConnection",
-                        "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                        "World": "semantic_world.world.World",
                         "Cabinet": "semantic_world.views.views.Cabinet",
                         "Container": "semantic_world.views.views.Container",
                         "Door": "semantic_world.views.views.Door",
                         "Drawer": "semantic_world.views.views.Drawer",
+                        "Fridge": "semantic_world.views.views.Fridge",
                         "Handle": "semantic_world.views.views.Handle",
+                        "FixedConnection": "semantic_world.connections.FixedConnection",
+                        "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
+                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                         "List": "typing.List",
-                        "Union": "typing.Union"
+                        "Union": "typing.Union",
+                        "World": "semantic_world.world.World"
                     },
                     "conclusion": {
                         "_type": "builtins.NoneType",
@@ -39,17 +40,18 @@
                         "builtins.list"
                     ],
                     "scope": {
-                        "FixedConnection": "semantic_world.connections.FixedConnection",
-                        "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                        "World": "semantic_world.world.World",
                         "Cabinet": "semantic_world.views.views.Cabinet",
                         "Container": "semantic_world.views.views.Container",
                         "Door": "semantic_world.views.views.Door",
                         "Drawer": "semantic_world.views.views.Drawer",
+                        "Fridge": "semantic_world.views.views.Fridge",
                         "Handle": "semantic_world.views.views.Handle",
+                        "FixedConnection": "semantic_world.connections.FixedConnection",
+                        "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
+                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                         "List": "typing.List",
-                        "Union": "typing.Union"
+                        "Union": "typing.Union",
+                        "World": "semantic_world.world.World"
                     },
                     "conclusion": {
                         "_type": "builtins.NoneType",
@@ -72,17 +74,18 @@
                             "builtins.bool"
                         ],
                         "scope": {
-                            "FixedConnection": "semantic_world.connections.FixedConnection",
-                            "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                            "World": "semantic_world.world.World",
                             "Cabinet": "semantic_world.views.views.Cabinet",
                             "Container": "semantic_world.views.views.Container",
                             "Door": "semantic_world.views.views.Door",
                             "Drawer": "semantic_world.views.views.Drawer",
+                            "Fridge": "semantic_world.views.views.Fridge",
                             "Handle": "semantic_world.views.views.Handle",
+                            "FixedConnection": "semantic_world.connections.FixedConnection",
+                            "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
+                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                             "List": "typing.List",
-                            "Union": "typing.Union"
+                            "Union": "typing.Union",
+                            "World": "semantic_world.world.World"
                         },
                         "conclusion": {
                             "_type": "builtins.NoneType",
@@ -99,17 +102,18 @@
                             "builtins.list"
                         ],
                         "scope": {
-                            "FixedConnection": "semantic_world.connections.FixedConnection",
-                            "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                            "World": "semantic_world.world.World",
                             "Cabinet": "semantic_world.views.views.Cabinet",
                             "Container": "semantic_world.views.views.Container",
                             "Door": "semantic_world.views.views.Door",
                             "Drawer": "semantic_world.views.views.Drawer",
+                            "Fridge": "semantic_world.views.views.Fridge",
                             "Handle": "semantic_world.views.views.Handle",
+                            "FixedConnection": "semantic_world.connections.FixedConnection",
+                            "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
+                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                             "List": "typing.List",
-                            "Union": "typing.Union"
+                            "Union": "typing.Union",
+                            "World": "semantic_world.world.World"
                         },
                         "conclusion": {
                             "_type": "builtins.NoneType",
@@ -132,17 +136,18 @@
                                 "builtins.bool"
                             ],
                             "scope": {
-                                "FixedConnection": "semantic_world.connections.FixedConnection",
-                                "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                "World": "semantic_world.world.World",
                                 "Cabinet": "semantic_world.views.views.Cabinet",
                                 "Container": "semantic_world.views.views.Container",
                                 "Door": "semantic_world.views.views.Door",
                                 "Drawer": "semantic_world.views.views.Drawer",
+                                "Fridge": "semantic_world.views.views.Fridge",
                                 "Handle": "semantic_world.views.views.Handle",
+                                "FixedConnection": "semantic_world.connections.FixedConnection",
+                                "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
+                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                 "List": "typing.List",
-                                "Union": "typing.Union"
+                                "Union": "typing.Union",
+                                "World": "semantic_world.world.World"
                             },
                             "conclusion": {
                                 "_type": "builtins.NoneType",
@@ -159,17 +164,18 @@
                                 "builtins.list"
                             ],
                             "scope": {
-                                "FixedConnection": "semantic_world.connections.FixedConnection",
-                                "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                "World": "semantic_world.world.World",
                                 "Cabinet": "semantic_world.views.views.Cabinet",
                                 "Container": "semantic_world.views.views.Container",
                                 "Door": "semantic_world.views.views.Door",
                                 "Drawer": "semantic_world.views.views.Drawer",
+                                "Fridge": "semantic_world.views.views.Fridge",
                                 "Handle": "semantic_world.views.views.Handle",
+                                "FixedConnection": "semantic_world.connections.FixedConnection",
+                                "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
+                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                 "List": "typing.List",
-                                "Union": "typing.Union"
+                                "Union": "typing.Union",
+                                "World": "semantic_world.world.World"
                             },
                             "conclusion": {
                                 "_type": "builtins.NoneType",
@@ -192,17 +198,18 @@
                                     "builtins.bool"
                                 ],
                                 "scope": {
-                                    "FixedConnection": "semantic_world.connections.FixedConnection",
-                                    "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                    "World": "semantic_world.world.World",
                                     "Cabinet": "semantic_world.views.views.Cabinet",
                                     "Container": "semantic_world.views.views.Container",
                                     "Door": "semantic_world.views.views.Door",
                                     "Drawer": "semantic_world.views.views.Drawer",
+                                    "Fridge": "semantic_world.views.views.Fridge",
                                     "Handle": "semantic_world.views.views.Handle",
+                                    "FixedConnection": "semantic_world.connections.FixedConnection",
+                                    "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
+                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                     "List": "typing.List",
-                                    "Union": "typing.Union"
+                                    "Union": "typing.Union",
+                                    "World": "semantic_world.world.World"
                                 },
                                 "conclusion": {
                                     "_type": "builtins.NoneType",
@@ -219,17 +226,18 @@
                                     "builtins.list"
                                 ],
                                 "scope": {
-                                    "FixedConnection": "semantic_world.connections.FixedConnection",
-                                    "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                    "World": "semantic_world.world.World",
                                     "Cabinet": "semantic_world.views.views.Cabinet",
                                     "Container": "semantic_world.views.views.Container",
                                     "Door": "semantic_world.views.views.Door",
                                     "Drawer": "semantic_world.views.views.Drawer",
+                                    "Fridge": "semantic_world.views.views.Fridge",
                                     "Handle": "semantic_world.views.views.Handle",
+                                    "FixedConnection": "semantic_world.connections.FixedConnection",
+                                    "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
+                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                     "List": "typing.List",
-                                    "Union": "typing.Union"
+                                    "Union": "typing.Union",
+                                    "World": "semantic_world.world.World"
                                 },
                                 "conclusion": {
                                     "_type": "builtins.NoneType",
@@ -252,17 +260,18 @@
                                         "builtins.bool"
                                     ],
                                     "scope": {
-                                        "FixedConnection": "semantic_world.connections.FixedConnection",
-                                        "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                        "World": "semantic_world.world.World",
                                         "Cabinet": "semantic_world.views.views.Cabinet",
                                         "Container": "semantic_world.views.views.Container",
                                         "Door": "semantic_world.views.views.Door",
                                         "Drawer": "semantic_world.views.views.Drawer",
+                                        "Fridge": "semantic_world.views.views.Fridge",
                                         "Handle": "semantic_world.views.views.Handle",
+                                        "FixedConnection": "semantic_world.connections.FixedConnection",
+                                        "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
+                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                         "List": "typing.List",
-                                        "Union": "typing.Union"
+                                        "Union": "typing.Union",
+                                        "World": "semantic_world.world.World"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -279,17 +288,18 @@
                                         "builtins.list"
                                     ],
                                     "scope": {
-                                        "FixedConnection": "semantic_world.connections.FixedConnection",
-                                        "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                        "World": "semantic_world.world.World",
                                         "Cabinet": "semantic_world.views.views.Cabinet",
                                         "Container": "semantic_world.views.views.Container",
                                         "Door": "semantic_world.views.views.Door",
                                         "Drawer": "semantic_world.views.views.Drawer",
+                                        "Fridge": "semantic_world.views.views.Fridge",
                                         "Handle": "semantic_world.views.views.Handle",
+                                        "FixedConnection": "semantic_world.connections.FixedConnection",
+                                        "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
+                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                         "List": "typing.List",
-                                        "Union": "typing.Union"
+                                        "Union": "typing.Union",
+                                        "World": "semantic_world.world.World"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -303,7 +313,1495 @@
                                 "weight": "next",
                                 "uid": "59112619694893607910753808758642808601",
                                 "refinement": null,
-                                "alternative": null
+                                "alternative": {
+                                    "_type": "ripple_down_rules.rules.MultiClassTopRule",
+                                    "conditions": {
+                                        "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
+                                        "user_input": "def _get_value(case):\n    def conditions_for_world_views_of_type_fridge(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Fridge.\"\"\"\n        return True\n    return conditions_for_world_views_of_type_fridge(case)\n    ",
+                                        "conclusion_type": [
+                                            "builtins.bool"
+                                        ],
+                                        "scope": {
+                                            "Cabinet": "semantic_world.views.views.Cabinet",
+                                            "Container": "semantic_world.views.views.Container",
+                                            "Door": "semantic_world.views.views.Door",
+                                            "Drawer": "semantic_world.views.views.Drawer",
+                                            "Fridge": "semantic_world.views.views.Fridge",
+                                            "Handle": "semantic_world.views.views.Handle",
+                                            "FixedConnection": "semantic_world.connections.FixedConnection",
+                                            "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
+                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
+                                            "List": "typing.List",
+                                            "Union": "typing.Union",
+                                            "World": "semantic_world.world.World"
+                                        },
+                                        "conclusion": {
+                                            "_type": "builtins.NoneType",
+                                            "value": null
+                                        },
+                                        "mutually_exclusive": false
+                                    },
+                                    "conclusion": {
+                                        "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
+                                        "user_input": "def _get_value(case):\n    def world_views_of_type_fridge(case: World) -> List[Fridge]:\n        \"\"\"Get possible value(s) for World.views  of type Fridge.\"\"\"\n        doors = [v for v in case.views if isinstance(v, Door) and \"fridge\" in v.body.name.name.lower()]\n        door_connections = [c for c in case.connections if isinstance(c, RevoluteConnection) and\n                                        c.child in [d.body for d in doors] and 'fridge' in c.parent.name.name.lower()]\n        fridge_bodies = [c.parent for c in door_connections]\n        return [Fridge(b, d) for b, d in zip(fridge_bodies, doors)]\n    return world_views_of_type_fridge(case)\n    ",
+                                        "conclusion_type": [
+                                            "semantic_world.views.views.Fridge",
+                                            "builtins.set",
+                                            "builtins.list"
+                                        ],
+                                        "scope": {
+                                            "Cabinet": "semantic_world.views.views.Cabinet",
+                                            "Container": "semantic_world.views.views.Container",
+                                            "Door": "semantic_world.views.views.Door",
+                                            "Drawer": "semantic_world.views.views.Drawer",
+                                            "Fridge": "semantic_world.views.views.Fridge",
+                                            "Handle": "semantic_world.views.views.Handle",
+                                            "FixedConnection": "semantic_world.connections.FixedConnection",
+                                            "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
+                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
+                                            "List": "typing.List",
+                                            "Union": "typing.Union",
+                                            "World": "semantic_world.world.World"
+                                        },
+                                        "conclusion": {
+                                            "_type": "builtins.NoneType",
+                                            "value": null
+                                        },
+                                        "mutually_exclusive": false
+                                    },
+                                    "parent": null,
+                                    "corner_case": {
+                                        "$id": "c8ca04e1-83a7-4079-bd36-c132e593beb0",
+                                        "__dataclass__": "semantic_world.world.World",
+                                        "fields": {
+                                            "root": {
+                                                "$id": "f294191a-4063-4438-8853-4e6f8ee6a20b",
+                                                "__dataclass__": "semantic_world.world_entity.Body",
+                                                "fields": {
+                                                    "_world": {
+                                                        "$id": "11a99d54-3e98-477b-a49c-86d54a1c41f6",
+                                                        "__dataclass__": "semantic_world.world.World",
+                                                        "fields": {
+                                                            "root": {
+                                                                "$ref": "f294191a-4063-4438-8853-4e6f8ee6a20b"
+                                                            },
+                                                            "kinematic_structure": null,
+                                                            "views": [],
+                                                            "degrees_of_freedom": {},
+                                                            "state": null,
+                                                            "_model_version": 2,
+                                                            "_state_version": 2,
+                                                            "world_is_being_modified": false
+                                                        }
+                                                    },
+                                                    "_views": [],
+                                                    "name": {
+                                                        "$id": "02573df9-8593-4acc-9dab-94589fef6ecd",
+                                                        "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                        "fields": {
+                                                            "name": "world",
+                                                            "prefix": "kitchen-small"
+                                                        }
+                                                    },
+                                                    "visual": [],
+                                                    "collision": []
+                                                }
+                                            },
+                                            "kinematic_structure": null,
+                                            "views": [
+                                                {
+                                                    "$id": "97c04744-31d5-406d-8d5f-623bf70be199",
+                                                    "__dataclass__": "semantic_world.views.views.Handle",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "e6118828-5a3c-4e11-8734-b1a8b708284c",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "71d8436e-31e1-4214-9032-d1a94dccd33c",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "oven_area_area_middle_upper_drawer_handle",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "bc78d5a3-d402-472a-be9c-831064219b1e",
+                                                    "__dataclass__": "semantic_world.views.views.Handle",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "5d05be21-035d-4b5d-bb37-89954c20b5f9",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "2a7a5c56-3b57-48ee-9928-f39ba3539b84",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "iai_fridge_door_handle",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "4e556bc2-cbae-48a6-ac72-9598e63a7c34",
+                                                    "__dataclass__": "semantic_world.views.views.Handle",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "ac41418d-fc54-48a9-9da7-28eabe203a66",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "2aba7059-b79a-4b0c-8b3a-70f57cd61a6a",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "kitchen_island_right_upper_drawer_handle",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "79fa90c0-3a03-403f-aacc-4be75bf89e5f",
+                                                    "__dataclass__": "semantic_world.views.views.Handle",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "5c55f82c-b811-47a2-a82e-eff34eea7b2f",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "73a95c26-5256-4de5-a865-c8847046d307",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "sink_area_dish_washer_door_handle",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "cb2c08a7-25b8-4774-87b2-191d891398e4",
+                                                    "__dataclass__": "semantic_world.views.views.Handle",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "05da431f-5c6a-424a-9d40-b6734154d59c",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "b635c3a1-a9d6-4297-9c0b-3a24e6b58cc6",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "kitchen_island_middle_lower_drawer_handle",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "e0413999-38ed-417b-ba81-311875859190",
+                                                    "__dataclass__": "semantic_world.views.views.Handle",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "4d075c01-6449-42f8-8fc5-1ce28290d2d2",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "03868d6d-e1c2-4657-84d7-3851ca8fc379",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "oven_area_area_left_drawer_handle",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "1ff53154-653d-4b54-a7dd-317f83c4e28c",
+                                                    "__dataclass__": "semantic_world.views.views.Handle",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "73494f69-d0f7-44c1-b507-5be47d11b9a0",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "51d23e17-7888-449d-9aac-30ef9104427c",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "kitchen_island_middle_upper_drawer_handle",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "cfaa6822-8f25-4fdd-b5df-d9d8c6622257",
+                                                    "__dataclass__": "semantic_world.views.views.Handle",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "46993378-0fdf-4c29-9ed8-bfb0039bc213",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "90e4260d-30ae-42cf-81b5-30cfb0c459cb",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "oven_area_area_right_drawer_handle",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "883b801a-ff71-4d51-9ff1-8ddf6f5a118a",
+                                                    "__dataclass__": "semantic_world.views.views.Handle",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "7803a8c5-eddf-4b1d-8ada-cc1b46922ec0",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "dac83bf6-9ca9-4d03-b6f9-92bf5867be27",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "oven_area_area_middle_lower_drawer_handle",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "caefdb63-cddb-4ebb-b633-f0c74c6ec39f",
+                                                    "__dataclass__": "semantic_world.views.views.Handle",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "fcb2bc50-3ac3-44c9-bb65-07826734fa3d",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "e1281bf2-d7bf-454d-a7f1-4b54c4591ff3",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "kitchen_island_right_lower_drawer_handle",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "5c8d29fa-71dc-4b62-9b09-f198b07b3e30",
+                                                    "__dataclass__": "semantic_world.views.views.Handle",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "007ead40-33a2-4dda-bca4-e7b5721c5a25",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "bf5623c7-2bd6-4e35-8a4f-220a6f440631",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "sink_area_left_bottom_drawer_handle",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "bfa1da5e-62c9-436e-836f-546dbf96823f",
+                                                    "__dataclass__": "semantic_world.views.views.Handle",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "a7024dc2-5ba3-4ec1-841c-ed87b925204c",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "7f81025d-607b-4d0b-8db9-2d99911522d1",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "kitchen_island_left_upper_drawer_handle",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "6b790cff-06ba-4376-b01d-71fb7b245334",
+                                                    "__dataclass__": "semantic_world.views.views.Handle",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "8066f624-8d6f-478b-bb2f-afd9c56e5159",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "efd9fc39-c463-4b63-ac0a-b598e2f7ccd0",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "sink_area_left_middle_drawer_handle",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "86e1183d-340b-47f7-a228-f4fa66d80aa3",
+                                                    "__dataclass__": "semantic_world.views.views.Handle",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "e2738eff-6d26-432e-a793-1553d63a168c",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "dcaeaefc-f52e-4fe1-b437-990e2ebaf9a0",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "oven_area_oven_door_handle",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "cc5d2ed1-b2e5-4c09-a6d3-9e924d8f4530",
+                                                    "__dataclass__": "semantic_world.views.views.Handle",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "8299045b-431c-48be-9c3b-1512fdb4895c",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "9aa653e7-70a9-4785-be09-eb8abb2213c2",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "fridge_area_lower_drawer_handle",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "7d7853c1-6795-47b0-b22d-2a3fca9612f2",
+                                                    "__dataclass__": "semantic_world.views.views.Handle",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "b9efd524-f05e-46b5-b25d-a30bb1c64c81",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "29cab64a-10f5-4ba4-82e0-ab6665ec0db5",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "sink_area_left_upper_drawer_handle",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "145c9752-0fca-423f-a349-ddc3623f7d34",
+                                                    "__dataclass__": "semantic_world.views.views.Handle",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "b3b1caeb-2605-4df3-86b7-5c7f63876d1d",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "f012eaff-7fd5-4aee-ace5-8a86a4ed92dc",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "kitchen_island_left_lower_drawer_handle",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "66817fee-53f6-4b68-8479-b289cbfe2767",
+                                                    "__dataclass__": "semantic_world.views.views.Handle",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "89629bc2-c486-4a37-90a8-f24e3947ea18",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "121634fb-380b-4ec3-aede-800a5ffb054d",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "sink_area_trash_drawer_handle",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "617544d4-e5af-4b51-a403-2cb1cacfb3f3",
+                                                    "__dataclass__": "semantic_world.views.views.Container",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "44e75416-9854-4c88-bb69-488123cd93bc",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "fd89443d-3a22-4e1d-8341-0498fb89e1e6",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "kitchen_island_left_upper_drawer_main",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "1978a223-0c76-4bc5-91fe-aa6681847145",
+                                                    "__dataclass__": "semantic_world.views.views.Container",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "6360b826-1e7d-4cc8-a96f-4e80791cba64",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "07c557bf-4a02-47c6-a7c5-e29c2445bee9",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "oven_area_area_middle_upper_drawer_main",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "e1bec457-41b2-48c8-977c-182d4820747b",
+                                                    "__dataclass__": "semantic_world.views.views.Container",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "f937b1a1-6d65-4782-a4f6-42564aca8cdb",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "22fb7acd-0b3b-40a3-b1c7-34c221bb9b0a",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "sink_area_left_upper_drawer_main",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "dffae55c-096f-4d63-a1fb-789e99866708",
+                                                    "__dataclass__": "semantic_world.views.views.Door",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "2d0a9718-8477-4397-8760-fd4db30f2328",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "0d9cb8b6-d634-4db2-b2e9-e3ab34df8355",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "oven_area_oven_door",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        },
+                                                        "handle": {
+                                                            "$ref": "86e1183d-340b-47f7-a228-f4fa66d80aa3"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "1780040c-80f6-445d-8762-681ba867223b",
+                                                    "__dataclass__": "semantic_world.views.views.Door",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "8b619f06-f3aa-45e8-9917-a3846f8c3c14",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "57668a40-5fbe-464b-b112-882cf2506a52",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "iai_fridge_door",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        },
+                                                        "handle": {
+                                                            "$ref": "bc78d5a3-d402-472a-be9c-831064219b1e"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "14e98a23-33b2-43e4-bb1e-5a97dde8922e",
+                                                    "__dataclass__": "semantic_world.views.views.Container",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "fe7594d1-7752-4444-90e9-6c1998dc5085",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "f4dc8917-539d-4794-9383-b91018f2a0ae",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "kitchen_island_right_lower_drawer_main",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "438266b9-387e-490f-989b-ea438f93b0f5",
+                                                    "__dataclass__": "semantic_world.views.views.Container",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "250893c5-83c2-466f-acb4-ba22e3f5c11e",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "94923e76-ed1b-425a-b85f-de13e13d41f5",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "sink_area_trash_drawer_main",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "36afb1f7-b783-40d9-8952-fcd8aee10b53",
+                                                    "__dataclass__": "semantic_world.views.views.Container",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "b4a134dd-e7f4-4fb7-b1f4-bde01b93ac86",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "7169d127-5c7d-4836-93d2-a54340672543",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "kitchen_island_middle_upper_drawer_main",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "e7705d54-b7ee-47ce-8dec-1054126ae2c5",
+                                                    "__dataclass__": "semantic_world.views.views.Door",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "99e1c444-ba71-4626-8e7d-79feb7de59ee",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "35cac4fa-cc17-42b5-9d40-735516ed6f52",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "sink_area_dish_washer_door",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        },
+                                                        "handle": {
+                                                            "$ref": "79fa90c0-3a03-403f-aacc-4be75bf89e5f"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "e7cd7b24-97cf-4234-b26e-3f3439b7dfef",
+                                                    "__dataclass__": "semantic_world.views.views.Container",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "ddeb3537-6229-4174-b538-c5c8d998aa80",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "552c7d0e-1b24-4a37-b9f1-38b19aeb33eb",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "kitchen_island_left_lower_drawer_main",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "4925cddf-c0dc-400f-be92-68944ed518f5",
+                                                    "__dataclass__": "semantic_world.views.views.Container",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "33fd4616-8e83-4cff-8d8b-e64bec31d091",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "ec4d39bd-6c58-4cdc-b64a-9fd91dcfefd2",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "sink_area_left_middle_drawer_main",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "6a7268af-5edb-4fe8-9bea-b751ad7f71f1",
+                                                    "__dataclass__": "semantic_world.views.views.Container",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "1a92e2c4-43fb-4b08-b85a-a344ae756c5f",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "0d5807ee-48a4-41f5-9ffb-443405504709",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "oven_area_area_middle_lower_drawer_main",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "6466106d-ba9b-4c54-b9d0-bff5b6e92361",
+                                                    "__dataclass__": "semantic_world.views.views.Container",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "0371bebc-1a9f-4834-9e07-0342603ba337",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "7d374a4b-2e40-42ff-a96d-fade92d40f5c",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "sink_area_left_bottom_drawer_main",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "7bf6c22d-c7b9-4622-8e19-7fe372081339",
+                                                    "__dataclass__": "semantic_world.views.views.Container",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "775f95e9-7c32-48eb-add0-1e76beffcf28",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "f7e12298-ccc1-4df6-a189-84be91a30866",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "kitchen_island_right_upper_drawer_main",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "6ea17319-e0ba-46b4-be51-22f4d92565db",
+                                                    "__dataclass__": "semantic_world.views.views.Container",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "1ff38e32-6d46-482b-8404-2b6103ef28e4",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "b1e8744e-d708-4e7b-a665-185fa165b8e2",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "kitchen_island_middle_lower_drawer_main",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "7c98a67a-f489-4176-a4b6-ae4e90734f03",
+                                                    "__dataclass__": "semantic_world.views.views.Container",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "d5d7ba09-9bae-48c7-98c6-55934fb08971",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "d3246b26-9c3c-4cbe-aef2-d87811932389",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "fridge_area_lower_drawer_main",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "6c9a07d6-d8f9-4870-a482-d84f2ae79979",
+                                                    "__dataclass__": "semantic_world.views.views.Container",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "body": {
+                                                            "$id": "ed4d4a6f-1707-4047-8ea8-fd92aabec8d4",
+                                                            "__dataclass__": "semantic_world.world_entity.Body",
+                                                            "fields": {
+                                                                "_world": {
+                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                },
+                                                                "_views": [],
+                                                                "name": {
+                                                                    "$id": "1547530c-eea1-4a9a-b275-76196e7d9398",
+                                                                    "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                    "fields": {
+                                                                        "name": "oven_area_area_left_drawer_main",
+                                                                        "prefix": "kitchen-small"
+                                                                    }
+                                                                },
+                                                                "visual": [],
+                                                                "collision": []
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "326e897a-a303-4b11-940e-0ceca4d72020",
+                                                    "__dataclass__": "semantic_world.views.views.Drawer",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "container": {
+                                                            "$ref": "7bf6c22d-c7b9-4622-8e19-7fe372081339"
+                                                        },
+                                                        "handle": {
+                                                            "$ref": "4e556bc2-cbae-48a6-ac72-9598e63a7c34"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "909cfb59-3051-4fc9-940b-9f688c44b31e",
+                                                    "__dataclass__": "semantic_world.views.views.Drawer",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "container": {
+                                                            "$ref": "6466106d-ba9b-4c54-b9d0-bff5b6e92361"
+                                                        },
+                                                        "handle": {
+                                                            "$ref": "5c8d29fa-71dc-4b62-9b09-f198b07b3e30"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "4ced1a51-9f0b-46d1-a9e8-3a35b8069c09",
+                                                    "__dataclass__": "semantic_world.views.views.Drawer",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "container": {
+                                                            "$ref": "e1bec457-41b2-48c8-977c-182d4820747b"
+                                                        },
+                                                        "handle": {
+                                                            "$ref": "7d7853c1-6795-47b0-b22d-2a3fca9612f2"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "4bc77571-5253-4da4-9e15-042c573498f4",
+                                                    "__dataclass__": "semantic_world.views.views.Drawer",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "container": {
+                                                            "$ref": "14e98a23-33b2-43e4-bb1e-5a97dde8922e"
+                                                        },
+                                                        "handle": {
+                                                            "$ref": "caefdb63-cddb-4ebb-b633-f0c74c6ec39f"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "8c804602-d81b-4371-a7eb-1e71f53f84f7",
+                                                    "__dataclass__": "semantic_world.views.views.Drawer",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "container": {
+                                                            "$ref": "617544d4-e5af-4b51-a403-2cb1cacfb3f3"
+                                                        },
+                                                        "handle": {
+                                                            "$ref": "bfa1da5e-62c9-436e-836f-546dbf96823f"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "da353b5d-cc36-4c16-bac2-d0429d145957",
+                                                    "__dataclass__": "semantic_world.views.views.Drawer",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "container": {
+                                                            "$ref": "e7cd7b24-97cf-4234-b26e-3f3439b7dfef"
+                                                        },
+                                                        "handle": {
+                                                            "$ref": "145c9752-0fca-423f-a349-ddc3623f7d34"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "cc7e7ff9-155b-4521-bfd0-72c4834b4de5",
+                                                    "__dataclass__": "semantic_world.views.views.Drawer",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "container": {
+                                                            "$ref": "7c98a67a-f489-4176-a4b6-ae4e90734f03"
+                                                        },
+                                                        "handle": {
+                                                            "$ref": "cc5d2ed1-b2e5-4c09-a6d3-9e924d8f4530"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "f1795fc0-a2a0-4459-ac9e-68ac6a1d9c99",
+                                                    "__dataclass__": "semantic_world.views.views.Drawer",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "container": {
+                                                            "$ref": "6a7268af-5edb-4fe8-9bea-b751ad7f71f1"
+                                                        },
+                                                        "handle": {
+                                                            "$ref": "883b801a-ff71-4d51-9ff1-8ddf6f5a118a"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "fdde742b-19a8-47f4-8d7b-100091b42875",
+                                                    "__dataclass__": "semantic_world.views.views.Drawer",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "container": {
+                                                            "$ref": "6ea17319-e0ba-46b4-be51-22f4d92565db"
+                                                        },
+                                                        "handle": {
+                                                            "$ref": "cb2c08a7-25b8-4774-87b2-191d891398e4"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "60f3705c-5c35-44f1-9050-c211e84cdee6",
+                                                    "__dataclass__": "semantic_world.views.views.Drawer",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "container": {
+                                                            "$ref": "36afb1f7-b783-40d9-8952-fcd8aee10b53"
+                                                        },
+                                                        "handle": {
+                                                            "$ref": "1ff53154-653d-4b54-a7dd-317f83c4e28c"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "b277000d-d57c-4dd2-8bcd-d143d4812618",
+                                                    "__dataclass__": "semantic_world.views.views.Drawer",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "container": {
+                                                            "$ref": "1978a223-0c76-4bc5-91fe-aa6681847145"
+                                                        },
+                                                        "handle": {
+                                                            "$ref": "97c04744-31d5-406d-8d5f-623bf70be199"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "f5cb206e-e83d-45f7-8ccb-73004c64c410",
+                                                    "__dataclass__": "semantic_world.views.views.Drawer",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "container": {
+                                                            "$ref": "4925cddf-c0dc-400f-be92-68944ed518f5"
+                                                        },
+                                                        "handle": {
+                                                            "$ref": "6b790cff-06ba-4376-b01d-71fb7b245334"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "9d10c3d1-6fc7-4ae7-9aeb-0a1de12379ef",
+                                                    "__dataclass__": "semantic_world.views.views.Drawer",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "container": {
+                                                            "$ref": "6c9a07d6-d8f9-4870-a482-d84f2ae79979"
+                                                        },
+                                                        "handle": {
+                                                            "$ref": "e0413999-38ed-417b-ba81-311875859190"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "223d19c2-adc3-4344-9c07-c49f40ece516",
+                                                    "__dataclass__": "semantic_world.views.views.Drawer",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "container": {
+                                                            "$ref": "438266b9-387e-490f-989b-ea438f93b0f5"
+                                                        },
+                                                        "handle": {
+                                                            "$ref": "66817fee-53f6-4b68-8479-b289cbfe2767"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "8a0c0f19-cce1-4eb2-b177-16989c1e416c",
+                                                    "__dataclass__": "semantic_world.views.views.Cabinet",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "container": {
+                                                            "$id": "e264f8f6-7cd4-4be1-8ee9-2d76b37ae5c0",
+                                                            "__dataclass__": "semantic_world.views.views.Container",
+                                                            "fields": {
+                                                                "_world": null,
+                                                                "_views": [],
+                                                                "body": {
+                                                                    "$id": "2e2d4606-1d99-4258-a35d-229582c7d259",
+                                                                    "__dataclass__": "semantic_world.world_entity.Body",
+                                                                    "fields": {
+                                                                        "_world": {
+                                                                            "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                        },
+                                                                        "_views": [],
+                                                                        "name": {
+                                                                            "$id": "de202afe-b2b8-47d7-a5bc-5aa6fc9b05c8",
+                                                                            "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                            "fields": {
+                                                                                "name": "sink_area",
+                                                                                "prefix": "kitchen-small"
+                                                                            }
+                                                                        },
+                                                                        "visual": [],
+                                                                        "collision": []
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "drawers": [
+                                                            {
+                                                                "$ref": "909cfb59-3051-4fc9-940b-9f688c44b31e"
+                                                            },
+                                                            {
+                                                                "$ref": "4ced1a51-9f0b-46d1-a9e8-3a35b8069c09"
+                                                            },
+                                                            {
+                                                                "$ref": "f5cb206e-e83d-45f7-8ccb-73004c64c410"
+                                                            },
+                                                            {
+                                                                "$ref": "223d19c2-adc3-4344-9c07-c49f40ece516"
+                                                            }
+                                                        ]
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "342051f0-a520-4784-87ca-695a5a0e0cde",
+                                                    "__dataclass__": "semantic_world.views.views.Cabinet",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "container": {
+                                                            "$id": "4d225f26-be25-4259-a3de-d37bc2590e0a",
+                                                            "__dataclass__": "semantic_world.views.views.Container",
+                                                            "fields": {
+                                                                "_world": null,
+                                                                "_views": [],
+                                                                "body": {
+                                                                    "$id": "e6c9a6ce-0ab2-4ae4-92a4-38d8a7ecbffe",
+                                                                    "__dataclass__": "semantic_world.world_entity.Body",
+                                                                    "fields": {
+                                                                        "_world": {
+                                                                            "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                        },
+                                                                        "_views": [],
+                                                                        "name": {
+                                                                            "$id": "25849224-0992-41b5-81d1-cccca4a9d9ae",
+                                                                            "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                            "fields": {
+                                                                                "name": "kitchen_island",
+                                                                                "prefix": "kitchen-small"
+                                                                            }
+                                                                        },
+                                                                        "visual": [],
+                                                                        "collision": []
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "drawers": [
+                                                            {
+                                                                "$ref": "326e897a-a303-4b11-940e-0ceca4d72020"
+                                                            },
+                                                            {
+                                                                "$ref": "4bc77571-5253-4da4-9e15-042c573498f4"
+                                                            },
+                                                            {
+                                                                "$ref": "8c804602-d81b-4371-a7eb-1e71f53f84f7"
+                                                            },
+                                                            {
+                                                                "$ref": "da353b5d-cc36-4c16-bac2-d0429d145957"
+                                                            },
+                                                            {
+                                                                "$ref": "fdde742b-19a8-47f4-8d7b-100091b42875"
+                                                            },
+                                                            {
+                                                                "$ref": "60f3705c-5c35-44f1-9050-c211e84cdee6"
+                                                            }
+                                                        ]
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "53328f50-8e0a-4e29-86cd-8a481f8f97d9",
+                                                    "__dataclass__": "semantic_world.views.views.Cabinet",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "container": {
+                                                            "$id": "8eb91ce4-b64c-45c0-b469-bc3d27eaabfa",
+                                                            "__dataclass__": "semantic_world.views.views.Container",
+                                                            "fields": {
+                                                                "_world": null,
+                                                                "_views": [],
+                                                                "body": {
+                                                                    "$id": "9d5789df-bc88-4ed2-a614-8f87cb0103b5",
+                                                                    "__dataclass__": "semantic_world.world_entity.Body",
+                                                                    "fields": {
+                                                                        "_world": {
+                                                                            "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                        },
+                                                                        "_views": [],
+                                                                        "name": {
+                                                                            "$id": "fa9684ea-e83e-4cf0-9342-9caac0c48fb9",
+                                                                            "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                            "fields": {
+                                                                                "name": "fridge_area",
+                                                                                "prefix": "kitchen-small"
+                                                                            }
+                                                                        },
+                                                                        "visual": [],
+                                                                        "collision": []
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "drawers": [
+                                                            {
+                                                                "$ref": "cc7e7ff9-155b-4521-bfd0-72c4834b4de5"
+                                                            }
+                                                        ]
+                                                    }
+                                                },
+                                                {
+                                                    "$id": "8acc045b-4a90-4093-a44c-47540b54f17b",
+                                                    "__dataclass__": "semantic_world.views.views.Cabinet",
+                                                    "fields": {
+                                                        "_world": null,
+                                                        "_views": [],
+                                                        "container": {
+                                                            "$id": "796b59ef-0ba6-46c0-82aa-8ca7c6889a1b",
+                                                            "__dataclass__": "semantic_world.views.views.Container",
+                                                            "fields": {
+                                                                "_world": null,
+                                                                "_views": [],
+                                                                "body": {
+                                                                    "$id": "b9ab4002-22b1-4f83-afc9-939cdec58e0a",
+                                                                    "__dataclass__": "semantic_world.world_entity.Body",
+                                                                    "fields": {
+                                                                        "_world": {
+                                                                            "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                        },
+                                                                        "_views": [],
+                                                                        "name": {
+                                                                            "$id": "0736f5bc-b733-4107-b7ba-e68313388258",
+                                                                            "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
+                                                                            "fields": {
+                                                                                "name": "oven_area_area",
+                                                                                "prefix": "kitchen-small"
+                                                                            }
+                                                                        },
+                                                                        "visual": [],
+                                                                        "collision": []
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "drawers": [
+                                                            {
+                                                                "$ref": "f1795fc0-a2a0-4459-ac9e-68ac6a1d9c99"
+                                                            },
+                                                            {
+                                                                "$ref": "b277000d-d57c-4dd2-8bcd-d143d4812618"
+                                                            },
+                                                            {
+                                                                "$ref": "9d10c3d1-6fc7-4ae7-9aeb-0a1de12379ef"
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            ],
+                                            "degrees_of_freedom": {},
+                                            "state": null,
+                                            "_model_version": 2,
+                                            "_state_version": 2,
+                                            "world_is_being_modified": false
+                                        }
+                                    },
+                                    "conclusion_name": "views",
+                                    "weight": "next",
+                                    "uid": "10840634078579061471470540436169882059",
+                                    "refinement": null,
+                                    "alternative": null
+                                }
                             }
                         }
                     }
