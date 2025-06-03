@@ -343,7 +343,7 @@
                                     },
                                     "conclusion": {
                                         "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                        "user_input": "def _get_value(case):\n    def world_views_of_type_fridge(case: World) -> List[Fridge]:\n        \"\"\"Get possible value(s) for World.views  of type Fridge.\"\"\"\n        doors = [v for v in case.views if isinstance(v, Door) and \"fridge\" in v.body.name.name.lower()]\n        door_connections = [c for c in case.connections if isinstance(c, RevoluteConnection) and\n                                        c.child in [d.body for d in doors] and 'fridge' in c.parent.name.name.lower()]\n        fridge_bodies = [c.parent for c in door_connections]\n        return [Fridge(b, d) for b, d in zip(fridge_bodies, doors)]\n    return world_views_of_type_fridge(case)\n    ",
+                                        "user_input": "def _get_value(case):\n    def world_views_of_type_fridge(case: World) -> List[Fridge]:\n        \"\"\"Get possible value(s) for World.views  of type Fridge.\"\"\"\n        # Get fridge-related doors\n        doors = [v for v in case.views if isinstance(v, Door) and \"fridge\" in v.body.name.name.lower()]\n        # Precompute bodies of the fridge doors\n        door_bodies = {d.body for d in doors}\n        # Filter relevant revolute connections\n        door_connections = [\n            c for c in case.connections\n            if isinstance(c, RevoluteConnection)\n               and c.child in door_bodies\n               and 'fridge' in c.parent.name.name.lower()\n        ]\n        fridge_bodies = [c.parent for c in door_connections]\n        return [Fridge(b, d) for b, d in zip(fridge_bodies, doors)]\n    return world_views_of_type_fridge(case)\n    ",
                                         "conclusion_type": [
                                             "semantic_world.views.views.Fridge",
                                             "builtins.set",
@@ -371,19 +371,19 @@
                                     },
                                     "parent": null,
                                     "corner_case": {
-                                        "$id": "c8ca04e1-83a7-4079-bd36-c132e593beb0",
+                                        "$id": "17ecc3a3-06e4-41e8-843c-a6f142435802",
                                         "__dataclass__": "semantic_world.world.World",
                                         "fields": {
                                             "root": {
-                                                "$id": "f294191a-4063-4438-8853-4e6f8ee6a20b",
+                                                "$id": "ecae9e1a-3fd3-4a60-9bdf-31ea30481345",
                                                 "__dataclass__": "semantic_world.world_entity.Body",
                                                 "fields": {
                                                     "_world": {
-                                                        "$id": "11a99d54-3e98-477b-a49c-86d54a1c41f6",
+                                                        "$id": "92ab727c-d47d-41f9-abb1-eb1f36be2581",
                                                         "__dataclass__": "semantic_world.world.World",
                                                         "fields": {
                                                             "root": {
-                                                                "$ref": "f294191a-4063-4438-8853-4e6f8ee6a20b"
+                                                                "$ref": "ecae9e1a-3fd3-4a60-9bdf-31ea30481345"
                                                             },
                                                             "kinematic_structure": null,
                                                             "views": [],
@@ -396,7 +396,7 @@
                                                     },
                                                     "_views": [],
                                                     "name": {
-                                                        "$id": "02573df9-8593-4acc-9dab-94589fef6ecd",
+                                                        "$id": "1e7f3aab-0efa-4464-8392-9d126a0f8351",
                                                         "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                         "fields": {
                                                             "name": "world",
@@ -410,21 +410,21 @@
                                             "kinematic_structure": null,
                                             "views": [
                                                 {
-                                                    "$id": "97c04744-31d5-406d-8d5f-623bf70be199",
+                                                    "$id": "0a2d7309-ff1b-4fbd-a361-d495547c0855",
                                                     "__dataclass__": "semantic_world.views.views.Handle",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "e6118828-5a3c-4e11-8734-b1a8b708284c",
+                                                            "$id": "30c15c31-67d6-47df-a86a-2499bbaa3b6a",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "71d8436e-31e1-4214-9032-d1a94dccd33c",
+                                                                    "$id": "8de67dd4-0e3a-4bff-9fba-ca8f5a72ac0b",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "oven_area_area_middle_upper_drawer_handle",
@@ -438,21 +438,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "bc78d5a3-d402-472a-be9c-831064219b1e",
+                                                    "$id": "1b9abb4d-5dbc-441d-8616-f839629f871f",
                                                     "__dataclass__": "semantic_world.views.views.Handle",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "5d05be21-035d-4b5d-bb37-89954c20b5f9",
+                                                            "$id": "576176b2-8a2c-4efb-8e6f-0fbfecd58a64",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "2a7a5c56-3b57-48ee-9928-f39ba3539b84",
+                                                                    "$id": "a9d7bd6b-c6ca-4d1a-8bd2-39de81a7d64d",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "iai_fridge_door_handle",
@@ -466,21 +466,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "4e556bc2-cbae-48a6-ac72-9598e63a7c34",
+                                                    "$id": "011b7fd4-c834-4a5c-9db0-9232c062ec84",
                                                     "__dataclass__": "semantic_world.views.views.Handle",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "ac41418d-fc54-48a9-9da7-28eabe203a66",
+                                                            "$id": "0f84805d-7eae-4cda-a4a5-2396f70c10bd",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "2aba7059-b79a-4b0c-8b3a-70f57cd61a6a",
+                                                                    "$id": "caadc17f-1559-4ca6-ac27-dc69e4c10f46",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "kitchen_island_right_upper_drawer_handle",
@@ -494,21 +494,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "79fa90c0-3a03-403f-aacc-4be75bf89e5f",
+                                                    "$id": "9639fcb8-5ffd-43ed-85ff-015a85e2ed39",
                                                     "__dataclass__": "semantic_world.views.views.Handle",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "5c55f82c-b811-47a2-a82e-eff34eea7b2f",
+                                                            "$id": "0e9df61a-6c77-450e-ae4b-ebe6c4cb336e",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "73a95c26-5256-4de5-a865-c8847046d307",
+                                                                    "$id": "3782af6f-ce17-4ba1-a5e2-fe7d4ad81812",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "sink_area_dish_washer_door_handle",
@@ -522,21 +522,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "cb2c08a7-25b8-4774-87b2-191d891398e4",
+                                                    "$id": "f244be6f-379e-41fb-a063-de16df32d205",
                                                     "__dataclass__": "semantic_world.views.views.Handle",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "05da431f-5c6a-424a-9d40-b6734154d59c",
+                                                            "$id": "3e426def-93e9-4c2b-a9e6-31f4989e3fe0",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "b635c3a1-a9d6-4297-9c0b-3a24e6b58cc6",
+                                                                    "$id": "18d34891-1dcc-4b8d-abc0-707f0c11051e",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "kitchen_island_middle_lower_drawer_handle",
@@ -550,21 +550,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "e0413999-38ed-417b-ba81-311875859190",
+                                                    "$id": "b2723564-6efe-4ce3-8f8e-30478063bd7d",
                                                     "__dataclass__": "semantic_world.views.views.Handle",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "4d075c01-6449-42f8-8fc5-1ce28290d2d2",
+                                                            "$id": "121d4313-e1dd-4132-a3fe-f4b9dcb3fe31",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "03868d6d-e1c2-4657-84d7-3851ca8fc379",
+                                                                    "$id": "34b1fc73-441a-494b-b2a9-e349a3898572",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "oven_area_area_left_drawer_handle",
@@ -578,21 +578,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "1ff53154-653d-4b54-a7dd-317f83c4e28c",
+                                                    "$id": "4d96c6f0-a722-4153-8c50-6b154d7cf620",
                                                     "__dataclass__": "semantic_world.views.views.Handle",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "73494f69-d0f7-44c1-b507-5be47d11b9a0",
+                                                            "$id": "dd5897d5-0cd3-4a24-a549-e66b970dab38",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "51d23e17-7888-449d-9aac-30ef9104427c",
+                                                                    "$id": "a262c976-eee0-41bc-b69f-a90a01da14d3",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "kitchen_island_middle_upper_drawer_handle",
@@ -606,21 +606,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "cfaa6822-8f25-4fdd-b5df-d9d8c6622257",
+                                                    "$id": "0c09bd22-add0-495a-a021-f5525100967b",
                                                     "__dataclass__": "semantic_world.views.views.Handle",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "46993378-0fdf-4c29-9ed8-bfb0039bc213",
+                                                            "$id": "4489c767-5264-44e9-b16e-12c7c2e5ca33",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "90e4260d-30ae-42cf-81b5-30cfb0c459cb",
+                                                                    "$id": "e16188d7-696a-4947-a94b-9d9919c1a646",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "oven_area_area_right_drawer_handle",
@@ -634,21 +634,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "883b801a-ff71-4d51-9ff1-8ddf6f5a118a",
+                                                    "$id": "3096ef22-cb69-4003-ae2f-1497ab43f54d",
                                                     "__dataclass__": "semantic_world.views.views.Handle",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "7803a8c5-eddf-4b1d-8ada-cc1b46922ec0",
+                                                            "$id": "30f683d8-ed99-4d12-9fbe-a9161d6af409",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "dac83bf6-9ca9-4d03-b6f9-92bf5867be27",
+                                                                    "$id": "b2117a87-59ae-4a43-8348-1ebb7ead1914",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "oven_area_area_middle_lower_drawer_handle",
@@ -662,21 +662,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "caefdb63-cddb-4ebb-b633-f0c74c6ec39f",
+                                                    "$id": "1138ddc5-5e61-453c-a63e-c3d8f8d865f5",
                                                     "__dataclass__": "semantic_world.views.views.Handle",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "fcb2bc50-3ac3-44c9-bb65-07826734fa3d",
+                                                            "$id": "a81c8692-a4b9-4045-91e7-d6a5027d1e5d",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "e1281bf2-d7bf-454d-a7f1-4b54c4591ff3",
+                                                                    "$id": "1a84e89c-b214-443e-9e22-ad878492710f",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "kitchen_island_right_lower_drawer_handle",
@@ -690,21 +690,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "5c8d29fa-71dc-4b62-9b09-f198b07b3e30",
+                                                    "$id": "caf5e770-a458-44a2-a0fd-537e6ab2aaa1",
                                                     "__dataclass__": "semantic_world.views.views.Handle",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "007ead40-33a2-4dda-bca4-e7b5721c5a25",
+                                                            "$id": "15b35ca0-60e6-40eb-b36c-f47103e0d45e",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "bf5623c7-2bd6-4e35-8a4f-220a6f440631",
+                                                                    "$id": "913ef7e4-389b-42fa-b98e-ae23e0651a4c",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "sink_area_left_bottom_drawer_handle",
@@ -718,21 +718,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "bfa1da5e-62c9-436e-836f-546dbf96823f",
+                                                    "$id": "fab91086-0c31-45d4-97a0-8b4d82605e4b",
                                                     "__dataclass__": "semantic_world.views.views.Handle",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "a7024dc2-5ba3-4ec1-841c-ed87b925204c",
+                                                            "$id": "c4cb0231-e330-49ce-af24-b6327b9afd89",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "7f81025d-607b-4d0b-8db9-2d99911522d1",
+                                                                    "$id": "b73999d4-d526-49a4-a483-eb5939ff3df1",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "kitchen_island_left_upper_drawer_handle",
@@ -746,21 +746,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "6b790cff-06ba-4376-b01d-71fb7b245334",
+                                                    "$id": "b96a820b-cd1a-4587-9a90-cd1e5d589dfd",
                                                     "__dataclass__": "semantic_world.views.views.Handle",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "8066f624-8d6f-478b-bb2f-afd9c56e5159",
+                                                            "$id": "db735fbc-3d8c-4ed8-8ba0-7123c8b32f22",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "efd9fc39-c463-4b63-ac0a-b598e2f7ccd0",
+                                                                    "$id": "c4e6514c-8f17-49c4-8d06-06e76dbb5e0d",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "sink_area_left_middle_drawer_handle",
@@ -774,21 +774,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "86e1183d-340b-47f7-a228-f4fa66d80aa3",
+                                                    "$id": "ec3997b8-89d1-4f44-a855-024f057588a8",
                                                     "__dataclass__": "semantic_world.views.views.Handle",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "e2738eff-6d26-432e-a793-1553d63a168c",
+                                                            "$id": "7f5d6cfb-e247-4b4b-a1d8-a5dc3d03bee2",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "dcaeaefc-f52e-4fe1-b437-990e2ebaf9a0",
+                                                                    "$id": "28cd1634-e1b1-437f-a131-fe3a3bfb72c2",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "oven_area_oven_door_handle",
@@ -802,21 +802,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "cc5d2ed1-b2e5-4c09-a6d3-9e924d8f4530",
+                                                    "$id": "01862ffc-3530-444b-9c5c-4578f15ecdc1",
                                                     "__dataclass__": "semantic_world.views.views.Handle",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "8299045b-431c-48be-9c3b-1512fdb4895c",
+                                                            "$id": "bb701ed9-f856-4871-a2ca-50752aa9d333",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "9aa653e7-70a9-4785-be09-eb8abb2213c2",
+                                                                    "$id": "7aee2752-7305-4ecd-b0aa-bb4d27019384",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "fridge_area_lower_drawer_handle",
@@ -830,21 +830,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "7d7853c1-6795-47b0-b22d-2a3fca9612f2",
+                                                    "$id": "dfe84a23-25d8-4c7e-b972-0345256a2b5f",
                                                     "__dataclass__": "semantic_world.views.views.Handle",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "b9efd524-f05e-46b5-b25d-a30bb1c64c81",
+                                                            "$id": "6418b018-a298-4069-b469-a757c52c18b8",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "29cab64a-10f5-4ba4-82e0-ab6665ec0db5",
+                                                                    "$id": "a839623b-ea2a-4a96-98ca-bb931f606ebb",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "sink_area_left_upper_drawer_handle",
@@ -858,21 +858,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "145c9752-0fca-423f-a349-ddc3623f7d34",
+                                                    "$id": "b8e03026-ce69-4518-a413-290e7fd64025",
                                                     "__dataclass__": "semantic_world.views.views.Handle",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "b3b1caeb-2605-4df3-86b7-5c7f63876d1d",
+                                                            "$id": "f46976be-5b6a-48c4-aef5-52536e4e5c29",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "f012eaff-7fd5-4aee-ace5-8a86a4ed92dc",
+                                                                    "$id": "57c4281b-a17c-4b1d-91e4-96cc14407660",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "kitchen_island_left_lower_drawer_handle",
@@ -886,21 +886,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "66817fee-53f6-4b68-8479-b289cbfe2767",
+                                                    "$id": "c0f9b6a3-977e-44ae-8abc-45f84af35fa7",
                                                     "__dataclass__": "semantic_world.views.views.Handle",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "89629bc2-c486-4a37-90a8-f24e3947ea18",
+                                                            "$id": "c5f03ced-a0db-4b3e-bee4-d8e12073d45d",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "121634fb-380b-4ec3-aede-800a5ffb054d",
+                                                                    "$id": "aa6d4504-d388-421a-9f0c-db9e2fc8a05d",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "sink_area_trash_drawer_handle",
@@ -914,21 +914,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "617544d4-e5af-4b51-a403-2cb1cacfb3f3",
+                                                    "$id": "aaf8bb75-e91b-4f5f-b1f4-182461161ba5",
                                                     "__dataclass__": "semantic_world.views.views.Container",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "44e75416-9854-4c88-bb69-488123cd93bc",
+                                                            "$id": "795d71ee-9cf7-45bf-99f9-4f4a1c723af1",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "fd89443d-3a22-4e1d-8341-0498fb89e1e6",
+                                                                    "$id": "70758abf-cbf8-465e-acb0-94c531ac259a",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "kitchen_island_left_upper_drawer_main",
@@ -942,21 +942,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "1978a223-0c76-4bc5-91fe-aa6681847145",
+                                                    "$id": "5556d005-60cb-4329-b5c4-10755c2df77b",
                                                     "__dataclass__": "semantic_world.views.views.Container",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "6360b826-1e7d-4cc8-a96f-4e80791cba64",
+                                                            "$id": "48337123-9d88-4977-8910-46fdabc1757e",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "07c557bf-4a02-47c6-a7c5-e29c2445bee9",
+                                                                    "$id": "76cd8189-368e-4cd4-83c1-25c0bf17fe51",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "oven_area_area_middle_upper_drawer_main",
@@ -970,21 +970,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "e1bec457-41b2-48c8-977c-182d4820747b",
+                                                    "$id": "9e9c3724-6174-4963-b48f-76674c5f6ff4",
                                                     "__dataclass__": "semantic_world.views.views.Container",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "f937b1a1-6d65-4782-a4f6-42564aca8cdb",
+                                                            "$id": "ea4b2a24-02b5-4b82-a947-3caa634f99f5",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "22fb7acd-0b3b-40a3-b1c7-34c221bb9b0a",
+                                                                    "$id": "a40e25e8-dedf-436d-b41a-3fdf54fe0486",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "sink_area_left_upper_drawer_main",
@@ -998,21 +998,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "dffae55c-096f-4d63-a1fb-789e99866708",
+                                                    "$id": "553525d4-b985-44d2-990d-01d37018faac",
                                                     "__dataclass__": "semantic_world.views.views.Door",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "2d0a9718-8477-4397-8760-fd4db30f2328",
+                                                            "$id": "5ef8b1ce-27d5-454b-afae-61d7a0c78e64",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "0d9cb8b6-d634-4db2-b2e9-e3ab34df8355",
+                                                                    "$id": "f2730302-f0b4-49f6-b9a5-39961181e289",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "oven_area_oven_door",
@@ -1024,26 +1024,26 @@
                                                             }
                                                         },
                                                         "handle": {
-                                                            "$ref": "86e1183d-340b-47f7-a228-f4fa66d80aa3"
+                                                            "$ref": "ec3997b8-89d1-4f44-a855-024f057588a8"
                                                         }
                                                     }
                                                 },
                                                 {
-                                                    "$id": "1780040c-80f6-445d-8762-681ba867223b",
+                                                    "$id": "febd8de2-49d7-41f5-8263-ad583bb3e302",
                                                     "__dataclass__": "semantic_world.views.views.Door",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "8b619f06-f3aa-45e8-9917-a3846f8c3c14",
+                                                            "$id": "cd370207-2fc6-456c-88a1-75f67786962f",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "57668a40-5fbe-464b-b112-882cf2506a52",
+                                                                    "$id": "3f0f1313-f514-456d-832e-aa54b89dc7d9",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "iai_fridge_door",
@@ -1055,26 +1055,26 @@
                                                             }
                                                         },
                                                         "handle": {
-                                                            "$ref": "bc78d5a3-d402-472a-be9c-831064219b1e"
+                                                            "$ref": "1b9abb4d-5dbc-441d-8616-f839629f871f"
                                                         }
                                                     }
                                                 },
                                                 {
-                                                    "$id": "14e98a23-33b2-43e4-bb1e-5a97dde8922e",
+                                                    "$id": "1e2ca0f2-a8cb-4eea-9fc0-7aecde531752",
                                                     "__dataclass__": "semantic_world.views.views.Container",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "fe7594d1-7752-4444-90e9-6c1998dc5085",
+                                                            "$id": "dfb6c12c-ccc3-4f9f-83be-e07aff006bc6",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "f4dc8917-539d-4794-9383-b91018f2a0ae",
+                                                                    "$id": "6fac52da-9246-4e37-9f46-08b321a4c8ea",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "kitchen_island_right_lower_drawer_main",
@@ -1088,21 +1088,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "438266b9-387e-490f-989b-ea438f93b0f5",
+                                                    "$id": "d942941f-d365-4dcb-b20d-911023f4354b",
                                                     "__dataclass__": "semantic_world.views.views.Container",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "250893c5-83c2-466f-acb4-ba22e3f5c11e",
+                                                            "$id": "7ffe56e7-b3c2-4fa2-9f6c-2923d81241c2",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "94923e76-ed1b-425a-b85f-de13e13d41f5",
+                                                                    "$id": "96cab0d2-7a76-4d29-b2a4-6bfe06fa4248",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "sink_area_trash_drawer_main",
@@ -1116,21 +1116,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "36afb1f7-b783-40d9-8952-fcd8aee10b53",
+                                                    "$id": "b7f48a01-8ac4-471d-a765-866081098cf9",
                                                     "__dataclass__": "semantic_world.views.views.Container",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "b4a134dd-e7f4-4fb7-b1f4-bde01b93ac86",
+                                                            "$id": "16a177dc-e1b2-4579-94a6-2e5816a084a1",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "7169d127-5c7d-4836-93d2-a54340672543",
+                                                                    "$id": "9a415092-04f0-4319-b46a-79364478532f",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "kitchen_island_middle_upper_drawer_main",
@@ -1144,21 +1144,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "e7705d54-b7ee-47ce-8dec-1054126ae2c5",
+                                                    "$id": "ad913533-e457-42ad-b44d-7cd35b74023c",
                                                     "__dataclass__": "semantic_world.views.views.Door",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "99e1c444-ba71-4626-8e7d-79feb7de59ee",
+                                                            "$id": "865f5fff-deb6-4488-89be-4c6c1b6ae958",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "35cac4fa-cc17-42b5-9d40-735516ed6f52",
+                                                                    "$id": "6da00f43-d6ee-448d-ac55-762e766d10dd",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "sink_area_dish_washer_door",
@@ -1170,26 +1170,26 @@
                                                             }
                                                         },
                                                         "handle": {
-                                                            "$ref": "79fa90c0-3a03-403f-aacc-4be75bf89e5f"
+                                                            "$ref": "9639fcb8-5ffd-43ed-85ff-015a85e2ed39"
                                                         }
                                                     }
                                                 },
                                                 {
-                                                    "$id": "e7cd7b24-97cf-4234-b26e-3f3439b7dfef",
+                                                    "$id": "0801b7b8-b24e-4391-8038-835e419ae735",
                                                     "__dataclass__": "semantic_world.views.views.Container",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "ddeb3537-6229-4174-b538-c5c8d998aa80",
+                                                            "$id": "97a9548e-dc5c-45be-b745-5e0f44db65a0",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "552c7d0e-1b24-4a37-b9f1-38b19aeb33eb",
+                                                                    "$id": "8bca70df-d10f-4bbd-9904-29e403d2e46b",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "kitchen_island_left_lower_drawer_main",
@@ -1203,21 +1203,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "4925cddf-c0dc-400f-be92-68944ed518f5",
+                                                    "$id": "7d68c8ce-92e6-4d12-b796-12d869bac36a",
                                                     "__dataclass__": "semantic_world.views.views.Container",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "33fd4616-8e83-4cff-8d8b-e64bec31d091",
+                                                            "$id": "98431bee-d8a6-4bbd-9cc4-ba9301772c37",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "ec4d39bd-6c58-4cdc-b64a-9fd91dcfefd2",
+                                                                    "$id": "3564951d-ab39-4c7d-9c8a-c80480de6f56",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "sink_area_left_middle_drawer_main",
@@ -1231,21 +1231,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "6a7268af-5edb-4fe8-9bea-b751ad7f71f1",
+                                                    "$id": "818a65ff-1773-4f48-a15a-47db2037cf91",
                                                     "__dataclass__": "semantic_world.views.views.Container",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "1a92e2c4-43fb-4b08-b85a-a344ae756c5f",
+                                                            "$id": "c7606254-2cfd-452c-ac01-4c526ebc7ab7",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "0d5807ee-48a4-41f5-9ffb-443405504709",
+                                                                    "$id": "cec38734-5c51-400a-a659-dcfed664296c",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "oven_area_area_middle_lower_drawer_main",
@@ -1259,21 +1259,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "6466106d-ba9b-4c54-b9d0-bff5b6e92361",
+                                                    "$id": "58afec0b-9fea-4fde-a969-59c7f984e693",
                                                     "__dataclass__": "semantic_world.views.views.Container",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "0371bebc-1a9f-4834-9e07-0342603ba337",
+                                                            "$id": "edef37ab-f43b-4e29-9091-699df79905cc",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "7d374a4b-2e40-42ff-a96d-fade92d40f5c",
+                                                                    "$id": "0546c42a-17b7-4452-b8e9-72edacb59029",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "sink_area_left_bottom_drawer_main",
@@ -1287,21 +1287,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "7bf6c22d-c7b9-4622-8e19-7fe372081339",
+                                                    "$id": "07a7d893-07bc-4041-8e57-a95da1121c13",
                                                     "__dataclass__": "semantic_world.views.views.Container",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "775f95e9-7c32-48eb-add0-1e76beffcf28",
+                                                            "$id": "7c5e423f-3eb9-4e1c-a162-ccf8d2bce891",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "f7e12298-ccc1-4df6-a189-84be91a30866",
+                                                                    "$id": "05844728-efa9-414f-a6e2-cc94f0a67f22",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "kitchen_island_right_upper_drawer_main",
@@ -1315,21 +1315,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "6ea17319-e0ba-46b4-be51-22f4d92565db",
+                                                    "$id": "7c7f1c49-d27f-41ef-8735-efc8f500fa19",
                                                     "__dataclass__": "semantic_world.views.views.Container",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "1ff38e32-6d46-482b-8404-2b6103ef28e4",
+                                                            "$id": "81f5f3e6-566c-4fb4-9f90-0722b952b274",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "b1e8744e-d708-4e7b-a665-185fa165b8e2",
+                                                                    "$id": "9873d58b-904c-4932-98e0-93f542157527",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "kitchen_island_middle_lower_drawer_main",
@@ -1343,21 +1343,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "7c98a67a-f489-4176-a4b6-ae4e90734f03",
+                                                    "$id": "a108bbfd-0e1f-4b7d-9d24-ce6bd6b99114",
                                                     "__dataclass__": "semantic_world.views.views.Container",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "d5d7ba09-9bae-48c7-98c6-55934fb08971",
+                                                            "$id": "2069d45e-cfb7-486a-9e00-21d2c6a06636",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "d3246b26-9c3c-4cbe-aef2-d87811932389",
+                                                                    "$id": "bb2c52ef-329c-466d-ae6c-77793577d2ff",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "fridge_area_lower_drawer_main",
@@ -1371,21 +1371,21 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "6c9a07d6-d8f9-4870-a482-d84f2ae79979",
+                                                    "$id": "c7d844ca-d351-49ab-9e5f-8f60f98e38f1",
                                                     "__dataclass__": "semantic_world.views.views.Container",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "body": {
-                                                            "$id": "ed4d4a6f-1707-4047-8ea8-fd92aabec8d4",
+                                                            "$id": "ffe31e4f-ffb2-4c6f-b6de-320233fd2c62",
                                                             "__dataclass__": "semantic_world.world_entity.Body",
                                                             "fields": {
                                                                 "_world": {
-                                                                    "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                    "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                 },
                                                                 "_views": [],
                                                                 "name": {
-                                                                    "$id": "1547530c-eea1-4a9a-b275-76196e7d9398",
+                                                                    "$id": "8bbb822c-6128-45fc-a593-8c3f257710a7",
                                                                     "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                     "fields": {
                                                                         "name": "oven_area_area_left_drawer_main",
@@ -1399,223 +1399,223 @@
                                                     }
                                                 },
                                                 {
-                                                    "$id": "326e897a-a303-4b11-940e-0ceca4d72020",
+                                                    "$id": "2e5641f5-83e4-43f6-bcd1-64ce34577399",
                                                     "__dataclass__": "semantic_world.views.views.Drawer",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "container": {
-                                                            "$ref": "7bf6c22d-c7b9-4622-8e19-7fe372081339"
+                                                            "$ref": "07a7d893-07bc-4041-8e57-a95da1121c13"
                                                         },
                                                         "handle": {
-                                                            "$ref": "4e556bc2-cbae-48a6-ac72-9598e63a7c34"
+                                                            "$ref": "011b7fd4-c834-4a5c-9db0-9232c062ec84"
                                                         }
                                                     }
                                                 },
                                                 {
-                                                    "$id": "909cfb59-3051-4fc9-940b-9f688c44b31e",
+                                                    "$id": "d0aaee30-05c3-4966-9a68-4def4b39b0a8",
                                                     "__dataclass__": "semantic_world.views.views.Drawer",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "container": {
-                                                            "$ref": "6466106d-ba9b-4c54-b9d0-bff5b6e92361"
+                                                            "$ref": "58afec0b-9fea-4fde-a969-59c7f984e693"
                                                         },
                                                         "handle": {
-                                                            "$ref": "5c8d29fa-71dc-4b62-9b09-f198b07b3e30"
+                                                            "$ref": "caf5e770-a458-44a2-a0fd-537e6ab2aaa1"
                                                         }
                                                     }
                                                 },
                                                 {
-                                                    "$id": "4ced1a51-9f0b-46d1-a9e8-3a35b8069c09",
+                                                    "$id": "fe3d2737-aeec-42ae-8824-ee4272b98eff",
                                                     "__dataclass__": "semantic_world.views.views.Drawer",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "container": {
-                                                            "$ref": "e1bec457-41b2-48c8-977c-182d4820747b"
+                                                            "$ref": "9e9c3724-6174-4963-b48f-76674c5f6ff4"
                                                         },
                                                         "handle": {
-                                                            "$ref": "7d7853c1-6795-47b0-b22d-2a3fca9612f2"
+                                                            "$ref": "dfe84a23-25d8-4c7e-b972-0345256a2b5f"
                                                         }
                                                     }
                                                 },
                                                 {
-                                                    "$id": "4bc77571-5253-4da4-9e15-042c573498f4",
+                                                    "$id": "141dbb7d-edf2-44bc-b53c-18a2cffdee29",
                                                     "__dataclass__": "semantic_world.views.views.Drawer",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "container": {
-                                                            "$ref": "14e98a23-33b2-43e4-bb1e-5a97dde8922e"
+                                                            "$ref": "1e2ca0f2-a8cb-4eea-9fc0-7aecde531752"
                                                         },
                                                         "handle": {
-                                                            "$ref": "caefdb63-cddb-4ebb-b633-f0c74c6ec39f"
+                                                            "$ref": "1138ddc5-5e61-453c-a63e-c3d8f8d865f5"
                                                         }
                                                     }
                                                 },
                                                 {
-                                                    "$id": "8c804602-d81b-4371-a7eb-1e71f53f84f7",
+                                                    "$id": "dc4e2258-4564-4739-9586-bc4cd3dd2915",
                                                     "__dataclass__": "semantic_world.views.views.Drawer",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "container": {
-                                                            "$ref": "617544d4-e5af-4b51-a403-2cb1cacfb3f3"
+                                                            "$ref": "aaf8bb75-e91b-4f5f-b1f4-182461161ba5"
                                                         },
                                                         "handle": {
-                                                            "$ref": "bfa1da5e-62c9-436e-836f-546dbf96823f"
+                                                            "$ref": "fab91086-0c31-45d4-97a0-8b4d82605e4b"
                                                         }
                                                     }
                                                 },
                                                 {
-                                                    "$id": "da353b5d-cc36-4c16-bac2-d0429d145957",
+                                                    "$id": "7692ab78-6491-45eb-bedf-53362ab0e41c",
                                                     "__dataclass__": "semantic_world.views.views.Drawer",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "container": {
-                                                            "$ref": "e7cd7b24-97cf-4234-b26e-3f3439b7dfef"
+                                                            "$ref": "0801b7b8-b24e-4391-8038-835e419ae735"
                                                         },
                                                         "handle": {
-                                                            "$ref": "145c9752-0fca-423f-a349-ddc3623f7d34"
+                                                            "$ref": "b8e03026-ce69-4518-a413-290e7fd64025"
                                                         }
                                                     }
                                                 },
                                                 {
-                                                    "$id": "cc7e7ff9-155b-4521-bfd0-72c4834b4de5",
+                                                    "$id": "4abd3439-dd50-4526-b63a-4751fa517ad4",
                                                     "__dataclass__": "semantic_world.views.views.Drawer",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "container": {
-                                                            "$ref": "7c98a67a-f489-4176-a4b6-ae4e90734f03"
+                                                            "$ref": "a108bbfd-0e1f-4b7d-9d24-ce6bd6b99114"
                                                         },
                                                         "handle": {
-                                                            "$ref": "cc5d2ed1-b2e5-4c09-a6d3-9e924d8f4530"
+                                                            "$ref": "01862ffc-3530-444b-9c5c-4578f15ecdc1"
                                                         }
                                                     }
                                                 },
                                                 {
-                                                    "$id": "f1795fc0-a2a0-4459-ac9e-68ac6a1d9c99",
+                                                    "$id": "4582f2c1-b31f-4a8c-b336-10b903725c72",
                                                     "__dataclass__": "semantic_world.views.views.Drawer",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "container": {
-                                                            "$ref": "6a7268af-5edb-4fe8-9bea-b751ad7f71f1"
+                                                            "$ref": "818a65ff-1773-4f48-a15a-47db2037cf91"
                                                         },
                                                         "handle": {
-                                                            "$ref": "883b801a-ff71-4d51-9ff1-8ddf6f5a118a"
+                                                            "$ref": "3096ef22-cb69-4003-ae2f-1497ab43f54d"
                                                         }
                                                     }
                                                 },
                                                 {
-                                                    "$id": "fdde742b-19a8-47f4-8d7b-100091b42875",
+                                                    "$id": "3522608b-bb53-46bf-8a53-8f754f1d0d24",
                                                     "__dataclass__": "semantic_world.views.views.Drawer",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "container": {
-                                                            "$ref": "6ea17319-e0ba-46b4-be51-22f4d92565db"
+                                                            "$ref": "7c7f1c49-d27f-41ef-8735-efc8f500fa19"
                                                         },
                                                         "handle": {
-                                                            "$ref": "cb2c08a7-25b8-4774-87b2-191d891398e4"
+                                                            "$ref": "f244be6f-379e-41fb-a063-de16df32d205"
                                                         }
                                                     }
                                                 },
                                                 {
-                                                    "$id": "60f3705c-5c35-44f1-9050-c211e84cdee6",
+                                                    "$id": "8e3be446-4060-4627-b4bc-7d80e5aeca25",
                                                     "__dataclass__": "semantic_world.views.views.Drawer",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "container": {
-                                                            "$ref": "36afb1f7-b783-40d9-8952-fcd8aee10b53"
+                                                            "$ref": "b7f48a01-8ac4-471d-a765-866081098cf9"
                                                         },
                                                         "handle": {
-                                                            "$ref": "1ff53154-653d-4b54-a7dd-317f83c4e28c"
+                                                            "$ref": "4d96c6f0-a722-4153-8c50-6b154d7cf620"
                                                         }
                                                     }
                                                 },
                                                 {
-                                                    "$id": "b277000d-d57c-4dd2-8bcd-d143d4812618",
+                                                    "$id": "5247d6f9-4aef-4aeb-8eb6-b5e2e6f43861",
                                                     "__dataclass__": "semantic_world.views.views.Drawer",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "container": {
-                                                            "$ref": "1978a223-0c76-4bc5-91fe-aa6681847145"
+                                                            "$ref": "5556d005-60cb-4329-b5c4-10755c2df77b"
                                                         },
                                                         "handle": {
-                                                            "$ref": "97c04744-31d5-406d-8d5f-623bf70be199"
+                                                            "$ref": "0a2d7309-ff1b-4fbd-a361-d495547c0855"
                                                         }
                                                     }
                                                 },
                                                 {
-                                                    "$id": "f5cb206e-e83d-45f7-8ccb-73004c64c410",
+                                                    "$id": "29694563-678a-47dc-8a91-1b70a8fb1445",
                                                     "__dataclass__": "semantic_world.views.views.Drawer",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "container": {
-                                                            "$ref": "4925cddf-c0dc-400f-be92-68944ed518f5"
+                                                            "$ref": "7d68c8ce-92e6-4d12-b796-12d869bac36a"
                                                         },
                                                         "handle": {
-                                                            "$ref": "6b790cff-06ba-4376-b01d-71fb7b245334"
+                                                            "$ref": "b96a820b-cd1a-4587-9a90-cd1e5d589dfd"
                                                         }
                                                     }
                                                 },
                                                 {
-                                                    "$id": "9d10c3d1-6fc7-4ae7-9aeb-0a1de12379ef",
+                                                    "$id": "1b8c6be2-ebd1-498b-a480-cddd57564ddc",
                                                     "__dataclass__": "semantic_world.views.views.Drawer",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "container": {
-                                                            "$ref": "6c9a07d6-d8f9-4870-a482-d84f2ae79979"
+                                                            "$ref": "c7d844ca-d351-49ab-9e5f-8f60f98e38f1"
                                                         },
                                                         "handle": {
-                                                            "$ref": "e0413999-38ed-417b-ba81-311875859190"
+                                                            "$ref": "b2723564-6efe-4ce3-8f8e-30478063bd7d"
                                                         }
                                                     }
                                                 },
                                                 {
-                                                    "$id": "223d19c2-adc3-4344-9c07-c49f40ece516",
+                                                    "$id": "10182284-030b-4fa1-8500-6eead3fa83ec",
                                                     "__dataclass__": "semantic_world.views.views.Drawer",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "container": {
-                                                            "$ref": "438266b9-387e-490f-989b-ea438f93b0f5"
+                                                            "$ref": "d942941f-d365-4dcb-b20d-911023f4354b"
                                                         },
                                                         "handle": {
-                                                            "$ref": "66817fee-53f6-4b68-8479-b289cbfe2767"
+                                                            "$ref": "c0f9b6a3-977e-44ae-8abc-45f84af35fa7"
                                                         }
                                                     }
                                                 },
                                                 {
-                                                    "$id": "8a0c0f19-cce1-4eb2-b177-16989c1e416c",
+                                                    "$id": "77462e66-8f3d-4aa4-8c13-5476e25fbd80",
                                                     "__dataclass__": "semantic_world.views.views.Cabinet",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "container": {
-                                                            "$id": "e264f8f6-7cd4-4be1-8ee9-2d76b37ae5c0",
+                                                            "$id": "098a130e-de85-4026-b5a0-31f07b88eb77",
                                                             "__dataclass__": "semantic_world.views.views.Container",
                                                             "fields": {
                                                                 "_world": null,
                                                                 "_views": [],
                                                                 "body": {
-                                                                    "$id": "2e2d4606-1d99-4258-a35d-229582c7d259",
+                                                                    "$id": "92c63d6e-e948-4d28-b641-6466e9acf89c",
                                                                     "__dataclass__": "semantic_world.world_entity.Body",
                                                                     "fields": {
                                                                         "_world": {
-                                                                            "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                            "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                         },
                                                                         "_views": [],
                                                                         "name": {
-                                                                            "$id": "de202afe-b2b8-47d7-a5bc-5aa6fc9b05c8",
+                                                                            "$id": "cd93bd59-da8b-4984-98b7-cb2af4625ac6",
                                                                             "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                             "fields": {
                                                                                 "name": "sink_area",
@@ -1630,42 +1630,42 @@
                                                         },
                                                         "drawers": [
                                                             {
-                                                                "$ref": "909cfb59-3051-4fc9-940b-9f688c44b31e"
+                                                                "$ref": "d0aaee30-05c3-4966-9a68-4def4b39b0a8"
                                                             },
                                                             {
-                                                                "$ref": "4ced1a51-9f0b-46d1-a9e8-3a35b8069c09"
+                                                                "$ref": "fe3d2737-aeec-42ae-8824-ee4272b98eff"
                                                             },
                                                             {
-                                                                "$ref": "f5cb206e-e83d-45f7-8ccb-73004c64c410"
+                                                                "$ref": "29694563-678a-47dc-8a91-1b70a8fb1445"
                                                             },
                                                             {
-                                                                "$ref": "223d19c2-adc3-4344-9c07-c49f40ece516"
+                                                                "$ref": "10182284-030b-4fa1-8500-6eead3fa83ec"
                                                             }
                                                         ]
                                                     }
                                                 },
                                                 {
-                                                    "$id": "342051f0-a520-4784-87ca-695a5a0e0cde",
+                                                    "$id": "a5f48f27-35c2-4697-bd9f-0e82db6191f5",
                                                     "__dataclass__": "semantic_world.views.views.Cabinet",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "container": {
-                                                            "$id": "4d225f26-be25-4259-a3de-d37bc2590e0a",
+                                                            "$id": "2bc992e1-4abc-42fa-9eb3-cb82907b0111",
                                                             "__dataclass__": "semantic_world.views.views.Container",
                                                             "fields": {
                                                                 "_world": null,
                                                                 "_views": [],
                                                                 "body": {
-                                                                    "$id": "e6c9a6ce-0ab2-4ae4-92a4-38d8a7ecbffe",
+                                                                    "$id": "be5a2f35-92f2-4304-ba43-f17e904617e4",
                                                                     "__dataclass__": "semantic_world.world_entity.Body",
                                                                     "fields": {
                                                                         "_world": {
-                                                                            "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                            "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                         },
                                                                         "_views": [],
                                                                         "name": {
-                                                                            "$id": "25849224-0992-41b5-81d1-cccca4a9d9ae",
+                                                                            "$id": "7a8e8479-3adc-43fb-b774-f5c6386c8a63",
                                                                             "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                             "fields": {
                                                                                 "name": "kitchen_island",
@@ -1680,48 +1680,48 @@
                                                         },
                                                         "drawers": [
                                                             {
-                                                                "$ref": "326e897a-a303-4b11-940e-0ceca4d72020"
+                                                                "$ref": "2e5641f5-83e4-43f6-bcd1-64ce34577399"
                                                             },
                                                             {
-                                                                "$ref": "4bc77571-5253-4da4-9e15-042c573498f4"
+                                                                "$ref": "141dbb7d-edf2-44bc-b53c-18a2cffdee29"
                                                             },
                                                             {
-                                                                "$ref": "8c804602-d81b-4371-a7eb-1e71f53f84f7"
+                                                                "$ref": "dc4e2258-4564-4739-9586-bc4cd3dd2915"
                                                             },
                                                             {
-                                                                "$ref": "da353b5d-cc36-4c16-bac2-d0429d145957"
+                                                                "$ref": "7692ab78-6491-45eb-bedf-53362ab0e41c"
                                                             },
                                                             {
-                                                                "$ref": "fdde742b-19a8-47f4-8d7b-100091b42875"
+                                                                "$ref": "3522608b-bb53-46bf-8a53-8f754f1d0d24"
                                                             },
                                                             {
-                                                                "$ref": "60f3705c-5c35-44f1-9050-c211e84cdee6"
+                                                                "$ref": "8e3be446-4060-4627-b4bc-7d80e5aeca25"
                                                             }
                                                         ]
                                                     }
                                                 },
                                                 {
-                                                    "$id": "53328f50-8e0a-4e29-86cd-8a481f8f97d9",
+                                                    "$id": "04c0d151-92cc-4ac6-9de3-cc1cb9e9a37c",
                                                     "__dataclass__": "semantic_world.views.views.Cabinet",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "container": {
-                                                            "$id": "8eb91ce4-b64c-45c0-b469-bc3d27eaabfa",
+                                                            "$id": "33c6bb7e-0f63-453d-8149-6748648ac1ad",
                                                             "__dataclass__": "semantic_world.views.views.Container",
                                                             "fields": {
                                                                 "_world": null,
                                                                 "_views": [],
                                                                 "body": {
-                                                                    "$id": "9d5789df-bc88-4ed2-a614-8f87cb0103b5",
+                                                                    "$id": "97287427-1468-487d-90e2-d1203ebed93f",
                                                                     "__dataclass__": "semantic_world.world_entity.Body",
                                                                     "fields": {
                                                                         "_world": {
-                                                                            "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                            "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                         },
                                                                         "_views": [],
                                                                         "name": {
-                                                                            "$id": "fa9684ea-e83e-4cf0-9342-9caac0c48fb9",
+                                                                            "$id": "f70a7df4-7625-4b96-9819-4160af00b46c",
                                                                             "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                             "fields": {
                                                                                 "name": "fridge_area",
@@ -1736,33 +1736,33 @@
                                                         },
                                                         "drawers": [
                                                             {
-                                                                "$ref": "cc7e7ff9-155b-4521-bfd0-72c4834b4de5"
+                                                                "$ref": "4abd3439-dd50-4526-b63a-4751fa517ad4"
                                                             }
                                                         ]
                                                     }
                                                 },
                                                 {
-                                                    "$id": "8acc045b-4a90-4093-a44c-47540b54f17b",
+                                                    "$id": "b6acdccd-ca7c-49a7-9164-35ffb4e6d520",
                                                     "__dataclass__": "semantic_world.views.views.Cabinet",
                                                     "fields": {
                                                         "_world": null,
                                                         "_views": [],
                                                         "container": {
-                                                            "$id": "796b59ef-0ba6-46c0-82aa-8ca7c6889a1b",
+                                                            "$id": "4dccd54f-6ca7-4f6f-a062-31212479cb24",
                                                             "__dataclass__": "semantic_world.views.views.Container",
                                                             "fields": {
                                                                 "_world": null,
                                                                 "_views": [],
                                                                 "body": {
-                                                                    "$id": "b9ab4002-22b1-4f83-afc9-939cdec58e0a",
+                                                                    "$id": "d233cfba-a0b7-42fa-b4f4-c27b6b2e0d66",
                                                                     "__dataclass__": "semantic_world.world_entity.Body",
                                                                     "fields": {
                                                                         "_world": {
-                                                                            "$ref": "11a99d54-3e98-477b-a49c-86d54a1c41f6"
+                                                                            "$ref": "92ab727c-d47d-41f9-abb1-eb1f36be2581"
                                                                         },
                                                                         "_views": [],
                                                                         "name": {
-                                                                            "$id": "0736f5bc-b733-4107-b7ba-e68313388258",
+                                                                            "$id": "f8c84cce-1db0-4efc-b81e-38c0ce78e5e6",
                                                                             "__dataclass__": "semantic_world.prefixed_name.PrefixedName",
                                                                             "fields": {
                                                                                 "name": "oven_area_area",
@@ -1777,13 +1777,13 @@
                                                         },
                                                         "drawers": [
                                                             {
-                                                                "$ref": "f1795fc0-a2a0-4459-ac9e-68ac6a1d9c99"
+                                                                "$ref": "4582f2c1-b31f-4a8c-b336-10b903725c72"
                                                             },
                                                             {
-                                                                "$ref": "b277000d-d57c-4dd2-8bcd-d143d4812618"
+                                                                "$ref": "5247d6f9-4aef-4aeb-8eb6-b5e2e6f43861"
                                                             },
                                                             {
-                                                                "$ref": "9d10c3d1-6fc7-4ae7-9aeb-0a1de12379ef"
+                                                                "$ref": "1b8c6be2-ebd1-498b-a480-cddd57564ddc"
                                                             }
                                                         ]
                                                     }
