@@ -21,10 +21,10 @@
                         "List": "typing.List",
                         "Set": "typing.Set",
                         "Union": "typing.Union",
+                        "World": "semantic_world.world.World",
                         "FixedConnection": "semantic_world.connections.FixedConnection",
                         "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                        "World": "semantic_world.world.World"
+                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                     },
                     "conclusion": {
                         "_type": "builtins.NoneType",
@@ -50,10 +50,10 @@
                         "List": "typing.List",
                         "Set": "typing.Set",
                         "Union": "typing.Union",
+                        "World": "semantic_world.world.World",
                         "FixedConnection": "semantic_world.connections.FixedConnection",
                         "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                        "World": "semantic_world.world.World"
+                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                     },
                     "conclusion": {
                         "_type": "builtins.NoneType",
@@ -85,10 +85,10 @@
                             "List": "typing.List",
                             "Set": "typing.Set",
                             "Union": "typing.Union",
+                            "World": "semantic_world.world.World",
                             "FixedConnection": "semantic_world.connections.FixedConnection",
                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                            "World": "semantic_world.world.World"
+                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                         },
                         "conclusion": {
                             "_type": "builtins.NoneType",
@@ -114,10 +114,10 @@
                             "List": "typing.List",
                             "Set": "typing.Set",
                             "Union": "typing.Union",
+                            "World": "semantic_world.world.World",
                             "FixedConnection": "semantic_world.connections.FixedConnection",
                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                            "World": "semantic_world.world.World"
+                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                         },
                         "conclusion": {
                             "_type": "builtins.NoneType",
@@ -143,10 +143,10 @@
                                 "List": "typing.List",
                                 "Set": "typing.Set",
                                 "Union": "typing.Union",
+                                "World": "semantic_world.world.World",
                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                "World": "semantic_world.world.World"
+                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                             },
                             "conclusion": {
                                 "_type": "builtins.NoneType",
@@ -172,10 +172,10 @@
                                 "List": "typing.List",
                                 "Set": "typing.Set",
                                 "Union": "typing.Union",
+                                "World": "semantic_world.world.World",
                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                "World": "semantic_world.world.World"
+                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                             },
                             "conclusion": {
                                 "_type": "builtins.NoneType",
@@ -207,10 +207,10 @@
                                     "List": "typing.List",
                                     "Set": "typing.Set",
                                     "Union": "typing.Union",
+                                    "World": "semantic_world.world.World",
                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                    "World": "semantic_world.world.World"
+                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                 },
                                 "conclusion": {
                                     "_type": "builtins.NoneType",
@@ -236,10 +236,10 @@
                                     "List": "typing.List",
                                     "Set": "typing.Set",
                                     "Union": "typing.Union",
+                                    "World": "semantic_world.world.World",
                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                    "World": "semantic_world.world.World"
+                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                 },
                                 "conclusion": {
                                     "_type": "builtins.NoneType",
@@ -271,10 +271,10 @@
                                         "List": "typing.List",
                                         "Set": "typing.Set",
                                         "Union": "typing.Union",
+                                        "World": "semantic_world.world.World",
                                         "FixedConnection": "semantic_world.connections.FixedConnection",
                                         "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                        "World": "semantic_world.world.World"
+                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -300,10 +300,10 @@
                                         "List": "typing.List",
                                         "Set": "typing.Set",
                                         "Union": "typing.Union",
+                                        "World": "semantic_world.world.World",
                                         "FixedConnection": "semantic_world.connections.FixedConnection",
                                         "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                        "World": "semantic_world.world.World"
+                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -335,10 +335,10 @@
                                             "List": "typing.List",
                                             "Set": "typing.Set",
                                             "Union": "typing.Union",
+                                            "World": "semantic_world.world.World",
                                             "FixedConnection": "semantic_world.connections.FixedConnection",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                            "World": "semantic_world.world.World"
+                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -364,10 +364,10 @@
                                             "List": "typing.List",
                                             "Set": "typing.Set",
                                             "Union": "typing.Union",
+                                            "World": "semantic_world.world.World",
                                             "FixedConnection": "semantic_world.connections.FixedConnection",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                            "World": "semantic_world.world.World"
+                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -399,10 +399,10 @@
                                                 "List": "typing.List",
                                                 "Set": "typing.Set",
                                                 "Union": "typing.Union",
+                                                "World": "semantic_world.world.World",
                                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                                "World": "semantic_world.world.World"
+                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -428,10 +428,10 @@
                                                 "List": "typing.List",
                                                 "Set": "typing.Set",
                                                 "Union": "typing.Union",
+                                                "World": "semantic_world.world.World",
                                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                                "World": "semantic_world.world.World"
+                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -463,10 +463,10 @@
                                                     "List": "typing.List",
                                                     "Set": "typing.Set",
                                                     "Union": "typing.Union",
+                                                    "World": "semantic_world.world.World",
                                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                                    "World": "semantic_world.world.World"
+                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -492,10 +492,10 @@
                                                     "List": "typing.List",
                                                     "Set": "typing.Set",
                                                     "Union": "typing.Union",
+                                                    "World": "semantic_world.world.World",
                                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                                    "World": "semantic_world.world.World"
+                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -539,10 +539,10 @@
                                 "List": "typing.List",
                                 "Set": "typing.Set",
                                 "Union": "typing.Union",
+                                "World": "semantic_world.world.World",
                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                "World": "semantic_world.world.World"
+                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                             },
                             "conclusion": {
                                 "_type": "builtins.NoneType",
@@ -568,10 +568,10 @@
                                 "List": "typing.List",
                                 "Set": "typing.Set",
                                 "Union": "typing.Union",
+                                "World": "semantic_world.world.World",
                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                "World": "semantic_world.world.World"
+                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                             },
                             "conclusion": {
                                 "_type": "builtins.NoneType",
@@ -597,10 +597,10 @@
                                     "List": "typing.List",
                                     "Set": "typing.Set",
                                     "Union": "typing.Union",
+                                    "World": "semantic_world.world.World",
                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                    "World": "semantic_world.world.World"
+                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                 },
                                 "conclusion": {
                                     "_type": "builtins.NoneType",
@@ -626,10 +626,10 @@
                                     "List": "typing.List",
                                     "Set": "typing.Set",
                                     "Union": "typing.Union",
+                                    "World": "semantic_world.world.World",
                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                    "World": "semantic_world.world.World"
+                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                 },
                                 "conclusion": {
                                     "_type": "builtins.NoneType",
@@ -661,10 +661,10 @@
                                         "List": "typing.List",
                                         "Set": "typing.Set",
                                         "Union": "typing.Union",
+                                        "World": "semantic_world.world.World",
                                         "FixedConnection": "semantic_world.connections.FixedConnection",
                                         "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                        "World": "semantic_world.world.World"
+                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -690,10 +690,10 @@
                                         "List": "typing.List",
                                         "Set": "typing.Set",
                                         "Union": "typing.Union",
+                                        "World": "semantic_world.world.World",
                                         "FixedConnection": "semantic_world.connections.FixedConnection",
                                         "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                        "World": "semantic_world.world.World"
+                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -725,10 +725,10 @@
                                             "List": "typing.List",
                                             "Set": "typing.Set",
                                             "Union": "typing.Union",
+                                            "World": "semantic_world.world.World",
                                             "FixedConnection": "semantic_world.connections.FixedConnection",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                            "World": "semantic_world.world.World"
+                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -754,10 +754,10 @@
                                             "List": "typing.List",
                                             "Set": "typing.Set",
                                             "Union": "typing.Union",
+                                            "World": "semantic_world.world.World",
                                             "FixedConnection": "semantic_world.connections.FixedConnection",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                            "World": "semantic_world.world.World"
+                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -789,10 +789,10 @@
                                                 "List": "typing.List",
                                                 "Set": "typing.Set",
                                                 "Union": "typing.Union",
+                                                "World": "semantic_world.world.World",
                                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                                "World": "semantic_world.world.World"
+                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -818,10 +818,10 @@
                                                 "List": "typing.List",
                                                 "Set": "typing.Set",
                                                 "Union": "typing.Union",
+                                                "World": "semantic_world.world.World",
                                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                                "World": "semantic_world.world.World"
+                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -853,10 +853,10 @@
                                                     "List": "typing.List",
                                                     "Set": "typing.Set",
                                                     "Union": "typing.Union",
+                                                    "World": "semantic_world.world.World",
                                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                                    "World": "semantic_world.world.World"
+                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -882,10 +882,10 @@
                                                     "List": "typing.List",
                                                     "Set": "typing.Set",
                                                     "Union": "typing.Union",
+                                                    "World": "semantic_world.world.World",
                                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                                    "World": "semantic_world.world.World"
+                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -928,10 +928,10 @@
                                     "List": "typing.List",
                                     "Set": "typing.Set",
                                     "Union": "typing.Union",
+                                    "World": "semantic_world.world.World",
                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                    "World": "semantic_world.world.World"
+                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                 },
                                 "conclusion": {
                                     "_type": "builtins.NoneType",
@@ -957,10 +957,10 @@
                                     "List": "typing.List",
                                     "Set": "typing.Set",
                                     "Union": "typing.Union",
+                                    "World": "semantic_world.world.World",
                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                    "World": "semantic_world.world.World"
+                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                 },
                                 "conclusion": {
                                     "_type": "builtins.NoneType",
@@ -986,10 +986,10 @@
                                         "List": "typing.List",
                                         "Set": "typing.Set",
                                         "Union": "typing.Union",
+                                        "World": "semantic_world.world.World",
                                         "FixedConnection": "semantic_world.connections.FixedConnection",
                                         "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                        "World": "semantic_world.world.World"
+                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -1015,10 +1015,10 @@
                                         "List": "typing.List",
                                         "Set": "typing.Set",
                                         "Union": "typing.Union",
+                                        "World": "semantic_world.world.World",
                                         "FixedConnection": "semantic_world.connections.FixedConnection",
                                         "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                        "World": "semantic_world.world.World"
+                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -1050,10 +1050,10 @@
                                             "List": "typing.List",
                                             "Set": "typing.Set",
                                             "Union": "typing.Union",
+                                            "World": "semantic_world.world.World",
                                             "FixedConnection": "semantic_world.connections.FixedConnection",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                            "World": "semantic_world.world.World"
+                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -1079,10 +1079,10 @@
                                             "List": "typing.List",
                                             "Set": "typing.Set",
                                             "Union": "typing.Union",
+                                            "World": "semantic_world.world.World",
                                             "FixedConnection": "semantic_world.connections.FixedConnection",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                            "World": "semantic_world.world.World"
+                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -1114,10 +1114,10 @@
                                                 "List": "typing.List",
                                                 "Set": "typing.Set",
                                                 "Union": "typing.Union",
+                                                "World": "semantic_world.world.World",
                                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                                "World": "semantic_world.world.World"
+                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -1143,10 +1143,10 @@
                                                 "List": "typing.List",
                                                 "Set": "typing.Set",
                                                 "Union": "typing.Union",
+                                                "World": "semantic_world.world.World",
                                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                                "World": "semantic_world.world.World"
+                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -1178,10 +1178,10 @@
                                                     "List": "typing.List",
                                                     "Set": "typing.Set",
                                                     "Union": "typing.Union",
+                                                    "World": "semantic_world.world.World",
                                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                                    "World": "semantic_world.world.World"
+                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -1207,10 +1207,10 @@
                                                     "List": "typing.List",
                                                     "Set": "typing.Set",
                                                     "Union": "typing.Union",
+                                                    "World": "semantic_world.world.World",
                                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                                    "World": "semantic_world.world.World"
+                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -1252,10 +1252,10 @@
                                         "List": "typing.List",
                                         "Set": "typing.Set",
                                         "Union": "typing.Union",
+                                        "World": "semantic_world.world.World",
                                         "FixedConnection": "semantic_world.connections.FixedConnection",
                                         "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                        "World": "semantic_world.world.World"
+                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -1281,10 +1281,10 @@
                                         "List": "typing.List",
                                         "Set": "typing.Set",
                                         "Union": "typing.Union",
+                                        "World": "semantic_world.world.World",
                                         "FixedConnection": "semantic_world.connections.FixedConnection",
                                         "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                        "World": "semantic_world.world.World"
+                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -1310,10 +1310,10 @@
                                             "List": "typing.List",
                                             "Set": "typing.Set",
                                             "Union": "typing.Union",
+                                            "World": "semantic_world.world.World",
                                             "FixedConnection": "semantic_world.connections.FixedConnection",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                            "World": "semantic_world.world.World"
+                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -1339,10 +1339,10 @@
                                             "List": "typing.List",
                                             "Set": "typing.Set",
                                             "Union": "typing.Union",
+                                            "World": "semantic_world.world.World",
                                             "FixedConnection": "semantic_world.connections.FixedConnection",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                            "World": "semantic_world.world.World"
+                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -1374,10 +1374,10 @@
                                                 "List": "typing.List",
                                                 "Set": "typing.Set",
                                                 "Union": "typing.Union",
+                                                "World": "semantic_world.world.World",
                                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                                "World": "semantic_world.world.World"
+                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -1403,10 +1403,10 @@
                                                 "List": "typing.List",
                                                 "Set": "typing.Set",
                                                 "Union": "typing.Union",
+                                                "World": "semantic_world.world.World",
                                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                                "World": "semantic_world.world.World"
+                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -1438,10 +1438,10 @@
                                                     "List": "typing.List",
                                                     "Set": "typing.Set",
                                                     "Union": "typing.Union",
+                                                    "World": "semantic_world.world.World",
                                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                                    "World": "semantic_world.world.World"
+                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -1467,10 +1467,10 @@
                                                     "List": "typing.List",
                                                     "Set": "typing.Set",
                                                     "Union": "typing.Union",
+                                                    "World": "semantic_world.world.World",
                                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                                    "World": "semantic_world.world.World"
+                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -1511,10 +1511,10 @@
                                             "List": "typing.List",
                                             "Set": "typing.Set",
                                             "Union": "typing.Union",
+                                            "World": "semantic_world.world.World",
                                             "FixedConnection": "semantic_world.connections.FixedConnection",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                            "World": "semantic_world.world.World"
+                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -1540,10 +1540,10 @@
                                             "List": "typing.List",
                                             "Set": "typing.Set",
                                             "Union": "typing.Union",
+                                            "World": "semantic_world.world.World",
                                             "FixedConnection": "semantic_world.connections.FixedConnection",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                            "World": "semantic_world.world.World"
+                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -1569,10 +1569,10 @@
                                                 "List": "typing.List",
                                                 "Set": "typing.Set",
                                                 "Union": "typing.Union",
+                                                "World": "semantic_world.world.World",
                                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                                "World": "semantic_world.world.World"
+                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -1598,10 +1598,10 @@
                                                 "List": "typing.List",
                                                 "Set": "typing.Set",
                                                 "Union": "typing.Union",
+                                                "World": "semantic_world.world.World",
                                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                                "World": "semantic_world.world.World"
+                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -1633,10 +1633,10 @@
                                                     "List": "typing.List",
                                                     "Set": "typing.Set",
                                                     "Union": "typing.Union",
+                                                    "World": "semantic_world.world.World",
                                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                                    "World": "semantic_world.world.World"
+                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -1662,10 +1662,10 @@
                                                     "List": "typing.List",
                                                     "Set": "typing.Set",
                                                     "Union": "typing.Union",
+                                                    "World": "semantic_world.world.World",
                                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
-                                                    "World": "semantic_world.world.World"
+                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
