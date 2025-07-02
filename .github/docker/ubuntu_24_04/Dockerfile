@@ -10,7 +10,7 @@ ENV WORKON_HOME=/root/venvs
 # tzdata install noninteractive, because of Timezone setup
 RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive TZ=Europe/Berlin apt-get -y install tzdata
-RUN apt-get install -y curl python3 python3-pip python3-venv git-all cmake \
+RUN apt-get install -y curl python3 python3-pip python3-venv git-all git cmake \
             sudo pkg-config python3-virtualenvwrapper python3-numpy
 
 # Install virtualenvwrapper \
