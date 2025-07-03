@@ -218,7 +218,14 @@ class QPController:
                                                god_map.collision_scene.get_external_collision_data(),
                                                god_map.collision_scene.get_self_collision_data(),
                                                symbol_manager)
-            self.xdot_full = self.qp_solver.solver_call(qp_data)
+            try:
+                self.xdot_full = self.qp_solver.solver_call(qp_data.filtered)
+            except InfeasibleException as e:
+                self.retries_with_relaxed_constraints -= 1
+                relaxed_solution = self.qp_solver.solver_call(qp_data.relaxed())
+                if self.retries_with_relaxed_constraints < 0:
+                    raise HardConstraintsViolatedException(f'Hard constraints were violated too often.')
+                self.xdot_full = self.qp_solver.solver_call(qp_data.partially_relaxed(relaxed_solution))
             if self.qp_formulation.is_implicit:
                 return NextCommands.from_xdot_implicit(self.free_variables,
                                                        self.xdot_full,
@@ -242,7 +249,7 @@ class QPController:
         except InfeasibleException as e_original:
             self.xdot_full = None
             self._create_debug_pandas()
-            self._has_nan()
+            # self._has_nan()
             # self._print_iis()
             if isinstance(e_original, HardConstraintsViolatedException):
                 raise
@@ -409,6 +416,9 @@ class QPController:
             if len(self.p_A) > 0:
                 self.p_Ax = pd.DataFrame(self.p_A.dot(self.p_pure_xdot), inequality_constr_names,
                                          ['data'], dtype=float)
+                bA_slack = self.p_xdot[len(self.p_xdot) - num_neq_constr - num_vel_constr:]
+                self.p_bA_raw.insert(1, 'Ax', self.p_Ax)
+                self.p_bA_raw.insert(2, 'slack', bA_slack.values)
             else:
                 self.p_Ax = pd.DataFrame()
             # self.p_Ax_without_slack = deepcopy(self.p_Ax_without_slack_raw)

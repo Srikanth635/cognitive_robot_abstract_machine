@@ -35,7 +35,6 @@ class ExternalCA(Goal):
         self.idx = idx
         name = f'{name_prefix}/{self.__class__.__name__}/{self.link_name}/{self.idx}'
         super().__init__(name=name, plot=False)
-        god_map.collision_scene.monitor_link_for_external(link_name, idx)
         self.root = god_map.world.root_link_name
         self.robot_name = robot_name
         self.control_horizon = god_map.qp_controller.prediction_horizon - (
@@ -45,6 +44,7 @@ class ExternalCA(Goal):
         a_P_pa = self.get_closest_point_on_a_in_a()
         map_V_n = self.map_V_n_symbol()
         actual_distance = self.get_actual_distance()
+        sample_period = god_map.qp_controller.mpc_dt
         number_of_external_collisions = self.get_number_of_external_collisions()
 
         map_T_a = god_map.world.compose_fk_expression(self.root, self.link_name)
@@ -53,6 +53,8 @@ class ExternalCA(Goal):
 
         # the position distance is not accurate, but the derivative is still correct
         dist = map_V_n.dot(map_P_pa)
+
+        qp_limits_for_lba = self.max_velocity * sample_period * self.control_horizon
 
         soft_threshold = 0
         actual_link_b_hash = self.get_link_b_hash()
@@ -63,14 +65,22 @@ class ExternalCA(Goal):
                                          b_result_cases=b_result_cases,
                                          else_result=soft_threshold)
 
+        hard_threshold = cas.min(self.hard_threshold, soft_threshold / 2)
         lower_limit = soft_threshold - actual_distance
 
-        # undo factor in A
+        lower_limit_limited = cas.limit(lower_limit,
+                                        -qp_limits_for_lba,
+                                        qp_limits_for_lba)
 
-        # dist <= inf
-        # dist + t >= 0.05
-        # t + t2 <= 0.05
-        # t2 has high weight
+        upper_slack = cas.if_greater(actual_distance, hard_threshold,
+                                     lower_limit_limited + cas.max(0, actual_distance - (hard_threshold)),
+                                     lower_limit_limited)
+        # undo factor in A
+        upper_slack /= (sample_period) * self.control_horizon
+
+        upper_slack = cas.if_greater(actual_distance, 50,  # assuming that distance of unchecked closest points is 100
+                                     1e4,
+                                     cas.max(0, upper_slack))
 
         # if 'r_wrist_roll_link' in self.link_name:
         #     god_map.debug_expression_manager.add_debug_expression(f'{self.name}/actual_distance', actual_distance)
@@ -97,7 +107,9 @@ class ExternalCA(Goal):
                                        lower_error=lower_limit,
                                        upper_error=float('inf'),
                                        weight=weight,
-                                       task_expression=dist)
+                                       task_expression=dist,
+                                       lower_slack_limit=-float('inf'),
+                                       upper_slack_limit=upper_slack)
 
     def map_V_n_symbol(self):
         return god_map.collision_scene.external_map_V_n_symbol(self.link_name, self.idx)
@@ -138,15 +150,16 @@ class SelfCA(Goal):
             raise Exception(f'Links {self.link_a} and {self.link_b} have different prefix.')
         name = f'{name_prefix}/{self.__class__.__name__}/{self.link_a}/{self.link_b}/{self.idx}'
         super().__init__(name=name, plot=False)
-        god_map.collision_scene.monitor_link_for_self(link_a, link_b, idx)
         self.root = god_map.world.root_link_name
         self.robot_name = robot_name
         self.control_horizon = god_map.qp_controller.prediction_horizon - (
                 god_map.qp_controller.max_derivative - 1)
         self.control_horizon = max(1, self.control_horizon)
 
+        hard_threshold = cas.min(self.hard_threshold, self.soft_threshold / 2)
         actual_distance = self.get_actual_distance()
         number_of_self_collisions = self.get_number_of_self_collisions()
+        sample_period = god_map.qp_controller.mpc_dt
 
         # b_T_a2 = god_map.get_world().compose_fk_evaluated_expression(self.link_b, self.link_a)
         b_T_a = god_map.world.compose_fk_expression(self.link_b, self.link_a)
@@ -159,7 +172,24 @@ class SelfCA(Goal):
 
         dist = pb_V_n.dot(pb_P_pa)
 
+        qp_limits_for_lba = self.max_velocity * sample_period * self.control_horizon
+
         lower_limit = self.soft_threshold - actual_distance
+
+        lower_limit_limited = cas.limit(lower_limit,
+                                        -qp_limits_for_lba,
+                                        qp_limits_for_lba)
+
+        upper_slack = cas.if_greater(actual_distance, hard_threshold,
+                                     lower_limit_limited + cas.max(0, actual_distance - hard_threshold),
+                                     lower_limit_limited)
+
+        # undo factor in A
+        upper_slack /= (sample_period) * self.control_horizon
+
+        upper_slack = cas.if_greater(actual_distance, 50,  # assuming that distance of unchecked closest points is 100
+                                     1e4,
+                                     cas.max(0, upper_slack))
 
         weight = cas.save_division(WEIGHT_COLLISION_AVOIDANCE,  # divide by number of active repeller per link
                                    cas.min(number_of_self_collisions, self.num_repeller))
@@ -174,7 +204,9 @@ class SelfCA(Goal):
                                        lower_error=lower_limit,
                                        upper_error=float('inf'),
                                        weight=weight,
-                                       task_expression=dist)
+                                       task_expression=dist,
+                                       lower_slack_limit=-float('inf'),
+                                       upper_slack_limit=upper_slack)
 
     def get_contact_normal_in_b(self):
         return god_map.collision_scene.self_new_b_V_n_symbol(self.link_a, self.link_b, self.idx)

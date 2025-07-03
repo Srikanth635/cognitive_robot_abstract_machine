@@ -503,7 +503,6 @@ class FreeVariableBounds(ProblemDataPart):
             lb_params.append(lower_slack)
             ub_params.append(upper_slack)
 
-
         lb, self.names = self._sorter(*lb_params)
         ub, _ = self._sorter(*ub_params)
         self.names_without_slack = self.names[:num_free_variables]
@@ -1414,7 +1413,6 @@ class InequalityModel(ProblemDataPart):
             max_derivative = self.max_derivative
             derivative_model, derivative_model_slack = cas.Expression(), cas.Expression()
 
-
         inequality_model, inequality_slack_model = self.inequality_constraint_model(max_derivative)
         vel_constr_model, vel_constr_slack_model = self.velocity_constraint_model()
 
@@ -1451,6 +1449,9 @@ class QPData:
     neq_lower_bounds: np.ndarray = field(default=None)
     neq_upper_bounds: np.ndarray = field(default=None)
 
+    num_eq_constraints: int = field(default=None)
+    num_neq_constraints: int = field(default=None)
+
     def explicit_data(self):
         return (self.quadratic_weights,
                 self.linear_weights,
@@ -1486,10 +1487,10 @@ class QPData:
             return self.neq_matrix
 
     @profile
-    def filtered(self,
-                 zero_quadratic_weight_filter: np.ndarray,
-                 bE_filter: np.ndarray,
-                 bA_filter: np.ndarray) -> QPData:
+    def apply_filters(self,
+                      zero_quadratic_weight_filter: np.ndarray,
+                      bE_filter: np.ndarray,
+                      bA_filter: np.ndarray):
         self.zero_quadratic_weight_filter = zero_quadratic_weight_filter
         self.bE_filter = bE_filter
         self.bA_filter = bA_filter
@@ -1513,7 +1514,45 @@ class QPData:
             qp_data_filtered.neq_matrix = self.neq_matrix
         qp_data_filtered.neq_lower_bounds = self.neq_lower_bounds[bA_filter]
         qp_data_filtered.neq_upper_bounds = self.neq_upper_bounds[bA_filter]
-        return qp_data_filtered
+        self.filtered = qp_data_filtered
+
+    def relaxed(self) -> QPData:
+        relaxed_qp_data = QPData(quadratic_weights=self.filtered.quadratic_weights,
+                                 linear_weights=self.filtered.linear_weights,
+                                 box_lower_constraints=self.filtered.box_lower_constraints.copy(),
+                                 box_upper_constraints=self.filtered.box_upper_constraints.copy(),
+                                 eq_matrix=self.filtered.eq_matrix,
+                                 eq_bounds=self.filtered.eq_bounds,
+                                 neq_matrix=self.filtered.neq_matrix,
+                                 neq_lower_bounds=self.filtered.neq_lower_bounds,
+                                 neq_upper_bounds=self.filtered.neq_upper_bounds)
+
+        relaxed_qp_data.box_lower_constraints[self.num_non_constraints:] -= 100
+        relaxed_qp_data.box_upper_constraints[self.num_non_constraints:] += 100
+
+        return relaxed_qp_data
+
+    @property
+    def num_non_constraints(self) -> int:
+        return len(self.quadratic_weights) - self.num_eq_constraints - self.num_neq_constraints
+
+    def partially_relaxed(self, relaxed_solution: np.ndarray) -> QPData:
+        relaxed_qp_data = QPData(quadratic_weights=self.filtered.quadratic_weights.copy(),
+                                 linear_weights=self.filtered.linear_weights,
+                                 box_lower_constraints=self.filtered.box_lower_constraints.copy(),
+                                 box_upper_constraints=self.filtered.box_upper_constraints.copy(),
+                                 eq_matrix=self.filtered.eq_matrix,
+                                 eq_bounds=self.filtered.eq_bounds,
+                                 neq_matrix=self.filtered.neq_matrix,
+                                 neq_lower_bounds=self.filtered.neq_lower_bounds,
+                                 neq_upper_bounds=self.filtered.neq_upper_bounds)
+        lower_box_filter = relaxed_solution < self.filtered.box_lower_constraints
+        upper_box_filter = relaxed_solution > self.filtered.box_upper_constraints
+        relaxed_qp_data.box_lower_constraints[lower_box_filter] -= 100
+        relaxed_qp_data.box_upper_constraints[upper_box_filter] += 100
+        relaxed_qp_data.quadratic_weights[lower_box_filter | upper_box_filter] *= 10000
+
+        return relaxed_qp_data
 
     def pretty_print_problem(self):
         print('QP data')
@@ -1669,7 +1708,7 @@ class GiskardToQPAdapter(abc.ABC):
                  goal_life_cycle_state: np.ndarray,
                  external_collision_data: np.ndarray,
                  self_collision_data: np.ndarray,
-                 symbol_manager: SymbolManager):
+                 symbol_manager: SymbolManager) -> QPData:
         ...
 
     @profile
@@ -1823,7 +1862,7 @@ class GiskardToExplicitQPAdapter(GiskardToQPAdapter):
                  goal_life_cycle_state: np.ndarray,
                  external_collision_data: np.ndarray,
                  self_collision_data: np.ndarray,
-                 symbol_manager: SymbolManager):
+                 symbol_manager: SymbolManager) -> QPData:
         aux_substitutions = symbol_manager.resolve_symbols([self.aux_symbols])
 
         eq_matrix_np_raw = self.eq_matrix_compiled.fast_call(world_state,
@@ -1859,7 +1898,9 @@ class GiskardToExplicitQPAdapter(GiskardToQPAdapter):
                                   eq_bounds=eq_bounds_np_raw,
                                   neq_matrix=neq_matrix_np_raw,
                                   neq_lower_bounds=neq_lower_bounds_np_raw,
-                                  neq_upper_bounds=neq_upper_bounds_np_raw)
+                                  neq_upper_bounds=neq_upper_bounds_np_raw,
+                                  num_eq_constraints=self.num_eq_constraints,
+                                  num_neq_constraints=self.num_neq_constraints)
 
         zero_quadratic_weight_filter, bE_filter, bA_filter = self.create_filters(
             quadratic_weights_np_raw=quadratic_weights_np_raw,
@@ -1867,7 +1908,8 @@ class GiskardToExplicitQPAdapter(GiskardToQPAdapter):
             num_eq_slack_variables=self.num_eq_slack_variables,
             num_neq_slack_variables=self.num_neq_slack_variables)
 
-        return self.qp_data_raw.filtered(zero_quadratic_weight_filter, bE_filter, bA_filter)
+        self.qp_data_raw.apply_filters(zero_quadratic_weight_filter, bE_filter, bA_filter)
+        return self.qp_data_raw
 
 
 class GiskardToTwoSidedNeqQPAdapter(GiskardToQPAdapter):
@@ -2022,15 +2064,15 @@ class GiskardToTwoSidedNeqQPAdapter(GiskardToQPAdapter):
                  goal_life_cycle_state: np.ndarray,
                  external_collision_data: np.ndarray,
                  self_collision_data: np.ndarray,
-                 symbol_manager: SymbolManager):
+                 symbol_manager: SymbolManager) -> QPData:
         aux_substitutions = symbol_manager.resolve_symbols([self.aux_symbols])
 
         neq_matrix = self.neq_matrix_compiled.fast_call(world_state,
-                                                             task_life_cycle_state,
-                                                             goal_life_cycle_state,
-                                                             external_collision_data,
-                                                             self_collision_data,
-                                                             *aux_substitutions)
+                                                        task_life_cycle_state,
+                                                        goal_life_cycle_state,
+                                                        external_collision_data,
+                                                        self_collision_data,
+                                                        *aux_substitutions)
         quadratic_weights_np_raw, \
             box_lower_constraints_np_raw, \
             _, \
@@ -2041,16 +2083,16 @@ class GiskardToTwoSidedNeqQPAdapter(GiskardToQPAdapter):
             linear_weights_np_raw, \
             box_eq_neq_lower_bounds_np_raw, \
             box_eq_neq_upper_bounds_np_raw = self.combined_vector_f.fast_call(world_state,
-                                                             task_life_cycle_state,
-                                                             goal_life_cycle_state,
-                                                             external_collision_data,
-                                                             self_collision_data,
-                                                             *aux_substitutions)
-        qp_data_raw = QPData(quadratic_weights=quadratic_weights_np_raw,
-                             linear_weights=linear_weights_np_raw,
-                             neq_matrix=neq_matrix,
-                             neq_lower_bounds=box_eq_neq_lower_bounds_np_raw,
-                             neq_upper_bounds=box_eq_neq_upper_bounds_np_raw)
+                                                                              task_life_cycle_state,
+                                                                              goal_life_cycle_state,
+                                                                              external_collision_data,
+                                                                              self_collision_data,
+                                                                              *aux_substitutions)
+        self.qp_data_raw = QPData(quadratic_weights=quadratic_weights_np_raw,
+                                  linear_weights=linear_weights_np_raw,
+                                  neq_matrix=neq_matrix,
+                                  neq_lower_bounds=box_eq_neq_lower_bounds_np_raw,
+                                  neq_upper_bounds=box_eq_neq_upper_bounds_np_raw)
 
         zero_quadratic_weight_filter, Ai_inf_filter, bE_bA_filter, b_bE_bA_filter = self.create_filters(
             quadratic_weights_np_raw=quadratic_weights_np_raw,
@@ -2060,10 +2102,10 @@ class GiskardToTwoSidedNeqQPAdapter(GiskardToQPAdapter):
             num_eq_slack_variables=self.num_eq_slack_variables,
             num_neq_slack_variables=self.num_neq_slack_variables)
 
-        qp_data = self.apply_filters(qp_data_raw=qp_data_raw,
-                                     zero_quadratic_weight_filter=zero_quadratic_weight_filter,
-                                     Ai_inf_filter=Ai_inf_filter,
-                                     bE_bA_filter=bE_bA_filter,
-                                     b_bE_bA_filter=b_bE_bA_filter)
+        self.apply_filters(qp_data_raw=self.qp_data_raw,
+                           zero_quadratic_weight_filter=zero_quadratic_weight_filter,
+                           Ai_inf_filter=Ai_inf_filter,
+                           bE_bA_filter=bE_bA_filter,
+                           b_bE_bA_filter=b_bE_bA_filter)
 
-        return qp_data
+        return self.qp_data_raw
