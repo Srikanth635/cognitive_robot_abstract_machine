@@ -1,6 +1,8 @@
+from __future__ import absolute_import
 from __future__ import annotations
 
 import logging
+from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import wraps, lru_cache
@@ -21,6 +23,7 @@ from .spatial_types.derivatives import Derivatives
 from .spatial_types.math import inverse_frame
 from .utils import IDGenerator, copy_lru_cache
 from .world_entity import Body, Connection, View
+from .world_state import WorldState
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +100,7 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
         Clears cache and recomputes all forward kinematics. Should be called after a state update.
         """
         self.compute_forward_kinematics_np.cache_clear()
-        self.subs = self.world.state[Derivatives.position]
+        self.subs = self.world.state.positions
         self.forward_kinematics_for_all_bodies = self.compiled_all_fks.fast_call(self.subs)
 
     def compute_tf(self) -> np.ndarray:
@@ -162,7 +165,7 @@ class ResetStateContextManager:
         self.world = world
 
     def __enter__(self) -> None:
-        self.state = self.world.state.copy()
+        self.state = deepcopy(self.world.state)
 
     def __exit__(self, exc_type: Optional[type], exc_val: Optional[Exception], exc_tb: Optional[type]) -> None:
         if exc_type is None:
@@ -230,7 +233,7 @@ class World:
 
     degrees_of_freedom: Dict[PrefixedName, DegreeOfFreedom] = field(default_factory=dict)
 
-    state: np.ndarray = field(default_factory=lambda: np.empty((4, 0), dtype=float))
+    state: WorldState = field(default_factory=WorldState)
     """
     2d array where rows are derivatives and columns are dof values for that derivative.
     """
@@ -299,8 +302,7 @@ class World:
         upper_limit = dof.get_upper_limit(derivative=Derivatives.position)
         if upper_limit is not None:
             initial_position = min(upper_limit, initial_position)
-        full_initial_state = np.array([initial_position, 0, 0, 0], dtype=float).reshape((4, 1))
-        self.state = np.hstack((self.state, full_initial_state))
+        self.state[name].position = initial_position
         self.degrees_of_freedom[name] = dof
         return dof
 
@@ -527,6 +529,7 @@ class World:
             return [], [root], []
         root_chain = self.compute_chain_of_bodies(self.root, root)
         tip_chain = self.compute_chain_of_bodies(self.root, tip)
+        i = 0
         for i in range(min(len(root_chain), len(tip_chain))):
             if root_chain[i] != tip_chain[i]:
                 break
@@ -679,6 +682,14 @@ class World:
         """
         return self._fk_computer.compute_forward_kinematics_np(root, tip)
 
+    def compute_inverse_kinematics(self, root: Body, tip: Body) -> Dict[DegreeOfFreedom, float]:
+        root_T_tip = self.compose_forward_kinematics_expression(root, tip)
+        p = root_T_tip.to_position()
+        q = root_T_tip.to_quaternion()
+        fk = cas.vstack([p[:3], q[:3]])
+        J = cas.jacobian(fk, fk.free_symbols())
+        state = np.array([self.state[v] for v in fk.free_symbols()])
+
     def apply_control_commands(self, commands: np.ndarray, dt: float, derivative: Derivatives) -> None:
         """
         Updates the state of a system by applying control commands at a specified derivative level,
@@ -696,10 +707,10 @@ class World:
             raise ValueError(
                 f"Commands length {len(commands)} does not match number of free variables {len(self.degrees_of_freedom)}")
 
-        self.state[derivative] = commands
+        self.state.set_derivative(derivative, commands)
 
         for i in range(derivative - 1, -1, -1):
-            self.state[i] += self.state[i + 1] * dt
+            self.state.set_derivative(i, self.state.get_derivative(i) + self.state.get_derivative(i + 1) * dt)
         for connection in self.connections:
             if isinstance(connection, HasUpdateState):
                 connection.update_state(dt)
