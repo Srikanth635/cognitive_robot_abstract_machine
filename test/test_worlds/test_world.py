@@ -198,7 +198,9 @@ def test_compute_fk(world_setup):
 
 def test_compute_ik(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
-    print(world.compute_inverse_kinematics(bf, l2))
+    target = np.eye(4)
+    target[0, 3] = 1.
+    print(world.compute_inverse_kinematics(bf, l2, target))
 
 
 def test_compute_fk_expression(world_setup):

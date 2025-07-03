@@ -8,6 +8,7 @@ from enum import IntEnum
 from functools import wraps, lru_cache
 from typing import Dict, Tuple, OrderedDict, Union, Optional
 
+import daqp
 import matplotlib.pyplot as plt
 import numpy as np
 import rustworkx as rx
@@ -682,13 +683,96 @@ class World:
         """
         return self._fk_computer.compute_forward_kinematics_np(root, tip)
 
-    def compute_inverse_kinematics(self, root: Body, tip: Body) -> Dict[DegreeOfFreedom, float]:
+    def find_dofs_for_position_symbols(self, symbols: List[cas.Symbol]) -> List[DegreeOfFreedom]:
+        result = []
+        for s in symbols:
+            for dof in self.degrees_of_freedom.values():
+                if s == dof.position_symbol:
+                    result.append(dof)
+        return result
+
+    def compute_inverse_kinematics(self, root: Body, tip: Body, target: np.ndarray,
+                                   dt: float = 0.05) -> Dict[str, float]:
+        from ctypes import c_int
+        large_value = np.inf
+
         root_T_tip = self.compose_forward_kinematics_expression(root, tip)
         p = root_T_tip.to_position()
         q = root_T_tip.to_quaternion()
-        fk = cas.vstack([p[:3], q[:3]])
-        J = cas.jacobian(fk, fk.free_symbols())
-        state = np.array([self.state[v] for v in fk.free_symbols()])
+        current = cas.vstack([p[:3], q[:3]])
+        free_symbols = current.free_symbols()
+        dofs = self.find_dofs_for_position_symbols(free_symbols)
+        lower_box_constraints = []
+        upper_box_constraints = []
+        for dof in dofs:
+            # position / velocity limits
+            if dof.has_position_limits():
+                ll = cas.max(dof.get_lower_limit(Derivatives.position) - dof.position_symbol,
+                             dof.get_lower_limit(Derivatives.velocity))
+                ul = cas.min(dof.get_upper_limit(Derivatives.position) - dof.position_symbol,
+                             dof.get_upper_limit(Derivatives.velocity))
+            else:
+                ll = dof.get_lower_limit(Derivatives.velocity)
+                ul = dof.get_upper_limit(Derivatives.velocity)
+            lower_box_constraints.append(ll)
+            upper_box_constraints.append(ul)
+        # add slack variables
+        lower_box_constraints.extend([-large_value] * 6)
+        upper_box_constraints.extend([large_value] * 6)
+
+        box_constraint_matrix = cas.eye(len(lower_box_constraints))
+        lower_box_constraints = cas.Expression(lower_box_constraints)
+        upper_box_constraints = cas.Expression(upper_box_constraints)
+
+        # goal
+        goal4x4 = cas.TransformationMatrix(target)
+        p = goal4x4.to_position()
+        q = goal4x4.to_quaternion()
+        goal = cas.vstack([p[:3], q[:3]])
+        error = goal - current
+
+        J = cas.jacobian(current, free_symbols) * dt
+        neq_matrix = cas.hstack([J, cas.eye(6) * dt])
+
+        # combine box and normal constraints
+        l = cas.vstack([lower_box_constraints, error])
+        u = cas.vstack([upper_box_constraints, error])
+        A = cas.vstack([box_constraint_matrix, neq_matrix])
+
+        # weights
+        quadratic_weights = cas.Expression([0.01] * len(free_symbols) + [1]*6)
+        linear_weights = cas.zeros(*quadratic_weights.shape)
+
+        # compile
+        l_f = l.compile(free_symbols)
+        u_f = u.compile(free_symbols)
+        A_f = A.compile(free_symbols)
+        quadratic_weights_f = quadratic_weights.compile(free_symbols)
+        linear_weights_f = linear_weights.compile(free_symbols)
+
+        # control loop
+        position = np.array([self.state[v].position for v in free_symbols])
+        for i in range(100):
+            l = l_f.fast_call(position)
+            u = u_f.fast_call(position)
+            A = A_f.fast_call(position)
+            H = np.diag(quadratic_weights_f.fast_call(position))
+            g = linear_weights_f.fast_call(position)
+
+            sense = np.zeros(l.shape, dtype=c_int)
+            sense[-6:] = 5 # set last 6 constraints to eq constraints
+            (xstar, fval, exitflag, info) = daqp.solve(H, g, A, u, l, sense)
+            if exitflag != 1:
+                raise Exception(f'failed to solve qp {exitflag}')
+            velocity = xstar[:len(free_symbols)]
+            if np.max(np.abs(velocity)) < 1e-3:
+                break
+            position += velocity * dt
+        print(f'iterations {i}')
+        return {v.name: position[i] for i, v in enumerate(dofs)}
+
+
+
 
     def apply_control_commands(self, commands: np.ndarray, dt: float, derivative: Derivatives) -> None:
         """
