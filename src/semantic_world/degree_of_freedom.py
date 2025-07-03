@@ -58,7 +58,7 @@ class DegreeOfFreedom(WorldEntity):
         for derivative in Derivatives.range(Derivatives.position, Derivatives.jerk):
             s = cas.Symbol(f'{self.name}_{derivative}')
             self._derivative_symbols[derivative] = s
-            symbol_manager.register_symbol(s, lambda d=derivative: self._world.state[d, self.state_idx])
+            symbol_manager.register_symbol_provider(s, lambda d=derivative: self._world.state[d, self.state_idx])
 
     @property
     def position_symbol(self) -> cas.Symbol:
