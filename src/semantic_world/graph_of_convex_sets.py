@@ -1,26 +1,26 @@
 from __future__ import annotations
+
 import logging
 
 import matplotlib.pyplot as plt
 
+from .geometry import BoundingBox, BoundingBoxCollection, SpatialVariables
 from .world import World
 
 logger = logging.getLogger(__name__)
 
-import enum
-import itertools
 import time
-from dataclasses import dataclass, field
 from functools import reduce
 from operator import or_
-from typing import List, Iterator, Optional, Dict, Self
+from typing import List, Optional, Dict
+# typing.Self is available starting with Python 3.11
+from typing_extensions import Self
 
 import numpy as np
 import plotly.graph_objects as go
 import rustworkx as rx
-from random_events.interval import reals, SimpleInterval, Bound
+from random_events.interval import reals
 from random_events.product_algebra import SimpleEvent, Event
-from random_events.variable import Continuous
 from rtree import index
 from sortedcontainers import SortedSet
 
@@ -39,170 +39,6 @@ class PoseOccupiedError(Exception):
         """
         super().__init__(f"The pose {point} is occupied.")
         self.point = point
-
-
-class SpatialVariables(enum.Enum):
-    x = Continuous("x")
-    y = Continuous("y")
-    z = Continuous("z")
-
-
-@dataclass
-class BoundingBox:
-    min_x: float
-    """
-    The minimum x-coordinate of the bounding box.
-    """
-
-    min_y: float
-    """
-    The minimum y-coordinate of the bounding box.
-    """
-
-    min_z: float
-    """
-    The minimum z-coordinate of the bounding box.
-    """
-
-    max_x: float
-    """
-    The maximum x-coordinate of the bounding box.
-    """
-
-    max_y: float
-    """
-    The maximum y-coordinate of the bounding box.
-    """
-
-    max_z: float
-    """
-    The maximum z-coordinate of the bounding box.
-    """
-
-    def __hash__(self):
-        # The hash should be this since comparing those via hash is checking if those are the same and not just equal
-        return hash((self.min_x, self.min_y, self.min_z, self.max_x, self.max_y, self.max_z))
-
-    @property
-    def x_interval(self) -> SimpleInterval:
-        """
-        :return: The x interval of the bounding box.
-        """
-        return SimpleInterval(self.min_x, self.max_x, Bound.CLOSED, Bound.CLOSED)
-
-    @property
-    def y_interval(self) -> SimpleInterval:
-        """
-        :return: The y interval of the bounding box.
-        """
-        return SimpleInterval(self.min_y, self.max_y, Bound.CLOSED, Bound.CLOSED)
-
-    @property
-    def z_interval(self) -> SimpleInterval:
-        """
-        :return: The z interval of the bounding box.
-        """
-        return SimpleInterval(self.min_z, self.max_z, Bound.CLOSED, Bound.CLOSED)
-
-    @property
-    def simple_event(self) -> SimpleEvent:
-        """
-        :return: The bounding box as a random event.
-        """
-        return SimpleEvent({SpatialVariables.x.value: self.x_interval,
-                            SpatialVariables.y.value: self.y_interval,
-                            SpatialVariables.z.value: self.z_interval})
-
-    def bloat(self, x_amount: float = 0., y_amount: float = 0, z_amount: float = 0) -> BoundingBox:
-        """
-        Enlarges the bounding box by a given amount in all dimensions.
-
-        :param x_amount: The amount to adjust minimum and maximum x-coordinates
-        :param y_amount: The amount to adjust minimum and maximum y-coordinates
-        :param z_amount: The amount to adjust minimum and maximum z-coordinates
-        :return: New enlarged bounding box
-        """
-        return self.__class__(self.min_x - x_amount, self.min_y - y_amount, self.min_z - z_amount,
-                              self.max_x + x_amount, self.max_y + y_amount, self.max_z + z_amount)
-
-    def contains(self, point: Point3) -> bool:
-        """
-        Check if the bounding box contains a point.
-        """
-        return self.simple_event.contains((point.x, point.y, point.z))
-
-    def as_collection(self) -> BoundingBoxCollection:
-        """
-        Convert the bounding box to a collection of bounding boxes.
-
-        :return: The bounding box as a collection
-        """
-        return BoundingBoxCollection([self])
-
-
-@dataclass
-class BoundingBoxCollection:
-    """
-    Dataclass for storing a collection of bounding boxes.
-    """
-
-    bounding_boxes: List[BoundingBox] = field(default_factory=list)
-
-    def __iter__(self) -> Iterator[BoundingBox]:
-        return iter(self.bounding_boxes)
-
-    @property
-    def event(self) -> Event:
-        """
-        :return: The bounding boxes as a random event.
-        """
-        return Event(*[box.simple_event for box in self.bounding_boxes])
-
-    def merge(self, other: BoundingBoxCollection) -> BoundingBoxCollection:
-        """
-        Merge another bounding box collection into this one.
-
-        :param other: The other bounding box collection.
-        :return: The merged bounding box collection.
-        """
-        return BoundingBoxCollection(self.bounding_boxes + other.bounding_boxes)
-
-    def bloat(self, x_amount: float = 0., y_amount: float = 0, z_amount: float = 0) -> BoundingBoxCollection:
-        """
-        Enlarges all bounding boxes in the collection by a given amount in all dimensions.
-
-        :param x_amount: The amount to adjust the x-coordinates
-        :param y_amount: The amount to adjust the y-coordinates
-        :param z_amount: The amount to adjust the z-coordinates
-
-        :return: The enlarged bounding box collection
-        """
-        return BoundingBoxCollection([box.bloat(x_amount, y_amount, z_amount) for box in self.bounding_boxes])
-
-    @classmethod
-    def from_simple_event(cls, simple_event: SimpleEvent):
-        """
-        Create a list of bounding boxes from a simple random event.
-
-        :param simple_event: The random event.
-        :return: The list of bounding boxes.
-        """
-        result = []
-        for x, y, z in itertools.product(simple_event[SpatialVariables.x.value].simple_sets,
-                                         simple_event[SpatialVariables.y.value].simple_sets,
-                                         simple_event[SpatialVariables.z.value].simple_sets):
-            result.append(BoundingBox(x.lower, y.lower, z.lower, x.upper, y.upper, z.upper))
-        return result
-
-    @classmethod
-    def from_event(cls, event: Event) -> Self:
-        """
-        Create a list of bounding boxes from a random event.
-
-        :param event: The random event.
-        :return: The list of bounding boxes.
-        """
-        return cls([box for simple_event in event.simple_sets for box in cls.from_simple_event(simple_event)])
 
 
 class GraphOfConvexSets:
@@ -236,7 +72,7 @@ class GraphOfConvexSets:
         self.graph = rx.PyGraph(multigraph=False)
         self.box_to_index_map = {}
 
-    def add(self, box: BoundingBox):
+    def add_node(self, box: BoundingBox):
         self.box_to_index_map[box] = self.graph.add_node(box)
 
     def calculate_connectivity(self, tolerance=0.001):
@@ -289,9 +125,7 @@ class GraphOfConvexSets:
                 box = _intersection_box(mn_i, mx_i, mn_j, mx_j)
 
                 # TODO check how to get the correct box here
-                self.graph.add_edge(self.box_to_index_map[self.graph[i]], self.box_to_index_map[self.graph[j]], box)
-        self.draw()
-        print
+                self.graph.add_edge(i, j, box)
 
     def draw(self):
         import rustworkx.visualization
@@ -468,8 +302,10 @@ class GraphOfConvexSets:
         search_space = cls._make_search_space(search_space)
         search_event = search_space.event
 
+        world_bounding_boxes = [body.bounding_box for body in world.bodies if body.has_collision()]
+
         # get obstacles
-        obstacles = cls.obstacles_of_world(world, search_space, bloat_obstacles, bloat_walls)
+        obstacles = cls.obstacles_from_bounding_boxes(world_bounding_boxes, search_event)
 
         start_time = time.time_ns()
         # calculate the free space and limit it to the searching space
@@ -478,7 +314,7 @@ class GraphOfConvexSets:
 
         # create a connectivity graph from the free space and calculate the edges
         result = cls(search_space=search_space)
-        [result.add(bb) for bb in BoundingBoxCollection.from_event(free_space)]
+        [result.add_node(bb) for bb in BoundingBoxCollection.from_event(free_space)]
 
         start_time = time.time_ns()
         result.calculate_connectivity(tolerance)
@@ -510,30 +346,34 @@ class GraphOfConvexSets:
         og_search_event = search_space.event
         search_event = og_search_event.marginal(cls.xy_variable)
 
-        bloated_bbs = (
-            # bloat the bb
-            bb.bloat(bloat_obstacles, bloat_obstacles, 0.)
-            # for all objects that are not robots or the floor
-            for obj in world.objects if not (obj.is_a_robot or obj.name == "floor")
-            # if the link of the object is either a wall or a door, and skip if not
-            for link in obj.link_name_to_id.keys()
-            for bb in obj.get_link_axis_aligned_bounding_box_collection(link)
-        )
+        world_bounding_boxes = [body.bounding_box for body in world.bodies if body.has_collision()]
 
-        obstacles = cls.obstacles_from_bounding_boxes(list(bloated_bbs), og_search_event, keep_z=False)
+        # bloated_bbs = (
+        #     # bloat the bb
+        #     bb.bloat(bloat_obstacles, bloat_obstacles, 0.)
+        #     # for all objects that are not robots or the floor
+        #     for obj in world.objects if not (obj.is_a_robot or obj.name == "floor")
+        #     # if the link of the object is either a wall or a door, and skip if not
+        #     for link in obj.link_name_to_id.keys()
+        #     for bb in obj.get_link_axis_aligned_bounding_box_collection(link)
+        # )
+
+        obstacles = cls.obstacles_from_bounding_boxes(world_bounding_boxes, og_search_event, keep_z=False)
 
         free_space = ~obstacles & search_event
 
+        SimpleEvent({SpatialVariables.z.value: reals()})
         # create floor level
-        z_event = SimpleEvent({BoundingBox.z_variable: reals()}).as_composite_set()
+        z_event = SimpleEvent({SpatialVariables.z.value: reals()}).as_composite_set()
         z_event.fill_missing_variables(cls.xy_variable)
-        free_space.fill_missing_variables(SortedSet([BoundingBox.z_variable]))
+        free_space.fill_missing_variables(SortedSet([SpatialVariables.z.value]))
         free_space &= z_event
         free_space &= og_search_event
 
         # create a connectivity graph from the free space and calculate the edges
         result = cls(search_space=search_space)
-        result.add_nodes_from(BoundingBox.from_event(free_space))
+        free_space_boxes = BoundingBoxCollection.from_event(free_space)
+        [result.add_node(bb) for bb in free_space_boxes]
         result.calculate_connectivity(tolerance)
 
         return result

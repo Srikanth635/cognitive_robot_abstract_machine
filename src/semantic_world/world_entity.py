@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List, Optional, TYPE_CHECKING
 
-from .geometry import Shape
+from .geometry import Shape, BoundingBox
 from .prefixed_name import PrefixedName
 from .spatial_types.spatial_types import TransformationMatrix, Expression
 from .spatial_types import spatial_types as cas
@@ -77,6 +77,14 @@ class Body(WorldEntity):
 
     def has_collision(self) -> bool:
         return len(self.collision) > 0
+
+    @property
+    def bounding_box(self) -> BoundingBox:
+        """
+        Returns the bounding box of the body if it exists, otherwise returns None.
+        """
+        return self.collision[0].as_bounding_box()
+
 
 
 class View(WorldEntity):
