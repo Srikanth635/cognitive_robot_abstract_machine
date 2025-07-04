@@ -131,8 +131,8 @@ def test_compute_fk_np_l_elbow_flex_joint_pr2(pr2_world):
 
 def test_compute_ik(pr2_world):
     pr2_world.state[PrefixedName(name='torso_lift_joint', prefix=None)].position = 0.2
-    # bf = pr2_world.root
-    bf = pr2_world.get_body_by_name('base_footprint')
+    bf = pr2_world.root
+    # bf = pr2_world.get_body_by_name('base_footprint')
     eef = pr2_world.get_body_by_name('r_gripper_tool_frame')
     fk = pr2_world.compute_forward_kinematics_np(bf, eef)
     fk[0, 3] -= 0.2

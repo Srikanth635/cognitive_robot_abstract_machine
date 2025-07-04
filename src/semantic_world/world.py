@@ -18,10 +18,12 @@ from typing_extensions import List
 
 from .connections import HasUpdateState, Has1DOFState, ActiveConnection, PassiveConnection
 from .degree_of_freedom import DegreeOfFreedom
+from .ik_solver import InverseKinematicsSolver
 from .prefixed_name import PrefixedName
 from .spatial_types import spatial_types as cas
 from .spatial_types.derivatives import Derivatives
 from .spatial_types.math import inverse_frame
+from .spatial_types.symbol_manager import symbol_manager
 from .utils import IDGenerator, copy_lru_cache
 from .world_entity import Body, Connection, View
 from .world_state import WorldState
@@ -694,127 +696,23 @@ class World:
         return result
 
     def compute_inverse_kinematics(self, root: Body, tip: Body, target: np.ndarray,
-                                   dt: float = 0.05, translation_velocity: float = 0.2, rotation_velocity: float = 0.2) \
+                                   dt: float = 0.05, max_iterations: int = 200,
+                                   translation_velocity: float = 0.2, rotation_velocity: float = 0.2) \
             -> Dict[PrefixedName, float]:
         """
+        Compute inverse kinematics using quadratic programming.
 
-        :param root:
-        :param tip:
-        :param target: desired tip pose relative to the root body
-        :param dt:
-        :param translation_velocity:
-        :param rotation_velocity:
-        :return:
+        :param root: Root body of the kinematic chain
+        :param tip: Tip body of the kinematic chain
+        :param target: Desired tip pose relative to the root body
+        :param dt: Time step for integration
+        :param max_iterations: Maximum number of iterations
+        :param translation_velocity: Maximum translation velocity
+        :param rotation_velocity: Maximum rotation velocity
+        :return: Dictionary mapping DOF names to their computed positions
         """
-        from ctypes import c_int
-        large_value = np.inf
-
-        root_T_tip = self.compose_forward_kinematics_expression(root, tip)
-        active_dofs = []
-        passive_dofs = []
-        for connection in self.compute_chain_of_connections(root, tip):
-            if isinstance(connection, ActiveConnection):
-                active_dofs.extend(connection.active_dofs)
-            if isinstance(connection, PassiveConnection):
-                passive_dofs.extend(connection.passive_dofs)
-        active_dofs = list(sorted([dof for dof in active_dofs], key=lambda d: str(d.name)))
-        passive_dofs = list(sorted([dof for dof in passive_dofs], key=lambda d: str(d.name)))
-        active_symbols = [dof.position_symbol for dof in active_dofs]
-        passive_symbols = [dof.position_symbol for dof in passive_dofs]
-
-        lower_box_constraints = []
-        upper_box_constraints = []
-        for dof in active_dofs:
-            # position / velocity limits
-            # vel_limit = 1
-            ll = cas.max(-1, dof.get_lower_limit(Derivatives.velocity))
-            ul = cas.min(1, dof.get_upper_limit(Derivatives.velocity))
-            if dof.has_position_limits():
-                ll = cas.max(dof.get_lower_limit(Derivatives.position) - dof.position_symbol,
-                             ll)
-                ul = cas.min(dof.get_upper_limit(Derivatives.position) - dof.position_symbol,
-                             ul)
-            lower_box_constraints.append(ll)
-            upper_box_constraints.append(ul)
-        # add slack variables
-        lower_box_constraints.extend([-large_value] * 6)
-        upper_box_constraints.extend([large_value] * 6)
-
-        box_constraint_matrix = cas.eye(len(lower_box_constraints))
-        lower_box_constraints = cas.Expression(lower_box_constraints)
-        upper_box_constraints = cas.Expression(upper_box_constraints)
-
-        # goal
-        root_P_tip = root_T_tip.to_position()
-        root_T_tip_goal = cas.TransformationMatrix(target)
-        root_P_tip_goal = root_T_tip_goal.to_position()
-        translation_cap = translation_velocity * dt
-        position_error = root_P_tip_goal[:3] - root_P_tip[:3]
-        position_error[0] = cas.limit(position_error[0], -translation_cap, translation_cap)
-        position_error[1] = cas.limit(position_error[1], -translation_cap, translation_cap)
-        position_error[2] = cas.limit(position_error[2], -translation_cap, translation_cap)
-
-        # rotation goal
-        rotation_cap = rotation_velocity * dt
-        hack = cas.RotationMatrix.from_axis_angle(cas.Vector3((0, 0, 1)), -0.0001)
-        root_R_tip = root_T_tip.to_rotation().dot(hack)
-        root_Q_tip_goal = root_T_tip_goal.to_quaternion()
-        root_Q_tip = root_R_tip.to_quaternion()
-        root_Q_tip_goal = cas.if_less(root_Q_tip_goal.dot(root_Q_tip), 0, -root_Q_tip_goal, root_Q_tip_goal)
-        rotation_error = root_Q_tip_goal[:3] - root_Q_tip[:3]
-        rotation_error[0] = cas.limit(rotation_error[0], -rotation_cap, rotation_cap)
-        rotation_error[1] = cas.limit(rotation_error[1], -rotation_cap, rotation_cap)
-        rotation_error[2] = cas.limit(rotation_error[2], -rotation_cap, rotation_cap)
-
-        current_expr = cas.vstack([root_P_tip[:3], root_Q_tip[:3]])
-        eq_bound_expr = cas.vstack([position_error, rotation_error])
-
-        J = cas.jacobian(current_expr, active_symbols)
-        neq_matrix = cas.hstack([J * dt, cas.eye(6) * dt])
-
-        # combine box and normal constraints
-        l = cas.vstack([lower_box_constraints, eq_bound_expr])
-        u = cas.vstack([upper_box_constraints, eq_bound_expr])
-        A = cas.vstack([box_constraint_matrix, neq_matrix])
-
-        # weights
-        dof_weights = [0.001 * (1. / min(1, dof.get_upper_limit(Derivatives.velocity))) ** 2 for dof in active_dofs]
-        slack_weights = [2500 * (1. / 0.2) ** 2] * 6
-        quadratic_weights = cas.Expression(dof_weights + slack_weights)
-        linear_weights = cas.zeros(*quadratic_weights.shape)
-
-        # compile
-        l_f = l.compile([active_symbols, passive_symbols])
-        u_f = u.compile([active_symbols, passive_symbols])
-        A_f = A.compile([active_symbols, passive_symbols])
-        quadratic_weights_f = quadratic_weights.compile([active_symbols, passive_symbols])
-        linear_weights_f = linear_weights.compile([active_symbols, passive_symbols])
-
-        # control loop
-        position = np.array([self.state[v.name].position for v in active_dofs])
-        passive_symbol_state = np.array([self.state[v.name].position for v in passive_dofs])
-        poss = []
-        vels = []
-        for i in range(200):
-            l = l_f.fast_call(position, passive_symbol_state)
-            u = u_f.fast_call(position, passive_symbol_state)
-            A = A_f.fast_call(position, passive_symbol_state)
-            H = np.diag(quadratic_weights_f.fast_call(position, passive_symbol_state))
-            g = linear_weights_f.fast_call(position, passive_symbol_state)
-
-            sense = np.zeros(l.shape, dtype=c_int)
-            sense[-6:] = 5  # set last 6 constraints to eq constraints
-            (xstar, fval, exitflag, info) = daqp.solve(H, g, A, u, l, sense)
-            if exitflag != 1:
-                raise Exception(f'failed to solve qp {exitflag}')
-            velocity = xstar[:len(active_symbols)]
-            if np.max(np.abs(velocity)) < 1e-4:
-                break
-            position += velocity * dt
-            poss.append(position.copy())
-            vels.append(velocity.copy())
-
-        return {v.name: position[i] for i, v in enumerate(active_dofs)}
+        ik_solver = InverseKinematicsSolver(self)
+        return ik_solver.solve(root, tip, target, dt, max_iterations, translation_velocity, rotation_velocity)
 
     def apply_control_commands(self, commands: np.ndarray, dt: float, derivative: Derivatives) -> None:
         """
