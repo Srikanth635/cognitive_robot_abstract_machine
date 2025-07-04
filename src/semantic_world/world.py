@@ -16,7 +16,7 @@ import rustworkx.visit
 import rustworkx.visualization
 from typing_extensions import List
 
-from .connections import HasUpdateState, Has1DOFState
+from .connections import HasUpdateState, Has1DOFState, ActiveConnection, PassiveConnection
 from .degree_of_freedom import DegreeOfFreedom
 from .prefixed_name import PrefixedName
 from .spatial_types import spatial_types as cas
@@ -202,6 +202,7 @@ def modifies_world(func):
     """
     Decorator that marks a method as a modification to the state or model of a world.
     """
+
     @wraps(func)
     def wrapper(self: World, *args, **kwargs):
         with self.modify_world() as context_manager:
@@ -270,7 +271,6 @@ class World:
             raise ValueError(f"More than one root found. Possible roots are {possible_roots}")
         else:
             raise ValueError(f"No root found.")
-
 
     def __hash__(self):
         return hash(id(self))
@@ -424,10 +424,12 @@ class World:
         :return: None
         """
         for dof in other.degrees_of_freedom.values():
-            dof.state_idx += len(self.degrees_of_freedom)
+            self.state[dof.name].position = other.state[dof.name].position
+            self.state[dof.name].velocity = other.state[dof.name].velocity
+            self.state[dof.name].acceleration = other.state[dof.name].acceleration
+            self.state[dof.name].jerk = other.state[dof.name].jerk
             dof._world = self
         self.degrees_of_freedom.update(other.degrees_of_freedom)
-        self.state = np.hstack((self.state, other.state))
 
         # do not trigger computations in other
         other.world_is_being_modified = True
@@ -619,8 +621,8 @@ class World:
 
         pos = self.bfs_layout(scale=scale, align=align)
 
-
-        rustworkx.visualization.mpl_draw(self.kinematic_structure, pos=pos, labels=lambda body: str(body.name), with_labels=True,
+        rustworkx.visualization.mpl_draw(self.kinematic_structure, pos=pos, labels=lambda body: str(body.name),
+                                         with_labels=True,
                                          edge_labels=lambda edge: edge.__class__.__name__)
 
         plt.title("World Kinematic Structure")
@@ -681,7 +683,7 @@ class World:
         :param tip: Tip body to which the kinematics are computed.
         :return: Transformation matrix representing the relative pose of the tip body with respect to the root body.
         """
-        return self._fk_computer.compute_forward_kinematics_np(root, tip)
+        return self._fk_computer.compute_forward_kinematics_np(root, tip).copy()
 
     def find_dofs_for_position_symbols(self, symbols: List[cas.Symbol]) -> List[DegreeOfFreedom]:
         result = []
@@ -692,28 +694,46 @@ class World:
         return result
 
     def compute_inverse_kinematics(self, root: Body, tip: Body, target: np.ndarray,
-                                   dt: float = 0.05) -> Dict[str, float]:
+                                   dt: float = 0.05, translation_velocity: float = 0.2, rotation_velocity: float = 0.2) \
+            -> Dict[PrefixedName, float]:
+        """
+
+        :param root:
+        :param tip:
+        :param target: desired tip pose relative to the root body
+        :param dt:
+        :param translation_velocity:
+        :param rotation_velocity:
+        :return:
+        """
         from ctypes import c_int
         large_value = np.inf
 
         root_T_tip = self.compose_forward_kinematics_expression(root, tip)
-        p = root_T_tip.to_position()
-        q = root_T_tip.to_quaternion()
-        current = cas.vstack([p[:3], q[:3]])
-        free_symbols = current.free_symbols()
-        dofs = self.find_dofs_for_position_symbols(free_symbols)
+        active_dofs = []
+        passive_dofs = []
+        for connection in self.compute_chain_of_connections(root, tip):
+            if isinstance(connection, ActiveConnection):
+                active_dofs.extend(connection.active_dofs)
+            if isinstance(connection, PassiveConnection):
+                passive_dofs.extend(connection.passive_dofs)
+        active_dofs = list(sorted([dof for dof in active_dofs], key=lambda d: str(d.name)))
+        passive_dofs = list(sorted([dof for dof in passive_dofs], key=lambda d: str(d.name)))
+        active_symbols = [dof.position_symbol for dof in active_dofs]
+        passive_symbols = [dof.position_symbol for dof in passive_dofs]
+
         lower_box_constraints = []
         upper_box_constraints = []
-        for dof in dofs:
+        for dof in active_dofs:
             # position / velocity limits
+            # vel_limit = 1
+            ll = cas.max(-1, dof.get_lower_limit(Derivatives.velocity))
+            ul = cas.min(1, dof.get_upper_limit(Derivatives.velocity))
             if dof.has_position_limits():
                 ll = cas.max(dof.get_lower_limit(Derivatives.position) - dof.position_symbol,
-                             dof.get_lower_limit(Derivatives.velocity))
+                             ll)
                 ul = cas.min(dof.get_upper_limit(Derivatives.position) - dof.position_symbol,
-                             dof.get_upper_limit(Derivatives.velocity))
-            else:
-                ll = dof.get_lower_limit(Derivatives.velocity)
-                ul = dof.get_upper_limit(Derivatives.velocity)
+                             ul)
             lower_box_constraints.append(ll)
             upper_box_constraints.append(ul)
         # add slack variables
@@ -725,54 +745,76 @@ class World:
         upper_box_constraints = cas.Expression(upper_box_constraints)
 
         # goal
-        goal4x4 = cas.TransformationMatrix(target)
-        p = goal4x4.to_position()
-        q = goal4x4.to_quaternion()
-        goal = cas.vstack([p[:3], q[:3]])
-        error = goal - current
+        root_P_tip = root_T_tip.to_position()
+        root_T_tip_goal = cas.TransformationMatrix(target)
+        root_P_tip_goal = root_T_tip_goal.to_position()
+        translation_cap = translation_velocity * dt
+        position_error = root_P_tip_goal[:3] - root_P_tip[:3]
+        position_error[0] = cas.limit(position_error[0], -translation_cap, translation_cap)
+        position_error[1] = cas.limit(position_error[1], -translation_cap, translation_cap)
+        position_error[2] = cas.limit(position_error[2], -translation_cap, translation_cap)
 
-        J = cas.jacobian(current, free_symbols) * dt
-        neq_matrix = cas.hstack([J, cas.eye(6) * dt])
+        # rotation goal
+        rotation_cap = rotation_velocity * dt
+        hack = cas.RotationMatrix.from_axis_angle(cas.Vector3((0, 0, 1)), -0.0001)
+        root_R_tip = root_T_tip.to_rotation().dot(hack)
+        root_Q_tip_goal = root_T_tip_goal.to_quaternion()
+        root_Q_tip = root_R_tip.to_quaternion()
+        root_Q_tip_goal = cas.if_less(root_Q_tip_goal.dot(root_Q_tip), 0, -root_Q_tip_goal, root_Q_tip_goal)
+        rotation_error = root_Q_tip_goal[:3] - root_Q_tip[:3]
+        rotation_error[0] = cas.limit(rotation_error[0], -rotation_cap, rotation_cap)
+        rotation_error[1] = cas.limit(rotation_error[1], -rotation_cap, rotation_cap)
+        rotation_error[2] = cas.limit(rotation_error[2], -rotation_cap, rotation_cap)
+
+        current_expr = cas.vstack([root_P_tip[:3], root_Q_tip[:3]])
+        eq_bound_expr = cas.vstack([position_error, rotation_error])
+
+        J = cas.jacobian(current_expr, active_symbols)
+        neq_matrix = cas.hstack([J * dt, cas.eye(6) * dt])
 
         # combine box and normal constraints
-        l = cas.vstack([lower_box_constraints, error])
-        u = cas.vstack([upper_box_constraints, error])
+        l = cas.vstack([lower_box_constraints, eq_bound_expr])
+        u = cas.vstack([upper_box_constraints, eq_bound_expr])
         A = cas.vstack([box_constraint_matrix, neq_matrix])
 
         # weights
-        quadratic_weights = cas.Expression([0.01] * len(free_symbols) + [1]*6)
+        dof_weights = [0.001 * (1. / min(1, dof.get_upper_limit(Derivatives.velocity))) ** 2 for dof in active_dofs]
+        slack_weights = [2500 * (1. / 0.2) ** 2] * 6
+        quadratic_weights = cas.Expression(dof_weights + slack_weights)
         linear_weights = cas.zeros(*quadratic_weights.shape)
 
         # compile
-        l_f = l.compile(free_symbols)
-        u_f = u.compile(free_symbols)
-        A_f = A.compile(free_symbols)
-        quadratic_weights_f = quadratic_weights.compile(free_symbols)
-        linear_weights_f = linear_weights.compile(free_symbols)
+        l_f = l.compile([active_symbols, passive_symbols])
+        u_f = u.compile([active_symbols, passive_symbols])
+        A_f = A.compile([active_symbols, passive_symbols])
+        quadratic_weights_f = quadratic_weights.compile([active_symbols, passive_symbols])
+        linear_weights_f = linear_weights.compile([active_symbols, passive_symbols])
 
         # control loop
-        position = np.array([self.state[v].position for v in free_symbols])
-        for i in range(100):
-            l = l_f.fast_call(position)
-            u = u_f.fast_call(position)
-            A = A_f.fast_call(position)
-            H = np.diag(quadratic_weights_f.fast_call(position))
-            g = linear_weights_f.fast_call(position)
+        position = np.array([self.state[v.name].position for v in active_dofs])
+        passive_symbol_state = np.array([self.state[v.name].position for v in passive_dofs])
+        poss = []
+        vels = []
+        for i in range(200):
+            l = l_f.fast_call(position, passive_symbol_state)
+            u = u_f.fast_call(position, passive_symbol_state)
+            A = A_f.fast_call(position, passive_symbol_state)
+            H = np.diag(quadratic_weights_f.fast_call(position, passive_symbol_state))
+            g = linear_weights_f.fast_call(position, passive_symbol_state)
 
             sense = np.zeros(l.shape, dtype=c_int)
-            sense[-6:] = 5 # set last 6 constraints to eq constraints
+            sense[-6:] = 5  # set last 6 constraints to eq constraints
             (xstar, fval, exitflag, info) = daqp.solve(H, g, A, u, l, sense)
             if exitflag != 1:
                 raise Exception(f'failed to solve qp {exitflag}')
-            velocity = xstar[:len(free_symbols)]
-            if np.max(np.abs(velocity)) < 1e-3:
+            velocity = xstar[:len(active_symbols)]
+            if np.max(np.abs(velocity)) < 1e-4:
                 break
             position += velocity * dt
-        print(f'iterations {i}')
-        return {v.name: position[i] for i, v in enumerate(dofs)}
+            poss.append(position.copy())
+            vels.append(velocity.copy())
 
-
-
+        return {v.name: position[i] for i, v in enumerate(active_dofs)}
 
     def apply_control_commands(self, commands: np.ndarray, dt: float, derivative: Derivatives) -> None:
         """
