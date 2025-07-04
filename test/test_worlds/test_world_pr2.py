@@ -166,27 +166,27 @@ def test_apply_control_commands_omni_drive_pr2(pr2_world):
     cmd[-1] = 100
     dt = 0.1
     pr2_world.apply_control_commands(cmd, dt, Derivatives.jerk)
-    assert pr2_world.state[Derivatives.jerk, omni_drive.yaw.state_idx] == 100.
-    assert pr2_world.state[Derivatives.acceleration, omni_drive.yaw.state_idx] == 100. * dt
-    assert pr2_world.state[Derivatives.velocity, omni_drive.yaw.state_idx] == 100. * dt * dt
-    assert pr2_world.state[Derivatives.position, omni_drive.yaw.state_idx] == 100. * dt * dt * dt
+    assert pr2_world.state[omni_drive.yaw.name].jerk == 100.
+    assert pr2_world.state[omni_drive.yaw.name].acceleration == 100. * dt
+    assert pr2_world.state[omni_drive.yaw.name].velocity == 100. * dt * dt
+    assert pr2_world.state[omni_drive.yaw.name].position == 100. * dt * dt * dt
 
-    assert pr2_world.state[Derivatives.jerk, omni_drive.x_vel.state_idx] == 100.
-    assert pr2_world.state[Derivatives.acceleration, omni_drive.x_vel.state_idx] == 100. * dt
-    assert pr2_world.state[Derivatives.velocity, omni_drive.x_vel.state_idx] == 100. * dt * dt
-    assert pr2_world.state[Derivatives.position, omni_drive.x_vel.state_idx] == 0
+    assert pr2_world.state[omni_drive.x_vel.name].jerk == 100.
+    assert pr2_world.state[omni_drive.x_vel.name].acceleration == 100. * dt
+    assert pr2_world.state[omni_drive.x_vel.name].velocity == 100. * dt * dt
+    assert pr2_world.state[omni_drive.x_vel.name].position == 0
 
-    assert pr2_world.state[Derivatives.jerk, omni_drive.y_vel.state_idx] == 100.
-    assert pr2_world.state[Derivatives.acceleration, omni_drive.y_vel.state_idx] == 100. * dt
-    assert pr2_world.state[Derivatives.velocity, omni_drive.y_vel.state_idx] == 100. * dt * dt
-    assert pr2_world.state[Derivatives.position, omni_drive.y_vel.state_idx] == 0
+    assert pr2_world.state[omni_drive.y_vel.name].jerk == 100.
+    assert pr2_world.state[omni_drive.y_vel.name].acceleration == 100. * dt
+    assert pr2_world.state[omni_drive.y_vel.name].velocity == 100. * dt * dt
+    assert pr2_world.state[omni_drive.y_vel.name].position == 0
 
-    assert pr2_world.state[Derivatives.jerk, omni_drive.x.state_idx] == 0.
-    assert pr2_world.state[Derivatives.acceleration, omni_drive.x.state_idx] == 0.
-    assert pr2_world.state[Derivatives.velocity, omni_drive.x.state_idx] == 0.8951707486311977
-    assert pr2_world.state[Derivatives.position, omni_drive.x.state_idx] == 0.08951707486311977
+    assert pr2_world.state[omni_drive.x.name].jerk == 0.
+    assert pr2_world.state[omni_drive.x.name].acceleration == 0.
+    assert pr2_world.state[omni_drive.x.name].velocity == 0.8951707486311977
+    assert pr2_world.state[omni_drive.x.name].position == 0.08951707486311977
 
-    assert pr2_world.state[Derivatives.jerk, omni_drive.y.state_idx] == 0.
-    assert pr2_world.state[Derivatives.acceleration, omni_drive.y.state_idx] == 0.
-    assert pr2_world.state[Derivatives.velocity, omni_drive.y.state_idx] == 1.094837581924854
-    assert pr2_world.state[Derivatives.position, omni_drive.y.state_idx] == 0.1094837581924854
+    assert pr2_world.state[omni_drive.y.name].jerk == 0.
+    assert pr2_world.state[omni_drive.y.name].acceleration == 0.
+    assert pr2_world.state[omni_drive.y.name].velocity == 1.094837581924854
+    assert pr2_world.state[omni_drive.y.name].position == 0.1094837581924854

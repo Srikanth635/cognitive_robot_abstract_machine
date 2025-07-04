@@ -368,16 +368,16 @@ class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
 
     def update_state(self, dt: float) -> None:
         state = self._world.state
-        state[Derivatives.position, self.x_vel.state_idx] = 0
-        state[Derivatives.position, self.y_vel.state_idx] = 0
+        state[self.x_vel.name].position = 0
+        state[self.y_vel.name].position = 0
 
-        x_vel = state[Derivatives.velocity, self.x_vel.state_idx]
-        y_vel = state[Derivatives.velocity, self.y_vel.state_idx]
-        delta = state[Derivatives.position, self.yaw.state_idx]
-        state[Derivatives.velocity, self.x.state_idx] = (np.cos(delta) * x_vel - np.sin(delta) * y_vel)
-        state[Derivatives.position, self.x.state_idx] += state[Derivatives.velocity, self.x.state_idx] * dt
-        state[Derivatives.velocity, self.y.state_idx] = (np.sin(delta) * x_vel + np.cos(delta) * y_vel)
-        state[Derivatives.position, self.y.state_idx] += state[Derivatives.velocity, self.y.state_idx] * dt
+        x_vel = state[self.x_vel.name].velocity
+        y_vel = state[self.y_vel.name].velocity
+        delta = state[self.yaw.name].position
+        state[self.x.name].velocity = (np.cos(delta) * x_vel - np.sin(delta) * y_vel)
+        state[self.x.name].position += state[self.x.name].velocity * dt
+        state[self.y.name].velocity = (np.sin(delta) * x_vel + np.cos(delta) * y_vel)
+        state[self.y.name].position += state[self.y.name].velocity * dt
 
     def get_free_variable_names(self) -> List[PrefixedName]:
         return [self.x.name, self.y.name, self.yaw.name]
