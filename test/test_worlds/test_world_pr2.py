@@ -5,8 +5,8 @@ import pytest
 from rustworkx import NoPathFound
 
 from semantic_world.adapters.urdf import URDFParser
-from semantic_world.connections import Connection6DoF, OmniDrive
-from semantic_world.ik_solver import ConvergenceException
+from semantic_world.connections import OmniDrive
+from semantic_world.ik_solver import MaxIterationsException, UnreachableException
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.spatial_types.derivatives import Derivatives
 from semantic_world.spatial_types.symbol_manager import symbol_manager
@@ -147,15 +147,16 @@ def test_compute_ik_max_iter(pr2_world):
     eef = pr2_world.get_body_by_name('r_gripper_tool_frame')
     fk = pr2_world.compute_forward_kinematics_np(bf, eef)
     fk[2, 3] = 10
-    with pytest.raises(ConvergenceException):
+    with pytest.raises(MaxIterationsException):
         pr2_world.compute_inverse_kinematics(bf, eef, fk)
 
-def test_compute_ik_cant_reach(pr2_world):
+def test_compute_ik_unreachable(pr2_world):
     bf = pr2_world.root
     eef = pr2_world.get_body_by_name('base_footprint')
     fk = pr2_world.compute_forward_kinematics_np(bf, eef)
     fk[2, 3] = -1
-    pr2_world.compute_inverse_kinematics(bf, eef, fk)
+    with pytest.raises(UnreachableException):
+        pr2_world.compute_inverse_kinematics(bf, eef, fk)
 
 def test_apply_control_commands_omni_drive_pr2(pr2_world):
     omni_drive: OmniDrive = pr2_world.get_connection_by_name(

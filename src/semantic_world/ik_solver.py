@@ -20,10 +20,14 @@ class IKSolverException(Exception):
     pass
 
 
-class ConvergenceException(IKSolverException):
-    def __init__(self, max_iterations):
-        self.max_iterations = max_iterations
-        super().__init__(f'Failed to converge in {max_iterations} iterations.')
+class UnreachableException(IKSolverException):
+    def __init__(self, iterations: int):
+        super().__init__(f'Converged after {iterations}, but target pose not reached.')
+
+
+class MaxIterationsException(IKSolverException):
+    def __init__(self, iterations: int):
+        super().__init__(f'Failed to converge in {iterations} iterations.')
 
 
 class QPSolverException(IKSolverException):
@@ -42,11 +46,12 @@ class InverseKinematicsSolver:
     This class handles the setup and solving of inverse kinematics problems
     using quadratic programming optimization.
     """
+    _large_value = np.inf
+    _convergence_tolerance = 1e-4
 
     def __init__(self, world: World):
         self.world = world
-        self._large_value = np.inf
-        self._convergence_tolerance = 1e-4
+        self.iteration = -1
 
     def solve(self, root: Body, tip: Body, target: np.ndarray,
               dt: float = 0.05, max_iterations: int = 200,
@@ -87,18 +92,18 @@ class InverseKinematicsSolver:
     def _solve_iteratively(self, qp_problem: QPProblem, solver_state: SolverState, dt: float,
                            max_iterations: int) -> np.ndarray:
         """Run the main IK solver loop."""
-        for iteration in range(max_iterations):
-            velocity = self._solve_qp_step(qp_problem, solver_state)
+        for self.iteration in range(max_iterations):
+            velocity, slack = self._solve_qp_step(qp_problem, solver_state)
 
-            if self._check_convergence(velocity):
+            if self._check_convergence(velocity, slack):
                 break
 
             solver_state.update_position(velocity, dt)
         else:
-            raise ConvergenceException(max_iterations)
+            raise MaxIterationsException(max_iterations)
         return solver_state.position
 
-    def _solve_qp_step(self, qp_problem: QPProblem, solver_state: SolverState) -> np.ndarray:
+    def _solve_qp_step(self, qp_problem: QPProblem, solver_state: SolverState) -> Tuple[np.ndarray, np.ndarray]:
 
         # Evaluate QP matrices at current state
         qp_matrices = qp_problem.evaluate_at_state(solver_state)
@@ -116,10 +121,16 @@ class InverseKinematicsSolver:
         if exitflag != 1:
             raise Exception(f'Failed to solve QP problem: exit flag {exitflag}')
 
-        return xstar[:len(qp_problem.active_symbols)]
+        return xstar[:len(qp_problem.active_symbols)], xstar[len(qp_problem.active_symbols):]
 
-    def _check_convergence(self, velocity: np.ndarray) -> bool:
-        return np.max(np.abs(velocity)) < self._convergence_tolerance
+    def _check_convergence(self, velocity: np.ndarray, slack: np.ndarray) -> bool:
+        vel_below_threshold = np.max(np.abs(velocity)) < self._convergence_tolerance
+        slack_below_threshold = np.max(np.abs(slack)) < self._convergence_tolerance
+        if vel_below_threshold and slack_below_threshold:
+            return True
+        if vel_below_threshold and not slack_below_threshold:
+            raise UnreachableException(self.iteration)
+        return False
 
 
 class QPProblem:
