@@ -31,12 +31,20 @@ class MaxIterationsException(IKSolverException):
 
 
 class QPSolverException(IKSolverException):
-    def __init__(self, exit_flag, message=None):
+    flag_map = {
+        2: 'Soft optimal',
+        1: 'Optimal',
+        -1: 'Infeasible',
+        -2: 'Cycling detected',
+        -3: 'Unbounded problem',
+        -4: 'Iteration limit reached',
+        -5: 'Nonconvex problem',
+        -6: 'Initial working set overdetermined'
+    }
+
+    def __init__(self, exit_flag):
         self.exit_flag = exit_flag
-        if message:
-            super().__init__(f'QP solver failed with exit flag {exit_flag}: {message}')
-        else:
-            super().__init__(f'QP solver failed with exit flag {exit_flag}')
+        super().__init__(f'QP solver failed with exit flag: {self.flag_map[exit_flag]}')
 
 
 class InverseKinematicsSolver:
@@ -119,7 +127,7 @@ class InverseKinematicsSolver:
         )
 
         if exitflag != 1:
-            raise Exception(f'Failed to solve QP problem: exit flag {exitflag}')
+            raise QPSolverException(exitflag)
 
         return xstar[:len(qp_problem.active_symbols)], xstar[len(qp_problem.active_symbols):]
 
