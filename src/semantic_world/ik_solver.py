@@ -1,17 +1,38 @@
 from __future__ import annotations
-from typing import Dict, TYPE_CHECKING
+
+from ctypes import c_int
+from typing import Dict, TYPE_CHECKING, List, Tuple
 
 import daqp
 import numpy as np
 
 from .connections import ActiveConnection, PassiveConnection
-from .prefixed_name import PrefixedName
-from .spatial_types.derivatives import Derivatives
+from .degree_of_freedom import DegreeOfFreedom
 from .spatial_types import spatial_types as cas
+from .spatial_types.derivatives import Derivatives
 
 if TYPE_CHECKING:
     from .world import World
     from .world_entity import Body
+
+
+class IKSolverException(Exception):
+    pass
+
+
+class ConvergenceException(IKSolverException):
+    def __init__(self, max_iterations):
+        self.max_iterations = max_iterations
+        super().__init__(f'Failed to converge in {max_iterations} iterations.')
+
+
+class QPSolverException(IKSolverException):
+    def __init__(self, exit_flag, message=None):
+        self.exit_flag = exit_flag
+        if message:
+            super().__init__(f'QP solver failed with exit flag {exit_flag}: {message}')
+        else:
+            super().__init__(f'QP solver failed with exit flag {exit_flag}')
 
 
 class InverseKinematicsSolver:
@@ -29,7 +50,7 @@ class InverseKinematicsSolver:
 
     def solve(self, root: Body, tip: Body, target: np.ndarray,
               dt: float = 0.05, max_iterations: int = 200,
-              translation_velocity: float = 0.2, rotation_velocity: float = 0.2) -> Dict[PrefixedName, float]:
+              translation_velocity: float = 0.2, rotation_velocity: float = 0.2) -> Dict[DegreeOfFreedom, float]:
         """
         Solve inverse kinematics problem.
 
@@ -61,26 +82,23 @@ class InverseKinematicsSolver:
         # Run iterative solver
         final_position = self._solve_iteratively(qp_problem, solver_state, dt, max_iterations)
 
-        return {dof.name: final_position[i] for i, dof in enumerate(qp_problem.active_dofs)}
+        return {dof: final_position[i] for i, dof in enumerate(qp_problem.active_dofs)}
 
-    def _solve_iteratively(self, qp_problem, solver_state, dt, max_iterations):
+    def _solve_iteratively(self, qp_problem: QPProblem, solver_state: SolverState, dt: float,
+                           max_iterations: int) -> np.ndarray:
         """Run the main IK solver loop."""
         for iteration in range(max_iterations):
-            # Solve QP problem
             velocity = self._solve_qp_step(qp_problem, solver_state)
 
-            # Check convergence
             if self._check_convergence(velocity):
                 break
 
-            # Update position
             solver_state.update_position(velocity, dt)
-
+        else:
+            raise ConvergenceException(max_iterations)
         return solver_state.position
 
-    def _solve_qp_step(self, qp_problem, solver_state):
-        """Solve a single QP step."""
-        from ctypes import c_int
+    def _solve_qp_step(self, qp_problem: QPProblem, solver_state: SolverState) -> np.ndarray:
 
         # Evaluate QP matrices at current state
         qp_matrices = qp_problem.evaluate_at_state(solver_state)
@@ -100,8 +118,7 @@ class InverseKinematicsSolver:
 
         return xstar[:len(qp_problem.active_symbols)]
 
-    def _check_convergence(self, velocity):
-        """Check if the solver has converged."""
+    def _check_convergence(self, velocity: np.ndarray) -> bool:
         return np.max(np.abs(velocity)) < self._convergence_tolerance
 
 
@@ -110,7 +127,8 @@ class QPProblem:
     Represents a quadratic programming problem for inverse kinematics.
     """
 
-    def __init__(self, world, root, tip, target, dt, translation_velocity, rotation_velocity):
+    def __init__(self, world: World, root: Body, tip: Body, target: np.ndarray, dt: float, translation_velocity: float,
+                 rotation_velocity: float):
         self.world = world
         self.root = root
         self.tip = tip
@@ -125,7 +143,7 @@ class QPProblem:
         self._setup_weights()
         self._compile_functions()
 
-    def _extract_dofs(self):
+    def _extract_dofs(self) -> Tuple[list[DegreeOfFreedom], list[DegreeOfFreedom], list[cas.Symbol], list[cas.Symbol]]:
         """Extract active and passive DOFs from the kinematic chain."""
         active_dofs = []
         passive_dofs = []
@@ -186,7 +204,7 @@ class QPProblem:
         self.quadratic_weights_f = self.quadratic_weights.compile(symbol_args)
         self.linear_weights_f = self.linear_weights.compile(symbol_args)
 
-    def evaluate_at_state(self, solver_state):
+    def evaluate_at_state(self, solver_state) -> QPMatrices:
         """Evaluate QP matrices at the current solver state."""
         return QPMatrices(
             l=self.l_f.fast_call(solver_state.position, solver_state.passive_position),
@@ -202,7 +220,8 @@ class ConstraintBuilder:
     Builds constraints for the inverse kinematics QP problem.
     """
 
-    def __init__(self, world, root, tip, target, dt, translation_velocity, rotation_velocity):
+    def __init__(self, world: World, root: Body, tip: Body, target: np.ndarray, dt: float, translation_velocity: float,
+                 rotation_velocity: float):
         self.world = world
         self.root = root
         self.tip = tip
@@ -212,7 +231,7 @@ class ConstraintBuilder:
         self.rotation_velocity = rotation_velocity
         self.large_value = np.inf
 
-    def build_box_constraints(self, active_dofs):
+    def build_box_constraints(self, active_dofs: List[DegreeOfFreedom]) -> Tuple[cas.Expression, cas.Expression]:
         """Build position and velocity limit constraints for DOFs."""
         lower_constraints = []
         upper_constraints = []
@@ -234,7 +253,7 @@ class ConstraintBuilder:
 
         return cas.Expression(lower_constraints), cas.Expression(upper_constraints)
 
-    def build_goal_constraints(self, active_symbols):
+    def build_goal_constraints(self, active_symbols: List[cas.Symbol]) -> Tuple[cas.Expression, cas.Expression]:
         """Build position and rotation goal constraints."""
         root_T_tip = self.world.compose_forward_kinematics_expression(self.root, self.tip)
 
@@ -254,7 +273,7 @@ class ConstraintBuilder:
 
         return eq_bound_expr, neq_matrix
 
-    def _compute_position_error(self, root_T_tip):
+    def _compute_position_error(self, root_T_tip: cas.TransformationMatrix) -> cas.Expression:
         """Compute position error with velocity limits."""
         root_P_tip = root_T_tip.to_position()
         root_T_tip_goal = cas.TransformationMatrix(self.target)
@@ -268,7 +287,7 @@ class ConstraintBuilder:
 
         return position_error
 
-    def _compute_rotation_error(self, root_T_tip):
+    def _compute_rotation_error(self, root_T_tip: cas.TransformationMatrix) -> cas.Expression:
         """Compute rotation error with velocity limits."""
         rotation_cap = self.rotation_velocity * self.dt
         hack = cas.RotationMatrix.from_axis_angle(cas.Vector3((0, 0, 1)), -0.0001)
@@ -293,14 +312,13 @@ class SolverState:
     Represents the state of the IK solver during iteration.
     """
 
-    def __init__(self, position, passive_position):
+    def __init__(self, position: np.ndarray, passive_position: np.ndarray):
         self.position = position
         self.passive_position = passive_position
         self.positions_history = []
         self.velocities_history = []
 
-    def update_position(self, velocity, dt):
-        """Update position using computed velocity."""
+    def update_position(self, velocity: np.ndarray, dt: float):
         self.positions_history.append(self.position.copy())
         self.velocities_history.append(velocity.copy())
         self.position += velocity * dt

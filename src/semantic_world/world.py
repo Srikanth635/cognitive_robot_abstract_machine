@@ -698,7 +698,7 @@ class World:
     def compute_inverse_kinematics(self, root: Body, tip: Body, target: np.ndarray,
                                    dt: float = 0.05, max_iterations: int = 200,
                                    translation_velocity: float = 0.2, rotation_velocity: float = 0.2) \
-            -> Dict[PrefixedName, float]:
+            -> Dict[DegreeOfFreedom, float]:
         """
         Compute inverse kinematics using quadratic programming.
 
