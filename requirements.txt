@@ -14,3 +14,4 @@ ripple_down_rules
 pytest-order
 sqlalchemy
 random_events==4.1.18
+plotly
