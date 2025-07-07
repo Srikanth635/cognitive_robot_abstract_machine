@@ -7,7 +7,7 @@ import semantic_world.spatial_types.spatial_types as cas
 from giskardpy.data_types.data_types import PrefixName
 from giskardpy.god_map import god_map
 from giskardpy.motion_statechart.tasks.task import Task, WEIGHT_ABOVE_CA
-from giskardpy.symbol_manager import symbol_manager
+from semantic_world.spatial_types.symbol_manager import symbol_manager
 
 
 class WiggleInsert(Task):

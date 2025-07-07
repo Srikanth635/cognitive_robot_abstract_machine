@@ -2,7 +2,6 @@ from typing import Dict, List, TypeVar, Generic, Set, Optional, Tuple
 
 import numpy as np
 
-from giskardpy.casadi_wrapper import CompiledFunction
 from giskardpy.data_types.data_types import LifeCycleState, ObservationState
 from giskardpy.data_types.exceptions import GoalInitalizationException
 from giskardpy.god_map import god_map
@@ -10,7 +9,7 @@ from giskardpy.motion_statechart.graph_node import MotionStatechartNode
 import semantic_world.spatial_types.spatial_types as cas
 from line_profiler import profile
 
-from giskardpy.symbol_manager import symbol_manager
+from semantic_world.spatial_types.symbol_manager import symbol_manager
 
 T = TypeVar('T', bound=MotionStatechartNode)
 

@@ -9,7 +9,7 @@ from giskardpy.data_types.data_types import JointStates, ColorRGBA
 from giskardpy.data_types.data_types import PrefixName
 from giskardpy.middleware import get_middleware
 from giskardpy.model.trajectory import Trajectory
-from giskardpy.symbol_manager import symbol_manager
+from semantic_world.spatial_types.symbol_manager import symbol_manager
 from line_profiler import profile
 
 class DebugExpressionManager:

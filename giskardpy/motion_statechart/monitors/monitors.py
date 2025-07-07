@@ -13,7 +13,7 @@ from giskardpy.data_types.data_types import Derivatives, PrefixName, Observation
 from giskardpy.data_types.exceptions import GiskardException, MonitorInitalizationException
 from giskardpy.god_map import god_map
 from giskardpy.motion_statechart.graph_node import MotionStatechartNode
-from giskardpy.symbol_manager import symbol_manager
+from semantic_world.spatial_types.symbol_manager import symbol_manager
 
 
 class Monitor(MotionStatechartNode):

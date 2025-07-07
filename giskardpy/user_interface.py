@@ -25,7 +25,7 @@ from giskardpy.model.trajectory import Trajectory
 from giskardpy.motion_statechart.tasks.task import WEIGHT_BELOW_CA
 from giskardpy.qp.constraint import EqualityConstraint, InequalityConstraint, DerivativeEqualityConstraint, \
     DerivativeInequalityConstraint
-from giskardpy.symbol_manager import symbol_manager
+from semantic_world.spatial_types.symbol_manager import symbol_manager
 from giskardpy.motion_statechart.monitors.monitors import EndMotion
 
 

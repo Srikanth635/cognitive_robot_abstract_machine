@@ -9,12 +9,10 @@ from line_profiler import profile
 import numpy as np
 
 import semantic_world.spatial_types.spatial_types as cas
-from giskardpy.casadi_wrapper import CompiledFunction
 from giskardpy.data_types.data_types import LifeCycleState, ObservationState
 from giskardpy.data_types.exceptions import GiskardException, GoalInitalizationException, UnknownGoalException
 from giskardpy.motion_statechart.goals.goal import Goal
 from giskardpy.god_map import god_map
-from giskardpy.middleware import get_middleware
 from giskardpy.motion_statechart.graph_node import MotionStatechartNode
 from giskardpy.motion_statechart.helpers import compile_graph_node_state_updater, MotionGraphNodeStateManager
 from giskardpy.motion_statechart.monitors.monitors import Monitor, EndMotion, CancelMotion
@@ -22,7 +20,7 @@ from giskardpy.motion_statechart.monitors.payload_monitors import PayloadMonitor
 from giskardpy.motion_statechart.tasks.task import Task
 from giskardpy.qp.constraint import EqualityConstraint, InequalityConstraint, DerivativeInequalityConstraint
 from giskardpy.qp.weight_gain import QuadraticWeightGain, LinearWeightGain
-from giskardpy.symbol_manager import symbol_manager
+from semantic_world.spatial_types.symbol_manager import symbol_manager
 from giskardpy.utils.utils import get_all_classes_in_package, ImmutableDict
 from giskardpy.qp.constraint import DerivativeEqualityConstraint
 

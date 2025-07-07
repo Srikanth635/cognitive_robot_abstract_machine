@@ -6,7 +6,7 @@ from giskardpy.data_types.data_types import Derivatives
 from collections import defaultdict
 
 from giskardpy.motion_statechart.tasks.task import Task
-from giskardpy.symbol_manager import symbol_manager
+from semantic_world.spatial_types.symbol_manager import symbol_manager
 
 
 class BaseArmWeightScaling(Task):

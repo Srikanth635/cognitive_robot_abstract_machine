@@ -8,7 +8,7 @@ from giskardpy.data_types.data_types import ObservationState
 from giskardpy.god_map import god_map
 from giskardpy.middleware import get_middleware
 from giskardpy.motion_statechart.monitors.monitors import PayloadMonitor, Monitor
-from giskardpy.symbol_manager import symbol_manager
+from semantic_world.spatial_types.symbol_manager import symbol_manager
 
 
 class CheckMaxTrajectoryLength(Monitor):

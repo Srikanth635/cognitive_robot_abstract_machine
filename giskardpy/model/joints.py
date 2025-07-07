@@ -12,7 +12,7 @@ import semantic_world.spatial_types.spatial_types as cas
 from giskardpy.data_types.data_types import derivative_map, PrefixName, Derivatives
 from giskardpy.god_map import god_map
 from giskardpy.qp.free_variable import FreeVariable
-from giskardpy.symbol_manager import symbol_manager
+from semantic_world.spatial_types.symbol_manager import symbol_manager
 from line_profiler import profile
 
 from giskardpy.utils.decorators import memoize

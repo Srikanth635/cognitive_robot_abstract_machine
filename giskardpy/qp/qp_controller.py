@@ -17,7 +17,7 @@ from giskardpy.qp.qp_formulation import QPFormulation
 from giskardpy.qp.qp_solver import QPSolver
 from giskardpy.qp.qp_solver_ids import SupportedQPSolver
 from giskardpy.qp.weight_gain import QuadraticWeightGain, LinearWeightGain
-from giskardpy.symbol_manager import symbol_manager, SymbolManager
+from semantic_world.spatial_types.symbol_manager import symbol_manager, SymbolManager
 from giskardpy.utils.utils import create_path, get_all_classes_in_module
 from line_profiler import profile
 

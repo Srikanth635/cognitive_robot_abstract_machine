@@ -24,7 +24,7 @@ from giskardpy.model.links import Link
 from giskardpy.model.utils import hacky_urdf_parser_fix, robot_name_from_urdf_string
 from giskardpy.qp.free_variable import FreeVariable
 from giskardpy.qp.next_command import NextCommands
-from giskardpy.symbol_manager import symbol_manager
+from semantic_world.spatial_types.symbol_manager import symbol_manager
 from giskardpy.utils.decorators import memoize, copy_memoize, clear_memo
 from giskardpy.utils.utils import suppress_stderr, clear_cached_properties
 from line_profiler import profile
