@@ -75,6 +75,13 @@ class Shape(ABC):
     """
     origin: TransformationMatrix
 
+    def as_bounding_box(self) -> BoundingBox:
+        """
+        Returns the bounding box of the shape.
+        This method should be implemented by subclasses.
+        """
+        raise NotImplementedError("Subclasses must implement this method.")
+
 @dataclass
 class Mesh(Shape):
     """
@@ -124,6 +131,13 @@ class Sphere(Primitive):
     Radius of the sphere.
     """
 
+    def as_bounding_box(self) -> BoundingBox:
+        """
+        Returns the bounding box of the sphere.
+        """
+        return BoundingBox(-self.radius, -self.radius, -self.radius,
+                           self.radius, self.radius, self.radius)
+
 
 @dataclass
 class Cylinder(Primitive):
@@ -132,6 +146,16 @@ class Cylinder(Primitive):
     """
     width: float = 0.5
     height: float = 0.5
+
+    def as_bounding_box(self) -> BoundingBox:
+        """
+        Returns the bounding box of the cylinder.
+        The bounding box is axis-aligned and centered at the origin.
+        """
+        half_width = self.width / 2
+        half_height = self.height / 2
+        return BoundingBox(-half_width, -half_width, -half_height,
+                           half_width, half_width, half_height)
 
 
 @dataclass
@@ -209,6 +233,18 @@ class BoundingBox:
         :return: The z interval of the bounding box.
         """
         return SimpleInterval(self.min_z, self.max_z, Bound.CLOSED, Bound.CLOSED)
+
+    @property
+    def depth(self) -> float:
+        return self.max_x - self.min_x
+
+    @property
+    def height(self) -> float:
+        return self.max_z - self.min_z
+
+    @property
+    def width(self) -> float:
+        return self.max_y - self.min_y
 
     @property
     def simple_event(self) -> SimpleEvent:
@@ -312,6 +348,28 @@ class BoundingBox:
         return cls(bounds[0][0], bounds[0][1], bounds[0][2],
                    bounds[1][0], bounds[1][1], bounds[1][2])
 
+    def get_points(self) -> List[Point3]:
+        """
+        Get the 8 corners of the bounding box as Point3 objects.
+
+        :return: A list of Point3 objects representing the corners of the bounding box.
+        """
+        return [Point3.from_xyz(x, y, z)
+                for x in (self.min_x, self.max_x)
+                for y in (self.min_y, self.max_y)
+                for z in (self.min_z, self.max_z)]
+
+    @classmethod
+    def from_min_max(cls, min_point: Point3, max_point: Point3) -> Self:
+        """
+        Set the axis-aligned bounding box from a minimum and maximum point.
+
+        :param min_point: The minimum point
+        :param max_point: The maximum point
+        """
+        return cls(*min_point.to_np()[:3], *max_point.to_np()[:3])
+
+
 
 @dataclass
 class BoundingBoxCollection:
@@ -376,3 +434,13 @@ class BoundingBoxCollection:
         :return: The list of bounding boxes.
         """
         return cls([box for simple_event in event.simple_sets for box in cls.from_simple_event(simple_event)])
+
+    @classmethod
+    def from_shapes(cls, shapes: List[Shape]) -> Self:
+        """
+        Create a bounding box collection from a list of shapes.
+
+        :param shapes: The list of shapes.
+        :return: The bounding box collection.
+        """
+        return cls([shape.as_bounding_box() for shape in shapes])
