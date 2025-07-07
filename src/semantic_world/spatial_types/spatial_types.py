@@ -1433,47 +1433,9 @@ def hessian(expression, symbols):
     return Expression(ca.hessian(expressions, Expression(symbols).s)[0])
 
 
-def manipulability_dot(expressions):
-    symbols = expressions.free_symbols()
-    expressions = _to_sx(expressions)
-    J = jacobian(expressions, symbols)
-    JJT = J.dot(J.T)
-    m = sqrt(det(JJT))
-    nJv = ca.vec(ca.inv(_to_sx(J.dot(J.T))))
-    Hs = defaultdict(list)
-    for e_i in range(expressions.shape[0]):
-        H_columns = ca.vertsplit(hessian(expressions[0], symbols).s)
-        for s_i, s in enumerate(symbols):
-            Hs[s].append(H_columns[s_i])
-    Hs_stacked = {}
-    for s, H in Hs.items():
-        Hs_stacked[s] = vstack(H)
-    md = {}
-    for s_i, s in enumerate(symbols):
-        md[s] = m * Expression(ca.mtimes(ca.vec(_to_sx(J.dot(Hs_stacked[s].T).T)).T, nJv))
-    return md
-
-
 def jacobian(expressions, symbols):
     expressions = Expression(expressions)
     return Expression(ca.jacobian(expressions.s, Expression(symbols).s))
-
-
-def jacobian_with_dict(expressions, symbols):
-    J = []
-    for e in expressions:
-        if isinstance(e, Expression):
-            ed = Expression(ca.jacobian(e.s, Expression(symbols).s))
-        else:
-            ed = []
-            for s in symbols:
-                try:
-                    ed.append(e[s])
-                except KeyError:
-                    ed.append(0)
-            ed = Expression(ed).T
-        J.append(ed)
-    return vstack(J)
 
 
 def jacobian_dot(expressions, symbols, symbols_dot):
