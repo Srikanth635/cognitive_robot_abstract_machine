@@ -10,6 +10,7 @@ from semantic_world.graph_of_convex_sets import GraphOfConvexSets, SpatialVariab
 from semantic_world.geometry import BoundingBox, BoundingBoxCollection
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.spatial_types import Point3
+from semantic_world.views import MultiBodyView
 from semantic_world.world import World
 from semantic_world.world_entity import Body
 
@@ -67,19 +68,17 @@ class GCSFromWorldTestCase(unittest.TestCase):
         apartment_parser = URDFParser(apartment)
         cls.world = apartment_parser.parse()
 
-
-
     def test_from_world(self):
-        search_space = BoundingBox(min_x=-1, max_x=1,
-                                   min_y=-1, max_y=1,
-                                   min_z=0.1, max_z=1).as_collection()
+        search_space = BoundingBox(min_x=-5, max_x=-2,
+                                   min_y=-1, max_y=2,
+                                   min_z=0, max_z=2).as_collection()
         gcs = GraphOfConvexSets.free_space_from_world(self.world, search_space=search_space)
         self.assertIsNotNone(gcs)
         self.assertGreater(len(gcs.graph.nodes()), 0)
         self.assertGreater(len(gcs.graph.edges()), 0)
 
-        start = Point3.from_xyz(-0.9, -0.9, 0.4)
-        target = Point3.from_xyz(-0.9, 0.9, 0.9)
+        start = Point3.from_xyz(-4.5, -0.5, 0.4)
+        target = Point3.from_xyz(-2.5, 1.5, 0.9)
 
         path = gcs.path_from_to(start, target)
 
@@ -92,10 +91,10 @@ class GCSFromWorldTestCase(unittest.TestCase):
             gcs.path_from_to(start, target)
 
     def test_navigation_map_from_world(self):
-        search_space = BoundingBox(min_x=-1, max_x=1,
-                                   min_y=-1, max_y=1,
-                                   min_z=0.1, max_z=1)
-        gcs = GraphOfConvexSets.navigation_map_from_world(self.world, search_space=BoundingBoxCollection([search_space]))
+        search_space = BoundingBox(min_x=-5, max_x=-2,
+                                   min_y=-1, max_y=2,
+                                   min_z=0, max_z=2).as_collection()
+        gcs = GraphOfConvexSets.navigation_map_from_world(self.world, search_space=search_space)
         self.assertGreater(len(gcs.graph.nodes()), 0)
         self.assertGreater(len(gcs.graph.edges()), 0)
 
