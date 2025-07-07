@@ -203,7 +203,11 @@ def test_compute_ik(world_setup):
                        [0.841471, 0.540302, 0., 0.],
                        [0., 0., 1., 0.],
                        [0., 0., 0., 1.]])
-    print(world.compute_inverse_kinematics(l2, r2, target))
+    joint_state = world.compute_inverse_kinematics(l2, r2, target)
+    for joint, state in joint_state.items():
+        world.state[joint.name].position = state
+    world.notify_state_change()
+    assert np.allclose(world.compute_forward_kinematics_np(l2, r2), target, atol=1e-3)
 
 
 def test_compute_fk_expression(world_setup):
