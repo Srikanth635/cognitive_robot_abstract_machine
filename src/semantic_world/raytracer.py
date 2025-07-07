@@ -1,4 +1,5 @@
 import numpy as np
+import trimesh
 from trimesh import Scene
 
 from .geometry import Mesh
@@ -71,10 +72,9 @@ class RayTracer:
         :return: A segmentation mask as a numpy array.
         """
         self.update_scene()
-        rays = self.create_camera_rays(camera_position, target_position, resolution=resolution)
-        points, index_ray, index_tri = self.scene.to_mesh().ray.intersects_location(rays[:, :3], rays[:, 3:6],
-                                                                                    multiple_hits=False,
-                                                                                    return_index=False)
+        ray_origins, ray_directions, pixels = self.create_camera_rays(camera_position, target_position, resolution=resolution)
+        points, index_ray, index_tri = self.scene.to_mesh().ray.intersects_location(ray_origins, ray_directions, multiple_hits=False )
+        return points, index_ray, index_tri
 
     def create_depth_map(self, camera_position: np.ndarray, target_position: np.ndarray,
                          resolution: int = 512) -> np.ndarray:
@@ -87,10 +87,28 @@ class RayTracer:
         :return: A depth map as a numpy array.
         """
         self.update_scene()
-        rays = self.create_camera_rays(camera_position, target_position, resolution=resolution)
-        points, index_ray, index_tri = self.scene.to_mesh().ray.intersects_location(rays[:, :3], rays[:, 3:6],
-                                                                                    multiple_hits=False,
-                                                                                    return_index=False)
+        ray_origins, ray_directions, pixels = self.create_camera_rays(camera_position, target_position, resolution=resolution)
+        # Use the ray tracer scene to find intersections with the mesh
+        # ray_origins = np.array([[0, 0, -5], ])
+        # ray_directions = np.array([[0, 0, 1]])
+        # ray_origins, ray_directions = self.scene.camera_rays()[:2]
+        points, index_ray, index_tri = self.scene.to_mesh().ray.intersects_location(ray_origins, ray_directions, multiple_hits=False)
+        depth = trimesh.util.diagonal_dot(points - ray_origins[0], ray_directions[index_ray])
+        pixel_ray = pixels[index_ray]
+
+        # create a numpy array we can turn into an image
+        # doing it with uint8 creates an `L` mode greyscale image
+        a = np.zeros(self.scene.camera.resolution, dtype=np.uint8)
+
+        # scale depth against range (0.0 - 1.0)
+        depth_float = (depth - depth.min()) / np.ptp(depth)
+
+        # convert depth into 0 - 255 uint8
+        depth_int = (depth_float * 255).round().astype(np.uint8)
+        # assign depth to correct pixel locations
+        a[pixel_ray[:, 0], pixel_ray[:, 1]] = depth_int
+
+        return a
 
     def create_camera_rays(self, camera_position: np.ndarray, target_position: np.ndarray,
                            resolution: int = 512) -> np.ndarray:
@@ -104,9 +122,15 @@ class RayTracer:
         """
         self.update_scene()
         self.scene.camera.resolution = (resolution, resolution)
-        self.scene.camera.fov = 90.0
+        # self.scene.camera.fov = 90.0
+        # base_pose_rotation = camera_position[:3, :3]
+        # target_pose_rotation = target_position[:3, :3]
+        # relative_rotation = np.linalg.inv(base_pose_rotation) @ target_pose_rotation
+        # camera_position[:3, :3] = relative_rotation
+        # print(camera_position)
+
+        # self.scene.graph[self.scene.camera.name] = camera_position
+        # self.scene.camera.look_at(points=[target_position[:3, 3]],)
         self.scene.graph[self.scene.camera.name] = camera_position
-        camera_transform = self.scene.camera.look_at(target_position)
-        self.scene.graph[self.scene.camera.name] = camera_transform
-        rays = self.scene.camera.to_rays()
-        return rays
+
+        return self.scene.camera_rays()
