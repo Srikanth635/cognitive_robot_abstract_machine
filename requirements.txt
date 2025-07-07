@@ -10,7 +10,7 @@ pytest
 scipy
 ormatic
 sqlacodegen
-ripple_down_rules
+ripple_down_rules==0.6.24
 pytest-order
 sqlalchemy
 random_events==4.1.18
