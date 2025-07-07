@@ -189,19 +189,6 @@ class TestSymbolManager:
         with pytest.raises(KeyError, match='Cannot resolve'):
             manager.resolve_symbols([unregistered_symbol])
 
-    def test_resolve_expr(self):
-        """Test resolving compiled expressions"""
-        manager = SymbolManager()
-
-        # Create a mock compiled function
-        mock_expr = Mock()
-        mock_expr.symbol_parameters = []
-        mock_expr.fast_call.return_value = 42.0
-
-        result = manager.resolve_expr(mock_expr)
-
-        assert result == 42.0
-        mock_expr.fast_call.assert_called_once()
 
     def test_evaluate_expr_with_number(self):
         """Test evaluating numeric expressions"""

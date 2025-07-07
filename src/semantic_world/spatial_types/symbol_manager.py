@@ -54,11 +54,19 @@ class SymbolManager(metaclass=SingletonMeta):
         self.symbol_to_provider = {}
 
     def register_symbol_provider(self, name: str, provider: Provider) -> cas.Symbol:
+        """
+        Creates a new symbol with the given name and associates it with a provider.
+        """
         symbol = cas.Symbol(name)
         self.symbol_to_provider[symbol] = provider
         return symbol
 
     def register_point3(self, name: str, provider: Callable[[], Tuple[float, float, float]]) -> cas.Point3:
+        """
+        :param name: Used as prefix for the symbols x, y, and z.
+        :param provider: A provider that returns a tuple of floats for x, y, and z.
+        :return: A Point3 expression with symbols for x, y, and z.
+        """
         sx = self.register_symbol_provider(f'{name}.x', lambda: provider()[0])
         sy = self.register_symbol_provider(f'{name}.y', lambda: provider()[1])
         sz = self.register_symbol_provider(f'{name}.z', lambda: provider()[2])
@@ -66,6 +74,11 @@ class SymbolManager(metaclass=SingletonMeta):
         return p
 
     def register_vector3(self, name: str, provider: Callable[[], Tuple[float, float, float]]) -> cas.Vector3:
+        """
+        :param name: Used as prefix for the symbols x, y, and z.
+        :param provider: A provider that returns a tuple of floats for x, y, and z.
+        :return: A Vector3 expression with symbols for x, y, and z.
+        """
         sx = self.register_symbol_provider(f'{name}.x', lambda: provider()[0])
         sy = self.register_symbol_provider(f'{name}.y', lambda: provider()[1])
         sz = self.register_symbol_provider(f'{name}.z', lambda: provider()[2])
@@ -74,6 +87,11 @@ class SymbolManager(metaclass=SingletonMeta):
 
     def register_quaternion(self, name: str, provider: Callable[[], Tuple[float, float, float, float]]) \
             -> cas.Quaternion:
+        """
+        :param name: Used as prefix for the symbols x, y, z, and w.
+        :param provider: A provider that returns a tuple of floats for x, y, z, and w.
+        :return: A Quaternion expression with symbols for x, y, z, and w.
+        """
         sx = self.register_symbol_provider(f'{name}.x', lambda: provider()[0])
         sy = self.register_symbol_provider(f'{name}.y', lambda: provider()[1])
         sz = self.register_symbol_provider(f'{name}.z', lambda: provider()[2])
@@ -86,6 +104,12 @@ class SymbolManager(metaclass=SingletonMeta):
                                                                     Tuple[float, float, float, float],
                                                                     Tuple[float, float, float, float]]]) \
             -> cas.TransformationMatrix:
+        """
+        :param name: Used as prefix for the symbols.
+        :param provider: A provider that returns a matrix.
+                    A numpy 4x4 matrix is fine, but only a 3x4 matrix is required, as the last row is always [0,0,0,1].
+        :return: A TransformationMatrix expression with symbols at all entries.
+        """
         symbols = []
         for row in range(3):
             symbols.append([])
@@ -98,6 +122,10 @@ class SymbolManager(metaclass=SingletonMeta):
 
     def resolve_symbols(self, symbols: Union[List[cas.Symbol], List[List[cas.Symbol]]]) \
             -> Union[np.ndarray, List[np.ndarray]]:
+        """
+        Given a list of symbols or a list of lists of symbols, returns a list of numeric values for each symbol computed using their providers.
+        Intended to be used in combination with `CompiledFunction.symbol_parameters` and `CompiledFunction.fast_call`.
+        """
         try:
             if len(symbols) == 0:
                 return np.array([])
@@ -123,10 +151,10 @@ class SymbolManager(metaclass=SingletonMeta):
                     raise KeyError(f'Cannot resolve {s} ({e2.__class__.__name__}: {str(e2)})')
             raise e
 
-    def resolve_expr(self, expr: cas.CompiledFunction):
-        return expr.fast_call(*self.resolve_symbols(expr.symbol_parameters))
-
     def evaluate_expr(self, expr: cas.Expression):
+        """
+        Compiles and evaluates an arbitrary symbolic expression, using the current symbol providers.
+        """
         if isinstance(expr, (int, float)):
             return expr
         f = expr.compile()
