@@ -126,7 +126,6 @@ class GraphOfConvexSets:
                     continue  # no true overlap
                 box = _intersection_box(mn_i, mx_i, mn_j, mx_j)
 
-                # TODO check how to get the correct box here
                 self.graph.add_edge(i, j, box)
 
     def draw(self):
