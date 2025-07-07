@@ -8,7 +8,7 @@ from giskardpy.motion_statechart.graph_node import MotionStatechartNode
 from giskardpy.motion_statechart.monitors.monitors import Monitor, Monitor
 from giskardpy.god_map import god_map
 from giskardpy.motion_statechart.tasks.task import Task
-from giskardpy.symbol_manager import symbol_manager
+from semantic_world.spatial_types.symbol_manager import symbol_manager
 from giskardpy.utils.utils import string_shortener
 from giskardpy.data_types.exceptions import GoalInitalizationException
 from giskardpy.model.joints import OneDofJoint

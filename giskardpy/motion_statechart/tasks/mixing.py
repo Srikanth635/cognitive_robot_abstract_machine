@@ -5,7 +5,7 @@ from giskardpy.god_map import god_map
 from giskardpy.motion_statechart.tasks.cartesian_tasks import CartesianPosition, CartesianOrientation
 from giskardpy.motion_statechart.tasks.task import Task, WEIGHT_BELOW_CA
 import semantic_world.spatial_types.spatial_types as cas
-from giskardpy.symbol_manager import symbol_manager
+from semantic_world.spatial_types.symbol_manager import symbol_manager
 
 
 class SpiralMixing(Task):

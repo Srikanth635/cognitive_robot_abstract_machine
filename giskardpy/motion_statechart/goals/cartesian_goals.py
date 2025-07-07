@@ -12,7 +12,7 @@ from giskardpy.model.joints import DiffDrive, OmniDrive
 from giskardpy.motion_statechart.monitors.cartesian_monitors import InWorldSpace
 from giskardpy.motion_statechart.tasks.cartesian_tasks import CartesianPosition, CartesianOrientation, \
     CartesianPositionStraight, CartesianPose, NoBase, KeepInWorkspace
-from giskardpy.symbol_manager import symbol_manager
+from semantic_world.spatial_types.symbol_manager import symbol_manager
 from giskardpy.motion_statechart.tasks.task import WEIGHT_ABOVE_CA, Task
 
 

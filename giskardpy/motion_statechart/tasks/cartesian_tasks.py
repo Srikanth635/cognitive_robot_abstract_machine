@@ -6,7 +6,7 @@ from giskardpy.data_types.data_types import PrefixName, ColorRGBA
 from giskardpy.god_map import god_map
 from giskardpy.motion_statechart.monitors.cartesian_monitors import PositionReached, OrientationReached
 from giskardpy.motion_statechart.tasks.task import Task, WEIGHT_ABOVE_CA
-from giskardpy.symbol_manager import symbol_manager
+from semantic_world.spatial_types.symbol_manager import symbol_manager
 import numpy as np
 
 

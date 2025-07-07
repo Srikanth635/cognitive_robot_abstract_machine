@@ -5,7 +5,7 @@ import semantic_world.spatial_types.spatial_types as cas
 from giskardpy.data_types.data_types import Derivatives
 from giskardpy.god_map import god_map
 from giskardpy.motion_statechart.tasks.task import Task
-from giskardpy.symbol_manager import symbol_manager
+from semantic_world.spatial_types.symbol_manager import symbol_manager
 
 
 class DebugGoal(Task):

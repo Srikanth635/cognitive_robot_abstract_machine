@@ -6,7 +6,7 @@ from itertools import product, combinations_with_replacement, combinations
 from typing import List, Dict, Optional, Tuple, Iterable, Set, DefaultDict, Callable
 
 import numpy as np
-from giskardpy.symbol_manager import symbol_manager
+from semantic_world.spatial_types.symbol_manager import symbol_manager
 from lxml import etree
 
 from giskardpy.data_types.data_types import Derivatives, PrefixName

@@ -19,7 +19,7 @@ from giskardpy.qp.free_variable import FreeVariable
 from giskardpy.qp.pos_in_vel_limits import b_profile
 from giskardpy.qp.qp_formulation import QPFormulation
 from giskardpy.qp.weight_gain import QuadraticWeightGain, LinearWeightGain
-from giskardpy.symbol_manager import SymbolManager, symbol_manager
+from semantic_world.spatial_types.symbol_manager import SymbolManager, symbol_manager
 from giskardpy.utils.decorators import memoize
 from line_profiler import profile
 
