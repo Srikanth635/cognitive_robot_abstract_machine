@@ -55,7 +55,8 @@ class InverseKinematicsSolver:
     using quadratic programming optimization.
     """
     _large_value = np.inf
-    _convergence_tolerance = 1e-4
+    _convergence_velocity_tolerance = 1e-4
+    _convergence_slack_tolerance = 1e-3
 
     def __init__(self, world: World):
         self.world = world
@@ -132,8 +133,8 @@ class InverseKinematicsSolver:
         return xstar[:len(qp_problem.active_symbols)], xstar[len(qp_problem.active_symbols):]
 
     def _check_convergence(self, velocity: np.ndarray, slack: np.ndarray) -> bool:
-        vel_below_threshold = np.max(np.abs(velocity)) < self._convergence_tolerance
-        slack_below_threshold = np.max(np.abs(slack)) < self._convergence_tolerance
+        vel_below_threshold = np.max(np.abs(velocity)) < self._convergence_velocity_tolerance
+        slack_below_threshold = np.max(np.abs(slack)) < self._convergence_slack_tolerance
         if vel_below_threshold and slack_below_threshold:
             return True
         if vel_below_threshold and not slack_below_threshold:
@@ -164,17 +165,17 @@ class QPProblem:
 
     def _extract_dofs(self) -> Tuple[list[DegreeOfFreedom], list[DegreeOfFreedom], list[cas.Symbol], list[cas.Symbol]]:
         """Extract active and passive DOFs from the kinematic chain."""
-        active_dofs = []
-        passive_dofs = []
-
-        for connection in self.world.compute_chain_of_connections(self.root, self.tip):
+        active_dofs_set = set()
+        passive_dofs_set = set()
+        root_to_common_link, common_link_to_tip = self.world.compute_split_chain_of_connections(self.root, self.tip)
+        for connection in root_to_common_link + common_link_to_tip:
             if isinstance(connection, ActiveConnection):
-                active_dofs.extend(connection.active_dofs)
+                active_dofs_set.update(connection.active_dofs)
             if isinstance(connection, PassiveConnection):
-                passive_dofs.extend(connection.passive_dofs)
+                passive_dofs_set.update(connection.passive_dofs)
 
-        active_dofs = list(sorted(active_dofs, key=lambda d: str(d.name)))
-        passive_dofs = list(sorted(passive_dofs, key=lambda d: str(d.name)))
+        active_dofs = list(sorted(active_dofs_set, key=lambda d: str(d.name)))
+        passive_dofs = list(sorted(passive_dofs_set, key=lambda d: str(d.name)))
 
         active_symbols = [dof.position_symbol for dof in active_dofs]
         passive_symbols = [dof.position_symbol for dof in passive_dofs]

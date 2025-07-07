@@ -174,6 +174,7 @@ def test_compute_fk_connection6dof(world_setup):
     world.state[connection.qw.name].position = 0
     world.state[connection.qz.name].position = 1
     world.notify_state_change()
+    fk = world.compute_forward_kinematics_np(world.root, bf)
     np.testing.assert_array_equal(fk, [[-1., 0., 0., 1.],
                                        [0., -1., 0., 0.],
                                        [0., 0., 1., 0.],
@@ -198,9 +199,11 @@ def test_compute_fk(world_setup):
 
 def test_compute_ik(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
-    target = np.eye(4)
-    target[0, 3] = 1.
-    print(world.compute_inverse_kinematics(bf, l2, target))
+    target = np.array([[0.540302, -0.841471, 0., -1.],
+                       [0.841471, 0.540302, 0., 0.],
+                       [0., 0., 1., 0.],
+                       [0., 0., 0., 1.]])
+    print(world.compute_inverse_kinematics(l2, r2, target))
 
 
 def test_compute_fk_expression(world_setup):
