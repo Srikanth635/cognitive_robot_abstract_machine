@@ -1,9 +1,8 @@
+from typing import Tuple
+
 import numpy as np
 import trimesh
 from trimesh import Scene
-
-from .geometry import Mesh
-
 
 class RayTracer:
 
@@ -40,13 +39,12 @@ class RayTracer:
         bodies_to_add = [body for body in self.world.bodies if body.name.name not in "\t".join(self.scene.graph.nodes)]
         for body in bodies_to_add:
             for i, collision in enumerate(body.collision):
-                if isinstance(collision, Mesh):
-                    self.collision_to_scene = self.scene.add_geometry(collision.mesh,
-                                                                      node_name=body.name.name + f"_collision_{i}",
-                                                                      parent_node_name="world",
-                                                                      transform=self.world.compute_forward_kinematics_np(
-                                                                          self.world.root,
-                                                                          body) @ collision.origin.to_np())
+                self.collision_to_scene[collision] = self.scene.add_geometry(collision.mesh,
+                                                                  node_name=body.name.name + f"_collision_{i}",
+                                                                  parent_node_name="world",
+                                                                  transform=self.world.compute_forward_kinematics_np(
+                                                                      self.world.root,
+                                                                      body) @ collision.origin.to_np())
 
     def update_transforms(self):
         """
@@ -55,44 +53,39 @@ class RayTracer:
         """
         for body in self.world.bodies:
             for i, collision in enumerate(body.collision):
-                if isinstance(collision, Mesh):
-                    transform = self.world.compute_forward_kinematics_np(self.world.root,
-                                                                         body) @ collision.origin.to_np()
-                    self.scene.graph[body.name.name + f"_collision_{i}"] = transform
+                transform = self.world.compute_forward_kinematics_np(self.world.root,
+                                                                     body) @ collision.origin.to_np()
+                self.scene.graph[body.name.name + f"_collision_{i}"] = transform
 
-
-    def create_segmentation_mask(self, camera_position: np.ndarray, target_position: np.ndarray,
+    def create_segmentation_mask(self, camera_position: np.ndarray,
                                  resolution: int = 512) -> np.ndarray:
         """
         Creates a segmentation mask for the ray tracer scene from the camera position to the target position.
 <
         :param camera_position: The position of the camera.t
-        :param target_position: The target position to look at.
         :param resolution: The resolution of the segmentation mask.
         :return: A segmentation mask as a numpy array.
         """
         self.update_scene()
-        ray_origins, ray_directions, pixels = self.create_camera_rays(camera_position, target_position, resolution=resolution)
-        points, index_ray, index_tri = self.scene.to_mesh().ray.intersects_location(ray_origins, ray_directions, multiple_hits=False )
+        ray_origins, ray_directions, pixels = self.create_camera_rays(camera_position, resolution=resolution)
+        points, index_ray, index_tri = self.scene.to_mesh().ray.intersects_location(ray_origins, ray_directions,
+                                                                                    multiple_hits=False)
         return points, index_ray, index_tri
 
-    def create_depth_map(self, camera_position: np.ndarray, target_position: np.ndarray,
+    def create_depth_map(self, camera_position: np.ndarray,
                          resolution: int = 512) -> np.ndarray:
         """
         Creates a depth map for the ray tracer scene from the camera position to the target position.
 
         :param camera_position: The position of the camera.
-        :param target_position: The target position to look at.
         :param resolution: The resolution of the depth map.
         :return: A depth map as a numpy array.
         """
         self.update_scene()
-        ray_origins, ray_directions, pixels = self.create_camera_rays(camera_position, target_position, resolution=resolution)
-        # Use the ray tracer scene to find intersections with the mesh
-        # ray_origins = np.array([[0, 0, -5], ])
-        # ray_directions = np.array([[0, 0, 1]])
-        # ray_origins, ray_directions = self.scene.camera_rays()[:2]
-        points, index_ray, index_tri = self.scene.to_mesh().ray.intersects_location(ray_origins, ray_directions, multiple_hits=False)
+        ray_origins, ray_directions, pixels = self.create_camera_rays(camera_position, resolution=resolution)
+        # Code from the example in trimesh repo: examples/raytrace.py
+        points, index_ray, index_tri = self.scene.to_mesh().ray.intersects_location(ray_origins, ray_directions,
+                                                                                    multiple_hits=False)
         depth = trimesh.util.diagonal_dot(points - ray_origins[0], ray_directions[index_ray])
         pixel_ray = pixels[index_ray]
 
@@ -110,27 +103,28 @@ class RayTracer:
 
         return a
 
-    def create_camera_rays(self, camera_position: np.ndarray, target_position: np.ndarray,
-                           resolution: int = 512) -> np.ndarray:
+    def create_camera_rays(self, camera_poe: np.ndarray,
+                           resolution: int = 512, fov=90) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
-        Creates camera rays for the ray tracer scene from the camera position to the target position.
+        Creates camera rays for the ray tracer scene from the camera position to the target position. Places the camera
+        at the given position and orientation view of the camera is along the x-axis.
 
-        :param camera_position: The position of the camera.
-        :param target_position: The target position to look at.
+        :param camera_poe: The position of the camera as a 4x4 transformation matrix.
         :param resolution: The resolution of the camera rays.
-        :return: Camera rays as a numpy array.
+        :param fov: The field of view of the camera in degrees.
+        :return: The origin points of the rays, the direction vectors of the rays, and the pixel coordinates.
         """
         self.update_scene()
         self.scene.camera.resolution = (resolution, resolution)
-        # self.scene.camera.fov = 90.0
-        # base_pose_rotation = camera_position[:3, :3]
-        # target_pose_rotation = target_position[:3, :3]
-        # relative_rotation = np.linalg.inv(base_pose_rotation) @ target_pose_rotation
-        # camera_position[:3, :3] = relative_rotation
-        # print(camera_position)
+        rotate = trimesh.transformations.rotation_matrix(
+            angle=np.radians(-90.0), direction=[0, 1, 0], point=self.scene.centroid
+        )
+        rotate_x = trimesh.transformations.rotation_matrix(
+            angle=np.radians(180.0), direction=[1, 0, 0], point=self.scene.centroid
+        )
 
-        # self.scene.graph[self.scene.camera.name] = camera_position
-        # self.scene.camera.look_at(points=[target_position[:3, 3]],)
-        self.scene.graph[self.scene.camera.name] = camera_position
+        self.scene.camera.fov = (fov, fov)
+        self.scene.camera.resolution  = [resolution, resolution]
+        self.scene.graph[self.scene.camera.name] = camera_poe @ rotate_x @ rotate
 
         return self.scene.camera_rays()
