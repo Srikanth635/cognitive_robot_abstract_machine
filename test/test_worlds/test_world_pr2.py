@@ -8,6 +8,7 @@ from semantic_world.adapters.urdf import URDFParser
 from semantic_world.connections import OmniDrive
 from semantic_world.ik_solver import MaxIterationsException, UnreachableException
 from semantic_world.prefixed_name import PrefixedName
+from semantic_world.robots import PR2
 from semantic_world.spatial_types.derivatives import Derivatives
 from semantic_world.spatial_types.symbol_manager import symbol_manager
 from semantic_world.world import World, Body
@@ -191,3 +192,14 @@ def test_apply_control_commands_omni_drive_pr2(pr2_world):
     assert pr2_world.state[omni_drive.y.name].acceleration == 0.
     assert pr2_world.state[omni_drive.y.name].velocity == 1.094837581924854
     assert pr2_world.state[omni_drive.y.name].position == 0.1094837581924854
+
+def test_pr2_view(pr2_world):
+    pr2 = PR2.get_view(pr2_world)
+    print(pr2)
+
+    assert len(pr2.manipulators) == 2
+    assert len(pr2.manipulator_chains) == 2
+    assert len(pr2.sensors) == 1
+    assert len(pr2.sensor_chains) == 1
+    assert pr2.sensor_chains[0].sensors == pr2.sensors
+    assert pr2.odom.name.name == 'odom_combined'
