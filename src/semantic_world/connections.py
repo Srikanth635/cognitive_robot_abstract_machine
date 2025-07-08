@@ -19,6 +19,8 @@ class Has1DOFState:
     Mixin class that implements state access for connections with 1 degree of freedom.
     """
 
+    dof: DegreeOfFreedom
+
     @property
     def position(self) -> float:
         return self._world.state[self.dof.name].position
