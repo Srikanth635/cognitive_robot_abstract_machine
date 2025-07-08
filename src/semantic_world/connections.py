@@ -12,7 +12,7 @@ from .prefixed_name import PrefixedName
 from .spatial_types.derivatives import Derivatives
 from .spatial_types.math import quaternion_from_rotation_matrix
 from .world_entity import Connection
-
+from .types import NpMatrix4x4
 
 class Has1DOFState:
     """
@@ -282,11 +282,11 @@ class Connection6DoF(PassiveConnection):
                                                                           child_frame=self.child.name)
 
     @property
-    def origin(self) -> np.ndarray:
+    def origin(self) -> NpMatrix4x4:
         return super().origin
 
     @origin.setter
-    def origin(self, transformation: np.ndarray) -> None:
+    def origin(self, transformation: NpMatrix4x4) -> None:
         orientation = quaternion_from_rotation_matrix(transformation)
         self._world.state[self.x.name].position = transformation[0, 3]
         self._world.state[self.y.name].position = transformation[1, 3]

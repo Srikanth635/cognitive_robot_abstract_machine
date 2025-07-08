@@ -3,6 +3,7 @@ from typing import Dict, Callable, Union, Tuple, List
 import numpy as np
 
 from . import spatial_types as cas
+from ..types import AnyMatrix4x4
 
 Provider = Union[float, Callable[[], float]]
 
@@ -100,9 +101,7 @@ class SymbolManager(metaclass=SingletonMeta):
         return q
 
     def register_transformation_matrix(self, name: str,
-                                       provider: Callable[[], Tuple[Tuple[float, float, float, float],
-                                                                    Tuple[float, float, float, float],
-                                                                    Tuple[float, float, float, float]]]) \
+                                       provider: Callable[[], AnyMatrix4x4]) \
             -> cas.TransformationMatrix:
         """
         :param name: Used as prefix for the symbols.

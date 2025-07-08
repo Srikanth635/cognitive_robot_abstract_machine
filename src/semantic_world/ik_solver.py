@@ -11,6 +11,7 @@ from .connections import ActiveConnection, PassiveConnection
 from .degree_of_freedom import DegreeOfFreedom
 from .spatial_types import spatial_types as cas
 from .spatial_types.derivatives import Derivatives
+from .types import NpMatrix4x4
 
 if TYPE_CHECKING:
     from .world import World
@@ -113,7 +114,7 @@ class InverseKinematicsSolver:
         self.world = world
         self.iteration = -1
 
-    def solve(self, root: Body, tip: Body, target: np.ndarray,
+    def solve(self, root: Body, tip: Body, target: NpMatrix4x4,
               dt: float = 0.05, max_iterations: int = 200,
               translation_velocity: float = 0.2, rotation_velocity: float = 0.2) -> Dict[DegreeOfFreedom, float]:
         """
@@ -217,7 +218,7 @@ class QPProblem:
     Represents a quadratic programming problem for inverse kinematics.
     """
 
-    def __init__(self, world: World, root: Body, tip: Body, target: np.ndarray, dt: float, translation_velocity: float,
+    def __init__(self, world: World, root: Body, tip: Body, target: NpMatrix4x4, dt: float, translation_velocity: float,
                  rotation_velocity: float):
         self.world = world
         self.root = root
@@ -317,7 +318,7 @@ class ConstraintBuilder:
     Used to limit the velocity of the DOFs, because the default values defined in the semantic world are sometimes unreasonably high.
     """
 
-    def __init__(self, world: World, root: Body, tip: Body, target: np.ndarray, dt: float, translation_velocity: float,
+    def __init__(self, world: World, root: Body, tip: Body, target: NpMatrix4x4, dt: float, translation_velocity: float,
                  rotation_velocity: float):
         self.world = world
         self.root = root

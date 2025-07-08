@@ -8,7 +8,6 @@ from enum import IntEnum
 from functools import wraps, lru_cache
 from typing import Dict, Tuple, OrderedDict, Union, Optional
 
-import daqp
 import matplotlib.pyplot as plt
 import numpy as np
 import rustworkx as rx
@@ -16,14 +15,14 @@ import rustworkx.visit
 import rustworkx.visualization
 from typing_extensions import List
 
-from .connections import HasUpdateState, Has1DOFState, ActiveConnection, PassiveConnection
+from .connections import HasUpdateState, Has1DOFState
 from .degree_of_freedom import DegreeOfFreedom
 from .ik_solver import InverseKinematicsSolver
 from .prefixed_name import PrefixedName
 from .spatial_types import spatial_types as cas
 from .spatial_types.derivatives import Derivatives
 from .spatial_types.math import inverse_frame
-from .spatial_types.symbol_manager import symbol_manager
+from .types import NpMatrix4x4
 from .utils import IDGenerator, copy_lru_cache
 from .world_entity import Body, Connection, View
 from .world_state import WorldState
@@ -118,7 +117,7 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
         return self.compiled_tf.fast_call(self.subs)
 
     @lru_cache(maxsize=None)
-    def compute_forward_kinematics_np(self, root: Body, tip: Body) -> np.ndarray:
+    def compute_forward_kinematics_np(self, root: Body, tip: Body) -> NpMatrix4x4:
         """
         Computes the forward kinematics from the root body to the tip body, root_T_tip.
 
@@ -674,7 +673,7 @@ class World:
         fk.child_frame = tip.name
         return fk
 
-    def compute_forward_kinematics_np(self, root: Body, tip: Body) -> np.ndarray:
+    def compute_forward_kinematics_np(self, root: Body, tip: Body) -> NpMatrix4x4:
         """
         Computes the forward kinematics from the root body to the tip body, root_T_tip.
 
@@ -695,7 +694,7 @@ class World:
                     result.append(dof)
         return result
 
-    def compute_inverse_kinematics(self, root: Body, tip: Body, target: np.ndarray,
+    def compute_inverse_kinematics(self, root: Body, tip: Body, target: NpMatrix4x4,
                                    dt: float = 0.05, max_iterations: int = 200,
                                    translation_velocity: float = 0.2, rotation_velocity: float = 0.2) \
             -> Dict[DegreeOfFreedom, float]:
