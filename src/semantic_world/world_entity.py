@@ -82,6 +82,10 @@ class Body(WorldEntity):
 
     @property
     def global_pose(self) -> np.ndarray:
+        """
+        Computes the pose of the body in the world frame.
+        :return: 4x4 transformation matrix.
+        """
         return self._world.compute_forward_kinematics_np(self._world.root, self)
 
 

@@ -7,6 +7,11 @@ from .spatial_types.derivatives import Derivatives
 
 
 class WorldStateView:
+    """
+    Returned if you access members in WorldState.
+    Provides a more convenient interface to the data of a single DOF.
+    """
+
     def __init__(self, data: np.ndarray):
         self.data = data
 
@@ -50,6 +55,13 @@ class WorldStateView:
 
 
 class WorldState(MutableMapping):
+    """
+    Tracks the state of all DOF in the world.
+    Data is stored in a 4xN numpy array, such that it can be used as input for compiled functions without copying.
+
+    This class adds a few convenience methods for manipulating this data.
+    """
+
     # 4 rows (pos, vel, acc, jerk), columns are joints
     data: np.ndarray
 
@@ -64,7 +76,7 @@ class WorldState(MutableMapping):
         self._names = []
         self._index = {}
 
-    def _add_joint(self, name: PrefixedName) -> None:
+    def _add_dof(self, name: PrefixedName) -> None:
         idx = len(self._names)
         self._names.append(name)
         self._index[name] = idx
@@ -77,7 +89,7 @@ class WorldState(MutableMapping):
 
     def __getitem__(self, name: PrefixedName) -> WorldStateView:
         if name not in self._index:
-            self._add_joint(name)
+            self._add_dof(name)
         idx = self._index[name]
         return WorldStateView(self.data[:, idx])
 
@@ -86,7 +98,7 @@ class WorldState(MutableMapping):
         if arr.shape != (4,):
             raise ValueError(f"Value for '{name}' must be length-4 array (pos, vel, acc, jerk).")
         if name not in self._index:
-            self._add_joint(name)
+            self._add_dof(name)
         idx = self._index[name]
         self.data[:, idx] = arr
 
@@ -143,7 +155,14 @@ class WorldState(MutableMapping):
         return self.data[3, :]
 
     def get_derivative(self, derivative: Derivatives) -> np.ndarray:
+        """
+        Retrieve the data for a whole derivative row.
+        """
         return self.data[derivative, :]
 
     def set_derivative(self, derivative: Derivatives, new_state: np.ndarray):
+        """
+        Overwrite the data for a whole derivative row.
+        Assums that the order of the DOFs is consistent.
+        """
         self.data[derivative, :] = new_state
