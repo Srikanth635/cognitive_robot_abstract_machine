@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from ctypes import c_int
+from enum import Enum
 from typing import Dict, TYPE_CHECKING, List, Tuple
 
 import daqp
@@ -21,30 +22,55 @@ class IKSolverException(Exception):
 
 
 class UnreachableException(IKSolverException):
+    iterations: int
+    """
+    After how many iterations the solver converged.
+    """
+
     def __init__(self, iterations: int):
-        super().__init__(f'Converged after {iterations}, but target pose not reached.')
+        self.iterations = iterations
+        super().__init__(f'Converged after {self.iterations}, but target pose not reached.')
 
 
 class MaxIterationsException(IKSolverException):
+    iterations: int
+    """
+    After how many iterations the solver did not converge.
+    """
+
     def __init__(self, iterations: int):
         super().__init__(f'Failed to converge in {iterations} iterations.')
 
 
-class QPSolverException(IKSolverException):
-    flag_map = {
-        2: 'Soft optimal',
-        1: 'Optimal',
-        -1: 'Infeasible',
-        -2: 'Cycling detected',
-        -3: 'Unbounded problem',
-        -4: 'Iteration limit reached',
-        -5: 'Nonconvex problem',
-        -6: 'Initial working set overdetermined'
-    }
+class DAQPSolverExitFlag(Enum):
+    """
+    Exit flags for the DAQP solver.
+    """
+    SOFT_OPTIMAL = (2, 'Soft optimal')
+    OPTIMAL = (1, 'Optimal')
+    INFEASIBLE = (-1, 'Infeasible')
+    CYCLING_DETECTED = (-2, 'Cycling detected')
+    UNBOUNDED_PROBLEM = (-3, 'Unbounded problem')
+    ITERATION_LIMIT_REACHED = (-4, 'Iteration limit reached')
+    NONCONVEX_PROBLEM = (-5, 'Nonconvex problem')
+    INITIAL_WORKING_SET_OVERDETERMINED = (-6, 'Initial working set overdetermined')
 
-    def __init__(self, exit_flag):
-        self.exit_flag = exit_flag
-        super().__init__(f'QP solver failed with exit flag: {self.flag_map[exit_flag]}')
+    def __init__(self, code, description):
+        self.code = code
+        self.description = description
+
+    @classmethod
+    def from_code(cls, code):
+        for flag in cls:
+            if flag.code == code:
+                return flag
+        raise ValueError(f"Unknown exit flag code: {code}")
+
+
+class QPSolverException(IKSolverException):
+    def __init__(self, exit_flag_code):
+        self.exit_flag = DAQPSolverExitFlag.from_code(exit_flag_code)
+        super().__init__(f'QP solver failed with exit flag: {self.exit_flag.description}')
 
 
 class InverseKinematicsSolver:
@@ -55,8 +81,33 @@ class InverseKinematicsSolver:
     using quadratic programming optimization.
     """
     _large_value = np.inf
+    """
+    Used as bounds for slack variables. 
+    Only needs to be changed when a different QP solver is used, as some can't handle inf.
+    """
+
     _convergence_velocity_tolerance = 1e-4
+    """
+    If the velocity of the active DOFs is below this threshold, the solver is considered to have converged.
+    Unit depends on the DOF, e.g. rad/s for revolute joints or m/s for prismatic joints.
+    """
+
     _convergence_slack_tolerance = 1e-3
+    """
+    The slack variables describe how much the target is violated. 
+    If all slack variables are below this threshold, the solver found a solution.
+    Unit is m for the position target or rad for the orientation target.
+    """
+
+    world: World
+    """
+    Backreference to semantic world.
+    """
+
+    iterations: int
+    """
+    The current iteration of the solver.
+    """
 
     def __init__(self, world: World):
         self.world = world
@@ -100,7 +151,15 @@ class InverseKinematicsSolver:
 
     def _solve_iteratively(self, qp_problem: QPProblem, solver_state: SolverState, dt: float,
                            max_iterations: int) -> np.ndarray:
-        """Run the main IK solver loop."""
+        """
+        Tries to solve the inverse kinematics problem iteratively.
+        :param qp_problem: Problem definition.
+        :param solver_state: Initial state.
+        :param dt: Step size per iteration. Unit is seconds.
+                    Too large values can lead to instability, too small values can lead to slow convergence.
+        :param max_iterations: Maximum number of iterations. A lower dt requires more iterations.
+        :return: The final state after max_iterations.
+        """
         for self.iteration in range(max_iterations):
             velocity, slack = self._solve_qp_step(qp_problem, solver_state)
 
@@ -113,6 +172,12 @@ class InverseKinematicsSolver:
         return solver_state.position
 
     def _solve_qp_step(self, qp_problem: QPProblem, solver_state: SolverState) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Evaluate the QP matrices at the current state and solve the QP.
+        :param qp_problem: Problem definition.
+        :param solver_state: Current state
+        :return: Velocities for the DOFs, and slack values.
+        """
 
         # Evaluate QP matrices at current state
         qp_matrices = qp_problem.evaluate_at_state(solver_state)
@@ -133,6 +198,11 @@ class InverseKinematicsSolver:
         return xstar[:len(qp_problem.active_symbols)], xstar[len(qp_problem.active_symbols):]
 
     def _check_convergence(self, velocity: np.ndarray, slack: np.ndarray) -> bool:
+        """
+        :param velocity: Current velocity of the DOFs.
+        :param slack: Current slack values.
+        :return: Whether the solver has converged.
+        """
         vel_below_threshold = np.max(np.abs(velocity)) < self._convergence_velocity_tolerance
         slack_below_threshold = np.max(np.abs(slack)) < self._convergence_slack_tolerance
         if vel_below_threshold and slack_below_threshold:
@@ -164,7 +234,10 @@ class QPProblem:
         self._compile_functions()
 
     def _extract_dofs(self) -> Tuple[list[DegreeOfFreedom], list[DegreeOfFreedom], list[cas.Symbol], list[cas.Symbol]]:
-        """Extract active and passive DOFs from the kinematic chain."""
+        """
+        Extract active and passive DOFs from the kinematic chain.
+        :return: Active Dofs, Passive Dofs, Active Symbols, Passive Symbols.
+        """
         active_dofs_set = set()
         passive_dofs_set = set()
         root_to_common_link, common_link_to_tip = self.world.compute_split_chain_of_connections(self.root, self.tip)
@@ -239,6 +312,10 @@ class ConstraintBuilder:
     """
     Builds constraints for the inverse kinematics QP problem.
     """
+    maximum_velocity = 1
+    """
+    Used to limit the velocity of the DOFs, because the default values defined in the semantic world are sometimes unreasonably high.
+    """
 
     def __init__(self, world: World, root: Body, tip: Body, target: np.ndarray, dt: float, translation_velocity: float,
                  rotation_velocity: float):
@@ -257,8 +334,8 @@ class ConstraintBuilder:
         upper_constraints = []
 
         for dof in active_dofs:
-            ll = cas.max(-1, dof.get_lower_limit(Derivatives.velocity))
-            ul = cas.min(1, dof.get_upper_limit(Derivatives.velocity))
+            ll = cas.max(-self.maximum_velocity, dof.get_lower_limit(Derivatives.velocity))
+            ul = cas.min(self.maximum_velocity, dof.get_upper_limit(Derivatives.velocity))
 
             if dof.has_position_limits():
                 ll = cas.max(dof.get_lower_limit(Derivatives.position) - dof.position_symbol, ll)
@@ -294,7 +371,11 @@ class ConstraintBuilder:
         return eq_bound_expr, neq_matrix
 
     def _compute_position_error(self, root_T_tip: cas.TransformationMatrix) -> Tuple[cas.Expression, cas.Expression]:
-        """Compute position error with velocity limits."""
+        """
+        Compute position error with velocity limits.
+        :param root_T_tip: Forward kinematics expression.
+        :return: Expression describing the position, and the error vector.
+        """
         root_P_tip = root_T_tip.to_position()
         root_T_tip_goal = cas.TransformationMatrix(self.target)
         root_P_tip_goal = root_T_tip_goal.to_position()
@@ -308,7 +389,11 @@ class ConstraintBuilder:
         return root_P_tip[:3], position_error
 
     def _compute_rotation_error(self, root_T_tip: cas.TransformationMatrix) -> Tuple[cas.Expression, cas.Expression]:
-        """Compute rotation error with velocity limits."""
+        """
+        Compute rotation error with velocity limits.
+        :param root_T_tip: Forward kinematics expression.
+        :return: Expression describing the rotation, and the error vector.
+        """
         rotation_cap = self.rotation_velocity * self.dt
 
         hack = cas.RotationMatrix.from_axis_angle(cas.Vector3((0, 0, 1)), -0.0001)
