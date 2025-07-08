@@ -3,11 +3,9 @@ from __future__ import annotations
 import itertools
 from abc import ABC
 from dataclasses import dataclass, field
-from enum import Enum
 from functools import cached_property
 from typing import Optional, List, Iterator
 
-from random_events.variable import Continuous
 from typing_extensions import Self
 
 import trimesh
@@ -17,6 +15,7 @@ from random_events.product_algebra import SimpleEvent, Event
 from .spatial_types import TransformationMatrix, Point3
 from .spatial_types.spatial_types import Expression
 from .utils import IDGenerator
+from .variables import SpatialVariables
 
 id_generator = IDGenerator()
 
@@ -172,10 +171,6 @@ class Box(Primitive):
         return BoundingBox(-self.scale.x / 2, -self.scale.y / 2, -self.scale.z / 2,
                            self.scale.x / 2, self.scale.y / 2, self.scale.z / 2)
 
-class SpatialVariables(Enum):
-    x = Continuous("x")
-    y = Continuous("y")
-    z = Continuous("z")
 
 @dataclass
 class BoundingBox:

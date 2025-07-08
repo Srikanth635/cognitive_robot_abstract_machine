@@ -4,7 +4,7 @@ from collections import deque
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from functools import reduce
-from typing import List, Optional, TYPE_CHECKING, Set
+from typing import List, Optional, TYPE_CHECKING, Set, get_args, get_type_hints
 import numpy as np
 from numpy import ndarray
 
@@ -151,7 +151,12 @@ class View(WorldEntity):
                 continue
 
             if isinstance(obj, View):
-                stack.extend(obj.__dict__.values())
+                values = [
+                    getattr(obj, name)
+                    for name, hint in get_type_hints(obj).items()
+                    if hint in (Body, View) or any(t in (Body, View) for t in get_args(hint))
+                ]
+                stack.extend(values)
                 continue
 
             if isinstance(obj, Iterable) and not isinstance(obj, (str, bytes, bytearray)):

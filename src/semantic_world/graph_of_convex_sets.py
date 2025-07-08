@@ -4,7 +4,8 @@ import logging
 
 import matplotlib.pyplot as plt
 
-from .geometry import BoundingBox, BoundingBoxCollection, SpatialVariables
+from .geometry import BoundingBox, BoundingBoxCollection
+from .variables import SpatialVariables
 from .views import MultiBodyView
 from .world import World
 from .world_entity import View
@@ -47,19 +48,13 @@ class GraphOfConvexSets:
     """
     A graph that represents the connectivity between convex sets.
 
-    Every node in this graph represents a convex set.
-    Every edge represents an adjacency between two convex sets.
-    Furthermore, the adjacency is saved in and edge attribute called "intersection".
+    Every node in the graph is a convex set, represented by a bounding box.
+    Every edge in the graph represents the connectivity between two convex sets.
     """
 
     search_space: BoundingBoxCollection
     """
     The bounding box of the search space. Defaults to the entire three dimensional space.
-    """
-
-    xy_variable = SortedSet([SpatialVariables.x.value, SpatialVariables.y.value])
-    """
-    The x and y variables used in our events
     """
 
     graph: rx.PyGraph[BoundingBox]
@@ -68,6 +63,9 @@ class GraphOfConvexSets:
     """
 
     box_to_index_map: Dict[BoundingBox, int]
+    """
+    A mapping from bounding boxes to their indices in the graph.
+    """
 
     def __init__(self, search_space: Optional[BoundingBoxCollection] = None):
         self.search_space = self._make_search_space(search_space)
@@ -285,7 +283,7 @@ class GraphOfConvexSets:
         """
 
         if not keep_z:
-            search_space_event = search_space_event.marginal(cls.xy_variable)
+            search_space_event = search_space_event.marginal(SpatialVariables.xy())
 
         events = (
             bb.simple_event.as_composite_set() & search_space_event
@@ -296,11 +294,12 @@ class GraphOfConvexSets:
         events = (event for event in events if not event.is_empty())
 
         if not keep_z:
-            events = (event.marginal(cls.xy_variable) for event in events)
+            events = (event.marginal(SpatialVariables.xy()) for event in events)
 
         try:
             return reduce(or_, events)
         except TypeError:
+            logger.warning("No obstacles found in the given views. Returning None.")
             return None
 
     @classmethod
@@ -399,14 +398,14 @@ class GraphOfConvexSets:
 
         # remove the z axis
         og_search_event = search_space.event
-        search_event = og_search_event.marginal(cls.xy_variable)
+        search_event = og_search_event.marginal(SpatialVariables.xy())
 
         free_space = ~obstacles & search_event
 
         SimpleEvent({SpatialVariables.z.value: reals()})
         # create floor level
         z_event = SimpleEvent({SpatialVariables.z.value: reals()}).as_composite_set()
-        z_event.fill_missing_variables(cls.xy_variable)
+        z_event.fill_missing_variables(SpatialVariables.xy())
         free_space.fill_missing_variables(SortedSet([SpatialVariables.z.value]))
         free_space &= z_event
         free_space &= og_search_event

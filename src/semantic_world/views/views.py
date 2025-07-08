@@ -76,7 +76,7 @@ class Wardrobe(Cupboard):
 @dataclass
 class MultiBodyView(View):
     """
-    A view that contains multiple bodies. Used for testing purposes.
+    A Generic View for multiple bodies.
     """
     bodies: List[Body] = field(default_factory=list, hash=False)
     views: List[View] = field(default_factory=list, hash=False)
