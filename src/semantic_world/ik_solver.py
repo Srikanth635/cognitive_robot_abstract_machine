@@ -278,13 +278,13 @@ class ConstraintBuilder:
         root_T_tip = self.world.compose_forward_kinematics_expression(self.root, self.tip)
 
         # Position and rotation errors
-        position_error = self._compute_position_error(root_T_tip)
-        rotation_error = self._compute_rotation_error(root_T_tip)
+        position_state, position_error = self._compute_position_error(root_T_tip)
+        rotation_state, rotation_error = self._compute_rotation_error(root_T_tip)
 
         # Current state and jacobian
         current_expr = cas.vstack([
-            root_T_tip.to_position()[:3],
-            root_T_tip.to_rotation().to_quaternion()[:3]
+            position_state,
+            rotation_state
         ])
         eq_bound_expr = cas.vstack([position_error, rotation_error])
 
@@ -293,7 +293,7 @@ class ConstraintBuilder:
 
         return eq_bound_expr, neq_matrix
 
-    def _compute_position_error(self, root_T_tip: cas.TransformationMatrix) -> cas.Expression:
+    def _compute_position_error(self, root_T_tip: cas.TransformationMatrix) -> Tuple[cas.Expression, cas.Expression]:
         """Compute position error with velocity limits."""
         root_P_tip = root_T_tip.to_position()
         root_T_tip_goal = cas.TransformationMatrix(self.target)
@@ -305,26 +305,24 @@ class ConstraintBuilder:
         for i in range(3):
             position_error[i] = cas.limit(position_error[i], -translation_cap, translation_cap)
 
-        return position_error
+        return root_P_tip[:3], position_error
 
-    def _compute_rotation_error(self, root_T_tip: cas.TransformationMatrix) -> cas.Expression:
+    def _compute_rotation_error(self, root_T_tip: cas.TransformationMatrix) -> Tuple[cas.Expression, cas.Expression]:
         """Compute rotation error with velocity limits."""
         rotation_cap = self.rotation_velocity * self.dt
+
         hack = cas.RotationMatrix.from_axis_angle(cas.Vector3((0, 0, 1)), -0.0001)
         root_R_tip = root_T_tip.to_rotation().dot(hack)
+        q_actual = cas.TransformationMatrix(self.target).to_quaternion()
+        q_goal = root_R_tip.to_quaternion()
+        q_goal = cas.if_less(q_goal.dot(q_actual), 0, -q_goal, q_goal)
+        q_error = cas.quaternion_multiply(q_goal, cas.quaternion_conjugate(q_actual))
 
-        root_T_tip_goal = cas.TransformationMatrix(self.target)
-        root_Q_tip_goal = root_T_tip_goal.to_quaternion()
-        root_Q_tip = root_R_tip.to_quaternion()
-
-        # Ensure quaternion consistency
-        root_Q_tip_goal = cas.if_less(root_Q_tip_goal.dot(root_Q_tip), 0, -root_Q_tip_goal, root_Q_tip_goal)
-
-        rotation_error = root_Q_tip_goal[:3] - root_Q_tip[:3]
+        rotation_error = -q_error
         for i in range(3):
             rotation_error[i] = cas.limit(rotation_error[i], -rotation_cap, rotation_cap)
 
-        return rotation_error
+        return q_error[:3], rotation_error[:3]
 
 
 class SolverState:
