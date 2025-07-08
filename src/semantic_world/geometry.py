@@ -97,6 +97,13 @@ class Mesh(Shape):
         """
         return trimesh.load_mesh(self.filename)
 
+    def __hash__(self):
+        """
+        Returns a unique hash for the shape based on its id.
+        """
+        return id(self)
+
+
 
 @dataclass
 class Primitive(Shape):
@@ -124,6 +131,12 @@ class Sphere(Primitive):
         """
         return trimesh.creation.icosphere(subdivisions=2, radius=self.radius)
 
+    def __hash__(self):
+        """
+        Returns a unique hash for the shape based on its id.
+        """
+        return id(self)
+
 
 @dataclass
 class Cylinder(Primitive):
@@ -140,6 +153,13 @@ class Cylinder(Primitive):
         """
         return trimesh.creation.cylinder(radius=self.width / 2, height=self.height, sections=16)
 
+    def __hash__(self):
+        """
+        Returns a unique hash for the shape based on its id.
+        """
+        return id(self)
+
+
 
 @dataclass
 class Box(Primitive):
@@ -155,4 +175,11 @@ class Box(Primitive):
         The box is centered at the origin and has the specified scale.
         """
         return trimesh.creation.box(extents=(self.scale.x, self.scale.y, self.scale.z))
+
+    def __hash__(self):
+        """
+        Returns a unique hash for the shape based on its id.
+        """
+        return id(self)
+
 

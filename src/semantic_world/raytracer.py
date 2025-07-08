@@ -1,8 +1,11 @@
-from typing import Tuple
+from typing import Tuple, List
 
 import numpy as np
 import trimesh
 from trimesh import Scene
+
+from .world_entity import Body
+
 
 class RayTracer:
 
@@ -15,7 +18,8 @@ class RayTracer:
         self.world = world
         self._last_world_model = -1
         self._last_world_state = -1
-        self.collision_to_scene = {}
+        self.index_to_body = {}
+        self.scene_to_index = {}
 
         self.scene = Scene()
         self.update_scene()
@@ -39,12 +43,14 @@ class RayTracer:
         bodies_to_add = [body for body in self.world.bodies if body.name.name not in "\t".join(self.scene.graph.nodes)]
         for body in bodies_to_add:
             for i, collision in enumerate(body.collision):
-                self.collision_to_scene[collision] = self.scene.add_geometry(collision.mesh,
-                                                                  node_name=body.name.name + f"_collision_{i}",
-                                                                  parent_node_name="world",
-                                                                  transform=self.world.compute_forward_kinematics_np(
-                                                                      self.world.root,
-                                                                      body) @ collision.origin.to_np())
+                self.scene.add_geometry(collision.mesh,
+                                        node_name=body.name.name + f"_collision_{i}",
+                                        parent_node_name="world",
+                                        transform=self.world.compute_forward_kinematics_np(
+                                            self.world.root,
+                                            body) @ collision.origin.to_np())
+                self.scene_to_index[body.name.name + f"_collision_{i}"] = body.index
+                self.index_to_body[body.index] = body
 
     def update_transforms(self):
         """
@@ -60,22 +66,39 @@ class RayTracer:
     def create_segmentation_mask(self, camera_position: np.ndarray,
                                  resolution: int = 512) -> np.ndarray:
         """
-        Creates a segmentation mask for the ray tracer scene from the camera position to the target position.
+        Creates a segmentation mask for the ray tracer scene from the camera position to the target position. Each pixel
+        in the mask corresponds to the index of a  body in the scene or -1 if no body is hit at that pixel.
 <
-        :param camera_position: The position of the camera.t
+        :param camera_position: The position of the camera.
         :param resolution: The resolution of the segmentation mask.
         :return: A segmentation mask as a numpy array.
         """
         self.update_scene()
         ray_origins, ray_directions, pixels = self.create_camera_rays(camera_position, resolution=resolution)
         points, index_ray, index_tri = self.scene.to_mesh().ray.intersects_location(ray_origins, ray_directions,
-                                                                                    multiple_hits=False)
-        return points, index_ray, index_tri
+                                                                                       multiple_hits=False)
+        bodies = self.scene.triangles_node[index_tri]
+
+        # map the name of the scene objects to the index
+        bodies = [self.scene_to_index[body] for body in bodies]
+
+        pixel_ray = pixels[index_ray]
+
+        # create a numpy array we can turn into an image
+        # doing it with uint8 creates an `L` mode greyscale image
+        a = np.zeros(self.scene.camera.resolution, dtype=np.int8) - 1
+
+        # assign bodies to correct pixel locations
+        a[pixel_ray[:, 0], pixel_ray[:, 1]] = bodies
+
+        return a
 
     def create_depth_map(self, camera_position: np.ndarray,
                          resolution: int = 512) -> np.ndarray:
         """
-        Creates a depth map for the ray tracer scene from the camera position to the target position.
+        Creates a depth map for the ray tracer scene from the camera position to the target position. Each pixel in the
+        depth map corresponds to the distance from the camera to the closest point on the surface of the scene or -1 if
+        no point is hit.
 
         :param camera_position: The position of the camera.
         :param resolution: The resolution of the depth map.
@@ -91,15 +114,10 @@ class RayTracer:
 
         # create a numpy array we can turn into an image
         # doing it with uint8 creates an `L` mode greyscale image
-        a = np.zeros(self.scene.camera.resolution, dtype=np.uint8)
+        a = np.zeros(self.scene.camera.resolution, dtype=np.float32) - 1
 
-        # scale depth against range (0.0 - 1.0)
-        depth_float = (depth - depth.min()) / np.ptp(depth)
-
-        # convert depth into 0 - 255 uint8
-        depth_int = (depth_float * 255).round().astype(np.uint8)
         # assign depth to correct pixel locations
-        a[pixel_ray[:, 0], pixel_ray[:, 1]] = depth_int
+        a[pixel_ray[:, 0], pixel_ray[:, 1]] = depth
 
         return a
 
@@ -116,6 +134,7 @@ class RayTracer:
         """
         self.update_scene()
         self.scene.camera.resolution = (resolution, resolution)
+        # By default, the camera is looking along the -z axis, so we need to rotate it to look along the x-axis.
         rotate = trimesh.transformations.rotation_matrix(
             angle=np.radians(-90.0), direction=[0, 1, 0], point=self.scene.centroid
         )
@@ -124,7 +143,31 @@ class RayTracer:
         )
 
         self.scene.camera.fov = (fov, fov)
-        self.scene.camera.resolution  = [resolution, resolution]
+        self.scene.camera.resolution = [resolution, resolution]
         self.scene.graph[self.scene.camera.name] = camera_poe @ rotate_x @ rotate
 
         return self.scene.camera_rays()
+
+    def ray_test(self, origin_points: np.ndarray, target_points: np.ndarray) -> Tuple[np.ndarray, np.ndarray, List[Body]]:
+        """
+        Performs a ray test from the origin point to the target point in the ray tracer scene.
+
+        :param origin_points: The starting point of the ray.
+        :param target_points: The end point of the ray.
+        :return: A tuple containing the points where the ray intersects and the indices of rays that hit the scene as well as the bodies that were.
+        """
+        self.update_scene()
+        origin_points = origin_points.reshape((-1, 3))
+        target_points = target_points.reshape((-1, 3))
+        if origin_points.shape != target_points.shape:
+            raise ValueError("Origin and target points must have the same shape.")
+
+        ray_directions = target_points - origin_points
+        points, index_ray, index_tri = self.scene.to_mesh().ray.intersects_location(origin_points, ray_directions,
+                                                                                   multiple_hits=False)
+        bodies = self.scene.triangles_node[index_tri]
+
+        # map the name of the scene objects to the index
+        bodies = [self.index_to_body[self.scene_to_index[body]] for body in bodies]
+
+        return points, index_ray, bodies
