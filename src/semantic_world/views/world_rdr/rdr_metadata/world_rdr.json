@@ -7,7 +7,7 @@
                 "_type": "ripple_down_rules.rules.MultiClassTopRule",
                 "conditions": {
                     "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                    "user_input": "def _get_value(case):\n    return True\n    ",
+                    "user_input": "def _get_value(case):\n    def has_bodies_named_handle(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Handle.\"\"\"\n        return any(\"handle\" in b.name.name.lower() for b in case.bodies)\n    return has_bodies_named_handle(case)\n    ",
                     "conclusion_type": [
                         "builtins.bool"
                     ],
@@ -18,13 +18,13 @@
                         "Drawer": "semantic_world.views.views.Drawer",
                         "Fridge": "semantic_world.views.views.Fridge",
                         "Handle": "semantic_world.views.views.Handle",
-                        "World": "semantic_world.world.World",
                         "FixedConnection": "semantic_world.connections.FixedConnection",
                         "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                         "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                         "List": "typing.List",
                         "Set": "typing.Set",
-                        "Union": "typing.Union"
+                        "Union": "typing.Union",
+                        "World": "semantic_world.world.World"
                     },
                     "conclusion": {
                         "_type": "builtins.NoneType",
@@ -34,7 +34,7 @@
                 },
                 "conclusion": {
                     "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                    "user_input": "def _get_value(case):\n    def get_value_for_world_views_of_type_handle(case: World) -> Union[set, list, Handle]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Handle\"\"\"\n        return [Handle(b) for b in case.bodies if \"handle\" in b.name.name.lower()]\n    \n    return get_value_for_world_views_of_type_handle(case)\n    ",
+                    "user_input": "def _get_value(case):\n    def get_handles(case: World) -> Union[set, list, Handle]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Handle\"\"\"\n        return [Handle(b) for b in case.bodies if \"handle\" in b.name.name.lower()]\n    \n    return get_handles(case)\n    ",
                     "conclusion_type": [
                         "semantic_world.views.views.Handle",
                         "builtins.set",
@@ -47,13 +47,13 @@
                         "Drawer": "semantic_world.views.views.Drawer",
                         "Fridge": "semantic_world.views.views.Fridge",
                         "Handle": "semantic_world.views.views.Handle",
-                        "World": "semantic_world.world.World",
                         "FixedConnection": "semantic_world.connections.FixedConnection",
                         "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                         "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                         "List": "typing.List",
                         "Set": "typing.Set",
-                        "Union": "typing.Union"
+                        "Union": "typing.Union",
+                        "World": "semantic_world.world.World"
                     },
                     "conclusion": {
                         "_type": "builtins.NoneType",
@@ -64,14 +64,14 @@
                 "parent": null,
                 "corner_case": null,
                 "conclusion_name": "views",
-                "weight": "next",
+                "weight": "",
                 "uid": "90574698325129464513441443063592862114",
                 "refinement": null,
                 "alternative": {
                     "_type": "ripple_down_rules.rules.MultiClassTopRule",
                     "conditions": {
                         "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                        "user_input": "def _get_value(case):\n    return len([v for v in case.views if type(v) is Handle]) > 0\n    ",
+                        "user_input": "def _get_value(case):\n    def has_handles_and_fixed_and_prismatic_connections(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Container.\"\"\"\n        return (any(v for v in case.views if type(v) is Handle) and\n                any(c for c in case.connections if isinstance(c, PrismaticConnection)) and\n                any(c for c in case.connections if isinstance(c, FixedConnection)))\n    return has_handles_and_fixed_and_prismatic_connections(case)\n    ",
                         "conclusion_type": [
                             "builtins.bool"
                         ],
@@ -82,13 +82,13 @@
                             "Drawer": "semantic_world.views.views.Drawer",
                             "Fridge": "semantic_world.views.views.Fridge",
                             "Handle": "semantic_world.views.views.Handle",
-                            "World": "semantic_world.world.World",
                             "FixedConnection": "semantic_world.connections.FixedConnection",
                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                             "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                             "List": "typing.List",
                             "Set": "typing.Set",
-                            "Union": "typing.Union"
+                            "Union": "typing.Union",
+                            "World": "semantic_world.world.World"
                         },
                         "conclusion": {
                             "_type": "builtins.NoneType",
@@ -98,7 +98,7 @@
                     },
                     "conclusion": {
                         "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                        "user_input": "def _get_value(case):\n    def get_value_for_world_views_of_type_container(case: World) -> Union[set, Container, list]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Container\"\"\"\n        prismatic_connections = [c for c in case.connections if isinstance(c, PrismaticConnection)]\n        fixed_connections = [c for c in case.connections if isinstance(c, FixedConnection)]\n        children_of_prismatic_connections = [c.child for c in prismatic_connections]\n        handles = [v for v in case.views if type(v) is Handle]\n        fixed_connections_with_handle_child = [fc for fc in fixed_connections if fc.child in [h.body for h in handles]]\n        drawer_containers = set(children_of_prismatic_connections).intersection(\n            set([fc.parent for fc in fixed_connections_with_handle_child]))\n        return [Container(b) for b in drawer_containers]\n    \n    return get_value_for_world_views_of_type_container(case)\n    ",
+                        "user_input": "def _get_value(case):\n    def get_containers(case: World) -> Union[set, Container, list]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Container\"\"\"\n        prismatic_connections = [c for c in case.connections if isinstance(c, PrismaticConnection)]\n        fixed_connections = [c for c in case.connections if isinstance(c, FixedConnection)]\n        children_of_prismatic_connections = [c.child for c in prismatic_connections]\n        handles = [v for v in case.views if type(v) is Handle]\n        fixed_connections_with_handle_child = [fc for fc in fixed_connections if fc.child in [h.body for h in handles]]\n        drawer_containers = set(children_of_prismatic_connections).intersection(\n            set([fc.parent for fc in fixed_connections_with_handle_child]))\n        return [Container(b) for b in drawer_containers]\n    \n    return get_containers(case)\n    ",
                         "conclusion_type": [
                             "semantic_world.views.views.Container",
                             "builtins.set",
@@ -111,13 +111,13 @@
                             "Drawer": "semantic_world.views.views.Drawer",
                             "Fridge": "semantic_world.views.views.Fridge",
                             "Handle": "semantic_world.views.views.Handle",
-                            "World": "semantic_world.world.World",
                             "FixedConnection": "semantic_world.connections.FixedConnection",
                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                             "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                             "List": "typing.List",
                             "Set": "typing.Set",
-                            "Union": "typing.Union"
+                            "Union": "typing.Union",
+                            "World": "semantic_world.world.World"
                         },
                         "conclusion": {
                             "_type": "builtins.NoneType",
@@ -129,7 +129,7 @@
                         "_type": "ripple_down_rules.rules.MultiClassTopRule",
                         "conditions": {
                             "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                            "user_input": "def _get_value(case):\n    return True\n    ",
+                            "user_input": "def _get_value(case):\n    def has_bodies_named_handle(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Handle.\"\"\"\n        return any(\"handle\" in b.name.name.lower() for b in case.bodies)\n    return has_bodies_named_handle(case)\n    ",
                             "conclusion_type": [
                                 "builtins.bool"
                             ],
@@ -140,13 +140,13 @@
                                 "Drawer": "semantic_world.views.views.Drawer",
                                 "Fridge": "semantic_world.views.views.Fridge",
                                 "Handle": "semantic_world.views.views.Handle",
-                                "World": "semantic_world.world.World",
                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                 "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                 "List": "typing.List",
                                 "Set": "typing.Set",
-                                "Union": "typing.Union"
+                                "Union": "typing.Union",
+                                "World": "semantic_world.world.World"
                             },
                             "conclusion": {
                                 "_type": "builtins.NoneType",
@@ -156,7 +156,7 @@
                         },
                         "conclusion": {
                             "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                            "user_input": "def _get_value(case):\n    def get_value_for_world_views_of_type_handle(case: World) -> Union[set, list, Handle]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Handle\"\"\"\n        return [Handle(b) for b in case.bodies if \"handle\" in b.name.name.lower()]\n    \n    return get_value_for_world_views_of_type_handle(case)\n    ",
+                            "user_input": "def _get_value(case):\n    def get_handles(case: World) -> Union[set, list, Handle]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Handle\"\"\"\n        return [Handle(b) for b in case.bodies if \"handle\" in b.name.name.lower()]\n    \n    return get_handles(case)\n    ",
                             "conclusion_type": [
                                 "semantic_world.views.views.Handle",
                                 "builtins.set",
@@ -169,13 +169,13 @@
                                 "Drawer": "semantic_world.views.views.Drawer",
                                 "Fridge": "semantic_world.views.views.Fridge",
                                 "Handle": "semantic_world.views.views.Handle",
-                                "World": "semantic_world.world.World",
                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                 "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                 "List": "typing.List",
                                 "Set": "typing.Set",
-                                "Union": "typing.Union"
+                                "Union": "typing.Union",
+                                "World": "semantic_world.world.World"
                             },
                             "conclusion": {
                                 "_type": "builtins.NoneType",
@@ -193,7 +193,7 @@
                             "_type": "ripple_down_rules.rules.MultiClassTopRule",
                             "conditions": {
                                 "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                "user_input": "def _get_value(case):\n    return len([v for v in case.views if type(v) is Handle]) > 0\n    ",
+                                "user_input": "def _get_value(case):\n    def has_handles_and_fixed_and_prismatic_connections(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Container.\"\"\"\n        return (any(v for v in case.views if type(v) is Handle) and\n                any(c for c in case.connections if isinstance(c, PrismaticConnection)) and\n                any(c for c in case.connections if isinstance(c, FixedConnection)))\n    return has_handles_and_fixed_and_prismatic_connections(case)\n    ",
                                 "conclusion_type": [
                                     "builtins.bool"
                                 ],
@@ -204,13 +204,13 @@
                                     "Drawer": "semantic_world.views.views.Drawer",
                                     "Fridge": "semantic_world.views.views.Fridge",
                                     "Handle": "semantic_world.views.views.Handle",
-                                    "World": "semantic_world.world.World",
                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                     "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                     "List": "typing.List",
                                     "Set": "typing.Set",
-                                    "Union": "typing.Union"
+                                    "Union": "typing.Union",
+                                    "World": "semantic_world.world.World"
                                 },
                                 "conclusion": {
                                     "_type": "builtins.NoneType",
@@ -220,7 +220,7 @@
                             },
                             "conclusion": {
                                 "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                "user_input": "def _get_value(case):\n    def get_value_for_world_views_of_type_container(case: World) -> Union[set, Container, list]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Container\"\"\"\n        prismatic_connections = [c for c in case.connections if isinstance(c, PrismaticConnection)]\n        fixed_connections = [c for c in case.connections if isinstance(c, FixedConnection)]\n        children_of_prismatic_connections = [c.child for c in prismatic_connections]\n        handles = [v for v in case.views if type(v) is Handle]\n        fixed_connections_with_handle_child = [fc for fc in fixed_connections if fc.child in [h.body for h in handles]]\n        drawer_containers = set(children_of_prismatic_connections).intersection(\n            set([fc.parent for fc in fixed_connections_with_handle_child]))\n        return [Container(b) for b in drawer_containers]\n    \n    return get_value_for_world_views_of_type_container(case)\n    ",
+                                "user_input": "def _get_value(case):\n    def get_containers(case: World) -> Union[set, Container, list]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Container\"\"\"\n        prismatic_connections = [c for c in case.connections if isinstance(c, PrismaticConnection)]\n        fixed_connections = [c for c in case.connections if isinstance(c, FixedConnection)]\n        children_of_prismatic_connections = [c.child for c in prismatic_connections]\n        handles = [v for v in case.views if type(v) is Handle]\n        fixed_connections_with_handle_child = [fc for fc in fixed_connections if fc.child in [h.body for h in handles]]\n        drawer_containers = set(children_of_prismatic_connections).intersection(\n            set([fc.parent for fc in fixed_connections_with_handle_child]))\n        return [Container(b) for b in drawer_containers]\n    \n    return get_containers(case)\n    ",
                                 "conclusion_type": [
                                     "semantic_world.views.views.Container",
                                     "builtins.set",
@@ -233,13 +233,13 @@
                                     "Drawer": "semantic_world.views.views.Drawer",
                                     "Fridge": "semantic_world.views.views.Fridge",
                                     "Handle": "semantic_world.views.views.Handle",
-                                    "World": "semantic_world.world.World",
                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                     "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                     "List": "typing.List",
                                     "Set": "typing.Set",
-                                    "Union": "typing.Union"
+                                    "Union": "typing.Union",
+                                    "World": "semantic_world.world.World"
                                 },
                                 "conclusion": {
                                     "_type": "builtins.NoneType",
@@ -257,7 +257,7 @@
                                 "_type": "ripple_down_rules.rules.MultiClassTopRule",
                                 "conditions": {
                                     "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                    "user_input": "def _get_value(case):\n    return len([v for v in case.views if type(v) is Handle]) > 0 and len(\n        [v for v in case.views if type(v) is Container]) > 0\n    ",
+                                    "user_input": "def _get_value(case):\n    def has_handles_and_containers(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Drawer.\"\"\"\n        return any(v for v in case.views if type(v) is Handle) and any(v for v in case.views if type(v) is Container)\n    return has_handles_and_containers(case)\n    ",
                                     "conclusion_type": [
                                         "builtins.bool"
                                     ],
@@ -268,13 +268,13 @@
                                         "Drawer": "semantic_world.views.views.Drawer",
                                         "Fridge": "semantic_world.views.views.Fridge",
                                         "Handle": "semantic_world.views.views.Handle",
-                                        "World": "semantic_world.world.World",
                                         "FixedConnection": "semantic_world.connections.FixedConnection",
                                         "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                         "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                         "List": "typing.List",
                                         "Set": "typing.Set",
-                                        "Union": "typing.Union"
+                                        "Union": "typing.Union",
+                                        "World": "semantic_world.world.World"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -284,7 +284,7 @@
                                 },
                                 "conclusion": {
                                     "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                    "user_input": "def _get_value(case):\n    def get_value_for_world_views_of_type_drawer(case: World) -> Union[set, list, Drawer]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Drawer\"\"\"\n        handles = [v for v in case.views if type(v) is Handle]\n        containers = [v for v in case.views if type(v) is Container]\n        fixed_connections = [c for c in case.connections if\n                             isinstance(c, FixedConnection) and c.parent in [cont.body for cont in\n                                                                             containers] and c.child in [\n                                 h.body for h in handles]]\n        prismatic_connections = [c for c in case.connections if\n                                 isinstance(c, PrismaticConnection) and c.child in [cont.body for cont in containers]]\n        drawer_handle_connections = [fc for fc in fixed_connections if\n                                     fc.parent in [pc.child for pc in prismatic_connections]]\n        drawers = [Drawer([cont for cont in containers if dc.parent == cont.body][0],\n                          [h for h in handles if dc.child == h.body][0]) for dc in drawer_handle_connections]\n        return drawers\n    \n    return get_value_for_world_views_of_type_drawer(case)\n    ",
+                                    "user_input": "def _get_value(case):\n    def get_drawers(case: World) -> Union[set, list, Drawer]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Drawer\"\"\"\n        handles = [v for v in case.views if type(v) is Handle]\n        containers = [v for v in case.views if type(v) is Container]\n        fixed_connections = [c for c in case.connections if\n                             isinstance(c, FixedConnection) and c.parent in [cont.body for cont in\n                                                                             containers] and c.child in [\n                                 h.body for h in handles]]\n        prismatic_connections = [c for c in case.connections if\n                                 isinstance(c, PrismaticConnection) and c.child in [cont.body for cont in containers]]\n        drawer_handle_connections = [fc for fc in fixed_connections if\n                                     fc.parent in [pc.child for pc in prismatic_connections]]\n        drawers = [Drawer([cont for cont in containers if dc.parent == cont.body][0],\n                          [h for h in handles if dc.child == h.body][0]) for dc in drawer_handle_connections]\n        return drawers\n    \n    return get_drawers(case)\n    ",
                                     "conclusion_type": [
                                         "semantic_world.views.views.Drawer",
                                         "builtins.set",
@@ -297,13 +297,13 @@
                                         "Drawer": "semantic_world.views.views.Drawer",
                                         "Fridge": "semantic_world.views.views.Fridge",
                                         "Handle": "semantic_world.views.views.Handle",
-                                        "World": "semantic_world.world.World",
                                         "FixedConnection": "semantic_world.connections.FixedConnection",
                                         "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                         "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                         "List": "typing.List",
                                         "Set": "typing.Set",
-                                        "Union": "typing.Union"
+                                        "Union": "typing.Union",
+                                        "World": "semantic_world.world.World"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -321,7 +321,7 @@
                                     "_type": "ripple_down_rules.rules.MultiClassTopRule",
                                     "conditions": {
                                         "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                        "user_input": "def _get_value(case):\n    return len([v for v in case.views if type(v) is Drawer]) > 0\n    ",
+                                        "user_input": "def _get_value(case):\n    def has_drawers(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Cabinet.\"\"\"\n        return any(v for v in case.views if type(v) is Drawer)\n    return has_drawers(case)\n    ",
                                         "conclusion_type": [
                                             "builtins.bool"
                                         ],
@@ -332,13 +332,13 @@
                                             "Drawer": "semantic_world.views.views.Drawer",
                                             "Fridge": "semantic_world.views.views.Fridge",
                                             "Handle": "semantic_world.views.views.Handle",
-                                            "World": "semantic_world.world.World",
                                             "FixedConnection": "semantic_world.connections.FixedConnection",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                             "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                             "List": "typing.List",
                                             "Set": "typing.Set",
-                                            "Union": "typing.Union"
+                                            "Union": "typing.Union",
+                                            "World": "semantic_world.world.World"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -348,7 +348,7 @@
                                     },
                                     "conclusion": {
                                         "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                        "user_input": "def _get_value(case):\n    def get_value_for_world_views_of_type_cabinet(case: World) -> Union[set, Cabinet, list]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Cabinet\"\"\"\n        drawers = [v for v in case.views if type(v) is Drawer]\n        prismatic_connections = [c for c in case.connections if\n                                 isinstance(c, PrismaticConnection) and c.child in [drawer.container.body for drawer in\n                                                                                    drawers]]\n        cabinet_container_bodies = [pc.parent for pc in prismatic_connections]\n        cabinets = []\n        for ccb in cabinet_container_bodies:\n            if ccb in [cabinet.container.body for cabinet in cabinets]:\n                continue\n            cc_prismatic_connections = [pc for pc in prismatic_connections if pc.parent is ccb]\n            cabinet_drawer_container_bodies = [pc.child for pc in cc_prismatic_connections]\n            cabinet_drawers = [d for d in drawers if d.container.body in cabinet_drawer_container_bodies]\n            cabinets.append(Cabinet(Container(ccb), cabinet_drawers))\n    \n        return cabinets\n    \n    return get_value_for_world_views_of_type_cabinet(case)\n    ",
+                                        "user_input": "def _get_value(case):\n    def get_cabinets(case: World) -> Union[set, Cabinet, list]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Cabinet\"\"\"\n        drawers = [v for v in case.views if type(v) is Drawer]\n        prismatic_connections = [c for c in case.connections if\n                                 isinstance(c, PrismaticConnection) and c.child in [drawer.container.body for drawer in\n                                                                                    drawers]]\n        cabinet_container_bodies = [pc.parent for pc in prismatic_connections]\n        cabinets = []\n        for ccb in cabinet_container_bodies:\n            if ccb in [cabinet.container.body for cabinet in cabinets]:\n                continue\n            cc_prismatic_connections = [pc for pc in prismatic_connections if pc.parent is ccb]\n            cabinet_drawer_container_bodies = [pc.child for pc in cc_prismatic_connections]\n            cabinet_drawers = [d for d in drawers if d.container.body in cabinet_drawer_container_bodies]\n            cabinets.append(Cabinet(Container(ccb), cabinet_drawers))\n    \n        return cabinets\n    \n    return get_cabinets(case)\n    ",
                                         "conclusion_type": [
                                             "semantic_world.views.views.Cabinet",
                                             "builtins.set",
@@ -361,13 +361,13 @@
                                             "Drawer": "semantic_world.views.views.Drawer",
                                             "Fridge": "semantic_world.views.views.Fridge",
                                             "Handle": "semantic_world.views.views.Handle",
-                                            "World": "semantic_world.world.World",
                                             "FixedConnection": "semantic_world.connections.FixedConnection",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                             "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                             "List": "typing.List",
                                             "Set": "typing.Set",
-                                            "Union": "typing.Union"
+                                            "Union": "typing.Union",
+                                            "World": "semantic_world.world.World"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -385,7 +385,7 @@
                                         "_type": "ripple_down_rules.rules.MultiClassTopRule",
                                         "conditions": {
                                             "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                            "user_input": "def _get_value(case):\n    def conditions_for_world_views_of_type_door(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Door.\"\"\"\n        return len([v for v in case.views if isinstance(v, Handle)]) > 0\n    return conditions_for_world_views_of_type_door(case)\n    ",
+                                            "user_input": "def _get_value(case):\n    def has_handles_and_revolute_connections(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Door.\"\"\"\n        return (any(v for v in case.views if isinstance(v, Handle)) and\n                any(c for c in case.connections if isinstance(c, RevoluteConnection)))\n    return has_handles_and_revolute_connections(case)\n    ",
                                             "conclusion_type": [
                                                 "builtins.bool"
                                             ],
@@ -396,13 +396,13 @@
                                                 "Drawer": "semantic_world.views.views.Drawer",
                                                 "Fridge": "semantic_world.views.views.Fridge",
                                                 "Handle": "semantic_world.views.views.Handle",
-                                                "World": "semantic_world.world.World",
                                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                                 "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                 "List": "typing.List",
                                                 "Set": "typing.Set",
-                                                "Union": "typing.Union"
+                                                "Union": "typing.Union",
+                                                "World": "semantic_world.world.World"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -412,7 +412,7 @@
                                         },
                                         "conclusion": {
                                             "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                            "user_input": "def _get_value(case):\n    def world_views_of_type_door(case: World) -> List[Door]:\n        \"\"\"Get possible value(s) for World.views  of type Door.\"\"\"\n        handles = [v for v in case.views if isinstance(v, Handle)]\n        handle_bodies = [h.body for h in handles]\n        connections_with_handles = [c for c in case.connections if isinstance(c, FixedConnection) and\n                                    c.child in handle_bodies]\n    \n        revolute_connections = [c for c in case.connections if isinstance(c, RevoluteConnection)]\n        bodies_connected_to_handles = [c.parent if c.child in handle_bodies else c.child for c in connections_with_handles]\n        bodies_that_have_revolute_joints = [b for b in bodies_connected_to_handles for c in revolute_connections\n                                            if b == c.child]\n        body_handle_connections = [c for c in connections_with_handles if c.parent in bodies_that_have_revolute_joints]\n        doors = [Door(c.parent, [h for h in handles if h.body == c.child][0]) for c in body_handle_connections]\n        return doors\n    return world_views_of_type_door(case)\n    ",
+                                            "user_input": "def _get_value(case):\n    def get_doors(case: World) -> List[Door]:\n        \"\"\"Get possible value(s) for World.views  of type Door.\"\"\"\n        handles = [v for v in case.views if isinstance(v, Handle)]\n        handle_bodies = [h.body for h in handles]\n        connections_with_handles = [c for c in case.connections if isinstance(c, FixedConnection) and\n                                    c.child in handle_bodies]\n    \n        revolute_connections = [c for c in case.connections if isinstance(c, RevoluteConnection)]\n        bodies_connected_to_handles = [c.parent if c.child in handle_bodies else c.child for c in connections_with_handles]\n        bodies_that_have_revolute_joints = [b for b in bodies_connected_to_handles for c in revolute_connections\n                                            if b == c.child]\n        body_handle_connections = [c for c in connections_with_handles if c.parent in bodies_that_have_revolute_joints]\n        doors = [Door(c.parent, [h for h in handles if h.body == c.child][0]) for c in body_handle_connections]\n        return doors\n    return get_doors(case)\n    ",
                                             "conclusion_type": [
                                                 "semantic_world.views.views.Door",
                                                 "builtins.set",
@@ -425,13 +425,13 @@
                                                 "Drawer": "semantic_world.views.views.Drawer",
                                                 "Fridge": "semantic_world.views.views.Fridge",
                                                 "Handle": "semantic_world.views.views.Handle",
-                                                "World": "semantic_world.world.World",
                                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                                 "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                 "List": "typing.List",
                                                 "Set": "typing.Set",
-                                                "Union": "typing.Union"
+                                                "Union": "typing.Union",
+                                                "World": "semantic_world.world.World"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -449,7 +449,7 @@
                                             "_type": "ripple_down_rules.rules.MultiClassTopRule",
                                             "conditions": {
                                                 "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                                "user_input": "def _get_value(case):\n    def conditions_for_world_views_of_type_fridge(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Fridge.\"\"\"\n        return True\n    return conditions_for_world_views_of_type_fridge(case)\n    ",
+                                                "user_input": "def _get_value(case):\n    def has_doors_with_fridge_in_their_name(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Fridge.\"\"\"\n        return any(v for v in case.views if isinstance(v, Door) and \"fridge\" in v.body.name.name.lower())\n    return has_doors_with_fridge_in_their_name(case)\n    ",
                                                 "conclusion_type": [
                                                     "builtins.bool"
                                                 ],
@@ -460,13 +460,13 @@
                                                     "Drawer": "semantic_world.views.views.Drawer",
                                                     "Fridge": "semantic_world.views.views.Fridge",
                                                     "Handle": "semantic_world.views.views.Handle",
-                                                    "World": "semantic_world.world.World",
                                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                                     "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                     "List": "typing.List",
                                                     "Set": "typing.Set",
-                                                    "Union": "typing.Union"
+                                                    "Union": "typing.Union",
+                                                    "World": "semantic_world.world.World"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -476,7 +476,7 @@
                                             },
                                             "conclusion": {
                                                 "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                                "user_input": "def _get_value(case):\n    def world_views_of_type_fridge(case: World) -> List[Fridge]:\n        \"\"\"Get possible value(s) for World.views  of type Fridge.\"\"\"\n        # Get fridge-related doors\n        doors = [v for v in case.views if isinstance(v, Door) and \"fridge\" in v.body.name.name.lower()]\n        # Precompute bodies of the fridge doors\n        door_bodies = [d.body for d in doors]\n        # Filter relevant revolute connections\n        door_connections = [\n            c for c in case.connections\n            if isinstance(c, RevoluteConnection)\n               and c.child in door_bodies\n               and 'fridge' in c.parent.name.name.lower()\n        ]\n        return [Fridge(c.parent, doors[door_bodies.index(c.child)]) for c in door_connections]\n    return world_views_of_type_fridge(case)\n    ",
+                                                "user_input": "def _get_value(case):\n    def get_fridges(case: World) -> List[Fridge]:\n        \"\"\"Get possible value(s) for World.views  of type Fridge.\"\"\"\n        # Get fridge-related doors\n        fridge_doors = [v for v in case.views if isinstance(v, Door) and \"fridge\" in v.body.name.name.lower()]\n        # Precompute bodies of the fridge doors\n        fridge_doors_bodies = [d.body for d in fridge_doors]\n        # Filter relevant revolute connections\n        fridge_door_connections = [\n            c for c in case.connections\n            if isinstance(c, RevoluteConnection)\n               and c.child in fridge_doors_bodies\n               and 'fridge' in c.parent.name.name.lower()\n        ]\n        return [Fridge(c.parent, fridge_doors[fridge_doors_bodies.index(c.child)]) for c in fridge_door_connections]\n    return get_fridges(case)\n    ",
                                                 "conclusion_type": [
                                                     "semantic_world.views.views.Fridge",
                                                     "builtins.set",
@@ -489,13 +489,13 @@
                                                     "Drawer": "semantic_world.views.views.Drawer",
                                                     "Fridge": "semantic_world.views.views.Fridge",
                                                     "Handle": "semantic_world.views.views.Handle",
-                                                    "World": "semantic_world.world.World",
                                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                                     "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                     "List": "typing.List",
                                                     "Set": "typing.Set",
-                                                    "Union": "typing.Union"
+                                                    "Union": "typing.Union",
+                                                    "World": "semantic_world.world.World"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -525,7 +525,7 @@
                         "_type": "ripple_down_rules.rules.MultiClassTopRule",
                         "conditions": {
                             "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                            "user_input": "def _get_value(case):\n    return len([v for v in case.views if type(v) is Handle]) > 0 and len(\n        [v for v in case.views if type(v) is Container]) > 0\n    ",
+                            "user_input": "def _get_value(case):\n    def has_handles_and_containers(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Drawer.\"\"\"\n        return any(v for v in case.views if type(v) is Handle) and any(v for v in case.views if type(v) is Container)\n    return has_handles_and_containers(case)\n    ",
                             "conclusion_type": [
                                 "builtins.bool"
                             ],
@@ -536,13 +536,13 @@
                                 "Drawer": "semantic_world.views.views.Drawer",
                                 "Fridge": "semantic_world.views.views.Fridge",
                                 "Handle": "semantic_world.views.views.Handle",
-                                "World": "semantic_world.world.World",
                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                 "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                 "List": "typing.List",
                                 "Set": "typing.Set",
-                                "Union": "typing.Union"
+                                "Union": "typing.Union",
+                                "World": "semantic_world.world.World"
                             },
                             "conclusion": {
                                 "_type": "builtins.NoneType",
@@ -552,7 +552,7 @@
                         },
                         "conclusion": {
                             "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                            "user_input": "def _get_value(case):\n    def get_value_for_world_views_of_type_drawer(case: World) -> Union[set, list, Drawer]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Drawer\"\"\"\n        handles = [v for v in case.views if type(v) is Handle]\n        containers = [v for v in case.views if type(v) is Container]\n        fixed_connections = [c for c in case.connections if\n                             isinstance(c, FixedConnection) and c.parent in [cont.body for cont in\n                                                                             containers] and c.child in [\n                                 h.body for h in handles]]\n        prismatic_connections = [c for c in case.connections if\n                                 isinstance(c, PrismaticConnection) and c.child in [cont.body for cont in containers]]\n        drawer_handle_connections = [fc for fc in fixed_connections if\n                                     fc.parent in [pc.child for pc in prismatic_connections]]\n        drawers = [Drawer([cont for cont in containers if dc.parent == cont.body][0],\n                          [h for h in handles if dc.child == h.body][0]) for dc in drawer_handle_connections]\n        return drawers\n    \n    return get_value_for_world_views_of_type_drawer(case)\n    ",
+                            "user_input": "def _get_value(case):\n    def get_drawers(case: World) -> Union[set, list, Drawer]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Drawer\"\"\"\n        handles = [v for v in case.views if type(v) is Handle]\n        containers = [v for v in case.views if type(v) is Container]\n        fixed_connections = [c for c in case.connections if\n                             isinstance(c, FixedConnection) and c.parent in [cont.body for cont in\n                                                                             containers] and c.child in [\n                                 h.body for h in handles]]\n        prismatic_connections = [c for c in case.connections if\n                                 isinstance(c, PrismaticConnection) and c.child in [cont.body for cont in containers]]\n        drawer_handle_connections = [fc for fc in fixed_connections if\n                                     fc.parent in [pc.child for pc in prismatic_connections]]\n        drawers = [Drawer([cont for cont in containers if dc.parent == cont.body][0],\n                          [h for h in handles if dc.child == h.body][0]) for dc in drawer_handle_connections]\n        return drawers\n    \n    return get_drawers(case)\n    ",
                             "conclusion_type": [
                                 "semantic_world.views.views.Drawer",
                                 "builtins.set",
@@ -565,13 +565,13 @@
                                 "Drawer": "semantic_world.views.views.Drawer",
                                 "Fridge": "semantic_world.views.views.Fridge",
                                 "Handle": "semantic_world.views.views.Handle",
-                                "World": "semantic_world.world.World",
                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                 "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                 "List": "typing.List",
                                 "Set": "typing.Set",
-                                "Union": "typing.Union"
+                                "Union": "typing.Union",
+                                "World": "semantic_world.world.World"
                             },
                             "conclusion": {
                                 "_type": "builtins.NoneType",
@@ -583,7 +583,7 @@
                             "_type": "ripple_down_rules.rules.MultiClassTopRule",
                             "conditions": {
                                 "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                "user_input": "def _get_value(case):\n    return len([v for v in case.views if type(v) is Handle]) > 0\n    ",
+                                "user_input": "def _get_value(case):\n    def has_handles_and_fixed_and_prismatic_connections(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Container.\"\"\"\n        return (any(v for v in case.views if type(v) is Handle) and\n                any(c for c in case.connections if isinstance(c, PrismaticConnection)) and\n                any(c for c in case.connections if isinstance(c, FixedConnection)))\n    return has_handles_and_fixed_and_prismatic_connections(case)\n    ",
                                 "conclusion_type": [
                                     "builtins.bool"
                                 ],
@@ -594,13 +594,13 @@
                                     "Drawer": "semantic_world.views.views.Drawer",
                                     "Fridge": "semantic_world.views.views.Fridge",
                                     "Handle": "semantic_world.views.views.Handle",
-                                    "World": "semantic_world.world.World",
                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                     "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                     "List": "typing.List",
                                     "Set": "typing.Set",
-                                    "Union": "typing.Union"
+                                    "Union": "typing.Union",
+                                    "World": "semantic_world.world.World"
                                 },
                                 "conclusion": {
                                     "_type": "builtins.NoneType",
@@ -610,7 +610,7 @@
                             },
                             "conclusion": {
                                 "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                "user_input": "def _get_value(case):\n    def get_value_for_world_views_of_type_container(case: World) -> Union[set, Container, list]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Container\"\"\"\n        prismatic_connections = [c for c in case.connections if isinstance(c, PrismaticConnection)]\n        fixed_connections = [c for c in case.connections if isinstance(c, FixedConnection)]\n        children_of_prismatic_connections = [c.child for c in prismatic_connections]\n        handles = [v for v in case.views if type(v) is Handle]\n        fixed_connections_with_handle_child = [fc for fc in fixed_connections if fc.child in [h.body for h in handles]]\n        drawer_containers = set(children_of_prismatic_connections).intersection(\n            set([fc.parent for fc in fixed_connections_with_handle_child]))\n        return [Container(b) for b in drawer_containers]\n    \n    return get_value_for_world_views_of_type_container(case)\n    ",
+                                "user_input": "def _get_value(case):\n    def get_containers(case: World) -> Union[set, Container, list]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Container\"\"\"\n        prismatic_connections = [c for c in case.connections if isinstance(c, PrismaticConnection)]\n        fixed_connections = [c for c in case.connections if isinstance(c, FixedConnection)]\n        children_of_prismatic_connections = [c.child for c in prismatic_connections]\n        handles = [v for v in case.views if type(v) is Handle]\n        fixed_connections_with_handle_child = [fc for fc in fixed_connections if fc.child in [h.body for h in handles]]\n        drawer_containers = set(children_of_prismatic_connections).intersection(\n            set([fc.parent for fc in fixed_connections_with_handle_child]))\n        return [Container(b) for b in drawer_containers]\n    \n    return get_containers(case)\n    ",
                                 "conclusion_type": [
                                     "semantic_world.views.views.Container",
                                     "builtins.set",
@@ -623,13 +623,13 @@
                                     "Drawer": "semantic_world.views.views.Drawer",
                                     "Fridge": "semantic_world.views.views.Fridge",
                                     "Handle": "semantic_world.views.views.Handle",
-                                    "World": "semantic_world.world.World",
                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                     "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                     "List": "typing.List",
                                     "Set": "typing.Set",
-                                    "Union": "typing.Union"
+                                    "Union": "typing.Union",
+                                    "World": "semantic_world.world.World"
                                 },
                                 "conclusion": {
                                     "_type": "builtins.NoneType",
@@ -647,7 +647,7 @@
                                 "_type": "ripple_down_rules.rules.MultiClassTopRule",
                                 "conditions": {
                                     "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                    "user_input": "def _get_value(case):\n    return len([v for v in case.views if type(v) is Handle]) > 0 and len(\n        [v for v in case.views if type(v) is Container]) > 0\n    ",
+                                    "user_input": "def _get_value(case):\n    def has_handles_and_containers(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Drawer.\"\"\"\n        return any(v for v in case.views if type(v) is Handle) and any(v for v in case.views if type(v) is Container)\n    return has_handles_and_containers(case)\n    ",
                                     "conclusion_type": [
                                         "builtins.bool"
                                     ],
@@ -658,13 +658,13 @@
                                         "Drawer": "semantic_world.views.views.Drawer",
                                         "Fridge": "semantic_world.views.views.Fridge",
                                         "Handle": "semantic_world.views.views.Handle",
-                                        "World": "semantic_world.world.World",
                                         "FixedConnection": "semantic_world.connections.FixedConnection",
                                         "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                         "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                         "List": "typing.List",
                                         "Set": "typing.Set",
-                                        "Union": "typing.Union"
+                                        "Union": "typing.Union",
+                                        "World": "semantic_world.world.World"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -674,7 +674,7 @@
                                 },
                                 "conclusion": {
                                     "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                    "user_input": "def _get_value(case):\n    def get_value_for_world_views_of_type_drawer(case: World) -> Union[set, list, Drawer]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Drawer\"\"\"\n        handles = [v for v in case.views if type(v) is Handle]\n        containers = [v for v in case.views if type(v) is Container]\n        fixed_connections = [c for c in case.connections if\n                             isinstance(c, FixedConnection) and c.parent in [cont.body for cont in\n                                                                             containers] and c.child in [\n                                 h.body for h in handles]]\n        prismatic_connections = [c for c in case.connections if\n                                 isinstance(c, PrismaticConnection) and c.child in [cont.body for cont in containers]]\n        drawer_handle_connections = [fc for fc in fixed_connections if\n                                     fc.parent in [pc.child for pc in prismatic_connections]]\n        drawers = [Drawer([cont for cont in containers if dc.parent == cont.body][0],\n                          [h for h in handles if dc.child == h.body][0]) for dc in drawer_handle_connections]\n        return drawers\n    \n    return get_value_for_world_views_of_type_drawer(case)\n    ",
+                                    "user_input": "def _get_value(case):\n    def get_drawers(case: World) -> Union[set, list, Drawer]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Drawer\"\"\"\n        handles = [v for v in case.views if type(v) is Handle]\n        containers = [v for v in case.views if type(v) is Container]\n        fixed_connections = [c for c in case.connections if\n                             isinstance(c, FixedConnection) and c.parent in [cont.body for cont in\n                                                                             containers] and c.child in [\n                                 h.body for h in handles]]\n        prismatic_connections = [c for c in case.connections if\n                                 isinstance(c, PrismaticConnection) and c.child in [cont.body for cont in containers]]\n        drawer_handle_connections = [fc for fc in fixed_connections if\n                                     fc.parent in [pc.child for pc in prismatic_connections]]\n        drawers = [Drawer([cont for cont in containers if dc.parent == cont.body][0],\n                          [h for h in handles if dc.child == h.body][0]) for dc in drawer_handle_connections]\n        return drawers\n    \n    return get_drawers(case)\n    ",
                                     "conclusion_type": [
                                         "semantic_world.views.views.Drawer",
                                         "builtins.set",
@@ -687,13 +687,13 @@
                                         "Drawer": "semantic_world.views.views.Drawer",
                                         "Fridge": "semantic_world.views.views.Fridge",
                                         "Handle": "semantic_world.views.views.Handle",
-                                        "World": "semantic_world.world.World",
                                         "FixedConnection": "semantic_world.connections.FixedConnection",
                                         "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                         "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                         "List": "typing.List",
                                         "Set": "typing.Set",
-                                        "Union": "typing.Union"
+                                        "Union": "typing.Union",
+                                        "World": "semantic_world.world.World"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -711,7 +711,7 @@
                                     "_type": "ripple_down_rules.rules.MultiClassTopRule",
                                     "conditions": {
                                         "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                        "user_input": "def _get_value(case):\n    return len([v for v in case.views if type(v) is Drawer]) > 0\n    ",
+                                        "user_input": "def _get_value(case):\n    def has_drawers(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Cabinet.\"\"\"\n        return any(v for v in case.views if type(v) is Drawer)\n    return has_drawers(case)\n    ",
                                         "conclusion_type": [
                                             "builtins.bool"
                                         ],
@@ -722,13 +722,13 @@
                                             "Drawer": "semantic_world.views.views.Drawer",
                                             "Fridge": "semantic_world.views.views.Fridge",
                                             "Handle": "semantic_world.views.views.Handle",
-                                            "World": "semantic_world.world.World",
                                             "FixedConnection": "semantic_world.connections.FixedConnection",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                             "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                             "List": "typing.List",
                                             "Set": "typing.Set",
-                                            "Union": "typing.Union"
+                                            "Union": "typing.Union",
+                                            "World": "semantic_world.world.World"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -738,7 +738,7 @@
                                     },
                                     "conclusion": {
                                         "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                        "user_input": "def _get_value(case):\n    def get_value_for_world_views_of_type_cabinet(case: World) -> Union[set, Cabinet, list]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Cabinet\"\"\"\n        drawers = [v for v in case.views if type(v) is Drawer]\n        prismatic_connections = [c for c in case.connections if\n                                 isinstance(c, PrismaticConnection) and c.child in [drawer.container.body for drawer in\n                                                                                    drawers]]\n        cabinet_container_bodies = [pc.parent for pc in prismatic_connections]\n        cabinets = []\n        for ccb in cabinet_container_bodies:\n            if ccb in [cabinet.container.body for cabinet in cabinets]:\n                continue\n            cc_prismatic_connections = [pc for pc in prismatic_connections if pc.parent is ccb]\n            cabinet_drawer_container_bodies = [pc.child for pc in cc_prismatic_connections]\n            cabinet_drawers = [d for d in drawers if d.container.body in cabinet_drawer_container_bodies]\n            cabinets.append(Cabinet(Container(ccb), cabinet_drawers))\n    \n        return cabinets\n    \n    return get_value_for_world_views_of_type_cabinet(case)\n    ",
+                                        "user_input": "def _get_value(case):\n    def get_cabinets(case: World) -> Union[set, Cabinet, list]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Cabinet\"\"\"\n        drawers = [v for v in case.views if type(v) is Drawer]\n        prismatic_connections = [c for c in case.connections if\n                                 isinstance(c, PrismaticConnection) and c.child in [drawer.container.body for drawer in\n                                                                                    drawers]]\n        cabinet_container_bodies = [pc.parent for pc in prismatic_connections]\n        cabinets = []\n        for ccb in cabinet_container_bodies:\n            if ccb in [cabinet.container.body for cabinet in cabinets]:\n                continue\n            cc_prismatic_connections = [pc for pc in prismatic_connections if pc.parent is ccb]\n            cabinet_drawer_container_bodies = [pc.child for pc in cc_prismatic_connections]\n            cabinet_drawers = [d for d in drawers if d.container.body in cabinet_drawer_container_bodies]\n            cabinets.append(Cabinet(Container(ccb), cabinet_drawers))\n    \n        return cabinets\n    \n    return get_cabinets(case)\n    ",
                                         "conclusion_type": [
                                             "semantic_world.views.views.Cabinet",
                                             "builtins.set",
@@ -751,13 +751,13 @@
                                             "Drawer": "semantic_world.views.views.Drawer",
                                             "Fridge": "semantic_world.views.views.Fridge",
                                             "Handle": "semantic_world.views.views.Handle",
-                                            "World": "semantic_world.world.World",
                                             "FixedConnection": "semantic_world.connections.FixedConnection",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                             "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                             "List": "typing.List",
                                             "Set": "typing.Set",
-                                            "Union": "typing.Union"
+                                            "Union": "typing.Union",
+                                            "World": "semantic_world.world.World"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -775,7 +775,7 @@
                                         "_type": "ripple_down_rules.rules.MultiClassTopRule",
                                         "conditions": {
                                             "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                            "user_input": "def _get_value(case):\n    def conditions_for_world_views_of_type_door(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Door.\"\"\"\n        return len([v for v in case.views if isinstance(v, Handle)]) > 0\n    return conditions_for_world_views_of_type_door(case)\n    ",
+                                            "user_input": "def _get_value(case):\n    def has_handles_and_revolute_connections(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Door.\"\"\"\n        return (any(v for v in case.views if isinstance(v, Handle)) and\n                any(c for c in case.connections if isinstance(c, RevoluteConnection)))\n    return has_handles_and_revolute_connections(case)\n    ",
                                             "conclusion_type": [
                                                 "builtins.bool"
                                             ],
@@ -786,13 +786,13 @@
                                                 "Drawer": "semantic_world.views.views.Drawer",
                                                 "Fridge": "semantic_world.views.views.Fridge",
                                                 "Handle": "semantic_world.views.views.Handle",
-                                                "World": "semantic_world.world.World",
                                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                                 "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                 "List": "typing.List",
                                                 "Set": "typing.Set",
-                                                "Union": "typing.Union"
+                                                "Union": "typing.Union",
+                                                "World": "semantic_world.world.World"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -802,7 +802,7 @@
                                         },
                                         "conclusion": {
                                             "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                            "user_input": "def _get_value(case):\n    def world_views_of_type_door(case: World) -> List[Door]:\n        \"\"\"Get possible value(s) for World.views  of type Door.\"\"\"\n        handles = [v for v in case.views if isinstance(v, Handle)]\n        handle_bodies = [h.body for h in handles]\n        connections_with_handles = [c for c in case.connections if isinstance(c, FixedConnection) and\n                                    c.child in handle_bodies]\n    \n        revolute_connections = [c for c in case.connections if isinstance(c, RevoluteConnection)]\n        bodies_connected_to_handles = [c.parent if c.child in handle_bodies else c.child for c in connections_with_handles]\n        bodies_that_have_revolute_joints = [b for b in bodies_connected_to_handles for c in revolute_connections\n                                            if b == c.child]\n        body_handle_connections = [c for c in connections_with_handles if c.parent in bodies_that_have_revolute_joints]\n        doors = [Door(c.parent, [h for h in handles if h.body == c.child][0]) for c in body_handle_connections]\n        return doors\n    return world_views_of_type_door(case)\n    ",
+                                            "user_input": "def _get_value(case):\n    def get_doors(case: World) -> List[Door]:\n        \"\"\"Get possible value(s) for World.views  of type Door.\"\"\"\n        handles = [v for v in case.views if isinstance(v, Handle)]\n        handle_bodies = [h.body for h in handles]\n        connections_with_handles = [c for c in case.connections if isinstance(c, FixedConnection) and\n                                    c.child in handle_bodies]\n    \n        revolute_connections = [c for c in case.connections if isinstance(c, RevoluteConnection)]\n        bodies_connected_to_handles = [c.parent if c.child in handle_bodies else c.child for c in connections_with_handles]\n        bodies_that_have_revolute_joints = [b for b in bodies_connected_to_handles for c in revolute_connections\n                                            if b == c.child]\n        body_handle_connections = [c for c in connections_with_handles if c.parent in bodies_that_have_revolute_joints]\n        doors = [Door(c.parent, [h for h in handles if h.body == c.child][0]) for c in body_handle_connections]\n        return doors\n    return get_doors(case)\n    ",
                                             "conclusion_type": [
                                                 "semantic_world.views.views.Door",
                                                 "builtins.set",
@@ -815,13 +815,13 @@
                                                 "Drawer": "semantic_world.views.views.Drawer",
                                                 "Fridge": "semantic_world.views.views.Fridge",
                                                 "Handle": "semantic_world.views.views.Handle",
-                                                "World": "semantic_world.world.World",
                                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                                 "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                 "List": "typing.List",
                                                 "Set": "typing.Set",
-                                                "Union": "typing.Union"
+                                                "Union": "typing.Union",
+                                                "World": "semantic_world.world.World"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -839,7 +839,7 @@
                                             "_type": "ripple_down_rules.rules.MultiClassTopRule",
                                             "conditions": {
                                                 "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                                "user_input": "def _get_value(case):\n    def conditions_for_world_views_of_type_fridge(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Fridge.\"\"\"\n        return True\n    return conditions_for_world_views_of_type_fridge(case)\n    ",
+                                                "user_input": "def _get_value(case):\n    def has_doors_with_fridge_in_their_name(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Fridge.\"\"\"\n        return any(v for v in case.views if isinstance(v, Door) and \"fridge\" in v.body.name.name.lower())\n    return has_doors_with_fridge_in_their_name(case)\n    ",
                                                 "conclusion_type": [
                                                     "builtins.bool"
                                                 ],
@@ -850,13 +850,13 @@
                                                     "Drawer": "semantic_world.views.views.Drawer",
                                                     "Fridge": "semantic_world.views.views.Fridge",
                                                     "Handle": "semantic_world.views.views.Handle",
-                                                    "World": "semantic_world.world.World",
                                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                                     "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                     "List": "typing.List",
                                                     "Set": "typing.Set",
-                                                    "Union": "typing.Union"
+                                                    "Union": "typing.Union",
+                                                    "World": "semantic_world.world.World"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -866,7 +866,7 @@
                                             },
                                             "conclusion": {
                                                 "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                                "user_input": "def _get_value(case):\n    def world_views_of_type_fridge(case: World) -> List[Fridge]:\n        \"\"\"Get possible value(s) for World.views  of type Fridge.\"\"\"\n        # Get fridge-related doors\n        doors = [v for v in case.views if isinstance(v, Door) and \"fridge\" in v.body.name.name.lower()]\n        # Precompute bodies of the fridge doors\n        door_bodies = [d.body for d in doors]\n        # Filter relevant revolute connections\n        door_connections = [\n            c for c in case.connections\n            if isinstance(c, RevoluteConnection)\n               and c.child in door_bodies\n               and 'fridge' in c.parent.name.name.lower()\n        ]\n        return [Fridge(c.parent, doors[door_bodies.index(c.child)]) for c in door_connections]\n    return world_views_of_type_fridge(case)\n    ",
+                                                "user_input": "def _get_value(case):\n    def get_fridges(case: World) -> List[Fridge]:\n        \"\"\"Get possible value(s) for World.views  of type Fridge.\"\"\"\n        # Get fridge-related doors\n        fridge_doors = [v for v in case.views if isinstance(v, Door) and \"fridge\" in v.body.name.name.lower()]\n        # Precompute bodies of the fridge doors\n        fridge_doors_bodies = [d.body for d in fridge_doors]\n        # Filter relevant revolute connections\n        fridge_door_connections = [\n            c for c in case.connections\n            if isinstance(c, RevoluteConnection)\n               and c.child in fridge_doors_bodies\n               and 'fridge' in c.parent.name.name.lower()\n        ]\n        return [Fridge(c.parent, fridge_doors[fridge_doors_bodies.index(c.child)]) for c in fridge_door_connections]\n    return get_fridges(case)\n    ",
                                                 "conclusion_type": [
                                                     "semantic_world.views.views.Fridge",
                                                     "builtins.set",
@@ -879,13 +879,13 @@
                                                     "Drawer": "semantic_world.views.views.Drawer",
                                                     "Fridge": "semantic_world.views.views.Fridge",
                                                     "Handle": "semantic_world.views.views.Handle",
-                                                    "World": "semantic_world.world.World",
                                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                                     "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                     "List": "typing.List",
                                                     "Set": "typing.Set",
-                                                    "Union": "typing.Union"
+                                                    "Union": "typing.Union",
+                                                    "World": "semantic_world.world.World"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -914,7 +914,7 @@
                             "_type": "ripple_down_rules.rules.MultiClassTopRule",
                             "conditions": {
                                 "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                "user_input": "def _get_value(case):\n    return len([v for v in case.views if type(v) is Drawer]) > 0\n    ",
+                                "user_input": "def _get_value(case):\n    def has_drawers(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Cabinet.\"\"\"\n        return any(v for v in case.views if type(v) is Drawer)\n    return has_drawers(case)\n    ",
                                 "conclusion_type": [
                                     "builtins.bool"
                                 ],
@@ -925,13 +925,13 @@
                                     "Drawer": "semantic_world.views.views.Drawer",
                                     "Fridge": "semantic_world.views.views.Fridge",
                                     "Handle": "semantic_world.views.views.Handle",
-                                    "World": "semantic_world.world.World",
                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                     "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                     "List": "typing.List",
                                     "Set": "typing.Set",
-                                    "Union": "typing.Union"
+                                    "Union": "typing.Union",
+                                    "World": "semantic_world.world.World"
                                 },
                                 "conclusion": {
                                     "_type": "builtins.NoneType",
@@ -941,7 +941,7 @@
                             },
                             "conclusion": {
                                 "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                "user_input": "def _get_value(case):\n    def get_value_for_world_views_of_type_cabinet(case: World) -> Union[set, Cabinet, list]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Cabinet\"\"\"\n        drawers = [v for v in case.views if type(v) is Drawer]\n        prismatic_connections = [c for c in case.connections if\n                                 isinstance(c, PrismaticConnection) and c.child in [drawer.container.body for drawer in\n                                                                                    drawers]]\n        cabinet_container_bodies = [pc.parent for pc in prismatic_connections]\n        cabinets = []\n        for ccb in cabinet_container_bodies:\n            if ccb in [cabinet.container.body for cabinet in cabinets]:\n                continue\n            cc_prismatic_connections = [pc for pc in prismatic_connections if pc.parent is ccb]\n            cabinet_drawer_container_bodies = [pc.child for pc in cc_prismatic_connections]\n            cabinet_drawers = [d for d in drawers if d.container.body in cabinet_drawer_container_bodies]\n            cabinets.append(Cabinet(Container(ccb), cabinet_drawers))\n    \n        return cabinets\n    \n    return get_value_for_world_views_of_type_cabinet(case)\n    ",
+                                "user_input": "def _get_value(case):\n    def get_cabinets(case: World) -> Union[set, Cabinet, list]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Cabinet\"\"\"\n        drawers = [v for v in case.views if type(v) is Drawer]\n        prismatic_connections = [c for c in case.connections if\n                                 isinstance(c, PrismaticConnection) and c.child in [drawer.container.body for drawer in\n                                                                                    drawers]]\n        cabinet_container_bodies = [pc.parent for pc in prismatic_connections]\n        cabinets = []\n        for ccb in cabinet_container_bodies:\n            if ccb in [cabinet.container.body for cabinet in cabinets]:\n                continue\n            cc_prismatic_connections = [pc for pc in prismatic_connections if pc.parent is ccb]\n            cabinet_drawer_container_bodies = [pc.child for pc in cc_prismatic_connections]\n            cabinet_drawers = [d for d in drawers if d.container.body in cabinet_drawer_container_bodies]\n            cabinets.append(Cabinet(Container(ccb), cabinet_drawers))\n    \n        return cabinets\n    \n    return get_cabinets(case)\n    ",
                                 "conclusion_type": [
                                     "semantic_world.views.views.Cabinet",
                                     "builtins.set",
@@ -954,13 +954,13 @@
                                     "Drawer": "semantic_world.views.views.Drawer",
                                     "Fridge": "semantic_world.views.views.Fridge",
                                     "Handle": "semantic_world.views.views.Handle",
-                                    "World": "semantic_world.world.World",
                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                     "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                     "List": "typing.List",
                                     "Set": "typing.Set",
-                                    "Union": "typing.Union"
+                                    "Union": "typing.Union",
+                                    "World": "semantic_world.world.World"
                                 },
                                 "conclusion": {
                                     "_type": "builtins.NoneType",
@@ -972,7 +972,7 @@
                                 "_type": "ripple_down_rules.rules.MultiClassTopRule",
                                 "conditions": {
                                     "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                    "user_input": "def _get_value(case):\n    return len([v for v in case.views if type(v) is Handle]) > 0 and len(\n        [v for v in case.views if type(v) is Container]) > 0\n    ",
+                                    "user_input": "def _get_value(case):\n    def has_handles_and_containers(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Drawer.\"\"\"\n        return any(v for v in case.views if type(v) is Handle) and any(v for v in case.views if type(v) is Container)\n    return has_handles_and_containers(case)\n    ",
                                     "conclusion_type": [
                                         "builtins.bool"
                                     ],
@@ -983,13 +983,13 @@
                                         "Drawer": "semantic_world.views.views.Drawer",
                                         "Fridge": "semantic_world.views.views.Fridge",
                                         "Handle": "semantic_world.views.views.Handle",
-                                        "World": "semantic_world.world.World",
                                         "FixedConnection": "semantic_world.connections.FixedConnection",
                                         "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                         "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                         "List": "typing.List",
                                         "Set": "typing.Set",
-                                        "Union": "typing.Union"
+                                        "Union": "typing.Union",
+                                        "World": "semantic_world.world.World"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -999,7 +999,7 @@
                                 },
                                 "conclusion": {
                                     "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                    "user_input": "def _get_value(case):\n    def get_value_for_world_views_of_type_drawer(case: World) -> Union[set, list, Drawer]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Drawer\"\"\"\n        handles = [v for v in case.views if type(v) is Handle]\n        containers = [v for v in case.views if type(v) is Container]\n        fixed_connections = [c for c in case.connections if\n                             isinstance(c, FixedConnection) and c.parent in [cont.body for cont in\n                                                                             containers] and c.child in [\n                                 h.body for h in handles]]\n        prismatic_connections = [c for c in case.connections if\n                                 isinstance(c, PrismaticConnection) and c.child in [cont.body for cont in containers]]\n        drawer_handle_connections = [fc for fc in fixed_connections if\n                                     fc.parent in [pc.child for pc in prismatic_connections]]\n        drawers = [Drawer([cont for cont in containers if dc.parent == cont.body][0],\n                          [h for h in handles if dc.child == h.body][0]) for dc in drawer_handle_connections]\n        return drawers\n    \n    return get_value_for_world_views_of_type_drawer(case)\n    ",
+                                    "user_input": "def _get_value(case):\n    def get_drawers(case: World) -> Union[set, list, Drawer]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Drawer\"\"\"\n        handles = [v for v in case.views if type(v) is Handle]\n        containers = [v for v in case.views if type(v) is Container]\n        fixed_connections = [c for c in case.connections if\n                             isinstance(c, FixedConnection) and c.parent in [cont.body for cont in\n                                                                             containers] and c.child in [\n                                 h.body for h in handles]]\n        prismatic_connections = [c for c in case.connections if\n                                 isinstance(c, PrismaticConnection) and c.child in [cont.body for cont in containers]]\n        drawer_handle_connections = [fc for fc in fixed_connections if\n                                     fc.parent in [pc.child for pc in prismatic_connections]]\n        drawers = [Drawer([cont for cont in containers if dc.parent == cont.body][0],\n                          [h for h in handles if dc.child == h.body][0]) for dc in drawer_handle_connections]\n        return drawers\n    \n    return get_drawers(case)\n    ",
                                     "conclusion_type": [
                                         "semantic_world.views.views.Drawer",
                                         "builtins.set",
@@ -1012,13 +1012,13 @@
                                         "Drawer": "semantic_world.views.views.Drawer",
                                         "Fridge": "semantic_world.views.views.Fridge",
                                         "Handle": "semantic_world.views.views.Handle",
-                                        "World": "semantic_world.world.World",
                                         "FixedConnection": "semantic_world.connections.FixedConnection",
                                         "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                         "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                         "List": "typing.List",
                                         "Set": "typing.Set",
-                                        "Union": "typing.Union"
+                                        "Union": "typing.Union",
+                                        "World": "semantic_world.world.World"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -1036,7 +1036,7 @@
                                     "_type": "ripple_down_rules.rules.MultiClassTopRule",
                                     "conditions": {
                                         "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                        "user_input": "def _get_value(case):\n    return len([v for v in case.views if type(v) is Drawer]) > 0\n    ",
+                                        "user_input": "def _get_value(case):\n    def has_drawers(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Cabinet.\"\"\"\n        return any(v for v in case.views if type(v) is Drawer)\n    return has_drawers(case)\n    ",
                                         "conclusion_type": [
                                             "builtins.bool"
                                         ],
@@ -1047,13 +1047,13 @@
                                             "Drawer": "semantic_world.views.views.Drawer",
                                             "Fridge": "semantic_world.views.views.Fridge",
                                             "Handle": "semantic_world.views.views.Handle",
-                                            "World": "semantic_world.world.World",
                                             "FixedConnection": "semantic_world.connections.FixedConnection",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                             "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                             "List": "typing.List",
                                             "Set": "typing.Set",
-                                            "Union": "typing.Union"
+                                            "Union": "typing.Union",
+                                            "World": "semantic_world.world.World"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -1063,7 +1063,7 @@
                                     },
                                     "conclusion": {
                                         "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                        "user_input": "def _get_value(case):\n    def get_value_for_world_views_of_type_cabinet(case: World) -> Union[set, Cabinet, list]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Cabinet\"\"\"\n        drawers = [v for v in case.views if type(v) is Drawer]\n        prismatic_connections = [c for c in case.connections if\n                                 isinstance(c, PrismaticConnection) and c.child in [drawer.container.body for drawer in\n                                                                                    drawers]]\n        cabinet_container_bodies = [pc.parent for pc in prismatic_connections]\n        cabinets = []\n        for ccb in cabinet_container_bodies:\n            if ccb in [cabinet.container.body for cabinet in cabinets]:\n                continue\n            cc_prismatic_connections = [pc for pc in prismatic_connections if pc.parent is ccb]\n            cabinet_drawer_container_bodies = [pc.child for pc in cc_prismatic_connections]\n            cabinet_drawers = [d for d in drawers if d.container.body in cabinet_drawer_container_bodies]\n            cabinets.append(Cabinet(Container(ccb), cabinet_drawers))\n    \n        return cabinets\n    \n    return get_value_for_world_views_of_type_cabinet(case)\n    ",
+                                        "user_input": "def _get_value(case):\n    def get_cabinets(case: World) -> Union[set, Cabinet, list]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Cabinet\"\"\"\n        drawers = [v for v in case.views if type(v) is Drawer]\n        prismatic_connections = [c for c in case.connections if\n                                 isinstance(c, PrismaticConnection) and c.child in [drawer.container.body for drawer in\n                                                                                    drawers]]\n        cabinet_container_bodies = [pc.parent for pc in prismatic_connections]\n        cabinets = []\n        for ccb in cabinet_container_bodies:\n            if ccb in [cabinet.container.body for cabinet in cabinets]:\n                continue\n            cc_prismatic_connections = [pc for pc in prismatic_connections if pc.parent is ccb]\n            cabinet_drawer_container_bodies = [pc.child for pc in cc_prismatic_connections]\n            cabinet_drawers = [d for d in drawers if d.container.body in cabinet_drawer_container_bodies]\n            cabinets.append(Cabinet(Container(ccb), cabinet_drawers))\n    \n        return cabinets\n    \n    return get_cabinets(case)\n    ",
                                         "conclusion_type": [
                                             "semantic_world.views.views.Cabinet",
                                             "builtins.set",
@@ -1076,13 +1076,13 @@
                                             "Drawer": "semantic_world.views.views.Drawer",
                                             "Fridge": "semantic_world.views.views.Fridge",
                                             "Handle": "semantic_world.views.views.Handle",
-                                            "World": "semantic_world.world.World",
                                             "FixedConnection": "semantic_world.connections.FixedConnection",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                             "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                             "List": "typing.List",
                                             "Set": "typing.Set",
-                                            "Union": "typing.Union"
+                                            "Union": "typing.Union",
+                                            "World": "semantic_world.world.World"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -1100,7 +1100,7 @@
                                         "_type": "ripple_down_rules.rules.MultiClassTopRule",
                                         "conditions": {
                                             "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                            "user_input": "def _get_value(case):\n    def conditions_for_world_views_of_type_door(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Door.\"\"\"\n        return len([v for v in case.views if isinstance(v, Handle)]) > 0\n    return conditions_for_world_views_of_type_door(case)\n    ",
+                                            "user_input": "def _get_value(case):\n    def has_handles_and_revolute_connections(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Door.\"\"\"\n        return (any(v for v in case.views if isinstance(v, Handle)) and\n                any(c for c in case.connections if isinstance(c, RevoluteConnection)))\n    return has_handles_and_revolute_connections(case)\n    ",
                                             "conclusion_type": [
                                                 "builtins.bool"
                                             ],
@@ -1111,13 +1111,13 @@
                                                 "Drawer": "semantic_world.views.views.Drawer",
                                                 "Fridge": "semantic_world.views.views.Fridge",
                                                 "Handle": "semantic_world.views.views.Handle",
-                                                "World": "semantic_world.world.World",
                                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                                 "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                 "List": "typing.List",
                                                 "Set": "typing.Set",
-                                                "Union": "typing.Union"
+                                                "Union": "typing.Union",
+                                                "World": "semantic_world.world.World"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -1127,7 +1127,7 @@
                                         },
                                         "conclusion": {
                                             "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                            "user_input": "def _get_value(case):\n    def world_views_of_type_door(case: World) -> List[Door]:\n        \"\"\"Get possible value(s) for World.views  of type Door.\"\"\"\n        handles = [v for v in case.views if isinstance(v, Handle)]\n        handle_bodies = [h.body for h in handles]\n        connections_with_handles = [c for c in case.connections if isinstance(c, FixedConnection) and\n                                    c.child in handle_bodies]\n    \n        revolute_connections = [c for c in case.connections if isinstance(c, RevoluteConnection)]\n        bodies_connected_to_handles = [c.parent if c.child in handle_bodies else c.child for c in connections_with_handles]\n        bodies_that_have_revolute_joints = [b for b in bodies_connected_to_handles for c in revolute_connections\n                                            if b == c.child]\n        body_handle_connections = [c for c in connections_with_handles if c.parent in bodies_that_have_revolute_joints]\n        doors = [Door(c.parent, [h for h in handles if h.body == c.child][0]) for c in body_handle_connections]\n        return doors\n    return world_views_of_type_door(case)\n    ",
+                                            "user_input": "def _get_value(case):\n    def get_doors(case: World) -> List[Door]:\n        \"\"\"Get possible value(s) for World.views  of type Door.\"\"\"\n        handles = [v for v in case.views if isinstance(v, Handle)]\n        handle_bodies = [h.body for h in handles]\n        connections_with_handles = [c for c in case.connections if isinstance(c, FixedConnection) and\n                                    c.child in handle_bodies]\n    \n        revolute_connections = [c for c in case.connections if isinstance(c, RevoluteConnection)]\n        bodies_connected_to_handles = [c.parent if c.child in handle_bodies else c.child for c in connections_with_handles]\n        bodies_that_have_revolute_joints = [b for b in bodies_connected_to_handles for c in revolute_connections\n                                            if b == c.child]\n        body_handle_connections = [c for c in connections_with_handles if c.parent in bodies_that_have_revolute_joints]\n        doors = [Door(c.parent, [h for h in handles if h.body == c.child][0]) for c in body_handle_connections]\n        return doors\n    return get_doors(case)\n    ",
                                             "conclusion_type": [
                                                 "semantic_world.views.views.Door",
                                                 "builtins.set",
@@ -1140,13 +1140,13 @@
                                                 "Drawer": "semantic_world.views.views.Drawer",
                                                 "Fridge": "semantic_world.views.views.Fridge",
                                                 "Handle": "semantic_world.views.views.Handle",
-                                                "World": "semantic_world.world.World",
                                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                                 "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                 "List": "typing.List",
                                                 "Set": "typing.Set",
-                                                "Union": "typing.Union"
+                                                "Union": "typing.Union",
+                                                "World": "semantic_world.world.World"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -1164,7 +1164,7 @@
                                             "_type": "ripple_down_rules.rules.MultiClassTopRule",
                                             "conditions": {
                                                 "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                                "user_input": "def _get_value(case):\n    def conditions_for_world_views_of_type_fridge(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Fridge.\"\"\"\n        return True\n    return conditions_for_world_views_of_type_fridge(case)\n    ",
+                                                "user_input": "def _get_value(case):\n    def has_doors_with_fridge_in_their_name(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Fridge.\"\"\"\n        return any(v for v in case.views if isinstance(v, Door) and \"fridge\" in v.body.name.name.lower())\n    return has_doors_with_fridge_in_their_name(case)\n    ",
                                                 "conclusion_type": [
                                                     "builtins.bool"
                                                 ],
@@ -1175,13 +1175,13 @@
                                                     "Drawer": "semantic_world.views.views.Drawer",
                                                     "Fridge": "semantic_world.views.views.Fridge",
                                                     "Handle": "semantic_world.views.views.Handle",
-                                                    "World": "semantic_world.world.World",
                                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                                     "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                     "List": "typing.List",
                                                     "Set": "typing.Set",
-                                                    "Union": "typing.Union"
+                                                    "Union": "typing.Union",
+                                                    "World": "semantic_world.world.World"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -1191,7 +1191,7 @@
                                             },
                                             "conclusion": {
                                                 "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                                "user_input": "def _get_value(case):\n    def world_views_of_type_fridge(case: World) -> List[Fridge]:\n        \"\"\"Get possible value(s) for World.views  of type Fridge.\"\"\"\n        # Get fridge-related doors\n        doors = [v for v in case.views if isinstance(v, Door) and \"fridge\" in v.body.name.name.lower()]\n        # Precompute bodies of the fridge doors\n        door_bodies = [d.body for d in doors]\n        # Filter relevant revolute connections\n        door_connections = [\n            c for c in case.connections\n            if isinstance(c, RevoluteConnection)\n               and c.child in door_bodies\n               and 'fridge' in c.parent.name.name.lower()\n        ]\n        return [Fridge(c.parent, doors[door_bodies.index(c.child)]) for c in door_connections]\n    return world_views_of_type_fridge(case)\n    ",
+                                                "user_input": "def _get_value(case):\n    def get_fridges(case: World) -> List[Fridge]:\n        \"\"\"Get possible value(s) for World.views  of type Fridge.\"\"\"\n        # Get fridge-related doors\n        fridge_doors = [v for v in case.views if isinstance(v, Door) and \"fridge\" in v.body.name.name.lower()]\n        # Precompute bodies of the fridge doors\n        fridge_doors_bodies = [d.body for d in fridge_doors]\n        # Filter relevant revolute connections\n        fridge_door_connections = [\n            c for c in case.connections\n            if isinstance(c, RevoluteConnection)\n               and c.child in fridge_doors_bodies\n               and 'fridge' in c.parent.name.name.lower()\n        ]\n        return [Fridge(c.parent, fridge_doors[fridge_doors_bodies.index(c.child)]) for c in fridge_door_connections]\n    return get_fridges(case)\n    ",
                                                 "conclusion_type": [
                                                     "semantic_world.views.views.Fridge",
                                                     "builtins.set",
@@ -1204,13 +1204,13 @@
                                                     "Drawer": "semantic_world.views.views.Drawer",
                                                     "Fridge": "semantic_world.views.views.Fridge",
                                                     "Handle": "semantic_world.views.views.Handle",
-                                                    "World": "semantic_world.world.World",
                                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                                     "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                     "List": "typing.List",
                                                     "Set": "typing.Set",
-                                                    "Union": "typing.Union"
+                                                    "Union": "typing.Union",
+                                                    "World": "semantic_world.world.World"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -1238,7 +1238,7 @@
                                 "_type": "ripple_down_rules.rules.MultiClassTopRule",
                                 "conditions": {
                                     "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                    "user_input": "def _get_value(case):\n    def conditions_for_world_views_of_type_door(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Door.\"\"\"\n        return len([v for v in case.views if isinstance(v, Handle)]) > 0\n    return conditions_for_world_views_of_type_door(case)\n    ",
+                                    "user_input": "def _get_value(case):\n    def has_handles_and_revolute_connections(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Door.\"\"\"\n        return (any(v for v in case.views if isinstance(v, Handle)) and\n                any(c for c in case.connections if isinstance(c, RevoluteConnection)))\n    return has_handles_and_revolute_connections(case)\n    ",
                                     "conclusion_type": [
                                         "builtins.bool"
                                     ],
@@ -1249,13 +1249,13 @@
                                         "Drawer": "semantic_world.views.views.Drawer",
                                         "Fridge": "semantic_world.views.views.Fridge",
                                         "Handle": "semantic_world.views.views.Handle",
-                                        "World": "semantic_world.world.World",
                                         "FixedConnection": "semantic_world.connections.FixedConnection",
                                         "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                         "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                         "List": "typing.List",
                                         "Set": "typing.Set",
-                                        "Union": "typing.Union"
+                                        "Union": "typing.Union",
+                                        "World": "semantic_world.world.World"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -1265,7 +1265,7 @@
                                 },
                                 "conclusion": {
                                     "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                    "user_input": "def _get_value(case):\n    def world_views_of_type_door(case: World) -> List[Door]:\n        \"\"\"Get possible value(s) for World.views  of type Door.\"\"\"\n        handles = [v for v in case.views if isinstance(v, Handle)]\n        handle_bodies = [h.body for h in handles]\n        connections_with_handles = [c for c in case.connections if isinstance(c, FixedConnection) and\n                                    c.child in handle_bodies]\n    \n        revolute_connections = [c for c in case.connections if isinstance(c, RevoluteConnection)]\n        bodies_connected_to_handles = [c.parent if c.child in handle_bodies else c.child for c in connections_with_handles]\n        bodies_that_have_revolute_joints = [b for b in bodies_connected_to_handles for c in revolute_connections\n                                            if b == c.child]\n        body_handle_connections = [c for c in connections_with_handles if c.parent in bodies_that_have_revolute_joints]\n        doors = [Door(c.parent, [h for h in handles if h.body == c.child][0]) for c in body_handle_connections]\n        return doors\n    return world_views_of_type_door(case)\n    ",
+                                    "user_input": "def _get_value(case):\n    def get_doors(case: World) -> List[Door]:\n        \"\"\"Get possible value(s) for World.views  of type Door.\"\"\"\n        handles = [v for v in case.views if isinstance(v, Handle)]\n        handle_bodies = [h.body for h in handles]\n        connections_with_handles = [c for c in case.connections if isinstance(c, FixedConnection) and\n                                    c.child in handle_bodies]\n    \n        revolute_connections = [c for c in case.connections if isinstance(c, RevoluteConnection)]\n        bodies_connected_to_handles = [c.parent if c.child in handle_bodies else c.child for c in connections_with_handles]\n        bodies_that_have_revolute_joints = [b for b in bodies_connected_to_handles for c in revolute_connections\n                                            if b == c.child]\n        body_handle_connections = [c for c in connections_with_handles if c.parent in bodies_that_have_revolute_joints]\n        doors = [Door(c.parent, [h for h in handles if h.body == c.child][0]) for c in body_handle_connections]\n        return doors\n    return get_doors(case)\n    ",
                                     "conclusion_type": [
                                         "semantic_world.views.views.Door",
                                         "builtins.set",
@@ -1278,13 +1278,13 @@
                                         "Drawer": "semantic_world.views.views.Drawer",
                                         "Fridge": "semantic_world.views.views.Fridge",
                                         "Handle": "semantic_world.views.views.Handle",
-                                        "World": "semantic_world.world.World",
                                         "FixedConnection": "semantic_world.connections.FixedConnection",
                                         "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                         "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                         "List": "typing.List",
                                         "Set": "typing.Set",
-                                        "Union": "typing.Union"
+                                        "Union": "typing.Union",
+                                        "World": "semantic_world.world.World"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -1296,7 +1296,7 @@
                                     "_type": "ripple_down_rules.rules.MultiClassTopRule",
                                     "conditions": {
                                         "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                        "user_input": "def _get_value(case):\n    return len([v for v in case.views if type(v) is Drawer]) > 0\n    ",
+                                        "user_input": "def _get_value(case):\n    def has_drawers(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Cabinet.\"\"\"\n        return any(v for v in case.views if type(v) is Drawer)\n    return has_drawers(case)\n    ",
                                         "conclusion_type": [
                                             "builtins.bool"
                                         ],
@@ -1307,13 +1307,13 @@
                                             "Drawer": "semantic_world.views.views.Drawer",
                                             "Fridge": "semantic_world.views.views.Fridge",
                                             "Handle": "semantic_world.views.views.Handle",
-                                            "World": "semantic_world.world.World",
                                             "FixedConnection": "semantic_world.connections.FixedConnection",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                             "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                             "List": "typing.List",
                                             "Set": "typing.Set",
-                                            "Union": "typing.Union"
+                                            "Union": "typing.Union",
+                                            "World": "semantic_world.world.World"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -1323,7 +1323,7 @@
                                     },
                                     "conclusion": {
                                         "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                        "user_input": "def _get_value(case):\n    def get_value_for_world_views_of_type_cabinet(case: World) -> Union[set, Cabinet, list]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Cabinet\"\"\"\n        drawers = [v for v in case.views if type(v) is Drawer]\n        prismatic_connections = [c for c in case.connections if\n                                 isinstance(c, PrismaticConnection) and c.child in [drawer.container.body for drawer in\n                                                                                    drawers]]\n        cabinet_container_bodies = [pc.parent for pc in prismatic_connections]\n        cabinets = []\n        for ccb in cabinet_container_bodies:\n            if ccb in [cabinet.container.body for cabinet in cabinets]:\n                continue\n            cc_prismatic_connections = [pc for pc in prismatic_connections if pc.parent is ccb]\n            cabinet_drawer_container_bodies = [pc.child for pc in cc_prismatic_connections]\n            cabinet_drawers = [d for d in drawers if d.container.body in cabinet_drawer_container_bodies]\n            cabinets.append(Cabinet(Container(ccb), cabinet_drawers))\n    \n        return cabinets\n    \n    return get_value_for_world_views_of_type_cabinet(case)\n    ",
+                                        "user_input": "def _get_value(case):\n    def get_cabinets(case: World) -> Union[set, Cabinet, list]:\n        \"\"\"Get possible value(s) for World.views of types list/set of Cabinet\"\"\"\n        drawers = [v for v in case.views if type(v) is Drawer]\n        prismatic_connections = [c for c in case.connections if\n                                 isinstance(c, PrismaticConnection) and c.child in [drawer.container.body for drawer in\n                                                                                    drawers]]\n        cabinet_container_bodies = [pc.parent for pc in prismatic_connections]\n        cabinets = []\n        for ccb in cabinet_container_bodies:\n            if ccb in [cabinet.container.body for cabinet in cabinets]:\n                continue\n            cc_prismatic_connections = [pc for pc in prismatic_connections if pc.parent is ccb]\n            cabinet_drawer_container_bodies = [pc.child for pc in cc_prismatic_connections]\n            cabinet_drawers = [d for d in drawers if d.container.body in cabinet_drawer_container_bodies]\n            cabinets.append(Cabinet(Container(ccb), cabinet_drawers))\n    \n        return cabinets\n    \n    return get_cabinets(case)\n    ",
                                         "conclusion_type": [
                                             "semantic_world.views.views.Cabinet",
                                             "builtins.set",
@@ -1336,13 +1336,13 @@
                                             "Drawer": "semantic_world.views.views.Drawer",
                                             "Fridge": "semantic_world.views.views.Fridge",
                                             "Handle": "semantic_world.views.views.Handle",
-                                            "World": "semantic_world.world.World",
                                             "FixedConnection": "semantic_world.connections.FixedConnection",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                             "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                             "List": "typing.List",
                                             "Set": "typing.Set",
-                                            "Union": "typing.Union"
+                                            "Union": "typing.Union",
+                                            "World": "semantic_world.world.World"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -1360,7 +1360,7 @@
                                         "_type": "ripple_down_rules.rules.MultiClassTopRule",
                                         "conditions": {
                                             "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                            "user_input": "def _get_value(case):\n    def conditions_for_world_views_of_type_door(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Door.\"\"\"\n        return len([v for v in case.views if isinstance(v, Handle)]) > 0\n    return conditions_for_world_views_of_type_door(case)\n    ",
+                                            "user_input": "def _get_value(case):\n    def has_handles_and_revolute_connections(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Door.\"\"\"\n        return (any(v for v in case.views if isinstance(v, Handle)) and\n                any(c for c in case.connections if isinstance(c, RevoluteConnection)))\n    return has_handles_and_revolute_connections(case)\n    ",
                                             "conclusion_type": [
                                                 "builtins.bool"
                                             ],
@@ -1371,13 +1371,13 @@
                                                 "Drawer": "semantic_world.views.views.Drawer",
                                                 "Fridge": "semantic_world.views.views.Fridge",
                                                 "Handle": "semantic_world.views.views.Handle",
-                                                "World": "semantic_world.world.World",
                                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                                 "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                 "List": "typing.List",
                                                 "Set": "typing.Set",
-                                                "Union": "typing.Union"
+                                                "Union": "typing.Union",
+                                                "World": "semantic_world.world.World"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -1387,7 +1387,7 @@
                                         },
                                         "conclusion": {
                                             "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                            "user_input": "def _get_value(case):\n    def world_views_of_type_door(case: World) -> List[Door]:\n        \"\"\"Get possible value(s) for World.views  of type Door.\"\"\"\n        handles = [v for v in case.views if isinstance(v, Handle)]\n        handle_bodies = [h.body for h in handles]\n        connections_with_handles = [c for c in case.connections if isinstance(c, FixedConnection) and\n                                    c.child in handle_bodies]\n    \n        revolute_connections = [c for c in case.connections if isinstance(c, RevoluteConnection)]\n        bodies_connected_to_handles = [c.parent if c.child in handle_bodies else c.child for c in connections_with_handles]\n        bodies_that_have_revolute_joints = [b for b in bodies_connected_to_handles for c in revolute_connections\n                                            if b == c.child]\n        body_handle_connections = [c for c in connections_with_handles if c.parent in bodies_that_have_revolute_joints]\n        doors = [Door(c.parent, [h for h in handles if h.body == c.child][0]) for c in body_handle_connections]\n        return doors\n    return world_views_of_type_door(case)\n    ",
+                                            "user_input": "def _get_value(case):\n    def get_doors(case: World) -> List[Door]:\n        \"\"\"Get possible value(s) for World.views  of type Door.\"\"\"\n        handles = [v for v in case.views if isinstance(v, Handle)]\n        handle_bodies = [h.body for h in handles]\n        connections_with_handles = [c for c in case.connections if isinstance(c, FixedConnection) and\n                                    c.child in handle_bodies]\n    \n        revolute_connections = [c for c in case.connections if isinstance(c, RevoluteConnection)]\n        bodies_connected_to_handles = [c.parent if c.child in handle_bodies else c.child for c in connections_with_handles]\n        bodies_that_have_revolute_joints = [b for b in bodies_connected_to_handles for c in revolute_connections\n                                            if b == c.child]\n        body_handle_connections = [c for c in connections_with_handles if c.parent in bodies_that_have_revolute_joints]\n        doors = [Door(c.parent, [h for h in handles if h.body == c.child][0]) for c in body_handle_connections]\n        return doors\n    return get_doors(case)\n    ",
                                             "conclusion_type": [
                                                 "semantic_world.views.views.Door",
                                                 "builtins.set",
@@ -1400,13 +1400,13 @@
                                                 "Drawer": "semantic_world.views.views.Drawer",
                                                 "Fridge": "semantic_world.views.views.Fridge",
                                                 "Handle": "semantic_world.views.views.Handle",
-                                                "World": "semantic_world.world.World",
                                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                                 "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                 "List": "typing.List",
                                                 "Set": "typing.Set",
-                                                "Union": "typing.Union"
+                                                "Union": "typing.Union",
+                                                "World": "semantic_world.world.World"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -1424,7 +1424,7 @@
                                             "_type": "ripple_down_rules.rules.MultiClassTopRule",
                                             "conditions": {
                                                 "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                                "user_input": "def _get_value(case):\n    def conditions_for_world_views_of_type_fridge(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Fridge.\"\"\"\n        return True\n    return conditions_for_world_views_of_type_fridge(case)\n    ",
+                                                "user_input": "def _get_value(case):\n    def has_doors_with_fridge_in_their_name(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Fridge.\"\"\"\n        return any(v for v in case.views if isinstance(v, Door) and \"fridge\" in v.body.name.name.lower())\n    return has_doors_with_fridge_in_their_name(case)\n    ",
                                                 "conclusion_type": [
                                                     "builtins.bool"
                                                 ],
@@ -1435,13 +1435,13 @@
                                                     "Drawer": "semantic_world.views.views.Drawer",
                                                     "Fridge": "semantic_world.views.views.Fridge",
                                                     "Handle": "semantic_world.views.views.Handle",
-                                                    "World": "semantic_world.world.World",
                                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                                     "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                     "List": "typing.List",
                                                     "Set": "typing.Set",
-                                                    "Union": "typing.Union"
+                                                    "Union": "typing.Union",
+                                                    "World": "semantic_world.world.World"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -1451,7 +1451,7 @@
                                             },
                                             "conclusion": {
                                                 "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                                "user_input": "def _get_value(case):\n    def world_views_of_type_fridge(case: World) -> List[Fridge]:\n        \"\"\"Get possible value(s) for World.views  of type Fridge.\"\"\"\n        # Get fridge-related doors\n        doors = [v for v in case.views if isinstance(v, Door) and \"fridge\" in v.body.name.name.lower()]\n        # Precompute bodies of the fridge doors\n        door_bodies = [d.body for d in doors]\n        # Filter relevant revolute connections\n        door_connections = [\n            c for c in case.connections\n            if isinstance(c, RevoluteConnection)\n               and c.child in door_bodies\n               and 'fridge' in c.parent.name.name.lower()\n        ]\n        return [Fridge(c.parent, doors[door_bodies.index(c.child)]) for c in door_connections]\n    return world_views_of_type_fridge(case)\n    ",
+                                                "user_input": "def _get_value(case):\n    def get_fridges(case: World) -> List[Fridge]:\n        \"\"\"Get possible value(s) for World.views  of type Fridge.\"\"\"\n        # Get fridge-related doors\n        fridge_doors = [v for v in case.views if isinstance(v, Door) and \"fridge\" in v.body.name.name.lower()]\n        # Precompute bodies of the fridge doors\n        fridge_doors_bodies = [d.body for d in fridge_doors]\n        # Filter relevant revolute connections\n        fridge_door_connections = [\n            c for c in case.connections\n            if isinstance(c, RevoluteConnection)\n               and c.child in fridge_doors_bodies\n               and 'fridge' in c.parent.name.name.lower()\n        ]\n        return [Fridge(c.parent, fridge_doors[fridge_doors_bodies.index(c.child)]) for c in fridge_door_connections]\n    return get_fridges(case)\n    ",
                                                 "conclusion_type": [
                                                     "semantic_world.views.views.Fridge",
                                                     "builtins.set",
@@ -1464,13 +1464,13 @@
                                                     "Drawer": "semantic_world.views.views.Drawer",
                                                     "Fridge": "semantic_world.views.views.Fridge",
                                                     "Handle": "semantic_world.views.views.Handle",
-                                                    "World": "semantic_world.world.World",
                                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                                     "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                     "List": "typing.List",
                                                     "Set": "typing.Set",
-                                                    "Union": "typing.Union"
+                                                    "Union": "typing.Union",
+                                                    "World": "semantic_world.world.World"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -1497,7 +1497,7 @@
                                     "_type": "ripple_down_rules.rules.MultiClassTopRule",
                                     "conditions": {
                                         "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                        "user_input": "def _get_value(case):\n    def conditions_for_world_views_of_type_fridge(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Fridge.\"\"\"\n        return True\n    return conditions_for_world_views_of_type_fridge(case)\n    ",
+                                        "user_input": "def _get_value(case):\n    def has_doors_with_fridge_in_their_name(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Fridge.\"\"\"\n        return any(v for v in case.views if isinstance(v, Door) and \"fridge\" in v.body.name.name.lower())\n    return has_doors_with_fridge_in_their_name(case)\n    ",
                                         "conclusion_type": [
                                             "builtins.bool"
                                         ],
@@ -1508,13 +1508,13 @@
                                             "Drawer": "semantic_world.views.views.Drawer",
                                             "Fridge": "semantic_world.views.views.Fridge",
                                             "Handle": "semantic_world.views.views.Handle",
-                                            "World": "semantic_world.world.World",
                                             "FixedConnection": "semantic_world.connections.FixedConnection",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                             "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                             "List": "typing.List",
                                             "Set": "typing.Set",
-                                            "Union": "typing.Union"
+                                            "Union": "typing.Union",
+                                            "World": "semantic_world.world.World"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -1524,7 +1524,7 @@
                                     },
                                     "conclusion": {
                                         "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                        "user_input": "def _get_value(case):\n    def world_views_of_type_fridge(case: World) -> List[Fridge]:\n        \"\"\"Get possible value(s) for World.views  of type Fridge.\"\"\"\n        # Get fridge-related doors\n        doors = [v for v in case.views if isinstance(v, Door) and \"fridge\" in v.body.name.name.lower()]\n        # Precompute bodies of the fridge doors\n        door_bodies = [d.body for d in doors]\n        # Filter relevant revolute connections\n        door_connections = [\n            c for c in case.connections\n            if isinstance(c, RevoluteConnection)\n               and c.child in door_bodies\n               and 'fridge' in c.parent.name.name.lower()\n        ]\n        return [Fridge(c.parent, doors[door_bodies.index(c.child)]) for c in door_connections]\n    return world_views_of_type_fridge(case)\n    ",
+                                        "user_input": "def _get_value(case):\n    def get_fridges(case: World) -> List[Fridge]:\n        \"\"\"Get possible value(s) for World.views  of type Fridge.\"\"\"\n        # Get fridge-related doors\n        fridge_doors = [v for v in case.views if isinstance(v, Door) and \"fridge\" in v.body.name.name.lower()]\n        # Precompute bodies of the fridge doors\n        fridge_doors_bodies = [d.body for d in fridge_doors]\n        # Filter relevant revolute connections\n        fridge_door_connections = [\n            c for c in case.connections\n            if isinstance(c, RevoluteConnection)\n               and c.child in fridge_doors_bodies\n               and 'fridge' in c.parent.name.name.lower()\n        ]\n        return [Fridge(c.parent, fridge_doors[fridge_doors_bodies.index(c.child)]) for c in fridge_door_connections]\n    return get_fridges(case)\n    ",
                                         "conclusion_type": [
                                             "semantic_world.views.views.Fridge",
                                             "builtins.set",
@@ -1537,13 +1537,13 @@
                                             "Drawer": "semantic_world.views.views.Drawer",
                                             "Fridge": "semantic_world.views.views.Fridge",
                                             "Handle": "semantic_world.views.views.Handle",
-                                            "World": "semantic_world.world.World",
                                             "FixedConnection": "semantic_world.connections.FixedConnection",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                             "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                             "List": "typing.List",
                                             "Set": "typing.Set",
-                                            "Union": "typing.Union"
+                                            "Union": "typing.Union",
+                                            "World": "semantic_world.world.World"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -1555,7 +1555,7 @@
                                         "_type": "ripple_down_rules.rules.MultiClassTopRule",
                                         "conditions": {
                                             "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                            "user_input": "def _get_value(case):\n    def conditions_for_world_views_of_type_door(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Door.\"\"\"\n        return len([v for v in case.views if isinstance(v, Handle)]) > 0\n    return conditions_for_world_views_of_type_door(case)\n    ",
+                                            "user_input": "def _get_value(case):\n    def has_handles_and_revolute_connections(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Door.\"\"\"\n        return (any(v for v in case.views if isinstance(v, Handle)) and\n                any(c for c in case.connections if isinstance(c, RevoluteConnection)))\n    return has_handles_and_revolute_connections(case)\n    ",
                                             "conclusion_type": [
                                                 "builtins.bool"
                                             ],
@@ -1566,13 +1566,13 @@
                                                 "Drawer": "semantic_world.views.views.Drawer",
                                                 "Fridge": "semantic_world.views.views.Fridge",
                                                 "Handle": "semantic_world.views.views.Handle",
-                                                "World": "semantic_world.world.World",
                                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                                 "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                 "List": "typing.List",
                                                 "Set": "typing.Set",
-                                                "Union": "typing.Union"
+                                                "Union": "typing.Union",
+                                                "World": "semantic_world.world.World"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -1582,7 +1582,7 @@
                                         },
                                         "conclusion": {
                                             "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                            "user_input": "def _get_value(case):\n    def world_views_of_type_door(case: World) -> List[Door]:\n        \"\"\"Get possible value(s) for World.views  of type Door.\"\"\"\n        handles = [v for v in case.views if isinstance(v, Handle)]\n        handle_bodies = [h.body for h in handles]\n        connections_with_handles = [c for c in case.connections if isinstance(c, FixedConnection) and\n                                    c.child in handle_bodies]\n    \n        revolute_connections = [c for c in case.connections if isinstance(c, RevoluteConnection)]\n        bodies_connected_to_handles = [c.parent if c.child in handle_bodies else c.child for c in connections_with_handles]\n        bodies_that_have_revolute_joints = [b for b in bodies_connected_to_handles for c in revolute_connections\n                                            if b == c.child]\n        body_handle_connections = [c for c in connections_with_handles if c.parent in bodies_that_have_revolute_joints]\n        doors = [Door(c.parent, [h for h in handles if h.body == c.child][0]) for c in body_handle_connections]\n        return doors\n    return world_views_of_type_door(case)\n    ",
+                                            "user_input": "def _get_value(case):\n    def get_doors(case: World) -> List[Door]:\n        \"\"\"Get possible value(s) for World.views  of type Door.\"\"\"\n        handles = [v for v in case.views if isinstance(v, Handle)]\n        handle_bodies = [h.body for h in handles]\n        connections_with_handles = [c for c in case.connections if isinstance(c, FixedConnection) and\n                                    c.child in handle_bodies]\n    \n        revolute_connections = [c for c in case.connections if isinstance(c, RevoluteConnection)]\n        bodies_connected_to_handles = [c.parent if c.child in handle_bodies else c.child for c in connections_with_handles]\n        bodies_that_have_revolute_joints = [b for b in bodies_connected_to_handles for c in revolute_connections\n                                            if b == c.child]\n        body_handle_connections = [c for c in connections_with_handles if c.parent in bodies_that_have_revolute_joints]\n        doors = [Door(c.parent, [h for h in handles if h.body == c.child][0]) for c in body_handle_connections]\n        return doors\n    return get_doors(case)\n    ",
                                             "conclusion_type": [
                                                 "semantic_world.views.views.Door",
                                                 "builtins.set",
@@ -1595,13 +1595,13 @@
                                                 "Drawer": "semantic_world.views.views.Drawer",
                                                 "Fridge": "semantic_world.views.views.Fridge",
                                                 "Handle": "semantic_world.views.views.Handle",
-                                                "World": "semantic_world.world.World",
                                                 "FixedConnection": "semantic_world.connections.FixedConnection",
                                                 "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                                 "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                 "List": "typing.List",
                                                 "Set": "typing.Set",
-                                                "Union": "typing.Union"
+                                                "Union": "typing.Union",
+                                                "World": "semantic_world.world.World"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -1619,7 +1619,7 @@
                                             "_type": "ripple_down_rules.rules.MultiClassTopRule",
                                             "conditions": {
                                                 "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                                "user_input": "def _get_value(case):\n    def conditions_for_world_views_of_type_fridge(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Fridge.\"\"\"\n        return True\n    return conditions_for_world_views_of_type_fridge(case)\n    ",
+                                                "user_input": "def _get_value(case):\n    def has_doors_with_fridge_in_their_name(case: World) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World.views  of type Fridge.\"\"\"\n        return any(v for v in case.views if isinstance(v, Door) and \"fridge\" in v.body.name.name.lower())\n    return has_doors_with_fridge_in_their_name(case)\n    ",
                                                 "conclusion_type": [
                                                     "builtins.bool"
                                                 ],
@@ -1630,13 +1630,13 @@
                                                     "Drawer": "semantic_world.views.views.Drawer",
                                                     "Fridge": "semantic_world.views.views.Fridge",
                                                     "Handle": "semantic_world.views.views.Handle",
-                                                    "World": "semantic_world.world.World",
                                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                                     "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                     "List": "typing.List",
                                                     "Set": "typing.Set",
-                                                    "Union": "typing.Union"
+                                                    "Union": "typing.Union",
+                                                    "World": "semantic_world.world.World"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -1646,7 +1646,7 @@
                                             },
                                             "conclusion": {
                                                 "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
-                                                "user_input": "def _get_value(case):\n    def world_views_of_type_fridge(case: World) -> List[Fridge]:\n        \"\"\"Get possible value(s) for World.views  of type Fridge.\"\"\"\n        # Get fridge-related doors\n        doors = [v for v in case.views if isinstance(v, Door) and \"fridge\" in v.body.name.name.lower()]\n        # Precompute bodies of the fridge doors\n        door_bodies = [d.body for d in doors]\n        # Filter relevant revolute connections\n        door_connections = [\n            c for c in case.connections\n            if isinstance(c, RevoluteConnection)\n               and c.child in door_bodies\n               and 'fridge' in c.parent.name.name.lower()\n        ]\n        return [Fridge(c.parent, doors[door_bodies.index(c.child)]) for c in door_connections]\n    return world_views_of_type_fridge(case)\n    ",
+                                                "user_input": "def _get_value(case):\n    def get_fridges(case: World) -> List[Fridge]:\n        \"\"\"Get possible value(s) for World.views  of type Fridge.\"\"\"\n        # Get fridge-related doors\n        fridge_doors = [v for v in case.views if isinstance(v, Door) and \"fridge\" in v.body.name.name.lower()]\n        # Precompute bodies of the fridge doors\n        fridge_doors_bodies = [d.body for d in fridge_doors]\n        # Filter relevant revolute connections\n        fridge_door_connections = [\n            c for c in case.connections\n            if isinstance(c, RevoluteConnection)\n               and c.child in fridge_doors_bodies\n               and 'fridge' in c.parent.name.name.lower()\n        ]\n        return [Fridge(c.parent, fridge_doors[fridge_doors_bodies.index(c.child)]) for c in fridge_door_connections]\n    return get_fridges(case)\n    ",
                                                 "conclusion_type": [
                                                     "semantic_world.views.views.Fridge",
                                                     "builtins.set",
@@ -1659,13 +1659,13 @@
                                                     "Drawer": "semantic_world.views.views.Drawer",
                                                     "Fridge": "semantic_world.views.views.Fridge",
                                                     "Handle": "semantic_world.views.views.Handle",
-                                                    "World": "semantic_world.world.World",
                                                     "FixedConnection": "semantic_world.connections.FixedConnection",
                                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                                     "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                     "List": "typing.List",
                                                     "Set": "typing.Set",
-                                                    "Union": "typing.Union"
+                                                    "Union": "typing.Union",
+                                                    "World": "semantic_world.world.World"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
