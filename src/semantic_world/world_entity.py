@@ -104,6 +104,9 @@ class Body(WorldEntity):
         This method computes the bounding box of the link in world coordinates by transforming the local axis-aligned
         bounding boxes of the link's geometry to world coordinates.
 
+        Note: These bounding boxes may not be disjoint, however the random events library always makes them disjoint. If
+        this is the case, and we feed he non-disjoint bounding boxes into the gcs, it may trigger unexpected behavior.
+
         :return: A BoundingBoxCollection containing the bounding boxes of the link's geometry in world
         """
         world = self._world

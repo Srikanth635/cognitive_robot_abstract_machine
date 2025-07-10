@@ -3,6 +3,7 @@ from __future__ import annotations
 from enum import Enum
 from functools import cached_property
 
+from ormatic.utils import classproperty
 from random_events.variable import Continuous
 from sortedcontainers import SortedSet
 
@@ -15,6 +16,6 @@ class SpatialVariables(Enum):
     y = Continuous("y")
     z = Continuous("z")
 
-    @classmethod
+    @classproperty
     def xy(cls):
         return SortedSet([cls.x.value, cls.y.value])

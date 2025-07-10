@@ -5,11 +5,11 @@ from .world_views_mcrdr_defs import *
 
 
 attribute_name = 'views'
-conclusion_type = (Handle, Cabinet, set, Drawer, list, Fridge, Container, Door,)
+conclusion_type = (Handle, Door, set, list, Cabinet, Container, Drawer, Fridge,)
 mutually_exclusive = False
 
 
-def classify(case: World, **kwargs) -> Set[Union[Handle, Cabinet, Drawer, Fridge, Container, Door]]:
+def classify(case: World, **kwargs) -> Set[Union[Handle, Door, Cabinet, Container, Drawer, Fridge]]:
     if not isinstance(case, Case):
         case = create_case(case, max_recursion_idx=3)
     conclusions = set()

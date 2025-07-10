@@ -283,7 +283,7 @@ class GraphOfConvexSets:
         """
 
         if not keep_z:
-            search_space_event = search_space_event.marginal(SpatialVariables.xy())
+            search_space_event = search_space_event.marginal(SpatialVariables.xy)
 
         events = (
             bb.simple_event.as_composite_set() & search_space_event
@@ -294,7 +294,7 @@ class GraphOfConvexSets:
         events = (event for event in events if not event.is_empty())
 
         if not keep_z:
-            events = (event.marginal(SpatialVariables.xy()) for event in events)
+            events = (event.marginal(SpatialVariables.xy) for event in events)
 
         try:
             return reduce(or_, events)
@@ -398,14 +398,14 @@ class GraphOfConvexSets:
 
         # remove the z axis
         og_search_event = search_space.event
-        search_event = og_search_event.marginal(SpatialVariables.xy())
+        search_event = og_search_event.marginal(SpatialVariables.xy)
 
         free_space = ~obstacles & search_event
 
         SimpleEvent({SpatialVariables.z.value: reals()})
         # create floor level
         z_event = SimpleEvent({SpatialVariables.z.value: reals()}).as_composite_set()
-        z_event.fill_missing_variables(SpatialVariables.xy())
+        z_event.fill_missing_variables(SpatialVariables.xy)
         free_space.fill_missing_variables(SortedSet([SpatialVariables.z.value]))
         free_space &= z_event
         free_space &= og_search_event
