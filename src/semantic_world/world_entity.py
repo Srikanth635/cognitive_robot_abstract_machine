@@ -109,21 +109,33 @@ class Body(WorldEntity):
         for other in others:
             # Calculate the closest vertex on this body to the other body
             closest_vert_id = \
-            self.collision[0].mesh.kdtree.query(self._world.compute_forward_kinematics_np(self, other)[:3, 3], k=1)[1]
+                self.collision[0].mesh.kdtree.query(
+                    (self._world.compute_forward_kinematics_np(self, other) @ other.collision[0].origin.to_np())[:3, 3],
+                    k=1)[1]
             closest_vert = self.collision[0].mesh.vertices[closest_vert_id]
 
             # Compute the closest faces on the other body to the closes vertex
             faces = nearby_faces(other.collision[0].mesh,
-                                 [self._world.compute_forward_kinematics_np(other, self)[:3, 3] + closest_vert])[0]
+                                 [(self._world.compute_forward_kinematics_np(other, self) @ self.collision[
+                                     0].origin.to_np())[:3, 3] + closest_vert])[0]
             face_weights = np.zeros(len(other.collision[0].mesh.faces))
 
             # Assign weights to the faces based on a geometric distribution
             face_weights[faces] = evaluated_geometric_distribution(len(faces))
 
             # Sample points on the surface of the other body
-            q = sample_surface(other.collision[0].mesh, sample_size, face_weight=face_weights, seed=420)[
-                    0] + self._world.compute_forward_kinematics_np(self, other)[:3, 3]
-            query_points.extend(q)
+            q = sample_surface(other.collision[0].mesh, sample_size, face_weight=face_weights, seed=420)[0]
+            # Make 4x4 transformation matrix from points
+            points = np.tile(np.eye(4, dtype=np.float32), (len(q), 1, 1))
+            points[:, :3, 3] = q
+
+            # Transform from the mesh to the other mesh
+            transform = np.linalg.inv(self.collision[0].origin.to_np()) @  self._world.compute_forward_kinematics_np(self, other) @ other.collision[0].origin.to_np()
+            points = points @ transform
+
+            points = points[:, :3, 3]  # Extract the points from the transformation matrix
+
+            query_points.extend(points)
 
         # Actually compute the closest points
         points, dists = closest_point(self.collision[0].mesh, query_points)[:2]
@@ -154,7 +166,6 @@ class Body(WorldEntity):
     def global_pose(self) -> np.ndarray:
         return self._world.compute_forward_kinematics_np(self._world.root, self)
 
-
     @property
     def parent_connection(self) -> Connection:
         """
@@ -172,6 +183,7 @@ class Body(WorldEntity):
         new_link.index = body.index
         return new_link
 
+
 @dataclass
 class View(WorldEntity):
     """
@@ -180,12 +192,14 @@ class View(WorldEntity):
     This class can hold references to certain bodies that gain meaning in this context.
     """
 
+
 @dataclass
 class RootedView(View):
     """
     Represents a view that is rooted in a specific body.
     """
     root: Body = field(default_factory=Body)
+
 
 @dataclass
 class EnvironmentView(View):
