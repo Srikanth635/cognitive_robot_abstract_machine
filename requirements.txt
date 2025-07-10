@@ -14,3 +14,4 @@ ripple_down_rules
 pytest-order
 sqlalchemy
 embreex # Hardware acceleration for trimesh raycasting
+rtree # For spatial indexing in trimesh
