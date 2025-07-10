@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from ctypes import c_int
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, TYPE_CHECKING, List, Tuple
 
@@ -17,6 +18,12 @@ if TYPE_CHECKING:
     from .world import World
     from .world_entity import Body
 
+
+_large_value = np.inf
+"""
+Used as bounds for slack variables. 
+Only needs to be changed when a different QP solver is used, as some can't handle inf.
+"""
 
 class IKSolverException(Exception):
     pass
@@ -74,6 +81,7 @@ class QPSolverException(IKSolverException):
         super().__init__(f'QP solver failed with exit flag: {self.exit_flag.description}')
 
 
+@dataclass
 class InverseKinematicsSolver:
     """
     Quadratic Programming-based Inverse Kinematics solver.
@@ -81,38 +89,29 @@ class InverseKinematicsSolver:
     This class handles the setup and solving of inverse kinematics problems
     using quadratic programming optimization.
     """
-    _large_value = np.inf
-    """
-    Used as bounds for slack variables. 
-    Only needs to be changed when a different QP solver is used, as some can't handle inf.
-    """
-
-    _convergence_velocity_tolerance = 1e-4
-    """
-    If the velocity of the active DOFs is below this threshold, the solver is considered to have converged.
-    Unit depends on the DOF, e.g. rad/s for revolute joints or m/s for prismatic joints.
-    """
-
-    _convergence_slack_tolerance = 1e-3
-    """
-    The slack variables describe how much the target is violated. 
-    If all slack variables are below this threshold, the solver found a solution.
-    Unit is m for the position target or rad for the orientation target.
-    """
 
     world: World
     """
     Backreference to semantic world.
     """
 
-    iterations: int
+    iterations: int = field(default=-1, init=False)
     """
     The current iteration of the solver.
     """
 
-    def __init__(self, world: World):
-        self.world = world
-        self.iteration = -1
+    _convergence_velocity_tolerance: float = field(default=1e-4)
+    """
+    If the velocity of the active DOFs is below this threshold, the solver is considered to have converged.
+    Unit depends on the DOF, e.g. rad/s for revolute joints or m/s for prismatic joints.
+    """
+
+    _convergence_slack_tolerance: float = field(default=1e-3)
+    """
+    The slack variables describe how much the target is violated. 
+    If all slack variables are below this threshold, the solver found a solution.
+    Unit is m for the position target or rad for the orientation target.
+    """
 
     def solve(self, root: Body, tip: Body, target: NpMatrix4x4,
               dt: float = 0.05, max_iterations: int = 200,
@@ -213,21 +212,21 @@ class InverseKinematicsSolver:
         return False
 
 
+@dataclass
 class QPProblem:
     """
     Represents a quadratic programming problem for inverse kinematics.
     """
 
-    def __init__(self, world: World, root: Body, tip: Body, target: NpMatrix4x4, dt: float, translation_velocity: float,
-                 rotation_velocity: float):
-        self.world = world
-        self.root = root
-        self.tip = tip
-        self.target = target
-        self.dt = dt
-        self.translation_velocity = translation_velocity
-        self.rotation_velocity = rotation_velocity
+    world: World
+    root: Body
+    tip: Body
+    target: NpMatrix4x4
+    dt: float
+    translation_velocity: float
+    rotation_velocity: float
 
+    def __post_init__(self):
         # Extract DOFs and setup problem
         self.active_dofs, self.passive_dofs, self.active_symbols, self.passive_symbols = self._extract_dofs()
         self._setup_constraints()
@@ -301,33 +300,53 @@ class QPProblem:
     def evaluate_at_state(self, solver_state) -> QPMatrices:
         """Evaluate QP matrices at the current solver state."""
         return QPMatrices(
+            H=np.diag(self.quadratic_weights_f.fast_call(solver_state.position, solver_state.passive_position)),
+            g=self.linear_weights_f.fast_call(solver_state.position, solver_state.passive_position),
+            A=self.A_f.fast_call(solver_state.position, solver_state.passive_position),
             l=self.l_f.fast_call(solver_state.position, solver_state.passive_position),
             u=self.u_f.fast_call(solver_state.position, solver_state.passive_position),
-            A=self.A_f.fast_call(solver_state.position, solver_state.passive_position),
-            H=np.diag(self.quadratic_weights_f.fast_call(solver_state.position, solver_state.passive_position)),
-            g=self.linear_weights_f.fast_call(solver_state.position, solver_state.passive_position)
         )
 
 
+@dataclass
 class ConstraintBuilder:
     """
     Builds constraints for the inverse kinematics QP problem.
     """
-    maximum_velocity = 1
+
+    world: World
+    """
+    Backreference to semantic world.
+    """
+
+    root: Body
+    """
+    Root body of the kinematic chain.
+    """
+
+    tip: Body
+    """
+    Tip body of the kinematic chain.
+    """
+
+    target: NpMatrix4x4
+    """
+    Desired tip pose relative to the root body.
+    """
+
+    dt: float
+    """
+    Time step for integration.
+    """
+
+    max_translation_velocity: float
+    max_rotation_velocity: float
+
+    maximum_velocity: float = field(default=1.0, init=False)
     """
     Used to limit the velocity of the DOFs, because the default values defined in the semantic world are sometimes unreasonably high.
     """
 
-    def __init__(self, world: World, root: Body, tip: Body, target: NpMatrix4x4, dt: float, translation_velocity: float,
-                 rotation_velocity: float):
-        self.world = world
-        self.root = root
-        self.tip = tip
-        self.target = target
-        self.dt = dt
-        self.translation_velocity = translation_velocity
-        self.rotation_velocity = rotation_velocity
-        self.large_value = np.inf
 
     def build_box_constraints(self, active_dofs: List[DegreeOfFreedom]) -> Tuple[cas.Expression, cas.Expression]:
         """Build position and velocity limit constraints for DOFs."""
@@ -346,8 +365,9 @@ class ConstraintBuilder:
             upper_constraints.append(ul)
 
         # Add slack variables
-        lower_constraints.extend([-self.large_value] * 6)
-        upper_constraints.extend([self.large_value] * 6)
+        global _large_value
+        lower_constraints.extend([-_large_value] * 6)
+        upper_constraints.extend([_large_value] * 6)
 
         return cas.Expression(lower_constraints), cas.Expression(upper_constraints)
 
@@ -381,7 +401,7 @@ class ConstraintBuilder:
         root_T_tip_goal = cas.TransformationMatrix(self.target)
         root_P_tip_goal = root_T_tip_goal.to_position()
 
-        translation_cap = self.translation_velocity * self.dt
+        translation_cap = self.max_translation_velocity * self.dt
         position_error = root_P_tip_goal[:3] - root_P_tip[:3]
 
         for i in range(3):
@@ -395,7 +415,7 @@ class ConstraintBuilder:
         :param root_T_tip: Forward kinematics expression.
         :return: Expression describing the rotation, and the error vector.
         """
-        rotation_cap = self.rotation_velocity * self.dt
+        rotation_cap = self.max_rotation_velocity * self.dt
 
         hack = cas.RotationMatrix.from_axis_angle(cas.Vector3((0, 0, 1)), -0.0001)
         root_R_tip = root_T_tip.to_rotation().dot(hack)
@@ -428,14 +448,17 @@ class SolverState:
         self.position += velocity * dt
 
 
+@dataclass
 class QPMatrices:
     """
     Container for QP problem matrices at a specific state.
+    min x^T H x + g^T x
+    subject to
+        l <= Ax <= u
     """
 
-    def __init__(self, l, u, A, H, g):
-        self.l = l
-        self.u = u
-        self.A = A
-        self.H = H
-        self.g = g
+    H: np.ndarray
+    g: np.ndarray
+    A: np.ndarray
+    l: np.ndarray
+    u: np.ndarray
