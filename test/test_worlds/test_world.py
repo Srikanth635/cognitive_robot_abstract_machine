@@ -1,48 +1,11 @@
-import os
-from typing import Tuple
-
-import pytest
 import numpy as np
-from networkx.exception import NetworkXNoPath
 
-from semantic_world.adapters.urdf import URDFParser
-from semantic_world.connections import PrismaticConnection, RevoluteConnection, Connection6DoF, OmniDrive, \
-    FixedConnection
+from semantic_world.connections import PrismaticConnection, RevoluteConnection, Connection6DoF
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.spatial_types.derivatives import Derivatives
 from semantic_world.spatial_types.math import rotation_matrix_from_rpy
 from semantic_world.spatial_types.symbol_manager import symbol_manager
-from semantic_world.world import World, Body, Connection
-
-
-@pytest.fixture
-def world_setup() -> Tuple[World, Body, Body, Body, Body, Body]:
-    world = World()
-    root = Body(PrefixedName(name='root', prefix='world'))
-    l1 = Body(PrefixedName('l1'))
-    l2 = Body(PrefixedName('l2'))
-    bf = Body(PrefixedName('bf'))
-    r1 = Body(PrefixedName('r1'))
-    r2 = Body(PrefixedName('r2'))
-
-    with world.modify_world():
-        [world.add_body(b) for b in [root, l1, l2, bf, r1, r2]]
-        dof = world.create_degree_of_freedom(name=PrefixedName('dof'),
-                                             lower_limits={Derivatives.velocity: -1},
-                                             upper_limits={Derivatives.velocity: 1})
-
-        c_l1_l2 = PrismaticConnection(l1, l2, dof=dof, axis=(1, 0, 0))
-        c_r1_r2 = RevoluteConnection(r1, r2, dof=dof, axis=(0, 0, 1))
-        bf_root_l1 = FixedConnection(bf, l1)
-        bf_root_r1 = FixedConnection(bf, r1)
-        world.add_connection(c_l1_l2)
-        world.add_connection(c_r1_r2)
-        world.add_connection(bf_root_l1)
-        world.add_connection(bf_root_r1)
-        c_root_bf = Connection6DoF(parent=root, child=bf, _world=world)
-        world.add_connection(c_root_bf)
-
-    return world, l1, l2, bf, r1, r2
+from semantic_world.testing import world_setup
 
 
 def test_set_state(world_setup):
@@ -54,7 +17,7 @@ def test_set_state(world_setup):
     c2.position = 1337
     assert c2.position == 1337
     c3: Connection6DoF = world.get_connection(world.root, bf)
-    transform = rotation_matrix_from_rpy(1,0,0)
+    transform = rotation_matrix_from_rpy(1, 0, 0)
     transform[0, 3] = 69
     c3.origin = transform
     assert np.allclose(world.compute_forward_kinematics_np(world.root, bf), transform)
@@ -64,8 +27,6 @@ def test_set_state(world_setup):
 
     transform[0, 3] += c1.position
     assert np.allclose(l2.global_pose, transform)
-
-
 
 
 def test_construction(world_setup):
