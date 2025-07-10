@@ -42,18 +42,15 @@ def test_chain_of_bodies(world_setup):
     world, _, l2, _, _, _ = world_setup
     result = world.compute_chain_of_bodies(root=world.root, tip=l2)
     result = [x.name for x in result]
-    assert result == [PrefixedName(name='root', prefix='world'),
-                      PrefixedName(name='bf', prefix=None),
-                      PrefixedName(name='l1', prefix=None),
-                      PrefixedName(name='l2', prefix=None)]
+    assert result == [PrefixedName(name='root', prefix='world'), PrefixedName(name='bf', prefix=None),
+                      PrefixedName(name='l1', prefix=None), PrefixedName(name='l2', prefix=None)]
 
 
 def test_chain_of_connections(world_setup):
     world, _, l2, _, _, _ = world_setup
     result = world.compute_chain_of_connections(root=world.root, tip=l2)
     result = [x.name for x in result]
-    assert result == [PrefixedName(name='root_T_bf', prefix=None),
-                      PrefixedName(name='bf_T_l1', prefix=None),
+    assert result == [PrefixedName(name='root_T_bf', prefix=None), PrefixedName(name='bf_T_l1', prefix=None),
                       PrefixedName(name='l1_T_l2', prefix=None)]
 
 
@@ -61,48 +58,38 @@ def test_split_chain_of_bodies(world_setup):
     world, _, l2, _, _, r2 = world_setup
     result = world.compute_split_chain_of_bodies(root=r2, tip=l2)
     result = tuple([x.name for x in y] for y in result)
-    assert result == ([PrefixedName(name='r2', prefix=None),
-                       PrefixedName(name='r1', prefix=None)],
+    assert result == ([PrefixedName(name='r2', prefix=None), PrefixedName(name='r1', prefix=None)],
                       [PrefixedName(name='bf', prefix=None)],
-                      [PrefixedName(name='l1', prefix=None),
-                       PrefixedName(name='l2', prefix=None)])
+                      [PrefixedName(name='l1', prefix=None), PrefixedName(name='l2', prefix=None)])
 
 
 def test_split_chain_of_bodies_adjacent1(world_setup):
     world, _, _, _, r1, r2 = world_setup
     result = world.compute_split_chain_of_bodies(root=r2, tip=r1)
     result = tuple([x.name for x in y] for y in result)
-    assert result == ([PrefixedName(name='r2', prefix=None)],
-                      [PrefixedName(name='r1', prefix=None)],
-                      [])
+    assert result == ([PrefixedName(name='r2', prefix=None)], [PrefixedName(name='r1', prefix=None)], [])
 
 
 def test_split_chain_of_bodies_adjacent2(world_setup):
     world, _, _, _, r1, r2 = world_setup
     result = world.compute_split_chain_of_bodies(root=r1, tip=r2)
     result = tuple([x.name for x in y] for y in result)
-    assert result == ([],
-                      [PrefixedName(name='r1', prefix=None)],
-                      [PrefixedName(name='r2', prefix=None)])
+    assert result == ([], [PrefixedName(name='r1', prefix=None)], [PrefixedName(name='r2', prefix=None)])
 
 
 def test_split_chain_of_bodies_identical(world_setup):
     world, _, _, _, r1, _ = world_setup
     result = world.compute_split_chain_of_bodies(root=r1, tip=r1)
     result = tuple([x.name for x in y] for y in result)
-    assert result == ([],
-                      [PrefixedName(name='r1', prefix=None)],
-                      [])
+    assert result == ([], [PrefixedName(name='r1', prefix=None)], [])
 
 
 def test_split_chain_of_connections(world_setup):
     world, _, l2, _, _, r2 = world_setup
     result = world.compute_split_chain_of_connections(root=r2, tip=l2)
     result = tuple([x.name for x in y] for y in result)
-    assert result == ([PrefixedName(name='r1_T_r2', prefix=None),
-                       PrefixedName(name='bf_T_r1', prefix=None)],
-                      [PrefixedName(name='bf_T_l1', prefix=None),
-                       PrefixedName(name='l1_T_l2', prefix=None)])
+    assert result == ([PrefixedName(name='r1_T_r2', prefix=None), PrefixedName(name='bf_T_r1', prefix=None)],
+                      [PrefixedName(name='bf_T_l1', prefix=None), PrefixedName(name='l1_T_l2', prefix=None)])
 
 
 def test_split_chain_of_connections_adjacent1(world_setup):
@@ -135,10 +122,7 @@ def test_compute_fk_connection6dof(world_setup):
     world.state[Derivatives.position, -1] = 0
     world.state[Derivatives.position, -2] = 1
     world.notify_state_change()
-    np.testing.assert_array_equal(fk, [[-1., 0., 0., 1.],
-                                       [0., -1., 0., 0.],
-                                       [0., 0., 1., 0.],
-                                       [0., 0., 0., 1.]])
+    np.testing.assert_array_equal(fk, [[-1., 0., 0., 1.], [0., -1., 0., 0.], [0., 0., 1., 0.], [0., 0., 0., 1.]])
 
 
 def test_compute_fk(world_setup):
@@ -149,10 +133,8 @@ def test_compute_fk(world_setup):
     world.state[Derivatives.position, 0] = 1.
     world.notify_state_change()
     fk = world.compute_forward_kinematics_np(l2, r2)
-    np.testing.assert_array_almost_equal(fk, np.array([[0.540302, -0.841471, 0., -1.],
-                                                       [0.841471, 0.540302, 0., 0.],
-                                                       [0., 0., 1., 0.],
-                                                       [0., 0., 0., 1.]]))
+    np.testing.assert_array_almost_equal(fk, np.array(
+        [[0.540302, -0.841471, 0., -1.], [0.841471, 0.540302, 0., 0.], [0., 0., 1., 0.], [0., 0., 0., 1.]]))
 
 
 def test_compute_fk_expression(world_setup):
