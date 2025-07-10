@@ -88,6 +88,30 @@ class InverseKinematicsSolver:
 
     This class handles the setup and solving of inverse kinematics problems
     using quadratic programming optimization.
+    General idea:
+    min_{dof_v, slack} low_weight * (dof_v1² + ... + dof_vn²) + high_weight * (slack_trans_x² + ... + slack_rot_z²)
+    subject to
+        position_error = J_translation * dof_v + translation slack
+        rotation_error = J_rotation * dof_v + rotation slack
+    where
+        dof_v = velocity of dofs, e.g., joint velocity
+        slack = auxiliary variables used to make constraints violable, in this case the remaining error that can not be achieved with the velocity.
+        J_translation is the jacobian of the forward kinematics position.
+        J_rotation is the jacobian of the forward kinematics rotation.
+        position_error = target_position - current_position
+        rotation_error = target_rotation - current_rotation
+
+    The slack variables ensure that the QP stays solvable, even if the target velocity cannot be reached.
+    Slack variables have a high weight, such that the solver only violates the constraints, if necessary.
+    If we solve this QP at the current state, we get a velocity for the dofs, apply this to the current state with a dt and solve again.
+    dof_v and slack below threshold:
+        target reached
+    dof_v below threshold, slack above threshold:
+        target unreachable
+    dof_v above threshold, slack below threshold:
+        almost done
+    dof_v above threshold, slack above threshold:
+        neither close to the target, nor converged
     """
 
     world: World
@@ -134,8 +158,8 @@ class InverseKinematicsSolver:
             tip=tip,
             target=target,
             dt=dt,
-            translation_velocity=translation_velocity,
-            rotation_velocity=rotation_velocity
+            max_translation_velocity=translation_velocity,
+            max_rotation_velocity=rotation_velocity
         )
 
         # Initialize solver state
@@ -219,12 +243,32 @@ class QPProblem:
     """
 
     world: World
+    """
+    Backreference to semantic world.
+    """
+
     root: Body
+    """
+    Root body of the kinematic chain.
+    """
+
     tip: Body
+    """
+    Tip body of the kinematic chain.
+    """
+
     target: NpMatrix4x4
+    """
+    Desired tip pose relative to the root body.
+    """
+
     dt: float
-    translation_velocity: float
-    rotation_velocity: float
+    """
+    Time step for integration.
+    """
+
+    max_translation_velocity: float
+    max_rotation_velocity: float
 
     def __post_init__(self):
         # Extract DOFs and setup problem
@@ -259,7 +303,7 @@ class QPProblem:
         """Setup all constraints for the QP problem."""
         self.constraint_builder = ConstraintBuilder(
             self.world, self.root, self.tip, self.target,
-            self.dt, self.translation_velocity, self.rotation_velocity
+            self.dt, self.max_translation_velocity, self.max_rotation_velocity
         )
 
         # Box constraints
@@ -452,9 +496,15 @@ class SolverState:
 class QPMatrices:
     """
     Container for QP problem matrices at a specific state.
-    min x^T H x + g^T x
+    min_{x} x^T H x + g^T x
     subject to
         l <= Ax <= u
+
+    Find an x that minimizes the cost function, while satisfying the constraints.
+    H (for Hessian) describes a quadratic cost function and g (for gradient) a linear one.
+    Ax is the constraint space velocity, e.g. if A is the Jacobian, then Ax is the Cartesian velocity.
+    l and u are the lower and upper bounds of the constraint space, e.g., translational or rotational velocity
+    if l == u, we have equality constraints.
     """
 
     H: np.ndarray
