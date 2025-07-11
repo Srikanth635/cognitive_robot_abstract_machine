@@ -72,7 +72,7 @@ class Shape(ABC):
     """
     Base class for all shapes in the world.
     """
-    origin: TransformationMatrix
+    origin: TransformationMatrix = field(default_factory=TransformationMatrix)
 
     def as_bounding_box(self) -> BoundingBox:
         """

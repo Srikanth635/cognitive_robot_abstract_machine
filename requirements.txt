@@ -10,9 +10,10 @@ pytest
 scipy
 ormatic>=1.1.1
 sqlacodegen
-ripple_down_rules==0.6.24
+ripple_down_rules
 pytest-order
 sqlalchemy
 random_events
 plotly
 rtree
+daqp

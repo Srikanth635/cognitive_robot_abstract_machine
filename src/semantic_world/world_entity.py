@@ -9,9 +9,15 @@ import numpy as np
 from numpy import ndarray
 
 from .geometry import Shape, BoundingBox, BoundingBoxCollection
+from dataclasses import dataclass, field
+from typing import List, Optional, TYPE_CHECKING
+
+from .geometry import Shape
 from .prefixed_name import PrefixedName
 from .spatial_types.spatial_types import TransformationMatrix, Expression, Point3
 from .spatial_types import spatial_types as cas
+from .spatial_types.spatial_types import TransformationMatrix, Expression
+from .types import NpMatrix4x4
 from .utils import IDGenerator
 
 if TYPE_CHECKING:
@@ -139,7 +145,11 @@ class Body(WorldEntity):
 
 
     @property
-    def global_pose(self) -> np.ndarray:
+    def global_pose(self) -> NpMatrix4x4:
+        """
+        Computes the pose of the body in the world frame.
+        :return: 4x4 transformation matrix.
+        """
         return self._world.compute_forward_kinematics_np(self._world.root, self)
 
 
@@ -270,7 +280,7 @@ class Connection(WorldEntity):
         return PrefixedName(f'{self.parent.name.name}_T_{self.child.name.name}', prefix=self.child.name.prefix)
 
     @property
-    def origin(self) -> np.ndarray:
+    def origin(self) -> NpMatrix4x4:
         """
         :return: The relative transform between the parent and child frame.
         """
