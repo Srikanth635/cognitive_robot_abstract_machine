@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import deque
 from collections.abc import Iterable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from functools import reduce
 from typing import List, Optional, TYPE_CHECKING, Set, get_args, get_type_hints
 import numpy as np
@@ -179,6 +179,7 @@ class View(WorldEntity):
         visited: Set[int] = set()
         stack: deque = deque([self])
 
+        # Use a stack to traverse the view and its attributes
         while stack:
             obj = stack.pop()
             oid = id(obj)
@@ -186,21 +187,25 @@ class View(WorldEntity):
                 continue
             visited.add(oid)
 
-            if isinstance(obj, Body):
-                bodies.add(obj)
-                continue
+            match obj:
+                # Bodies are aggregated directly
+                case Body():
+                    bodies.add(obj)
 
-            if isinstance(obj, View):
-                values = [
-                    getattr(obj, name)
-                    for name, hint in get_type_hints(obj).items()
-                    if hint in (Body, View) or any(t in (Body, View) for t in get_args(hint))
-                ]
-                stack.extend(values)
-                continue
+                # Views are traversed recursively
+                case View():
+                    for f in fields(obj):
+                        value = getattr(obj, f.name)
+                        if isinstance(value, Body):
+                            bodies.add(value)
+                        elif isinstance(value, View):
+                            stack.append(value)
+                        elif isinstance(value, (list, set)):
+                            stack.extend(value)
 
-            if isinstance(obj, Iterable) and not isinstance(obj, (str, bytes, bytearray)):
-                stack.extend(obj)
+                # Iterables are traversed
+                case Iterable() if not isinstance(obj, (str, bytes, bytearray)):
+                    stack.extend(obj)
         return bodies
 
     def as_bounding_box_collection(self) -> BoundingBoxCollection:
