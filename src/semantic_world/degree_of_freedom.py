@@ -22,11 +22,6 @@ class DegreeOfFreedom(WorldEntity):
     and provides methods to get and set limits for these derivatives.
     """
 
-    name: PrefixedName
-    """
-    The identifier for this free variable
-    """
-
     _lower_limits: Dict[Derivatives, Optional[float]] = field(default=None)
     _upper_limits: Dict[Derivatives, Optional[float]] = field(default=None)
     """

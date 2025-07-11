@@ -261,6 +261,7 @@ class Connection6DoF(PassiveConnection):
     """
 
     def __post_init__(self):
+        super().__post_init__()
         self.x = self.x or self._world.create_degree_of_freedom(name=PrefixedName('x', self.name))
         self.y = self.y or self._world.create_degree_of_freedom(name=PrefixedName('y', self.name))
         self.z = self.z or self._world.create_degree_of_freedom(name=PrefixedName('z', self.name))
@@ -333,23 +334,25 @@ class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
     rotation_velocity_limits: float = field(default=0.5)
 
     def __post_init__(self):
-        self.x = self.x or self._world.create_degree_of_freedom(name=PrefixedName('x', self.name))
-        self.y = self.y or self._world.create_degree_of_freedom(name=PrefixedName('y', self.name))
-        self.z = self.z or self._world.create_degree_of_freedom(name=PrefixedName('z', self.name))
+        super().__post_init__()
+        stringified_name = str(self.name)
+        self.x = self.x or self._world.create_degree_of_freedom(name=PrefixedName('x', stringified_name))
+        self.y = self.y or self._world.create_degree_of_freedom(name=PrefixedName('y', stringified_name))
+        self.z = self.z or self._world.create_degree_of_freedom(name=PrefixedName('z', stringified_name))
 
-        self.roll = self.roll or self._world.create_degree_of_freedom(name=PrefixedName('roll', self.name))
-        self.pitch = self.pitch or self._world.create_degree_of_freedom(name=PrefixedName('pitch', self.name))
+        self.roll = self.roll or self._world.create_degree_of_freedom(name=PrefixedName('roll', stringified_name))
+        self.pitch = self.pitch or self._world.create_degree_of_freedom(name=PrefixedName('pitch', stringified_name))
         self.yaw = self.yaw or self._world.create_degree_of_freedom(
-            name=PrefixedName('yaw', self.name),
+            name=PrefixedName('yaw', stringified_name),
             lower_limits={Derivatives.velocity: -self.rotation_velocity_limits},
             upper_limits={Derivatives.velocity: self.rotation_velocity_limits})
 
         self.x_vel = self.x_vel or self._world.create_degree_of_freedom(
-            name=PrefixedName('x_vel', self.name),
+            name=PrefixedName('x_vel', stringified_name),
             lower_limits={Derivatives.velocity: -self.translation_velocity_limits},
             upper_limits={Derivatives.velocity: self.translation_velocity_limits})
         self.y_vel = self.y_vel or self._world.create_degree_of_freedom(
-            name=PrefixedName('y_vel', self.name),
+            name=PrefixedName('y_vel', stringified_name),
             lower_limits={Derivatives.velocity: -self.translation_velocity_limits},
             upper_limits={Derivatives.velocity: self.translation_velocity_limits})
         self.active_dofs = [self.x_vel, self.y_vel, self.yaw]
