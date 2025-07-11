@@ -1,14 +1,14 @@
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, Tuple, Dict, Union, List
 from ..spatial_types import spatial_types as cas
-from urdf_parser_py import urdf
+from urdf_parser_py import urdf as urdfpy
 
 from ..connections import RevoluteConnection, PrismaticConnection, FixedConnection
 from ..prefixed_name import PrefixedName
 from ..spatial_types.derivatives import Derivatives
 from ..spatial_types.spatial_types import TransformationMatrix
-from ..utils import suppress_stdout_stderr, hacky_urdf_parser_fix
+from ..utils import suppress_stdout_stderr, hacky_urdf_parser_fix, robot_name_from_urdf_string
 from ..world import World, Body, Connection
 from ..geometry import Box, Sphere, Cylinder, Mesh, Scale, Shape, Color
 
@@ -21,7 +21,7 @@ connection_type_map = {  # 'unknown': JointType.UNKNOWN,
     'fixed': FixedConnection}
 
 
-def urdf_joint_to_limits(urdf_joint: urdf.Joint) -> Tuple[Dict[Derivatives, float], Dict[Derivatives, float]]:
+def urdf_joint_to_limits(urdf_joint: urdfpy.Joint) -> Tuple[Dict[Derivatives, float], Dict[Derivatives, float]]:
     lower_limits = {}
     upper_limits = {}
     if not urdf_joint.type == 'continuous':
@@ -64,11 +64,17 @@ def urdf_joint_to_limits(urdf_joint: urdf.Joint) -> Tuple[Dict[Derivatives, floa
 class URDFParser:
     """
     Class to parse URDF files to worlds.
+    Must set either urdf or file_path.
     """
 
-    file_path: str
+    urdf: str = field(default=None, kw_only=True)
     """
-    The file path of the URDF.
+    The URDF string.
+    """
+
+    file_path: str = field(default=None, kw_only=True)
+    """
+    The file path for a URDF.
     """
 
     prefix: Optional[str] = None
@@ -77,19 +83,20 @@ class URDFParser:
     """
 
     def __post_init__(self):
+        if self.urdf is None and self.file_path is None:
+            raise ValueError("Either urdf or file_path must be set.")
+        if self.urdf is not None and self.file_path is not None:
+            raise ValueError("Only one of urdf and file_path can be set.")
+        if self.file_path is not None:
+            with open(self.file_path, 'r') as file:
+                # Since parsing URDF causes a lot of warning messages which can't be deactivated, we suppress them
+                with suppress_stdout_stderr():
+                    self.urdf = hacky_urdf_parser_fix(file.read())
+        self.parsed = urdfpy.URDF.from_xml_string(self.urdf)
         if self.prefix is None:
-            self.prefix = os.path.basename(self.file_path).split('.')[0]
+            self.prefix = robot_name_from_urdf_string(self.urdf)
 
     def parse(self) -> World:
-        # cache_dir = os.path.join(os.getcwd(), '..', '..', '../resources', 'cache')
-        # file_name = os.path.basename(self.file_path)
-        # new_file_path = os.path.join(cache_dir, file_name)
-        # generate_from_description_file(self.file_path, new_file_path)
-
-        with open(self.file_path, 'r') as file:
-            # Since parsing URDF causes a lot of warning messages which can't be deactivated, we suppress them
-            with suppress_stdout_stderr():
-                self.parsed = urdf.URDF.from_xml_string(hacky_urdf_parser_fix(file.read()))
 
         links = [self.parse_link(link, PrefixedName(link.name, self.parsed.name)) for link in self.parsed.links]
         root = [link for link in links if link.name.name == self.parsed.get_root()][0]
@@ -109,7 +116,7 @@ class URDFParser:
 
         return world
 
-    def parse_joint(self, joint: urdf.Joint, parent: Body, child: Body, world: World) -> Connection:
+    def parse_joint(self, joint: urdfpy.Joint, parent: Body, child: Body, world: World) -> Connection:
         connection_type = connection_type_map.get(joint.type, Connection)
         if joint.origin is not None:
             translation_offset = joint.origin.xyz
@@ -160,7 +167,7 @@ class URDFParser:
                                  dof=dof)
         return result
 
-    def parse_link(self, link: urdf.Link, parent_frame: PrefixedName) -> Body:
+    def parse_link(self, link: urdfpy.Link, parent_frame: PrefixedName) -> Body:
         """
         Parses a URDF link to a link object.
         :param link: The URDF link to parse.
@@ -172,7 +179,7 @@ class URDFParser:
         collisions = self.parse_geometry(link.collisions, parent_frame)
         return Body(name=name, visual=visuals, collision=collisions)
 
-    def parse_geometry(self, geometry: Union[List[urdf.Collision], List[urdf.Visual]], parent_frame: PrefixedName) -> \
+    def parse_geometry(self, geometry: Union[List[urdfpy.Collision], List[urdfpy.Visual]], parent_frame: PrefixedName) -> \
             List[Shape]:
         """
         Parses a URDF geometry to the corresponding shapes.
@@ -194,7 +201,7 @@ class URDFParser:
                                                                                                                         i),
                                                                                                                     parent_frame.prefix))
             origin_transform = TransformationMatrix.from_xyz_rpy(*params)
-            if isinstance(geom.geometry, urdf.Box):
+            if isinstance(geom.geometry, urdfpy.Box):
                 color = Color(*material_dict.get(geom.material.name,
                                                  (1, 1, 1, 1))) if hasattr(geom,
                                                                            "material") and geom.material else Color(
@@ -203,7 +210,7 @@ class URDFParser:
                     1,
                     1)
                 res.append(Box(origin=origin_transform, scale=Scale(*geom.geometry.size), color=color))
-            elif isinstance(geom.geometry, urdf.Sphere):
+            elif isinstance(geom.geometry, urdfpy.Sphere):
                 color = Color(*material_dict.get(geom.material.name,
                                                  (1, 1, 1, 1))) if hasattr(geom,
                                                                            "material") and geom.material else Color(
@@ -212,7 +219,7 @@ class URDFParser:
                     1,
                     1)
                 res.append(Sphere(origin=origin_transform, radius=geom.geometry.radius, color=color))
-            elif isinstance(geom.geometry, urdf.Cylinder):
+            elif isinstance(geom.geometry, urdfpy.Cylinder):
                 color = Color(*material_dict.get(geom.material.name,
                                                  (1, 1, 1, 1))) if hasattr(geom,
                                                                            "material") and geom.material else Color(
@@ -222,7 +229,7 @@ class URDFParser:
                     1)
                 res.append(Cylinder(origin=origin_transform, width=geom.geometry.radius, height=geom.geometry.length,
                                     color=color))
-            elif isinstance(geom.geometry, urdf.Mesh):
+            elif isinstance(geom.geometry, urdfpy.Mesh):
                 if geom.geometry.filename is None:
                     raise ValueError("Mesh geometry must have a filename.")
                 res.append(Mesh(origin=origin_transform, filename=geom.geometry.filename,
