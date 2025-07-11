@@ -66,8 +66,8 @@ def test_construction(world_setup):
     world.validate()
     assert len(world.connections) == 5
     assert len(world.bodies) == 6
-    assert world.state[Derivatives.position, 0] == 0
-    assert world.get_connection(l1, l2).dof.state_idx == world.get_connection(r1, r2).dof.state_idx
+    assert world.state.positions[0] == 0
+    assert world.get_connection(l1, l2).dof.name == world.get_connection(r1, r2).dof.name
 
 
 def test_chain_of_bodies(world_setup):
@@ -150,42 +150,64 @@ def test_compute_fk_connection6dof(world_setup):
     fk = world.compute_forward_kinematics_np(world.root, bf)
     np.testing.assert_array_equal(fk, np.eye(4))
 
-    world.state[Derivatives.position, 1] = 1.
-    world.state[Derivatives.position, -1] = 0
-    world.state[Derivatives.position, -2] = 1
+    connection: Connection6DoF = world.get_connection(world.root, bf)
+
+    world.state[connection.x.name].position = 1.
+    world.state[connection.qw.name].position = 0
+    world.state[connection.qz.name].position = 1
     world.notify_state_change()
+    fk = world.compute_forward_kinematics_np(world.root, bf)
     np.testing.assert_array_equal(fk, [[-1., 0., 0., 1.], [0., -1., 0., 0.], [0., 0., 1., 0.], [0., 0., 0., 1.]])
 
 
 def test_compute_fk(world_setup):
-    world, _, l2, _, _, r2 = world_setup
+    world, l1, l2, bf, r1, r2 = world_setup
     fk = world.compute_forward_kinematics_np(l2, r2)
     np.testing.assert_array_equal(fk, np.eye(4))
 
-    world.state[Derivatives.position, 0] = 1.
+    connection: PrismaticConnection = world.get_connection(r1, r2)
+
+    world.state[connection.dof.name].position = 1.
     world.notify_state_change()
     fk = world.compute_forward_kinematics_np(l2, r2)
-    np.testing.assert_array_almost_equal(fk, np.array(
-        [[0.540302, -0.841471, 0., -1.], [0.841471, 0.540302, 0., 0.], [0., 0., 1., 0.], [0., 0., 0., 1.]]))
+    assert np.allclose(fk, np.array([[0.540302, -0.841471, 0., -1.],
+                                     [0.841471, 0.540302, 0., 0.],
+                                     [0., 0., 1., 0.],
+                                     [0., 0., 0., 1.]]))
+
+
+def test_compute_ik(world_setup):
+    world, l1, l2, bf, r1, r2 = world_setup
+    target = np.array([[0.540302, -0.841471, 0., -1.],
+                       [0.841471, 0.540302, 0., 0.],
+                       [0., 0., 1., 0.],
+                       [0., 0., 0., 1.]])
+    joint_state = world.compute_inverse_kinematics(l2, r2, target)
+    for joint, state in joint_state.items():
+        world.state[joint.name].position = state
+    world.notify_state_change()
+    assert np.allclose(world.compute_forward_kinematics_np(l2, r2), target, atol=1e-3)
 
 
 def test_compute_fk_expression(world_setup):
-    world, _, l2, _, _, r2 = world_setup
-    world.state[Derivatives.position, 0] = 1.
+    world, l1, l2, bf, r1, r2 = world_setup
+    connection: PrismaticConnection = world.get_connection(r1, r2)
+    world.state[connection.dof.name].position = 1.
     world.notify_state_change()
     fk = world.compute_forward_kinematics_np(r2, l2)
     fk_expr = world.compose_forward_kinematics_expression(r2, l2)
     fk_expr_compiled = fk_expr.compile()
-    fk2 = fk_expr_compiled.fast_call(symbol_manager.resolve_symbols(fk_expr_compiled.symbol_parameters))
+    fk2 = fk_expr_compiled.fast_call(*symbol_manager.resolve_symbols(fk_expr_compiled.symbol_parameters))
     np.testing.assert_array_almost_equal(fk, fk2)
 
 
 def test_apply_control_commands(world_setup):
-    world, _, _, _, _, _ = world_setup
+    world, l1, l2, bf, r1, r2 = world_setup
+    connection: PrismaticConnection = world.get_connection(r1, r2)
     cmd = np.array([100., 0, 0, 0, 0, 0, 0, 0])
     dt = 0.1
     world.apply_control_commands(cmd, dt, Derivatives.jerk)
-    assert world.state[Derivatives.jerk, 0] == 100.
-    assert world.state[Derivatives.acceleration, 0] == 100. * dt
-    assert world.state[Derivatives.velocity, 0] == 100. * dt * dt
-    assert world.state[Derivatives.position, 0] == 100. * dt * dt * dt
+    assert world.state[connection.dof.name].jerk == 100.
+    assert world.state[connection.dof.name].acceleration == 100. * dt
+    assert world.state[connection.dof.name].velocity == 100. * dt * dt
+    assert world.state[connection.dof.name].position == 100. * dt * dt * dt

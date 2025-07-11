@@ -64,7 +64,7 @@ class Shape(ABC):
     """
     Base class for all shapes in the world.
     """
-    origin: TransformationMatrix
+    origin: TransformationMatrix = field(default_factory=TransformationMatrix)
 
 @dataclass
 class Mesh(Shape):

@@ -1,8 +1,9 @@
-from typing import Dict, Callable, Type, Optional, overload, Union, Iterable, Tuple
+from typing import Dict, Callable, Union, Tuple, List
 
 import numpy as np
 
 from . import spatial_types as cas
+from ..types import AnyMatrix4x4
 
 Provider = Union[float, Callable[[], float]]
 
@@ -45,68 +46,120 @@ class SymbolManager(metaclass=SingletonMeta):
     The purpose of this class is to abstract the management of symbolic variables and enable their seamless
     use in mathematical and symbolic computations.
     """
-    symbol_to_lambda: Dict[cas.Symbol, Callable[[], float]]
+    symbol_to_provider: Dict[cas.Symbol, Callable[[], float]]
     """
     A dictionary mapping symbolic variables (`cas.Symbol`) to callable functions that provide numeric values for those symbols.
     """
 
     def __init__(self):
-        self.symbol_str_to_provider = {}
+        self.symbol_to_provider = {}
 
-    def register_symbol(self, symbol: cas.Symbol, provider: Provider):
-        if symbol in self.symbol_str_to_provider:
-            raise ValueError(f"Symbol {symbol} already exists")
-        self.symbol_str_to_provider[symbol] = provider
+    def register_symbol_provider(self, name: str, provider: Provider) -> cas.Symbol:
+        """
+        Creates a new symbol with the given name and associates it with a provider.
+        """
+        symbol = cas.Symbol(name)
+        self.symbol_to_provider[symbol] = provider
+        return symbol
 
-    def register_point3(self, name: str, provider: Callable[[], np.ndarray]) -> cas.Point3:
-        sx, sy, sz = cas.Symbol(f'{name}.x'), cas.Symbol(f'{name}.y'), cas.Symbol(f'{name}.z')
+    def register_point3(self, name: str, provider: Callable[[], Tuple[float, float, float]]) -> cas.Point3:
+        """
+        :param name: Used as prefix for the symbols x, y, and z.
+        :param provider: A provider that returns a tuple of floats for x, y, and z.
+        :return: A Point3 expression with symbols for x, y, and z.
+        """
+        sx = self.register_symbol_provider(f'{name}.x', lambda: provider()[0])
+        sy = self.register_symbol_provider(f'{name}.y', lambda: provider()[1])
+        sz = self.register_symbol_provider(f'{name}.z', lambda: provider()[2])
         p = cas.Point3([sx, sy, sz])
-        self.register_symbol(sx, lambda: provider()[0])
-        self.register_symbol(sy, lambda: provider()[1])
-        self.register_symbol(sz, lambda: provider()[2])
         return p
 
-    def register_vector3(self, name: str, provider: Callable[[], np.ndarray]) -> cas.Vector3:
-        sx, sy, sz = cas.Symbol(f'{name}.x'), cas.Symbol(f'{name}.y'), cas.Symbol(f'{name}.z')
+    def register_vector3(self, name: str, provider: Callable[[], Tuple[float, float, float]]) -> cas.Vector3:
+        """
+        :param name: Used as prefix for the symbols x, y, and z.
+        :param provider: A provider that returns a tuple of floats for x, y, and z.
+        :return: A Vector3 expression with symbols for x, y, and z.
+        """
+        sx = self.register_symbol_provider(f'{name}.x', lambda: provider()[0])
+        sy = self.register_symbol_provider(f'{name}.y', lambda: provider()[1])
+        sz = self.register_symbol_provider(f'{name}.z', lambda: provider()[2])
         v = cas.Vector3([sx, sy, sz])
-        self.register_symbol(sx, lambda: provider()[0])
-        self.register_symbol(sy, lambda: provider()[1])
-        self.register_symbol(sz, lambda: provider()[2])
         return v
 
     def register_quaternion(self, name: str, provider: Callable[[], Tuple[float, float, float, float]]) \
             -> cas.Quaternion:
-        sw, sx, sy, sz = cas.Symbol(f'{name}.w'), cas.Symbol(f'{name}.x'), cas.Symbol(f'{name}.y'), cas.Symbol(
-            f'{name}.z')
+        """
+        :param name: Used as prefix for the symbols x, y, z, and w.
+        :param provider: A provider that returns a tuple of floats for x, y, z, and w.
+        :return: A Quaternion expression with symbols for x, y, z, and w.
+        """
+        sx = self.register_symbol_provider(f'{name}.x', lambda: provider()[0])
+        sy = self.register_symbol_provider(f'{name}.y', lambda: provider()[1])
+        sz = self.register_symbol_provider(f'{name}.z', lambda: provider()[2])
+        sw = self.register_symbol_provider(f'{name}.w', lambda: provider()[3])
         q = cas.Quaternion((sx, sy, sz, sw))
-        self.register_symbol(sx, lambda: provider()[0])
-        self.register_symbol(sy, lambda: provider()[1])
-        self.register_symbol(sz, lambda: provider()[2])
-        self.register_symbol(sw, lambda: provider()[3])
         return q
 
-    def resolve_symbols(self, symbols):
+    def register_transformation_matrix(self, name: str,
+                                       provider: Callable[[], AnyMatrix4x4]) \
+            -> cas.TransformationMatrix:
+        """
+        :param name: Used as prefix for the symbols.
+        :param provider: A provider that returns a matrix.
+                    A numpy 4x4 matrix is fine, but only a 3x4 matrix is required, as the last row is always [0,0,0,1].
+        :return: A TransformationMatrix expression with symbols at all entries.
+        """
+        symbols = []
+        for row in range(3):
+            symbols.append([])
+            for col in range(4):
+                symbols[row].append(self.register_symbol_provider(f'{name}[{row},{col}]',
+                                                                  lambda r=row, c=col: provider()[r][c]))
+        symbols.append([0,0,0,1])
+        root_T_tip = cas.TransformationMatrix(symbols)
+        return root_T_tip
+
+    def resolve_symbols(self, symbols: Union[List[cas.Symbol], List[List[cas.Symbol]]]) \
+            -> Union[np.ndarray, List[np.ndarray]]:
+        """
+        Given a list of symbols or a list of lists of symbols, returns a list of numeric values for each symbol computed using their providers.
+        Intended to be used in combination with `CompiledFunction.symbol_parameters` and `CompiledFunction.fast_call`.
+        """
         try:
-            return np.array([self.symbol_str_to_provider[s]() for s in symbols], dtype=float)
+            if len(symbols) == 0:
+                return np.array([])
+            if isinstance(symbols[0], list):
+                return [np.array([self.symbol_to_provider[s]() for s in param], dtype=float) for param in symbols]
+            else:
+                return np.array([self.symbol_to_provider[s]() for s in symbols], dtype=float)
         except Exception as e:
-            for s in symbols:
+            # Flatten symbols for error checking
+            flattened_symbols = []
+            if len(symbols) > 0 and isinstance(symbols[0], list):
+                # symbols is a list of lists
+                for sublist in symbols:
+                    flattened_symbols.extend(sublist)
+            else:
+                # symbols is already a flat list
+                flattened_symbols = symbols
+
+            for s in flattened_symbols:
                 try:
-                    np.array([self.symbol_str_to_provider[s]()])
+                    np.array([self.symbol_to_provider[s]()])
                 except Exception as e2:
                     raise KeyError(f'Cannot resolve {s} ({e2.__class__.__name__}: {str(e2)})')
             raise e
 
-    def resolve_expr(self, expr: cas.CompiledFunction):
-        symbols = expr.symbol_parameters
-        return expr.fast_call(self.resolve_symbols(symbols))
-
     def evaluate_expr(self, expr: cas.Expression):
+        """
+        Compiles and evaluates an arbitrary symbolic expression, using the current symbol providers.
+        """
         if isinstance(expr, (int, float)):
             return expr
         f = expr.compile()
-        if len(f.str_parameters) == 0:
+        if len(f.symbol_parameters) == 0:
             return expr.to_np()
-        result = f.fast_call(self.resolve_symbols(f.str_parameters))
+        result = f.fast_call(*self.resolve_symbols(f.symbol_parameters))
         if len(result) == 1:
             return result[0]
         else:
