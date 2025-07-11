@@ -65,7 +65,7 @@ class ORMTest(unittest.TestCase):
         color = Color(0., 1., 1.)
         shape1 = Box(origin=origin, scale=scale, color=color)
         b1 = Body(
-            PrefixedName("b1"),
+            name=PrefixedName("b1"),
             collision=[shape1]
         )
 

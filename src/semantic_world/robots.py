@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import enum
 from dataclasses import dataclass, field
 from typing import Tuple
 
 from typing_extensions import Optional, List, Self
 
+from .prefixed_name import PrefixedName
 from .spatial_types.spatial_types import Vector3
 from .world import World
 from .world_entity import Body, RootedView
@@ -28,8 +28,6 @@ class RobotView(RootedView):
     of tip bodies.
     """
     _robot: AbstractRobot = field(default=None, init=False)
-    identifier: str = field(default_factory=str)
-
 
 @dataclass
 class KinematicChain(RobotView):
@@ -73,7 +71,6 @@ class Sensor(RobotBody):
     """
     Represents any kind of sensor in a robot.
     """
-    identifier: str = field(default_factory=str)
 
 
 @dataclass
@@ -157,9 +154,9 @@ class AbstractRobot(RootedView):
     """
 
     def __repr__(self):
-        manipulator_identifiers = [chain.identifier for chain in self.manipulator_chains] if self.manipulator_chains else []
-        sensor_identifiers = [chain.identifier for chain in self.sensor_chains] if self.sensor_chains else []
-        return f"<{self.__class__.__name__} base={self.root.name}, torso={self.torso.identifier}, manipulators={manipulator_identifiers}, sensors={sensor_identifiers}>"
+        manipulator_names = [chain.name for chain in self.manipulator_chains] if self.manipulator_chains else []
+        sensor_names = [chain.name for chain in self.sensor_chains] if self.sensor_chains else []
+        return f"<{self.__class__.__name__} base={self.root.name}, torso={self.torso.name}, manipulators={manipulator_names}, sensors={sensor_names}>"
 
     def __str__(self):
         def format_tree(node, prefix="", is_last=True):
@@ -183,18 +180,18 @@ class AbstractRobot(RootedView):
         def make_chain_node(chain: KinematicChain):
             children = []
             if chain.manipulator:
-                manip_label = f"{chain.manipulator.identifier} ({chain.manipulator.__class__.__name__}):"
+                manip_label = f"{chain.manipulator.name} ({chain.manipulator.__class__.__name__}):"
                 manip_children = [(f"Tool Frame: {chain.manipulator.tool_frame.name}", [])]
                 if isinstance(chain.manipulator, Gripper):
                     if chain.manipulator.fingers:
                         finger_children = []
                         for idx, finger in enumerate(chain.manipulator.fingers):
                             finger_children.append((
-                                f"[{idx}] {finger.identifier} ({finger.__class__.__name__}): {finger.root.name} → {finger.tip_body.name}", []
+                                f"[{idx}] {finger.name} ({finger.__class__.__name__}): {finger.root.name} → {finger.tip_body.name}", []
                             ))
                         if chain.manipulator.thumb:
                             finger_children.append((
-                                f"{chain.manipulator.thumb.identifier} ({chain.manipulator.thumb.__class__.__name__}): {chain.manipulator.thumb.root.name} → {chain.manipulator.thumb.tip_body.name}",
+                                f"{chain.manipulator.thumb.name} ({chain.manipulator.thumb.__class__.__name__}): {chain.manipulator.thumb.root.name} → {chain.manipulator.thumb.tip_body.name}",
                                 []
                             ))
                         manip_children.append(("Fingers:", finger_children))
@@ -204,12 +201,12 @@ class AbstractRobot(RootedView):
                 for sensor in chain.sensors:
                     if isinstance(sensor, Camera):
                         sensor_children.append((
-                            f"{sensor.identifier} ({sensor.__class__.__name__}): [Camera, Forward Vector {sensor.forward_facing_axis}, "
+                            f"{sensor.name} ({sensor.__class__.__name__}): [Camera, Forward Vector {sensor.forward_facing_axis}, "
                             f"FOV=({sensor.field_of_view.horizontal_angle:.2f}, {sensor.field_of_view.vertical_angle:.2f})]",
                             []
                         ))
                     else:
-                        sensor_children.append((sensor.identifier, []))
+                        sensor_children.append((sensor.name, []))
                 children.append(("Sensors:", sensor_children))
             if hasattr(chain, "roll_body") and chain.roll_body:
                 children.append((f"Roll body: {chain.roll_body.name}", []))
@@ -217,10 +214,10 @@ class AbstractRobot(RootedView):
                 children.append((f"Pitch body: {chain.pitch_body.name}", []))
             if hasattr(chain, "yaw_body") and chain.yaw_body:
                 children.append((f"Yaw body: {chain.yaw_body.name}", []))
-            return f"{chain.identifier} ({chain.__class__.__name__}): {chain.root.name} → {chain.tip_body.name}", children
+            return f"{chain.name} ({chain.__class__.__name__}): {chain.root.name} → {chain.tip_body.name}", children
 
         def make_torso_node(torso: Torso):
-            torso_label = f"{torso.identifier} ({torso.__class__.__name__}): {torso.root.name} → {torso.tip_body.name}"
+            torso_label = f"{torso.name} ({torso.__class__.__name__}): {torso.root.name} → {torso.tip_body.name}"
             children = [make_chain_node(kc) for kc in torso.kinematic_chains]
             return torso_label, children
 
@@ -269,7 +266,7 @@ class PR2(AbstractRobot):
 
             :param world: The world from which to get the body objects.
             :param finger_body_pairs: A list of tuples containing the root and tip body names for each finger.
-            :param prefix: A prefix to use for the identifiers of the fingers.
+            :param prefix: A prefix to use for the names of the fingers.
 
             :return: A tuple containing a list of Finger objects and the thumb Finger object.
             """
@@ -281,13 +278,13 @@ class PR2(AbstractRobot):
                     finger = Finger(
                         root=RobotBody.from_body(root_obj),
                         tip_body=RobotBody.from_body(tip_body_obj),
-                        identifier=f"{prefix}_finger_{index}",
+                        name=PrefixedName(name=f"finger_{index}", prefix=prefix),
                         _world=world,
                     )
                     fingers.append(finger)
             thumb = fingers[-1] if fingers else None
             if thumb:
-                thumb.identifier = f"{prefix}_thumb"
+                thumb.name = PrefixedName(name=thumb, prefix=prefix)
             return fingers, thumb
 
         def create_gripper(world: World, palm_body_name: str, tool_frame_name: str, finger_bodys: List[Tuple[str, str]], prefix):
@@ -297,7 +294,7 @@ class PR2(AbstractRobot):
             :param palm_body_name: The name of the palm body in the world.
             :param tool_frame_name: The name of the tool frame body in the world.
             :param finger_bodys: A list of tuples containing the root and tip body names for each finger.
-            :param prefix: A prefix to use for the identifier of the gripper.
+            :param prefix: A prefix to use for the name of the gripper.
             :return: A Gripper object if the palm and tool frame bodies are found, otherwise None.
             """
             fingers, thumb = create_fingers(world, finger_bodys, prefix)
@@ -305,7 +302,7 @@ class PR2(AbstractRobot):
             tool_frame_body = world.get_body_by_name(tool_frame_name)
             if palm_body and tool_frame_body and thumb:
                 return Gripper(
-                    identifier=f"{prefix}_gripper",
+                    name=PrefixedName(name='gripper', prefix=prefix),
                     root=RobotBody.from_body(palm_body),
                     fingers=fingers,
                     thumb=thumb,
@@ -320,14 +317,14 @@ class PR2(AbstractRobot):
             :param world: The world from which to get the body objects.
             :param shoulder_body_name: The name of the shoulder body in the world.
             :param gripper: The Gripper object representing the gripper of the arm.
-            :param prefix: A prefix to use for the identifier of the arm.
+            :param prefix: A prefix to use for the name of the arm.
             :return: A KinematicChain object if the shoulder body and gripper are found, otherwise None.
             """
             shoulder_body = world.get_body_by_name(shoulder_body_name)
             if shoulder_body and gripper:
                 arm_tip_body = gripper.root.parent_body
                 return KinematicChain(
-                    identifier=f"{prefix}_arm",
+                    name=PrefixedName(name='arm', prefix=prefix),
                     root=RobotBody.from_body(shoulder_body),
                     tip_body=RobotBody.from_body(arm_tip_body),
                     manipulator=gripper,
@@ -364,10 +361,9 @@ class PR2(AbstractRobot):
         ################################# Create camera #################################
         camera_body = world.get_body_by_name("wide_stereo_optical_frame")
         camera = Camera(
-            camera_body.name,
-            camera_body.visual,
-            camera_body.collision,
-            identifier="kinect_camera",
+            name=camera_body.name,
+            visual=camera_body.visual,
+            collision=camera_body.collision,
             forward_facing_axis=Vector3.from_xyz(0, 0, 1),
             field_of_view=FieldOfView(horizontal_angle=0.99483, vertical_angle=0.75049),
             minimal_height=1.27,
@@ -380,7 +376,7 @@ class PR2(AbstractRobot):
         neck_root = world.get_body_by_name("head_pan_link")
         neck_tip_body = world.get_body_by_name("head_tilt_link")
         head = Neck(
-            identifier="neck",
+            name=PrefixedName('neck'),
             root=RobotBody.from_body(neck_root),
             tip_body=RobotBody.from_body(neck_tip_body),
             sensors=[camera],
@@ -393,7 +389,7 @@ class PR2(AbstractRobot):
         ################################## Create torso ##################################
         torso_body = world.get_body_by_name("torso_lift_link")
         torso = Torso(
-            identifier="torso",
+            name=PrefixedName('torso'),
             root=RobotBody.from_body(torso_body),
             tip_body=RobotBody.from_body(torso_body),
             kinematic_chains=[kc for kc in [left_arm, right_arm, head] if kc],

@@ -409,8 +409,49 @@ class World:
         self.kinematic_structure.add_edge(connection.parent.index, connection.child.index, connection)
 
     def add_view(self, view: View) -> None:
+        """
+        Adds a view to the current list of views if it doesn't already exist. Ensures
+        that the `view` is associated with the current instance and maintains the
+        integrity of unique view names.
+
+        :param view: The view instance to be added. Its name must be unique within
+            the current context.
+
+        :raises ValueError: If a view with the same name already exists.
+        """
+        try:
+            self.get_view_by_name(view.name)
+        except ValueError:
+            pass
+        else:
+            raise ValueError(f"View with name {view.name} already exists.")
         view._world = self
         self.views.append(view)
+
+    def get_view_by_name(self, name: Union[str, PrefixedName]) -> View:
+        """
+        Retrieves a View from the list of view based on its name.
+        If the input is of type `PrefixedName`, it checks whether the prefix is specified and looks for an
+        exact match. Otherwise, it matches based on the name's string representation.
+        If more than one body with the same name is found, an assertion error is raised.
+        If no matching body is found, a `ValueError` is raised.
+
+        :param name: The name of the view to search for. Can be a string or a `PrefixedName` object.
+        :return: The `View` object that matches the given name.
+        :raises ValueError: If multiple or no views with the specified name are found.
+        """
+        if isinstance(name, PrefixedName):
+            if name.prefix is not None:
+                matches = [view for view in self.views if view.name == name]
+            else:
+                matches = [view for view in self.views if view.name.name == name.name]
+        else:
+            matches = [view for view in self.views if view.name.name == name]
+        if len(matches) > 1:
+            raise ValueError(f'Multiple views with name {name} found')
+        if matches:
+            return matches[0]
+        raise ValueError(f'View with name {name} not found')
 
     @modifies_world
     def remove_body(self, body: Body) -> None:

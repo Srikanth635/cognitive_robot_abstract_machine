@@ -20,7 +20,7 @@ def pr2_world():
     pr2 = os.path.join(urdf_dir, "pr2_kinematic_tree.urdf")
     world = World()
     with world.modify_world():
-        localization_body = Body(PrefixedName('odom_combined'))
+        localization_body = Body(name=PrefixedName('odom_combined'))
         world.add_body(localization_body)
 
         pr2_parser = URDFParser(file_path=pr2)
@@ -160,8 +160,7 @@ def test_compute_ik_unreachable(pr2_world):
         pr2_world.compute_inverse_kinematics(bf, eef, fk)
 
 def test_apply_control_commands_omni_drive_pr2(pr2_world):
-    omni_drive: OmniDrive = pr2_world.get_connection_by_name(
-        PrefixedName(name='odom_combined_T_base_footprint', prefix='pr2_kinematic_tree'))
+    omni_drive: OmniDrive = pr2_world.get_connection_by_name('odom_combined_T_base_footprint')
     cmd = np.zeros((len(pr2_world.degrees_of_freedom)), dtype=float)
     cmd[-3] = 100
     cmd[-2] = 100
