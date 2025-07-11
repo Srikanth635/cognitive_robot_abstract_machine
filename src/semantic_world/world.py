@@ -446,6 +446,9 @@ class World:
     def get_connection(self, parent: Body, child: Body) -> Connection:
         return self.kinematic_structure.get_edge_data(parent.index, child.index)
 
+    def search_for_connections_of_type(self, connection_type: Type[ConnectionTypeVar]) -> List[ConnectionTypeVar]:
+        return [c for c in self.connections if isinstance(c, connection_type)]
+
     def get_body_by_name(self, name: Union[str, PrefixedName]) -> Body:
         """
         Retrieves a body from the list of bodies based on its name.

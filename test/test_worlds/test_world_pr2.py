@@ -5,7 +5,7 @@ import pytest
 from rustworkx import NoPathFound
 
 from semantic_world.adapters.urdf import URDFParser
-from semantic_world.connections import OmniDrive
+from semantic_world.connections import OmniDrive, PrismaticConnection, RevoluteConnection
 from semantic_world.ik_solver import MaxIterationsException, UnreachableException
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.robots import PR2
@@ -192,6 +192,28 @@ def test_apply_control_commands_omni_drive_pr2(pr2_world):
     assert pr2_world.state[omni_drive.y.name].acceleration == 0.
     assert pr2_world.state[omni_drive.y.name].velocity == 1.094837581924854
     assert pr2_world.state[omni_drive.y.name].position == 0.1094837581924854
+
+def test_search_for_connections_of_type(pr2_world: World):
+    connections = pr2_world.search_for_connections_of_type(OmniDrive)
+    assert len(connections) == 1
+    assert connections[0].name == PrefixedName(name='odom_combined_T_base_footprint', prefix='pr2')
+    assert connections[0].parent == pr2_world.root
+    assert connections[0].child == pr2_world.get_body_by_name('base_footprint')
+
+    connections = pr2_world.search_for_connections_of_type(PrismaticConnection)
+    assert len(connections) == 3
+    assert connections[0].name == PrefixedName(name='base_link_T_torso_lift_link', prefix='pr2')
+    assert connections[0].parent == pr2_world.get_body_by_name('base_link')
+    assert connections[0].child == pr2_world.get_body_by_name('torso_lift_link')
+    assert connections[1].name == PrefixedName(name='r_gripper_palm_link_T_r_gripper_motor_slider_link', prefix='pr2')
+    assert connections[1].parent == pr2_world.get_body_by_name('r_gripper_palm_link')
+    assert connections[1].child == pr2_world.get_body_by_name('r_gripper_motor_slider_link')
+    assert connections[2].name == PrefixedName(name='l_gripper_palm_link_T_l_gripper_motor_slider_link', prefix='pr2')
+    assert connections[2].parent == pr2_world.get_body_by_name('l_gripper_palm_link')
+    assert connections[2].child == pr2_world.get_body_by_name('l_gripper_motor_slider_link')
+
+    connections = pr2_world.search_for_connections_of_type(RevoluteConnection)
+    assert len(connections) == 40
 
 def test_pr2_view(pr2_world):
     pr2 = PR2.get_view(pr2_world)
