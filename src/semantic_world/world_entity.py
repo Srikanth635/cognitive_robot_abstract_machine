@@ -133,6 +133,14 @@ class RootedView(View):
     """
     root: Body = field(default_factory=Body)
 
+    @property
+    def connections(self) -> List[Connection]:
+        return self._world.get_connections_of_branch(self.root)
+
+    @property
+    def bodies(self) -> List[Body]:
+        return self._world.get_bodies_of_branch(self.root)
+
 @dataclass
 class EnvironmentView(View):
     """

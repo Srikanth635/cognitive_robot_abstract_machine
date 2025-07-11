@@ -64,6 +64,9 @@ class FixedConnection(Connection):
     Has 0 degrees of freedom.
     """
 
+    def __hash__(self):
+        return hash((self.parent, self.child))
+
 
 @dataclass
 class ActiveConnection(Connection):

@@ -91,7 +91,8 @@ class URDFParser:
             with open(self.file_path, 'r') as file:
                 # Since parsing URDF causes a lot of warning messages which can't be deactivated, we suppress them
                 with suppress_stdout_stderr():
-                    self.urdf = hacky_urdf_parser_fix(file.read())
+                    self.urdf = file.read()
+        self.urdf = hacky_urdf_parser_fix(self.urdf)
         self.parsed = urdfpy.URDF.from_xml_string(self.urdf)
         if self.prefix is None:
             self.prefix = robot_name_from_urdf_string(self.urdf)
@@ -135,7 +136,7 @@ class URDFParser:
                                                                pitch=rotation_offset[1],
                                                                yaw=rotation_offset[2])
         if connection_type == FixedConnection:
-            return connection_type(parent=parent, child=child, origin_expression=parent_T_child)
+            return connection_type(name=PrefixedName(joint.name), parent=parent, child=child, origin_expression=parent_T_child)
 
         lower_limits, upper_limits = urdf_joint_to_limits(joint)
         is_mimic = joint.mimic is not None
@@ -161,7 +162,7 @@ class URDFParser:
             dof = world.create_degree_of_freedom(name=PrefixedName(joint.name),
                                                  lower_limits=lower_limits, upper_limits=upper_limits)
 
-        result = connection_type(parent=parent, child=child, origin_expression=parent_T_child,
+        result = connection_type(name=PrefixedName(joint.name), parent=parent, child=child, origin_expression=parent_T_child,
                                  multiplier=multiplier, offset=offset,
                                  axis=joint.axis,
                                  dof=dof)

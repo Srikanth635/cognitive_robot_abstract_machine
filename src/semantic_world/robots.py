@@ -8,7 +8,7 @@ from typing_extensions import Optional, List, Self
 from .prefixed_name import PrefixedName
 from .spatial_types.spatial_types import Vector3
 from .world import World
-from .world_entity import Body, RootedView
+from .world_entity import Body, RootedView, Connection
 
 
 @dataclass
@@ -152,6 +152,10 @@ class AbstractRobot(RootedView):
     """
     A collection of all kinematic chains containing a sensor, such as a camera.
     """
+
+    def __post_init__(self):
+        for manipulator in self.manipulators:
+            manipulator._world = self._world
 
     def __repr__(self):
         manipulator_names = [chain.name for chain in self.manipulator_chains] if self.manipulator_chains else []

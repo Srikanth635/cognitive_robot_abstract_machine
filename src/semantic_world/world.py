@@ -428,6 +428,52 @@ class World:
         view._world = self
         self.views.append(view)
 
+    def get_connections_of_branch(self, root: Body) -> List[Connection]:
+        """
+        Collect all connections that are below root in the tree.
+
+        :param root: The root body of the branch
+        :return: List of all connections in the subtree rooted at the given body
+        """
+        # Create a custom visitor to collect connections
+        class ConnectionCollector(rustworkx.visit.DFSVisitor):
+            def __init__(self, world: 'World'):
+                self.world = world
+                self.connections = []
+
+            def tree_edge(self, edge: Tuple[int, int, Connection]):
+                """Called for each tree edge during DFS traversal"""
+                self.connections.append(edge[2])  # edge[2] is the connection
+
+        visitor = ConnectionCollector(self)
+        rx.dfs_search(self.kinematic_structure, [root.index], visitor)
+
+        return visitor.connections
+
+    def get_bodies_of_branch(self, root: Body) -> List[Body]:
+        """
+        Collect all bodies that are below root in the tree.
+
+        :param root: The root body of the branch
+        :return: List of all bodies in the subtree rooted at the given body (including the root)
+        """
+
+        # Create a custom visitor to collect bodies
+        class BodyCollector(rustworkx.visit.DFSVisitor):
+            def __init__(self, world: World):
+                self.world = world
+                self.bodies = []
+
+            def discover_vertex(self, node_index: int, time: int) -> None:
+                """Called when a vertex is first discovered during DFS traversal"""
+                body = self.world.kinematic_structure[node_index]
+                self.bodies.append(body)
+
+        visitor = BodyCollector(self)
+        rx.dfs_search(self.kinematic_structure, [root.index], visitor)
+
+        return visitor.bodies
+
     def get_view_by_name(self, name: Union[str, PrefixedName]) -> View:
         """
         Retrieves a View from the list of view based on its name.
