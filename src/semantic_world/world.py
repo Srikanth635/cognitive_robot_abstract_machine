@@ -6,7 +6,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import wraps, lru_cache
-from typing import Dict, Tuple, OrderedDict, Union, Optional
+from typing import Dict, Tuple, OrderedDict, Union, Optional, Type, TypeVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -30,6 +30,8 @@ from .world_state import WorldState
 logger = logging.getLogger(__name__)
 
 id_generator = IDGenerator()
+
+ConnectionTypeVar = TypeVar('ConnectionTypeVar', bound=Connection)
 
 
 class PlotAlignment(IntEnum):
@@ -405,6 +407,10 @@ class World:
         self.add_body(connection.child)
         connection._world = self
         self.kinematic_structure.add_edge(connection.parent.index, connection.child.index, connection)
+
+    def add_view(self, view: View) -> None:
+        view._world = self
+        self.views.append(view)
 
     @modifies_world
     def remove_body(self, body: Body) -> None:
