@@ -713,16 +713,16 @@ class World:
         """
         return self._fk_computer.compute_forward_kinematics_np(root, tip).copy()
 
-    def compute_relative_pose(self, pose: NpMatrix4x4, pose_body: Body, target_body: Body) -> NpMatrix4x4:
+    def compute_relative_pose(self, pose: NpMatrix4x4, target_body: Body, pose_body: Body) -> NpMatrix4x4:
         """
         Computes the relative pose to a body given another body as reference.
         :param pose: The pose to be transformed
-        :param pose_body: The body which should be used as reference for the pose
         :param target_body: The body to which the pose should be transformed
+        :param pose_body: The body which should be used as reference frame for the pose
         :return: The pose relative to the target body.
         """
-        transform = self.compute_forward_kinematics_np(pose_body, target_body)
-        return pose @ transform
+        target_to_pose = self.compute_forward_kinematics_np(target_body, pose_body)
+        return target_to_pose @ pose
 
     def find_dofs_for_position_symbols(self, symbols: List[cas.Symbol]) -> List[DegreeOfFreedom]:
         result = []
