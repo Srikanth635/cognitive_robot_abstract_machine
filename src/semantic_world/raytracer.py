@@ -1,14 +1,42 @@
-from typing import Tuple, List
+from typing import Tuple, List, TYPE_CHECKING
 
 import numpy as np
 import trimesh
 from trimesh import Scene
 
 from .world_entity import Body
+from .types import NpMatrix4x4
+
+if TYPE_CHECKING:
+    from .world import World
 
 
 class RayTracer:
 
+    world: World
+    """
+    The world to use for ray tracing.
+    """
+    _last_world_model: int
+    """
+    Last model version of the world to which the ray tracer was updated.
+    """
+    _last_world_state: int
+    """
+    Last state version of the world to which the ray tracer was updated.
+    """
+    index_to_body: dict
+    """
+    Maps the index of a body to the body itself.
+    """
+    scene_to_index: dict
+    """
+    Maps the index in the trimesh scene to the index of the body in the world.
+    """
+    scene: Scene
+    """
+    The trimesh scene used for ray tracing which mirrors the world.
+    """
     def __init__(self, world):
         """
         Initializes the RayTracer with the given world.
@@ -40,6 +68,9 @@ class RayTracer:
         """
         Adds all bodies from the world to the ray tracer scene that are not already present.
         """
+        # Bodies are added to the scene with their name as the node name plus a suffix for collision geometries.
+        # We check if a body is not in the complete list of all node names in the scene graph.
+        # If the body is not present, we add it to the scene.
         bodies_to_add = [body for body in self.world.bodies if body.name.name not in "\t".join(self.scene.graph.nodes)]
         for body in bodies_to_add:
             for i, collision in enumerate(body.collision):
@@ -63,18 +94,18 @@ class RayTracer:
                                                                      body) @ collision.origin.to_np()
                 self.scene.graph[body.name.name + f"_collision_{i}"] = transform
 
-    def create_segmentation_mask(self, camera_position: np.ndarray,
+    def create_segmentation_mask(self, camera_pose: NpMatrix4x4,
                                  resolution: int = 512) -> np.ndarray:
         """
         Creates a segmentation mask for the ray tracer scene from the camera position to the target position. Each pixel
         in the mask corresponds to the index of a  body in the scene or -1 if no body is hit at that pixel.
 <
-        :param camera_position: The position of the camera.
+        :param camera_pose: The position of the camera.
         :param resolution: The resolution of the segmentation mask.
         :return: A segmentation mask as a numpy array.
         """
         self.update_scene()
-        ray_origins, ray_directions, pixels = self.create_camera_rays(camera_position, resolution=resolution)
+        ray_origins, ray_directions, pixels = self.create_camera_rays(camera_pose, resolution=resolution)
         points, index_ray, index_tri = self.scene.to_mesh().ray.intersects_location(ray_origins, ray_directions,
                                                                                        multiple_hits=False)
         bodies = self.scene.triangles_node[index_tri]
@@ -93,7 +124,7 @@ class RayTracer:
 
         return a
 
-    def create_depth_map(self, camera_position: np.ndarray,
+    def create_depth_map(self, camera_position: NpMatrix4x4,
                          resolution: int = 512) -> np.ndarray:
         """
         Creates a depth map for the ray tracer scene from the camera position to the target position. Each pixel in the
@@ -121,13 +152,13 @@ class RayTracer:
 
         return a
 
-    def create_camera_rays(self, camera_poe: np.ndarray,
+    def create_camera_rays(self, camera_pose: NpMatrix4x4,
                            resolution: int = 512, fov=90) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Creates camera rays for the ray tracer scene from the camera position to the target position. Places the camera
         at the given position and orientation view of the camera is along the x-axis.
 
-        :param camera_poe: The position of the camera as a 4x4 transformation matrix.
+        :param camera_pose: The position of the camera as a 4x4 transformation matrix.
         :param resolution: The resolution of the camera rays.
         :param fov: The field of view of the camera in degrees.
         :return: The origin points of the rays, the direction vectors of the rays, and the pixel coordinates.
@@ -144,7 +175,7 @@ class RayTracer:
 
         self.scene.camera.fov = (fov, fov)
         self.scene.camera.resolution = [resolution, resolution]
-        self.scene.graph[self.scene.camera.name] = camera_poe @ rotate_x @ rotate
+        self.scene.graph[self.scene.camera.name] = camera_pose @ rotate_x @ rotate
 
         return self.scene.camera_rays()
 

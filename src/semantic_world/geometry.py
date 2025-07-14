@@ -89,6 +89,10 @@ class Mesh(Shape):
     """
     Scale of the mesh.
     """
+    hash = id
+    """
+    Set the hash of this file to the id of the object.
+    """
 
     @cached_property
     def mesh(self) -> trimesh.Trimesh:
@@ -97,11 +101,6 @@ class Mesh(Shape):
         """
         return trimesh.load_mesh(self.filename)
 
-    def __hash__(self):
-        """
-        Returns a unique hash for the shape based on its id.
-        """
-        return id(self)
 
 
 
@@ -123,6 +122,10 @@ class Sphere(Primitive):
     """
     Radius of the sphere.
     """
+    hash = id
+    """
+    Set the hash of this file to the id of the object.
+    """
 
     @property
     def mesh(self) -> trimesh.Trimesh:
@@ -130,12 +133,6 @@ class Sphere(Primitive):
         Returns a trimesh object representing the sphere.
         """
         return trimesh.creation.icosphere(subdivisions=2, radius=self.radius)
-
-    def __hash__(self):
-        """
-        Returns a unique hash for the shape based on its id.
-        """
-        return id(self)
 
 
 @dataclass
@@ -146,6 +143,10 @@ class Cylinder(Primitive):
     width: float = 0.5
     height: float = 0.5
 
+    hash = id
+    """
+    Set the hash of this file to the id of the object.
+    """
     @property
     def mesh(self) -> trimesh.Trimesh:
         """
@@ -153,11 +154,6 @@ class Cylinder(Primitive):
         """
         return trimesh.creation.cylinder(radius=self.width / 2, height=self.height, sections=16)
 
-    def __hash__(self):
-        """
-        Returns a unique hash for the shape based on its id.
-        """
-        return id(self)
 
 
 
@@ -168,6 +164,11 @@ class Box(Primitive):
     """
     scale: Scale = field(default_factory=Scale)
 
+    hash = id
+    """
+    Set the hash of this file to the id of the object.
+    """
+
     @property
     def mesh(self) -> trimesh.Trimesh:
         """
@@ -175,11 +176,4 @@ class Box(Primitive):
         The box is centered at the origin and has the specified scale.
         """
         return trimesh.creation.box(extents=(self.scale.x, self.scale.y, self.scale.z))
-
-    def __hash__(self):
-        """
-        Returns a unique hash for the shape based on its id.
-        """
-        return id(self)
-
 
