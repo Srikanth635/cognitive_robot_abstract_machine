@@ -204,7 +204,7 @@ class RevoluteConnection(ActiveConnection, Has1DOFState):
     Rotation about the axis is offset by this value. Useful if Connections share DoFs.
     """
 
-    dof: Optional[DegreeOfFreedom] = field(default=None)
+    dof: DegreeOfFreedom = field(default=None)
     """
     Degree of freedom to control rotation about the axis.
     """
