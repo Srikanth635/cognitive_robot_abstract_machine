@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import numpy as np
 
@@ -204,7 +204,7 @@ class RevoluteConnection(ActiveConnection, Has1DOFState):
     Rotation about the axis is offset by this value. Useful if Connections share DoFs.
     """
 
-    dof: DegreeOfFreedom = field(default=None)
+    dof: Optional[DegreeOfFreedom] = field(default=None)
     """
     Degree of freedom to control rotation about the axis.
     """
