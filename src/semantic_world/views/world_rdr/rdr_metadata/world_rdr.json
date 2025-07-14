@@ -51,10 +51,10 @@
                             "builtins.bool"
                         ],
                         "scope": {
-                            "World": "semantic_world.world.World",
+                            "FixedConnection": "semantic_world.connections.FixedConnection",
                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                            "Handle": "semantic_world.views.views.Handle",
-                            "FixedConnection": "semantic_world.connections.FixedConnection"
+                            "World": "semantic_world.world.World",
+                            "Handle": "semantic_world.views.views.Handle"
                         },
                         "conclusion": {
                             "_type": "builtins.NoneType",
@@ -69,12 +69,12 @@
                             "semantic_world.views.views.Container"
                         ],
                         "scope": {
-                            "Handle": "semantic_world.views.views.Handle",
-                            "Container": "semantic_world.views.views.Container",
-                            "World": "semantic_world.world.World",
+                            "FixedConnection": "semantic_world.connections.FixedConnection",
                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                             "Union": "typing.Union",
-                            "FixedConnection": "semantic_world.connections.FixedConnection"
+                            "Handle": "semantic_world.views.views.Handle",
+                            "World": "semantic_world.world.World",
+                            "Container": "semantic_world.views.views.Container"
                         },
                         "conclusion": {
                             "_type": "builtins.NoneType",
@@ -130,10 +130,10 @@
                                     "builtins.bool"
                                 ],
                                 "scope": {
-                                    "World": "semantic_world.world.World",
+                                    "FixedConnection": "semantic_world.connections.FixedConnection",
                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                    "Handle": "semantic_world.views.views.Handle",
-                                    "FixedConnection": "semantic_world.connections.FixedConnection"
+                                    "World": "semantic_world.world.World",
+                                    "Handle": "semantic_world.views.views.Handle"
                                 },
                                 "conclusion": {
                                     "_type": "builtins.NoneType",
@@ -148,12 +148,12 @@
                                     "semantic_world.views.views.Container"
                                 ],
                                 "scope": {
-                                    "Handle": "semantic_world.views.views.Handle",
-                                    "Container": "semantic_world.views.views.Container",
-                                    "World": "semantic_world.world.World",
+                                    "FixedConnection": "semantic_world.connections.FixedConnection",
                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                     "Union": "typing.Union",
-                                    "FixedConnection": "semantic_world.connections.FixedConnection"
+                                    "Handle": "semantic_world.views.views.Handle",
+                                    "World": "semantic_world.world.World",
+                                    "Container": "semantic_world.views.views.Container"
                                 },
                                 "conclusion": {
                                     "_type": "builtins.NoneType",
@@ -176,8 +176,8 @@
                                     ],
                                     "scope": {
                                         "World": "semantic_world.world.World",
-                                        "Handle": "semantic_world.views.views.Handle",
-                                        "Container": "semantic_world.views.views.Container"
+                                        "Container": "semantic_world.views.views.Container",
+                                        "Handle": "semantic_world.views.views.Handle"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -192,13 +192,13 @@
                                         "semantic_world.views.views.Drawer"
                                     ],
                                     "scope": {
-                                        "Handle": "semantic_world.views.views.Handle",
-                                        "Container": "semantic_world.views.views.Container",
-                                        "World": "semantic_world.world.World",
-                                        "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                        "Union": "typing.Union",
                                         "FixedConnection": "semantic_world.connections.FixedConnection",
-                                        "Drawer": "semantic_world.views.views.Drawer"
+                                        "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
+                                        "Drawer": "semantic_world.views.views.Drawer",
+                                        "Union": "typing.Union",
+                                        "Handle": "semantic_world.views.views.Handle",
+                                        "World": "semantic_world.world.World",
+                                        "Container": "semantic_world.views.views.Container"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -236,12 +236,12 @@
                                             "semantic_world.views.views.Cabinet"
                                         ],
                                         "scope": {
-                                            "Container": "semantic_world.views.views.Container",
-                                            "World": "semantic_world.world.World",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                            "Union": "typing.Union",
+                                            "Drawer": "semantic_world.views.views.Drawer",
                                             "Cabinet": "semantic_world.views.views.Cabinet",
-                                            "Drawer": "semantic_world.views.views.Drawer"
+                                            "Union": "typing.Union",
+                                            "World": "semantic_world.world.World",
+                                            "Container": "semantic_world.views.views.Container"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -263,8 +263,8 @@
                                                 "builtins.bool"
                                             ],
                                             "scope": {
-                                                "World": "semantic_world.world.World",
                                                 "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
+                                                "World": "semantic_world.world.World",
                                                 "Handle": "semantic_world.views.views.Handle"
                                             },
                                             "conclusion": {
@@ -280,12 +280,12 @@
                                                 "semantic_world.views.views.Door"
                                             ],
                                             "scope": {
+                                                "FixedConnection": "semantic_world.connections.FixedConnection",
+                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
+                                                "List": "typing.List",
                                                 "Handle": "semantic_world.views.views.Handle",
                                                 "World": "semantic_world.world.World",
-                                                "Door": "semantic_world.views.views.Door",
-                                                "List": "typing.List",
-                                                "FixedConnection": "semantic_world.connections.FixedConnection",
-                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
+                                                "Door": "semantic_world.views.views.Door"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -323,11 +323,11 @@
                                                     "semantic_world.views.views.Fridge"
                                                 ],
                                                 "scope": {
-                                                    "Fridge": "semantic_world.views.views.Fridge",
-                                                    "World": "semantic_world.world.World",
-                                                    "Door": "semantic_world.views.views.Door",
+                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                     "List": "typing.List",
-                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
+                                                    "World": "semantic_world.world.World",
+                                                    "Fridge": "semantic_world.views.views.Fridge",
+                                                    "Door": "semantic_world.views.views.Door"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -361,8 +361,8 @@
                             ],
                             "scope": {
                                 "World": "semantic_world.world.World",
-                                "Handle": "semantic_world.views.views.Handle",
-                                "Container": "semantic_world.views.views.Container"
+                                "Container": "semantic_world.views.views.Container",
+                                "Handle": "semantic_world.views.views.Handle"
                             },
                             "conclusion": {
                                 "_type": "builtins.NoneType",
@@ -377,13 +377,13 @@
                                 "semantic_world.views.views.Drawer"
                             ],
                             "scope": {
-                                "Handle": "semantic_world.views.views.Handle",
-                                "Container": "semantic_world.views.views.Container",
-                                "World": "semantic_world.world.World",
-                                "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                "Union": "typing.Union",
                                 "FixedConnection": "semantic_world.connections.FixedConnection",
-                                "Drawer": "semantic_world.views.views.Drawer"
+                                "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
+                                "Drawer": "semantic_world.views.views.Drawer",
+                                "Union": "typing.Union",
+                                "Handle": "semantic_world.views.views.Handle",
+                                "World": "semantic_world.world.World",
+                                "Container": "semantic_world.views.views.Container"
                             },
                             "conclusion": {
                                 "_type": "builtins.NoneType",
@@ -400,10 +400,10 @@
                                     "builtins.bool"
                                 ],
                                 "scope": {
-                                    "World": "semantic_world.world.World",
+                                    "FixedConnection": "semantic_world.connections.FixedConnection",
                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                    "Handle": "semantic_world.views.views.Handle",
-                                    "FixedConnection": "semantic_world.connections.FixedConnection"
+                                    "World": "semantic_world.world.World",
+                                    "Handle": "semantic_world.views.views.Handle"
                                 },
                                 "conclusion": {
                                     "_type": "builtins.NoneType",
@@ -418,12 +418,12 @@
                                     "semantic_world.views.views.Container"
                                 ],
                                 "scope": {
-                                    "Handle": "semantic_world.views.views.Handle",
-                                    "Container": "semantic_world.views.views.Container",
-                                    "World": "semantic_world.world.World",
+                                    "FixedConnection": "semantic_world.connections.FixedConnection",
                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
                                     "Union": "typing.Union",
-                                    "FixedConnection": "semantic_world.connections.FixedConnection"
+                                    "Handle": "semantic_world.views.views.Handle",
+                                    "World": "semantic_world.world.World",
+                                    "Container": "semantic_world.views.views.Container"
                                 },
                                 "conclusion": {
                                     "_type": "builtins.NoneType",
@@ -446,8 +446,8 @@
                                     ],
                                     "scope": {
                                         "World": "semantic_world.world.World",
-                                        "Handle": "semantic_world.views.views.Handle",
-                                        "Container": "semantic_world.views.views.Container"
+                                        "Container": "semantic_world.views.views.Container",
+                                        "Handle": "semantic_world.views.views.Handle"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -462,13 +462,13 @@
                                         "semantic_world.views.views.Drawer"
                                     ],
                                     "scope": {
-                                        "Handle": "semantic_world.views.views.Handle",
-                                        "Container": "semantic_world.views.views.Container",
-                                        "World": "semantic_world.world.World",
-                                        "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                        "Union": "typing.Union",
                                         "FixedConnection": "semantic_world.connections.FixedConnection",
-                                        "Drawer": "semantic_world.views.views.Drawer"
+                                        "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
+                                        "Drawer": "semantic_world.views.views.Drawer",
+                                        "Union": "typing.Union",
+                                        "Handle": "semantic_world.views.views.Handle",
+                                        "World": "semantic_world.world.World",
+                                        "Container": "semantic_world.views.views.Container"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -506,12 +506,12 @@
                                             "semantic_world.views.views.Cabinet"
                                         ],
                                         "scope": {
-                                            "Container": "semantic_world.views.views.Container",
-                                            "World": "semantic_world.world.World",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                            "Union": "typing.Union",
+                                            "Drawer": "semantic_world.views.views.Drawer",
                                             "Cabinet": "semantic_world.views.views.Cabinet",
-                                            "Drawer": "semantic_world.views.views.Drawer"
+                                            "Union": "typing.Union",
+                                            "World": "semantic_world.world.World",
+                                            "Container": "semantic_world.views.views.Container"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -533,8 +533,8 @@
                                                 "builtins.bool"
                                             ],
                                             "scope": {
-                                                "World": "semantic_world.world.World",
                                                 "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
+                                                "World": "semantic_world.world.World",
                                                 "Handle": "semantic_world.views.views.Handle"
                                             },
                                             "conclusion": {
@@ -550,12 +550,12 @@
                                                 "semantic_world.views.views.Door"
                                             ],
                                             "scope": {
+                                                "FixedConnection": "semantic_world.connections.FixedConnection",
+                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
+                                                "List": "typing.List",
                                                 "Handle": "semantic_world.views.views.Handle",
                                                 "World": "semantic_world.world.World",
-                                                "Door": "semantic_world.views.views.Door",
-                                                "List": "typing.List",
-                                                "FixedConnection": "semantic_world.connections.FixedConnection",
-                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
+                                                "Door": "semantic_world.views.views.Door"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -593,11 +593,11 @@
                                                     "semantic_world.views.views.Fridge"
                                                 ],
                                                 "scope": {
-                                                    "Fridge": "semantic_world.views.views.Fridge",
-                                                    "World": "semantic_world.world.World",
-                                                    "Door": "semantic_world.views.views.Door",
+                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                     "List": "typing.List",
-                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
+                                                    "World": "semantic_world.world.World",
+                                                    "Fridge": "semantic_world.views.views.Fridge",
+                                                    "Door": "semantic_world.views.views.Door"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -645,12 +645,12 @@
                                     "semantic_world.views.views.Cabinet"
                                 ],
                                 "scope": {
-                                    "Container": "semantic_world.views.views.Container",
-                                    "World": "semantic_world.world.World",
                                     "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                    "Union": "typing.Union",
+                                    "Drawer": "semantic_world.views.views.Drawer",
                                     "Cabinet": "semantic_world.views.views.Cabinet",
-                                    "Drawer": "semantic_world.views.views.Drawer"
+                                    "Union": "typing.Union",
+                                    "World": "semantic_world.world.World",
+                                    "Container": "semantic_world.views.views.Container"
                                 },
                                 "conclusion": {
                                     "_type": "builtins.NoneType",
@@ -668,8 +668,8 @@
                                     ],
                                     "scope": {
                                         "World": "semantic_world.world.World",
-                                        "Handle": "semantic_world.views.views.Handle",
-                                        "Container": "semantic_world.views.views.Container"
+                                        "Container": "semantic_world.views.views.Container",
+                                        "Handle": "semantic_world.views.views.Handle"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -684,13 +684,13 @@
                                         "semantic_world.views.views.Drawer"
                                     ],
                                     "scope": {
-                                        "Handle": "semantic_world.views.views.Handle",
-                                        "Container": "semantic_world.views.views.Container",
-                                        "World": "semantic_world.world.World",
-                                        "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                        "Union": "typing.Union",
                                         "FixedConnection": "semantic_world.connections.FixedConnection",
-                                        "Drawer": "semantic_world.views.views.Drawer"
+                                        "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
+                                        "Drawer": "semantic_world.views.views.Drawer",
+                                        "Union": "typing.Union",
+                                        "Handle": "semantic_world.views.views.Handle",
+                                        "World": "semantic_world.world.World",
+                                        "Container": "semantic_world.views.views.Container"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -728,12 +728,12 @@
                                             "semantic_world.views.views.Cabinet"
                                         ],
                                         "scope": {
-                                            "Container": "semantic_world.views.views.Container",
-                                            "World": "semantic_world.world.World",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                            "Union": "typing.Union",
+                                            "Drawer": "semantic_world.views.views.Drawer",
                                             "Cabinet": "semantic_world.views.views.Cabinet",
-                                            "Drawer": "semantic_world.views.views.Drawer"
+                                            "Union": "typing.Union",
+                                            "World": "semantic_world.world.World",
+                                            "Container": "semantic_world.views.views.Container"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -755,8 +755,8 @@
                                                 "builtins.bool"
                                             ],
                                             "scope": {
-                                                "World": "semantic_world.world.World",
                                                 "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
+                                                "World": "semantic_world.world.World",
                                                 "Handle": "semantic_world.views.views.Handle"
                                             },
                                             "conclusion": {
@@ -772,12 +772,12 @@
                                                 "semantic_world.views.views.Door"
                                             ],
                                             "scope": {
+                                                "FixedConnection": "semantic_world.connections.FixedConnection",
+                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
+                                                "List": "typing.List",
                                                 "Handle": "semantic_world.views.views.Handle",
                                                 "World": "semantic_world.world.World",
-                                                "Door": "semantic_world.views.views.Door",
-                                                "List": "typing.List",
-                                                "FixedConnection": "semantic_world.connections.FixedConnection",
-                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
+                                                "Door": "semantic_world.views.views.Door"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -815,11 +815,11 @@
                                                     "semantic_world.views.views.Fridge"
                                                 ],
                                                 "scope": {
-                                                    "Fridge": "semantic_world.views.views.Fridge",
-                                                    "World": "semantic_world.world.World",
-                                                    "Door": "semantic_world.views.views.Door",
+                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                     "List": "typing.List",
-                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
+                                                    "World": "semantic_world.world.World",
+                                                    "Fridge": "semantic_world.views.views.Fridge",
+                                                    "Door": "semantic_world.views.views.Door"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -850,8 +850,8 @@
                                         "builtins.bool"
                                     ],
                                     "scope": {
-                                        "World": "semantic_world.world.World",
                                         "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
+                                        "World": "semantic_world.world.World",
                                         "Handle": "semantic_world.views.views.Handle"
                                     },
                                     "conclusion": {
@@ -867,12 +867,12 @@
                                         "semantic_world.views.views.Door"
                                     ],
                                     "scope": {
+                                        "FixedConnection": "semantic_world.connections.FixedConnection",
+                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
+                                        "List": "typing.List",
                                         "Handle": "semantic_world.views.views.Handle",
                                         "World": "semantic_world.world.World",
-                                        "Door": "semantic_world.views.views.Door",
-                                        "List": "typing.List",
-                                        "FixedConnection": "semantic_world.connections.FixedConnection",
-                                        "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
+                                        "Door": "semantic_world.views.views.Door"
                                     },
                                     "conclusion": {
                                         "_type": "builtins.NoneType",
@@ -905,12 +905,12 @@
                                             "semantic_world.views.views.Cabinet"
                                         ],
                                         "scope": {
-                                            "Container": "semantic_world.views.views.Container",
-                                            "World": "semantic_world.world.World",
                                             "PrismaticConnection": "semantic_world.connections.PrismaticConnection",
-                                            "Union": "typing.Union",
+                                            "Drawer": "semantic_world.views.views.Drawer",
                                             "Cabinet": "semantic_world.views.views.Cabinet",
-                                            "Drawer": "semantic_world.views.views.Drawer"
+                                            "Union": "typing.Union",
+                                            "World": "semantic_world.world.World",
+                                            "Container": "semantic_world.views.views.Container"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -932,8 +932,8 @@
                                                 "builtins.bool"
                                             ],
                                             "scope": {
-                                                "World": "semantic_world.world.World",
                                                 "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
+                                                "World": "semantic_world.world.World",
                                                 "Handle": "semantic_world.views.views.Handle"
                                             },
                                             "conclusion": {
@@ -949,12 +949,12 @@
                                                 "semantic_world.views.views.Door"
                                             ],
                                             "scope": {
+                                                "FixedConnection": "semantic_world.connections.FixedConnection",
+                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
+                                                "List": "typing.List",
                                                 "Handle": "semantic_world.views.views.Handle",
                                                 "World": "semantic_world.world.World",
-                                                "Door": "semantic_world.views.views.Door",
-                                                "List": "typing.List",
-                                                "FixedConnection": "semantic_world.connections.FixedConnection",
-                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
+                                                "Door": "semantic_world.views.views.Door"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -992,11 +992,11 @@
                                                     "semantic_world.views.views.Fridge"
                                                 ],
                                                 "scope": {
-                                                    "Fridge": "semantic_world.views.views.Fridge",
-                                                    "World": "semantic_world.world.World",
-                                                    "Door": "semantic_world.views.views.Door",
+                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                     "List": "typing.List",
-                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
+                                                    "World": "semantic_world.world.World",
+                                                    "Fridge": "semantic_world.views.views.Fridge",
+                                                    "Door": "semantic_world.views.views.Door"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
@@ -1042,11 +1042,11 @@
                                             "semantic_world.views.views.Fridge"
                                         ],
                                         "scope": {
-                                            "Fridge": "semantic_world.views.views.Fridge",
-                                            "World": "semantic_world.world.World",
-                                            "Door": "semantic_world.views.views.Door",
+                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                             "List": "typing.List",
-                                            "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
+                                            "World": "semantic_world.world.World",
+                                            "Fridge": "semantic_world.views.views.Fridge",
+                                            "Door": "semantic_world.views.views.Door"
                                         },
                                         "conclusion": {
                                             "_type": "builtins.NoneType",
@@ -1063,8 +1063,8 @@
                                                 "builtins.bool"
                                             ],
                                             "scope": {
-                                                "World": "semantic_world.world.World",
                                                 "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
+                                                "World": "semantic_world.world.World",
                                                 "Handle": "semantic_world.views.views.Handle"
                                             },
                                             "conclusion": {
@@ -1080,12 +1080,12 @@
                                                 "semantic_world.views.views.Door"
                                             ],
                                             "scope": {
+                                                "FixedConnection": "semantic_world.connections.FixedConnection",
+                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
+                                                "List": "typing.List",
                                                 "Handle": "semantic_world.views.views.Handle",
                                                 "World": "semantic_world.world.World",
-                                                "Door": "semantic_world.views.views.Door",
-                                                "List": "typing.List",
-                                                "FixedConnection": "semantic_world.connections.FixedConnection",
-                                                "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
+                                                "Door": "semantic_world.views.views.Door"
                                             },
                                             "conclusion": {
                                                 "_type": "builtins.NoneType",
@@ -1123,11 +1123,11 @@
                                                     "semantic_world.views.views.Fridge"
                                                 ],
                                                 "scope": {
-                                                    "Fridge": "semantic_world.views.views.Fridge",
-                                                    "World": "semantic_world.world.World",
-                                                    "Door": "semantic_world.views.views.Door",
+                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection",
                                                     "List": "typing.List",
-                                                    "RevoluteConnection": "semantic_world.connections.RevoluteConnection"
+                                                    "World": "semantic_world.world.World",
+                                                    "Fridge": "semantic_world.views.views.Fridge",
+                                                    "Door": "semantic_world.views.views.Door"
                                                 },
                                                 "conclusion": {
                                                     "_type": "builtins.NoneType",
