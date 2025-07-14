@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from semantic_world.connections import PrismaticConnection, RevoluteConnection, Connection6DoF, FixedConnection, \
     UnitVector
@@ -7,6 +8,7 @@ from semantic_world.spatial_types.derivatives import Derivatives
 from semantic_world.spatial_types.math import rotation_matrix_from_rpy
 from semantic_world.spatial_types.symbol_manager import symbol_manager
 from semantic_world.testing import world_setup
+from semantic_world.world_entity import View
 
 
 def test_set_state(world_setup):

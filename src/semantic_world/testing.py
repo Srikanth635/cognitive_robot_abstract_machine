@@ -4,7 +4,7 @@ from typing import Tuple
 import pytest
 
 from .adapters.urdf import URDFParser
-from .connections import Connection6DoF, PrismaticConnection, RevoluteConnection, FixedConnection, OmniDrive
+from .connections import Connection6DoF, PrismaticConnection, RevoluteConnection, FixedConnection, OmniDrive, UnitVector
 from .geometry import Box, Scale, Sphere
 from .prefixed_name import PrefixedName
 from .spatial_types import TransformationMatrix
@@ -12,19 +12,45 @@ from .spatial_types.derivatives import Derivatives
 from .world import World
 from .world_entity import Body
 
+@pytest.fixture
+def world_setup() -> Tuple[World, Body, Body, Body, Body, Body]:
+    world = World()
+    root = Body(name=PrefixedName(name='root', prefix='world'))
+    l1 = Body(name=PrefixedName('l1'))
+    l2 = Body(name=PrefixedName('l2'))
+    bf = Body(name=PrefixedName('bf'))
+    r1 = Body(name=PrefixedName('r1'))
+    r2 = Body(name=PrefixedName('r2'))
 
+    with world.modify_world():
+        [world.add_body(b) for b in [root, l1, l2, bf, r1, r2]]
+        dof = world.create_degree_of_freedom(name=PrefixedName('dof'), lower_limits={Derivatives.velocity: -1},
+                                             upper_limits={Derivatives.velocity: 1})
+
+        c_l1_l2 = PrismaticConnection(parent=l1, child=l2, dof=dof, axis=UnitVector(1, 0, 0))
+        c_r1_r2 = RevoluteConnection(parent=r1, child=r2, dof=dof, axis=UnitVector(0, 0, 1))
+        bf_root_l1 = FixedConnection(parent=bf, child=l1)
+        bf_root_r1 = FixedConnection(parent=bf, child=r1)
+        world.add_connection(c_l1_l2)
+        world.add_connection(c_r1_r2)
+        world.add_connection(bf_root_l1)
+        world.add_connection(bf_root_r1)
+        c_root_bf = Connection6DoF(parent=root, child=bf, _world=world)
+        world.add_connection(c_root_bf)
+
+    return world, l1, l2, bf, r1, r2
 
 @pytest.fixture
 def world_setup_simple():
     world = World()
-    root = Body(PrefixedName(name='root', prefix='world'))
-    body1 = Body(PrefixedName('name1', prefix='test'),
+    root = Body(name=PrefixedName(name='root', prefix='world'))
+    body1 = Body(name=PrefixedName('name1', prefix='test'),
                  collision=[Box(origin=TransformationMatrix.from_xyz_rpy(), scale=Scale(0.25, 0.25, 0.25))])
-    body2 = Body(PrefixedName('name2', prefix='test'),
+    body2 = Body(name=PrefixedName('name2', prefix='test'),
                  collision=[Box(origin=TransformationMatrix.from_xyz_rpy(), scale=Scale(0.25, 0.25, 0.25))])
-    body3 = Body(PrefixedName('name3', prefix='test'),
+    body3 = Body(name=PrefixedName('name3', prefix='test'),
                  collision=[Sphere(origin=TransformationMatrix.from_xyz_rpy(), radius=0.01)])
-    body4 = Body(PrefixedName('name4', prefix='test'),
+    body4 = Body(name=PrefixedName('name4', prefix='test'),
                  collision=[Sphere(origin=TransformationMatrix.from_xyz_rpy(), radius=0.01)])
 
     with world.modify_world():
@@ -44,43 +70,13 @@ def world_setup_simple():
         world.add_connection(c_root_body4)
     return world, body1, body2, body3, body4
 
-
-@pytest.fixture
-def world_setup() -> Tuple[World, Body, Body, Body, Body, Body]:
-    world = World()
-    root = Body(PrefixedName(name='root', prefix='world'))
-    l1 = Body(PrefixedName('l1'))
-    l2 = Body(PrefixedName('l2'))
-    bf = Body(PrefixedName('bf'))
-    r1 = Body(PrefixedName('r1'))
-    r2 = Body(PrefixedName('r2'))
-
-    with world.modify_world():
-        [world.add_body(b) for b in [root, l1, l2, bf, r1, r2]]
-        dof = world.create_degree_of_freedom(name=PrefixedName('dof'),
-                                             lower_limits={Derivatives.velocity: -1},
-                                             upper_limits={Derivatives.velocity: 1})
-
-        c_l1_l2 = PrismaticConnection(l1, l2, dof=dof, axis=(1, 0, 0))
-        c_r1_r2 = RevoluteConnection(r1, r2, dof=dof, axis=(0, 0, 1))
-        bf_root_l1 = FixedConnection(bf, l1)
-        bf_root_r1 = FixedConnection(bf, r1)
-        world.add_connection(c_l1_l2)
-        world.add_connection(c_r1_r2)
-        world.add_connection(bf_root_l1)
-        world.add_connection(bf_root_r1)
-        c_root_bf = Connection6DoF(parent=root, child=bf, _world=world)
-        world.add_connection(c_root_bf)
-
-    return world, l1, l2, bf, r1, r2
-
 @pytest.fixture
 def pr2_world():
     urdf_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "resources", "urdf")
     pr2 = os.path.join(urdf_dir, "pr2_kinematic_tree.urdf")
     world = World()
     with world.modify_world():
-        localization_body = Body(PrefixedName('odom_combined'))
+        localization_body = Body(name=PrefixedName('odom_combined'))
         world.add_body(localization_body)
 
         pr2_parser = URDFParser(pr2)
