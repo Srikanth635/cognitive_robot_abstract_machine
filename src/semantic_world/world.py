@@ -499,6 +499,23 @@ class World:
             return matches[0]
         raise ValueError(f'View with name {name} not found')
 
+    def get_world_state_symbols(self) -> List[cas.Symbol]:
+        """
+        Constructs and returns a list of symbols representing the state of the system. The state
+        is defined in terms of positions, velocities, accelerations, and jerks for each degree
+        of freedom specified in the current state.
+
+        :raises KeyError: If a degree of freedom defined in the state does not exist in
+            the `degrees_of_freedom`.
+        :returns: A combined list of symbols corresponding to the positions, velocities,
+            accelerations, and jerks for each degree of freedom in the state.
+        """
+        positions = [self.degrees_of_freedom[v_name].position_symbol for v_name in self.state]
+        velocities = [self.degrees_of_freedom[v_name].velocity_symbol for v_name in self.state]
+        accelerations = [self.degrees_of_freedom[v_name].acceleration_symbol for v_name in self.state]
+        jerks = [self.degrees_of_freedom[v_name].jerk_symbol for v_name in self.state]
+        return positions + velocities + accelerations + jerks
+
     @modifies_world
     def remove_body(self, body: Body) -> None:
         if body._world is self and body.index is not None:
