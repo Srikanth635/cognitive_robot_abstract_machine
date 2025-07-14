@@ -8,10 +8,14 @@ casadi~=3.7.0
 hypothesis
 pytest
 scipy
-ormatic>=1.1.1
+ormatic>=1.1.5
 sqlacodegen
 ripple_down_rules
 pytest-order
 sqlalchemy
 embreex # Hardware acceleration for trimesh raycasting
 rtree # For spatial indexing in trimesh
+random_events
+plotly
+rtree
+daqp

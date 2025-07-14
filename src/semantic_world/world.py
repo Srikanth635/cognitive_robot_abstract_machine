@@ -1,6 +1,8 @@
+from __future__ import absolute_import
 from __future__ import annotations
 
 import logging
+from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import wraps, lru_cache
@@ -15,12 +17,15 @@ from typing_extensions import List
 
 from .connections import HasUpdateState, Has1DOFState
 from .degree_of_freedom import DegreeOfFreedom
+from .ik_solver import InverseKinematicsSolver
 from .prefixed_name import PrefixedName
 from .spatial_types import spatial_types as cas
 from .spatial_types.derivatives import Derivatives
 from .spatial_types.math import inverse_frame
+from .types import NpMatrix4x4
 from .utils import IDGenerator, copy_lru_cache
 from .world_entity import Body, Connection, View
+from .world_state import WorldState
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +102,7 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
         Clears cache and recomputes all forward kinematics. Should be called after a state update.
         """
         self.compute_forward_kinematics_np.cache_clear()
-        self.subs = self.world.state[Derivatives.position]
+        self.subs = self.world.state.positions
         self.forward_kinematics_for_all_bodies = self.compiled_all_fks.fast_call(self.subs)
 
     def compute_tf(self) -> np.ndarray:
@@ -112,7 +117,7 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
         return self.compiled_tf.fast_call(self.subs)
 
     @lru_cache(maxsize=None)
-    def compute_forward_kinematics_np(self, root: Body, tip: Body) -> np.ndarray:
+    def compute_forward_kinematics_np(self, root: Body, tip: Body) -> NpMatrix4x4:
         """
         Computes the forward kinematics from the root body to the tip body, root_T_tip.
 
@@ -162,7 +167,7 @@ class ResetStateContextManager:
         self.world = world
 
     def __enter__(self) -> None:
-        self.state = self.world.state.copy()
+        self.state = deepcopy(self.world.state)
 
     def __exit__(self, exc_type: Optional[type], exc_val: Optional[Exception], exc_tb: Optional[type]) -> None:
         if exc_type is None:
@@ -198,6 +203,7 @@ def modifies_world(func):
     """
     Decorator that marks a method as a modification to the state or model of a world.
     """
+
     @wraps(func)
     def wrapper(self: World, *args, **kwargs):
         with self.modify_world() as context_manager:
@@ -230,7 +236,7 @@ class World:
 
     degrees_of_freedom: Dict[PrefixedName, DegreeOfFreedom] = field(default_factory=dict)
 
-    state: np.ndarray = field(default_factory=lambda: np.empty((4, 0), dtype=float))
+    state: WorldState = field(default_factory=WorldState)
     """
     2d array where rows are derivatives and columns are dof values for that derivative.
     """
@@ -267,7 +273,6 @@ class World:
         else:
             raise ValueError(f"No root found.")
 
-
     def __hash__(self):
         return hash(id(self))
 
@@ -299,8 +304,7 @@ class World:
         upper_limit = dof.get_upper_limit(derivative=Derivatives.position)
         if upper_limit is not None:
             initial_position = min(upper_limit, initial_position)
-        full_initial_state = np.array([initial_position, 0, 0, 0], dtype=float).reshape((4, 1))
-        self.state = np.hstack((self.state, full_initial_state))
+        self.state[name].position = initial_position
         self.degrees_of_freedom[name] = dof
         return dof
 
@@ -402,6 +406,51 @@ class World:
         connection._world = self
         self.kinematic_structure.add_edge(connection.parent.index, connection.child.index, connection)
 
+    def add_view(self, view: View) -> None:
+        """
+        Adds a view to the current list of views if it doesn't already exist. Ensures
+        that the `view` is associated with the current instance and maintains the
+        integrity of unique view names.
+
+        :param view: The view instance to be added. Its name must be unique within
+            the current context.
+
+        :raises ValueError: If a view with the same name already exists.
+        """
+        try:
+            self.get_view_by_name(view.name)
+        except ValueError:
+            pass
+        else:
+            raise ValueError(f"View with name {view.name} already exists.")
+        view._world = self
+        self.views.append(view)
+
+    def get_view_by_name(self, name: Union[str, PrefixedName]) -> View:
+        """
+        Retrieves a View from the list of view based on its name.
+        If the input is of type `PrefixedName`, it checks whether the prefix is specified and looks for an
+        exact match. Otherwise, it matches based on the name's string representation.
+        If more than one body with the same name is found, an assertion error is raised.
+        If no matching body is found, a `ValueError` is raised.
+
+        :param name: The name of the view to search for. Can be a string or a `PrefixedName` object.
+        :return: The `View` object that matches the given name.
+        :raises ValueError: If multiple or no views with the specified name are found.
+        """
+        if isinstance(name, PrefixedName):
+            if name.prefix is not None:
+                matches = [view for view in self.views if view.name == name]
+            else:
+                matches = [view for view in self.views if view.name.name == name.name]
+        else:
+            matches = [view for view in self.views if view.name.name == name]
+        if len(matches) > 1:
+            raise ValueError(f'Multiple views with name {name} found')
+        if matches:
+            return matches[0]
+        raise ValueError(f'View with name {name} not found')
+
     @modifies_world
     def remove_body(self, body: Body) -> None:
         if body._world is self and body.index is not None:
@@ -421,10 +470,12 @@ class World:
         :return: None
         """
         for dof in other.degrees_of_freedom.values():
-            dof.state_idx += len(self.degrees_of_freedom)
+            self.state[dof.name].position = other.state[dof.name].position
+            self.state[dof.name].velocity = other.state[dof.name].velocity
+            self.state[dof.name].acceleration = other.state[dof.name].acceleration
+            self.state[dof.name].jerk = other.state[dof.name].jerk
             dof._world = self
         self.degrees_of_freedom.update(other.degrees_of_freedom)
-        self.state = np.hstack((self.state, other.state))
 
         # do not trigger computations in other
         other.world_is_being_modified = True
@@ -554,6 +605,7 @@ class World:
             return [], [root], []
         root_chain = self.compute_chain_of_bodies(self.root, root)
         tip_chain = self.compute_chain_of_bodies(self.root, tip)
+        i = 0
         for i in range(min(len(root_chain), len(tip_chain))):
             if root_chain[i] != tip_chain[i]:
                 break
@@ -642,8 +694,8 @@ class World:
 
         pos = self.bfs_layout(scale=scale, align=align)
 
-
-        rustworkx.visualization.mpl_draw(self.kinematic_structure, pos=pos, labels=lambda body: str(body.name), with_labels=True,
+        rustworkx.visualization.mpl_draw(self.kinematic_structure, pos=pos, labels=lambda body: str(body.name),
+                                         with_labels=True,
                                          edge_labels=lambda edge: edge.__class__.__name__)
 
         plt.title("World Kinematic Structure")
@@ -693,7 +745,7 @@ class World:
         fk.child_frame = tip.name
         return fk
 
-    def compute_forward_kinematics_np(self, root: Body, tip: Body) -> np.ndarray:
+    def compute_forward_kinematics_np(self, root: Body, tip: Body) -> NpMatrix4x4:
         """
         Computes the forward kinematics from the root body to the tip body, root_T_tip.
 
@@ -704,7 +756,45 @@ class World:
         :param tip: Tip body to which the kinematics are computed.
         :return: Transformation matrix representing the relative pose of the tip body with respect to the root body.
         """
-        return self._fk_computer.compute_forward_kinematics_np(root, tip)
+        return self._fk_computer.compute_forward_kinematics_np(root, tip).copy()
+
+    def compute_relative_pose(self, pose: NpMatrix4x4, target_body: Body, pose_body: Body) -> NpMatrix4x4:
+        """
+        Computes the relative pose to a body given another body as reference.
+        :param pose: The pose to be transformed
+        :param target_body: The body to which the pose should be transformed
+        :param pose_body: The body which should be used as reference frame for the pose
+        :return: The pose relative to the target body.
+        """
+        target_T_pose = self.compute_forward_kinematics_np(target_body, pose_body)
+        return target_T_pose @ pose
+
+    def find_dofs_for_position_symbols(self, symbols: List[cas.Symbol]) -> List[DegreeOfFreedom]:
+        result = []
+        for s in symbols:
+            for dof in self.degrees_of_freedom.values():
+                if s == dof.position_symbol:
+                    result.append(dof)
+        return result
+
+    def compute_inverse_kinematics(self, root: Body, tip: Body, target: NpMatrix4x4,
+                                   dt: float = 0.05, max_iterations: int = 200,
+                                   translation_velocity: float = 0.2, rotation_velocity: float = 0.2) \
+            -> Dict[DegreeOfFreedom, float]:
+        """
+        Compute inverse kinematics using quadratic programming.
+
+        :param root: Root body of the kinematic chain
+        :param tip: Tip body of the kinematic chain
+        :param target: Desired tip pose relative to the root body
+        :param dt: Time step for integration
+        :param max_iterations: Maximum number of iterations
+        :param translation_velocity: Maximum translation velocity
+        :param rotation_velocity: Maximum rotation velocity
+        :return: Dictionary mapping DOF names to their computed positions
+        """
+        ik_solver = InverseKinematicsSolver(self)
+        return ik_solver.solve(root, tip, target, dt, max_iterations, translation_velocity, rotation_velocity)
 
     def apply_control_commands(self, commands: np.ndarray, dt: float, derivative: Derivatives) -> None:
         """
@@ -723,10 +813,10 @@ class World:
             raise ValueError(
                 f"Commands length {len(commands)} does not match number of free variables {len(self.degrees_of_freedom)}")
 
-        self.state[derivative] = commands
+        self.state.set_derivative(derivative, commands)
 
         for i in range(derivative - 1, -1, -1):
-            self.state[i] += self.state[i + 1] * dt
+            self.state.set_derivative(i, self.state.get_derivative(i) + self.state.get_derivative(i + 1) * dt)
         for connection in self.connections:
             if isinstance(connection, HasUpdateState):
                 connection.update_state(dt)
