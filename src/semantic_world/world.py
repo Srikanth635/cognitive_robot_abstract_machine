@@ -721,8 +721,8 @@ class World:
         :param pose_body: The body which should be used as reference frame for the pose
         :return: The pose relative to the target body.
         """
-        target_to_pose = self.compute_forward_kinematics_np(target_body, pose_body)
-        return target_to_pose @ pose
+        target_T_pose = self.compute_forward_kinematics_np(target_body, pose_body)
+        return target_T_pose @ pose
 
     def find_dofs_for_position_symbols(self, symbols: List[cas.Symbol]) -> List[DegreeOfFreedom]:
         result = []
