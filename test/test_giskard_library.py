@@ -2,6 +2,7 @@ from itertools import combinations
 
 import pytest
 import urdf_parser_py.urdf as up
+from rustworkx import NoPathFound
 
 import semantic_world.spatial_types.spatial_types as cas
 from giskardpy.god_map import god_map
@@ -14,7 +15,8 @@ from giskardpy.model.world_config import EmptyWorld, WorldWithOmniDriveRobot
 from giskardpy.qp.qp_controller_config import QPControllerConfig
 from giskardpy.user_interface import GiskardWrapper
 from giskardpy.utils.utils import suppress_stderr
-from semantic_world.connections import FixedConnection, PrismaticConnection, UnitVector, OmniDrive, ActiveConnection
+from semantic_world.connections import FixedConnection, PrismaticConnection, UnitVector, OmniDrive, ActiveConnection, \
+    RevoluteConnection
 from semantic_world.geometry import Box, Scale, Color
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.robots import AbstractRobot, Manipulator
@@ -317,177 +319,51 @@ class TestWorld:
             pr2_world.get_body_by_name('r_gripper_r_finger_tip_link'),
             pr2_world.get_body_by_name('r_gripper_l_finger_tip_frame')}
 
-    def test_get_chain(self, pr2_world: World):
+    def test_compute_chain_of_connections(self, pr2_world: World):
         with suppress_stderr():
             urdf = open('urdfs/pr2.urdf', 'r').read()
             parsed_urdf = up.URDF.from_xml_string(hacky_urdf_parser_fix(urdf))
 
         root_link = 'base_footprint'
         tip_link = 'r_gripper_tool_frame'
-        real = pr2_world.compute_chain(root_link_name=pr2_world.search_for_link_name(root_link),
-                                       tip_link_name=pr2_world.search_for_link_name(tip_link),
-                                       add_joints=True,
-                                       add_links=True,
-                                       add_fixed_joints=True,
-                                       add_non_controlled_joints=True)
-        expected = parsed_urdf.get_chain(root_link, tip_link, True, True, True)
-        assert {x.short_name for x in real} == set(expected)
+        real = pr2_world.compute_chain_of_connections(root=pr2_world.get_body_by_name(root_link),
+                                                      tip=pr2_world.get_body_by_name(tip_link))
+        expected = parsed_urdf.get_chain(root_link, tip_link, joints=True, links=False, fixed=True)
+        assert {x.name.name for x in real} == set(expected)
+
+    def test_compute_chain_of_bodies(self, pr2_world: World):
+        with suppress_stderr():
+            urdf = open('urdfs/pr2.urdf', 'r').read()
+            parsed_urdf = up.URDF.from_xml_string(hacky_urdf_parser_fix(urdf))
+
+        root_link = 'base_footprint'
+        tip_link = 'r_gripper_tool_frame'
+        real = pr2_world.compute_chain_of_bodies(root=pr2_world.get_body_by_name(root_link),
+                                                 tip=pr2_world.get_body_by_name(tip_link))
+        expected = parsed_urdf.get_chain(root_link, tip_link, joints=False, links=True, fixed=False)
+        assert {x.name.name for x in real} == set(expected)
 
     def test_get_chain2(self, pr2_world: World):
-        root_link = pr2_world.search_for_link_name('l_gripper_tool_frame')
-        tip_link = pr2_world.search_for_link_name('r_gripper_tool_frame')
-        try:
-            pr2_world.compute_chain(root_link, tip_link, True, True, True, True)
-            assert False
-        except ValueError:
-            pass
-
-    def test_get_chain_group(self, pr2_world: World):
-        root_link = pr2_world.search_for_link_name('r_wrist_roll_link')
-        tip_link = pr2_world.search_for_link_name('r_gripper_r_finger_tip_link')
-        pr2_world.register_group('r_hand', root_link)
-        real = pr2_world.compute_chain(root_link, tip_link, True, True, True, True)
-        assert real == ['pr2/r_wrist_roll_link',
-                        'pr2/r_gripper_palm_joint',
-                        'pr2/r_gripper_palm_link',
-                        'pr2/r_gripper_r_finger_joint',
-                        'pr2/r_gripper_r_finger_link',
-                        'pr2/r_gripper_r_finger_tip_joint',
-                        'pr2/r_gripper_r_finger_tip_link']
-
-    def test_get_chain_group2(self, pr2_world: World):
-        root_link = pr2_world.search_for_link_name('r_gripper_l_finger_tip_link')
-        tip_link = pr2_world.search_for_link_name('r_gripper_r_finger_tip_link')
-        pr2_world.register_group('r_hand', pr2_world.search_for_link_name('r_wrist_roll_link'))
-        try:
-            real = pr2_world.compute_chain(root_link, tip_link, True, True, True, True)
-            assert False
-        except ValueError:
-            pass
+        root_link = pr2_world.get_body_by_name('l_gripper_tool_frame')
+        tip_link = pr2_world.get_body_by_name('r_gripper_tool_frame')
+        with pytest.raises(NoPathFound):
+            pr2_world.compute_chain_of_connections(root_link, tip_link)
 
     def test_get_split_chain(self, pr2_world: World):
-        root_link = pr2_world.search_for_link_name('l_gripper_r_finger_tip_link')
-        tip_link = pr2_world.search_for_link_name('l_gripper_l_finger_tip_link')
-        chain1, connection, chain2 = pr2_world.compute_split_chain(root_link, tip_link, True, True, True, True)
-        chain1 = [n.short_name for n in chain1]
-        connection = [n.short_name for n in connection]
-        chain2 = [n.short_name for n in chain2]
-        assert chain1 == ['l_gripper_r_finger_tip_link', 'l_gripper_r_finger_tip_joint', 'l_gripper_r_finger_link',
-                          'l_gripper_r_finger_joint']
+        root_link = pr2_world.get_body_by_name('l_gripper_r_finger_tip_link')
+        tip_link = pr2_world.get_body_by_name('l_gripper_l_finger_tip_link')
+        chain1, connection, chain2 = pr2_world.compute_split_chain_of_bodies(root_link, tip_link)
+        chain1 = [n.name.name for n in chain1]
+        connection = [n.name.name for n in connection]
+        chain2 = [n.name.name for n in chain2]
+        assert chain1 == ['l_gripper_r_finger_tip_link', 'l_gripper_r_finger_link']
         assert connection == ['l_gripper_palm_link']
-        assert chain2 == ['l_gripper_l_finger_joint', 'l_gripper_l_finger_link', 'l_gripper_l_finger_tip_joint',
-                          'l_gripper_l_finger_tip_link']
-
-    def test_get_split_chain_group(self, pr2_world: World):
-        root_link = pr2_world.search_for_link_name('r_gripper_l_finger_tip_link')
-        tip_link = pr2_world.search_for_link_name('r_gripper_r_finger_tip_link')
-        pr2_world.register_group('r_hand', pr2_world.search_for_link_name('r_wrist_roll_link'))
-        chain1, connection, chain2 = pr2_world.compute_split_chain(root_link, tip_link,
-                                                                   True, True, True, True)
-        assert chain1 == ['pr2/r_gripper_l_finger_tip_link',
-                          'pr2/r_gripper_l_finger_tip_joint',
-                          'pr2/r_gripper_l_finger_link',
-                          'pr2/r_gripper_l_finger_joint']
-        assert connection == ['pr2/r_gripper_palm_link']
-        assert chain2 == ['pr2/r_gripper_r_finger_joint',
-                          'pr2/r_gripper_r_finger_link',
-                          'pr2/r_gripper_r_finger_tip_joint',
-                          'pr2/r_gripper_r_finger_tip_link']
+        assert chain2 == ['l_gripper_l_finger_link', 'l_gripper_l_finger_tip_link']
 
     def test_get_joint_limits2(self, pr2_world: World):
-        lower_limit, upper_limit = pr2_world.get_joint_position_limits(
-            pr2_world.search_for_joint_name('l_shoulder_pan_joint'))
-        assert lower_limit == -0.564601836603
-        assert upper_limit == 2.1353981634
-
-    def test_search_branch(self, pr2_world: World):
-        result = pr2_world._search_branch(pr2_world.search_for_link_name('odom'),
-                                          stop_at_joint_when=lambda _: False,
-                                          stop_at_link_when=lambda _: False)
-        assert result == ([], [])
-        result = pr2_world._search_branch(pr2_world.search_for_link_name('odom'),
-                                          stop_at_joint_when=pr2_world.is_joint_controlled,
-                                          stop_at_link_when=lambda _: False,
-                                          collect_link_when=pr2_world.has_link_collisions)
-        assert result == ([], [])
-        result = pr2_world._search_branch(pr2_world.search_for_link_name('base_footprint'),
-                                          stop_at_joint_when=pr2_world.is_joint_controlled,
-                                          collect_link_when=pr2_world.has_link_collisions)
-        assert set(result[0]) == {'pr2/base_bellow_link',
-                                  'pr2/fl_caster_l_wheel_link',
-                                  'pr2/fl_caster_r_wheel_link',
-                                  'pr2/fl_caster_rotation_link',
-                                  'pr2/fr_caster_l_wheel_link',
-                                  'pr2/fr_caster_r_wheel_link',
-                                  'pr2/fr_caster_rotation_link',
-                                  'pr2/bl_caster_l_wheel_link',
-                                  'pr2/bl_caster_r_wheel_link',
-                                  'pr2/bl_caster_rotation_link',
-                                  'pr2/br_caster_l_wheel_link',
-                                  'pr2/br_caster_r_wheel_link',
-                                  'pr2/br_caster_rotation_link',
-                                  'pr2/base_link'}
-        result = pr2_world._search_branch(pr2_world.search_for_link_name('l_elbow_flex_link'),
-                                          collect_joint_when=pr2_world.is_joint_fixed)
-        assert set(result[0]) == set()
-        assert set(result[1]) == {'pr2/l_force_torque_adapter_joint',
-                                  'pr2/l_force_torque_joint',
-                                  'pr2/l_forearm_cam_frame_joint',
-                                  'pr2/l_forearm_cam_optical_frame_joint',
-                                  'pr2/l_forearm_joint',
-                                  'pr2/l_gripper_led_joint',
-                                  'pr2/l_gripper_motor_accelerometer_joint',
-                                  'pr2/l_gripper_palm_joint',
-                                  'pr2/l_gripper_tool_joint'}
-        links, joints = pr2_world._search_branch(pr2_world.search_for_link_name('r_wrist_roll_link'),
-                                                 stop_at_joint_when=pr2_world.is_joint_controlled,
-                                                 collect_link_when=pr2_world.has_link_collisions,
-                                                 collect_joint_when=lambda _: True)
-        assert set(links) == {'pr2/r_gripper_l_finger_tip_link',
-                              'pr2/r_gripper_l_finger_link',
-                              'pr2/r_gripper_r_finger_tip_link',
-                              'pr2/r_gripper_r_finger_link',
-                              'pr2/r_gripper_palm_link',
-                              'pr2/r_wrist_roll_link'}
-        assert set(joints) == {'pr2/r_gripper_palm_joint',
-                               'pr2/r_gripper_led_joint',
-                               'pr2/r_gripper_motor_accelerometer_joint',
-                               'pr2/r_gripper_tool_joint',
-                               'pr2/r_gripper_motor_slider_joint',
-                               'pr2/r_gripper_motor_screw_joint',
-                               'pr2/r_gripper_l_finger_joint',
-                               'pr2/r_gripper_l_finger_tip_joint',
-                               'pr2/r_gripper_r_finger_joint',
-                               'pr2/r_gripper_r_finger_tip_joint',
-                               'pr2/r_gripper_joint'}
-        links, joints = pr2_world._search_branch(pr2_world.search_for_link_name('br_caster_l_wheel_link'),
-                                                 collect_link_when=lambda _: True,
-                                                 collect_joint_when=lambda _: True)
-        assert links == ['pr2/br_caster_l_wheel_link']
-        assert joints == []
-
-    # def test_get_siblings_with_collisions(self, pr2_world: World):
-    #     # FIXME
-    #     result = pr2_world.get_siblings_with_collisions(pr2_world.search_for_joint_name('brumbrum'))
-    #     assert result == []
-    #     result = pr2_world.get_siblings_with_collisions(pr2_world.search_for_joint_name('l_elbow_flex_joint'))
-    #     assert set(result) == {'pr2/l_upper_arm_roll_link', 'pr2/l_upper_arm_link'}
-    #     result = pr2_world.get_siblings_with_collisions(pr2_world.search_for_joint_name('r_wrist_roll_joint'))
-    #     assert result == ['pr2/r_wrist_flex_link']
-    #     result = pr2_world.get_siblings_with_collisions(pr2_world.search_for_joint_name('br_caster_l_wheel_joint'))
-    #     assert set(result) == {'pr2/base_bellow_link',
-    #                            'pr2/fl_caster_l_wheel_link',
-    #                            'pr2/fl_caster_r_wheel_link',
-    #                            'pr2/fl_caster_rotation_link',
-    #                            'pr2/fr_caster_l_wheel_link',
-    #                            'pr2/fr_caster_r_wheel_link',
-    #                            'pr2/fr_caster_rotation_link',
-    #                            'pr2/bl_caster_l_wheel_link',
-    #                            'pr2/bl_caster_r_wheel_link',
-    #                            'pr2/bl_caster_rotation_link',
-    #                            'pr2/br_caster_r_wheel_link',
-    #                            'pr2/br_caster_rotation_link',
-    #                            'pr2/base_link'}
+        c: RevoluteConnection = pr2_world.get_connection_by_name('l_shoulder_pan_joint')
+        assert c.dof.get_lower_limit(Derivatives.position) == -0.564601836603
+        assert c.dof.get_upper_limit(Derivatives.position) == 2.1353981634
 
     def test_get_controlled_parent_joint_of_link(self, pr2_world: World):
         with pytest.raises(KeyError) as e_info:
