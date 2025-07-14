@@ -42,18 +42,17 @@ class WorldEntity:
     The views this entity is part of.
     """
 
+    name: PrefixedName = field(default=None, kw_only=True)
+    """
+    The identifier for this world entity.
+    """
+
 
 @dataclass
 class Body(WorldEntity):
     """
     Represents a body in the world.
     A body is a semantic atom, meaning that it cannot be decomposed into meaningful smaller parts.
-    """
-
-    name: PrefixedName
-    """
-    The name of the link. Must be unique in the world.
-    If not provided, a unique name will be generated.
     """
 
     visual: List[Shape] = field(default_factory=list, repr=False)
@@ -165,7 +164,7 @@ class Body(WorldEntity):
         """
         Creates a new link from an existing link.
         """
-        new_link = cls(body.name, body.visual, body.collision)
+        new_link = cls(name=body.name, visual=body.visual, collision=body.collision)
         new_link._world = body._world
         new_link.index = body.index
         return new_link
@@ -258,7 +257,7 @@ class Connection(WorldEntity):
     The child body of the connection.
     """
 
-    origin_expression: TransformationMatrix = None
+    origin_expression: TransformationMatrix = field(default=None)
     """
     A symbolic expression describing the origin of the connection.
     """
@@ -268,16 +267,14 @@ class Connection(WorldEntity):
             self.origin_expression = TransformationMatrix()
         self.origin_expression.reference_frame = self.parent.name
         self.origin_expression.child_frame = self.child.name
+        if self.name is None:
+            self.name = PrefixedName(f'{self.parent.name.name}_T_{self.child.name.name}', prefix=self.child.name.prefix)
 
     def __hash__(self):
         return hash((self.parent, self.child))
 
     def __eq__(self, other):
         return self.name == other.name
-
-    @property
-    def name(self):
-        return PrefixedName(f'{self.parent.name.name}_T_{self.child.name.name}', prefix=self.child.name.prefix)
 
     @property
     def origin(self) -> NpMatrix4x4:
