@@ -3,33 +3,35 @@ from typing import Tuple
 import numpy as np
 import pytest
 
-from semantic_world.connections import PrismaticConnection, RevoluteConnection, Connection6DoF, FixedConnection
+from semantic_world.connections import PrismaticConnection, RevoluteConnection, Connection6DoF, FixedConnection, \
+    UnitVector
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.spatial_types.derivatives import Derivatives
 from semantic_world.spatial_types.math import rotation_matrix_from_rpy
 from semantic_world.spatial_types.symbol_manager import symbol_manager
 from semantic_world.world import World, Body
+from semantic_world.world_entity import View
 
 
 @pytest.fixture
 def world_setup() -> Tuple[World, Body, Body, Body, Body, Body]:
     world = World()
-    root = Body(PrefixedName(name='root', prefix='world'))
-    l1 = Body(PrefixedName('l1'))
-    l2 = Body(PrefixedName('l2'))
-    bf = Body(PrefixedName('bf'))
-    r1 = Body(PrefixedName('r1'))
-    r2 = Body(PrefixedName('r2'))
+    root = Body(name=PrefixedName(name='root', prefix='world'))
+    l1 = Body(name=PrefixedName('l1'))
+    l2 = Body(name=PrefixedName('l2'))
+    bf = Body(name=PrefixedName('bf'))
+    r1 = Body(name=PrefixedName('r1'))
+    r2 = Body(name=PrefixedName('r2'))
 
     with world.modify_world():
         [world.add_body(b) for b in [root, l1, l2, bf, r1, r2]]
         dof = world.create_degree_of_freedom(name=PrefixedName('dof'), lower_limits={Derivatives.velocity: -1},
                                              upper_limits={Derivatives.velocity: 1})
 
-        c_l1_l2 = PrismaticConnection(l1, l2, dof=dof, axis=(1, 0, 0))
-        c_r1_r2 = RevoluteConnection(r1, r2, dof=dof, axis=(0, 0, 1))
-        bf_root_l1 = FixedConnection(bf, l1)
-        bf_root_r1 = FixedConnection(bf, r1)
+        c_l1_l2 = PrismaticConnection(parent=l1, child=l2, dof=dof, axis=UnitVector(1, 0, 0))
+        c_r1_r2 = RevoluteConnection(parent=r1, child=r2, dof=dof, axis=UnitVector(0, 0, 1))
+        bf_root_l1 = FixedConnection(parent=bf, child=l1)
+        bf_root_r1 = FixedConnection(parent=bf, child=r1)
         world.add_connection(c_l1_l2)
         world.add_connection(c_r1_r2)
         world.add_connection(bf_root_l1)
@@ -276,3 +278,11 @@ def test_compute_relative_pose_only_rotation(world_setup):
                               [0., 0., 0., 1.]])
 
     np.testing.assert_array_almost_equal(relative_pose, expected_pose)
+
+def test_add_view(world_setup):
+    world, l1, l2, bf, r1, r2 = world_setup
+    v = View(name=PrefixedName('muh'))
+    world.add_view(v)
+    with pytest.raises(ValueError):
+        world.add_view(v)
+    assert world.get_view_by_name(v.name) == v

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from ormatic.dao import AlternativeMapping
 
@@ -77,7 +77,7 @@ class RotationMatrixMapping(AlternativeMapping[RotationMatrix]):
 @dataclass
 class TransformationMatrixMapping(AlternativeMapping[TransformationMatrix]):
     reference_frame: PrefixedName
-    child_frame: PrefixedName
+    child_frame: Optional[PrefixedName]
     position: Point3
     rotation: Quaternion
 
