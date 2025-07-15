@@ -104,10 +104,6 @@ class Mesh(Shape):
     """
     Scale of the mesh.
     """
-    hash = id
-    """
-    Set the hash of this file to the id of the object.
-    """
 
     @cached_property
     def mesh(self) -> trimesh.Trimesh:
@@ -143,10 +139,6 @@ class Sphere(Primitive):
     """
     Radius of the sphere.
     """
-    hash = id
-    """
-    Set the hash of this file to the id of the object.
-    """
 
     @property
     def mesh(self) -> trimesh.Trimesh:
@@ -171,10 +163,6 @@ class Cylinder(Primitive):
     width: float = 0.5
     height: float = 0.5
 
-    hash = id
-    """
-    Set the hash of this file to the id of the object.
-    """
     @property
     def mesh(self) -> trimesh.Trimesh:
         """
@@ -201,11 +189,6 @@ class Box(Primitive):
     A box shape. Pivot point is at the center of the box.
     """
     scale: Scale = field(default_factory=Scale)
-
-    hash = id
-    """
-    Set the hash of this file to the id of the object.
-    """
 
     @property
     def mesh(self) -> trimesh.Trimesh:
