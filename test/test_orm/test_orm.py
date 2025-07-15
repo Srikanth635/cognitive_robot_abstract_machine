@@ -44,10 +44,6 @@ class ORMTest(unittest.TestCase):
     def test_table_world(self):
         world_dao: WorldMappingDAO = to_dao(self.table_world)
 
-        for body in world_dao.bodies:
-            for collision in body.collision:
-                print(collision.origin)
-
         self.session.add(world_dao)
         self.session.commit()
 
@@ -76,3 +72,5 @@ class ORMTest(unittest.TestCase):
         self.session.commit()
         result = self.session.scalar(select(ShapeDAO))
         self.assertIsInstance(result, BoxDAO)
+
+        box = result.from_dao()
