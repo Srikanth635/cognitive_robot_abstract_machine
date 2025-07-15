@@ -6,35 +6,26 @@ defaults:
 
 on:
   push:
-    branches:
-      - main
-      - docker
+    branches: [main, docker]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
-  deploy-book:
+  build-book:
     runs-on: ubuntu-latest
     container:
-      image: "pycram/semantic_world:jazzy"
-    permissions:
-      pages: write
-      id-token: write
-    env:
-      ACTIONS_ID_TOKEN_REQUEST_URL: $ACTIONS_ID_TOKEN_REQUEST_URL
-      ACTIONS_ID_TOKEN_REQUEST_TOKEN: $ACTIONS_ID_TOKEN_REQUEST_TOKEN
+      image: pycram/semantic_world:jazzy
     steps:
       - uses: actions/checkout@v4
         with:
-          path: "ros/src/semantic_world"
+          path: ros/src/semantic_world
           repository: ${{ github.repository }}
           ref: ${{ github.ref }}
-          submodules: 'false'
+          submodules: false
 
       - name: Update semantic_world source files
         run: |
-          rm -rf /opt/ros/overlay_ws/src/semantic_world/* 
+          rm -rf /opt/ros/overlay_ws/src/semantic_world/*
           cd /opt/ros/overlay_ws/src/semantic_world
           rm -rf .git .github .gitignore .gitmodules .readthedocs.yaml
           cp -r /__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}/ros/src/semantic_world /opt/ros/overlay_ws/src
@@ -43,10 +34,13 @@ jobs:
         run: |
           sudo apt-get update
           cd /opt/ros/overlay_ws/src/semantic_world
-          source ../semantic_world-venv/bin/activate    
-          pip install -U pip && pip install -r requirements.txt && pip install . && pip install -r doc/requirements.txt
+          source ../semantic_world-venv/bin/activate
+          pip install -U pip && \
+          pip install -r requirements.txt && \
+          pip install . && \
+          pip install -r doc/requirements.txt
 
-      - name: cache executed notebooks
+      - name: Cache executed notebooks
         uses: actions/cache@v4
         with:
           path: doc/_build/.jupyter_cache
@@ -55,14 +49,22 @@ jobs:
       - name: Build the book
         run: |
           cd /opt/ros/overlay_ws/src/semantic_world
-          source ../semantic_world-venv/bin/activate 
+          source ../semantic_world-venv/bin/activate
           jupyter-book build doc
 
-      - name: Upload artifact
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "/opt/ros/overlay_ws/src/semantic_world/doc/_build/html"
+          path: /opt/ros/overlay_ws/src/semantic_world/doc/_build/html
 
+  deploy:
+    needs: build-book
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read      # required by Pages
+      pages:    write     # allow publishing
+      id-token: write     # enable OIDC for deploy-pages
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
