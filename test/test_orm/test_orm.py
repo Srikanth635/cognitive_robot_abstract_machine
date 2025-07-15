@@ -53,6 +53,7 @@ class ORMTest(unittest.TestCase):
         connections_from_db = self.session.scalars(select(ConnectionDAO)).all()
         self.assertEqual(len(connections_from_db), len(self.table_world.connections))
 
+
     def test_insert(self):
         reference_frame = PrefixedName("reference_frame", "world")
         child_frame = PrefixedName("child_frame", "world")

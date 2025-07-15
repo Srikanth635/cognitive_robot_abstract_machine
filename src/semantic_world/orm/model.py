@@ -21,6 +21,19 @@ class WorldMapping(AlternativeMapping[World]):
     def create_instance(cls, obj: World):
         return cls(obj.bodies, obj.connections, obj.views)
 
+    def create_from_dao(self) -> World:
+        result = World()
+
+        with result.modify_world():
+            for body in self.bodies:
+                result.add_body(body)
+            for connection in self.connections:
+                result.add_connection(connection)
+            for view in self.views:
+                result.add_view(view)
+
+        return result
+
 
 @dataclass
 class Vector3Mapping(AlternativeMapping[Vector3]):
