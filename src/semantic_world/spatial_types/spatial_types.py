@@ -7,12 +7,13 @@ from collections import defaultdict
 from copy import copy
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Union, TypeVar
+from typing import Union, TypeVar, TYPE_CHECKING
 
 import casadi as ca
 import numpy as np
 
-from ..prefixed_name import PrefixedName
+if TYPE_CHECKING:
+    from ..world_entity import Body
 
 builtin_max = builtins.max
 builtin_min = builtins.min
@@ -24,7 +25,7 @@ pi = ca.pi
 
 @dataclass
 class ReferenceFrameMixin:
-    reference_frame: PrefixedName
+    reference_frame: Body
 
 
 class StackedCompiledFunction:
