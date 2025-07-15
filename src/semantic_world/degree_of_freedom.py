@@ -80,7 +80,7 @@ class DegreeOfFreedom(WorldEntity):
     @lru_cache(maxsize=None)
     def get_lower_limit(self, derivative: Derivatives) -> Optional[float]:
         if derivative in self._lower_limits and derivative in self._lower_limits_overwrite:
-            lower_limit = cas.max(self._lower_limits[derivative], self._lower_limits_overwrite[derivative])
+            lower_limit = max(self._lower_limits[derivative], self._lower_limits_overwrite[derivative])
         elif derivative in self._lower_limits:
             lower_limit = self._lower_limits[derivative]
         elif derivative in self._lower_limits_overwrite:
@@ -92,7 +92,7 @@ class DegreeOfFreedom(WorldEntity):
     @lru_cache(maxsize=None)
     def get_upper_limit(self, derivative: Derivatives) -> Optional[float]:
         if derivative in self._upper_limits and derivative in self._upper_limits_overwrite:
-            upper_limit = cas.min(self._upper_limits[derivative], self._upper_limits_overwrite[derivative])
+            upper_limit = min(self._upper_limits[derivative], self._upper_limits_overwrite[derivative])
         elif derivative in self._upper_limits:
             upper_limit = self._upper_limits[derivative]
         elif derivative in self._upper_limits_overwrite:
