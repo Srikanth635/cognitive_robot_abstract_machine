@@ -8,6 +8,7 @@ from sqlalchemy import create_engine, select, text
 from sqlalchemy.orm import Session
 
 from semantic_world.adapters.urdf import URDFParser
+from semantic_world.connections import RevoluteConnection
 from semantic_world.geometry import Shape, Box, Scale, Color
 from semantic_world.orm.model import WorldMapping
 from semantic_world.prefixed_name import PrefixedName
