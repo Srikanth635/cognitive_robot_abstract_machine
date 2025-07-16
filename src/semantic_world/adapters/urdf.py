@@ -6,7 +6,7 @@ from urdf_parser_py import urdf
 
 from ..connections import RevoluteConnection, PrismaticConnection, FixedConnection, UnitVector
 from ..prefixed_name import PrefixedName
-from ..spatial_types.derivatives import Derivatives
+from ..spatial_types.derivatives import Derivatives, DerivativeMap
 from ..spatial_types.spatial_types import TransformationMatrix
 from ..utils import suppress_stdout_stderr, hacky_urdf_parser_fix
 from ..world import World, Body, Connection
@@ -21,24 +21,24 @@ connection_type_map = {  # 'unknown': JointType.UNKNOWN,
     'fixed': FixedConnection}
 
 
-def urdf_joint_to_limits(urdf_joint: urdf.Joint) -> Tuple[Dict[Derivatives, float], Dict[Derivatives, float]]:
-    lower_limits = {}
-    upper_limits = {}
+def urdf_joint_to_limits(urdf_joint: urdf.Joint) -> Tuple[DerivativeMap[float], DerivativeMap[float]]:
+    lower_limits = DerivativeMap()
+    upper_limits = DerivativeMap()
     if not urdf_joint.type == 'continuous':
         try:
-            lower_limits[Derivatives.position] = max(urdf_joint.safety_controller.soft_lower_limit,
+            lower_limits.position = max(urdf_joint.safety_controller.soft_lower_limit,
                                                      urdf_joint.limit.lower)
-            upper_limits[Derivatives.position] = min(urdf_joint.safety_controller.soft_upper_limit,
+            upper_limits.position = min(urdf_joint.safety_controller.soft_upper_limit,
                                                      urdf_joint.limit.upper)
         except AttributeError:
             try:
-                lower_limits[Derivatives.position] = urdf_joint.limit.lower
-                upper_limits[Derivatives.position] = urdf_joint.limit.upper
+                lower_limits.position = urdf_joint.limit.lower
+                upper_limits.position = urdf_joint.limit.upper
             except AttributeError:
                 pass
     try:
-        lower_limits[Derivatives.velocity] = -urdf_joint.limit.velocity
-        upper_limits[Derivatives.velocity] = urdf_joint.limit.velocity
+        lower_limits.velocity = -urdf_joint.limit.velocity
+        upper_limits.velocity = urdf_joint.limit.velocity
     except AttributeError:
         pass
     if urdf_joint.mimic is not None:
@@ -51,12 +51,12 @@ def urdf_joint_to_limits(urdf_joint: urdf.Joint) -> Tuple[Dict[Derivatives, floa
         else:
             offset = 0
         for d2 in Derivatives.range(Derivatives.position, Derivatives.velocity):
-            lower_limits[d2] -= offset
-            upper_limits[d2] -= offset
+            lower_limits.data[d2] -= offset
+            upper_limits.data[d2] -= offset
             if multiplier < 0:
-                upper_limits[d2], lower_limits[d2] = lower_limits[d2], upper_limits[d2]
-            upper_limits[d2] /= multiplier
-            lower_limits[d2] /= multiplier
+                upper_limits.data[d2], lower_limits.data[d2] = lower_limits.data[d2], upper_limits.data[d2]
+            upper_limits.data[d2] /= multiplier
+            lower_limits.data[d2] /= multiplier
     return lower_limits, upper_limits
 
 

@@ -6,6 +6,7 @@ from ormatic.dao import AlternativeMapping, T
 from ..degree_of_freedom import DegreeOfFreedom
 from ..prefixed_name import PrefixedName
 from ..spatial_types import RotationMatrix, Vector3, Point3, TransformationMatrix
+from ..spatial_types.derivatives import DerivativeMap
 from ..spatial_types.spatial_types import Quaternion
 from ..spatial_types.symbol_manager import symbol_manager
 from ..world import World, Body
@@ -34,7 +35,7 @@ class WorldMapping(AlternativeMapping[World]):
             for view in self.views:
                 result.add_view(view)
             for dof in self.degrees_of_freedom:
-                result.create_degree_of_freedom(name=dof.name, lower_limits=dof._lower_limits, upper_limits=dof._upper_limits)
+                result.create_degree_of_freedom(name=dof.name, lower_limits=dof.lower_limits, upper_limits=dof.upper_limits)
                 result.degrees_of_freedom[dof.name] = dof
 
         return result
@@ -123,3 +124,18 @@ class TransformationMatrixMapping(AlternativeMapping[TransformationMatrix]):
             point=self.position,
             rotation_matrix=RotationMatrix.from_quaternion(self.rotation), reference_frame=self.reference_frame,
             child_frame=self.child_frame,)
+
+@dataclass
+class DegreeOfFreedomMapping(AlternativeMapping[DegreeOfFreedom]):
+    name: PrefixedName
+    lower_limits: List[float]
+    upper_limits: List[float]
+
+    @classmethod
+    def create_instance(cls, obj: DegreeOfFreedom):
+        return cls(name=obj.name, lower_limits=obj.lower_limits.data, upper_limits=obj.upper_limits.data)
+
+    def create_from_dao(self) -> DegreeOfFreedom:
+        lower_limits = DerivativeMap(data=self.lower_limits)
+        upper_limits = DerivativeMap(data=self.upper_limits)
+        return DegreeOfFreedom(name=self.name, lower_limits=lower_limits, upper_limits=upper_limits)
