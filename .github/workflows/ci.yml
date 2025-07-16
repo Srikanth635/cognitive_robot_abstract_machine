@@ -42,6 +42,6 @@ jobs:
 
     - name: Run tests
       run: |
-        cd /opt/ros/overlay_ws/src/semantic_world
-        source ../semantic_world-venv/bin/activate 
+        source /opt/ros/overlay_ws/install/setup.bash
+        source /opt/ros/overlay_ws/src/semantic_world-venv/bin/activate
         python -m pytest -v test/
