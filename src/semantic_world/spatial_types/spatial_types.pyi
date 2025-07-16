@@ -24,7 +24,7 @@ pi: float
 def _operation_type_error(arg1: object, operation: str, arg2: object) -> TypeError: ...
 
 class ReferenceFrameMixin:
-    reference_frame: Body
+    reference_frame: Optional[Body]
 
 
 class StackedCompiledFunction:
