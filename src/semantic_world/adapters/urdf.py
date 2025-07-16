@@ -144,13 +144,13 @@ class URDFParser:
             else:
                 offset = 0
 
-            free_variable_name = PrefixedName(joint.mimic.joint)
+            dof_name = PrefixedName(joint.mimic.joint)
         else:
-            free_variable_name = PrefixedName(joint.name)
+            dof_name = PrefixedName(joint.name)
 
-        if free_variable_name in world.degrees_of_freedom:
-            dof = world.degrees_of_freedom[free_variable_name]
-        else:
+        try:
+            dof = world.get_degree_of_freedom_by_name(dof_name)
+        except KeyError as e:
             dof = world.create_degree_of_freedom(name=PrefixedName(joint.name),
                                                  lower_limits=lower_limits, upper_limits=upper_limits)
 
