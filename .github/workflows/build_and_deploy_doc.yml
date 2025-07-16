@@ -70,11 +70,13 @@ jobs:
 
     # Upload the book's HTML as an artifact
     - name: Upload artifact
+      if: github.event_name == 'push'
       uses: actions/upload-pages-artifact@v3
       with:
         path: "/opt/ros/overlay_ws/src/semantic_world/doc/_build/html"
 
     # Deploy the book's HTML to GitHub Pages
     - name: Deploy to GitHub Pages
+      if: github.event_name == 'push'
       id: deployment
       uses: actions/deploy-pages@v4
