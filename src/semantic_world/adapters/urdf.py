@@ -225,6 +225,28 @@ class URDFParser:
             elif isinstance(geom.geometry, urdf.Mesh):
                 if geom.geometry.filename is None:
                     raise ValueError("Mesh geometry must have a filename.")
-                res.append(Mesh(origin=origin_transform, filename=geom.geometry.filename,
+                res.append(Mesh(origin=origin_transform, filename=self.parse_file_path(geom.geometry.filename),
                                 scale=Scale(*(geom.geometry.scale or (1, 1, 1)))))
         return res
+
+    @staticmethod
+    def parse_file_path(file_path: str) -> str:
+        """
+        Parses a file path which contains a ros package to a path in the local file system.
+        :param file_path: The path to the URDF file.
+        :return: The parsed and processed file path.
+        """
+        if "package://" in file_path:
+            try:
+                from ament_index_python.packages import get_package_share_directory
+            except ImportError:
+                raise ImportError("No ROS install found while the URDF file contains references to ROS packages. ")
+            # Splits the file path at '//' to get the package  and the rest of the path
+            package_split = file_path.split('//')
+            # Splits the path after the // to get the package name and the rest of the path
+            package_name = package_split[1].split('/')[0]
+            package_path = get_package_share_directory(package_name)
+            file_path = file_path.replace("package://" + package_name, package_path)
+        if 'file://' in file_path:
+            file_path = file_path.replace("file://", './')
+        return file_path
