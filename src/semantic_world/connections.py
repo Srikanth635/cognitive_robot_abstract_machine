@@ -179,6 +179,8 @@ class PrismaticConnection(ActiveConnection, Has1DOFState):
                                                                y=translation_axis[1],
                                                                z=translation_axis[2])
         self.origin_expression = self.origin_expression.dot(parent_T_child)
+        self.origin_expression.reference_frame = self.parent
+        self.origin_expression.child_frame = self.child
 
     def __hash__(self):
         return hash((self.parent, self.child))
@@ -229,6 +231,8 @@ class RevoluteConnection(ActiveConnection, Has1DOFState):
         rotation_axis = cas.Vector3(self.axis)
         parent_R_child = cas.RotationMatrix.from_axis_angle(rotation_axis, motor_expression)
         self.origin_expression = self.origin_expression.dot(cas.TransformationMatrix(parent_R_child))
+        self.origin_expression.reference_frame = self.parent
+        self.origin_expression.child_frame = self.child
 
     def __hash__(self):
         return hash((self.parent, self.child))
@@ -381,6 +385,8 @@ class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
                                                             pitch=self.pitch.symbols.position,
                                                             yaw=0)
         self.origin_expression = odom_T_bf.dot(bf_T_bf_vel).dot(bf_vel_T_bf)
+        self.origin_expression.reference_frame = self.parent
+        self.origin_expression.child_frame = self.child
 
     def update_state(self, dt: float) -> None:
         state = self._world.state

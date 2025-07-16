@@ -185,14 +185,7 @@ class URDFParser:
                                  [material.color.rgba if material.color else None for material in
                                   self.parsed.materials]))
         for i, geom in enumerate(geometry):
-            params = (*(geom.origin.xyz + geom.origin.rpy), parent_frame,
-                      PrefixedName(geom.__class__.__name__ + str(i), parent_frame.prefix)) if geom.origin else (0, 0, 0,
-                                                                                                                0, 0, 0,
-                                                                                                                parent_frame,
-                                                                                                                PrefixedName(
-                                                                                                                    geom.__class__.__name__ + str(
-                                                                                                                        i),
-                                                                                                                    parent_frame.prefix))
+            params = (*(geom.origin.xyz + geom.origin.rpy),) if geom.origin else (0, 0, 0, 0, 0, 0,)
             origin_transform = TransformationMatrix.from_xyz_rpy(*params)
             if isinstance(geom.geometry, urdf.Box):
                 color = Color(*material_dict.get(geom.material.name,

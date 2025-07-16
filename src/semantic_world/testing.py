@@ -74,6 +74,25 @@ def world_setup_simple():
         world.add_connection(c_root_body4)
     return world, body1, body2, body3, body4
 
+
+@pytest.fixture
+def two_arm_robot_world():
+    urdf_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "resources", "urdf")
+    robot = os.path.join(urdf_dir, "simple_two_arm_robot.urdf")
+    world = World()
+    with world.modify_world():
+        localization_body = Body(name=PrefixedName('odom_combined'))
+        world.add_body(localization_body)
+
+        robot_parser = URDFParser(robot)
+        world_with_robot = robot_parser.parse()
+        # world_with_pr2.plot_kinematic_structure()
+        root = world_with_robot.root
+        world.merge_world(world_with_robot)
+        c_root_bf = OmniDrive(parent=localization_body, child=root, _world=world)
+        world.add_connection(c_root_bf)
+    return world
+
 @pytest.fixture
 def pr2_world():
     urdf_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "resources", "urdf")
