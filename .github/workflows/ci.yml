@@ -25,7 +25,7 @@ jobs:
         cd /opt/ros/overlay_ws/src/semantic_world
         rm -rf .git .github .gitignore .gitmodules .readthedocs.yaml
         cp -r /__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}/ros/src/semantic_world /opt/ros/overlay_ws/src
-    
+
     - name: Install dependencies
       run: |
         sudo apt-get update
