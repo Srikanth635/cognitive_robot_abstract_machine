@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Dict, Any, Optional
+from typing import List, Optional
 
 from ormatic.dao import AlternativeMapping, T
 
@@ -42,7 +42,7 @@ class WorldMapping(AlternativeMapping[World]):
 
 @dataclass
 class Vector3Mapping(AlternativeMapping[Vector3]):
-    reference_frame: PrefixedName
+    reference_frame: Optional[Body]
 
     x: float
     y: float
@@ -59,7 +59,7 @@ class Vector3Mapping(AlternativeMapping[Vector3]):
 
 @dataclass
 class Point3Mapping(AlternativeMapping[Point3]):
-    reference_frame: PrefixedName
+    reference_frame: Optional[Body]
 
     x: float
     y: float
@@ -76,7 +76,7 @@ class Point3Mapping(AlternativeMapping[Point3]):
 
 @dataclass
 class QuaternionMapping(AlternativeMapping[Quaternion]):
-    reference_frame: PrefixedName
+    reference_frame: Optional[Body]
     x: float
     y: float
     z: float
@@ -93,7 +93,7 @@ class QuaternionMapping(AlternativeMapping[Quaternion]):
 
 @dataclass
 class RotationMatrixMapping(AlternativeMapping[RotationMatrix]):
-    reference_frame: PrefixedName
+    reference_frame: Optional[Body]
     rotation: Quaternion
 
     @classmethod
@@ -105,8 +105,8 @@ class RotationMatrixMapping(AlternativeMapping[RotationMatrix]):
 
 @dataclass
 class TransformationMatrixMapping(AlternativeMapping[TransformationMatrix]):
-    reference_frame: PrefixedName
-    child_frame: Optional[PrefixedName]
+    reference_frame: Optional[Body]
+    child_frame: Optional[Body]
     position: Point3
     rotation: Quaternion
 

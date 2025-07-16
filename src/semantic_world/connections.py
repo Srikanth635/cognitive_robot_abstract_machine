@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Tuple, Optional
+from typing import List, Tuple
 
 import numpy as np
 
@@ -11,8 +11,9 @@ from .degree_of_freedom import DegreeOfFreedom
 from .prefixed_name import PrefixedName
 from .spatial_types.derivatives import Derivatives
 from .spatial_types.math import quaternion_from_rotation_matrix
-from .world_entity import Connection
 from .types import NpMatrix4x4
+from .world_entity import Connection
+
 
 class Has1DOFState:
     """
@@ -168,7 +169,7 @@ class PrismaticConnection(ActiveConnection, Has1DOFState):
         else:
             self.offset = self.offset
         self.axis = self.axis
-        self.dof = self.dof or self._world.create_degree_of_freedom(name=PrefixedName(self.name))
+        self.dof = self.dof or self._world.create_degree_of_freedom(name=PrefixedName(str(self.name)))
         self.active_dofs = [self.dof]
 
         motor_expression = self.dof.get_symbol(Derivatives.position) * self.multiplier + self.offset
@@ -220,7 +221,7 @@ class RevoluteConnection(ActiveConnection, Has1DOFState):
         else:
             self.offset = self.offset
         self.axis = self.axis
-        self.dof = self.dof or self._world.create_degree_of_freedom(name=PrefixedName(self.name))
+        self.dof = self.dof or self._world.create_degree_of_freedom(name=PrefixedName(str(self.name)))
         self.active_dofs = [self.dof]
 
         motor_expression = self.dof.get_symbol(Derivatives.position) * self.multiplier + self.offset
@@ -262,13 +263,13 @@ class Connection6DoF(PassiveConnection):
 
     def __post_init__(self):
         super().__post_init__()
-        self.x = self.x or self._world.create_degree_of_freedom(name=PrefixedName('x', self.name))
-        self.y = self.y or self._world.create_degree_of_freedom(name=PrefixedName('y', self.name))
-        self.z = self.z or self._world.create_degree_of_freedom(name=PrefixedName('z', self.name))
-        self.qx = self.qx or self._world.create_degree_of_freedom(name=PrefixedName('qx', self.name))
-        self.qy = self.qy or self._world.create_degree_of_freedom(name=PrefixedName('qy', self.name))
-        self.qz = self.qz or self._world.create_degree_of_freedom(name=PrefixedName('qz', self.name))
-        self.qw = self.qw or self._world.create_degree_of_freedom(name=PrefixedName('qw', self.name))
+        self.x = self.x or self._world.create_degree_of_freedom(name=PrefixedName('x', str(self.name)))
+        self.y = self.y or self._world.create_degree_of_freedom(name=PrefixedName('y', str(self.name)))
+        self.z = self.z or self._world.create_degree_of_freedom(name=PrefixedName('z', str(self.name)))
+        self.qx = self.qx or self._world.create_degree_of_freedom(name=PrefixedName('qx', str(self.name)))
+        self.qy = self.qy or self._world.create_degree_of_freedom(name=PrefixedName('qy', str(self.name)))
+        self.qz = self.qz or self._world.create_degree_of_freedom(name=PrefixedName('qz', str(self.name)))
+        self.qw = self.qw or self._world.create_degree_of_freedom(name=PrefixedName('qw', str(self.name)))
         self.passive_dofs = [self.x, self.y, self.z, self.qx, self.qy, self.qz, self.qw]
 
         self._world.state[self.qw.name].position = 1.
@@ -281,8 +282,8 @@ class Connection6DoF(PassiveConnection):
                                          self.qw.get_symbol(Derivatives.position))).to_rotation_matrix()
         self.origin_expression = cas.TransformationMatrix.from_point_rotation_matrix(point=parent_P_child,
                                                                           rotation_matrix=parent_R_child,
-                                                                          reference_frame=self.parent.name,
-                                                                          child_frame=self.child.name)
+                                                                          reference_frame=self.parent,
+                                                                          child_frame=self.child)
 
     @property
     def origin(self) -> NpMatrix4x4:

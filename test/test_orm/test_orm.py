@@ -58,17 +58,15 @@ class ORMTest(unittest.TestCase):
 
 
     def test_insert(self):
-        reference_frame = PrefixedName("reference_frame", "world")
-        child_frame = PrefixedName("child_frame", "world")
-        origin = TransformationMatrix.from_xyz_rpy(1, 2, 3, 1, 2, 3, reference_frame=reference_frame,
-                                                   child_frame=child_frame)
+        b1 = Body(
+            name=PrefixedName("b1"),
+        )
+        origin = TransformationMatrix.from_xyz_rpy(1, 2, 3, 1, 2, 3, reference_frame=b1,
+                                                   child_frame=None)
         scale = Scale(1., 1., 1.)
         color = Color(0., 1., 1.)
         shape1 = Box(origin=origin, scale=scale, color=color)
-        b1 = Body(
-            name=PrefixedName("b1"),
-            collision=[shape1]
-        )
+        b1.collision.append(shape1)
 
         dao: BodyDAO = to_dao(b1)
 

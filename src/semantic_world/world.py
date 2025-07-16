@@ -741,8 +741,8 @@ class World:
             fk = fk.dot(tip_T_root)
         for connection in tip_chain:
             fk = fk.dot(connection.origin_expression)
-        fk.reference_frame = root.name
-        fk.child_frame = tip.name
+        fk.reference_frame = root
+        fk.child_frame = tip
         return fk
 
     def compute_forward_kinematics_np(self, root: Body, tip: Body) -> NpMatrix4x4:
