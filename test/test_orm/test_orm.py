@@ -42,6 +42,7 @@ class ORMTest(unittest.TestCase):
         self.session.close()
 
     def test_table_world(self):
+        #TODO tom: AttributeError: 'DegreeOfFreedomMapping' object has no attribute '_sa_instance_state'
         world_dao: WorldMappingDAO = to_dao(self.table_world)
 
         self.session.add(world_dao)
@@ -74,4 +75,5 @@ class ORMTest(unittest.TestCase):
         result = self.session.scalar(select(ShapeDAO))
         self.assertIsInstance(result, BoxDAO)
 
+        # TODO tom: when the body is initialized, it gets None as input param for collision and can't set its ref frame
         box = result.from_dao()
