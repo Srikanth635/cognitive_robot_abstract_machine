@@ -5,7 +5,7 @@ repositories:
     version: ros-jazzy
   semantic_world:
     type: git
-    url: git@github.com:LucaKro/semantic_world.git
+    url: git@github.com:cram2/semantic_world.git
     version: main
   iai_pr2:
     type: git

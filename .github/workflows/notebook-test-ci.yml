@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - docker
   pull_request:
     branches:
       - main
@@ -19,7 +18,7 @@ defaults:
 jobs:
   test-and-build:
     name: Test Jupyter Notebooks
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     container:
       image: "pycram/semantic_world:jazzy"
 
