@@ -8,7 +8,7 @@ from .connections import Connection6DoF, PrismaticConnection, RevoluteConnection
 from .geometry import Box, Scale, Sphere
 from .prefixed_name import PrefixedName
 from .spatial_types import TransformationMatrix
-from .spatial_types.derivatives import Derivatives
+from .spatial_types.derivatives import Derivatives, DerivativeMap
 from .world import World
 from .world_entity import Body
 
@@ -24,8 +24,12 @@ def world_setup() -> Tuple[World, Body, Body, Body, Body, Body]:
 
     with world.modify_world():
         [world.add_body(b) for b in [root, l1, l2, bf, r1, r2]]
-        dof = world.create_degree_of_freedom(name=PrefixedName('dof'), lower_limits={Derivatives.velocity: -1},
-                                             upper_limits={Derivatives.velocity: 1})
+        lower_limits = DerivativeMap()
+        lower_limits.velocity = -1
+        upper_limits = DerivativeMap()
+        upper_limits.velocity = 1
+        dof = world.create_degree_of_freedom(name=PrefixedName('dof'), lower_limits=lower_limits,
+                                             upper_limits=upper_limits)
 
         c_l1_l2 = PrismaticConnection(parent=l1, child=l2, dof=dof, axis=UnitVector(1, 0, 0))
         c_r1_r2 = RevoluteConnection(parent=r1, child=r2, dof=dof, axis=UnitVector(0, 0, 1))
