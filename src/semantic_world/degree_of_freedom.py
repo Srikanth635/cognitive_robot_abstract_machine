@@ -13,6 +13,14 @@ from .world_entity import WorldEntity
 
 
 @dataclass
+class AnnotatedDerivative:
+    """
+    TODO: Simon will make a good datastrucute here.
+    """
+    derivative: Derivatives
+    value: float
+
+@dataclass
 class DegreeOfFreedom(WorldEntity):
     """
     A class representing a degree of freedom in a world model with associated derivatives and limits.

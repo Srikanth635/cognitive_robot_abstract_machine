@@ -3,6 +3,7 @@ from typing import List, Dict, Any, Optional
 
 from ormatic.dao import AlternativeMapping, T
 
+from ..degree_of_freedom import DegreeOfFreedom
 from ..prefixed_name import PrefixedName
 from ..spatial_types import RotationMatrix, Vector3, Point3, TransformationMatrix
 from ..spatial_types.spatial_types import Quaternion
@@ -16,10 +17,11 @@ class WorldMapping(AlternativeMapping[World]):
     bodies: List[Body]
     connections: List[Connection]
     views: List[View]
+    degrees_of_freedom: List[DegreeOfFreedom]
 
     @classmethod
     def create_instance(cls, obj: World):
-        return cls(obj.bodies, obj.connections, obj.views)
+        return cls(obj.bodies, obj.connections, obj.views, list(obj.degrees_of_freedom.values()))
 
     def create_from_dao(self) -> World:
         result = World()
@@ -31,6 +33,9 @@ class WorldMapping(AlternativeMapping[World]):
                 result.add_connection(connection)
             for view in self.views:
                 result.add_view(view)
+            for dof in self.degrees_of_freedom:
+                result.create_degree_of_freedom(name=dof.name, lower_limits=dof._lower_limits, upper_limits=dof._upper_limits)
+                result.degrees_of_freedom[dof.name] = dof
 
         return result
 
