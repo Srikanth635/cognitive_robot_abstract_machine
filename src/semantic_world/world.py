@@ -494,6 +494,18 @@ class World:
         connection = partial_connection or Connection6DoF(parent=self_root, child=other_root, _world=self)
         self.add_connection(connection)
 
+    def merge_world_with_pose(self, other: World, pose: NpMatrix4x4) -> None:
+        """
+        Merge another world into the existing one, creates a 6DoF connection between the root of this world and the root
+        of the other world.
+        :param other: The world to be added.
+        :param pose: The pose of the other world in this world's coordinate system.
+        """
+        root_connection = Connection6DoF(parent=self.root, child=other.root, _world=self)
+        root_connection.origin = pose
+        self.merge_world(other, root_connection)
+        self.add_connection(root_connection)
+
     def __str__(self):
         return f"{self.__class__.__name__} with {len(self.bodies)} bodies."
 
