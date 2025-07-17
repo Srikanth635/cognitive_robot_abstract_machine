@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import numpy as np
 
@@ -12,47 +12,49 @@ from .prefixed_name import PrefixedName
 from .spatial_types.derivatives import Derivatives
 from .spatial_types.math import quaternion_from_rotation_matrix
 from .world_entity import Connection
-
+from .types import NpMatrix4x4
 
 class Has1DOFState:
     """
     Mixin class that implements state access for connections with 1 degree of freedom.
     """
 
+    dof: DegreeOfFreedom
+
     @property
     def position(self) -> float:
-        return self._world.state[Derivatives.position, self.dof.state_idx]
+        return self._world.state[self.dof.name].position
 
     @position.setter
     def position(self, value: float) -> None:
-        self._world.state[Derivatives.position, self.dof.state_idx] = value
+        self._world.state[self.dof.name].position = value
         self._world.notify_state_change()
 
     @property
     def velocity(self) -> float:
-        return self._world.state[Derivatives.velocity, self.dof.state_idx]
+        return self._world.state[self.dof.name].velocity
 
     @velocity.setter
     def velocity(self, value: float) -> None:
-        self._world.state[Derivatives.velocity, self.dof.state_idx] = value
+        self._world.state[self.dof.name].velocity = value
         self._world.notify_state_change()
 
     @property
     def acceleration(self) -> float:
-        return self._world.state[Derivatives.acceleration, self.dof.state_idx]
+        return self._world.state[self.dof.name].acceleration
 
     @acceleration.setter
     def acceleration(self, value: float) -> None:
-        self._world.state[Derivatives.acceleration, self.dof.state_idx] = value
+        self._world.state[self.dof.name].acceleration = value
         self._world.notify_state_change()
 
     @property
     def jerk(self) -> float:
-        return self._world.state[Derivatives.jerk, self.dof.state_idx]
+        return self._world.state[self.dof.name].jerk
 
     @jerk.setter
     def jerk(self, value: float) -> None:
-        self._world.state[Derivatives.jerk, self.dof.state_idx] = value
+        self._world.state[self.dof.name].jerk = value
         self._world.notify_state_change()
 
 
@@ -259,6 +261,7 @@ class Connection6DoF(PassiveConnection):
     """
 
     def __post_init__(self):
+        super().__post_init__()
         self.x = self.x or self._world.create_degree_of_freedom(name=PrefixedName('x', self.name))
         self.y = self.y or self._world.create_degree_of_freedom(name=PrefixedName('y', self.name))
         self.z = self.z or self._world.create_degree_of_freedom(name=PrefixedName('z', self.name))
@@ -268,7 +271,7 @@ class Connection6DoF(PassiveConnection):
         self.qw = self.qw or self._world.create_degree_of_freedom(name=PrefixedName('qw', self.name))
         self.passive_dofs = [self.x, self.y, self.z, self.qx, self.qy, self.qz, self.qw]
 
-        self._world.state[Derivatives.position][self.qw.state_idx] = 1.
+        self._world.state[self.qw.name].position = 1.
         parent_P_child = cas.Point3((self.x.get_symbol(Derivatives.position),
                                      self.y.get_symbol(Derivatives.position),
                                      self.z.get_symbol(Derivatives.position)))
@@ -282,19 +285,19 @@ class Connection6DoF(PassiveConnection):
                                                                           child_frame=self.child.name)
 
     @property
-    def origin(self) -> np.ndarray:
+    def origin(self) -> NpMatrix4x4:
         return super().origin
 
     @origin.setter
-    def origin(self, transformation: np.ndarray) -> None:
+    def origin(self, transformation: NpMatrix4x4) -> None:
         orientation = quaternion_from_rotation_matrix(transformation)
-        self._world.state[Derivatives.position][self.x.state_idx] = transformation[0, 3]
-        self._world.state[Derivatives.position][self.y.state_idx] = transformation[1, 3]
-        self._world.state[Derivatives.position][self.z.state_idx] = transformation[2, 3]
-        self._world.state[Derivatives.position][self.qx.state_idx] = orientation[0]
-        self._world.state[Derivatives.position][self.qy.state_idx] = orientation[1]
-        self._world.state[Derivatives.position][self.qz.state_idx] = orientation[2]
-        self._world.state[Derivatives.position][self.qw.state_idx] = orientation[3]
+        self._world.state[self.x.name].position = transformation[0, 3]
+        self._world.state[self.y.name].position = transformation[1, 3]
+        self._world.state[self.z.name].position = transformation[2, 3]
+        self._world.state[self.qx.name].position = orientation[0]
+        self._world.state[self.qy.name].position = orientation[1]
+        self._world.state[self.qz.name].position = orientation[2]
+        self._world.state[self.qw.name].position = orientation[3]
         self._world.notify_state_change()
 
 
@@ -331,23 +334,25 @@ class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
     rotation_velocity_limits: float = field(default=0.5)
 
     def __post_init__(self):
-        self.x = self.x or self._world.create_degree_of_freedom(name=PrefixedName('x', self.name))
-        self.y = self.y or self._world.create_degree_of_freedom(name=PrefixedName('y', self.name))
-        self.z = self.z or self._world.create_degree_of_freedom(name=PrefixedName('z', self.name))
+        super().__post_init__()
+        stringified_name = str(self.name)
+        self.x = self.x or self._world.create_degree_of_freedom(name=PrefixedName('x', stringified_name))
+        self.y = self.y or self._world.create_degree_of_freedom(name=PrefixedName('y', stringified_name))
+        self.z = self.z or self._world.create_degree_of_freedom(name=PrefixedName('z', stringified_name))
 
-        self.roll = self.roll or self._world.create_degree_of_freedom(name=PrefixedName('roll', self.name))
-        self.pitch = self.pitch or self._world.create_degree_of_freedom(name=PrefixedName('pitch', self.name))
+        self.roll = self.roll or self._world.create_degree_of_freedom(name=PrefixedName('roll', stringified_name))
+        self.pitch = self.pitch or self._world.create_degree_of_freedom(name=PrefixedName('pitch', stringified_name))
         self.yaw = self.yaw or self._world.create_degree_of_freedom(
-            name=PrefixedName('yaw', self.name),
+            name=PrefixedName('yaw', stringified_name),
             lower_limits={Derivatives.velocity: -self.rotation_velocity_limits},
             upper_limits={Derivatives.velocity: self.rotation_velocity_limits})
 
         self.x_vel = self.x_vel or self._world.create_degree_of_freedom(
-            name=PrefixedName('x_vel', self.name),
+            name=PrefixedName('x_vel', stringified_name),
             lower_limits={Derivatives.velocity: -self.translation_velocity_limits},
             upper_limits={Derivatives.velocity: self.translation_velocity_limits})
         self.y_vel = self.y_vel or self._world.create_degree_of_freedom(
-            name=PrefixedName('y_vel', self.name),
+            name=PrefixedName('y_vel', stringified_name),
             lower_limits={Derivatives.velocity: -self.translation_velocity_limits},
             upper_limits={Derivatives.velocity: self.translation_velocity_limits})
         self.active_dofs = [self.x_vel, self.y_vel, self.yaw]
@@ -368,16 +373,16 @@ class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
 
     def update_state(self, dt: float) -> None:
         state = self._world.state
-        state[Derivatives.position, self.x_vel.state_idx] = 0
-        state[Derivatives.position, self.y_vel.state_idx] = 0
+        state[self.x_vel.name].position = 0
+        state[self.y_vel.name].position = 0
 
-        x_vel = state[Derivatives.velocity, self.x_vel.state_idx]
-        y_vel = state[Derivatives.velocity, self.y_vel.state_idx]
-        delta = state[Derivatives.position, self.yaw.state_idx]
-        state[Derivatives.velocity, self.x.state_idx] = (np.cos(delta) * x_vel - np.sin(delta) * y_vel)
-        state[Derivatives.position, self.x.state_idx] += state[Derivatives.velocity, self.x.state_idx] * dt
-        state[Derivatives.velocity, self.y.state_idx] = (np.sin(delta) * x_vel + np.cos(delta) * y_vel)
-        state[Derivatives.position, self.y.state_idx] += state[Derivatives.velocity, self.y.state_idx] * dt
+        x_vel = state[self.x_vel.name].velocity
+        y_vel = state[self.y_vel.name].velocity
+        delta = state[self.yaw.name].position
+        state[self.x.name].velocity = (np.cos(delta) * x_vel - np.sin(delta) * y_vel)
+        state[self.x.name].position += state[self.x.name].velocity * dt
+        state[self.y.name].velocity = (np.sin(delta) * x_vel + np.cos(delta) * y_vel)
+        state[self.y.name].position += state[self.y.name].velocity * dt
 
     def get_free_variable_names(self) -> List[PrefixedName]:
         return [self.x.name, self.y.name, self.yaw.name]

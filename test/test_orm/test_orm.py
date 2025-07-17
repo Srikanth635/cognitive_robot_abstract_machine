@@ -8,6 +8,7 @@ from sqlalchemy import create_engine, select, text
 from sqlalchemy.orm import Session
 
 from semantic_world.adapters.urdf import URDFParser
+from semantic_world.connections import RevoluteConnection
 from semantic_world.geometry import Shape, Box, Scale, Color
 from semantic_world.orm.model import WorldMapping
 from semantic_world.prefixed_name import PrefixedName
@@ -43,10 +44,6 @@ class ORMTest(unittest.TestCase):
     def test_table_world(self):
         world_dao: WorldMappingDAO = to_dao(self.table_world)
 
-        for body in world_dao.bodies:
-            for collision in body.collision:
-                print(collision.origin)
-
         self.session.add(world_dao)
         self.session.commit()
 
@@ -55,6 +52,10 @@ class ORMTest(unittest.TestCase):
 
         connections_from_db = self.session.scalars(select(ConnectionDAO)).all()
         self.assertEqual(len(connections_from_db), len(self.table_world.connections))
+
+        queried_world = self.session.scalar(select(WorldMappingDAO))
+        reconstructed = queried_world.from_dao()
+
 
     def test_insert(self):
         reference_frame = PrefixedName("reference_frame", "world")
@@ -65,7 +66,7 @@ class ORMTest(unittest.TestCase):
         color = Color(0., 1., 1.)
         shape1 = Box(origin=origin, scale=scale, color=color)
         b1 = Body(
-            PrefixedName("b1"),
+            name=PrefixedName("b1"),
             collision=[shape1]
         )
 
@@ -75,3 +76,5 @@ class ORMTest(unittest.TestCase):
         self.session.commit()
         result = self.session.scalar(select(ShapeDAO))
         self.assertIsInstance(result, BoxDAO)
+
+        box = result.from_dao()

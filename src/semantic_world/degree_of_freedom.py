@@ -13,6 +13,14 @@ from .world_entity import WorldEntity
 
 
 @dataclass
+class AnnotatedDerivative:
+    """
+    TODO: Simon will make a good datastrucute here.
+    """
+    derivative: Derivatives
+    value: float
+
+@dataclass
 class DegreeOfFreedom(WorldEntity):
     """
     A class representing a degree of freedom in a world model with associated derivatives and limits.
@@ -20,11 +28,6 @@ class DegreeOfFreedom(WorldEntity):
     This class manages a variable that can freely change within specified limits, tracking its position,
     velocity, acceleration, and jerk. It maintains symbolic representations for each derivative order
     and provides methods to get and set limits for these derivatives.
-    """
-
-    name: PrefixedName
-    """
-    The identifier for this free variable
     """
 
     _lower_limits: Dict[Derivatives, Optional[float]] = field(default=None)
@@ -39,11 +42,6 @@ class DegreeOfFreedom(WorldEntity):
     Temporary lower and upper bound overwrites
     """
 
-    state_idx: int = field(default=None, init=False)
-    """
-    Index of this variable in the world state
-    """
-
     _derivative_symbols: Dict[Derivatives, cas.Symbol] = field(default_factory=dict, init=False)
     """
     Symbolic representations for each derivative
@@ -52,13 +50,11 @@ class DegreeOfFreedom(WorldEntity):
     def __post_init__(self):
         self._lower_limits = self._lower_limits or defaultdict(lambda: None)
         self._upper_limits = self._upper_limits or defaultdict(lambda: None)
-        self.state_idx = len(self._world.degrees_of_freedom)
 
-        # Register symbols for all derivatives in one loop
         for derivative in Derivatives.range(Derivatives.position, Derivatives.jerk):
-            s = cas.Symbol(f'{self.name}_{derivative}')
+            s = symbol_manager.register_symbol_provider(f'{self.name}_{derivative}',
+                                                    lambda d=derivative: self._world.state[self.name][d])
             self._derivative_symbols[derivative] = s
-            symbol_manager.register_symbol(s, lambda d=derivative: self._world.state[d, self.state_idx])
 
     @property
     def position_symbol(self) -> cas.Symbol:
