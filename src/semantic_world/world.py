@@ -511,10 +511,10 @@ class World:
         :returns: A combined list of symbols corresponding to the positions, velocities,
             accelerations, and jerks for each degree of freedom in the state.
         """
-        positions = [self.degrees_of_freedom[v_name].position_symbol for v_name in self.state]
-        velocities = [self.degrees_of_freedom[v_name].velocity_symbol for v_name in self.state]
-        accelerations = [self.degrees_of_freedom[v_name].acceleration_symbol for v_name in self.state]
-        jerks = [self.degrees_of_freedom[v_name].jerk_symbol for v_name in self.state]
+        positions = [self.get_degree_of_freedom_by_name(v_name).symbols.position for v_name in self.state]
+        velocities = [self.get_degree_of_freedom_by_name(v_name).symbols.velocity for v_name in self.state]
+        accelerations = [self.get_degree_of_freedom_by_name(v_name).symbols.acceleration for v_name in self.state]
+        jerks = [self.get_degree_of_freedom_by_name(v_name).symbols.jerk for v_name in self.state]
         return positions + velocities + accelerations + jerks
 
     @modifies_world
