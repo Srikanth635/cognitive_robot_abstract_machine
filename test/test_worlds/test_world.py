@@ -1,13 +1,13 @@
 import numpy as np
 import pytest
-
+from functools import partial
 from semantic_world.connections import PrismaticConnection, RevoluteConnection, Connection6DoF, FixedConnection, \
     UnitVector
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.spatial_types.derivatives import Derivatives
 from semantic_world.spatial_types.math import rotation_matrix_from_rpy
 from semantic_world.spatial_types.symbol_manager import symbol_manager
-from semantic_world.testing import world_setup
+from semantic_world.testing import world_setup, pr2_world
 from semantic_world.world_entity import View
 
 
@@ -255,3 +255,39 @@ def test_add_view(world_setup):
     with pytest.raises(ValueError):
         world.add_view(v)
     assert world.get_view_by_name(v.name) == v
+
+def test_merge_world(world_setup, pr2_world):
+    world, l1, l2, bf, r1, r2 = world_setup
+
+    base_link = pr2_world.get_body_by_name("base_link")
+    r_gripper_tool_frame = pr2_world.get_body_by_name('r_gripper_tool_frame')
+    torso_lift_link = pr2_world.get_body_by_name("torso_lift_link")
+    r_shoulder_pan_joint = pr2_world.get_connection(torso_lift_link, pr2_world.get_body_by_name("r_shoulder_pan_link"))
+
+    l_shoulder_pan_joint = pr2_world.get_connection(torso_lift_link, pr2_world.get_body_by_name("l_shoulder_pan_link"))
+
+    world.merge_world(pr2_world)
+
+    assert base_link in world.bodies
+    assert r_gripper_tool_frame in world.bodies
+    assert l_shoulder_pan_joint in world.connections
+    assert torso_lift_link._world == world
+    assert r_shoulder_pan_joint._world == world
+
+def test_merge_with_connection(world_setup, pr2_world):
+    world, l1, l2, bf, r1, r2 = world_setup
+
+    base_link = pr2_world.get_body_by_name("base_link")
+    r_gripper_tool_frame = pr2_world.get_body_by_name('r_gripper_tool_frame')
+    torso_lift_link = pr2_world.get_body_by_name("torso_lift_link")
+    r_shoulder_pan_joint = pr2_world.get_connection(torso_lift_link, pr2_world.get_body_by_name("r_shoulder_pan_link"))
+
+    new_connection = Connection6DoF(parent=l1, child=pr2_world.root, _world=world)
+
+    world.merge_world(pr2_world, new_connection)
+
+    assert base_link in world.bodies
+    assert r_gripper_tool_frame in world.bodies
+    assert new_connection in world.connections
+    assert torso_lift_link._world == world
+    assert r_shoulder_pan_joint._world == world

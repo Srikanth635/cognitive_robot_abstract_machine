@@ -83,8 +83,8 @@ def pr2_world():
         world_with_pr2 = pr2_parser.parse()
         # world_with_pr2.plot_kinematic_structure()
         pr2_root = world_with_pr2.root
-        world.merge_world(world_with_pr2)
         c_root_bf = OmniDrive(parent=localization_body, child=pr2_root, _world=world)
-        world.add_connection(c_root_bf)
+        world.merge_world(world_with_pr2, c_root_bf)
+
     return world
 
