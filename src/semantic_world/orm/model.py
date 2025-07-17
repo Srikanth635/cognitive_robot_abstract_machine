@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Optional
 
 from ormatic.dao import AlternativeMapping, T
@@ -22,6 +22,7 @@ class WorldMapping(AlternativeMapping[World]):
 
     @classmethod
     def create_instance(cls, obj: World):
+        # return cls(obj.bodies[:2], [],[],[], )
         return cls(obj.bodies, obj.connections, obj.views, list(obj.degrees_of_freedom))
 
     def create_from_dao(self) -> World:
@@ -42,86 +43,100 @@ class WorldMapping(AlternativeMapping[World]):
 
 @dataclass
 class Vector3Mapping(AlternativeMapping[Vector3]):
-    reference_frame: Optional[Body]
 
     x: float
     y: float
     z: float
+
+    reference_frame: Optional[Body] = field(init=False, default=None)
 
     @classmethod
     def create_instance(cls, obj: Vector3):
         x, y, z, _ = symbol_manager.evaluate_expr(obj).tolist()
-        return cls(x=x, y=y, z=z, reference_frame=obj.reference_frame)
+        result = cls(x=x, y=y, z=z)
+        result.reference_frame = obj.reference_frame
+        return
 
     def create_from_dao(self) -> Vector3:
-        return Vector3.from_xyz(x=self.x, y=self.y, z=self.z, reference_frame=self.reference_frame)
+        return Vector3.from_xyz(x=self.x, y=self.y, z=self.z, reference_frame=None)
 
 
 @dataclass
 class Point3Mapping(AlternativeMapping[Point3]):
-    reference_frame: Optional[Body]
 
     x: float
     y: float
     z: float
 
+    reference_frame: Optional[Body] = field(init=False, default=None)
+
     @classmethod
     def create_instance(cls, obj: Point3):
         x, y, z, _ = symbol_manager.evaluate_expr(obj).tolist()
-        result = cls(x=x, y=y, z=z, reference_frame=obj.reference_frame)
+        result = cls(x=x, y=y, z=z)
+        result.reference_frame = obj.reference_frame
         return result
 
     def create_from_dao(self) -> Point3:
-        return Point3.from_xyz(x=self.x, y=self.y, z=self.z, reference_frame=self.reference_frame)
+        return Point3.from_xyz(x=self.x, y=self.y, z=self.z, reference_frame=None)
 
 @dataclass
 class QuaternionMapping(AlternativeMapping[Quaternion]):
-    reference_frame: Optional[Body]
     x: float
     y: float
     z: float
     w: float
 
+    reference_frame: Optional[Body] = field(init=False, default=None)
+
     @classmethod
     def create_instance(cls, obj: Quaternion):
         x, y, z, w = symbol_manager.evaluate_expr(obj).tolist()
-        result = cls(x=x, y=y, z=z, w=w, reference_frame=obj.reference_frame)
+        result = cls(x=x, y=y, z=z, w=w)
+        result.reference_frame = obj.reference_frame
         return result
 
     def create_from_dao(self) -> Quaternion:
-        return Quaternion.from_xyzw(x=self.x, y=self.y, z=self.z, w=self.w, reference_frame=self.reference_frame)
+        return Quaternion.from_xyzw(x=self.x, y=self.y, z=self.z, w=self.w, reference_frame=None)
 
 @dataclass
 class RotationMatrixMapping(AlternativeMapping[RotationMatrix]):
-    reference_frame: Optional[Body]
     rotation: Quaternion
+    reference_frame: Optional[Body] = field(init=False, default=None)
 
     @classmethod
     def create_instance(cls, obj: RotationMatrix):
-        return cls(reference_frame=obj.reference_frame, rotation=obj.to_quaternion())
+        result = cls(rotation=obj.to_quaternion())
+        result.reference_frame = obj.reference_frame
+        return result
 
     def create_from_dao(self) -> RotationMatrix:
-        return RotationMatrix.from_quaternion(self.rotation)
+        result = RotationMatrix.from_quaternion(self.rotation)
+        result.reference_frame = None
+        return result
 
 @dataclass
 class TransformationMatrixMapping(AlternativeMapping[TransformationMatrix]):
-    reference_frame: Optional[Body]
-    child_frame: Optional[Body]
     position: Point3
     rotation: Quaternion
+    reference_frame: Optional[Body] = field(init=False, default=None)
+    child_frame: Optional[Body] = field(init=False, default=None)
 
     @classmethod
     def create_instance(cls, obj: TransformationMatrix):
         position = obj.to_position()
         rotation = obj.to_quaternion()
-        result = cls(reference_frame=obj.reference_frame, child_frame=obj.child_frame, position=position,
+        result = cls(position=position,
                      rotation=rotation)
+        result.reference_frame = obj.reference_frame
+        result.child_frame = obj.child_frame
+
         return result
 
     def create_from_dao(self) -> TransformationMatrix:
         return TransformationMatrix.from_point_rotation_matrix(
             point=self.position,
-            rotation_matrix=RotationMatrix.from_quaternion(self.rotation), reference_frame=self.reference_frame,
+            rotation_matrix=RotationMatrix.from_quaternion(self.rotation), reference_frame=None,
             child_frame=self.child_frame,)
 
 @dataclass

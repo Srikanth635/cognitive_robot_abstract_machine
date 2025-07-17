@@ -1,3 +1,5 @@
+import inspect
+import itertools
 import logging
 import os
 import sys
@@ -10,7 +12,7 @@ from sqlalchemy.orm import Session
 from semantic_world.adapters.urdf import URDFParser
 from semantic_world.connections import RevoluteConnection
 from semantic_world.geometry import Shape, Box, Scale, Color
-from semantic_world.orm.model import WorldMapping
+from semantic_world.orm.model import WorldMapping, QuaternionMapping
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.spatial_types.spatial_types import TransformationMatrix
 from semantic_world.world import Body
@@ -45,6 +47,11 @@ class ORMTest(unittest.TestCase):
         #TODO tom: AttributeError: 'DegreeOfFreedomMapping' object has no attribute '_sa_instance_state'
         world_dao: WorldMappingDAO = to_dao(self.table_world)
 
+        # for body in world_dao.bodies:
+        #     for shape in itertools.chain(body.collision, body.visual):
+        #         if not isinstance(shape.origin.position, Point3MappingDAO):
+        #             print(body.name)
+
         self.session.add(world_dao)
         self.session.commit()
 
@@ -72,8 +79,10 @@ class ORMTest(unittest.TestCase):
 
         self.session.add(dao)
         self.session.commit()
+        queried_body = self.session.scalar(select(BodyDAO))
+        reconstructed_body = queried_body.from_dao()
+        self.assertIs(reconstructed_body, reconstructed_body.collision[0].origin.reference_frame)
+
         result = self.session.scalar(select(ShapeDAO))
         self.assertIsInstance(result, BoxDAO)
-
-        # TODO tom: when the body is initialized, it gets None as input param for collision and can't set its ref frame
         box = result.from_dao()
