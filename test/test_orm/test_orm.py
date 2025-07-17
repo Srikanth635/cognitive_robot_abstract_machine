@@ -42,11 +42,8 @@ class ORMTest(unittest.TestCase):
         self.session.close()
 
     def test_table_world(self):
+        #TODO tom: AttributeError: 'DegreeOfFreedomMapping' object has no attribute '_sa_instance_state'
         world_dao: WorldMappingDAO = to_dao(self.table_world)
-
-        for body in world_dao.bodies:
-            for collision in body.collision:
-                print(collision.origin)
 
         self.session.add(world_dao)
         self.session.commit()
@@ -57,11 +54,12 @@ class ORMTest(unittest.TestCase):
         connections_from_db = self.session.scalars(select(ConnectionDAO)).all()
         self.assertEqual(len(connections_from_db), len(self.table_world.connections))
 
+        queried_world = self.session.scalar(select(WorldMappingDAO))
+        reconstructed = queried_world.from_dao()
+
+
     def test_insert(self):
-        reference_frame = PrefixedName("reference_frame", "world")
-        child_frame = PrefixedName("child_frame", "world")
-        origin = TransformationMatrix.from_xyz_rpy(1, 2, 3, 1, 2, 3, reference_frame=reference_frame,
-                                                   child_frame=child_frame)
+        origin = TransformationMatrix.from_xyz_rpy(1, 2, 3, 1, 2, 3)
         scale = Scale(1., 1., 1.)
         color = Color(0., 1., 1.)
         shape1 = Box(origin=origin, scale=scale, color=color)
@@ -76,3 +74,6 @@ class ORMTest(unittest.TestCase):
         self.session.commit()
         result = self.session.scalar(select(ShapeDAO))
         self.assertIsInstance(result, BoxDAO)
+
+        # TODO tom: when the body is initialized, it gets None as input param for collision and can't set its ref frame
+        box = result.from_dao()
