@@ -310,7 +310,7 @@ def test_merge_with_pose(world_setup, pr2_world):
     pose = np.eye(4)
     pose[0, 3] = 1.0  # Translate along x-axis
 
-    world.merge_world_with_pose(pr2_world, pose)
+    world.merge_world_at_pose(pr2_world, pose)
 
     assert base_link in world.bodies
     assert r_gripper_tool_frame in world.bodies
@@ -334,7 +334,7 @@ def test_merge_with_pose_rotation(world_setup, pr2_world):
                      [0., 0., 1., 0.],
                      [0., 0., 0., 1.]])
 
-    world.merge_world_with_pose(pr2_world, pose)
+    world.merge_world_at_pose(pr2_world, pose)
 
     assert base_link in world.bodies
     assert r_gripper_tool_frame in world.bodies

@@ -465,13 +465,13 @@ class World:
             logger.debug("Trying to remove a body that is not part of this world.")
 
     @modifies_world
-    def merge_world(self, other: World, partial_connection: Connection = None) -> None:
+    def merge_world(self, other: World, root_connection: Connection = None) -> None:
         """
         Merge a world into the existing one by merging degrees of freedom, states, connections, and bodies.
         This removes all bodies and connections from `other`.
 
         :param other: The world to be added.
-        :param partial_connection: If provided, this connection will be used to connect the two worlds. Otherwise, a new Connection6DoF will be created
+        :param root_connection: If provided, this connection will be used to connect the two worlds. Otherwise, a new Connection6DoF will be created
         :return: None
         """
         self_root = self.root
@@ -492,15 +492,15 @@ class World:
             self.add_connection(connection)
         other.world_is_being_modified = False
 
-        connection = partial_connection or Connection6DoF(parent=self_root, child=other_root, _world=self)
+        connection = root_connection or Connection6DoF(parent=self_root, child=other_root, _world=self)
         self.add_connection(connection)
 
-    def merge_world_with_pose(self, other: World, pose: NpMatrix4x4) -> None:
+    def merge_world_at_pose(self, other: World, pose: NpMatrix4x4) -> None:
         """
         Merge another world into the existing one, creates a 6DoF connection between the root of this world and the root
         of the other world.
         :param other: The world to be added.
-        :param pose: The pose of the other world in this world's coordinate system.
+        :param pose: world_root_T_other_root, the pose of the other world's root with respect to the current world's root
         """
         root_connection = Connection6DoF(parent=self.root, child=other.root, _world=self)
         root_connection.origin = pose
