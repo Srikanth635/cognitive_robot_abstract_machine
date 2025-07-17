@@ -9,10 +9,16 @@ from semantic_world.world import View, Body
 class Handle(View):
     body: Body
 
+    def __post_init__(self):
+        self.name = self.body.name
+
 
 @dataclass(unsafe_hash=True)
 class Container(View):
     body: Body
+
+    def __post_init__(self):
+        self.name = self.body.name
 
 
 @dataclass
@@ -23,10 +29,16 @@ class Door(View):  # Door has a Footprint
     handle: Handle
     body: Body
 
+    def __post_init__(self):
+        self.name = self.body.name
+
 @dataclass(unsafe_hash=True)
 class Fridge(View):
     body: Body
     door: Door
+
+    def __post_init__(self):
+        self.name = self.body.name
 
 ################################
 
@@ -49,11 +61,17 @@ class Door(Components):
     body: Body
     handle: Handle
 
+    def __post_init__(self):
+        self.name = self.body.name
+
 
 @dataclass(unsafe_hash=True)
 class Drawer(Components):
     container: Container
     handle: Handle
+
+    def __post_init__(self):
+        self.name = self.container.name
 
 
 ############################### subclasses to Furniture
@@ -67,6 +85,9 @@ class Cupboard(Furniture):
 class Cabinet(Cupboard):
     container: Container
     drawers: list[Drawer] = field(default_factory=list, hash=False)
+
+    def __post_init__(self):
+        self.name = self.container.name
 
 
 @dataclass

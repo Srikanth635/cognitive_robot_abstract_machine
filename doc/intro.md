@@ -29,12 +29,14 @@ More information on the kinematic world model can be found [here](kinematic_worl
 
 ## Views
 
-Views are aggregation objects for bodies and connections in the world. 
-Semantically, a `semantic_world.world_entity.View` is an interpretation of a set of links and connections.
-For instance, a Drawer can be seen as a view on a handle and a container that is connected via a fixed connection
+A View ({py:class}`semantic_world.world_entity.View`) is a different representation for a part or a collection of parts in the world that has a semantic meaning and
+functional purpose in specific contexts.
+
+For example, a Drawer can be seen as a view on a handle and a container that is connected via a fixed connection
 and where the container has some prismatic connection.
 
-Views can be inferred by specifying rules that make up a view. TODO Bass stuff
+Views can be inferred by specifying rules that make up a view. More information on how the views are inferred and used
+can be found [here](views.md).
 
 ## Database
 

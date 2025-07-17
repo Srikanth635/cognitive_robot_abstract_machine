@@ -2,19 +2,22 @@ from __future__ import absolute_import
 from __future__ import annotations
 
 import logging
+import os
 from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import wraps, lru_cache
-from typing import Dict, Tuple, OrderedDict, Union, Optional
+from os.path import dirname
+from typing import Dict, Tuple, OrderedDict, Union, Optional, ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
 import rustworkx as rx
 import rustworkx.visit
 import rustworkx.visualization
-from typing_extensions import List
+from typing_extensions import List, Any, Type
 
+from ripple_down_rules import GeneralRDR, CaseQuery
 from .connections import HasUpdateState, Has1DOFState
 from .degree_of_freedom import DegreeOfFreedom
 from .ik_solver import InverseKinematicsSolver
@@ -418,15 +421,13 @@ class World:
         :raises ValueError: If a view with the same name already exists.
         """
         try:
-            self.get_view_by_name(view.name)
+            self.get_view_by_name(view.name, type(view))
+            view._world = self
+            self.views.append(view)
         except ValueError:
             pass
-        else:
-            raise ValueError(f"View with name {view.name} already exists.")
-        view._world = self
-        self.views.append(view)
 
-    def get_view_by_name(self, name: Union[str, PrefixedName]) -> View:
+    def get_view_by_name(self, name: Union[str, PrefixedName], view_type: Type[View]) -> View:
         """
         Retrieves a View from the list of view based on its name.
         If the input is of type `PrefixedName`, it checks whether the prefix is specified and looks for an
@@ -440,11 +441,11 @@ class World:
         """
         if isinstance(name, PrefixedName):
             if name.prefix is not None:
-                matches = [view for view in self.views if view.name == name]
+                matches = [view for view in self.views if view.name == name and type(view) == view_type]
             else:
-                matches = [view for view in self.views if view.name.name == name.name]
+                matches = [view for view in self.views if view.name.name == name.name and type(view) == view_type]
         else:
-            matches = [view for view in self.views if view.name.name == name]
+            matches = [view for view in self.views if view.name.name == name and type(view) == view_type]
         if len(matches) > 1:
             raise ValueError(f'Multiple views with name {name} found')
         if matches:
