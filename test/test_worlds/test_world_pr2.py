@@ -144,9 +144,9 @@ def test_compute_ik_unreachable(pr2_world):
 def test_apply_control_commands_omni_drive_pr2(pr2_world):
     omni_drive: OmniDrive = pr2_world.get_connection_by_name('odom_combined_T_base_footprint')
     cmd = np.zeros((len(pr2_world.degrees_of_freedom)), dtype=float)
-    cmd[-3] = 100
-    cmd[-2] = 100
-    cmd[-1] = 100
+    cmd[pr2_world.state._index[omni_drive.x_vel.name]] = 100
+    cmd[pr2_world.state._index[omni_drive.y_vel.name]] = 100
+    cmd[pr2_world.state._index[omni_drive.yaw.name]] = 100
     dt = 0.1
     pr2_world.apply_control_commands(cmd, dt, Derivatives.jerk)
     assert pr2_world.state[omni_drive.yaw.name].jerk == 100.
