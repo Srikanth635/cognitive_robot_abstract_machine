@@ -62,6 +62,7 @@ class SetOdometry(PayloadMonitor):
                 raise GoalInitalizationException(f'Group {self.group_name} has no odometry joint.')
 
     def __call__(self):
+        self.brumbrum_joint
         base_pose = god_map.world.transform(self.brumbrum_joint.parent_link_name, self.base_pose)
         position = base_pose.to_position().to_np()
         orientation = base_pose.to_rotation().to_quaternion().to_np()
@@ -73,10 +74,10 @@ class SetOdometry(PayloadMonitor):
                                                  orientation[3])
         if axis[-1] < 0:
             angle = -angle
-        if isinstance(self.brumbrum_joint, OmniDrivePR22):
-            god_map.world.state[self.brumbrum_joint.yaw1_vel.name].position = 0
-            god_map.world.state[self.brumbrum_joint.yaw.name].position = angle
-        else:
-            god_map.world.state[self.brumbrum_joint.yaw.name].position = angle
+        # if isinstance(self.brumbrum_joint, OmniDrivePR22):
+        #     god_map.world.state[self.brumbrum_joint.yaw1_vel.name].position = 0
+        #     god_map.world.state[self.brumbrum_joint.yaw.name].position = angle
+        # else:
+        god_map.world.state[self.brumbrum_joint.yaw.name].position = angle
         god_map.world.notify_state_change()
         self.state = ObservationState.true

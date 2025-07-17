@@ -55,7 +55,7 @@ class WorldConfig(ABC):
         joint = self.world.get_connection_by_name(PrefixedName(joint_name, group_name))
         if not isinstance(joint, Has1DOFState):
             raise ValueError(f'Can\'t change weight because {joint_name} is not of type {str(Has1DOFState)}.')
-        free_variable = self.world.degrees_of_freedom[joint.dof.name]
+        # free_variable = self.world.degrees_of_freedom[joint.dof.name]
         # Fixme where to put the weights?
         # for derivative, weight in weight_map.items():
         #     free_variable.quadratic_weights[derivative] = weight
@@ -73,7 +73,7 @@ class WorldConfig(ABC):
         joint = self.world.get_connection_by_name(PrefixedName(joint_name, group_name))
         if not isinstance(joint, Has1DOFState):
             raise ValueError(f'Can\'t change limits because {joint_name} is not of type {str(Has1DOFState)}.')
-        free_variable = self.world.degrees_of_freedom[joint.dof.name]
+        free_variable = joint.dof
         for derivative, limit in limit_map.items():
             free_variable.set_lower_limit(derivative, -limit if limit is not None else None)
             free_variable.set_upper_limit(derivative, limit)
@@ -94,7 +94,7 @@ class WorldConfig(ABC):
                                  Derivatives.acceleration: np.inf,
                                  Derivatives.jerk: 711}
         """
-        for dof in self.world.degrees_of_freedom.values():
+        for dof in self.world.degrees_of_freedom:
             dof._lower_limits_overwrite = {k: -v if v is not None else None for k, v in new_limits.items()}
             dof._upper_limits_overwrite = new_limits
 
@@ -152,7 +152,7 @@ class WorldConfig(ABC):
         """
         If you need a virtual link during your world building.
         """
-        link = Body(link_name)
+        link = Body(name=link_name)
         self.world.add_body(link)
 
     def add_omni_drive_joint(self,

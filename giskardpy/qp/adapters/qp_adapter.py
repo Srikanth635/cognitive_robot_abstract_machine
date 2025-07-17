@@ -54,6 +54,7 @@ def find_best_jerk_limit(prediction_horizon: int, dt: float, target_vel_limit: f
     lower_bound = 0
     best_vel_limit = 0
     best_jerk_limit = 0
+    i = -1
     for i in range(100):
         vel_limit = max_velocity_from_horizon_and_jerk_qp(prediction_horizon=prediction_horizon,
                                                           vel_limit=1000,
@@ -73,8 +74,8 @@ def find_best_jerk_limit(prediction_horizon: int, dt: float, target_vel_limit: f
         else:
             lower_bound = jerk_limit
             jerk_limit = round((jerk_limit + upper_bound) / 2, 4)
-    print(
-        f'best velocity limit: {best_vel_limit} (target = {target_vel_limit}) with jerk limit: {best_jerk_limit} after {i + 1} iterations')
+    print(f'best velocity limit: {best_vel_limit} '
+          f'(target = {target_vel_limit}) with jerk limit: {best_jerk_limit} after {i + 1} iterations')
     return best_jerk_limit
 
 
@@ -165,16 +166,16 @@ class ProblemDataPart(ABC):
 
     @profile
     def velocity_limit(self, v: DegreeOfFreedom, max_derivative: Derivatives) -> Tuple[cas.Expression, cas.Expression]:
-        current_position = v.get_symbol(Derivatives.position)
-        lower_velocity_limit = v.get_lower_limit(Derivatives.velocity)
-        upper_velocity_limit = v.get_upper_limit(Derivatives.velocity)
-        lower_acc_limit = v.get_lower_limit(Derivatives.acceleration)
-        upper_acc_limit = v.get_upper_limit(Derivatives.acceleration)
-        current_vel = v.get_symbol(Derivatives.velocity)
-        current_acc = v.get_symbol(Derivatives.acceleration)
+        current_position = v.symbols.position
+        lower_velocity_limit = v.lower_limits.velocity
+        upper_velocity_limit = v.upper_limits.velocity
+        lower_acc_limit = v.lower_limits.acceleration
+        upper_acc_limit = v.upper_limits.acceleration
+        current_vel = v.symbols.velocity
+        current_acc = v.symbols.acceleration
 
-        lower_jerk_limit = v.get_lower_limit(Derivatives.jerk)
-        upper_jerk_limit = v.get_upper_limit(Derivatives.jerk)
+        lower_jerk_limit = v.lower_limits.jerk
+        upper_jerk_limit = v.upper_limits.jerk
         if self.config.prediction_horizon == 1:
             return cas.Expression([lower_velocity_limit]), cas.Expression([upper_velocity_limit])
 
@@ -186,8 +187,8 @@ class ProblemDataPart(ABC):
         if not v.has_position_limits():
             lower_limit = upper_limit = None
         else:
-            lower_limit = v.get_lower_limit(Derivatives.position)
-            upper_limit = v.get_upper_limit(Derivatives.position)
+            lower_limit = v.lower_limits.position
+            upper_limit = v.upper_limits.position
 
         try:
             lb, ub = b_profile(current_pos=current_position,
@@ -206,7 +207,8 @@ class ProblemDataPart(ABC):
                 acc_limit=upper_acc_limit,
                 jerk_limit=upper_jerk_limit,
                 dt=self.config.mpc_dt,
-                max_derivative=max_derivative)[0]
+                max_derivative=max_derivative,
+                solver_class=self.config.qp_solver_class)[0]
             if max_reachable_vel < upper_velocity_limit:
                 error_msg = f'Free variable "{v.name}" can\'t reach velocity limit of "{upper_velocity_limit}". ' \
                             f'Maximum reachable with prediction horizon = "{self.config.prediction_horizon}", ' \
@@ -292,16 +294,16 @@ class Weights(ProblemDataPart):
                         continue
                     if derivative == Derivatives.jerk and not self.config.qp_formulation.has_explicit_jerk_variables:
                         continue
-                    normalized_weight = self.normalize_dof_weight(limit=v.get_upper_limit(derivative),
+                    normalized_weight = self.normalize_dof_weight(limit=v.upper_limits.data[derivative],
                                                                   base_weight=self.config.get_dof_weight(v.name, derivative),
                                                                   t=t,
                                                                   derivative=derivative,
                                                                   horizon=self.config.prediction_horizon - 3,
                                                                   alpha=self.config.horizon_weight_gain_scalar)
-                    weights[derivative][f't{t:03}/{v.position_symbol}/{derivative}'] = normalized_weight
+                    weights[derivative][f't{t:03}/{v.symbols.position}/{derivative}'] = normalized_weight
                     for q_gain in quadratic_weight_gains:
                         if t < len(q_gain.gains) and v in q_gain.gains[t][derivative].keys():
-                            weights[derivative][f't{t:03}/{v.position_symbol}/{derivative}'] *= \
+                            weights[derivative][f't{t:03}/{v.symbols.position}/{derivative}'] *= \
                                 q_gain.gains[t][derivative][v]
         for _, weight in sorted(weights.items()):
             params.append(weight)
@@ -367,10 +369,10 @@ class Weights(ProblemDataPart):
                             continue
                         if derivative == Derivatives.jerk and not self.config.qp_formulation.has_explicit_jerk_variables:
                             continue
-                        weights[derivative][f't{t:03}/{v.position_symbol}/{derivative}'] = 0
+                        weights[derivative][f't{t:03}/{v.symbols.position}/{derivative}'] = 0
                         for l_gain in linear_weight_gains:
                             if t < len(l_gain.gains) and v in l_gain.gains[t][derivative].keys():
-                                weights[derivative][f't{t:03}/{v.position_symbol}/{derivative}'] += \
+                                weights[derivative][f't{t:03}/{v.symbols.position}/{derivative}'] += \
                                     l_gain.gains[t][derivative][v]
             for _, weight in sorted(weights.items()):
                 params.append(weight)
@@ -378,7 +380,7 @@ class Weights(ProblemDataPart):
         return None
 
     def get_free_variable_symbols(self, order: Derivatives) -> List[cas.Symbol]:
-        return self._sorter({v.position_symbol: v.get_symbol(order) for v in self.free_variables})[0]
+        return self._sorter({v.symbols.position: v.symbols.data[order] for v in self.free_variables})[0]
 
 
 @dataclass
@@ -419,8 +421,8 @@ class FreeVariableBounds(ProblemDataPart):
                         if derivative == Derivatives.jerk and not self.config.qp_formulation.has_explicit_jerk_variables:
                             continue
                         index = t + self.config.prediction_horizon * (derivative - 1)
-                        lb[derivative][f't{t:03}/{v.name}/{derivative}'] = v.get_lower_limit(derivative)
-                        ub[derivative][f't{t:03}/{v.name}/{derivative}'] = v.get_upper_limit(derivative)
+                        lb[derivative][f't{t:03}/{v.name}/{derivative}'] = v.lower_limits.data[derivative]
+                        ub[derivative][f't{t:03}/{v.name}/{derivative}'] = v.upper_limits.data[derivative]
             else:
                 lb_, ub_ = self.velocity_limit(v=v, max_derivative=max_derivative)
                 for t in range(self.config.prediction_horizon):
@@ -547,7 +549,7 @@ class EqualityBounds(ProblemDataPart):
     def last_derivative_values(self, derivative: Derivatives) -> Dict[str, cas.symbol_expr_float]:
         last_values = {}
         for v in self.free_variables:
-            last_values[f'{v.name}/last_{derivative}'] = v.get_symbol(derivative)
+            last_values[f'{v.name}/last_{derivative}'] = v.symbols.data[derivative]
         return last_values
 
     def derivative_links(self, derivative: Derivatives) -> Dict[str, cas.symbol_expr_float]:
@@ -587,9 +589,9 @@ class EqualityBounds(ProblemDataPart):
                 for v in self.free_variables:
                     name = f't{t:03}/{Derivatives.jerk}/{v.name}/link'
                     if t == 0:
-                        derivative_link[name] = - v.velocity_symbol - v.acceleration_symbol * self.config.mpc_dt
+                        derivative_link[name] = - v.symbols.velocity - v.symbols.acceleration * self.config.mpc_dt
                     elif t == 1:
-                        derivative_link[name] = v.velocity_symbol
+                        derivative_link[name] = v.symbols.velocity
                     else:
                         derivative_link[name] = 0
             bounds.append(derivative_link)
@@ -670,9 +672,9 @@ class InequalityBounds(ProblemDataPart):
         lb_acc, ub_acc = {}, {}
         lb_jerk, ub_jerk = {}, {}
         for v in self.free_variables:
-            lb_, ub_ = v.get_lower_limit(Derivatives.position), v.get_upper_limit(Derivatives.position)
+            lb_, ub_ = v.lower_limits.position, v.upper_limits.position
             for t in range(self.config.prediction_horizon - 2):
-                ptc = v.get_symbol(Derivatives.position)
+                ptc = v.symbols.position
                 lb_jerk[f't{t:03}/{v.name}/{Derivatives.position}'] = lb_ - ptc
                 ub_jerk[f't{t:03}/{v.name}/{Derivatives.position}'] = ub_ - ptc
         return [lb_acc, lb_jerk], [ub_acc, ub_jerk]
@@ -682,7 +684,7 @@ class InequalityBounds(ProblemDataPart):
         lb_jerk, ub_jerk = {}, {}
         for v in self.free_variables:
             if self.config.qp_formulation.has_explicit_pos_limits:
-                lb_, ub_ = v.get_lower_limit(Derivatives.jerk), v.get_upper_limit(Derivatives.jerk)
+                lb_, ub_ = v.lower_limits.jerk, v.upper_limits.jerk
             else:
                 lb_, ub_ = self.velocity_limit(v=v, max_derivative=Derivatives.jerk)
             for t in range(self.config.prediction_horizon):
@@ -690,7 +692,7 @@ class InequalityBounds(ProblemDataPart):
                 #     a_min = v.get_lower_limit(Derivatives.acceleration)
                 #     a_max = v.get_upper_limit(Derivatives.acceleration)
                 #     if not ((np.isinf(a_min) or cas.is_inf(a_min)) and (np.isinf(a_max) or cas.is_inf(a_max))):
-                #         vtc = v.get_symbol(Derivatives.velocity)
+                #         vtc = v.symbols.velocity
                 #         if t == 0:
                 #             # vtc/dt + a_min <= vt0/dt <= vtc/dt + a_max
                 #             lb_acc[f't{t:03}/{v.name}/{Derivatives.acceleration}'] = vtc / self.config.mpc_dt + a_min
@@ -705,8 +707,8 @@ class InequalityBounds(ProblemDataPart):
                     else:
                         j_min = lb_[self.config.prediction_horizon * 2 + t]
                         j_max = ub_[self.config.prediction_horizon * 2 + t]
-                    vtc = v.get_symbol(Derivatives.velocity)
-                    atc = v.get_symbol(Derivatives.acceleration)
+                    vtc = v.symbols.velocity
+                    atc = v.symbols.acceleration
                     if t == 0:
                         # vtc/dt**2 + atc/dt + j_min <=    vt0/dt**2     <= vtc/dt**2 + atc/dt + j_max
                         lb_jerk[
@@ -775,8 +777,8 @@ class EqualityModel(ProblemDataPart):
     def equality_constraint_expressions(self) -> List[cas.Expression]:
         return self._sorter({c.name: c.expression for c in self.equality_constraints})[0]
 
-    def get_free_variable_symbols(self, order: Derivatives) -> List[cas.Symbol]:
-        return self._sorter({v.position_symbol.name: v.get_symbol(order) for v in self.free_variables})[0]
+    def get_free_variable_symbols(self, derivative: Derivatives) -> List[cas.Symbol]:
+        return self._sorter({v.symbols.position.name: v.symbols.data[derivative] for v in self.free_variables})[0]
 
     def get_eq_derivative_constraint_expressions(self, derivative: Derivatives):
         return \
@@ -1082,7 +1084,7 @@ class InequalityModel(ProblemDataPart):
             0]
 
     def get_free_variable_symbols(self, order: Derivatives):
-        return self._sorter({v.position_symbol: v.get_symbol(order) for v in self.free_variables})[0]
+        return self._sorter({v.symbols.position: v.symbols.data[order] for v in self.free_variables})[0]
 
     def velocity_constraint_model(self) -> Tuple[cas.Expression, cas.Expression]:
         """

@@ -17,7 +17,7 @@ class JointGoalReached(Monitor):
         comparison_list = []
         for joint_name, goal in goal_state.items():
             connection: Has1DOFState = god_map.world.get_connection_by_name(joint_name)
-            current = connection.dof.get_symbol(Derivatives.position)
+            current = connection.dof.symbols.position
             if (isinstance(connection, RevoluteConnection)
                     and connection.dof.has_position_limits()):
                 error = cas.shortest_angular_distance(current, goal)

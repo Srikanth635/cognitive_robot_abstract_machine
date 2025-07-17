@@ -276,19 +276,17 @@ class CartesianPose(Task):
 
         distance_to_goal = cas.euclidean_distance(root_P_goal, r_P_c)
 
-        r_T_c = god_map.world.compose_fk_expression(self.root, self.tip)
+        r_T_c = god_map.world.compose_forward_kinematics_expression(self.root, self.tip)
         r_R_c = r_T_c.to_rotation()
-        c_R_r_eval = god_map.world.compose_fk_evaluated_expression(self.tip, self.root).to_rotation()
 
         self.add_rotation_goal_constraints(frame_R_current=r_R_c,
                                            frame_R_goal=root_R_goal,
-                                           current_R_frame_eval=c_R_r_eval,
                                            reference_velocity=self.reference_angular_velocity,
                                            weight=self.weight)
-        debug_trans_matrix = cas.TransformationMatrix.from_point_rotation_matrix(point=goal_point,
-                                                                        rotation_matrix=root_R_goal)
-        debug_current_trans_matrix = cas.TransformationMatrix.from_point_rotation_matrix(point=r_T_c.to_position(),
-                                                                                rotation_matrix=r_R_c)
+        # debug_trans_matrix = cas.TransformationMatrix.from_point_rotation_matrix(point=goal_point,
+        #                                                                 rotation_matrix=root_R_goal)
+        # debug_current_trans_matrix = cas.TransformationMatrix.from_point_rotation_matrix(point=r_T_c.to_position(),
+        #                                                                         rotation_matrix=r_R_c)
         # god_map.debug_expression_manager.add_debug_expression(f'{self.name}/goal_orientation', debug_trans_matrix)
         # god_map.debug_expression_manager.add_debug_expression(f'{self.name}/current_orientation',
         #                                                       debug_current_trans_matrix)

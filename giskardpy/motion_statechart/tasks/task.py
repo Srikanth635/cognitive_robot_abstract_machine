@@ -354,7 +354,6 @@ class Task(MotionStatechartNode):
     def add_rotation_goal_constraints(self,
                                       frame_R_current: cas.RotationMatrix,
                                       frame_R_goal: cas.RotationMatrix,
-                                      current_R_frame_eval: cas.RotationMatrix,
                                       reference_velocity: Union[cas.Symbol, float],
                                       weight: Union[cas.Symbol, float],
                                       name: str = ''):

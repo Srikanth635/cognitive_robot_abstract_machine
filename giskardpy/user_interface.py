@@ -241,9 +241,9 @@ class MotionGoalWrapper:
         :param weight: None = use default weight
         """
         if isinstance(root_link, str):
-            root_link = god_map.world.get_body_by_name(root_link)
+            root_link = god_map.world.get_body_by_name(root_link).name
         if isinstance(tip_link, str):
-            tip_link = god_map.world.get_body_by_name(tip_link)
+            tip_link = god_map.world.get_body_by_name(tip_link).name
         name = self._generate_default_name(CartesianPose, name)
         goal = CartesianPose(root_link=root_link,
                              tip_link=tip_link,
@@ -410,8 +410,8 @@ class GiskardWrapper:
         symbols = set()
         for c in chain(eq_constraints, neq_constraints, eq_derivative_constraints, derivative_constraints):
             symbols.update(str(s) for s in cas.free_symbols(c.expression))
-        free_variables = list(sorted([v for v in god_map.world.degrees_of_freedom.values() if v.position_symbol in symbols],
-                                     key=lambda x: x.position_symbol))
+        free_variables = list(sorted([v for v in god_map.world.degrees_of_freedom if v.symbols.position in symbols],
+                                     key=lambda x: x.symbols.position))
         if len(free_variables) == 0:
             raise EmptyProblemException('Goal parsing resulted in no free variables.')
         god_map.degrees_of_freedoms = free_variables

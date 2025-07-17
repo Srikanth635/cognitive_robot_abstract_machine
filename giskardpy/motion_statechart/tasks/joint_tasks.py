@@ -38,16 +38,16 @@ class JointPositionList(Task):
             if not isinstance(connection, Has1DOFState):
                 raise GoalInitalizationException(f'Connection {joint_name} must be of type Has1DOFState')
 
-            ul_pos = connection.dof.get_upper_limit(Derivatives.position)
-            ll_pos = connection.dof.get_lower_limit(Derivatives.position)
+            ul_pos = connection.dof.upper_limits.position
+            ll_pos = connection.dof.lower_limits.position
             if ll_pos is not None:
                 goal_position = cas.limit(goal_position, ll_pos, ul_pos)
 
-            ul_vel = connection.dof.get_upper_limit(Derivatives.velocity)
-            ll_vel = connection.dof.get_lower_limit(Derivatives.velocity)
+            ul_vel = connection.dof.upper_limits.velocity
+            ll_vel = connection.dof.lower_limits.velocity
             velocity_limit = cas.limit(max_velocity, ll_vel, ul_vel)
 
-            self.current_positions.append(connection.dof.get_symbol(Derivatives.position))
+            self.current_positions.append(connection.dof.symbols.position)
             self.goal_positions.append(goal_position)
             self.velocity_limits.append(velocity_limit)
 
