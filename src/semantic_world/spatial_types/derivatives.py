@@ -29,7 +29,24 @@ class Derivatives(IntEnum):
 
 @dataclass
 class DerivativeMap(Generic[T]):
+    """
+    A container class that maps derivatives (position, velocity, acceleration, jerk) to values of type T.
+
+    This class provides a structured way to store and access different orders of derivatives
+    using properties. Each derivative order can hold a value of type T or None.
+
+    Type Parameters:
+        T: The type of values stored for each derivative order.
+
+    Attributes:
+        data (List[Optional[T]]): Internal list storing the derivative values, initialized with None values.
+    """
+
     data: List[Optional[T]] = field(default_factory=lambda: [None] * len(Derivatives))
+    """
+    Internal list storing the derivative values, initialized with None values.
+    Order corresponds to the order of the Derivatives enum.
+    """
 
     @property
     def position(self) -> T:
