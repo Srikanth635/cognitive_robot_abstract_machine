@@ -67,7 +67,7 @@ class WorldReasoner:
                 attr_value = list(attr_value)
             if attr_name == 'views':
                 for view in attr_value:
-                    self.world.add_view(view)
+                    self.world.add_view(view, exists_ok=True)
             else:
                 setattr(self.world, attr_name, attr_value)
 

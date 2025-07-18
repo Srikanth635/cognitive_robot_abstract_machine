@@ -3,6 +3,7 @@ import pytest
 
 from semantic_world.connections import PrismaticConnection, RevoluteConnection, Connection6DoF, FixedConnection, \
     UnitVector
+from semantic_world.exceptions import AddingAnExistingViewError, DuplicateViewError
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.spatial_types.derivatives import Derivatives
 from semantic_world.spatial_types.math import rotation_matrix_from_rpy
@@ -252,6 +253,15 @@ def test_add_view(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
     v = View(name=PrefixedName('muh'))
     world.add_view(v)
-    with pytest.raises(ValueError):
+    with pytest.raises(AddingAnExistingViewError):
         world.add_view(v)
-    assert world.get_view_by_name(v.name) == v
+    assert world.get_view_by_name_and_type(v.name, type(v)) == v
+
+
+def test_duplicate_view(world_setup):
+    world, l1, l2, bf, r1, r2 = world_setup
+    v = View(name=PrefixedName('muh'))
+    world.add_view(v)
+    world.views.append(v)
+    with pytest.raises(DuplicateViewError):
+        world.get_view_by_name_and_type(v.name, type(v))
