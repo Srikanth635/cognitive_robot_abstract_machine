@@ -6,7 +6,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import wraps, lru_cache
-from typing import Dict, Tuple, OrderedDict, Union, Optional
+from typing import Dict, Tuple, OrderedDict, Union, Optional, Type
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,13 +15,14 @@ import rustworkx.visit
 import rustworkx.visualization
 from typing_extensions import List
 
-from .connections import HasUpdateState, Has1DOFState
+from .connections import HasUpdateState, Has1DOFState, Connection6DoF
 from .degree_of_freedom import DegreeOfFreedom
 from .ik_solver import InverseKinematicsSolver
 from .prefixed_name import PrefixedName
 from .spatial_types import spatial_types as cas
 from .spatial_types.derivatives import Derivatives, DerivativeMap
 from .spatial_types.math import inverse_frame
+from .spatial_types.spatial_types import TransformationMatrix
 from .types import NpMatrix4x4
 from .utils import IDGenerator, copy_lru_cache
 from .world_entity import Body, Connection, View
@@ -276,14 +277,16 @@ class World:
     def __hash__(self):
         return hash(id(self))
 
-    def validate(self) -> None:
+    def validate(self) -> bool:
         """
         Validate the world.
 
         The world must be a tree.
+        :return: True if the world is valid, raises an AssertionError otherwise.
         """
         assert len(self.bodies) == (len(self.connections) + 1)
         assert rx.is_weakly_connected(self.kinematic_structure)
+        return True
 
     @modifies_world
     def create_degree_of_freedom(self, name: PrefixedName, lower_limits: Optional[DerivativeMap[float]] = None,
@@ -462,14 +465,17 @@ class World:
             logger.debug("Trying to remove a body that is not part of this world.")
 
     @modifies_world
-    def merge_world(self, other: World) -> None:
+    def merge_world(self, other: World, root_connection: Connection = None) -> None:
         """
         Merge a world into the existing one by merging degrees of freedom, states, connections, and bodies.
         This removes all bodies and connections from `other`.
 
         :param other: The world to be added.
+        :param root_connection: If provided, this connection will be used to connect the two worlds. Otherwise, a new Connection6DoF will be created
         :return: None
         """
+        self_root = self.root
+        other_root = other.root
         for dof in other.degrees_of_freedom:
             self.state[dof.name].position = other.state[dof.name].position
             self.state[dof.name].velocity = other.state[dof.name].velocity
@@ -485,6 +491,21 @@ class World:
             other.remove_body(connection.child)
             self.add_connection(connection)
         other.world_is_being_modified = False
+
+        connection = root_connection or Connection6DoF(parent=self_root, child=other_root, _world=self)
+        self.add_connection(connection)
+
+    def merge_world_at_pose(self, other: World, pose: NpMatrix4x4) -> None:
+        """
+        Merge another world into the existing one, creates a 6DoF connection between the root of this world and the root
+        of the other world.
+        :param other: The world to be added.
+        :param pose: world_root_T_other_root, the pose of the other world's root with respect to the current world's root
+        """
+        root_connection = Connection6DoF(parent=self.root, child=other.root, _world=self)
+        root_connection.origin = pose
+        self.merge_world(other, root_connection)
+        self.add_connection(root_connection)
 
     def __str__(self):
         return f"{self.__class__.__name__} with {len(self.bodies)} bodies."
