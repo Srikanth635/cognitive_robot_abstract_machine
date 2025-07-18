@@ -6,7 +6,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import wraps, lru_cache
-from typing import Dict, Tuple, OrderedDict, Union, Optional
+from typing import Dict, Tuple, OrderedDict, Union, Optional, Type
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,14 +15,15 @@ import rustworkx.visit
 import rustworkx.visualization
 from typing_extensions import List, Type
 
-from .connections import HasUpdateState, Has1DOFState
+from .connections import HasUpdateState, Has1DOFState, Connection6DoF
 from .degree_of_freedom import DegreeOfFreedom
 from .exceptions import AddingAnExistingViewError, DuplicateViewError
 from .ik_solver import InverseKinematicsSolver
 from .prefixed_name import PrefixedName
 from .spatial_types import spatial_types as cas
-from .spatial_types.derivatives import Derivatives
+from .spatial_types.derivatives import Derivatives, DerivativeMap
 from .spatial_types.math import inverse_frame
+from .spatial_types.spatial_types import TransformationMatrix
 from .types import NpMatrix4x4
 from .utils import IDGenerator, copy_lru_cache
 from .world_entity import Body, Connection, View
@@ -92,7 +93,7 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
                 continue
             collision_fks.append(self.child_body_to_fk_expr[body.name])
         collision_fks = cas.vstack(collision_fks)
-        params = [v.get_symbol(Derivatives.position) for v in self.world.degrees_of_freedom.values()]
+        params = [v.symbols.position for v in self.world.degrees_of_freedom]
         self.compiled_all_fks = all_fks.compile(parameters=params)
         self.compiled_collision_fks = collision_fks.compile(parameters=params)
         self.compiled_tf = tf.compile(parameters=params)
@@ -235,7 +236,7 @@ class World:
     All views the world is aware of.
     """
 
-    degrees_of_freedom: Dict[PrefixedName, DegreeOfFreedom] = field(default_factory=dict)
+    degrees_of_freedom: List[DegreeOfFreedom] = field(default_factory=list)
 
     state: WorldState = field(default_factory=WorldState)
     """
@@ -277,18 +278,20 @@ class World:
     def __hash__(self):
         return hash(id(self))
 
-    def validate(self) -> None:
+    def validate(self) -> bool:
         """
         Validate the world.
 
         The world must be a tree.
+        :return: True if the world is valid, raises an AssertionError otherwise.
         """
         assert len(self.bodies) == (len(self.connections) + 1)
         assert rx.is_weakly_connected(self.kinematic_structure)
+        return True
 
     @modifies_world
-    def create_degree_of_freedom(self, name: PrefixedName, lower_limits: Optional[Dict[Derivatives, float]] = None,
-                                 upper_limits: Optional[Dict[Derivatives, float]] = None) -> DegreeOfFreedom:
+    def create_degree_of_freedom(self, name: PrefixedName, lower_limits: Optional[DerivativeMap[float]] = None,
+                                 upper_limits: Optional[DerivativeMap[float]] = None) -> DegreeOfFreedom:
         """
         Create a degree of freedom in the world and return it.
         For dependent kinematics, DoFs must be created with this method and passed to the connection's conctructor.
@@ -297,16 +300,17 @@ class World:
         :param upper_limits: If the DoF is actively controlled, it must have at least velocity limits.
         :return: The already registered DoF.
         """
-        dof = DegreeOfFreedom(name=name, _lower_limits=lower_limits, _upper_limits=upper_limits, _world=self)
+        dof = DegreeOfFreedom(name=name, lower_limits=lower_limits, upper_limits=upper_limits, _world=self)
         initial_position = 0
-        lower_limit = dof.get_lower_limit(derivative=Derivatives.position)
+        lower_limit = dof.lower_limits.position
         if lower_limit is not None:
             initial_position = max(lower_limit, initial_position)
-        upper_limit = dof.get_upper_limit(derivative=Derivatives.position)
+        upper_limit = dof.upper_limits.position
         if upper_limit is not None:
             initial_position = min(upper_limit, initial_position)
         self.state[name].position = initial_position
-        self.degrees_of_freedom[name] = dof
+        assert [dof for dof in self.degrees_of_freedom if dof.name == name].count(dof) == 0
+        self.degrees_of_freedom.append(dof)
         return dof
 
     def modify_world(self) -> WorldModelUpdateContextManager:
@@ -330,7 +334,7 @@ class World:
         self.compute_chain_of_bodies.cache_clear()
         self.compute_chain_of_connections.cache_clear()
         # self.is_link_controlled.cache_clear()
-        for dof in self.degrees_of_freedom.values():
+        for dof in self.degrees_of_freedom:
             dof.reset_cache()
 
     def notify_state_change(self) -> None:
@@ -463,21 +467,24 @@ class World:
 
 
     @modifies_world
-    def merge_world(self, other: World) -> None:
+    def merge_world(self, other: World, root_connection: Connection = None) -> None:
         """
         Merge a world into the existing one by merging degrees of freedom, states, connections, and bodies.
         This removes all bodies and connections from `other`.
 
         :param other: The world to be added.
+        :param root_connection: If provided, this connection will be used to connect the two worlds. Otherwise, a new Connection6DoF will be created
         :return: None
         """
-        for dof in other.degrees_of_freedom.values():
+        self_root = self.root
+        other_root = other.root
+        for dof in other.degrees_of_freedom:
             self.state[dof.name].position = other.state[dof.name].position
             self.state[dof.name].velocity = other.state[dof.name].velocity
             self.state[dof.name].acceleration = other.state[dof.name].acceleration
             self.state[dof.name].jerk = other.state[dof.name].jerk
             dof._world = self
-        self.degrees_of_freedom.update(other.degrees_of_freedom)
+        self.degrees_of_freedom.extend(other.degrees_of_freedom)
 
         # do not trigger computations in other
         other.world_is_being_modified = True
@@ -487,6 +494,20 @@ class World:
             self.add_connection(connection)
         other.world_is_being_modified = False
 
+        connection = root_connection or Connection6DoF(parent=self_root, child=other_root, _world=self)
+        self.add_connection(connection)
+
+    def merge_world_at_pose(self, other: World, pose: NpMatrix4x4) -> None:
+        """
+        Merge another world into the existing one, creates a 6DoF connection between the root of this world and the root
+        of the other world.
+        :param other: The world to be added.
+        :param pose: world_root_T_other_root, the pose of the other world's root with respect to the current world's root
+        """
+        root_connection = Connection6DoF(parent=self.root, child=other.root, _world=self)
+        root_connection.origin = pose
+        self.merge_world(other, root_connection)
+        self.add_connection(root_connection)
 
     def __str__(self):
         return f"{self.__class__.__name__} with {len(self.bodies)} bodies."
@@ -519,7 +540,32 @@ class World:
             raise ValueError(f'Multiple bodies with name {name} found')
         if matches:
             return matches[0]
-        raise ValueError(f'Body with name {name} not found')
+        raise KeyError(f'Body with name {name} not found')
+
+    def get_degree_of_freedom_by_name(self, name: Union[str, PrefixedName]) -> DegreeOfFreedom:
+        """
+        Retrieves a DegreeOfFreedom from the list of DegreeOfFreedom based on its name.
+        If the input is of type `PrefixedName`, it checks whether the prefix is specified and looks for an
+        exact match. Otherwise, it matches based on the name's string representation.
+        If more than one body with the same name is found, an assertion error is raised.
+        If no matching body is found, a `ValueError` is raised.
+
+        :param name: The name of the DegreeOfFreedom to search for. Can be a string or a `PrefixedName` object.
+        :return: The `DegreeOfFreedom` object that matches the given name.
+        :raises ValueError: If multiple or no DegreeOfFreedom with the specified name are found.
+        """
+        if isinstance(name, PrefixedName):
+            if name.prefix is not None:
+                matches = [dof for dof in self.degrees_of_freedom if dof.name == name]
+            else:
+                matches = [dof for dof in self.degrees_of_freedom if dof.name.name == name.name]
+        else:
+            matches = [dof for dof in self.degrees_of_freedom if dof.name.name == name]
+        if len(matches) > 1:
+            raise ValueError(f'Multiple DegreeOfFreedom with name {name} found')
+        if matches:
+            return matches[0]
+        raise KeyError(f'DegreeOfFreedom with name {name} not found')
 
 
     def get_connection_by_name(self, name: Union[str, PrefixedName]) -> Connection:
@@ -551,7 +597,7 @@ class World:
             raise ValueError(f'Multiple connections with name {name} found')
         if matches:
             return matches[0]
-        raise ValueError(f'Connection with name {name} not found')
+        raise KeyError(f'Connection with name {name} not found')
 
 
     @lru_cache(maxsize=None)
@@ -761,8 +807,8 @@ class World:
             fk = fk.dot(tip_T_root)
         for connection in tip_chain:
             fk = fk.dot(connection.origin_expression)
-        fk.reference_frame = root.name
-        fk.child_frame = tip.name
+        fk.reference_frame = root
+        fk.child_frame = tip
         return fk
 
 
@@ -795,8 +841,8 @@ class World:
     def find_dofs_for_position_symbols(self, symbols: List[cas.Symbol]) -> List[DegreeOfFreedom]:
         result = []
         for s in symbols:
-            for dof in self.degrees_of_freedom.values():
-                if s == dof.position_symbol:
+            for dof in self.degrees_of_freedom:
+                if s == dof.symbols.position:
                     result.append(dof)
         return result
 
