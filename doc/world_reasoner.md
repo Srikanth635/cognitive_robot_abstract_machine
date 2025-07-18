@@ -69,7 +69,12 @@ shell. Maybe you see a mistake and not all the currently detected drawers are ac
 results. To start writing your rule, just type `%edit` in the Ipython terminal as shown the image bellow, or if using
 the GUI just press the `Edit` button.
 
-<img src="images/write_edit_in_ipython.png" alt="Write %edit in Ipython" width="600"/>
+```{figure} images/write_edit_in_ipython.png
+---
+width: 800px
+---
+Open the Template File in Editor from the Ipython Shell.
+```
 
 Now, a template file with some imports and an empty function is openned for you to write your rule inside the body of
 the function as shown bellow:
@@ -115,12 +120,22 @@ So the above is the generated template, and I just filled in the body of the fun
 you write `%load` in the Ipython and the function you just wrote will be available to you to test it out in the Ipython
 shell as shown bellow (in the GUI just pres the Load button):
 
-<img src="images/load_rule_and_test_it.png" alt="Load Rule in Ipython" width="1200"/>
+```{figure} images/load_rule_and_test_it.png
+---
+width: 1600px
+---
+Load the written Rule into the Ipython Shell.
+```
 
 Then if you want to change the rule, just edit the already open template file and do `load` again. Once you are happy
 with your rule results just return the function output as follows (in the GUI just press the Accept button):
 
-<img src="images/accept_rule.png" alt="Accept Rule in Ipython" width="400"/>
+```{figure} images/accept_rule.png
+---
+width: 600px
+---
+Accept the Rule in Ipython.
+```
 
 If you also want to contribute to the semantic world package, then it's better to do that in the `test_views/test_views.py`
 test file. Since there is already rules for Drawer, there would already be a test method for that. All you need to do is
