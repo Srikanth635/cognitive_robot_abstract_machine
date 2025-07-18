@@ -14,6 +14,19 @@ if TYPE_CHECKING:
 
 @dataclass
 class WorldReasoner:
+    """
+    The world reasoner is a class that uses Ripple Down Rules to reason on world related concepts like world views.
+    The reasoner can be used in two ways:
+    1. Classification mode, where the reasoner infers all concepts that it has rules for at that time.
+    >>> reasoner = WorldReasoner(world)
+    >>> inferred_concepts = reasoner.reason()
+    >>> inferred_views = inferred_concepts['views']
+    2. Fitting mode, where the reasoner prompts the expert for answers given a query on a world concept. This allows
+    incremental knowledge gain, improved reasoning capabilities, and an increased breadth of application with more
+     usage.
+     >>> reasoner = WorldReasoner(world)
+     >>> reasoner.fit_attribute("views", [Handle, Drawer])
+    """
     world: World
     """
     The semantic world instance on which the reasoning is performed.
