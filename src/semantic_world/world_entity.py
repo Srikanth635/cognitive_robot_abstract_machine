@@ -83,6 +83,11 @@ class Body(WorldEntity):
         if self._world is not None:
             self.index = self._world.kinematic_structure.add_node(self)
 
+        for c in self.collision:
+            c.origin.reference_frame = self
+        for v in self.visual:
+            v.origin.reference_frame = self
+
     def __hash__(self):
         return hash(self.name)
 

@@ -1,3 +1,5 @@
+import inspect
+import itertools
 import logging
 import os
 import sys
@@ -10,7 +12,7 @@ from sqlalchemy.orm import Session
 from semantic_world.adapters.urdf import URDFParser
 from semantic_world.connections import RevoluteConnection
 from semantic_world.geometry import Shape, Box, Scale, Color
-from semantic_world.orm.model import WorldMapping
+from semantic_world.orm.model import WorldMapping, QuaternionMapping
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.spatial_types.spatial_types import TransformationMatrix
 from semantic_world.world import Body
@@ -42,7 +44,13 @@ class ORMTest(unittest.TestCase):
         self.session.close()
 
     def test_table_world(self):
+        #TODO tom: AttributeError: 'DegreeOfFreedomMapping' object has no attribute '_sa_instance_state'
         world_dao: WorldMappingDAO = to_dao(self.table_world)
+
+        # for body in world_dao.bodies:
+        #     for shape in itertools.chain(body.collision, body.visual):
+        #         if not isinstance(shape.origin.position, Point3MappingDAO):
+        #             print(body.name)
 
         self.session.add(world_dao)
         self.session.commit()
@@ -58,21 +66,23 @@ class ORMTest(unittest.TestCase):
 
 
     def test_insert(self):
-        b1 = Body(
-            name=PrefixedName("b1"),
-        )
-        origin = TransformationMatrix.from_xyz_rpy(1, 2, 3, 1, 2, 3, reference_frame=b1,
-                                                   child_frame=None)
+        origin = TransformationMatrix.from_xyz_rpy(1, 2, 3, 1, 2, 3)
         scale = Scale(1., 1., 1.)
         color = Color(0., 1., 1.)
         shape1 = Box(origin=origin, scale=scale, color=color)
-        b1.collision.append(shape1)
+        b1 = Body(
+            name=PrefixedName("b1"),
+            collision=[shape1]
+        )
 
         dao: BodyDAO = to_dao(b1)
 
         self.session.add(dao)
         self.session.commit()
+        queried_body = self.session.scalar(select(BodyDAO))
+        reconstructed_body = queried_body.from_dao()
+        self.assertIs(reconstructed_body, reconstructed_body.collision[0].origin.reference_frame)
+
         result = self.session.scalar(select(ShapeDAO))
         self.assertIsInstance(result, BoxDAO)
-
         box = result.from_dao()
