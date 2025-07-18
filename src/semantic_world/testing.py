@@ -88,9 +88,8 @@ def two_arm_robot_world():
         world_with_robot = robot_parser.parse()
         # world_with_pr2.plot_kinematic_structure()
         root = world_with_robot.root
-        world.merge_world(world_with_robot)
         c_root_bf = OmniDrive(parent=localization_body, child=root, _world=world)
-        world.add_connection(c_root_bf)
+        world.merge_world(world_with_robot, root_connection=c_root_bf)
     return world
 
 @pytest.fixture
