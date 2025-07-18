@@ -83,6 +83,23 @@ class WorldReasoner:
         :param world_factory: Optional callable that can be used to recreate the world object.
         :param scenario: Optional callable that represents the test method or scenario that is being executed.
         """
-        for view in required_views:
-            case_query = CaseQuery(self.world, "views", (view,), False, case_factory=world_factory, scenario=scenario)
-            self.rdr.fit_case(case_query, update_existing_rules=update_existing_views)
+        self.fit_attribute("views", required_views, update_existing_rules=update_existing_views,
+                           world_factory=world_factory, scenario=scenario)
+
+    def fit_attribute(self, attribute_name: str, attribute_types: List[Type[Any]], update_existing_rules: bool = False,
+                      world_factory: Optional[Callable] = None,
+                      scenario: Optional[Callable] = None) -> None:
+        """
+        Fit the world RDR to the required attribute types.
+
+        :param attribute_name: The attribute name that the RDR should be fitted to.
+        :param attribute_types: A list of attribute types that the RDR should be fitted to.
+        :param update_existing_rules: If True, existing rules of the given types will be updated with new rules,
+         else they will be skipped.
+        :param world_factory: Optional callable that can be used to recreate the world object.
+        :param scenario: Optional callable that represents the test method or scenario that is being executed.
+        """
+        for attr_type in attribute_types:
+            case_query = CaseQuery(self.world, attribute_name, (attr_type,), False, case_factory=world_factory,
+                                   scenario=scenario)
+            self.rdr.fit_case(case_query, update_existing_rules=update_existing_rules)

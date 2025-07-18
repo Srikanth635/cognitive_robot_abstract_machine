@@ -27,6 +27,18 @@ those elements is added by specifying a {py:class}`semantic_world.world_entity.C
 All those things have to be added to the world for full functionality.
 More information on the kinematic world model can be found [here](kinematic_world.md).
 
+
+## WorldReasoner
+
+The world reasoner {py:class}`semantic_world.reasoner.WorldReasoner` is a class that uses [Ripple Down Rules](https://github.com/AbdelrhmanBassiouny/ripple_down_rules/tree/main)
+to classify concepts and attributes of the world. This is done using a rule based classifier that benefits from incremental
+rule addition through querying the system and answering the prompts that pop up using python code.
+
+The benefit of that is the rules of the reasoner are based on the world datastructures and are updates as the datastructures
+are updated. Thus, the rules become a part of the semantic world repository and are update, migrated, and versioned with it.
+
+More information about the world reasoner can be found [here](world_reasoner.md).
+
 ## Views
 
 A View ({py:class}`semantic_world.world_entity.View`) is a different representation for a part or a collection of parts in the world that has a semantic meaning and
