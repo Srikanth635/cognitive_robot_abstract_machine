@@ -82,5 +82,5 @@ Pay attention to the logger during generation and see if it understands your dat
 +++
 
 ## The sharp bits 🔪
-The world class manages the dependencies of the bodies in the world. Whenever you retrieve a body or connection, it comes as a data access pbkect that is disconnected from the world itself.
+The world class manages the dependencies of the bodies in the world. Whenever you retrieve a body or connection, it comes as a data access object that is disconnected from the world itself.
 The relationships to the world exist and can be joined. However, when you reconstruct something else but the world, the reconstructed object does not have a world available. You can always reconstruct the entire world by querying for the objects world instead.
