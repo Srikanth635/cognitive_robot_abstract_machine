@@ -269,14 +269,17 @@ class View(WorldEntity):
     def _attr_values(self):
         """
         Yields all dataclass fields and set properties of this view.
+        Skips private fields (those starting with '_'), as well as the 'aggregated_bodies' property.
         """
         for f in fields(self):
+            if f.name.startswith('_'):
+                continue
             v = getattr(self, f.name, None)
             if self._is_relevant(v):
                 yield v
 
         for name, prop in inspect.getmembers(type(self), lambda o: isinstance(o, property)):
-            if name == "aggregated_bodies":
+            if name == "aggregated_bodies" or name.startswith('_'):
                 continue
             try:
                 v = getattr(self, name)
@@ -314,7 +317,6 @@ class View(WorldEntity):
 
         return bodies
 
-    # ---- PUBLIC ---------------------------------------------------
     @property
     def aggregated_bodies(self) -> Set[Body]:
         """
