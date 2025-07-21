@@ -40,6 +40,13 @@ class KinematicChain(RobotView):
     manipulator: Optional[Manipulator] = None
     sensors: List[Sensor] = field(default_factory=list)
 
+    @property
+    def kinematic_chain(self) -> list[RobotBody]:
+        """
+        Returns itself as a kinematic chain.
+        """
+        return self._world.compute_chain_of_bodies(self.root, self.tip_body)
+
 @dataclass
 class Manipulator(RobotView):
     """

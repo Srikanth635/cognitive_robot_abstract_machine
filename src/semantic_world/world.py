@@ -554,7 +554,7 @@ class World:
         :param body: The body for which to compute child bodies.
         :return: A list of child bodies.
         """
-        return list(self.kinematic_structure.successors(body))
+        return list(self.kinematic_structure.successors(body.index))
 
     @lru_cache(maxsize=None)
     def compute_parent_body(self, body: Body) -> Body:

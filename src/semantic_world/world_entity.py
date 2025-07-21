@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import inspect
 from collections import deque
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field, fields
 from functools import reduce
-from typing import List, Optional, TYPE_CHECKING, Set, get_args, get_type_hints
+from typing import List, Optional, TYPE_CHECKING, Set, get_args, get_type_hints, Deque
 import numpy as np
 from numpy import ndarray
 
@@ -245,18 +246,42 @@ class View(WorldEntity):
     This class can hold references to certain bodies that gain meaning in this context.
     """
 
-    @property
-    def aggregated_bodies(self) -> Set[Body]:
+    @staticmethod
+    def _is_relevant(x: object) -> bool:
         """
-        Recursively traverses the view and its attributes to find all bodies contained within it.
+        Determines if an object is a Body, a View, or an Iterable (excluding strings and bytes).
+        """
+        return (
+            isinstance(x, (Body, View)) or
+            (isinstance(x, Iterable) and not isinstance(x, (str, bytes, bytearray)))
+        )
 
-        :return: A set of bodies that are part of this view.
+    def _attr_values(self):
         """
+        Yields all dataclass fields and set properties of this view.
+        """
+        for f in fields(self):
+            v = getattr(self, f.name, None)
+            if self._is_relevant(v):
+                yield v
+
+        for name, prop in inspect.getmembers(type(self), lambda o: isinstance(o, property)):
+            if name == "aggregated_bodies":
+                continue
+            try:
+                v = getattr(self, name)
+            except Exception:
+                continue
+            if self._is_relevant(v):
+                yield v
+
+    def _aggregated_bodies(self, visited: Set[int]) -> Set[Body]:
+        """
+        Recursively collects all bodies that are part of this view.
+        """
+        stack: Deque[object] = deque([self])
         bodies: Set[Body] = set()
-        visited: Set[int] = set()
-        stack: deque = deque([self])
 
-        # Use a stack to traverse the view and its attributes
         while stack:
             obj = stack.pop()
             oid = id(obj)
@@ -265,25 +290,27 @@ class View(WorldEntity):
             visited.add(oid)
 
             match obj:
-                # Bodies are aggregated directly
                 case Body():
                     bodies.add(obj)
 
-                # Views are traversed recursively
                 case View():
-                    for f in fields(obj):
-                        value = getattr(obj, f.name)
-                        if isinstance(value, Body):
-                            bodies.add(value)
-                        elif isinstance(value, View):
-                            stack.append(value)
-                        elif isinstance(value, (list, set)):
-                            stack.extend(value)
+                    stack.extend(obj._attr_values())
 
-                # Iterables are traversed
+                case Mapping():
+                    stack.extend(v for v in obj.values() if self._is_relevant(v))
+
                 case Iterable() if not isinstance(obj, (str, bytes, bytearray)):
-                    stack.extend(obj)
+                    stack.extend(v for v in obj if self._is_relevant(v))
+
         return bodies
+
+    # ---- PUBLIC ---------------------------------------------------
+    @property
+    def aggregated_bodies(self) -> Set[Body]:
+        """
+        Returns a set of all bodies that are part of this view.
+        """
+        return self._aggregated_bodies(set())
 
     def as_bounding_box_collection(self) -> BoundingBoxCollection:
         """
