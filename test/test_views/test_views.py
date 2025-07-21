@@ -7,9 +7,9 @@ import pytest
 from numpy.ma.testutils import assert_equal
 from ripple_down_rules import TrackedObjectMixin
 
-from semantic_world import PR2, Gripper, Manipulator
-from semantic_world.reasoner import WorldReasoner
+from semantic_world import PR2, Manipulator
 from semantic_world.predicates import has
+from semantic_world.reasoner import WorldReasoner, CaseReasoner
 
 try:
     from ripple_down_rules.user_interface.gui import RDRCaseViewer
@@ -79,10 +79,13 @@ class ViewTestCase(unittest.TestCase):
         """
         Test the canBeLocatedIn predicate.
         """
-        reasoner = WorldReasoner(self.kitchen_world)
-        views = reasoner.infer_views()
+        world_reasoner = WorldReasoner(self.kitchen_world)
+        views = world_reasoner.infer_views()
         fridges = [v for v in views if isinstance(v, Fridge)]
-        assert fridges[0].possible_locations
+        view_reasoner = CaseReasoner(fridges[0])
+        view_reasoner.fit_attribute("possible_locations", (Type[View],),
+                                    False)
+        assert Kitchen in view_reasoner.reason()['possible_locations']
 
     def test_bodies_property(self):
         world_view = MultiBodyView()

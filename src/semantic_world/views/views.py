@@ -22,38 +22,6 @@ class Container(View):
     def __post_init__(self):
         self.name = self.body.name
 
-
-@dataclass
-class Door(View):  # Door has a Footprint
-    """
-    Door in a body that has a Handle and can open towards or away from the user.
-    """
-    handle: Handle
-    body: Body
-
-    def __post_init__(self):
-        self.name = self.body.name
-
-@dataclass(unsafe_hash=True)
-class Fridge(View):
-    body: Body
-    door: Door
-
-    def __post_init__(self):
-        self.name = self.body.name
-
-
-@dataclass
-class Kitchen(EnvironmentView):
-    """
-    Represents a view of a kitchen.
-    """
-    fridges: List[Fridge] = field(default_factory=list)
-
-    def __post_init__(self):
-        if self.name is None:
-            self.name = PrefixedName('kitchen', prefix='environment')
-
 ################################
 
 
@@ -68,8 +36,6 @@ class Furniture(View):
 
 
 #################### subclasses von Components
-
-
 @dataclass(unsafe_hash=True)
 class Door(Components):
     body: Body
@@ -77,6 +43,26 @@ class Door(Components):
 
     def __post_init__(self):
         self.name = self.body.name
+
+@dataclass(unsafe_hash=True)
+class Fridge(View):
+    body: Body
+    door: Door
+
+    def __post_init__(self):
+        self.name = self.body.name
+
+
+@dataclass(unsafe_hash=True)
+class Kitchen(EnvironmentView):
+    """
+    Represents a view of a kitchen.
+    """
+    fridges: List[Fridge] = field(default_factory=list)
+
+    def __post_init__(self):
+        if self.name is None:
+            self.name = PrefixedName('kitchen', prefix='environment')
 
 
 @dataclass(unsafe_hash=True)

@@ -1,24 +1,26 @@
 from __future__ import annotations
 
+import os
 from collections import deque
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from dataclasses import fields
 from functools import lru_cache
 from functools import reduce
+from os.path import dirname
 from typing import List, Optional, TYPE_CHECKING, Tuple
 from typing import Set
 
 import numpy as np
 from numpy import ndarray
-from ripple_down_rules import TrackedObjectMixin
+from ripple_down_rules import TrackedObjectMixin, GeneralRDR
 from scipy.stats import geom
 from trimesh.proximity import closest_point, nearby_faces
 from trimesh.sample import sample_surface
+from typing_extensions import ClassVar
 
 from .geometry import BoundingBox, BoundingBoxCollection
 from .geometry import Shape
-from .predicates import canBeLocatedIn
 from .prefixed_name import PrefixedName
 from .spatial_types import spatial_types as cas
 from .spatial_types.spatial_types import Point3
@@ -249,7 +251,7 @@ class View(WorldEntity):
 
     This class can hold references to certain bodies that gain meaning in this context.
     """
-    possible_locations: List[View] = field(init=False, default_factory=list)
+    possible_locations: List[View] = field(init=False, default_factory=list, hash=False)
     """
     A list of views that represent possible locations for this view.
     """
