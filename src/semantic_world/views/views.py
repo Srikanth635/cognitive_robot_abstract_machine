@@ -2,7 +2,9 @@ from dataclasses import dataclass, field
 
 from typing_extensions import List
 
+from semantic_world import PrefixedName
 from semantic_world.world import View, Body
+from semantic_world.world_entity import EnvironmentView
 
 
 @dataclass(unsafe_hash=True)
@@ -39,6 +41,18 @@ class Fridge(View):
 
     def __post_init__(self):
         self.name = self.body.name
+
+
+@dataclass
+class Kitchen(EnvironmentView):
+    """
+    Represents a view of a kitchen.
+    """
+    fridges: List[Fridge] = field(default_factory=list)
+
+    def __post_init__(self):
+        if self.name is None:
+            self.name = PrefixedName('kitchen', prefix='environment')
 
 ################################
 

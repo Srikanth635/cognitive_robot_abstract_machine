@@ -18,6 +18,7 @@ from trimesh.sample import sample_surface
 
 from .geometry import BoundingBox, BoundingBoxCollection
 from .geometry import Shape
+from .predicates import canBeLocatedIn
 from .prefixed_name import PrefixedName
 from .spatial_types import spatial_types as cas
 from .spatial_types.spatial_types import Point3
@@ -247,6 +248,10 @@ class View(WorldEntity):
     Represents a view on a set of bodies in the world.
 
     This class can hold references to certain bodies that gain meaning in this context.
+    """
+    possible_locations: List[View] = field(init=False, default_factory=list)
+    """
+    A list of views that represent possible locations for this view.
     """
 
     @property

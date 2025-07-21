@@ -5,9 +5,11 @@ import unittest
 
 import pytest
 from numpy.ma.testutils import assert_equal
-from ripple_down_rules import TrackedObjectMixin, has
+from ripple_down_rules import TrackedObjectMixin
 
+from semantic_world import PR2, Gripper, Manipulator
 from semantic_world.reasoner import WorldReasoner
+from semantic_world.predicates import has
 
 try:
     from ripple_down_rules.user_interface.gui import RDRCaseViewer
@@ -71,6 +73,16 @@ class ViewTestCase(unittest.TestCase):
         assert has(Drawer, Handle)
         assert has(Cabinet, Drawer)
         assert has(Cabinet, Handle, recursive=True)
+        assert has(PR2, Manipulator)
+
+    def test_can_be_located_in(self):
+        """
+        Test the canBeLocatedIn predicate.
+        """
+        reasoner = WorldReasoner(self.kitchen_world)
+        views = reasoner.infer_views()
+        fridges = [v for v in views if isinstance(v, Fridge)]
+        assert fridges[0].possible_locations
 
     def test_bodies_property(self):
         world_view = MultiBodyView()
