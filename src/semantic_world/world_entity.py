@@ -11,6 +11,7 @@ from typing import Set
 
 import numpy as np
 from numpy import ndarray
+from ripple_down_rules import TrackedObjectMixin
 from scipy.stats import geom
 from trimesh.proximity import closest_point, nearby_faces
 from trimesh.sample import sample_surface
@@ -31,7 +32,7 @@ id_generator = IDGenerator()
 
 
 @dataclass(unsafe_hash=True)
-class WorldEntity:
+class WorldEntity(TrackedObjectMixin):
     """
     A class representing an entity in the world.
     """

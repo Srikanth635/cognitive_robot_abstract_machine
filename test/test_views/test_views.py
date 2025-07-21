@@ -5,6 +5,7 @@ import unittest
 
 import pytest
 from numpy.ma.testutils import assert_equal
+from ripple_down_rules import TrackedObjectMixin, has
 
 from semantic_world.reasoner import WorldReasoner
 
@@ -63,6 +64,13 @@ class ViewTestCase(unittest.TestCase):
         if RDRCaseViewer is not None and QApplication is not None and cls.use_gui:
             cls.app = QApplication(sys.argv)
             cls.viewer = RDRCaseViewer()
+
+    def test_dependency_graph(self):
+        TrackedObjectMixin.make_class_dependency_graph()
+        TrackedObjectMixin.to_dot("dependency_graph")
+        assert has(Drawer, Handle)
+        assert has(Cabinet, Drawer)
+        assert has(Cabinet, Handle, recursive=True)
 
     def test_bodies_property(self):
         world_view = MultiBodyView()
