@@ -11,18 +11,23 @@ from numpy import ndarray
 
 from .geometry import Shape, BoundingBox, BoundingBoxCollection
 from dataclasses import dataclass, field
+from dataclasses import fields
 from functools import lru_cache
+from functools import reduce
 from typing import List, Optional, TYPE_CHECKING, Tuple
+from typing import Set
 
 import numpy as np
+from numpy import ndarray
+from scipy.stats import geom
 from trimesh.proximity import closest_point, nearby_faces
 from trimesh.sample import sample_surface
-from scipy.stats import geom
 
+from .geometry import BoundingBox, BoundingBoxCollection
 from .geometry import Shape
 from .prefixed_name import PrefixedName
-from .spatial_types.spatial_types import TransformationMatrix, Expression, Point3
 from .spatial_types import spatial_types as cas
+from .spatial_types.spatial_types import Point3
 from .spatial_types.spatial_types import TransformationMatrix, Expression
 from .types import NpMatrix4x4
 from .utils import IDGenerator
@@ -86,6 +91,11 @@ class Body(WorldEntity):
         if self._world is not None:
             self.index = self._world.kinematic_structure.add_node(self)
 
+        for c in self.collision:
+            c.origin.reference_frame = self
+        for v in self.visual:
+            v.origin.reference_frame = self
+
     def __hash__(self):
         return hash(self.name)
 
@@ -139,7 +149,8 @@ class Body(WorldEntity):
             points[:, :3, 3] = q
 
             # Transform from the mesh to the other mesh
-            transform = np.linalg.inv(self.collision[0].origin.to_np()) @  self._world.compute_forward_kinematics_np(self, other) @ other.collision[0].origin.to_np()
+            transform = np.linalg.inv(self.collision[0].origin.to_np()) @ self._world.compute_forward_kinematics_np(
+                self, other) @ other.collision[0].origin.to_np()
             points = points @ transform
 
             points = points[:, :3, 3]  # Extract the points from the transformation matrix
@@ -210,7 +221,6 @@ class Body(WorldEntity):
             world_bboxes.append(world_bb)
 
         return BoundingBoxCollection(world_bboxes)
-
 
     @property
     def global_pose(self) -> NpMatrix4x4:
@@ -337,6 +347,7 @@ class EnvironmentView(View):
     Represents a view of the environment.
     """
 
+
 @dataclass
 class Connection(WorldEntity):
     """
@@ -361,8 +372,8 @@ class Connection(WorldEntity):
     def __post_init__(self):
         if self.origin_expression is None:
             self.origin_expression = TransformationMatrix()
-        self.origin_expression.reference_frame = self.parent.name
-        self.origin_expression.child_frame = self.child.name
+        self.origin_expression.reference_frame = self.parent
+        self.origin_expression.child_frame = self.child
         if self.name is None:
             self.name = PrefixedName(f'{self.parent.name.name}_T_{self.child.name.name}', prefix=self.child.name.prefix)
 

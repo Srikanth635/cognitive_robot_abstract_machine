@@ -1,13 +1,15 @@
-from ..views import Cabinet, Container, Door, Drawer, Fridge, Handle
-from typing_extensions import List, Set, Union
-from ...connections import FixedConnection, PrismaticConnection, RevoluteConnection
-from ...world import World
+from typing_extensions import List, Union
+
+from semantic_world.views.views import Cabinet, Container, Door, Drawer, Fridge, Handle
+from semantic_world.connections import FixedConnection, PrismaticConnection, RevoluteConnection
+from semantic_world.world import World
 
 
 def conditions_90574698325129464513441443063592862114(case) -> bool:
     def has_bodies_named_handle(case: World) -> bool:
         """Get conditions on whether it's possible to conclude a value for World.views  of type Handle."""
         return any("handle" in b.name.name.lower() for b in case.bodies)
+
     return has_bodies_named_handle(case)
 
 
@@ -15,7 +17,7 @@ def conclusion_90574698325129464513441443063592862114(case) -> List[Handle]:
     def get_handles(case: World) -> Union[set, list, Handle]:
         """Get possible value(s) for World.views of types list/set of Handle"""
         return [Handle(b) for b in case.bodies if "handle" in b.name.name.lower()]
-    
+
     return get_handles(case)
 
 
@@ -25,6 +27,7 @@ def conditions_14920098271685635920637692283091167284(case) -> bool:
         return (any(v for v in case.views if type(v) is Handle) and
                 any(c for c in case.connections if isinstance(c, PrismaticConnection)) and
                 any(c for c in case.connections if isinstance(c, FixedConnection)))
+
     return has_handles_and_fixed_and_prismatic_connections(case)
 
 
@@ -39,7 +42,7 @@ def conclusion_14920098271685635920637692283091167284(case) -> List[Container]:
         drawer_containers = set(children_of_prismatic_connections).intersection(
             set([fc.parent for fc in fixed_connections_with_handle_child]))
         return [Container(b) for b in drawer_containers]
-    
+
     return get_containers(case)
 
 
@@ -47,6 +50,7 @@ def conditions_331345798360792447350644865254855982739(case) -> bool:
     def has_handles_and_containers(case: World) -> bool:
         """Get conditions on whether it's possible to conclude a value for World.views  of type Drawer."""
         return any(v for v in case.views if type(v) is Handle) and any(v for v in case.views if type(v) is Container)
+
     return has_handles_and_containers(case)
 
 
@@ -66,7 +70,7 @@ def conclusion_331345798360792447350644865254855982739(case) -> List[Drawer]:
         drawers = [Drawer([cont for cont in containers if dc.parent == cont.body][0],
                           [h for h in handles if dc.child == h.body][0]) for dc in drawer_handle_connections]
         return drawers
-    
+
     return get_drawers(case)
 
 
@@ -74,6 +78,7 @@ def conditions_35528769484583703815352905256802298589(case) -> bool:
     def has_drawers(case: World) -> bool:
         """Get conditions on whether it's possible to conclude a value for World.views  of type Cabinet."""
         return any(v for v in case.views if type(v) is Drawer)
+
     return has_drawers(case)
 
 
@@ -93,9 +98,9 @@ def conclusion_35528769484583703815352905256802298589(case) -> List[Cabinet]:
             cabinet_drawer_container_bodies = [pc.child for pc in cc_prismatic_connections]
             cabinet_drawers = [d for d in drawers if d.container.body in cabinet_drawer_container_bodies]
             cabinets.append(Cabinet(Container(ccb), cabinet_drawers))
-    
+
         return cabinets
-    
+
     return get_cabinets(case)
 
 
@@ -104,6 +109,7 @@ def conditions_59112619694893607910753808758642808601(case) -> bool:
         """Get conditions on whether it's possible to conclude a value for World.views  of type Door."""
         return (any(v for v in case.views if isinstance(v, Handle)) and
                 any(c for c in case.connections if isinstance(c, RevoluteConnection)))
+
     return has_handles_and_revolute_connections(case)
 
 
@@ -114,14 +120,16 @@ def conclusion_59112619694893607910753808758642808601(case) -> List[Door]:
         handle_bodies = [h.body for h in handles]
         connections_with_handles = [c for c in case.connections if isinstance(c, FixedConnection) and
                                     c.child in handle_bodies]
-    
+
         revolute_connections = [c for c in case.connections if isinstance(c, RevoluteConnection)]
-        bodies_connected_to_handles = [c.parent if c.child in handle_bodies else c.child for c in connections_with_handles]
+        bodies_connected_to_handles = [c.parent if c.child in handle_bodies else c.child for c in
+                                       connections_with_handles]
         bodies_that_have_revolute_joints = [b for b in bodies_connected_to_handles for c in revolute_connections
                                             if b == c.child]
         body_handle_connections = [c for c in connections_with_handles if c.parent in bodies_that_have_revolute_joints]
         doors = [Door(c.parent, [h for h in handles if h.body == c.child][0]) for c in body_handle_connections]
         return doors
+
     return get_doors(case)
 
 
@@ -129,6 +137,7 @@ def conditions_10840634078579061471470540436169882059(case) -> bool:
     def has_doors_with_fridge_in_their_name(case: World) -> bool:
         """Get conditions on whether it's possible to conclude a value for World.views  of type Fridge."""
         return any(v for v in case.views if isinstance(v, Door) and "fridge" in v.body.name.name.lower())
+
     return has_doors_with_fridge_in_their_name(case)
 
 
@@ -147,6 +156,5 @@ def conclusion_10840634078579061471470540436169882059(case) -> List[Fridge]:
                and 'fridge' in c.parent.name.name.lower()
         ]
         return [Fridge(c.parent, fridge_doors[fridge_doors_bodies.index(c.child)]) for c in fridge_door_connections]
+
     return get_fridges(case)
-
-
