@@ -60,14 +60,12 @@ jobs:
         run: |
           source /opt/ros/overlay_ws/src/semantic_world-venv/bin/activate
           cd /opt/ros/overlay_ws/src/semantic_world/examples
-          rm -rf tmp
-          mkdir tmp
           python -m jupytext --to notebook *.md
-          mv *.ipynb tmp && cd tmp
 
       - name: Run tests
         run: |
           source /opt/ros/overlay_ws/install/setup.bash
           source /opt/ros/overlay_ws/src/semantic_world-venv/bin/activate
-          cd /opt/ros/overlay_ws/src/semantic_world/examples/tmp
-          python -m treon --thread 1 -v --exclude=migrate_neems.ipynb --exclude=improving_actions.ipynb
+          cd /opt/ros/overlay_ws/src/semantic_world/examples/
+          python -m treon --thread 1 -v
+          rm *.ipynb
