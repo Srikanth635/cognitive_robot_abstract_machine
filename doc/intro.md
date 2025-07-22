@@ -60,6 +60,6 @@ The types for sqlalchemy are defined in {py:mod}`semantic_world.orm.model`.
 The interface to sqlalchemy is auto-generated to {py:mod}`semantic_world.orm.ormatic_interface`.
 The script to recreate the interface is found in [here](https://github.com/cram2/semantic_world/blob/main/scripts/generate_orm.py).
 
-Learn more about the ORM in TODO.
+Learn more about the ORM in [this tutorial](orm-guide).
 
 
