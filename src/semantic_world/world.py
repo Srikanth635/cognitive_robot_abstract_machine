@@ -260,6 +260,11 @@ class World:
     Is set to True, when a function with @modifies_world is called or world.modify_world context is used.
     """
 
+    primary_prefix: Optional[str] = None
+    """
+    Prefix used for the world. Acts as default namespace for all bodies and views in the world which do not have a prefix.
+    """
+
     @property
     def root(self) -> Body:
         """
@@ -471,11 +476,14 @@ class World:
         """
         Merge a world into the existing one by merging degrees of freedom, states, connections, and bodies.
         This removes all bodies and connections from `other`.
+        The self does not have a primary prefix, it will be set to the primary prefix of the other world.
 
         :param other: The world to be added.
         :param root_connection: If provided, this connection will be used to connect the two worlds. Otherwise, a new Connection6DoF will be created
         :return: None
         """
+        if self.primary_prefix is None:
+            self.primary_prefix = other.primary_prefix
         self_root = self.root
         other_root = other.root
         for dof in other.degrees_of_freedom:
@@ -607,7 +615,7 @@ class World:
         :param body: The body for which to compute child bodies.
         :return: A list of child bodies.
         """
-        return list(self.kinematic_structure.successors(body))
+        return list(self.kinematic_structure.successors(body.index))
 
 
     @lru_cache(maxsize=None)

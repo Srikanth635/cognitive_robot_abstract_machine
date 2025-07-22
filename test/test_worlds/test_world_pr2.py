@@ -175,8 +175,7 @@ def test_apply_control_commands_omni_drive_pr2(pr2_world):
     assert pr2_world.state[omni_drive.y.name].position == 0.1094837581924854
 
 def test_pr2_view(pr2_world):
-    pr2 = PR2.get_view(pr2_world)
-    print(pr2)
+    pr2 = PR2.from_world(pr2_world)
 
     assert len(pr2.manipulators) == 2
     assert len(pr2.manipulator_chains) == 2
