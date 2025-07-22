@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from .geometry import BoundingBox, BoundingBoxCollection
 from .variables import SpatialVariables
-from .views import MultiBodyView
+from .views.views import MultiBodyView
 from .world import World
 from .world_entity import View
 
