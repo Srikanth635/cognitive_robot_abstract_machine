@@ -7,6 +7,8 @@ parts:
 - caption: Concepts
   chapters:
     - file: kinematic_world
+    - file: views
+    - file: world_reasoner
     - file: style_guide
 - caption: Examples
   chapters:
