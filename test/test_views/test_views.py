@@ -5,10 +5,9 @@ import unittest
 
 import pytest
 from numpy.ma.testutils import assert_equal
-from ripple_down_rules import TrackedObjectMixin
 
-from semantic_world import PR2, Manipulator
-from semantic_world.predicates import has
+from semantic_world import PR2, Manipulator, AbstractRobot
+from semantic_world.predicates import has, isA, TrackedObjectMixin
 from semantic_world.reasoner import WorldReasoner, CaseReasoner
 
 try:
@@ -74,11 +73,13 @@ class ViewTestCase(unittest.TestCase):
         assert has(Cabinet, Drawer)
         assert has(Cabinet, Handle, recursive=True)
         assert has(PR2, Manipulator)
+        assert isA(PR2, AbstractRobot)
 
     def test_can_be_located_in(self):
         """
         Test the canBeLocatedIn predicate.
         """
+        TrackedObjectMixin.make_class_dependency_graph()
         world_reasoner = WorldReasoner(self.kitchen_world)
         views = world_reasoner.infer_views()
         fridges = [v for v in views if isinstance(v, Fridge)]

@@ -24,6 +24,10 @@ class Handle(View):
 class Container(View):
     body: Body
 
+    def __post_init__(self):
+        self.name = self.body.name
+
+
 @dataclass(unsafe_hash=True)
 class Table(View):
     """
