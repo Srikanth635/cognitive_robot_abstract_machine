@@ -68,4 +68,4 @@ jobs:
           source /opt/ros/overlay_ws/src/semantic_world-venv/bin/activate
           cd /opt/ros/overlay_ws/src/semantic_world/examples/
           python -m treon --thread 1 -v
-          rm -rf *.ipynb
+          rm *.ipynb
