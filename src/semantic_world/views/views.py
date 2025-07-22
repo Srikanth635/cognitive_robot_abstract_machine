@@ -70,7 +70,7 @@ class Table(View):
         return [Point3.from_xyz(*s, reference_frame=self.top) for s in samples]
 
     def __post_init__(self):
-        self.name = self.body.name
+        self.name = self.top.name
 
 ################################
 
