@@ -7,6 +7,7 @@ from typing_extensions import Optional, List, Self
 
 from .prefixed_name import PrefixedName
 from .spatial_types.spatial_types import Vector3
+from .views import ControlledConnections
 from .world import World
 from .world_entity import Body, RootedView, Connection
 
@@ -152,6 +153,8 @@ class AbstractRobot(RootedView):
     """
     A collection of all kinematic chains containing a sensor, such as a camera.
     """
+
+    controlled_connections: ControlledConnections = field(default_factory=ControlledConnections)
 
     def __post_init__(self):
         for manipulator in self.manipulators:
