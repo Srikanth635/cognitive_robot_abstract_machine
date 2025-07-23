@@ -268,16 +268,21 @@ class Connection6DoF(PassiveConnection):
 
     def __post_init__(self):
         super().__post_init__()
-        self.x = self.x or self._world.create_degree_of_freedom(name=PrefixedName('x', str(self.name)))
-        self.y = self.y or self._world.create_degree_of_freedom(name=PrefixedName('y', str(self.name)))
-        self.z = self.z or self._world.create_degree_of_freedom(name=PrefixedName('z', str(self.name)))
-        self.qx = self.qx or self._world.create_degree_of_freedom(name=PrefixedName('qx', str(self.name)))
-        self.qy = self.qy or self._world.create_degree_of_freedom(name=PrefixedName('qy', str(self.name)))
-        self.qz = self.qz or self._world.create_degree_of_freedom(name=PrefixedName('qz', str(self.name)))
-        self.qw = self.qw or self._world.create_degree_of_freedom(name=PrefixedName('qw', str(self.name)))
+
+        if self.qx is None and self.qy is None and self.qz is None and self.qw is None:
+            self.x = self._world.create_degree_of_freedom(name=PrefixedName('x', str(self.name)))
+            self.y = self._world.create_degree_of_freedom(name=PrefixedName('y', str(self.name)))
+            self.z = self._world.create_degree_of_freedom(name=PrefixedName('z', str(self.name)))
+            self.qx = self._world.create_degree_of_freedom(name=PrefixedName('qx', str(self.name)))
+            self.qy = self._world.create_degree_of_freedom(name=PrefixedName('qy', str(self.name)))
+            self.qz = self._world.create_degree_of_freedom(name=PrefixedName('qz', str(self.name)))
+            self.qw = self._world.create_degree_of_freedom(name=PrefixedName('qw', str(self.name)))
+            self._world.state[self.qw.name].position = 1.
+        elif any(q is None for q in (self.qx, self.qy, self.qz, self.qw)):
+            raise Exception('all quaternion dofs must be None or all must be not None')
+
         self.passive_dofs = [self.x, self.y, self.z, self.qx, self.qy, self.qz, self.qw]
 
-        self._world.state[self.qw.name].position = 1.
         parent_P_child = cas.Point3((self.x.symbols.position,
                                      self.y.symbols.position,
                                      self.z.symbols.position))

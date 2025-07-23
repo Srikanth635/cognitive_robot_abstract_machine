@@ -18,6 +18,7 @@ from .spatial_types import TransformationMatrix, Point3
 from .spatial_types.spatial_types import Expression
 from .utils import IDGenerator
 from .variables import SpatialVariables
+import trimesh.exchange.stl
 
 id_generator = IDGenerator()
 
@@ -137,9 +138,10 @@ class TriangleMesh(Shape):
     @cached_property
     def file(self):
         f = tempfile.NamedTemporaryFile(delete=False)
-        self.mesh.export(f.name)
+        print(f)
+        with open(f.name, "w") as fd:
+            fd.write(trimesh.exchange.stl.export_stl_ascii(self.mesh))
         return f
-
 
 
 @dataclass

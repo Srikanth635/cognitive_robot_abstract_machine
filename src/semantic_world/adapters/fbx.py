@@ -5,8 +5,10 @@ from typing import Optional
 try:
     import bpy
     from bpy import types as bpy_types
+    BlenderObject = bpy_types.Object
 except ImportError:
-    bpy = None
+    bpy = object
+    BlenderObject = object
     logging.warn("bpy not found")
 
 from ..connections import Connection6DoF
@@ -19,7 +21,7 @@ import numpy as np
 import trimesh
 
 
-def blender_mesh_to_trimesh(obj: bpy.types.Object,
+def blender_mesh_to_trimesh(obj: BlenderObject,
                             apply_modifiers: bool = True,
                             preserve_world_transform: bool = False) -> trimesh.Trimesh:
     """
@@ -106,7 +108,10 @@ class FBXParser:
         bpy.ops.wm.read_factory_settings(use_empty=True)
 
         # import the fbx
-        bpy.ops.import_scene.fbx(filepath=self.file_path)
+        bpy.ops.import_scene.fbx(filepath=self.file_path, axis_forward='Y', axis_up='Z', global_scale=0.01,
+                                 # bake_space_transform=True,
+                                 # automatic_bone_orientation=False,  # keep bones untouched
+                                 )
 
         with world.modify_world():
 
