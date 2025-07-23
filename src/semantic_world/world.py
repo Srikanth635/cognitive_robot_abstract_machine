@@ -15,6 +15,7 @@ import rustworkx.visit
 import rustworkx.visualization
 from typing_extensions import List
 
+from .connections import ActiveConnection, PassiveConnection
 from .connections import HasUpdateState, Has1DOFState
 from .degree_of_freedom import DegreeOfFreedom
 from .ik_solver import InverseKinematicsSolver
@@ -277,6 +278,22 @@ class World:
 
     def __hash__(self):
         return hash(id(self))
+    
+    @property
+    def active_degrees_of_freedom(self) -> List[DegreeOfFreedom]:
+        dofs = []
+        for connection in self.connections:
+            if isinstance(connection, ActiveConnection):
+                dofs.extend(connection.active_dofs)
+        return dofs
+    
+    @property
+    def passive_degrees_of_freedom(self) -> List[DegreeOfFreedom]:
+        dofs = []
+        for connection in self.connections:
+            if isinstance(connection, PassiveConnection):
+                dofs.extend(connection.passive_dofs)
+        return dofs
 
     def validate(self) -> None:
         """
