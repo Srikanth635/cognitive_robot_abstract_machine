@@ -1,6 +1,9 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 
+import trimesh
+from io import BytesIO
+
 from ormatic.dao import AlternativeMapping, T
 
 from ..degree_of_freedom import DegreeOfFreedom
@@ -11,6 +14,10 @@ from ..spatial_types.spatial_types import Quaternion
 from ..spatial_types.symbol_manager import symbol_manager
 from ..world import World, Body
 from ..world_entity import Connection, View
+from typing import Type, Optional
+from sqlalchemy import TypeDecorator
+from sqlalchemy import types
+import trimesh.exchange.stl
 
 
 @dataclass
@@ -22,7 +29,6 @@ class WorldMapping(AlternativeMapping[World]):
 
     @classmethod
     def create_instance(cls, obj: World):
-        # return cls(obj.bodies[:2], [],[],[], )
         return cls(obj.bodies, obj.connections, obj.views, list(obj.degrees_of_freedom))
 
     def create_from_dao(self) -> World:
@@ -153,3 +159,22 @@ class DegreeOfFreedomMapping(AlternativeMapping[DegreeOfFreedom]):
         lower_limits = DerivativeMap(data=self.lower_limits)
         upper_limits = DerivativeMap(data=self.upper_limits)
         return DegreeOfFreedom(name=self.name, lower_limits=lower_limits, upper_limits=upper_limits)
+
+
+
+class TrimeshType(TypeDecorator):
+    """
+    Type that casts fields that are of type `type` to their class name on serialization and converts the name
+    to the class itself through the globals on load.
+    """
+    impl = types.LargeBinary
+
+    def process_bind_param(self, value: trimesh.Trimesh, dialect):
+        # return binary version of trimesh
+        return trimesh.exchange.stl.export_stl(value)
+
+    def process_result_value(self, value: impl, dialect) -> Optional[trimesh.Trimesh]:
+        if value is None:
+            return None
+        mesh = trimesh.Trimesh(**trimesh.exchange.stl.load_stl_binary(BytesIO(value)))
+        return mesh

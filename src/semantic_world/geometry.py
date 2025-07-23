@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import itertools
+import tempfile
 from abc import ABC
 from dataclasses import dataclass, field
 from functools import cached_property
 from typing import Optional, List, Iterator
 
+from trimesh import Trimesh
 from typing_extensions import Self
 
 import trimesh
@@ -118,6 +120,25 @@ class Mesh(Shape):
         """
         return BoundingBox.from_mesh(self.mesh)
 
+
+@dataclass
+class TriangleMesh(Shape):
+
+    mesh: Optional[Trimesh] = None
+    """
+    The loaded mesh object.
+    """
+
+    scale: Scale = field(default_factory=Scale)
+    """
+    Scale of the mesh.
+    """
+
+    @cached_property
+    def file(self):
+        f = tempfile.NamedTemporaryFile(delete=False)
+        self.mesh.export(f.name)
+        return f
 
 
 

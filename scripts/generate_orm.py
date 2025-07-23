@@ -3,10 +3,12 @@ import os
 import sys
 from enum import Enum
 
+import trimesh
+
 from ormatic.ormatic import logger, ORMatic
 from ormatic.utils import classes_of_module, recursive_subclasses
 from sqlacodegen.generators import TablesGenerator
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, LargeBinary
 from sqlalchemy.orm import registry, Session
 
 import semantic_world.geometry
@@ -47,19 +49,19 @@ def generate_orm():
     """
     Generate the ORM classes for the pycram package.
     """
-    # Set up logging
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-
-    logger.addHandler(handler)
-    logger.setLevel(logging.INFO)
+    # # Set up logging
+    # handler = logging.StreamHandler(sys.stdout)
+    # handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    #
+    # logger.addHandler(handler)
+    # logger.setLevel(logging.INFO)
 
     mapper_registry = registry()
     engine = create_engine('sqlite:///:memory:')
     session = Session(engine)
 
     # Create an ORMatic object with the classes to be mapped
-    ormatic = ORMatic(list(classes))
+    ormatic = ORMatic(list(classes), type_mappings={trimesh.Trimesh: TrimeshType})
 
     # Generate the ORM classes
     ormatic.make_all_tables()
