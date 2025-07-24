@@ -138,10 +138,15 @@ class TriangleMesh(Shape):
     @cached_property
     def file(self):
         f = tempfile.NamedTemporaryFile(delete=False)
-        print(f)
         with open(f.name, "w") as fd:
             fd.write(trimesh.exchange.stl.export_stl_ascii(self.mesh))
         return f
+
+    def as_bounding_box(self) -> BoundingBox:
+        """
+        Returns the bounding box of the mesh.
+        """
+        return BoundingBox.from_mesh(self.mesh)
 
 
 @dataclass

@@ -8,6 +8,8 @@ from sqlalchemy.orm import Session
 from ormatic.dao import to_dao
 from semantic_world.orm.ormatic_interface import *
 from semantic_world.adapters.fbx import FBXParser
+from semantic_world.world import World
+
 
 class FBXParserTest(unittest.TestCase):
 
@@ -26,24 +28,28 @@ class FBXParserTest(unittest.TestCase):
     def test_parse_fbx(self):
         # Base.metadata.drop_all(bind=self.session.bind)
         parser = FBXParser(self.fbx_path)
-        world = parser.parse()
+        worlds = parser.parse()
 
-        dao = to_dao(world)
-        self.session.add(dao)
+        daos = [to_dao(world) for world in worlds]
+        self.session.add_all(daos)
         self.session.commit()
 
     def test_query(self):
         from semantic_world.adapters.viz_marker import VizMarkerPublisher
-
-        query = select(WorldMappingDAO)
-        world_dao = self.session.scalars(query).first()
-        world = world_dao.from_dao()
-
-
-
         import rclpy
         rclpy.init()
+
+        query = select(WorldMappingDAO)
+        world_dao = self.session.scalars(query).all()
+        world: World = world_dao[1].from_dao()
+
+        for body in world.bodies:
+            for shape in body.collision:
+                print(shape.origin.to_position())
+
         node = rclpy.create_node("viz_marker")
 
         p = VizMarkerPublisher(world, node)
         time.sleep(100)
+        p._stop_publishing()
+        rclpy.shutdown()
