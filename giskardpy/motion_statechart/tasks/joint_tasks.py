@@ -54,7 +54,7 @@ class JointPositionList(Task):
         for connection, current, goal, velocity_limit in zip(self.connections, self.current_positions,
                                                        self.goal_positions, self.velocity_limits):
             if (isinstance(connection, RevoluteConnection)
-                    and connection.dof.has_position_limits()):
+                    and not connection.dof.has_position_limits()):
                 error = cas.shortest_angular_distance(current, goal)
             else:
                 error = goal - current

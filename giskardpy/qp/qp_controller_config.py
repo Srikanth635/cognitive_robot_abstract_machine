@@ -80,6 +80,8 @@ class QPControllerConfig:
             raise ValueError('prediction horizon must be >= 4.')
         self.__endless_mode = self.max_trajectory_length is None
         self.set_qp_solver(self.qp_solver_id)
+
+    def setup(self):
         self.init_qp_controller()
 
     def set_qp_solver(self, solver_id: SupportedQPSolver) -> None:

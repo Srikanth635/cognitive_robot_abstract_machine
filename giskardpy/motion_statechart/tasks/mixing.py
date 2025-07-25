@@ -24,7 +24,7 @@ class SpiralMixing(Task):
         super().__init__(name=name, plot=plot)
 
         root_T_tip = god_map.world.compose_fk_expression(root_link=root_link, tip_link=tip_link)
-        t = symbol_manager.time
+        t = god_map.time_symbol
 
         r = radial_increment * t
         a = angle_increment * t

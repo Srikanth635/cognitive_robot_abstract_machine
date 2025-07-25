@@ -39,7 +39,7 @@ class BaseTrajFollower(Goal):
     def current_traj_point(self, free_variable_name: PrefixName, start_t: float,
                            derivative: Derivatives = Derivatives.position) \
             -> cas.Expression:
-        time = symbol_manager.time
+        time = god_map.time_symbol
         b_result_cases = []
         for t in range(self.trajectory_length):
             b = t * god_map.qp_controller.mpc_dt

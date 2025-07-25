@@ -6,16 +6,18 @@ from typing import TYPE_CHECKING, List, Dict, Tuple
 from giskardpy.middleware import get_middleware
 from giskardpy.utils.utils import create_path
 from semantic_world.prefixed_name import PrefixedName
+from semantic_world.spatial_types.symbol_manager import symbol_manager
 
 if TYPE_CHECKING:
+    from semantic_world.degree_of_freedom import DegreeOfFreedom
     from semantic_world.world import World
-    from giskardpy.qp.free_variable import FreeVariable
     from giskardpy.qp.next_command import NextCommands
     from giskardpy.model.trajectory import Trajectory
     from giskardpy.qp.qp_controller import QPController
     from giskardpy.motion_statechart.motion_statechart_manager import MotionStatechartManager
     from giskardpy.debug_expression_manager import DebugExpressionManager
     from giskardpy.model.collision_world_syncer import CollisionWorldSynchronizer, Collisions
+    import semantic_world.spatial_types.spatial_types as cas
 
 
 class GodMap:
@@ -31,6 +33,7 @@ class GodMap:
 
     # %% controller datatypes
     time: float  # real/planning time in s
+    time_symbol: cas.Symbol
     control_cycle_counter: int
     trajectory: Trajectory
     qp_solver_solution: NextCommands
@@ -38,7 +41,7 @@ class GodMap:
     closest_point: Collisions
     motion_start_time: float
     hack: float
-    free_variables: List[FreeVariable]
+    free_variables: List[DegreeOfFreedom]
 
     # %% other
     tmp_folder: str
@@ -54,6 +57,8 @@ class GodMap:
         elif item == 'debug_expression_manager':
             from giskardpy.debug_expression_manager import DebugExpressionManager
             self.debug_expression_manager = DebugExpressionManager()
+        elif item == 'time_symbol':
+            self.time_symbol = symbol_manager.register_symbol_provider('time', lambda : self.time)
         return super().__getattribute__(item)
 
     def is_collision_checking_enabled(self):

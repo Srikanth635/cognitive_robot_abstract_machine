@@ -256,7 +256,7 @@ def mpc(upper_limits: Tuple[Tuple[float, ...], ...],
 
 
 def simple_mpc(vel_limit, acc_limit, jerk_limit, current_vel, current_acc, dt, ph, q_weight, lin_weight,
-               solver_class=None, link_to_current_vel: bool = True):
+               solver_class, link_to_current_vel: bool = True):
     upper_limits = ((vel_limit,) * ph,
                     (acc_limit,) * ph,
                     (jerk_limit,) * ph)

@@ -6,6 +6,8 @@ from itertools import product, combinations_with_replacement, combinations
 from typing import List, Dict, Optional, Tuple, Iterable, Set, DefaultDict, Callable
 
 import numpy as np
+
+from semantic_world.robots import AbstractRobot
 from semantic_world.spatial_types.symbol_manager import symbol_manager
 from lxml import etree
 
@@ -524,13 +526,8 @@ class CollisionWorldSynchronizer:
         raise KeyError(f'robot names {robot_name} does not exist')
 
     @property
-    def robots(self) -> List[WorldBranch]:
-        return [god_map.world.groups[robot_name] for robot_name in god_map.world.groups.keys()
-                if god_map.world.groups[robot_name].actuated]
-
-    @property
-    def group_names(self):
-        return list(god_map.world.groups.keys())
+    def robots(self) -> List[AbstractRobot]:
+        return [view for view in god_map.world.views if isinstance(view, AbstractRobot)]
 
     @property
     def robot_names(self):

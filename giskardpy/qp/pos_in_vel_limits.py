@@ -112,7 +112,7 @@ def implicit_vel_profile(acc_limit: float, jerk_limit: float, dt: float, ph: int
 @memoize
 @profile
 def b_profile(dof_symbols: DerivativeMap[cas.Symbol],
-              lower_limits: DerivativeMap[float], upper_limits: DerivativeMap[float],
+              lower_limits: DerivativeMap[float], upper_limits: DerivativeMap[float], solver_class,
               dt: float, ph: int, eps: float = 0.00001):
     vel_limit = upper_limits.velocity
     acc_limit = upper_limits.acceleration
@@ -128,7 +128,8 @@ def b_profile(dof_symbols: DerivativeMap[cas.Symbol],
                                 current_vel=vel_limit,
                                 current_acc=0,
                                 dt=dt, ph=ph,
-                                q_weight=(0, 0, 0), lin_weight=(-1, 0, 0))
+                                q_weight=(0, 0, 0), lin_weight=(-1, 0, 0),
+                                solver_class=solver_class)
         vel_profile_mpc = profile[:ph]
         acc_profile_mpc = profile[ph:ph * 2]
         pos_error_lb = lower_limits.position - dof_symbols.position

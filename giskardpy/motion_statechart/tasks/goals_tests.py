@@ -35,7 +35,7 @@ class DebugGoal(Task):
         e2 = cas.Expression(np.array([1, 2, 3]))
         god_map.debug_expression_manager.add_debug_expression('e2', e2)
 
-        t = symbol_manager.time
+        t = god_map.time_symbol
         god_map.debug_expression_manager.add_debug_expression('t', t)
 
         god_map.debug_expression_manager.add_debug_expression('f', 23)

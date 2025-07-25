@@ -107,26 +107,22 @@ class LocalMinimumReached(Monitor):
         self.windows_size = windows_size
 
     def pre_compile(self):
-        condition_list = []
-        traj_length_in_sec = symbol_manager.time
-        condition_list.append(cas.greater(traj_length_in_sec, 1))
-        if len(god_map.degrees_of_freedoms) == 0:
-            self.observation_expression = cas.BinaryTrue
-            return
-        for free_variable in god_map.degrees_of_freedoms:
-            free_variable_name = free_variable.name
-            velocity_limit = symbol_manager.evaluate_expr(free_variable.get_upper_limit(Derivatives.velocity))
+        ref = []
+        symbols = []
+        for free_variable in god_map.world.active_degrees_of_freedom:
+            velocity_limit = god_map.qp_controller.config.dof_upper_limits_overwrite[free_variable.name].velocity
+            if free_variable.upper_limits.velocity is not None:
+                velocity_limit = min(velocity_limit, free_variable.upper_limits.velocity)
             velocity_limit *= self.joint_convergence_threshold
             velocity_limit = min(max(self.min_cut_off, velocity_limit), self.max_cut_off)
-            for t in range(self.windows_size):
-                if t == 0:
-                    joint_vel_symbol = free_variable.get_symbol(Derivatives.velocity)
-                else:
-                    expr = f'god_map.trajectory.get_exact({-t})[\'{free_variable_name}\'].velocity'
-                    joint_vel_symbol = symbol_manager.get_symbol(expr)
-                condition_list.append(cas.less(cas.abs(joint_vel_symbol), velocity_limit))
+            ref.append(velocity_limit)
+            symbols.append(free_variable.symbols.velocity)
+        ref = cas.Expression(ref)
+        vel_symbols = cas.Expression(symbols)
 
-        self.observation_expression = cas.logic_all(cas.Expression(condition_list))
+        traj_longer_than_1_sec = cas.greater(god_map.time_symbol, 1)
+        self.observation_expression = cas.logic_and(traj_longer_than_1_sec,
+                                                    cas.logic_all(cas.less(vel_symbols, ref)))
 
 
 class TimeAbove(Monitor):
@@ -136,7 +132,7 @@ class TimeAbove(Monitor):
         super().__init__(name=name)
         if threshold is None:
             threshold = god_map.qp_controller_config.max_trajectory_length
-        traj_length_in_sec = symbol_manager.time
+        traj_length_in_sec = god_map.time_symbol
         condition = cas.greater(traj_length_in_sec, threshold)
         self.observation_expression = condition
 
@@ -149,7 +145,7 @@ class Alternator(Monitor):
                  plot: bool = True):
         super().__init__(name=name,
                          plot=plot)
-        time = symbol_manager.time
+        time = god_map.time_symbol
         expr = cas.equal(cas.fmod(cas.floor(time), mod), 0)
         self.observation_expression = expr
 

@@ -208,6 +208,7 @@ class ProblemDataPart(ABC):
             lb, ub = b_profile(dof_symbols=v.symbols,
                                lower_limits=lower_limits,
                                upper_limits=upper_limits,
+                               solver_class=self.config.qp_solver_class,
                                dt=self.config.mpc_dt,
                                ph=self.config.prediction_horizon)
         except InfeasibleException as e:
