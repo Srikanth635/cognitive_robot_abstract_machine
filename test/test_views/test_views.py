@@ -4,10 +4,9 @@ import sys
 import unittest
 
 import pytest
-from numpy.ma.testutils import assert_equal, assert_not_equal
+from numpy.ma.testutils import assert_equal
 
 from semantic_world.reasoner import WorldReasoner
-from semantic_world.robots import KinematicChain
 
 try:
     from ripple_down_rules.user_interface.gui import RDRCaseViewer
@@ -34,7 +33,7 @@ class TestView(View):
     A Generic View for multiple bodies.
     """
     _private_body: Body = field(default=Body)
-    bodies: List[Body] = field(default_factory=list, hash=False)
+    body_list: List[Body] = field(default_factory=list, hash=False)
     views: List[View] = field(default_factory=list, hash=False)
     root_body_1: Body = field(default=Body)
     root_body_2: Body = field(default=Body)
@@ -42,7 +41,7 @@ class TestView(View):
     tip_body_2: Body = field(default=Body)
 
     def add_body(self, body: Body):
-        self.bodies.append(body)
+        self.body_list.append(body)
         body._views.append(self)
 
     def add_view(self, view: View):

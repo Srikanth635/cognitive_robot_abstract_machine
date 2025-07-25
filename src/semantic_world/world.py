@@ -617,6 +617,17 @@ class World:
         """
         return list(self.kinematic_structure.successors(body.index))
 
+    def compute_child_bodies_recursive(self, body: Body) -> List[Body]:
+        """
+        Computes all child bodies of a given body in the world recursively.
+        :param body: The body for which to compute child bodies.
+        :return: A list of all child bodies.
+        """
+        children = self.compute_child_bodies(body)
+        for child in children:
+            children.extend(self.compute_child_bodies_recursive(child))
+        return children
+
 
     @lru_cache(maxsize=None)
     def compute_parent_body(self, body: Body) -> Body:

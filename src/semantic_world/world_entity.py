@@ -366,7 +366,7 @@ class EnvironmentView(RootedView):
         """
         Returns a set of all bodies in the environment view.
         """
-        return set(self._world.compute_child_bodies(self.root))
+        return set(self._world.compute_child_bodies_recursive(self.root))
 
 
 @dataclass

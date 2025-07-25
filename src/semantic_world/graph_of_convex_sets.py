@@ -358,7 +358,7 @@ class GraphOfConvexSets:
         :return: The connectivity graph.
         """
 
-        view = EnvironmentView(root=world.root)
+        view = EnvironmentView(root=world.root, _world=world)
 
         return cls.free_space_from_view(view, tolerance=tolerance, search_space=search_space,
                                         bloat_obstacles=bloat_obstacles)
@@ -434,7 +434,7 @@ class GraphOfConvexSets:
         :return: The connectivity graph.
         """
 
-        view = EnvironmentView(root=world.root)
+        view = EnvironmentView(root=world.root, _world=world)
 
         return cls.navigation_map_from_view(view, tolerance=tolerance, search_space=search_space,
                                             bloat_obstacles=bloat_obstacles)
