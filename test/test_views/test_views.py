@@ -42,11 +42,11 @@ class TestView(View):
 
     def add_body(self, body: Body):
         self.body_list.append(body)
-        body._views.append(self)
+        body._views.add(self)
 
     def add_view(self, view: View):
         self.views.append(view)
-        view._views.append(self)
+        view._views.add(self)
 
     @property
     def chain(self) -> list[Body]:
@@ -61,6 +61,13 @@ class TestView(View):
         Returns itself as a kinematic chain.
         """
         return self._world.compute_chain_of_bodies(self.root_body_2, self.tip_body_2)
+
+    def __hash__(self):
+        """
+        Custom hash function to ensure that the view is hashable.
+        """
+        return hash((self._private_body, tuple(self.body_list), tuple(self.views),
+                     self.root_body_1, self.root_body_2, self.tip_body_1, self.tip_body_2))
 
 
 class ViewTestCase(unittest.TestCase):

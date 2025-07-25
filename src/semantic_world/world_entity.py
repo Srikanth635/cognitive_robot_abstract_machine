@@ -51,7 +51,7 @@ class WorldEntity:
     The backreference to the world this entity belongs to.
     """
 
-    _views: List[View] = field(default_factory=list, init=False, repr=False, hash=False)
+    _views: Set[View] = field(default_factory=set, init=False, repr=False, hash=False)
     """
     The views this entity is part of.
     """

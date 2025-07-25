@@ -476,14 +476,12 @@ class World:
         """
         Merge a world into the existing one by merging degrees of freedom, states, connections, and bodies.
         This removes all bodies and connections from `other`.
-        The self does not have a primary prefix, it will be set to the primary prefix of the other world.
 
         :param other: The world to be added.
         :param root_connection: If provided, this connection will be used to connect the two worlds. Otherwise, a new Connection6DoF will be created
         :return: None
         """
-        if self.name is None:
-            self.name = other.name
+
         self_root = self.root
         other_root = other.root
         for dof in other.degrees_of_freedom:
