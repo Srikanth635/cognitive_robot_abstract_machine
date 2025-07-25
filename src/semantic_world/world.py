@@ -574,8 +574,25 @@ class World:
     def get_connection(self, parent: Body, child: Body) -> Connection:
         return self.kinematic_structure.get_edge_data(parent.index, child.index)
 
-    def search_for_connections_of_type(self, connection_type: Tuple[Type[Connection], ...]) -> List[Connection]:
+    def search_for_connections_of_type(self, connection_type: Union[Type[Connection], Tuple[Type[Connection], ...]]) \
+            -> List[Connection]:
         return [c for c in self.connections if isinstance(c, connection_type)]
+
+    def search_for_views_of_type(self, view_type: Union[Type[View], Tuple[Type[View], ...]]) \
+            -> List[View]:
+        return [v for v in self.views if isinstance(v, view_type)]
+
+    @modifies_world
+    def clear(self):
+        """
+        Clears all stored data and resets the state of the instance.
+        """
+        for body in list(self.bodies):
+            self.remove_body(body)
+
+        self.views.clear()
+        self.degrees_of_freedom.clear()
+        self.state = WorldState()
 
     def get_body_by_name(self, name: Union[str, PrefixedName]) -> Body:
         """

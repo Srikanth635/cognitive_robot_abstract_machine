@@ -406,3 +406,6 @@ class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
 
     def get_free_variable_names(self) -> List[PrefixedName]:
         return [self.x.name, self.y.name, self.yaw.name]
+
+    def __hash__(self):
+        return hash(self.name)
