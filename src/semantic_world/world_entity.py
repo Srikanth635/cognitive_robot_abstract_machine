@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+from abc import abstractmethod
 from collections import deque
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field, fields
@@ -8,6 +9,7 @@ from functools import reduce
 from typing import List, Optional, TYPE_CHECKING, Set, get_args, get_type_hints, Deque
 import numpy as np
 from numpy import ndarray
+from typing_extensions import Self
 
 from .geometry import Shape, BoundingBox, BoundingBoxCollection
 from dataclasses import dataclass, field
@@ -257,13 +259,13 @@ class View(WorldEntity):
     """
 
     @staticmethod
-    def _is_relevant(x: object) -> bool:
+    def _is_body_view_or_iterable(obj: object) -> bool:
         """
         Determines if an object is a Body, a View, or an Iterable (excluding strings and bytes).
         """
         return (
-            isinstance(x, (Body, View)) or
-            (isinstance(x, Iterable) and not isinstance(x, (str, bytes, bytearray)))
+                isinstance(obj, (Body, View)) or
+                (isinstance(obj, Iterable) and not isinstance(obj, (str, bytes, bytearray)))
         )
 
     def _attr_values(self):
@@ -275,20 +277,20 @@ class View(WorldEntity):
             if f.name.startswith('_'):
                 continue
             v = getattr(self, f.name, None)
-            if self._is_relevant(v):
+            if self._is_body_view_or_iterable(v):
                 yield v
 
         for name, prop in inspect.getmembers(type(self), lambda o: isinstance(o, property)):
-            if name == "aggregated_bodies" or name.startswith('_'):
+            if name == "bodies" or name.startswith('_'):
                 continue
             try:
                 v = getattr(self, name)
             except Exception:
                 continue
-            if self._is_relevant(v):
+            if self._is_body_view_or_iterable(v):
                 yield v
 
-    def _aggregated_bodies(self, visited: Set[int]) -> Set[Body]:
+    def _bodies(self, visited: Set[int]) -> Set[Body]:
         """
         Recursively collects all bodies that are part of this view.
         """
@@ -310,19 +312,21 @@ class View(WorldEntity):
                     stack.extend(obj._attr_values())
 
                 case Mapping():
-                    stack.extend(v for v in obj.values() if self._is_relevant(v))
+                    stack.extend(v for v in obj.values() if self._is_body_view_or_iterable(v))
 
                 case Iterable() if not isinstance(obj, (str, bytes, bytearray)):
-                    stack.extend(v for v in obj if self._is_relevant(v))
+                    stack.extend(v for v in obj if self._is_body_view_or_iterable(v))
 
         return bodies
 
     @property
-    def aggregated_bodies(self) -> Set[Body]:
+    def bodies(self) -> Iterable[Body]:
         """
-        Returns a set of all bodies that are part of this view.
+        Returns a Iterable of all relevant bodies in this view. The default behaviour is to aggregate all bodies that are accessible
+        through the properties and fields of this view, recursively.
+        If this behaviour is not desired for a specific view, it can be overridden by implementing the `bodies` property.
         """
-        return self._aggregated_bodies(set())
+        return self._bodies(set())
 
     def as_bounding_box_collection(self) -> BoundingBoxCollection:
         """
@@ -330,9 +334,17 @@ class View(WorldEntity):
         """
         bbs = reduce(
             lambda accumulator, bb_collection: accumulator.merge(bb_collection),
-            (body.bounding_box_collection for body in self.aggregated_bodies if body.has_collision())
+            (body.bounding_box_collection for body in self.bodies if body.has_collision())
         )
         return bbs
+
+    @classmethod
+    def create(cls, *args, **kwargs) -> Self:
+        """
+        Creates a new view of the world.
+        This method should be implemented by subclasses to create specific types of views.
+        """
+        raise NotImplementedError(f"{cls.__name__}.create() is not implemented.")
 
 
 @dataclass
@@ -344,10 +356,17 @@ class RootedView(View):
 
 
 @dataclass
-class EnvironmentView(View):
+class EnvironmentView(RootedView):
     """
     Represents a view of the environment.
     """
+
+    @property
+    def bodies(self) -> Set[Body]:
+        """
+        Returns a set of all bodies in the environment view.
+        """
+        return set(self._world.compute_child_bodies(self.root))
 
 
 @dataclass

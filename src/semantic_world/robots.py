@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-from abc import abstractmethod
+import logging
+from abc import abstractmethod, ABC
 from dataclasses import dataclass, field
-from typing import Tuple
+from typing import Tuple, Iterable, Set
 
 from typing_extensions import Optional, List, Self
 
 from .prefixed_name import PrefixedName
 from .spatial_types.spatial_types import Vector3
 from .world import World
-from .world_entity import Body, RootedView
+from .world_entity import Body, RootedView, Connection
 
 
 @dataclass
@@ -23,12 +24,32 @@ class RobotView(RootedView):
     The robot this view belongs to
     """
 
+    @abstractmethod
+    def create(cls, *args, **kwargs) -> Self:
+        """
+        Creates a robot view from the given arguments. This method should be implemented in subclasses to ensure
+        proper creation of the robot view.
+
+        :return: A robot view.
+        """
+        raise NotImplementedError("This method should be implemented in subclasses.")
+
+    @abstractmethod
+    def add_to_robot(self, robot: AbstractRobot):
+        """
+        Adds this view to the robot's collection of kinematic chains.
+        This method should be implemented in subclasses to ensure the view is properly added to the robot.
+
+        :param robot: The robot to which this view should be added.
+        """
+        raise NotImplementedError("This method should be implemented in subclasses.")
+
+
 @dataclass
-class KinematicChain(RobotView):
+class KinematicChain(RobotView, ABC):
     """
-    Represents a kinematic chain in a robot, starting from a root body, and ending in a specific tip body.
-    A kinematic chain can contain both manipulators and sensors at the same time, and is not limited to a single
-    instance of each.
+    Abstract base class for kinematic chain in a robot, starting from a root body, and ending in a specific tip body.
+    A kinematic chain can contain both a manipulator and sensors at the same time.
     """
     tip_body: Body = field(default_factory=Body)
     """
@@ -40,25 +61,123 @@ class KinematicChain(RobotView):
     The manipulator of the kinematic chain, if it exists. This is usually a gripper or similar device.
     """
 
-    sensors: List[Sensor] = field(default_factory=list)
+    sensors: Set[Sensor] = field(default_factory=set)
     """
     A collection of sensors in the kinematic chain, such as cameras or other sensors.
     """
 
     @property
-    def kinematic_chain(self) -> list[Body]:
+    def bodies(self) -> Iterable[Body]:
         """
         Returns itself as a kinematic chain.
         """
         return self._world.compute_chain_of_bodies(self.root, self.tip_body)
 
+    @property
+    def connections(self) -> Iterable[Connection]:
+        """
+        Returns the connections of the kinematic chain.
+        This is a list of bodies that connect the root body to the tip body.
+        """
+        return self._world.compute_chain_of_connections(self.root, self.tip_body)
+
+    def add_to_robot(self, robot: AbstractRobot):
+        """
+        Adds this kinematic chain to the robot's collection of kinematic chains.
+        This method is called when the kinematic chain is created and should be implemented in subclasses.
+
+        :param robot: The robot to which this kinematic chain should be added.
+        """
+        if self._robot is not None and self._robot != robot:
+            raise ValueError(f"Kinematic chain {self.name} is already part of another robot: {self._robot.name}.")
+        if self._robot is not None and self._robot == robot:
+            return
+        self._robot = robot
+        if self.manipulator is not None:
+            robot.add_manipulator(self.manipulator)
+        for sensor in self.sensors:
+            robot.add_sensor(sensor)
+
+    def __hash__(self):
+        """
+        Returns the hash of the kinematic chain, which is based on the root and tip bodies.
+        This allows for proper comparison and storage in sets or dictionaries.
+        """
+        return hash((self.name, self.root, self.tip_body))
 
 @dataclass
-class Manipulator(RobotView):
+class Arm(KinematicChain):
     """
-    Represents a manipulator of a robot. Always has a tool frame.
+    Represents an arm of a robot, which is a kinematic chain with a specific tip body.
+    An arm has a manipulators and potentially sensors.
+    """
+
+    @classmethod
+    def create(cls, world: World, name: str, root_name: str, manipulator: Manipulator,
+               sensors: Set[Sensor] = None) -> Self:
+        """
+        Creates a KinematicChain object representing an arm, starting from the shoulder body and ending at the gripper.
+
+        :param world: The world from which to get the body objects.
+        :param name: The name of the kinematic chain.
+        :param root_name: The name of the shoulder body in the world.
+        :param manipulator: An optional manipulator (e.g., a gripper) that is part of the arm.
+        :param sensors: An optional Set of sensors that are part of the arm.
+
+        :return: A KinematicChain object if the shoulder body and gripper are found, otherwise raises ValueError.
+        """
+        if sensors is None:
+            sensors = []
+
+        root = world.get_body_by_name(root_name)
+        arm_tip = manipulator.root.parent_body
+
+        arm = cls(
+            name=PrefixedName(name=name, prefix=world.name),
+            root=root,
+            tip_body=arm_tip,
+            manipulator=manipulator,
+            sensors=sensors,
+            _world=world,
+        )
+
+        world.add_view(arm)
+        return arm
+
+    def __hash__(self):
+        """
+        Returns the hash of the kinematic chain, which is based on the root and tip bodies.
+        This allows for proper comparison and storage in sets or dictionaries.
+        """
+        return hash((self.name, self.root, self.tip_body))
+
+
+@dataclass
+class Manipulator(RobotView, ABC):
+    """
+    Abstract base class of robot manipulators. Always has a tool frame.
     """
     tool_frame: Body = field(default_factory=Body)
+
+    def add_to_robot(self, robot: AbstractRobot):
+        """
+        Adds this manipulator to the robot's collection of manipulators.
+        This method is called when the manipulator is created and should be implemented in subclasses.
+
+        :param robot: The robot to which this manipulator should be added.
+        """
+        if self._robot is not None and self._robot != robot:
+            raise ValueError(f"Manipulator {self.name} is already part of another robot: {self._robot.name}.")
+        if self._robot is not None and self._robot == robot:
+            return
+        self._robot = robot
+
+    def __hash__(self):
+        """
+        Returns the hash of the kinematic chain, which is based on the root and tip bodies.
+        This allows for proper comparison and storage in sets or dictionaries.
+        """
+        return hash((self.name, self.root, self.tool_frame))
 
 
 @dataclass
@@ -66,7 +185,40 @@ class Finger(KinematicChain):
     """
     A finger is a kinematic chain, since it should have an unambiguous tip body, and may contain sensors.
     """
-    ...
+
+    @classmethod
+    def create(cls, world: World, name: str, root_name: str, tip_name: str, sensors: Set[Sensor] = None) -> Self:
+        """
+        :param world: The world from which to get the body objects
+        :param name: The name of the finger, which will be prefixed with the world name.
+        :param root_name: The name of the root body in the world.
+        :param tip_name: The name of the tip body in the world.
+        :param sensors: An optional Set of sensors that are part of the finger.
+
+        :return: A Finger object if the root and tip bodies are found, raise ValueError otherwise.
+        """
+        if sensors is None:
+            sensors = []
+        root = world.get_body_by_name(root_name)
+        tip_body = world.get_body_by_name(tip_name)
+
+        finger = cls(
+            root=root,
+            tip_body=tip_body,
+            name=PrefixedName(name=name, prefix=world.name),
+            sensors=sensors,
+            _world=world,
+        )
+        world.add_view(finger)
+
+        return finger
+
+    def __hash__(self):
+        """
+        Returns the hash of the kinematic chain, which is based on the root and tip bodies.
+        This allows for proper comparison and storage in sets or dictionaries.
+        """
+        return hash((self.name, self.root, self.tip_body))
 
 
 @dataclass
@@ -76,14 +228,85 @@ class ParallelGripper(Manipulator):
     that always needs to touch an object when grasping it, ensuring a stable grasp.
     """
     finger: Finger = field(default_factory=Finger)
-    thumb: Finger = field(default=Finger)
+    thumb: Finger = field(default_factory=Finger)
 
+    @classmethod
+    def create(cls, world: World, name: str, palm_body_name: str, tool_frame_name: str,
+               finger_bodys: List[Tuple[str, str]]) -> Self:
+        """
+        Creates a ParallelGripper object from the given palm body name, tool frame name, and finger body pairs.
+
+        :param world: The world from which to get the body objects.
+        :param name: A side to use for the name of the gripper.
+        :param palm_body_name: The name of the palm body in the world.
+        :param tool_frame_name: The name of the tool frame body in the world.
+        :param finger_bodys: A list of tuples containing the root and tip body names for each finger.
+        :return: A ParallelGripper object if the palm and tool frame bodies are found, otherwise raises ValueError.
+        """
+        if len(finger_bodys) != 2:
+            raise ValueError("Parallel gripper must have exactly two fingers")
+        finger, thumb = None, None
+        for index, (finger_root_name, finger_tip_name) in enumerate(finger_bodys):
+            if index == 0:
+                thumb = Finger.create(world, name + '_thumb', finger_root_name, finger_tip_name)
+            elif index == 1:
+                finger = Finger.create(world, name + '_finger', finger_root_name, finger_tip_name)
+
+        palm_body = world.get_body_by_name(palm_body_name)
+        tool_frame = world.get_body_by_name(tool_frame_name)
+
+        parallel_gripper = cls(
+            name=PrefixedName(name=name + '_gripper', prefix=world.name),
+            root=palm_body,
+            finger=finger,
+            thumb=thumb,
+            tool_frame=tool_frame,
+            _world=world,
+        )
+
+        world.add_view(parallel_gripper)
+        return parallel_gripper
+
+    def add_to_robot(self, robot: AbstractRobot):
+        """
+        Adds this parallel gripper to the robot's collection of manipulators.
+        This method is called when the parallel gripper is created and should be implemented in subclasses.
+
+        :param robot: The robot to which this parallel gripper should be added.
+        """
+        if self._robot is not None and self._robot != robot:
+            raise ValueError(f"ParallelGripper {self.name} is already part of another robot: {self._robot.name}.")
+        if self._robot is not None and self._robot == robot:
+            return
+        self._robot = robot
+        robot.add_kinematic_chain(self.finger)
+        robot.add_kinematic_chain(self.thumb)
+
+    def __hash__(self):
+        """
+        Returns the hash of the kinematic chain, which is based on the root and tip bodies.
+        This allows for proper comparison and storage in sets or dictionaries.
+        """
+        return hash((self.name, self.root, self.tool_frame))
 
 @dataclass
-class Sensor(RobotView):
+class Sensor(RobotView, ABC):
     """
-    Represents any kind of sensor in a robot.
+    Abstract base class for any kind of sensor in a robot.
     """
+
+    def add_to_robot(self, robot: AbstractRobot):
+        """
+        Adds this sensor to the robot's collection of sensors.
+        This method is called when the sensor is created and should be implemented in subclasses.
+
+        :param robot: The robot to which this sensor should be added.
+        """
+        if self._robot is not None and self._robot != robot:
+            raise ValueError(f"Sensor {self.name} is already part of another robot: {self._robot.name}.")
+        if self._robot is not None and self._robot == robot:
+            return
+        self._robot = robot
 
 
 @dataclass
@@ -105,25 +328,85 @@ class Camera(Sensor):
     minimal_height: float = 0.0
     maximal_height: float = 1.0
 
+    @classmethod
+    def create(cls, world: World, camera_name: str, forward_facing_axis: Vector3,
+               field_of_view: FieldOfView, minimal_height: float, maximal_height: float) -> Camera:
+        """
+        Creates a Camera object from the given camera sensor.
+
+        :param world: The world from which to get the body objects.
+        :param camera_name: The name of the camera body in the world.
+        :param forward_facing_axis: The axis that the camera is facing
+        :param field_of_view: The field of view of the camera, defined by vertical and horizontal angles.
+        :param minimal_height: The minimal height of the camera above the ground.
+        :param maximal_height: The maximal height of the camera above the ground.
+
+        :return: A Camera object if the camera body is found, otherwise raises ValueError.
+        """
+        camera_body = world.get_body_by_name(camera_name)
+        camera = cls(
+            name=PrefixedName(name=camera_name, prefix=world.name),
+            root=camera_body,
+            forward_facing_axis=forward_facing_axis,
+            field_of_view=field_of_view,
+            minimal_height=minimal_height,
+            maximal_height=maximal_height,
+            _world=world,
+        )
+
+        world.add_view(camera)
+        return camera
+
+    def __hash__(self):
+        """
+        Returns the hash of the kinematic chain, which is based on the root and tip bodies.
+        This allows for proper comparison and storage in sets or dictionaries.
+        """
+        return hash((self.name, self.root))
 
 @dataclass
 class Neck(KinematicChain):
     """
-    Represents a special kinematic chain to identify the different bodys of the neck, which is useful to calculate
-    for example "LookAt" joint states without needing IK
+    Represents a special kinematic chain that connects the head of a robot with a collection of sensors, such as cameras
+    and which does not have a manipulator.
     """
-    roll_body: Optional[Body] = None
-    """
-    The body which is connected to the connection controlling the roll rotation of the neck.
-    """
-    pitch_body: Optional[Body] = None
-    """
-    The body which is connected to the connection controlling the pitch rotation of the neck.
-    """
-    yaw_body: Optional[Body] = None
-    """
-    The body which is connected to the connection controlling the yaw rotation of the neck.
-    """
+
+    @classmethod
+    def create(cls, world: World, name: str, sensors: Set[Sensor], root_name: str, tip_name: str) -> Neck:
+        """
+        Creates a Neck object from the given camera sensor.
+
+        :param world: The world from which to get the body objects.
+        :param name: The name of the neck, which will be prefixed with the world name.
+        :param sensors: A Set of sensors that are part of the neck, such as cameras.
+        :param root_name: The name of the root body of the neck
+        :param tip_name: The name of the tip body of the neck
+
+        :return: A Neck object if the camera is found, otherwise raises ValueError.
+        """
+        if not sensors:
+            raise ValueError("Neck must have at least one sensor")
+
+        neck_root = world.get_body_by_name(root_name)
+        neck_tip = world.get_body_by_name(tip_name)
+
+        neck = cls(
+            name=PrefixedName(name=name, prefix=world.name),
+            root=neck_root,
+            tip_body=neck_tip,
+            sensors=sensors,
+            _world=world,
+        )
+
+        world.add_view(neck)
+        return neck
+
+    def __hash__(self):
+        """
+        Returns the hash of the kinematic chain, which is based on the root and tip bodies.
+        This allows for proper comparison and storage in sets or dictionaries.
+        """
+        return hash((self.name, self.root, self.tip_body))
 
 
 @dataclass
@@ -131,11 +414,57 @@ class Torso(KinematicChain):
     """
     A Torso is a kinematic chain connecting the base of the robot with a collection of other kinematic chains.
     """
-    kinematic_chains: List[KinematicChain] = field(default_factory=list)
+    kinematic_chains: Set[KinematicChain] = field(default_factory=set)
     """
     A collection of kinematic chains, such as sensor chains or manipulation chains, that are connected to the torso.
     """
 
+    @classmethod
+    def create(cls, world: World, name: str, root_name: str, tip_name: str,
+               manipulator_chains: Set[KinematicChain], sensor_chains: Set[KinematicChain]) -> Torso:
+        """
+        Creates a Torso object from the given manipulator and sensor chains.
+
+        :param world: The world from which to get the body objects.
+        :param name: The name of the torso, which will be prefixed with the world name.
+        :param root_name: The name of the root body of the torso in the world.
+        :param tip_name: The name of the tip body of the torso in the world.
+        :param manipulator_chains: A Set of KinematicChain objects representing the manipulators of the robot.
+        :param sensor_chains: A Set of KinematicChain objects representing the sensors of the robot.
+
+        :return: A Torso object if the torso body is found, otherwise raises ValueError.
+        """
+        torso_root = world.get_body_by_name(root_name)
+        torso_tip = world.get_body_by_name(tip_name)
+
+        torso = cls(
+            name=PrefixedName(name=name, prefix=world.name),
+            root=torso_root,
+            tip_body=torso_tip,
+            kinematic_chains=manipulator_chains | sensor_chains,
+            _world=world,
+        )
+        world.add_view(torso)
+        return torso
+
+    def add_to_robot(self, robot: AbstractRobot):
+        """
+        Adds the torso to the robot's collection of kinematic chains.
+        """
+        if self._robot is not None and self._robot != robot:
+            raise ValueError(f"Torso {self.name} is already part of another robot: {self._robot.name}.")
+        if self._robot is not None and self._robot == robot:
+            return
+        self._robot = robot
+        for chain in self.kinematic_chains:
+            robot.add_kinematic_chain(chain)
+
+    def __hash__(self):
+        """
+        Returns the hash of the kinematic chain, which is based on the root and tip bodies.
+        This allows for proper comparison and storage in sets or dictionaries.
+        """
+        return hash((self.name, self.root, self.tip_body))
 
 @dataclass
 class AbstractRobot(RootedView):
@@ -158,26 +487,27 @@ class AbstractRobot(RootedView):
     The torso of the robot, which is a kinematic chain connecting the base with a collection of other kinematic chains.
     """
 
-    manipulators: List[Manipulator] = field(default_factory=list)
+    manipulators: Set[Manipulator] = field(default_factory=set)
     """
     A collection of manipulators in the robot, such as grippers.
     """
 
-    sensors: List[Sensor] = field(default_factory=list)
+    sensors: Set[Sensor] = field(default_factory=set)
     """
     A collection of sensors in the robot, such as cameras.
     """
 
-    manipulator_chains: List[KinematicChain] = field(default_factory=list)
+    manipulator_chains: Set[KinematicChain] = field(default_factory=set)
     """
     A collection of all kinematic chains containing a manipulator, such as a gripper.
     """
 
-    sensor_chains: List[KinematicChain] = field(default_factory=list)
+    sensor_chains: Set[KinematicChain] = field(default_factory=set)
     """
     A collection of all kinematic chains containing a sensor, such as a camera.
     """
 
+    @classmethod
     @abstractmethod
     def from_world(cls, world: World) -> Self:
         """
@@ -191,6 +521,47 @@ class AbstractRobot(RootedView):
         """
         raise NotImplementedError("This method should be implemented in subclasses.")
 
+    def add_manipulator(self, manipulator: Manipulator):
+        """
+        Adds a manipulator to the robot's collection of manipulators.
+        """
+        self.manipulators.add(manipulator)
+        self._views.append(manipulator)
+        manipulator.add_to_robot(self)
+
+    def add_sensor(self, sensor: Sensor):
+        """
+        Adds a sensor to the robot's collection of sensors.
+        """
+        self.sensors.add(sensor)
+        self._views.append(sensor)
+        sensor.add_to_robot(self)
+
+    def add_torso(self, torso: Torso):
+        """
+        Adds a torso to the robot's collection of kinematic chains.
+        """
+        if self.torso is not None:
+            raise ValueError(f"Robot {self.name} already has a torso: {self.torso.name}.")
+        self.torso = torso
+        self._views.append(torso)
+        torso.add_to_robot(self)
+
+    def add_kinematic_chain(self, kinematic_chain: KinematicChain):
+        """
+        Adds a kinematic chain to the robot's collection of kinematic chains.
+        This can be either a manipulator chain or a sensor chain.
+        """
+        if kinematic_chain.manipulator is not None:
+            self.manipulator_chains.add(kinematic_chain)
+        elif kinematic_chain.sensors:
+            self.sensor_chains.add(kinematic_chain)
+        else:
+            logging.warning(f"Kinematic chain {kinematic_chain.name} has no manipulator or sensors, so it was skipped. Did you mean to add it to the torso?")
+            return
+        self._views.append(kinematic_chain)
+        kinematic_chain.add_to_robot(self)
+
 
 @dataclass
 class PR2(AbstractRobot):
@@ -198,162 +569,28 @@ class PR2(AbstractRobot):
     Represents the Personal Robot 2 (PR2), which was originally created by Willow Garage.
     The PR2 robot consists of two arms, each with a parallel gripper, a head with a camera, and a prismatic torso
     """
-
+    neck: Neck = field(default_factory=Neck)
     left_arm: KinematicChain = field(default_factory=KinematicChain)
     right_arm: KinematicChain = field(default_factory=KinematicChain)
 
-    def _create_finger(self, world: World, root_name: str, tip_name: str, name: str) -> Finger:
+    def add_kinematic_chain(self, kinematic_chain: KinematicChain):
         """
-        :param world: The world from which to get the body objects.
-        :param root_name: The name of the root body in the world.
-        :param tip_name: The name of the tip body in the world.
-        :param side: Which side the finger is on, used for naming.
+        Adds a kinematic chain to the PR2 robot's collection of kinematic chains.
+        If the kinematic chain is an arm, it will be added to the left or right arm accordingly.
 
-        :return: A Finger object if both bodies are found, otherwise None.
+        :param kinematic_chain: The kinematic chain to add to the PR2 robot.
         """
-        root = world.get_body_by_name(root_name)
-        tip_body = world.get_body_by_name(tip_name)
+        if isinstance(kinematic_chain, Arm):
+            if  kinematic_chain.name.name.startswith("left"):
+                self.left_arm = kinematic_chain
+            elif kinematic_chain.name.name.startswith("right"):
+                self.right_arm = kinematic_chain
+            else:
+                logging.warning(f"Kinematic chain {kinematic_chain.name} is not recognized as a left or right arm.")
+        elif isinstance(kinematic_chain, Neck):
+            self.neck = kinematic_chain
+        super().add_kinematic_chain(kinematic_chain)
 
-        finger = Finger(
-            root=root,
-            tip_body=tip_body,
-            name=PrefixedName(name=name, prefix=world.primary_prefix),
-            _world=world,
-            _robot=self,
-        )
-        world.add_view(finger)
-        return finger
-
-    def _create_parallel_gripper(self, world: World, palm_body_name: str, tool_frame_name: str,
-                                finger_bodys: List[Tuple[str, str]], side: str) -> ParallelGripper:
-        """
-        Creates a ParallelGripper object from the given palm body name, tool frame name, and finger body pairs.
-
-        :param world: The world from which to get the body objects.
-        :param palm_body_name: The name of the palm body in the world.
-        :param tool_frame_name: The name of the tool frame body in the world.
-        :param finger_bodys: A list of tuples containing the root and tip body names for each finger.
-        :param side: A side to use for the name of the gripper.
-        :return: A ParallelGripper object if the palm and tool frame bodies are found, otherwise None.
-        """
-        if len(finger_bodys) != 2:
-            raise ValueError("Parallel gripper must have exactly two fingers")
-        finger, thumb = None, None
-        for index, (finger_root_name, finger_tip_name) in enumerate(finger_bodys):
-            if index == 0:
-                thumb = self._create_finger(world, finger_root_name, finger_tip_name, side + '_gripper_thumb')
-            elif index == 1:
-                finger = self._create_finger(world, finger_root_name, finger_tip_name, side + '_gripper_finger')
-
-        palm_body = world.get_body_by_name(palm_body_name)
-        tool_frame = world.get_body_by_name(tool_frame_name)
-
-        parallel_gripper = ParallelGripper(
-            name=PrefixedName(name=side + '_gripper', prefix=world.primary_prefix),
-            root=palm_body,
-            finger=finger,
-            thumb=thumb,
-            tool_frame=tool_frame,
-            _world=world,
-            _robot=self,
-        )
-
-        world.add_view(parallel_gripper)
-        return parallel_gripper
-
-    def _create_arm(self, world: World, shoulder_body_name: str, gripper: ParallelGripper, side: str) -> KinematicChain:
-        """
-        Creates a KinematicChain object representing an arm, starting from the shoulder body and ending at the gripper.
-
-        :param world: The world from which to get the body objects.
-        :param shoulder_body_name: The name of the shoulder body in the world.
-        :param gripper: The Gripper object representing the gripper of the arm.
-        :param side: A side to use for the name of the arm.
-
-        :return: A KinematicChain object if the shoulder body and gripper are found, otherwise None.
-        """
-        shoulder = world.get_body_by_name(shoulder_body_name)
-        arm_tip = gripper.root.parent_body
-
-        arm = KinematicChain(
-            name=PrefixedName(name=side + '_arm', prefix=world.primary_prefix),
-            root=shoulder,
-            tip_body=arm_tip,
-            manipulator=gripper,
-            _world=world,
-            _robot=self,
-        )
-        world.add_view(arm)
-        return arm
-
-    def _create_camera(self, world: World) -> Camera:
-        """
-        Creates a Camera object from the given camera sensor.
-
-        :param world: The world from which to get the body objects.
-
-        :return: A Camera object if the camera body is found, otherwise None.
-        """
-        camera_body = world.get_body_by_name("wide_stereo_optical_frame")
-        camera = Camera(
-            name=PrefixedName(name="head_camera", prefix=world.primary_prefix),
-            root=camera_body,
-            forward_facing_axis=Vector3.from_xyz(0, 0, 1),
-            field_of_view=FieldOfView(horizontal_angle=0.99483, vertical_angle=0.75049),
-            minimal_height=1.27,
-            maximal_height=1.60,
-            _world=world,
-            _robot=self,
-        )
-        world.add_view(camera)
-        return camera
-
-    def _create_neck(self, world: World, camera: Camera) -> Neck:
-        """
-        Creates a Neck object from the given camera sensor.
-
-        :param world: The world from which to get the body objects.
-        :param camera: The Camera object representing the camera sensor of the neck.
-
-        :return: A Neck object if the camera is found, otherwise None.
-        """
-        neck_root = world.get_body_by_name("head_pan_link")
-        neck_tip_body = world.get_body_by_name("head_tilt_link")
-
-        neck = Neck(
-            name=PrefixedName(name='neck', prefix=world.primary_prefix),
-            root=neck_root,
-            tip_body=neck_tip_body,
-            sensors=[camera],
-            pitch_body=neck_tip_body,
-            yaw_body=neck_root,
-            _world=world,
-            _robot=self,
-        )
-        world.add_view(neck)
-        return neck
-
-    def _create_torso(self, world: World, manipulator_chains: List[KinematicChain], sensor_chains: List[KinematicChain]) -> Torso:
-        """
-        Creates a Torso object from the given manipulator and sensor chains.
-
-        :param world: The world from which to get the body objects.
-        :param manipulator_chains: A list of KinematicChain objects representing the manipulators of the robot.
-        :param sensor_chains: A list of KinematicChain objects representing the sensors of the robot.
-
-        :return: A Torso object if the torso body is found, otherwise None.
-        """
-        torso_body = world.get_body_by_name("torso_lift_link")
-        torso = Torso(
-            name=PrefixedName(name='torso', prefix=world.primary_prefix),
-            root=torso_body,
-            tip_body=torso_body,
-            kinematic_chains=manipulator_chains + sensor_chains,
-            _world=world,
-            _robot=self,
-        )
-        world.add_view(torso)
-        return torso
 
     @classmethod
     def from_world(cls, world: World) -> Self:
@@ -366,7 +603,7 @@ class PR2(AbstractRobot):
         """
 
         robot = cls(
-            name=PrefixedName(name='pr2', prefix=world.primary_prefix),
+            name=PrefixedName(name='pr2', prefix=world.name),
             odom=world.get_body_by_name("odom_combined"),
             root=world.get_body_by_name("base_footprint"),
             _world=world,
@@ -377,36 +614,33 @@ class PR2(AbstractRobot):
             ("l_gripper_l_finger_link", "l_gripper_l_finger_tip_link"),
             ("l_gripper_r_finger_link", "l_gripper_r_finger_tip_link"),
         ]
+        left_gripper = ParallelGripper.create(world, "left_gripper", "l_gripper_palm_link",
+                                              "l_gripper_tool_frame", left_finger_bodys)
 
-        left_gripper = robot._create_parallel_gripper(world, "l_gripper_palm_link", "l_gripper_tool_frame",
-                                                      left_finger_bodys, "left")
-        robot.manipulators.append(left_gripper)
-
-        robot.left_arm = robot._create_arm(world, "l_shoulder_pan_link", left_gripper, "left")
-        robot.manipulator_chains.append(robot.left_arm)
+        left_arm = Arm.create(world, "left_arm", "l_shoulder_pan_link", left_gripper)
+        robot.add_kinematic_chain(left_arm)
 
         # Create right arm
         right_finger_bodys = [
             ("r_gripper_l_finger_link", "r_gripper_l_finger_tip_link"),
             ("r_gripper_r_finger_link", "r_gripper_r_finger_tip_link"),
         ]
-        right_gripper = robot._create_parallel_gripper(world, "r_gripper_palm_link", "r_gripper_tool_frame",
-                                                       right_finger_bodys, "right")
-        robot.manipulators.append(right_gripper)
-        robot.right_arm = robot._create_arm(world, "r_shoulder_pan_link", right_gripper, "right")
-        robot.manipulator_chains.append(robot.right_arm)
+        right_gripper = ParallelGripper.create(world, "right_gripper", "r_gripper_palm_link", "r_gripper_tool_frame",
+                                                       right_finger_bodys)
+        right_arm = Arm.create(world, "right_arm", "r_shoulder_pan_link", right_gripper)
+        robot.add_kinematic_chain(right_arm)
 
-        # Create camera
-        camera = robot._create_camera(world)
-        robot.sensors.append(camera)
-
-        # Create neck
-        neck = robot._create_neck(world, camera)
-        robot.sensor_chains.append(neck)
+        # Create camera and neck
+        camera = Camera.create(world, "wide_stereo_optical_frame", Vector3.from_xyz(0, 0, 1),
+                               FieldOfView(horizontal_angle=0.99483, vertical_angle=0.75049), 1.27, 1.60)
+        neck = Neck.create(world, "neck", sensors={camera}, root_name="head_pan_link", tip_name="head_tilt_link")
+        robot.add_kinematic_chain(neck)
 
         # Create torso
-        torso = robot._create_torso(world, robot.manipulator_chains, robot.sensor_chains)
-        robot.torso = torso
+        torso = Torso.create(world, "torso", "torso_lift_link", "torso_lift_link",
+                             robot.manipulator_chains, robot.sensor_chains)
+        robot.add_torso(torso)
+
         world.add_view(robot)
 
         return robot

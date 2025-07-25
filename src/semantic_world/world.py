@@ -260,9 +260,9 @@ class World:
     Is set to True, when a function with @modifies_world is called or world.modify_world context is used.
     """
 
-    primary_prefix: Optional[str] = None
+    name: Optional[str] = None
     """
-    Prefix used for the world. Acts as default namespace for all bodies and views in the world which do not have a prefix.
+    Name of the world. May act as default namespace for all bodies and views in the world which do not have a prefix.
     """
 
     @property
@@ -482,8 +482,8 @@ class World:
         :param root_connection: If provided, this connection will be used to connect the two worlds. Otherwise, a new Connection6DoF will be created
         :return: None
         """
-        if self.primary_prefix is None:
-            self.primary_prefix = other.primary_prefix
+        if self.name is None:
+            self.name = other.name
         self_root = self.root
         other_root = other.root
         for dof in other.degrees_of_freedom:
