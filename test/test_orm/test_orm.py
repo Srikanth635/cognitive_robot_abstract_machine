@@ -44,13 +44,7 @@ class ORMTest(unittest.TestCase):
         self.session.close()
 
     def test_table_world(self):
-        #TODO tom: AttributeError: 'DegreeOfFreedomMapping' object has no attribute '_sa_instance_state'
         world_dao: WorldMappingDAO = to_dao(self.table_world)
-
-        # for body in world_dao.bodies:
-        #     for shape in itertools.chain(body.collision, body.visual):
-        #         if not isinstance(shape.origin.position, Point3MappingDAO):
-        #             print(body.name)
 
         self.session.add(world_dao)
         self.session.commit()
@@ -63,7 +57,7 @@ class ORMTest(unittest.TestCase):
 
         queried_world = self.session.scalar(select(WorldMappingDAO))
         reconstructed = queried_world.from_dao()
-
+        
 
     def test_insert(self):
         origin = TransformationMatrix.from_xyz_rpy(1, 2, 3, 1, 2, 3)
