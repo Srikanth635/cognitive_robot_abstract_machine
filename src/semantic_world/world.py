@@ -6,7 +6,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import wraps, lru_cache
-from typing import Dict, Tuple, OrderedDict, Union, Optional, Type, TypeVar
+from typing import Dict, Tuple, OrderedDict, Union, Optional, Type, TypeVar, overload
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -278,7 +278,7 @@ class World:
 
     def __hash__(self):
         return hash(id(self))
-    
+
     @property
     def active_degrees_of_freedom(self) -> List[DegreeOfFreedom]:
         dofs = []
@@ -286,7 +286,7 @@ class World:
             if isinstance(connection, ActiveConnection):
                 dofs.extend(connection.active_dofs)
         return dofs
-    
+
     @property
     def passive_degrees_of_freedom(self) -> List[DegreeOfFreedom]:
         dofs = []
@@ -439,7 +439,7 @@ class World:
         """
         try:
             self.get_view_by_name(view.name)
-        except ValueError:
+        except KeyError:
             pass
         else:
             raise ValueError(f"View with name {view.name} already exists.")
@@ -453,6 +453,7 @@ class World:
         :param root: The root body of the branch
         :return: List of all connections in the subtree rooted at the given body
         """
+
         # Create a custom visitor to collect connections
         class ConnectionCollector(rustworkx.visit.DFSVisitor):
             def __init__(self, world: 'World'):
@@ -503,6 +504,7 @@ class World:
         :param name: The name of the view to search for. Can be a string or a `PrefixedName` object.
         :return: The `View` object that matches the given name.
         :raises ValueError: If multiple or no views with the specified name are found.
+        :raises KeyError: If no view is found.
         """
         if isinstance(name, PrefixedName):
             if name.prefix is not None:
@@ -515,7 +517,7 @@ class World:
             raise ValueError(f'Multiple views with name {name} found')
         if matches:
             return matches[0]
-        raise ValueError(f'View with name {name} not found')
+        raise KeyError(f'View with name {name} not found')
 
     def get_world_state_symbols(self) -> List[cas.Symbol]:
         """
@@ -954,3 +956,36 @@ class World:
         for connection, value in new_state.items():
             connection.position = value
         self.notify_state_change()
+
+    @overload
+    def transform(self, target_frame: Body, geometric_cas_object: cas.Point3) -> cas.Point3:
+        ...
+
+    @overload
+    def transform(self, target_frame: Body, geometric_cas_object: cas.TransformationMatrix) -> cas.TransformationMatrix:
+        ...
+
+    @overload
+    def transform(self, target_frame: Body, geometric_cas_object: cas.Vector3) -> cas.Vector3:
+        ...
+
+    @overload
+    def transform(self, target_frame: Body, geometric_cas_object: cas.Quaternion) -> cas.Quaternion:
+        ...
+
+    @overload
+    def transform(self, target_frame: Body, geometric_cas_object: cas.RotationMatrix) -> cas.RotationMatrix:
+        ...
+
+    def transform(self, target_frame, geometric_cas_object):
+        if geometric_cas_object.reference_frame is None:
+            raise Exception('Can\'t transform an object without reference_frame.')
+        target_frame_T_reference_frame = cas.TransformationMatrix(self.compute_forward_kinematics_np(
+            root=target_frame,
+            tip=geometric_cas_object.reference_frame))
+        if isinstance(geometric_cas_object, cas.Quaternion):
+            reference_frame_R = geometric_cas_object.to_rotation_matrix()
+            target_frame_R = target_frame_T_reference_frame.dot(reference_frame_R)
+            return target_frame_R.to_quaternion()
+        else:
+            return target_frame_T_reference_frame.dot(geometric_cas_object)
