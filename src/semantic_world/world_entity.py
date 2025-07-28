@@ -306,13 +306,6 @@ class View(WorldEntity):
         )
         return bbs
 
-    @classmethod
-    def create(cls, *args, **kwargs) -> Self:
-        """
-        Creates a new view of the world.
-        This method should be implemented by subclasses to create specific types of views.
-        """
-        raise NotImplementedError(f"{cls.__name__}.create() is not implemented.")
 
 
 @dataclass

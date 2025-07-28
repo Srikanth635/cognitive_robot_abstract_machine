@@ -184,5 +184,8 @@ def test_pr2_view(pr2_world):
     assert len(pr2.manipulator_chains) == 2
     assert len(pr2.sensors) == 1
     assert len(pr2.sensor_chains) == 1
+    assert pr2.neck == list(pr2.sensor_chains)[0]
+    assert pr2.torso.name.name == 'torso'
+    assert len(pr2.torso.sensors) == 0
     assert list(pr2.sensor_chains)[0].sensors == pr2.sensors
     assert pr2.odom.name.name == 'odom_combined'
