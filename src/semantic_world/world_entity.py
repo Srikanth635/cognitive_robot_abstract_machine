@@ -258,38 +258,6 @@ class View(WorldEntity):
     This class can hold references to certain bodies that gain meaning in this context.
     """
 
-    @staticmethod
-    def _is_body_view_or_iterable(obj: object) -> bool:
-        """
-        Determines if an object is a Body, a View, or an Iterable (excluding strings and bytes).
-        """
-        return (
-                isinstance(obj, (Body, View)) or
-                (isinstance(obj, Iterable) and not isinstance(obj, (str, bytes, bytearray)))
-        )
-
-    def _attr_values(self):
-        """
-        Yields all dataclass fields and set properties of this view.
-        Skips private fields (those starting with '_'), as well as the 'aggregated_bodies' property.
-        """
-        for f in fields(self):
-            if f.name.startswith('_'):
-                continue
-            v = getattr(self, f.name, None)
-            if self._is_body_view_or_iterable(v):
-                yield v
-
-        for name, prop in inspect.getmembers(type(self), lambda o: isinstance(o, property)):
-            if name == "bodies" or name.startswith('_'):
-                continue
-            try:
-                v = getattr(self, name)
-            except Exception:
-                continue
-            if self._is_body_view_or_iterable(v):
-                yield v
-
     def _bodies(self, visited: Set[int]) -> Set[Body]:
         """
         Recursively collects all bodies that are part of this view.
@@ -309,13 +277,13 @@ class View(WorldEntity):
                     bodies.add(obj)
 
                 case View():
-                    stack.extend(obj._attr_values())
+                    stack.extend(_attr_values(obj))
 
                 case Mapping():
-                    stack.extend(v for v in obj.values() if self._is_body_view_or_iterable(v))
+                    stack.extend(v for v in obj.values() if _is_body_view_or_iterable(v))
 
                 case Iterable() if not isinstance(obj, (str, bytes, bytearray)):
-                    stack.extend(v for v in obj if self._is_body_view_or_iterable(v))
+                    stack.extend(v for v in obj if _is_body_view_or_iterable(v))
 
         return bodies
 
@@ -366,7 +334,7 @@ class EnvironmentView(RootedView):
         """
         Returns a set of all bodies in the environment view.
         """
-        return set(self._world.compute_child_bodies_recursive(self.root))
+        return set(self._world.compute_child_bodies_recursive(self.root)) | {self.root}
 
 
 @dataclass
@@ -416,3 +384,36 @@ class Connection(WorldEntity):
         position = self.origin_expression.to_position()[:3]
         orientation = self.origin_expression.to_quaternion()
         return cas.vstack([position, orientation]).T
+
+def _is_body_view_or_iterable(obj: object) -> bool:
+    """
+    Determines if an object is a Body, a View, or an Iterable (excluding strings and bytes).
+    """
+    return (
+            isinstance(obj, (Body, View)) or
+            (isinstance(obj, Iterable) and not isinstance(obj, (str, bytes, bytearray)))
+    )
+
+def _attr_values(view: View) -> Iterable[object]:
+    """
+    Yields all dataclass fields and set properties of this view.
+    Skips private fields (those starting with '_'), as well as the 'bodies' property.
+
+    :param view: The view to extract attributes from.
+    """
+    for f in fields(view):
+        if f.name.startswith('_'):
+            continue
+        v = getattr(view, f.name, None)
+        if _is_body_view_or_iterable(v):
+            yield v
+
+    for name, prop in inspect.getmembers(type(view), lambda o: isinstance(o, property)):
+        if name == "bodies" or name.startswith('_'):
+            continue
+        try:
+            v = getattr(view, name)
+        except Exception:
+            continue
+        if _is_body_view_or_iterable(v):
+            yield v
