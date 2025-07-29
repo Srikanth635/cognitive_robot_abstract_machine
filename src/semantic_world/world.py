@@ -18,7 +18,7 @@ from typing_extensions import List, Type
 from .connections import ActiveConnection, PassiveConnection
 from .connections import HasUpdateState, Has1DOFState, Connection6DoF
 from .degree_of_freedom import DegreeOfFreedom
-from .exceptions import DuplicateViewError
+from .exceptions import DuplicateViewError, AddingAnExistingViewError
 from .ik_solver import InverseKinematicsSolver
 from .prefixed_name import PrefixedName
 from .spatial_types import spatial_types as cas
