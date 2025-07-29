@@ -7,7 +7,7 @@ from ..degree_of_freedom import DegreeOfFreedom
 from ..prefixed_name import PrefixedName
 from ..spatial_types import RotationMatrix, Vector3, Point3, TransformationMatrix
 from ..spatial_types.derivatives import DerivativeMap
-from ..spatial_types.spatial_types import Quaternion
+from ..spatial_types.spatial_types import Quaternion, UnitVector3
 from ..spatial_types.symbol_manager import symbol_manager
 from ..world import World, Body
 from ..world_entity import Connection, View
@@ -36,14 +36,14 @@ class WorldMapping(AlternativeMapping[World]):
             for view in self.views:
                 result.add_view(view)
             for dof in self.degrees_of_freedom:
-                result.create_degree_of_freedom(name=dof.name, lower_limits=dof.lower_limits, upper_limits=dof.upper_limits)
+                result.create_degree_of_freedom(name=dof.name, lower_limits=dof.lower_limits,
+                                                upper_limits=dof.upper_limits)
 
         return result
 
 
 @dataclass
 class Vector3Mapping(AlternativeMapping[Vector3]):
-
     x: float
     y: float
     z: float
@@ -62,8 +62,26 @@ class Vector3Mapping(AlternativeMapping[Vector3]):
 
 
 @dataclass
-class Point3Mapping(AlternativeMapping[Point3]):
+class UnitVector3Mapping(AlternativeMapping[UnitVector3]):
+    x: float
+    y: float
+    z: float
 
+    reference_frame: Optional[Body] = field(init=False, default=None)
+
+    @classmethod
+    def create_instance(cls, obj: UnitVector3):
+        x, y, z, _ = symbol_manager.evaluate_expr(obj).tolist()
+        result = cls(x=x, y=y, z=z)
+        result.reference_frame = obj.reference_frame
+        return
+
+    def create_from_dao(self) -> UnitVector3:
+        return UnitVector3(x=self.x, y=self.y, z=self.z, reference_frame=self.reference_frame)
+
+
+@dataclass
+class Point3Mapping(AlternativeMapping[Point3]):
     x: float
     y: float
     z: float
@@ -79,6 +97,7 @@ class Point3Mapping(AlternativeMapping[Point3]):
 
     def create_from_dao(self) -> Point3:
         return Point3.from_xyz(x=self.x, y=self.y, z=self.z, reference_frame=None)
+
 
 @dataclass
 class QuaternionMapping(AlternativeMapping[Quaternion]):
@@ -99,6 +118,7 @@ class QuaternionMapping(AlternativeMapping[Quaternion]):
     def create_from_dao(self) -> Quaternion:
         return Quaternion.from_xyzw(x=self.x, y=self.y, z=self.z, w=self.w, reference_frame=None)
 
+
 @dataclass
 class RotationMatrixMapping(AlternativeMapping[RotationMatrix]):
     rotation: Quaternion
@@ -114,6 +134,7 @@ class RotationMatrixMapping(AlternativeMapping[RotationMatrix]):
         result = RotationMatrix.from_quaternion(self.rotation)
         result.reference_frame = None
         return result
+
 
 @dataclass
 class TransformationMatrixMapping(AlternativeMapping[TransformationMatrix]):
@@ -137,7 +158,8 @@ class TransformationMatrixMapping(AlternativeMapping[TransformationMatrix]):
         return TransformationMatrix.from_point_rotation_matrix(
             point=self.position,
             rotation_matrix=RotationMatrix.from_quaternion(self.rotation), reference_frame=None,
-            child_frame=self.child_frame,)
+            child_frame=self.child_frame, )
+
 
 @dataclass
 class DegreeOfFreedomMapping(AlternativeMapping[DegreeOfFreedom]):

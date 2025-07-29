@@ -161,7 +161,12 @@ class Symbol_:
     def free_symbols(self):
         return free_symbols(self.s)
 
+    def is_constant(self):
+        return len(self.free_symbols()) == 0
+
     def to_np(self):
+        if not self.is_constant():
+            raise ValueError('Only expressions with no free symbols can be converted to numpy arrays.')
         if not hasattr(self, 'np_data'):
             if self.shape[0] == self.shape[1] == 0:
                 self.np_data = np.eye(0)
@@ -1231,6 +1236,31 @@ class Vector3(Symbol_, ReferenceFrameMixin):
 
     def scale(self, a):
         self.s = (save_division(self, self.norm()) * a).s
+
+
+class UnitVector3(Vector3):
+    """
+    Represents a unit vector which is always of size 1.
+    """
+
+    def __init__(self, x, y, z, reference_frame=None):
+        super().__init__(data=[x, y, z], reference_frame=reference_frame)
+        self.scale(1)
+
+    @classmethod
+    def X(cls):
+        return cls((1, 0, 0))
+
+    @classmethod
+    def Y(cls):
+        return cls((0, 1, 0))
+
+    @classmethod
+    def Z(cls):
+        return cls((0, 0, 1))
+
+    def as_tuple(self):
+        return tuple(self.to_np()[:3])
 
 
 class Quaternion(Symbol_, ReferenceFrameMixin):
@@ -2552,3 +2582,6 @@ def is_inf(expr):
         if is_inf(cas_expr.dep(arg)):
             return True
     return False
+
+
+GeometricType = TypeVar('GeometricType', Point3, TransformationMatrix, Vector3, Quaternion, RotationMatrix)

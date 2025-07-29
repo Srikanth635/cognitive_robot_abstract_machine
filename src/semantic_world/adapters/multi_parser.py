@@ -9,7 +9,7 @@ from multiverse_parser import (InertiaSource,
                                JointBuilder, JointType)
 from pxr import UsdUrdf
 
-from ..connections import RevoluteConnection, PrismaticConnection, FixedConnection, UnitVector
+from ..connections import RevoluteConnection, PrismaticConnection, FixedConnection
 from ..spatial_types.derivatives import DerivativeMap
 from ..prefixed_name import PrefixedName
 from ..spatial_types import spatial_types as cas
@@ -153,9 +153,10 @@ class MultiParser:
         elif joint_builder.type == JointType.FIXED:
             return FixedConnection(parent=parent_body, child=child_body, origin_expression=origin)
         elif joint_builder.type in [JointType.REVOLUTE, JointType.CONTINUOUS, JointType.PRISMATIC]:
-            axis = UnitVector(float(joint_builder.axis.to_array()[0]),
-                              float(joint_builder.axis.to_array()[1]),
-                              float(joint_builder.axis.to_array()[2]))
+            axis = cas.UnitVector3(float(joint_builder.axis.to_array()[0]),
+                                   float(joint_builder.axis.to_array()[1]),
+                                   float(joint_builder.axis.to_array()[2]),
+                                   reference_frame=parent_body)
             try:
                 dof = world.get_degree_of_freedom_by_name(free_variable_name)
             except KeyError:

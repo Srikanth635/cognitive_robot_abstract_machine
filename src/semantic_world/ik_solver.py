@@ -137,7 +137,7 @@ class InverseKinematicsSolver:
     Unit is m for the position target or rad for the orientation target.
     """
 
-    def solve(self, root: Body, tip: Body, target: NpMatrix4x4,
+    def solve(self, root: Body, tip: Body, target: cas.TransformationMatrix,
               dt: float = 0.05, max_iterations: int = 200,
               translation_velocity: float = 0.2, rotation_velocity: float = 0.2) -> Dict[DegreeOfFreedom, float]:
         """
@@ -257,7 +257,7 @@ class QPProblem:
     Tip body of the kinematic chain.
     """
 
-    target: NpMatrix4x4
+    target: cas.TransformationMatrix
     """
     Desired tip pose relative to the root body.
     """
@@ -373,7 +373,7 @@ class ConstraintBuilder:
     Tip body of the kinematic chain.
     """
 
-    target: NpMatrix4x4
+    target: cas.TransformationMatrix
     """
     Desired tip pose relative to the root body.
     """

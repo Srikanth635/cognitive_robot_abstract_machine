@@ -61,6 +61,9 @@ class WorldEntity:
     The identifier for this world entity.
     """
 
+    def __post_init__(self):
+        if self.name is None:
+            self.name = PrefixedName(f"{self.__class__.__name__}_{id_generator(self)}")
 
 @dataclass
 class Body(WorldEntity):
@@ -391,11 +394,11 @@ class Connection(WorldEntity):
         return self.name == other.name
 
     @property
-    def origin(self) -> NpMatrix4x4:
+    def origin(self) -> cas.TransformationMatrix:
         """
         :return: The relative transform between the parent and child frame.
         """
-        return self._world.compute_forward_kinematics_np(self.parent, self.child)
+        return self._world.compute_forward_kinematics(self.parent, self.child)
 
     # @lru_cache(maxsize=None)
     def origin_as_position_quaternion(self) -> Expression:

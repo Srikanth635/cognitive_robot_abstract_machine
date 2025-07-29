@@ -8,7 +8,6 @@ import numpy as np
 import casadi as ca  # type: ignore
 
 from scipy import sparse as sp
-from ..connections import UnitVector
 
 if TYPE_CHECKING:
     from ..world_entity import Body
@@ -72,6 +71,8 @@ class Symbol_:
     def __len__(self) -> int: ...
 
     def free_symbols(self) -> List[ca.SX]: ...
+
+    def is_constant(self) -> bool: ...
 
     def to_np(self) -> Union[float, np.ndarray]: ...
 
@@ -322,7 +323,6 @@ class Vector3(Symbol_, ReferenceFrameMixin):
     def __init__(self, data: Optional[Union[Expression, Point3, Vector3,
                                             ca.SX,
                                             np.ndarray,
-                                            UnitVector,
                                             Iterable[symbol_expr_float]]] = None,
                  reference_frame: Optional[Body] = None): ...
 
@@ -394,6 +394,20 @@ class Vector3(Symbol_, ReferenceFrameMixin):
 
     def cross(self, other: Vector3) -> Vector3: ...
 
+
+class UnitVector3(Vector3):
+    def __init__(self, x: float, y: float, z: float, reference_frame: Optional[Body] = None): ...
+
+    @classmethod
+    def X(cls) -> UnitVector3: ...
+
+    @classmethod
+    def Y(cls) -> UnitVector3: ...
+
+    @classmethod
+    def Z(cls) -> UnitVector3: ...
+
+    def as_tuple(self) -> Tuple[float, float, float]: ...
 
 TrinaryFalse = -1
 TrinaryUnknown = 0
@@ -1033,3 +1047,5 @@ def distance_vector_projected_on_plane(point1: Point3, point2:Point3, normal_vec
 def replace_with_three_logic(expr: Expression) -> Expression: ...
 
 def is_inf(expr: Expression) -> bool: ...
+
+GeometricType = TypeVar('GeometricType', Point3, TransformationMatrix, Vector3, Quaternion, RotationMatrix)

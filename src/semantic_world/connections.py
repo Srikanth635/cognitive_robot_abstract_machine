@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Tuple, TYPE_CHECKING
+from typing import List, Tuple, TYPE_CHECKING, Union
 
 import numpy as np
 
@@ -112,60 +112,12 @@ class PassiveConnection(Connection):
 
 
 @dataclass
-class UnitVector:
-    """
-    Represents a unit vector which is always of size 1.
-    """
-
-    x: float
-    y: float
-    z: float
-
-    def __post_init__(self):
-        self.normalize()
-
-    def normalize(self):
-        length = self.length
-        self.x /= length
-        self.y /= length
-        self.z /= length
-
-    @property
-    def length(self):
-        return np.sqrt(self.x ** 2 + self.y ** 2 + self.z ** 2)
-
-    def __getitem__(self, item: int) -> float:
-        if item == 0:
-            return self.x
-        if item == 1:
-            return self.y
-        if item == 2:
-            return self.z
-        raise IndexError
-
-    def as_tuple(self) -> Tuple[float, float, float]:
-        return self.x, self.y, self.z
-
-    @classmethod
-    def X(cls):
-        return cls(1, 0, 0)
-
-    @classmethod
-    def Y(cls):
-        return cls(0, 1, 0)
-
-    @classmethod
-    def Z(cls):
-        return cls(0, 0, 1)
-
-
-@dataclass
 class PrismaticConnection(ActiveConnection, Has1DOFState):
     """
     Allows the movement along an axis.
     """
 
-    axis: UnitVector = field(kw_only=True)
+    axis: cas.UnitVector3 = field(kw_only=True)
     """
     Connection moves along this axis, should be a unit vector.
     The axis is defined relative to the local reference frame of the parent body.
@@ -230,7 +182,7 @@ class RevoluteConnection(ActiveConnection, Has1DOFState):
     Allows rotation about an axis.
     """
 
-    axis: UnitVector = field(kw_only=True)
+    axis: cas.UnitVector3 = field(kw_only=True)
     """
     Connection rotates about this axis, should be a unit vector.
     The axis is defined relative to the local reference frame of the parent body.
@@ -354,11 +306,13 @@ class Connection6DoF(PassiveConnection):
         return [self.x, self.y, self.z, self.qx, self.qy, self.qz, self.qw]
 
     @property
-    def origin(self) -> NpMatrix4x4:
+    def origin(self) -> cas.TransformationMatrix:
         return super().origin
 
     @origin.setter
-    def origin(self, transformation: NpMatrix4x4) -> None:
+    def origin(self, transformation: Union[NpMatrix4x4, cas.TransformationMatrix]) -> None:
+        if isinstance(transformation, cas.TransformationMatrix):
+            transformation = transformation.to_np()
         orientation = quaternion_from_rotation_matrix(transformation)
         self._world.state[self.x.name].position = transformation[0, 3]
         self._world.state[self.y.name].position = transformation[1, 3]

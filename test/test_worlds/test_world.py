@@ -2,10 +2,11 @@ import numpy as np
 import pytest
 
 from semantic_world.connections import PrismaticConnection, RevoluteConnection, Connection6DoF
-from semantic_world.exceptions import AddingAnExistingViewError, DuplicateViewError
+from semantic_world.exceptions import AddingAnExistingViewError, DuplicateViewError, ViewNotFoundError
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.spatial_types.derivatives import Derivatives
 from semantic_world.spatial_types.math import rotation_matrix_from_rpy
+from semantic_world.spatial_types.spatial_types import TransformationMatrix
 from semantic_world.spatial_types.symbol_manager import symbol_manager
 from semantic_world.testing import world_setup, pr2_world
 from semantic_world.world_entity import View
@@ -190,14 +191,14 @@ def test_compute_relative_pose(world_setup):
     world.state[connection.dof.name].position = 1.
     world.notify_state_change()
 
-    pose = np.eye(4)
-    relative_pose = world.compute_relative_pose(pose, l1, l2)
-    expected_pose = np.array([[1., 0, 0., 1.],
-                              [0., 1., 0., 0.],
-                              [0., 0., 1., 0.],
-                              [0., 0., 0., 1.]])
+    pose = TransformationMatrix(reference_frame=l2)
+    relative_pose = world.transform(pose, l1)
+    expected_pose = TransformationMatrix([[1., 0, 0., 1.],
+                                          [0., 1., 0., 0.],
+                                          [0., 0., 1., 0.],
+                                          [0., 0., 0., 1.]])
 
-    np.testing.assert_array_almost_equal(relative_pose, expected_pose)
+    np.testing.assert_array_almost_equal(relative_pose.to_np(), expected_pose.to_np())
 
 
 def test_compute_relative_pose_both(world_setup):
@@ -259,7 +260,7 @@ def test_add_view(world_setup):
     world.add_view(v)
     with pytest.raises(AddingAnExistingViewError):
         world.add_view(v)
-    assert world.get_view_by_name_and_type(v.name, type(v)) == v
+    assert world.get_view_by_name_and_type(v.name) == v
 
 
 def test_duplicate_view(world_setup):
@@ -268,7 +269,7 @@ def test_duplicate_view(world_setup):
     world.add_view(v)
     world.views.append(v)
     with pytest.raises(DuplicateViewError):
-        world.get_view_by_name_and_type(v.name, type(v))
+        world.get_view_by_name_and_type(v.name)
 
 
 def test_merge_world(world_setup, pr2_world):

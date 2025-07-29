@@ -345,8 +345,8 @@ class TestRotationMatrix:
            random_angle())
     def test_rotation3_axis_angle(self, axis, angle):
         assert np.allclose(cas.compile_and_execute(cas.RotationMatrix.from_axis_angle,
-                                                                     [axis, angle]),
-                                             giskard_math.rotation_matrix_from_axis_angle(np.array(axis), angle))
+                                                   [axis, angle]),
+                           giskard_math.rotation_matrix_from_axis_angle(np.array(axis), angle))
 
     @given(quaternion())
     def test_axis_angle_from_matrix(self, q):
@@ -495,6 +495,18 @@ class TestVector3:
             assert np.isclose(result, expected)
 
 
+class TestUnitVector3:
+    @given(vector(3))
+    def test_is_length_1(self, v):
+        assume(abs(v[0]) > 0.00001 or abs(v[1]) > 0.00001 or abs(v[2]) > 0.00001)
+        unit_v = cas.UnitVector3(v)
+        assert np.isclose(unit_v.norm().to_np(), 1)
+
+    def test_to_list(self):
+        unit_v = cas.UnitVector3([0, 0, 1])
+        assert unit_v.as_tuple() == (0, 0, 1)
+
+
 class TestTransformationMatrix:
     @given(float_no_nan_no_inf(),
            float_no_nan_no_inf(),
@@ -565,8 +577,8 @@ class TestTransformationMatrix:
         r2[1, 3] = y
         r2[2, 3] = z
         assert np.allclose(cas.compile_and_execute(cas.TransformationMatrix.from_xyz_rpy,
-                                                                     [x, y, z, roll, pitch, yaw]),
-                                             r2)
+                                                   [x, y, z, roll, pitch, yaw]),
+                           r2)
 
     @given(float_no_nan_no_inf(),
            float_no_nan_no_inf(),
@@ -1546,7 +1558,7 @@ class TestCASWrapper:
            float_no_nan_no_inf())
     def test_if_eq_zero(self, condition, if_result, else_result):
         assert np.isclose(cas.compile_and_execute(cas.if_eq_zero, [condition, if_result, else_result]),
-                   float(if_result if condition == 0 else else_result))
+                          float(if_result if condition == 0 else else_result))
 
     @given(float_no_nan_no_inf(),
            float_no_nan_no_inf(),
