@@ -779,19 +779,21 @@ class RotationMatrix(Symbol_, ReferenceFrameMixin):
         return cls.__quaternion_to_rotation_matrix(q)
 
     def x_vector(self):
-        return Vector3(self[:4, 3:], reference_frame=self.reference_frame)
+        return UnitVector3(x=self[0, 0], y=self[1, 0], z=self[2, 0], reference_frame=self.reference_frame)
 
     def y_vector(self):
-        return Vector3(self[:4, 3:], reference_frame=self.reference_frame)
+        return UnitVector3(x=self[0, 1], y=self[1, 1], z=self[2, 1], reference_frame=self.reference_frame)
 
     def z_vector(self):
-        return Vector3(self[:4, 3:], reference_frame=self.reference_frame)
+        return UnitVector3(x=self[0, 2], y=self[1, 2], z=self[2, 2], reference_frame=self.reference_frame)
 
     def dot(self, other):
         if isinstance(other, (Vector3, Point3, RotationMatrix, TransformationMatrix)):
             result = ca.mtimes(self.s, other.s)
             if isinstance(other, Vector3):
                 result = Vector3(result)
+            elif isinstance(other, UnitVector3):
+                result = UnitVector3(result)
             elif isinstance(other, Point3):
                 result = Point3(result)
             elif isinstance(other, RotationMatrix):
@@ -827,29 +829,17 @@ class RotationMatrix(Symbol_, ReferenceFrameMixin):
 
     @classmethod
     def from_vectors(cls, x=None, y=None, z=None, reference_frame=None):
-        if x is not None:
-            x.scale(1)
-        if y is not None:
-            y.scale(1)
-        if z is not None:
-            z.scale(1)
         if x is not None and y is not None and z is None:
-            z = cross(x, y)
-            z.scale(1)
+            z = UnitVector3.from_vector3(cross(x, y))
         elif x is not None and y is None and z is not None:
-            y = cross(z, x)
-            y.scale(1)
+            y = UnitVector3.from_vector3(cross(z, x))
         elif x is None and y is not None and z is not None:
-            x = cross(y, z)
-            x.scale(1)
-        # else:
-        #     raise AttributeError(f'only one vector can be None')
+            x = UnitVector3.from_vector3(cross(y, z))
         R = cls([[x[0], y[0], z[0], 0],
                  [x[1], y[1], z[1], 0],
                  [x[2], y[2], z[2], 0],
                  [0, 0, 0, 1]],
                 reference_frame=reference_frame)
-        R.normalize()
         return R
 
     @classmethod
@@ -1248,16 +1238,22 @@ class UnitVector3(Vector3):
         self.scale(1)
 
     @classmethod
-    def X(cls):
-        return cls((1, 0, 0))
+    def X(cls, reference_frame=None):
+        return cls(x=1, y=0, z=0, reference_frame=reference_frame)
 
     @classmethod
-    def Y(cls):
-        return cls((0, 1, 0))
+    def Y(cls, reference_frame=None):
+        return cls(x=0, y=1, z=0, reference_frame=reference_frame)
 
     @classmethod
-    def Z(cls):
-        return cls((0, 0, 1))
+    def Z(cls, reference_frame=None):
+        return cls(x=0, y=0, z=1, reference_frame=reference_frame)
+
+    @classmethod
+    def from_vector3(cls, vector3):
+        result = UnitVector3(x=vector3.x, y=vector3.y, z=vector3.z, reference_frame=vector3.reference_frame)
+        result.vis_frame = result.vis_frame
+        return result
 
     def as_tuple(self):
         return tuple(self.to_np()[:3])

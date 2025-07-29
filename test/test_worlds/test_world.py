@@ -209,16 +209,15 @@ def test_compute_relative_pose_both(world_setup):
                                                             [0., 0., 0., 1.]])
     world.notify_state_change()
 
-    pose = np.eye(4)
-    pose[0, 3] = 1.0  # Translate along x-axis
-    relative_pose = world.compute_relative_pose(pose, world.root, bf)
+    pose = TransformationMatrix.from_xyz_rpy(x=1.0, reference_frame=bf)
+    relative_pose = world.transform(pose, world.root)
     # Rotation is 90 degrees around z-axis, translation is 1 along x-axis
     expected_pose = np.array([[0., -1., 0., 1.],
                               [1., 0., 0., 1.],
                               [0., 0., 1., 0.],
                               [0., 0., 0., 1.]])
 
-    np.testing.assert_array_almost_equal(relative_pose, expected_pose)
+    np.testing.assert_array_almost_equal(relative_pose.to_np(), expected_pose)
 
 
 def test_compute_relative_pose_only_translation(world_setup):
@@ -227,15 +226,14 @@ def test_compute_relative_pose_only_translation(world_setup):
     world.state[connection.dof.name].position = 1.
     world.notify_state_change()
 
-    pose = np.eye(4)
-    pose[0, 3] = 2.0  # Translate along x-axis
-    relative_pose = world.compute_relative_pose(pose, l1, l2)
+    pose = TransformationMatrix.from_xyz_rpy(x=2.0, reference_frame=l2)
+    relative_pose = world.transform(pose, l1)
     expected_pose = np.array([[1., 0, 0., 3.],
                               [0., 1., 0., 0.],
                               [0., 0., 1., 0.],
                               [0., 0., 0., 1.]])
 
-    np.testing.assert_array_almost_equal(relative_pose, expected_pose)
+    np.testing.assert_array_almost_equal(relative_pose.to_np(), expected_pose)
 
 
 def test_compute_relative_pose_only_rotation(world_setup):
@@ -244,14 +242,14 @@ def test_compute_relative_pose_only_rotation(world_setup):
     world.state[connection.dof.name].position = np.pi / 2  # 90 degrees
     world.notify_state_change()
 
-    pose = np.eye(4)
-    relative_pose = world.compute_relative_pose(pose, r1, r2)
+    pose = TransformationMatrix(reference_frame=r2)
+    relative_pose = world.transform(pose, r1)
     expected_pose = np.array([[0., -1., 0., 0.],
                               [1., 0., 0., 0.],
                               [0., 0., 1., 0.],
                               [0., 0., 0., 1.]])
 
-    np.testing.assert_array_almost_equal(relative_pose, expected_pose)
+    np.testing.assert_array_almost_equal(relative_pose.to_np(), expected_pose)
 
 
 def test_add_view(world_setup):

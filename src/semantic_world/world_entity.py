@@ -332,6 +332,8 @@ class EnvironmentView(RootedView):
         """
         return set(self._world.compute_child_bodies_recursive(self.root)) | {self.root}
 
+    def __hash__(self):
+        return hash((self.name, self.root))
 
 @dataclass
 class Connection(WorldEntity):

@@ -314,9 +314,14 @@ class TestExpression:
 
 
 class TestRotationMatrix:
-    def test_transpose(self):
-        # todo
-        pass
+    def test_x_y_z_vector(self):
+        v = np.array([1, 1, 1])
+        v = v / np.linalg.norm(v)
+        R_ref = giskard_math.rotation_matrix_from_axis_angle(v, 1)
+        R = cas.RotationMatrix().from_axis_angle(cas.UnitVector3(1, 1, 1), 1)
+        assert np.allclose(R.x_vector().to_np(), R_ref[:, 0])
+        assert np.allclose(R.y_vector().to_np(), R_ref[:, 1])
+        assert np.allclose(R.z_vector().to_np(), R_ref[:, 2])
 
     def test_create_RotationMatrix(self):
         s = cas.Symbol('s')
@@ -326,6 +331,21 @@ class TestRotationMatrix:
         t = cas.TransformationMatrix.from_xyz_rpy(1, 2, 3)
         r = cas.RotationMatrix(t)
         assert t[0, 3].to_np() == 1
+
+    def test_from_vectors(self):
+        v = np.array([1, 1, 1])
+        v = v / np.linalg.norm(v)
+        R_ref = giskard_math.rotation_matrix_from_axis_angle(v, 1)
+        x = R_ref[:, 0]
+        y = R_ref[:, 1]
+        z = R_ref[:, 2]
+        x_unit = cas.UnitVector3(*x)
+        y_unit = cas.UnitVector3(*y)
+        z_unit = cas.UnitVector3(*z)
+        assert np.allclose(cas.RotationMatrix.from_vectors(x=x_unit, y=y_unit).to_np(), R_ref)
+        assert np.allclose(cas.RotationMatrix.from_vectors(x=x_unit, z=z_unit).to_np(), R_ref)
+        assert np.allclose(cas.RotationMatrix.from_vectors(y=y_unit, z=z_unit).to_np(), R_ref)
+        assert np.allclose(cas.RotationMatrix.from_vectors(x=x_unit, y=y_unit, z=z_unit).to_np(), R_ref)
 
     @given(quaternion())
     def test_from_quaternion(self, q):

@@ -217,9 +217,8 @@ class RevoluteConnection(ActiveConnection, Has1DOFState):
         self._post_init_world_part()
 
         motor_expression = self.dof.symbols.position * self.multiplier + self.offset
-        rotation_axis = cas.Vector3(self.axis)
-        parent_R_child = cas.RotationMatrix.from_axis_angle(rotation_axis, motor_expression)
-        self.origin_expression = self.origin_expression.dot(cas.TransformationMatrix(parent_R_child))
+        parent_R_child = cas.RotationMatrix.from_axis_angle(self.axis, motor_expression)
+        self.origin_expression = self.origin_expression @ cas.TransformationMatrix(parent_R_child)
         self.origin_expression.reference_frame = self.parent
         self.origin_expression.child_frame = self.child
 
