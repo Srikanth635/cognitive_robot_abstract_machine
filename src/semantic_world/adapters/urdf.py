@@ -98,8 +98,8 @@ class URDFParser:
             self.prefix = robot_name_from_urdf_string(self.urdf)
 
     def parse(self) -> World:
-
-        links = [self.parse_link(link, PrefixedName(link.name, self.parsed.name)) for link in self.parsed.links]
+        prefix = self.parsed.name
+        links = [self.parse_link(link, PrefixedName(link.name, prefix)) for link in self.parsed.links]
         root = [link for link in links if link.name.name == self.parsed.get_root()][0]
         world = World()
         world.name = self.prefix
@@ -110,7 +110,7 @@ class URDFParser:
             for joint in self.parsed.joints:
                 parent = [link for link in links if link.name.name == joint.parent][0]
                 child = [link for link in links if link.name.name == joint.child][0]
-                parsed_joint = self.parse_joint(joint, parent, child, world)
+                parsed_joint = self.parse_joint(joint, parent, child, world, prefix)
                 joints.append(parsed_joint)
 
             [world.add_connection(joint) for joint in joints]
@@ -118,7 +118,8 @@ class URDFParser:
 
         return world
 
-    def parse_joint(self, joint: urdfpy.Joint, parent: Body, child: Body, world: World) -> Connection:
+    def parse_joint(self, joint: urdfpy.Joint, parent: Body, child: Body, world: World, prefix: str) -> Connection:
+        connection_name = PrefixedName(joint.name, prefix)
         connection_type = connection_type_map.get(joint.type, Connection)
         if joint.origin is not None:
             translation_offset = joint.origin.xyz
@@ -137,7 +138,8 @@ class URDFParser:
                                                                pitch=rotation_offset[1],
                                                                yaw=rotation_offset[2])
         if connection_type == FixedConnection:
-            return connection_type(name=PrefixedName(joint.name), parent=parent, child=child, origin_expression=parent_T_child)
+            return connection_type(name=connection_name,
+                                   parent=parent, child=child, origin_expression=parent_T_child)
 
         lower_limits, upper_limits = urdf_joint_to_limits(joint)
         is_mimic = joint.mimic is not None
@@ -153,17 +155,17 @@ class URDFParser:
             else:
                 offset = 0
 
-            dof_name = PrefixedName(joint.mimic.joint)
+            dof_name = PrefixedName(joint.mimic.joint, prefix)
         else:
-            dof_name = PrefixedName(joint.name)
+            dof_name = connection_name
 
         try:
             dof = world.get_degree_of_freedom_by_name(dof_name)
         except KeyError as e:
-            dof = world.create_degree_of_freedom(name=PrefixedName(joint.name),
+            dof = world.create_degree_of_freedom(name=dof_name,
                                                  lower_limits=lower_limits, upper_limits=upper_limits)
 
-        result = connection_type(name=PrefixedName(joint.name), parent=parent, child=child, origin_expression=parent_T_child,
+        result = connection_type(name=connection_name, parent=parent, child=child, origin_expression=parent_T_child,
                                  multiplier=multiplier, offset=offset,
                                  axis=UnitVector(*map(int, joint.axis)),
                                  dof=dof)
