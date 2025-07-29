@@ -519,11 +519,15 @@ class TestUnitVector3:
     @given(vector(3))
     def test_is_length_1(self, v):
         assume(abs(v[0]) > 0.00001 or abs(v[1]) > 0.00001 or abs(v[2]) > 0.00001)
-        unit_v = cas.UnitVector3(v)
+        unit_v = cas.UnitVector3(*v)
         assert np.isclose(unit_v.norm().to_np(), 1)
 
+    def test_length_0(self):
+        unit_v = cas.UnitVector3(x=0, y=0, z=0)
+        assert np.isnan(unit_v.norm().to_np())
+
     def test_to_list(self):
-        unit_v = cas.UnitVector3([0, 0, 1])
+        unit_v = cas.UnitVector3(0, 0, 1)
         assert unit_v.as_tuple() == (0, 0, 1)
 
 

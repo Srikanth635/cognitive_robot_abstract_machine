@@ -1224,8 +1224,11 @@ class Vector3(Symbol_, ReferenceFrameMixin):
     def norm(self):
         return norm(self)
 
-    def scale(self, a):
-        self.s = (save_division(self, self.norm()) * a).s
+    def scale(self, a, unsafe=False):
+        if unsafe:
+            self.s = ((self / self.norm()) * a).s
+        else:
+            self.s = (save_division(self, self.norm()) * a).s
 
 
 class UnitVector3(Vector3):
@@ -1235,7 +1238,7 @@ class UnitVector3(Vector3):
 
     def __init__(self, x, y, z, reference_frame=None):
         super().__init__(data=[x, y, z], reference_frame=reference_frame)
-        self.scale(1)
+        self.scale(1, unsafe=True)
 
     @classmethod
     def X(cls, reference_frame=None):
