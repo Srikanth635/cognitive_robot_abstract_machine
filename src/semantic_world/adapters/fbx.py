@@ -1,14 +1,13 @@
 import logging
-import math
 import os
 from collections import deque
 from dataclasses import dataclass
 from typing import Optional, List
-import mathutils
 
 try:
     import bpy
     from bpy import types as bpy_types
+
     BlenderObject = bpy_types.Object
 except ImportError:
     bpy = None
@@ -86,14 +85,13 @@ def blender_mesh_to_trimesh(obj: BlenderObject,
 
 def get_min_z(root: BlenderObject) -> float:
     min_z = np.inf
-    for x, y, z  in root.bound_box:
+    for x, y, z in root.bound_box:
         min_z = min(z, min_z)
     return min_z
 
 
 @dataclass
 class FBXParser:
-
     file_path: str
     """
     The path of the FBX file.
@@ -118,7 +116,7 @@ class FBXParser:
         bpy.ops.wm.read_factory_settings(use_empty=True)
 
         # import the fbx
-        bpy.ops.import_scene.fbx(filepath=self.file_path, axis_forward='Y', axis_up='Z', global_scale=1.,
+        bpy.ops.import_scene.fbx(filepath=self.file_path, axis_forward='X', axis_up='Z', global_scale=1.,
                                  # bake_space_transform=True,
                                  # automatic_bone_orientation=False,  # keep bones untouched
                                  )
@@ -132,7 +130,6 @@ class FBXParser:
         return [self.parse_single_world(obj) for obj in bpy.context.scene.objects
                 if obj.type == 'MESH' and obj.parent is None]
 
-
     def parse_single_world(self, root: BlenderObject) -> World:
         """
         Create a world from a group in the FBX file.
@@ -143,13 +140,11 @@ class FBXParser:
 
         # move the group to the center of the world
         root.location = (0, 0, 0)
-        # TODO lift the mesh up by min z
         min_z = get_min_z(root)
-        root.location = (0, 0, -min_z)
 
         # create the resulting world and make a footprint as root
         world = World(primary_prefix=self.prefix)
-        base_foot_print = Body(name=PrefixedName("base_footprint", self.prefix))
+        base_foot_print = Body(name=PrefixedName(f"{self.prefix}_footprint", self.prefix))
         world.add_body(base_foot_print)
 
         # initialize parent dict
@@ -161,11 +156,12 @@ class FBXParser:
             while object_queue:
                 obj = object_queue.popleft()
 
-                name = PrefixedName(name=obj.name_full , prefix=self.prefix)
+                name = PrefixedName(name=obj.name_full, prefix=self.prefix)
 
                 # convert the mesh to trimesh
                 mesh = blender_mesh_to_trimesh(obj)
                 origin = np.array(obj.matrix_local)
+                origin[2][3] -= min_z
                 origin = TransformationMatrix(origin)
                 shape = TriangleMesh(origin=origin, mesh=mesh)
 

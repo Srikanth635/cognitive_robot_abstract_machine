@@ -33,7 +33,6 @@ class WorldEntityDAO(Base, DataAccessObject[semantic_world.world_entity.WorldEnt
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
-
     polymorphic_type: Mapped[str] = mapped_column(String(255), nullable=False)
 
     name_id: Mapped[int] = mapped_column(ForeignKey('PrefixedNameDAO.id', use_alter=True), nullable=True)

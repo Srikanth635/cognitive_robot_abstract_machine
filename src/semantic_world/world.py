@@ -15,7 +15,7 @@ import rustworkx.visit
 import rustworkx.visualization
 from typing_extensions import List, Type
 
-from .connections import HasUpdateState, Has1DOFState, Connection6DoF
+from .connections import HasUpdateState, Has1DOFState, Connection6DoF, ActiveConnection
 from .degree_of_freedom import DegreeOfFreedom
 from .exceptions import AddingAnExistingViewError, DuplicateViewError
 from .ik_solver import InverseKinematicsSolver
@@ -470,6 +470,14 @@ class World:
         else:
             logger.debug("Trying to remove a body that is not part of this world.")
 
+    @modifies_world
+    def remove_connection(self, connection: Connection) -> None:
+        if connection._world is self:
+            connection._world = None
+            if isinstance(connection, ActiveConnection):
+                self.degrees_of_freedom = [dof for dof in self.degrees_of_freedom if dof not in connection.active_dofs]
+        else:
+            logger.debug("Trying to remove a connection that is not part of this world.")
 
     @modifies_world
     def merge_world(self, other: World, root_connection: Connection = None) -> None:
