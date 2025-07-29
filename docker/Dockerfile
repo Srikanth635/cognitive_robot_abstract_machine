@@ -16,10 +16,13 @@ RUN echo "source $OVERLAY_WS/install/setup.bash" >> ~/.bashrc
 
 RUN python3 -m venv semantic_world-venv --system-site-packages  && source semantic_world-venv/bin/activate && pip install -U pip && pip install -U setuptools && pip install -r $OVERLAY_WS/src/semantic_world/requirements.txt
 
-# Install the Multiverse Parser
+# Install the Multiverse Parser outside of the overlay workspace
+WORKDIR /opt/ros
 RUN git clone https://github.com/Multiverse-Framework/Multiverse-Parser.git
-RUN source semantic_world-venv/bin/activate && pip install -r Multiverse-Parser/requirements.txt && pip install pyside6 pyopengl jinja2 && ./Multiverse-Parser/setup.sh --usd && pip install -e Multiverse-Parser
+RUN source $OVERLAY_WS/src/semantic_world-venv/bin/activate && pip install -r Multiverse-Parser/requirements.txt && pip install pyside6 pyopengl jinja2 &&  ./Multiverse-Parser/setup.sh --usd && pip install -e Multiverse-Parser
 
+RUN source /opt/ros/jazzy/setup.bash && cd $OVERLAY_WS && colcon build --symlink-install
+RUN echo "source $OVERLAY_WS/install/setup.bash" >> ~/.bashrc
 
 COPY entrypoint.sh /
 ENTRYPOINT ["bash", "/entrypoint.sh"]

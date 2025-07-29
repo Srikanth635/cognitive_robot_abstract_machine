@@ -144,9 +144,9 @@ def test_compute_ik_unreachable(pr2_world):
 def test_apply_control_commands_omni_drive_pr2(pr2_world):
     omni_drive: OmniDrive = pr2_world.get_connection_by_name('odom_combined_T_base_footprint')
     cmd = np.zeros((len(pr2_world.degrees_of_freedom)), dtype=float)
-    cmd[-3] = 100
-    cmd[-2] = 100
-    cmd[-1] = 100
+    cmd[pr2_world.state._index[omni_drive.x_vel.name]] = 100
+    cmd[pr2_world.state._index[omni_drive.y_vel.name]] = 100
+    cmd[pr2_world.state._index[omni_drive.yaw.name]] = 100
     dt = 0.1
     pr2_world.apply_control_commands(cmd, dt, Derivatives.jerk)
     assert pr2_world.state[omni_drive.yaw.name].jerk == 100.
@@ -197,12 +197,17 @@ def test_search_for_connections_of_type(pr2_world: World):
     assert len(connections) == 40
 
 def test_pr2_view(pr2_world):
-    pr2 = PR2.get_view(pr2_world)
-    print(pr2)
+    pr2 = PR2.from_world(pr2_world)
+
+    # Ensure there are no loose bodies
+    pr2_world._notify_model_change()
 
     assert len(pr2.manipulators) == 2
     assert len(pr2.manipulator_chains) == 2
     assert len(pr2.sensors) == 1
     assert len(pr2.sensor_chains) == 1
-    assert pr2.sensor_chains[0].sensors == pr2.sensors
+    assert pr2.neck == list(pr2.sensor_chains)[0]
+    assert pr2.torso.name.name == 'torso'
+    assert len(pr2.torso.sensors) == 0
+    assert list(pr2.sensor_chains)[0].sensors == pr2.sensors
     assert pr2.odom.name.name == 'odom_combined'
