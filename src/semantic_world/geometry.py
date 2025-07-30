@@ -14,6 +14,7 @@ import trimesh
 from random_events.interval import SimpleInterval, Bound
 from random_events.product_algebra import SimpleEvent, Event
 
+from .prefixed_name import PrefixedName
 from .spatial_types import TransformationMatrix, Point3
 from .spatial_types.spatial_types import Expression
 from .utils import IDGenerator
@@ -426,6 +427,15 @@ class BoundingBox:
         """
         return cls(*min_point.to_np()[:3], *max_point.to_np()[:3])
 
+    def as_shape(self, reference_frame: Optional[PrefixedName] = None) -> Box:
+        scale = Scale(x=self.max_x - self.min_x,
+                      y=self.max_y - self.min_y,
+                      z=self.max_z - self.min_z)
+        x = (self.max_x - self.min_x) / 2  + self.min_x
+        y = (self.max_y - self.min_y) / 2 + self.min_y
+        z = (self.max_z - self.min_z) / 2 + self.min_z
+        origin = TransformationMatrix.from_xyz_rpy(x, y, z, 0, 0, 0, reference_frame)
+        return Box(origin=origin, scale=scale)
 
 
 @dataclass
@@ -501,3 +511,6 @@ class BoundingBoxCollection:
         :return: The bounding box collection.
         """
         return cls([shape.as_bounding_box() for shape in shapes])
+
+    def as_shapes(self, reference_frame: Optional[PrefixedName] = None) -> List[Box]:
+        return [box.as_shape(reference_frame) for box in self.bounding_boxes]
