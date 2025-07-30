@@ -243,17 +243,14 @@ class Point3(Symbol_, ReferenceFrameMixin):
     @z.setter
     def z(self, value: symbol_expr_float): ...
 
-    def __init__(self, data: Optional[Union[Expression, Point3, Vector3,
-                                            ca.SX,
-                                            np.ndarray,
-                                            Iterable[symbol_expr_float]]] = None,
+    def __init__(self, x: symbol_expr_float = 0, y: symbol_expr_float = 0, z: symbol_expr_float = 0,
                  reference_frame: Optional[Body] = None): ...
 
     @classmethod
-    def from_xyz(cls,
-                 x: Optional[symbol_expr_float] = None,
-                 y: Optional[symbol_expr_float] = None,
-                 z: Optional[symbol_expr_float] = None,
+    def from_iterable(cls, data: Optional[Union[Expression, Point3, Vector3,
+                                            ca.SX,
+                                            np.ndarray,
+                                            Iterable[symbol_expr_float]]] = None,
                  reference_frame: Optional[Body] = None) -> Point3: ...
 
     def norm(self) -> Expression: ...
@@ -279,6 +276,11 @@ class Point3(Symbol_, ReferenceFrameMixin):
     @overload
     def __mul__(self, other: float) -> Point3: ...
     def __rmul__(self, other: float) -> Point3: ...
+
+    @overload
+    def __matmul__(self, other: Point3) -> Expression: ...
+    @overload
+    def __matmul__(self, other: Vector3) -> Expression: ...
 
     @overload
     def __pow__(self, other: Symbol) -> Point3: ...
@@ -320,17 +322,14 @@ class Vector3(Symbol_, ReferenceFrameMixin):
     @z.setter
     def z(self, value: symbol_expr_float): ...
 
-    def __init__(self, data: Optional[Union[Expression, Point3, Vector3,
-                                            ca.SX,
-                                            np.ndarray,
-                                            Iterable[symbol_expr_float]]] = None,
+    def __init__(self, x: symbol_expr_float = 0, y: symbol_expr_float = 0, z: symbol_expr_float = 0,
                  reference_frame: Optional[Body] = None): ...
 
     @classmethod
-    def from_xyz(cls,
-                 x: Optional[symbol_expr_float] = None,
-                 y: Optional[symbol_expr_float] = None,
-                 z: Optional[symbol_expr_float] = None,
+    def from_iterable(cls, data: Optional[Union[Expression, Point3, Vector3,
+                                            ca.SX,
+                                            np.ndarray,
+                                            Iterable[symbol_expr_float]]] = None,
                  reference_frame: Optional[Body] = None) -> Vector3: ...
 
     def norm(self) -> Expression: ...
@@ -368,6 +367,11 @@ class Vector3(Symbol_, ReferenceFrameMixin):
     @overload
     def __mul__(self, other: float) -> Vector3: ...
     def __rmul__(self, other: float) -> Vector3: ...
+
+    @overload
+    def __matmul__(self, other: Point3) -> Expression: ...
+    @overload
+    def __matmul__(self, other: Vector3) -> Expression: ...
 
     @overload
     def __truediv__(self, other: Symbol) -> Vector3: ...
@@ -544,8 +548,6 @@ class RotationMatrix(Symbol_, ReferenceFrameMixin):
     def to_quaternion(self) -> Quaternion: ...
 
     @overload
-    def dot(self, other: Point3) -> Point3: ...
-    @overload
     def dot(self, other: Vector3) -> Vector3: ...
     @overload
     def dot(self, other: UnitVector3) -> UnitVector3: ...
@@ -554,8 +556,6 @@ class RotationMatrix(Symbol_, ReferenceFrameMixin):
     @overload
     def dot(self, other: TransformationMatrix) -> TransformationMatrix: ...
 
-    @overload
-    def __matmul__(self, other: Point3) -> Point3: ...
     @overload
     def __matmul__(self, other: Vector3) -> Vector3: ...
     @overload
