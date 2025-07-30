@@ -63,7 +63,8 @@ class WorldEntity:
 
     def __post_init__(self):
         if self.name is None:
-            self.name = PrefixedName(f"{self.__class__.__name__}_{id_generator(self)}")
+            self.name = PrefixedName(f"{self.__class__.__name__}_{hash(self)}")
+
 
 @dataclass
 class Body(WorldEntity):
@@ -310,8 +311,7 @@ class View(WorldEntity):
         return bbs
 
 
-
-@dataclass
+@dataclass(unsafe_hash=True)
 class RootedView(View):
     """
     Represents a view that is rooted in a specific body.
@@ -319,7 +319,7 @@ class RootedView(View):
     root: Body = field(default_factory=Body)
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class EnvironmentView(RootedView):
     """
     Represents a view of the environment.
@@ -332,8 +332,6 @@ class EnvironmentView(RootedView):
         """
         return set(self._world.compute_child_bodies_recursive(self.root)) | {self.root}
 
-    def __hash__(self):
-        return hash((self.name, self.root))
 
 @dataclass
 class Connection(WorldEntity):
@@ -408,6 +406,7 @@ class Connection(WorldEntity):
         orientation = self.origin_expression.to_quaternion()
         return cas.vstack([position, orientation]).T
 
+
 def _is_body_view_or_iterable(obj: object) -> bool:
     """
     Determines if an object is a Body, a View, or an Iterable (excluding strings and bytes).
@@ -416,6 +415,7 @@ def _is_body_view_or_iterable(obj: object) -> bool:
             isinstance(obj, (Body, View)) or
             (isinstance(obj, Iterable) and not isinstance(obj, (str, bytes, bytearray)))
     )
+
 
 def _attr_values(view: View) -> Iterable[object]:
     """

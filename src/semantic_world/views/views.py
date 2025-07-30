@@ -5,6 +5,7 @@ from probabilistic_model.probabilistic_circuit.rx.helper import uniform_measure_
 from typing_extensions import List
 
 from semantic_world.geometry import BoundingBox, BoundingBoxCollection
+from semantic_world.prefixed_name import PrefixedName
 from semantic_world.spatial_types import Point3
 from semantic_world.variables import SpatialVariables
 from semantic_world.world import View, Body
@@ -15,7 +16,7 @@ class Handle(View):
     body: Body
 
     def __post_init__(self):
-        self.name = self.body.name
+        self.name = PrefixedName(str(self.body.name), self.__class__.__name__)
 
 
 @dataclass(unsafe_hash=True)
@@ -23,10 +24,10 @@ class Container(View):
     body: Body
 
     def __post_init__(self):
-        self.name = self.body.name
+        self.name = PrefixedName(str(self.body.name), self.__class__.__name__)
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class Door(View):  # Door has a Footprint
     """
     Door in a body that has a Handle and can open towards or away from the user.
@@ -35,12 +36,15 @@ class Door(View):  # Door has a Footprint
     body: Body
 
     def __post_init__(self):
-        self.name = self.body.name
+        self.name = PrefixedName(str(self.body.name), self.__class__.__name__)
 
 @dataclass(unsafe_hash=True)
 class Fridge(View):
     body: Body
     door: Door
+
+    def __post_init__(self):
+        self.name = PrefixedName(str(self.body.name), self.__class__.__name__)
 
 @dataclass(unsafe_hash=True)
 class Table(View):
@@ -94,7 +98,7 @@ class Door(Components):
     handle: Handle
 
     def __post_init__(self):
-        self.name = self.body.name
+        self.name = PrefixedName(str(self.body.name), self.__class__.__name__)
 
 
 @dataclass(unsafe_hash=True)

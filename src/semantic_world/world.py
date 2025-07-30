@@ -428,14 +428,14 @@ class World:
         :raises AddingAnExistingViewError: If exists_ok is False and a view with the same name and type already exists.
         """
         try:
-            self.get_view_by_name_and_type(view.name)
+            self.get_view_by_name(view.name)
             if not exists_ok:
                 raise AddingAnExistingViewError(view)
         except ViewNotFoundError:
             view._world = self
             self.views.append(view)
 
-    def get_view_by_name_and_type(self, name: Union[str, PrefixedName]) -> Optional[View]:
+    def get_view_by_name(self, name: Union[str, PrefixedName]) -> Optional[View]:
         """
         Retrieves a View from the list of view based on its name.
         If the input is of type `PrefixedName`, it checks whether the prefix is specified and looks for an
@@ -833,17 +833,6 @@ class World:
         :return: Transformation matrix representing the relative pose of the tip body with respect to the root body.
         """
         return self._fk_computer.compute_forward_kinematics_np(root, tip).copy()
-
-    def compute_relative_pose(self, pose: NpMatrix4x4, target_body: Body, pose_body: Body) -> NpMatrix4x4:
-        """
-        Computes the relative pose to a body given another body as reference.
-        :param pose: The pose to be transformed
-        :param target_body: The body to which the pose should be transformed
-        :param pose_body: The body which should be used as reference frame for the pose
-        :return: The pose relative to the target body.
-        """
-        target_T_pose = self.compute_forward_kinematics_np(target_body, pose_body)
-        return target_T_pose @ pose
 
     def transform(self, geometric_cas_object: cas.GeometricType, target_frame: Body) -> cas.GeometricType:
         target_frame_T_reference_frame = self.compute_forward_kinematics(root=target_frame,

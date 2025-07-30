@@ -258,7 +258,7 @@ def test_add_view(world_setup):
     world.add_view(v)
     with pytest.raises(AddingAnExistingViewError):
         world.add_view(v)
-    assert world.get_view_by_name_and_type(v.name) == v
+    assert world.get_view_by_name(v.name) == v
 
 
 def test_duplicate_view(world_setup):
@@ -267,7 +267,7 @@ def test_duplicate_view(world_setup):
     world.add_view(v)
     world.views.append(v)
     with pytest.raises(DuplicateViewError):
-        world.get_view_by_name_and_type(v.name)
+        world.get_view_by_name(v.name)
 
 
 def test_merge_world(world_setup, pr2_world):
