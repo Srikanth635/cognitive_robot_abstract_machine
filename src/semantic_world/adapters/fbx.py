@@ -14,14 +14,16 @@ except ImportError:
     BlenderObject = None
     logging.warn("bpy not found")
 
-from ..connections import Connection6DoF
+from ..connections import Connection6DoF, FixedConnection
 from ..geometry import TriangleMesh
 from ..prefixed_name import PrefixedName
-from ..spatial_types.spatial_types import TransformationMatrix
+from ..spatial_types.spatial_types import TransformationMatrix, Point3, RotationMatrix, Quaternion
 from ..world import World, Body
 
 import numpy as np
 import trimesh
+from scipy.spatial.transform import Rotation as R
+
 
 
 def blender_mesh_to_trimesh(obj: BlenderObject,
@@ -116,7 +118,7 @@ class FBXParser:
         bpy.ops.wm.read_factory_settings(use_empty=True)
 
         # import the fbx
-        bpy.ops.import_scene.fbx(filepath=self.file_path, axis_forward='X', axis_up='Z', global_scale=1.,
+        bpy.ops.import_scene.fbx(filepath=self.file_path, axis_forward='Y', axis_up='Z', global_scale=1.,
                                  # bake_space_transform=True,
                                  # automatic_bone_orientation=False,  # keep bones untouched
                                  )
@@ -130,6 +132,7 @@ class FBXParser:
         return [self.parse_single_world(obj) for obj in bpy.context.scene.objects
                 if obj.type == 'MESH' and obj.parent is None]
 
+
     def parse_single_world(self, root: BlenderObject) -> World:
         """
         Create a world from a group in the FBX file.
@@ -141,6 +144,7 @@ class FBXParser:
         # move the group to the center of the world
         root.location = (0, 0, 0)
         min_z = get_min_z(root)
+        root.location = (0, 0, -min_z)
 
         # create the resulting world and make a footprint as root
         world = World(primary_prefix=self.prefix)
@@ -161,19 +165,23 @@ class FBXParser:
                 # convert the mesh to trimesh
                 mesh = blender_mesh_to_trimesh(obj)
                 origin = np.array(obj.matrix_local)
-                origin[2][3] -= min_z
-                origin = TransformationMatrix(origin)
-                shape = TriangleMesh(origin=origin, mesh=mesh)
+                point = Point3.from_xyz(*origin[:-1, 3])
+                rotation = R.from_matrix(matrix=origin[:-1, :-1]).as_quat()
+                quaterion = Quaternion.from_xyzw(*rotation)
+                rotationmatrix = RotationMatrix.from_quaternion(quaterion)
+                origin = TransformationMatrix.from_point_rotation_matrix(point, rotationmatrix)
+                shape = TriangleMesh(mesh=mesh)
 
                 # create the body
-                body = Body(name=name, visual=[shape], collision=[shape], )
+                body = Body(name=name, visual=[shape], collision=[shape])
                 world.add_body(body)
 
                 # memoize this and create a connection
                 obj_to_body_map[obj] = body
-                connection = Connection6DoF(parent=obj_to_body_map[obj.parent],
+                connection = FixedConnection(parent=obj_to_body_map[obj.parent],
                                             child=body,
-                                            _world=world)
+                                            _world=world,
+                                            origin_expression=origin)
                 world.add_connection(connection)
 
                 object_queue.extend(obj.children)

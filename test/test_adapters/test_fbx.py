@@ -7,10 +7,14 @@ from sqlalchemy.orm import Session
 
 from ormatic.dao import to_dao
 from semantic_world.adapters.fbx import FBXParser
-from semantic_world.adapters.procthor import replace_dresser_drawer_connections
+from semantic_world.adapters.procthor import replace_dresser_drawer_connections, HandleFactory, ContainerFactory, \
+    DrawerFactory, Direction, DresserFactory, DoorFactory
 from semantic_world.connections import PrismaticConnection
+from semantic_world.geometry import Scale
 from semantic_world.orm.ormatic_interface import *
+from semantic_world.prefixed_name import PrefixedName
 from semantic_world.reasoner import WorldReasoner
+from semantic_world.spatial_types import TransformationMatrix
 from semantic_world.world import World
 
 
@@ -58,17 +62,35 @@ class FBXParserTest(unittest.TestCase):
         rclpy.init()
         node = rclpy.create_node("viz_marker")
 
-        query = select(WorldMappingDAO)
-        world_dao = self.session.scalars(query).all()
-        world: World = world_dao[0].from_dao()
+        handle_factory = HandleFactory(scale=0.1, parent_name=PrefixedName("drawer"))
+        factory = DoorFactory(name=PrefixedName('Door'), scale=Scale(0.03, 1, 2), handle_factory=handle_factory, handle_transform=TransformationMatrix.from_xyz_rpy(0.05, 0.4, 0, 0, 0, 0))
 
-        replace_dresser_drawer_connections(world)
-        prismatic_connection = list(filter(lambda x: isinstance(x, PrismaticConnection), world.connections))
-        self.assertEqual(len(prismatic_connection), 4)
+        world = factory.create()
 
-        world.state[prismatic_connection[0].dof.name].position = 2
-        world.notify_state_change()
+
+
         p = VizMarkerPublisher(world, node)
         time.sleep(100)
         p._stop_publishing()
         rclpy.shutdown()
+
+
+    def test_drawer_factory_from_fbx(self):
+        from semantic_world.adapters.viz_marker import VizMarkerPublisher
+        import rclpy
+        rclpy.init()
+        node = rclpy.create_node("viz_marker")
+
+        query = select(WorldMappingDAO)
+        world_dao = self.session.scalars(query).all()
+        world: World = world_dao[5].from_dao()
+        dresser_factory = replace_dresser_drawer_connections(world)
+
+
+        world = dresser_factory.create()
+
+        p = VizMarkerPublisher(world, node)
+        time.sleep(100)
+        p._stop_publishing()
+        rclpy.shutdown()
+

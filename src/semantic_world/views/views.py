@@ -111,6 +111,11 @@ class Drawer(Components):
 class Cupboard(Furniture):
     ...
 
+@dataclass
+class Dresser(Furniture):
+    container: Container
+    drawers: List[Drawer] = field(default_factory=list, hash=False)
+    doors: List[Door] = field(default_factory=list, hash=False)
 
 ############################### subclasses to Cupboard
 @dataclass(unsafe_hash=True)

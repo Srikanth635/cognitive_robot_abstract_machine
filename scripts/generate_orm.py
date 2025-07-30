@@ -18,6 +18,7 @@ import semantic_world.degree_of_freedom
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.orm.model import *
 from semantic_world.world import *
+from semantic_world.adapters.procthor import *
 import semantic_world.views.views
 import semantic_world.robots
 
@@ -39,6 +40,7 @@ classes |= set(classes_of_module(semantic_world.connections))
 classes |= set(classes_of_module(semantic_world.views.views))
 classes |= set(classes_of_module(semantic_world.degree_of_freedom))
 classes |= set(classes_of_module(semantic_world.robots))
+classes |= set(recursive_subclasses(ViewFactory))
 
 # remove classes that should not be mapped
 classes -= {ResetStateContextManager, WorldModelUpdateContextManager, HasUpdateState,

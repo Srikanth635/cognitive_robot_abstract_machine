@@ -293,6 +293,13 @@ class BoundingBox:
         return SimpleInterval(self.min_z, self.max_z, Bound.CLOSED, Bound.CLOSED)
 
     @property
+    def scale(self) -> Scale:
+        """
+        :return: The scale of the bounding box.
+        """
+        return Scale(self.depth, self.width, self.height)
+
+    @property
     def depth(self) -> float:
         return self.max_x - self.min_x
 

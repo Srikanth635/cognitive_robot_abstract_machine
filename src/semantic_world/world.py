@@ -460,6 +460,15 @@ class World:
             return matches[0]
         return None
 
+    def get_views_by_type(self, view_type: Type[View]) -> List[View]:
+        """
+        Retrieves all views of a specific type from the world.
+
+        :param view_type: The class (type) of the views to search for.
+        :return: A list of `View` objects that match the given type.
+        """
+        return [view for view in self.views if isinstance(view, view_type)]
+
 
     @modifies_world
     def remove_body(self, body: Body) -> None:
@@ -508,6 +517,12 @@ class World:
             other.remove_body(connection.parent)
             other.remove_body(connection.child)
             self.add_connection(connection)
+        for body in other.bodies:
+            if body._world is not None:
+                other.remove_body(body)
+
+            body._world = self
+            self.add_body(body)
         other.world_is_being_modified = False
 
         connection = root_connection or Connection6DoF(parent=self_root, child=other_root, _world=self)
@@ -616,7 +631,6 @@ class World:
         raise KeyError(f'Connection with name {name} not found')
 
 
-    @lru_cache(maxsize=None)
     def compute_child_bodies(self, body: Body) -> List[Body]:
         """
         Computes the child bodies of a given body in the world.
@@ -626,7 +640,6 @@ class World:
         return list(self.kinematic_structure.successors(body.index))
 
 
-    @lru_cache(maxsize=None)
     def compute_parent_body(self, body: Body) -> Body:
         """
         Computes the parent body of a given body in the world.
@@ -636,7 +649,6 @@ class World:
         return next(iter(self.kinematic_structure.predecessors(body.index)))
 
 
-    @lru_cache(maxsize=None)
     def compute_parent_connection(self, body: Body) -> Connection:
         """
         Computes the parent connection of a given body in the world.
