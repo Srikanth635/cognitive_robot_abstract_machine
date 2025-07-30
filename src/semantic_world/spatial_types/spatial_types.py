@@ -2590,4 +2590,4 @@ def is_inf(expr):
     return False
 
 
-GeometricType = TypeVar('GeometricType', Point3, TransformationMatrix, Vector3, Quaternion, RotationMatrix)
+SpatialType = TypeVar('SpatialType', Point3, TransformationMatrix, Vector3, Quaternion, RotationMatrix)

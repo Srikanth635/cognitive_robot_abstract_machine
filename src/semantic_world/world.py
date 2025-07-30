@@ -834,15 +834,33 @@ class World:
         """
         return self._fk_computer.compute_forward_kinematics_np(root, tip).copy()
 
-    def transform(self, geometric_cas_object: cas.GeometricType, target_frame: Body) -> cas.GeometricType:
+    def transform(self, spatial_object: cas.SpatialType, target_frame: Body) -> cas.SpatialType:
+        """
+        Transforms a given spatial object from its reference frame to a target frame.
+
+        This method calculates the transformation from the reference frame of the provided
+        spatial object to the specified target frame. Depending on the type of the
+        spatial object, the transformation is applied differently:
+
+        - If the object is a Quaternion, its rotation matrix is computed, transformed, and
+          converted back to a Quaternion.
+        - For other types, the transformation matrix is directly applied.
+
+        :param spatial_object: The spatial object to be transformed.
+        :param target_frame: The target body frame to which the spatial object should
+            be transformed.
+        :return: The spatial object transformed to the target frame. If the input object
+            is a Quaternion, the returned object is a Quaternion. Otherwise, it is the
+            transformed spatial object.
+        """
         target_frame_T_reference_frame = self.compute_forward_kinematics(root=target_frame,
-                                                                         tip=geometric_cas_object.reference_frame)
-        if isinstance(geometric_cas_object, cas.Quaternion):
-            reference_frame_R = geometric_cas_object.to_rotation_matrix()
+                                                                         tip=spatial_object.reference_frame)
+        if isinstance(spatial_object, cas.Quaternion):
+            reference_frame_R = spatial_object.to_rotation_matrix()
             target_frame_R = target_frame_T_reference_frame @ reference_frame_R
             return target_frame_R.to_quaternion()
         else:
-            return target_frame_T_reference_frame @ geometric_cas_object
+            return target_frame_T_reference_frame @ spatial_object
 
     def find_dofs_for_position_symbols(self, symbols: List[cas.Symbol]) -> List[DegreeOfFreedom]:
         result = []
