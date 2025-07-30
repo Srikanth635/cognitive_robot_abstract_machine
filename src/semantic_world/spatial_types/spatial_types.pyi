@@ -478,14 +478,21 @@ class TransformationMatrix(Symbol_, ReferenceFrameMixin):
 
     @classmethod
     def from_xyz_rpy(cls,
-                     x: Optional[symbol_expr_float] = None,
-                     y: Optional[symbol_expr_float] = None,
-                     z: Optional[symbol_expr_float] = None,
-                     roll: Optional[symbol_expr_float] = None,
-                     pitch: Optional[symbol_expr_float] = None,
-                     yaw: Optional[symbol_expr_float] = None,
+                     x: Optional[symbol_expr_float] = 0,
+                     y: Optional[symbol_expr_float] = 0,
+                     z: Optional[symbol_expr_float] = 0,
+                     roll: Optional[symbol_expr_float] = 0,
+                     pitch: Optional[symbol_expr_float] = 0,
+                     yaw: Optional[symbol_expr_float] = 0,
                      reference_frame: Optional[Body] = None,
                      child_frame: Optional[Body] = None) -> TransformationMatrix: ...
+    @classmethod
+    def from_xyz_quat(cls,
+                      pos_x: symbol_expr_float = 0, pos_y: symbol_expr_float = 0, pos_z: symbol_expr_float =00,
+                      quat_w: symbol_expr_float = 0, quat_x: symbol_expr_float = 0,
+                      quat_y: symbol_expr_float = 0, quat_z: symbol_expr_float = 1,
+                      reference_frame: Optional[Body] = None, child_frame: Optional[Body] = None) \
+            -> TransformationMatrix: ...
     @classmethod
     def from_point_rotation_matrix(cls,
                                    point: Optional[Point3] = None,

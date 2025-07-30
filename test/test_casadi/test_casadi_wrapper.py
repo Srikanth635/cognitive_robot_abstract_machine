@@ -380,7 +380,7 @@ class TestRotationMatrix:
     @given(random_angle(),
            random_angle(),
            random_angle())
-    def test_rotation_matrix_from_rpy(self, roll, pitch, yaw):
+    def test_from_rpy(self, roll, pitch, yaw):
         m1 = cas.compile_and_execute(cas.RotationMatrix.from_rpy, [roll, pitch, yaw])
         m2 = giskard_math.rotation_matrix_from_rpy(roll, pitch, yaw)
         assert np.allclose(m1, m2)
@@ -430,8 +430,7 @@ class TestRotationMatrix:
         r1 = cas.compile_and_execute(cas.RotationMatrix.from_rpy, [roll, pitch, yaw])
         assert np.allclose(r1, matrix, atol=1.e-4)
 
-
-    def test_rotation_matrix_initialization(self):
+    def test_initialization(self):
         """Test various ways to initialize RotationMatrix"""
         # Default initialization (identity)
         r_identity = cas.RotationMatrix()
@@ -460,8 +459,7 @@ class TestRotationMatrix:
         assert r_from_t[1, 3] == 0
         assert r_from_t[2, 3] == 0
 
-
-    def test_rotation_matrix_sanity_check(self):
+    def test_sanity_check(self):
         """Test that sanity check enforces proper rotation matrix structure"""
         # Valid 4x4 matrix should pass
         valid_matrix = np.eye(4)
@@ -483,8 +481,7 @@ class TestRotationMatrix:
         with pytest.raises(ValueError):
             cas.RotationMatrix(np.ones((4, 5)))  # Wrong dimensions
 
-
-    def test_rotation_matrix_orthogonality_properties(self):
+    def test_orthogonality_properties(self):
         """Test orthogonality properties of rotation matrices"""
         # Create rotation from known values
         r = cas.RotationMatrix.from_rpy(0.1, 0.2, 0.3)
@@ -498,8 +495,7 @@ class TestRotationMatrix:
         det = np.linalg.det(rotation_part)
         assert np.isclose(det, 1.0, atol=1e-10)
 
-
-    def test_rotation_matrix_transpose(self):
+    def test_transpose(self):
         """Test transpose operation and its properties"""
         r = cas.RotationMatrix.from_rpy(0.1, 0.2, 0.3)
         r_t = r.T
@@ -515,8 +511,7 @@ class TestRotationMatrix:
         r_tt = r_t.T
         assert np.allclose(r.to_np(), r_tt.to_np())
 
-
-    def test_rotation_matrix_inverse(self):
+    def test_inverse(self):
         """Test matrix inversion for rotation matrices"""
         r = cas.RotationMatrix.from_rpy(0.5, -0.3, 1.2)
 
@@ -531,8 +526,7 @@ class TestRotationMatrix:
         identity = cas.RotationMatrix()
         assert np.allclose(identity_check.to_np(), identity.to_np(), atol=1e-10)
 
-
-    def test_rotation_matrix_composition(self):
+    def test_composition(self):
         """Test composition of multiple rotations"""
         r1 = cas.RotationMatrix.from_rpy(0.1, 0, 0)  # Roll
         r2 = cas.RotationMatrix.from_rpy(0, 0.2, 0)  # Pitch
@@ -550,8 +544,7 @@ class TestRotationMatrix:
         assert np.allclose(np.linalg.det(combined_rotation), 1.0)
         assert np.allclose(combined_rotation @ combined_rotation.T, np.eye(3), atol=1e-10)
 
-
-    def test_rotation_matrix_vector_rotation(self):
+    def test_vector_rotation(self):
         """Test rotation of vectors and unit vectors"""
         # 90-degree rotation around Z-axis
         r_z90 = cas.RotationMatrix.from_axis_angle(cas.UnitVector3(0, 0, 1), np.pi / 2)
@@ -571,8 +564,7 @@ class TestRotationMatrix:
         assert isinstance(rotated_v, cas.Vector3)
         assert np.allclose(rotated_v.to_np()[:3], [0, 1, 0], atol=1e-10)
 
-
-    def test_rotation_matrix_frame_properties(self):
+    def test_frame_properties(self):
         """Test reference frame and child frame properties"""
         r = cas.RotationMatrix()
 
@@ -589,8 +581,7 @@ class TestRotationMatrix:
         assert hasattr(result, 'reference_frame')
         assert hasattr(result, 'child_frame')
 
-
-    def test_rotation_matrix_to_conversions(self):
+    def test_to_conversions(self):
         """Test conversion methods to other representations"""
         r = cas.RotationMatrix.from_rpy(0.1, 0.2, 0.3)
 
@@ -614,8 +605,7 @@ class TestRotationMatrix:
         r_roundtrip = cas.RotationMatrix.from_quaternion(q)
         assert np.allclose(r.to_np(), r_roundtrip.to_np(), atol=1e-10)
 
-
-    def test_rotation_matrix_invalid_matmul_operations(self):
+    def test_invalid_matmul_operations(self):
         """Test invalid matrix multiplication operations"""
         r = cas.RotationMatrix()
         s = cas.Symbol('s')
@@ -633,9 +623,8 @@ class TestRotationMatrix:
         with pytest.raises(TypeError):
             r @ q  # Matrix @ Quaternion
 
-
     @given(random_angle(), random_angle(), random_angle())
-    def test_rotation_matrix_rpy_roundtrip(self, roll, pitch, yaw):
+    def test_rpy_roundtrip(self, roll, pitch, yaw):
         """Property-based test for RPY round-trip conversion"""
         # Avoid gimbal lock region
         assume(abs(pitch) < np.pi / 2 - 0.1)
@@ -648,9 +637,8 @@ class TestRotationMatrix:
         assert np.isclose(r_pitch.to_np(), pitch, atol=1e-10)
         assert np.isclose(r_yaw.to_np(), yaw, atol=1e-10)
 
-
     @given(unit_vector(length=3), random_angle())
-    def test_rotation_matrix_axis_angle_properties(self, axis, angle):
+    def test_axis_angle_properties(self, axis, angle):
         """Property-based test for axis-angle rotation properties"""
         # Skip very small angles to avoid numerical issues
         assume(abs(angle) > 1e-6)
@@ -664,8 +652,7 @@ class TestRotationMatrix:
         dot_product = axis_unit @ rotated_axis
         assert np.isclose(dot_product.to_np(), 1.0, atol=1e-10)
 
-
-    def test_rotation_matrix_small_angle_approximation(self):
+    def test_small_angle_approximation(self):
         """Test behavior with very small rotation angles"""
         small_angle = 1e-8
 
@@ -679,8 +666,7 @@ class TestRotationMatrix:
         # But determinant should still be 1
         assert np.isclose(np.linalg.det(rotation_part), 1.0, atol=1e-12)
 
-
-    def test_rotation_matrix_symbolic_operations(self):
+    def test_symbolic_operations(self):
         """Test operations with symbolic expressions"""
         angle_sym = cas.Symbol('theta')
 
@@ -698,8 +684,7 @@ class TestRotationMatrix:
         symbol_names = [s.name for s in symbols if hasattr(s, 'name')]
         assert 'theta' in symbol_names
 
-
-    def test_rotation_matrix_compilation(self):
+    def test_compilation(self):
         """Test compilation and execution of rotation matrices"""
         # Test symbolic rotation compilation
         compiled_rotation = cas.compile_and_execute(
@@ -713,8 +698,7 @@ class TestRotationMatrix:
         assert np.isclose(np.linalg.det(rotation_part), 1.0)
         assert np.allclose(rotation_part @ rotation_part.T, np.eye(3), atol=1e-10)
 
-
-    def test_rotation_matrix_edge_cases(self):
+    def test_edge_cases(self):
         """Test edge cases and boundary conditions"""
         # Zero rotation
         r_zero = cas.RotationMatrix.from_axis_angle(cas.UnitVector3(1, 0, 0), 0)
@@ -732,8 +716,7 @@ class TestRotationMatrix:
         expected_rotation = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
         assert np.allclose(rotation_part, expected_rotation, atol=1e-10)
 
-
-    def test_rotation_matrix_quaternion_consistency(self):
+    def test_quaternion_consistency(self):
         """Test consistency between quaternion and rotation matrix representations"""
         # Create rotation via different methods
         r_rpy = cas.RotationMatrix.from_rpy(0.1, 0.2, 0.3)
@@ -743,8 +726,7 @@ class TestRotationMatrix:
         # Should be identical
         assert np.allclose(r_rpy.to_np(), r_from_q.to_np(), atol=1e-12)
 
-
-    def test_rotation_matrix_determinant_preservation(self):
+    def test_determinant_preservation(self):
         """Test that all operations preserve determinant = 1"""
         r1 = cas.RotationMatrix.from_rpy(0.5, -0.3, 1.2)
         r2 = cas.RotationMatrix.from_axis_angle(cas.UnitVector3(1, 1, 1), 0.8)
@@ -761,6 +743,7 @@ class TestRotationMatrix:
             rotation_part = r.to_np()[:3, :3]
             det = np.linalg.det(rotation_part)
             assert np.isclose(det, 1.0, atol=1e-10), f"Determinant {det} != 1.0 for operation"
+
 
 class TestPoint3:
 
@@ -1464,6 +1447,67 @@ class TestUnitVector3:
 
 
 class TestTransformationMatrix:
+    def test_matmul_type_preservation(self):
+        """Test that @ operator preserves correct types for TransformationMatrix"""
+        s = cas.Symbol('s')
+        e = cas.Expression(1)
+        v = cas.Vector3(1, 1, 1)
+        u = cas.UnitVector3(1, 1, 1)
+        p = cas.Point3(1, 1, 1)
+        r = cas.RotationMatrix()
+        q = cas.Quaternion()
+        t = cas.TransformationMatrix()
+
+        # TransformationMatrix @ invalid types should raise TypeError
+        with pytest.raises(TypeError):
+            t @ s  # TransformationMatrix @ Symbol
+        with pytest.raises(TypeError):
+            t @ e  # TransformationMatrix @ Expression (scalar)
+        with pytest.raises(TypeError):
+            t @ q  # TransformationMatrix @ Quaternion
+
+        # TransformationMatrix @ valid types should return correct types
+        assert isinstance(t @ v, cas.Vector3)  # Transform vector -> Vector3
+        assert isinstance(t @ u, cas.UnitVector3)  # Transform unit vector -> UnitVector3
+        assert isinstance(t @ p, cas.Point3)  # Transform point -> Point3
+        assert isinstance(t @ r, cas.RotationMatrix)  # Transform rotation -> RotationMatrix
+        assert isinstance(t @ t, cas.TransformationMatrix)  # Transform transformation -> TransformationMatrix
+
+        # Test reverse operations (other types @ TransformationMatrix)
+        # RotationMatrix @ TransformationMatrix -> TransformationMatrix (already tested in RotationMatrix)
+        assert isinstance(r @ t, cas.TransformationMatrix)
+
+        # Verify that the transformed objects maintain their geometric properties
+        # Vector should remain homogeneous coordinate = 0
+        transformed_vector = t @ v
+        assert transformed_vector[3] == 0
+
+        # Point should remain homogeneous coordinate = 1
+        transformed_point = t @ p
+        assert transformed_point[3] == 1
+
+        # UnitVector should remain a unit vector (length ≈ 1) when no scaling is applied
+        # For identity transformation, length should be preserved exactly
+        transformed_unit = t @ u
+        length_squared = (transformed_unit.x ** 2 + transformed_unit.y ** 2 + transformed_unit.z ** 2)
+        assert np.isclose(length_squared.to_np(), 1.0, atol=1e-10)
+
+        # Test with non-identity transformation to ensure type preservation holds
+        t_rot = cas.TransformationMatrix.from_xyz_rpy(1, 2, 3, 0.1, 0.2, 0.3)
+
+        assert isinstance(t_rot @ v, cas.Vector3)
+        assert isinstance(t_rot @ u, cas.UnitVector3)
+        assert isinstance(t_rot @ p, cas.Point3)
+        assert isinstance(t_rot @ r, cas.RotationMatrix)
+        assert isinstance(t_rot @ t, cas.TransformationMatrix)
+
+        # Verify homogeneous coordinate preservation with non-identity transform
+        transformed_vector_rot = t_rot @ v
+        assert transformed_vector_rot[3] == 0
+
+        transformed_point_rot = t_rot @ p
+        assert transformed_point_rot[3] == 1
+
     @given(float_no_nan_no_inf(),
            float_no_nan_no_inf(),
            float_no_nan_no_inf())
@@ -1516,7 +1560,7 @@ class TestTransformationMatrix:
         r2[1, 3] = y
         r2[2, 3] = z
         r = cas.compile_and_execute(lambda x, y, z, axis, angle: cas.TransformationMatrix.from_point_rotation_matrix(
-            cas.Point3((x, y, z)),
+            cas.Point3(x, y, z),
             cas.RotationMatrix.from_axis_angle(axis, angle)),
                                     [x, y, z, axis, angle])
         assert np.allclose(r, r2)
@@ -1545,7 +1589,7 @@ class TestTransformationMatrix:
         r2[0, 3] = x
         r2[1, 3] = y
         r2[2, 3] = z
-        r = cas.TransformationMatrix.from_point_rotation_matrix(point=cas.Point3((x, y, z)),
+        r = cas.TransformationMatrix.from_point_rotation_matrix(point=cas.Point3(x, y, z),
                                                                 rotation_matrix=cas.RotationMatrix.from_quaternion(
                                                                     cas.Quaternion(q))).to_np()
         assert np.allclose(r, r2)
@@ -1569,7 +1613,7 @@ class TestTransformationMatrix:
            float_no_nan_no_inf(),
            unit_vector(4))
     def test_pos_of(self, x, y, z, q):
-        r1 = cas.TransformationMatrix.from_point_rotation_matrix(cas.Point3((x, y, z)),
+        r1 = cas.TransformationMatrix.from_point_rotation_matrix(cas.Point3(x, y, z),
                                                                  cas.RotationMatrix.from_quaternion(
                                                                      cas.Quaternion(q))).to_position()
         r2 = [x, y, z, 1]
@@ -1581,7 +1625,7 @@ class TestTransformationMatrix:
            float_no_nan_no_inf(),
            unit_vector(4))
     def test_trans_of(self, x, y, z, q):
-        r1 = cas.TransformationMatrix.from_point_rotation_matrix(point=cas.Point3((x, y, z)),
+        r1 = cas.TransformationMatrix.from_point_rotation_matrix(point=cas.Point3(x, y, z),
                                                                  rotation_matrix=cas.RotationMatrix.from_quaternion(
                                                                      cas.Quaternion(q))).to_translation().to_np()
         r2 = np.identity(4)
@@ -1597,7 +1641,7 @@ class TestTransformationMatrix:
            float_no_nan_no_inf(),
            unit_vector(4))
     def test_rot_of(self, x, y, z, q):
-        r1 = cas.TransformationMatrix.from_point_rotation_matrix(point=cas.Point3((x, y, z)),
+        r1 = cas.TransformationMatrix.from_point_rotation_matrix(point=cas.Point3(x, y, z),
                                                                  rotation_matrix=cas.RotationMatrix.from_quaternion(
                                                                      cas.Quaternion(q))).to_rotation().to_np()
         r2 = giskard_math.rotation_matrix_from_quaternion(*q)
@@ -1615,6 +1659,434 @@ class TestTransformationMatrix:
         assert r[0, 0] == 1
         assert r[1, 1] == 1
         assert r[2, 2] == 1
+
+    def test_initialization(self):
+        """Test various ways to initialize TransformationMatrix"""
+        # Default initialization (identity)
+        t_identity = cas.TransformationMatrix()
+        assert isinstance(t_identity, cas.TransformationMatrix)
+        identity_np = t_identity.to_np()
+        expected_identity = np.eye(4)
+        assert np.allclose(identity_np, expected_identity)
+
+        # From RotationMatrix
+        r = cas.RotationMatrix.from_rpy(0.1, 0.2, 0.3)
+        t_from_r = cas.TransformationMatrix(r)
+        assert isinstance(t_from_r, cas.TransformationMatrix)
+        # Should preserve rotation, zero translation
+        assert t_from_r[0, 3] == 0
+        assert t_from_r[1, 3] == 0
+        assert t_from_r[2, 3] == 0
+
+        # From another TransformationMatrix
+        t_copy = cas.TransformationMatrix(t_from_r)
+        assert isinstance(t_copy, cas.TransformationMatrix)
+        assert np.allclose(t_copy.to_np(), t_from_r.to_np())
+
+        # From numpy array
+        transform_data = np.eye(4)
+        transform_data[:3, 3] = [1, 2, 3]  # Add translation
+        t_from_np = cas.TransformationMatrix(transform_data)
+        assert isinstance(t_from_np, cas.TransformationMatrix)
+
+    def test_sanity_check(self):
+        """Test that sanity check enforces proper transformation matrix structure"""
+        # Valid 4x4 matrix should pass
+        valid_matrix = np.eye(4)
+        valid_matrix[:3, 3] = [1, 2, 3]
+        t = cas.TransformationMatrix(valid_matrix)
+
+        # Check that bottom row is enforced to [0, 0, 0, 1]
+        assert t[3, 0] == 0
+        assert t[3, 1] == 0
+        assert t[3, 2] == 0
+        assert t[3, 3] == 1
+
+        # Invalid shape should raise ValueError
+        with pytest.raises(ValueError):
+            cas.TransformationMatrix(np.eye(3))  # 3x3 instead of 4x4
+
+        with pytest.raises(ValueError):
+            cas.TransformationMatrix(np.ones((2, 5)))  # Wrong dimensions
+
+    def test_properties(self):
+        """Test x, y, z property getters and setters"""
+        t = cas.TransformationMatrix.from_xyz_rpy(1, 2, 3, 0.1, 0.2, 0.3)
+
+        # Test getters
+        assert t.x.to_np() == 1
+        assert t.y.to_np() == 2
+        assert t.z.to_np() == 3
+
+        # Test setters
+        t.x = 10
+        t.y = 20
+        t.z = 30
+        assert t[0, 3].to_np() == 10
+        assert t[1, 3].to_np() == 20
+        assert t[2, 3].to_np() == 30
+
+        # Bottom row should remain unchanged
+        assert t[3, 3] == 1
+
+    def test_from_point_rotation(self):
+        """Test construction from point and rotation matrix"""
+        p = cas.Point3(1, 2, 3)
+        r = cas.RotationMatrix.from_rpy(0.1, 0.2, 0.3)
+
+        # From both point and rotation
+        t1 = cas.TransformationMatrix.from_point_rotation_matrix(p, r)
+        assert isinstance(t1, cas.TransformationMatrix)
+        assert t1.x.to_np() == 1
+        assert t1.y.to_np() == 2
+        assert t1.z.to_np() == 3
+
+        # From point only (identity rotation)
+        t2 = cas.TransformationMatrix.from_point_rotation_matrix(point=p)
+        rotation_part = t2.to_np()[:3, :3]
+        assert np.allclose(rotation_part, np.eye(3))
+        assert t2.x.to_np() == 1
+
+        # From rotation only (zero translation)
+        t3 = cas.TransformationMatrix.from_point_rotation_matrix(rotation_matrix=r)
+        assert t3.x.to_np() == 0
+        assert t3.y.to_np() == 0
+        assert t3.z.to_np() == 0
+
+    def test_from_xyz_quat(self):
+        """Test construction from position and quaternion"""
+        t = cas.TransformationMatrix.from_xyz_quat(
+            pos_x=1, pos_y=2, pos_z=3,
+            quat_w=1, quat_x=0, quat_y=0, quat_z=0  # Identity quaternion
+        )
+
+        assert isinstance(t, cas.TransformationMatrix)
+        assert t.x.to_np() == 1
+        assert t.y.to_np() == 2
+        assert t.z.to_np() == 3
+
+        # Should have identity rotation
+        rotation_part = t.to_np()[:3, :3]
+        assert np.allclose(rotation_part, np.eye(3))
+
+    def test_composition(self):
+        """Test composition of multiple transformations"""
+        # Translation only
+        t1 = cas.TransformationMatrix.from_xyz_rpy(1, 0, 0)  # Translate in X
+        t2 = cas.TransformationMatrix.from_xyz_rpy(0, 1, 0)  # Translate in Y
+
+        # Compose transformations
+        combined = t2 @ t1
+        assert isinstance(combined, cas.TransformationMatrix)
+
+        # Apply to origin point
+        origin = cas.Point3(0, 0, 0)
+        result = combined @ origin
+        assert isinstance(result, cas.Point3)
+        # Should be at (1, 1, 0) after both translations
+        assert np.isclose(result.x.to_np(), 1)
+        assert np.isclose(result.y.to_np(), 1)
+        assert np.isclose(result.z.to_np(), 0)
+
+    def test_point_transformation(self):
+        """Test transformation of points"""
+        # Create a transformation: translate by (1,2,3) and rotate by 90° around Z
+        t = cas.TransformationMatrix.from_xyz_rpy(1, 2, 3, 0, 0, np.pi / 2)
+
+        # Transform a point
+        p = cas.Point3(1, 0, 0)
+        transformed = t @ p
+
+        assert isinstance(transformed, cas.Point3)
+        assert transformed[3] == 1  # Homogeneous coordinate preserved
+
+        # Expected: rotation transforms (1,0,0) to (0,1,0), then translation adds (1,2,3)
+        expected_x = 0 + 1  # 1 (translation)
+        expected_y = 1 + 2  # 3 (rotated + translation)
+        expected_z = 0 + 3  # 3 (translation)
+
+        assert np.isclose(transformed.x.to_np(), expected_x, atol=1e-10)
+        assert np.isclose(transformed.y.to_np(), expected_y, atol=1e-10)
+        assert np.isclose(transformed.z.to_np(), expected_z, atol=1e-10)
+
+    def test_vector_transformation(self):
+        """Test transformation of vectors (no translation effect)"""
+        # Create transformation with both rotation and translation
+        t = cas.TransformationMatrix.from_xyz_rpy(1, 2, 3, 0, 0, np.pi / 2)
+
+        # Transform a vector
+        v = cas.Vector3(1, 0, 0)
+        transformed = t @ v
+
+        assert isinstance(transformed, cas.Vector3)
+        assert transformed[3] == 0  # Vector homogeneous coordinate
+
+        # Only rotation should affect vectors, not translation
+        # 90° rotation around Z: (1,0,0) -> (0,1,0)
+        assert np.isclose(transformed.x.to_np(), 0, atol=1e-10)
+        assert np.isclose(transformed.y.to_np(), 1, atol=1e-10)
+        assert np.isclose(transformed.z.to_np(), 0, atol=1e-10)
+
+    def test_inverse(self):
+        """Test matrix inversion"""
+        t = cas.TransformationMatrix.from_xyz_rpy(1, 2, 3, 0.1, 0.2, 0.3)
+        t_inv = t.inverse()
+
+        assert isinstance(t_inv, cas.TransformationMatrix)
+
+        # Test that T @ T^(-1) = I
+        identity_check = t @ t_inv
+        identity = cas.TransformationMatrix()
+        assert np.allclose(identity_check.to_np(), identity.to_np(), atol=1e-10)
+
+        # Test that T^(-1) @ T = I
+        identity_check2 = t_inv @ t
+        assert np.allclose(identity_check2.to_np(), identity.to_np(), atol=1e-10)
+
+        # Test frame swapping
+        if hasattr(t, 'reference_frame') and hasattr(t, 'child_frame'):
+            assert t_inv.reference_frame == t.child_frame
+            assert t_inv.child_frame == t.reference_frame
+
+    def test_extraction_methods(self):
+        """Test methods for extracting components"""
+        t = cas.TransformationMatrix.from_xyz_rpy(1, 2, 3, 0.1, 0.2, 0.3)
+
+        # Extract position
+        position = t.to_position()
+        assert isinstance(position, cas.Point3)
+        assert position.x.to_np() == 1
+        assert position.y.to_np() == 2
+        assert position.z.to_np() == 3
+        assert position[3] == 1
+
+        # Extract rotation
+        rotation = t.to_rotation()
+        assert isinstance(rotation, cas.RotationMatrix)
+        # Should have zero translation
+        assert rotation[0, 3] == 0
+        assert rotation[1, 3] == 0
+        assert rotation[2, 3] == 0
+
+        # Extract translation (pure translation matrix)
+        translation = t.to_translation()
+        assert isinstance(translation, cas.TransformationMatrix)
+        # Should have identity rotation
+        rotation_part = translation.to_np()[:3, :3]
+        assert np.allclose(rotation_part, np.eye(3))
+        # Should preserve translation
+        assert translation.x.to_np() == 1
+        assert translation.y.to_np() == 2
+        assert translation.z.to_np() == 3
+
+        # Extract quaternion
+        quaternion = t.to_quaternion()
+        assert isinstance(quaternion, cas.Quaternion)
+
+    def test_frame_properties(self):
+        """Test reference frame and child frame properties"""
+        t = cas.TransformationMatrix()
+
+        # Initially should be None
+        assert t.reference_frame is None
+        assert t.child_frame is None
+
+        # Test frame preservation in operations
+        t1 = cas.TransformationMatrix.from_xyz_rpy(1, 2, 3, 0.1, 0.2, 0.3)
+        t2 = cas.TransformationMatrix.from_xyz_rpy(4, 5, 6, 0.4, 0.5, 0.6)
+
+        result = t1 @ t2
+        # Frame handling depends on implementation
+        assert hasattr(result, 'reference_frame')
+        assert hasattr(result, 'child_frame')
+
+    def test_invalid_operations(self):
+        """Test invalid operations that should raise TypeError"""
+        t = cas.TransformationMatrix()
+        s = cas.Symbol('s')
+        e = cas.Expression(1)
+        q = cas.Quaternion()
+
+        # These should raise TypeError
+        with pytest.raises(TypeError):
+            t @ s  # Matrix @ Symbol
+        with pytest.raises(TypeError):
+            t @ e  # Matrix @ Expression (scalar)
+        with pytest.raises(TypeError):
+            t @ q  # Matrix @ Quaternion
+
+    @given(float_no_nan_no_inf(), float_no_nan_no_inf(), float_no_nan_no_inf())
+    def test_pure_translation(self, x, y, z):
+        """Property-based test for pure translation matrices"""
+        t = cas.TransformationMatrix.from_xyz_rpy(x, y, z)
+
+        # Should have identity rotation
+        rotation_part = t.to_np()[:3, :3]
+        assert np.allclose(rotation_part, np.eye(3))
+
+        # Should have correct translation
+        assert np.isclose(t.x.to_np(), x)
+        assert np.isclose(t.y.to_np(), y)
+        assert np.isclose(t.z.to_np(), z)
+
+        # Bottom row should be [0, 0, 0, 1]
+        assert t[3, 0] == 0
+        assert t[3, 1] == 0
+        assert t[3, 2] == 0
+        assert t[3, 3] == 1
+
+    def test_symbolic_operations(self):
+        """Test operations with symbolic expressions"""
+        x_sym = cas.Symbol('x')
+        y_sym = cas.Symbol('y')
+        angle_sym = cas.Symbol('theta')
+
+        # Create symbolic transformation
+        t_sym = cas.TransformationMatrix.from_xyz_rpy(x_sym, y_sym, 0, 0, 0, angle_sym)
+
+        # Should be able to compose with other transformations
+        t_numeric = cas.TransformationMatrix.from_xyz_rpy(1, 1, 1)
+        result = t_sym @ t_numeric
+
+        assert isinstance(result, cas.TransformationMatrix)
+
+        # Should contain the symbols
+        symbols = result.free_symbols()
+        symbol_names = [s.name for s in symbols if hasattr(s, 'name')]
+        assert 'x' in symbol_names
+        assert 'y' in symbol_names
+        assert 'theta' in symbol_names
+
+    def test_compilation(self):
+        """Test compilation and execution of transformation matrices"""
+        # Test symbolic transformation compilation
+        compiled_transform = cas.compile_and_execute(
+            lambda x, y, z, roll, pitch, yaw: cas.TransformationMatrix.from_xyz_rpy(x, y, z, roll, pitch, yaw),
+            [1, 2, 3, 0.1, 0.2, 0.3]
+        )
+
+        # Should be a valid 4x4 transformation matrix
+        assert compiled_transform.shape == (4, 4)
+        assert np.isclose(compiled_transform[3, 3], 1)
+        assert np.isclose(compiled_transform[3, 0], 0)
+        assert np.isclose(compiled_transform[3, 1], 0)
+        assert np.isclose(compiled_transform[3, 2], 0)
+
+    def test_deepcopy(self):
+        """Test deep copy functionality"""
+        t = cas.TransformationMatrix.from_xyz_rpy(1, 2, 3, 0.1, 0.2, 0.3)
+
+        from copy import deepcopy
+        t_copy = deepcopy(t)
+
+        assert isinstance(t_copy, cas.TransformationMatrix)
+        assert np.allclose(t.to_np(), t_copy.to_np())
+
+        # Frames should be preserved but not deep copied (reference equality)
+        assert t_copy.reference_frame == t.reference_frame
+        assert t_copy.child_frame == t.child_frame
+
+    def test_robot_kinematics(self):
+        """Test transformation matrices in typical robotics scenarios"""
+        # Forward kinematics chain: base -> link1 -> link2 -> end_effector
+        base_T_link1 = cas.TransformationMatrix.from_xyz_rpy(0, 0, 1, 0, 0, np.pi / 4)  # Lift and rotate
+        link1_T_link2 = cas.TransformationMatrix.from_xyz_rpy(1, 0, 0, 0, np.pi / 2, 0)  # Extend and bend
+        link2_T_ee = cas.TransformationMatrix.from_xyz_rpy(0.5, 0, 0)  # End effector offset
+
+        # Forward kinematics
+        base_T_ee = base_T_link1 @ link1_T_link2 @ link2_T_ee
+        assert isinstance(base_T_ee, cas.TransformationMatrix)
+
+        # Test that inverse kinematics works
+        ee_T_base = base_T_ee.inverse()
+        identity_check = base_T_ee @ ee_T_base
+        identity = cas.TransformationMatrix()
+        assert np.allclose(identity_check.to_np(), identity.to_np(), atol=1e-10)
+
+    def test_coordinate_transformations(self):
+        """Test coordinate frame transformations"""
+        # Transform from world to robot base
+        world_T_robot = cas.TransformationMatrix.from_xyz_rpy(2, 3, 0, 0, 0, np.pi / 2)
+
+        # Point in world coordinates
+        world_point = cas.Point3(1, 0, 1)
+
+        # Transform to robot coordinates
+        robot_point = world_T_robot.inverse() @ world_point
+        assert isinstance(robot_point, cas.Point3)
+
+        # Transform back to world coordinates
+        world_point_back = world_T_robot @ robot_point
+        assert isinstance(world_point_back, cas.Point3)
+
+        # Should get original point back
+        assert np.allclose(world_point.to_np(), world_point_back.to_np(), atol=1e-10)
+
+    def test_edge_cases(self):
+        """Test edge cases and boundary conditions"""
+        # Identity transformation
+        t_identity = cas.TransformationMatrix()
+        point = cas.Point3(1, 2, 3)
+        transformed = t_identity @ point
+        assert np.allclose(point.to_np(), transformed.to_np())
+
+        # Zero translation, identity rotation
+        t_zero = cas.TransformationMatrix.from_xyz_rpy(0, 0, 0, 0, 0, 0)
+        assert np.allclose(t_zero.to_np(), t_identity.to_np())
+
+        # Large translation values
+        t_large = cas.TransformationMatrix.from_xyz_rpy(1e6, -1e6, 1e6)
+        assert t_large.x.to_np() == 1e6
+        assert t_large.y.to_np() == -1e6
+        assert t_large.z.to_np() == 1e6
+
+        # Small rotation angles (numerical stability)
+        t_small = cas.TransformationMatrix.from_xyz_rpy(0, 0, 0, 1e-8, 1e-8, 1e-8)
+        rotation_part = t_small.to_np()[:3, :3]
+        assert np.allclose(rotation_part, np.eye(3), atol=1e-7)
+
+    @given(quaternion())
+    def test_quaternion_consistency(self, q):
+        """Property-based test for quaternion consistency"""
+        # Create transformation from quaternion
+        t = cas.TransformationMatrix.from_xyz_quat(
+            pos_x=1, pos_y=2, pos_z=3,
+            quat_w=q[3], quat_x=q[0], quat_y=q[1], quat_z=q[2]
+        )
+
+        # Extract quaternion back
+        q_extracted = t.to_quaternion()
+
+        # Create transformation from extracted quaternion
+        t_roundtrip = cas.TransformationMatrix.from_xyz_quat(
+            pos_x=1, pos_y=2, pos_z=3,
+            quat_w=q_extracted[3], quat_x=q_extracted[0],
+            quat_y=q_extracted[1], quat_z=q_extracted[2]
+        )
+
+        # Should be the same (within numerical precision)
+        assert np.allclose(t.to_np(), t_roundtrip.to_np(), atol=1e-10)
+
+    def test_homogeneous_properties(self):
+        """Test homogeneous coordinate properties"""
+        t = cas.TransformationMatrix.from_xyz_rpy(1, 2, 3, 0.1, 0.2, 0.3)
+
+        # Transforming points preserves homogeneous coordinate = 1
+        point = cas.Point3(4, 5, 6)
+        transformed_point = t @ point
+        assert transformed_point[3] == 1
+
+        # Transforming vectors preserves homogeneous coordinate = 0
+        vector = cas.Vector3(1, 1, 1)
+        transformed_vector = t @ vector
+        assert transformed_vector[3] == 0
+
+        # Transformation matrix structure
+        transform_np = t.to_np()
+        assert transform_np[3, 0] == 0
+        assert transform_np[3, 1] == 0
+        assert transform_np[3, 2] == 0
+        assert transform_np[3, 3] == 1
 
 
 class TestQuaternion:

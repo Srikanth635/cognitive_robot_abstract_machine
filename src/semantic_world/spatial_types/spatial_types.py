@@ -564,7 +564,7 @@ class TransformationMatrix(Symbol_, ReferenceFrameMixin):
         elif isinstance(data, ca.SX):
             self.s = data
         elif isinstance(data, (Expression, RotationMatrix, TransformationMatrix)):
-            self.s = data.s
+            self.s = copy(data.s)
             if isinstance(data, RotationMatrix):
                 self.reference_frame = self.reference_frame or data.reference_frame
             if isinstance(data, TransformationMatrix):
@@ -616,8 +616,11 @@ class TransformationMatrix(Symbol_, ReferenceFrameMixin):
         return a_T_b
 
     def dot(self, other):
-        if isinstance(other, (Vector3, Point3, RotationMatrix, TransformationMatrix)):
+        if isinstance(other, (Vector3, UnitVector3, Point3, RotationMatrix, TransformationMatrix)):
             result = ca.mtimes(self.s, other.s)
+            if isinstance(other, UnitVector3):
+                result = UnitVector3.from_iterable(result, reference_frame=self.reference_frame)
+                return result
             if isinstance(other, Vector3):
                 result = Vector3.from_iterable(result, reference_frame=self.reference_frame)
                 return result
@@ -644,7 +647,7 @@ class TransformationMatrix(Symbol_, ReferenceFrameMixin):
         return inv
 
     @classmethod
-    def from_xyz_rpy(cls, x=None, y=None, z=None, roll=None, pitch=None, yaw=None, reference_frame=None,
+    def from_xyz_rpy(cls, x=0, y=0, z=0, roll=0, pitch=0, yaw=0, reference_frame=None,
                      child_frame=None):
         p = Point3(x, y, z)
         r = RotationMatrix.from_rpy(roll, pitch, yaw)
