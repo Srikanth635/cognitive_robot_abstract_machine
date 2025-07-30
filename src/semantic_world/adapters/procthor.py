@@ -118,6 +118,11 @@ class HandleFactory(ViewFactory[Handle]):
             world.add_view(handle_view)
         return world
 
+@dataclass
+class DresserFactory(ViewFactory[...]):
+    number_of_drawers: int = 2
+
+
 
 def replace_dresser_drawer_connections(world: World):
     dresser_pattern = re.compile(r'^dresser_\d+$')
