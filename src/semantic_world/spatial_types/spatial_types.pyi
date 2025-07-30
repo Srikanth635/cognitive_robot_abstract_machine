@@ -418,8 +418,8 @@ class UnitVector3(Vector3):
     @classmethod
     def from_vector3(cls, vector3: Vector3) -> UnitVector3: ...
 
-TrinaryFalse = -1
-TrinaryUnknown = 0
+TrinaryFalse = 0
+TrinaryUnknown = 0.5
 TrinaryTrue = 1
 
 BinaryTrue: Expression
@@ -596,22 +596,19 @@ class Quaternion(Symbol_, ReferenceFrameMixin):
     @w.setter
     def w(self, value: symbol_expr_float): ...
 
-    def __init__(self, data: Optional[Union[Expression,
+    def __init__(self, x: symbol_expr_float = 0.0, y: symbol_expr_float = 0.0,
+                 z: symbol_expr_float = 0.0, w: symbol_expr_float = 1.0,
+                 reference_frame: Optional[Body] = None): ...
+
+    @classmethod
+    def from_iterable(cls, data: Optional[Union[Expression,
                                             Quaternion,
                                             ca.SX,
                                             Tuple[symbol_expr_float,
                                                   symbol_expr_float,
                                                   symbol_expr_float,
                                                   symbol_expr_float]]] = None,
-                 reference_frame: Optional[Body] = None): ...
-
-    @classmethod
-    def from_xyzw(cls,
-                  x: symbol_expr_float,
-                  y: symbol_expr_float,
-                  z: symbol_expr_float,
-                  w: symbol_expr_float,
-                  reference_frame: Optional[Body] = None) -> Quaternion: ...
+                 reference_frame: Optional[Body] = None) -> Quaternion: ...
 
     @classmethod
     def from_axis_angle(cls, axis: Vector3, angle: symbol_expr_float, reference_frame: Optional[Body] = None) \

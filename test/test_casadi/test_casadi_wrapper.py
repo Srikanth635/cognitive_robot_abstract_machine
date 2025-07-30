@@ -373,7 +373,7 @@ class TestRotationMatrix:
 
     @given(quaternion())
     def test_from_quaternion(self, q):
-        actual = cas.RotationMatrix.from_quaternion(cas.Quaternion(q)).to_np()
+        actual = cas.RotationMatrix.from_quaternion(cas.Quaternion.from_iterable(q)).to_np()
         expected = giskard_math.rotation_matrix_from_quaternion(*q)
         assert np.allclose(actual, expected)
 
@@ -826,7 +826,7 @@ class TestPoint3:
         with pytest.raises(TypeError):
             assert r @ p
 
-    def test_point3_sub(self):
+    def test_sub(self):
         p1 = cas.Point3(1, 1, 1)
         p2 = cas.Point3(1, 1, 1)
         p3 = p1 - p2
@@ -836,7 +836,7 @@ class TestPoint3:
         assert p3[2] == 0
         assert p3[3] == 0
 
-    def test_point3_add_vector3(self):
+    def test_add_vector3(self):
         p1 = cas.Point3(1, 1, 1)
         v1 = cas.Vector3(1, 1, 1)
         p3 = p1 + v1
@@ -846,7 +846,7 @@ class TestPoint3:
         assert p3[2] == 2
         assert p3[3] == 1
 
-    def test_point3_mul(self):
+    def test_mul(self):
         p1 = cas.Point3(1, 1, 1)
         s = cas.Symbol('s')
         p3 = p1 * s
@@ -876,7 +876,7 @@ class TestPoint3:
         expected = if_result if condition > 0 else else_result
         assert np.allclose(actual, expected)
 
-    def test_point3_arithmetic_operations(self):
+    def test_arithmetic_operations(self):
         """Test all arithmetic operations with proper type checking and homogeneous coordinates"""
         p1 = cas.Point3(1, 2, 3)
         p2 = cas.Point3(4, 5, 6)
@@ -931,7 +931,7 @@ class TestPoint3:
         assert isinstance(result, cas.Point3)
         assert result[3] == 1
 
-    def test_point3_properties(self):
+    def test_properties(self):
         """Test x, y, z property getters and setters"""
         p = cas.Point3(1, 2, 3)
 
@@ -949,7 +949,7 @@ class TestPoint3:
         assert p[2] == 30
         assert p[3] == 1  # Homogeneous coordinate unchanged
 
-    def test_point3_geometric_operations(self):
+    def test_geometric_operations(self):
         """Test geometric operations specific to points"""
         p1 = cas.Point3(0, 0, 0)  # Origin
         p2 = cas.Point3(3, 4, 0)  # Point on XY plane
@@ -967,7 +967,7 @@ class TestPoint3:
         assert np.isclose(midpoint.y.to_np(), 2.0)
         assert np.isclose(midpoint.z.to_np(), 0.0)
 
-    def test_point3_reference_frame_preservation(self):
+    def test_reference_frame_preservation(self):
         """Test that reference frames are properly preserved through operations"""
         p1 = cas.Point3(1, 2, 3)  # reference_frame=some_frame
         v = cas.Vector3(1, 1, 1)
@@ -988,7 +988,7 @@ class TestPoint3:
         assert isinstance(result, cas.Vector3)
         assert result.reference_frame == p1.reference_frame
 
-    def test_point3_negation(self):
+    def test_negation(self):
         """Test unary negation operator"""
         p = cas.Point3(1, -2, 3)
         result = -p
@@ -999,7 +999,7 @@ class TestPoint3:
         assert result[2] == -3
         assert result[3] == 1  # Homogeneous coordinate preserved
 
-    def test_point3_invalid_operations(self):
+    def test_invalid_operations(self):
         """Test operations that should raise TypeError"""
         p = cas.Point3(1, 2, 3)
         r = cas.RotationMatrix()
@@ -1032,18 +1032,8 @@ class TestPoint3:
         with pytest.raises(TypeError):
             "string" + p
 
-    def test_point3_from_xyz_class_method(self):
-        """Test from_xyz class method if it exists"""
-        # Note: This method is referenced in msg_converter.py but may not be implemented
-        # This test would verify its existence and functionality
-        if hasattr(cas.Point3, 'from_xyz'):
-            p = cas.Point3.from_xyz(1, 2, 3)
-            assert isinstance(p, cas.Point3)
-            assert p.x == 1 and p.y == 2 and p.z == 3
-            assert p[3] == 1
-
     @given(vector(3), vector(3))
-    def test_point3_distance_property_based(self, p1_data, p2_data):
+    def test_distance_property_based(self, p1_data, p2_data):
         """Property-based test for point-to-point distance"""
         p1 = cas.Point3.from_iterable(p1_data)
         p2 = cas.Point3.from_iterable(p2_data)
@@ -1059,7 +1049,7 @@ class TestPoint3:
         if not (np.isnan(actual) or np.isinf(actual)):
             assert np.isclose(actual, expected)
 
-    def test_point3_transformation_operations(self):
+    def test_transformation_operations(self):
         """Test transformation matrix operations with points"""
         p = cas.Point3(1, 2, 3)
         t = cas.TransformationMatrix()
@@ -1073,7 +1063,7 @@ class TestPoint3:
         with pytest.raises(TypeError):
             p @ t
 
-    def test_point3_compilation_and_execution(self):
+    def test_compilation_and_execution(self):
         """Test that Point3 operations compile and execute correctly"""
         # Test point arithmetic compilation
         compiled_add = cas.compile_and_execute(
@@ -1091,7 +1081,7 @@ class TestPoint3:
         expected_vector = np.array([4, 4, 4, 0])  # Result is a Vector3
         np.testing.assert_allclose(compiled_sub, expected_vector)
 
-    def test_point3_edge_cases(self):
+    def test_edge_cases(self):
         """Test edge cases and boundary conditions"""
         # Test with zero coordinates
         p_zero = cas.Point3(0, 0, 0)
@@ -1115,7 +1105,7 @@ class TestPoint3:
         assert p_small[0] == small_val
         assert p_small[3] == 1
 
-    def test_point3_symbolic_operations(self):
+    def test_symbolic_operations(self):
         """Test operations with symbolic expressions"""
         x, y, z = cas.create_symbols(['x', 'y', 'z'])
         p_symbolic = cas.Point3(x, y, z)
@@ -1137,7 +1127,7 @@ class TestPoint3:
         assert 'x' in symbol_names and 'y' in symbol_names and 'z' in symbol_names
 
     @given(vector(3))
-    def test_point3_homogeneous_coordinate_invariant(self, coords):
+    def test_homogeneous_coordinate_invariant(self, coords):
         """Property-based test ensuring homogeneous coordinate is always 1 for points"""
         p = cas.Point3.from_iterable(coords)
         assert p[3] == 1
@@ -1258,7 +1248,7 @@ class TestVector3:
         if not np.isnan(result) and not np.isinf(result):
             assert np.isclose(result, expected)
 
-    def test_vector3_cross_product(self):
+    def test_cross_product(self):
         """Test cross product operations"""
         v1 = cas.Vector3(1, 0, 0)
         v2 = cas.Vector3(0, 1, 0)
@@ -1273,7 +1263,7 @@ class TestVector3:
         result2 = v2.cross(v1)
         np.testing.assert_allclose(result2[:3].to_np(), [0, 0, -1])
 
-    def test_vector3_properties(self):
+    def test_properties(self):
         """Test x, y, z property getters and setters"""
         v = cas.Vector3(1, 2, 3)
 
@@ -1291,7 +1281,7 @@ class TestVector3:
         assert v[2] == 30
         assert v[3] == 0  # Homogeneous coordinate unchanged
 
-    def test_vector3_reference_frame_preservation(self):
+    def test_reference_frame_preservation(self):
         """Test that reference frames are properly preserved through operations"""
         # This would require a mock reference frame object
         v1 = cas.Vector3(1, 2, 3)  # reference_frame=some_frame
@@ -1307,7 +1297,7 @@ class TestVector3:
         result = -v1
         assert result.reference_frame == v1.reference_frame
 
-    def test_vector3_negation(self):
+    def test_negation(self):
         """Test unary negation operator"""
         v = cas.Vector3(1, -2, 3)
         result = -v
@@ -1318,7 +1308,7 @@ class TestVector3:
         assert result[2] == -3
         assert result[3] == 0
 
-    def test_vector3_scale_method(self):
+    def test_scale_method(self):
         """Test the scale method with safe and unsafe modes"""
         v = cas.Vector3(3, 4, 0)  # Length = 5
 
@@ -1334,7 +1324,7 @@ class TestVector3:
         expected_norm2 = v_copy2.norm().to_np()
         assert np.isclose(expected_norm2, 10)
 
-    def test_vector3_invalid_operations(self):
+    def test_invalid_operations(self):
         """Test operations that should raise TypeError"""
         v = cas.Vector3(1, 2, 3)
         r = cas.RotationMatrix()
@@ -1362,7 +1352,7 @@ class TestVector3:
             "string" + v
 
     @given(vector(3), vector(3))
-    def test_vector3_dot_product_property_based(self, v1_data, v2_data):
+    def test_dot_product_property_based(self, v1_data, v2_data):
         """Property-based test for dot product"""
         v1 = cas.Vector3.from_iterable(v1_data)
         v2 = cas.Vector3.from_iterable(v2_data)
@@ -1378,7 +1368,7 @@ class TestVector3:
             assert np.isclose(actual, expected)
 
     @given(vector(3))
-    def test_vector3_norm_property_based(self, v_data):
+    def test_norm_property_based(self, v_data):
         """Property-based test for vector norm"""
         v = cas.Vector3.from_iterable(v_data)
         norm_result = v.norm()
@@ -1389,7 +1379,7 @@ class TestVector3:
         if not (np.isnan(actual) or np.isinf(actual)):
             assert np.isclose(actual, expected)
 
-    def test_vector3_from_iterable_edge_cases(self):
+    def test_from_iterable_edge_cases(self):
         """Test edge cases for from_iterable class method"""
         # Test with different iterable types
         v1 = cas.Vector3.from_iterable([1, 2, 3])
@@ -1406,7 +1396,7 @@ class TestVector3:
         new_vector = cas.Vector3.from_iterable(existing_vector)
         assert new_vector.reference_frame == existing_vector.reference_frame
 
-    def test_vector3_compilation_and_execution(self):
+    def test_compilation_and_execution(self):
         """Test that Vector3 operations compile and execute correctly"""
         v1 = cas.Vector3(cas.Symbol('x'), cas.Symbol('y'), cas.Symbol('z'))
         v2 = cas.Vector3(1, 2, 3)
@@ -1591,7 +1581,7 @@ class TestTransformationMatrix:
         r2[2, 3] = z
         r = cas.TransformationMatrix.from_point_rotation_matrix(point=cas.Point3(x, y, z),
                                                                 rotation_matrix=cas.RotationMatrix.from_quaternion(
-                                                                    cas.Quaternion(q))).to_np()
+                                                                    cas.Quaternion(*q))).to_np()
         assert np.allclose(r, r2)
 
     @given(float_no_nan_no_inf(outer_limit=1000),
@@ -1615,7 +1605,7 @@ class TestTransformationMatrix:
     def test_pos_of(self, x, y, z, q):
         r1 = cas.TransformationMatrix.from_point_rotation_matrix(cas.Point3(x, y, z),
                                                                  cas.RotationMatrix.from_quaternion(
-                                                                     cas.Quaternion(q))).to_position()
+                                                                     cas.Quaternion(*q))).to_position()
         r2 = [x, y, z, 1]
         for i, e in enumerate(r2):
             np.isclose(r1[i].to_np(), e)
@@ -1627,7 +1617,7 @@ class TestTransformationMatrix:
     def test_trans_of(self, x, y, z, q):
         r1 = cas.TransformationMatrix.from_point_rotation_matrix(point=cas.Point3(x, y, z),
                                                                  rotation_matrix=cas.RotationMatrix.from_quaternion(
-                                                                     cas.Quaternion(q))).to_translation().to_np()
+                                                                     cas.Quaternion(*q))).to_translation().to_np()
         r2 = np.identity(4)
         r2[0, 3] = x
         r2[1, 3] = y
@@ -1643,7 +1633,7 @@ class TestTransformationMatrix:
     def test_rot_of(self, x, y, z, q):
         r1 = cas.TransformationMatrix.from_point_rotation_matrix(point=cas.Point3(x, y, z),
                                                                  rotation_matrix=cas.RotationMatrix.from_quaternion(
-                                                                     cas.Quaternion(q))).to_rotation().to_np()
+                                                                     cas.Quaternion(*q))).to_rotation().to_np()
         r2 = giskard_math.rotation_matrix_from_quaternion(*q)
         assert np.allclose(r1, r2)
 
@@ -2119,16 +2109,16 @@ class TestQuaternion:
     @given(quaternion())
     def test_axis_angle_from_quaternion(self, q):
         axis2, angle2 = giskard_math.axis_angle_from_quaternion(*q)
-        axis = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion((x, y, z, w_)).to_axis_angle()[0], q)
-        angle = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion((x, y, z, w_)).to_axis_angle()[1], q)
+        axis = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion(x, y, z, w_).to_axis_angle()[0], q)
+        angle = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion(x, y, z, w_).to_axis_angle()[1], q)
         compare_axis_angle(angle, axis[:3], angle2, axis2, 2)
         assert axis[-1] == 0
 
     def test_axis_angle_from_quaternion2(self):
         q = [0, 0, 0, 1.0000001]
         axis2, angle2 = giskard_math.axis_angle_from_quaternion(*q)
-        axis = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion((x, y, z, w_)).to_axis_angle()[0], q)
-        angle = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion((x, y, z, w_)).to_axis_angle()[1], q)
+        axis = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion(x, y, z, w_).to_axis_angle()[0], q)
+        angle = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion(x, y, z, w_).to_axis_angle()[1], q)
         compare_axis_angle(angle, axis[:3], angle2, axis2, 2)
         assert axis[-1] == 0
 
@@ -2151,7 +2141,7 @@ class TestQuaternion:
     def test_dot(self, q1, q2):
         q1 = np.array(q1)
         q2 = np.array(q2)
-        result = cas.compile_and_execute(lambda p1, p2: cas.Quaternion(p1).dot(cas.Quaternion(p2)), [q1, q2])
+        result = cas.compile_and_execute(lambda p1, p2: cas.Quaternion.from_iterable(p1).dot(cas.Quaternion.from_iterable(p2)), [q1, q2])
         expected = np.dot(q1.T, q2)
         if not np.isnan(result) and not np.isinf(result):
             assert np.isclose(result, expected)
@@ -2174,8 +2164,8 @@ class TestCASWrapper:
         f = 1.0
         s = cas.Symbol('s')
         e = cas.Expression(1)
-        v = cas.Vector3((1, 1, 1))
-        p = cas.Point3((1, 1, 1))
+        v = cas.Vector3(1, 1, 1)
+        p = cas.Point3(1, 1, 1)
         t = cas.TransformationMatrix()
         r = cas.RotationMatrix()
         q = cas.Quaternion()
@@ -2307,8 +2297,8 @@ class TestCASWrapper:
         f = 1.0
         s = cas.Symbol('s')
         e = cas.Expression(1)
-        v = cas.Vector3((1, 1, 1))
-        p = cas.Point3((1, 1, 1))
+        v = cas.Vector3(1, 1, 1)
+        p = cas.Point3(1, 1, 1)
         t = cas.TransformationMatrix()
         r = cas.RotationMatrix()
         q = cas.Quaternion()
@@ -2434,8 +2424,8 @@ class TestCASWrapper:
         str_ = 'muh23'
         things = [cas.Symbol('s'),
                   cas.Expression(1),
-                  cas.Vector3((1, 1, 1)),
-                  cas.Point3((1, 1, 1)),
+                  cas.Vector3(1, 1, 1),
+                  cas.Point3(1, 1, 1),
                   cas.TransformationMatrix(),
                   cas.RotationMatrix(),
                   cas.Quaternion()]
@@ -2458,8 +2448,8 @@ class TestCASWrapper:
         f = 1.0
         s = cas.Symbol('s')
         e = cas.Expression(1)
-        v = cas.Vector3((1, 1, 1))
-        p = cas.Point3((1, 1, 1))
+        v = cas.Vector3(1, 1, 1)
+        p = cas.Point3(1, 1, 1)
         t = cas.TransformationMatrix()
         r = cas.RotationMatrix()
         q = cas.Quaternion()
@@ -2586,8 +2576,8 @@ class TestCASWrapper:
     def test_dot_types(self):
         s = cas.Symbol('s')
         e = cas.Expression(1)
-        v = cas.Vector3((1, 1, 1))
-        p = cas.Point3((1, 1, 1))
+        v = cas.Vector3(1, 1, 1)
+        p = cas.Point3(1, 1, 1)
         t = cas.TransformationMatrix()
         r = cas.RotationMatrix()
         q = cas.Quaternion()
@@ -2639,8 +2629,10 @@ class TestCASWrapper:
             p.dot(t)
         with pytest.raises(TypeError):
             cas.dot(p, t)
-        assert isinstance(r.dot(p), cas.Point3)
-        assert isinstance(cas.dot(r, p), cas.Point3)
+        with pytest.raises(TypeError):
+            assert isinstance(r.dot(p), cas.Point3)
+        with pytest.raises(TypeError):
+            assert isinstance(cas.dot(r, p), cas.Point3)
         with pytest.raises(TypeError):
             p.dot(q)
         with pytest.raises(TypeError):
@@ -3187,10 +3179,10 @@ class TestCASWrapper:
            quaternion())
     def test_slerp123(self, q1, q2):
         step = 0.1
-        q_d = cas.compile_and_execute(lambda q1, q2: cas.Quaternion(q1).diff(cas.Quaternion(q2)),
+        q_d = cas.compile_and_execute(lambda q1, q2: cas.Quaternion.from_iterable(q1).diff(cas.Quaternion.from_iterable(q2)),
                                       [q1, q2])
-        axis = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion((x, y, z, w_)).to_axis_angle()[0], q_d)
-        angle = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion((x, y, z, w_)).to_axis_angle()[1], q_d)
+        axis = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion(x, y, z, w_).to_axis_angle()[0], q_d)
+        angle = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion(x, y, z, w_).to_axis_angle()[1], q_d)
         assume(angle != np.pi)
         if np.abs(angle) > np.pi:
             angle = angle - np.pi * 2
@@ -3200,28 +3192,28 @@ class TestCASWrapper:
         r2s = []
         for t in np.arange(0, 1.001, step):
             r1 = cas.compile_and_execute(cas.quaternion_slerp, [q1, q2, t])
-            r1 = cas.compile_and_execute(lambda q1, q2: cas.Quaternion(q1).diff(cas.Quaternion(q2)),
+            r1 = cas.compile_and_execute(lambda q1, q2: cas.Quaternion.from_iterable(q1).diff(cas.Quaternion.from_iterable(q2)),
                                          [q1, r1])
-            axis2 = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion((x, y, z, w_)).to_axis_angle()[0], r1)
-            angle2 = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion((x, y, z, w_)).to_axis_angle()[1], r1)
+            axis2 = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion(x, y, z, w_).to_axis_angle()[0], r1)
+            angle2 = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion(x, y, z, w_).to_axis_angle()[1], r1)
             r2 = cas.compile_and_execute(cas.Quaternion.from_axis_angle, [axis, angle * t])
             r1s.append(r1)
             r2s.append(r2)
         aa1 = []
         aa2 = []
         for r1, r2 in zip(r1s, r2s):
-            axisr1 = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion((x, y, z, w_)).to_axis_angle()[0], r1)
-            angler1 = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion((x, y, z, w_)).to_axis_angle()[1], r1)
+            axisr1 = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion(x, y, z, w_).to_axis_angle()[0], r1)
+            angler1 = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion(x, y, z, w_).to_axis_angle()[1], r1)
             aa1.append([axisr1, angler1])
-            axisr2 = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion((x, y, z, w_)).to_axis_angle()[0], r2)
-            angler2 = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion((x, y, z, w_)).to_axis_angle()[1], r2)
+            axisr2 = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion(x, y, z, w_).to_axis_angle()[0], r2)
+            angler2 = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion(x, y, z, w_).to_axis_angle()[1], r2)
             aa2.append([axisr2, angler2])
         qds = []
         for i in range(len(r1s) - 1):
             q1t = r1s[i]
             q2t = r1s[i + 1]
             qds.append(
-                cas.compile_and_execute(lambda q1, q2: cas.Quaternion(q1).diff(cas.Quaternion(q2)),
+                cas.compile_and_execute(lambda q1, q2: cas.Quaternion.from_iterable(q1).diff(cas.Quaternion.from_iterable(q2)),
                                         [q1t, q2t]))
         qds = np.array(qds)
         for r1, r2 in zip(r1s, r2s):
@@ -3357,7 +3349,7 @@ class TestCASWrapper:
         assert nearest[2] == 1
 
     def test_to_str(self):
-        axis = cas.Vector3(cas.create_symbols(['v1', 'v2', 'v3']))
+        axis = cas.Vector3(*cas.create_symbols(['v1', 'v2', 'v3']))
         angle = cas.Symbol('alpha')
         q = cas.Quaternion.from_axis_angle(axis, angle)
         expr = cas.norm(q)

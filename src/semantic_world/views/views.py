@@ -67,7 +67,7 @@ class Table(View):
         samples = p.sample(amount)
         z_coordinate = np.full((amount, 1), max([b.max_z for b in area_of_table]) + 0.01)
         samples = np.concatenate((samples, z_coordinate), axis=1)
-        return [Point3.from_xyz(*s, reference_frame=self.top) for s in samples]
+        return [Point3(*s, reference_frame=self.top) for s in samples]
 
     def __post_init__(self):
         self.name = self.top.name

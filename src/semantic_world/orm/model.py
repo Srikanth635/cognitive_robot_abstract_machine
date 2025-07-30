@@ -58,7 +58,7 @@ class Vector3Mapping(AlternativeMapping[Vector3]):
         return
 
     def create_from_dao(self) -> Vector3:
-        return Vector3.from_xyz(x=self.x, y=self.y, z=self.z, reference_frame=None)
+        return Vector3(x=self.x, y=self.y, z=self.z, reference_frame=None)
 
 
 @dataclass
@@ -96,7 +96,7 @@ class Point3Mapping(AlternativeMapping[Point3]):
         return result
 
     def create_from_dao(self) -> Point3:
-        return Point3.from_xyz(x=self.x, y=self.y, z=self.z, reference_frame=None)
+        return Point3(x=self.x, y=self.y, z=self.z, reference_frame=None)
 
 
 @dataclass
@@ -116,7 +116,7 @@ class QuaternionMapping(AlternativeMapping[Quaternion]):
         return result
 
     def create_from_dao(self) -> Quaternion:
-        return Quaternion.from_xyzw(x=self.x, y=self.y, z=self.z, w=self.w, reference_frame=None)
+        return Quaternion(x=self.x, y=self.y, z=self.z, w=self.w, reference_frame=None)
 
 
 @dataclass

@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Tuple, TYPE_CHECKING, Union
+from typing import List, TYPE_CHECKING, Union
 
 import numpy as np
 
 from . import spatial_types as cas
 from .degree_of_freedom import DegreeOfFreedom
 from .prefixed_name import PrefixedName
-from .spatial_types.derivatives import Derivatives, DerivativeMap
+from .spatial_types.derivatives import DerivativeMap
 from .spatial_types.math import quaternion_from_rotation_matrix
 from .types import NpMatrix4x4
 from .world_entity import Connection
@@ -152,7 +152,7 @@ class PrismaticConnection(ActiveConnection, Has1DOFState):
         self._post_init_world_part()
 
         motor_expression = self.dof.symbols.position * self.multiplier + self.offset
-        translation_axis = cas.Vector3(self.axis) * motor_expression
+        translation_axis = cas.Vector3.from_iterable(self.axis) * motor_expression
         parent_T_child = cas.TransformationMatrix.from_xyz_rpy(x=translation_axis[0],
                                                                y=translation_axis[1],
                                                                z=translation_axis[2])
@@ -269,13 +269,13 @@ class Connection6DoF(PassiveConnection):
     def __post_init__(self):
         super().__post_init__()
         self._post_init_world_part()
-        parent_P_child = cas.Point3((self.x.symbols.position,
-                                     self.y.symbols.position,
-                                     self.z.symbols.position))
-        parent_R_child = cas.Quaternion((self.qx.symbols.position,
-                                         self.qy.symbols.position,
-                                         self.qz.symbols.position,
-                                         self.qw.symbols.position)).to_rotation_matrix()
+        parent_P_child = cas.Point3(x=self.x.symbols.position,
+                                    y=self.y.symbols.position,
+                                    z=self.z.symbols.position)
+        parent_R_child = cas.Quaternion(x=self.qx.symbols.position,
+                                        y=self.qy.symbols.position,
+                                        z=self.qz.symbols.position,
+                                        w=self.qw.symbols.position).to_rotation_matrix()
         self.origin_expression = cas.TransformationMatrix.from_point_rotation_matrix(point=parent_P_child,
                                                                                      rotation_matrix=parent_R_child,
                                                                                      reference_frame=self.parent,
