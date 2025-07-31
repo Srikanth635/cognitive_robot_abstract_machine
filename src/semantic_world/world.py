@@ -6,7 +6,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import wraps, lru_cache
-from typing import Dict, Tuple, OrderedDict, Union, Optional, Type
+from typing import Dict, Tuple, OrderedDict, Union, Optional, Type, TypeVar, Generic
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -38,6 +38,7 @@ class PlotAlignment(IntEnum):
     HORIZONTAL = 0
     VERTICAL = 1
 
+T = TypeVar('T')
 
 class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
     """
@@ -460,7 +461,7 @@ class World:
             return matches[0]
         return None
 
-    def get_views_by_type(self, view_type: Type[View]) -> List[View]:
+    def get_views_by_type(self, view_type: Type[Generic[T]]) -> List[T]:
         """
         Retrieves all views of a specific type from the world.
 

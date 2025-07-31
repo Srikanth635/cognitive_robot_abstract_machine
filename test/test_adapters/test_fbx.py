@@ -9,7 +9,7 @@ from ormatic.dao import to_dao
 from semantic_world.adapters.fbx import FBXParser
 from semantic_world.adapters.procthor import replace_dresser_drawer_connections, HandleFactory, ContainerFactory, \
     DrawerFactory, Direction, DresserFactory, DoorFactory
-from semantic_world.connections import PrismaticConnection
+from semantic_world.connections import PrismaticConnection, RevoluteConnection
 from semantic_world.geometry import Scale
 from semantic_world.orm.ormatic_interface import *
 from semantic_world.prefixed_name import PrefixedName
@@ -62,8 +62,8 @@ class FBXParserTest(unittest.TestCase):
         rclpy.init()
         node = rclpy.create_node("viz_marker")
 
-        handle_factory = HandleFactory(scale=0.1, parent_name=PrefixedName("drawer"))
-        factory = DoorFactory(name=PrefixedName('Door'), scale=Scale(0.03, 1, 2), handle_factory=handle_factory, handle_transform=TransformationMatrix.from_xyz_rpy(0.05, 0.4, 0, 0, 0, 0))
+        handle_factory = HandleFactory(width=0.1, name=PrefixedName("door_handle"))
+        factory = DoorFactory(name=PrefixedName('Door'), scale=Scale(0.03, 1, 2), handle_factory=handle_factory, handle_direction=Direction.Y)
 
         world = factory.create()
 
@@ -88,6 +88,11 @@ class FBXParserTest(unittest.TestCase):
 
 
         world = dresser_factory.create()
+        connections = list(filter(lambda x: isinstance(x, RevoluteConnection), world.connections))
+        self.assertEqual(len(connections), 4)
+
+        world.state[connections[0].dof.name].position = 1.5
+        world.notify_state_change()
 
         p = VizMarkerPublisher(world, node)
         time.sleep(100)

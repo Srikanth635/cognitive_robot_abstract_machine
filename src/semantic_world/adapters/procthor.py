@@ -5,6 +5,7 @@ from enum import IntEnum
 from typing import TypeVar, Generic, List
 
 import numpy as np
+from numpy import ndarray
 from random_events.interval import closed
 from random_events.product_algebra import SimpleEvent
 
@@ -80,12 +81,11 @@ class ContainerFactory(ViewFactory[Container]):
         else:
             inner_box[SpatialVariables.z.value] = closed(-self.scale.z / 2, inner_scale.z / 2)
 
-
         container = outer_box.as_composite_set() - inner_box.as_composite_set()
 
         bounding_box_collection = BoundingBoxCollection.from_event(container)
         collision = bounding_box_collection.as_shapes(reference_frame=self.name)
-        body = Body(name=PrefixedName(self.name.name+'_blox', self.name.prefix), collision=collision, visual=collision)
+        body = Body(name=self.name, collision=collision, visual=collision)
         container_view = Container(body=body, name=self.name)
 
         world = World()
@@ -96,22 +96,21 @@ class ContainerFactory(ViewFactory[Container]):
 
 @dataclass
 class HandleFactory(ViewFactory[Handle]):
-    parent_name: PrefixedName
-    scale: float
+    name: PrefixedName
+    width: float
 
     def create(self) -> World:
-        name = PrefixedName(f"{self.parent_name.name}_handle", self.parent_name.prefix)
         long_side_handle = Box(origin=TransformationMatrix.from_xyz_rpy(0, 0, 0, 0, 0, 0),
-                               scale=Scale(self.scale / 4, self.scale, self.scale / 4), )
+                               scale=Scale(self.width / 4, self.width, self.width / 4), )
         short_side_handle_left = Box(
-            origin=TransformationMatrix.from_xyz_rpy(-0.25 * self.scale, 0.5 * 0.75 * self.scale, 0, 0, 0, 0),
-            scale=Scale(self.scale / 4, self.scale / 4, self.scale / 4), )
+            origin=TransformationMatrix.from_xyz_rpy(-0.25 * self.width, 0.5 * 0.75 * self.width, 0, 0, 0, 0),
+            scale=Scale(self.width / 4, self.width / 4, self.width / 4), )
         short_side_handle_right = Box(
-            origin=TransformationMatrix.from_xyz_rpy(-0.25 * self.scale, -0.5 * 0.75 * self.scale, 0, 0, 0, 0),
-            scale=Scale(self.scale / 4, self.scale / 4, self.scale / 4), )
+            origin=TransformationMatrix.from_xyz_rpy(-0.25 * self.width, -0.5 * 0.75 * self.width, 0, 0, 0, 0),
+            scale=Scale(self.width / 4, self.width / 4, self.width / 4), )
         collision = [long_side_handle, short_side_handle_left, short_side_handle_right]
-        handle = Body(name=name, collision=collision, visual=collision)
-        handle_view = Handle(handle)
+        handle = Body(name=self.name, collision=collision, visual=collision)
+        handle_view = Handle(name=self.name, body=handle)
 
         world = World()
         with world.modify_world():
@@ -123,48 +122,67 @@ class HandleFactory(ViewFactory[Handle]):
 class DoorFactory(ViewFactory[Door]):
     name: PrefixedName
     handle_factory: HandleFactory
-    handle_transform: TransformationMatrix
+    handle_direction: Direction
     scale: Scale = field(default_factory= lambda: Scale(.03, 1., 2.))
 
     def create(self) -> World:
 
-        box = event_from_scale(self.scale).as_composite_set()
+        x_interval = closed(-self.scale.x / 2, self.scale.x / 2)
+        y_interval = closed(-self.scale.y / 2, self.scale.y / 2)
+        z_interval = closed(-self.scale.z / 2, self.scale.z / 2)
+
+        if self.handle_direction == Direction.X:
+            x_interval = closed(0, self.scale.x)
+            handle_transform = TransformationMatrix.from_xyz_rpy(self.scale.x - 0.1, -0.05, 0, 0, 0, -np.pi / 2)
+        elif self.handle_direction == Direction.NEGATIVE_X:
+            x_interval = closed(-self.scale.x, 0)
+            handle_transform = TransformationMatrix.from_xyz_rpy(-(self.scale.x - 0.1), -0.05, 0, 0, 0, -np.pi / 2)
+        elif self.handle_direction == Direction.Y:
+            y_interval = closed(0, self.scale.y)
+            handle_transform = TransformationMatrix.from_xyz_rpy(-0.05, (self.scale.y - 0.1), 0, 0, 0, np.pi)
+        elif self.handle_direction == Direction.NEGATIVE_Y:
+            y_interval = closed(-self.scale.y, 0)
+            handle_transform = TransformationMatrix.from_xyz_rpy(-0.05, -(self.scale.y - 0.1), 0, 0, 0, np.pi)
+        else:
+            raise NotImplementedError(f"Handle direction Z and NEGATIVE_Z are not implemented yet")
+
+        box = SimpleEvent({SpatialVariables.x.value: x_interval,
+                             SpatialVariables.y.value: y_interval,
+                             SpatialVariables.z.value: z_interval, }).as_composite_set()
 
         bounding_box_collection = BoundingBoxCollection.from_event(box)
         collision = bounding_box_collection.as_shapes(reference_frame=self.name)
-        body = Body(name=PrefixedName(f"{self.name.name}_door_{id_generator(box)}", self.name.prefix), collision=collision,
-                    visual=collision)
+        body = Body(name=self.name, collision=collision, visual=collision)
 
         world = World()
         with world.modify_world():
             world.add_body(body)
 
         handle_world = self.handle_factory.create()
-        handle_view: Handle = handle_world.views[0]
+        handle_view: Handle = handle_world.get_views_by_type(Handle)[0]
 
-        door_to_handle = FixedConnection(world.root, handle_world.root, self.handle_transform)
+        door_to_handle = FixedConnection(world.root, handle_world.root, handle_transform)
 
         world.merge_world(handle_world, door_to_handle)
 
         world.add_view(handle_view)
-        world.add_view(Door(handle=handle_view, body=body))
+        world.add_view(Door(name=self.name, handle=handle_view, body=body))
 
         return world
 
 
 @dataclass
 class DrawerFactory(ViewFactory[Drawer]):
-    parent_name: PrefixedName
+    name: PrefixedName
     handle_factory: HandleFactory
     container_factory: ContainerFactory
 
     def create(self) -> World:
-        name = PrefixedName(f"{self.parent_name.name}_drawer", self.parent_name.prefix)
         container_world = self.container_factory.create()
-        container_view: Container = container_world.views[0]
+        container_view: Container = container_world.get_views_by_type(Container)[0]
 
         handle_world = self.handle_factory.create()
-        handle_view: Handle = handle_world.views[0]
+        handle_view: Handle = handle_world.get_views_by_type(Handle)[0]
 
         drawer_to_handle = FixedConnection(container_world.root, handle_world.root,
                                            TransformationMatrix.from_xyz_rpy(0, -( self.container_factory.scale.y / 2) - 0.04, 0, 0, 0,
@@ -172,7 +190,7 @@ class DrawerFactory(ViewFactory[Drawer]):
 
         container_world.merge_world(handle_world, drawer_to_handle)
 
-        drawer_view = Drawer(name=name, container=container_view, handle=handle_view)
+        drawer_view = Drawer(name=self.name, container=container_view, handle=handle_view)
 
         container_world.add_view(drawer_view)
 
@@ -182,8 +200,8 @@ class DrawerFactory(ViewFactory[Drawer]):
 
 @dataclass
 class DresserFactory(ViewFactory[Dresser]):
+    name: PrefixedName
     container_factory: ContainerFactory
-
     drawers_factories: List[DrawerFactory] = field(default_factory=list, hash=False)
     drawer_transforms: List[TransformationMatrix] = field(default_factory=list, hash=False)
     door_factories: List[DoorFactory] = field(default_factory=list, hash=False)
@@ -192,50 +210,52 @@ class DresserFactory(ViewFactory[Dresser]):
     def create(self) -> World:
         assert len(self.drawers_factories) == len(self.drawer_transforms), "Number of drawers must match number of transforms"
 
-        name = PrefixedName("dresser_body")
         container_world = self.container_factory.create()
-        container_view: Container = container_world.views[0]
+        container_view: Container = container_world.get_views_by_type(Container)[0]
 
         for drawer_factory, transform in zip(self.drawers_factories, self.drawer_transforms):
             drawer_world = drawer_factory.create()
 
-            for drawer in drawer_world.bodies:
-                if "handle" not in drawer.name.name:
-                    lower_limits = DerivativeMap[float]()
-                    lower_limits.position = 0.
-                    upper_limits = DerivativeMap[float]()
-                    upper_limits.position = drawer_factory.container_factory.scale.x * 0.75
+            drawer_view: Drawer = drawer_world.get_views_by_type(Drawer)[0]
+            drawer_body = drawer_view.container.body
 
-                    dof = container_world.create_degree_of_freedom(PrefixedName(f"{drawer.name.name}_{id_generator(drawer)}_connection",
-                                                                      drawer.name.prefix), lower_limits, upper_limits)
-                    connection = PrismaticConnection(parent=container_world.bodies[0], child=drawer,
-                                                     origin_expression=transform,
-                                                     multiplier=1., offset=0., axis=UnitVector.X(),
-                                                     dof=dof)
-                    with container_world.modify_world():
-                        container_world.merge_world(drawer_world, connection)
+            lower_limits = DerivativeMap[float]()
+            lower_limits.position = 0.
+            upper_limits = DerivativeMap[float]()
+            upper_limits.position = drawer_factory.container_factory.scale.x * 0.75
+
+            dof = container_world.create_degree_of_freedom(PrefixedName(f"{drawer_body.name.name}_connection",
+                                                              drawer_body.name.prefix), lower_limits, upper_limits)
+            connection = PrismaticConnection(parent=container_world.bodies[0], child=drawer_body,
+                                             origin_expression=transform,
+                                             multiplier=1., offset=0., axis=UnitVector.X(),
+                                             dof=dof)
+            with container_world.modify_world():
+                container_world.merge_world(drawer_world, connection)
 
         for door_factory, transform in zip(self.door_factories, self.door_transforms):
             door_world = door_factory.create()
 
             door_view: Door = door_world.get_views_by_type(Door)[0]
             door_body = door_view.body
-            handle_position = door_view.handle.body.parent_connection.origin_expression.to_position().to_np()
+
+
+            handle_position: ndarray[float] = door_view.handle.body.parent_connection.origin_expression.to_position().to_np()
 
             lower_limits = DerivativeMap[float]()
-            lower_limits.position = 0.
             upper_limits = DerivativeMap[float]()
-            upper_limits.position = np.pi/2
+            if door_factory.handle_direction in {Direction.NEGATIVE_X, Direction.NEGATIVE_Y}:
+                lower_limits.position = 0.
+                upper_limits.position = np.pi/2
+            else:
+                lower_limits.position = -np.pi/2
+                upper_limits.position = 0.
 
-            dof = container_world.create_degree_of_freedom(PrefixedName(f"{door_body.name.name}_{id_generator(door_body)}_connection",
+            dof = container_world.create_degree_of_freedom(PrefixedName(f"{door_body.name.name}_connection",
                                                               door_body.name.prefix), lower_limits, upper_limits)
 
-            relative_pivot_point = np.array([handle_position[0], -handle_position[1], handle_position[2]])
-            T_DP = np.eye(4)
-            T_DP[:3, 3] = relative_pivot_point
-            T_WP = transform.to_np() @ T_DP
-
-            door_position = T_WP[:3, 3]
+            offset = -np.sign(handle_position[0]) * (door_factory.scale.x / 2)
+            door_position = transform.to_np()[:3, 3] + np.array([offset, 0, 0])
 
             pivot_point = TransformationMatrix.from_xyz_rpy(door_position[0], door_position[1], door_position[2], 0, 0, 0)
 
@@ -246,7 +266,9 @@ class DresserFactory(ViewFactory[Dresser]):
             with container_world.modify_world():
                 container_world.merge_world(door_world, connection)
 
-        dresser_view = Dresser(container=container_view, drawers=[v for v in container_world.views if isinstance(v, Drawer)])
+        dresser_view = Dresser(name=self.name, container=container_view,
+                               drawers=[drawer for drawer in container_world.get_views_by_type(Drawer)],
+                               doors=[door for door in container_world.get_views_by_type(Door)])
         container_world.add_view(dresser_view)
 
         return container_world
@@ -269,20 +291,21 @@ def replace_dresser_drawer_connections(world: World):
             if bool(drawer_pattern.fullmatch(child.name.name)):
                 drawer_transforms.append(child.parent_connection.origin_expression)
 
-                handle_factory = HandleFactory(child.name, 0.1)
-                container_factory = ContainerFactory(name=child.name, scale=child.bounding_box_collection.bounding_boxes[0].scale, direction=Direction.Z)
-                drawer_factory = DrawerFactory(parent_name=dresser.name, handle_factory=handle_factory, container_factory=container_factory)
+                handle_factory = HandleFactory(name=PrefixedName(child.name.name+"_handle", child.name.prefix), width=0.1)
+                container_factory = ContainerFactory(name=PrefixedName(child.name.name+"_container", child.name.prefix), scale=child.bounding_box_collection.bounding_boxes[0].scale, direction=Direction.Z)
+                drawer_factory = DrawerFactory(name=child.name, handle_factory=handle_factory, container_factory=container_factory)
                 drawer_factories.append(drawer_factory)
             elif bool(door_pattern.fullmatch(child.name.name)):
                 door_transforms.append(child.parent_connection.origin_expression)
-                handle_factory = HandleFactory(child.name, 0.1)
+                handle_factory = HandleFactory(PrefixedName(child.name.name+"_handle", child.name.prefix), 0.1)
 
-                door_factory = DoorFactory(name=dresser.name, scale=child.bounding_box_collection.bounding_boxes[0].scale, handle_factory=handle_factory,
-                                           handle_transform=TransformationMatrix.from_xyz_rpy(0.05, 0.4, 0, 0, 0, 0))
+                door_factory = DoorFactory(name=child.name, scale=child.bounding_box_collection.bounding_boxes[0].scale, handle_factory=handle_factory,
+                                           handle_direction=Direction.NEGATIVE_X)
                 door_factories.append(door_factory)
 
-
-        dresser_factory = DresserFactory(container_factory=ContainerFactory(name=dresser.name, scale=dresser.bounding_box_collection.bounding_boxes[0].scale, direction=Direction.NEGATIVE_Y),
-                                         drawers_factories=drawer_factories, drawer_transforms=drawer_transforms, door_factories=door_factories, door_transforms=door_transforms)
+        dresser_container_factory = ContainerFactory(name=PrefixedName(dresser.name.name+"_container", dresser.name.prefix),
+                                                     scale=dresser.bounding_box_collection.bounding_boxes[0].scale, direction=Direction.NEGATIVE_Y)
+        dresser_factory = DresserFactory(name=dresser.name, container_factory=dresser_container_factory, drawers_factories=drawer_factories,
+                                         drawer_transforms=drawer_transforms, door_factories=door_factories, door_transforms=door_transforms)
 
         return dresser_factory

@@ -15,7 +15,8 @@ class Handle(View):
     body: Body
 
     def __post_init__(self):
-        self.name = self.body.name
+        if self.name is None:
+            self.name = self.body.name
 
 
 @dataclass(unsafe_hash=True)
@@ -23,24 +24,8 @@ class Container(View):
     body: Body
 
     def __post_init__(self):
-        self.name = self.body.name
-
-
-@dataclass
-class Door(View):  # Door has a Footprint
-    """
-    Door in a body that has a Handle and can open towards or away from the user.
-    """
-    handle: Handle
-    body: Body
-
-    def __post_init__(self):
-        self.name = self.body.name
-
-@dataclass(unsafe_hash=True)
-class Fridge(View):
-    body: Body
-    door: Door
+        if self.name is None:
+            self.name = self.body.name
 
 @dataclass(unsafe_hash=True)
 class Table(View):
@@ -94,7 +79,8 @@ class Door(Components):
     handle: Handle
 
     def __post_init__(self):
-        self.name = self.body.name
+        if self.name is None:
+            self.name = self.body.name
 
 
 @dataclass(unsafe_hash=True)
@@ -103,7 +89,8 @@ class Drawer(Components):
     handle: Handle
 
     def __post_init__(self):
-        self.name = self.container.name
+        if self.name is None:
+            self.name = self.container.name
 
 
 ############################### subclasses to Furniture
@@ -111,11 +98,20 @@ class Drawer(Components):
 class Cupboard(Furniture):
     ...
 
+@dataclass(unsafe_hash=True)
+class Fridge(View):
+    body: Body
+    door: Door
+
 @dataclass
 class Dresser(Furniture):
     container: Container
     drawers: List[Drawer] = field(default_factory=list, hash=False)
     doors: List[Door] = field(default_factory=list, hash=False)
+
+    def __post_init__(self):
+        if self.name is None:
+            self.name = self.container.name
 
 ############################### subclasses to Cupboard
 @dataclass(unsafe_hash=True)
