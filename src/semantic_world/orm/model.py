@@ -55,26 +55,14 @@ class Vector3Mapping(AlternativeMapping[Vector3]):
         x, y, z, _ = symbol_manager.evaluate_expr(obj).tolist()
         result = cls(x=x, y=y, z=z)
         result.reference_frame = obj.reference_frame
-        return
+        return result
 
     def create_from_dao(self) -> Vector3:
         return Vector3.from_xyz(x=self.x, y=self.y, z=self.z, reference_frame=None)
 
 
 @dataclass
-class UnitVector3Mapping(AlternativeMapping[UnitVector3]):
-    x: float
-    y: float
-    z: float
-
-    reference_frame: Optional[Body] = field(init=False, default=None)
-
-    @classmethod
-    def create_instance(cls, obj: UnitVector3):
-        x, y, z, _ = symbol_manager.evaluate_expr(obj).tolist()
-        result = cls(x=x, y=y, z=z)
-        result.reference_frame = obj.reference_frame
-        return
+class UnitVector3Mapping(Vector3Mapping, AlternativeMapping[UnitVector3]):
 
     def create_from_dao(self) -> UnitVector3:
         return UnitVector3(x=self.x, y=self.y, z=self.z, reference_frame=self.reference_frame)
