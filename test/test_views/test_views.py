@@ -4,10 +4,9 @@ import sys
 import unittest
 
 import pytest
-from numpy.ma.testutils import assert_equal, assert_not_equal
+from numpy.ma.testutils import assert_equal
 
 from semantic_world.reasoner import WorldReasoner
-from semantic_world.robots import KinematicChain
 
 try:
     from ripple_down_rules.user_interface.gui import RDRCaseViewer
@@ -34,7 +33,7 @@ class TestView(View):
     A Generic View for multiple bodies.
     """
     _private_body: Body = field(default=Body)
-    bodies: List[Body] = field(default_factory=list, hash=False)
+    body_list: List[Body] = field(default_factory=list, hash=False)
     views: List[View] = field(default_factory=list, hash=False)
     root_body_1: Body = field(default=Body)
     root_body_2: Body = field(default=Body)
@@ -42,12 +41,12 @@ class TestView(View):
     tip_body_2: Body = field(default=Body)
 
     def add_body(self, body: Body):
-        self.bodies.append(body)
-        body._views.append(self)
+        self.body_list.append(body)
+        body._views.add(self)
 
     def add_view(self, view: View):
         self.views.append(view)
-        view._views.append(self)
+        view._views.add(self)
 
     @property
     def chain(self) -> list[Body]:
@@ -62,6 +61,13 @@ class TestView(View):
         Returns itself as a kinematic chain.
         """
         return self._world.compute_chain_of_bodies(self.root_body_2, self.tip_body_2)
+
+    def __hash__(self):
+        """
+        Custom hash function to ensure that the view is hashable.
+        """
+        return hash((self._private_body, tuple(self.body_list), tuple(self.views),
+                     self.root_body_1, self.root_body_2, self.tip_body_1, self.tip_body_2))
 
 
 class ViewTestCase(unittest.TestCase):
@@ -115,11 +121,11 @@ class ViewTestCase(unittest.TestCase):
         [world_view.add_body(body) for body in body_subset]
 
         # Test aggregation of bodies in a new as well as a nested view
-        view1 = MultiBodyView()
+        view1 = TestView()
         view1_subset = self.kitchen_world.bodies[10:18]
         [view1.add_body(body) for body in view1_subset]
 
-        view2 = MultiBodyView()
+        view2 = TestView()
         view2_subset = self.kitchen_world.bodies[20:]
         [view2.add_body(body) for body in view2_subset]
 
@@ -131,7 +137,7 @@ class ViewTestCase(unittest.TestCase):
         world_view.tip_body_2 = self.kitchen_world.bodies[20]
 
         # The aggregation should not include the private dataclass field body or the body added exclusively in the private property
-        assert_equal(world_view.aggregated_bodies, set(self.kitchen_world.bodies) - {self.kitchen_world.bodies[0], self.kitchen_world.bodies[19]})
+        assert_equal(world_view.bodies, set(self.kitchen_world.bodies) - {self.kitchen_world.bodies[0], self.kitchen_world.bodies[19]})
 
     def test_handle_view(self):
         self.fit_rules_for_a_view_in_apartment(Handle, scenario=self.test_handle_view)
