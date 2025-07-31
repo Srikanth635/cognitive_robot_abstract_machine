@@ -8,7 +8,6 @@ import numpy as np
 import casadi as ca  # type: ignore
 
 from scipy import sparse as sp
-from ..connections import UnitVector
 
 if TYPE_CHECKING:
     from ..world_entity import Body
@@ -72,6 +71,8 @@ class Symbol_:
     def __len__(self) -> int: ...
 
     def free_symbols(self) -> List[Symbol]: ...
+
+    def is_constant(self) -> bool: ...
 
     def to_np(self) -> Union[float, np.ndarray]: ...
 
@@ -242,17 +243,14 @@ class Point3(Symbol_, ReferenceFrameMixin):
     @z.setter
     def z(self, value: symbol_expr_float): ...
 
-    def __init__(self, data: Optional[Union[Expression, Point3, Vector3,
-                                            ca.SX,
-                                            np.ndarray,
-                                            Iterable[symbol_expr_float]]] = None,
+    def __init__(self, x: symbol_expr_float = 0, y: symbol_expr_float = 0, z: symbol_expr_float = 0,
                  reference_frame: Optional[Body] = None): ...
 
     @classmethod
-    def from_xyz(cls,
-                 x: Optional[symbol_expr_float] = None,
-                 y: Optional[symbol_expr_float] = None,
-                 z: Optional[symbol_expr_float] = None,
+    def from_iterable(cls, data: Optional[Union[Expression, Point3, Vector3,
+                                            ca.SX,
+                                            np.ndarray,
+                                            Iterable[symbol_expr_float]]] = None,
                  reference_frame: Optional[Body] = None) -> Point3: ...
 
     def norm(self) -> Expression: ...
@@ -278,6 +276,11 @@ class Point3(Symbol_, ReferenceFrameMixin):
     @overload
     def __mul__(self, other: float) -> Point3: ...
     def __rmul__(self, other: float) -> Point3: ...
+
+    @overload
+    def __matmul__(self, other: Point3) -> Expression: ...
+    @overload
+    def __matmul__(self, other: Vector3) -> Expression: ...
 
     @overload
     def __pow__(self, other: Symbol) -> Point3: ...
@@ -319,23 +322,19 @@ class Vector3(Symbol_, ReferenceFrameMixin):
     @z.setter
     def z(self, value: symbol_expr_float): ...
 
-    def __init__(self, data: Optional[Union[Expression, Point3, Vector3,
-                                            ca.SX,
-                                            np.ndarray,
-                                            UnitVector,
-                                            Iterable[symbol_expr_float]]] = None,
+    def __init__(self, x: symbol_expr_float = 0, y: symbol_expr_float = 0, z: symbol_expr_float = 0,
                  reference_frame: Optional[Body] = None): ...
 
     @classmethod
-    def from_xyz(cls,
-                 x: Optional[symbol_expr_float] = None,
-                 y: Optional[symbol_expr_float] = None,
-                 z: Optional[symbol_expr_float] = None,
+    def from_iterable(cls, data: Optional[Union[Expression, Point3, Vector3,
+                                            ca.SX,
+                                            np.ndarray,
+                                            Iterable[symbol_expr_float]]] = None,
                  reference_frame: Optional[Body] = None) -> Vector3: ...
 
     def norm(self) -> Expression: ...
 
-    def scale(self, a: symbol_expr_float): ...
+    def scale(self, a: symbol_expr_float, unsafe: bool = False): ...
 
     @overload
     def __add__(self, other: Point3) -> Point3: ...
@@ -370,6 +369,11 @@ class Vector3(Symbol_, ReferenceFrameMixin):
     def __rmul__(self, other: float) -> Vector3: ...
 
     @overload
+    def __matmul__(self, other: Point3) -> Expression: ...
+    @overload
+    def __matmul__(self, other: Vector3) -> Expression: ...
+
+    @overload
     def __truediv__(self, other: Symbol) -> Vector3: ...
     @overload
     def __truediv__(self, other: Expression) -> Vector3: ...
@@ -395,8 +399,27 @@ class Vector3(Symbol_, ReferenceFrameMixin):
     def cross(self, other: Vector3) -> Vector3: ...
 
 
-TrinaryFalse = -1
-TrinaryUnknown = 0
+class UnitVector3(Vector3):
+    def __init__(self,
+                 x: symbol_expr_float, y: symbol_expr_float, z: symbol_expr_float,
+                 reference_frame: Optional[Body] = None): ...
+
+    @classmethod
+    def X(cls) -> UnitVector3: ...
+
+    @classmethod
+    def Y(cls) -> UnitVector3: ...
+
+    @classmethod
+    def Z(cls) -> UnitVector3: ...
+
+    def as_tuple(self) -> Tuple[float, float, float]: ...
+
+    @classmethod
+    def from_vector3(cls, vector3: Vector3) -> UnitVector3: ...
+
+TrinaryFalse = 0
+TrinaryUnknown = 0.5
 TrinaryTrue = 1
 
 BinaryTrue: Expression
@@ -455,14 +478,21 @@ class TransformationMatrix(Symbol_, ReferenceFrameMixin):
 
     @classmethod
     def from_xyz_rpy(cls,
-                     x: Optional[symbol_expr_float] = None,
-                     y: Optional[symbol_expr_float] = None,
-                     z: Optional[symbol_expr_float] = None,
-                     roll: Optional[symbol_expr_float] = None,
-                     pitch: Optional[symbol_expr_float] = None,
-                     yaw: Optional[symbol_expr_float] = None,
+                     x: Optional[symbol_expr_float] = 0,
+                     y: Optional[symbol_expr_float] = 0,
+                     z: Optional[symbol_expr_float] = 0,
+                     roll: Optional[symbol_expr_float] = 0,
+                     pitch: Optional[symbol_expr_float] = 0,
+                     yaw: Optional[symbol_expr_float] = 0,
                      reference_frame: Optional[Body] = None,
                      child_frame: Optional[Body] = None) -> TransformationMatrix: ...
+    @classmethod
+    def from_xyz_quat(cls,
+                      pos_x: symbol_expr_float = 0, pos_y: symbol_expr_float = 0, pos_z: symbol_expr_float =00,
+                      quat_w: symbol_expr_float = 0, quat_x: symbol_expr_float = 0,
+                      quat_y: symbol_expr_float = 0, quat_z: symbol_expr_float = 1,
+                      reference_frame: Optional[Body] = None, child_frame: Optional[Body] = None) \
+            -> TransformationMatrix: ...
     @classmethod
     def from_point_rotation_matrix(cls,
                                    point: Optional[Point3] = None,
@@ -490,24 +520,22 @@ class RotationMatrix(Symbol_, ReferenceFrameMixin):
     def __quaternion_to_rotation_matrix(cls, q: Quaternion) -> RotationMatrix: ...
 
     @classmethod
-    def from_axis_angle(cls, axis: Vector3, angle: symbol_expr_float, reference_frame: Optional[Body] = None) \
+    def from_axis_angle(cls, axis: UnitVector3, angle: symbol_expr_float, reference_frame: Optional[Body] = None) \
             -> RotationMatrix: ...
     @classmethod
     def from_quaternion(cls, q: Quaternion) -> RotationMatrix: ...
     @classmethod
     @overload
-    def from_vectors(cls, x: Vector3, y: Vector3, reference_frame: Optional[Body] = None) -> RotationMatrix: ...
+    def from_vectors(cls, x: UnitVector3, y: UnitVector3, reference_frame: Optional[Body] = None) -> RotationMatrix: ...
     @classmethod
     @overload
-    def from_vectors(cls, x: Vector3, z: Vector3, reference_frame: Optional[Body] = None) -> RotationMatrix: ...
+    def from_vectors(cls, x: UnitVector3, z: UnitVector3, reference_frame: Optional[Body] = None) -> RotationMatrix: ...
     @classmethod
     @overload
-    def from_vectors(cls, y: Vector3, z: Vector3, reference_frame: Optional[Body] = None) -> RotationMatrix: ...
+    def from_vectors(cls, y: UnitVector3, z: UnitVector3, reference_frame: Optional[Body] = None) -> RotationMatrix: ...
     @classmethod
     @overload
-    def from_vectors(cls, x: Optional[Vector3] = None,
-                     y: Optional[Vector3] = None,
-                     z: Optional[Vector3] = None,
+    def from_vectors(cls, x: UnitVector3, y: UnitVector3, z: UnitVector3,
                      reference_frame: Optional[Body] = None) -> RotationMatrix: ...
 
     @classmethod
@@ -527,18 +555,18 @@ class RotationMatrix(Symbol_, ReferenceFrameMixin):
     def to_quaternion(self) -> Quaternion: ...
 
     @overload
-    def dot(self, other: Point3) -> Point3: ...
-    @overload
     def dot(self, other: Vector3) -> Vector3: ...
+    @overload
+    def dot(self, other: UnitVector3) -> UnitVector3: ...
     @overload
     def dot(self, other: RotationMatrix) -> RotationMatrix: ...
     @overload
     def dot(self, other: TransformationMatrix) -> TransformationMatrix: ...
 
     @overload
-    def __matmul__(self, other: Point3) -> Point3: ...
-    @overload
     def __matmul__(self, other: Vector3) -> Vector3: ...
+    @overload
+    def __matmul__(self, other: UnitVector3) -> UnitVector3: ...
     @overload
     def __matmul__(self, other: RotationMatrix) -> RotationMatrix: ...
     @overload
@@ -568,22 +596,19 @@ class Quaternion(Symbol_, ReferenceFrameMixin):
     @w.setter
     def w(self, value: symbol_expr_float): ...
 
-    def __init__(self, data: Optional[Union[Expression,
+    def __init__(self, x: symbol_expr_float = 0.0, y: symbol_expr_float = 0.0,
+                 z: symbol_expr_float = 0.0, w: symbol_expr_float = 1.0,
+                 reference_frame: Optional[Body] = None): ...
+
+    @classmethod
+    def from_iterable(cls, data: Optional[Union[Expression,
                                             Quaternion,
                                             ca.SX,
                                             Tuple[symbol_expr_float,
                                                   symbol_expr_float,
                                                   symbol_expr_float,
                                                   symbol_expr_float]]] = None,
-                 reference_frame: Optional[Body] = None): ...
-
-    @classmethod
-    def from_xyzw(cls,
-                  x: symbol_expr_float,
-                  y: symbol_expr_float,
-                  z: symbol_expr_float,
-                  w: symbol_expr_float,
-                  reference_frame: Optional[Body] = None) -> Quaternion: ...
+                 reference_frame: Optional[Body] = None) -> Quaternion: ...
 
     @classmethod
     def from_axis_angle(cls, axis: Vector3, angle: symbol_expr_float, reference_frame: Optional[Body] = None) \
@@ -1033,3 +1058,5 @@ def distance_vector_projected_on_plane(point1: Point3, point2:Point3, normal_vec
 def replace_with_three_logic(expr: Expression) -> Expression: ...
 
 def is_inf(expr: Expression) -> bool: ...
+
+SpatialType = TypeVar('SpatialType', Point3, TransformationMatrix, Vector3, Quaternion, RotationMatrix)

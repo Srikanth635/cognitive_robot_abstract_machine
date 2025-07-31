@@ -4,10 +4,10 @@ from typing import Optional, Tuple, Dict, Union, List
 from ..spatial_types import spatial_types as cas
 from urdf_parser_py import urdf as urdfpy
 
-from ..connections import RevoluteConnection, PrismaticConnection, FixedConnection, UnitVector
+from ..connections import RevoluteConnection, PrismaticConnection, FixedConnection
 from ..prefixed_name import PrefixedName
 from ..spatial_types.derivatives import Derivatives, DerivativeMap
-from ..spatial_types.spatial_types import TransformationMatrix
+from ..spatial_types.spatial_types import TransformationMatrix, UnitVector3
 from ..utils import suppress_stdout_stderr, hacky_urdf_parser_fix, robot_name_from_urdf_string
 from ..world import World, Body, Connection
 from ..geometry import Box, Sphere, Cylinder, Mesh, Scale, Shape, Color
@@ -167,7 +167,8 @@ class URDFParser:
 
         result = connection_type(name=connection_name, parent=parent, child=child, origin_expression=parent_T_child,
                                  multiplier=multiplier, offset=offset,
-                                 axis=UnitVector(*map(int, joint.axis)),
+                                 axis=UnitVector3(*map(int, joint.axis),
+                                                 reference_frame=parent),
                                  dof=dof)
         return result
 
