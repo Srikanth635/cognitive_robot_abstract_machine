@@ -63,7 +63,7 @@ class FBXParserTest(unittest.TestCase):
         node = rclpy.create_node("viz_marker")
 
         handle_factory = HandleFactory(width=0.1, name=PrefixedName("door_handle"))
-        factory = DoorFactory(name=PrefixedName('Door'), scale=Scale(0.03, 1, 2), handle_factory=handle_factory, handle_direction=Direction.Y)
+        factory = DoorFactory(name=PrefixedName('Door'), scale=Scale(0.03, 1, 2), handle_factory=handle_factory, handle_direction=Direction.NEGATIVE_Y)
 
         world = factory.create()
 
@@ -91,7 +91,7 @@ class FBXParserTest(unittest.TestCase):
         connections = list(filter(lambda x: isinstance(x, RevoluteConnection), world.connections))
         self.assertEqual(len(connections), 4)
 
-        world.state[connections[0].dof.name].position = 1.5
+        world.state[connections[0].dof.name].position = -1.5
         world.notify_state_change()
 
         p = VizMarkerPublisher(world, node)

@@ -100,6 +100,9 @@ class HandleFactory(ViewFactory[Handle]):
     width: float
 
     def create(self) -> World:
+
+        # I think this construction is wrong since i fixed the mesh orientation, but it doesnt visually
+        # break, just results in some unintuitive rotations. fix when there is time
         long_side_handle = Box(origin=TransformationMatrix.from_xyz_rpy(0, 0, 0, 0, 0, 0),
                                scale=Scale(self.width / 4, self.width, self.width / 4), )
         short_side_handle_left = Box(
@@ -133,16 +136,16 @@ class DoorFactory(ViewFactory[Door]):
 
         if self.handle_direction == Direction.X:
             x_interval = closed(0, self.scale.x)
-            handle_transform = TransformationMatrix.from_xyz_rpy(self.scale.x - 0.1, -0.05, 0, 0, 0, -np.pi / 2)
+            handle_transform = TransformationMatrix.from_xyz_rpy(self.scale.x - 0.1, 0.05, 0, 0, 0, np.pi / 2)
         elif self.handle_direction == Direction.NEGATIVE_X:
             x_interval = closed(-self.scale.x, 0)
-            handle_transform = TransformationMatrix.from_xyz_rpy(-(self.scale.x - 0.1), -0.05, 0, 0, 0, -np.pi / 2)
+            handle_transform = TransformationMatrix.from_xyz_rpy(-(self.scale.x - 0.1), 0.05, 0, 0, 0, np.pi / 2)
         elif self.handle_direction == Direction.Y:
             y_interval = closed(0, self.scale.y)
-            handle_transform = TransformationMatrix.from_xyz_rpy(-0.05, (self.scale.y - 0.1), 0, 0, 0, np.pi)
+            handle_transform = TransformationMatrix.from_xyz_rpy(0.05, (self.scale.y - 0.1), 0, 0, 0, 0)
         elif self.handle_direction == Direction.NEGATIVE_Y:
             y_interval = closed(-self.scale.y, 0)
-            handle_transform = TransformationMatrix.from_xyz_rpy(-0.05, -(self.scale.y - 0.1), 0, 0, 0, np.pi)
+            handle_transform = TransformationMatrix.from_xyz_rpy(0.05, -(self.scale.y - 0.1), 0, 0, 0, 0)
         else:
             raise NotImplementedError(f"Handle direction Z and NEGATIVE_Z are not implemented yet")
 
@@ -185,8 +188,7 @@ class DrawerFactory(ViewFactory[Drawer]):
         handle_view: Handle = handle_world.get_views_by_type(Handle)[0]
 
         drawer_to_handle = FixedConnection(container_world.root, handle_world.root,
-                                           TransformationMatrix.from_xyz_rpy(0, -( self.container_factory.scale.y / 2) - 0.04, 0, 0, 0,
-                                                                             -np.pi / 2, ))
+                                           TransformationMatrix.from_xyz_rpy(( self.container_factory.scale.x / 2) + 0.03, 0, 0, 0, 0, 0))
 
         container_world.merge_world(handle_world, drawer_to_handle)
 
@@ -254,8 +256,8 @@ class DresserFactory(ViewFactory[Dresser]):
             dof = container_world.create_degree_of_freedom(PrefixedName(f"{door_body.name.name}_connection",
                                                               door_body.name.prefix), lower_limits, upper_limits)
 
-            offset = -np.sign(handle_position[0]) * (door_factory.scale.x / 2)
-            door_position = transform.to_np()[:3, 3] + np.array([offset, 0, 0])
+            offset = -np.sign(handle_position[1]) * (door_factory.scale.y / 2)
+            door_position = transform.to_np()[:3, 3] + np.array([0, offset, 0])
 
             pivot_point = TransformationMatrix.from_xyz_rpy(door_position[0], door_position[1], door_position[2], 0, 0, 0)
 
@@ -300,11 +302,11 @@ def replace_dresser_drawer_connections(world: World):
                 handle_factory = HandleFactory(PrefixedName(child.name.name+"_handle", child.name.prefix), 0.1)
 
                 door_factory = DoorFactory(name=child.name, scale=child.bounding_box_collection.bounding_boxes[0].scale, handle_factory=handle_factory,
-                                           handle_direction=Direction.NEGATIVE_X)
+                                           handle_direction=Direction.Y)
                 door_factories.append(door_factory)
 
         dresser_container_factory = ContainerFactory(name=PrefixedName(dresser.name.name+"_container", dresser.name.prefix),
-                                                     scale=dresser.bounding_box_collection.bounding_boxes[0].scale, direction=Direction.NEGATIVE_Y)
+                                                     scale=dresser.bounding_box_collection.bounding_boxes[0].scale, direction=Direction.X)
         dresser_factory = DresserFactory(name=dresser.name, container_factory=dresser_container_factory, drawers_factories=drawer_factories,
                                          drawer_transforms=drawer_transforms, door_factories=door_factories, door_transforms=door_transforms)
 

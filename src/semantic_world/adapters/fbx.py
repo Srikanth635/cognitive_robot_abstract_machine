@@ -1,8 +1,10 @@
 import logging
+import math
 import os
 from collections import deque
 from dataclasses import dataclass
 from typing import Optional, List
+
 
 try:
     import bpy
@@ -113,21 +115,69 @@ class FBXParser:
         Parse the FBX file into a list of World objects.
         The fbx file is split at the top group level.
         """
+        import mathutils
 
         # === Clean the scene ===
         bpy.ops.wm.read_factory_settings(use_empty=True)
 
         # import the fbx
         bpy.ops.import_scene.fbx(filepath=self.file_path, axis_forward='Y', axis_up='Z', global_scale=1.,
-                                 # bake_space_transform=True,
+                                 bake_space_transform=True,
                                  # automatic_bone_orientation=False,  # keep bones untouched
                                  )
 
-        for obj in bpy.context.scene.objects:
+        # Clean up non-mesh objects
+        for obj in list(bpy.context.scene.objects):
             if obj.type != 'MESH':
                 bpy.data.objects.remove(obj, do_unlink=True)
-            bpy.ops.object.transform_apply(location=True, rotation=True, scale=True, isolate_users=True)
-            bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
+
+        # Apply transform and reset origin
+        for obj in bpy.context.scene.objects:
+            if obj.type == 'MESH':
+                bpy.context.view_layer.objects.active = obj
+                bpy.ops.object.select_all(action='DESELECT')
+                obj.select_set(True)
+                bpy.ops.object.transform_apply(location=True, rotation=True, scale=True, isolate_users=True)
+                bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
+                obj.select_set(False)
+
+        if bpy.context.mode != 'OBJECT':
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Make mesh data single-user to avoid rotating shared meshes multiple times
+        for obj in bpy.context.scene.objects:
+            if obj.type == 'MESH' and obj.data.users > 1:
+                obj.data = obj.data.copy()
+
+        # Rotation that remaps +Y -> +X (axes rotation)
+        R_axes = mathutils.Matrix.Rotation(-math.pi / 2.0, 4, 'Z')
+        R_axes_inv = R_axes.inverted()
+
+        def reaxis_to_x_forward(obj):
+            """Rotate object's local axes so X is forward, preserve children world transforms."""
+            # Cache direct children's world matrices (all types, to keep chains intact)
+            child_world = {c: c.matrix_world.copy() for c in obj.children}
+
+            # Rotate the object's local axes by post-multiplying its world matrix
+            obj.matrix_world = obj.matrix_world @ R_axes
+
+            # Counter-rotate mesh data so the object doesn't move visually
+            if obj.type == 'MESH':
+                obj.data.transform(R_axes_inv)
+                obj.data.update()
+
+            # Restore children's world transforms so they don't shift
+            for c, Mw in child_world.items():
+                c.matrix_world = Mw
+
+            # Recurse so children also get their axes reset (and their own kids preserved)
+            for c in obj.children:
+                reaxis_to_x_forward(c)
+
+        # Start from roots so recursion covers the whole tree exactly once
+        roots = [obj for obj in bpy.context.scene.objects if obj.type == 'MESH' and obj.parent is None]
+        for root in roots:
+            reaxis_to_x_forward(root)
 
         return [self.parse_single_world(obj) for obj in bpy.context.scene.objects
                 if obj.type == 'MESH' and obj.parent is None]
@@ -143,11 +193,29 @@ class FBXParser:
 
         # move the group to the center of the world
         root.location = (0, 0, 0)
-        min_z = get_min_z(root)
-        root.location = (0, 0, -min_z)
+
+        # this is used to align the bottom of the group (for example the dresser) to the ground. But tbh I dont think
+        # we want this, because thats what usually the footprint should be fore for:
+        # map -> foot_print -> center of the group
+        # min_z = get_min_z(root)
+        # root.location = (0, 0, -min_z)
+
+        # rotate the group to have the x-axis be the forward axis. this rotation was taken from
+        # the dressers_group.fbx, it may not apply to all procthor fbx files
+        rot_z = math.radians(90)
+        root.rotation_euler.rotate_axis("Z", rot_z)
+
+        # Apply the rotation to set +X as the new forward direction
+        bpy.context.view_layer.objects.active = root
+        bpy.ops.object.select_all(action='DESELECT')
+        root.select_set(True)
+        bpy.ops.object.transform_apply(rotation=True)
+        root.select_set(False)
+
+
 
         # create the resulting world and make a footprint as root
-        world = World(primary_prefix=self.prefix)
+        world = World(name=self.prefix)
         base_foot_print = Body(name=PrefixedName(f"{self.prefix}_footprint", self.prefix))
         world.add_body(base_foot_print)
 
