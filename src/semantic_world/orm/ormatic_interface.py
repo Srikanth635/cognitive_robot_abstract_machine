@@ -25,14 +25,15 @@ class Base(DeclarativeBase):
     }
 
 
-class Point3MappingDAO(Base, DataAccessObject[semantic_world.orm.model.Point3Mapping]):
-    __tablename__ = 'Point3MappingDAO'
+class QuaternionMappingDAO(Base, DataAccessObject[semantic_world.orm.model.QuaternionMapping]):
+    __tablename__ = 'QuaternionMappingDAO'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
     x: Mapped[float]
     y: Mapped[float]
     z: Mapped[float]
+    w: Mapped[float]
 
 
     reference_frame_id: Mapped[Optional[int]] = mapped_column(ForeignKey('BodyDAO.id', use_alter=True), nullable=True)
@@ -59,21 +60,43 @@ class ShapeDAO(Base, DataAccessObject[semantic_world.geometry.Shape]):
         'polymorphic_identity': 'ShapeDAO',
     }
 
-class BoundingBoxDAO(Base, DataAccessObject[semantic_world.geometry.BoundingBox]):
-    __tablename__ = 'BoundingBoxDAO'
+class Point3MappingDAO(Base, DataAccessObject[semantic_world.orm.model.Point3Mapping]):
+    __tablename__ = 'Point3MappingDAO'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
-    min_x: Mapped[float]
-    min_y: Mapped[float]
-    min_z: Mapped[float]
-    max_x: Mapped[float]
-    max_y: Mapped[float]
-    max_z: Mapped[float]
+    x: Mapped[float]
+    y: Mapped[float]
+    z: Mapped[float]
 
 
-    boundingboxcollectiondao_bounding_boxes_id: Mapped[Optional[int]] = mapped_column(ForeignKey('BoundingBoxCollectionDAO.id', use_alter=True), nullable=True)
+    reference_frame_id: Mapped[Optional[int]] = mapped_column(ForeignKey('BodyDAO.id', use_alter=True), nullable=True)
 
+    reference_frame: Mapped[BodyDAO] = relationship('BodyDAO', uselist=False, foreign_keys=[reference_frame_id], post_update=True)
+
+
+class ScaleDAO(Base, DataAccessObject[semantic_world.geometry.Scale]):
+    __tablename__ = 'ScaleDAO'
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+    x: Mapped[float]
+    y: Mapped[float]
+    z: Mapped[float]
+
+
+
+
+
+class BoundingBoxCollectionDAO(Base, DataAccessObject[semantic_world.geometry.BoundingBoxCollection]):
+    __tablename__ = 'BoundingBoxCollectionDAO'
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+
+
+
+    bounding_boxes: Mapped[List[BoundingBoxDAO]] = relationship('BoundingBoxDAO', foreign_keys='[BoundingBoxDAO.boundingboxcollectiondao_bounding_boxes_id]', post_update=True)
 
 
 class WorldEntityDAO(Base, DataAccessObject[semantic_world.world_entity.WorldEntity]):
@@ -93,6 +116,34 @@ class WorldEntityDAO(Base, DataAccessObject[semantic_world.world_entity.WorldEnt
         'polymorphic_identity': 'WorldEntityDAO',
     }
 
+class WorldMappingDAO(Base, DataAccessObject[semantic_world.orm.model.WorldMapping]):
+    __tablename__ = 'WorldMappingDAO'
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+
+
+
+    bodies: Mapped[List[BodyDAO]] = relationship('BodyDAO', foreign_keys='[BodyDAO.worldmappingdao_bodies_id]', post_update=True)
+    connections: Mapped[List[ConnectionDAO]] = relationship('ConnectionDAO', foreign_keys='[ConnectionDAO.worldmappingdao_connections_id]', post_update=True)
+    views: Mapped[List[ViewDAO]] = relationship('ViewDAO', foreign_keys='[ViewDAO.worldmappingdao_views_id]', post_update=True)
+    degrees_of_freedom: Mapped[List[DegreeOfFreedomMappingDAO]] = relationship('DegreeOfFreedomMappingDAO', foreign_keys='[DegreeOfFreedomMappingDAO.worldmappingdao_degrees_of_freedom_id]', post_update=True)
+
+
+class ColorDAO(Base, DataAccessObject[semantic_world.geometry.Color]):
+    __tablename__ = 'ColorDAO'
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+    R: Mapped[float]
+    G: Mapped[float]
+    B: Mapped[float]
+    A: Mapped[float]
+
+
+
+
+
 class Vector3MappingDAO(Base, DataAccessObject[semantic_world.orm.model.Vector3Mapping]):
     __tablename__ = 'Vector3MappingDAO'
 
@@ -102,27 +153,26 @@ class Vector3MappingDAO(Base, DataAccessObject[semantic_world.orm.model.Vector3M
     y: Mapped[float]
     z: Mapped[float]
 
-    polymorphic_type: Mapped[str] = mapped_column(String(255), nullable=False)
 
     reference_frame_id: Mapped[Optional[int]] = mapped_column(ForeignKey('BodyDAO.id', use_alter=True), nullable=True)
 
     reference_frame: Mapped[BodyDAO] = relationship('BodyDAO', uselist=False, foreign_keys=[reference_frame_id], post_update=True)
 
-    __mapper_args__ = {
-        'polymorphic_on': 'polymorphic_type',
-        'polymorphic_identity': 'Vector3MappingDAO',
-    }
 
-class ScaleDAO(Base, DataAccessObject[semantic_world.geometry.Scale]):
-    __tablename__ = 'ScaleDAO'
+class BoundingBoxDAO(Base, DataAccessObject[semantic_world.geometry.BoundingBox]):
+    __tablename__ = 'BoundingBoxDAO'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
-    x: Mapped[float]
-    y: Mapped[float]
-    z: Mapped[float]
+    min_x: Mapped[float]
+    min_y: Mapped[float]
+    min_z: Mapped[float]
+    max_x: Mapped[float]
+    max_y: Mapped[float]
+    max_z: Mapped[float]
 
 
+    boundingboxcollectiondao_bounding_boxes_id: Mapped[Optional[int]] = mapped_column(ForeignKey('BoundingBoxCollectionDAO.id', use_alter=True), nullable=True)
 
 
 
@@ -156,45 +206,6 @@ class PrefixedNameDAO(Base, DataAccessObject[semantic_world.prefixed_name.Prefix
 
 
 
-class ColorDAO(Base, DataAccessObject[semantic_world.geometry.Color]):
-    __tablename__ = 'ColorDAO'
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-
-    R: Mapped[float]
-    G: Mapped[float]
-    B: Mapped[float]
-    A: Mapped[float]
-
-
-
-
-
-class BoundingBoxCollectionDAO(Base, DataAccessObject[semantic_world.geometry.BoundingBoxCollection]):
-    __tablename__ = 'BoundingBoxCollectionDAO'
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-
-
-
-
-    bounding_boxes: Mapped[List[BoundingBoxDAO]] = relationship('BoundingBoxDAO', foreign_keys='[BoundingBoxDAO.boundingboxcollectiondao_bounding_boxes_id]', post_update=True)
-
-
-class WorldMappingDAO(Base, DataAccessObject[semantic_world.orm.model.WorldMapping]):
-    __tablename__ = 'WorldMappingDAO'
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-
-
-
-
-    bodies: Mapped[List[BodyDAO]] = relationship('BodyDAO', foreign_keys='[BodyDAO.worldmappingdao_bodies_id]', post_update=True)
-    connections: Mapped[List[ConnectionDAO]] = relationship('ConnectionDAO', foreign_keys='[ConnectionDAO.worldmappingdao_connections_id]', post_update=True)
-    views: Mapped[List[ViewDAO]] = relationship('ViewDAO', foreign_keys='[ViewDAO.worldmappingdao_views_id]', post_update=True)
-    degrees_of_freedom: Mapped[List[DegreeOfFreedomMappingDAO]] = relationship('DegreeOfFreedomMappingDAO', foreign_keys='[DegreeOfFreedomMappingDAO.worldmappingdao_degrees_of_freedom_id]', post_update=True)
-
-
 class RotationMatrixMappingDAO(Base, DataAccessObject[semantic_world.orm.model.RotationMatrixMapping]):
     __tablename__ = 'RotationMatrixMappingDAO'
 
@@ -206,22 +217,6 @@ class RotationMatrixMappingDAO(Base, DataAccessObject[semantic_world.orm.model.R
     reference_frame_id: Mapped[Optional[int]] = mapped_column(ForeignKey('BodyDAO.id', use_alter=True), nullable=True)
 
     rotation: Mapped[QuaternionMappingDAO] = relationship('QuaternionMappingDAO', uselist=False, foreign_keys=[rotation_id], post_update=True)
-    reference_frame: Mapped[BodyDAO] = relationship('BodyDAO', uselist=False, foreign_keys=[reference_frame_id], post_update=True)
-
-
-class QuaternionMappingDAO(Base, DataAccessObject[semantic_world.orm.model.QuaternionMapping]):
-    __tablename__ = 'QuaternionMappingDAO'
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-
-    x: Mapped[float]
-    y: Mapped[float]
-    z: Mapped[float]
-    w: Mapped[float]
-
-
-    reference_frame_id: Mapped[Optional[int]] = mapped_column(ForeignKey('BodyDAO.id', use_alter=True), nullable=True)
-
     reference_frame: Mapped[BodyDAO] = relationship('BodyDAO', uselist=False, foreign_keys=[reference_frame_id], post_update=True)
 
 
@@ -276,6 +271,25 @@ class BodyDAO(WorldEntityDAO, DataAccessObject[semantic_world.world_entity.Body]
         'inherit_condition': id == WorldEntityDAO.id,
     }
 
+class DegreeOfFreedomMappingDAO(WorldEntityDAO, DataAccessObject[semantic_world.orm.model.DegreeOfFreedomMapping]):
+    __tablename__ = 'DegreeOfFreedomMappingDAO'
+
+    id: Mapped[int] = mapped_column(ForeignKey(WorldEntityDAO.id), primary_key=True)
+
+
+    lower_limits: Mapped[List[float]] = mapped_column(JSON, nullable=False)
+    upper_limits: Mapped[List[float]] = mapped_column(JSON, nullable=False)
+
+    worldmappingdao_degrees_of_freedom_id: Mapped[Optional[int]] = mapped_column(ForeignKey('WorldMappingDAO.id', use_alter=True), nullable=True)
+    name_id: Mapped[int] = mapped_column(ForeignKey('PrefixedNameDAO.id', use_alter=True), nullable=True)
+
+    name: Mapped[PrefixedNameDAO] = relationship('PrefixedNameDAO', uselist=False, foreign_keys=[name_id], post_update=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'DegreeOfFreedomMappingDAO',
+        'inherit_condition': id == WorldEntityDAO.id,
+    }
+
 class ConnectionDAO(WorldEntityDAO, DataAccessObject[semantic_world.world_entity.Connection]):
     __tablename__ = 'ConnectionDAO'
 
@@ -312,37 +326,20 @@ class ViewDAO(WorldEntityDAO, DataAccessObject[semantic_world.world_entity.View]
         'inherit_condition': id == WorldEntityDAO.id,
     }
 
-class DegreeOfFreedomMappingDAO(WorldEntityDAO, DataAccessObject[semantic_world.orm.model.DegreeOfFreedomMapping]):
-    __tablename__ = 'DegreeOfFreedomMappingDAO'
+class BoxDAO(PrimitiveDAO, DataAccessObject[semantic_world.geometry.Box]):
+    __tablename__ = 'BoxDAO'
 
-    id: Mapped[int] = mapped_column(ForeignKey(WorldEntityDAO.id), primary_key=True)
+    id: Mapped[int] = mapped_column(ForeignKey(PrimitiveDAO.id), primary_key=True)
 
 
-    lower_limits: Mapped[List[float]] = mapped_column(JSON, nullable=False)
-    upper_limits: Mapped[List[float]] = mapped_column(JSON, nullable=False)
 
-    worldmappingdao_degrees_of_freedom_id: Mapped[Optional[int]] = mapped_column(ForeignKey('WorldMappingDAO.id', use_alter=True), nullable=True)
-    name_id: Mapped[int] = mapped_column(ForeignKey('PrefixedNameDAO.id', use_alter=True), nullable=True)
+    scale_id: Mapped[int] = mapped_column(ForeignKey('ScaleDAO.id', use_alter=True), nullable=True)
 
-    name: Mapped[PrefixedNameDAO] = relationship('PrefixedNameDAO', uselist=False, foreign_keys=[name_id], post_update=True)
+    scale: Mapped[ScaleDAO] = relationship('ScaleDAO', uselist=False, foreign_keys=[scale_id], post_update=True)
 
     __mapper_args__ = {
-        'polymorphic_identity': 'DegreeOfFreedomMappingDAO',
-        'inherit_condition': id == WorldEntityDAO.id,
-    }
-
-class UnitVector3MappingDAO(Vector3MappingDAO, DataAccessObject[semantic_world.orm.model.UnitVector3Mapping]):
-    __tablename__ = 'UnitVector3MappingDAO'
-
-    id: Mapped[int] = mapped_column(ForeignKey(Vector3MappingDAO.id), primary_key=True)
-
-
-
-
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'UnitVector3MappingDAO',
-        'inherit_condition': id == Vector3MappingDAO.id,
+        'polymorphic_identity': 'BoxDAO',
+        'inherit_condition': id == PrimitiveDAO.id,
     }
 
 class SphereDAO(PrimitiveDAO, DataAccessObject[semantic_world.geometry.Sphere]):
@@ -376,20 +373,18 @@ class CylinderDAO(PrimitiveDAO, DataAccessObject[semantic_world.geometry.Cylinde
         'inherit_condition': id == PrimitiveDAO.id,
     }
 
-class BoxDAO(PrimitiveDAO, DataAccessObject[semantic_world.geometry.Box]):
-    __tablename__ = 'BoxDAO'
+class ActiveConnectionDAO(ConnectionDAO, DataAccessObject[semantic_world.connections.ActiveConnection]):
+    __tablename__ = 'ActiveConnectionDAO'
 
-    id: Mapped[int] = mapped_column(ForeignKey(PrimitiveDAO.id), primary_key=True)
+    id: Mapped[int] = mapped_column(ForeignKey(ConnectionDAO.id), primary_key=True)
 
 
 
-    scale_id: Mapped[int] = mapped_column(ForeignKey('ScaleDAO.id', use_alter=True), nullable=True)
 
-    scale: Mapped[ScaleDAO] = relationship('ScaleDAO', uselist=False, foreign_keys=[scale_id], post_update=True)
 
     __mapper_args__ = {
-        'polymorphic_identity': 'BoxDAO',
-        'inherit_condition': id == PrimitiveDAO.id,
+        'polymorphic_identity': 'ActiveConnectionDAO',
+        'inherit_condition': id == ConnectionDAO.id,
     }
 
 class FixedConnectionDAO(ConnectionDAO, DataAccessObject[semantic_world.connections.FixedConnection]):
@@ -420,22 +415,24 @@ class PassiveConnectionDAO(ConnectionDAO, DataAccessObject[semantic_world.connec
         'inherit_condition': id == ConnectionDAO.id,
     }
 
-class ActiveConnectionDAO(ConnectionDAO, DataAccessObject[semantic_world.connections.ActiveConnection]):
-    __tablename__ = 'ActiveConnectionDAO'
+class RootedViewDAO(ViewDAO, DataAccessObject[semantic_world.world_entity.RootedView]):
+    __tablename__ = 'RootedViewDAO'
 
-    id: Mapped[int] = mapped_column(ForeignKey(ConnectionDAO.id), primary_key=True)
-
-
+    id: Mapped[int] = mapped_column(ForeignKey(ViewDAO.id), primary_key=True)
 
 
+
+    root_id: Mapped[int] = mapped_column(ForeignKey('BodyDAO.id', use_alter=True), nullable=True)
+
+    root: Mapped[BodyDAO] = relationship('BodyDAO', uselist=False, foreign_keys=[root_id], post_update=True)
 
     __mapper_args__ = {
-        'polymorphic_identity': 'ActiveConnectionDAO',
-        'inherit_condition': id == ConnectionDAO.id,
+        'polymorphic_identity': 'RootedViewDAO',
+        'inherit_condition': id == ViewDAO.id,
     }
 
-class ContainerDAO(ViewDAO, DataAccessObject[semantic_world.views.views.Container]):
-    __tablename__ = 'ContainerDAO'
+class FridgeDAO(ViewDAO, DataAccessObject[semantic_world.views.views.Fridge]):
+    __tablename__ = 'FridgeDAO'
 
     id: Mapped[int] = mapped_column(ForeignKey(ViewDAO.id), primary_key=True)
 
@@ -446,7 +443,7 @@ class ContainerDAO(ViewDAO, DataAccessObject[semantic_world.views.views.Containe
     body: Mapped[BodyDAO] = relationship('BodyDAO', uselist=False, foreign_keys=[body_id], post_update=True)
 
     __mapper_args__ = {
-        'polymorphic_identity': 'ContainerDAO',
+        'polymorphic_identity': 'FridgeDAO',
         'inherit_condition': id == ViewDAO.id,
     }
 
@@ -463,22 +460,6 @@ class TableDAO(ViewDAO, DataAccessObject[semantic_world.views.views.Table]):
 
     __mapper_args__ = {
         'polymorphic_identity': 'TableDAO',
-        'inherit_condition': id == ViewDAO.id,
-    }
-
-class RootedViewDAO(ViewDAO, DataAccessObject[semantic_world.world_entity.RootedView]):
-    __tablename__ = 'RootedViewDAO'
-
-    id: Mapped[int] = mapped_column(ForeignKey(ViewDAO.id), primary_key=True)
-
-
-
-    root_id: Mapped[int] = mapped_column(ForeignKey('BodyDAO.id', use_alter=True), nullable=True)
-
-    root: Mapped[BodyDAO] = relationship('BodyDAO', uselist=False, foreign_keys=[root_id], post_update=True)
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'RootedViewDAO',
         'inherit_condition': id == ViewDAO.id,
     }
 
@@ -526,8 +507,8 @@ class FurnitureDAO(ViewDAO, DataAccessObject[semantic_world.views.views.Furnitur
         'inherit_condition': id == ViewDAO.id,
     }
 
-class FridgeDAO(ViewDAO, DataAccessObject[semantic_world.views.views.Fridge]):
-    __tablename__ = 'FridgeDAO'
+class ContainerDAO(ViewDAO, DataAccessObject[semantic_world.views.views.Container]):
+    __tablename__ = 'ContainerDAO'
 
     id: Mapped[int] = mapped_column(ForeignKey(ViewDAO.id), primary_key=True)
 
@@ -538,56 +519,8 @@ class FridgeDAO(ViewDAO, DataAccessObject[semantic_world.views.views.Fridge]):
     body: Mapped[BodyDAO] = relationship('BodyDAO', uselist=False, foreign_keys=[body_id], post_update=True)
 
     __mapper_args__ = {
-        'polymorphic_identity': 'FridgeDAO',
+        'polymorphic_identity': 'ContainerDAO',
         'inherit_condition': id == ViewDAO.id,
-    }
-
-class Connection6DoFDAO(PassiveConnectionDAO, DataAccessObject[semantic_world.connections.Connection6DoF]):
-    __tablename__ = 'Connection6DoFDAO'
-
-    id: Mapped[int] = mapped_column(ForeignKey(PassiveConnectionDAO.id), primary_key=True)
-
-
-
-    x_id: Mapped[int] = mapped_column(ForeignKey('DegreeOfFreedomMappingDAO.id', use_alter=True), nullable=True)
-    y_id: Mapped[int] = mapped_column(ForeignKey('DegreeOfFreedomMappingDAO.id', use_alter=True), nullable=True)
-    z_id: Mapped[int] = mapped_column(ForeignKey('DegreeOfFreedomMappingDAO.id', use_alter=True), nullable=True)
-    qx_id: Mapped[int] = mapped_column(ForeignKey('DegreeOfFreedomMappingDAO.id', use_alter=True), nullable=True)
-    qy_id: Mapped[int] = mapped_column(ForeignKey('DegreeOfFreedomMappingDAO.id', use_alter=True), nullable=True)
-    qz_id: Mapped[int] = mapped_column(ForeignKey('DegreeOfFreedomMappingDAO.id', use_alter=True), nullable=True)
-    qw_id: Mapped[int] = mapped_column(ForeignKey('DegreeOfFreedomMappingDAO.id', use_alter=True), nullable=True)
-
-    x: Mapped[DegreeOfFreedomMappingDAO] = relationship('DegreeOfFreedomMappingDAO', uselist=False, foreign_keys=[x_id], post_update=True)
-    y: Mapped[DegreeOfFreedomMappingDAO] = relationship('DegreeOfFreedomMappingDAO', uselist=False, foreign_keys=[y_id], post_update=True)
-    z: Mapped[DegreeOfFreedomMappingDAO] = relationship('DegreeOfFreedomMappingDAO', uselist=False, foreign_keys=[z_id], post_update=True)
-    qx: Mapped[DegreeOfFreedomMappingDAO] = relationship('DegreeOfFreedomMappingDAO', uselist=False, foreign_keys=[qx_id], post_update=True)
-    qy: Mapped[DegreeOfFreedomMappingDAO] = relationship('DegreeOfFreedomMappingDAO', uselist=False, foreign_keys=[qy_id], post_update=True)
-    qz: Mapped[DegreeOfFreedomMappingDAO] = relationship('DegreeOfFreedomMappingDAO', uselist=False, foreign_keys=[qz_id], post_update=True)
-    qw: Mapped[DegreeOfFreedomMappingDAO] = relationship('DegreeOfFreedomMappingDAO', uselist=False, foreign_keys=[qw_id], post_update=True)
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'Connection6DoFDAO',
-        'inherit_condition': id == PassiveConnectionDAO.id,
-    }
-
-class RevoluteConnectionDAO(ActiveConnectionDAO, DataAccessObject[semantic_world.connections.RevoluteConnection]):
-    __tablename__ = 'RevoluteConnectionDAO'
-
-    id: Mapped[int] = mapped_column(ForeignKey(ActiveConnectionDAO.id), primary_key=True)
-
-    multiplier: Mapped[float]
-    offset: Mapped[float]
-
-
-    axis_id: Mapped[int] = mapped_column(ForeignKey('UnitVector3MappingDAO.id', use_alter=True), nullable=True)
-    dof_id: Mapped[int] = mapped_column(ForeignKey('DegreeOfFreedomMappingDAO.id', use_alter=True), nullable=True)
-
-    axis: Mapped[UnitVector3MappingDAO] = relationship('UnitVector3MappingDAO', uselist=False, foreign_keys=[axis_id], post_update=True)
-    dof: Mapped[DegreeOfFreedomMappingDAO] = relationship('DegreeOfFreedomMappingDAO', uselist=False, foreign_keys=[dof_id], post_update=True)
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'RevoluteConnectionDAO',
-        'inherit_condition': id == ActiveConnectionDAO.id,
     }
 
 class PrismaticConnectionDAO(ActiveConnectionDAO, DataAccessObject[semantic_world.connections.PrismaticConnection]):
@@ -599,10 +532,10 @@ class PrismaticConnectionDAO(ActiveConnectionDAO, DataAccessObject[semantic_worl
     offset: Mapped[float]
 
 
-    axis_id: Mapped[int] = mapped_column(ForeignKey('UnitVector3MappingDAO.id', use_alter=True), nullable=True)
+    axis_id: Mapped[int] = mapped_column(ForeignKey('Vector3MappingDAO.id', use_alter=True), nullable=True)
     dof_id: Mapped[int] = mapped_column(ForeignKey('DegreeOfFreedomMappingDAO.id', use_alter=True), nullable=True)
 
-    axis: Mapped[UnitVector3MappingDAO] = relationship('UnitVector3MappingDAO', uselist=False, foreign_keys=[axis_id], post_update=True)
+    axis: Mapped[Vector3MappingDAO] = relationship('Vector3MappingDAO', uselist=False, foreign_keys=[axis_id], post_update=True)
     dof: Mapped[DegreeOfFreedomMappingDAO] = relationship('DegreeOfFreedomMappingDAO', uselist=False, foreign_keys=[dof_id], post_update=True)
 
     __mapper_args__ = {
@@ -642,6 +575,54 @@ class OmniDriveDAO(ActiveConnectionDAO, DataAccessObject[semantic_world.connecti
         'inherit_condition': id == ActiveConnectionDAO.id,
     }
 
+class RevoluteConnectionDAO(ActiveConnectionDAO, DataAccessObject[semantic_world.connections.RevoluteConnection]):
+    __tablename__ = 'RevoluteConnectionDAO'
+
+    id: Mapped[int] = mapped_column(ForeignKey(ActiveConnectionDAO.id), primary_key=True)
+
+    multiplier: Mapped[float]
+    offset: Mapped[float]
+
+
+    axis_id: Mapped[int] = mapped_column(ForeignKey('Vector3MappingDAO.id', use_alter=True), nullable=True)
+    dof_id: Mapped[int] = mapped_column(ForeignKey('DegreeOfFreedomMappingDAO.id', use_alter=True), nullable=True)
+
+    axis: Mapped[Vector3MappingDAO] = relationship('Vector3MappingDAO', uselist=False, foreign_keys=[axis_id], post_update=True)
+    dof: Mapped[DegreeOfFreedomMappingDAO] = relationship('DegreeOfFreedomMappingDAO', uselist=False, foreign_keys=[dof_id], post_update=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'RevoluteConnectionDAO',
+        'inherit_condition': id == ActiveConnectionDAO.id,
+    }
+
+class Connection6DoFDAO(PassiveConnectionDAO, DataAccessObject[semantic_world.connections.Connection6DoF]):
+    __tablename__ = 'Connection6DoFDAO'
+
+    id: Mapped[int] = mapped_column(ForeignKey(PassiveConnectionDAO.id), primary_key=True)
+
+
+
+    x_id: Mapped[int] = mapped_column(ForeignKey('DegreeOfFreedomMappingDAO.id', use_alter=True), nullable=True)
+    y_id: Mapped[int] = mapped_column(ForeignKey('DegreeOfFreedomMappingDAO.id', use_alter=True), nullable=True)
+    z_id: Mapped[int] = mapped_column(ForeignKey('DegreeOfFreedomMappingDAO.id', use_alter=True), nullable=True)
+    qx_id: Mapped[int] = mapped_column(ForeignKey('DegreeOfFreedomMappingDAO.id', use_alter=True), nullable=True)
+    qy_id: Mapped[int] = mapped_column(ForeignKey('DegreeOfFreedomMappingDAO.id', use_alter=True), nullable=True)
+    qz_id: Mapped[int] = mapped_column(ForeignKey('DegreeOfFreedomMappingDAO.id', use_alter=True), nullable=True)
+    qw_id: Mapped[int] = mapped_column(ForeignKey('DegreeOfFreedomMappingDAO.id', use_alter=True), nullable=True)
+
+    x: Mapped[DegreeOfFreedomMappingDAO] = relationship('DegreeOfFreedomMappingDAO', uselist=False, foreign_keys=[x_id], post_update=True)
+    y: Mapped[DegreeOfFreedomMappingDAO] = relationship('DegreeOfFreedomMappingDAO', uselist=False, foreign_keys=[y_id], post_update=True)
+    z: Mapped[DegreeOfFreedomMappingDAO] = relationship('DegreeOfFreedomMappingDAO', uselist=False, foreign_keys=[z_id], post_update=True)
+    qx: Mapped[DegreeOfFreedomMappingDAO] = relationship('DegreeOfFreedomMappingDAO', uselist=False, foreign_keys=[qx_id], post_update=True)
+    qy: Mapped[DegreeOfFreedomMappingDAO] = relationship('DegreeOfFreedomMappingDAO', uselist=False, foreign_keys=[qy_id], post_update=True)
+    qz: Mapped[DegreeOfFreedomMappingDAO] = relationship('DegreeOfFreedomMappingDAO', uselist=False, foreign_keys=[qz_id], post_update=True)
+    qw: Mapped[DegreeOfFreedomMappingDAO] = relationship('DegreeOfFreedomMappingDAO', uselist=False, foreign_keys=[qw_id], post_update=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'Connection6DoFDAO',
+        'inherit_condition': id == PassiveConnectionDAO.id,
+    }
+
 class EnvironmentViewDAO(RootedViewDAO, DataAccessObject[semantic_world.world_entity.EnvironmentView]):
     __tablename__ = 'EnvironmentViewDAO'
 
@@ -654,25 +635,6 @@ class EnvironmentViewDAO(RootedViewDAO, DataAccessObject[semantic_world.world_en
     __mapper_args__ = {
         'polymorphic_identity': 'EnvironmentViewDAO',
         'inherit_condition': id == RootedViewDAO.id,
-    }
-
-class DoorDAO(ComponentsDAO, DataAccessObject[semantic_world.views.views.Door]):
-    __tablename__ = 'DoorDAO'
-
-    id: Mapped[int] = mapped_column(ForeignKey(ComponentsDAO.id), primary_key=True)
-
-
-
-    body_id: Mapped[int] = mapped_column(ForeignKey('BodyDAO.id', use_alter=True), nullable=True)
-    handle_id: Mapped[int] = mapped_column(ForeignKey('HandleDAO.id', use_alter=True), nullable=True)
-    wardrobedao_doors_id: Mapped[Optional[int]] = mapped_column(ForeignKey('WardrobeDAO.id', use_alter=True), nullable=True)
-
-    body: Mapped[BodyDAO] = relationship('BodyDAO', uselist=False, foreign_keys=[body_id], post_update=True)
-    handle: Mapped[HandleDAO] = relationship('HandleDAO', uselist=False, foreign_keys=[handle_id], post_update=True)
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'DoorDAO',
-        'inherit_condition': id == ComponentsDAO.id,
     }
 
 class DrawerDAO(ComponentsDAO, DataAccessObject[semantic_world.views.views.Drawer]):
@@ -691,6 +653,25 @@ class DrawerDAO(ComponentsDAO, DataAccessObject[semantic_world.views.views.Drawe
 
     __mapper_args__ = {
         'polymorphic_identity': 'DrawerDAO',
+        'inherit_condition': id == ComponentsDAO.id,
+    }
+
+class DoorDAO(ComponentsDAO, DataAccessObject[semantic_world.views.views.Door]):
+    __tablename__ = 'DoorDAO'
+
+    id: Mapped[int] = mapped_column(ForeignKey(ComponentsDAO.id), primary_key=True)
+
+
+
+    body_id: Mapped[int] = mapped_column(ForeignKey('BodyDAO.id', use_alter=True), nullable=True)
+    handle_id: Mapped[int] = mapped_column(ForeignKey('HandleDAO.id', use_alter=True), nullable=True)
+    wardrobedao_doors_id: Mapped[Optional[int]] = mapped_column(ForeignKey('WardrobeDAO.id', use_alter=True), nullable=True)
+
+    body: Mapped[BodyDAO] = relationship('BodyDAO', uselist=False, foreign_keys=[body_id], post_update=True)
+    handle: Mapped[HandleDAO] = relationship('HandleDAO', uselist=False, foreign_keys=[handle_id], post_update=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'DoorDAO',
         'inherit_condition': id == ComponentsDAO.id,
     }
 

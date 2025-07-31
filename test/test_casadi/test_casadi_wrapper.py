@@ -318,7 +318,6 @@ class TestRotationMatrix:
         s = cas.Symbol('s')
         e = cas.Expression(1)
         v = cas.Vector3(1, 1, 1)
-        u = cas.UnitVector3(1, 1, 1)
         p = cas.Point3(1, 1, 1)
         r = cas.RotationMatrix()
         q = cas.Quaternion()
@@ -329,7 +328,6 @@ class TestRotationMatrix:
         with pytest.raises(TypeError):
             r @ e
         assert isinstance(r @ v, cas.Vector3)
-        assert isinstance(r @ u, cas.UnitVector3)
         with pytest.raises(TypeError):
             assert isinstance(r @ p, cas.Point3)
         assert isinstance(r @ r, cas.RotationMatrix)
@@ -342,7 +340,7 @@ class TestRotationMatrix:
         v = np.array([1, 1, 1])
         v = v / np.linalg.norm(v)
         R_ref = giskard_math.rotation_matrix_from_axis_angle(v, 1)
-        R = cas.RotationMatrix().from_axis_angle(cas.UnitVector3(1, 1, 1), 1)
+        R = cas.RotationMatrix().from_axis_angle(cas.Vector3.unit_vector(1, 1, 1), 1)
         assert np.allclose(R.x_vector().to_np(), R_ref[:, 0])
         assert np.allclose(R.y_vector().to_np(), R_ref[:, 1])
         assert np.allclose(R.z_vector().to_np(), R_ref[:, 2])
@@ -363,9 +361,12 @@ class TestRotationMatrix:
         x = R_ref[:, 0]
         y = R_ref[:, 1]
         z = R_ref[:, 2]
-        x_unit = cas.UnitVector3(*x)
-        y_unit = cas.UnitVector3(*y)
-        z_unit = cas.UnitVector3(*z)
+        x_unit = cas.Vector3(*x)
+        x_unit.scale(1.1)
+        y_unit = cas.Vector3(*y)
+        y_unit.scale(0.2)
+        z_unit = cas.Vector3(*z)
+        z_unit.scale(1.1)
         assert np.allclose(cas.RotationMatrix.from_vectors(x=x_unit, y=y_unit).to_np(), R_ref)
         assert np.allclose(cas.RotationMatrix.from_vectors(x=x_unit, z=z_unit).to_np(), R_ref)
         assert np.allclose(cas.RotationMatrix.from_vectors(y=y_unit, z=z_unit).to_np(), R_ref)
@@ -547,13 +548,13 @@ class TestRotationMatrix:
     def test_vector_rotation(self):
         """Test rotation of vectors and unit vectors"""
         # 90-degree rotation around Z-axis
-        r_z90 = cas.RotationMatrix.from_axis_angle(cas.UnitVector3(0, 0, 1), np.pi / 2)
+        r_z90 = cas.RotationMatrix.from_axis_angle(cas.Vector3.Z(), np.pi / 2)
 
         # Rotate unit vector along X-axis
-        x_axis = cas.UnitVector3(1, 0, 0)
+        x_axis = cas.Vector3.X()
         rotated = r_z90 @ x_axis
 
-        assert isinstance(rotated, cas.UnitVector3)
+        assert isinstance(rotated, cas.Vector3)
         # Should become Y-axis
         expected = np.array([0, 1, 0, 0])  # Homogeneous coordinates
         assert np.allclose(rotated.to_np(), expected, atol=1e-10)
@@ -587,7 +588,7 @@ class TestRotationMatrix:
 
         # Test conversion to axis-angle
         axis, angle = r.to_axis_angle()
-        assert isinstance(axis, cas.UnitVector3)
+        assert isinstance(axis, cas.Vector3)
         assert axis[3] == 0  # Should be a vector, not point
         assert hasattr(angle, 'to_np')  # Should be Expression or similar
 
@@ -643,7 +644,7 @@ class TestRotationMatrix:
         # Skip very small angles to avoid numerical issues
         assume(abs(angle) > 1e-6)
 
-        axis_unit = cas.UnitVector3(*axis)
+        axis_unit = cas.Vector3(*axis)
         r = cas.RotationMatrix.from_axis_angle(axis_unit, angle)
 
         # Test that axis is preserved (rotation around axis shouldn't change axis)
@@ -657,7 +658,7 @@ class TestRotationMatrix:
         small_angle = 1e-8
 
         # Small rotation around Z-axis
-        r = cas.RotationMatrix.from_axis_angle(cas.UnitVector3(0, 0, 1), small_angle)
+        r = cas.RotationMatrix.from_axis_angle(cas.Vector3.Z(), small_angle)
         rotation_part = r.to_np()[:3, :3]
 
         # Should be close to identity for very small angles
@@ -671,7 +672,7 @@ class TestRotationMatrix:
         angle_sym = cas.Symbol('theta')
 
         # Create symbolic rotation
-        r_sym = cas.RotationMatrix.from_axis_angle(cas.UnitVector3(0, 0, 1), angle_sym)
+        r_sym = cas.RotationMatrix.from_axis_angle(cas.Vector3.Z(), angle_sym)
 
         # Should be able to compose with other rotations
         r_numeric = cas.RotationMatrix.from_rpy(0.1, 0, 0)
@@ -688,7 +689,7 @@ class TestRotationMatrix:
         """Test compilation and execution of rotation matrices"""
         # Test symbolic rotation compilation
         compiled_rotation = cas.compile_and_execute(
-            lambda angle: cas.RotationMatrix.from_axis_angle(cas.UnitVector3(0, 0, 1), angle),
+            lambda angle: cas.RotationMatrix.from_axis_angle(cas.Vector3.Z(), angle),
             [np.pi / 4]
         )
 
@@ -701,16 +702,16 @@ class TestRotationMatrix:
     def test_edge_cases(self):
         """Test edge cases and boundary conditions"""
         # Zero rotation
-        r_zero = cas.RotationMatrix.from_axis_angle(cas.UnitVector3(1, 0, 0), 0)
+        r_zero = cas.RotationMatrix.from_axis_angle(cas.Vector3.X(), 0)
         identity = cas.RotationMatrix()
         assert np.allclose(r_zero.to_np(), identity.to_np(), atol=1e-12)
 
         # Full rotation (2π)
-        r_full = cas.RotationMatrix.from_axis_angle(cas.UnitVector3(0, 1, 0), 2 * np.pi)
+        r_full = cas.RotationMatrix.from_axis_angle(cas.Vector3.Y(), 2 * np.pi)
         assert np.allclose(r_full.to_np(), identity.to_np(), atol=1e-10)
 
         # π rotation (180 degrees)
-        r_pi = cas.RotationMatrix.from_axis_angle(cas.UnitVector3(0, 0, 1), np.pi)
+        r_pi = cas.RotationMatrix.from_axis_angle(cas.Vector3.Z(), np.pi)
         rotation_part = r_pi.to_np()[:3, :3]
         # Should flip X and Y axes
         expected_rotation = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
@@ -729,7 +730,7 @@ class TestRotationMatrix:
     def test_determinant_preservation(self):
         """Test that all operations preserve determinant = 1"""
         r1 = cas.RotationMatrix.from_rpy(0.5, -0.3, 1.2)
-        r2 = cas.RotationMatrix.from_axis_angle(cas.UnitVector3(1, 1, 1), 0.8)
+        r2 = cas.RotationMatrix.from_axis_angle(cas.Vector3.unit_vector(1, 1, 1), 0.8)
 
         operations_to_test = [
             r1,
@@ -759,7 +760,6 @@ class TestPoint3:
         s = cas.Symbol('s')
         e = cas.Expression(1)
         v = cas.Vector3(1, 1, 1)
-        u = cas.UnitVector3(1, 1, 1)
         p = cas.Point3(l[0], l[1], l[2])
         r = cas.RotationMatrix()
         q = cas.Quaternion()
@@ -775,7 +775,6 @@ class TestPoint3:
         cas.Point3.from_iterable(cas.Expression(v))
         cas.Point3.from_iterable(p)
         cas.Point3.from_iterable(v)
-        cas.Point3.from_iterable(u)
         cas.Point3.from_iterable(v.s)
         cas.Point3.from_iterable(l)
         with pytest.raises(TypeError):
@@ -791,7 +790,6 @@ class TestPoint3:
         s = cas.Symbol('s')
         e = cas.Expression(1)
         v = cas.Vector3(1, 1, 1)
-        u = cas.UnitVector3(1, 1, 1)
         p = cas.Point3(1, 1, 1)
         r = cas.RotationMatrix()
         q = cas.Quaternion()
@@ -803,7 +801,6 @@ class TestPoint3:
         with pytest.raises(TypeError):
             p @ e  # Point @ Expression(scalar) - not mathematically meaningful
         assert isinstance(p @ v, cas.Expression)  # Point @ Vector3 = scalar (dot product)
-        assert isinstance(p @ u, cas.Expression)  # Point @ UnitVector3 = scalar (dot product)
         assert isinstance(p @ p, cas.Expression)  # Point @ Point3 = scalar (dot product)
         with pytest.raises(TypeError):
             p @ r  # Point @ RotationMatrix - not directly meaningful
@@ -818,7 +815,6 @@ class TestPoint3:
         with pytest.raises(TypeError):
             e @ p  # Expression(scalar) @ Point3 - not meaningful
         assert isinstance(v @ p, cas.Expression)  # Vector3 @ Point3 = scalar
-        assert isinstance(u @ p, cas.Expression)  # UnitVector3 @ Point3 = scalar
         # Note: p @ p already tested above
         with pytest.raises(TypeError):
             q @ p  # Quaternion @ Point3 - not meaningful
@@ -1152,7 +1148,6 @@ class TestVector3:
         s = cas.Symbol('s')
         e = cas.Expression(1)
         v = cas.Vector3(1, 1, 1)
-        u = cas.UnitVector3(1, 1, 1)
         p = cas.Point3(1, 1, 1)
         r = cas.RotationMatrix()
         q = cas.Quaternion()
@@ -1169,7 +1164,6 @@ class TestVector3:
         cas.Vector3.from_iterable(cas.Expression(v))
         cas.Vector3.from_iterable(p)  # Can create Vector3 from Point3
         cas.Vector3.from_iterable(v)
-        cas.Vector3.from_iterable(u)
         cas.Vector3.from_iterable(v.s)
         cas.Vector3.from_iterable(l)
         with pytest.raises(TypeError):
@@ -1185,7 +1179,6 @@ class TestVector3:
         s = cas.Symbol('s')
         e = cas.Expression(1)
         v = cas.Vector3(1, 1, 1)
-        u = cas.UnitVector3(1, 1, 1)
         p = cas.Point3(1, 1, 1)
         r = cas.RotationMatrix()
         q = cas.Quaternion()
@@ -1197,7 +1190,6 @@ class TestVector3:
         with pytest.raises(TypeError):
             v @ e  # Vector @ Expression(scalar) - not mathematically meaningful
         assert isinstance(v @ v, cas.Expression)  # Vector @ Vector3 = scalar (dot product)
-        assert isinstance(v @ u, cas.Expression)  # Vector @ UnitVector3 = scalar (dot product)
         assert isinstance(v @ p, cas.Expression)  # Vector @ Point3 = scalar (dot product)
         with pytest.raises(TypeError):
             v @ r  # Vector @ RotationMatrix - not directly meaningful
@@ -1212,7 +1204,6 @@ class TestVector3:
         with pytest.raises(TypeError):
             e @ v  # Expression(scalar) @ Vector3 - not meaningful
         # v @ v already tested above
-        assert isinstance(u @ v, cas.Expression)  # UnitVector3 @ Vector3 = scalar
         assert isinstance(p @ v, cas.Expression)  # Point3 @ Vector3 = scalar
         with pytest.raises(TypeError):
             q @ v  # Quaternion @ Vector3 - not meaningful
@@ -1424,16 +1415,12 @@ class TestUnitVector3:
     @given(vector(3))
     def test_is_length_1(self, v):
         assume(abs(v[0]) > 0.00001 or abs(v[1]) > 0.00001 or abs(v[2]) > 0.00001)
-        unit_v = cas.UnitVector3(*v)
+        unit_v = cas.Vector3.unit_vector(*v)
         assert np.isclose(unit_v.norm().to_np(), 1)
 
     def test_length_0(self):
-        unit_v = cas.UnitVector3(x=0, y=0, z=0)
+        unit_v = cas.Vector3.unit_vector(x=0, y=0, z=0)
         assert np.isnan(unit_v.norm().to_np())
-
-    def test_to_list(self):
-        unit_v = cas.UnitVector3(0, 0, 1)
-        assert unit_v.as_tuple() == (0, 0, 1)
 
 
 class TestTransformationMatrix:
@@ -1442,7 +1429,6 @@ class TestTransformationMatrix:
         s = cas.Symbol('s')
         e = cas.Expression(1)
         v = cas.Vector3(1, 1, 1)
-        u = cas.UnitVector3(1, 1, 1)
         p = cas.Point3(1, 1, 1)
         r = cas.RotationMatrix()
         q = cas.Quaternion()
@@ -1458,7 +1444,6 @@ class TestTransformationMatrix:
 
         # TransformationMatrix @ valid types should return correct types
         assert isinstance(t @ v, cas.Vector3)  # Transform vector -> Vector3
-        assert isinstance(t @ u, cas.UnitVector3)  # Transform unit vector -> UnitVector3
         assert isinstance(t @ p, cas.Point3)  # Transform point -> Point3
         assert isinstance(t @ r, cas.RotationMatrix)  # Transform rotation -> RotationMatrix
         assert isinstance(t @ t, cas.TransformationMatrix)  # Transform transformation -> TransformationMatrix
@@ -1476,17 +1461,10 @@ class TestTransformationMatrix:
         transformed_point = t @ p
         assert transformed_point[3] == 1
 
-        # UnitVector should remain a unit vector (length ≈ 1) when no scaling is applied
-        # For identity transformation, length should be preserved exactly
-        transformed_unit = t @ u
-        length_squared = (transformed_unit.x ** 2 + transformed_unit.y ** 2 + transformed_unit.z ** 2)
-        assert np.isclose(length_squared.to_np(), 1.0, atol=1e-10)
-
         # Test with non-identity transformation to ensure type preservation holds
         t_rot = cas.TransformationMatrix.from_xyz_rpy(1, 2, 3, 0.1, 0.2, 0.3)
 
         assert isinstance(t_rot @ v, cas.Vector3)
-        assert isinstance(t_rot @ u, cas.UnitVector3)
         assert isinstance(t_rot @ p, cas.Point3)
         assert isinstance(t_rot @ r, cas.RotationMatrix)
         assert isinstance(t_rot @ t, cas.TransformationMatrix)
@@ -2141,7 +2119,8 @@ class TestQuaternion:
     def test_dot(self, q1, q2):
         q1 = np.array(q1)
         q2 = np.array(q2)
-        result = cas.compile_and_execute(lambda p1, p2: cas.Quaternion.from_iterable(p1).dot(cas.Quaternion.from_iterable(p2)), [q1, q2])
+        result = cas.compile_and_execute(
+            lambda p1, p2: cas.Quaternion.from_iterable(p1).dot(cas.Quaternion.from_iterable(p2)), [q1, q2])
         expected = np.dot(q1.T, q2)
         if not np.isnan(result) and not np.isinf(result):
             assert np.isclose(result, expected)
@@ -3179,8 +3158,9 @@ class TestCASWrapper:
            quaternion())
     def test_slerp123(self, q1, q2):
         step = 0.1
-        q_d = cas.compile_and_execute(lambda q1, q2: cas.Quaternion.from_iterable(q1).diff(cas.Quaternion.from_iterable(q2)),
-                                      [q1, q2])
+        q_d = cas.compile_and_execute(
+            lambda q1, q2: cas.Quaternion.from_iterable(q1).diff(cas.Quaternion.from_iterable(q2)),
+            [q1, q2])
         axis = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion(x, y, z, w_).to_axis_angle()[0], q_d)
         angle = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion(x, y, z, w_).to_axis_angle()[1], q_d)
         assume(angle != np.pi)
@@ -3192,8 +3172,9 @@ class TestCASWrapper:
         r2s = []
         for t in np.arange(0, 1.001, step):
             r1 = cas.compile_and_execute(cas.quaternion_slerp, [q1, q2, t])
-            r1 = cas.compile_and_execute(lambda q1, q2: cas.Quaternion.from_iterable(q1).diff(cas.Quaternion.from_iterable(q2)),
-                                         [q1, r1])
+            r1 = cas.compile_and_execute(
+                lambda q1, q2: cas.Quaternion.from_iterable(q1).diff(cas.Quaternion.from_iterable(q2)),
+                [q1, r1])
             axis2 = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion(x, y, z, w_).to_axis_angle()[0], r1)
             angle2 = cas.compile_and_execute(lambda x, y, z, w_: cas.Quaternion(x, y, z, w_).to_axis_angle()[1], r1)
             r2 = cas.compile_and_execute(cas.Quaternion.from_axis_angle, [axis, angle * t])
@@ -3213,8 +3194,9 @@ class TestCASWrapper:
             q1t = r1s[i]
             q2t = r1s[i + 1]
             qds.append(
-                cas.compile_and_execute(lambda q1, q2: cas.Quaternion.from_iterable(q1).diff(cas.Quaternion.from_iterable(q2)),
-                                        [q1t, q2t]))
+                cas.compile_and_execute(
+                    lambda q1, q2: cas.Quaternion.from_iterable(q1).diff(cas.Quaternion.from_iterable(q2)),
+                    [q1t, q2t]))
         qds = np.array(qds)
         for r1, r2 in zip(r1s, r2s):
             compare_orientations(r1, r2)
