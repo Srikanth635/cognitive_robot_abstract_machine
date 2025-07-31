@@ -115,11 +115,11 @@ class MultiParser:
             transform = body_builder.xform.GetLocalTransformation()
             pos = transform.ExtractTranslation()
             quat = transform.ExtractRotationQuat()
-            point_expr = cas.Point3((pos[0], pos[1], pos[2]))
-            quaternion_expr = cas.Quaternion((quat.GetImaginary()[0],
+            point_expr = cas.Point3(pos[0], pos[1], pos[2])
+            quaternion_expr = cas.Quaternion(quat.GetImaginary()[0],
                                               quat.GetImaginary()[1],
                                               quat.GetImaginary()[2],
-                                              quat.GetReal()))
+                                              quat.GetReal())
             origin = cas.TransformationMatrix.from_point_rotation_matrix(point=point_expr,
                                                                          rotation_matrix=quaternion_expr.to_rotation_matrix())
             connection = FixedConnection(parent=parent_body, child=child_body, origin_expression=origin)
@@ -132,11 +132,11 @@ class MultiParser:
         joint_name = joint_prim.GetName()
         joint_pos = joint_builder.pos
         joint_quat = joint_builder.quat
-        point_expr = cas.Point3((joint_pos[0], joint_pos[1], joint_pos[2]))
-        quaternion_expr = cas.Quaternion((joint_quat.GetImaginary()[0],
+        point_expr = cas.Point3(joint_pos[0], joint_pos[1], joint_pos[2])
+        quaternion_expr = cas.Quaternion(joint_quat.GetImaginary()[0],
                                           joint_quat.GetImaginary()[1],
                                           joint_quat.GetImaginary()[2],
-                                          joint_quat.GetReal()))
+                                          joint_quat.GetReal())
         origin = cas.TransformationMatrix.from_point_rotation_matrix(point=point_expr,
                                                                      rotation_matrix=quaternion_expr.to_rotation_matrix())
         free_variable_name = PrefixedName(joint_name)

@@ -63,7 +63,8 @@ class WorldEntity:
 
     def __post_init__(self):
         if self.name is None:
-            self.name = PrefixedName(f"{self.__class__.__name__}_{id_generator(self)}")
+            self.name = PrefixedName(f"{self.__class__.__name__}_{hash(self)}")
+
 
 @dataclass
 class Body(WorldEntity):
@@ -222,7 +223,7 @@ class Body(WorldEntity):
             min_corner = np.min(transformed_corners, axis=0)
             max_corner = np.max(transformed_corners, axis=0)
 
-            world_bb = BoundingBox.from_min_max(Point3.from_xyz(*min_corner), Point3.from_xyz(*max_corner))
+            world_bb = BoundingBox.from_min_max(Point3(*min_corner), Point3(*max_corner))
             world_bboxes.append(world_bb)
 
         return BoundingBoxCollection(world_bboxes)
@@ -310,8 +311,7 @@ class View(WorldEntity):
         return bbs
 
 
-
-@dataclass
+@dataclass(unsafe_hash=True)
 class RootedView(View):
     """
     Represents a view that is rooted in a specific body.
@@ -319,7 +319,7 @@ class RootedView(View):
     root: Body = field(default_factory=Body)
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class EnvironmentView(RootedView):
     """
     Represents a view of the environment.
@@ -406,6 +406,7 @@ class Connection(WorldEntity):
         orientation = self.origin_expression.to_quaternion()
         return cas.vstack([position, orientation]).T
 
+
 def _is_body_view_or_iterable(obj: object) -> bool:
     """
     Determines if an object is a Body, a View, or an Iterable (excluding strings and bytes).
@@ -414,6 +415,7 @@ def _is_body_view_or_iterable(obj: object) -> bool:
             isinstance(obj, (Body, View)) or
             (isinstance(obj, Iterable) and not isinstance(obj, (str, bytes, bytearray)))
     )
+
 
 def _attr_values(view: View) -> Iterable[object]:
     """

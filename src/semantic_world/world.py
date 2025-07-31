@@ -428,14 +428,14 @@ class World:
         :raises AddingAnExistingViewError: If exists_ok is False and a view with the same name and type already exists.
         """
         try:
-            self.get_view_by_name_and_type(view.name)
+            self.get_view_by_name(view.name)
             if not exists_ok:
                 raise AddingAnExistingViewError(view)
         except ViewNotFoundError:
             view._world = self
             self.views.append(view)
 
-    def get_view_by_name_and_type(self, name: Union[str, PrefixedName]) -> Optional[View]:
+    def get_view_by_name(self, name: Union[str, PrefixedName]) -> Optional[View]:
         """
         Retrieves a View from the list of view based on its name.
         If the input is of type `PrefixedName`, it checks whether the prefix is specified and looks for an
@@ -834,26 +834,33 @@ class World:
         """
         return self._fk_computer.compute_forward_kinematics_np(root, tip).copy()
 
-    def compute_relative_pose(self, pose: NpMatrix4x4, target_body: Body, pose_body: Body) -> NpMatrix4x4:
+    def transform(self, spatial_object: cas.SpatialType, target_frame: Body) -> cas.SpatialType:
         """
-        Computes the relative pose to a body given another body as reference.
-        :param pose: The pose to be transformed
-        :param target_body: The body to which the pose should be transformed
-        :param pose_body: The body which should be used as reference frame for the pose
-        :return: The pose relative to the target body.
-        """
-        target_T_pose = self.compute_forward_kinematics_np(target_body, pose_body)
-        return target_T_pose @ pose
+        Transforms a given spatial object from its reference frame to a target frame.
 
-    def transform(self, geometric_cas_object: cas.GeometricType, target_frame: Body) -> cas.GeometricType:
+        This method calculates the transformation from the reference frame of the provided
+        spatial object to the specified target frame. Depending on the type of the
+        spatial object, the transformation is applied differently:
+
+        - If the object is a Quaternion, its rotation matrix is computed, transformed, and
+          converted back to a Quaternion.
+        - For other types, the transformation matrix is directly applied.
+
+        :param spatial_object: The spatial object to be transformed.
+        :param target_frame: The target body frame to which the spatial object should
+            be transformed.
+        :return: The spatial object transformed to the target frame. If the input object
+            is a Quaternion, the returned object is a Quaternion. Otherwise, it is the
+            transformed spatial object.
+        """
         target_frame_T_reference_frame = self.compute_forward_kinematics(root=target_frame,
-                                                                         tip=geometric_cas_object.reference_frame)
-        if isinstance(geometric_cas_object, cas.Quaternion):
-            reference_frame_R = geometric_cas_object.to_rotation_matrix()
+                                                                         tip=spatial_object.reference_frame)
+        if isinstance(spatial_object, cas.Quaternion):
+            reference_frame_R = spatial_object.to_rotation_matrix()
             target_frame_R = target_frame_T_reference_frame @ reference_frame_R
             return target_frame_R.to_quaternion()
         else:
-            return target_frame_T_reference_frame @ geometric_cas_object
+            return target_frame_T_reference_frame @ spatial_object
 
     def find_dofs_for_position_symbols(self, symbols: List[cas.Symbol]) -> List[DegreeOfFreedom]:
         result = []
