@@ -616,11 +616,8 @@ class TransformationMatrix(Symbol_, ReferenceFrameMixin):
         return a_T_b
 
     def dot(self, other):
-        if isinstance(other, (Vector3, UnitVector3, Point3, RotationMatrix, TransformationMatrix)):
+        if isinstance(other, (Vector3, Point3, RotationMatrix, TransformationMatrix)):
             result = ca.mtimes(self.s, other.s)
-            if isinstance(other, UnitVector3):
-                result = UnitVector3.from_iterable(result, reference_frame=self.reference_frame)
-                return result
             if isinstance(other, Vector3):
                 result = Vector3.from_iterable(result, reference_frame=self.reference_frame)
                 return result
@@ -729,11 +726,8 @@ class RotationMatrix(Symbol_, ReferenceFrameMixin):
         https://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToMatrix/index.htm
         """
         # use casadi to prevent a bunch of Expression.__init__.py calls
-        axis = axis.s
-        try:
-            angle = angle.s
-        except AttributeError:
-            pass
+        axis = _to_sx(axis)
+        angle = _to_sx(angle)
         ct = ca.cos(angle)
         st = ca.sin(angle)
         vt = 1 - ct
@@ -779,20 +773,18 @@ class RotationMatrix(Symbol_, ReferenceFrameMixin):
         return cls.__quaternion_to_rotation_matrix(q)
 
     def x_vector(self):
-        return UnitVector3(x=self[0, 0], y=self[1, 0], z=self[2, 0], reference_frame=self.reference_frame)
+        return Vector3(x=self[0, 0], y=self[1, 0], z=self[2, 0], reference_frame=self.reference_frame)
 
     def y_vector(self):
-        return UnitVector3(x=self[0, 1], y=self[1, 1], z=self[2, 1], reference_frame=self.reference_frame)
+        return Vector3(x=self[0, 1], y=self[1, 1], z=self[2, 1], reference_frame=self.reference_frame)
 
     def z_vector(self):
-        return UnitVector3(x=self[0, 2], y=self[1, 2], z=self[2, 2], reference_frame=self.reference_frame)
+        return Vector3(x=self[0, 2], y=self[1, 2], z=self[2, 2], reference_frame=self.reference_frame)
 
     def dot(self, other):
         if isinstance(other, (Vector3, RotationMatrix, TransformationMatrix)):
             result = ca.mtimes(self.s, other.s)
-            if isinstance(other, UnitVector3):
-                result = UnitVector3.from_iterable(result)
-            elif isinstance(other, Vector3):
+            if isinstance(other, Vector3):
                 result = Vector3.from_iterable(result)
             elif isinstance(other, RotationMatrix):
                 result = RotationMatrix(result, sanity_check=False)
@@ -830,6 +822,9 @@ class RotationMatrix(Symbol_, ReferenceFrameMixin):
             y = z.cross(x)
         elif x is None and y is not None and z is not None:
             x = y.cross(z)
+        x.scale(1)
+        y.scale(1)
+        z.scale(1)
         R = cls([[x[0], y[0], z[0], 0],
                  [x[1], y[1], z[1], 0],
                  [x[2], y[2], z[2], 0],
@@ -1085,6 +1080,24 @@ class Vector3(Symbol_, ReferenceFrameMixin):
             result.vis_frame = data.vis_frame
         return result
 
+    @classmethod
+    def X(cls, reference_frame=None):
+        return cls(x=1, y=0, z=0, reference_frame=reference_frame)
+
+    @classmethod
+    def Y(cls, reference_frame=None):
+        return cls(x=0, y=1, z=0, reference_frame=reference_frame)
+
+    @classmethod
+    def Z(cls, reference_frame=None):
+        return cls(x=0, y=0, z=1, reference_frame=reference_frame)
+
+    @classmethod
+    def unit_vector(cls, x=0, y=0, z=0, reference_frame=None):
+        v = cls(x, y, z, reference_frame=reference_frame)
+        v.scale(1, unsafe=True)
+        return v
+
     @property
     def x(self):
         return self[0]
@@ -1232,31 +1245,6 @@ class Vector3(Symbol_, ReferenceFrameMixin):
             self.s = (save_division(self, self.norm()) * a).s
 
 
-class UnitVector3(Vector3):
-    """
-    Represents a unit vector which is always of size 1.
-    """
-
-    def __init__(self, x, y, z, reference_frame=None):
-        super().__init__(x=x, y=y, z=z, reference_frame=reference_frame)
-        self.scale(1, unsafe=True)
-
-    @classmethod
-    def X(cls, reference_frame=None):
-        return cls(x=1, y=0, z=0, reference_frame=reference_frame)
-
-    @classmethod
-    def Y(cls, reference_frame=None):
-        return cls(x=0, y=1, z=0, reference_frame=reference_frame)
-
-    @classmethod
-    def Z(cls, reference_frame=None):
-        return cls(x=0, y=0, z=1, reference_frame=reference_frame)
-
-    def as_tuple(self):
-        return tuple(self.to_np()[:3])
-
-
 class Quaternion(Symbol_, ReferenceFrameMixin):
     def __init__(self, x=0.0, y=0.0, z=0.0, w=1.0, reference_frame=None):
         if hasattr(x, 'shape') and x.shape not in (tuple(), (1, 1)):
@@ -1270,7 +1258,7 @@ class Quaternion(Symbol_, ReferenceFrameMixin):
 
     @classmethod
     def from_iterable(cls, data=None, reference_frame=None):
-        if isinstance(data, (Point3, Vector3, UnitVector3, RotationMatrix, TransformationMatrix)):
+        if isinstance(data, (Point3, Vector3, RotationMatrix, TransformationMatrix)):
             raise TypeError(f'Can\'t create a Quaternion form {type(data)}')
         if hasattr(data, 'shape') and len(data.shape) > 1 and data.shape[1] != 1:
             raise ValueError('The iterable must be a 1d list, tuple or array')
@@ -1431,7 +1419,7 @@ class Quaternion(Symbol_, ReferenceFrameMixin):
         x = if_eq_zero(w2, 0, self.x / m)
         y = if_eq_zero(w2, 0, self.y / m)
         z = if_eq_zero(w2, 1, self.z / m)
-        return UnitVector3(x, y, z, reference_frame=self.reference_frame), angle
+        return Vector3(x, y, z, reference_frame=self.reference_frame), angle
 
     def to_rotation_matrix(self):
         return RotationMatrix.from_quaternion(self)
@@ -2076,10 +2064,10 @@ def quaternion_slerp(q1, q2, t):
     ratio_a = save_division(sin((1.0 - t) * half_theta), sin_half_theta)
     ratio_b = save_division(sin(t * half_theta), sin_half_theta)
     return Quaternion.from_iterable(if_greater_eq_zero(if1,
-                                         q1,
-                                         if_greater_zero(if2,
-                                                         0.5 * q1 + 0.5 * q2,
-                                                         ratio_a * q1 + ratio_b * q2)))
+                                                       q1,
+                                                       if_greater_zero(if2,
+                                                                       0.5 * q1 + 0.5 * q2,
+                                                                       ratio_a * q1 + ratio_b * q2)))
 
 
 def slerp(v1, v2, t):

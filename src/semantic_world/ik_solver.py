@@ -459,7 +459,7 @@ class ConstraintBuilder:
         """
         rotation_cap = self.max_rotation_velocity * self.dt
 
-        hack = cas.RotationMatrix.from_axis_angle(cas.UnitVector3(0, 0, 1), -0.0001)
+        hack = cas.RotationMatrix.from_axis_angle(cas.Vector3.Z(), -0.0001)
         root_R_tip = root_T_tip.to_rotation().dot(hack)
         q_actual = cas.TransformationMatrix(self.target).to_quaternion()
         q_goal = root_R_tip.to_quaternion()

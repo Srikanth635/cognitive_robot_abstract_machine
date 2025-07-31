@@ -120,7 +120,7 @@ class PrismaticConnection(ActiveConnection, Has1DOFState):
     Allows the movement along an axis.
     """
 
-    axis: cas.UnitVector3 = field(kw_only=True)
+    axis: cas.Vector3 = field(kw_only=True)
     """
     Connection moves along this axis, should be a unit vector.
     The axis is defined relative to the local reference frame of the parent body.
@@ -185,7 +185,7 @@ class RevoluteConnection(ActiveConnection, Has1DOFState):
     Allows rotation about an axis.
     """
 
-    axis: cas.UnitVector3 = field(kw_only=True)
+    axis: cas.Vector3 = field(kw_only=True)
     """
     Connection rotates about this axis, should be a unit vector.
     The axis is defined relative to the local reference frame of the parent body.

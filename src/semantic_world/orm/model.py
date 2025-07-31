@@ -7,7 +7,7 @@ from ..degree_of_freedom import DegreeOfFreedom
 from ..prefixed_name import PrefixedName
 from ..spatial_types import RotationMatrix, Vector3, Point3, TransformationMatrix
 from ..spatial_types.derivatives import DerivativeMap
-from ..spatial_types.spatial_types import Quaternion, UnitVector3
+from ..spatial_types.spatial_types import Quaternion
 from ..spatial_types.symbol_manager import symbol_manager
 from ..world import World, Body
 from ..world_entity import Connection, View
@@ -55,29 +55,11 @@ class Vector3Mapping(AlternativeMapping[Vector3]):
         x, y, z, _ = symbol_manager.evaluate_expr(obj).tolist()
         result = cls(x=x, y=y, z=z)
         result.reference_frame = obj.reference_frame
-        return
+        return result
 
     def create_from_dao(self) -> Vector3:
         return Vector3(x=self.x, y=self.y, z=self.z, reference_frame=None)
 
-
-@dataclass
-class UnitVector3Mapping(AlternativeMapping[UnitVector3]):
-    x: float
-    y: float
-    z: float
-
-    reference_frame: Optional[Body] = field(init=False, default=None)
-
-    @classmethod
-    def create_instance(cls, obj: UnitVector3):
-        x, y, z, _ = symbol_manager.evaluate_expr(obj).tolist()
-        result = cls(x=x, y=y, z=z)
-        result.reference_frame = obj.reference_frame
-        return
-
-    def create_from_dao(self) -> UnitVector3:
-        return UnitVector3(x=self.x, y=self.y, z=self.z, reference_frame=self.reference_frame)
 
 
 @dataclass

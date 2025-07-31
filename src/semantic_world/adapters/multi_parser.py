@@ -153,7 +153,7 @@ class MultiParser:
         elif joint_builder.type == JointType.FIXED:
             return FixedConnection(parent=parent_body, child=child_body, origin_expression=origin)
         elif joint_builder.type in [JointType.REVOLUTE, JointType.CONTINUOUS, JointType.PRISMATIC]:
-            axis = cas.UnitVector3(float(joint_builder.axis.to_array()[0]),
+            axis = cas.Vector3(float(joint_builder.axis.to_array()[0]),
                                    float(joint_builder.axis.to_array()[1]),
                                    float(joint_builder.axis.to_array()[2]),
                                    reference_frame=parent_body)
