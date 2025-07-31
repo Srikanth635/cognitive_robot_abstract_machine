@@ -17,6 +17,9 @@ from semantic_world.world import View, Body
 class ControlledConnections(View):
     connections: List[ActiveConnection] = field(default_factory=list)
 
+    def __hash__(self):
+        return hash(tuple(self.connections))
+
     def compute_chain_reduced_to_controlled_joints(self, root: Body, tip: Body) -> Tuple[Body, Body]:
         """
         1. Compute the kinematic chain of bodies between root and tip.

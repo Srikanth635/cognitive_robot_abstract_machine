@@ -6,8 +6,8 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import wraps, lru_cache
-from typing import Dict, Tuple, OrderedDict, Union, Optional
-from typing import TypeVar, overload
+from typing import Dict, Tuple, OrderedDict, Union, Optional, Type
+from typing import TypeVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -1026,36 +1026,3 @@ class World:
         for connection, value in new_state.items():
             connection.position = value
         self.notify_state_change()
-
-    @overload
-    def transform(self, target_frame: Body, geometric_cas_object: cas.Point3) -> cas.Point3:
-        ...
-
-    @overload
-    def transform(self, target_frame: Body, geometric_cas_object: cas.TransformationMatrix) -> cas.TransformationMatrix:
-        ...
-
-    @overload
-    def transform(self, target_frame: Body, geometric_cas_object: cas.Vector3) -> cas.Vector3:
-        ...
-
-    @overload
-    def transform(self, target_frame: Body, geometric_cas_object: cas.Quaternion) -> cas.Quaternion:
-        ...
-
-    @overload
-    def transform(self, target_frame: Body, geometric_cas_object: cas.RotationMatrix) -> cas.RotationMatrix:
-        ...
-
-    def transform(self, target_frame, geometric_cas_object):
-        if geometric_cas_object.reference_frame is None:
-            raise Exception('Can\'t transform an object without reference_frame.')
-        target_frame_T_reference_frame = cas.TransformationMatrix(self.compute_forward_kinematics_np(
-            root=target_frame,
-            tip=geometric_cas_object.reference_frame))
-        if isinstance(geometric_cas_object, cas.Quaternion):
-            reference_frame_R = geometric_cas_object.to_rotation_matrix()
-            target_frame_R = target_frame_T_reference_frame.dot(reference_frame_R)
-            return target_frame_R.to_quaternion()
-        else:
-            return target_frame_T_reference_frame.dot(geometric_cas_object)
