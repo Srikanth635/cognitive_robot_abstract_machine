@@ -4,10 +4,10 @@ from functools import cached_property
 from typing import List, Union, Optional
 
 import semantic_world.spatial_types.spatial_types as cas
+from semantic_world.connections import Has1DOFState
 from semantic_world.prefixed_name import PrefixedName
 from giskardpy.data_types.exceptions import GoalInitalizationException
 from giskardpy.god_map import god_map
-from giskardpy.model.joints import OneDofJoint
 from giskardpy.motion_statechart.graph_node import MotionStatechartNode
 from giskardpy.motion_statechart.monitors.monitors import Monitor
 from giskardpy.motion_statechart.tasks.task import Task
@@ -58,8 +58,8 @@ class Goal(MotionStatechartNode):
         if not god_map.world.has_joint(joint_name):
             raise KeyError(f'World doesn\'t have joint named: {joint_name}.')
         joint = god_map.world.joints[joint_name]
-        if isinstance(joint, OneDofJoint):
-            return joint.get_symbol(Derivatives.position)
+        if isinstance(joint, Has1DOFState):
+            return joint.dof.symbols.position
         raise TypeError(f'get_joint_position_symbol is only supported for OneDofJoint, not {type(joint)}')
 
     def connect_start_condition_to_all_tasks(self, condition: str) -> None:

@@ -2,13 +2,12 @@ from __future__ import division
 
 from typing import Optional
 
-import numpy as np
-
 import semantic_world.spatial_types.spatial_types as cas
-from giskardpy.data_types.data_types import ColorRGBA, PrefixedName
-from semantic_world.spatial_types.symbol_manager import symbol_manager
-from giskardpy.motion_statechart.tasks.task import WEIGHT_BELOW_CA, Task
 from giskardpy.god_map import god_map
+from giskardpy.motion_statechart.tasks.task import WEIGHT_BELOW_CA, Task
+from semantic_world.geometry import Color
+from semantic_world.prefixed_name import PrefixedName
+from semantic_world.spatial_types.symbol_manager import symbol_manager
 
 
 class Pointing(Task):
@@ -55,13 +54,13 @@ class Pointing(Task):
         root_V_goal_axis.vis_frame = self.tip
         god_map.debug_expression_manager.add_debug_expression('root_V_pointing_axis',
                                                               root_V_pointing_axis,
-                                                              color=ColorRGBA(r=1, g=0, b=0, a=1))
+                                                              color=Color(1, 0, 0, 1))
         god_map.debug_expression_manager.add_debug_expression('goal_point',
                                                               root_P_goal_point,
-                                                              color=ColorRGBA(r=0, g=0, b=1, a=1))
+                                                              color=Color(0, 0, 1, 1))
         god_map.debug_expression_manager.add_debug_expression('root_V_goal_axis',
                                                               root_V_goal_axis,
-                                                              color=ColorRGBA(r=0, g=1, b=0, a=1))
+                                                              color=Color(0, 1, 0, 1))
         self.add_vector_goal_constraints(frame_V_current=root_V_pointing_axis,
                                          frame_V_goal=root_V_goal_axis,
                                          reference_velocity=self.max_velocity,
@@ -114,19 +113,19 @@ class PointingCone(Task):
         root_V_goal_axis.vis_frame = self.tip
         god_map.debug_expression_manager.add_debug_expression('root_V_pointing_axis',
                                                               root_V_pointing_axis,
-                                                              color=ColorRGBA(r=1, g=0, b=0, a=1))
+                                                              color=Color(1, 0, 0, 1))
         god_map.debug_expression_manager.add_debug_expression('goal_point',
                                                               root_P_goal_point,
-                                                              color=ColorRGBA(r=0, g=0, b=1, a=1))
+                                                              color=Color(0, 0, 1, 1))
 
         root_V_goal_axis_proj = cas.project_to_cone(root_V_pointing_axis, root_V_goal_axis, cone_theta)
         root_V_goal_axis_proj.vis_frame = self.tip
         god_map.debug_expression_manager.add_debug_expression('cone_axis',
                                                               root_V_goal_axis,
-                                                              color=ColorRGBA(r=1, g=1, b=0, a=1))
+                                                              color=Color(1, 1, 0, 1))
         god_map.debug_expression_manager.add_debug_expression('projected_axis',
                                                               root_V_goal_axis_proj,
-                                                              color=ColorRGBA(r=1, g=1, b=0, a=1))
+                                                              color=Color(1, 1, 0, 1))
 
         self.add_vector_goal_constraints(frame_V_current=root_V_pointing_axis,
                                          frame_V_goal=root_V_goal_axis_proj,

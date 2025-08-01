@@ -11,18 +11,18 @@ import numpy as np
 from sortedcontainers import SortedDict
 from line_profiler import profile
 
-from giskardpy.data_types.data_types import JointStates
 from semantic_world.prefixed_name import PrefixedName
 from giskardpy.god_map import god_map
 from giskardpy.middleware import get_middleware
 from giskardpy.utils.utils import cm_to_inch
 from semantic_world.spatial_types.derivatives import Derivatives
+from semantic_world.world_state import WorldState
 
 plot_lock = Lock()
 
 
 class Trajectory:
-    _points: Dict[int, JointStates]
+    _points: Dict[int, WorldState]
 
     def __init__(self):
         self.clear()
@@ -30,11 +30,11 @@ class Trajectory:
     def clear(self):
         self._points = OrderedDict()
 
-    def get_exact(self, time: int) -> JointStates:
+    def get_exact(self, time: int) -> WorldState:
         time = max(-len(self), min(len(self), time))
         return list(self._points.values())[time]
 
-    def set(self, time: int, point: JointStates):
+    def set(self, time: int, point: WorldState):
         if len(self._points) > 0 and list(self._points.keys())[-1] > time:
             raise KeyError('Cannot append a trajectory point that is before the current end time of the trajectory.')
         self._points[time] = deepcopy(point)

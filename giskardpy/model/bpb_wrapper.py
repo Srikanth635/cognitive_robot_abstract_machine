@@ -8,7 +8,6 @@ from pkg_resources import resource_filename
 
 from giskardpy.god_map import god_map
 from giskardpy.model.collision_world_syncer import Collision
-from giskardpy.model.links import Link, LinkGeometry, BoxGeometry, SphereGeometry, CylinderGeometry, MeshGeometry
 from semantic_world.prefixed_name import PrefixedName
 from giskardpy.middleware import get_middleware
 from giskardpy.utils.utils import suppress_stdout

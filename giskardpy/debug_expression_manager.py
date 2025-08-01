@@ -2,15 +2,17 @@ from copy import deepcopy
 from typing import Dict, Optional, List, Union
 
 import numpy as np
+from line_profiler import profile
 
 import semantic_world.spatial_types.spatial_types as cas
-from semantic_world.spatial_types.derivatives import Derivatives
-from giskardpy.data_types.data_types import JointStates, ColorRGBA
-from semantic_world.prefixed_name import PrefixedName
 from giskardpy.middleware import get_middleware
 from giskardpy.model.trajectory import Trajectory
+from semantic_world.geometry import Color
+from semantic_world.prefixed_name import PrefixedName
+from semantic_world.spatial_types.derivatives import Derivatives
 from semantic_world.spatial_types.symbol_manager import symbol_manager
-from line_profiler import profile
+from semantic_world.world_state import WorldState
+
 
 class DebugExpressionManager:
     debug_expressions: Dict[PrefixedName, cas.Expression]
@@ -27,7 +29,7 @@ class DebugExpressionManager:
         self.compiled_debug_expressions = {}
         self.evaluated_debug_expressions = {}
 
-    def add_debug_expression(self, name: str, expression: cas.Expression, color: Optional[ColorRGBA] = None,
+    def add_debug_expression(self, name: str, expression: cas.Expression, color: Optional[Color] = None,
                              derivative: Derivatives = Derivatives.position,
                              derivatives_to_plot: Optional[List[Derivatives]] = None):
         if derivatives_to_plot is None:
@@ -76,8 +78,8 @@ class DebugExpressionManager:
                 last_mjs = debug_trajectory.get_exact(control_cycle_counter - 1)
                 js = deepcopy(last_mjs)
             else:
-                last_mjs = JointStates()
-                js = JointStates()
+                last_mjs = WorldState()
+                js = WorldState()
             for name, value in evaluated_debug_expressions.items():
                 if len(value) > 1:
                     if len(value.shape) == 2:
@@ -106,7 +108,7 @@ class DebugExpressionManager:
 
         return debug_trajectory
 
-    def evaluated_expr_to_js(self, name: Union[PrefixedName, str], last_js: JointStates, next_js: JointStates, value: float,
+    def evaluated_expr_to_js(self, name: Union[PrefixedName, str], last_js: WorldState, next_js: WorldState, value: float,
                              dt:float, derivative: Derivatives, control_cycle_counter: int):
         next_js[name][derivative] = value
 

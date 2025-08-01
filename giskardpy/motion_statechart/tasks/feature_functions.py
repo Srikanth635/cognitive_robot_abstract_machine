@@ -3,12 +3,10 @@ from __future__ import division
 from typing import Optional, Union
 
 import semantic_world.spatial_types.spatial_types as cas
-from giskardpy.data_types.data_types import ColorRGBA
-from semantic_world.prefixed_name import PrefixedName
 from giskardpy.god_map import god_map
 from giskardpy.motion_statechart.tasks.task import WEIGHT_BELOW_CA, Task
-from geometry_msgs.msg import PointStamped, Vector3Stamped
-from semantic_world.spatial_types.symbol_manager import symbol_manager
+from semantic_world.geometry import Color
+from semantic_world.prefixed_name import PrefixedName
 
 
 class FeatureFunctionGoal(Task):
@@ -33,25 +31,25 @@ class FeatureFunctionGoal(Task):
             self.root_P_controlled_feature = root_T_tip.dot(tip_controlled_feature)
             god_map.debug_expression_manager.add_debug_expression('root_P_controlled_feature',
                                                                   self.root_P_controlled_feature,
-                                                                  color=ColorRGBA(r=1, g=0, b=0, a=1))
+                                                                  color=Color(1, 0, 0, 1))
         elif isinstance(controlled_feature, cas.Vector3):
             self.root_V_controlled_feature = root_T_tip.dot(cas.Vector3(tip_controlled_feature))
             self.root_V_controlled_feature.vis_frame = controlled_feature.vis_frame
             god_map.debug_expression_manager.add_debug_expression('root_V_controlled_feature',
                                                                   self.root_V_controlled_feature,
-                                                                  color=ColorRGBA(r=1, g=0, b=0, a=1))
+                                                                  color=Color(1, 0, 0, 1))
 
         if isinstance(reference_feature, cas.Point3):
             self.root_P_reference_feature = root_reference_feature
             god_map.debug_expression_manager.add_debug_expression('root_P_reference_feature',
                                                                   self.root_P_reference_feature,
-                                                                  color=ColorRGBA(r=0, g=1, b=0, a=1))
+                                                                  color=Color(0, 1, 0, 1))
         if isinstance(reference_feature, cas.Vector3):
             self.root_V_reference_feature = cas.Vector3(root_reference_feature)
             self.root_V_reference_feature.vis_frame = controlled_feature.vis_frame
             god_map.debug_expression_manager.add_debug_expression('root_V_reference_feature',
                                                                   self.root_V_reference_feature,
-                                                                  color=ColorRGBA(r=0, g=1, b=0, a=1))
+                                                                  color=Color(0, 1, 0, 1))
 
 
 class AlignPerpendicular(FeatureFunctionGoal):

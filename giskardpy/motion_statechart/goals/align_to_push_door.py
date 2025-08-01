@@ -1,12 +1,13 @@
 from typing import Optional
+
 import numpy as np
 
 import semantic_world.spatial_types.spatial_types as cas
-from giskardpy.data_types.data_types import ColorRGBA
 from giskardpy.data_types.exceptions import GoalInitalizationException
-from giskardpy.motion_statechart.goals.goal import Goal
 from giskardpy.god_map import god_map
+from giskardpy.motion_statechart.goals.goal import Goal
 from giskardpy.motion_statechart.tasks.task import WEIGHT_BELOW_CA, Task
+from semantic_world.geometry import Color
 
 
 class AlignToPushDoor(Goal):
@@ -77,7 +78,7 @@ class AlignToPushDoor(Goal):
 
         if object_joint_angle >= minimum_angle_to_push_door:
             god_map.debug_expression_manager.add_debug_expression('goal_point', root_P_top,
-                                                                  color=ColorRGBA(0, 0.5, 0.5, 1))
+                                                                  color=Color(0, 0.5, 0.5, 1))
 
             god_map.debug_expression_manager.add_debug_expression('root_V_grasp_axis', root_V_tip_grasp_axis)
             god_map.debug_expression_manager.add_debug_expression('root_V_object_axis', root_V_object_rotation_axis)

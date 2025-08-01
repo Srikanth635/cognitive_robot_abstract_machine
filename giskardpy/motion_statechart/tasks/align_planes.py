@@ -1,10 +1,11 @@
 from typing import Optional
 
 import semantic_world.spatial_types.spatial_types as cas
-from giskardpy.data_types.data_types import ColorRGBA, PrefixedName
 from giskardpy.motion_statechart.tasks.task import WEIGHT_ABOVE_CA, Task
 from giskardpy.middleware import get_middleware
 from giskardpy.god_map import god_map
+from semantic_world.geometry import Color
+from semantic_world.prefixed_name import PrefixedName
 
 
 class AlignPlanes(Task):
@@ -57,10 +58,10 @@ class AlignPlanes(Task):
         root_V_tip_normal.vis_frame = self.tip
         god_map.debug_expression_manager.add_debug_expression(f'{self.name}/current_normal',
                                                               root_V_tip_normal,
-                                                              color=ColorRGBA(r=1, g=0, b=0, a=1))
+                                                              color=Color(1, 0, 0, 1))
         self.root_V_root_normal.vis_frame = self.tip
         god_map.debug_expression_manager.add_debug_expression(f'{self.name}/goal_normal',
                                                               self.root_V_root_normal,
-                                                              color=ColorRGBA(r=0, g=0, b=1, a=1))
+                                                              color=Color(0, 0, 1, 1))
 
         self.observation_expression = cas.less_equal(cas.angle_between_vector(root_V_tip_normal, self.root_V_root_normal), threshold)
