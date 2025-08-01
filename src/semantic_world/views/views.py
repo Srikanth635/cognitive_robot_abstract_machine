@@ -1,3 +1,4 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -8,6 +9,22 @@ from semantic_world.geometry import BoundingBox, BoundingBoxCollection
 from semantic_world.spatial_types import Point3
 from semantic_world.variables import SpatialVariables
 from semantic_world.world import View, Body
+from semantic_world.world_entity import Region
+
+
+@dataclass
+class HasDrawers:
+    """
+    A mixin class for views that have drawers.
+    """
+    drawers: List[Drawer] = field(default_factory=list, hash=False)
+
+@dataclass
+class HasDoors:
+    """
+    A mixin class for views that have doors.
+    """
+    doors: List[Door] = field(default_factory=list, hash=False)
 
 
 @dataclass(unsafe_hash=True)
@@ -92,11 +109,34 @@ class Drawer(Components):
         if self.name is None:
             self.name = self.container.name
 
+@dataclass
+class SupportingSurface(View):
+    """
+    A view that represents a supporting surface.
+    """
+    region: Region
+    """
+    The body that represents the supporting surface.
+    """
+
+    def __post_init__(self):
+        if self.name is None:
+            self.name = self.region.reference_frame.name
+
 
 ############################### subclasses to Furniture
 @dataclass
 class Cupboard(Furniture):
     ...
+
+@dataclass
+class Shelf(Furniture, HasDoors, HasDrawers):
+    container: Container = field(default=None, hash=False)
+    supporting_surfaces: List[SupportingSurface] = field(default_factory=list, hash=False)
+
+    def __post_init__(self):
+        if self.name is None:
+            self.name = self.container.name
 
 @dataclass(unsafe_hash=True)
 class Fridge(View):

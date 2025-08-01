@@ -26,7 +26,7 @@ from .spatial_types.math import inverse_frame
 from .spatial_types.spatial_types import TransformationMatrix
 from .types import NpMatrix4x4
 from .utils import IDGenerator, copy_lru_cache
-from .world_entity import Body, Connection, View
+from .world_entity import Body, Connection, View, Region
 from .world_state import WorldState
 
 logger = logging.getLogger(__name__)
@@ -237,6 +237,8 @@ class World:
     All views the world is aware of.
     """
 
+    regions: List[Region] = field(default_factory=list, repr=False)
+
     degrees_of_freedom: List[DegreeOfFreedom] = field(default_factory=list)
 
     state: WorldState = field(default_factory=WorldState)
@@ -416,6 +418,15 @@ class World:
         self.add_body(connection.child)
         connection._world = self
         self.kinematic_structure.add_edge(connection.parent.index, connection.child.index, connection)
+
+    def add_region(self, region: Region) -> None:
+        if region._world is self:
+            return
+        elif region._world is not None and region._world is not self:
+            raise NotImplementedError("Cannot add a region that already belongs to another world.")
+
+        # write self as the bodys world
+        region._world = self
 
     def add_view(self, view: View, exists_ok: bool = False) -> None:
         """

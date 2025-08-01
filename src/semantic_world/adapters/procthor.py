@@ -6,8 +6,9 @@ from typing import TypeVar, Generic, List
 
 import numpy as np
 from numpy import ndarray
+from pycram.world_reasoning import supporting
 from random_events.interval import closed
-from random_events.product_algebra import SimpleEvent
+from random_events.product_algebra import SimpleEvent, Event
 
 from ..connections import PrismaticConnection, UnitVector, FixedConnection, RevoluteConnection
 from ..geometry import Box, Scale, BoundingBoxCollection
@@ -16,7 +17,7 @@ from ..spatial_types.derivatives import DerivativeMap
 from ..spatial_types.spatial_types import TransformationMatrix
 from ..utils import IDGenerator
 from ..variables import SpatialVariables
-from ..views import Container, Handle, Dresser, Drawer, Door
+from ..views import Container, Handle, Dresser, Drawer, Door, Shelf, SupportingSurface
 from ..world import World
 from ..world_entity import Body
 
@@ -53,6 +54,35 @@ class ViewFactory(Generic[T], ABC):
         :return: The world.
         """
         raise NotImplementedError()
+
+@dataclass
+class ShelfFactory(ViewFactory[Shelf]):
+    name: PrefixedName
+    scale: Scale = field(default_factory=lambda: Scale(1., 1., 1.))
+    supporting_surfaces_factories: List[ViewFactory[SupportingSurface]] = field(default_factory=list, hash=False)
+    supporting_surfaces_transforms: List[TransformationMatrix] = field(default_factory=list, hash=False)
+    drawer_factories: List[ViewFactory[Drawer]] = field(default_factory=list, hash=False)
+    drawer_transforms: List[TransformationMatrix] = field(default_factory=list, hash=False)
+    door_factories: List[ViewFactory[Door]] = field(default_factory=list, hash=False)
+    door_transforms: List[TransformationMatrix] = field(default_factory=list, hash=False)
+    #
+    # def create(self) -> World:
+    #
+    #     container = event_from_scale(self.scale).as_composite_set()
+    #
+    #     for surface_factory, transform in zip(self.supporting_surfaces_factories, self.supporting_surfaces_transforms):
+    #         surface_world = surface_factory.create()
+    #         surface_view: SupportingSurface = surface_world.get_views_by_type(SupportingSurface)[0]
+    #         surface_region_bb_collection = surface_view.region.as_bounding_box_collection()
+    #         container = container - surface_region_bb_collection.event
+    #
+    #         bounding_box_collection = BoundingBoxCollection.from_event(container)
+    #         collision = bounding_box_collection.as_shapes(reference_frame=self.name)
+    #         body = Body(name=surface_body.name, collision=collision, visual=collision)
+    #
+    #         connection = FixedConnection(parent=surface_world.root, child=body, origin_expression=transform)
+
+
 
 
 @dataclass
@@ -311,3 +341,40 @@ def replace_dresser_drawer_connections(world: World):
                                          drawer_transforms=drawer_transforms, door_factories=door_factories, door_transforms=door_transforms)
 
         return dresser_factory
+
+from random_events.interval import Bound
+from random_events.interval import open, open_closed
+from semantic_world.variables import SpatialVariables
+from random_events.product_algebra import *
+
+def has_supporting_surfaces():
+
+    shelf = SimpleEvent({SpatialVariables.x.value: (0, 1),
+                         SpatialVariables.y.value: (0, 0.6),
+                         SpatialVariables.z.value: (0, 1.5)})
+    empty_space = SimpleEvent({SpatialVariables.y.value: (0, 0.6),
+                               SpatialVariables.z.value: open(0.2, 0.6) | open_closed(0.8, 1.5),
+                               SpatialVariables.x.value: open(0.1, 0.45) | open(0.55, 0.9)})
+    shelf = shelf.as_composite_set() - empty_space.as_composite_set()
+
+    shelf_c = ~shelf
+
+    supporting_surfaces = None
+
+    for simple_event in shelf_c.simple_sets:
+        for x, y, z in itertools.product(simple_event[SpatialVariables.x.value].simple_sets,
+                                         simple_event[SpatialVariables.y.value].simple_sets,
+                                         simple_event[SpatialVariables.z.value].simple_sets):
+            z: SimpleInterval
+            z = SimpleInterval(z.lower, z.upper, Bound.CLOSED, z.right)
+
+            current_box = SimpleEvent({SpatialVariables.x.value: x,
+                                       SpatialVariables.y.value: y,
+                                     SpatialVariables.z.value: z}).as_composite_set()
+
+            intersection = shelf & current_box
+            if not intersection.is_empty():
+                if supporting_surfaces is None:
+                    supporting_surfaces = intersection
+                else:
+                    supporting_surfaces = supporting_surfaces | intersection

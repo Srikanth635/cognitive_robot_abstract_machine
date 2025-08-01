@@ -307,6 +307,22 @@ class View(WorldEntity):
         return bbs
 
 
+@dataclass
+class Region(WorldEntity):
+    """
+    Virtual Body representing a semantic region in the world.
+    """
+    reference_frame: Optional[Body] = field(default=None, repr=False, hash=False)
+    areas: List[Shape] = field(default_factory=list, hash=False)
+
+    def as_bounding_box_collection(self)  -> BoundingBoxCollection:
+        """
+        Returns a bounding box collection that contains the bounding boxes of all areas in this region.
+        """
+        bbs = [area.as_bounding_box() for area in self.areas]
+        return BoundingBoxCollection(bbs)
+
+
 
 @dataclass
 class RootedView(View):
