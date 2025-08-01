@@ -212,15 +212,13 @@ class FBXParser:
         bpy.ops.object.transform_apply(rotation=True)
         root.select_set(False)
 
-
-
         # create the resulting world and make a footprint as root
         world = World(name=self.prefix)
-        base_foot_print = Body(name=PrefixedName(f"{self.prefix}_footprint", self.prefix))
-        world.add_body(base_foot_print)
+        # base_foot_print = Body(name=PrefixedName(f"{self.prefix}_footprint", self.prefix))
+        # world.add_body(base_foot_print)
 
         # initialize parent dict
-        obj_to_body_map = {None: base_foot_print}
+        obj_to_body_map = {}
 
         # go through objects in bfs order
         object_queue = deque([root])
@@ -244,14 +242,15 @@ class FBXParser:
                 body = Body(name=name, visual=[shape], collision=[shape])
                 world.add_body(body)
 
-                # memoize this and create a connection
                 obj_to_body_map[obj] = body
-                connection = FixedConnection(parent=obj_to_body_map[obj.parent],
-                                            child=body,
-                                            _world=world,
-                                            origin_expression=origin)
-                world.add_connection(connection)
-
                 object_queue.extend(obj.children)
+
+                # memoize this and create a connection
+                if obj.parent is not None:
+                    connection = FixedConnection(parent=obj_to_body_map[obj.parent],
+                                                child=body,
+                                                _world=world,
+                                                origin_expression=origin)
+                    world.add_connection(connection)
 
         return world
