@@ -1,9 +1,9 @@
 from typing import Optional, List
 
 import semantic_world.spatial_types.spatial_types as cas
+from semantic_world.connections import OmniDrive
 from semantic_world.prefixed_name import PrefixedName
 from giskardpy.god_map import god_map
-from giskardpy.model.joints import OmniDrive
 from giskardpy.motion_statechart.monitors.monitors import Monitor
 
 

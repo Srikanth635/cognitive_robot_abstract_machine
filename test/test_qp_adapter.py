@@ -6,7 +6,6 @@ from typing import List
 import numpy as np
 import pytest
 
-from giskardpy.data_types.data_types import JointStates, Derivatives, PrefixedName
 from giskardpy.god_map import god_map
 from giskardpy.motion_statechart.tasks.task import WEIGHT_BELOW_CA
 from giskardpy.qp.constraint import EqualityConstraint, InequalityConstraint
@@ -14,13 +13,16 @@ from giskardpy.qp.free_variable import FreeVariable
 from giskardpy.qp.qp_formulation import QPFormulation
 from giskardpy.qp.solvers.qp_solver_qpSWIFT import QPSolverQPSwift
 from giskardpy.qp.solvers.qp_solver_qpalm import QPSolverQPalm
+from semantic_world.prefixed_name import PrefixedName
+from semantic_world.spatial_types.derivatives import Derivatives
 from semantic_world.spatial_types.symbol_manager import symbol_manager
+from semantic_world.world_state import WorldState
 
 
 @dataclass
 class FakeWorld:
     dofs: List[FreeVariable]
-    state: JointStates = field(default_factory=JointStates)
+    state: WorldState = field(default_factory=WorldState)
 
 
 @pytest.fixture

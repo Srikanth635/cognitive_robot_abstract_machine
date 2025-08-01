@@ -1,15 +1,14 @@
 from dataclasses import dataclass, field
 from typing import Optional
 
-from semantic_world.spatial_types.derivatives import Derivatives
-import semantic_world.spatial_types.spatial_types as cas
-from giskardpy.data_types.data_types import ColorRGBA
-from giskardpy.god_map import god_map
-from giskardpy.motion_statechart.tasks.task import Task, WEIGHT_ABOVE_CA
-from semantic_world.prefixed_name import PrefixedName
-from semantic_world.spatial_types.symbol_manager import symbol_manager
 import numpy as np
 
+import semantic_world.spatial_types.spatial_types as cas
+from giskardpy.god_map import god_map
+from giskardpy.motion_statechart.tasks.task import Task, WEIGHT_ABOVE_CA
+from semantic_world.geometry import Color
+from semantic_world.prefixed_name import PrefixedName
+from semantic_world.spatial_types.derivatives import Derivatives
 from semantic_world.world_entity import Body
 
 
@@ -51,7 +50,7 @@ class CartesianPosition(Task):
                                         reference_velocity=self.reference_velocity,
                                         weight=self.weight)
         god_map.debug_expression_manager.add_debug_expression(f'{self.name}/target', root_P_goal.y,
-                                                              color=ColorRGBA(r=0.0, g=0.0, b=1.0, a=1.0),
+                                                              color=Color(0.0, 0.0, 1.0, 1.0),
                                                               derivative=Derivatives.position,
                                                               derivatives_to_plot=[Derivatives.position])
 
@@ -66,7 +65,7 @@ class CartesianPosition(Task):
                                                                   Derivatives.position,
                                                               ])
         god_map.debug_expression_manager.add_debug_expression(f'{self.name}/current', r_P_c.y,
-                                                              color=ColorRGBA(r=1.0, g=0.0, b=0.0, a=1.0),
+                                                              color=Color(1.0, 0.0, 0.0, 1.0),
                                                               derivative=Derivatives.position,
                                                               derivatives_to_plot=Derivatives.range(
                                                                   Derivatives.position,
@@ -140,9 +139,9 @@ class CartesianPositionStraight(Task):
                                                    'line/y',
                                                    'line/z'])
         god_map.debug_expression_manager.add_debug_expression(f'{self.name}/current_point', root_P_tip,
-                                                              color=ColorRGBA(r=1, g=0, b=0, a=1))
+                                                              color=Color(1, 0, 0, 1))
         god_map.debug_expression_manager.add_debug_expression(f'{self.name}/goal_point', root_P_goal,
-                                                              color=ColorRGBA(r=0, g=0, b=1, a=1))
+                                                              color=Color(0, 0, 1, 1))
         self.observation_expression = cas.less(dist, self.threshold)
 
 

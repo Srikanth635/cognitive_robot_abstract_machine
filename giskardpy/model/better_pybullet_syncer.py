@@ -9,7 +9,6 @@ from giskardpy.middleware import get_middleware
 from giskardpy.model.bpb_wrapper import create_shape_from_link, BPCollisionWrapper
 from giskardpy.model.collision_world_syncer import CollisionWorldSynchronizer, Collisions
 from giskardpy.model.collision_world_syncer import CollisionCheckerLib
-from giskardpy.model.links import Link
 from line_profiler import profile
 
 from semantic_world.world_entity import Body

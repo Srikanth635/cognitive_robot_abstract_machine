@@ -1,17 +1,10 @@
 from __future__ import division
 
-from typing import Optional, Dict, Union, List
-
-import numpy as np
+from typing import Optional, Union, List
 
 import semantic_world.spatial_types.spatial_types as cas
 from giskardpy.motion_statechart.goals.goal import Goal
-from giskardpy.god_map import god_map
-from giskardpy.model.joints import DiffDrive
-from giskardpy.motion_statechart.tasks.cartesian_tasks import CartesianPosition, CartesianOrientation, \
-    CartesianPositionStraight, CartesianPose
-from semantic_world.spatial_types.symbol_manager import symbol_manager
-from giskardpy.motion_statechart.tasks.task import WEIGHT_ABOVE_CA, Task
+from giskardpy.motion_statechart.tasks.task import Task
 
 
 class SimpleSequenceGoal(Goal):

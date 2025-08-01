@@ -13,12 +13,12 @@ import semantic_world.spatial_types.spatial_types as cas
 from giskardpy.data_types.exceptions import UnknownGroupException, UnknownLinkException
 from giskardpy.god_map import god_map
 from giskardpy.middleware import get_middleware
-from giskardpy.model.world import WorldBranch
 from giskardpy.qp.free_variable import FreeVariable
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.robots import AbstractRobot
 from semantic_world.spatial_types.derivatives import Derivatives
 from semantic_world.spatial_types.symbol_manager import symbol_manager
+from semantic_world.world_entity import View
 
 np.random.seed(1337)
 
@@ -290,7 +290,7 @@ class Collisions:
         self.all_collisions.add(collision)
 
     @profile
-    def transform_self_collision(self, collision: Collision, robot: WorldBranch) -> Collision:
+    def transform_self_collision(self, collision: Collision, robot: View) -> Collision:
         link_a = collision.original_link_a
         link_b = collision.original_link_b
         new_link_a, new_link_b = god_map.world.compute_chain_reduced_to_controlled_joints(link_a, link_b,
@@ -519,7 +519,7 @@ class CollisionWorldSynchronizer:
                                                         deepcopy(self.disabled_links))
         self.self_collision_matrix = deepcopy(self_collision_matrix)
 
-    def robot(self, robot_name: str = '') -> WorldBranch:
+    def robot(self, robot_name: str = '') -> View:
         for robot in self.robots:
             if robot.name == robot_name:
                 return robot
@@ -534,9 +534,6 @@ class CollisionWorldSynchronizer:
         return [r.name for r in self.robots]
 
     def add_object(self, link):
-        """
-        :type link: giskardpy.model.world.Link
-        """
         pass
 
     def remove_links_from_self_collision_matrix(self, link_names: Set[PrefixedName]):
@@ -638,7 +635,7 @@ class CollisionWorldSynchronizer:
 
     def compute_self_collision_matrix_adjacent(self,
                                                link_combinations: Set[Tuple[PrefixedName, PrefixedName]],
-                                               group: WorldBranch) \
+                                               group: View) \
             -> Tuple[Set[Tuple[PrefixedName, PrefixedName]], Dict[Tuple[PrefixedName, PrefixedName], DisableCollisionReason]]:
         """
         Find connecting links and disable all adjacent link collisions
@@ -657,7 +654,7 @@ class CollisionWorldSynchronizer:
 
     def compute_self_collision_matrix_default(self,
                                               link_combinations: Set[Tuple[PrefixedName, PrefixedName]],
-                                              group: WorldBranch,
+                                              group: View,
                                               distance_threshold_zero: float) \
             -> Tuple[Set[Tuple[PrefixedName, PrefixedName]], Dict[Tuple[PrefixedName, PrefixedName], DisableCollisionReason]]:
         """
@@ -675,7 +672,7 @@ class CollisionWorldSynchronizer:
 
     def compute_self_collision_matrix_always(self,
                                              link_combinations: Set[Tuple[PrefixedName, PrefixedName]],
-                                             group: WorldBranch,
+                                             group: View,
                                              distance_threshold_always: float,
                                              number_of_tries: int = 200,
                                              almost_percentage: float = 0.95) \
@@ -703,7 +700,7 @@ class CollisionWorldSynchronizer:
 
     def compute_self_collision_matrix_never(self,
                                             link_combinations: Set[Tuple[PrefixedName, PrefixedName]],
-                                            group: WorldBranch,
+                                            group: View,
                                             distance_threshold_never_initial: float,
                                             distance_threshold_never_min: float,
                                             distance_threshold_never_range: float,
@@ -759,7 +756,7 @@ class CollisionWorldSynchronizer:
         return remaining_pairs, self_collision_matrix
 
     def save_self_collision_matrix(self,
-                                   group: WorldBranch,
+                                   group: View,
                                    self_collision_matrix: Dict[Tuple[PrefixedName, PrefixedName], DisableCollisionReason],
                                    disabled_links: Set[PrefixedName],
                                    file_name: Optional[str] = None):
@@ -812,8 +809,8 @@ class CollisionWorldSynchronizer:
                             god_map.world.sort_links(link_a, link_b)] = DisableCollisionReason.Unknown
                 continue
             # disable all collisions of groups that aren't a robot
-            group_a: WorldBranch = god_map.world.groups[group_a_name]
-            group_b: WorldBranch = god_map.world.groups[group_b_name]
+            group_a: View = god_map.world.groups[group_a_name]
+            group_b: View = god_map.world.groups[group_b_name]
             for link_a, link_b in product(group_a.link_names_with_collisions, group_b.link_names_with_collisions):
                 self.self_collision_matrix[god_map.world.sort_links(link_a, link_b)] = DisableCollisionReason.Unknown
         # disable non actuated groups
@@ -833,7 +830,7 @@ class CollisionWorldSynchronizer:
             god_map.world.state[free_variable].position = 0
         god_map.world.notify_state_change()
 
-    def set_default_joint_state(self, group: WorldBranch):
+    def set_default_joint_state(self, group: View):
         for joint_name in group.movable_joint_names:
             free_variable: FreeVariable
             for free_variable in group.joints[joint_name].free_variables:
@@ -844,7 +841,7 @@ class CollisionWorldSynchronizer:
         god_map.world.notify_state_change()
 
     @profile
-    def set_rnd_joint_state(self, group: WorldBranch):
+    def set_rnd_joint_state(self, group: View):
         for joint_name in group.movable_joint_names:
             free_variable: FreeVariable
             for free_variable in group.joints[joint_name].free_variables:

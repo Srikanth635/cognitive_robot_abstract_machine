@@ -1,11 +1,11 @@
 from __future__ import division
 
 import semantic_world.spatial_types.spatial_types as cas
+from semantic_world.connections import OmniDrive
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.spatial_types.derivatives import Derivatives
 from giskardpy.motion_statechart.goals.goal import Goal
 from giskardpy.god_map import god_map
-from giskardpy.model.joints import OmniDrive, OmniDrivePR22
 from semantic_world.spatial_types.symbol_manager import symbol_manager
 from giskardpy.motion_statechart.tasks.task import WEIGHT_ABOVE_CA, WEIGHT_BELOW_CA, Task
 from line_profiler import profile
@@ -147,82 +147,3 @@ class BaseTrajFollower(Goal):
                                           task_expression=self.joint.yaw.get_symbol(Derivatives.position),
                                           velocity_limit=0.5,
                                           name='/rot')
-
-
-class BaseTrajFollowerPR2(BaseTrajFollower):
-    joint: OmniDrivePR22
-
-    def make_constraints(self):
-        constraints = super().make_constraints()
-        return constraints
-
-    @profile
-    def add_trans_constraints(self):
-        lb_yaw1 = []
-        lb_forward = []
-        god_map.world.state[self.joint.yaw1_vel.name].position = 0
-        map_T_current = god_map.world.compose_fk_expression(god_map.world.root_link_name, self.base_footprint_link)
-        map_P_current = map_T_current.to_position()
-        self.add_debug_expr(f'map_P_current.x', map_P_current.x)
-        self.add_debug_expr('time', god_map.to_expr(identifier.time))
-        for t in range(god_map.qp_controller.prediction_horizon - 2):
-            trajectory_time_in_s = t * god_map.qp_controller.mpc_dt
-            map_P_goal = self.make_map_T_base_footprint_goal(trajectory_time_in_s).to_position()
-            map_V_error = (map_P_goal - map_P_current)
-            self.add_debug_expr(f'map_P_goal.x/{t}', map_P_goal.x)
-            self.add_debug_expr(f'map_V_error.x/{t}', map_V_error.x)
-            self.add_debug_expr(f'map_V_error.y/{t}', map_V_error.y)
-            weight = self.weight
-            if t < 100:
-                self.add_constraint(reference_velocity=self.joint.translation_limits[Derivatives.velocity],
-                                    lower_error=map_V_error.x,
-                                    upper_error=map_V_error.x,
-                                    weight=weight,
-                                    task_expression=map_P_current.x,
-                                    name=f'base/x/{t:02d}',
-                                    control_horizon=t + 1)
-                self.add_constraint(reference_velocity=self.joint.translation_limits[Derivatives.velocity],
-                                    lower_error=map_V_error.y,
-                                    upper_error=map_V_error.y,
-                                    weight=weight,
-                                    task_expression=map_P_current.y,
-                                    name=f'base/y/{t:02d}',
-                                    control_horizon=t + 1)
-            yaw1 = self.current_traj_point(self.joint.yaw1_vel.name, trajectory_time_in_s, Derivatives.velocity)
-            lb_yaw1.append(yaw1)
-            # if t == 0 and not self.track_only_velocity:
-            #     lb_yaw1[-1] += self.rot_error_at(t)
-            #     yaw1_goal_position = self.current_traj_point(self.joint.yaw1_vel.name, trajectory_time_in_s,
-            #                                                  Derivatives.position)
-            forward = self.current_traj_point(self.joint.forward_vel.name,
-                                              t * god_map.qp_controller.mpc_dt,
-                                              Derivatives.velocity) * 1.1
-            lb_forward.append(forward)
-        weight_vel = WEIGHT_ABOVE_CA
-        lba_yaw = lb_yaw1
-        uba_yaw = lb_yaw1
-        lba_forward = lb_forward
-        uba_forward = lb_forward
-
-        yaw1 = self.joint.yaw1_vel.get_symbol(Derivatives.position)
-        yaw2 = self.joint.yaw.get_symbol(Derivatives.position)
-        bf_yaw = yaw1 - yaw2
-        x = cas.cos(bf_yaw)
-        y = cas.sin(bf_yaw)
-        v = cas.Vector3([x, y, 0])
-        v.vis_frame = 'pr2/base_footprint'
-        v.reference_frame = 'pr2/base_footprint'
-        self.add_debug_expr('v', v)
-
-        # self.add_velocity_constraint(lower_velocity_limit=lba_yaw,
-        #                              upper_velocity_limit=uba_yaw,
-        #                              weight=weight_vel,
-        #                              task_expression=self.joint.yaw1_vel.get_symbol(Derivatives.position),
-        #                              velocity_limit=100,
-        #                              name_suffix='/yaw1')
-        self.add_velocity_constraint(lower_velocity_limit=lba_forward,
-                                     upper_velocity_limit=uba_forward,
-                                     weight=weight_vel,
-                                     task_expression=self.joint.forward_vel.get_symbol(Derivatives.position),
-                                     velocity_limit=self.joint.translation_limits[Derivatives.velocity],
-                                     name_suffix='/forward')
