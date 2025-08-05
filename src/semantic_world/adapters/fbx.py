@@ -26,33 +26,18 @@ import numpy as np
 import trimesh
 from scipy.spatial.transform import Rotation as R
 
-
-
 def blender_mesh_to_trimesh(obj: BlenderObject,
                             apply_modifiers: bool = True,
                             preserve_world_transform: bool = False) -> trimesh.Trimesh:
     """
-    Convert a Blender mesh object into a trimesh.Trimesh object.
-
-    This function extracts the geometry information of a Blender mesh object,
-    optionally applying modifiers and preserving the world transform when
-    transforming vertex positions. The resulting data is returned as a
-    trimesh.Trimesh object, suitable for use with the trimesh library.
-
-    :param obj: The Blender object to convert. Must be of type 'MESH'.
-    :type obj: BlenderObject
-    :param apply_modifiers: If True, apply all modifiers to the Blender mesh before extracting geometry.
-    :type apply_modifiers: bool
-    :param preserve_world_transform: If True, preserve the object's world transformation when extracting vertex data.
-    :type preserve_world_transform: bool
-    :return: A trimesh.Trimesh object representing the geometry of the Blender mesh.
-    :rtype: trimesh.Trimesh
-    :raises TypeError: If the input `obj` is not of type 'MESH'.
+    Convert a Blender mesh object to a trimesh.Trimesh.
+    Ensures that all faces are triangles so NumPy and trimesh receive
+    a homogeneous (N, 3) array.
     """
     if obj.type != 'MESH':
         raise TypeError(f"Object {obj.name} is not a mesh")
 
-    # Evaluate through depsgraph if modifiers should be applied
+    # Obtain a (possibly evaluated) mesh datablock
     if apply_modifiers:
         depsgraph = bpy.context.evaluated_depsgraph_get()
         obj_eval = obj.evaluated_get(depsgraph)
@@ -61,26 +46,26 @@ def blender_mesh_to_trimesh(obj: BlenderObject,
         mesh = obj.to_mesh()
 
     try:
-        # Fetch vertex positions
+        # Vertex positions ----------------------------------------------------
         if preserve_world_transform:
-            mat = obj.matrix_world  # 4×4 transform
+            mat = obj.matrix_world
             verts = np.array([mat @ v.co for v in mesh.vertices], dtype=np.float64)
         else:
             verts = np.array([v.co[:] for v in mesh.vertices], dtype=np.float64)
 
-        # Faces (vertex indices)
-        faces = np.array([p.vertices[:] for p in mesh.polygons],
-                         dtype=np.int64)
+        # Faces – always triangles -------------------------------------------
+        mesh.calc_loop_triangles()                       # triangulate on-the-fly
+        faces = np.array([t.vertices[:] for t in mesh.loop_triangles],
+                         dtype=np.int64)                 # (N, 3)
 
-        # Optional: vertex normals, UVs, etc.
-        # normals = np.array([p.normal[:] for p in mesh.polygons])
-        # uv_layer = mesh.uv_layers.active.data
-
-        tri_mesh = trimesh.Trimesh(vertices=verts, faces=faces,
-                                   process=True, validate=True)
+        # Build trimesh -------------------------------------------------------
+        tri_mesh = trimesh.Trimesh(vertices=verts,
+                                   faces=faces,
+                                   process=True,
+                                   validate=True)
         return tri_mesh
     finally:
-        # Important: free the mesh datablock we created with to_mesh()
+        # Free temporary mesh datablock created by to_mesh()
         if apply_modifiers:
             obj_eval.to_mesh_clear()
         else:
@@ -190,7 +175,6 @@ class FBXParser:
         :param root: The root of the group.
         :return: The world
         """
-
         # move the group to the center of the world
         root.location = (0, 0, 0)
 

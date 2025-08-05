@@ -5,8 +5,10 @@ import tempfile
 from abc import ABC
 from dataclasses import dataclass, field
 from functools import cached_property
-from typing import Optional, List, Iterator
+from typing import Optional, List, Iterator, TYPE_CHECKING
 
+import numpy as np
+from numpy import ndarray
 from trimesh import Trimesh
 from typing_extensions import Self
 
@@ -17,9 +19,13 @@ from random_events.product_algebra import SimpleEvent, Event
 from .prefixed_name import PrefixedName
 from .spatial_types import TransformationMatrix, Point3
 from .spatial_types.spatial_types import Expression
+from .types import NpMatrix4x4
 from .utils import IDGenerator
 from .variables import SpatialVariables
 import trimesh.exchange.stl
+
+if TYPE_CHECKING:
+    from .world_entity import Body
 
 id_generator = IDGenerator()
 
@@ -120,7 +126,31 @@ class Mesh(Shape):
         """
         Returns the bounding box of the mesh.
         """
-        return BoundingBox.from_mesh(self.mesh)
+        reference_frame = self.origin.reference_frame
+        reference_frame_world = reference_frame._world
+        body_transform: NpMatrix4x4 = reference_frame_world.compute_forward_kinematics_np(reference_frame_world.root, reference_frame)
+
+        shape_transform: ndarray = self.origin.to_np()
+
+        world_transform: ndarray = body_transform @ shape_transform
+        body_pos = world_transform[:3, 3]
+        body_rotation_matrix = world_transform[:3, :3]
+
+        local_bb: BoundingBox = self.as_bounding_box()
+
+        # Get all 8 corners of the BB in link-local space
+        corners = np.array([corner.to_np()[:3] for corner in local_bb.get_points()])  # shape (8, 3)
+
+        # Transform each corner to world space: R * corner + T
+        transformed_corners = (corners @ body_rotation_matrix.T) + body_pos
+
+        # Compute world-space bounding box from transformed corners
+        min_corner = np.min(transformed_corners, axis=0)
+        max_corner = np.max(transformed_corners, axis=0)
+
+        world_bb = BoundingBox.from_min_max(Point3.from_xyz(*min_corner), Point3.from_xyz(*max_corner))
+
+        return world_bb
 
 
 @dataclass
@@ -231,6 +261,35 @@ class Box(Primitive):
         """
         Returns the bounding box of the box.
         """
+
+        reference_frame = self.origin.reference_frame
+        reference_frame_world = reference_frame._world
+        body_transform: NpMatrix4x4 = reference_frame_world.compute_forward_kinematics_np(reference_frame_world.root, reference_frame)
+
+        shape_transform: ndarray = self.origin.to_np()
+
+        world_transform: ndarray = body_transform @ shape_transform
+        body_pos = world_transform[:3, 3]
+        body_rotation_matrix = world_transform[:3, :3]
+
+        local_bb: BoundingBox = self.local_bounding_box
+
+        # Get all 8 corners of the BB in link-local space
+        corners = np.array([corner.to_np()[:3] for corner in local_bb.get_points()])  # shape (8, 3)
+
+        # Transform each corner to world space: R * corner + T
+        transformed_corners = (corners @ body_rotation_matrix.T) + body_pos
+
+        # Compute world-space bounding box from transformed corners
+        min_corner = np.min(transformed_corners, axis=0)
+        max_corner = np.max(transformed_corners, axis=0)
+
+        world_bb = BoundingBox.from_min_max(Point3.from_xyz(*min_corner), Point3.from_xyz(*max_corner))
+
+        return world_bb
+
+    @property
+    def local_bounding_box(self) -> BoundingBox:
         return BoundingBox(-self.scale.x / 2, -self.scale.y / 2, -self.scale.z / 2,
                            self.scale.x / 2, self.scale.y / 2, self.scale.z / 2)
 
@@ -434,7 +493,7 @@ class BoundingBox:
         """
         return cls(*min_point.to_np()[:3], *max_point.to_np()[:3])
 
-    def as_shape(self, reference_frame: Optional[PrefixedName] = None) -> Box:
+    def as_shape(self, reference_frame: Optional[Body] = None) -> Box:
         scale = Scale(x=self.max_x - self.min_x,
                       y=self.max_y - self.min_y,
                       z=self.max_z - self.min_z)
@@ -485,19 +544,24 @@ class BoundingBoxCollection:
         return BoundingBoxCollection([box.bloat(x_amount, y_amount, z_amount) for box in self.bounding_boxes])
 
     @classmethod
-    def from_simple_event(cls, simple_event: SimpleEvent):
+    def from_simple_event(cls, simple_event: SimpleEvent, keep_surface: bool = False) -> BoundingBoxCollection:
         """
         Create a list of bounding boxes from a simple random event.
 
         :param simple_event: The random event.
+        :param keep_surface: Whether to keep events that are infinitely thin
         :return: The list of bounding boxes.
         """
         result = []
         for x, y, z in itertools.product(simple_event[SpatialVariables.x.value].simple_sets,
                                          simple_event[SpatialVariables.y.value].simple_sets,
                                          simple_event[SpatialVariables.z.value].simple_sets):
-            result.append(BoundingBox(x.lower, y.lower, z.lower, x.upper, y.upper, z.upper))
-        return result
+
+            bb = BoundingBox(x.lower, y.lower, z.lower, x.upper, y.upper, z.upper)
+            if not keep_surface and bb.depth == 0 or bb.height == 0 or bb.width == 0:
+                continue
+            result.append(bb)
+        return BoundingBoxCollection(result)
 
     @classmethod
     def from_event(cls, event: Event) -> Self:
@@ -519,5 +583,5 @@ class BoundingBoxCollection:
         """
         return cls([shape.as_bounding_box() for shape in shapes])
 
-    def as_shapes(self, reference_frame: Optional[PrefixedName] = None) -> List[Box]:
+    def as_shapes(self, reference_frame: Optional[Body] = None) -> List[Box]:
         return [box.as_shape(reference_frame) for box in self.bounding_boxes]

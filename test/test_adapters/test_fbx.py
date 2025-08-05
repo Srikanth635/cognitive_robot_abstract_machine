@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from ormatic.dao import to_dao
 from semantic_world.adapters.fbx import FBXParser
-from semantic_world.adapters.procthor import replace_dresser_drawer_connections, HandleFactory, ContainerFactory, \
+from semantic_world.adapters.factories import replace_dresser_drawer_connections, HandleFactory, ContainerFactory, \
     DrawerFactory, Direction, DresserFactory, DoorFactory
 from semantic_world.connections import PrismaticConnection, RevoluteConnection
 from semantic_world.geometry import Scale
@@ -16,6 +16,12 @@ from semantic_world.prefixed_name import PrefixedName
 from semantic_world.reasoner import WorldReasoner
 from semantic_world.spatial_types import TransformationMatrix
 from semantic_world.world import World
+
+from contextlib import suppress
+from typing import Iterable
+
+from sqlalchemy import MetaData, inspect, text
+from sqlalchemy.engine import Engine
 
 
 class FBXParserTest(unittest.TestCase):
@@ -32,6 +38,7 @@ class FBXParserTest(unittest.TestCase):
         Base.metadata.create_all(bind=self.session.bind)
 
     def test_parse_fbx(self):
+        #drop_database(self.engine)
         # Base.metadata.drop_all(bind=self.session.bind)
         parser = FBXParser(self.fbx_path)
         worlds = parser.parse()
@@ -41,20 +48,20 @@ class FBXParserTest(unittest.TestCase):
         self.session.commit()
 
     def test_query(self):
-        from semantic_world.adapters.viz_marker import VizMarkerPublisher
-        import rclpy
-        rclpy.init()
+            from semantic_world.adapters.viz_marker import VizMarkerPublisher
+            import rclpy
+            rclpy.init()
 
-        query = select(WorldMappingDAO)
-        world_dao = self.session.scalars(query).all()
-        world: World = world_dao[0].from_dao()
+            query = select(WorldMappingDAO)
+            world_dao = self.session.scalars(query).all()
+            world: World = world_dao[0].from_dao()
 
-        node = rclpy.create_node("viz_marker")
+            node = rclpy.create_node("viz_marker")
 
-        p = VizMarkerPublisher(world, node)
-        time.sleep(100)
-        p._stop_publishing()
-        rclpy.shutdown()
+            p = VizMarkerPublisher(world, node)
+            time.sleep(100)
+            p._stop_publishing()
+            rclpy.shutdown()
 
     def test_rdr_creation(self):
         from semantic_world.adapters.viz_marker import VizMarkerPublisher

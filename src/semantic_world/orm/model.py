@@ -167,7 +167,7 @@ class TrimeshType(TypeDecorator):
     Type that casts fields that are of type `type` to their class name on serialization and converts the name
     to the class itself through the globals on load.
     """
-    impl = types.LargeBinary
+    impl = types.LargeBinary(4 * 1024 * 1024 * 1024 - 1) # 4 GB max
 
     def process_bind_param(self, value: trimesh.Trimesh, dialect):
         # return binary version of trimesh

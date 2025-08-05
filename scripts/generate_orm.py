@@ -1,26 +1,20 @@
-import logging
+import builtins
 import os
-import sys
 from enum import Enum
-
 import trimesh
 
-from ormatic.ormatic import logger, ORMatic
-from ormatic.utils import classes_of_module, recursive_subclasses
-from sqlacodegen.generators import TablesGenerator
-from sqlalchemy import create_engine, LargeBinary
-from sqlalchemy.orm import registry, Session
-
-import semantic_world.geometry
-import semantic_world.world_entity
-from semantic_world.connections import FixedConnection, OmniDrive
 import semantic_world.degree_of_freedom
-from semantic_world.prefixed_name import PrefixedName
-from semantic_world.orm.model import *
-from semantic_world.world import *
-from semantic_world.adapters.procthor import *
-import semantic_world.views.views
+import semantic_world.geometry
 import semantic_world.robots
+import semantic_world.views.views
+import semantic_world.world_entity
+from ormatic.ormatic import ORMatic
+from ormatic.utils import classes_of_module, recursive_subclasses
+from semantic_world.adapters.factories import *
+from semantic_world.connections import FixedConnection
+from semantic_world.orm.model import *
+from semantic_world.prefixed_name import PrefixedName
+from semantic_world.world import *
 
 # ----------------------------------------------------------------------------------------------------------------------
 # This script generates the ORM classes for the semantic_world package.
@@ -40,39 +34,26 @@ classes |= set(classes_of_module(semantic_world.connections))
 classes |= set(classes_of_module(semantic_world.views.views))
 classes |= set(classes_of_module(semantic_world.degree_of_freedom))
 classes |= set(classes_of_module(semantic_world.robots))
-classes |= set(recursive_subclasses(ViewFactory))
+#classes |= set(recursive_subclasses(ViewFactory))
 
 # remove classes that should not be mapped
 classes -= {ResetStateContextManager, WorldModelUpdateContextManager, HasUpdateState,
             World, ForwardKinematicsVisitor, Has1DOFState, DegreeOfFreedom}
 classes -= set(recursive_subclasses(Enum))
 
+
 def generate_orm():
     """
     Generate the ORM classes for the pycram package.
     """
-    # # Set up logging
-    # handler = logging.StreamHandler(sys.stdout)
-    # handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-    #
-    # logger.addHandler(handler)
-    # logger.setLevel(logging.INFO)
-
-    mapper_registry = registry()
-    engine = create_engine('sqlite:///:memory:')
-    session = Session(engine)
-
     # Create an ORMatic object with the classes to be mapped
     ormatic = ORMatic(list(classes), type_mappings={trimesh.Trimesh: TrimeshType})
 
     # Generate the ORM classes
     ormatic.make_all_tables()
 
-    # Create the tables in the database
-    mapper_registry.metadata.create_all(session.bind)
-
     path = os.path.abspath(os.path.join(os.getcwd(), '../src/semantic_world/orm/'))
-    with open(os.path.join(path, 'ormatic_interface.py'), 'w') as f:
+    with builtins.open(os.path.join(path, 'ormatic_interface.py'), 'w') as f:
         ormatic.to_sqlalchemy_file(f)
 
 

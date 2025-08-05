@@ -187,39 +187,23 @@ class Body(WorldEntity):
     @property
     def bounding_box_collection(self) -> BoundingBoxCollection:
         """
-        Return the bounding box collection of the link with the given name.
-        This method computes the bounding box of the link in world coordinates by transforming the local axis-aligned
-        bounding boxes of the link's geometry to world coordinates.
+        Provides the bounding box collection for the current object based on its
+        relative transformations and collision shapes.
 
-        Note: These bounding boxes may not be disjoint, however the random events library always makes them disjoint. If
-        this is the case, and we feed he non-disjoint bounding boxes into the gcs, it may trigger unexpected behavior.
+        This property computes the forward kinematics to determine the object's
+        position and orientation in world space. Bounding boxes for each shape in the
+        collision attribute are transformed to world coordinates. The world-space bounding
+        boxes are then aggregated into a BoundingBoxCollection.
 
-        :return: A BoundingBoxCollection containing the bounding boxes of the link's geometry in world
+        :returns: A collection of bounding boxes in world-space coordinates.
+        :rtype: BoundingBoxCollection
         """
         world = self._world
         body_transform: ndarray = world.compute_forward_kinematics_np(world.root, self)
         world_bboxes = []
 
         for shape in self.collision:
-            shape_transform: ndarray = shape.origin.to_np()
-
-            world_transform: ndarray = body_transform @ shape_transform
-            body_pos = world_transform[:3, 3]
-            body_rotation_matrix = world_transform[:3, :3]
-
-            local_bb: BoundingBox = shape.as_bounding_box()
-
-            # Get all 8 corners of the BB in link-local space
-            corners = np.array([corner.to_np()[:3] for corner in local_bb.get_points()])  # shape (8, 3)
-
-            # Transform each corner to world space: R * corner + T
-            transformed_corners = (corners @ body_rotation_matrix.T) + body_pos
-
-            # Compute world-space bounding box from transformed corners
-            min_corner = np.min(transformed_corners, axis=0)
-            max_corner = np.max(transformed_corners, axis=0)
-
-            world_bb = BoundingBox.from_min_max(Point3.from_xyz(*min_corner), Point3.from_xyz(*max_corner))
+            world_bb = shape.as_bounding_box()
             world_bboxes.append(world_bb)
 
         return BoundingBoxCollection(world_bboxes)
