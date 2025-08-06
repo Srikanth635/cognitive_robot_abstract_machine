@@ -215,9 +215,9 @@ class FBXParser:
                 # convert the mesh to trimesh
                 mesh = blender_mesh_to_trimesh(obj)
                 origin = np.array(obj.matrix_local)
-                point = Point3.from_xyz(*origin[:-1, 3])
+                point = Point3.from_iterable(origin[:-1, 3])
                 rotation = R.from_matrix(matrix=origin[:-1, :-1]).as_quat()
-                quaterion = Quaternion.from_xyzw(*rotation)
+                quaterion = Quaternion.from_iterable(rotation)
                 rotationmatrix = RotationMatrix.from_quaternion(quaterion)
                 origin = TransformationMatrix.from_point_rotation_matrix(point, rotationmatrix)
                 shape = TriangleMesh(mesh=mesh)

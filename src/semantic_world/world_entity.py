@@ -8,6 +8,7 @@ from dataclasses import dataclass, field, fields
 from functools import reduce
 from typing import List, Optional, TYPE_CHECKING, Set, get_args, get_type_hints, Deque
 import numpy as np
+import rustworkx
 from numpy import ndarray
 from typing_extensions import Self
 
@@ -177,9 +178,17 @@ class Body(WorldEntity):
     @property
     def child_bodies(self) -> List[Body]:
         """
-        Returns the child bodies of this body.
+        Returns the direct child bodies of this body.
         """
         return self._world.compute_child_bodies(self)
+
+    @property
+    def recursive_child_bodies(self) -> List[Body]:
+        """
+        Returns the recursive child bodies of this body.
+        :return: All child bodies of this body.
+        """
+        return [self._world.kinematic_structure[i] for i in rustworkx.descendants(self._world.kinematic_structure, self.index)]
 
     @property
     def parent_body(self) -> Body:
@@ -308,7 +317,6 @@ class Region(WorldEntity):
         """
         bbs = [area.as_bounding_box(reference_frame) for area in self.areas]
         return BoundingBoxCollection(bbs)
-
 
 
 @dataclass(unsafe_hash=True)

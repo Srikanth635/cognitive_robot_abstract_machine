@@ -48,20 +48,20 @@ class FBXParserTest(unittest.TestCase):
         self.session.commit()
 
     def test_query(self):
-            from semantic_world.adapters.viz_marker import VizMarkerPublisher
-            import rclpy
-            rclpy.init()
+        from semantic_world.adapters.viz_marker import VizMarkerPublisher
+        import rclpy
+        rclpy.init()
 
-            query = select(WorldMappingDAO)
-            world_dao = self.session.scalars(query).all()
-            world: World = world_dao[0].from_dao()
+        query = select(WorldMappingDAO)
+        world_dao = self.session.scalars(query).all()
+        world: World = world_dao[1].from_dao()
 
-            node = rclpy.create_node("viz_marker")
+        node = rclpy.create_node("viz_marker")
 
-            p = VizMarkerPublisher(world, node)
-            time.sleep(100)
-            p._stop_publishing()
-            rclpy.shutdown()
+        p = VizMarkerPublisher(world, node)
+        time.sleep(100)
+        p._stop_publishing()
+        rclpy.shutdown()
 
     def test_rdr_creation(self):
         from semantic_world.adapters.viz_marker import VizMarkerPublisher

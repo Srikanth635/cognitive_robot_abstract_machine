@@ -58,7 +58,8 @@ def dresser_factory_replace(dresser: Body) -> DresserFactory:
     return dresser_factory
 
 def parse_fbx_file(fbx_file, session):
-    dresser_pattern = re.compile(r'^dresser_\d+.*$')
+    dresser_pattern = re.compile(r'^.*dresser_(?!drawer\b).*$', re.IGNORECASE)
+
     pipeline = Pipeline(
         [
             BodyFilter(lambda x: not x.name.name.startswith("PS_")),
@@ -75,9 +76,8 @@ def parse_fbx_file(fbx_file, session):
     worlds = [pipeline.apply(world) for world in worlds]
 
     daos = [to_dao(world) for world in worlds]
+
     session.add_all(daos)
-
-
 
 
 

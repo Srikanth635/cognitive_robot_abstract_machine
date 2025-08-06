@@ -13,7 +13,7 @@ from ..connections import PrismaticConnection, FixedConnection, RevoluteConnecti
 from ..geometry import Box, Scale, BoundingBoxCollection
 from ..prefixed_name import PrefixedName
 from ..spatial_types.derivatives import DerivativeMap
-from ..spatial_types.spatial_types import TransformationMatrix
+from ..spatial_types.spatial_types import TransformationMatrix, Vector3
 from ..utils import IDGenerator
 from ..views import Container, Handle, Dresser, Drawer, Door, Shelf, SupportingSurface
 from ..world import World
@@ -114,8 +114,10 @@ class ContainerFactory(ViewFactory[Container]):
         container = outer_box.as_composite_set() - inner_box.as_composite_set()
 
         bounding_box_collection = BoundingBoxCollection.from_event(container)
-        collision = bounding_box_collection.as_shapes(reference_frame=self.name)
-        body = Body(name=self.name, collision=collision, visual=collision)
+        body = Body(name=self.name)
+        collision = bounding_box_collection.as_shapes(reference_frame=body)
+        body.visual = collision
+        body.collision = collision
         container_view = Container(body=body, name=self.name)
 
         world = World()
@@ -185,8 +187,10 @@ class DoorFactory(ViewFactory[Door]):
                            SpatialVariables.z.value: z_interval, }).as_composite_set()
 
         bounding_box_collection = BoundingBoxCollection.from_event(box)
-        collision = bounding_box_collection.as_shapes(reference_frame=self.name)
-        body = Body(name=self.name, collision=collision, visual=collision)
+        body = Body(name=self.name)
+        collision = bounding_box_collection.as_shapes(reference_frame=body)
+        body.collision = collision
+        body.visual = collision
 
         world = World()
         with world.modify_world():
@@ -199,7 +203,7 @@ class DoorFactory(ViewFactory[Door]):
 
         world.merge_world(handle_world, door_to_handle)
 
-        world.add_view(handle_view)
+        # world.add_view(handle_view)
         world.add_view(Door(name=self.name, handle=handle_view, body=body))
 
         return world
@@ -263,7 +267,7 @@ class DresserFactory(ViewFactory[Dresser]):
                                                            upper_limits)
             connection = PrismaticConnection(parent=container_world.bodies[0], child=drawer_body,
                                              origin_expression=transform,
-                                             multiplier=1., offset=0., axis=UnitVector.X(),
+                                             multiplier=1., offset=0., axis=Vector3.X(),
                                              dof=dof)
             with container_world.modify_world():
                 container_world.merge_world(drawer_world, connection)
@@ -294,11 +298,11 @@ class DresserFactory(ViewFactory[Dresser]):
             door_position = transform.to_np()[:3, 3] + np.array([0, offset, 0])
 
             pivot_point = TransformationMatrix.from_xyz_rpy(door_position[0], door_position[1], door_position[2], 0, 0,
-                                                            0)
+                                                            0, reference_frame=container_world.bodies[0])
 
             connection = RevoluteConnection(parent=container_world.bodies[0], child=door_body,
                                             origin_expression=pivot_point,
-                                            multiplier=1., offset=0., axis=UnitVector.Z(),
+                                            multiplier=1., offset=0., axis=Vector3.Z(),
                                             dof=dof)
             with container_world.modify_world():
                 container_world.merge_world(door_world, connection)
@@ -327,23 +331,13 @@ class DresserFactory(ViewFactory[Dresser]):
         container_footprint.fill_missing_variables([SpatialVariables.x.value])
 
         depth_interval = container_bounding_boxes.bounding_box()[SpatialVariables.x.value]
-        print(depth_interval)
         limiting_event = SimpleEvent({SpatialVariables.x.value: depth_interval}).as_composite_set()
         limiting_event.fill_missing_variables(SpatialVariables.yz)
 
         container_bounding_boxes |= (container_footprint & limiting_event)
 
-        # container_bounding_boxes &= SimpleEvent({SpatialVariables.x.value: reals(),
-        #                                          SpatialVariables.y.value: closed(0.568, 1.),
-        #                                          SpatialVariables.z.value: closed(-0.325, 0.325)}).as_composite_set()
-
-        #
-        # import plotly.graph_objects as go
-        # fig = go.Figure(container_bounding_boxes.plot())
-        # fig.show()
-
         container_body.collision = BoundingBoxCollection.from_event(container_bounding_boxes).as_shapes(
-            container_body.name)
+            container_body)
         container_body.visual = container_body.collision
         return world
 

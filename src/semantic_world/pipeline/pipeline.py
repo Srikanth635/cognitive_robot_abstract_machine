@@ -205,8 +205,16 @@ class BodyFactoryReplace(Step):
             factory = self.factory_creator(body)
 
             parent_connection = body.parent_connection
+            if parent_connection is None:
+                return factory.create()
+
+            with self.world.modify_world():
+                [self.world.remove_body(b) for b in body.recursive_child_bodies]
+                self.world.remove_body(body)
+
             new_world = factory.create()
             self.world.merge_world(new_world, parent_connection)
-            # self.world.remove_body(body)
+
+
 
         return self.world
