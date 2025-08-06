@@ -61,6 +61,10 @@ class WorldEntity:
     The identifier for this world entity.
     """
 
+    def __post_init__(self):
+        if self.name is None:
+            self.name = PrefixedName(f"{self.__class__.__name__}_{hash(self)}")
+
 
 @dataclass
 class Body(WorldEntity):
@@ -307,7 +311,7 @@ class Region(WorldEntity):
 
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class RootedView(View):
     """
     Represents a view that is rooted in a specific body.
@@ -315,7 +319,7 @@ class RootedView(View):
     root: Body = field(default_factory=Body)
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class EnvironmentView(RootedView):
     """
     Represents a view of the environment.
@@ -358,6 +362,30 @@ class Connection(WorldEntity):
         if self.name is None:
             self.name = PrefixedName(f'{self.parent.name.name}_T_{self.child.name.name}', prefix=self.child.name.prefix)
 
+    def _post_init_world_part(self):
+        """
+        Executes post-initialization logic based on the presence of a world attribute.
+        """
+        if self._world is None:
+            self._post_init_without_world()
+        else:
+            self._post_init_with_world()
+
+    def _post_init_with_world(self):
+        """
+        Initialize or perform additional setup operations required after the main
+        initialization step. Use for world-related configurations or specific setup
+        details required post object creation.
+        """
+        pass
+
+    def _post_init_without_world(self):
+        """
+        Handle internal initialization processes when _world is None. Perform
+        operations post-initialization for internal use only.
+        """
+        pass
+
     def __hash__(self):
         return hash((self.parent, self.child))
 
@@ -365,17 +393,18 @@ class Connection(WorldEntity):
         return self.name == other.name
 
     @property
-    def origin(self) -> NpMatrix4x4:
+    def origin(self) -> cas.TransformationMatrix:
         """
         :return: The relative transform between the parent and child frame.
         """
-        return self._world.compute_forward_kinematics_np(self.parent, self.child)
+        return self._world.compute_forward_kinematics(self.parent, self.child)
 
     # @lru_cache(maxsize=None)
     def origin_as_position_quaternion(self) -> Expression:
         position = self.origin_expression.to_position()[:3]
         orientation = self.origin_expression.to_quaternion()
         return cas.vstack([position, orientation]).T
+
 
 def _is_body_view_or_iterable(obj: object) -> bool:
     """
@@ -385,6 +414,7 @@ def _is_body_view_or_iterable(obj: object) -> bool:
             isinstance(obj, (Body, View)) or
             (isinstance(obj, Iterable) and not isinstance(obj, (str, bytes, bytearray)))
     )
+
 
 def _attr_values(view: View) -> Iterable[object]:
     """
