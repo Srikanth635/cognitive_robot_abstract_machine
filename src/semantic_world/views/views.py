@@ -1,58 +1,14 @@
 from dataclasses import dataclass, field
-from typing import Tuple
 
 import numpy as np
 from probabilistic_model.probabilistic_circuit.rx.helper import uniform_measure_of_event
 from typing_extensions import List
 
-from semantic_world.geometry import BoundingBox, BoundingBoxCollection
+from semantic_world.geometry import BoundingBoxCollection
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.spatial_types import Point3
 from semantic_world.variables import SpatialVariables
-from semantic_world.connections import ActiveConnection
 from semantic_world.world import View, Body
-
-
-@dataclass
-class ControlledConnections(View):
-    connections: List[ActiveConnection] = field(default_factory=list)
-
-    def __hash__(self):
-        return hash(tuple(self.connections))
-
-    def compute_chain_reduced_to_controlled_joints(self, root: Body, tip: Body) -> Tuple[Body, Body]:
-        """
-        1. Compute the kinematic chain of bodies between root and tip.
-        2. Remove all entries from link_a downward until one is connected with a connection from this view.
-        2. Remove all entries from link_b upward until one is connected with a connection from this view.
-        :param root: start of the chain
-        :param tip: end of the chain
-        :return: start and end link of the reduced chain
-        """
-        downward_chain, upward_chain = self._world.compute_split_chain_of_connections(root=root, tip=tip)
-        chain = downward_chain + upward_chain
-        for i, connection in enumerate(chain):
-            if connection in self.connections:
-                new_root = connection
-                break
-        else:
-            raise KeyError(f'no controlled connection in chain between {root} and {tip}')
-        for i, connection in enumerate(reversed(chain)):
-            if connection in self.connections:
-                new_tip = connection
-                break
-        else:
-            raise KeyError(f'no controlled connection in chain between {root} and {tip}')
-
-        if new_root in upward_chain:
-            new_root_body = new_root.parent
-        else:  # if new_root is in the downward chain, we need to "flip" it by returning its child
-            new_root_body = new_root.child
-        if new_tip in upward_chain:
-            new_tip_body = new_tip.child
-        else:  # if new_root is in the downward chain, we need to "flip" it by returning its parent
-            new_tip_body = new_tip.parent
-        return new_root_body, new_tip_body
 
 
 @dataclass(unsafe_hash=True)
@@ -82,6 +38,7 @@ class Door(View):  # Door has a Footprint
     def __post_init__(self):
         self.name = PrefixedName(str(self.body.name), self.__class__.__name__)
 
+
 @dataclass(unsafe_hash=True)
 class Fridge(View):
     body: Body
@@ -89,6 +46,7 @@ class Fridge(View):
 
     def __post_init__(self):
         self.name = PrefixedName(str(self.body.name), self.__class__.__name__)
+
 
 @dataclass(unsafe_hash=True)
 class Table(View):
@@ -119,6 +77,7 @@ class Table(View):
 
     def __post_init__(self):
         self.name = self.top.name
+
 
 ################################
 
