@@ -661,23 +661,30 @@ class World:
         return children
 
 
-    def compute_parent_body(self, body: Body) -> Body:
+    def compute_parent_body(self, body: Body) -> Optional[Body]:
         """
         Computes the parent body of a given body in the world.
         :param body: The body for which to compute the parent body.
         :return: The parent body of the given body.
         """
-        return next(iter(self.kinematic_structure.predecessors(body.index)))
+        parents = list(self.kinematic_structure.predecessors(body.index))
+        if parents:
+            return parents[0]
+        else:
+            return None
 
 
-    def compute_parent_connection(self, body: Body) -> Connection:
+    def compute_parent_connection(self, body: Body) -> Optional[Connection]:
         """
         Computes the parent connection of a given body in the world.
         :param body: The body for which to compute the parent connection.
         :return: The parent connection of the given body.
         """
-        return self.kinematic_structure.get_edge_data(self.compute_parent_body(body).index, body.index)
-
+        parent_body = self.compute_parent_body(body)
+        if parent_body:
+            return self.kinematic_structure.get_edge_data(parent_body.index, body.index)
+        else:
+            return None
 
     @lru_cache(maxsize=None)
     def compute_chain_of_bodies(self, root: Body, tip: Body) -> List[Body]:

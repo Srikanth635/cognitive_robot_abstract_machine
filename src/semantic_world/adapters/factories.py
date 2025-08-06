@@ -315,13 +315,13 @@ class DresserFactory(ViewFactory[Dresser]):
         dresser: Dresser = world.get_views_by_type(Dresser)[0]
         container_body = dresser.container.body
 
-        container_bounding_boxes = container_body.bounding_box_collection.event
+        container_bounding_boxes = container_body.as_bounding_box_collection(container_body._world.root).event
         container_footprint = container_bounding_boxes.marginal(SpatialVariables.yz)
 
         for body in world.bodies:
             if body == container_body:
                 continue
-            body_footprint = (body.bounding_box_collection.event.marginal(SpatialVariables.yz))
+            body_footprint = (body.as_bounding_box_collection(body._world.root).event.marginal(SpatialVariables.yz))
             container_footprint -= body_footprint
 
         container_footprint.fill_missing_variables([SpatialVariables.x.value])
@@ -367,7 +367,7 @@ def replace_dresser_drawer_connections(world: World):
                                                width=0.1)
                 container_factory = ContainerFactory(
                     name=PrefixedName(child.name.name + "_container", child.name.prefix),
-                    scale=child.bounding_box_collection.bounding_boxes[0].scale, direction=Direction.Z)
+                    scale=child.as_bounding_box_collection(child._world.root).bounding_boxes[0].scale, direction=Direction.Z)
                 drawer_factory = DrawerFactory(name=child.name, handle_factory=handle_factory,
                                                container_factory=container_factory)
                 drawer_factories.append(drawer_factory)
@@ -375,14 +375,14 @@ def replace_dresser_drawer_connections(world: World):
                 door_transforms.append(child.parent_connection.origin_expression)
                 handle_factory = HandleFactory(PrefixedName(child.name.name + "_handle", child.name.prefix), 0.1)
 
-                door_factory = DoorFactory(name=child.name, scale=child.bounding_box_collection.bounding_boxes[0].scale,
+                door_factory = DoorFactory(name=child.name, scale=child.as_bounding_box_collection(child._world.root).bounding_boxes[0].scale,
                                            handle_factory=handle_factory,
                                            handle_direction=Direction.Y)
                 door_factories.append(door_factory)
 
         dresser_container_factory = ContainerFactory(
             name=PrefixedName(dresser.name.name + "_container", dresser.name.prefix),
-            scale=dresser.bounding_box_collection.bounding_boxes[0].scale, direction=Direction.X)
+            scale=dresser.as_bounding_box_collection(dresser._world.root).bounding_boxes[0].scale, direction=Direction.X)
         dresser_factory = DresserFactory(name=dresser.name, container_factory=dresser_container_factory,
                                          drawers_factories=drawer_factories,
                                          drawer_transforms=drawer_transforms, door_factories=door_factories,
