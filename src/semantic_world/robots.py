@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from abc import abstractmethod, ABC
 from dataclasses import dataclass, field
+from functools import lru_cache, cached_property
 from typing import Tuple, Iterable, Set
 
 from typing_extensions import Optional, List, Self
@@ -370,6 +371,25 @@ class AbstractRobot(RootedView, ABC):
             self.sensor_chains.add(kinematic_chain)
         self._views.add(kinematic_chain)
         kinematic_chain.assign_to_robot(self)
+
+    @lru_cache(maxsize=None)
+    def is_controlled_connection_in_chain(self, root: Body, tip: Body) -> bool:
+        for c in self._world.compute_chain_of_connections(root, tip):
+            if c in self.controlled_connections.connections:
+                return True
+        return False
+
+    @lru_cache(maxsize=None)
+    def get_controlled_parent_connection(self, body: Body) -> Connection:
+        if body == self.root:
+            raise ValueError(f"Cannot get controlled parent connection for root body {self.root.name}.")
+        if body.parent_connection in self.controlled_connections.connections:
+            return body.parent_connection
+        return self.get_controlled_parent_connection(body.parent_body)
+
+    @cached_property
+    def bodies_with_collisions(self) -> List[Body]:
+        return [x for x in self.bodies if x.has_collision()]
 
 
 @dataclass
