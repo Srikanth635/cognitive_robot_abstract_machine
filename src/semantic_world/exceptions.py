@@ -1,10 +1,10 @@
 from __future__ import annotations
 from typing_extensions import List, TYPE_CHECKING
 
-from semantic_world.prefixed_name import PrefixedName
+from .prefixed_name import PrefixedName
 
 if TYPE_CHECKING:
-    from semantic_world.world_entity import View
+    from .world_entity import View
 
 
 class LogicalError(Exception):

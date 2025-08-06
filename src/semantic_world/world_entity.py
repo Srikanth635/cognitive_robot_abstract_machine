@@ -380,17 +380,16 @@ class Connection(WorldEntity):
 
     def _post_init_with_world(self):
         """
-        This method is invoked to initialize or perform additional setup operations
-        that are required after the main initialization step. It is intended for
-        use cases involving world-related configurations or any specific setup
+        Initialize or perform additional setup operations required after the main
+        initialization step. Use for world-related configurations or specific setup
         details required post object creation.
         """
         pass
 
     def _post_init_without_world(self):
         """
-        This method is intended for internal initialization processes and is not meant for external use.
-        It performs operations post-initialization, called when _world is None.
+        Handle internal initialization processes when _world is None. Perform
+        operations post-initialization for internal use only.
         """
         pass
 

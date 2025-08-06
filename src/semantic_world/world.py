@@ -917,10 +917,10 @@ class World:
 
     def compute_forward_kinematics(self, root: Body, tip: Body) -> cas.TransformationMatrix:
         """
-        Computes the forward kinematics from the root body to the tip body, root_T_tip.
+        Compute the forward kinematics from the root body to the tip body.
 
-        This method computes the transformation matrix representing the pose of the
-        tip body relative to the root body, expressed as a numpy ndarray.
+        Calculate the transformation matrix representing the pose of the
+        tip body relative to the root body.
 
         :param root: Root body for which the kinematics are computed.
         :param tip: Tip body to which the kinematics are computed.
@@ -930,9 +930,9 @@ class World:
 
     def compute_forward_kinematics_np(self, root: Body, tip: Body) -> NpMatrix4x4:
         """
-        Computes the forward kinematics from the root body to the tip body, root_T_tip and returns it as a 4x4 numpy ndarray.
+        Compute the forward kinematics from the root body to the tip body, root_T_tip and return it as a 4x4 numpy ndarray.
 
-        This method computes the transformation matrix representing the pose of the
+        Calculate the transformation matrix representing the pose of the
         tip body relative to the root body, expressed as a numpy ndarray.
 
         :param root: Root body for which the kinematics are computed.
@@ -943,15 +943,15 @@ class World:
 
     def transform(self, spatial_object: cas.SpatialType, target_frame: Body) -> cas.SpatialType:
         """
-        Transforms a given spatial object from its reference frame to a target frame.
+        Transform a given spatial object from its reference frame to a target frame.
 
-        This method calculates the transformation from the reference frame of the provided
-        spatial object to the specified target frame. Depending on the type of the
-        spatial object, the transformation is applied differently:
+        Calculate the transformation from the reference frame of the provided
+        spatial object to the specified target frame. Apply the transformation
+        differently depending on the type of the spatial object:
 
-        - If the object is a Quaternion, its rotation matrix is computed, transformed, and
-          converted back to a Quaternion.
-        - For other types, the transformation matrix is directly applied.
+        - If the object is a Quaternion, compute its rotation matrix, transform it, and
+          convert back to a Quaternion.
+        - For other types, apply the transformation matrix directly.
 
         :param spatial_object: The spatial object to be transformed.
         :param target_frame: The target body frame to which the spatial object should
