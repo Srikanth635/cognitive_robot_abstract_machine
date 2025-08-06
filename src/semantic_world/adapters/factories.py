@@ -412,7 +412,7 @@ def supporting_surfaces(body: Body, min_surface_area: float = 0.03, clearance=1e
     :raises ValueError: If no valid supporting surfaces are detected after processing.
     """
 
-    body_geometry = body.bounding_box_collection.event
+    body_geometry = body.as_bounding_box_collection(body._world.root).event
 
     events = []
 

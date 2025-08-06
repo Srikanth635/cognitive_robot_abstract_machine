@@ -25,7 +25,7 @@ from sqlalchemy.engine import Engine
 
 
 class FBXParserTest(unittest.TestCase):
-    fbx_path = os.path.join(os.path.dirname(__file__), "..", "..", "resources", "fbx", "dressers_group.fbx")
+    fbx_path = os.path.join(os.path.dirname(__file__), "..", "..", "resources", "fbx", "shelves_group.fbx")
 
     @classmethod
     def setUpClass(cls):

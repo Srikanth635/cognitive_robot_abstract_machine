@@ -184,8 +184,7 @@ class Body(WorldEntity):
         """
         return self._world.compute_parent_body(self)
 
-    @property
-    def bounding_box_collection(self) -> BoundingBoxCollection:
+    def as_bounding_box_collection(self, reference_frame: Optional[Body] = None) -> BoundingBoxCollection:
         """
         Provides the bounding box collection for the current object based on its
         relative transformations and collision shapes.
@@ -198,12 +197,12 @@ class Body(WorldEntity):
         :returns: A collection of bounding boxes in world-space coordinates.
         :rtype: BoundingBoxCollection
         """
-        world = self._world
-        body_transform: ndarray = world.compute_forward_kinematics_np(world.root, self)
         world_bboxes = []
 
         for shape in self.collision:
-            world_bb = shape.as_bounding_box()
+            if shape.origin.reference_frame is None:
+                continue
+            world_bb = shape.as_bounding_box(reference_frame)
             world_bboxes.append(world_bb)
 
         return BoundingBoxCollection(world_bboxes)
@@ -280,13 +279,13 @@ class View(WorldEntity):
         """
         return self._bodies(set())
 
-    def as_bounding_box_collection(self) -> BoundingBoxCollection:
+    def as_bounding_box_collection(self, reference_frame: Optional[Body] = None) -> BoundingBoxCollection:
         """
         Returns a bounding box collection that contains the bounding boxes of all bodies in this view.
         """
         bbs = reduce(
             lambda accumulator, bb_collection: accumulator.merge(bb_collection),
-            (body.bounding_box_collection for body in self.bodies if body.has_collision())
+            (body.as_bounding_box_collection(reference_frame) for body in self.bodies if body.has_collision())
         )
         return bbs
 
@@ -299,11 +298,11 @@ class Region(WorldEntity):
     reference_frame: Optional[Body] = field(default=None, repr=False, hash=False)
     areas: List[Shape] = field(default_factory=list, hash=False)
 
-    def as_bounding_box_collection(self)  -> BoundingBoxCollection:
+    def as_bounding_box_collection(self, reference_frame: Optional[Body] = None)  -> BoundingBoxCollection:
         """
         Returns a bounding box collection that contains the bounding boxes of all areas in this region.
         """
-        bbs = [area.as_bounding_box() for area in self.areas]
+        bbs = [area.as_bounding_box(reference_frame) for area in self.areas]
         return BoundingBoxCollection(bbs)
 
 
