@@ -9,7 +9,7 @@ from random_events.interval import Bound
 from random_events.product_algebra import *
 
 from semantic_world.variables import SpatialVariables
-from ..connections import PrismaticConnection, UnitVector, FixedConnection, RevoluteConnection
+from ..connections import PrismaticConnection, FixedConnection, RevoluteConnection
 from ..geometry import Box, Scale, BoundingBoxCollection
 from ..prefixed_name import PrefixedName
 from ..spatial_types.derivatives import DerivativeMap

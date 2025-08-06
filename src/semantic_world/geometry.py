@@ -118,7 +118,7 @@ class Shape(ABC):
         min_corner = np.min(transformed_corners, axis=0)
         max_corner = np.max(transformed_corners, axis=0)
 
-        world_bb = BoundingBox.from_min_max(Point3.from_xyz(*min_corner), Point3.from_xyz(*max_corner))
+        world_bb = BoundingBox.from_min_max(Point3.from_iterable(min_corner), Point3.from_iterable(max_corner))
 
         return world_bb
 

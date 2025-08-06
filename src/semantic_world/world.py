@@ -439,11 +439,12 @@ class World:
 
         :raises AddingAnExistingViewError: If exists_ok is False and a view with the same name and type already exists.
         """
-        try:
-            self.get_view_by_name(view.name)
+
+        existing_view = self.get_view_by_name(view.name)
+        if existing_view is not None:
             if not exists_ok:
                 raise AddingAnExistingViewError(view)
-        except ViewNotFoundError:
+        else:
             view._world = self
             self.views.append(view)
 
