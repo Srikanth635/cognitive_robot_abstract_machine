@@ -31,13 +31,14 @@ world: World = world_dao[7].from_dao()
 body = [b for b in world.bodies if not b.name.name.startswith("PS")][0]
 [world.remove_body(b) for b in world.bodies if b != body]
 mesh: trimesh.Trimesh = body.collision[0].mesh
+origin = body.collision[0].origin
 
 mesh = coacd.Mesh(mesh.vertices, mesh.faces)
 parts = coacd.run_coacd(mesh, apx_mode="box", mcts_iterations=1000)
 
 new_geometry = []
 for vs, fs in parts:
-    new_geometry.append(TriangleMesh(mesh=trimesh.Trimesh(vs, fs)))
+    new_geometry.append(TriangleMesh(mesh=trimesh.Trimesh(vs, fs), origin=origin))
 print("NUMBER OF PRIMITIVES", len(new_geometry))
 body.collision = new_geometry
 body.vertices = new_geometry
