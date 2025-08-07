@@ -1,7 +1,6 @@
 import builtins
 import os
 from enum import Enum
-import trimesh
 
 import semantic_world.degree_of_freedom
 import semantic_world.geometry
@@ -10,7 +9,6 @@ import semantic_world.views.views
 import semantic_world.world_entity
 from ormatic.ormatic import ORMatic
 from ormatic.utils import classes_of_module, recursive_subclasses
-from semantic_world.adapters.factories import *
 from semantic_world.connections import FixedConnection
 from semantic_world.orm.model import *
 from semantic_world.prefixed_name import PrefixedName

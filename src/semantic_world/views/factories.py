@@ -7,17 +7,18 @@ from typing import TypeVar, Generic
 from numpy import ndarray
 from random_events.interval import Bound
 from random_events.product_algebra import *
+from trimesh import visual
 
 from semantic_world.variables import SpatialVariables
-from ..connections import PrismaticConnection, FixedConnection, RevoluteConnection
-from ..geometry import Box, Scale, BoundingBoxCollection
-from ..prefixed_name import PrefixedName
-from ..spatial_types.derivatives import DerivativeMap
-from ..spatial_types.spatial_types import TransformationMatrix, Vector3
-from ..utils import IDGenerator
-from ..views import Container, Handle, Dresser, Drawer, Door, Shelf, SupportingSurface
-from ..world import World
-from ..world_entity import Body, Region
+from semantic_world.connections import PrismaticConnection, FixedConnection, RevoluteConnection
+from semantic_world.geometry import Box, Scale, BoundingBoxCollection
+from semantic_world.prefixed_name import PrefixedName
+from semantic_world.spatial_types.derivatives import DerivativeMap
+from semantic_world.spatial_types.spatial_types import TransformationMatrix, Vector3
+from semantic_world.utils import IDGenerator
+from semantic_world.views import Container, Handle, Dresser, Drawer, Door, Shelf, SupportingSurface
+from semantic_world.world import World
+from semantic_world.world_entity import Body, Region
 
 id_generator = IDGenerator()
 
@@ -114,37 +115,61 @@ class ContainerFactory(ViewFactory[Container]):
         container = outer_box.as_composite_set() - inner_box.as_composite_set()
 
         bounding_box_collection = BoundingBoxCollection.from_event(container)
-        body = Body(name=self.name)
-        collision = bounding_box_collection.as_shapes(reference_frame=body)
-        body.visual = collision
-        body.collision = collision
+
+        collision = bounding_box_collection.as_shapes()
+        body = Body(name=self.name, collision=collision, visual=collision)
         container_view = Container(body=body, name=self.name)
 
         world = World()
         with world.modify_world():
             world.add_body(body)
             world.add_view(container_view)
+
         return world
 
+class Alignment(IntEnum):
+    HORIZONTAL = 0
+    VERTICAL = 1
 
 @dataclass
 class HandleFactory(ViewFactory[Handle]):
     name: PrefixedName
-    width: float
+    scale: Scale = field(default_factory=lambda: Scale(0.05, 0.1, 0.02))
+    thickness: float = 0.01
 
     def create(self) -> World:
-        # I think this construction is wrong since i fixed the mesh orientation, but it doesnt visually
-        # break, just results in some unintuitive rotations. fix when there is time
-        long_side_handle = Box(origin=TransformationMatrix.from_xyz_rpy(0, 0, 0, 0, 0, 0),
-                               scale=Scale(self.width / 4, self.width, self.width / 4), )
-        short_side_handle_left = Box(
-            origin=TransformationMatrix.from_xyz_rpy(-0.25 * self.width, 0.5 * 0.75 * self.width, 0, 0, 0, 0),
-            scale=Scale(self.width / 4, self.width / 4, self.width / 4), )
-        short_side_handle_right = Box(
-            origin=TransformationMatrix.from_xyz_rpy(-0.25 * self.width, -0.5 * 0.75 * self.width, 0, 0, 0, 0),
-            scale=Scale(self.width / 4, self.width / 4, self.width / 4), )
-        collision = [long_side_handle, short_side_handle_left, short_side_handle_right]
-        handle = Body(name=self.name, collision=collision, visual=collision)
+
+        x_interval = closed(0, self.scale.x)
+        y_interval = closed(-self.scale.y / 2, self.scale.y / 2)
+        z_interval = closed(-self.scale.z / 2, self.scale.z / 2)
+
+        handle_event = SimpleEvent(
+            {
+                SpatialVariables.x.value: x_interval,
+                SpatialVariables.y.value: y_interval,
+                SpatialVariables.z.value: z_interval,
+            }
+        ).as_composite_set()
+
+        x_interval = closed(0, self.scale.x - self.thickness)
+        y_interval = closed(-self.scale.y / 2 + self.thickness, self.scale.y / 2- self.thickness)
+        z_interval = closed(-self.scale.z, self.scale.z)
+
+        innerbox = SimpleEvent(
+            {
+                SpatialVariables.x.value: x_interval,
+                SpatialVariables.y.value: y_interval,
+                SpatialVariables.z.value: z_interval,
+            }
+        ).as_composite_set()
+
+        handle_event -= innerbox
+
+        handle = Body(name=self.name)
+        collision = BoundingBoxCollection.from_event(handle_event).as_shapes(handle)
+        handle.collision = collision
+        handle.visual = collision
+
         handle_view = Handle(name=self.name, body=handle)
 
         world = World()

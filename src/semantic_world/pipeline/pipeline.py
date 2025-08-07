@@ -2,13 +2,13 @@ import re
 from abc import ABC
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import List, Optional, Any, Callable
+from typing import List, Optional, Callable
 
 import coacd
 import numpy as np
 import trimesh
 
-from semantic_world.adapters.factories import ViewFactory
+from semantic_world.views.factories import ViewFactory
 from semantic_world.geometry import TriangleMesh, Mesh
 from semantic_world.world import World
 from semantic_world.world_entity import Body

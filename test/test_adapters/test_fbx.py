@@ -7,21 +7,12 @@ from sqlalchemy.orm import Session
 
 from ormatic.dao import to_dao
 from semantic_world.adapters.fbx import FBXParser
-from semantic_world.adapters.factories import replace_dresser_drawer_connections, HandleFactory, ContainerFactory, \
-    DrawerFactory, Direction, DresserFactory, DoorFactory
-from semantic_world.connections import PrismaticConnection, RevoluteConnection
+from semantic_world.views.factories import replace_dresser_drawer_connections, HandleFactory, Direction, DoorFactory
+from semantic_world.connections import RevoluteConnection
 from semantic_world.geometry import Scale
 from semantic_world.orm.ormatic_interface import *
 from semantic_world.prefixed_name import PrefixedName
-from semantic_world.reasoner import WorldReasoner
-from semantic_world.spatial_types import TransformationMatrix
 from semantic_world.world import World
-
-from contextlib import suppress
-from typing import Iterable
-
-from sqlalchemy import MetaData, inspect, text
-from sqlalchemy.engine import Engine
 
 
 class FBXParserTest(unittest.TestCase):
