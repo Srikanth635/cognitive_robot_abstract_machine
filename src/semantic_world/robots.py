@@ -577,7 +577,9 @@ class AbstractRobot(RootedView, ABC):
 
     @lru_cache(maxsize=None)
     def is_controlled_connection_in_chain(self, root: Body, tip: Body) -> bool:
-        for c in self._world.compute_chain_of_connections(root, tip):
+        root_part, tip_part = self._world.compute_split_chain_of_connections(root, tip)
+        connections = root_part + tip_part
+        for c in connections:
             if c in self.controlled_connections:
                 return True
         return False
@@ -665,6 +667,9 @@ class PR2(AbstractRobot):
     neck: Neck = field(default_factory=Neck)
     left_arm: KinematicChain = field(default_factory=KinematicChain)
     right_arm: KinematicChain = field(default_factory=KinematicChain)
+
+    def __hash__(self):
+        return hash(self.name)
 
     def _add_arm(self, arm: KinematicChain, arm_side: str):
         """
