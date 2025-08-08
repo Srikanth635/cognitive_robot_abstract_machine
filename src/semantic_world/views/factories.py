@@ -56,6 +56,8 @@ class ViewFactory(Generic[T], ABC):
         raise NotImplementedError()
 
 
+
+
 @dataclass
 class ShelfFactory(ViewFactory[Shelf]):
     name: PrefixedName
