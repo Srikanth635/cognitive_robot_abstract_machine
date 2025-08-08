@@ -6,8 +6,8 @@ from operator import or_
 import plotly.graph_objects as go
 import tqdm
 from ormatic.dao import to_dao
-from ripple_down_rules.entity import an, entities
-from ripple_down_rules.symbolic import in_
+from entity_query_language.entity import an, entity
+from entity_query_language.symbolic import in_
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
@@ -51,6 +51,7 @@ def parse_fbx_file(fbx_file, session):
 def main():
     semantic_world_database_uri = os.environ.get("SEMANTIC_WORLD_DATABASE_URI")
     procthor_root = os.path.join(os.path.expanduser("~"), "ai2thor")
+    procthor_root = os.path.join(os.path.expanduser("~"), "work", "ai2thor")
 
     files = []
     for root, dirs, filenames in os.walk(procthor_root):

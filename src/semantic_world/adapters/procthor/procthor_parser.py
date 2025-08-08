@@ -36,8 +36,19 @@ class ProcTHORParser:
 
         reference_frame = Body(name=room_name)
 
-        polytope = room["floorPolygon"]
-        points_2d = np.array([[p["x"], p["z"]] for p in polytope])
+        room_polytope = room["floorPolygon"]
+
+        cx = sum(v['x'] for v in room_polytope) / len(room_polytope)
+        cy = sum(v['y'] for v in room_polytope) / len(room_polytope)
+        cz = sum(v['z'] for v in room_polytope) / len(room_polytope)
+
+        center = (cx, cy, cz)
+
+        centered_polytope = [
+            (v['x'] - cx, v['y'] - cy, v['z'] - cz) for v in room_polytope
+        ]
+
+        points_2d = np.array([[p[0], p[2]] for p in centered_polytope])
         polytope = Polytope.from_2d_points(points_2d)
         region_event = polytope.maximum_inner_box().to_simple_event().as_composite_set()
 
@@ -59,7 +70,11 @@ class ProcTHORParser:
             reference_frame=reference_frame,
         )
 
-        return region
+        transform = TransformationMatrix.from_xyz_rpy(
+            center[0], center[1], center[2], 0, 0, 0
+        )
+
+        return region, transform
 
     def import_object(self, parent_body, obj):
         body_name = obj["id"].replace("|", "_")
@@ -197,11 +212,11 @@ class ProcTHORParser:
         room_numbers = [w["id"].split("|")[1] for w in wall.walls]
         wall_name = f"wall_room{room_numbers[0]}_room{room_numbers[1]}"
 
-        wall_position, wall_scale = self.polygon_scale_and_center(wall["polygon"])
+        wall_position, wall_scale = self.polygon_scale_and_center(wall.walls[0]["polygon"])
 
         wall_factory = ... # WallFactory(scale=wall_scale, door_factories=[door_factory], door_transforms=[door_transform]
 
-        wall_transform = TransformationMatrix.from_xyz_rpy(*wall_position, 0, 0, 0)
+        wall_transform = TransformationMatrix.from_xyz_rpy(wall_position.x, wall_position.y, wall_position.z, 0, 0, 0)
 
         return
 
@@ -211,6 +226,7 @@ class ProcTHORParser:
         house_name = self.file_path.split("/")[-1].split(".")[0]
 
         rooms = house["rooms"]
+        room_regions, room_transforms = [], []
         for room in rooms:
             self.import_room(room)
 
@@ -232,7 +248,7 @@ class ProcTHORParser:
 
 def main():
     parser = ProcTHORParser(
-        "/home/itsme/Downloads/house_987654321/house_987654321.json"
+        "../../../../resources/procthor_json/house_987654321.json"
     )
     parser.parse()
 
