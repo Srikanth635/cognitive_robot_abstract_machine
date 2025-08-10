@@ -37,16 +37,24 @@ class CaseReasoner:
     """
     The latest result of the :py:meth:`reason` call.
     """
-    rdr: ClassVar[GeneralRDR] = field(init=False, default=None)
+    rdrs: ClassVar[Dict[Type, GeneralRDR]] = {}
     """
-    This is a ripple down rules reasoner that infers concepts relevant to the view like finding out the components
-    that exist in the current view.
+    This is a collection ripple down rules reasoners that infer case attributes.
     """
 
     def __post_init__(self):
-        if self.__class__.rdr is None:
-            self.__class__.rdr = GeneralRDR(save_dir=dirname(__file__),
-                                            model_name=f"{type(self.case).__name__.lower()}_rdr")
+        if self.case.__class__ not in self.rdrs:
+            self.rdrs[self.case.__class__] = GeneralRDR(save_dir=dirname(__file__),
+                                            model_name=f"{self.case.__class__.__name__.lower()}_rdr")
+
+    @property
+    def rdr(self) -> GeneralRDR:
+        """
+        The Ripple Down Rules instance that is used for reasoning on the case concepts.
+
+        :return: The Ripple Down Rules instance.
+        """
+        return self.rdrs[self.case.__class__]
 
     def reason(self) -> Dict[str, Any]:
         """
@@ -79,25 +87,26 @@ class CaseReasoner:
 
 
 @dataclass
-class WorldReasoner(CaseReasoner):
+class WorldReasoner:
     """
-    The world reasoner is a class that uses Ripple Down Rules to reason on world related concepts like world views.
-    The reasoner can be used in two ways:
-    1. Classification mode, where the reasoner infers all concepts that it has rules for at that time.
-    >>> reasoner = WorldReasoner(world)
-    >>> inferred_concepts = reasoner.reason()
-    >>> inferred_views = inferred_concepts['views']
-    2. Fitting mode, where the reasoner prompts the expert for answers given a query on a world concept. This allows
-    incremental knowledge gain, improved reasoning capabilities, and an increased breadth of application with more
-     usage.
-     >>> reasoner = WorldReasoner(world)
-     >>> reasoner.fit_attribute("views", [Handle, Drawer], False)
+    A utility class that uses CaseReasoner for reasoning on the world concepts.
+    """
+    world: World
+    """
+    The world instance to reason on.
     """
     _last_world_model_version: Optional[int] = field(init=False, default=None)
     """
     The last world model version of the world used when :py:meth:`reason` 
     was last called.
     """
+    reasoner: CaseReasoner = field(init=False)
+    """
+    The case reasoner that is used to reason on the world concepts.
+    """
+
+    def __post_init__(self):
+        self.reasoner = CaseReasoner(self.world)
 
     def infer_views(self) -> List[View]:
         """
@@ -106,11 +115,7 @@ class WorldReasoner(CaseReasoner):
         :return: The inferred views of the world.
         """
         result = self.reason()
-        if 'views' in result:
-            views = result['views']
-        else:
-            views = []
-        return views
+        return result.get('views', [])
 
     def reason(self) -> Dict[str, Any]:
         """
@@ -118,24 +123,24 @@ class WorldReasoner(CaseReasoner):
 
         :return: The inferred concepts as a dictionary mapping concept name to all inferred values of that concept.
         """
-        if self.case._model_version != self._last_world_model_version:
-            self.result = self.rdr.classify(self.case)
+        if self.world._model_version != self._last_world_model_version:
+            self.reasoner.result = self.reasoner.rdr.classify(self.world)
             self._update_world_attributes()
-            self._last_world_model_version = self.case._model_version
-        return self.result
+            self._last_world_model_version = self.world._model_version
+        return self.reasoner.result
 
     def _update_world_attributes(self):
         """
         Update the world attributes from the values in the result of the latest :py:meth:`reason` call.
         """
-        for attr_name, attr_value in self.result.items():
-            if isinstance(getattr(self.case, attr_name), list):
+        for attr_name, attr_value in self.reasoner.result.items():
+            if isinstance(getattr(self.world, attr_name), list):
                 attr_value = list(attr_value)
             if attr_name == 'views':
                 for view in attr_value:
-                    self.case.add_view(view, exists_ok=True)
+                    self.world.add_view(view, exists_ok=True)
             else:
-                setattr(self.case, attr_name, attr_value)
+                setattr(self.world, attr_name, attr_value)
 
     def fit_views(self, required_views: List[Type[View]],
                   update_existing_views: bool = False,
@@ -149,6 +154,6 @@ class WorldReasoner(CaseReasoner):
         :param world_factory: Optional callable that can be used to recreate the world object.
         :param scenario: Optional callable that represents the test method or scenario that is being executed.
         """
-        self.fit_attribute("views", required_views, False,
+        self.reasoner.fit_attribute("views", required_views, False,
                            update_existing_rules=update_existing_views,
                            case_factory=world_factory, scenario=scenario)
