@@ -1,8 +1,10 @@
 from __future__ import annotations
 from typing_extensions import List, TYPE_CHECKING
 
+from .prefixed_name import PrefixedName
+
 if TYPE_CHECKING:
-    from semantic_world.world_entity import View
+    from .world_entity import View
 
 
 class LogicalError(Exception):
@@ -36,3 +38,9 @@ class ParsingError(Exception):
     An error that happens during parsing of files.
     """
     ...
+
+
+class ViewNotFoundError(UsageError):
+    def __init__(self, name: PrefixedName):
+        msg = f'View with name {name} not found'
+        super().__init__(msg)

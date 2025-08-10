@@ -6,10 +6,10 @@ from ..exceptions import ParsingError
 from ..spatial_types import spatial_types as cas
 from urdf_parser_py import urdf
 
-from ..connections import RevoluteConnection, PrismaticConnection, FixedConnection, UnitVector
+from ..connections import RevoluteConnection, PrismaticConnection, FixedConnection
 from ..prefixed_name import PrefixedName
 from ..spatial_types.derivatives import Derivatives, DerivativeMap
-from ..spatial_types.spatial_types import TransformationMatrix
+from ..spatial_types.spatial_types import TransformationMatrix, Vector3
 from ..utils import suppress_stdout_stderr, hacky_urdf_parser_fix
 from ..world import World, Body, Connection
 from ..geometry import Box, Sphere, Cylinder, Mesh, Scale, Shape, Color
@@ -107,6 +107,7 @@ class URDFParser:
         links = [self.parse_link(link, PrefixedName(link.name, self.parsed.name)) for link in self.parsed.links]
         root = [link for link in links if link.name.name == self.parsed.get_root()][0]
         world = World()
+        world.name = self.prefix
         world.add_body(root)
 
         with world.modify_world():
@@ -169,7 +170,8 @@ class URDFParser:
 
         result = connection_type(parent=parent, child=child, origin_expression=parent_T_child,
                                  multiplier=multiplier, offset=offset,
-                                 axis=UnitVector(*map(int, joint.axis)),
+                                 axis=Vector3(*map(int, joint.axis),
+                                                 reference_frame=parent),
                                  dof=dof)
         return result
 

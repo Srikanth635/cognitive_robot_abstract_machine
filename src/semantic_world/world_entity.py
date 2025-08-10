@@ -1,8 +1,18 @@
 from __future__ import annotations
 
+import inspect
+from abc import abstractmethod
 import os
 from collections import deque
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass, field, fields
+from functools import reduce
+from typing import List, Optional, TYPE_CHECKING, Set, get_args, get_type_hints, Deque
+import numpy as np
+from numpy import ndarray
+from typing_extensions import Self
+
+from .geometry import Shape, BoundingBox, BoundingBoxCollection
 from dataclasses import dataclass, field
 from dataclasses import fields
 from functools import lru_cache
@@ -45,7 +55,7 @@ class WorldEntity(TrackedObjectMixin):
     The backreference to the world this entity belongs to.
     """
 
-    _views: List[View] = field(default_factory=list, init=False, repr=False, hash=False)
+    _views: Set[View] = field(default_factory=set, init=False, repr=False, hash=False)
     """
     The views this entity is part of.
     """
@@ -54,6 +64,10 @@ class WorldEntity(TrackedObjectMixin):
     """
     The identifier for this world entity.
     """
+
+    def __post_init__(self):
+        if self.name is None:
+            self.name = PrefixedName(f"{self.__class__.__name__}_{hash(self)}")
 
 
 @dataclass
@@ -213,7 +227,7 @@ class Body(WorldEntity):
             min_corner = np.min(transformed_corners, axis=0)
             max_corner = np.max(transformed_corners, axis=0)
 
-            world_bb = BoundingBox.from_min_max(Point3.from_xyz(*min_corner), Point3.from_xyz(*max_corner))
+            world_bb = BoundingBox.from_min_max(Point3(*min_corner), Point3(*max_corner))
             world_bboxes.append(world_bb)
 
         return BoundingBoxCollection(world_bboxes)
@@ -256,18 +270,13 @@ class View(WorldEntity):
     A list of views that represent possible locations for this view.
     """
 
-    @property
-    def aggregated_bodies(self) -> Set[Body]:
+    def _bodies(self, visited: Set[int]) -> Set[Body]:
         """
-        Recursively traverses the view and its attributes to find all bodies contained within it.
-
-        :return: A set of bodies that are part of this view.
+        Recursively collects all bodies that are part of this view.
         """
+        stack: Deque[object] = deque([self])
         bodies: Set[Body] = set()
-        visited: Set[int] = set()
-        stack: deque = deque([self])
 
-        # Use a stack to traverse the view and its attributes
         while stack:
             obj = stack.pop()
             oid = id(obj)
@@ -276,25 +285,28 @@ class View(WorldEntity):
             visited.add(oid)
 
             match obj:
-                # Bodies are aggregated directly
                 case Body():
                     bodies.add(obj)
 
-                # Views are traversed recursively
                 case View():
-                    for f in fields(obj):
-                        value = getattr(obj, f.name)
-                        if isinstance(value, Body):
-                            bodies.add(value)
-                        elif isinstance(value, View):
-                            stack.append(value)
-                        elif isinstance(value, (list, set)):
-                            stack.extend(value)
+                    stack.extend(_attr_values(obj))
 
-                # Iterables are traversed
+                case Mapping():
+                    stack.extend(v for v in obj.values() if _is_body_view_or_iterable(v))
+
                 case Iterable() if not isinstance(obj, (str, bytes, bytearray)):
-                    stack.extend(obj)
+                    stack.extend(v for v in obj if _is_body_view_or_iterable(v))
+
         return bodies
+
+    @property
+    def bodies(self) -> Iterable[Body]:
+        """
+        Returns a Iterable of all relevant bodies in this view. The default behaviour is to aggregate all bodies that are accessible
+        through the properties and fields of this view, recursively.
+        If this behaviour is not desired for a specific view, it can be overridden by implementing the `bodies` property.
+        """
+        return self._bodies(set())
 
     def as_bounding_box_collection(self) -> BoundingBoxCollection:
         """
@@ -302,12 +314,12 @@ class View(WorldEntity):
         """
         bbs = reduce(
             lambda accumulator, bb_collection: accumulator.merge(bb_collection),
-            (body.bounding_box_collection for body in self.aggregated_bodies if body.has_collision())
+            (body.bounding_box_collection for body in self.bodies if body.has_collision())
         )
         return bbs
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class RootedView(View):
     """
     Represents a view that is rooted in a specific body.
@@ -315,11 +327,18 @@ class RootedView(View):
     root: Body = field(default_factory=Body)
 
 
-@dataclass
-class EnvironmentView(View):
+@dataclass(unsafe_hash=True)
+class EnvironmentView(RootedView):
     """
     Represents a view of the environment.
     """
+
+    @property
+    def bodies(self) -> Set[Body]:
+        """
+        Returns a set of all bodies in the environment view.
+        """
+        return set(self._world.compute_child_bodies_recursive(self.root)) | {self.root}
 
 
 @dataclass
@@ -351,6 +370,30 @@ class Connection(WorldEntity):
         if self.name is None:
             self.name = PrefixedName(f'{self.parent.name.name}_T_{self.child.name.name}', prefix=self.child.name.prefix)
 
+    def _post_init_world_part(self):
+        """
+        Executes post-initialization logic based on the presence of a world attribute.
+        """
+        if self._world is None:
+            self._post_init_without_world()
+        else:
+            self._post_init_with_world()
+
+    def _post_init_with_world(self):
+        """
+        Initialize or perform additional setup operations required after the main
+        initialization step. Use for world-related configurations or specific setup
+        details required post object creation.
+        """
+        pass
+
+    def _post_init_without_world(self):
+        """
+        Handle internal initialization processes when _world is None. Perform
+        operations post-initialization for internal use only.
+        """
+        pass
+
     def __hash__(self):
         return hash((self.parent, self.child))
 
@@ -358,14 +401,49 @@ class Connection(WorldEntity):
         return self.name == other.name
 
     @property
-    def origin(self) -> NpMatrix4x4:
+    def origin(self) -> cas.TransformationMatrix:
         """
         :return: The relative transform between the parent and child frame.
         """
-        return self._world.compute_forward_kinematics_np(self.parent, self.child)
+        return self._world.compute_forward_kinematics(self.parent, self.child)
 
     # @lru_cache(maxsize=None)
     def origin_as_position_quaternion(self) -> Expression:
         position = self.origin_expression.to_position()[:3]
         orientation = self.origin_expression.to_quaternion()
         return cas.vstack([position, orientation]).T
+
+
+def _is_body_view_or_iterable(obj: object) -> bool:
+    """
+    Determines if an object is a Body, a View, or an Iterable (excluding strings and bytes).
+    """
+    return (
+            isinstance(obj, (Body, View)) or
+            (isinstance(obj, Iterable) and not isinstance(obj, (str, bytes, bytearray)))
+    )
+
+
+def _attr_values(view: View) -> Iterable[object]:
+    """
+    Yields all dataclass fields and set properties of this view.
+    Skips private fields (those starting with '_'), as well as the 'bodies' property.
+
+    :param view: The view to extract attributes from.
+    """
+    for f in fields(view):
+        if f.name.startswith('_'):
+            continue
+        v = getattr(view, f.name, None)
+        if _is_body_view_or_iterable(v):
+            yield v
+
+    for name, prop in inspect.getmembers(type(view), lambda o: isinstance(o, property)):
+        if name == "bodies" or name.startswith('_'):
+            continue
+        try:
+            v = getattr(view, name)
+        except Exception:
+            continue
+        if _is_body_view_or_iterable(v):
+            yield v

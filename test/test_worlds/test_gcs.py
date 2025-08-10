@@ -6,14 +6,11 @@ from random_events.interval import SimpleInterval
 from random_events.product_algebra import SimpleEvent
 
 from semantic_world.adapters.urdf import URDFParser
-from semantic_world.graph_of_convex_sets import GraphOfConvexSets, PoseOccupiedError
-from semantic_world.variables import SpatialVariables
 from semantic_world.geometry import BoundingBox, BoundingBoxCollection
-from semantic_world.prefixed_name import PrefixedName
+from semantic_world.graph_of_convex_sets import GraphOfConvexSets, PoseOccupiedError
 from semantic_world.spatial_types import Point3
-from semantic_world.views.views import MultiBodyView
+from semantic_world.variables import SpatialVariables
 from semantic_world.world import World
-from semantic_world.world_entity import Body
 
 
 class GCSTestCase(unittest.TestCase):
@@ -42,8 +39,8 @@ class GCSTestCase(unittest.TestCase):
         cls.gcs = gcs
 
     def test_reachability(self):
-        start_point = Point3.from_xyz(-1, -1, 0.5)
-        target_point = Point3.from_xyz(2, 2, 0.5)
+        start_point = Point3(-1, -1, 0.5)
+        target_point = Point3(2, 2, 0.5)
 
         path = self.gcs.path_from_to(start_point, target_point)
         self.assertEqual(len(path), 4)
@@ -78,8 +75,8 @@ class GCSFromWorldTestCase(unittest.TestCase):
         self.assertGreater(len(gcs.graph.nodes()), 0)
         self.assertGreater(len(gcs.graph.edges()), 0)
 
-        start = Point3.from_xyz(-4.5, -0.5, 0.4)
-        target = Point3.from_xyz(-2.5, 1.5, 0.9)
+        start = Point3(-4.5, -0.5, 0.4)
+        target = Point3(-2.5, 1.5, 0.9)
 
         path = gcs.path_from_to(start, target)
 
@@ -87,8 +84,8 @@ class GCSFromWorldTestCase(unittest.TestCase):
         self.assertGreater(len(path), 1)
 
         with self.assertRaises(PoseOccupiedError):
-            start = Point3.from_xyz(-10, -10, -10)
-            target = Point3.from_xyz(10, 10, 10)
+            start = Point3(-10, -10, -10)
+            target = Point3(10, 10, 10)
             gcs.path_from_to(start, target)
 
     def test_navigation_map_from_world(self):
