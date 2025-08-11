@@ -495,7 +495,12 @@ class World:
             other.remove_body(connection.parent)
             other.remove_body(connection.child)
             self.add_connection(connection)
+
+        for body in other.bodies:
+            other.remove_body(body)
+            self.add_body(body)
         other.world_is_being_modified = False
+
 
         connection = root_connection or Connection6DoF(parent=self_root, child=other_root, _world=self)
         self.add_connection(connection)
