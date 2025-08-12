@@ -100,11 +100,9 @@ class FBXParser(MeshParser):
                     meshes = []
                     for o in obj.children:
                         if isinstance(o, FBXMesh):
-                            # Unreal uses Y-up, but we want Z-up
-                            vertices_z_up = o.vertices[:, [0, 2, 1]]
-                            # Convert from cm to m
-                            vertices_in_meter = vertices_z_up / 100
-                            meshes.append(TriangleMesh(origin=TransformationMatrix(), mesh=trimesh.Trimesh(vertices=vertices_in_meter,faces=o.faces)))
+                            t_mesh = TriangleMesh(origin=TransformationMatrix(), mesh=trimesh.Trimesh(vertices=o.vertices,faces=o.faces))
+                            t_mesh.mesh.vertices = o.vertices[:, [0, 2, 1]] / 100  # Convert from cm to m and switch Y and Z axes
+                            meshes.append(t_mesh)
                     body = Body(name=PrefixedName(name), collision=meshes, visual=meshes)
                     world.add_body(body)
 
