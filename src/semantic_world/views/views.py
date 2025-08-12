@@ -160,11 +160,6 @@ class Shelf(Furniture, HasDoors, HasDrawers):
         if self.name is None:
             self.name = self.container.name
 
-@dataclass(unsafe_hash=True)
-class Fridge(View):
-    body: Body
-    door: Door
-
 @dataclass
 class Dresser(Furniture):
     container: Container

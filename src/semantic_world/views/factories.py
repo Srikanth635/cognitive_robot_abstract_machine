@@ -305,8 +305,10 @@ class DresserFactory(ViewFactory[Dresser]):
             door_view: Door = door_world.get_views_by_type(Door)[0]
             door_body = door_view.body
 
-            handle_position: ndarray[
-                float] = door_view.handle.body.parent_connection.origin_expression.to_position().to_np()
+            parent_connection = door_view.handle.body.parent_connection
+            if parent_connection is None:
+                raise ValueError("Handle's body does not have a parent_connection; cannot compute handle_position.")
+            handle_position: ndarray[float] = parent_connection.origin_expression.to_position().to_np()
 
             lower_limits = DerivativeMap[float]()
             upper_limits = DerivativeMap[float]()
@@ -464,9 +466,6 @@ def supporting_surfaces(body: Body, min_surface_area: float = 0.03, clearance=1e
 
     result = Event(*[s for e in events for s in e.simple_sets])
     result.make_disjoint()
-
-    import plotly.graph_objects as go
-    go.Figure(result.plot()).show()
 
     region = Region(areas=BoundingBoxCollection.from_event(result).as_shapes(body), reference_frame=body)
     result = SupportingSurface(region=region)
