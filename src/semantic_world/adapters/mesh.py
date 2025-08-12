@@ -11,18 +11,18 @@ from ..geometry import Mesh
 
 
 @dataclass
-class STLParser:
+class MeshParser:
     """
-    Adapter for STL files.
+    Adapter for mesh files.
     """
     file_path: str
     """
-    The path to the STL file.
+    The path to the mesh file.
     """
 
     def parse(self) -> World:
         """
-        Parse the STL file to a body and return a world containing that body.
+        Parse the mesh file to a body and return a world containing that body.
 
         :return: A World object containing the parsed body.
         """
@@ -35,3 +35,31 @@ class STLParser:
         world.add_body(body)
 
         return world
+
+@dataclass
+class STLParser(MeshParser):
+    pass
+
+@dataclass
+class OBJParser(MeshParser):
+    pass
+
+@dataclass
+class DAEParser(MeshParser):
+    pass
+
+@dataclass
+class PLYParser(MeshParser):
+    pass
+
+@dataclass
+class OFFParser(MeshParser):
+    pass
+
+@dataclass
+class GLBParser(MeshParser):
+    pass
+
+@dataclass
+class XYZParser(MeshParser):
+    pass

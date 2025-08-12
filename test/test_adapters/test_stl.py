@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from semantic_world.adapters.stl import STLParser
+from semantic_world.adapters.mesh import STLParser
 from semantic_world.geometry import Mesh
 
 
