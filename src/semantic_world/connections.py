@@ -269,6 +269,9 @@ class Connection6DoF(PassiveConnection):
     Rotation of child body with respect to parent body represented as a quaternion.
     """
 
+    def __hash__(self):
+        return hash(self.name)
+
     def __post_init__(self):
         super().__post_init__()
         self._post_init_world_part()

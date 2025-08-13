@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 from abc import abstractmethod, ABC
+from collections import defaultdict
 from dataclasses import dataclass, field
 from functools import lru_cache, cached_property
 from itertools import combinations_with_replacement
@@ -291,8 +292,11 @@ class CollisionAvoidanceThreshold:
 
     number_of_repeller: int = 1
     """
-    From how many bodies can this body be repelled at the same time.
+    From how many bodies can this body be repelled from at the same time.
     """
+
+    def __post_init__(self):
+        assert self.soft_threshold >= self.hard_threshold
 
 
 @dataclass
@@ -353,6 +357,13 @@ class CollisionConfig(View):
         disabled_pairs = self.compute_uncontrolled_body_pairs()
         self.disabled_pairs.update(disabled_pairs)
         super().__post_init__()
+        external_avoidance_threshold = defaultdict(lambda: self.default_external_threshold)
+        external_avoidance_threshold.update(self.external_avoidance_threshold)
+        self.external_avoidance_threshold = external_avoidance_threshold
+
+        self_avoidance_threshold = defaultdict(lambda: self.default_self_threshold)
+        self_avoidance_threshold.update(self.self_avoidance_threshold)
+        self.self_avoidance_threshold = self_avoidance_threshold
 
     @staticmethod
     def sort_bodies(body_a: Body, body_b: Body) -> Tuple[Body, Body]:
@@ -584,6 +595,15 @@ class AbstractRobot(RootedView, ABC):
                 return True
         return False
 
+    @cached_property
+    def unmovable_bodies_with_collision(self) -> Set[Body]:
+        result = set()
+        for body in self.bodies_with_collisions:
+            if not self.is_controlled_connection_in_chain(self._world.root, body):
+                result.add(body)
+        return result
+
+
     @lru_cache(maxsize=None)
     def get_controlled_parent_connection(self, body: Body) -> Connection:
         if body == self.root:
@@ -664,9 +684,9 @@ class PR2(AbstractRobot):
     Represents the Personal Robot 2 (PR2), which was originally created by Willow Garage.
     The PR2 robot consists of two arms, each with a parallel gripper, a head with a camera, and a prismatic torso
     """
-    neck: Neck = field(default_factory=Neck)
-    left_arm: KinematicChain = field(default_factory=KinematicChain)
-    right_arm: KinematicChain = field(default_factory=KinematicChain)
+    neck: Neck = field(init=False)
+    left_arm: KinematicChain = field(init=False)
+    right_arm: KinematicChain = field(init=False)
 
     def __hash__(self):
         return hash(self.name)
@@ -785,6 +805,7 @@ class PR2(AbstractRobot):
 
         # Create camera and neck
         camera = Camera(name=PrefixedName('wide_stereo_optical_frame', prefix=robot.name.name),
+                        root=world.get_body_by_name('wide_stereo_optical_frame'),
                         forward_facing_axis=Vector3(0, 0, 1),
                         field_of_view=FieldOfView(horizontal_angle=0.99483, vertical_angle=0.75049),
                         minimal_height=1.27,

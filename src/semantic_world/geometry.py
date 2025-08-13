@@ -13,6 +13,7 @@ from random_events.interval import SimpleInterval, Bound
 from random_events.product_algebra import SimpleEvent, Event
 
 from .spatial_types import TransformationMatrix, Point3
+from .spatial_types.math import cube_volume, cube_surface, cylinder_volume, cylinder_surface, sphere_volume
 from .spatial_types.spatial_types import Expression
 from .utils import IDGenerator
 from .variables import SpatialVariables
@@ -109,6 +110,9 @@ class Shape(ABC):
         """
         raise NotImplementedError("Subclasses must implement the mesh property.")
 
+    def is_bigger(self, volume_threshold: float = 1.001e-6, surface_threshold: float = 0.00061) -> bool:
+        return False
+
 
 @dataclass
 class Primitive(Shape):
@@ -119,7 +123,7 @@ class Primitive(Shape):
 
 
 @dataclass
-class Mesh(Primitive):
+class Mesh(Shape):
     """
     A mesh shape.
     """
@@ -134,6 +138,11 @@ class Mesh(Primitive):
     Scale of the mesh.
     """
 
+    color: Color = field(default_factory=Color)
+    """
+    Color of the mesh.
+    """
+
     @cached_property
     def mesh(self) -> trimesh.Trimesh:
         """
@@ -146,6 +155,9 @@ class Mesh(Primitive):
         Returns the bounding box of the mesh.
         """
         return BoundingBox.from_mesh(self.mesh)
+
+    def is_bigger(self, volume_threshold: float = 1.001e-6, surface_threshold: float = 0.00061) -> bool:
+        return True
 
 
 @dataclass
@@ -173,6 +185,9 @@ class Sphere(Primitive):
         return BoundingBox(-self.radius, -self.radius, -self.radius,
                            self.radius, self.radius, self.radius)
 
+    def is_bigger(self, volume_threshold: float = 1.001e-6, surface_threshold: float = 0.00061) -> bool:
+        return sphere_volume(self.radius) > volume_threshold
+
 
 @dataclass
 class Cylinder(Primitive):
@@ -199,6 +214,10 @@ class Cylinder(Primitive):
         return BoundingBox(-half_width, -half_width, -half_height,
                            half_width, half_width, half_height)
 
+    def is_bigger(self, volume_threshold: float = 1.001e-6, surface_threshold: float = 0.00061) -> bool:
+        return (cylinder_volume(self.width/2, self.height) > volume_threshold or
+                cylinder_surface(self.width/2, self.height) > surface_threshold)
+
 
 @dataclass
 class Box(Primitive):
@@ -221,6 +240,10 @@ class Box(Primitive):
         """
         return BoundingBox(-self.scale.x / 2, -self.scale.y / 2, -self.scale.z / 2,
                            self.scale.x / 2, self.scale.y / 2, self.scale.z / 2)
+
+    def is_bigger(self, volume_threshold: float = 1.001e-6, surface_threshold: float = 0.00061) -> bool:
+        return (cube_volume(self.scale.x, self.scale.y, self.scale.z) > volume_threshold or
+                cube_surface(self.scale.x, self.scale.y, self.scale.z) > surface_threshold)
 
 
 @dataclass
