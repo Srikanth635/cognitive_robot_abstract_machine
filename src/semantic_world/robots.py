@@ -46,7 +46,7 @@ class KinematicChain(RobotView, ABC):
     A kinematic chain can contain both a manipulator and sensors at the same time. There are no assumptions about the
     position of the manipulator or sensors in the kinematic chain
     """
-    tip: Body = field(default_factory=Body)
+    tip: Body = field(default=None)
     """
     The tip body of the kinematic chain, which is the last body in the chain.
     """
@@ -119,7 +119,7 @@ class Manipulator(RobotView, ABC):
     """
     Abstract base class of robot manipulators. Always has a tool frame.
     """
-    tool_frame: Body = field(default_factory=Body)
+    tool_frame: Body = field(default=None)
 
     def assign_to_robot(self, robot: AbstractRobot):
         """
@@ -160,8 +160,8 @@ class ParallelGripper(Manipulator):
     Represents a gripper of a robot. Contains a collection of fingers and a thumb. The thumb is a specific finger
     that always needs to touch an object when grasping it, ensuring a stable grasp.
     """
-    finger: Finger = field(default_factory=Finger)
-    thumb: Finger = field(default_factory=Finger)
+    finger: Finger = field(default=None)
+    thumb: Finger = field(default=None)
 
     def assign_to_robot(self, robot: AbstractRobot):
         """
@@ -217,8 +217,8 @@ class Camera(Sensor):
     """
     Represents a camera sensor in a robot.
     """
-    forward_facing_axis: Vector3 = field(default_factory=Vector3)
-    field_of_view: FieldOfView = field(default_factory=FieldOfView)
+    forward_facing_axis: Vector3 = field(default=None)
+    field_of_view: FieldOfView = field(default=None)
     minimal_height: float = 0.0
     maximal_height: float = 1.0
 
@@ -282,7 +282,7 @@ class AbstractRobot(RootedView, ABC):
     - an optional collection of sensor chains, each containing a sensor, such as a camera
     => If a kinematic chain contains both a manipulator and a sensor, it will be part of both collections
     """
-    odom: Body = field(default_factory=Body)
+    odom: Body = field(default=None)
     """
     The odometry body of the robot, which is usually the base footprint.
     """
@@ -375,9 +375,9 @@ class PR2(AbstractRobot):
     Represents the Personal Robot 2 (PR2), which was originally created by Willow Garage.
     The PR2 robot consists of two arms, each with a parallel gripper, a head with a camera, and a prismatic torso
     """
-    neck: Neck = field(default_factory=Neck)
-    left_arm: KinematicChain = field(default_factory=KinematicChain)
-    right_arm: KinematicChain = field(default_factory=KinematicChain)
+    neck: Neck = field(default=None)
+    left_arm: KinematicChain = field(default=None)
+    right_arm: KinematicChain = field(default=None)
 
     def _add_arm(self, arm: KinematicChain, arm_side: str):
         """
@@ -459,11 +459,13 @@ class PR2(AbstractRobot):
                                        thumb=left_gripper_thumb,
                                        finger=left_gripper_finger,
                                        _world=world)
-
-        left_arm = Arm(name=PrefixedName('left_arm', prefix=robot.name.name),
-                       root=world.get_body_by_name("l_shoulder_pan_link"),
-                       manipulator=left_gripper,
-                       _world=world)
+        left_arm = Arm(
+            name=PrefixedName("left_arm", prefix=robot.name.name),
+            root=world.get_body_by_name("l_shoulder_pan_link"),
+            tip=world.get_body_by_name("l_wrist_roll_link"),
+            manipulator=left_gripper,
+            _world=world,
+        )
 
         robot.add_left_arm(left_arm)
 
@@ -484,6 +486,7 @@ class PR2(AbstractRobot):
                                         _world=world)
         right_arm = Arm(name=PrefixedName('right_arm', prefix=robot.name.name),
                         root=world.get_body_by_name("r_shoulder_pan_link"),
+                        tip=world.get_body_by_name("r_wrist_roll_link"),
                         manipulator=right_gripper,
                         _world=world)
 
