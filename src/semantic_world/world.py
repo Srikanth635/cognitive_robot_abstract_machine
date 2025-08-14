@@ -6,7 +6,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import wraps, lru_cache
-from typing import Dict, Tuple, OrderedDict, Union, Optional
+from typing import Dict, Tuple, OrderedDict, Union, Optional, Generic, TypeVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -31,6 +31,8 @@ from .world_state import WorldState
 logger = logging.getLogger(__name__)
 
 id_generator = IDGenerator()
+
+T = TypeVar("T")
 
 
 class PlotAlignment(IntEnum):
@@ -458,6 +460,16 @@ class World:
         if matches:
             return matches[0]
         raise ViewNotFoundError(name)
+
+    def get_views_by_type(self, view_type: Type[Generic[T]]) -> List[T]:
+        """
+        Retrieves all views of a specific type from the world.
+
+        :param view_type: The class (type) of the views to search for.
+        :return: A list of `View` objects that match the given type.
+        """
+        return [view for view in self.views if isinstance(view, view_type)]
+
 
     @modifies_world
     def remove_body(self, body: Body) -> None:
