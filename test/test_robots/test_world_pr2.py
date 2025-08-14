@@ -190,7 +190,6 @@ def test_pr2_view(pr2_world):
     assert pr2.torso.name.name == 'torso'
     assert len(pr2.torso.sensors) == 0
     assert list(pr2.sensor_chains)[0].sensors == pr2.sensors
-    assert pr2.odom.name.name == 'odom_combined'
 
 
 def test_kinematic_chains(pr2_world):

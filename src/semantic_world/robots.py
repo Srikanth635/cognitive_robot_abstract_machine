@@ -26,7 +26,7 @@ class RobotView(RootedView, ABC):
 
     def __post_init__(self):
         if self._world is not None:
-            self._world.add_view(self)
+            self._world.add_view(self, exists_ok=True)
 
     @abstractmethod
     def assign_to_robot(self, robot: AbstractRobot):
@@ -282,11 +282,6 @@ class AbstractRobot(RootedView, ABC):
     - an optional collection of sensor chains, each containing a sensor, such as a camera
     => If a kinematic chain contains both a manipulator and a sensor, it will be part of both collections
     """
-    odom: Body = field(default=None)
-    """
-    The odometry body of the robot, which is usually the base footprint.
-    """
-
     torso: Optional[Torso] = None
     """
     The torso of the robot, which is a kinematic chain connecting the base with a collection of other kinematic chains.
@@ -437,7 +432,6 @@ class PR2(AbstractRobot):
 
         robot = cls(
             name=PrefixedName(name='pr2', prefix=world.name),
-            odom=world.get_body_by_name("odom_combined"),
             root=world.get_body_by_name("base_footprint"),
             _world=world,
         )
@@ -461,7 +455,7 @@ class PR2(AbstractRobot):
                                        _world=world)
         left_arm = Arm(
             name=PrefixedName("left_arm", prefix=robot.name.name),
-            root=world.get_body_by_name("l_shoulder_pan_link"),
+            root=world.get_body_by_name("torso_lift_link"),
             tip=world.get_body_by_name("l_wrist_roll_link"),
             manipulator=left_gripper,
             _world=world,
@@ -485,7 +479,7 @@ class PR2(AbstractRobot):
                                         finger=right_gripper_finger,
                                         _world=world)
         right_arm = Arm(name=PrefixedName('right_arm', prefix=robot.name.name),
-                        root=world.get_body_by_name("r_shoulder_pan_link"),
+                        root=world.get_body_by_name("torso_lift_link"),
                         tip=world.get_body_by_name("r_wrist_roll_link"),
                         manipulator=right_gripper,
                         _world=world)
@@ -514,6 +508,6 @@ class PR2(AbstractRobot):
                       _world=world)
         robot.add_torso(torso)
 
-        world.add_view(robot)
+        world.add_view(robot, exists_ok=True)
 
         return robot
