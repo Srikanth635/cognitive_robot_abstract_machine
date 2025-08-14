@@ -2,11 +2,13 @@ from __future__ import absolute_import
 from __future__ import annotations
 
 import logging
+import os
 from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import wraps, lru_cache
-from typing import Dict, Tuple, OrderedDict, Union, Optional, Type
+from itertools import combinations_with_replacement
+from typing import Dict, Tuple, OrderedDict, Union, Optional, Type, Set
 from typing import TypeVar
 
 import matplotlib.pyplot as plt
@@ -14,6 +16,7 @@ import numpy as np
 import rustworkx as rx
 import rustworkx.visit
 import rustworkx.visualization
+from lxml import etree
 from typing_extensions import List
 
 from .connections import ActiveConnection, PassiveConnection
@@ -268,6 +271,15 @@ class World:
     """
     Name of the world. May act as default namespace for all bodies and views in the world which do not have a prefix.
     """
+
+    disabled_collision_pairs: Set[Tuple[Body, Body]] = field(default_factory=lambda: set())
+
+    temp_disabled_collision_pairs: Set[Tuple[Body, Body]] = field(default_factory=lambda: set())
+
+    def reset_temporary_collision_config(self):
+        self.temp_disabled_collision_pairs = set()
+        for body in self.bodies_with_collisions:
+            body.reset_temporary_collision_config()
 
     @property
     def root(self) -> Body:
@@ -1026,3 +1038,181 @@ class World:
         for connection, value in new_state.items():
             connection.position = value
         self.notify_state_change()
+
+    def load_collision_srdf(self, file_path: str):
+        """
+        Creates a CollisionConfig instance from an SRDF file.
+
+        Parse an SRDF file to configure disabled collision pairs or bodies for a given world.
+        Process SRDF elements like `disable_collisions`, `disable_self_collision`,
+        or `disable_all_collisions` to update collision configuration
+        by referencing bodies in the provided `world`.
+
+        :param file_path: The path to the SRDF file used for collision configuration.
+        """
+        SRDF_DISABLE_ALL_COLLISIONS: str = 'disable_all_collisions'
+        SRDF_DISABLE_SELF_COLLISION: str = 'disable_self_collision'
+        SRDF_MOVEIT_DISABLE_COLLISIONS: str = 'disable_collisions'
+
+        if not os.path.exists(file_path):
+            raise ValueError(f'file {file_path} does not exist')
+        srdf = etree.parse(file_path)
+        srdf_root = srdf.getroot()
+        for child in srdf_root:
+            if hasattr(child, 'tag'):
+                if child.tag in {SRDF_MOVEIT_DISABLE_COLLISIONS, SRDF_DISABLE_SELF_COLLISION}:
+                    body_a_srdf_name: str = child.attrib['link1']
+                    body_b_srdf_name: str = child.attrib['link2']
+                    body_a = self.get_body_by_name(body_a_srdf_name)
+                    body_b = self.get_body_by_name(body_b_srdf_name)
+                    if body_a not in self.bodies_with_collisions:
+                        continue
+                    if body_b not in self.bodies_with_collisions:
+                        continue
+                    self.disable_collision_pair(body_a, body_b)
+                elif child.tag == SRDF_DISABLE_ALL_COLLISIONS:
+                    body = self.get_body_by_name(child.attrib['link'])
+                    body.collision_config.disabled = True
+
+    @property
+    def controlled_connections(self) -> Set[ActiveConnection]:
+        """
+        A subset of the robot's connections that are controlled by a controller.
+        """
+        return set(c for c in self.connections if isinstance(c, ActiveConnection) and c.is_controlled)
+
+    def is_controlled_connection_in_chain(self, root: Body, tip: Body) -> bool:
+        root_part, tip_part = self.compute_split_chain_of_connections(root, tip)
+        connections = root_part + tip_part
+        for c in connections:
+            if c in self.controlled_connections:
+                return True
+        return False
+
+    def compute_uncontrolled_body_pairs(self) -> Set[Tuple[Body, Body]]:
+        """
+        Computes pairs of bodies that should not be collision checked because they have no controlled connections
+        between them.
+
+        When all connections between two bodies are not controlled, these bodies cannot move relative to each
+        other, so collision checking between them is unnecessary.
+
+        :return: Set of body pairs that should have collisions disabled
+        """
+        body_combinations = set(combinations_with_replacement(self.bodies_with_collisions, 2))
+        disabled_pairs = set()
+        for body_a, body_b in list(body_combinations):
+            if body_a == body_b:
+                continue
+            if self.is_controlled_connection_in_chain(body_a, body_b):
+                continue
+            self.disable_collision_pair(body_a, body_b)
+            disabled_pairs.add((body_a, body_b))
+        return disabled_pairs
+
+    @property
+    def disabled_bodies(self) -> Set[Body]:
+        return set(b for b in self.bodies_with_collisions if b.collision_config.disabled)
+
+    def disable_collision_pair(self, body_a: Body, body_b: Body):
+        """
+        Disable collision checking between two bodies
+        """
+        pair = tuple(sorted([body_a, body_b], key=lambda b: b.name))
+        self.disabled_collision_pairs.add(pair)
+
+    def avoid_collisions(self, view: View, threshold: float):
+        """
+        Will not enable collision checking for disabled bodies
+        :param view:
+        :param threshold:
+        :return:
+        """
+        for body in view.bodies:
+            body.collision_config.buffer_zone_distance = threshold
+
+    def disable_collision_checking(self, view1: View, view2: Optional[View] = None):
+        for body_a in view1.bodies:
+            for body_b in view2.bodies:
+                self.disable_collision_pair(body_a, body_b)
+
+    def get_directly_child_bodies_with_collision(self, connection: Connection) -> Set[Body]:
+        """
+        Collect all child Bodies until a movable connection is found.
+
+
+        :param connection: The connection from the kinematic structure whose child bodies will be traversed.
+        :return: A set of Bodies that are moved directly by only this connection.
+        """
+
+        class BodyCollector(rx.visit.DFSVisitor):
+            def __init__(self, world: World):
+                self.world = world
+                self.bodies = set()
+
+            def discover_vertex(self, node_index: int, time: int) -> None:
+                body = self.world.kinematic_structure[node_index]
+                if body.has_collision():
+                    self.bodies.add(body)
+
+            def tree_edge(self, e: Connection):
+                if (isinstance(e, ActiveConnection)
+                        and e.is_controlled
+                        and not e.frozen_for_collision_avoidance):
+                    raise rx.visit.PruneSearch()
+
+        visitor = BodyCollector(self)
+        rx.dfs_search(self.kinematic_structure, [connection.child.index], visitor)
+
+        return visitor.bodies
+
+    @lru_cache(maxsize=None)
+    def get_controlled_parent_connection(self, body: Body) -> Connection:
+        """
+        Traverse the chain up until a controlled active connection is found.
+        :param body: The body where the search starts.
+        :return: The controlled active connection.
+        """
+        if body == self.root:
+            raise ValueError(f"Cannot get controlled parent connection for root body {self.root.name}.")
+        if body.parent_connection in self.controlled_connections:
+            return body.parent_connection
+        return self.get_controlled_parent_connection(body.parent_body)
+
+    def compute_chain_reduced_to_controlled_joints(self, root: Body, tip: Body) -> Tuple[Body, Body]:
+        """
+        Removes root and tip links until they are both connected with a controlled connection.
+        Useful for implementing collision avoidance.
+
+        1. Compute the kinematic chain of bodies between root and tip.
+        2. Remove all entries from link_a downward until one is connected with a connection from this view.
+        2. Remove all entries from link_b upward until one is connected with a connection from this view.
+
+        :param root: start of the chain
+        :param tip: end of the chain
+        :return: start and end link of the reduced chain
+        """
+        downward_chain, upward_chain = self.compute_split_chain_of_connections(root=root, tip=tip)
+        chain = downward_chain + upward_chain
+        for i, connection in enumerate(chain):
+            if connection in self.connections:
+                new_root = connection
+                break
+        else:
+            raise KeyError(f'no controlled connection in chain between {root} and {tip}')
+        for i, connection in enumerate(reversed(chain)):
+            if connection in self.connections:
+                new_tip = connection
+                break
+        else:
+            raise KeyError(f'no controlled connection in chain between {root} and {tip}')
+
+        if new_root in upward_chain:
+            new_root_body = new_root.parent
+        else:  # if new_root is in the downward chain, we need to "flip" it by returning its child
+            new_root_body = new_root.child
+        if new_tip in upward_chain:
+            new_tip_body = new_tip.child
+        else:  # if new_root is in the downward chain, we need to "flip" it by returning its parent
+            new_tip_body = new_tip.parent
+        return new_root_body, new_tip_body

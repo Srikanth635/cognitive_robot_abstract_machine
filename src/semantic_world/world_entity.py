@@ -67,6 +67,24 @@ class WorldEntity:
 
 
 @dataclass
+class CollisionCheckingConfig:
+    buffer_zone_distance: Optional[float] = None
+    """
+    This represents a buffer zone, which should be adhered to, but nothing explodes when it gets violated a little bit.
+    """
+
+    violated_distance: float = 0.0
+    """
+    If this threshold is violated, we are in serious trouble.
+    """
+
+    disabled: bool = False
+    """
+    If collisions with this body should be ignored.
+    """
+
+
+@dataclass
 class Body(WorldEntity):
     """
     Represents a body in the world.
@@ -85,10 +103,22 @@ class Body(WorldEntity):
     The poses of the shapes are relative to the link.
     """
 
+    collision_config: Optional[CollisionCheckingConfig] = None
+
+    temp_collision_config: Optional[CollisionCheckingConfig] = None
+
     index: Optional[int] = field(default=None, init=False)
     """
     The index of the entity in `_world.kinematic_structure`.
     """
+
+    def get_collision_config(self) -> CollisionCheckingConfig:
+        if self.temp_collision_config is not None:
+            return self.temp_collision_config
+        return self.collision_config
+
+    def reset_temporary_collision_config(self):
+        self.temp_collision_config = None
 
     def __post_init__(self):
         if not self.name:
@@ -336,6 +366,7 @@ class RootedView(View):
     @property
     def bodies(self) -> List[Body]:
         return self._world.get_bodies_of_branch(self.root)
+
 
 @dataclass(unsafe_hash=True)
 class EnvironmentView(RootedView):
