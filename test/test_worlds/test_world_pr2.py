@@ -8,7 +8,7 @@ from semantic_world.adapters.urdf import URDFParser
 from semantic_world.connections import OmniDrive, PrismaticConnection, RevoluteConnection
 from semantic_world.ik_solver import MaxIterationsException, UnreachableException
 from semantic_world.prefixed_name import PrefixedName
-from semantic_world.robots import PR2, CollisionConfig
+from semantic_world.robots import PR2
 from semantic_world.spatial_types.derivatives import Derivatives
 from semantic_world.spatial_types.symbol_manager import symbol_manager
 from semantic_world.world import World, Body
@@ -222,5 +222,5 @@ def test_load_collision_config_srdf(pr2_world):
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                         '..', '..', 'resources', 'collision_configs', 'pr2.srdf')
     pr2.load_collision_config(path)
-    assert len(pr2.collision_config.disabled_bodies) == 20
+    assert len(pr2.collision_config.bodies_with_enabled_collision) == 20
     assert len(pr2.collision_config.disabled_pairs) == 794

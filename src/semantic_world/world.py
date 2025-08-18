@@ -26,12 +26,13 @@ from .exceptions import DuplicateViewError, AddingAnExistingViewError
 from .exceptions import ViewNotFoundError
 from .ik_solver import InverseKinematicsSolver
 from .prefixed_name import PrefixedName
+from .robots import AbstractRobot
 from .spatial_types import spatial_types as cas
 from .spatial_types.derivatives import Derivatives, DerivativeMap
 from .spatial_types.math import inverse_frame
 from .types import NpMatrix4x4
 from .utils import IDGenerator, copy_lru_cache
-from .world_entity import Body, Connection, View
+from .world_entity import Body, Connection, View, CollisionCheckingConfig
 from .world_state import WorldState
 
 logger = logging.getLogger(__name__)
@@ -95,7 +96,7 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
         all_fks = cas.vstack([self.child_body_to_fk_expr[body.name] for body in self.world.bodies])
         tf = cas.vstack([pose for pose in self.tf.values()])
         collision_fks = []
-        for body in self.world.bodies_with_collisions:
+        for body in sorted(self.world.bodies_with_enabled_collision, key=lambda b: b.name):
             if body == self.world.root:
                 continue
             collision_fks.append(self.child_body_to_fk_expr[body.name])
@@ -113,6 +114,7 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
         self.compute_forward_kinematics_np.cache_clear()
         self.subs = self.world.state.positions
         self.forward_kinematics_for_all_bodies = self.compiled_all_fks.fast_call(self.subs)
+        self.collision_fks = self.compiled_collision_fks.fast_call(self.subs)
 
     def compute_tf(self) -> np.ndarray:
         """
@@ -272,12 +274,18 @@ class World:
     Name of the world. May act as default namespace for all bodies and views in the world which do not have a prefix.
     """
 
-    disabled_collision_pairs: Set[Tuple[Body, Body]] = field(default_factory=lambda: set())
+    _disabled_collision_pairs: Set[Tuple[Body, Body]] = field(default_factory=lambda: set())
+    """
+    Collisions for these Body pairs is disabled.
+    """
 
-    temp_disabled_collision_pairs: Set[Tuple[Body, Body]] = field(default_factory=lambda: set())
+    _temp_disabled_collision_pairs: Set[Tuple[Body, Body]] = field(default_factory=lambda: set())
+    """
+    A set of Body pairs for which collisions are temporarily disabled.
+    """
 
     def reset_temporary_collision_config(self):
-        self.temp_disabled_collision_pairs = set()
+        self._temp_disabled_collision_pairs = set()
         for body in self.bodies_with_collisions:
             body.reset_temporary_collision_config()
 
@@ -397,6 +405,7 @@ class World:
             self.notify_state_change()
             self._model_version += 1
             self.validate()
+            self.disable_non_robot_collisions()
 
     @property
     def bodies(self) -> List[Body]:
@@ -418,6 +427,11 @@ class World:
         :return: A list of all connections in the world.
         """
         return list(self.kinematic_structure.edges())
+
+    @property
+    def frozen_connections(self) -> Set[Connection]:
+        return set(c for c in self.connections
+                   if isinstance(c, ActiveConnection) and (not c.is_controlled or c.frozen_for_collision_avoidance))
 
     @modifies_world
     def add_body(self, body: Body) -> None:
@@ -816,8 +830,8 @@ class World:
         if root == tip:
             return [], []
         root_chain, common_ancestor, tip_chain = self.compute_split_chain_of_bodies(root, tip)
-        root_chain.append(common_ancestor[0])
-        tip_chain.insert(0, common_ancestor[0])
+        root_chain = root_chain + [common_ancestor[0]]
+        tip_chain = [common_ancestor[0]] + tip_chain
         root_connections = []
         for i in range(len(root_chain) - 1):
             root_connections.append(self.get_connection(root_chain[i + 1], root_chain[i]))
@@ -953,6 +967,9 @@ class World:
         """
         return self._fk_computer.compute_forward_kinematics_np(root, tip).copy()
 
+    def compute_forward_kinematics_of_all_collision_bodies(self) -> np.ndarray:
+        return self._fk_computer.collision_fks
+
     def transform(self, spatial_object: cas.SpatialType, target_frame: Body) -> cas.SpatialType:
         """
         Transform a given spatial object from its reference frame to a target frame.
@@ -1069,10 +1086,11 @@ class World:
                         continue
                     if body_b not in self.bodies_with_collisions:
                         continue
-                    self.disable_collision_pair(body_a, body_b)
+                    self.add_disabled_collision_pair(body_a, body_b)
                 elif child.tag == SRDF_DISABLE_ALL_COLLISIONS:
                     body = self.get_body_by_name(child.attrib['link'])
-                    body.collision_config.disabled = True
+                    collision_config = CollisionCheckingConfig(disabled=True)
+                    body.set_static_collision_config(collision_config)
 
     @property
     def controlled_connections(self) -> Set[ActiveConnection]:
@@ -1099,27 +1117,42 @@ class World:
 
         :return: Set of body pairs that should have collisions disabled
         """
-        body_combinations = set(combinations_with_replacement(self.bodies_with_collisions, 2))
+        body_combinations = set(combinations_with_replacement(self.bodies_with_enabled_collision, 2))
         disabled_pairs = set()
         for body_a, body_b in list(body_combinations):
             if body_a == body_b:
                 continue
             if self.is_controlled_connection_in_chain(body_a, body_b):
                 continue
-            self.disable_collision_pair(body_a, body_b)
+            self.add_disabled_collision_pair(body_a, body_b)
             disabled_pairs.add((body_a, body_b))
         return disabled_pairs
 
     @property
     def disabled_bodies(self) -> Set[Body]:
-        return set(b for b in self.bodies_with_collisions if b.collision_config.disabled)
+        return set(b for b in self.bodies_with_collisions if b.collision_config and b.collision_config.disabled)
 
-    def disable_collision_pair(self, body_a: Body, body_b: Body):
+    @property
+    def bodies_with_enabled_collision(self) -> Set[Body]:
+        return set(b for b in self.bodies_with_collisions if b.collision_config and not b.collision_config.disabled)
+
+    @property
+    def disabled_collision_pairs(self) -> Set[Tuple[Body, Body]]:
+        return self._disabled_collision_pairs | self._temp_disabled_collision_pairs
+
+    def add_disabled_collision_pair(self, body_a: Body, body_b: Body):
         """
         Disable collision checking between two bodies
         """
         pair = tuple(sorted([body_a, body_b], key=lambda b: b.name))
-        self.disabled_collision_pairs.add(pair)
+        self._disabled_collision_pairs.add(pair)
+
+    def add_temp_disabled_collision_pair(self, body_a: Body, body_b: Body):
+        """
+        Disable collision checking between two bodies
+        """
+        pair = tuple(sorted([body_a, body_b], key=lambda b: b.name))
+        self._temp_disabled_collision_pairs.add(pair)
 
     def avoid_collisions(self, view: View, threshold: float):
         """
@@ -1129,12 +1162,12 @@ class World:
         :return:
         """
         for body in view.bodies:
-            body.collision_config.buffer_zone_distance = threshold
+            body._collision_config.buffer_zone_distance = threshold
 
     def disable_collision_checking(self, view1: View, view2: Optional[View] = None):
         for body_a in view1.bodies:
             for body_b in view2.bodies:
-                self.disable_collision_pair(body_a, body_b)
+                self.add_disabled_collision_pair(body_a, body_b)
 
     def get_directly_child_bodies_with_collision(self, connection: Connection) -> Set[Body]:
         """
@@ -1216,3 +1249,15 @@ class World:
         else:  # if new_root is in the downward chain, we need to "flip" it by returning its parent
             new_tip_body = new_tip.parent
         return new_root_body, new_tip_body
+
+    def disable_non_robot_collisions(self) -> None:
+        robot_bodies = set()
+        robot: AbstractRobot
+        for robot in self.search_for_views_of_type(AbstractRobot):
+            robot_bodies.update(robot.bodies_with_collisions)
+
+        non_robot_bodies = set(self.bodies_with_enabled_collision) - robot_bodies
+        for body_a in non_robot_bodies:
+            for body_b in non_robot_bodies:
+                self.add_disabled_collision_pair(body_a, body_b)
+

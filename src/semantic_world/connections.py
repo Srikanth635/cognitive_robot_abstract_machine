@@ -12,7 +12,7 @@ from .prefixed_name import PrefixedName
 from .spatial_types.derivatives import DerivativeMap
 from .spatial_types.math import quaternion_from_rotation_matrix
 from .types import NpMatrix4x4
-from .world_entity import Connection
+from .world_entity import Connection, CollisionCheckingConfig
 
 if TYPE_CHECKING:
     from .world import World
@@ -118,6 +118,11 @@ class ActiveConnection(Connection):
     @property
     def active_dofs(self) -> List[DegreeOfFreedom]:
         return []
+
+    def set_static_collision_config_for_direct_child_bodies(self, collision_config: CollisionCheckingConfig):
+        for child_body in self._world.get_directly_child_bodies_with_collision(self):
+            if not child_body.collision_config.disabled:
+                child_body.set_static_collision_config(collision_config)
 
 
 @dataclass

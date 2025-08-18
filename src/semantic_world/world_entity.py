@@ -70,17 +70,25 @@ class WorldEntity:
 class CollisionCheckingConfig:
     buffer_zone_distance: Optional[float] = None
     """
-    This represents a buffer zone, which should be adhered to, but nothing explodes when it gets violated a little bit.
+    Distance defining a buffer zone around the entity. The buffer zone represents a soft boundary where
+    proximity should be monitored but minor violations are acceptable.
     """
 
     violated_distance: float = 0.0
     """
-    If this threshold is violated, we are in serious trouble.
+    Critical distance threshold that must not be violated. Any proximity below this threshold represents
+    a severe collision risk requiring immediate attention.
     """
 
-    disabled: bool = False
+    disabled: Optional[bool] = None
     """
-    If collisions with this body should be ignored.
+    Flag to enable/disable collision checking for this entity. When True, all collision checks are ignored.
+    """
+
+    max_avoided_bodies: int = 1
+    """
+    Maximum number of other bodies this body should avoid simultaneously.
+    If more bodies than this are in the buffer zone, only the closest ones are avoided.
     """
 
 
@@ -103,22 +111,45 @@ class Body(WorldEntity):
     The poses of the shapes are relative to the link.
     """
 
-    collision_config: Optional[CollisionCheckingConfig] = None
+    _collision_config: Optional[CollisionCheckingConfig] = field(default_factory=CollisionCheckingConfig)
+    """
+    Configuration for collision checking.
+    """
 
-    temp_collision_config: Optional[CollisionCheckingConfig] = None
+    _temp_collision_config: Optional[CollisionCheckingConfig] = None
+    """
+    Temporary configuration for collision checking, takes priority over `collision_config`.
+    """
 
     index: Optional[int] = field(default=None, init=False)
     """
     The index of the entity in `_world.kinematic_structure`.
     """
 
-    def get_collision_config(self) -> CollisionCheckingConfig:
-        if self.temp_collision_config is not None:
-            return self.temp_collision_config
-        return self.collision_config
+    @property
+    def collision_config(self) -> CollisionCheckingConfig:
+        if self._temp_collision_config is not None:
+            return self._temp_collision_config
+        return self._collision_config
+
+    def set_static_collision_config(self, collision_config: CollisionCheckingConfig):
+        merged_config = CollisionCheckingConfig(
+            buffer_zone_distance=collision_config.buffer_zone_distance if collision_config.buffer_zone_distance is not None else self._collision_config.buffer_zone_distance,
+            violated_distance=collision_config.violated_distance,
+            disabled=collision_config.disabled if collision_config.disabled is not None else self._collision_config.disabled,
+            max_avoided_bodies=collision_config.max_avoided_bodies
+        )
+        self._collision_config = merged_config
+
+    def set_static_collision_distances(self, buffer_zone_distance: float, violated_distance: float):
+        self._collision_config.buffer_zone_distance = buffer_zone_distance
+        self._collision_config.violated_distance = violated_distance
+
+    def set_temporary_collision_config(self, collision_config: CollisionCheckingConfig):
+        self._temp_collision_config = collision_config
 
     def reset_temporary_collision_config(self):
-        self.temp_collision_config = None
+        self._temp_collision_config = None
 
     def __post_init__(self):
         if not self.name:

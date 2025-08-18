@@ -7,7 +7,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from functools import lru_cache, cached_property
 from itertools import combinations_with_replacement
-from typing import Tuple, Iterable, Set, Dict, Union
+from typing import Tuple, Iterable, Set, Dict, Union, TYPE_CHECKING
 
 from lxml import etree
 import rustworkx as rx
@@ -16,8 +16,10 @@ from typing_extensions import Optional, List, Self
 from .connections import ActiveConnection, FixedConnection, OmniDrive
 from .prefixed_name import PrefixedName
 from .spatial_types.spatial_types import Vector3
-from .world import World
 from .world_entity import Body, RootedView, Connection, View
+
+if TYPE_CHECKING:
+    from .world import World
 
 
 @dataclass
@@ -390,7 +392,7 @@ class AbstractRobot(RootedView, ABC):
     @cached_property
     def unmovable_bodies_with_collision(self) -> Set[Body]:
         result = set()
-        for body in self.bodies_with_collisions:
+        for body in self.bodies_with_enabled_collision:
             if not self._world.is_controlled_connection_in_chain(self._world.root, body):
                 result.add(body)
         return result
@@ -398,6 +400,10 @@ class AbstractRobot(RootedView, ABC):
     @cached_property
     def bodies_with_collisions(self) -> List[Body]:
         return [x for x in self.bodies if x.has_collision()]
+
+    @property
+    def bodies_with_enabled_collision(self) -> Set[Body]:
+        return set(body for body in self.bodies if body.has_collision() and not body.collision_config.disabled)
 
 
 @dataclass
@@ -476,7 +482,7 @@ class PR2(AbstractRobot):
             _world=world,
         )
 
-        robot.drive = robot.odom.parent_connection
+        robot.drive = robot.root.parent_connection
 
         # Create left arm
         left_gripper_thumb = Finger(name=PrefixedName('left_gripper_thumb', prefix=robot.name.name),
