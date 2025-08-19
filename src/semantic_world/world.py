@@ -308,19 +308,19 @@ class World:
         return hash(id(self))
 
     @property
-    def active_degrees_of_freedom(self) -> List[DegreeOfFreedom]:
-        dofs = []
+    def active_degrees_of_freedom(self) -> Set[DegreeOfFreedom]:
+        dofs = set()
         for connection in self.connections:
             if isinstance(connection, ActiveConnection):
-                dofs.extend(connection.active_dofs)
+                dofs.update(set(connection.active_dofs))
         return dofs
 
     @property
-    def passive_degrees_of_freedom(self) -> List[DegreeOfFreedom]:
-        dofs = []
+    def passive_degrees_of_freedom(self) -> Set[DegreeOfFreedom]:
+        dofs = set()
         for connection in self.connections:
             if isinstance(connection, PassiveConnection):
-                dofs.extend(connection.passive_dofs)
+                dofs.update(set(connection.passive_dofs))
         return dofs
 
     def validate(self) -> bool:
