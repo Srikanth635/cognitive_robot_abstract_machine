@@ -1188,7 +1188,8 @@ class World:
                 if body.has_collision():
                     self.bodies.add(body)
 
-            def tree_edge(self, e: Connection):
+            def tree_edge(self, args: Tuple[int, int, Connection]) -> None:
+                parent_index, child_index, e = args
                 if (isinstance(e, ActiveConnection)
                         and e.is_controlled
                         and not e.frozen_for_collision_avoidance):
@@ -1228,13 +1229,17 @@ class World:
         downward_chain, upward_chain = self.compute_split_chain_of_connections(root=root, tip=tip)
         chain = downward_chain + upward_chain
         for i, connection in enumerate(chain):
-            if connection in self.connections:
+            if (isinstance(connection, ActiveConnection)
+                    and connection.is_controlled
+                    and not connection.frozen_for_collision_avoidance):
                 new_root = connection
                 break
         else:
             raise KeyError(f'no controlled connection in chain between {root} and {tip}')
         for i, connection in enumerate(reversed(chain)):
-            if connection in self.connections:
+            if (isinstance(connection, ActiveConnection)
+                    and connection.is_controlled
+                    and not connection.frozen_for_collision_avoidance):
                 new_tip = connection
                 break
         else:
