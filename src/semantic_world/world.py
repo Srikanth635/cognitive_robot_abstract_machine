@@ -482,6 +482,12 @@ class World:
 
     @modifies_world
     def remove_connection(self, connection: Connection) -> None:
+        """
+        Removes a connection and deletes the corresponding degree of freedom, if it was only used by this connection.
+        Might create disconnected bodies, so make sure to add a new connection or delete the child body.
+
+        :param connection: The connection to be removed
+        """
         remaining_dofs = set()
         for remaining_connection in self.connections:
             if remaining_connection == connection:
