@@ -19,11 +19,11 @@ import rustworkx.visualization
 from lxml import etree
 from typing_extensions import List
 
-from .connections import ActiveConnection, PassiveConnection
+from .connections import ActiveConnection, PassiveConnection, FixedConnection
 from .connections import HasUpdateState, Has1DOFState, Connection6DoF
 from .degree_of_freedom import DegreeOfFreedom
 from .exceptions import DuplicateViewError, AddingAnExistingViewError
-from .exceptions import ViewNotFoundError
+from .exceptions import ViewNotFoundError, MovingBranchError
 from .ik_solver import InverseKinematicsSolver
 from .prefixed_name import PrefixedName
 from .robots import AbstractRobot
@@ -614,6 +614,17 @@ class World:
         connection = root_connection or Connection6DoF(parent=self_root, child=other_root, _world=self)
         self.add_connection(connection)
 
+    @modifies_world
+    def move_branch(self, branch_root: Body, new_parent: Body) -> None:
+        if not isinstance(branch_root.parent_connection, FixedConnection):
+            raise ValueError(f"Cannot move branch: {branch_root.name} is not connected with a FixedConnection")
+        new_parent_T_root = self.compute_forward_kinematics(new_parent, branch_root)
+        new_connection = FixedConnection(parent=new_parent,
+                                         child=branch_root,
+                                         _world=self,
+                                         origin_expression=new_parent_T_root)
+        self.add_connection(new_connection)
+
     def merge_world_at_pose(self, other: World, pose: cas.TransformationMatrix) -> None:
         """
         Merge another world into the existing one, creates a 6DoF connection between the root of this world and the root
@@ -1108,7 +1119,7 @@ class World:
                 return True
         return False
 
-    def compute_uncontrolled_body_pairs(self) -> Set[Tuple[Body, Body]]:
+    def disable_collisions_for_adjacent_bodies(self):
         """
         Computes pairs of bodies that should not be collision checked because they have no controlled connections
         between them.
@@ -1119,15 +1130,13 @@ class World:
         :return: Set of body pairs that should have collisions disabled
         """
         body_combinations = set(combinations_with_replacement(self.bodies_with_enabled_collision, 2))
-        disabled_pairs = set()
         for body_a, body_b in list(body_combinations):
             if body_a == body_b:
+                self.add_disabled_collision_pair(body_a, body_b)
                 continue
             if self.is_controlled_connection_in_chain(body_a, body_b):
                 continue
             self.add_disabled_collision_pair(body_a, body_b)
-            disabled_pairs.add((body_a, body_b))
-        return disabled_pairs
 
     @property
     def disabled_bodies(self) -> Set[Body]:
@@ -1266,13 +1275,6 @@ class World:
         for body_a in non_robot_bodies:
             for body_b in non_robot_bodies:
                 self.add_disabled_collision_pair(body_a, body_b)
-
-    def disable_collisions_for_adjacent_bodies(self):
-        """
-        Find connecting links and disable all adjacent link collisions
-        """
-        disabled_pairs = self.compute_uncontrolled_body_pairs()
-        self._disabled_collision_pairs.update(disabled_pairs)
 
     def search_for_robot_with_body(self, body: Body) -> Optional[AbstractRobot]:
         robots = [v for v in self.views if isinstance(v, AbstractRobot) and body in v.bodies]
