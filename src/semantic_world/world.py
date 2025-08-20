@@ -481,6 +481,20 @@ class World:
             logger.debug("Trying to remove a body that is not part of this world.")
 
     @modifies_world
+    def remove_connection(self, connection: Connection) -> None:
+        remaining_dofs = set()
+        for remaining_connection in self.connections:
+            if remaining_connection == connection:
+                continue
+            remaining_dofs.update(remaining_connection.dofs)
+
+        for dof in connection.dofs:
+            if dof not in remaining_dofs:
+                self.degrees_of_freedom.remove(dof)
+                del self.state[dof.name]
+        self.kinematic_structure.remove_edge(connection.parent.index, connection.child.index)
+
+    @modifies_world
     def merge_world(self, other: World, root_connection: Connection = None) -> None:
         """
         Merge a world into the existing one by merging degrees of freedom, states, connections, and bodies.
