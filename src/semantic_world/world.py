@@ -10,6 +10,7 @@ from functools import wraps, lru_cache
 from itertools import combinations_with_replacement
 from typing import Dict, Tuple, OrderedDict, Union, Optional, Type, Set
 from typing import TypeVar
+from typing import Dict, Tuple, OrderedDict, Union, Optional, Generic, TypeVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -40,6 +41,8 @@ logger = logging.getLogger(__name__)
 id_generator = IDGenerator()
 
 ConnectionTypeVar = TypeVar('ConnectionTypeVar', bound=Connection)
+
+T = TypeVar("T")
 
 
 class PlotAlignment(IntEnum):
@@ -573,6 +576,16 @@ class World:
         jerks = [self.get_degree_of_freedom_by_name(v_name).symbols.jerk for v_name in self.state]
         return positions + velocities + accelerations + jerks
 
+    def get_views_by_type(self, view_type: Type[Generic[T]]) -> List[T]:
+        """
+        Retrieves all views of a specific type from the world.
+
+        :param view_type: The class (type) of the views to search for.
+        :return: A list of `View` objects that match the given type.
+        """
+        return [view for view in self.views if isinstance(view, view_type)]
+
+
     @modifies_world
     def remove_body(self, body: Body) -> None:
         if body._world is self and body.index is not None:
@@ -581,6 +594,26 @@ class World:
             body.index = None
         else:
             logger.debug("Trying to remove a body that is not part of this world.")
+
+    @modifies_world
+    def remove_connection(self, connection: Connection) -> None:
+        """
+        Removes a connection and deletes the corresponding degree of freedom, if it was only used by this connection.
+        Might create disconnected bodies, so make sure to add a new connection or delete the child body.
+
+        :param connection: The connection to be removed
+        """
+        remaining_dofs = set()
+        for remaining_connection in self.connections:
+            if remaining_connection == connection:
+                continue
+            remaining_dofs.update(remaining_connection.dofs)
+
+        for dof in connection.dofs:
+            if dof not in remaining_dofs:
+                self.degrees_of_freedom.remove(dof)
+                del self.state[dof.name]
+        self.kinematic_structure.remove_edge(connection.parent.index, connection.child.index)
 
     @modifies_world
     def merge_world(self, other: World, root_connection: Connection = None) -> None:
@@ -609,7 +642,12 @@ class World:
             other.remove_body(connection.parent)
             other.remove_body(connection.child)
             self.add_connection(connection)
+
+        for body in other.bodies:
+            other.remove_body(body)
+            self.add_body(body)
         other.world_is_being_modified = False
+
 
         connection = root_connection or Connection6DoF(parent=self_root, child=other_root, _world=self)
         self.add_connection(connection)
