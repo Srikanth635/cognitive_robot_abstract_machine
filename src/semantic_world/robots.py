@@ -16,7 +16,7 @@ from typing_extensions import Optional, List, Self
 from .connections import ActiveConnection, FixedConnection, OmniDrive
 from .prefixed_name import PrefixedName
 from .spatial_types.spatial_types import Vector3
-from .world_entity import Body, RootedView, Connection, View
+from .world_entity import Body, RootedView, Connection, View, CollisionCheckingConfig
 
 if TYPE_CHECKING:
     from .world import World
@@ -325,6 +325,10 @@ class AbstractRobot(RootedView, ABC):
     """
     A collection of all kinematic chains containing a sensor, such as a camera.
     """
+
+    default_collision_config: CollisionCheckingConfig = field(
+        kw_only=True,
+        default_factory=lambda: CollisionCheckingConfig(buffer_zone_distance=0.05))
 
     @property
     def controlled_connections(self) -> Set[ActiveConnection]:

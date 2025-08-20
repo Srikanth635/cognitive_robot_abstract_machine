@@ -406,6 +406,7 @@ class World:
             self._model_version += 1
             self.validate()
             self.disable_non_robot_collisions()
+            self.disable_collisions_for_adjacent_bodies()
 
     @property
     def bodies(self) -> List[Body]:
@@ -1103,7 +1104,7 @@ class World:
         root_part, tip_part = self.compute_split_chain_of_connections(root, tip)
         connections = root_part + tip_part
         for c in connections:
-            if c in self.controlled_connections:
+            if isinstance(c, ActiveConnection) and c.is_controlled and not c.frozen_for_collision_avoidance:
                 return True
         return False
 
@@ -1266,3 +1267,17 @@ class World:
             for body_b in non_robot_bodies:
                 self.add_disabled_collision_pair(body_a, body_b)
 
+    def disable_collisions_for_adjacent_bodies(self):
+        """
+        Find connecting links and disable all adjacent link collisions
+        """
+        disabled_pairs = self.compute_uncontrolled_body_pairs()
+        self._disabled_collision_pairs.update(disabled_pairs)
+
+    def search_for_robot_with_body(self, body: Body) -> Optional[AbstractRobot]:
+        robots = [v for v in self.views if isinstance(v, AbstractRobot) and body in v.bodies]
+        if len(robots) == 1:
+            return robots[0]
+        if len(robots) > 1:
+            raise ValueError(f"Found multiple robots with body {body.name}")
+        return None
