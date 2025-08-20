@@ -398,6 +398,15 @@ class RootedView(View):
     def bodies(self) -> List[Body]:
         return self._world.get_bodies_of_branch(self.root)
 
+    @property
+    def bodies_with_collisions(self) -> List[Body]:
+        return [x for x in self.bodies if x.has_collision()]
+
+    @property
+    def bodies_with_enabled_collision(self) -> Set[Body]:
+        return set(body for body in self.bodies if body.has_collision() and not body.collision_config.disabled)
+
+
 
 @dataclass(unsafe_hash=True)
 class EnvironmentView(RootedView):

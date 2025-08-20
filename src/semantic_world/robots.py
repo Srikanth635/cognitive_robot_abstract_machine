@@ -401,15 +401,6 @@ class AbstractRobot(RootedView, ABC):
                 result.add(body)
         return result
 
-    @cached_property
-    def bodies_with_collisions(self) -> List[Body]:
-        return [x for x in self.bodies if x.has_collision()]
-
-    @property
-    def bodies_with_enabled_collision(self) -> Set[Body]:
-        return set(body for body in self.bodies if body.has_collision() and not body.collision_config.disabled)
-
-
 @dataclass
 class PR2(AbstractRobot):
     """
