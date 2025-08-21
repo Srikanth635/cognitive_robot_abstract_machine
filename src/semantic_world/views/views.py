@@ -5,7 +5,6 @@ from probabilistic_model.probabilistic_circuit.rx.helper import uniform_measure_
 from typing_extensions import List
 
 from semantic_world.geometry import BoundingBox, BoundingBoxCollection
-from semantic_world.prefixed_name import PrefixedName
 from semantic_world.spatial_types import Point3
 from semantic_world.variables import SpatialVariables
 from semantic_world import PrefixedName

@@ -258,10 +258,6 @@ class View(WorldEntity):
 
     This class can hold references to certain bodies that gain meaning in this context.
     """
-    possible_locations: List[View] = field(init=False, default_factory=list, hash=False)
-    """
-    A list of views that represent possible locations for this view.
-    """
 
     def _bodies(self, visited: Set[int]) -> Set[Body]:
         """
