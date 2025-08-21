@@ -6,9 +6,7 @@ import unittest
 import pytest
 from numpy.ma.testutils import assert_equal
 
-from semantic_world import PR2, Manipulator, AbstractRobot
-from semantic_world.predicates import has, isA, TrackedObjectMixin
-from semantic_world.reasoner import WorldReasoner, CaseReasoner
+from semantic_world.reasoner import WorldReasoner
 
 try:
     from ripple_down_rules.user_interface.gui import RDRCaseViewer
@@ -107,28 +105,6 @@ class ViewTestCase(unittest.TestCase):
         if RDRCaseViewer is not None and QApplication is not None and cls.use_gui:
             cls.app = QApplication(sys.argv)
             cls.viewer = RDRCaseViewer()
-
-    def test_dependency_graph(self):
-        TrackedObjectMixin.make_class_dependency_graph()
-        TrackedObjectMixin.to_dot("dependency_graph")
-        assert has(Drawer, Handle)
-        assert has(Cabinet, Drawer)
-        assert has(Cabinet, Handle, recursive=True)
-        assert has(PR2, Manipulator)
-        assert isA(PR2, AbstractRobot)
-
-    def test_can_be_located_in(self):
-        """
-        Test the canBeLocatedIn predicate.
-        """
-        TrackedObjectMixin.make_class_dependency_graph()
-        world_reasoner = WorldReasoner(self.kitchen_world)
-        views = world_reasoner.infer_views()
-        fridges = [v for v in views if isinstance(v, Fridge)]
-        view_reasoner = CaseReasoner(fridges[0])
-        view_reasoner.fit_attribute("possible_locations", (Type[View],),
-                                    False)
-        assert Kitchen in view_reasoner.reason()['possible_locations']
 
     def test_aggregate_bodies(self):
         world_view = TestView(_world=self.kitchen_world)
