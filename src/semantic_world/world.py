@@ -15,7 +15,13 @@ import rustworkx.visit
 import rustworkx.visualization
 from typing_extensions import List, Type
 
-from .connections import HasUpdateState, Has1DOFState, Connection6DoF
+from .connections import (
+    HasUpdateState,
+    Has1DOFState,
+    Connection6DoF,
+    ActiveConnection,
+    PassiveConnection,
+)
 from .degree_of_freedom import DegreeOfFreedom
 from .exceptions import DuplicateViewError, AddingAnExistingViewError, ViewNotFoundError
 from .ik_solver import InverseKinematicsSolver
@@ -296,8 +302,12 @@ class World:
         return True
 
     @modifies_world
-    def create_degree_of_freedom(self, name: PrefixedName, lower_limits: Optional[DerivativeMap[float]] = None,
-                                 upper_limits: Optional[DerivativeMap[float]] = None) -> DegreeOfFreedom:
+    def create_degree_of_freedom(
+        self,
+        name: PrefixedName,
+        lower_limits: Optional[DerivativeMap[float]] = None,
+        upper_limits: Optional[DerivativeMap[float]] = None,
+    ) -> DegreeOfFreedom:
         """
         Create a degree of freedom in the world and return it.
         For dependent kinematics, DoFs must be created with this method and passed to the connection's conctructor.
@@ -306,7 +316,22 @@ class World:
         :param upper_limits: If the DoF is actively controlled, it must have at least velocity limits.
         :return: The already registered DoF.
         """
-        dof = DegreeOfFreedom(name=name, lower_limits=lower_limits, upper_limits=upper_limits, _world=self)
+        dof = DegreeOfFreedom(
+            name=name, lower_limits=lower_limits, upper_limits=upper_limits, _world=self
+        )
+        self.register_degree_of_freedom(dof)
+        return dof
+
+    @modifies_world
+    def register_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
+        """
+        Register a degree of freedom in the world.
+        This is used to register DoFs that are not created by the world, but are part of the world model.
+        :param dof: The degree of freedom to register.
+        """
+        if dof in self.degrees_of_freedom:
+            logger.debug(f"Degree of freedom {dof.name} already registered in world {self.name}.")
+            return
         initial_position = 0
         lower_limit = dof.lower_limits.position
         if lower_limit is not None:
@@ -314,10 +339,9 @@ class World:
         upper_limit = dof.upper_limits.position
         if upper_limit is not None:
             initial_position = min(upper_limit, initial_position)
-        self.state[name].position = initial_position
-        assert [dof for dof in self.degrees_of_freedom if dof.name == name].count(dof) == 0
+        self.state[dof.name].position = initial_position
         self.degrees_of_freedom.append(dof)
-        return dof
+
 
     def modify_world(self) -> WorldModelUpdateContextManager:
         return WorldModelUpdateContextManager(self)
@@ -362,10 +386,20 @@ class World:
             # self._fix_tree_structure()
             self.reset_cache()
             self.compile_forward_kinematics_expressions()
-            # self._cleanup_unused_dofs()
+            self.deleted_orphaned_dof()
             self.notify_state_change()
             self._model_version += 1
             self.validate()
+
+    def deleted_orphaned_dof(self):
+        actual_dofs = set()
+        for connection in self.connections:
+            if isinstance(connection, ActiveConnection):
+                actual_dofs.update(set(connection.active_dofs))
+            if isinstance(connection, PassiveConnection):
+                actual_dofs.update(set(connection.passive_dofs))
+        self.degrees_of_freedom = list(actual_dofs)
+
 
     @property
     def bodies(self) -> List[Body]:
@@ -527,14 +561,20 @@ class World:
             other.remove_body(connection.parent)
             other.remove_body(connection.child)
             self.add_connection(connection)
-
         for body in other.bodies:
-            other.remove_body(body)
-            self.add_body(body)
+            if body._world is not None:
+                other.remove_body(body)
+
+        for view in other.views:
+            self.add_view(view)
+
         other.world_is_being_modified = False
 
-
-        connection = root_connection or Connection6DoF(parent=self_root, child=other_root, _world=self)
+        connection = root_connection or Connection6DoF(
+            parent=self_root, child=other_root, _world=self
+        )
+        for dof in connection.dofs:
+            self.register_degree_of_freedom(dof)
         self.add_connection(connection)
 
     def merge_world_at_pose(self, other: World, pose: cas.TransformationMatrix) -> None:
