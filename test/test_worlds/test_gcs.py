@@ -67,16 +67,16 @@ class GCSFromWorldTestCase(unittest.TestCase):
         cls.world = apartment_parser.parse()
 
     def test_from_world(self):
-        search_space = BoundingBox(min_x=-5, max_x=-2,
-                                   min_y=-1, max_y=2,
+        search_space = BoundingBox(min_x=-2, max_x=2,
+                                   min_y=-2, max_y=2,
                                    min_z=0, max_z=2).as_collection()
         gcs = GraphOfConvexSets.free_space_from_world(self.world, search_space=search_space)
         self.assertIsNotNone(gcs)
         self.assertGreater(len(gcs.graph.nodes()), 0)
         self.assertGreater(len(gcs.graph.edges()), 0)
 
-        start = Point3(-4.5, -0.5, 0.4)
-        target = Point3(-2.5, 1.5, 0.9)
+        start = Point3(-1.5, -0.5, 0.4)
+        target = Point3(1.5, 1.5, 0.9)
 
         path = gcs.path_from_to(start, target)
 
@@ -89,8 +89,8 @@ class GCSFromWorldTestCase(unittest.TestCase):
             gcs.path_from_to(start, target)
 
     def test_navigation_map_from_world(self):
-        search_space = BoundingBox(min_x=-5, max_x=-2,
-                                   min_y=-1, max_y=2,
+        search_space = BoundingBox(min_x=-2, max_x=2,
+                                   min_y=-2, max_y=2,
                                    min_z=0, max_z=2).as_collection()
         gcs = GraphOfConvexSets.navigation_map_from_world(self.world, search_space=search_space)
         self.assertGreater(len(gcs.graph.nodes()), 0)
