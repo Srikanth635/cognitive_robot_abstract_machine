@@ -7,7 +7,6 @@ from typing_extensions import List
 from semantic_world.geometry import BoundingBox, BoundingBoxCollection
 from semantic_world.spatial_types import Point3
 from semantic_world.variables import SpatialVariables
-from semantic_world import PrefixedName
 from semantic_world.world import View, Body
 from semantic_world.world_entity import EnvironmentView
 
