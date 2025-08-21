@@ -5,18 +5,11 @@ from abc import abstractmethod
 import os
 from collections import deque
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass, field, fields
-from functools import reduce
-from typing import List, Optional, TYPE_CHECKING, Set, get_args, get_type_hints, Deque
-import numpy as np
-from numpy import ndarray
-from typing_extensions import Self
-
-from .geometry import Shape, BoundingBox, BoundingBoxCollection
 from dataclasses import dataclass, field
 from dataclasses import fields
 from functools import lru_cache
 from functools import reduce
+from typing import Deque
 from os.path import dirname
 from typing import List, Optional, TYPE_CHECKING, Tuple
 from typing import Set
@@ -40,6 +33,7 @@ from .utils import IDGenerator
 
 if TYPE_CHECKING:
     from .world import World
+    from .degree_of_freedom import DegreeOfFreedom
 
 id_generator = IDGenerator()
 
@@ -412,6 +406,20 @@ class Connection(WorldEntity):
         position = self.origin_expression.to_position()[:3]
         orientation = self.origin_expression.to_quaternion()
         return cas.vstack([position, orientation]).T
+
+    @property
+    def dofs(self) -> Set[DegreeOfFreedom]:
+        """
+        Returns the degrees of freedom associated with this connection.
+        """
+        dofs = set()
+
+        if hasattr(self, 'active_dofs'):
+            dofs.update(set(self.active_dofs))
+        if hasattr(self, 'passive_dofs'):
+            dofs.update(set(self.passive_dofs))
+
+        return dofs
 
 
 def _is_body_view_or_iterable(obj: object) -> bool:
