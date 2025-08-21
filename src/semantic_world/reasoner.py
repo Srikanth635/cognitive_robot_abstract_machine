@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from os.path import dirname
 
-from ripple_down_rules.utils import update_case
 from typing_extensions import ClassVar, List, Dict, Any, TYPE_CHECKING, Optional, Callable, Type
 
 from ripple_down_rules import GeneralRDR, CaseQuery
