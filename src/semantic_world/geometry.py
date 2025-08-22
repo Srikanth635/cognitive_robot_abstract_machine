@@ -100,14 +100,18 @@ class Shape(ABC):
 
         if reference_frame_world is not None:
             reference_T_origin: TransformationMatrix = reference_frame_world.compute_forward_kinematics(reference_frame,
-                                                                                           origin_frame)
+                                                                                                        origin_frame)
         else:
             reference_T_origin: TransformationMatrix = TransformationMatrix()
 
         reference_T_self: TransformationMatrix = reference_T_origin @ origin_T_self
 
         # Get all 8 corners of the BB in link-local space
-        list_self_T_corner = [TransformationMatrix.from_point_rotation_matrix(self_P_corner) for self_P_corner in self._local_bounding_box().get_points()] # shape (8, 3)
+        list_self_T_corner = [
+            TransformationMatrix.from_point_rotation_matrix(self_P_corner)
+            for self_P_corner
+            in self._local_bounding_box().get_points()
+        ] # shape (8, 3)
 
         list_reference_T_corner = [reference_T_self @ self_T_corner for self_T_corner in list_self_T_corner]
 
@@ -546,7 +550,7 @@ class BoundingBoxCollection:
                                          simple_event[SpatialVariables.z.value].simple_sets):
 
             bb = BoundingBox(x.lower, y.lower, z.lower, x.upper, y.upper, z.upper)
-            if not keep_surface and bb.depth == 0 or bb.height == 0 or bb.width == 0:
+            if not keep_surface and (bb.depth == 0 or bb.height == 0 or bb.width == 0):
                 continue
             result.append(bb)
         return BoundingBoxCollection(result)

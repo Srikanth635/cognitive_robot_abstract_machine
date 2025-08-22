@@ -1,10 +1,8 @@
-import re
 from dataclasses import dataclass, field
 from enum import IntEnum
 from typing import TypeVar, Generic
 
 from numpy import ndarray
-from random_events.interval import Bound
 from random_events.product_algebra import *
 
 from semantic_world.connections import (
@@ -182,6 +180,7 @@ class ContainerFactory(ViewFactory[Container]):
                 )
 
         return inner_event
+
 
 @dataclass
 class HandleFactory(ViewFactory[Handle]):
@@ -980,73 +979,3 @@ def calculate_door_pivot_point(
     )
 
     return door_transform
-
-
-def replace_dresser_drawer_connections(world: World):
-    dresser_pattern = re.compile(r"^dresser_\d+.*$")
-    drawer_pattern = re.compile(r"^.*_drawer_.*$")
-    door_pattern = re.compile(r"^.*_door_.*$")
-
-    dresser_bodies = [
-        b for b in world.bodies if bool(dresser_pattern.fullmatch(b.name.name))
-    ]
-    for dresser in dresser_bodies:
-        drawer_factories = []
-        drawer_transforms = []
-        door_factories = []
-        door_transforms = []
-        for child in dresser.child_bodies:
-            if bool(drawer_pattern.fullmatch(child.name.name)):
-                drawer_transforms.append(child.parent_connection.origin_expression)
-
-                handle_factory = HandleFactory(
-                    name=PrefixedName(child.name.name + "_handle", child.name.prefix)
-                )
-                container_factory = ContainerFactory(
-                    name=PrefixedName(
-                        child.name.name + "_container", child.name.prefix
-                    ),
-                    scale=child.as_bounding_box_collection(child._world.root)
-                    .bounding_boxes[0]
-                    .scale,
-                    direction=Direction.Z,
-                )
-                drawer_factory = DrawerFactory(
-                    name=child.name,
-                    handle_factory=handle_factory,
-                    container_factory=container_factory,
-                )
-                drawer_factories.append(drawer_factory)
-            elif bool(door_pattern.fullmatch(child.name.name)):
-                door_transforms.append(child.parent_connection.origin_expression)
-                handle_factory = HandleFactory(
-                    PrefixedName(child.name.name + "_handle", child.name.prefix)
-                )
-
-                door_factory = DoorFactory(
-                    name=child.name,
-                    scale=child.as_bounding_box_collection(child._world.root)
-                    .bounding_boxes[0]
-                    .scale,
-                    handle_factory=handle_factory,
-                    handle_direction=Direction.Y,
-                )
-                door_factories.append(door_factory)
-
-        dresser_container_factory = ContainerFactory(
-            name=PrefixedName(dresser.name.name + "_container", dresser.name.prefix),
-            scale=dresser.as_bounding_box_collection(dresser._world.root)
-            .bounding_boxes[0]
-            .scale,
-            direction=Direction.X,
-        )
-        dresser_factory = DresserFactory(
-            name=dresser.name,
-            container_factory=dresser_container_factory,
-            drawers_factories=drawer_factories,
-            drawer_transforms=drawer_transforms,
-            door_factories=door_factories,
-            door_transforms=door_transforms,
-        )
-
-        return dresser_factory
