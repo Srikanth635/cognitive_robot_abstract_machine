@@ -563,7 +563,7 @@ class World:
                 other.remove_body(body)
 
         for view in other.views:
-            self.add_view(view)
+            self.add_view(view, exists_ok=True)
 
         other.world_is_being_modified = False
 

@@ -183,12 +183,6 @@ class ContainerFactory(ViewFactory[Container]):
 
         return inner_event
 
-
-class Alignment(IntEnum):
-    HORIZONTAL = 0
-    VERTICAL = 1
-
-
 @dataclass
 class HandleFactory(ViewFactory[Handle]):
     """
@@ -633,7 +627,7 @@ class DresserFactory(ViewFactory[Dresser]):
             drawers=[drawer for drawer in dresser_world.get_views_by_type(Drawer)],
             doors=[door for door in dresser_world.get_views_by_type(Door)],
         )
-        dresser_world.add_view(dresser_view)
+        dresser_world.add_view(dresser_view, exists_ok=True)
 
         return dresser_world
 
