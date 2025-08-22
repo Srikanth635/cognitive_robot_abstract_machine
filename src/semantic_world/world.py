@@ -394,10 +394,7 @@ class World:
     def deleted_orphaned_dof(self):
         actual_dofs = set()
         for connection in self.connections:
-            if isinstance(connection, ActiveConnection):
-                actual_dofs.update(set(connection.active_dofs))
-            if isinstance(connection, PassiveConnection):
-                actual_dofs.update(set(connection.passive_dofs))
+            actual_dofs.update(connection.dofs)
         self.degrees_of_freedom = list(actual_dofs)
 
 
@@ -577,6 +574,7 @@ class World:
             self.register_degree_of_freedom(dof)
         self.add_connection(connection)
 
+    @modifies_world
     def merge_world_at_pose(self, other: World, pose: cas.TransformationMatrix) -> None:
         """
         Merge another world into the existing one, creates a 6DoF connection between the root of this world and the root
@@ -587,7 +585,6 @@ class World:
         root_connection = Connection6DoF(parent=self.root, child=other.root, _world=self)
         root_connection.origin = pose
         self.merge_world(other, root_connection)
-        self.add_connection(root_connection)
 
     def __str__(self):
         return f"{self.__class__.__name__} with {len(self.bodies)} bodies."

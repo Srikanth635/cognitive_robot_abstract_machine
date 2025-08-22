@@ -1,6 +1,10 @@
+import time
+
 import numpy as np
 import pytest
+import rclpy
 
+from semantic_world.adapters.viz_marker import VizMarkerPublisher
 from semantic_world.connections import PrismaticConnection, RevoluteConnection, Connection6DoF, FixedConnection
 from semantic_world.exceptions import AddingAnExistingViewError, DuplicateViewError, ViewNotFoundError
 from semantic_world.prefixed_name import PrefixedName
@@ -297,8 +301,12 @@ def test_merge_with_connection(world_setup, pr2_world):
     torso_lift_link = pr2_world.get_body_by_name("torso_lift_link")
     r_shoulder_pan_joint = pr2_world.get_connection(torso_lift_link, pr2_world.get_body_by_name("r_shoulder_pan_link"))
 
-    new_connection = Connection6DoF(parent=l1, child=pr2_world.root, _world=world)
+    pose = np.eye(4)
+    pose[0, 3] = 1.0
 
+    origin = TransformationMatrix(pose)
+
+    new_connection = FixedConnection(parent=world.root, child=pr2_world.root, origin_expression=origin, _world=world)
     world.merge_world(pr2_world, new_connection)
 
     assert base_link in world.bodies
@@ -306,6 +314,8 @@ def test_merge_with_connection(world_setup, pr2_world):
     assert new_connection in world.connections
     assert torso_lift_link._world == world
     assert r_shoulder_pan_joint._world == world
+    assert world.compute_forward_kinematics_np(world.root, base_link)[0, 3] == pytest.approx(1.0, abs=1e-6)
+
 
 
 def test_merge_with_pose(world_setup, pr2_world):
@@ -319,7 +329,7 @@ def test_merge_with_pose(world_setup, pr2_world):
     pose = np.eye(4)
     pose[0, 3] = 1.0  # Translate along x-axis
 
-    world.merge_world_at_pose(pr2_world, pose)
+    world.merge_world_at_pose(pr2_world, TransformationMatrix(pose))
 
     assert base_link in world.bodies
     assert r_gripper_tool_frame in world.bodies
@@ -343,7 +353,7 @@ def test_merge_with_pose_rotation(world_setup, pr2_world):
                      [0., 0., 1., 0.],
                      [0., 0., 0., 1.]])
 
-    world.merge_world_at_pose(pr2_world, pose)
+    world.merge_world_at_pose(pr2_world, TransformationMatrix(pose))
 
     assert base_link in world.bodies
     assert r_gripper_tool_frame in world.bodies
