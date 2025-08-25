@@ -41,6 +41,7 @@ class WorldMapping(AlternativeMapping[World]):
                     lower_limits=dof.lower_limits,
                     upper_limits=dof.upper_limits)
                 result.add_degree_of_freedom(d)
+            result.deleted_orphaned_dof()
 
         return result
 

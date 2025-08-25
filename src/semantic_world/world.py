@@ -19,15 +19,13 @@ from .connections import (
     HasUpdateState,
     Has1DOFState,
     Connection6DoF,
-    ActiveConnection,
-    PassiveConnection,
 )
 from .degree_of_freedom import DegreeOfFreedom
 from .exceptions import DuplicateViewError, AddingAnExistingViewError, ViewNotFoundError
 from .ik_solver import InverseKinematicsSolver
 from .prefixed_name import PrefixedName
 from .spatial_types import spatial_types as cas
-from .spatial_types.derivatives import Derivatives, DerivativeMap
+from .spatial_types.derivatives import Derivatives
 from .spatial_types.math import inverse_frame
 from .types import NpMatrix4x4
 from .utils import IDGenerator, copy_lru_cache
@@ -299,6 +297,12 @@ class World:
         """
         assert len(self.bodies) == (len(self.connections) + 1)
         assert rx.is_weakly_connected(self.kinematic_structure)
+        actual_dofs = set()
+        for connection in self.connections:
+            actual_dofs.update(connection.dofs)
+        assert actual_dofs == set(
+            self.degrees_of_freedom
+        ), "self.degrees_of_freedom does not match the actual dofs used in connections. Did you forget to call deleted_orphaned_dof()?"
         return True
 
     @modifies_world
@@ -326,7 +330,6 @@ class World:
             initial_position = min(upper_limit, initial_position)
         self.state[dof.name].position = initial_position
         self.degrees_of_freedom.append(dof)
-
 
     def modify_world(self) -> WorldModelUpdateContextManager:
         return WorldModelUpdateContextManager(self)
@@ -368,10 +371,8 @@ class World:
         the model version number.
         """
         if not self.world_is_being_modified:
-            # self._fix_tree_structure()
             self.reset_cache()
             self.compile_forward_kinematics_expressions()
-            self.deleted_orphaned_dof()
             self.notify_state_change()
             self._model_version += 1
             self.validate()
@@ -381,7 +382,6 @@ class World:
         for connection in self.connections:
             actual_dofs.update(connection.dofs)
         self.degrees_of_freedom = list(actual_dofs)
-
 
     @property
     def bodies(self) -> List[Body]:
@@ -485,7 +485,6 @@ class World:
         :return: A list of `View` objects that match the given type.
         """
         return [view for view in self.views if isinstance(view, view_type)]
-
 
     @modifies_world
     def remove_body(self, body: Body) -> None:
