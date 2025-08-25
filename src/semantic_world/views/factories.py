@@ -275,14 +275,14 @@ class HandleFactory(ViewFactory[Handle]):
         return inner_box
 
 @dataclass
-class EntryWayFactory(ViewFactory[EntryWay], ABC):
+class EntryWayFactory(ViewFactory[T], ABC):
     """
     Abstract factory for creating an entryway with a body.
     """
     ...
 
 @dataclass
-class DoorFactory(ViewFactory[Door], EntryWayFactory):
+class DoorFactory(EntryWayFactory[Door]):
     """
     Factory for creating a door with a handle. The door is defined by its scale and handle direction.
     The doors origin is at the pivot point of the door, not at the center.
@@ -407,7 +407,7 @@ class DoorFactory(ViewFactory[Door], EntryWayFactory):
 
 
 @dataclass
-class DoubleDoorFactory(ViewFactory[DoubleDoor], EntryWayFactory):
+class DoubleDoorFactory(EntryWayFactory[DoubleDoor]):
     """
     Factory for creating a double door with two doors and their handles.
     """
