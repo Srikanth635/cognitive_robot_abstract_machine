@@ -115,7 +115,7 @@ world = apartment_parser.parse()
 
 search_space = BoundingBox(min_x=-2, max_x=2,
                            min_y=-2, max_y=2,
-                           min_z=0., max_z=2, world.root).as_collection()
+                           min_z=0., max_z=2, reference_frame=world.root).as_collection()
 gcs = GraphOfConvexSets.free_space_from_world(world, search_space=search_space)
 ```
 
