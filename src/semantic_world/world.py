@@ -368,22 +368,19 @@ class World:
         return ResetStateContextManager(self)
 
     def reset_cache(self) -> None:
-        # super().reset_cache()
-        # self.get_directly_controlled_child_links_with_collisions.cache_clear()
-        # self.get_directly_controlled_child_links_with_collisions.cache_clear()
-        # self.compute_chain_reduced_to_controlled_joints.cache_clear()
-        # self.get_movable_parent_joint.cache_clear()
-        # self.get_controlled_parent_joint_of_link.cache_clear()
-        # self.get_controlled_parent_joint_of_joint.cache_clear()
-        self.compute_split_chain_of_bodies.cache_clear()
-        self.compute_split_chain_of_connections.cache_clear()
-        # self.are_linked.cache_clear()
-        # self.compose_fk_expression.cache_clear()
-        self.compute_chain_of_bodies.cache_clear()
-        self.compute_chain_of_connections.cache_clear()
-        # self.is_link_controlled.cache_clear()
+        self.clear_all_lru_caches()
         for dof in self.degrees_of_freedom:
             dof.reset_cache()
+
+    def clear_all_lru_caches(self):
+        for method_name in dir(self):
+            try:
+                method = getattr(self, method_name)
+                if hasattr(method, 'cache_clear') and callable(method.cache_clear):
+                    method.cache_clear()
+            except AttributeError:
+                # Skip attributes that can't be accessed
+                pass
 
     def notify_state_change(self) -> None:
         """
