@@ -176,14 +176,6 @@ class Body(WorldEntity):
         return self._world.compute_child_bodies(self)
 
     @property
-    def recursive_child_bodies(self) -> List[Body]:
-        """
-        Returns the recursive child bodies of this body.
-        :return: All child bodies of this body.
-        """
-        return [self._world.kinematic_structure[i] for i in rustworkx.descendants(self._world.kinematic_structure, self.index)]
-
-    @property
     def parent_body(self) -> Body:
         """
         Returns the parent body of this body.

@@ -377,7 +377,7 @@ class World:
             self._model_version += 1
             self.validate()
 
-    def deleted_orphaned_dof(self):
+    def delete_orphaned_dofs(self):
         actual_dofs = set()
         for connection in self.connections:
             actual_dofs.update(connection.dofs)

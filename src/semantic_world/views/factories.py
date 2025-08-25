@@ -451,8 +451,10 @@ class DoubleDoorFactory(EntryWayFactory[DoubleDoor]):
 
         self.add_doors_to_world(parent_world=world, door_factories=door_factories)
 
+        doors = world.get_views_by_type(Door)
+        assert len(doors) == 2, "Double door must have exactly two doors"
         double_door_view = DoubleDoor(
-            body=double_door_body, doors=world.get_views_by_type(Door)
+            body=double_door_body, door1=doors[0], door2=doors[1]
         )
         world.add_view(double_door_view)
 
