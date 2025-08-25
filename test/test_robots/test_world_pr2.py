@@ -180,13 +180,13 @@ def test_apply_control_commands_omni_drive_pr2(pr2_world):
 
 
 def test_search_for_connections_of_type(pr2_world: World):
-    connections = pr2_world.search_for_connections_of_type(OmniDrive)
+    connections = pr2_world.get_connections_by_type(OmniDrive)
     assert len(connections) == 1
     assert connections[0].name == PrefixedName(name='odom_combined_T_base_footprint', prefix='pr2')
     assert connections[0].parent == pr2_world.root
     assert connections[0].child == pr2_world.get_body_by_name('base_footprint')
 
-    connections = pr2_world.search_for_connections_of_type(PrismaticConnection)
+    connections = pr2_world.get_connections_by_type(PrismaticConnection)
     assert len(connections) == 3
     assert connections[0].name == PrefixedName(name='torso_lift_joint', prefix='pr2')
     assert connections[0].parent == pr2_world.get_body_by_name('base_link')
@@ -198,7 +198,7 @@ def test_search_for_connections_of_type(pr2_world: World):
     assert connections[2].parent == pr2_world.get_body_by_name('l_gripper_palm_link')
     assert connections[2].child == pr2_world.get_body_by_name('l_gripper_motor_slider_link')
 
-    connections = pr2_world.search_for_connections_of_type(RevoluteConnection)
+    connections = pr2_world.get_connections_by_type(RevoluteConnection)
     assert len(connections) == 40
 
 
