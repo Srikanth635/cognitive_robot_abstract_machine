@@ -107,19 +107,19 @@ class MultiParser:
         connections = []
         for joint_builder in body_builder.joint_builders:
             parent_body = world.get_kinematic_structure_entity_by_name(
-                joint_builder.parent_prim.GetName()
+                PrefixedName(joint_builder.parent_prim.GetName())
             )
             child_body = world.get_kinematic_structure_entity_by_name(
-                joint_builder.child_prim.GetName()
+                PrefixedName(joint_builder.child_prim.GetName())
             )
             connection = self.parse_joint(joint_builder, parent_body, child_body, world)
             connections.append(connection)
         if len(body_builder.joint_builders) == 0 and not body_builder.xform.GetPrim().GetParent().IsPseudoRoot():
             parent_body = world.get_kinematic_structure_entity_by_name(
-                body_builder.xform.GetPrim().GetParent().GetName()
+                PrefixedName(body_builder.xform.GetPrim().GetParent().GetName())
             )
             child_body = world.get_kinematic_structure_entity_by_name(
-                body_builder.xform.GetPrim().GetName()
+                PrefixedName(body_builder.xform.GetPrim().GetName())
             )
             transform = body_builder.xform.GetLocalTransformation()
             pos = transform.ExtractTranslation()
