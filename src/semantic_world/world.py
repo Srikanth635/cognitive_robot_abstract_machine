@@ -21,7 +21,12 @@ from .connections import (
     Connection6DoF,
 )
 from .degree_of_freedom import DegreeOfFreedom
-from .exceptions import DuplicateViewError, AddingAnExistingViewError, ViewNotFoundError
+from .exceptions import (
+    DuplicateViewError,
+    AddingAnExistingViewError,
+    ViewNotFoundError,
+    AlreadyBelongsToAWorldError,
+)
 from .ik_solver import InverseKinematicsSolver
 from .prefixed_name import PrefixedName
 from .spatial_types import spatial_types as cas
@@ -308,16 +313,14 @@ class World:
     @modifies_world
     def add_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
         """
-        Register a degree of freedom in the world.
+        Adds degree of freedom in the world.
         This is used to register DoFs that are not created by the world, but are part of the world model.
         :param dof: The degree of freedom to register.
         """
         if dof._world is self:
-            logger.debug(f"Degree of freedom {dof.name} already registered in world {self.name}.")
             return
-
         if dof._world is not None:
-            raise NotImplementedError("Cannot register a degree of freedom that already belongs to another world.")
+            raise AlreadyBelongsToAWorldError("Cannot add a degree of freedom that already belongs to another world.")
 
         dof._world = self
 
@@ -414,7 +417,7 @@ class World:
         if body._world is self and body.index is not None:
             return
         elif body._world is not None and body._world is not self:
-            raise NotImplementedError("Cannot add a body that already belongs to another world.")
+            raise AlreadyBelongsToAWorldError("Cannot add a body that already belongs to another world.")
 
         body.index = self.kinematic_structure.add_node(body)
 

@@ -457,7 +457,7 @@ class BoundingBox:
 
     @classmethod
     def from_min_max(
-        cls, reference_frame: Body, min_point: Point3, max_point: Point3
+        cls, min_point: Point3, max_point: Point3
     ) -> Self:
         """
         Set the axis-aligned bounding box from a minimum and maximum point.
@@ -465,10 +465,12 @@ class BoundingBox:
         :param min_point: The minimum point
         :param max_point: The maximum point
         """
+        assert min_point.reference_frame is not None
+        assert min_point.reference_frame == max_point.reference_frame, "The reference frames of the minimum and maximum points must be the same."
         return cls(
             *min_point.to_np()[:3],
             *max_point.to_np()[:3],
-            reference_frame=reference_frame,
+            reference_frame=min_point.reference_frame,
         )
 
     def as_shape(self) -> Box:
@@ -515,9 +517,8 @@ class BoundingBox:
         max_corner = np.max(list_reference_P_corner, axis=0)
 
         world_bb = BoundingBox.from_min_max(
-            reference_frame,
-            Point3.from_iterable(min_corner),
-            Point3.from_iterable(max_corner),
+            Point3.from_iterable(min_corner, reference_frame=reference_frame),
+            Point3.from_iterable(max_corner, reference_frame=reference_frame)
         )
 
         return world_bb
@@ -538,6 +539,10 @@ class BoundingBoxCollection:
     """
     The list of bounding boxes.
     """
+
+    def  __post_init__(self):
+        for box in self.bounding_boxes:
+            assert box.reference_frame == self.reference_frame, "All bounding boxes must have the same reference frame."
 
     def __iter__(self) -> Iterator[BoundingBox]:
         return iter(self.bounding_boxes)
