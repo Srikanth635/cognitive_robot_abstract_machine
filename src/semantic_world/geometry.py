@@ -158,6 +158,8 @@ class Mesh(Shape):
         """
         return BoundingBox.from_mesh(self.mesh)
 
+    def is_bigger(self, volume_threshold: float = 1.001e-6, surface_threshold: float = 0.00061) -> bool:
+        return True
 
 @dataclass
 class TriangleMesh(Shape):

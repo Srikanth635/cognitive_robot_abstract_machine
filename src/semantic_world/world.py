@@ -24,7 +24,7 @@ from .connections import ActiveConnection, PassiveConnection, FixedConnection
 from .connections import HasUpdateState, Has1DOFState, Connection6DoF
 from .degree_of_freedom import DegreeOfFreedom
 from .exceptions import DuplicateViewError, AddingAnExistingViewError
-from .exceptions import ViewNotFoundError, MovingBranchError
+from .exceptions import ViewNotFoundError
 from .ik_solver import InverseKinematicsSolver
 from .prefixed_name import PrefixedName
 from .robots import AbstractRobot
@@ -585,7 +585,6 @@ class World:
         """
         return [view for view in self.views if isinstance(view, view_type)]
 
-
     @modifies_world
     def remove_body(self, body: Body) -> None:
         if body._world is self and body.index is not None:
@@ -648,20 +647,31 @@ class World:
             self.add_body(body)
         other.world_is_being_modified = False
 
-
         connection = root_connection or Connection6DoF(parent=self_root, child=other_root, _world=self)
         self.add_connection(connection)
 
     @modifies_world
     def move_branch(self, branch_root: Body, new_parent: Body) -> None:
-        if not isinstance(branch_root.parent_connection, FixedConnection):
-            raise ValueError(f"Cannot move branch: {branch_root.name} is not connected with a FixedConnection")
-        new_parent_T_root = self.compute_forward_kinematics(new_parent, branch_root)
-        new_connection = FixedConnection(parent=new_parent,
-                                         child=branch_root,
-                                         _world=self,
-                                         origin_expression=new_parent_T_root)
-        self.add_connection(new_connection)
+        old_connection = branch_root.parent_connection
+        if isinstance(old_connection, FixedConnection):
+            new_parent_T_root = self.compute_forward_kinematics(new_parent, branch_root)
+            new_connection = FixedConnection(parent=new_parent,
+                                             child=branch_root,
+                                             _world=self,
+                                             origin_expression=new_parent_T_root)
+            self.add_connection(new_connection)
+            self.remove_connection(old_connection)
+        elif isinstance(old_connection, Connection6DoF):
+            new_parent_T_root = self.compute_forward_kinematics(new_parent, branch_root)
+            new_connection = Connection6DoF(parent=new_parent,
+                                            child=branch_root,
+                                            _world=self)
+            self.add_connection(new_connection)
+            self.remove_connection(old_connection)
+            # fixme: probably don't do it like that?
+            new_connection.origin = new_parent_T_root
+        else:
+            raise ValueError(f'Cannot move branch: "{branch_root.name}" is not connected with a FixedConnection')
 
     def merge_world_at_pose(self, other: World, pose: cas.TransformationMatrix) -> None:
         """
