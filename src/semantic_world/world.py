@@ -367,11 +367,6 @@ class World:
     def reset_state_context(self) -> ResetStateContextManager:
         return ResetStateContextManager(self)
 
-    def reset_cache(self) -> None:
-        self.clear_all_lru_caches()
-        for dof in self.degrees_of_freedom:
-            dof.reset_cache()
-
     def clear_all_lru_caches(self):
         for method_name in dir(self):
             try:
@@ -399,7 +394,7 @@ class World:
         """
         if not self.world_is_being_modified:
             # self._fix_tree_structure()
-            self.reset_cache()
+            self.clear_all_lru_caches()
             self.compile_forward_kinematics_expressions()
             # self._cleanup_unused_dofs()
             self.notify_state_change()
@@ -428,11 +423,6 @@ class World:
         :return: A list of all connections in the world.
         """
         return list(self.kinematic_structure.edges())
-
-    @property
-    def frozen_connections(self) -> Set[Connection]:
-        return set(c for c in self.connections
-                   if isinstance(c, ActiveConnection) and (not c.is_controlled or c.frozen_for_collision_avoidance))
 
     @modifies_world
     def add_body(self, body: Body) -> None:
@@ -573,7 +563,8 @@ class World:
         jerks = [self.get_degree_of_freedom_by_name(v_name).symbols.jerk for v_name in self.state]
         return positions + velocities + accelerations + jerks
 
-    def get_views_by_type(self, view_type: Type[Generic[T]]) -> List[T]:
+    def get_views_by_type(self, view_type: Union[Type[View], Tuple[Type[View], ...]]) \
+            -> List[View]:
         """
         Retrieves all views of a specific type from the world.
 
@@ -649,6 +640,13 @@ class World:
 
     @modifies_world
     def move_branch(self, branch_root: Body, new_parent: Body) -> None:
+        """
+        Destroys the connection between branch_root and its parent, and moves it to a new parent using a new connection
+        of the same type. The pose of body with respect to root stays the same.
+
+        :param branch_root: The root of the branch to be moved.
+        :param new_parent: The new parent of the branch.
+        """
         old_connection = branch_root.parent_connection
         if isinstance(old_connection, FixedConnection):
             new_parent_T_root = self.compute_forward_kinematics(new_parent, branch_root)
@@ -688,13 +686,9 @@ class World:
     def get_connection(self, parent: Body, child: Body) -> Connection:
         return self.kinematic_structure.get_edge_data(parent.index, child.index)
 
-    def search_for_connections_of_type(self, connection_type: Union[Type[Connection], Tuple[Type[Connection], ...]]) \
+    def get_connections_by_type(self, connection_type: Union[Type[Connection], Tuple[Type[Connection], ...]]) \
             -> List[Connection]:
         return [c for c in self.connections if isinstance(c, connection_type)]
-
-    def search_for_views_of_type(self, view_type: Union[Type[View], Tuple[Type[View], ...]]) \
-            -> List[View]:
-        return [v for v in self.views if isinstance(v, view_type)]
 
     @modifies_world
     def clear(self):
@@ -816,7 +810,10 @@ class World:
         :param body: The body for which to compute the parent body.
         :return: The parent body of the given body.
         """
-        return next(iter(self.kinematic_structure.predecessors(body.index)))
+        try:
+            return next(iter(self.kinematic_structure.predecessors(body.index)))
+        except StopIteration:
+            return None
 
     @lru_cache(maxsize=None)
     def compute_parent_connection(self, body: Body) -> Connection:
@@ -1184,10 +1181,6 @@ class World:
             self.add_disabled_collision_pair(body_a, body_b)
 
     @property
-    def disabled_bodies(self) -> Set[Body]:
-        return set(b for b in self.bodies_with_collisions if b.collision_config and b.collision_config.disabled)
-
-    @property
     def bodies_with_enabled_collision(self) -> Set[Body]:
         return set(b for b in self.bodies_with_collisions if b.collision_config and not b.collision_config.disabled)
 
@@ -1209,25 +1202,9 @@ class World:
         pair = tuple(sorted([body_a, body_b], key=lambda b: b.name))
         self._temp_disabled_collision_pairs.add(pair)
 
-    def avoid_collisions(self, view: View, threshold: float):
-        """
-        Will not enable collision checking for disabled bodies
-        :param view:
-        :param threshold:
-        :return:
-        """
-        for body in view.bodies:
-            body._collision_config.buffer_zone_distance = threshold
-
-    def disable_collision_checking(self, view1: View, view2: Optional[View] = None):
-        for body_a in view1.bodies:
-            for body_b in view2.bodies:
-                self.add_disabled_collision_pair(body_a, body_b)
-
-    def get_directly_child_bodies_with_collision(self, connection: Connection) -> Set[Body]:
+    def get_direct_child_bodies_with_collision(self, connection: Connection) -> Set[Body]:
         """
         Collect all child Bodies until a movable connection is found.
-
 
         :param connection: The connection from the kinematic structure whose child bodies will be traversed.
         :return: A set of Bodies that are moved directly by only this connection.
@@ -1313,18 +1290,10 @@ class World:
     def disable_non_robot_collisions(self) -> None:
         robot_bodies = set()
         robot: AbstractRobot
-        for robot in self.search_for_views_of_type(AbstractRobot):
+        for robot in self.get_views_by_type(AbstractRobot):
             robot_bodies.update(robot.bodies_with_collisions)
 
         non_robot_bodies = set(self.bodies_with_enabled_collision) - robot_bodies
         for body_a in non_robot_bodies:
             for body_b in non_robot_bodies:
                 self.add_disabled_collision_pair(body_a, body_b)
-
-    def search_for_robot_with_body(self, body: Body) -> Optional[AbstractRobot]:
-        robots = [v for v in self.views if isinstance(v, AbstractRobot) and body in v.bodies]
-        if len(robots) == 1:
-            return robots[0]
-        if len(robots) > 1:
-            raise ValueError(f"Found multiple robots with body {body.name}")
-        return None
