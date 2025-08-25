@@ -286,15 +286,6 @@ class AbstractRobot(RootedView, ABC):
     - an optional collection of sensor chains, each containing a sensor, such as a camera
     => If a kinematic chain contains both a manipulator and a sensor, it will be part of both collections
     """
-    odom: Body = field(default=None)
-    """
-    The odometry body of the robot, which is usually the base footprint.
-    """
-
-    drive: Optional[OmniDrive] = None
-    """
-    The connection which the robot uses for driving.
-    """
 
     torso: Optional[Torso] = None
     """
@@ -345,6 +336,18 @@ class AbstractRobot(RootedView, ABC):
         :return: A robot view.
         """
         raise NotImplementedError("This method should be implemented in subclasses.")
+
+    @property
+    def drive(self) -> Optional[OmniDrive]:
+        """
+        The connection which the robot uses for driving.
+        """
+        try:
+            parent_connection = self.root.parent_connection
+            if isinstance(parent_connection, OmniDrive):
+                return parent_connection
+        except AttributeError:
+            pass
 
     def add_manipulator(self, manipulator: Manipulator):
         """
@@ -470,8 +473,6 @@ class PR2(AbstractRobot):
             root=world.get_body_by_name("base_footprint"),
             _world=world,
         )
-
-        robot.drive = robot.root.parent_connection
 
         # Create left arm
         left_gripper_thumb = Finger(name=PrefixedName('left_gripper_thumb', prefix=robot.name.name),
