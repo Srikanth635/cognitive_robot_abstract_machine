@@ -317,7 +317,7 @@ class World:
         This is used to register DoFs that are not created by the world, but are part of the world model.
         :param dof: The degree of freedom to register.
         """
-        if dof._world is self:
+        if dof._world is self and dof in self.degrees_of_freedom:
             return
         if dof._world is not None:
             raise AlreadyBelongsToAWorldError("Cannot add a degree of freedom that already belongs to another world.")
