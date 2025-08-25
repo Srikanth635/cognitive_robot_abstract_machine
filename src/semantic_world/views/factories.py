@@ -30,7 +30,7 @@ from semantic_world.views import (
     Wall,
     DoubleDoor, EntryWay,
 )
-from semantic_world.world import World
+from semantic_world.world import World, modifies_world
 from semantic_world.world_entity import Body
 
 id_generator = IDGenerator()
@@ -920,7 +920,6 @@ class WallFactory(ViewFactory[Wall]):
 
                     wall_world.merge_world(door_world, connection)
 
-
 def add_door_to_world(
     door_factory: DoorFactory, parent_T_door: TransformationMatrix, parent_world: World
 ):
@@ -951,27 +950,29 @@ def add_door_to_world(
         lower_limits.position = 0.0
         upper_limits.position = np.pi / 2
 
-    dof = parent_world.create_degree_of_freedom(
-        PrefixedName(f"{door_body.name.name}_connection", door_body.name.prefix),
-        lower_limits,
-        upper_limits,
+    dof = DegreeOfFreedom(
+        name=PrefixedName(f"{door_body.name.name}_connection", door_body.name.prefix),
+        lower_limits=lower_limits,
+        upper_limits=upper_limits,
     )
+    with parent_world.modify_world():
+        parent_world.add_degree_of_freedom(dof)
 
-    pivot_point = calculate_door_pivot_point(
-        door_view, parent_T_door, door_factory.scale
-    )
+        pivot_point = calculate_door_pivot_point(
+            door_view, parent_T_door, door_factory.scale
+        )
 
-    connection = RevoluteConnection(
-        parent=parent_world.root,
-        child=door_body,
-        origin_expression=pivot_point,
-        multiplier=1.0,
-        offset=0.0,
-        axis=Vector3.Z(),
-        dof=dof,
-    )
+        connection = RevoluteConnection(
+            parent=parent_world.root,
+            child=door_body,
+            origin_expression=pivot_point,
+            multiplier=1.0,
+            offset=0.0,
+            axis=Vector3.Z(),
+            dof=dof,
+        )
 
-    parent_world.merge_world(door_world, connection)
+        parent_world.merge_world(door_world, connection)
 
 
 def calculate_door_pivot_point(

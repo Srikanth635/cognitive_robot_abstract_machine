@@ -302,36 +302,21 @@ class World:
         return True
 
     @modifies_world
-    def create_degree_of_freedom(
-        self,
-        name: PrefixedName,
-        lower_limits: Optional[DerivativeMap[float]] = None,
-        upper_limits: Optional[DerivativeMap[float]] = None,
-    ) -> DegreeOfFreedom:
-        """
-        Create a degree of freedom in the world and return it.
-        For dependent kinematics, DoFs must be created with this method and passed to the connection's conctructor.
-        :param name: Name of the DoF.
-        :param lower_limits: If the DoF is actively controlled, it must have at least velocity limits.
-        :param upper_limits: If the DoF is actively controlled, it must have at least velocity limits.
-        :return: The already registered DoF.
-        """
-        dof = DegreeOfFreedom(
-            name=name, lower_limits=lower_limits, upper_limits=upper_limits, _world=self
-        )
-        self.register_degree_of_freedom(dof)
-        return dof
-
-    @modifies_world
-    def register_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
+    def add_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
         """
         Register a degree of freedom in the world.
         This is used to register DoFs that are not created by the world, but are part of the world model.
         :param dof: The degree of freedom to register.
         """
-        if dof in self.degrees_of_freedom:
+        if dof._world is self:
             logger.debug(f"Degree of freedom {dof.name} already registered in world {self.name}.")
             return
+
+        if dof._world is not None:
+            raise NotImplementedError("Cannot register a degree of freedom that already belongs to another world.")
+
+        dof._world = self
+
         initial_position = 0
         lower_limit = dof.lower_limits.position
         if lower_limit is not None:
@@ -571,7 +556,7 @@ class World:
             parent=self_root, child=other_root, _world=self
         )
         for dof in connection.dofs:
-            self.register_degree_of_freedom(dof)
+            self.add_degree_of_freedom(dof)
         self.add_connection(connection)
 
     @modifies_world
