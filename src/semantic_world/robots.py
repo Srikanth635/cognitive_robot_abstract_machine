@@ -1,22 +1,17 @@
 from __future__ import annotations
 
 import logging
-import os
 from abc import abstractmethod, ABC
-from collections import defaultdict
 from dataclasses import dataclass, field
-from functools import lru_cache, cached_property
-from itertools import combinations_with_replacement
-from typing import Tuple, Iterable, Set, Dict, Union, TYPE_CHECKING
+from functools import cached_property
+from typing import Iterable, Set, TYPE_CHECKING
 
-from lxml import etree
-import rustworkx as rx
-from typing_extensions import Optional, List, Self
+from typing_extensions import Optional, Self
 
-from .connections import ActiveConnection, FixedConnection, OmniDrive
+from .connections import ActiveConnection, OmniDrive
 from .prefixed_name import PrefixedName
 from .spatial_types.spatial_types import Vector3
-from .world_entity import Body, RootedView, Connection, View, CollisionCheckingConfig
+from .world_entity import Body, RootedView, Connection, CollisionCheckingConfig
 
 if TYPE_CHECKING:
     from .world import World
