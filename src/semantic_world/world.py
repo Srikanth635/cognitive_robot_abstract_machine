@@ -922,7 +922,7 @@ class World:
         Compute the forward kinematics from the root entity to the tip entity, root_T_tip and return it as a 4x4 numpy ndarray.
 
         Calculate the transformation matrix representing the pose of the
-        tip entity relative to the entity body, expressed as a numpy ndarray.
+        tip entity relative to the root entity, expressed as a numpy ndarray.
 
         :param root: Root entity for which the kinematics are computed.
         :param tip: Tip entity to which the kinematics are computed.

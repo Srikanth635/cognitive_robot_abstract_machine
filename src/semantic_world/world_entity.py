@@ -59,7 +59,6 @@ class WorldEntity:
 
 
 @dataclass(unsafe_hash=True)
-@dataclass
 class KinematicStructureEntity(WorldEntity):
     """
     An entity that is part of the kinematic structure of the world.
