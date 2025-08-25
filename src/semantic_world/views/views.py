@@ -118,10 +118,17 @@ class Furniture(View): ...
 
 #################### subclasses von Components
 
+@dataclass(unsafe_hash=True)
+class EntryWay(Components):
+    body: Body
+
+    def __post_init__(self):
+        if self.name is None:
+            self.name = PrefixedName(str(self.body.name), self.__class__.__name__)
+
 
 @dataclass(unsafe_hash=True)
-class Door(Components):
-    body: Body
+class Door(EntryWay):
     handle: Handle
 
     def __post_init__(self):
@@ -130,8 +137,7 @@ class Door(Components):
 
 
 @dataclass(unsafe_hash=True)
-class DoubleDoor(Components):
-    body: Body
+class DoubleDoor(EntryWay):
     doors: List[Door] = field(default_factory=list, hash=False)
 
     def __post_init__(self):

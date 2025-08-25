@@ -28,7 +28,7 @@ from semantic_world.views import (
     Drawer,
     Door,
     Wall,
-    DoubleDoor,
+    DoubleDoor, EntryWay,
 )
 from semantic_world.world import World
 from semantic_world.world_entity import Body
@@ -274,9 +274,15 @@ class HandleFactory(ViewFactory[Handle]):
 
         return inner_box
 
+@dataclass
+class EntryWayFactory(ViewFactory[EntryWay], ABC):
+    """
+    Abstract factory for creating an entryway with a body.
+    """
+    ...
 
 @dataclass
-class DoorFactory(ViewFactory[Door]):
+class DoorFactory(ViewFactory[Door], EntryWayFactory):
     """
     Factory for creating a door with a handle. The door is defined by its scale and handle direction.
     The doors origin is at the pivot point of the door, not at the center.
@@ -401,7 +407,7 @@ class DoorFactory(ViewFactory[Door]):
 
 
 @dataclass
-class DoubleDoorFactory(ViewFactory[DoubleDoor]):
+class DoubleDoorFactory(ViewFactory[DoubleDoor], EntryWayFactory):
     """
     Factory for creating a double door with two doors and their handles.
     """
@@ -756,7 +762,7 @@ class DresserFactory(ViewFactory[Dresser]):
 class WallFactory(ViewFactory[Wall]):
     name: PrefixedName
     scale: Scale
-    door_factories: List[Union[DoorFactory, DoubleDoorFactory]] = field(
+    door_factories: List[EntryWayFactory] = field(
         default_factory=list
     )
     door_transforms: List[TransformationMatrix] = field(default_factory=list)
