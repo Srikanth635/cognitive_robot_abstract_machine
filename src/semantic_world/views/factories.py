@@ -11,6 +11,7 @@ from semantic_world.connections import (
     RevoluteConnection,
 )
 from semantic_world.degree_of_freedom import DegreeOfFreedom
+from semantic_world.exceptions import AddingAnExistingViewError
 from semantic_world.geometry import Scale, BoundingBoxCollection, Box
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.spatial_types.derivatives import DerivativeMap
@@ -669,6 +670,7 @@ class DresserFactory(ViewFactory[Dresser]):
                 axis=Vector3.X(),
                 dof=dof,
             )
+
             parent_world.merge_world(drawer_world, connection)
 
     def create_drawer_upper_lower_limits(

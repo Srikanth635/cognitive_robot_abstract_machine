@@ -171,12 +171,12 @@ class MultiParser:
                         lower_limits=lower_limits,
                         upper_limits=upper_limits,
                     )
-                    dof = world.add_degree_of_freedom(dof)
+                    world.add_degree_of_freedom(dof)
                 else:
                     dof = DegreeOfFreedom(
                         name=PrefixedName(joint_name),
                     )
-                    dof = world.add_degree_of_freedom(dof)
+                    world.add_degree_of_freedom(dof)
             if joint_builder.type in [JointType.REVOLUTE, JointType.CONTINUOUS]:
                 connection = RevoluteConnection(parent=parent_body, child=child_body, origin_expression=origin,
                                                 multiplier=multiplier, offset=offset,

@@ -453,6 +453,22 @@ class World:
             view._world = self
             self.views.append(view)
 
+    def remove_view(self, view: View) -> None:
+        """
+        Removes a view from the current list of views if it exists.
+
+        :param view: The view instance to be removed.
+        """
+        try:
+            existing_view = self.get_view_by_name(view.name)
+            if existing_view == view:
+                self.views.remove(existing_view)
+                view._world = None
+            else:
+                raise ValueError("The provided view instance does not match the existing view with the same name.")
+        except ViewNotFoundError:
+            logger.debug(f"View {view.name} not found in the world. No action taken.")
+
     def get_view_by_name(self, name: Union[str, PrefixedName]) -> Optional[View]:
         """
         Retrieves a View from the list of view based on its name.
@@ -546,8 +562,10 @@ class World:
             if body._world is not None:
                 other.remove_body(body)
 
-        for view in other.views:
-            self.add_view(view, exists_ok=True)
+        other_views = [view for view in other.views]
+        for view in other_views:
+            other.remove_view(view)
+            self.add_view(view)
 
         other.world_is_being_modified = False
 
