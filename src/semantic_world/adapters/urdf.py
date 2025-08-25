@@ -22,6 +22,17 @@ connection_type_map = {  # 'unknown': JointType.UNKNOWN,
 
 
 def urdf_joint_to_limits(urdf_joint: urdfpy.Joint) -> Tuple[DerivativeMap[float], DerivativeMap[float]]:
+    """
+    Maps the URDF joint specifications to lower and upper joint limits, including
+    position and velocity constraints. Mimics and safety controller parameters are
+    also considered when determining the limits.
+
+    :param urdf_joint: A URDF (Unified Robot Description Format) joint object
+                       which contains the joint's type, limits, safety controller,
+                       and mimic information.
+    :return: A tuple containing two DerivativeMap objects, representing the lower
+             and upper limits of the joint in terms of position and velocity.
+    """
     lower_limits = DerivativeMap()
     upper_limits = DerivativeMap()
     if not urdf_joint.type == 'continuous':
@@ -119,6 +130,23 @@ class URDFParser:
         return world
 
     def parse_joint(self, joint: urdfpy.Joint, parent: Body, child: Body, world: World, prefix: str) -> Connection:
+        """
+        Parses a given URDF joint and creates a corresponding connection object.
+
+        The function processes the provided joint data, extracting necessary
+        information including translation offsets, rotation offsets, connection type,
+        and relevant joint limits. It maps URDF joint types to predefined connection
+        types and either retrieves or creates a degree of freedom (DOF) in the world
+        context. It generates and returns a connection object representing the
+        relationship between a parent and a child body.
+
+        :param joint: The URDF joint to be parsed.
+        :param parent: The parent body to be connected by the joint.
+        :param child: The child body to be connected by the joint.
+        :param world: The world instance containing degrees of freedom.
+        :param prefix: The prefix for naming connections and DOFs.
+        :return: A connection object representing the parsed joint.
+        """
         connection_name = PrefixedName(joint.name, prefix)
         connection_type = connection_type_map.get(joint.type, Connection)
         if joint.origin is not None:
