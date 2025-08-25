@@ -803,7 +803,10 @@ class World:
         :param body: The body for which to compute the parent body.
         :return: The parent body of the given body.
         """
-        return next(iter(self.kinematic_structure.predecessors(body.index)))
+        try:
+            return next(iter(self.kinematic_structure.predecessors(body.index)))
+        except StopIteration:
+            return None
 
     @lru_cache(maxsize=None)
     def compute_parent_connection(self, body: Body) -> Connection:
