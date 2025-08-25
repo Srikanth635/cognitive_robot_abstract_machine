@@ -24,7 +24,7 @@ class GCSTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         world = World()
-        world.add_body(Body())
+        world.add_entity(Body())
         gcs = GraphOfConvexSets(world)
 
         obstacle = BoundingBox(0, 0, 0, 1, 1, 1, world.root)

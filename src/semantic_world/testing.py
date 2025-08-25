@@ -25,7 +25,7 @@ def world_setup() -> Tuple[World, Body, Body, Body, Body, Body]:
     r2 = Body(name=PrefixedName('r2'))
 
     with world.modify_world():
-        [world.add_body(b) for b in [root, l1, l2, bf, r1, r2]]
+        [world.add_entity(b) for b in [root, l1, l2, bf, r1, r2]]
         lower_limits = DerivativeMap()
         lower_limits.velocity = -1
         upper_limits = DerivativeMap()
@@ -63,10 +63,10 @@ def world_setup_simple():
                  collision=[Sphere(origin=TransformationMatrix.from_xyz_rpy(), radius=0.01)])
 
     with world.modify_world():
-        world.add_body(body1)
-        world.add_body(body2)
-        world.add_body(body3)
-        world.add_body(body4)
+        world.add_entity(body1)
+        world.add_entity(body2)
+        world.add_entity(body3)
+        world.add_entity(body4)
 
         c_root_body1 = Connection6DoF(parent=root, child=body1, _world=world)
         c_root_body2 = Connection6DoF(parent=root, child=body2, _world=world)
@@ -87,7 +87,7 @@ def two_arm_robot_world():
     world = World()
     with world.modify_world():
         localization_body = Body(name=PrefixedName('odom_combined'))
-        world.add_body(localization_body)
+        world.add_entity(localization_body)
 
         robot_parser = URDFParser(robot)
         world_with_robot = robot_parser.parse()
@@ -104,7 +104,7 @@ def pr2_world():
     world = World()
     with world.modify_world():
         localization_body = Body(name=PrefixedName('odom_combined'))
-        world.add_body(localization_body)
+        world.add_entity(localization_body)
 
         pr2_parser = URDFParser(pr2)
         world_with_pr2 = pr2_parser.parse()

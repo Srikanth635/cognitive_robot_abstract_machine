@@ -53,14 +53,14 @@ class TestView(View):
         """
         Returns itself as a kinematic chain.
         """
-        return self._world.compute_chain_of_bodies(self.root_body_1, self.tip_body_1)
+        return self._world.compute_chain_of_entities(self.root_body_1, self.tip_body_1)
 
     @property
     def _private_chain(self) -> list[Body]:
         """
         Returns itself as a kinematic chain.
         """
-        return self._world.compute_chain_of_bodies(self.root_body_2, self.tip_body_2)
+        return self._world.compute_chain_of_entities(self.root_body_2, self.tip_body_2)
 
     def __hash__(self):
         """
@@ -110,34 +110,34 @@ class ViewTestCase(unittest.TestCase):
         world_view = TestView(_world=self.kitchen_world)
 
         # Test bodies added to a private dataclass field are not aggregated
-        world_view._private_body = self.kitchen_world.bodies[0]
+        world_view._private_body = self.kitchen_world.kinematic_structure_entities[0]
 
         # Test aggregation of bodies added in custom properties
-        world_view.root_body_1 = self.kitchen_world.bodies[1]
-        world_view.tip_body_1 = self.kitchen_world.bodies[4]
+        world_view.root_body_1 = self.kitchen_world.kinematic_structure_entities[1]
+        world_view.tip_body_1 = self.kitchen_world.kinematic_structure_entities[4]
 
         # Test aggregation of normal dataclass field
-        body_subset = self.kitchen_world.bodies[5:10]
+        body_subset = self.kitchen_world.kinematic_structure_entities[5:10]
         [world_view.add_body(body) for body in body_subset]
 
         # Test aggregation of bodies in a new as well as a nested view
         view1 = TestView()
-        view1_subset = self.kitchen_world.bodies[10:18]
+        view1_subset = self.kitchen_world.kinematic_structure_entities[10:18]
         [view1.add_body(body) for body in view1_subset]
 
         view2 = TestView()
-        view2_subset = self.kitchen_world.bodies[20:]
+        view2_subset = self.kitchen_world.kinematic_structure_entities[20:]
         [view2.add_body(body) for body in view2_subset]
 
         view1.add_view(view2)
         world_view.add_view(view1)
 
         # Test that bodies added in a custom private property are not aggregated
-        world_view.root_body_2 = self.kitchen_world.bodies[18]
-        world_view.tip_body_2 = self.kitchen_world.bodies[20]
+        world_view.root_body_2 = self.kitchen_world.kinematic_structure_entities[18]
+        world_view.tip_body_2 = self.kitchen_world.kinematic_structure_entities[20]
 
         # The aggregation should not include the private dataclass field body or the body added exclusively in the private property
-        assert_equal(world_view.bodies, set(self.kitchen_world.bodies) - {self.kitchen_world.bodies[0], self.kitchen_world.bodies[19]})
+        assert_equal(world_view.bodies, set(self.kitchen_world.kinematic_structure_entities) - {self.kitchen_world.kinematic_structure_entities[0], self.kitchen_world.kinematic_structure_entities[19]})
 
     def test_handle_view(self):
         self.fit_rules_for_a_view_in_apartment(Handle, scenario=self.test_handle_view)

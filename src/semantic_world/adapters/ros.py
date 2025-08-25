@@ -6,12 +6,12 @@ import threading
 import time
 from dataclasses import dataclass
 
-# from roslaunch.core import get_ros_package_path as get_ros_package_paths
-
 from ..geometry import Shape, Mesh, Sphere, Cylinder, Box, Color
-from ..spatial_types import Vector3, Quaternion
+from ..spatial_types import Vector3
 from ..utils import IDGenerator
 from ..world import World
+
+# from roslaunch.core import get_ros_package_path as get_ros_package_paths
 
 try:
     import rospy
@@ -159,7 +159,7 @@ class WorldPublisher:
         :return: An Array of Visualization Marker
         """
         marker_array = MarkerArray()
-        for body in self.world.bodies:
+        for body in self.world.kinematic_structure_entities:
             for shape in body.visual:
                 marker = shape.ros_message()
                 marker_array.markers.append(marker)

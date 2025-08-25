@@ -1,18 +1,18 @@
 import os
 from dataclasses import dataclass
-from typing import Optional, Tuple, Dict, Union, List
+from typing import Optional, Tuple, Union, List
 
-from ..degree_of_freedom import DegreeOfFreedom
-from ..spatial_types import spatial_types as cas
 from urdf_parser_py import urdf
 
 from ..connections import RevoluteConnection, PrismaticConnection, FixedConnection
+from ..degree_of_freedom import DegreeOfFreedom
+from ..geometry import Box, Sphere, Cylinder, Mesh, Scale, Shape, Color
 from ..prefixed_name import PrefixedName
+from ..spatial_types import spatial_types as cas
 from ..spatial_types.derivatives import Derivatives, DerivativeMap
 from ..spatial_types.spatial_types import TransformationMatrix, Vector3
 from ..utils import suppress_stdout_stderr, hacky_urdf_parser_fix
 from ..world import World, Body, Connection
-from ..geometry import Box, Sphere, Cylinder, Mesh, Scale, Shape, Color
 
 connection_type_map = {  # 'unknown': JointType.UNKNOWN,
     'revolute': RevoluteConnection,
@@ -97,7 +97,7 @@ class URDFParser:
         root = [link for link in links if link.name.name == self.parsed.get_root()][0]
         world = World()
         world.name = self.prefix
-        world.add_body(root)
+        world.add_entity(root)
 
         with world.modify_world():
             joints = []
@@ -108,7 +108,7 @@ class URDFParser:
                 joints.append(parsed_joint)
 
             [world.add_connection(joint) for joint in joints]
-            [world.add_body(link) for link in links]
+            [world.add_entity(link) for link in links]
 
         return world
 

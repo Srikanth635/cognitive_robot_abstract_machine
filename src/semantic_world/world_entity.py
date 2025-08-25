@@ -58,8 +58,50 @@ class WorldEntity:
             self.name = PrefixedName(f"{self.__class__.__name__}_{hash(self)}")
 
 
+@dataclass(unsafe_hash=True)
 @dataclass
-class Body(WorldEntity):
+class KinematicStructureEntity(WorldEntity):
+    """
+    An entity that is part of the kinematic structure of the world.
+    """
+
+    index: Optional[int] = field(default=None, init=False)
+    """
+    The index of the entity in `_world.kinematic_structure`.
+    """
+
+    @property
+    def global_pose(self) -> NpMatrix4x4:
+        """
+        Computes the pose of the entity in the world frame.
+        :return: 4x4 transformation matrix.
+        """
+        return self._world.compute_forward_kinematics_np(self._world.root, self)
+
+    @property
+    def parent_connection(self) -> Connection:
+        """
+        Returns the parent connection of this entity.
+        """
+        return self._world.compute_parent_connection(self)
+
+    @property
+    def child_bodies(self) -> List[KinematicStructureEntity]:
+        """
+        Returns the direct child bodies of this entity.
+        """
+        return self._world.compute_child_entities(self)
+
+    @property
+    def parent_entity(self) -> KinematicStructureEntity:
+        """
+        Returns the parent entity of this entity.
+        """
+        return self._world.compute_parent_entity(self)
+
+
+@dataclass
+class Body(KinematicStructureEntity):
     """
     Represents a body in the world.
     A body is a semantic atom, meaning that it cannot be decomposed into meaningful smaller parts.
@@ -75,11 +117,6 @@ class Body(WorldEntity):
     """
     List of shapes that represent the collision geometry of the link.
     The poses of the shapes are relative to the link.
-    """
-
-    index: Optional[int] = field(default=None, init=False)
-    """
-    The index of the entity in `_world.kinematic_structure`.
     """
 
     def __post_init__(self):
@@ -166,25 +203,11 @@ class Body(WorldEntity):
                            np.argmin(dists, axis=1), :]
         return points_min_self, points_min_other, dist_min
 
-    @property
-    def child_bodies(self) -> List[Body]:
-        """
-        Returns the direct child bodies of this body.
-        """
-        return self._world.compute_child_bodies(self)
-
-    @property
-    def parent_body(self) -> Body:
-        """
-        Returns the parent body of this body.
-        """
-        return self._world.compute_parent_body(self)
-
     def as_bounding_box_collection_in_frame(
-        self, reference_frame: Body
+        self, reference_frame: KinematicStructureEntity
     ) -> BoundingBoxCollection:
         """
-        Provides the bounding box collection for this body in the given reference frame.
+        Provides the bounding box collection for this entity in the given reference frame.
         :param reference_frame: The reference frame to express the bounding boxes in.
         :returns: A collection of bounding boxes in world-space coordinates.
         """
@@ -199,30 +222,31 @@ class Body(WorldEntity):
 
         return BoundingBoxCollection(reference_frame, world_bboxes)
 
-    @property
-    def global_pose(self) -> NpMatrix4x4:
-        """
-        Computes the pose of the body in the world frame.
-        :return: 4x4 transformation matrix.
-        """
-        return self._world.compute_forward_kinematics_np(self._world.root, self)
 
-    @property
-    def parent_connection(self) -> Connection:
-        """
-        Returns the parent connection of this body.
-        """
-        return self._world.compute_parent_connection(self)
+@dataclass
+class Region(KinematicStructureEntity):
+    """
+    Virtual KinematicStructureEntity representing a semantic region in the world.
+    """
 
-    @classmethod
-    def from_body(cls, body: Body):
+    area: List[Shape] = field(default_factory=list, hash=False)
+    """
+    List of shapes that represent the area of the region.
+    """
+
+    def __hash__(self):
+        return id(self)
+
+    def as_bounding_box_collection_in_frame(
+        self, reference_frame: KinematicStructureEntity
+    ) -> BoundingBoxCollection:
         """
-        Creates a new link from an existing link.
+        Returns a bounding box collection that contains the bounding boxes of all areas in this region.
         """
-        new_link = cls(name=body.name, visual=body.visual, collision=body.collision)
-        new_link._world = body._world
-        new_link.index = body.index
-        return new_link
+        bbs = [shape.local_frame_bounding_box for shape in self.area]
+        bbs = [bb.transform_to_frame(reference_frame) for bb in bbs]
+        return BoundingBoxCollection(reference_frame, bbs)
+
 
 @dataclass
 class View(WorldEntity):
@@ -232,12 +256,12 @@ class View(WorldEntity):
     This class can hold references to certain bodies that gain meaning in this context.
     """
 
-    def _bodies(self, visited: Set[int]) -> Set[Body]:
+    def _bodies(self, visited: Set[int]) -> Set[KinematicStructureEntity]:
         """
         Recursively collects all bodies that are part of this view.
         """
         stack: Deque[object] = deque([self])
-        bodies: Set[Body] = set()
+        bodies: Set[KinematicStructureEntity] = set()
 
         while stack:
             obj = stack.pop()
@@ -247,22 +271,24 @@ class View(WorldEntity):
             visited.add(oid)
 
             match obj:
-                case Body():
+                case KinematicStructureEntity():
                     bodies.add(obj)
 
                 case View():
                     stack.extend(_attr_values(obj))
 
                 case Mapping():
-                    stack.extend(v for v in obj.values() if _is_body_view_or_iterable(v))
+                    stack.extend(
+                        v for v in obj.values() if _is_entity_view_or_iterable(v)
+                    )
 
                 case Iterable() if not isinstance(obj, (str, bytes, bytearray)):
-                    stack.extend(v for v in obj if _is_body_view_or_iterable(v))
+                    stack.extend(v for v in obj if _is_entity_view_or_iterable(v))
 
         return bodies
 
     @property
-    def bodies(self) -> Iterable[Body]:
+    def bodies(self) -> Iterable[KinematicStructureEntity]:
         """
         Returns a Iterable of all relevant bodies in this view. The default behaviour is to aggregate all bodies that are accessible
         through the properties and fields of this view, recursively.
@@ -271,7 +297,7 @@ class View(WorldEntity):
         return self._bodies(set())
 
     def as_bounding_box_collection_in_frame(
-        self, reference_frame: Body
+        self, reference_frame: KinematicStructureEntity
     ) -> BoundingBoxCollection:
         """
         Returns a bounding box collection that contains the bounding boxes of all bodies in this view.
@@ -280,9 +306,9 @@ class View(WorldEntity):
         """
 
         collections = iter(
-            body.as_bounding_box_collection_in_frame(reference_frame)
-            for body in self.bodies
-            if body.has_collision()
+            entity.as_bounding_box_collection_in_frame(reference_frame)
+            for entity in self.bodies
+            if entity.has_collision()
         )
         bbs = BoundingBoxCollection(reference_frame, [])
 
@@ -295,9 +321,9 @@ class View(WorldEntity):
 @dataclass(unsafe_hash=True)
 class RootedView(View):
     """
-    Represents a view that is rooted in a specific body.
+    Represents a view that is rooted in a specific entity.
     """
-    root: Body = field(default_factory=Body)
+    root: KinematicStructureEntity = field(default_factory=KinematicStructureEntity)
 
 
 @dataclass(unsafe_hash=True)
@@ -307,27 +333,29 @@ class EnvironmentView(RootedView):
     """
 
     @property
-    def bodies(self) -> Set[Body]:
+    def bodies(self) -> Set[KinematicStructureEntity]:
         """
         Returns a set of all bodies in the environment view.
         """
-        return set(self._world.compute_child_bodies_recursive(self.root)) | {self.root}
+        return set(self._world.compute_descendent_child_entities(self.root)) | {
+            self.root
+        }
 
 
 @dataclass
 class Connection(WorldEntity):
     """
-    Represents a connection between two bodies in the world.
+    Represents a connection between two entities in the world.
     """
 
-    parent: Body
+    parent: KinematicStructureEntity
     """
-    The parent body of the connection.
+    The parent entity of the connection.
     """
 
-    child: Body
+    child: KinematicStructureEntity
     """
-    The child body of the connection.
+    The child entity of the connection.
     """
 
     origin_expression: TransformationMatrix = field(default=None)
@@ -401,13 +429,12 @@ class Connection(WorldEntity):
         return dofs
 
 
-def _is_body_view_or_iterable(obj: object) -> bool:
+def _is_entity_view_or_iterable(obj: object) -> bool:
     """
-    Determines if an object is a Body, a View, or an Iterable (excluding strings and bytes).
+    Determines if an object is a KinematicStructureEntity, a View, or an Iterable (excluding strings and bytes).
     """
-    return (
-            isinstance(obj, (Body, View)) or
-            (isinstance(obj, Iterable) and not isinstance(obj, (str, bytes, bytearray)))
+    return isinstance(obj, (KinematicStructureEntity, View)) or (
+        isinstance(obj, Iterable) and not isinstance(obj, (str, bytes, bytearray))
     )
 
 
@@ -422,7 +449,7 @@ def _attr_values(view: View) -> Iterable[object]:
         if f.name.startswith('_'):
             continue
         v = getattr(view, f.name, None)
-        if _is_body_view_or_iterable(v):
+        if _is_entity_view_or_iterable(v):
             yield v
 
     for name, prop in inspect.getmembers(type(view), lambda o: isinstance(o, property)):
@@ -432,5 +459,5 @@ def _attr_values(view: View) -> Iterable[object]:
             v = getattr(view, name)
         except Exception:
             continue
-        if _is_body_view_or_iterable(v):
+        if _is_entity_view_or_iterable(v):
             yield v
