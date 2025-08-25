@@ -918,6 +918,15 @@ class WallFactory(ViewFactory[Wall]):
 def add_door_to_world(
     door_factory: DoorFactory, parent_T_door: TransformationMatrix, parent_world: World
 ):
+    """
+    Adds a door to the parent world with a revolute connection. The Door's pivot point is on the opposite side of the
+    handle.
+
+    :param door_factory: The factory used to create the door.
+    :param parent_T_door: The transformation matrix defining the door's position and orientation relative
+    to the parent world.
+    :param parent_world: The world to which the door will be added.
+    """
     door_world = door_factory.create()
 
     door_view: Door = door_world.get_views_by_type(Door)[0]
@@ -962,6 +971,16 @@ def add_door_to_world(
 def calculate_door_pivot_point(
     door_view, door_transform: TransformationMatrix, scale: Scale
 ) -> TransformationMatrix:
+    """
+    Calculate the door pivot point based on the handle position and the door scale. The pivot point is on the opposite
+    side of the handle.
+
+    :param door_view: The door view containing the handle.
+    :param door_transform: The transformation matrix defining the door's position and orientation.
+    :param scale: The scale of the door.
+
+    :return: The transformation matrix defining the door's pivot point.
+    """
     parent_connection = door_view.handle.body.parent_connection
     if parent_connection is None:
         raise ValueError(
