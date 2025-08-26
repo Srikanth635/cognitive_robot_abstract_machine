@@ -4,7 +4,7 @@ from semantic_world.reasoner import WorldReasoner
 from semantic_world.adapters.urdf import URDFParser
 
 
-kitchen_world = URDFParser(join(dirname(__file__), '../resources/urdf/kitchen-small.urdf')).parse()
+kitchen_world = URDFParser(join(dirname(__file__), '..', 'resources', 'urdf', 'kitchen-small.urdf')).parse()
 reasoner = WorldReasoner(kitchen_world)
 found_concepts = reasoner.reason()
 
