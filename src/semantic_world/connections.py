@@ -161,7 +161,7 @@ class PrismaticConnection(ActiveConnection, Has1DOFState):
         self.origin_expression.child_frame = self.child
 
     def _post_init_with_world(self):
-        self.dof = self.dof or self._world.create_degree_of_freedom(name=PrefixedName(str(self.name)))
+        self.dof = self.dof or self._world.create_degree_of_freedom(name=self.name)
 
     def _post_init_without_world(self):
         if self.dof is None:
@@ -223,7 +223,7 @@ class RevoluteConnection(ActiveConnection, Has1DOFState):
         self.origin_expression.child_frame = self.child
 
     def _post_init_with_world(self):
-        self.dof = self.dof or self._world.create_degree_of_freedom(name=PrefixedName(str(self.name)))
+        self.dof = self.dof or self._world.create_degree_of_freedom(name=self.name)
 
     def _post_init_without_world(self):
         if self.dof is None:
