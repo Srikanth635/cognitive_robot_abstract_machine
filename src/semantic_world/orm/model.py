@@ -35,7 +35,7 @@ class WorldMapping(AlternativeMapping[World]):
 
         with result.modify_world():
             for body in self.bodies:
-                result.add_entity(body)
+                result.add_kinematic_structure_entity(body)
             for connection in self.connections:
                 result.add_connection(connection)
             for view in self.views:

@@ -114,7 +114,7 @@ class ContainerFactory(ViewFactory[Container]):
         container_view = Container(body=container_body, name=self.name)
 
         world = World()
-        world.add_entity(container_body)
+        world.add_kinematic_structure_entity(container_body)
         world.add_view(container_view)
 
         return world
@@ -212,7 +212,7 @@ class HandleFactory(ViewFactory[Handle]):
         handle_view = Handle(name=self.name, body=handle)
 
         world = World()
-        world.add_entity(handle)
+        world.add_kinematic_structure_entity(handle)
         world.add_view(handle_view)
         return world
 
@@ -310,7 +310,7 @@ class DoorFactory(EntryWayFactory[Door]):
         body.visual = collision
 
         world = World()
-        world.add_entity(body)
+        world.add_kinematic_structure_entity(body)
 
         handle_world = self.handle_factory.create()
         handle_view: Handle = handle_world.get_views_by_type(Handle)[0]
@@ -424,7 +424,7 @@ class DoubleDoorFactory(EntryWayFactory[DoubleDoor]):
 
         world = World()
         double_door_body = Body(name=self.name)
-        world.add_entity(double_door_body)
+        world.add_kinematic_structure_entity(double_door_body)
 
         assert len(door_factories) == 2, "Double door must have exactly two doors"
 
@@ -769,7 +769,7 @@ class WallFactory(ViewFactory[Wall]):
         wall_collision = self._create_wall_collision(wall_body)
         wall_body.collision = wall_collision
         wall_body.visual = wall_collision
-        wall_world.add_entity(wall_body)
+        wall_world.add_kinematic_structure_entity(wall_body)
 
         self.add_doors_and_double_doors_to_world(wall_world)
 
@@ -877,7 +877,7 @@ class WallFactory(ViewFactory[Wall]):
         out the doors from the wall event.
         """
         temp_world = World()
-        temp_world.add_entity(Body())
+        temp_world.add_kinematic_structure_entity(Body())
 
         connection = FixedConnection(
             parent=temp_world.root,

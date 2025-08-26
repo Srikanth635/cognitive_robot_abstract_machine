@@ -30,7 +30,7 @@ def test_set_state(world_setup):
     assert c1.position == 2.0
 
     transform[0, 3] += c1.position
-    assert np.allclose(l2.global_pose, transform)
+    assert np.allclose(l2.global_pose.to_np(), transform)
 
 
 def test_construction(world_setup):
@@ -44,7 +44,7 @@ def test_construction(world_setup):
 
 def test_chain_of_bodies(world_setup):
     world, _, l2, _, _, _ = world_setup
-    result = world.compute_chain_of_entities(root=world.root, tip=l2)
+    result = world.compute_chain_of_kinematic_structure_entities(root=world.root, tip=l2)
     result = [x.name for x in result]
     assert result == [PrefixedName(name='root', prefix='world'), PrefixedName(name='bf', prefix=None),
                       PrefixedName(name='l1', prefix=None), PrefixedName(name='l2', prefix=None)]
@@ -60,7 +60,7 @@ def test_chain_of_connections(world_setup):
 
 def test_split_chain_of_bodies(world_setup):
     world, _, l2, _, _, r2 = world_setup
-    result = world.compute_split_chain_of_entities(root=r2, tip=l2)
+    result = world.compute_split_chain_of_kinematic_structure_entities(root=r2, tip=l2)
     result = tuple([x.name for x in y] for y in result)
     assert result == ([PrefixedName(name='r2', prefix=None), PrefixedName(name='r1', prefix=None)],
                       [PrefixedName(name='bf', prefix=None)],
@@ -69,21 +69,21 @@ def test_split_chain_of_bodies(world_setup):
 
 def test_split_chain_of_bodies_adjacent1(world_setup):
     world, _, _, _, r1, r2 = world_setup
-    result = world.compute_split_chain_of_entities(root=r2, tip=r1)
+    result = world.compute_split_chain_of_kinematic_structure_entities(root=r2, tip=r1)
     result = tuple([x.name for x in y] for y in result)
     assert result == ([PrefixedName(name='r2', prefix=None)], [PrefixedName(name='r1', prefix=None)], [])
 
 
 def test_split_chain_of_bodies_adjacent2(world_setup):
     world, _, _, _, r1, r2 = world_setup
-    result = world.compute_split_chain_of_entities(root=r1, tip=r2)
+    result = world.compute_split_chain_of_kinematic_structure_entities(root=r1, tip=r2)
     result = tuple([x.name for x in y] for y in result)
     assert result == ([], [PrefixedName(name='r1', prefix=None)], [PrefixedName(name='r2', prefix=None)])
 
 
 def test_split_chain_of_bodies_identical(world_setup):
     world, _, _, _, r1, _ = world_setup
-    result = world.compute_split_chain_of_entities(root=r1, tip=r1)
+    result = world.compute_split_chain_of_kinematic_structure_entities(root=r1, tip=r1)
     result = tuple([x.name for x in y] for y in result)
     assert result == ([], [PrefixedName(name='r1', prefix=None)], [])
 
@@ -366,7 +366,7 @@ def test_remove_connection(world_setup):
     connection = world.get_connection(l1, l2)
     with world.modify_world():
         world.remove_connection(connection)
-        world.remove_entity(l2)
+        world.remove_kinematic_structure_entity(l2)
     assert connection not in world.connections
     # dof should still exist because it was a mimic connection.
     assert connection.dof.name in world.state

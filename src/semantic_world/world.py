@@ -6,7 +6,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import wraps, lru_cache
-from typing import Dict, Tuple, OrderedDict, Union, Optional, Generic, TypeVar
+from typing import Dict, Tuple, OrderedDict, Optional, TypeVar, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -34,14 +34,21 @@ from .spatial_types.derivatives import Derivatives
 from .spatial_types.math import inverse_frame
 from .types import NpMatrix4x4
 from .utils import IDGenerator, copy_lru_cache
-from .world_entity import Body, Connection, View, KinematicStructureEntity, Region
+from .world_entity import (
+    Body,
+    Connection,
+    View,
+    KinematicStructureEntity,
+    Region,
+    GenericKinematicStructureEntity,
+)
 from .world_state import WorldState
 
 logger = logging.getLogger(__name__)
 
 id_generator = IDGenerator()
 
-T = TypeVar("T")
+GenericView = TypeVar("GenericView", bound=View)
 
 
 class PlotAlignment(IntEnum):
@@ -246,11 +253,6 @@ class World:
     All views the world is aware of.
     """
 
-    regions: List[Region] = field(default_factory=list, repr=False)
-    """
-    All regions the world is aware of.
-    """
-
     degrees_of_freedom: List[DegreeOfFreedom] = field(default_factory=list)
     """
     All degrees of freedom in the world.
@@ -356,13 +358,13 @@ class World:
         # self.get_movable_parent_joint.cache_clear()
         # self.get_controlled_parent_joint_of_link.cache_clear()
         # self.get_controlled_parent_joint_of_joint.cache_clear()
-        self.compute_split_chain_of_entities.cache_clear()
+        self.compute_split_chain_of_kinematic_structure_entities.cache_clear()
         self.compute_split_chain_of_connections.cache_clear()
-        self.compute_child_entities.cache_clear()
-        self.compute_descendent_child_entities.cache_clear()
+        self.compute_child_kinematic_structure_entities.cache_clear()
+        self.compute_descendent_child_kinematic_structure_entities.cache_clear()
         # self.are_linked.cache_clear()
         # self.compose_fk_expression.cache_clear()
-        self.compute_chain_of_entities.cache_clear()
+        self.compute_chain_of_kinematic_structure_entities.cache_clear()
         self.compute_chain_of_connections.cache_clear()
         # self.is_link_controlled.cache_clear()
         for dof in self.degrees_of_freedom:
@@ -396,6 +398,21 @@ class World:
             actual_dofs.update(connection.dofs)
         self.degrees_of_freedom = list(actual_dofs)
 
+    def get_kinematic_structure_entity_by_type(
+        self, entity_type: Type[GenericKinematicStructureEntity]
+    ) -> List[GenericKinematicStructureEntity]:
+        """
+        Retrieves all kinematic structure entities of a specific type from the world.
+
+        :param entity_type: The class (type) of the kinematic structure entities to search for.
+        :return: A list of `KinematicStructureEntity` objects that match the given type.
+        """
+        return [
+            entity
+            for entity in self.kinematic_structure_entities
+            if isinstance(entity, entity_type)
+        ]
+
     @property
     def kinematic_structure_entities(self) -> List[KinematicStructureEntity]:
         """
@@ -404,18 +421,25 @@ class World:
         return list(self.kinematic_structure.nodes())
 
     @property
+    def regions(self) -> List[Region]:
+        """
+        :return: A list of all regions in the world.
+        """
+        return self.get_kinematic_structure_entity_by_type(Region)
+
+    @property
     def bodies(self) -> List[Body]:
         """
         :return: A list of all bodies in the world.
         """
-        return [entity for entity in self.kinematic_structure_entities if isinstance(entity, Body)]
+        return self.get_kinematic_structure_entity_by_type(Body)
 
     @property
     def bodies_with_collisions(self) -> List[Body]:
         """
         :return: A list of all bodies in the world that have collisions.
         """
-        return [entity for entity in self.kinematic_structure_entities if isinstance(entity, Body) and entity.has_collision()]
+        return [body for body in self.bodies if body.has_collision()]
 
     @property
     def connections(self) -> List[Connection]:
@@ -425,19 +449,32 @@ class World:
         return list(self.kinematic_structure.edges())
 
     @modifies_world
-    def add_entity(self, entity: KinematicStructureEntity) -> None:
+    def add_kinematic_structure_entity(
+        self, kinematic_structure_entity: KinematicStructureEntity
+    ) -> None:
         """
-        Add an entity to the world.
+        Add an kinematic_structure_entity to the world.
 
-        :param entity: The entity to add.
+        :param kinematic_structure_entity: The kinematic_structure_entity to add.
         """
-        if entity._world is self and entity.index is not None:
+        if (
+            kinematic_structure_entity._world is self
+            and kinematic_structure_entity.index is not None
+        ):
             return
-        elif entity._world is not None and entity._world is not self:
-            raise AlreadyBelongsToAWorldError(world=entity._world, type_trying_to_add=KinematicStructureEntity)
+        elif (
+            kinematic_structure_entity._world is not None
+            and kinematic_structure_entity._world is not self
+        ):
+            raise AlreadyBelongsToAWorldError(
+                world=kinematic_structure_entity._world,
+                type_trying_to_add=KinematicStructureEntity,
+            )
 
-        entity.index = self.kinematic_structure.add_node(entity)
-        entity._world = self
+        kinematic_structure_entity.index = self.kinematic_structure.add_node(
+            kinematic_structure_entity
+        )
+        kinematic_structure_entity._world = self
 
     @modifies_world
     def add_connection(self, connection: Connection) -> None:
@@ -446,8 +483,8 @@ class World:
 
         :param connection: The connection to add.
         """
-        self.add_entity(connection.parent)
-        self.add_entity(connection.child)
+        self.add_kinematic_structure_entity(connection.parent)
+        self.add_kinematic_structure_entity(connection.child)
         connection._world = self
         self.kinematic_structure.add_edge(connection.parent.index, connection.child.index, connection)
 
@@ -487,7 +524,7 @@ class World:
         except ViewNotFoundError:
             logger.debug(f"View {view.name} not found in the world. No action taken.")
 
-    def get_view_by_name(self, name: PrefixedName) -> Optional[View]:
+    def get_view_by_name(self, name: Union[str, PrefixedName]) -> Optional[View]:
         """
         Retrieves a View from the list of view based on its name.
         If the input is of type `PrefixedName`, it checks whether the prefix is specified and looks for an
@@ -495,21 +532,23 @@ class World:
         If more than one body with the same name is found, an assertion error is raised.
         If no matching body is found, a `ValueError` is raised.
 
-        :param name: The name of the view to search for.
+        :param name: The name of the view to search for. Can be a string or a `PrefixedName` object.
         :return: The `View` object that matches the given name.
         """
-        if name.prefix is not None:
-            matches = [view for view in self.views if view.name == name]
+        if isinstance(name, PrefixedName):
+            if name.prefix is not None:
+                matches = [view for view in self.views if view.name == name]
+            else:
+                matches = [view for view in self.views if view.name.name == name.name]
         else:
-            matches = [view for view in self.views if view.name.name == name.name]
-
+            matches = [view for view in self.views if view.name.name == name]
         if len(matches) > 1:
             raise DuplicateViewError(matches)
         if matches:
             return matches[0]
         raise ViewNotFoundError(name)
 
-    def get_views_by_type(self, view_type: Type[Generic[T]]) -> List[T]:
+    def get_views_by_type(self, view_type: Type[GenericView]) -> List[GenericView]:
         """
         Retrieves all views of a specific type from the world.
 
@@ -519,22 +558,29 @@ class World:
         return [view for view in self.views if isinstance(view, view_type)]
 
     @modifies_world
-    def remove_entity(self, entity: KinematicStructureEntity) -> None:
+    def remove_kinematic_structure_entity(
+        self, kinematic_structure_entity: KinematicStructureEntity
+    ) -> None:
         """
-        Removes an entity from the world.
+        Removes an kinematic_structure_entity from the world.
         """
-        if entity._world is self and entity.index is not None:
-            self.kinematic_structure.remove_node(entity.index)
-            entity._world = None
-            entity.index = None
+        if (
+            kinematic_structure_entity._world is self
+            and kinematic_structure_entity.index is not None
+        ):
+            self.kinematic_structure.remove_node(kinematic_structure_entity.index)
+            kinematic_structure_entity._world = None
+            kinematic_structure_entity.index = None
         else:
-            logger.debug("Trying to remove an entity that is not part of this world.")
+            logger.debug(
+                "Trying to remove an kinematic_structure_entity that is not part of this world."
+            )
 
     @modifies_world
     def remove_connection(self, connection: Connection) -> None:
         """
         Removes a connection and deletes the corresponding degree of freedom, if it was only used by this connection.
-        Might create disconnected entities, so make sure to add a new connection or delete the child entity.
+        Might create disconnected entities, so make sure to add a new connection or delete the child kinematic_structure_entity.
 
         :param connection: The connection to be removed
         """
@@ -575,12 +621,12 @@ class World:
         # do not trigger computations in other
         other.world_is_being_modified = True
         for connection in other.connections:
-            other.remove_entity(connection.parent)
-            other.remove_entity(connection.child)
+            other.remove_kinematic_structure_entity(connection.parent)
+            other.remove_kinematic_structure_entity(connection.child)
             self.add_connection(connection)
-        for entity in other.kinematic_structure_entities:
-            if entity._world is not None:
-                other.remove_entity(entity)
+        for kinematic_structure_entity in other.kinematic_structure_entities:
+            if kinematic_structure_entity._world is not None:
+                other.remove_kinematic_structure_entity(kinematic_structure_entity)
 
         other_views = [view for view in other.views]
         for view in other_views:
@@ -613,34 +659,37 @@ class World:
 
     def get_connection(self, parent: KinematicStructureEntity, child: KinematicStructureEntity) -> Connection:
         """
-        Retrieves the connection between a parent and child entity in the kinematic structure.
+        Retrieves the connection between a parent and child kinematic_structure_entity in the kinematic structure.
         """
         return self.kinematic_structure.get_edge_data(parent.index, child.index)
 
-    def get_kinematic_structure_entity_by_name(self, name: PrefixedName) -> KinematicStructureEntity:
+    def get_kinematic_structure_entity_by_name(self, name: Union[str, PrefixedName]) -> KinematicStructureEntity:
         """
-        Retrieves an entity from the list of entities based on its name.
+        Retrieves a kinematic_structure_entity from the list of KinematicStructureEntites based on its name.
         If the input is of type `PrefixedName`, it checks whether the prefix is specified and looks for an
         exact match. Otherwise, it matches based on the name's string representation.
-        If more than one body with the same name is found, an assertion error is raised.
-        If no matching body is found, a `ValueError` is raised.
+        If more than one kinematic_structure_entity with the same name is found, an assertion error is raised.
+        If no matching kinematic_structure_entity is found, a `ValueError` is raised.
 
-        :param name: The Prefixed Name of the body to search for.
-        :return: The `Body` object that matches the given name.
-        :raises ValueError: If multiple or no bodies with the specified name are found.
+        :param name: The name of the kinematic_structure_entity to search for. Can be a string or a `PrefixedName` object.
+        :return: The `KinematicStructureEntity` object that matches the given name.
+        :raises ValueError: If multiple or no KinematicStructureEntities with the specified name are found.
         """
-        if name.prefix is not None:
-            matches = [entity for entity in self.kinematic_structure_entities if entity.name == name]
+        if isinstance(name, PrefixedName):
+            if name.prefix is not None:
+                matches = [entity for entity in self.kinematic_structure_entities if entity.name == name]
+            else:
+                matches = [entity for entity in self.kinematic_structure_entities if entity.name.name == name.name]
         else:
-            matches = [entity for entity in self.kinematic_structure_entities if entity.name.name == name.name]
-
+            matches = [entity for entity in self.kinematic_structure_entities if entity.name.name == name]
         if len(matches) > 1:
-            raise ValueError(f'Multiple entities with name {name} found')
+            raise ValueError(f'Multiple KinematicStructureEntities with name {name} found')
         if matches:
             return matches[0]
-        raise KeyError(f'No Entity with name {name} found')
+        raise KeyError(f'KinematicStructureEntity with name {name} not found')
 
-    def get_degree_of_freedom_by_name(self, name: PrefixedName) -> DegreeOfFreedom:
+
+    def get_degree_of_freedom_by_name(self, name: Union[str, PrefixedName]) -> DegreeOfFreedom:
         """
         Retrieves a DegreeOfFreedom from the list of DegreeOfFreedom based on its name.
         If the input is of type `PrefixedName`, it checks whether the prefix is specified and looks for an
@@ -648,21 +697,24 @@ class World:
         If more than one body with the same name is found, an assertion error is raised.
         If no matching body is found, a `ValueError` is raised.
 
-        :param name: The name of the DegreeOfFreedom to search for.
+        :param name: The name of the DegreeOfFreedom to search for. Can be a string or a `PrefixedName` object.
         :return: The `DegreeOfFreedom` object that matches the given name.
         :raises ValueError: If multiple or no DegreeOfFreedom with the specified name are found.
         """
-        if name.prefix is not None:
-            matches = [dof for dof in self.degrees_of_freedom if dof.name == name]
+        if isinstance(name, PrefixedName):
+            if name.prefix is not None:
+                matches = [dof for dof in self.degrees_of_freedom if dof.name == name]
+            else:
+                matches = [dof for dof in self.degrees_of_freedom if dof.name.name == name.name]
         else:
-            matches = [dof for dof in self.degrees_of_freedom if dof.name.name == name.name]
+            matches = [dof for dof in self.degrees_of_freedom if dof.name.name == name]
         if len(matches) > 1:
             raise ValueError(f'Multiple DegreeOfFreedom with name {name} found')
         if matches:
             return matches[0]
-        raise KeyError(f'No DegreeOfFreedom with name {name} found')
+        raise KeyError(f'DegreeOfFreedom with name {name} not found')
 
-    def get_connection_by_name(self, name: PrefixedName) -> Connection:
+    def get_connection_by_name(self, name: Union[str, PrefixedName]) -> Connection:
         """
         Retrieve a connection by its name.
         This method accepts either a string or a `PrefixedName` instance.
@@ -673,15 +725,20 @@ class World:
         one connection matches the specified name, or if no connection is found,
         an exception is raised.
 
-        :param name: The name of the connection to retrieve.
+        :param name: The name of the connection to retrieve. Can be a string or
+            a `PrefixedName` instance. If a prefix is included in `PrefixedName`,
+            it will be used for matching.
         :return: The connection that matches the specified name.
         :raises ValueError: If multiple connections with the given name are found
             or if no connection with the given name exists.
         """
-        if name.prefix is not None:
-            matches = [conn for conn in self.connections if conn.name == name]
+        if isinstance(name, PrefixedName):
+            if name.prefix is not None:
+                matches = [conn for conn in self.connections if conn.name == name]
+            else:
+                matches = [conn for conn in self.connections if conn.name.name == name.name]
         else:
-            matches = [conn for conn in self.connections if conn.name.name == name.name]
+            matches = [conn for conn in self.connections if conn.name.name == name]
         if len(matches) > 1:
             raise ValueError(f'Multiple connections with name {name} found')
         if matches:
@@ -689,46 +746,71 @@ class World:
         raise KeyError(f'Connection with name {name} not found')
 
     @lru_cache(maxsize=None)
-    def compute_child_entities(self, entity: KinematicStructureEntity) -> List[KinematicStructureEntity]:
+    def compute_child_kinematic_structure_entities(
+        self, kinematic_structure_entity: KinematicStructureEntity
+    ) -> List[KinematicStructureEntity]:
         """
-        Computes the child entities of a given entity in the world.
-        :param entity: The entity for which to compute child entities.
-        :return: A list of child entities.
+        Computes the child entities of a given KinematicStructureEntity in the world.
+        :param kinematic_structure_entity: The KinematicStructureEntity for which to compute children.
+        :return: A list of child KinematicStructureEntities.
         """
-        return list(self.kinematic_structure.successors(entity.index))
+        return list(
+            self.kinematic_structure.successors(kinematic_structure_entity.index)
+        )
 
     @lru_cache(maxsize=None)
-    def compute_descendent_child_entities(self, entity: KinematicStructureEntity) -> List[KinematicStructureEntity]:
+    def compute_descendent_child_kinematic_structure_entities(
+        self, kinematic_structure_entity: KinematicStructureEntity
+    ) -> List[KinematicStructureEntity]:
         """
-        Computes all child entities of a given entity in the world recursively.
-        :param entity: The entity for which to compute child entities.
-        :return: A list of all child entities.
+        Computes all child entities of a given KinematicStructureEntity in the world recursively.
+        :param kinematic_structure_entity: The KinematicStructureEntity for which to compute children.
+        :return: A list of all child KinematicStructureEntities.
         """
-        children = self.compute_child_entities(entity)
+        children = self.compute_child_kinematic_structure_entities(
+            kinematic_structure_entity
+        )
         for child in children:
-            children.extend(self.compute_descendent_child_entities(child))
+            children.extend(
+                self.compute_descendent_child_kinematic_structure_entities(child)
+            )
         return children
 
     @lru_cache(maxsize=None)
-    def compute_parent_entity(self, entity: KinematicStructureEntity) -> KinematicStructureEntity:
+    def compute_parent_kinematic_structure_entity(
+        self, kinematic_structure_entity: KinematicStructureEntity
+    ) -> KinematicStructureEntity:
         """
-        Computes the parent entity of a given entity in the world.
-        :param entity: The entity for which to compute the parent entity.
-        :return: The parent entity of the given entity.
+        Computes the parent KinematicStructureEntity of a given KinematicStructureEntity in the world.
+        :param kinematic_structure_entity: The KinematicStructureEntity for which to compute the parent KinematicStructureEntity.
+        :return: The parent KinematicStructureEntity of the given KinematicStructureEntity.
         """
-        return next(iter(self.kinematic_structure.predecessors(entity.index)))
+        return next(
+            iter(
+                self.kinematic_structure.predecessors(kinematic_structure_entity.index)
+            )
+        )
 
     @lru_cache(maxsize=None)
-    def compute_parent_connection(self, entity: KinematicStructureEntity) -> Connection:
+    def compute_parent_connection(
+        self, kinematic_structure_entity: KinematicStructureEntity
+    ) -> Connection:
         """
-        Computes the parent connection of a given entity in the world.
-        :param entity: The entity for which to compute the parent connection.
-        :return: The parent connection of the given entity.
+        Computes the parent connection of a given KinematicStructureEntity in the world.
+        :param kinematic_structure_entity: The entityKinematicStructureEntity for which to compute the parent connection.
+        :return: The parent connection of the given KinematicStructureEntity.
         """
-        return self.kinematic_structure.get_edge_data(self.compute_parent_entity(entity).index, entity.index)
+        return self.kinematic_structure.get_edge_data(
+            self.compute_parent_kinematic_structure_entity(
+                kinematic_structure_entity
+            ).index,
+            kinematic_structure_entity.index,
+        )
 
     @lru_cache(maxsize=None)
-    def compute_chain_of_entities(self, root: KinematicStructureEntity, tip: KinematicStructureEntity) -> List[KinematicStructureEntity]:
+    def compute_chain_of_kinematic_structure_entities(
+        self, root: KinematicStructureEntity, tip: KinematicStructureEntity
+    ) -> List[KinematicStructureEntity]:
         """
         Computes the chain between root and tip. Can handle chains that start and end anywhere in the tree.
         """
@@ -746,15 +828,21 @@ class World:
         """
         Computes the chain of connections between root and tip. Can handle chains that start and end anywhere in the tree.
         """
-        entity_chain = self.compute_chain_of_entities(root, tip)
+        entity_chain = self.compute_chain_of_kinematic_structure_entities(root, tip)
         return [self.get_connection(entity_chain[i], entity_chain[i + 1]) for i in range(len(entity_chain) - 1)]
 
     @lru_cache(maxsize=None)
-    def compute_split_chain_of_entities(self, root: KinematicStructureEntity, tip: KinematicStructureEntity) -> Tuple[List[KinematicStructureEntity], List[KinematicStructureEntity], List[KinematicStructureEntity]]:
+    def compute_split_chain_of_kinematic_structure_entities(
+        self, root: KinematicStructureEntity, tip: KinematicStructureEntity
+    ) -> Tuple[
+        List[KinematicStructureEntity],
+        List[KinematicStructureEntity],
+        List[KinematicStructureEntity],
+    ]:
         """
         Computes the chain between root and tip. Can handle chains that start and end anywhere in the tree.
-        :param root: The root entity to start the chain from
-        :param tip: The tip entity to end the chain at
+        :param root: The root KinematicStructureEntity to start the chain from
+        :param tip: The tip KinematicStructureEntity to end the chain at
         :return: tuple containing
                     1. chain from root to the common ancestor (excluding common ancestor)
                     2. list containing just the common ancestor
@@ -762,8 +850,8 @@ class World:
         """
         if root == tip:
             return [], [root], []
-        root_chain = self.compute_chain_of_entities(self.root, root)
-        tip_chain = self.compute_chain_of_entities(self.root, tip)
+        root_chain = self.compute_chain_of_kinematic_structure_entities(self.root, root)
+        tip_chain = self.compute_chain_of_kinematic_structure_entities(self.root, tip)
         i = 0
         for i in range(min(len(root_chain), len(tip_chain))):
             if root_chain[i] != tip_chain[i]:
@@ -771,10 +859,14 @@ class World:
         else:
             i += 1
         common_ancestor = tip_chain[i - 1]
-        root_chain = self.compute_chain_of_entities(common_ancestor, root)
+        root_chain = self.compute_chain_of_kinematic_structure_entities(
+            common_ancestor, root
+        )
         root_chain = root_chain[1:]
         root_chain = root_chain[::-1]
-        tip_chain = self.compute_chain_of_entities(common_ancestor, tip)
+        tip_chain = self.compute_chain_of_kinematic_structure_entities(
+            common_ancestor, tip
+        )
         tip_chain = tip_chain[1:]
         return root_chain, [common_ancestor], tip_chain
 
@@ -792,7 +884,9 @@ class World:
         """
         if root == tip:
             return [], []
-        root_chain, common_ancestor, tip_chain = self.compute_split_chain_of_entities(root, tip)
+        root_chain, common_ancestor, tip_chain = (
+            self.compute_split_chain_of_kinematic_structure_entities(root, tip)
+        )
         root_chain.append(common_ancestor[0])
         tip_chain.insert(0, common_ancestor[0])
         root_connections = []
@@ -861,14 +955,20 @@ class World:
         plt.axis('off')  # Hide axes
         plt.show()
 
-    def _travel_branch(self, entity: KinematicStructureEntity, visitor: rustworkx.visit.DFSVisitor) -> None:
+    def _travel_branch(
+        self,
+        kinematic_structure_entity: KinematicStructureEntity,
+        visitor: rustworkx.visit.DFSVisitor,
+    ) -> None:
         """
         Apply a DFS Visitor to a subtree of the kinematic structure.
 
-        :param entity: Starting point of the search
+        :param kinematic_structure_entity: Starting point of the search
         :param visitor: This visitor to apply.
         """
-        rx.dfs_search(self.kinematic_structure, [entity.index], visitor)
+        rx.dfs_search(
+            self.kinematic_structure, [kinematic_structure_entity.index], visitor
+        )
 
     def compile_forward_kinematics_expressions(self) -> None:
         """
@@ -885,11 +985,11 @@ class World:
     @copy_lru_cache()
     def compose_forward_kinematics_expression(self, root: KinematicStructureEntity, tip: KinematicStructureEntity) -> cas.TransformationMatrix:
         """
-        :param root: The root entity in the kinematic chain.
+        :param root: The root KinematicStructureEntity in the kinematic chain.
             It determines the starting point of the forward kinematics calculation.
-        :param tip: The tip entity in the kinematic chain.
+        :param tip: The tip KinematicStructureEntity in the kinematic chain.
             It determines the endpoint of the forward kinematics calculation.
-        :return: An expression representing the computed forward kinematics of the tip entity relative to the root entity.
+        :return: An expression representing the computed forward kinematics of the tip KinematicStructureEntity relative to the root KinematicStructureEntity.
         """
 
         fk = cas.TransformationMatrix()
@@ -906,27 +1006,27 @@ class World:
 
     def compute_forward_kinematics(self, root: KinematicStructureEntity, tip: KinematicStructureEntity) -> cas.TransformationMatrix:
         """
-        Compute the forward kinematics from the root entity to the tip entity.
+        Compute the forward kinematics from the root KinematicStructureEntity to the tip KinematicStructureEntity.
 
         Calculate the transformation matrix representing the pose of the
-        tip entity relative to the root entity.
+        tip KinematicStructureEntity relative to the root KinematicStructureEntity.
 
-        :param root: Root entity for which the kinematics are computed.
-        :param tip: Tip entity to which the kinematics are computed.
-        :return: Transformation matrix representing the relative pose of the tip entity with respect to the root entity.
+        :param root: Root KinematicStructureEntity for which the kinematics are computed.
+        :param tip: Tip KinematicStructureEntity to which the kinematics are computed.
+        :return: Transformation matrix representing the relative pose of the tip KinematicStructureEntity with respect to the root KinematicStructureEntity.
         """
         return cas.TransformationMatrix(self.compute_forward_kinematics_np(root, tip))
 
     def compute_forward_kinematics_np(self, root: KinematicStructureEntity, tip: KinematicStructureEntity) -> NpMatrix4x4:
         """
-        Compute the forward kinematics from the root entity to the tip entity, root_T_tip and return it as a 4x4 numpy ndarray.
+        Compute the forward kinematics from the root KinematicStructureEntity to the tip KinematicStructureEntity, root_T_tip and return it as a 4x4 numpy ndarray.
 
         Calculate the transformation matrix representing the pose of the
-        tip entity relative to the root entity, expressed as a numpy ndarray.
+        tip KinematicStructureEntity relative to the root KinematicStructureEntity, expressed as a numpy ndarray.
 
-        :param root: Root entity for which the kinematics are computed.
-        :param tip: Tip entity to which the kinematics are computed.
-        :return: Transformation matrix representing the relative pose of the tip entity with respect to the root entity.
+        :param root: Root KinematicStructureEntity for which the kinematics are computed.
+        :param tip: Tip KinematicStructureEntity to which the kinematics are computed.
+        :return: Transformation matrix representing the relative pose of the tip KinematicStructureEntity with respect to the root KinematicStructureEntity.
         """
         return self._fk_computer.compute_forward_kinematics_np(root, tip).copy()
 
@@ -943,7 +1043,7 @@ class World:
         - For other types, apply the transformation matrix directly.
 
         :param spatial_object: The spatial object to be transformed.
-        :param target_frame: The target entity frame to which the spatial object should
+        :param target_frame: The target KinematicStructureEntity frame to which the spatial object should
             be transformed.
         :return: The spatial object transformed to the target frame. If the input object
             is a Quaternion, the returned object is a Quaternion. Otherwise, it is the
@@ -976,9 +1076,9 @@ class World:
         """
         Compute inverse kinematics using quadratic programming.
 
-        :param root: Root entity of the kinematic chain
-        :param tip: Tip entity of the kinematic chain
-        :param target: Desired tip pose relative to the root entity
+        :param root: Root KinematicStructureEntity of the kinematic chain
+        :param tip: Tip KinematicStructureEntity of the kinematic chain
+        :param target: Desired tip pose relative to the root KinematicStructureEntity
         :param dt: Time step for integration
         :param max_iterations: Maximum number of iterations
         :param translation_velocity: Maximum translation velocity

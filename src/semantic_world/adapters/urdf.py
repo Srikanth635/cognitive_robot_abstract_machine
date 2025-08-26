@@ -97,7 +97,7 @@ class URDFParser:
         root = [link for link in links if link.name.name == self.parsed.get_root()][0]
         world = World()
         world.name = self.prefix
-        world.add_entity(root)
+        world.add_kinematic_structure_entity(root)
 
         with world.modify_world():
             joints = []
@@ -108,7 +108,7 @@ class URDFParser:
                 joints.append(parsed_joint)
 
             [world.add_connection(joint) for joint in joints]
-            [world.add_entity(link) for link in links]
+            [world.add_kinematic_structure_entity(link) for link in links]
 
         return world
 

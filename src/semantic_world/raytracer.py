@@ -75,7 +75,7 @@ class RayTracer:
         # If the body is not present, we add it to the scene.
         bodies_to_add = [
             body
-            for body in self.world.kinematic_structure_entities
+            for body in self.world.bodies
             if body.name.name not in "\t".join(self.scene.graph.nodes)
         ]
         for body in bodies_to_add:
@@ -94,7 +94,7 @@ class RayTracer:
         Updates the transforms of all bodies in the ray tracer scene.
         This is necessary to ensure that the ray tracing uses the correct positions and orientations.
         """
-        for body in self.world.kinematic_structure_entities:
+        for body in self.world.bodies:
             for i, collision in enumerate(body.collision):
                 transform = self.world.compute_forward_kinematics_np(self.world.root,
                                                                      body) @ collision.origin.to_np()

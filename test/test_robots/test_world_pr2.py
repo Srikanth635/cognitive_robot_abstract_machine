@@ -20,7 +20,7 @@ from semantic_world.world_entity import RootedView
 def test_compute_chain_of_bodies_pr2(pr2_world):
     root_link = pr2_world.get_kinematic_structure_entity_by_name(PrefixedName('base_footprint'))
     tip_link = pr2_world.get_kinematic_structure_entity_by_name(PrefixedName('r_gripper_tool_frame'))
-    real = pr2_world.compute_chain_of_entities(root=root_link, tip=tip_link)
+    real = pr2_world.compute_chain_of_kinematic_structure_entities(root=root_link, tip=tip_link)
     real = [x.name for x in real]
     assert real == [PrefixedName(name='base_footprint', prefix='pr2_kinematic_tree'),
                     PrefixedName(name='base_link', prefix='pr2_kinematic_tree'),
@@ -62,7 +62,7 @@ def test_compute_chain_of_bodies_error_pr2(pr2_world):
     root = pr2_world.get_kinematic_structure_entity_by_name(PrefixedName('r_gripper_tool_frame'))
     tip = pr2_world.get_kinematic_structure_entity_by_name(PrefixedName('base_footprint'))
     with pytest.raises(NoPathFound):
-        pr2_world.compute_chain_of_entities(root, tip)
+        pr2_world.compute_chain_of_kinematic_structure_entities(root, tip)
 
 
 def test_compute_chain_of_connections_error_pr2(pr2_world):
@@ -75,7 +75,7 @@ def test_compute_chain_of_connections_error_pr2(pr2_world):
 def test_compute_split_chain_of_bodies_pr2(pr2_world):
     root = pr2_world.get_kinematic_structure_entity_by_name(PrefixedName('l_gripper_r_finger_tip_link'))
     tip = pr2_world.get_kinematic_structure_entity_by_name(PrefixedName('l_gripper_l_finger_tip_link'))
-    chain1, connection, chain2 = pr2_world.compute_split_chain_of_entities(root, tip)
+    chain1, connection, chain2 = pr2_world.compute_split_chain_of_kinematic_structure_entities(root, tip)
     chain1 = [n.name.name for n in chain1]
     connection = [n.name.name for n in connection]
     chain2 = [n.name.name for n in chain2]

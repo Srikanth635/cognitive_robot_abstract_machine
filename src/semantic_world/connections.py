@@ -120,7 +120,7 @@ class PrismaticConnection(ActiveConnection, Has1DOFState):
     axis: cas.Vector3 = field(kw_only=True)
     """
     Connection moves along this axis, should be a unit vector.
-    The axis is defined relative to the local reference frame of the parent entity.
+    The axis is defined relative to the local reference frame of the parent KinematicStructureEntity.
     """
 
     multiplier: float = 1.0
@@ -189,7 +189,7 @@ class RevoluteConnection(ActiveConnection, Has1DOFState):
     axis: cas.Vector3 = field(kw_only=True)
     """
     Connection rotates about this axis, should be a unit vector.
-    The axis is defined relative to the local reference frame of the parent entity.
+    The axis is defined relative to the local reference frame of the parent KinematicStructureEntity.
     """
 
     multiplier: float = 1.0
@@ -255,15 +255,15 @@ class Connection6DoF(PassiveConnection):
 
     x: DegreeOfFreedom = field(default=None)
     """
-    Displacement of child entity with respect to parent entity along the x-axis.
+    Displacement of child KinematicStructureEntity with respect to parent KinematicStructureEntity along the x-axis.
     """
     y: DegreeOfFreedom = field(default=None)
     """
-    Displacement of child entity with respect to parent entity along the y-axis.
+    Displacement of child KinematicStructureEntity with respect to parent KinematicStructureEntity along the y-axis.
     """
     z: DegreeOfFreedom = field(default=None)
     """
-    Displacement of child entity with respect to parent entity along the z-axis.
+    Displacement of child KinematicStructureEntity with respect to parent KinematicStructureEntity along the z-axis.
     """
 
     qx: DegreeOfFreedom = field(default=None)
@@ -271,7 +271,7 @@ class Connection6DoF(PassiveConnection):
     qz: DegreeOfFreedom = field(default=None)
     qw: DegreeOfFreedom = field(default=None)
     """
-    Rotation of child entity with respect to parent entity represented as a quaternion.
+    Rotation of child KinematicStructureEntity with respect to parent KinematicStructureEntity represented as a quaternion.
     """
 
     def __post_init__(self):

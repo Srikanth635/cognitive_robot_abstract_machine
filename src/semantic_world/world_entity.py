@@ -8,6 +8,8 @@ from dataclasses import fields
 from functools import lru_cache
 from typing import (
     Deque,
+    Type,
+    TypeVar,
 )
 from typing import List, Optional, TYPE_CHECKING, Tuple
 from typing import Set
@@ -70,33 +72,33 @@ class KinematicStructureEntity(WorldEntity):
     """
 
     @property
-    def global_pose(self) -> NpMatrix4x4:
+    def global_pose(self) -> TransformationMatrix:
         """
-        Computes the pose of the entity in the world frame.
-        :return: 4x4 transformation matrix.
+        Computes the pose of the KinematicStructureEntity in the world frame.
+        :return: TransformationMatrix representing the global pose.
         """
-        return self._world.compute_forward_kinematics_np(self._world.root, self)
+        return self._world.compute_forward_kinematics(self._world.root, self)
 
     @property
     def parent_connection(self) -> Connection:
         """
-        Returns the parent connection of this entity.
+        Returns the parent connection of this KinematicStructureEntity.
         """
         return self._world.compute_parent_connection(self)
 
     @property
-    def child_bodies(self) -> List[KinematicStructureEntity]:
+    def child_kinematic_structure_entities(self) -> List[KinematicStructureEntity]:
         """
-        Returns the direct child bodies of this entity.
+        Returns the direct child KinematicStructureEntity of this entity.
         """
-        return self._world.compute_child_entities(self)
+        return self._world.compute_child_kinematic_structure_entities(self)
 
     @property
-    def parent_entity(self) -> KinematicStructureEntity:
+    def parent_kinematic_structure_entity(self) -> KinematicStructureEntity:
         """
-        Returns the parent entity of this entity.
+        Returns the parent KinematicStructureEntity of this entity.
         """
-        return self._world.compute_parent_entity(self)
+        return self._world.compute_parent_kinematic_structure_entity(self)
 
 
 @dataclass
@@ -246,7 +248,7 @@ class Region(KinematicStructureEntity):
         bbs = [bb.transform_to_frame(reference_frame) for bb in bbs]
         return BoundingBoxCollection(reference_frame, bbs)
 
-
+GenericKinematicStructureEntity = TypeVar("GenericKinematicStructureEntity", bound=KinematicStructureEntity)
 @dataclass
 class View(WorldEntity):
     """
@@ -255,12 +257,12 @@ class View(WorldEntity):
     This class can hold references to certain bodies that gain meaning in this context.
     """
 
-    def _kinematic_structure_entities(self, visited: Set[int]) -> Set[KinematicStructureEntity]:
+    def _kinematic_structure_entities(self, visited: Set[int], aggregation_type: Type[GenericKinematicStructureEntity]) -> Set[GenericKinematicStructureEntity]:
         """
         Recursively collects all entities that are part of this view.
         """
         stack: Deque[object] = deque([self])
-        entities: Set[KinematicStructureEntity] = set()
+        entities: Set[aggregation_type] = set()
 
         while stack:
             obj = stack.pop()
@@ -270,30 +272,49 @@ class View(WorldEntity):
             visited.add(oid)
 
             match obj:
-                case KinematicStructureEntity():
+                case aggregation_type():
                     entities.add(obj)
 
                 case View():
-                    stack.extend(_attr_values(obj))
+                    stack.extend(_attr_values(obj, aggregation_type))
 
                 case Mapping():
                     stack.extend(
-                        v for v in obj.values() if _is_entity_view_or_iterable(v)
+                        v for v in obj.values() if _is_entity_view_or_iterable(v, aggregation_type)
                     )
 
                 case Iterable() if not isinstance(obj, (str, bytes, bytearray)):
-                    stack.extend(v for v in obj if _is_entity_view_or_iterable(v))
+                    stack.extend(v for v in obj if _is_entity_view_or_iterable(v, aggregation_type))
 
         return entities
 
     @property
     def kinematic_structure_entities(self) -> Iterable[KinematicStructureEntity]:
         """
-        Returns a Iterable of all relevant bodies in this view. The default behaviour is to aggregate all bodies that are accessible
+        Returns a Iterable of all relevant KinematicStructureEntity in this view. The default behaviour is to aggregate all KinematicStructureEntity that are accessible
+        through the properties and fields of this view, recursively.
+        If this behaviour is not desired for a specific view, it can be overridden by implementing the `KinematicStructureEntity` property.
+        """
+        return self._kinematic_structure_entities(set(), KinematicStructureEntity)
+
+    @property
+    def bodies(self) -> Iterable[Body]:
+        """
+        Returns an Iterable of all relevant bodies in this view. The default behaviour is to aggregate all bodies that are accessible
         through the properties and fields of this view, recursively.
         If this behaviour is not desired for a specific view, it can be overridden by implementing the `bodies` property.
         """
-        return self._kinematic_structure_entities(set())
+        return self._kinematic_structure_entities(set(), Body)
+
+
+    @property
+    def regions(self) -> Iterable[Region]:
+        """
+        Returns an Iterable of all relevant regions in this view. The default behaviour is to aggregate all regions that are accessible
+        through the properties and fields of this view, recursively.
+        If this behaviour is not desired for a specific view, it can be overridden by implementing the `regions` property.
+        """
+        return self._kinematic_structure_entities(set(), Region)
 
     def as_bounding_box_collection_in_frame(
         self, reference_frame: KinematicStructureEntity
@@ -320,9 +341,9 @@ class View(WorldEntity):
 @dataclass(unsafe_hash=True)
 class RootedView(View):
     """
-    Represents a view that is rooted in a specific entity.
+    Represents a view that is rooted in a specific KinematicStructureEntity.
     """
-    root: KinematicStructureEntity = field(default_factory=KinematicStructureEntity)
+    root: KinematicStructureEntity = field(default=None)
 
 
 @dataclass(unsafe_hash=True)
@@ -334,9 +355,9 @@ class EnvironmentView(RootedView):
     @property
     def kinematic_structure_entities(self) -> Set[KinematicStructureEntity]:
         """
-        Returns a set of all bodies in the environment view.
+        Returns a set of all KinematicStructureEntity in the environment view.
         """
-        return set(self._world.compute_descendent_child_entities(self.root)) | {
+        return set(self._world.compute_descendent_child_kinematic_structure_entities(self.root)) | {
             self.root
         }
 
@@ -349,12 +370,12 @@ class Connection(WorldEntity):
 
     parent: KinematicStructureEntity
     """
-    The parent entity of the connection.
+    The parent KinematicStructureEntity of the connection.
     """
 
     child: KinematicStructureEntity
     """
-    The child entity of the connection.
+    The child KinematicStructureEntity of the connection.
     """
 
     origin_expression: TransformationMatrix = field(default=None)
@@ -428,16 +449,16 @@ class Connection(WorldEntity):
         return dofs
 
 
-def _is_entity_view_or_iterable(obj: object) -> bool:
+def _is_entity_view_or_iterable(obj: object, aggregation_type: Type[KinematicStructureEntity]) -> bool:
     """
     Determines if an object is a KinematicStructureEntity, a View, or an Iterable (excluding strings and bytes).
     """
-    return isinstance(obj, (KinematicStructureEntity, View)) or (
+    return isinstance(obj, (aggregation_type, View)) or (
         isinstance(obj, Iterable) and not isinstance(obj, (str, bytes, bytearray))
     )
 
 
-def _attr_values(view: View) -> Iterable[object]:
+def _attr_values(view: View, aggregation_type: Type[GenericKinematicStructureEntity]) -> Iterable[object]:
     """
     Yields all dataclass fields and set properties of this view.
     Skips private fields (those starting with '_'), as well as the 'bodies' property.
@@ -448,15 +469,15 @@ def _attr_values(view: View) -> Iterable[object]:
         if f.name.startswith('_'):
             continue
         v = getattr(view, f.name, None)
-        if _is_entity_view_or_iterable(v):
+        if _is_entity_view_or_iterable(v, aggregation_type):
             yield v
 
     for name, prop in inspect.getmembers(type(view), lambda o: isinstance(o, property)):
-        if name == "kinematic_structure_entities" or name.startswith('_'):
+        if name in {"kinematic_structure_entities", "bodies", "regions"} or name.startswith("_"):
             continue
         try:
             v = getattr(view, name)
         except Exception:
             continue
-        if _is_entity_view_or_iterable(v):
+        if _is_entity_view_or_iterable(v, aggregation_type):
             yield v

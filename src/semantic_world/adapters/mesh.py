@@ -34,7 +34,7 @@ class MeshParser:
         body = Body(name=PrefixedName(file_name), collision=[mesh_shape], visual=[mesh_shape])
 
         world = World()
-        world.add_entity(body)
+        world.add_kinematic_structure_entity(body)
 
         return world
 
@@ -104,7 +104,7 @@ class FBXParser(MeshParser):
                             t_mesh.mesh.vertices = o.vertices[:, [0, 2, 1]] / 100  # Convert from cm to m and switch Y and Z axes
                             meshes.append(t_mesh)
                     body = Body(name=PrefixedName(name), collision=meshes, visual=meshes)
-                    world.add_entity(body)
+                    world.add_kinematic_structure_entity(body)
 
             for obj in fbx.objects.values():
                 if type(obj) is Object3D:

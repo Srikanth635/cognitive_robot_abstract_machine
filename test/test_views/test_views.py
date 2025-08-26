@@ -54,14 +54,14 @@ class TestView(View):
         """
         Returns itself as a kinematic chain.
         """
-        return self._world.compute_chain_of_entities(self.root_entity_1, self.tip_entity_1)
+        return self._world.compute_chain_of_kinematic_structure_entities(self.root_entity_1, self.tip_entity_1)
 
     @property
     def _private_chain(self) -> list[KinematicStructureEntity]:
         """
         Returns itself as a kinematic chain.
         """
-        return self._world.compute_chain_of_entities(self.root_entity_2, self.tip_entity_2)
+        return self._world.compute_chain_of_kinematic_structure_entities(self.root_entity_2, self.tip_entity_2)
 
     def __hash__(self):
         """
