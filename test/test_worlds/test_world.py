@@ -30,7 +30,7 @@ def test_set_state(world_setup):
     assert c1.position == 2.0
 
     transform[0, 3] += c1.position
-    assert np.allclose(l2.global_pose, transform)
+    assert np.allclose(l2.global_pose.to_np(), transform)
 
 
 def test_construction(world_setup):
