@@ -15,7 +15,8 @@ import rustworkx.visit
 import rustworkx.visualization
 from typing_extensions import List, Type
 
-from .connections import HasUpdateState, Has1DOFState, Connection6DoF
+from .connections import HasUpdateState, Has1DOFState, Connection6DoF, PrismaticConnection, RevoluteConnection, \
+    FixedConnection, OmniDrive
 from .degree_of_freedom import DegreeOfFreedom
 from .exceptions import DuplicateViewError, AddingAnExistingViewError, ViewNotFoundError
 from .ik_solver import InverseKinematicsSolver
@@ -470,7 +471,6 @@ class World:
         """
         return [view for view in self.views if isinstance(view, view_type)]
 
-
     @modifies_world
     def remove_body(self, body: Body) -> None:
         if body._world is self and body.index is not None:
@@ -532,7 +532,6 @@ class World:
             other.remove_body(body)
             self.add_body(body)
         other.world_is_being_modified = False
-
 
         connection = root_connection or Connection6DoF(parent=self_root, child=other_root, _world=self)
         self.add_connection(connection)
@@ -656,7 +655,6 @@ class World:
             children.extend(self.compute_child_bodies_recursive(child))
         return children
 
-    @lru_cache(maxsize=None)
     def compute_parent_body(self, body: Body) -> Body:
         """
         Computes the parent body of a given body in the world.
@@ -665,7 +663,6 @@ class World:
         """
         return next(iter(self.kinematic_structure.predecessors(body.index)))
 
-    @lru_cache(maxsize=None)
     def compute_parent_connection(self, body: Body) -> Connection:
         """
         Computes the parent connection of a given body in the world.
@@ -856,7 +853,7 @@ class World:
         :param tip: Tip body to which the kinematics are computed.
         :return: Transformation matrix representing the relative pose of the tip body with respect to the root body.
         """
-        return cas.TransformationMatrix(self.compute_forward_kinematics_np(root, tip))
+        return cas.TransformationMatrix(self.compute_forward_kinematics_np(root, tip), reference_frame=root)
 
     def compute_forward_kinematics_np(self, root: Body, tip: Body) -> NpMatrix4x4:
         """
@@ -956,3 +953,39 @@ class World:
         for connection, value in new_state.items():
             connection.position = value
         self.notify_state_change()
+
+    def __deepcopy__(self, memo):
+        new_world = World(name=self.name)
+        body_mapping = {}
+        with new_world.modify_world():
+            for body in self.bodies:
+                new_body = Body(visual=body.visual, collision=body.collision, name=body.name, )
+                new_world.add_body(new_body)
+                body_mapping[body] = new_body
+            for connection in self.connections:
+                if isinstance(connection, PrismaticConnection):
+                    new_connection = PrismaticConnection(parent=body_mapping[connection.parent],
+                                                         child=body_mapping[connection.child], axis=connection.axis,
+                                                         _world=new_world, name=connection.name)
+                elif isinstance(connection, RevoluteConnection):
+                    new_connection = RevoluteConnection(parent=body_mapping[connection.parent],
+                                                        child=body_mapping[connection.child], axis=connection.axis,
+                                                        _world=new_world, name=connection.name)
+                elif isinstance(connection, FixedConnection):
+                    new_connection = FixedConnection(parent=body_mapping[connection.parent],
+                                                     child=body_mapping[connection.child], name=connection.name)
+                elif isinstance(connection, Connection6DoF):
+                    new_connection = Connection6DoF(parent=body_mapping[connection.parent],
+                                                    child=body_mapping[connection.child],
+                                                    _world=new_world, name=connection.name)
+                elif isinstance(connection, OmniDrive):
+                    new_connection = OmniDrive(parent=body_mapping[connection.parent],
+                                               child=body_mapping[connection.child],
+                                               translation_velocity_limits=connection.translation_velocity_limits,
+                                               rotation_velocity_limits=connection.rotation_velocity_limits,
+                                               _world=new_world, name=connection.name)
+                else:
+                    print(f"Unknown connection type {type(connection)}")
+                new_world.add_connection(new_connection)
+            new_world.state = deepcopy(self.state)
+        return new_world
