@@ -447,12 +447,13 @@ class DoubleDoorFactory(EntryWayFactory[DoubleDoor]):
         double_door_body = Body(name=self.name)
         world.add_body(double_door_body)
 
-        self.add_doors_to_world(parent_world=world, door_factories=door_factories)
+        assert len(door_factories) == 2, "Double door must have exactly two doors"
 
-        doors = world.get_views_by_type(Door)
-        assert len(doors) == 2, "Double door must have exactly two doors"
+
+        left_door, right_door = self.add_doors_to_world(parent_world=world, door_factories=door_factories)
+
         double_door_view = DoubleDoor(
-            body=double_door_body, door1=doors[0], door2=doors[1]
+            body=double_door_body,left_door=left_door, right_door=right_door
         )
         world.add_view(double_door_view)
 
@@ -489,10 +490,13 @@ class DoubleDoorFactory(EntryWayFactory[DoubleDoor]):
 
     def add_doors_to_world(
         self, parent_world: World, door_factories: List[DoorFactory]
-    ):
+    ) -> tuple[Door, Door]:
         """
         Adds doors to the parent world.
         """
+        left_door = None
+        right_door = None
+
         for door_factory in door_factories:
             y_direction: float = self.one_door_scale.y / 2
             if door_factory.handle_direction == Direction.Y:
@@ -504,11 +508,18 @@ class DoubleDoorFactory(EntryWayFactory[DoubleDoor]):
                 )
             )
 
-            add_door_to_world(
+            door = add_door_to_world(
                 door_factory=door_factory,
                 parent_T_door=parent_T_door,
                 parent_world=parent_world,
             )
+            if door_factory.handle_direction == Direction.Y:
+                right_door = door
+            else:
+                left_door = door
+
+        assert (left_door is not None) and (right_door is not None)
+        return left_door, right_door
 
 
 @dataclass
@@ -922,7 +933,7 @@ class WallFactory(ViewFactory[Wall]):
 
 def add_door_to_world(
     door_factory: DoorFactory, parent_T_door: TransformationMatrix, parent_world: World
-):
+) -> Door:
     """
     Adds a door to the parent world with a revolute connection. The Door's pivot point is on the opposite side of the
     handle.
@@ -931,6 +942,8 @@ def add_door_to_world(
     :param parent_T_door: The transformation matrix defining the door's position and orientation relative
     to the parent world.
     :param parent_world: The world to which the door will be added.
+
+    :return: The door view that was added to the parent world.
     """
     door_world = door_factory.create()
 
@@ -973,6 +986,10 @@ def add_door_to_world(
         )
 
         parent_world.merge_world(door_world, connection)
+
+        door_view = parent_world.get_views_by_type(Door)[0]
+
+        return door_view
 
 
 def calculate_door_pivot_point(

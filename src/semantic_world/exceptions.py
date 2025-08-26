@@ -1,10 +1,14 @@
 from __future__ import annotations
+
+from typing import Type
+
 from typing_extensions import List, TYPE_CHECKING
 
 from .prefixed_name import PrefixedName
 
 if TYPE_CHECKING:
-    from .world_entity import View
+    from .world import World
+    from .world_entity import View, WorldEntity
 
 
 class LogicalError(Exception):
@@ -39,4 +43,6 @@ class ViewNotFoundError(UsageError):
         super().__init__(msg)
 
 class AlreadyBelongsToAWorldError(UsageError):
-    ...
+    def __init__(self, world: World, type_trying_to_add: Type[WorldEntity]):
+        msg = f"Cannot add a {type_trying_to_add} that already belongs to another world {world.name}."
+        super().__init__(msg)
