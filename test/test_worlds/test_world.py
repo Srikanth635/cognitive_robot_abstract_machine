@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import numpy as np
 import pytest
 
@@ -373,3 +375,45 @@ def test_remove_connection(world_setup):
     with pytest.raises(ValueError):
         # if you remove a connection, the child must be connected some other way or deleted
         world.remove_connection(world.get_connection(r1, r2))
+
+
+def test_copy_world(world_setup):
+    world, l1, l2, bf, r1, r2 = world_setup
+    world_copy = deepcopy(world)
+    assert l2 not in world_copy.bodies
+    assert bf.parent_connection not in world_copy.connections
+    bf.parent_connection.origin = np.array([[1, 0, 0, 1.5],
+                                            [0, 1, 0, 0],
+                                            [0, 0, 1, 0],
+                                            [0, 0, 0, 1]])
+    assert float(world_copy.get_body_by_name("bf").global_pose[0, 3]) == 0.0
+    assert float(bf.global_pose[0, 3]) == 1.5
+
+def test_copy_world_state(world_setup):
+    world, l1, l2, bf, r1, r2 = world_setup
+    connection: PrismaticConnection = world.get_connection(r1, r2)
+    world.state[connection.dof.name].position = 1.
+    world.notify_state_change()
+    world_copy = deepcopy(world)
+
+    assert world.get_connection(r1, r2).position == 1.0
+    assert world_copy.get_connection(r1, r2).position == 1.0
+
+def test_match_index(world_setup):
+    world, l1, l2, bf, r1, r2 = world_setup
+    world_copy = deepcopy(world)
+    for body in world.bodies:
+        new_body = world_copy.get_body_by_name(body.name)
+        assert body.index == new_body.index
+
+def test_world_different_entities(world_setup):
+    world, l1, l2, bf, r1, r2 = world_setup
+    world_copy = deepcopy(world)
+    for body in world_copy.bodies:
+        assert body not in world.bodies
+    for connection in world_copy.connections:
+        assert connection not in world.connections
+    for dof in world_copy.state:
+        assert dof not in world.degrees_of_freedom
+
+

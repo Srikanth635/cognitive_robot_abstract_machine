@@ -957,30 +957,53 @@ class World:
     def __deepcopy__(self, memo):
         new_world = World(name=self.name)
         body_mapping = {}
+        dof_mapping = {}
         with new_world.modify_world():
             for body in self.bodies:
                 new_body = Body(visual=body.visual, collision=body.collision, name=body.name, )
                 new_world.add_body(new_body)
                 body_mapping[body] = new_body
+            for dof in self.degrees_of_freedom:
+                new_dof = DegreeOfFreedom(name=dof.name, lower_limits=dof.lower_limits, upper_limits=dof.upper_limits,
+                                          _world=new_world)
+                new_world.degrees_of_freedom.append(new_dof)
+                dof_mapping[dof] = new_dof
             for connection in self.connections:
                 if isinstance(connection, PrismaticConnection):
                     new_connection = PrismaticConnection(parent=body_mapping[connection.parent],
                                                          child=body_mapping[connection.child], axis=connection.axis,
-                                                         _world=new_world, name=connection.name)
+                                                         _world=new_world, name=connection.name,
+                                                         dof=dof_mapping[connection.dof])
                 elif isinstance(connection, RevoluteConnection):
                     new_connection = RevoluteConnection(parent=body_mapping[connection.parent],
                                                         child=body_mapping[connection.child], axis=connection.axis,
-                                                        _world=new_world, name=connection.name)
+                                                        _world=new_world, name=connection.name,
+                                                        dof=dof_mapping[connection.dof])
                 elif isinstance(connection, FixedConnection):
                     new_connection = FixedConnection(parent=body_mapping[connection.parent],
                                                      child=body_mapping[connection.child], name=connection.name)
                 elif isinstance(connection, Connection6DoF):
                     new_connection = Connection6DoF(parent=body_mapping[connection.parent],
+                                                    x=dof_mapping[connection.x],
+                                                    y=dof_mapping[connection.y],
+                                                    z=dof_mapping[connection.z],
+                                                    qx=dof_mapping[connection.qx],
+                                                    qy=dof_mapping[connection.qy],
+                                                    qz=dof_mapping[connection.qz],
+                                                    qw=dof_mapping[connection.qw],
                                                     child=body_mapping[connection.child],
                                                     _world=new_world, name=connection.name)
                 elif isinstance(connection, OmniDrive):
                     new_connection = OmniDrive(parent=body_mapping[connection.parent],
                                                child=body_mapping[connection.child],
+                                               x=dof_mapping[connection.x],
+                                               y=dof_mapping[connection.y],
+                                               z=dof_mapping[connection.z],
+                                               roll=dof_mapping[connection.roll],
+                                               pitch=dof_mapping[connection.pitch],
+                                               yaw=dof_mapping[connection.yaw],
+                                               x_vel=dof_mapping[connection.x_vel],
+                                               y_vel=dof_mapping[connection.y_vel],
                                                translation_velocity_limits=connection.translation_velocity_limits,
                                                rotation_velocity_limits=connection.rotation_velocity_limits,
                                                _world=new_world, name=connection.name)
