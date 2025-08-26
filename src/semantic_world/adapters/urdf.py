@@ -94,11 +94,6 @@ class URDFParser:
             self.package_resolver = {os.path.basename(path): path for path in package_paths if os.path.exists(path)}
 
     def parse(self) -> World:
-        # cache_dir = os.path.join(os.getcwd(), '..', '..', '../resources', 'cache')
-        # file_name = os.path.basename(self.file_path)
-        # new_file_path = os.path.join(cache_dir, file_name)
-        # generate_from_description_file(self.file_path, new_file_path)
-
         with open(self.file_path, 'r') as file:
             # Since parsing URDF causes a lot of warning messages which can't be deactivated, we suppress them
             with suppress_stdout_stderr():
@@ -257,10 +252,11 @@ class URDFParser:
                     if package_name in self.package_resolver:
                         package_path = self.package_resolver[package_name]
                     else:
-                        raise ParsingError(f"Package '{package_name}' not found in package resolver and "
-                                          f"ROS is not installed.")
+                        raise ParsingError(msg=f"Package '{package_name}' not found in package resolver and "
+                                           f"ROS is not installed.")
                 else:
-                    raise ParsingError("No ROS install found while the URDF file contains references to ROS packages. ")
+                    raise ParsingError(msg="No ROS install found while the URDF file contains references to "
+                                           "ROS packages.")
             file_path = file_path.replace("package://" + package_name, package_path)
         if 'file://' in file_path:
             file_path = file_path.replace("file://", './')

@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+from typing import Optional
+
 from typing_extensions import List, TYPE_CHECKING
 
 from .prefixed_name import PrefixedName
@@ -37,7 +40,13 @@ class ParsingError(Exception):
     """
     An error that happens during parsing of files.
     """
-    ...
+    def __init__(self, file_path: Optional[str] = None, msg: Optional[str] = None):
+        if not msg:
+            if file_path:
+                msg = f'File {file_path} could not be parsed.'
+            else:
+                msg = ""
+        super().__init__(msg)
 
 
 class ViewNotFoundError(UsageError):
