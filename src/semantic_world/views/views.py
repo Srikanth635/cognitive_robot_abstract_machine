@@ -138,8 +138,8 @@ class Door(EntryWay):
 
 @dataclass(unsafe_hash=True)
 class DoubleDoor(EntryWay):
-    door1 : Door
-    door2 : Door
+    left_door : Door
+    right_door : Door
 
     def __post_init__(self):
         if self.name is None:

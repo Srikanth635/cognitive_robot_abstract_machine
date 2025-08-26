@@ -328,7 +328,7 @@ class World:
         if dof._world is self and dof in self.degrees_of_freedom:
             return
         if dof._world is not None:
-            raise AlreadyBelongsToAWorldError("Cannot add a degree of freedom that already belongs to another world.")
+            raise AlreadyBelongsToAWorldError(world=dof._world, type_trying_to_add=DegreeOfFreedom)
 
         dof._world = self
 
@@ -434,7 +434,7 @@ class World:
         if entity._world is self and entity.index is not None:
             return
         elif entity._world is not None and entity._world is not self:
-            raise AlreadyBelongsToAWorldError("Cannot add an entity that already belongs to another world.")
+            raise AlreadyBelongsToAWorldError(world=entity._world, type_trying_to_add=KinematicStructureEntity)
 
         entity.index = self.kinematic_structure.add_node(entity)
         entity._world = self
