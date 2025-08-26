@@ -62,7 +62,7 @@ class KinematicChain(RobotView, ABC):
     """
 
     @property
-    def bodies(self) -> Iterable[KinematicStructureEntity]:
+    def kinematic_structure_entities(self) -> Iterable[KinematicStructureEntity]:
         """
         Returns itself as a kinematic chain.
         """

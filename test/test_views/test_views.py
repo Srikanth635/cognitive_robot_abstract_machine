@@ -138,7 +138,7 @@ class ViewTestCase(unittest.TestCase):
         world_view.tip_entity_2 = self.kitchen_world.kinematic_structure_entities[20]
 
         # The aggregation should not include the private dataclass field body or the body added exclusively in the private property
-        assert_equal(world_view.bodies, set(self.kitchen_world.kinematic_structure_entities) - {self.kitchen_world.kinematic_structure_entities[0], self.kitchen_world.kinematic_structure_entities[19]})
+        assert_equal(world_view.kinematic_structure_entities, set(self.kitchen_world.kinematic_structure_entities) - {self.kitchen_world.kinematic_structure_entities[0], self.kitchen_world.kinematic_structure_entities[19]})
 
     def test_handle_view(self):
         self.fit_rules_for_a_view_in_apartment(Handle, scenario=self.test_handle_view)

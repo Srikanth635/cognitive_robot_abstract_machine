@@ -10,18 +10,18 @@ from semantic_world.connections import (
     FixedConnection,
     RevoluteConnection,
 )
-from semantic_world.degree_of_freedom import DegreeOfFreedom
-from semantic_world.geometry import Scale, BoundingBoxCollection, Box
-from semantic_world.prefixed_name import PrefixedName
-from semantic_world.spatial_types.derivatives import DerivativeMap
-from semantic_world.spatial_types.spatial_types import (
+from ..degree_of_freedom import DegreeOfFreedom
+from ..geometry import Scale, BoundingBoxCollection, Box
+from ..prefixed_name import PrefixedName
+from ..spatial_types.derivatives import DerivativeMap
+from ..spatial_types.spatial_types import (
     TransformationMatrix,
     Vector3,
     Point3,
 )
-from semantic_world.utils import IDGenerator
-from semantic_world.variables import SpatialVariables
-from semantic_world.views import (
+from ..utils import IDGenerator
+from ..variables import SpatialVariables
+from ..views import (
     Container,
     Handle,
     Dresser,
@@ -30,8 +30,8 @@ from semantic_world.views import (
     Wall,
     DoubleDoor,
 )
-from semantic_world.world import World
-from semantic_world.world_entity import Body
+from ..world import World
+from ..world_entity import Body
 
 id_generator = IDGenerator()
 

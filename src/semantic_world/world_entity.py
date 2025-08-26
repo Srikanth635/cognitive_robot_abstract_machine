@@ -255,12 +255,12 @@ class View(WorldEntity):
     This class can hold references to certain bodies that gain meaning in this context.
     """
 
-    def _bodies(self, visited: Set[int]) -> Set[KinematicStructureEntity]:
+    def _kinematic_structure_entities(self, visited: Set[int]) -> Set[KinematicStructureEntity]:
         """
-        Recursively collects all bodies that are part of this view.
+        Recursively collects all entities that are part of this view.
         """
         stack: Deque[object] = deque([self])
-        bodies: Set[KinematicStructureEntity] = set()
+        entities: Set[KinematicStructureEntity] = set()
 
         while stack:
             obj = stack.pop()
@@ -271,7 +271,7 @@ class View(WorldEntity):
 
             match obj:
                 case KinematicStructureEntity():
-                    bodies.add(obj)
+                    entities.add(obj)
 
                 case View():
                     stack.extend(_attr_values(obj))
@@ -284,16 +284,16 @@ class View(WorldEntity):
                 case Iterable() if not isinstance(obj, (str, bytes, bytearray)):
                     stack.extend(v for v in obj if _is_entity_view_or_iterable(v))
 
-        return bodies
+        return entities
 
     @property
-    def bodies(self) -> Iterable[KinematicStructureEntity]:
+    def kinematic_structure_entities(self) -> Iterable[KinematicStructureEntity]:
         """
         Returns a Iterable of all relevant bodies in this view. The default behaviour is to aggregate all bodies that are accessible
         through the properties and fields of this view, recursively.
         If this behaviour is not desired for a specific view, it can be overridden by implementing the `bodies` property.
         """
-        return self._bodies(set())
+        return self._kinematic_structure_entities(set())
 
     def as_bounding_box_collection_in_frame(
         self, reference_frame: KinematicStructureEntity
@@ -306,8 +306,8 @@ class View(WorldEntity):
 
         collections = iter(
             entity.as_bounding_box_collection_in_frame(reference_frame)
-            for entity in self.bodies
-            if entity.has_collision()
+            for entity in self.kinematic_structure_entities
+            if isinstance(entity, Body) and entity.has_collision()
         )
         bbs = BoundingBoxCollection(reference_frame, [])
 
@@ -332,7 +332,7 @@ class EnvironmentView(RootedView):
     """
 
     @property
-    def bodies(self) -> Set[KinematicStructureEntity]:
+    def kinematic_structure_entities(self) -> Set[KinematicStructureEntity]:
         """
         Returns a set of all bodies in the environment view.
         """
@@ -452,7 +452,7 @@ def _attr_values(view: View) -> Iterable[object]:
             yield v
 
     for name, prop in inspect.getmembers(type(view), lambda o: isinstance(o, property)):
-        if name == "bodies" or name.startswith('_'):
+        if name == "kinematic_structure_entities" or name.startswith('_'):
             continue
         try:
             v = getattr(view, name)
