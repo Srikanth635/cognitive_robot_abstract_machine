@@ -21,7 +21,7 @@ from semantic_world.spatial_types.spatial_types import (
 )
 from semantic_world.utils import IDGenerator
 from semantic_world.variables import SpatialVariables
-from semantic_world.views import (
+from semantic_world.views.views import (
     Container,
     Handle,
     Dresser,
