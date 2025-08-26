@@ -1,16 +1,18 @@
-import os
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Optional, Tuple, Dict, Union, List
-from ..spatial_types import spatial_types as cas
+from typing import Optional, Tuple, Union, List
+
 from urdf_parser_py import urdf as urdfpy
 
 from ..connections import RevoluteConnection, PrismaticConnection, FixedConnection
+from ..geometry import Box, Sphere, Cylinder, Mesh, Scale, Shape, Color
 from ..prefixed_name import PrefixedName
+from ..spatial_types import spatial_types as cas
 from ..spatial_types.derivatives import Derivatives, DerivativeMap
 from ..spatial_types.spatial_types import TransformationMatrix, Vector3
 from ..utils import suppress_stdout_stderr, hacky_urdf_parser_fix, robot_name_from_urdf_string
 from ..world import World, Body, Connection
-from ..geometry import Box, Sphere, Cylinder, Mesh, Scale, Shape, Color
 
 connection_type_map = {  # 'unknown': JointType.UNKNOWN,
     'revolute': RevoluteConnection,
@@ -38,9 +40,9 @@ def urdf_joint_to_limits(urdf_joint: urdfpy.Joint) -> Tuple[DerivativeMap[float]
     if not urdf_joint.type == 'continuous':
         try:
             lower_limits.position = max(urdf_joint.safety_controller.soft_lower_limit,
-                                                     urdf_joint.limit.lower)
+                                        urdf_joint.limit.lower)
             upper_limits.position = min(urdf_joint.safety_controller.soft_upper_limit,
-                                                     urdf_joint.limit.upper)
+                                        urdf_joint.limit.upper)
         except AttributeError:
             try:
                 lower_limits.position = urdf_joint.limit.lower
@@ -78,14 +80,9 @@ class URDFParser:
     Must set either urdf or file_path.
     """
 
-    urdf: str = field(default=None, kw_only=True)
+    urdf: str
     """
     The URDF string.
-    """
-
-    file_path: str = field(default=None, kw_only=True)
-    """
-    The file path for a URDF.
     """
 
     prefix: Optional[str] = None
@@ -94,19 +91,19 @@ class URDFParser:
     """
 
     def __post_init__(self):
-        if self.urdf is None and self.file_path is None:
-            raise ValueError("Either urdf or file_path must be set.")
-        if self.urdf is not None and self.file_path is not None:
-            raise ValueError("Only one of urdf and file_path can be set.")
-        if self.file_path is not None:
-            with open(self.file_path, 'r') as file:
-                # Since parsing URDF causes a lot of warning messages which can't be deactivated, we suppress them
-                with suppress_stdout_stderr():
-                    self.urdf = file.read()
         self.urdf = hacky_urdf_parser_fix(self.urdf)
         self.parsed = urdfpy.URDF.from_xml_string(self.urdf)
         if self.prefix is None:
             self.prefix = robot_name_from_urdf_string(self.urdf)
+
+    @classmethod
+    def from_file(cls, file_path: str, prefix: Optional[str] = None) -> URDFParser:
+        if file_path is not None:
+            with open(file_path, 'r') as file:
+                # Since parsing URDF causes a lot of warning messages which can't be deactivated, we suppress them
+                with suppress_stdout_stderr():
+                    urdf = file.read()
+        return URDFParser(urdf=urdf, prefix=prefix)
 
     def parse(self) -> World:
         prefix = self.parsed.name
@@ -196,7 +193,7 @@ class URDFParser:
         result = connection_type(name=connection_name, parent=parent, child=child, origin_expression=parent_T_child,
                                  multiplier=multiplier, offset=offset,
                                  axis=Vector3(*map(int, joint.axis),
-                                                 reference_frame=parent),
+                                              reference_frame=parent),
                                  dof=dof)
         return result
 
@@ -212,7 +209,8 @@ class URDFParser:
         collisions = self.parse_geometry(link.collisions, parent_frame)
         return Body(name=name, visual=visuals, collision=collisions)
 
-    def parse_geometry(self, geometry: Union[List[urdfpy.Collision], List[urdfpy.Visual]], parent_frame: PrefixedName) -> \
+    def parse_geometry(self, geometry: Union[List[urdfpy.Collision], List[urdfpy.Visual]],
+                       parent_frame: PrefixedName) -> \
             List[Shape]:
         """
         Parses a URDF geometry to the corresponding shapes.

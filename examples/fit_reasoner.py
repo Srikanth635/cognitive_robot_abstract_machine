@@ -4,7 +4,7 @@ from semantic_world.views.views import Drawer
 
 
 def create_kitchen_world(kitchen_path: str = '../resources/urdf/kitchen-small.urdf'):
-    return URDFParser(kitchen_path).parse()
+    return URDFParser.from_file(file_path=kitchen_path).parse()
 
 
 kitchen_world = create_kitchen_world()

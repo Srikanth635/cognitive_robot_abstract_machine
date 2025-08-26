@@ -25,7 +25,7 @@ from semantic_world.reasoner import WorldReasoner
 from semantic_world.adapters.urdf import URDFParser
 
 def create_kitchen_world(kitchen_path: str = 'kitchen-small.urdf'):
-    return URDFParser(kitchen_path)
+    return URDFParser.from_file(file_path=kitchen_path)
 
 kitchen_world = create_kitchen_world()
 reasoner = WorldReasoner(kitchen_world)
@@ -56,7 +56,7 @@ from semantic_world.adapters.urdf import URDFParser
 from semantic_world.views.views import Drawer
 
 def create_kitchen_world(kitchen_path: str = 'kitchen-small.urdf'):
-    return URDFParser(kitchen_path)
+    return URDFParser.from_file(file_path=kitchen_path)
 
 kitchen_world = create_kitchen_world()
 reasoner = WorldReasoner(kitchen_world)
