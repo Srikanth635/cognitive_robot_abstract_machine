@@ -170,11 +170,7 @@ class Body(WorldEntity):
         :param surface_threshold: Ignore simple geometry shapes with a surface area less than this (in m^2)
         :return: True if collision geometry is mesh or simple shape exceeding thresholds
         """
-        for collision in self.collision:
-            geo = collision
-            if geo.is_bigger(volume_threshold=volume_threshold, surface_threshold=surface_threshold):
-                return True
-        return False
+        return len(self.collision) > 0
 
     def compute_closest_points_multi(self, others: list[Body], sample_size=25) -> Tuple[
         np.ndarray, np.ndarray, np.ndarray]:
