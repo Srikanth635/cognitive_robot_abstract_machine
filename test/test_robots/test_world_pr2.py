@@ -227,9 +227,8 @@ def test_kinematic_chains(pr2_world):
 
 
 def test_load_collision_config_srdf(pr2_world):
-    pr2 = PR2.from_world(pr2_world)
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                         '..', '..', 'resources', 'collision_configs', 'pr2.srdf')
-    pr2.load_collision_config(path)
-    assert len(pr2.collision_config.bodies_with_enabled_collision) == 20
-    assert len(pr2.collision_config.disabled_pairs) == 794
+    pr2_world.load_collision_srdf(path)
+    assert len([b for b in pr2_world.bodies if b.collision_config.disabled]) == 20
+    assert len(pr2_world.disabled_collision_pairs) == 1128
