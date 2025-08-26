@@ -150,7 +150,8 @@ class Fridge(View):
 
 @dataclass(unsafe_hash=True)
 class DoubleDoor(EntryWay):
-    doors: List[Door] = field(default_factory=list, hash=False)
+    left_door : Door
+    right_door : Door
 
     def __post_init__(self):
         if self.name is None:

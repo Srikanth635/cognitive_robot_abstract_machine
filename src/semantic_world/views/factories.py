@@ -11,6 +11,7 @@ from semantic_world.connections import (
     RevoluteConnection,
 )
 from semantic_world.degree_of_freedom import DegreeOfFreedom
+from semantic_world.exceptions import AddingAnExistingViewError
 from semantic_world.geometry import Scale, BoundingBoxCollection, Box
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.spatial_types.derivatives import DerivativeMap
@@ -30,7 +31,7 @@ from semantic_world.views.views import (
     Wall,
     DoubleDoor, EntryWay,
 )
-from semantic_world.world import World
+from semantic_world.world import World, modifies_world
 from semantic_world.world_entity import Body
 
 id_generator = IDGenerator()
@@ -107,9 +108,7 @@ class ContainerFactory(ViewFactory[Container]):
         container_event = self.create_container_event()
 
         container_body = Body(name=self.name)
-        collision_shapes = BoundingBoxCollection.from_event(container_event).as_shapes(
-            container_body
-        )
+        collision_shapes = BoundingBoxCollection.from_event(container_body, container_event).as_shapes()
         container_body.collision = collision_shapes
         container_body.visual = collision_shapes
 
@@ -212,7 +211,7 @@ class HandleFactory(ViewFactory[Handle]):
         handle_event = self.create_handle_event()
 
         handle = Body(name=self.name)
-        collision = BoundingBoxCollection.from_event(handle_event).as_shapes(handle)
+        collision = BoundingBoxCollection.from_event(handle, handle_event).as_shapes()
         handle.collision = collision
         handle.visual = collision
 
@@ -315,9 +314,9 @@ class DoorFactory(EntryWayFactory[Door]):
 
         door_event = self.create_door_event().as_composite_set()
 
-        bounding_box_collection = BoundingBoxCollection.from_event(door_event)
         body = Body(name=self.name)
-        collision = bounding_box_collection.as_shapes(reference_frame=body)
+        bounding_box_collection = BoundingBoxCollection.from_event(body, door_event)
+        collision = bounding_box_collection.as_shapes()
         body.collision = collision
         body.visual = collision
 
@@ -448,10 +447,13 @@ class DoubleDoorFactory(EntryWayFactory[DoubleDoor]):
         double_door_body = Body(name=self.name)
         world.add_body(double_door_body)
 
-        self.add_doors_to_world(parent_world=world, door_factories=door_factories)
+        assert len(door_factories) == 2, "Double door must have exactly two doors"
+
+
+        left_door, right_door = self.add_doors_to_world(parent_world=world, door_factories=door_factories)
 
         double_door_view = DoubleDoor(
-            body=double_door_body, doors=world.get_views_by_type(Door)
+            body=double_door_body,left_door=left_door, right_door=right_door
         )
         world.add_view(double_door_view)
 
@@ -488,10 +490,13 @@ class DoubleDoorFactory(EntryWayFactory[DoubleDoor]):
 
     def add_doors_to_world(
         self, parent_world: World, door_factories: List[DoorFactory]
-    ):
+    ) -> tuple[Door, Door]:
         """
         Adds doors to the parent world.
         """
+        left_door = None
+        right_door = None
+
         for door_factory in door_factories:
             y_direction: float = self.one_door_scale.y / 2
             if door_factory.handle_direction == Direction.Y:
@@ -503,11 +508,18 @@ class DoubleDoorFactory(EntryWayFactory[DoubleDoor]):
                 )
             )
 
-            add_door_to_world(
+            door = add_door_to_world(
                 door_factory=door_factory,
                 parent_T_door=parent_T_door,
                 parent_world=parent_world,
             )
+            if door_factory.handle_direction == Direction.Y:
+                right_door = door
+            else:
+                left_door = door
+
+        assert (left_door is not None) and (right_door is not None)
+        return left_door, right_door
 
 
 @dataclass
@@ -669,6 +681,7 @@ class DresserFactory(ViewFactory[Dresser]):
                 axis=Vector3.X(),
                 dof=dof,
             )
+
             parent_world.merge_world(drawer_world, connection)
 
     def create_drawer_upper_lower_limits(
@@ -692,7 +705,7 @@ class DresserFactory(ViewFactory[Dresser]):
         :param world: The world containing the dresser body as its root.
         """
         dresser_body = world.root
-        container_event = dresser_body.as_bounding_box_collection(dresser_body).event
+        container_event = dresser_body.as_bounding_box_collection_in_frame(dresser_body).event
 
         container_footprint = self.subtract_bodies_from_container_footprint(
             world, container_event
@@ -700,9 +713,7 @@ class DresserFactory(ViewFactory[Dresser]):
 
         container_event = self.fill_container_body(container_footprint, container_event)
 
-        collision_shapes = BoundingBoxCollection.from_event(container_event).as_shapes(
-            dresser_body
-        )
+        collision_shapes = BoundingBoxCollection.from_event(dresser_body, container_event).as_shapes()
         dresser_body.collision = collision_shapes
         dresser_body.visual = collision_shapes
         return world
@@ -726,7 +737,7 @@ class DresserFactory(ViewFactory[Dresser]):
         for body in world.bodies:
             if body == dresser_body:
                 continue
-            body_footprint = body.as_bounding_box_collection(
+            body_footprint = body.as_bounding_box_collection_in_frame(
                 dresser_body
             ).event.marginal(SpatialVariables.yz)
             container_footprint -= body_footprint
@@ -771,13 +782,13 @@ class WallFactory(ViewFactory[Wall]):
         """
         Return a world with the wall body at its root and potentially doors and double doors as children of the wall body.
         """
-
-        wall_collision = self._create_wall_collision()
-
         wall_world = World()
         wall_body = Body(
-            name=self.name, collision=wall_collision, visual=wall_collision
+            name=self.name
         )
+        wall_collision = self._create_wall_collision(wall_body)
+        wall_body.collision = wall_collision
+        wall_body.visual = wall_collision
         wall_world.add_body(wall_body)
 
         self.add_doors_and_double_doors_to_world(wall_world)
@@ -791,7 +802,7 @@ class WallFactory(ViewFactory[Wall]):
 
         return wall_world
 
-    def _create_wall_collision(self) -> List[Box]:
+    def _create_wall_collision(self, reference_frame: Body) -> List[Box]:
         """
         Return the collision shapes for the wall. A wall event is created based on the scale of the wall, and
         doors are removed from the wall event. The resulting bounding box collection is converted to shapes.
@@ -801,7 +812,7 @@ class WallFactory(ViewFactory[Wall]):
 
         wall_event = self.remove_doors_from_wall_event(wall_event)
 
-        bounding_box_collection = BoundingBoxCollection.from_event(wall_event)
+        bounding_box_collection = BoundingBoxCollection.from_event(reference_frame, wall_event)
 
         wall_collision = bounding_box_collection.as_shapes()
         return wall_collision
@@ -851,7 +862,7 @@ class WallFactory(ViewFactory[Wall]):
             door_thickness_spatial_variable = SpatialVariables.x.value
 
             for door in doors:
-                door_event = door.body.as_bounding_box_collection(temp_world.root).event
+                door_event = door.body.as_bounding_box_collection_in_frame(temp_world.root).event
                 door_event = door_event.marginal(door_plane_spatial_variables)
                 door_event.fill_missing_variables([door_thickness_spatial_variable])
 
@@ -920,10 +931,9 @@ class WallFactory(ViewFactory[Wall]):
 
                     wall_world.merge_world(door_world, connection)
 
-
 def add_door_to_world(
     door_factory: DoorFactory, parent_T_door: TransformationMatrix, parent_world: World
-):
+) -> Door:
     """
     Adds a door to the parent world with a revolute connection. The Door's pivot point is on the opposite side of the
     handle.
@@ -932,6 +942,8 @@ def add_door_to_world(
     :param parent_T_door: The transformation matrix defining the door's position and orientation relative
     to the parent world.
     :param parent_world: The world to which the door will be added.
+
+    :return: The door view that was added to the parent world.
     """
     door_world = door_factory.create()
 
@@ -951,27 +963,33 @@ def add_door_to_world(
         lower_limits.position = 0.0
         upper_limits.position = np.pi / 2
 
-    dof = parent_world.create_degree_of_freedom(
-        PrefixedName(f"{door_body.name.name}_connection", door_body.name.prefix),
-        lower_limits,
-        upper_limits,
+    dof = DegreeOfFreedom(
+        name=PrefixedName(f"{door_body.name.name}_connection", door_body.name.prefix),
+        lower_limits=lower_limits,
+        upper_limits=upper_limits,
     )
+    with parent_world.modify_world():
+        parent_world.add_degree_of_freedom(dof)
 
-    pivot_point = calculate_door_pivot_point(
-        door_view, parent_T_door, door_factory.scale
-    )
+        pivot_point = calculate_door_pivot_point(
+            door_view, parent_T_door, door_factory.scale
+        )
 
-    connection = RevoluteConnection(
-        parent=parent_world.root,
-        child=door_body,
-        origin_expression=pivot_point,
-        multiplier=1.0,
-        offset=0.0,
-        axis=Vector3.Z(),
-        dof=dof,
-    )
+        connection = RevoluteConnection(
+            parent=parent_world.root,
+            child=door_body,
+            origin_expression=pivot_point,
+            multiplier=1.0,
+            offset=0.0,
+            axis=Vector3.Z(),
+            dof=dof,
+        )
 
-    parent_world.merge_world(door_world, connection)
+        parent_world.merge_world(door_world, connection)
+
+        door_view = parent_world.get_views_by_type(Door)[0]
+
+        return door_view
 
 
 def calculate_door_pivot_point(
