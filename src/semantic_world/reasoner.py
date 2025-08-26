@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import UserDict
 from dataclasses import dataclass, field
 from os.path import dirname
 
@@ -10,6 +11,14 @@ from semantic_world.world_entity import View
 
 if TYPE_CHECKING:
     from semantic_world.world import World
+
+
+class ReasoningResult(UserDict[str, Any]):
+    ...
+
+
+class CaseRDRs(UserDict[Type, GeneralRDR]):
+    ...
 
 
 @dataclass
@@ -31,13 +40,13 @@ class CaseReasoner:
     """
     The case instance on which the reasoning is performed.
     """
-    result: Optional[Dict[str, Any]] = field(init=False, default=None)
+    result: Optional[ReasoningResult] = field(init=False, default=None)
     """
     The latest result of the :py:meth:`reason` call.
     """
-    rdrs: ClassVar[Dict[Type, GeneralRDR]] = {}
+    rdrs: ClassVar[CaseRDRs] = CaseRDRs()
     """
-    This is a collection ripple down rules reasoners that infer case attributes.
+    This is a collection of ripple down rules reasoners that infer case attributes.
     """
 
     def __post_init__(self):
