@@ -150,12 +150,12 @@ class Body(KinematicStructureEntity):
     The poses of the shapes are relative to the link.
     """
 
-    _collision_config: Optional[CollisionCheckingConfig] = field(default_factory=CollisionCheckingConfig)
+    collision_config: Optional[CollisionCheckingConfig] = field(default_factory=CollisionCheckingConfig)
     """
     Configuration for collision checking.
     """
 
-    _temp_collision_config: Optional[CollisionCheckingConfig] = None
+    temp_collision_config: Optional[CollisionCheckingConfig] = None
     """
     Temporary configuration for collision checking, takes priority over `collision_config`.
     """
@@ -165,30 +165,29 @@ class Body(KinematicStructureEntity):
     The index of the entity in `_world.kinematic_structure`.
     """
 
-    @property
-    def collision_config(self) -> CollisionCheckingConfig:
-        if self._temp_collision_config is not None:
-            return self._temp_collision_config
-        return self._collision_config
+    def get_collision_config(self) -> CollisionCheckingConfig:
+        if self.temp_collision_config is not None:
+            return self.temp_collision_config
+        return self.collision_config
 
     def set_static_collision_config(self, collision_config: CollisionCheckingConfig):
         merged_config = CollisionCheckingConfig(
-            buffer_zone_distance=collision_config.buffer_zone_distance if collision_config.buffer_zone_distance is not None else self._collision_config.buffer_zone_distance,
+            buffer_zone_distance=collision_config.buffer_zone_distance if collision_config.buffer_zone_distance is not None else self.collision_config.buffer_zone_distance,
             violated_distance=collision_config.violated_distance,
-            disabled=collision_config.disabled if collision_config.disabled is not None else self._collision_config.disabled,
+            disabled=collision_config.disabled if collision_config.disabled is not None else self.collision_config.disabled,
             max_avoided_bodies=collision_config.max_avoided_bodies
         )
-        self._collision_config = merged_config
+        self.collision_config = merged_config
 
     def set_static_collision_distances(self, buffer_zone_distance: float, violated_distance: float):
-        self._collision_config.buffer_zone_distance = buffer_zone_distance
-        self._collision_config.violated_distance = violated_distance
+        self.collision_config.buffer_zone_distance = buffer_zone_distance
+        self.collision_config.violated_distance = violated_distance
 
     def set_temporary_collision_config(self, collision_config: CollisionCheckingConfig):
-        self._temp_collision_config = collision_config
+        self.temp_collision_config = collision_config
 
     def reset_temporary_collision_config(self):
-        self._temp_collision_config = None
+        self.temp_collision_config = None
 
     def __post_init__(self):
         if not self.name:
@@ -440,7 +439,7 @@ class RootedView(View):
 
     @property
     def bodies_with_enabled_collision(self) -> Set[Body]:
-        return set(body for body in self.bodies if body.has_collision() and not body.collision_config.disabled)
+        return set(body for body in self.bodies if body.has_collision() and not body.get_collision_config().disabled)
 
 
 

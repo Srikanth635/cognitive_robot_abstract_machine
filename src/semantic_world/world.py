@@ -1333,7 +1333,7 @@ class World:
     @property
     def bodies_with_enabled_collision(self) -> Set[Body]:
         return set(b for b in self.bodies
-                   if b.has_collision() and b.collision_config and not b.collision_config.disabled)
+                   if b.has_collision() and b.get_collision_config and not b.get_collision_config().disabled)
 
     @property
     def disabled_collision_pairs(self) -> Set[Tuple[Body, Body]]:

@@ -121,7 +121,7 @@ class ActiveConnection(Connection):
 
     def set_static_collision_config_for_direct_child_bodies(self, collision_config: CollisionCheckingConfig):
         for child_body in self._world.get_direct_child_bodies_with_collision(self):
-            if not child_body.collision_config.disabled:
+            if not child_body.get_collision_config().disabled:
                 child_body.set_static_collision_config(collision_config)
 
 
