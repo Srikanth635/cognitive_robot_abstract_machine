@@ -313,6 +313,13 @@ class BoundingBox:
                             SpatialVariables.y.value: self.y_interval,
                             SpatialVariables.z.value: self.z_interval})
 
+    @property
+    def dimensions(self) -> List[float]:
+        """
+        :return: The dimensions of the bounding box as a list [width, height, depth].
+        """
+        return [self.width, self.height, self.depth]
+
     def bloat(self, x_amount: float = 0., y_amount: float = 0, z_amount: float = 0) -> BoundingBox:
         """
         Enlarges the bounding box by a given amount in all dimensions.

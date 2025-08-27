@@ -145,9 +145,9 @@ class URDFParser:
             else:
                 offset = 0
 
-            dof_name = PrefixedName(joint.mimic.joint)
-        else:
-            dof_name = PrefixedName(joint.name)
+            # dof_name = PrefixedName(joint.mimic.joint)
+
+        dof_name = PrefixedName(joint.name)
 
         try:
             dof = world.get_degree_of_freedom_by_name(dof_name)

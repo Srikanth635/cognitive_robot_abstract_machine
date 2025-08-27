@@ -8,7 +8,7 @@ from typing import Tuple, Iterable, Set
 from typing_extensions import Optional, List, Self
 
 from .prefixed_name import PrefixedName
-from .spatial_types.spatial_types import Vector3
+from .spatial_types.spatial_types import Vector3, Quaternion
 from .world import World
 from .world_entity import Body, RootedView, Connection
 
@@ -121,6 +121,17 @@ class Manipulator(RobotView, ABC):
     """
     tool_frame: Body = field(default=None)
 
+    front_facing_orientation: Quaternion = field(default=None)
+    """
+    The orientation of the manipulator's tool frame, which is usually the front-facing orientation.
+    """
+
+    front_facing_axis: Vector3 = field(default=None)
+    """
+    The axis of the manipulator's tool frame that is facing forward.
+    """
+
+
     def assign_to_robot(self, robot: AbstractRobot):
         """
         Assigns the manipulator to the given robot. This method ensures that the manipulator is only assigned
@@ -138,6 +149,8 @@ class Manipulator(RobotView, ABC):
         This allows for proper comparison and storage in sets or dictionaries.
         """
         return hash((self.name, self.root, self.tool_frame))
+
+
 
 
 @dataclass
@@ -235,6 +248,15 @@ class Neck(KinematicChain):
     """
     Represents a special kinematic chain that connects the head of a robot with a collection of sensors, such as cameras
     and which does not have a manipulator.
+    """
+
+    pitch_body: Optional[Body] = None
+    """
+    The body that allows pitch movement in the neck, if it exists.
+    """
+    yaw_body: Optional[Body] = None
+    """
+    The body that allows yaw movement in the neck, if it exists.
     """
 
     def __hash__(self):
@@ -450,6 +472,8 @@ class PR2(AbstractRobot):
         left_gripper = ParallelGripper(name=PrefixedName('left_gripper', prefix=robot.name.name),
                                        root=world.get_body_by_name("l_gripper_palm_link"),
                                        tool_frame=world.get_body_by_name("l_gripper_tool_frame"),
+                                       front_facing_orientation=Quaternion(0, 0, 0, 1),
+                                       front_facing_axis=Vector3(1, 0, 0),
                                        thumb=left_gripper_thumb,
                                        finger=left_gripper_finger,
                                        _world=world)
@@ -475,6 +499,8 @@ class PR2(AbstractRobot):
         right_gripper = ParallelGripper(name=PrefixedName('right_gripper', prefix=robot.name.name),
                                         root=world.get_body_by_name("r_gripper_palm_link"),
                                         tool_frame=world.get_body_by_name("r_gripper_tool_frame"),
+                                        front_facing_orientation=Quaternion(0, 0, 0, 1),
+                                        front_facing_axis=Vector3(1, 0, 0),
                                         thumb=right_gripper_thumb,
                                         finger=right_gripper_finger,
                                         _world=world)
@@ -498,6 +524,8 @@ class PR2(AbstractRobot):
                     sensors={camera},
                     root=world.get_body_by_name("head_pan_link"),
                     tip=world.get_body_by_name("head_tilt_link"),
+                    pitch_body=world.get_body_by_name("head_tilt_link"),
+                    yaw_body=world.get_body_by_name("head_pan_link"),
                     _world=world)
         robot.add_neck(neck)
 

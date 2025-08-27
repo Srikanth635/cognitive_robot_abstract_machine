@@ -555,7 +555,7 @@ BinaryFalse = Expression(False)
 
 class TransformationMatrix(Symbol_, ReferenceFrameMixin):
 
-    def __init__(self, data=None, reference_frame=None, child_frame=None, sanity_check=True):
+    def __init__(self, data=None, reference_frame: Body = None, child_frame: Body = None, sanity_check=True):
         self.reference_frame = reference_frame
         self.child_frame = child_frame
         if data is None:
