@@ -1451,3 +1451,13 @@ class World:
         for body_a in non_robot_bodies:
             for body_b in non_robot_bodies:
                 self.add_disabled_collision_pair(body_a, body_b)
+
+    def is_body_controlled(self, body: Body) -> bool:
+        root_part, tip_part = self.compute_split_chain_of_connections(self.root, body)
+        connections = root_part + tip_part
+        for c in connections:
+            if (isinstance(c, ActiveConnection)
+                    and c.is_controlled
+                    and not c.frozen_for_collision_avoidance):
+                return True
+        return False
