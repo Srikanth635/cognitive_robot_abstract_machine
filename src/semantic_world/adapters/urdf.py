@@ -2,6 +2,7 @@ import os
 from dataclasses import dataclass
 from typing import Optional, Tuple, Union, List
 
+from typing_extensions import Dict
 from urdf_parser_py import urdf
 
 from ..exceptions import ParsingError
