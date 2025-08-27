@@ -11,9 +11,9 @@ from pxr import UsdUrdf
 
 from ..connections import RevoluteConnection, PrismaticConnection, FixedConnection
 from ..degree_of_freedom import DegreeOfFreedom
-from ..spatial_types.derivatives import DerivativeMap
 from ..prefixed_name import PrefixedName
 from ..spatial_types import spatial_types as cas
+from ..spatial_types.derivatives import DerivativeMap
 from ..world import World, Body, Connection
 
 
@@ -84,11 +84,11 @@ class MultiParser:
         factory.import_model()
         bodies = [self.parse_body(body_builder) for body_builder in factory.world_builder.body_builders]
         world = World()
-        world.add_body(bodies[0])
+        world.add_kinematic_structure_entity(bodies[0])
 
         with world.modify_world():
             for body in bodies:
-                world.add_body(body)
+                world.add_kinematic_structure_entity(body)
             joints = []
             for body_builder in factory.world_builder.body_builders:
                 joints += self.parse_joints(body_builder=body_builder, world=world)
@@ -106,13 +106,21 @@ class MultiParser:
         """
         connections = []
         for joint_builder in body_builder.joint_builders:
-            parent_body = world.get_body_by_name(joint_builder.parent_prim.GetName())
-            child_body = world.get_body_by_name(joint_builder.child_prim.GetName())
+            parent_body = world.get_kinematic_structure_entity_by_name(
+                joint_builder.parent_prim.GetName()
+            )
+            child_body = world.get_kinematic_structure_entity_by_name(
+                joint_builder.child_prim.GetName()
+            )
             connection = self.parse_joint(joint_builder, parent_body, child_body, world)
             connections.append(connection)
         if len(body_builder.joint_builders) == 0 and not body_builder.xform.GetPrim().GetParent().IsPseudoRoot():
-            parent_body = world.get_body_by_name(body_builder.xform.GetPrim().GetParent().GetName())
-            child_body = world.get_body_by_name(body_builder.xform.GetPrim().GetName())
+            parent_body = world.get_kinematic_structure_entity_by_name(
+                body_builder.xform.GetPrim().GetParent().GetName()
+            )
+            child_body = world.get_kinematic_structure_entity_by_name(
+                body_builder.xform.GetPrim().GetName()
+            )
             transform = body_builder.xform.GetLocalTransformation()
             pos = transform.ExtractTranslation()
             quat = transform.ExtractRotationQuat()
@@ -140,13 +148,13 @@ class MultiParser:
                                           joint_quat.GetReal())
         origin = cas.TransformationMatrix.from_point_rotation_matrix(point=point_expr,
                                                                      rotation_matrix=quaternion_expr.to_rotation_matrix())
-        free_variable_name = PrefixedName(joint_name)
+        free_variable_name = joint_name
         offset = None
         multiplier = None
         if joint_prim.HasAPI(UsdUrdf.UrdfJointAPI):
             urdf_joint_api = UsdUrdf.UrdfJointAPI(joint_prim)
             if len(urdf_joint_api.GetJointRel().GetTargets()) > 0:
-                free_variable_name = PrefixedName(urdf_joint_api.GetJointRel().GetTargets()[0].name)
+                free_variable_name = urdf_joint_api.GetJointRel().GetTargets()[0].name
                 offset = urdf_joint_api.GetOffsetAttr().Get()
                 multiplier = urdf_joint_api.GetMultiplierAttr().Get()
         if joint_builder.type == JointType.FREE:
