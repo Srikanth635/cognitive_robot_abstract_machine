@@ -21,7 +21,7 @@ from ..spatial_types.spatial_types import (
 )
 from ..utils import IDGenerator
 from ..variables import SpatialVariables
-from ..views import (
+from ..views.views import (
     Container,
     Handle,
     Dresser,

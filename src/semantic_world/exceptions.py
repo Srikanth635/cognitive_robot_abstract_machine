@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import Type
-
-from typing_extensions import List, TYPE_CHECKING
+from typing_extensions import Optional, List, Type, TYPE_CHECKING
 
 from .prefixed_name import PrefixedName
 
@@ -34,6 +32,19 @@ class AddingAnExistingViewError(UsageError):
 class DuplicateViewError(UsageError):
     def __init__(self, views: List[View]):
         msg = f'Views {views} are duplicates, while views elements should be unique.'
+        super().__init__(msg)
+
+
+class ParsingError(Exception):
+    """
+    An error that happens during parsing of files.
+    """
+    def __init__(self, file_path: Optional[str] = None, msg: Optional[str] = None):
+        if not msg:
+            if file_path:
+                msg = f'File {file_path} could not be parsed.'
+            else:
+                msg = ""
         super().__init__(msg)
 
 
