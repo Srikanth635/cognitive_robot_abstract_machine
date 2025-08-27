@@ -5,7 +5,6 @@ from typing import Callable
 import numpy as np
 import rclpy  # type: ignore
 import semantic_world_msgs.msg
-import semantic_world_msgs.msg
 import sqlalchemy.orm
 from ormatic.dao import to_dao
 from rclpy.subscription import Subscription

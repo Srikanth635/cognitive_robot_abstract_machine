@@ -52,7 +52,7 @@ class WorldStatePublisherTestCase(unittest.TestCase):
 
         w1.state.data[0, 0] = 1.0
         w1.notify_state_change()
-        time.sleep(10e-1)
+        time.sleep(1.)
         assert w1.state.data[0, 0] == 1.0
         assert w1.state.data[0, 0] == w2.state.data[0, 0]
 
