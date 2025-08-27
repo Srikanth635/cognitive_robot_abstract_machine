@@ -1,16 +1,18 @@
 import os
 from dataclasses import dataclass
-from typing import Optional, Tuple, Dict, Union, List
-from ..spatial_types import spatial_types as cas
+from typing import Optional, Tuple, Union, List
+
 from urdf_parser_py import urdf
 
 from ..connections import RevoluteConnection, PrismaticConnection, FixedConnection
+from ..degree_of_freedom import DegreeOfFreedom
+from ..geometry import Box, Sphere, Cylinder, Mesh, Scale, Shape, Color
 from ..prefixed_name import PrefixedName
+from ..spatial_types import spatial_types as cas
 from ..spatial_types.derivatives import Derivatives, DerivativeMap
 from ..spatial_types.spatial_types import TransformationMatrix, Vector3
 from ..utils import suppress_stdout_stderr, hacky_urdf_parser_fix
 from ..world import World, Body, Connection
-from ..geometry import Box, Sphere, Cylinder, Mesh, Scale, Shape, Color
 
 connection_type_map = {  # 'unknown': JointType.UNKNOWN,
     'revolute': RevoluteConnection,
@@ -95,7 +97,7 @@ class URDFParser:
         root = [link for link in links if link.name.name == self.parsed.get_root()][0]
         world = World()
         world.name = self.prefix
-        world.add_body(root)
+        world.add_kinematic_structure_entity(root)
 
         with world.modify_world():
             joints = []
@@ -106,7 +108,7 @@ class URDFParser:
                 joints.append(parsed_joint)
 
             [world.add_connection(joint) for joint in joints]
-            [world.add_body(link) for link in links]
+            [world.add_kinematic_structure_entity(link) for link in links]
 
         return world
 
@@ -152,8 +154,12 @@ class URDFParser:
         try:
             dof = world.get_degree_of_freedom_by_name(dof_name)
         except KeyError as e:
-            dof = world.create_degree_of_freedom(name=PrefixedName(joint.name),
-                                                 lower_limits=lower_limits, upper_limits=upper_limits)
+            dof = DegreeOfFreedom(
+                name=PrefixedName(joint.name),
+                lower_limits=lower_limits,
+                upper_limits=upper_limits,
+            )
+            world.add_degree_of_freedom(dof)
 
         result = connection_type(parent=parent, child=child, origin_expression=parent_T_child,
                                  multiplier=multiplier, offset=offset,

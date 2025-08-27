@@ -4,13 +4,14 @@ import time
 
 import numpy as np
 from builtin_interfaces.msg import Duration
-from geometry_msgs.msg import Vector3, Point, PoseStamped, Quaternion, Pose
+from geometry_msgs.msg import Vector3, Point, Quaternion, Pose
 from scipy.spatial.transform import Rotation
 from std_msgs.msg import ColorRGBA
 from visualization_msgs.msg import Marker, MarkerArray
 
 from ..geometry import Mesh, Box, Sphere, Cylinder, Primitive, TriangleMesh
 from ..world import World
+
 
 class VizMarkerPublisher:
     """
@@ -60,14 +61,14 @@ class VizMarkerPublisher:
         :return: An Array of Visualization Marker
         """
         marker_array = MarkerArray()
-        for body in self.world.bodies:
+        for body in self.world.kinematic_structure_entities:
             for i, collision in enumerate(body.collision):
                 msg = Marker()
                 msg.header.frame_id = self.reference_frame
                 msg.ns = body.name.name
                 msg.id = i
                 msg.action = Marker.ADD
-                msg.pose = self.transform_to_pose(self.world.compute_forward_kinematics_np(self.world.root, body) @ collision.origin.to_np())
+                msg.pose = self.transform_to_pose((self.world.compute_forward_kinematics(self.world.root, body) @ collision.origin).to_np())
                 msg.color = body.color if isinstance(body, Primitive) else ColorRGBA(r=1.0, g=1.0, b=1.0, a=1.0)
                 msg.lifetime = Duration(sec=1)
 
@@ -80,9 +81,9 @@ class VizMarkerPublisher:
                     f = collision.file
                     msg.type = Marker.MESH_RESOURCE
                     msg.mesh_resource = "file://" + f.name
-                    msg.scale = Vector3(x=float(collision.scale.x), y=float(collision.scale.y), z=float(collision.scale.z))
+                    msg.scale = Vector3(x=float(collision.scale.x), y=float(collision.scale.y),
+                                        z=float(collision.scale.z))
                     msg.mesh_use_embedded_materials = True
-
                 elif isinstance(collision, Cylinder):
                     msg.type = Marker.CYLINDER
                     msg.scale = Vector3(x=float(collision.width), y=float(collision.width), z=float(collision.height))
@@ -115,4 +116,3 @@ class VizMarkerPublisher:
         pose.position = Point(**dict(zip(["x", "y", "z"], transform[:3, 3])))
         pose.orientation = Quaternion(**dict(zip(["x", "y", "z", "w"], Rotation.from_matrix(transform[:3, :3]).as_quat())))
         return pose
-

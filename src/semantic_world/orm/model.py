@@ -1,10 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-import trimesh
-from io import BytesIO
-
-from ormatic.dao import AlternativeMapping, T
+from ormatic.dao import AlternativeMapping
 
 from ..degree_of_freedom import DegreeOfFreedom
 from ..prefixed_name import PrefixedName
@@ -13,11 +10,7 @@ from ..spatial_types.derivatives import DerivativeMap
 from ..spatial_types.spatial_types import Quaternion
 from ..spatial_types.symbol_manager import symbol_manager
 from ..world import World, Body
-from ..world_entity import Connection, View, WorldEntity
-from typing import Type, Optional
-from sqlalchemy import TypeDecorator
-from sqlalchemy import types
-import trimesh.exchange.stl
+from ..world_entity import Connection, View
 
 
 @dataclass
@@ -29,21 +22,31 @@ class WorldMapping(AlternativeMapping[World]):
 
     @classmethod
     def create_instance(cls, obj: World):
-        return cls(obj.bodies, obj.connections, obj.views, list(obj.degrees_of_freedom))
+        # return cls(obj.bodies[:2], [],[],[], )
+        return cls(
+            obj.kinematic_structure_entities,
+            obj.connections,
+            obj.views,
+            list(obj.degrees_of_freedom),
+        )
 
     def create_from_dao(self) -> World:
         result = World()
 
         with result.modify_world():
             for body in self.bodies:
-                result.add_body(body)
+                result.add_kinematic_structure_entity(body)
             for connection in self.connections:
                 result.add_connection(connection)
             for view in self.views:
                 result.add_view(view)
             for dof in self.degrees_of_freedom:
-                result.create_degree_of_freedom(name=dof.name, lower_limits=dof.lower_limits,
-                                                upper_limits=dof.upper_limits)
+                d = DegreeOfFreedom(
+                    name=dof.name,
+                    lower_limits=dof.lower_limits,
+                    upper_limits=dof.upper_limits)
+                result.add_degree_of_freedom(d)
+            result.delete_orphaned_dofs()
 
         return result
 
@@ -64,7 +67,7 @@ class Vector3Mapping(AlternativeMapping[Vector3]):
         return result
 
     def create_from_dao(self) -> Vector3:
-        return Vector3(x=self.x, y=self.y, z=self.z, reference_frame=self.reference_frame)
+        return Vector3(x=self.x, y=self.y, z=self.z, reference_frame=None)
 
 
 @dataclass
@@ -83,7 +86,7 @@ class Point3Mapping(AlternativeMapping[Point3]):
         return result
 
     def create_from_dao(self) -> Point3:
-        return Point3(x=self.x, y=self.y, z=self.z, reference_frame=self.reference_frame)
+        return Point3(x=self.x, y=self.y, z=self.z, reference_frame=None)
 
 
 @dataclass
@@ -103,7 +106,7 @@ class QuaternionMapping(AlternativeMapping[Quaternion]):
         return result
 
     def create_from_dao(self) -> Quaternion:
-        return Quaternion(x=self.x, y=self.y, z=self.z, w=self.w, reference_frame=self.reference_frame)
+        return Quaternion(x=self.x, y=self.y, z=self.z, w=self.w, reference_frame=None)
 
 
 @dataclass
@@ -119,7 +122,7 @@ class RotationMatrixMapping(AlternativeMapping[RotationMatrix]):
 
     def create_from_dao(self) -> RotationMatrix:
         result = RotationMatrix.from_quaternion(self.rotation)
-        result.reference_frame = self.reference_frame
+        result.reference_frame = None
         return result
 
 
@@ -142,14 +145,15 @@ class TransformationMatrixMapping(AlternativeMapping[TransformationMatrix]):
         return result
 
     def create_from_dao(self) -> TransformationMatrix:
-        result = TransformationMatrix.from_point_rotation_matrix(
+        return TransformationMatrix.from_point_rotation_matrix(
             point=self.position,
-            rotation_matrix=RotationMatrix.from_quaternion(self.rotation), reference_frame=self.reference_frame,
+            rotation_matrix=RotationMatrix.from_quaternion(self.rotation), reference_frame=None,
             child_frame=self.child_frame, )
-        return result
+
 
 @dataclass
-class DegreeOfFreedomMapping(WorldEntity, AlternativeMapping[DegreeOfFreedom]):
+class DegreeOfFreedomMapping(AlternativeMapping[DegreeOfFreedom]):
+    name: PrefixedName
     lower_limits: List[float]
     upper_limits: List[float]
 
@@ -161,21 +165,3 @@ class DegreeOfFreedomMapping(WorldEntity, AlternativeMapping[DegreeOfFreedom]):
         lower_limits = DerivativeMap(data=self.lower_limits)
         upper_limits = DerivativeMap(data=self.upper_limits)
         return DegreeOfFreedom(name=self.name, lower_limits=lower_limits, upper_limits=upper_limits)
-
-
-class TrimeshType(TypeDecorator):
-    """
-    Type that casts fields that are of type `type` to their class name on serialization and converts the name
-    to the class itself through the globals on load.
-    """
-    impl = types.LargeBinary(4 * 1024 * 1024 * 1024 - 1) # 4 GB max
-
-    def process_bind_param(self, value: trimesh.Trimesh, dialect):
-        # return binary version of trimesh
-        return trimesh.exchange.stl.export_stl(value)
-
-    def process_result_value(self, value: impl, dialect) -> Optional[trimesh.Trimesh]:
-        if value is None:
-            return None
-        mesh = trimesh.Trimesh(**trimesh.exchange.stl.load_stl_binary(BytesIO(value)))
-        return mesh
