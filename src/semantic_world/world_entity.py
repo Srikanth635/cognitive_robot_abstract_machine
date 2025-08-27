@@ -1,34 +1,39 @@
 from __future__ import annotations
 
 import inspect
+from abc import abstractmethod
+import os
 from collections import deque
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from dataclasses import fields
-from functools import lru_cache
-from functools import reduce
-from typing import Deque
+from functools import reduce, lru_cache
+from typing import (
+    Deque,
+    Type,
+    TypeVar,
+)
+from os.path import dirname
 from typing import List, Optional, TYPE_CHECKING, Tuple
 from typing import Set
 
 import numpy as np
-from numpy import ndarray
 from scipy.stats import geom
 from trimesh.proximity import closest_point, nearby_faces
 from trimesh.sample import sample_surface
+from typing_extensions import ClassVar
 
-from .geometry import BoundingBox, BoundingBoxCollection
+from .geometry import BoundingBoxCollection, BoundingBox
 from .geometry import Shape
 from .prefixed_name import PrefixedName
 from .spatial_types import spatial_types as cas
-from .spatial_types.spatial_types import Point3
 from .spatial_types.spatial_types import TransformationMatrix, Expression
 from .types import NpMatrix4x4
 from .utils import IDGenerator
 
 if TYPE_CHECKING:
-    from .world import World
     from .degree_of_freedom import DegreeOfFreedom
+    from .world import World
 
 id_generator = IDGenerator()
 
@@ -85,8 +90,49 @@ class CollisionCheckingConfig:
     """
 
 
+@dataclass(unsafe_hash=True)
+class KinematicStructureEntity(WorldEntity):
+    """
+    An entity that is part of the kinematic structure of the world.
+    """
+
+    index: Optional[int] = field(default=None, init=False)
+    """
+    The index of the entity in `_world.kinematic_structure`.
+    """
+
+    @property
+    def global_pose(self) -> TransformationMatrix:
+        """
+        Computes the pose of the KinematicStructureEntity in the world frame.
+        :return: TransformationMatrix representing the global pose.
+        """
+        return self._world.compute_forward_kinematics(self._world.root, self)
+
+    @property
+    def parent_connection(self) -> Connection:
+        """
+        Returns the parent connection of this KinematicStructureEntity.
+        """
+        return self._world.compute_parent_connection(self)
+
+    @property
+    def child_kinematic_structure_entities(self) -> List[KinematicStructureEntity]:
+        """
+        Returns the direct child KinematicStructureEntity of this entity.
+        """
+        return self._world.compute_child_kinematic_structure_entities(self)
+
+    @property
+    def parent_kinematic_structure_entity(self) -> KinematicStructureEntity:
+        """
+        Returns the parent KinematicStructureEntity of this entity.
+        """
+        return self._world.compute_parent_kinematic_structure_entity(self)
+
+
 @dataclass
-class Body(WorldEntity):
+class Body(KinematicStructureEntity):
     """
     Represents a body in the world.
     A body is a semantic atom, meaning that it cannot be decomposed into meaningful smaller parts.
@@ -235,84 +281,52 @@ class Body(WorldEntity):
                            np.argmin(dists, axis=1), :]
         return points_min_self, points_min_other, dist_min
 
-    @property
-    def child_bodies(self) -> List[Body]:
+    def as_bounding_box_collection_in_frame(
+            self, reference_frame: KinematicStructureEntity
+    ) -> BoundingBoxCollection:
         """
-        Returns the child bodies of this body.
+        Provides the bounding box collection for this entity in the given reference frame.
+        :param reference_frame: The reference frame to express the bounding boxes in.
+        :returns: A collection of bounding boxes in world-space coordinates.
         """
-        return self._world.compute_child_bodies(self)
-
-    @property
-    def parent_body(self) -> Body:
-        """
-        Returns the parent body of this body.
-        """
-        return self._world.compute_parent_body(self)
-
-    @property
-    def bounding_box_collection(self) -> BoundingBoxCollection:
-        """
-        Return the bounding box collection of the link with the given name.
-        This method computes the bounding box of the link in world coordinates by transforming the local axis-aligned
-        bounding boxes of the link's geometry to world coordinates.
-
-        Note: These bounding boxes may not be disjoint, however the random events library always makes them disjoint. If
-        this is the case, and we feed he non-disjoint bounding boxes into the gcs, it may trigger unexpected behavior.
-
-        :return: A BoundingBoxCollection containing the bounding boxes of the link's geometry in world
-        """
-        world = self._world
-        body_transform: ndarray = world.compute_forward_kinematics_np(world.root, self)
         world_bboxes = []
 
         for shape in self.collision:
-            shape_transform: ndarray = shape.origin.to_np()
-
-            world_transform: ndarray = body_transform @ shape_transform
-            body_pos = world_transform[:3, 3]
-            body_rotation_matrix = world_transform[:3, :3]
-
-            local_bb: BoundingBox = shape.as_bounding_box()
-
-            # Get all 8 corners of the BB in link-local space
-            corners = np.array([corner.to_np()[:3] for corner in local_bb.get_points()])  # shape (8, 3)
-
-            # Transform each corner to world space: R * corner + T
-            transformed_corners = (corners @ body_rotation_matrix.T) + body_pos
-
-            # Compute world-space bounding box from transformed corners
-            min_corner = np.min(transformed_corners, axis=0)
-            max_corner = np.max(transformed_corners, axis=0)
-
-            world_bb = BoundingBox.from_min_max(Point3(*min_corner), Point3(*max_corner))
+            if shape.origin.reference_frame is None:
+                continue
+            local_bb: BoundingBox = shape.local_frame_bounding_box
+            world_bb = local_bb.transform_to_frame(reference_frame)
             world_bboxes.append(world_bb)
 
-        return BoundingBoxCollection(world_bboxes)
+        return BoundingBoxCollection(reference_frame, world_bboxes)
 
-    @property
-    def global_pose(self) -> cas.TransformationMatrix:
-        """
-        Computes the pose of the body in the world frame.
-        :return: 4x4 transformation matrix.
-        """
-        return self._world.compute_forward_kinematics(self._world.root, self)
 
-    @property
-    def parent_connection(self) -> Connection:
-        """
-        Returns the parent connection of this body.
-        """
-        return self._world.compute_parent_connection(self)
+@dataclass
+class Region(KinematicStructureEntity):
+    """
+    Virtual KinematicStructureEntity representing a semantic region in the world.
+    """
 
-    @classmethod
-    def from_body(cls, body: Body):
+    area: List[Shape] = field(default_factory=list, hash=False)
+    """
+    List of shapes that represent the area of the region.
+    """
+
+    def __hash__(self):
+        return id(self)
+
+    def as_bounding_box_collection_in_frame(
+            self, reference_frame: KinematicStructureEntity
+    ) -> BoundingBoxCollection:
         """
-        Creates a new link from an existing link.
+        Returns a bounding box collection that contains the bounding boxes of all areas in this region.
         """
-        new_link = cls(name=body.name, visual=body.visual, collision=body.collision)
-        new_link._world = body._world
-        new_link.index = body.index
-        return new_link
+        bbs = [shape.local_frame_bounding_box for shape in self.area]
+        bbs = [bb.transform_to_frame(reference_frame) for bb in bbs]
+        return BoundingBoxCollection(reference_frame, bbs)
+
+
+GenericKinematicStructureEntity = TypeVar("GenericKinematicStructureEntity", bound=KinematicStructureEntity)
 
 
 @dataclass
@@ -323,12 +337,14 @@ class View(WorldEntity):
     This class can hold references to certain bodies that gain meaning in this context.
     """
 
-    def _bodies(self, visited: Set[int]) -> Set[Body]:
+    def _kinematic_structure_entities(self, visited: Set[int],
+                                      aggregation_type: Type[GenericKinematicStructureEntity]) -> Set[
+        GenericKinematicStructureEntity]:
         """
-        Recursively collects all bodies that are part of this view.
+        Recursively collects all entities that are part of this view.
         """
         stack: Deque[object] = deque([self])
-        bodies: Set[Body] = set()
+        entities: Set[aggregation_type] = set()
 
         while stack:
             obj = stack.pop()
@@ -338,46 +354,77 @@ class View(WorldEntity):
             visited.add(oid)
 
             match obj:
-                case Body():
-                    bodies.add(obj)
+                case aggregation_type():
+                    entities.add(obj)
 
                 case View():
-                    stack.extend(_attr_values(obj))
+                    stack.extend(_attr_values(obj, aggregation_type))
 
                 case Mapping():
-                    stack.extend(v for v in obj.values() if _is_body_view_or_iterable(v))
+                    stack.extend(
+                        v for v in obj.values() if _is_entity_view_or_iterable(v, aggregation_type)
+                    )
 
                 case Iterable() if not isinstance(obj, (str, bytes, bytearray)):
-                    stack.extend(v for v in obj if _is_body_view_or_iterable(v))
+                    stack.extend(v for v in obj if _is_entity_view_or_iterable(v, aggregation_type))
 
-        return bodies
+        return entities
+
+    @property
+    def kinematic_structure_entities(self) -> Iterable[KinematicStructureEntity]:
+        """
+        Returns a Iterable of all relevant KinematicStructureEntity in this view. The default behaviour is to aggregate all KinematicStructureEntity that are accessible
+        through the properties and fields of this view, recursively.
+        If this behaviour is not desired for a specific view, it can be overridden by implementing the `KinematicStructureEntity` property.
+        """
+        return self._kinematic_structure_entities(set(), KinematicStructureEntity)
 
     @property
     def bodies(self) -> Iterable[Body]:
         """
-        Returns a Iterable of all relevant bodies in this view. The default behaviour is to aggregate all bodies that are accessible
+        Returns an Iterable of all relevant bodies in this view. The default behaviour is to aggregate all bodies that are accessible
         through the properties and fields of this view, recursively.
         If this behaviour is not desired for a specific view, it can be overridden by implementing the `bodies` property.
         """
-        return self._bodies(set())
+        return self._kinematic_structure_entities(set(), Body)
 
-    def as_bounding_box_collection(self) -> BoundingBoxCollection:
+    @property
+    def regions(self) -> Iterable[Region]:
+        """
+        Returns an Iterable of all relevant regions in this view. The default behaviour is to aggregate all regions that are accessible
+        through the properties and fields of this view, recursively.
+        If this behaviour is not desired for a specific view, it can be overridden by implementing the `regions` property.
+        """
+        return self._kinematic_structure_entities(set(), Region)
+
+    def as_bounding_box_collection_in_frame(
+            self, reference_frame: KinematicStructureEntity
+    ) -> BoundingBoxCollection:
         """
         Returns a bounding box collection that contains the bounding boxes of all bodies in this view.
+        :param reference_frame: The reference frame to express the bounding boxes in.
+        :returns: A collection of bounding boxes in world-space coordinates.
         """
-        bbs = reduce(
-            lambda accumulator, bb_collection: accumulator.merge(bb_collection),
-            (body.bounding_box_collection for body in self.bodies if body.has_collision())
+
+        collections = iter(
+            entity.as_bounding_box_collection_in_frame(reference_frame)
+            for entity in self.kinematic_structure_entities
+            if isinstance(entity, Body) and entity.has_collision()
         )
+        bbs = BoundingBoxCollection(reference_frame, [])
+
+        for bb_collection in collections:
+            bbs = bbs.merge(bb_collection)
+
         return bbs
 
 
 @dataclass(unsafe_hash=True)
 class RootedView(View):
     """
-    Represents a view that is rooted in a specific body.
+    Represents a view that is rooted in a specific KinematicStructureEntity.
     """
-    root: Body
+    root: KinematicStructureEntity = field(default=None)
 
     @property
     def connections(self) -> List[Connection]:
@@ -404,27 +451,29 @@ class EnvironmentView(RootedView):
     """
 
     @property
-    def bodies(self) -> Set[Body]:
+    def kinematic_structure_entities(self) -> Set[KinematicStructureEntity]:
         """
-        Returns a set of all bodies in the environment view.
+        Returns a set of all KinematicStructureEntity in the environment view.
         """
-        return set(self._world.compute_child_bodies_recursive(self.root)) | {self.root}
+        return set(self._world.compute_descendent_child_kinematic_structure_entities(self.root)) | {
+            self.root
+        }
 
 
 @dataclass
 class Connection(WorldEntity):
     """
-    Represents a connection between two bodies in the world.
+    Represents a connection between two entities in the world.
     """
 
-    parent: Body
+    parent: KinematicStructureEntity
     """
-    The parent body of the connection.
+    The parent KinematicStructureEntity of the connection.
     """
 
-    child: Body
+    child: KinematicStructureEntity
     """
-    The child body of the connection.
+    The child KinematicStructureEntity of the connection.
     """
 
     origin_expression: TransformationMatrix = field(default=None)
@@ -498,17 +547,16 @@ class Connection(WorldEntity):
         return dofs
 
 
-def _is_body_view_or_iterable(obj: object) -> bool:
+def _is_entity_view_or_iterable(obj: object, aggregation_type: Type[KinematicStructureEntity]) -> bool:
     """
-    Determines if an object is a Body, a View, or an Iterable (excluding strings and bytes).
+    Determines if an object is a KinematicStructureEntity, a View, or an Iterable (excluding strings and bytes).
     """
-    return (
-            isinstance(obj, (Body, View)) or
-            (isinstance(obj, Iterable) and not isinstance(obj, (str, bytes, bytearray)))
+    return isinstance(obj, (aggregation_type, View)) or (
+            isinstance(obj, Iterable) and not isinstance(obj, (str, bytes, bytearray))
     )
 
 
-def _attr_values(view: View) -> Iterable[object]:
+def _attr_values(view: View, aggregation_type: Type[GenericKinematicStructureEntity]) -> Iterable[object]:
     """
     Yields all dataclass fields and set properties of this view.
     Skips private fields (those starting with '_'), as well as the 'bodies' property.
@@ -519,15 +567,15 @@ def _attr_values(view: View) -> Iterable[object]:
         if f.name.startswith('_'):
             continue
         v = getattr(view, f.name, None)
-        if _is_body_view_or_iterable(v):
+        if _is_entity_view_or_iterable(v, aggregation_type):
             yield v
 
     for name, prop in inspect.getmembers(type(view), lambda o: isinstance(o, property)):
-        if name == "bodies" or name.startswith('_'):
+        if name in {"kinematic_structure_entities", "bodies", "regions"} or name.startswith("_"):
             continue
         try:
             v = getattr(view, name)
         except Exception:
             continue
-        if _is_body_view_or_iterable(v):
+        if _is_entity_view_or_iterable(v, aggregation_type):
             yield v

@@ -1,14 +1,34 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 
 import numpy as np
 from probabilistic_model.probabilistic_circuit.rx.helper import uniform_measure_of_event
 from typing_extensions import List
 
-from semantic_world.geometry import BoundingBoxCollection
-from semantic_world.prefixed_name import PrefixedName
-from semantic_world.spatial_types import Point3
-from semantic_world.variables import SpatialVariables
-from semantic_world.world import View, Body
+from ..geometry import BoundingBoxCollection
+from ..prefixed_name import PrefixedName
+from ..spatial_types import Point3
+from ..variables import SpatialVariables
+from ..world import View, Body
+
+
+@dataclass
+class HasDrawers:
+    """
+    A mixin class for views that have drawers.
+    """
+
+    drawers: List[Drawer] = field(default_factory=list, hash=False)
+
+
+@dataclass
+class HasDoors:
+    """
+    A mixin class for views that have doors.
+    """
+
+    doors: List[Door] = field(default_factory=list, hash=False)
 
 
 @dataclass(unsafe_hash=True)
@@ -16,7 +36,8 @@ class Handle(View):
     body: Body
 
     def __post_init__(self):
-        self.name = PrefixedName(str(self.body.name), self.__class__.__name__)
+        if self.name is None:
+            self.name = PrefixedName(str(self.body.name), self.__class__.__name__)
 
 
 @dataclass(unsafe_hash=True)
@@ -24,7 +45,8 @@ class Container(View):
     body: Body
 
     def __post_init__(self):
-        self.name = PrefixedName(str(self.body.name), self.__class__.__name__)
+        if self.name is None:
+            self.name = PrefixedName(str(self.body.name), self.__class__.__name__)
 
 
 @dataclass(unsafe_hash=True)
@@ -32,6 +54,7 @@ class Door(View):  # Door has a Footprint
     """
     Door in a body that has a Handle and can open towards or away from the user.
     """
+
     handle: Handle
     body: Body
 
@@ -41,11 +64,15 @@ class Door(View):  # Door has a Footprint
 
 @dataclass(unsafe_hash=True)
 class Fridge(View):
+    """
+    A view representing a fridge that has a door and a body.
+    """
     body: Body
     door: Door
 
     def __post_init__(self):
-        self.name = PrefixedName(str(self.body.name), self.__class__.__name__)
+        if self.name is None:
+            self.name = PrefixedName(str(self.body.name), self.__class__.__name__)
 
 
 @dataclass(unsafe_hash=True)
@@ -71,7 +98,9 @@ class Table(View):
         p = uniform_measure_of_event(event)
         p = p.marginal(SpatialVariables.xy)
         samples = p.sample(amount)
-        z_coordinate = np.full((amount, 1), max([b.max_z for b in area_of_table]) + 0.01)
+        z_coordinate = np.full(
+            (amount, 1), max([b.max_z for b in area_of_table]) + 0.01
+        )
         samples = np.concatenate((samples, z_coordinate), axis=1)
         return [Point3(*s, reference_frame=self.top) for s in samples]
 
@@ -83,25 +112,50 @@ class Table(View):
 
 
 @dataclass(unsafe_hash=True)
-class Components(View):
-    ...
+class Components(View): ...
 
 
 @dataclass(unsafe_hash=True)
-class Furniture(View):
-    ...
+class Furniture(View): ...
 
 
 #################### subclasses von Components
 
+@dataclass(unsafe_hash=True)
+class EntryWay(Components):
+    body: Body
+
+    def __post_init__(self):
+        if self.name is None:
+            self.name = PrefixedName(str(self.body.name), self.__class__.__name__)
+
 
 @dataclass(unsafe_hash=True)
-class Door(Components):
-    body: Body
+class Door(EntryWay):
     handle: Handle
 
     def __post_init__(self):
-        self.name = PrefixedName(str(self.body.name), self.__class__.__name__)
+        self.name = self.body.name
+
+
+@dataclass(unsafe_hash=True)
+class Fridge(View):
+    body: Body
+    door: Door
+
+    def __post_init__(self):
+        if self.name is None:
+            self.name = PrefixedName(str(self.body.name), self.__class__.__name__)
+
+
+@dataclass(unsafe_hash=True)
+class DoubleDoor(EntryWay):
+    left_door : Door
+    right_door : Door
+
+    def __post_init__(self):
+        if self.name is None:
+            self.name = PrefixedName(str(self.body.name), self.__class__.__name__)
 
 
 @dataclass(unsafe_hash=True)
@@ -110,13 +164,24 @@ class Drawer(Components):
     handle: Handle
 
     def __post_init__(self):
-        self.name = self.container.name
+        if self.name is None:
+            self.name = self.container.name
 
 
 ############################### subclasses to Furniture
 @dataclass
-class Cupboard(Furniture):
-    ...
+class Cupboard(Furniture): ...
+
+
+@dataclass
+class Dresser(Furniture):
+    container: Container
+    drawers: List[Drawer] = field(default_factory=list, hash=False)
+    doors: List[Door] = field(default_factory=list, hash=False)
+
+    def __post_init__(self):
+        if self.name is None:
+            self.name = self.container.name
 
 
 ############################### subclasses to Cupboard
@@ -132,3 +197,13 @@ class Cabinet(Cupboard):
 @dataclass
 class Wardrobe(Cupboard):
     doors: List[Door] = field(default_factory=list)
+
+
+@dataclass
+class Wall(View):
+    body: Body
+    doors: List[Door] = field(default_factory=list)
+
+    def __post_init__(self):
+        if self.name is None:
+            self.name = self.body.name
