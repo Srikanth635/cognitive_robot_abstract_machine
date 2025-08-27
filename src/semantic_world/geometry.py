@@ -228,7 +228,7 @@ class Cylinder(Primitive):
         """
         return trimesh.creation.cylinder(radius=self.width / 2, height=self.height, sections=16)
 
-@property
+    @property
     def local_frame_bounding_box(self) -> BoundingBox:
         """
         Returns the bounding box of the cylinder.

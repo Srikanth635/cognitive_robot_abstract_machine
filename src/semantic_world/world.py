@@ -46,7 +46,7 @@ from .world_entity import (
     View,
     KinematicStructureEntity,
     Region,
-    GenericKinematicStructureEntity,
+    GenericKinematicStructureEntity, CollisionCheckingConfig,
 )
 from .world_state import WorldState
 
@@ -795,7 +795,7 @@ class World:
         Clears all stored data and resets the state of the instance.
         """
         for body in list(self.bodies):
-            self.remove_body(body)
+            self.remove_kinematic_structure_entity(body)
 
         self.views.clear()
         self.degrees_of_freedom.clear()
@@ -1284,15 +1284,15 @@ class World:
                 if child.tag in {SRDF_MOVEIT_DISABLE_COLLISIONS, SRDF_DISABLE_SELF_COLLISION}:
                     body_a_srdf_name: str = child.attrib['link1']
                     body_b_srdf_name: str = child.attrib['link2']
-                    body_a = self.get_body_by_name(body_a_srdf_name)
-                    body_b = self.get_body_by_name(body_b_srdf_name)
+                    body_a: Body = self.get_kinematic_structure_entity_by_name(body_a_srdf_name)
+                    body_b: Body = self.get_kinematic_structure_entity_by_name(body_b_srdf_name)
                     if not body_a.has_collision():
                         continue
                     if not body_b.has_collision():
                         continue
                     self.add_disabled_collision_pair(body_a, body_b)
                 elif child.tag == SRDF_DISABLE_ALL_COLLISIONS:
-                    body = self.get_body_by_name(child.attrib['link'])
+                    body: Body = self.get_kinematic_structure_entity_by_name(child.attrib['link'])
                     collision_config = CollisionCheckingConfig(disabled=True)
                     body.set_static_collision_config(collision_config)
 

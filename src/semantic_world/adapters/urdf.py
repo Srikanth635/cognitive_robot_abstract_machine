@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
-from typing import Optional, Tuple, Union, List
+from typing import Optional, Tuple, Union, List, Dict
 
 from urdf_parser_py import urdf as urdfpy
 
@@ -298,7 +299,7 @@ class URDFParser:
                         package_path = self.package_resolver[package_name]
                     else:
                         raise ParsingError(msg=f"Package '{package_name}' not found in package resolver and "
-                                           f"ROS is not installed.")
+                                               f"ROS is not installed.")
                 else:
                     raise ParsingError(msg="No ROS install found while the URDF file contains references to "
                                            "ROS packages.")
