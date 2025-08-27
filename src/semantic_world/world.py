@@ -6,7 +6,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import wraps, lru_cache
-from typing import Dict, Tuple, OrderedDict, Optional, TypeVar, Union
+from typing import Dict, Tuple, OrderedDict, Optional, TypeVar, Union, Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -285,6 +285,10 @@ class World:
     Name of the world. May act as default namespace for all bodies and views in the world which do not have a prefix.
     """
 
+    state_change_callbacks: List[Callable] = field(default_factory=list, repr=False)
+
+    model_change_callbacks: List[Callable] = field(default_factory=list, repr=False)
+
     @property
     def root(self) -> KinematicStructureEntity:
         """
@@ -380,16 +384,28 @@ class World:
         self._recompute_forward_kinematics()
         self._state_version += 1
 
-    def _notify_model_change(self) -> None:
+        [callback() for callback in self.state_change_callbacks]
+
+    def _notify_model_change(self, skip_callbacks: Optional[List] = None) -> None:
         """
-        Call this function if you have changed the model of the world to trigger necessary events and increase
-        the model version number.
+        Notifies the system of a model change and updates necessary states, caches,
+        and forward kinematics expressions while also triggering registered callbacks
+        for model changes. Optionally, certain callbacks can be skipped.
+
+        :param skip_callbacks: List of callbacks to be skipped during model change
+            notification if provided. Defaults to None, meaning no callbacks are
+            skipped.
         """
+        if skip_callbacks is None:
+            skip_callbacks = []
         if not self.world_is_being_modified:
             self.reset_cache()
             self.compile_forward_kinematics_expressions()
             self.notify_state_change()
             self._model_version += 1
+
+            [callback() for callback in self.model_change_callbacks if callback not in skip_callbacks]
+
             self.validate()
 
     def delete_orphaned_dofs(self):
@@ -687,7 +703,6 @@ class World:
         if matches:
             return matches[0]
         raise KeyError(f'KinematicStructureEntity with name {name} not found')
-
 
     def get_degree_of_freedom_by_name(self, name: Union[str, PrefixedName]) -> DegreeOfFreedom:
         """
