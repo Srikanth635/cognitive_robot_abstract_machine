@@ -3,11 +3,19 @@ import threading
 import time
 
 import numpy as np
-from builtin_interfaces.msg import Duration
-from geometry_msgs.msg import Vector3, Point, Quaternion, Pose
+
+from .. import logger
+
+try:
+    from builtin_interfaces.msg import Duration
+    from geometry_msgs.msg import Vector3, Point, Quaternion, Pose
+    from std_msgs.msg import ColorRGBA
+    from visualization_msgs.msg import Marker, MarkerArray
+    from geometry_msgs.msg import Vector3, Point, PoseStamped, Quaternion, Pose
+except ImportError as e:
+    logger.warning(f"Could not import ros messages, viz marker will not be available: {e}")
+
 from scipy.spatial.transform import Rotation
-from std_msgs.msg import ColorRGBA
-from visualization_msgs.msg import Marker, MarkerArray
 
 from ..geometry import Mesh, Box, Sphere, Cylinder, Primitive, TriangleMesh
 from ..world import World
