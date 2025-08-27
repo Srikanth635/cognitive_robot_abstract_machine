@@ -464,7 +464,7 @@ class ConstraintBuilder:
         q_actual = cas.TransformationMatrix(self.target).to_quaternion()
         q_goal = root_R_tip.to_quaternion()
         q_goal = cas.if_less(q_goal.dot(q_actual), 0, -q_goal, q_goal)
-        q_error = cas.quaternion_multiply(q_goal, cas.quaternion_conjugate(q_actual))
+        q_error = q_actual.diff(q_goal)
 
         rotation_error = -q_error
         for i in range(3):

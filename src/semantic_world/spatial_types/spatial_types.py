@@ -8,7 +8,8 @@ from collections import defaultdict
 from copy import copy, deepcopy
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Union, TypeVar, TYPE_CHECKING, Optional, List, Tuple, overload, Iterable, Dict, Callable, Sequence
+from typing import Union, TypeVar, TYPE_CHECKING, Optional, List, Tuple, overload, Iterable, Dict, Callable, Sequence, \
+    Any, Type
 
 import casadi as ca
 import numpy as np
@@ -514,26 +515,9 @@ class Expression(Symbol_):
             return Expression(self.s.__radd__(other))
         raise _operation_type_error(other, '+', self)
 
-    @overload
-    def __sub__(self, other: Point3) -> Point3:
-        ...
-
-    @overload
-    def __sub__(self, other: Vector3) -> Vector3:
-        ...
-
-    @overload
-    def __sub__(self, other: Union[
-        Symbol, Expression, float, TransformationMatrix, RotationMatrix, Quaternion]) -> Expression:
-        ...
-
-    def __sub__(self, other):
+    def __sub__(self, other: all_expressions_float_np) -> Expression:
         if isinstance(other, (int, float)):
             return Expression(self.s.__sub__(other))
-        if isinstance(other, Point3):
-            return Point3.from_iterable(self.s.__sub__(other.s))
-        if isinstance(other, Vector3):
-            return Vector3.from_iterable(self.s.__sub__(other.s))
         if isinstance(other, (Expression, Symbol)):
             return Expression(self.s.__sub__(other.s))
         raise _operation_type_error(self, '-', other)
@@ -1873,9 +1857,23 @@ all_expressions_float_np = Union[
     np.ndarray
 ]
 
-PreservedCasType = TypeVar('PreservedCasType', Point3, Vector3, TransformationMatrix, RotationMatrix, Quaternion,
-                           Expression)
-SpatialType = TypeVar('SpatialType', Point3, Vector3, TransformationMatrix, RotationMatrix, Quaternion)
+SpatialType = TypeVar(
+    'SpatialType', 
+    Point3, 
+    Vector3, 
+    TransformationMatrix, 
+    RotationMatrix, 
+    Quaternion
+)
+AnyCasType = TypeVar(
+    'AnyCasType',
+    Expression,
+    Point3,
+    Vector3,
+    TransformationMatrix,
+    RotationMatrix,
+    Quaternion,
+)
 
 
 def var(variables_names: str) -> List[Symbol]:
@@ -1956,61 +1954,21 @@ def tri(dimension: int) -> Expression:
     return Expression(np.tri(dimension))
 
 
-@overload
-def abs(x: Vector3) -> Vector3: ...
-
-
-@overload
-def abs(x: Point3) -> Point3: ...
-
-
-@overload
-def abs(x: symbol_expr_float) -> Expression: ...
-
-
-def abs(x):
-    x = Expression(x).s
-    result = ca.fabs(x)
-    if isinstance(x, Point3):
-        return Point3(result)
-    elif isinstance(x, Vector3):
-        return Vector3(result)
+def abs(x: all_expressions_float_np) -> Expression:
+    x_sx = _to_sx(x)
+    result = ca.fabs(x_sx)
     return Expression(result)
 
 
-@overload
-def max(x: Point3, y: None) -> Expression: ...
-
-
-@overload
-def max(x: Vector3, y: None) -> Expression: ...
-
-
-@overload
-def max(x: symbol_expr_float, y: Optional[symbol_expr_float] = None) -> Expression: ...
-
-
-def max(x, y=None):
-    x = Expression(x).s
-    y = Expression(y).s
+def max(x: symbol_expr_float, y: symbol_expr_float) -> Expression:
+    x = _to_sx(x)
+    y = _to_sx(y)
     return Expression(ca.fmax(x, y))
 
 
-@overload
-def min(x: Point3, y: None) -> Expression: ...
-
-
-@overload
-def min(x: Vector3, y: None) -> Expression: ...
-
-
-@overload
-def min(x: symbol_expr_float, y: Optional[symbol_expr_float] = None) -> Expression: ...
-
-
-def min(x, y=None):
-    x = Expression(x).s
-    y = Expression(y).s
+def min(x: symbol_expr_float, y: symbol_expr_float) -> Expression:
+    x = _to_sx(x)
+    y = _to_sx(y)
     return Expression(ca.fmin(x, y))
 
 
@@ -2020,21 +1978,21 @@ def limit(x: symbol_expr_float,
     return Expression(max(lower_limit, min(upper_limit, x)))
 
 
-@overload
-def if_else(condition: symbol_expr_float, if_result: Vector3, else_result: Vector3) -> Vector3: ...
+def _get_return_type(thing: Any):
+    return_type = type(thing)
+    if return_type in (int, float):
+        return Expression
+    if return_type == Symbol:
+        return Expression
+    return return_type
 
+def _recreate_return_type(thing: Any, return_type: Type) -> Any:
+    if return_type in (Point3, Vector3, Quaternion):
+        return return_type.from_iterable(thing)
+    return return_type(thing)
 
-@overload
-def if_else(condition: symbol_expr_float, if_result: Point3, else_result: Point3) -> Point3: ...
-
-
-@overload
-def if_else(condition: symbol_expr_float, if_result: symbol_expr_float,
-            else_result: symbol_expr_float) -> Expression: ...
-
-
-def if_else(condition, if_result, else_result):
-    condition = Expression(condition).s
+def if_else(condition: symbol_expr_float, if_result: AnyCasType, else_result: AnyCasType) -> AnyCasType:
+    condition = _to_sx(condition)
     if isinstance(if_result, (float, int)):
         if_result = Expression(if_result)
     if isinstance(else_result, (float, int)):
@@ -2042,16 +2000,10 @@ def if_else(condition, if_result, else_result):
     if isinstance(if_result, (Point3, Vector3, TransformationMatrix, RotationMatrix, Quaternion)):
         assert type(if_result) == type(else_result), \
             f'if_else: result types are not equal {type(if_result)} != {type(else_result)}'
-    return_type = type(if_result)
-    if return_type in (int, float):
-        return_type = Expression
-    if return_type == Symbol:
-        return_type = Expression
+    return_type = _get_return_type(if_result)
     if_result = Expression(if_result).s
     else_result = Expression(else_result).s
-    if return_type in (Point3, Vector3, Quaternion):
-        return return_type.from_iterable(ca.if_else(condition, if_result, else_result))
-    return return_type(ca.if_else(condition, if_result, else_result))
+    return _recreate_return_type(ca.if_else(condition, if_result, else_result), return_type)
 
 
 def equal(x: symbol_expr_float, y: symbol_expr_float) -> Expression:
@@ -2182,56 +2134,27 @@ def logic_not3(expr: symbol_expr_float) -> Expression:
     return Expression(1 - expr)
 
 
-@overload
-def if_greater(a: symbol_expr_float, b: symbol_expr_float, if_result: Vector3,
-               else_result: Vector3) -> Vector3: ...
-
-
-@overload
-def if_greater(a: symbol_expr_float, b: symbol_expr_float, if_result: Point3,
-               else_result: Point3) -> Point3: ...
-
-
-@overload
-def if_greater(a: symbol_expr_float, b: symbol_expr_float, if_result: symbol_expr_float,
-               else_result: symbol_expr_float) -> Expression: ...
-
-
-def if_greater(a, b, if_result, else_result):
-    a = Expression(a).s
-    b = Expression(b).s
+def if_greater(a: symbol_expr_float,
+               b: symbol_expr_float,
+               if_result: AnyCasType,
+               else_result: AnyCasType) -> AnyCasType:
+    a = _to_sx(a)
+    b = _to_sx(b)
     return if_else(ca.gt(a, b), if_result, else_result)
 
 
-@overload
-def if_less(a: symbol_expr_float, b: symbol_expr_float, if_result: Quaternion,
-            else_result: Quaternion) -> Quaternion: ...
-
-
-@overload
-def if_less(a: symbol_expr_float, b: symbol_expr_float, if_result: Vector3,
-            else_result: Vector3) -> Vector3: ...
-
-
-@overload
-def if_less(a: symbol_expr_float, b: symbol_expr_float, if_result: Point3,
-            else_result: Point3) -> Point3: ...
-
-
-@overload
-def if_less(a: symbol_expr_float, b: symbol_expr_float, if_result: symbol_expr_float,
-            else_result: symbol_expr_float) -> Expression: ...
-
-
-def if_less(a, b, if_result, else_result):
-    a = Expression(a).s
-    b = Expression(b).s
+def if_less(a: symbol_expr_float,
+            b: symbol_expr_float,
+            if_result: AnyCasType,
+            else_result: AnyCasType) -> AnyCasType:
+    a = _to_sx(a)
+    b = _to_sx(b)
     return if_else(ca.lt(a, b), if_result, else_result)
 
 
 def if_greater_zero(condition: symbol_expr_float,
-                    if_result: PreservedCasType,
-                    else_result: PreservedCasType) -> PreservedCasType:
+                    if_result: AnyCasType,
+                    else_result: AnyCasType) -> AnyCasType:
     """
     :return: if_result if condition > 0 else else_result
     """
@@ -2239,44 +2162,19 @@ def if_greater_zero(condition: symbol_expr_float,
     return if_else(ca.gt(condition, 0), if_result, else_result)
 
 
-@overload
-def if_greater_eq_zero(condition: symbol_expr_float, if_result: Vector3,
-                       else_result: Vector3) -> Vector3: ...
-
-
-@overload
-def if_greater_eq_zero(condition: symbol_expr_float, if_result: Point3,
-                       else_result: Point3) -> Point3: ...
-
-
-@overload
-def if_greater_eq_zero(condition: symbol_expr_float, if_result: symbol_expr_float,
-                       else_result: symbol_expr_float) -> Expression: ...
-
-
-def if_greater_eq_zero(condition, if_result, else_result):
+def if_greater_eq_zero(condition: symbol_expr_float,
+                       if_result: AnyCasType,
+                       else_result: AnyCasType) -> AnyCasType:
     """
     :return: if_result if condition >= 0 else else_result
     """
     return if_greater_eq(condition, 0, if_result, else_result)
 
 
-@overload
-def if_greater_eq(a: symbol_expr_float, b: symbol_expr_float, if_result: Vector3,
-                  else_result: Vector3) -> Vector3: ...
-
-
-@overload
-def if_greater_eq(a: symbol_expr_float, b: symbol_expr_float, if_result: Point3,
-                  else_result: Point3) -> Point3: ...
-
-
-@overload
-def if_greater_eq(a: symbol_expr_float, b: symbol_expr_float, if_result: symbol_expr_float,
-                  else_result: symbol_expr_float) -> Expression: ...
-
-
-def if_greater_eq(a, b, if_result, else_result):
+def if_greater_eq(a: symbol_expr_float,
+                  b: symbol_expr_float,
+                  if_result: AnyCasType,
+                  else_result: AnyCasType) -> AnyCasType:
     """
     :return: if_result if a >= b else else_result
     """
@@ -2285,83 +2183,37 @@ def if_greater_eq(a, b, if_result, else_result):
     return if_else(ca.ge(a, b), if_result, else_result)
 
 
-@overload
-def if_less_eq(a: symbol_expr_float, b: symbol_expr_float, if_result: Vector3,
-               else_result: Vector3) -> Vector3: ...
-
-
-@overload
-def if_less_eq(a: symbol_expr_float, b: symbol_expr_float, if_result: Point3,
-               else_result: Point3) -> Point3: ...
-
-
-@overload
-def if_less_eq(a: symbol_expr_float, b: symbol_expr_float, if_result: symbol_expr_float,
-               else_result: symbol_expr_float) -> Expression: ...
-
-
-def if_less_eq(a, b, if_result, else_result):
+def if_less_eq(a: symbol_expr_float,
+               b: symbol_expr_float,
+               if_result: AnyCasType,
+               else_result: AnyCasType) -> AnyCasType:
     """
     :return: if_result if a <= b else else_result
     """
     return if_greater_eq(b, a, if_result, else_result)
 
 
-@overload
 def if_eq_zero(condition: symbol_expr_float,
-               if_result: Vector3,
-               else_result: Vector3) -> Vector3: ...
-
-
-@overload
-def if_eq_zero(condition: symbol_expr_float,
-               if_result: Point3,
-               else_result: Point3) -> Point3: ...
-
-
-@overload
-def if_eq_zero(condition: symbol_expr_float,
-               if_result: symbol_expr_float,
-               else_result: symbol_expr_float) -> Expression: ...
-
-
-def if_eq_zero(condition, if_result, else_result):
+               if_result: AnyCasType,
+               else_result: AnyCasType) -> AnyCasType:
     """
     :return: if_result if condition == 0 else else_result
     """
     return if_else(condition, else_result, if_result)
 
 
-@overload
 def if_eq(a: symbol_expr_float,
           b: symbol_expr_float,
-          if_result: Vector3,
-          else_result: Vector3) -> Vector3: ...
-
-
-@overload
-def if_eq(a: symbol_expr_float,
-          b: symbol_expr_float,
-          if_result: Point3,
-          else_result: Point3) -> Point3: ...
-
-
-@overload
-def if_eq(a: symbol_expr_float,
-          b: symbol_expr_float,
-          if_result: symbol_expr_float,
-          else_result: symbol_expr_float) -> Expression: ...
-
-
-def if_eq(a, b, if_result, else_result):
+          if_result: AnyCasType,
+          else_result: AnyCasType) -> AnyCasType:
     a = Expression(a).s
     b = Expression(b).s
     return if_else(ca.eq(a, b), if_result, else_result)
 
 
 def if_eq_cases(a: symbol_expr_float,
-                b_result_cases: Iterable[Tuple[symbol_expr_float, symbol_expr_float]],
-                else_result: symbol_expr_float) -> Expression:
+                b_result_cases: Iterable[Tuple[symbol_expr_float, AnyCasType]],
+                else_result: AnyCasType) -> AnyCasType:
     """
     if a == b_result_cases[0][0]:
         return b_result_cases[0][1]
@@ -2371,23 +2223,25 @@ def if_eq_cases(a: symbol_expr_float,
     else:
         return else_result
     """
+    return_type = _get_return_type(else_result)
     a = _to_sx(a)
     result = _to_sx(else_result)
     for b, b_result in b_result_cases:
         b = _to_sx(b)
         b_result = _to_sx(b_result)
         result = ca.if_else(ca.eq(a, b), b_result, result)
-    return Expression(result)
+    return _recreate_return_type(result, return_type)
 
 
 def if_eq_cases_grouped(a: symbol_expr_float,
-                        b_result_cases: Iterable[Tuple[symbol_expr_float, symbol_expr_float]],
-                        else_result: symbol_expr_float) -> Expression:
+                        b_result_cases: Iterable[Tuple[symbol_expr_float, AnyCasType]],
+                        else_result: AnyCasType) -> AnyCasType:
     """
     a: symbol (hash)
     grouped_cases: list of tuples (hash_list, outcome) where hash_list is a list of hashes mapping to outcome.
     else_result: default outcome if no hash matches.
     """
+    return_type = _get_return_type(else_result)
     groups = defaultdict(list)
     for h, res in b_result_cases:
         groups[res].append(_to_sx(h))
@@ -2401,11 +2255,11 @@ def if_eq_cases_grouped(a: symbol_expr_float,
         else:
             condition = ca.eq(a, hash_list[0])
         result = ca.if_else(condition, outcome, result)
-    return Expression(result)
+    return _recreate_return_type(result, return_type)
 
 
-def if_cases(cases: Sequence[Tuple[symbol_expr_float, symbol_expr_float]],
-             else_result: symbol_expr_float) -> Expression:
+def if_cases(cases: Sequence[Tuple[symbol_expr_float, AnyCasType]],
+             else_result: AnyCasType) -> AnyCasType:
     """
     if cases[0][0]:
         return cases[0][1]
@@ -2415,18 +2269,19 @@ def if_cases(cases: Sequence[Tuple[symbol_expr_float, symbol_expr_float]],
     else:
         return else_result
     """
+    return_type = _get_return_type(else_result)
     else_result = _to_sx(else_result)
     result = _to_sx(else_result)
     for i in reversed(range(len(cases))):
         case = _to_sx(cases[i][0])
         case_result = _to_sx(cases[i][1])
         result = ca.if_else(case, case_result, result)
-    return Expression(result)
+    return _recreate_return_type(result, return_type)
 
 
 def if_less_eq_cases(a: symbol_expr_float,
-                     b_result_cases: Sequence[Tuple[symbol_expr_float, symbol_expr_float]],
-                     else_result: symbol_expr_float) -> Expression:
+                     b_result_cases: Sequence[Tuple[symbol_expr_float, AnyCasType]],
+                     else_result: AnyCasType) -> AnyCasType:
     """
     This only works if b_result_cases is sorted in ascending order.
     if a <= b_result_cases[0][0]:
@@ -2437,16 +2292,17 @@ def if_less_eq_cases(a: symbol_expr_float,
     else:
         return else_result
     """
+    return_type = _get_return_type(else_result)
     a = _to_sx(a)
     result = _to_sx(else_result)
     for i in reversed(range(len(b_result_cases))):
         b = _to_sx(b_result_cases[i][0])
         b_result = _to_sx(b_result_cases[i][1])
         result = ca.if_else(ca.le(a, b), b_result, result)
-    return Expression(result)
+    return _recreate_return_type(result, return_type)
 
 
-def _to_sx(thing: object) -> ca.SX:
+def _to_sx(thing: Union[ca.SX, all_expressions]) -> ca.SX:
     try:
         return thing.s
     except AttributeError:
@@ -2992,23 +2848,6 @@ def total_derivative2(expr: Union[Symbol, Expression],
     H = Expression(ca.hessian(expr.s, symbols.s)[0])
     H = H.reshape((1, len(H) ** 2))
     return H.dot(v)
-
-
-def quaternion_multiply(q1: Quaternion, q2: Quaternion) -> Quaternion:
-    q1 = Quaternion.from_iterable(q1)
-    q2 = Quaternion.from_iterable(q2)
-    return q1.multiply(q2)
-
-
-def quaternion_conjugate(q: Quaternion) -> Quaternion:
-    q1 = Quaternion.from_iterable(q)
-    return q1.conjugate()
-
-
-def quaternion_diff(q1: Quaternion, q2: Quaternion) -> Quaternion:
-    q1 = Quaternion.from_iterable(q1)
-    q2 = Quaternion.from_iterable(q2)
-    return q1.diff(q2)
 
 
 def sign(x: symbol_expr_float) -> Expression:
