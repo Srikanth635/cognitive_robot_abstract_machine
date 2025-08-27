@@ -969,19 +969,22 @@ class World:
                 new_world.degrees_of_freedom.append(new_dof)
                 dof_mapping[dof] = new_dof
             for connection in self.connections:
+                origin_transform = deepcopy(connection.origin_expression)
+                origin_transform.reference_frame = body_mapping[connection.origin_expression.reference_frame]
+                origin_transform.child_frame = body_mapping[connection.origin_expression.child_frame]
                 if isinstance(connection, PrismaticConnection):
                     new_connection = PrismaticConnection(parent=body_mapping[connection.parent],
                                                          child=body_mapping[connection.child], axis=connection.axis,
                                                          _world=new_world, name=connection.name,
-                                                         dof=dof_mapping[connection.dof])
+                                                         dof=dof_mapping[connection.dof], origin_expression=origin_transform)
                 elif isinstance(connection, RevoluteConnection):
                     new_connection = RevoluteConnection(parent=body_mapping[connection.parent],
                                                         child=body_mapping[connection.child], axis=connection.axis,
                                                         _world=new_world, name=connection.name,
-                                                        dof=dof_mapping[connection.dof])
+                                                        dof=dof_mapping[connection.dof], origin_expression=origin_transform)
                 elif isinstance(connection, FixedConnection):
                     new_connection = FixedConnection(parent=body_mapping[connection.parent],
-                                                     child=body_mapping[connection.child], name=connection.name)
+                                                     child=body_mapping[connection.child], name=connection.name, origin_expression=origin_transform)
                 elif isinstance(connection, Connection6DoF):
                     new_connection = Connection6DoF(parent=body_mapping[connection.parent],
                                                     x=dof_mapping[connection.x],
@@ -992,7 +995,7 @@ class World:
                                                     qz=dof_mapping[connection.qz],
                                                     qw=dof_mapping[connection.qw],
                                                     child=body_mapping[connection.child],
-                                                    _world=new_world, name=connection.name)
+                                                    _world=new_world, name=connection.name, origin_expression=origin_transform)
                 elif isinstance(connection, OmniDrive):
                     new_connection = OmniDrive(parent=body_mapping[connection.parent],
                                                child=body_mapping[connection.child],
@@ -1006,7 +1009,7 @@ class World:
                                                y_vel=dof_mapping[connection.y_vel],
                                                translation_velocity_limits=connection.translation_velocity_limits,
                                                rotation_velocity_limits=connection.rotation_velocity_limits,
-                                               _world=new_world, name=connection.name)
+                                               _world=new_world, name=connection.name, origin_expression=origin_transform)
                 else:
                     print(f"Unknown connection type {type(connection)}")
                 new_world.add_connection(new_connection)
