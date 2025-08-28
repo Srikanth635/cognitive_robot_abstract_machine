@@ -1,3 +1,5 @@
+import json
+import time
 from dataclasses import dataclass, field
 from functools import cached_property
 from typing import Callable
@@ -13,6 +15,11 @@ from sqlalchemy import select
 from ...orm.ormatic_interface import *
 from ...prefixed_name import PrefixedName
 from ...world import World
+from ...world_modification import (
+    WorldModelModificationBlock,
+    WorldModelModification,
+    AddBodyModification,
+)
 
 
 @dataclass
@@ -61,6 +68,12 @@ class WorldSynchronizer:
     The subscriber to the model changes.
     """
 
+    model_change_callback: Optional[Callable] = field(default=None, init=False)
+    """
+    Pointer to the callback used to signal the model change.
+    This is used to avoid calling the callback multiple times.
+    """
+
     reload_model_subscriber: Optional[Subscription] = field(default=None, init=False)
     """
     The subscriber to the reloading the model from the database.
@@ -80,10 +93,14 @@ class WorldSynchronizer:
 
         if self.publish:
             self.world.state_change_callbacks.append(lambda: self.publish_state())
+            self.model_change_callback = lambda: self.publish_model_change()
+
+            self.world.model_change_callbacks.append(self.model_change_callback)
 
             if self.session:
                 self.reload_model_callback = lambda: self.publish_reload_model()
-                self.world.model_change_callbacks.append(self.reload_model_callback)
+                # self.world.model_change_callbacks.append(self.reload_model_callback)
+
         self.update_previous_world_state()
 
         if self.subscribe:
@@ -91,6 +108,13 @@ class WorldSynchronizer:
                 semantic_world_msgs.msg.WorldState,
                 topic="/semantic_world/world_state",
                 callback=self.update_state,
+                qos_profile=10,
+            )
+
+            self.model_change_subscriber = self.node.create_subscription(
+                semantic_world_msgs.msg.WorldModelModificationBlock,
+                topic="/semantic_world/model_change",
+                callback=self.apply_model_change,
                 qos_profile=10,
             )
 
@@ -126,11 +150,12 @@ class WorldSynchronizer:
 
     @cached_property
     def model_change_publisher(self):
-        return self.node.create_publisher(
+        result =  self.node.create_publisher(
             semantic_world_msgs.msg.WorldModelModificationBlock,
             topic="/semantic_world/model_change",
             qos_profile=10,
         )
+        return result
 
     def publish_state(self):
         """
@@ -224,7 +249,27 @@ class WorldSynchronizer:
             self.world.notify_state_change()
 
     def publish_model_change(self):
-        ...
+        latest_changes = self.parse_latest_modification_block()
+        msg = semantic_world_msgs.msg.WorldModelModificationBlock(modifications=[json.dumps(m.to_json()) for m in latest_changes.modifications])
+        self.model_change_publisher.publish(msg)
 
     def apply_model_change(self, msg: semantic_world_msgs.msg.WorldModelModificationBlock):
-        ...
+        changes = WorldModelModificationBlock(modifications=[WorldModelModification.from_json(json.loads(m))
+                                                             for m in msg.modifications], skip_callbacks=[self.model_change_callback])
+        changes(self.world)
+
+    def parse_latest_modification_block(self):
+
+        latest_calls = self.world._modifications[-1]
+
+        result = WorldModelModificationBlock([])
+
+        for call, kwargs in latest_calls:
+            if call.__name__ == self.world.add_kinematic_structure_entity.__name__:
+                modification = AddBodyModification(kwargs["kinematic_structure_entity"])
+            else:
+                raise NotImplementedError
+
+            result.modifications.append(modification)
+
+        return result

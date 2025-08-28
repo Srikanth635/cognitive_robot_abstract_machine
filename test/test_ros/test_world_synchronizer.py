@@ -90,8 +90,8 @@ class WorldStatePublisherTestCase(unittest.TestCase):
 
     def test_model_synchronization(self):
 
-        w1 = World() # self.create_dummy_world()
-        w2 = World() # self.create_dummy_world()
+        w1 = World(name="w1") # self.create_dummy_world()
+        w2 = World(name="w2") # self.create_dummy_world()
 
         synchronizer_1 = WorldSynchronizer(
             self.node, w1, subscribe=False
@@ -104,9 +104,10 @@ class WorldStatePublisherTestCase(unittest.TestCase):
             # parent = w1.get_kinematic_structure_entity_by_name("b2")
             # c = Connection6DoF(parent, new_body, _world=w1)
             # w1.add_connection(c)
-
         time.sleep(0.1)
-        self.assertEqual(len(w2.kinematic_structure_entities), 3)
+        self.assertEqual(len(w1.kinematic_structure_entities), 1)
+        self.assertEqual(len(w2.kinematic_structure_entities), 1)
+
 
         assert w2.get_kinematic_structure_entity_by_name("b3")
 

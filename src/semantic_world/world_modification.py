@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import List, TYPE_CHECKING, Dict, Any, Self
+from typing import List, TYPE_CHECKING, Dict, Any, Self, Callable, Optional
 
 from random_events.utils import SubclassJSONSerializer
 
@@ -74,7 +74,9 @@ class WorldModelModificationBlock:
     """
     modifications: List[WorldModelModification]
 
+    skip_callbacks: Optional[List] = None
+
     def __call__(self, world: World):
-        with world.modify_world():
+        with world.modify_world(skip_callbacks=self.skip_callbacks):
             for modification in self.modifications:
                 modification(world)

@@ -219,8 +219,11 @@ class WorldModelUpdateContextManager:
     Arguments of the modification function.
     """
 
-    def __init__(self, world: World):
+    skip_callbacks: Optional[List] = None
+
+    def __init__(self, world: World, skip_callbacks: Optional[List] = None):
         self.world = world
+        self.skip_callbacks = skip_callbacks
 
     def __enter__(self):
         if self.world.world_is_being_modified:
@@ -230,18 +233,17 @@ class WorldModelUpdateContextManager:
         if self.first:
             self.world._current_modification_block =[]
 
-        return self.world
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.world._current_modification_block.append((self.modification, self.arguments))
+        if self.modification is not None:
+            self.world._current_modification_block.append((self.modification, self.arguments))
         if self.first:
             self.world.world_is_being_modified = False
-            if exc_type is None:
-                self.world._notify_model_change()
-
             self.world._modifications.append(self.world._current_modification_block)
             self.world._current_modification_block = None
-
+            if exc_type is None:
+                self.world._notify_model_change(self.skip_callbacks)
 
 def modifies_world(func):
     """
@@ -253,7 +255,7 @@ def modifies_world(func):
     def wrapper(self: World, *args, **kwargs):
 
         # bind args and kwargs
-        bound = sig.bind_partial(*args, **kwargs)  # use bind() if you require all args
+        bound = sig.bind_partial(self, *args, **kwargs)  # use bind() if you require all args
         bound.apply_defaults()  # fill in default values
 
 
@@ -406,8 +408,8 @@ class World:
         self.state[dof.name].position = initial_position
         self.degrees_of_freedom.append(dof)
 
-    def modify_world(self) -> WorldModelUpdateContextManager:
-        return WorldModelUpdateContextManager(self)
+    def modify_world(self, skip_callbacks: Optional[List] = None) -> WorldModelUpdateContextManager:
+        return WorldModelUpdateContextManager(self, skip_callbacks=skip_callbacks)
 
     def reset_state_context(self) -> ResetStateContextManager:
         return ResetStateContextManager(self)
@@ -432,18 +434,22 @@ class World:
         for dof in self.degrees_of_freedom:
             dof.reset_cache()
 
-    def notify_state_change(self) -> None:
+    def notify_state_change(self, skip_callbacks: Optional[List] = None) -> None:
         """
         If you have changed the state of the world, call this function to trigger necessary events and increase
         the state version.
         """
+
+        if skip_callbacks is None:
+            skip_callbacks = []
+
         # self.compute_fk.cache_clear()
         # self.compute_fk_with_collision_offset_np.cache_clear()
         if not self.empty:
             self._recompute_forward_kinematics()
         self._state_version += 1
 
-        [callback() for callback in self.state_change_callbacks]
+        [callback() for callback in self.state_change_callbacks if callback not in skip_callbacks]
 
     def _notify_model_change(self, skip_callbacks: Optional[List] = None) -> None:
         """
