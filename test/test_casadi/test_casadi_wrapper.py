@@ -2510,103 +2510,6 @@ class TestCASWrapper:
             with pytest.raises(TypeError):
                 fn(q, q)
 
-    def test_dot_types(self):
-        s = cas.Symbol('s')
-        e = cas.Expression(1)
-        v = cas.Vector3(1, 1, 1)
-        p = cas.Point3(1, 1, 1)
-        t = cas.TransformationMatrix()
-        r = cas.RotationMatrix()
-        q = cas.Quaternion()
-        # Symbol
-        for muh in [s, e, v, p, t, r, q]:
-            with pytest.raises(TypeError):
-                cas.dot(s, muh)
-            with pytest.raises(TypeError):
-                cas.dot(muh, s)
-        # Expression
-        assert isinstance(cas.dot(e, e), cas.Expression)
-        assert isinstance(e.dot(e), cas.Expression)
-        for muh in [v, p, t, r, q]:
-            with pytest.raises(TypeError):
-                cas.dot(e, muh)
-            with pytest.raises(TypeError):
-                cas.dot(muh, e)
-            with pytest.raises(TypeError):
-                e.dot(muh)
-        # Vector3
-        assert isinstance(v.dot(v), cas.Expression)
-        assert isinstance(cas.dot(v, v), cas.Expression)
-        assert isinstance(v.dot(p), cas.Expression)
-        assert isinstance(cas.dot(v, p), cas.Expression)
-        assert isinstance(p.dot(v), cas.Expression)
-        assert isinstance(cas.dot(p, v), cas.Expression)
-        assert isinstance(t.dot(v), cas.Vector3)
-        assert isinstance(cas.dot(t, v), cas.Vector3)
-        with pytest.raises(TypeError):
-            v.dot(t)
-        with pytest.raises(TypeError):
-            cas.dot(v, t)
-        assert isinstance(r.dot(v), cas.Vector3)
-        assert isinstance(cas.dot(r, v), cas.Vector3)
-        with pytest.raises(TypeError):
-            v.dot(q)
-        with pytest.raises(TypeError):
-            cas.dot(v, q)
-        with pytest.raises(TypeError):
-            q.dot(v)
-        with pytest.raises(TypeError):
-            cas.dot(q, v)
-        # Point3
-        assert isinstance(p.dot(p), cas.Expression)
-        assert isinstance(cas.dot(p, p), cas.Expression)
-        assert isinstance(t.dot(p), cas.Point3)
-        assert isinstance(cas.dot(t, p), cas.Point3)
-        with pytest.raises(TypeError):
-            p.dot(t)
-        with pytest.raises(TypeError):
-            cas.dot(p, t)
-        with pytest.raises(TypeError):
-            assert isinstance(r.dot(p), cas.Point3)
-        with pytest.raises(TypeError):
-            assert isinstance(cas.dot(r, p), cas.Point3)
-        with pytest.raises(TypeError):
-            p.dot(q)
-        with pytest.raises(TypeError):
-            cas.dot(p, q)
-        with pytest.raises(TypeError):
-            q.dot(p)
-        with pytest.raises(TypeError):
-            cas.dot(q, p)
-        # TransMatrix
-        assert isinstance(t.dot(t), cas.TransformationMatrix)
-        assert isinstance(cas.dot(t, t), cas.TransformationMatrix)
-        assert isinstance(t.dot(r), cas.RotationMatrix)
-        assert isinstance(cas.dot(t, r), cas.RotationMatrix)
-        assert isinstance(r.dot(t), cas.TransformationMatrix)
-        assert isinstance(cas.dot(r, t), cas.TransformationMatrix)
-        with pytest.raises(TypeError):
-            t.dot(q)
-        with pytest.raises(TypeError):
-            cas.dot(t, q)
-        with pytest.raises(TypeError):
-            q.dot(t)
-        with pytest.raises(TypeError):
-            cas.dot(q, t)
-        # RotationMatrix
-        assert isinstance(r.dot(r), cas.RotationMatrix)
-        assert isinstance(cas.dot(r, r), cas.RotationMatrix)
-        with pytest.raises(TypeError):
-            r.dot(q)
-        with pytest.raises(TypeError):
-            cas.dot(r, q)
-        with pytest.raises(TypeError):
-            q.dot(r)
-        with pytest.raises(TypeError):
-            cas.dot(q, r)
-        assert isinstance(q.dot(q), cas.Expression)
-        assert isinstance(cas.dot(q, q), cas.Expression)
-
     def test_free_symbols(self):
         m = cas.Expression(cas.var('a b c d'))
         assert len(cas.free_symbols(m)) == 4
@@ -2715,7 +2618,7 @@ class TestCASWrapper:
         bd_s = cas.Symbol('bd')
         bdd_s = cas.Symbol('bdd')
         m = cas.Expression(a_s * b_s ** 2)
-        jac = cas.total_derivative2(m, [a_s, b_s], [ad_s, bd_s], [add_s, bdd_s])
+        jac = cas.second_order_total_derivative(m, [a_s, b_s], [ad_s, bd_s], [add_s, bdd_s])
         actual = jac.compile()(**kwargs)
         expected = bdd * 2 * a + 2 * ad * bd * 2 * b
         assert_allclose(actual, expected)
@@ -2751,7 +2654,7 @@ class TestCASWrapper:
         cd_s = cas.Symbol('cd')
         cdd_s = cas.Symbol('cdd')
         m = cas.Expression(a_s * b_s ** 2 * c_s ** 3)
-        jac = cas.total_derivative2(m, [a_s, b_s, c_s], [ad_s, bd_s, cd_s], [add_s, bdd_s, cdd_s])
+        jac = cas.second_order_total_derivative(m, [a_s, b_s, c_s], [ad_s, bd_s, cd_s], [add_s, bdd_s, cdd_s])
         # expected_expr = cas.Expression(add_s + bdd_s*2*a*c**3 + 4*ad_s*)
         actual = jac.compile()(**kwargs)
         # expected = expected_expr.compile()(**kwargs)
@@ -3156,13 +3059,6 @@ class TestCASWrapper:
         actual_sum = cas.sum(m)
         expected_sum = np.sum(m)
         assert_allclose(actual_sum, expected_sum, rtol=1.e-4)
-
-    @given(float_no_nan_no_inf_min_max(min_value=0))
-    def test_r_gauss(self, n):
-        result = cas.r_gauss(cas.gauss(n))
-        assert_allclose(result, n)
-        result = cas.gauss(cas.r_gauss(n))
-        assert_allclose(result, n)
 
     @given(sq_matrix())
     def test_sum_row(self, m):

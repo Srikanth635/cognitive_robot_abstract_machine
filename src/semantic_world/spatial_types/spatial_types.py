@@ -756,23 +756,7 @@ class TransformationMatrix(Symbol_, ReferenceFrameMixin):
             a_T_b[2, 3] = point.z
         return a_T_b
 
-    @overload
-    def dot(self, other: Point3) -> Point3:
-        ...
-
-    @overload
-    def dot(self, other: Vector3) -> Vector3:
-        ...
-
-    @overload
-    def dot(self, other: RotationMatrix) -> RotationMatrix:
-        ...
-
-    @overload
-    def dot(self, other: TransformationMatrix) -> TransformationMatrix:
-        ...
-
-    def dot(self, other):
+    def dot(self, other: SpatialType) -> SpatialType:
         if isinstance(other, (Vector3, Point3, RotationMatrix, TransformationMatrix)):
             result = ca.mtimes(self.s, other.s)
             if isinstance(other, Vector3):
@@ -791,23 +775,7 @@ class TransformationMatrix(Symbol_, ReferenceFrameMixin):
                 return result
         raise _operation_type_error(self, 'dot', other)
 
-    @overload
-    def __matmul__(self, other: Point3) -> Point3:
-        ...
-
-    @overload
-    def __matmul__(self, other: Vector3) -> Vector3:
-        ...
-
-    @overload
-    def __matmul__(self, other: RotationMatrix) -> RotationMatrix:
-        ...
-
-    @overload
-    def __matmul__(self, other: TransformationMatrix) -> TransformationMatrix:
-        ...
-
-    def __matmul__(self, other):
+    def __matmul__(self, other: SpatialType) -> SpatialType:
         return self.dot(other)
 
     def inverse(self) -> TransformationMatrix:
@@ -1126,7 +1094,7 @@ class RotationMatrix(Symbol_, ReferenceFrameMixin):
                              atan2(-self[k, i], cy))
         az = if_greater_zero(if0,
                              atan2(self[j, i], self[i, i]),
-                             0)
+                             Expression(0))
         return ax, ay, az
 
     def to_quaternion(self) -> Quaternion:
@@ -1240,11 +1208,11 @@ class Point3(Symbol_, ReferenceFrameMixin):
         ...
 
     @overload
-    def __sub__(self, other: Union[Symbol, Expression, Vector3]) -> Point3:
+    def __sub__(self, other: Vector3) -> Point3:
         ...
 
     @overload
-    def __sub__(self, other: float) -> Point3:
+    def __sub__(self, other: Union[Symbol, Expression, float]) -> Point3:
         ...
 
     def __sub__(self, other):
@@ -1338,15 +1306,7 @@ class Point3(Symbol_, ReferenceFrameMixin):
         result.reference_frame = self.reference_frame
         return result
 
-    @overload
-    def dot(self, other: Point3) -> Expression:
-        ...
-
-    @overload
-    def dot(self, other: Vector3) -> Expression:
-        ...
-
-    def dot(self, other):
+    def dot(self, other: Union[Point3, Vector3]) -> Expression:
         if isinstance(other, (Point3, Vector3)):
             return Expression(ca.mtimes(self[:3].T.s, other[:3].s))
         raise _operation_type_error(self, 'dot', other)
@@ -1426,15 +1386,7 @@ class Vector3(Symbol_, ReferenceFrameMixin):
     def z(self, value: symbol_expr_float):
         self[2] = value
 
-    @overload
-    def __matmul__(self, other: Point3) -> Expression:
-        ...
-
-    @overload
-    def __matmul__(self, other: Vector3) -> Expression:
-        ...
-
-    def __matmul__(self, other):
+    def __matmul__(self, other: Union[Point3, Vector3]) -> Expression:
         return self.dot(other)
 
     @overload
@@ -1509,7 +1461,7 @@ class Vector3(Symbol_, ReferenceFrameMixin):
         result.reference_frame = self.reference_frame
         return result
 
-    def __rsub__(self, other: float) -> Vector3:
+    def __rsub__(self, other: float):
         if isinstance(other, (int, float)):
             result = Vector3.from_iterable(self.s.__rsub__(other))
         else:
@@ -1517,19 +1469,7 @@ class Vector3(Symbol_, ReferenceFrameMixin):
         result.reference_frame = self.reference_frame
         return result
 
-    @overload
-    def __mul__(self, other: Symbol) -> Vector3:
-        ...
-
-    @overload
-    def __mul__(self, other: Expression) -> Vector3:
-        ...
-
-    @overload
-    def __mul__(self, other: float) -> Vector3:
-        ...
-
-    def __mul__(self, other):
+    def __mul__(self, other: symbol_expr_float) -> Vector3:
         if isinstance(other, (int, float)):
             result = Vector3.from_iterable(self.s.__mul__(other))
         elif isinstance(other, (Symbol, Expression)):
@@ -1565,19 +1505,7 @@ class Vector3(Symbol_, ReferenceFrameMixin):
         result.reference_frame = self.reference_frame
         return result
 
-    @overload
-    def __truediv__(self, other: Symbol) -> Vector3:
-        ...
-
-    @overload
-    def __truediv__(self, other: Expression) -> Vector3:
-        ...
-
-    @overload
-    def __truediv__(self, other: float) -> Vector3:
-        ...
-
-    def __truediv__(self, other):
+    def __truediv__(self, other: symbol_expr_float) -> Vector3:
         if isinstance(other, (int, float)):
             result = Vector3.from_iterable(self.s.__truediv__(other))
         elif isinstance(other, (Symbol, Expression)):
@@ -1600,15 +1528,7 @@ class Vector3(Symbol_, ReferenceFrameMixin):
         result.reference_frame = self.reference_frame
         return result
 
-    @overload
-    def dot(self, other: Point3) -> Expression:
-        ...
-
-    @overload
-    def dot(self, other: Vector3) -> Expression:
-        ...
-
-    def dot(self, other):
+    def dot(self, other: Union[Point3, Vector3]) -> Expression:
         if isinstance(other, (Point3, Vector3)):
             return Expression(ca.mtimes(self[:3].T.s, other[:3].s))
         raise _operation_type_error(self, 'dot', other)
@@ -1809,11 +1729,11 @@ class Quaternion(Symbol_, ReferenceFrameMixin):
     def to_axis_angle(self) -> Tuple[Vector3, Expression]:
         self.normalize()
         w2 = sqrt(1 - self.w ** 2)
-        m = if_eq_zero(w2, 1, w2)  # avoid /0
-        angle = if_eq_zero(w2, 0, (2 * acos(limit(self.w, -1, 1))))
-        x = if_eq_zero(w2, 0, self.x / m)
-        y = if_eq_zero(w2, 0, self.y / m)
-        z = if_eq_zero(w2, 1, self.z / m)
+        m = if_eq_zero(w2, Expression(1), w2)  # avoid /0
+        angle = if_eq_zero(w2, Expression(0), (2 * acos(limit(self.w, -1, 1))))
+        x = if_eq_zero(w2, Expression(0), self.x / m)
+        y = if_eq_zero(w2, Expression(0), self.y / m)
+        z = if_eq_zero(w2, Expression(1), self.z / m)
         return Vector3(x, y, z, reference_frame=self.reference_frame), angle
 
     def to_rotation_matrix(self) -> RotationMatrix:
@@ -1857,12 +1777,16 @@ all_expressions_float_np = Union[
     np.ndarray
 ]
 
+array_like_expressions = Union[
+    Point3,
+    Vector3,
+]
 SpatialType = TypeVar(
-    'SpatialType', 
-    Point3, 
-    Vector3, 
-    TransformationMatrix, 
-    RotationMatrix, 
+    'SpatialType',
+    Point3,
+    Vector3,
+    TransformationMatrix,
+    RotationMatrix,
     Quaternion
 )
 AnyCasType = TypeVar(
@@ -1921,7 +1845,7 @@ def jacobian_ddot(expressions: Expression,
     Jdd = jacobian(expressions, symbols)
     for i in range(Jdd.shape[0]):
         for j in range(Jdd.shape[1]):
-            Jdd[i, j] = total_derivative2(Jdd[i, j], symbols, symbols_dot, symbols_ddot)
+            Jdd[i, j] = second_order_total_derivative(Jdd[i, j], symbols, symbols_dot, symbols_ddot)
     return Jdd
 
 
@@ -1986,10 +1910,12 @@ def _get_return_type(thing: Any):
         return Expression
     return return_type
 
+
 def _recreate_return_type(thing: Any, return_type: Type) -> Any:
     if return_type in (Point3, Vector3, Quaternion):
         return return_type.from_iterable(thing)
     return return_type(thing)
+
 
 def if_else(condition: symbol_expr_float, if_result: AnyCasType, else_result: AnyCasType) -> AnyCasType:
     condition = _to_sx(condition)
@@ -2324,67 +2250,11 @@ def norm(v: Union[Vector3, Point3, Expression, Quaternion]) -> Expression:
     return Expression(ca.norm_2(v))
 
 
-@overload
-def scale(v: Vector3, a: symbol_expr_float) -> Vector3: ...
-
-
-@overload
-def scale(v: Point3, a: symbol_expr_float) -> Point3: ...
-
-
-@overload
-def scale(v: Expression, a: symbol_expr_float) -> Expression: ...
-
-
-def scale(v, a):
+def scale(v: Expression, a: symbol_expr_float) -> Expression:
     return save_division(v, norm(v)) * a
 
 
-@overload
-def dot(e1: TransformationMatrix, e2: Point3) -> Point3: ...
-
-
-@overload
-def dot(e1: TransformationMatrix, e2: Vector3) -> Vector3: ...
-
-
-@overload
-def dot(e1: RotationMatrix, e2: Point3) -> Point3: ...
-
-
-@overload
-def dot(e1: RotationMatrix, e2: Vector3) -> Vector3: ...
-
-
-@overload
-def dot(e1: RotationMatrix, e2: RotationMatrix) -> RotationMatrix: ...
-
-
-@overload
-def dot(e1: RotationMatrix, e2: TransformationMatrix) -> TransformationMatrix: ...
-
-
-@overload
-def dot(e1: TransformationMatrix, e2: RotationMatrix) -> TransformationMatrix: ...
-
-
-@overload
-def dot(e1: TransformationMatrix, e2: TransformationMatrix) -> TransformationMatrix: ...
-
-
-@overload
-def dot(e1: Quaternion, e2: Quaternion) -> Expression: ...
-
-
-@overload
-def dot(e1: Union[Vector3, Point3], e2: Union[Vector3, Point3]) -> Expression: ...
-
-
-@overload
-def dot(e1: Expression, e2: Expression) -> Expression: ...
-
-
-def dot(e1, e2):
+def dot(e1: Expression, e2: Expression) -> Expression:
     try:
         return e1.dot(e2)
     except Exception as e:
@@ -2425,47 +2295,21 @@ def trace(matrix: Union[Expression, RotationMatrix, TransformationMatrix]) -> Ex
 #     return acos(angle)
 
 
-@overload
-def vstack(list_of_matrices: List[Union[Point3, Vector3, Quaternion]]) -> Expression: ...
-
-
-@overload
-def vstack(list_of_matrices: List[TransformationMatrix]) -> Expression: ...
-
-
-@overload
-def vstack(list_of_matrices: List[Expression]) -> Expression: ...
-
-
-def vstack(list_of_matrices):
+def vstack(
+        list_of_matrices: Union[List[Union[Point3, Vector3, Quaternion, TransformationMatrix, Expression]]]) \
+        -> Expression:
     if len(list_of_matrices) == 0:
         return Expression()
     return Expression(ca.vertcat(*[_to_sx(x) for x in list_of_matrices]))
 
 
-@overload
-def hstack(list_of_matrices: List[TransformationMatrix]) -> Expression: ...
-
-
-@overload
-def hstack(list_of_matrices: List[Expression]) -> Expression: ...
-
-
-def hstack(list_of_matrices):
+def hstack(list_of_matrices: Union[List[TransformationMatrix], List[Expression]]) -> Expression:
     if len(list_of_matrices) == 0:
         return Expression()
     return Expression(ca.horzcat(*[_to_sx(x) for x in list_of_matrices]))
 
 
-@overload
-def diag_stack(list_of_matrices: List[TransformationMatrix]) -> Expression: ...
-
-
-@overload
-def diag_stack(list_of_matrices: List[Expression]) -> Expression: ...
-
-
-def diag_stack(list_of_matrices):
+def diag_stack(list_of_matrices: Union[List[TransformationMatrix], List[Expression]]) -> Expression:
     num_rows = int(math.fsum(e.shape[0] for e in list_of_matrices))
     num_columns = int(math.fsum(e.shape[1] for e in list_of_matrices))
     combined_matrix = zeros(num_rows, num_columns)
@@ -2500,19 +2344,7 @@ def cosine_distance(v0: symbol_expr_float, v1: symbol_expr_float) -> Expression:
     return 1 - ((dot(v0.T, v1))[0] / (norm(v0) * norm(v1)))
 
 
-@overload
-def euclidean_distance(v1: symbol_expr_float, v2: symbol_expr_float) -> Expression: ...
-
-
-@overload
-def euclidean_distance(v1: Point3, v2: Point3) -> Expression: ...
-
-
-def euclidean_distance(v1, v2):
-    """
-    :param v1: nx1 Matrix
-    :param v2: nx1 Matrix
-    """
+def euclidean_distance(v1: array_like_expressions, v2: array_like_expressions) -> Expression:
     return norm(v1 - v2)
 
 
@@ -2586,42 +2418,22 @@ def quaternion_slerp(q1: Quaternion, q2: Quaternion, t: symbol_expr_float) -> Qu
                                                                        ratio_a * q1 + ratio_b * q2)))
 
 
-@overload
-def slerp(v1: Vector3, v2: Vector3, t: symbol_expr_float) -> Vector3: ...
-
-
-@overload
-def slerp(v1: Expression, v2: Expression, t: symbol_expr_float) -> Expression: ...
-
-
-def slerp(v1, v2, t):
+def slerp(v1: Vector3, v2: Vector3, t: symbol_expr_float) -> Vector3:
     """
     spherical linear interpolation
     :param v1: any vector
     :param v2: vector of same length as v1
     :param t: value between 0 and 1. 0 is v1 and 1 is v2
     """
-    angle = save_acos(dot(v1, v2))
-    angle2 = if_eq(angle, 0, 1, angle)
+    angle = save_acos(v1.dot(v2))
+    angle2 = if_eq(angle, 0, Expression(1), angle)
     return if_eq(angle, 0,
                  v1,
                  (sin((1 - t) * angle2) / sin(angle2)) * v1 + (sin(t * angle2) / sin(angle2)) * v2)
 
 
-@overload
-def save_division(nominator: Vector3, denominator: symbol_expr_float, if_nan: Optional[Vector3] = None) -> Vector3: ...
-
-
-@overload
-def save_division(nominator: Point3, denominator: symbol_expr_float, if_nan: Optional[Point3] = None) -> Point3: ...
-
-
-@overload
-def save_division(nominator: symbol_expr_float, denominator: symbol_expr_float,
-                  if_nan: Optional[symbol_expr_float] = None) -> Expression: ...
-
-
-def save_division(nominator, denominator, if_nan=None):
+def save_division(nominator: AnyCasType, denominator: symbol_expr_float,
+                  if_nan: Optional[AnyCasType] = None) -> AnyCasType:
     if if_nan is None:
         if isinstance(nominator, Vector3):
             if_nan = Vector3()
@@ -2630,7 +2442,7 @@ def save_division(nominator, denominator, if_nan=None):
         else:
             if_nan = 0
     save_denominator = if_eq_zero(condition=denominator,
-                                  if_result=1,
+                                  if_result=Expression(1),
                                   else_result=denominator)
     return if_eq_zero(denominator,
                       if_result=if_nan,
@@ -2743,7 +2555,8 @@ def distance_point_to_plane_signed(frame_P_current: Point3, frame_V_v1: Vector3,
     normal = cross(frame_V_v1, frame_V_v2)
     normal = normal / norm(normal)  # Normalize the normal vector
     d = normal.dot(frame_P_current)  # Signed distance to the plane
-    nearest = frame_P_current - normal * d  # Nearest point on the plane
+    offset = (normal * d)
+    nearest = frame_P_current - offset  # Nearest point on the plane
     return d, nearest
 
 
@@ -2814,8 +2627,6 @@ def to_str(expression: all_expressions) -> List[List[str]]:
                 equal_position = len(x.split('=')[0])
                 index = x[:equal_position]
                 sub = x[equal_position + 1:]
-                if index not in result:
-                    raise Exception('fuck')
                 result = result.replace(index, sub)
             result_list[x_index][y_index] = result
     return result_list
@@ -2825,15 +2636,42 @@ def total_derivative(expr: Union[Symbol, Expression],
                      symbols: Iterable[Symbol],
                      symbols_dot: Iterable[Symbol]) \
         -> Expression:
+    """
+    Compute the total derivative of an expression with respect to given symbols and their derivatives
+    (dot symbols).
+
+    The total derivative accounts for a dependent relationship where the specified symbols represent
+    the variables of interest, and the dot symbols represent the time derivatives of those variables.
+
+    :param expr: The expression to be differentiated.
+    :param symbols: Iterable of symbols with respect to which the derivative is computed.
+    :param symbols_dot: Iterable of dot symbols representing the derivatives of the symbols.
+    :return: The expression resulting from the total derivative computation.
+    """
     symbols = Expression(symbols)
     symbols_dot = Expression(symbols_dot)
     return Expression(ca.jtimes(expr.s, symbols.s, symbols_dot.s))
 
 
-def total_derivative2(expr: Union[Symbol, Expression],
-                      symbols: Iterable[Symbol],
-                      symbols_dot: Iterable[Symbol],
-                      symbols_ddot: Iterable[Symbol]) -> Expression:
+def second_order_total_derivative(expr: Union[Symbol, Expression],
+                                  symbols: Iterable[Symbol],
+                                  symbols_dot: Iterable[Symbol],
+                                  symbols_ddot: Iterable[Symbol]) -> Expression:
+    """
+    Computes the second-order total derivative of an expression with respect to a set of symbols.
+
+    This function takes an expression and computes its second-order total derivative
+    using provided symbols, their first-order derivatives, and their second-order
+    derivatives. The computation internally constructs a Hessian matrix of the
+    expression and multiplies it by a vector that combines the provided derivative
+    data.
+
+    :param expr: The mathematical expression whose second-order total derivative is to be computed.
+    :param symbols: Iterable containing the symbols with respect to which the derivative is calculated.
+    :param symbols_dot: Iterable containing the first-order derivatives of the symbols.
+    :param symbols_ddot: Iterable containing the second-order derivatives of the symbols.
+    :return: The computed second-order total derivative, returned as an `Expression`.
+    """
     symbols = Expression(symbols)
     symbols_dot = Expression(symbols_dot)
     symbols_ddot = Expression(symbols_ddot)
@@ -2908,6 +2746,21 @@ def atan2(x: symbol_expr_float, y: symbol_expr_float) -> Expression:
 
 def solve_for(expression: Expression, target_value: float, start_value: float = 0.0001, max_tries: int = 10000,
               eps: float = 1e-10, max_step: float = 1) -> float:
+    """
+    Solves for a value `x` such that the given mathematical expression, when evaluated at `x`,
+    is approximately equal to the target value. The solver iteratively adjusts the value of `x`
+    using a numerical approach based on the derivative of the expression.
+
+    :param expression: The mathematical expression to solve. It is assumed to be differentiable.
+    :param target_value: The value that the expression is expected to approximate.
+    :param start_value: The initial guess for the iterative solver. Defaults to 0.0001.
+    :param max_tries: The maximum number of iterations the solver will perform. Defaults to 10000.
+    :param eps: The maximum tolerated absolute error for the solution. If the difference
+        between the computed value and the target value is less than `eps`, the solution is considered valid. Defaults to 1e-10.
+    :param max_step: The maximum adjustment to the value of `x` at each iteration step. Defaults to 1.
+    :return: The estimated value of `x` that solves the equation for the given expression and target value.
+    :raises ValueError: If no solution is found within the allowed number of steps or if convergence criteria are not met.
+    """
     f_dx = jacobian(expression, expression.free_symbols()).compile()
     f = expression.compile()
     x = start_value
@@ -2926,33 +2779,19 @@ def solve_for(expression: Expression, target_value: float, start_value: float = 
 
 
 def gauss(n: symbol_expr_float) -> Expression:
+    """
+    Calculate the sum of the first `n` natural numbers using the Gauss formula.
+
+    This function computes the sum of an arithmetic series where the first term
+    is 1, the last term is `n`, and the total count of the terms is `n`. The
+    result is derived from the formula `(n * (n + 1)) / 2`, which simplifies
+    to `(n ** 2 + n) / 2`.
+
+    :param n: The upper limit of the sum, representing the last natural number
+              of the series to include.
+    :return: The sum of the first `n` natural numbers.
+    """
     return (n ** 2 + n) / 2
-
-
-def r_gauss(integral: symbol_expr_float) -> Expression:
-    return sqrt(2 * integral + (1 / 4)) - 1 / 2
-
-
-def one_step_change(current_acceleration: symbol_expr_float, jerk_limit: symbol_expr_float, dt: float) \
-        -> Expression:
-    return current_acceleration * dt + jerk_limit * dt ** 2
-
-
-def desired_velocity(current_position, goal_position, dt, ph):
-    e = goal_position - current_position
-    a = e / (gauss(ph) * dt)
-    # a = e / ((gauss(ph-1) + ph - 1)*dt)
-    return a * ph
-    # return a * (ph-2)
-
-
-def vel_integral(vel_limit, jerk_limit, dt, ph):
-    def f(vc, ac, jl, t, dt, ph):
-        return vc + (t) * ac * dt + gauss(t) * jl * dt ** 2
-
-    half1 = math.floor(ph / 2)
-    x = f(0, 0, jerk_limit, half1, dt, ph)
-    return x
 
 
 def substitute(expression: Union[Symbol, Expression], old_symbols: List[Symbol],
