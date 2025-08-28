@@ -47,7 +47,7 @@ with box_world.modify_world():
     box = Body(name=PrefixedName("box"), collision=[Box(scale=Scale(0.5, 0.5, 0.5),
                                                         color=Color(1., 1., 1., 1.),
                                                         origin=TransformationMatrix.from_xyz_rpy(0,0,0,0,0,0),) ])
-    box_world.add_body(box)
+    box_world.add_kinematic_structure_entity(box)
     
 ```
 
@@ -62,7 +62,7 @@ from semantic_world.geometry import BoundingBox
 
 search_space = BoundingBox(min_x=-1, max_x=1,
                            min_y=-1, max_y=1,
-                           min_z=0.1, max_z=0.2).as_collection()
+                           min_z=0.1, max_z=0.2, reference_frame=box_world.root).as_collection()
                            
 gcs = GraphOfConvexSets.free_space_from_world(box_world, search_space=search_space)
 ```
@@ -110,12 +110,12 @@ root = next(
 
 apartment = os.path.realpath(os.path.join(root, "resources", "urdf", "kitchen.urdf"))
 
-apartment_parser = URDFParser(apartment)
+apartment_parser = URDFParser.from_file(apartment)
 world = apartment_parser.parse()
 
 search_space = BoundingBox(min_x=-2, max_x=2,
                            min_y=-2, max_y=2,
-                           min_z=0., max_z=2).as_collection()
+                           min_z=0., max_z=2, reference_frame=world.root).as_collection()
 gcs = GraphOfConvexSets.free_space_from_world(world, search_space=search_space)
 ```
 
@@ -145,8 +145,8 @@ This allows the accessing of locations using a sequence of local problems put to
 Finally, let's find a way from here to there:
 
 ```{code-cell} ipython2
-start = Point3(-0.75, 0, 0.15)
-goal = Point3(0.75, 0, 0.15)
+start = Point3(-0.75, 0, 1.15)
+goal = Point3(0.75, 0, 1.15)
 path = gcs.path_from_to(start, goal)
 print("A potential path is", [(point.x, point.y, point.z) for point in path])
 ```
