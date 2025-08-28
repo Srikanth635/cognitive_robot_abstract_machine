@@ -1584,6 +1584,7 @@ SpatialType = TypeVar(
 )
 AnyCasType = TypeVar(
     'AnyCasType',
+    Symbol,
     Expression,
     Point3,
     Vector3,
@@ -1593,15 +1594,22 @@ AnyCasType = TypeVar(
 )
 
 
-def var(variables_names: str) -> List[Symbol]:
+def create_symbols(names: Union[List[str], int]) -> List[Symbol]:
     """
-    :param variables_names: e.g. 'a b c'
-    :return: e.g. [Symbol('a'), Symbol('b'), Symbol('c')]
+    Generates a list of symbolic objects based on the input names or an integer value.
+
+    This function takes either a list of names or an integer. If an integer is
+    provided, it generates symbolic objects with default names in the format
+    `s_<index>` for numbers up to the given integer. If a list of names is
+    provided, it generates symbolic objects for each name in the list.
+
+    :param names: A list of strings representing names of symbols or an integer
+        specifying the number of symbols to generate.
+    :return: A list of symbolic objects created based on the input.
     """
-    symbols = []
-    for v in variables_names.split(' '):
-        symbols.append(Symbol(v))
-    return symbols
+    if isinstance(names, int):
+        names = [f's_{i}' for i in range(names)]
+    return [Symbol(x) for x in names]
 
 
 def diag(args: Union[List[symbol_expr_float], Expression]) -> Expression:
@@ -1612,11 +1620,35 @@ def diag(args: Union[List[symbol_expr_float], Expression]) -> Expression:
 
 
 def hessian(expressions: Union[symbol_expr, List[symbol_expr]], symbols: Iterable[Symbol]) -> Expression:
+    """
+    Computes the Hessian matrix of a given scalar function or a list of functions with
+    respect to specified symbols. The Hessian matrix contains second-order partial
+    derivatives of the input expressions. This is often used in numerical optimization
+    and analysis.
+
+    :param expressions: The scalar expression or a list of scalar expressions with
+        respect to which the Hessian matrix is to be computed.
+    :param symbols: The symbols or variables involved in the computation of the
+        Hessian matrix.
+    :return: An Expression representing the computed Hessian matrix.
+    """
     expressions = _to_sx(expressions)
     return Expression(ca.hessian(expressions, Expression(symbols).s)[0])
 
 
 def jacobian(expressions: Union[symbol_expr, List[symbol_expr]], symbols: Iterable[Symbol]) -> Expression:
+    """
+    Computes the Jacobian matrix of the given expressions with respect to the specified symbols.
+
+    The function takes one or more symbolic expressions and a set of symbols and
+    calculates the matrix of first-order partial derivatives (Jacobian matrix).
+    The Jacobian matrix encapsulates how the expressions change with respect
+    to the given symbols.
+
+    :param expressions: The symbolic expression(s) for which the Jacobian is to be computed.
+    :param symbols: An iterable of symbols with respect to which the partial derivatives are taken.
+    :return: The Jacobian matrix as an instance of the Expression class.
+    """
     expressions = Expression(expressions)
     return Expression(ca.jacobian(expressions.s, Expression(symbols).s))
 
@@ -1624,6 +1656,23 @@ def jacobian(expressions: Union[symbol_expr, List[symbol_expr]], symbols: Iterab
 def jacobian_dot(expressions: Expression,
                  symbols: Iterable[symbol_expr],
                  symbols_dot: Iterable[symbol_expr]) -> Expression:
+    """
+    Compute the total derivative of the Jacobian matrix.
+
+    This function calculates the time derivative of a Jacobian matrix given
+    a set of expressions and symbols, along with their corresponding
+    derivatives. For each element in the Jacobian matrix, this method
+    computes the total derivative based on the provided symbols and
+    their time derivatives.
+
+    :param expressions: A set of expressions for which the Jacobian matrix
+        is computed.
+    :param symbols: Iterable containing the symbols with respect to which
+        the Jacobian is calculated.
+    :param symbols_dot: Iterable containing the time derivatives of the
+        corresponding symbols in `symbols`.
+    :return: The time derivative of the Jacobian matrix.
+    """
     Jd = jacobian(expressions, symbols)
     for i in range(Jd.shape[0]):
         for j in range(Jd.shape[1]):
@@ -1635,6 +1684,28 @@ def jacobian_ddot(expressions: Expression,
                   symbols: Iterable[symbol_expr],
                   symbols_dot: Iterable[symbol_expr],
                   symbols_ddot: Iterable[symbol_expr]) -> Expression:
+    """
+    Compute the second-order total derivative of the Jacobian matrix.
+
+    This function computes the Jacobian matrix of the given expressions with
+    respect to specified symbols and further calculates the second-order
+    total derivative for each element in the Jacobian matrix with respect to
+    the provided symbols, their first-order derivatives, and their second-order
+    derivatives.
+
+    :param expressions: A symbolic expression or a collection of symbolic
+        expressions for which the Jacobian matrix and its second-order
+        total derivatives are to be computed.
+    :param symbols: An iterable of symbolic variables representing the
+        primary variables with respect to which the Jacobian and derivatives
+        are calculated.
+    :param symbols_dot: An iterable of symbolic variables representing the
+        first-order derivatives of the primary variables.
+    :param symbols_ddot: An iterable of symbolic variables representing the
+        second-order derivatives of the primary variables.
+    :return: A symbolic matrix representing the second-order total derivative
+        of the Jacobian matrix of the provided expressions.
+    """
     Jdd = jacobian(expressions, symbols)
     for i in range(Jdd.shape[0]):
         for j in range(Jdd.shape[1]):
@@ -1651,12 +1722,6 @@ def equivalent(expression1: symbol_expr, expression2: symbol_expr) -> bool:
 def free_symbols(expression: all_expressions) -> List[Symbol]:
     expression = _to_sx(expression)
     return [Symbol._registry[str(s)] for s in ca.symvar(expression)]
-
-
-def create_symbols(names: Union[List[str], int]) -> List[Symbol]:
-    if isinstance(names, int):
-        names = [f's_{i}' for i in range(names)]
-    return [Symbol(x) for x in names]
 
 
 def zeros(rows: int, columns: int) -> Expression:
@@ -1711,6 +1776,13 @@ def _recreate_return_type(thing: Any, return_type: Type) -> Any:
 
 
 def if_else(condition: symbol_expr_float, if_result: AnyCasType, else_result: AnyCasType) -> AnyCasType:
+    """
+    Creates an expression that represents:
+    if condition:
+        return if_result
+    else:
+        return else_result
+    """
     condition = _to_sx(condition)
     if isinstance(if_result, (float, int)):
         if_result = Expression(if_result)
@@ -1857,6 +1929,13 @@ def if_greater(a: symbol_expr_float,
                b: symbol_expr_float,
                if_result: AnyCasType,
                else_result: AnyCasType) -> AnyCasType:
+    """
+    Creates an expression that represents:
+    if a > b:
+        return if_result
+    else:
+        return else_result
+    """
     a = _to_sx(a)
     b = _to_sx(b)
     return if_else(ca.gt(a, b), if_result, else_result)
@@ -1866,6 +1945,13 @@ def if_less(a: symbol_expr_float,
             b: symbol_expr_float,
             if_result: AnyCasType,
             else_result: AnyCasType) -> AnyCasType:
+    """
+    Creates an expression that represents:
+    if a < b:
+        return if_result
+    else:
+        return else_result
+    """
     a = _to_sx(a)
     b = _to_sx(b)
     return if_else(ca.lt(a, b), if_result, else_result)
@@ -1875,7 +1961,11 @@ def if_greater_zero(condition: symbol_expr_float,
                     if_result: AnyCasType,
                     else_result: AnyCasType) -> AnyCasType:
     """
-    :return: if_result if condition > 0 else else_result
+    Creates an expression that represents:
+    if condition > 0:
+        return if_result
+    else:
+        return else_result
     """
     condition = _to_sx(condition)
     return if_else(ca.gt(condition, 0), if_result, else_result)
@@ -1885,7 +1975,11 @@ def if_greater_eq_zero(condition: symbol_expr_float,
                        if_result: AnyCasType,
                        else_result: AnyCasType) -> AnyCasType:
     """
-    :return: if_result if condition >= 0 else else_result
+    Creates an expression that represents:
+    if condition >= 0:
+        return if_result
+    else:
+        return else_result
     """
     return if_greater_eq(condition, 0, if_result, else_result)
 
@@ -1895,7 +1989,11 @@ def if_greater_eq(a: symbol_expr_float,
                   if_result: AnyCasType,
                   else_result: AnyCasType) -> AnyCasType:
     """
-    :return: if_result if a >= b else else_result
+    Creates an expression that represents:
+    if a >= b:
+        return if_result
+    else:
+        return else_result
     """
     a = Expression(a).s
     b = Expression(b).s
@@ -1907,7 +2005,11 @@ def if_less_eq(a: symbol_expr_float,
                if_result: AnyCasType,
                else_result: AnyCasType) -> AnyCasType:
     """
-    :return: if_result if a <= b else else_result
+    Creates an expression that represents:
+    if a <= b:
+        return if_result
+    else:
+        return else_result
     """
     return if_greater_eq(b, a, if_result, else_result)
 
@@ -1916,7 +2018,11 @@ def if_eq_zero(condition: symbol_expr_float,
                if_result: AnyCasType,
                else_result: AnyCasType) -> AnyCasType:
     """
-    :return: if_result if condition == 0 else else_result
+    Creates an expression that represents:
+    if condition == 0:
+        return if_result
+    else:
+        return else_result
     """
     return if_else(condition, else_result, if_result)
 
@@ -1925,6 +2031,13 @@ def if_eq(a: symbol_expr_float,
           b: symbol_expr_float,
           if_result: AnyCasType,
           else_result: AnyCasType) -> AnyCasType:
+    """
+    Creates an expression that represents:
+    if a == b:
+        return if_result
+    else:
+        return else_result
+    """
     a = Expression(a).s
     b = Expression(b).s
     return if_else(ca.eq(a, b), if_result, else_result)
@@ -1949,31 +2062,6 @@ def if_eq_cases(a: symbol_expr_float,
         b = _to_sx(b)
         b_result = _to_sx(b_result)
         result = ca.if_else(ca.eq(a, b), b_result, result)
-    return _recreate_return_type(result, return_type)
-
-
-def if_eq_cases_grouped(a: symbol_expr_float,
-                        b_result_cases: Iterable[Tuple[symbol_expr_float, AnyCasType]],
-                        else_result: AnyCasType) -> AnyCasType:
-    """
-    a: symbol (hash)
-    grouped_cases: list of tuples (hash_list, outcome) where hash_list is a list of hashes mapping to outcome.
-    else_result: default outcome if no hash matches.
-    """
-    return_type = _get_return_type(else_result)
-    groups = defaultdict(list)
-    for h, res in b_result_cases:
-        groups[res].append(_to_sx(h))
-    # Rearrange into (hash_list, result) tuples:
-    grouped_cases = [(hash_list, _to_sx(result)) for result, hash_list in groups.items()]
-    a = _to_sx(a)
-    result = _to_sx(else_result)
-    for hash_list, outcome in grouped_cases:
-        if len(hash_list) >= 2:
-            condition = _to_sx(logic_or(*[ca.eq(a, h) for h in hash_list], False))
-        else:
-            condition = ca.eq(a, hash_list[0])
-        result = ca.if_else(condition, outcome, result)
     return _recreate_return_type(result, return_type)
 
 
@@ -2071,22 +2159,6 @@ def trace(matrix: Union[Expression, RotationMatrix, TransformationMatrix]) -> Ex
     return Expression(s)
 
 
-# def rotation_distance(a_R_b, a_R_c):
-#     """
-#     :param a_R_b: 4x4 or 3x3 Matrix
-#     :param a_R_c: 4x4 or 3x3 Matrix
-#     :return: angle of axis angle representation of b_R_c
-#     """
-#     a_R_b = Expression(a_R_b).s
-#     a_R_c = Expression(a_R_c).s
-#     difference = dot(a_R_b.T, a_R_c)
-#     # return axis_angle_from_matrix(difference)[1]
-#     angle = (trace(difference[:3, :3]) - 1) / 2
-#     angle = min(angle, 1)
-#     angle = max(angle, -1)
-#     return acos(angle)
-
-
 def vstack(
         list_of_matrices: Union[List[Union[Point3, Vector3, Quaternion, TransformationMatrix, Expression]]]) \
         -> Expression:
@@ -2113,18 +2185,6 @@ def diag_stack(list_of_matrices: Union[List[TransformationMatrix], List[Expressi
         row_counter += matrix.shape[0]
         column_counter += matrix.shape[1]
     return combined_matrix
-
-
-def normalize_axis_angle(axis: Vector3, angle: symbol_expr_float) -> Tuple[Vector3, Expression]:
-    # todo add test
-    axis = if_less(angle, 0, -axis, axis)
-    angle = abs(angle)
-    return axis, angle
-
-
-def axis_angle_from_rpy(roll: symbol_expr_float, pitch: symbol_expr_float, yaw: symbol_expr_float) \
-        -> Tuple[Vector3, Expression]:
-    return Quaternion.from_rpy(roll, pitch, yaw).to_axis_angle()
 
 
 def cosine_distance(v0: symbol_expr_float, v1: symbol_expr_float) -> Expression:
@@ -2226,6 +2286,12 @@ def slerp(v1: Vector3, v2: Vector3, t: symbol_expr_float) -> Vector3:
 
 def save_division(nominator: AnyCasType, denominator: symbol_expr_float,
                   if_nan: Optional[AnyCasType] = None) -> AnyCasType:
+    """
+    A version of division where no sub-expression is ever NaN. The expression would evaluate to 'if_nan', but
+    you should probably never work with the 'if_nan' result. However, if one sub-expressions is NaN, the whole expression
+    evaluates to NaN, even if it is only in a branch of an if-else, that is not returned.
+    This method is a workaround for such cases.
+    """
     if if_nan is None:
         if isinstance(nominator, Vector3):
             if_nan = Vector3()
@@ -2242,11 +2308,25 @@ def save_division(nominator: AnyCasType, denominator: symbol_expr_float,
 
 
 def save_acos(angle: symbol_expr_float) -> Expression:
+    """
+    Limits the angle between -1 and 1 to avoid acos becoming NaN.
+    """
     angle = limit(angle, -1, 1)
     return acos(angle)
 
 
 def entrywise_product(matrix1: Expression, matrix2: Expression) -> Expression:
+    """
+    Computes the entrywise (element-wise) product of two matrices, assuming they have the same dimensions. The
+    operation multiplies each corresponding element of the input matrices and stores the result in a new matrix
+    of the same shape.
+
+    :param matrix1: The first matrix, represented as an object of type `Expression`, whose shape
+                    must match the shape of `matrix2`.
+    :param matrix2: The second matrix, represented as an object of type `Expression`, whose shape
+                    must match the shape of `matrix1`.
+    :return: A new matrix of type `Expression` containing the entrywise product of `matrix1` and `matrix2`.
+    """
     assert matrix1.shape == matrix2.shape
     result = zeros(*matrix1.shape)
     for i in range(matrix1.shape[0]):
@@ -2312,13 +2392,13 @@ def distance_point_to_line_segment(frame_P_current: Point3, frame_P_line_start: 
     frame_P_line_end = Point3.from_iterable(frame_P_line_end)
     frame_V_line_vec = frame_P_line_end - frame_P_line_start
     pnt_vec = frame_P_current - frame_P_line_start
-    line_len = norm(frame_V_line_vec)
+    line_len = frame_V_line_vec.norm()
     line_unitvec = frame_V_line_vec / line_len
     pnt_vec_scaled = pnt_vec / line_len
     t = line_unitvec @ pnt_vec_scaled
     t = limit(t, lower_limit=0.0, upper_limit=1.0)
     frame_V_offset = frame_V_line_vec * t
-    dist = norm(frame_V_offset - pnt_vec)
+    dist = (frame_V_offset - pnt_vec).norm()
     frame_P_nearest = frame_P_line_start + frame_V_offset
     return dist, frame_P_nearest
 
@@ -2327,7 +2407,7 @@ def distance_point_to_line(frame_P_point: Point3, frame_P_line_point: Point3, fr
         -> Expression:
     lp_vector = frame_P_point - frame_P_line_point
     cross_product = cross(lp_vector, frame_V_line_direction)
-    distance = norm(cross_product) / norm(frame_V_line_direction)
+    distance = cross_product.norm() / frame_V_line_direction.norm()
     return distance
 
 
@@ -2359,6 +2439,19 @@ def distance_point_to_plane_signed(frame_P_current: Point3, frame_V_v1: Vector3,
 
 def project_to_cone(frame_V_current: Vector3, frame_V_cone_axis: Vector3,
                     cone_theta: Union[Symbol, float, Expression]) -> Vector3:
+    """
+    Projects a given vector onto the boundary of a cone defined by its axis and angle.
+
+    This function computes the projection of a vector onto the boundary of a
+    cone specified by its axis and half-angle. It handles special cases where
+    the input vector is collinear with the cone's axis. The projection ensures
+    the resulting vector lies within the cone's boundary.
+
+    :param frame_V_current: The vector to be projected.
+    :param frame_V_cone_axis: The axis of the cone.
+    :param cone_theta: The half-angle of the cone in radians. Can be a symbolic value or a float.
+    :return: The projection of the input vector onto the cone's boundary.
+    """
     frame_V_cone_axis_norm = frame_V_cone_axis / norm(frame_V_cone_axis)
     beta = frame_V_current @ frame_V_cone_axis_norm
     norm_v = norm(frame_V_current)
@@ -2410,6 +2503,17 @@ def angle_between_vector(v1: Vector3, v2: Vector3) -> Expression:
 
 
 def rotational_error(r1: RotationMatrix, r2: RotationMatrix) -> Expression:
+    """
+    Calculate the rotational error between two rotation matrices.
+
+    This function computes the angular difference between two rotation matrices
+    by computing the dot product of the first matrix and the inverse of the second.
+    Subsequently, it generates the angle of the resulting rotation matrix.
+
+    :param r1: The first rotation matrix.
+    :param r2: The second rotation matrix.
+    :return: The angular error between the two rotation matrices as an expression.
+    """
     r_distance = r1.dot(r2.inverse())
     return r_distance.to_angle()
 
@@ -2597,6 +2701,19 @@ def gauss(n: symbol_expr_float) -> Expression:
 
 def substitute(expression: Union[Symbol, Expression], old_symbols: List[Symbol],
                new_symbols: List[Union[Symbol, Expression]]) -> Expression:
+    """
+    Replace symbols in an expression with new symbols or expressions.
+
+    This function substitutes symbols in the given expression with the provided
+    new symbols or expressions. It ensures that the original expression remains
+    unaltered and creates a new instance with the substitutions applied.
+
+    :param expression: The input mathematical expression that will undergo symbol replacement.
+    :param old_symbols: A list of symbols in the expression which need to be replaced.
+    :param new_symbols: A list of new symbols or expressions which will replace the old symbols.
+        The length of this list must correspond to the `old_symbols` list.
+    :return: A new expression with the specified symbols replaced.
+    """
     sx = expression.s
     old_symbols = Expression([_to_sx(s) for s in old_symbols]).s
     new_symbols = Expression([_to_sx(s) for s in new_symbols]).s
@@ -2610,8 +2727,16 @@ def matrix_inverse(a: Expression) -> Expression:
     return Expression(ca.inv(a.s))
 
 
-def gradient(ex: Expression, arg: Expression) -> Expression:
-    return Expression(ca.gradient(ex.s, arg.s))
+def gradient(expression: Expression, arg: Expression) -> Expression:
+    """
+    Computes the gradient of a mathematical expression with respect to a given argument. The gradient represents the
+    partial derivatives of the input expression with respect to each component of the argument.
+
+    :param expression: The mathematical expression for which the gradient will be computed.
+    :param arg: The argument with respect to which the gradient is calculated.
+    :return: An expression representing the gradient of the input expression with respect to the given argument.
+    """
+    return Expression(ca.gradient(expression.s, arg.s))
 
 
 def is_true_symbol(expr: Expression) -> bool:
@@ -2669,6 +2794,18 @@ def is_constant(expr: Expression) -> bool:
 
 
 def det(expr: Union[Expression, RotationMatrix, TransformationMatrix]) -> Expression:
+    """
+    Calculate the determinant of the given expression.
+
+    This function computes the determinant of the provided mathematical expression.
+    The input can be an instance of either `Expression`, `RotationMatrix`, or
+    `TransformationMatrix`. The result is returned as an `Expression`.
+
+    :param expr: The mathematical expression for which the determinant is
+        computed. It must be one of `Expression`, `RotationMatrix`, or
+        `TransformationMatrix`.
+    :return: An `Expression` representing the determinant of the input.
+    """
     return Expression(ca.det(expr.s))
 
 
@@ -2686,6 +2823,17 @@ def distance_vector_projected_on_plane(point1: Point3, point2: Point3, normal_ve
 
 
 def replace_with_three_logic(expr: Expression) -> Expression:
+    """
+    Converts a given logical expression into a three-valued logic expression.
+
+    This function recursively processes a logical expression and replaces it
+    with its three-valued logic equivalent. The three-valued logic can represent
+    true, false, or an indeterminate state. The method identifies specific
+    operations like NOT, AND, and OR and applies three-valued logic rules to them.
+
+    :param expr: The logical expression to be converted.
+    :return: The converted logical expression in three-valued logic.
+    """
     cas_expr = _to_sx(expr)
     if cas_expr.n_dep() == 0:
         if is_true_symbol(cas_expr):

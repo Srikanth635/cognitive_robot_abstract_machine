@@ -2015,7 +2015,7 @@ class TestCASWrapper:
                     assert 'NotImplementedType' not in str(e), error_msg
 
     def test_free_symbols(self):
-        m = cas.Expression(cas.var('a b c d'))
+        m = cas.Expression(cas.create_symbols(['a', 'b', 'c', 'd']))
         assert len(cas.free_symbols(m)) == 4
         a = cas.Symbol('a')
         assert cas.equivalent(a, cas.free_symbols(a)[0])
@@ -2169,8 +2169,8 @@ class TestCASWrapper:
                    + 12 * a * bd * b * cd * c ** 2
         assert_allclose(actual, expected)
 
-    def test_var(self):
-        result = cas.var('a b c')
+    def test_create_symbols(self):
+        result = cas.create_symbols(['a', 'b', 'c'])
         assert str(result[0]) == 'a'
         assert str(result[1]) == 'b'
         assert str(result[2]) == 'c'
@@ -2370,25 +2370,6 @@ class TestCASWrapper:
         expected = float(reference(a, b_result_cases, 0))
         assert_allclose(actual, expected)
 
-    @given(float_no_nan_no_inf())
-    def test_if_eq_cases_grouped(self, a):
-        b_result_cases = [(1, 1),
-                          (3, 1),
-                          (4, 1),
-                          (-1, 3),
-                          (0.5, 3),
-                          (-0.5, 1)]
-
-        def reference(a_, b_result_cases_, else_result):
-            for b, if_result in b_result_cases_:
-                if a_ == b:
-                    return if_result
-            return else_result
-
-        actual = cas.if_eq_cases_grouped(a, b_result_cases, 0)
-        expected = float(reference(a, b_result_cases, 0))
-        assert_allclose(actual, expected)
-
     @given(float_no_nan_no_inf(10))
     def test_if_less_eq_cases(self, a):
         b_result_cases = [
@@ -2496,17 +2477,6 @@ class TestCASWrapper:
             assert_allclose(giskard_math.shortest_angular_distance(actual_angle.to_np(), expected_angle), 0)
         except AssertionError:
             assert_allclose(giskard_math.shortest_angular_distance(actual_angle.to_np(), -expected_angle), 0)
-
-    @given(random_angle(),
-           random_angle(),
-           random_angle())
-    def test_axis_angle_from_rpy(self, roll, pitch, yaw):
-        expected_axis, expected_angle = giskard_math.axis_angle_from_rpy(roll, pitch, yaw)
-        expected_axis = np.array(list(list(expected_axis)))
-        axis = cas.axis_angle_from_rpy(roll, pitch, yaw)[0]
-        angle = cas.axis_angle_from_rpy(roll, pitch, yaw)[1]
-        compare_axis_angle(angle, axis[:3], expected_angle, expected_axis)
-        assert axis[-1] == 0
 
     @given(quaternion(),
            quaternion(),
@@ -2621,7 +2591,7 @@ class TestCASWrapper:
         assert cas.to_str(expr) == expr.pretty_str()
 
     def test_to_str2(self):
-        a, b = cas.var('a b')
+        a, b = cas.create_symbols(['a', 'b'])
         e = cas.if_eq(a, 0, a, b)
         assert cas.to_str(e) == [['(((a==0)?a:0)+((!(a==0))?b:0))']]
         assert cas.to_str(e) == e.pretty_str()
