@@ -17,7 +17,7 @@ import sys
 from scipy import sparse as sp
 
 if TYPE_CHECKING:
-    from ..world_entity import Body
+    from ..world_entity import KinematicStructureEntity
 
 builtin_max = builtins.max
 builtin_min = builtins.min
@@ -29,7 +29,7 @@ pi: float = ca.pi
 
 @dataclass
 class ReferenceFrameMixin:
-    reference_frame: Optional[Body]
+    reference_frame: Optional[KinematicStructureEntity]
 
 
 class StackedCompiledFunction:

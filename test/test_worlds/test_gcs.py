@@ -24,7 +24,7 @@ class GCSTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         world = World()
-        world.add_body(Body())
+        world.add_kinematic_structure_entity(Body())
         gcs = GraphOfConvexSets(world)
 
         obstacle = BoundingBox(0, 0, 0, 1, 1, 1, world.root)
@@ -66,7 +66,7 @@ class GCSFromWorldTestCase(unittest.TestCase):
     def setUpClass(cls):
         urdf_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "resources", "urdf")
         apartment = os.path.join(urdf_dir, "table.urdf")
-        apartment_parser = URDFParser(apartment)
+        apartment_parser = URDFParser.from_file(file_path=apartment)
         cls.world = apartment_parser.parse()
 
     def test_from_world(self):

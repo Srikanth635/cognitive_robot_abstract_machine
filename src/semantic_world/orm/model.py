@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-from ormatic.dao import AlternativeMapping, T
+from ormatic.dao import AlternativeMapping
 
 from ..degree_of_freedom import DegreeOfFreedom
 from ..prefixed_name import PrefixedName
@@ -23,14 +23,19 @@ class WorldMapping(AlternativeMapping[World]):
     @classmethod
     def create_instance(cls, obj: World):
         # return cls(obj.bodies[:2], [],[],[], )
-        return cls(obj.bodies, obj.connections, obj.views, list(obj.degrees_of_freedom))
+        return cls(
+            obj.kinematic_structure_entities,
+            obj.connections,
+            obj.views,
+            list(obj.degrees_of_freedom),
+        )
 
     def create_from_dao(self) -> World:
         result = World()
 
         with result.modify_world():
             for body in self.bodies:
-                result.add_body(body)
+                result.add_kinematic_structure_entity(body)
             for connection in self.connections:
                 result.add_connection(connection)
             for view in self.views:
@@ -63,7 +68,6 @@ class Vector3Mapping(AlternativeMapping[Vector3]):
 
     def create_from_dao(self) -> Vector3:
         return Vector3(x=self.x, y=self.y, z=self.z, reference_frame=None)
-
 
 
 @dataclass
@@ -145,6 +149,22 @@ class TransformationMatrixMapping(AlternativeMapping[TransformationMatrix]):
             point=self.position,
             rotation_matrix=RotationMatrix.from_quaternion(self.rotation), reference_frame=None,
             child_frame=self.child_frame, )
+
+
+@dataclass
+class DegreeOfFreedomMapping(AlternativeMapping[DegreeOfFreedom]):
+    name: PrefixedName
+    lower_limits: List[float]
+    upper_limits: List[float]
+
+    @classmethod
+    def create_instance(cls, obj: DegreeOfFreedom):
+        return cls(name=obj.name, lower_limits=obj.lower_limits.data, upper_limits=obj.upper_limits.data)
+
+    def create_from_dao(self) -> DegreeOfFreedom:
+        lower_limits = DerivativeMap(data=self.lower_limits)
+        upper_limits = DerivativeMap(data=self.upper_limits)
+        return DegreeOfFreedom(name=self.name, lower_limits=lower_limits, upper_limits=upper_limits)
 
 
 @dataclass

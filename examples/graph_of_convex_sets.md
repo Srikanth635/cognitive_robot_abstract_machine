@@ -47,7 +47,7 @@ with box_world.modify_world():
     box = Body(name=PrefixedName("box"), collision=[Box(scale=Scale(0.5, 0.5, 0.5),
                                                         color=Color(1., 1., 1., 1.),
                                                         origin=TransformationMatrix.from_xyz_rpy(0,0,0,0,0,0),) ])
-    box_world.add_body(box)
+    box_world.add_kinematic_structure_entity(box)
     
 ```
 
@@ -110,7 +110,7 @@ root = next(
 
 apartment = os.path.realpath(os.path.join(root, "resources", "urdf", "kitchen.urdf"))
 
-apartment_parser = URDFParser(apartment)
+apartment_parser = URDFParser.from_file(apartment)
 world = apartment_parser.parse()
 
 search_space = BoundingBox(min_x=-2, max_x=2,
