@@ -13,15 +13,20 @@ from semantic_world.spatial_types.math import shortest_angular_distance
 BIG_NUMBER = 1e100
 SMALL_NUMBER = 1e-100
 
+all_expressions_float_np = Union[
+    cas.SymbolicType,
+    float,
+    np.ndarray,
+]
 
-def to_float_or_np(x: cas.all_expressions_float_np) -> Union[float, np.ndarray]:
-    if isinstance(x, cas.all_expressions):
+def to_float_or_np(x: all_expressions_float_np) -> Union[float, np.ndarray]:
+    if isinstance(x, cas.SymbolicType):
         return x.to_np()
     return x
 
 
-def assert_allclose(a: cas.all_expressions_float_np,
-                    b: cas.all_expressions_float_np,
+def assert_allclose(a: all_expressions_float_np,
+                    b: all_expressions_float_np,
                     atol: float = 1e-3,
                     rtol: float = 1e-3,
                     equal_nan: bool = False):
@@ -42,10 +47,10 @@ def random_angle():
     return st.floats(-np.pi, np.pi)
 
 
-def compare_axis_angle(actual_angle: cas.all_expressions_float_np,
-                       actual_axis: cas.all_expressions_float_np,
-                       expected_angle: cas.symbol_expr_float,
-                       expected_axis: cas.all_expressions_float_np):
+def compare_axis_angle(actual_angle: all_expressions_float_np,
+                       actual_axis: all_expressions_float_np,
+                       expected_angle: cas.ScalarData,
+                       expected_axis: all_expressions_float_np):
     actual_angle = to_float_or_np(actual_angle)
     actual_axis = to_float_or_np(actual_axis)
     expected_angle = to_float_or_np(expected_angle)
@@ -64,8 +69,8 @@ def compare_axis_angle(actual_angle: cas.all_expressions_float_np,
             assert not np.any(np.isnan(expected_axis))
 
 
-def compare_orientations(actual_orientation: cas.all_expressions_float_np,
-                         desired_orientation: cas.all_expressions_float_np) -> None:
+def compare_orientations(actual_orientation: all_expressions_float_np,
+                         desired_orientation: all_expressions_float_np) -> None:
     try:
         assert_allclose(actual_orientation, desired_orientation)
     except:

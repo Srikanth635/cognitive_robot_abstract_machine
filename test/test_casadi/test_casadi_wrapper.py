@@ -1,16 +1,12 @@
-import math
-from typing import Union
-
-import pytest
-from datetime import timedelta
-import semantic_world.spatial_types.math as giskard_math
 import hypothesis.strategies as st
 import numpy as np
-from hypothesis import given, assume, settings
+import pytest
+from hypothesis import given, assume
+
+import semantic_world.spatial_types.math as giskard_math
 import semantic_world.spatial_types.spatial_types as cas
 from .utils_for_tests import float_no_nan_no_inf, quaternion, random_angle, unit_vector, compare_axis_angle, \
-    angle_positive, vector, lists_of_same_length, compare_orientations, sq_matrix, float_no_nan_no_inf_min_max, \
-    assert_allclose
+    angle_positive, vector, lists_of_same_length, compare_orientations, sq_matrix, assert_allclose
 
 
 def logic_not(a):
@@ -44,17 +40,6 @@ def logic_or(a, b):
         return cas.TrinaryUnknown
     else:
         raise ValueError(f'Invalid truth values: {a}, {b}')
-
-
-example_spatial_objects = [
-    cas.Symbol('s'),
-    cas.Expression(1),
-    cas.Point3(),
-    cas.Vector3(),
-    cas.Quaternion(),
-    cas.RotationMatrix(),
-    cas.TransformationMatrix()
-]
 
 
 class TestLogic3:
@@ -2597,6 +2582,6 @@ class TestCASWrapper:
         assert cas.to_str(e) == e.pretty_str()
 
     def test_leq_on_array(self):
-        a = cas.Expression(np.array([1,2,3,4]))
-        b = cas.Expression(np.array([2,2,2,2]))
+        a = cas.Expression(np.array([1, 2, 3, 4]))
+        b = cas.Expression(np.array([2, 2, 2, 2]))
         assert not cas.logic_all(cas.less_equal(a, b)).to_np()
