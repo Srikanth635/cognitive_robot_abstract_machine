@@ -22,6 +22,7 @@ class TrimeshCollisionDetector(CollisionDetector):
     """
     Last synced model version of the world
     """
+    _manager_objects: set[Body] = field(default_factory=set, init=False)
 
     def sync_world_model(self) -> None:
         """
@@ -29,8 +30,14 @@ class TrimeshCollisionDetector(CollisionDetector):
         """
         if self._last_synced_model == self._world._model_version:
             return
-        for body in self._world.bodies_with_enabled_collision:
+        bodies_to_be_removed = self._manager_objects - set(self._world.bodies_with_enabled_collision)
+        for body in bodies_to_be_removed:
+            self.collision_manager.remove_object(body.name.name)
+            self._manager_objects.remove(body)
+        bodies_to_be_added = set(self._world.bodies_with_enabled_collision) - self._manager_objects
+        for body in bodies_to_be_added:
             self.collision_manager.add_object(body.name.name, body.combined_collision_mesh, body.global_pose.to_np())
+            self._manager_objects.add(body)
         self._last_synced_model = self._world._model_version
 
     def sync_world_state(self) -> None:
@@ -60,8 +67,9 @@ class TrimeshCollisionDetector(CollisionDetector):
                             self._world.get_kinematic_structure_entity_by_name(pair[1])) for pair in collisions[1]]
         result_set = set()
         for pair in collision_pairs:
-            if pair in [(c.body_a, c.body_b) for c in collision_matrix or []] or (pair[1], pair[0]) in [
-                (c.body_a, c.body_b) for c in collision_matrix or []] or collision_matrix is None:
+            if (pair in [(c.body_a, c.body_b) for c in collision_matrix or []]
+                or (pair[1], pair[0]) in [(c.body_a, c.body_b) for c in collision_matrix or []]
+                or collision_matrix is None):
                 for data in collisions[2]:
                     if data.names == {pair[0].name.name, pair[1].name.name} or data.names == {
                         pair[1].name.name, pair[0].name.name}:

@@ -169,6 +169,10 @@ class Body(KinematicStructureEntity):
 
     @cached_property
     def combined_collision_mesh(self) -> Trimesh:
+        """
+        Combines all collision meshes into a single mesh, applying the respective transformations.
+        :return: A single Trimesh representing the combined collision geometry.
+        """
         transformed_meshes = []
         for shape in self.collision:
             transform = shape.origin.to_np()
