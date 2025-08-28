@@ -83,10 +83,10 @@ class WorldStatePublisherTestCase(unittest.TestCase):
         assert len(query) == 1
         assert w2.get_kinematic_structure_entity_by_name("b2")
 
-    def test_model_synchronization(self):
+    def test_model_synchronization_body_only(self):
 
-        w1 = World(name="w1") # self.create_dummy_world()
-        w2 = World(name="w2") # self.create_dummy_world()
+        w1 = World(name="w1")
+        w2 = World(name="w2")
 
         synchronizer_1 = WorldSynchronizer(
             self.node, w1, subscribe=False
@@ -96,15 +96,36 @@ class WorldStatePublisherTestCase(unittest.TestCase):
         with w1.modify_world():
             new_body = Body(name=PrefixedName("b3"))
             w1.add_kinematic_structure_entity(new_body)
-            # parent = w1.get_kinematic_structure_entity_by_name("b2")
-            # c = Connection6DoF(parent, new_body, _world=w1)
-            # w1.add_connection(c)
+
         time.sleep(0.1)
         self.assertEqual(len(w1.kinematic_structure_entities), 1)
         self.assertEqual(len(w2.kinematic_structure_entities), 1)
 
-
         assert w2.get_kinematic_structure_entity_by_name("b3")
+
+    def test_model_synchronization_creation_only(self):
+
+        w1 = World(name="w1")
+        w2 = World(name="w2")
+
+        synchronizer_1 = WorldSynchronizer(self.node, w1, subscribe=False)
+        synchronizer_2 = WorldSynchronizer(self.node, w2)
+
+        with w1.modify_world():
+            b2 = Body(name=PrefixedName("b2"))
+            w1.add_kinematic_structure_entity(b2)
+
+            new_body = Body(name=PrefixedName("b3"))
+            w1.add_kinematic_structure_entity(new_body)
+
+            c = Connection6DoF(b2, new_body, _world=w1)
+            w1.add_connection(c)
+        time.sleep(0.1)
+        self.assertEqual(len(w1.kinematic_structure_entities), 2)
+        self.assertEqual(len(w2.kinematic_structure_entities), 2)
+        self.assertEqual(len(w1.connections), 1)
+        self.assertEqual(len(w2.connections), 1)
+
 
     @classmethod
     def tearDownClass(cls):

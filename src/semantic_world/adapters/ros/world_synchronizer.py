@@ -19,6 +19,8 @@ from ...world_modification import (
     WorldModelModificationBlock,
     WorldModelModification,
     AddBodyModification,
+    RemoveBodyModification,
+    AddConnectionModification,
 )
 
 
@@ -267,6 +269,10 @@ class WorldSynchronizer:
         for call, kwargs in latest_calls:
             if call.__name__ == self.world.add_kinematic_structure_entity.__name__:
                 modification = AddBodyModification(kwargs["kinematic_structure_entity"])
+            elif call.__name__ == self.world.remove_kinematic_structure_entity.__name__:
+                modification = RemoveBodyModification(kwargs["kinematic_structure_entity"].name)
+            elif call.__name__ == self.world.add_connection.__name__:
+                modification = AddConnectionModification(kwargs["connection"])
             else:
                 raise NotImplementedError
 
