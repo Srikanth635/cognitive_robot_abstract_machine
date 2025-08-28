@@ -439,14 +439,6 @@ class AbstractRobot(RootedView, ABC):
         self._views.add(kinematic_chain)
         kinematic_chain.assign_to_robot(self)
 
-    @cached_property
-    def unmovable_bodies_with_collision(self) -> Set[Body]:
-        result = set()
-        for body in self.bodies_with_enabled_collision:
-            if not self._world.is_controlled_connection_in_chain(self._world.root, body):
-                result.add(body)
-        return result
-
 @dataclass
 class PR2(AbstractRobot):
     """
