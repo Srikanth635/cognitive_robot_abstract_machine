@@ -682,7 +682,7 @@ BinaryFalse = Expression(False)
 
 
 class TransformationMatrix(Symbol_, ReferenceFrameMixin):
-    child_frame: Optional[Body]
+    child_frame: Optional[KinematicStructureEntity]
 
     def __init__(self, data: Optional[Union[TransformationMatrix,
     RotationMatrix,
@@ -690,8 +690,8 @@ class TransformationMatrix(Symbol_, ReferenceFrameMixin):
     np.ndarray,
     Expression,
     Iterable[Iterable[symbol_expr_float]]]] = None,
-                 reference_frame: Optional[Body] = None,
-                 child_frame: Optional[Body] = None,
+                 reference_frame: Optional[KinematicStructureEntity] = None,
+                 child_frame: Optional[KinematicStructureEntity] = None,
                  sanity_check: bool = True):
         self.reference_frame = reference_frame
         self.child_frame = child_frame
@@ -744,8 +744,8 @@ class TransformationMatrix(Symbol_, ReferenceFrameMixin):
     def from_point_rotation_matrix(cls,
                                    point: Optional[Point3] = None,
                                    rotation_matrix: Optional[RotationMatrix] = None,
-                                   reference_frame: Optional[Body] = None,
-                                   child_frame: Optional[Body] = None) -> TransformationMatrix:
+                                   reference_frame: Optional[KinematicStructureEntity] = None,
+                                   child_frame: Optional[KinematicStructureEntity] = None) -> TransformationMatrix:
         if rotation_matrix is None:
             a_T_b = cls(reference_frame=reference_frame, child_frame=child_frame)
         else:
@@ -792,8 +792,8 @@ class TransformationMatrix(Symbol_, ReferenceFrameMixin):
                      roll: Optional[symbol_expr_float] = 0,
                      pitch: Optional[symbol_expr_float] = 0,
                      yaw: Optional[symbol_expr_float] = 0,
-                     reference_frame: Optional[Body] = None,
-                     child_frame: Optional[Body] = None) -> TransformationMatrix:
+                     reference_frame: Optional[KinematicStructureEntity] = None,
+                     child_frame: Optional[KinematicStructureEntity] = None) -> TransformationMatrix:
         p = Point3(x, y, z)
         r = RotationMatrix.from_rpy(roll, pitch, yaw)
         return cls.from_point_rotation_matrix(p, r, reference_frame=reference_frame, child_frame=child_frame)
@@ -803,7 +803,7 @@ class TransformationMatrix(Symbol_, ReferenceFrameMixin):
                       pos_x: symbol_expr_float = 0, pos_y: symbol_expr_float = 0, pos_z: symbol_expr_float = 00,
                       quat_w: symbol_expr_float = 0, quat_x: symbol_expr_float = 0,
                       quat_y: symbol_expr_float = 0, quat_z: symbol_expr_float = 1,
-                      reference_frame: Optional[Body] = None, child_frame: Optional[Body] = None) \
+                      reference_frame: Optional[KinematicStructureEntity] = None, child_frame: Optional[KinematicStructureEntity] = None) \
             -> TransformationMatrix:
         p = Point3(pos_x, pos_y, pos_z)
         r = RotationMatrix.from_quaternion(q=Quaternion(w=quat_w, x=quat_x, y=quat_y, z=quat_z))
@@ -841,7 +841,7 @@ class TransformationMatrix(Symbol_, ReferenceFrameMixin):
 
 
 class RotationMatrix(Symbol_, ReferenceFrameMixin):
-    child_frame: Optional[Body]
+    child_frame: Optional[KinematicStructureEntity]
 
     def __init__(self,
                  data: Optional[Union[TransformationMatrix,
@@ -851,8 +851,8 @@ class RotationMatrix(Symbol_, ReferenceFrameMixin):
                  ca.SX,
                  np.ndarray,
                  Iterable[Iterable[symbol_expr_float]]]] = None,
-                 reference_frame: Optional[Body] = None,
-                 child_frame: Optional[Body] = None,
+                 reference_frame: Optional[KinematicStructureEntity] = None,
+                 child_frame: Optional[KinematicStructureEntity] = None,
                  sanity_check: bool = True):
         self.reference_frame = reference_frame
         self.child_frame = child_frame
@@ -883,7 +883,7 @@ class RotationMatrix(Symbol_, ReferenceFrameMixin):
             self[3, 3] = 1
 
     @classmethod
-    def from_axis_angle(cls, axis: Vector3, angle: symbol_expr_float, reference_frame: Optional[Body] = None) \
+    def from_axis_angle(cls, axis: Vector3, angle: symbol_expr_float, reference_frame: Optional[KinematicStructureEntity] = None) \
             -> RotationMatrix:
         """
         Conversion of unit axis and angle to 4x4 rotation matrix according to:
@@ -1007,7 +1007,7 @@ class RotationMatrix(Symbol_, ReferenceFrameMixin):
                      x: Optional[Vector3] = None,
                      y: Optional[Vector3] = None,
                      z: Optional[Vector3] = None,
-                     reference_frame: Optional[Body] = None) -> RotationMatrix:
+                     reference_frame: Optional[KinematicStructureEntity] = None) -> RotationMatrix:
         """
         Create a rotation matrix from 2 or 3 orthogonal vectors.
 
@@ -1041,7 +1041,7 @@ class RotationMatrix(Symbol_, ReferenceFrameMixin):
                  roll: Optional[symbol_expr_float] = None,
                  pitch: Optional[symbol_expr_float] = None,
                  yaw: Optional[symbol_expr_float] = None,
-                 reference_frame: Optional[Body] = None) -> RotationMatrix:
+                 reference_frame: Optional[KinematicStructureEntity] = None) -> RotationMatrix:
         """
         Conversion of roll, pitch, yaw to 4x4 rotation matrix according to:
         https://github.com/orocos/orocos_kinematics_dynamics/blob/master/orocos_kdl/src/frames.cpp#L167
@@ -1119,7 +1119,7 @@ class Point3(Symbol_, ReferenceFrameMixin):
                  x: symbol_expr_float = 0,
                  y: symbol_expr_float = 0,
                  z: symbol_expr_float = 0,
-                 reference_frame: Optional[Body] = None):
+                 reference_frame: Optional[KinematicStructureEntity] = None):
         self.reference_frame = reference_frame
         # casadi can't be initialized with an array that mixes int/float and SX
         self.s = ca.SX([0, 0, 0, 1])
@@ -1131,7 +1131,7 @@ class Point3(Symbol_, ReferenceFrameMixin):
     def from_iterable(cls,
                       data: Optional[
                           Union[Expression, Point3, Vector3, ca.SX, np.ndarray, Iterable[symbol_expr_float]]] = None,
-                      reference_frame: Optional[Body] = None) -> Point3:
+                      reference_frame: Optional[KinematicStructureEntity] = None) -> Point3:
         if isinstance(data, (Quaternion, RotationMatrix, TransformationMatrix)):
             raise TypeError(f'Can\'t create a Point3 form {type(data)}')
         if hasattr(data, 'shape') and len(data.shape) > 1 and data.shape[1] != 1:
@@ -1200,13 +1200,13 @@ class Point3(Symbol_, ReferenceFrameMixin):
 
 
 class Vector3(Symbol_, ReferenceFrameMixin):
-    vis_frame: Optional[Body]
+    vis_frame: Optional[KinematicStructureEntity]
 
     def __init__(self,
                  x: symbol_expr_float = 0,
                  y: symbol_expr_float = 0,
                  z: symbol_expr_float = 0,
-                 reference_frame: Optional[Body] = None):
+                 reference_frame: Optional[KinematicStructureEntity] = None):
         point = Point3(x, y, z, reference_frame=reference_frame)
         self.s = point.s
         self.reference_frame = point.reference_frame
@@ -1218,7 +1218,7 @@ class Vector3(Symbol_, ReferenceFrameMixin):
     ca.SX,
     np.ndarray,
     Iterable[symbol_expr_float]]] = None,
-                      reference_frame: Optional[Body] = None) -> Vector3:
+                      reference_frame: Optional[KinematicStructureEntity] = None) -> Vector3:
         if isinstance(data, (Quaternion, RotationMatrix, TransformationMatrix)):
             raise TypeError(f'Can\'t create a Vector3 form {type(data)}')
         if hasattr(data, 'shape') and len(data.shape) > 1 and data.shape[1] != 1:
@@ -1231,20 +1231,20 @@ class Vector3(Symbol_, ReferenceFrameMixin):
         return result
 
     @classmethod
-    def X(cls, reference_frame: Optional[Body] = None) -> Vector3:
+    def X(cls, reference_frame: Optional[KinematicStructureEntity] = None) -> Vector3:
         return cls(x=1, y=0, z=0, reference_frame=reference_frame)
 
     @classmethod
-    def Y(cls, reference_frame: Optional[Body] = None) -> Vector3:
+    def Y(cls, reference_frame: Optional[KinematicStructureEntity] = None) -> Vector3:
         return cls(x=0, y=1, z=0, reference_frame=reference_frame)
 
     @classmethod
-    def Z(cls, reference_frame: Optional[Body] = None) -> Vector3:
+    def Z(cls, reference_frame: Optional[KinematicStructureEntity] = None) -> Vector3:
         return cls(x=0, y=0, z=1, reference_frame=reference_frame)
 
     @classmethod
     def unit_vector(cls, x: symbol_expr_float = 0, y: symbol_expr_float = 0, z: symbol_expr_float = 0,
-                    reference_frame: Optional[Body] = None) -> Vector3:
+                    reference_frame: Optional[KinematicStructureEntity] = None) -> Vector3:
         v = cls(x, y, z, reference_frame=reference_frame)
         v.scale(1, unsafe=True)
         return v
@@ -1345,7 +1345,7 @@ class Vector3(Symbol_, ReferenceFrameMixin):
 class Quaternion(Symbol_, ReferenceFrameMixin):
     def __init__(self, x: symbol_expr_float = 0.0, y: symbol_expr_float = 0.0,
                  z: symbol_expr_float = 0.0, w: symbol_expr_float = 1.0,
-                 reference_frame: Optional[Body] = None):
+                 reference_frame: Optional[KinematicStructureEntity] = None):
         if hasattr(x, 'shape') and x.shape not in (tuple(), (1, 1)):
             raise ValueError('x, y, z, w must be scalars')
         self.reference_frame = reference_frame
@@ -1363,7 +1363,7 @@ class Quaternion(Symbol_, ReferenceFrameMixin):
     symbol_expr_float,
     symbol_expr_float,
     symbol_expr_float]]] = None,
-                      reference_frame: Optional[Body] = None) -> Quaternion:
+                      reference_frame: Optional[KinematicStructureEntity] = None) -> Quaternion:
         if isinstance(data, (Point3, Vector3, RotationMatrix, TransformationMatrix)):
             raise TypeError(f'Can\'t create a Quaternion form {type(data)}')
         if hasattr(data, 'shape') and len(data.shape) > 1 and data.shape[1] != 1:
@@ -1405,7 +1405,8 @@ class Quaternion(Symbol_, ReferenceFrameMixin):
         self[3] = value
 
     @classmethod
-    def from_axis_angle(cls, axis: Vector3, angle: symbol_expr_float, reference_frame: Optional[Body] = None) \
+    def from_axis_angle(cls, axis: Vector3, angle: symbol_expr_float,
+                        reference_frame: Optional[KinematicStructureEntity] = None) \
             -> Quaternion:
         half_angle = angle / 2
         return cls(axis[0] * sin(half_angle),
@@ -1416,10 +1417,10 @@ class Quaternion(Symbol_, ReferenceFrameMixin):
 
     @classmethod
     def from_rpy(cls, roll: symbol_expr_float, pitch: symbol_expr_float, yaw: symbol_expr_float,
-                 reference_frame: Optional[Body] = None) -> Quaternion:
-        roll = Expression(roll).s
-        pitch = Expression(pitch).s
-        yaw = Expression(yaw).s
+                 reference_frame: Optional[KinematicStructureEntity] = None) -> Quaternion:
+        roll = _to_sx(roll)
+        pitch = _to_sx(pitch)
+        yaw = _to_sx(yaw)
         roll_half = roll / 2.0
         pitch_half = pitch / 2.0
         yaw_half = yaw / 2.0
@@ -1616,7 +1617,7 @@ def diag(args: Union[List[symbol_expr_float], Expression]) -> Expression:
     try:
         return Expression(ca.diag(args.s))
     except AttributeError:
-        return Expression(ca.diag(Expression(args).s))
+        return Expression(ca.diag(_to_sx(args)))
 
 
 def hessian(expressions: Union[symbol_expr, List[symbol_expr]], symbols: Iterable[Symbol]) -> Expression:
@@ -1714,8 +1715,8 @@ def jacobian_ddot(expressions: Expression,
 
 
 def equivalent(expression1: symbol_expr, expression2: symbol_expr) -> bool:
-    expression1 = Expression(expression1).s
-    expression2 = Expression(expression2).s
+    expression1 = _to_sx(expression1)
+    expression2 = _to_sx(expression2)
     return ca.is_equal(ca.simplify(expression1), ca.simplify(expression2), 5)
 
 
@@ -1792,8 +1793,8 @@ def if_else(condition: symbol_expr_float, if_result: AnyCasType, else_result: An
         assert type(if_result) == type(else_result), \
             f'if_else: result types are not equal {type(if_result)} != {type(else_result)}'
     return_type = _get_return_type(if_result)
-    if_result = Expression(if_result).s
-    else_result = Expression(else_result).s
+    if_result = _to_sx(if_result)
+    else_result = _to_sx(else_result)
     return _recreate_return_type(ca.if_else(condition, if_result, else_result), return_type)
 
 
@@ -1995,8 +1996,8 @@ def if_greater_eq(a: symbol_expr_float,
     else:
         return else_result
     """
-    a = Expression(a).s
-    b = Expression(b).s
+    a = _to_sx(a)
+    b = _to_sx(b)
     return if_else(ca.ge(a, b), if_result, else_result)
 
 
@@ -2038,8 +2039,8 @@ def if_eq(a: symbol_expr_float,
     else:
         return else_result
     """
-    a = Expression(a).s
-    b = Expression(b).s
+    a = _to_sx(a)
+    b = _to_sx(b)
     return if_else(ca.eq(a, b), if_result, else_result)
 
 
@@ -2126,7 +2127,7 @@ def cross(u: Union[Vector3, Expression], v: Union[Vector3, Expression]) -> Vecto
 def norm(v: Union[Vector3, Point3, Expression, Quaternion]) -> Expression:
     if isinstance(v, (Point3, Vector3)):
         return Expression(ca.norm_2(v[:3].s))
-    v = Expression(v).s
+    v = _to_sx(v)
     return Expression(ca.norm_2(v))
 
 
@@ -2146,13 +2147,29 @@ def eye(size: int) -> Expression:
 
 
 def kron(m1: Expression, m2: Expression) -> Expression:
-    m1 = Expression(m1).s
-    m2 = Expression(m2).s
+    """
+    Compute the Kronecker product of two given matrices.
+
+    The Kronecker product is a block matrix construction, derived from the
+    direct product of two matrices. It combines the entries of the first
+    matrix (`m1`) with each entry of the second matrix (`m2`) by a rule
+    of scalar multiplication. This operation extends to any two matrices
+    of compatible shapes.
+
+    :param m1: The first matrix to be used in calculating the Kronecker product.
+               Supports symbolic or numerical matrix types.
+    :param m2: The second matrix to be used in calculating the Kronecker product.
+               Supports symbolic or numerical matrix types.
+    :return: An Expression representing the resulting Kronecker product as a
+             symbolic or numerical matrix of appropriate size.
+    """
+    m1 = _to_sx(m1)
+    m2 = _to_sx(m2)
     return Expression(ca.kron(m1, m2))
 
 
 def trace(matrix: Union[Expression, RotationMatrix, TransformationMatrix]) -> Expression:
-    matrix = Expression(matrix).s
+    matrix = _to_sx(matrix)
     s = 0
     for i in range(matrix.shape[0]):
         s += matrix[i, i]
@@ -2201,8 +2218,8 @@ def euclidean_distance(v1: array_like_expressions, v2: array_like_expressions) -
 
 
 def fmod(a: symbol_expr_float, b: symbol_expr_float) -> Expression:
-    a = Expression(a).s
-    b = Expression(b).s
+    a = _to_sx(a)
+    b = _to_sx(b)
     return Expression(ca.fmod(a, b))
 
 
@@ -2336,22 +2353,22 @@ def entrywise_product(matrix1: Expression, matrix2: Expression) -> Expression:
 
 
 def floor(x: symbol_expr_float) -> Expression:
-    x = Expression(x).s
+    x = _to_sx(x)
     return Expression(ca.floor(x))
 
 
 def ceil(x: symbol_expr_float) -> Expression:
-    x = Expression(x).s
+    x = _to_sx(x)
     return Expression(ca.ceil(x))
 
 
 def round_up(x: symbol_expr_float, decimal_places: symbol_expr_float) -> Expression:
-    f = 10 ** (decimal_places)
+    f = 10 ** decimal_places
     return ceil(x * f) / f
 
 
 def round_down(x: symbol_expr_float, decimal_places: symbol_expr_float) -> Expression:
-    f = 10 ** (decimal_places)
+    f = 10 ** decimal_places
     return floor(x * f) / f
 
 
@@ -2359,7 +2376,7 @@ def sum(matrix: Expression) -> Expression:
     """
     the equivalent to np.sum(matrix)
     """
-    matrix = Expression(matrix).s
+    matrix = _to_sx(matrix)
     return Expression(ca.sum1(ca.sum2(matrix)))
 
 
@@ -2367,7 +2384,7 @@ def sum_row(matrix: Expression) -> Expression:
     """
     the equivalent to np.sum(matrix, axis=0)
     """
-    matrix = Expression(matrix).s
+    matrix = _to_sx(matrix)
     return Expression(ca.sum1(matrix))
 
 
@@ -2375,7 +2392,7 @@ def sum_column(matrix: Expression) -> Expression:
     """
     the equivalent to np.sum(matrix, axis=1)
     """
-    matrix = Expression(matrix).s
+    matrix = _to_sx(matrix)
     return Expression(ca.sum2(matrix))
 
 
@@ -2594,58 +2611,58 @@ def second_order_total_derivative(expr: Union[Symbol, Expression],
 
 
 def sign(x: symbol_expr_float) -> Expression:
-    x = Expression(x).s
+    x = _to_sx(x)
     return Expression(ca.sign(x))
 
 
 def cos(x: symbol_expr_float) -> Expression:
-    x = Expression(x).s
+    x = _to_sx(x)
     return Expression(ca.cos(x))
 
 
 def sin(x: symbol_expr_float) -> Expression:
-    x = Expression(x).s
+    x = _to_sx(x)
     return Expression(ca.sin(x))
 
 
 def exp(x: symbol_expr_float) -> Expression:
-    x = Expression(x).s
+    x = _to_sx(x)
     return Expression(ca.exp(x))
 
 
 def log(x: symbol_expr_float) -> Expression:
-    x = Expression(x).s
+    x = _to_sx(x)
     return Expression(ca.log(x))
 
 
 def tan(x: symbol_expr_float) -> Expression:
-    x = Expression(x).s
+    x = _to_sx(x)
     return Expression(ca.tan(x))
 
 
 def cosh(x: symbol_expr_float) -> Expression:
-    x = Expression(x).s
+    x = _to_sx(x)
     return Expression(ca.cosh(x))
 
 
 def sinh(x: symbol_expr_float) -> Expression:
-    x = Expression(x).s
+    x = _to_sx(x)
     return Expression(ca.sinh(x))
 
 
 def sqrt(x: symbol_expr_float) -> Expression:
-    x = Expression(x).s
+    x = _to_sx(x)
     return Expression(ca.sqrt(x))
 
 
 def acos(x: symbol_expr_float) -> Expression:
-    x = Expression(x).s
+    x = _to_sx(x)
     return Expression(ca.acos(x))
 
 
 def atan2(x: symbol_expr_float, y: symbol_expr_float) -> Expression:
-    x = Expression(x).s
-    y = Expression(y).s
+    x = _to_sx(x)
+    y = _to_sx(y)
     return Expression(ca.atan2(x, y))
 
 
