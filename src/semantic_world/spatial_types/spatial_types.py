@@ -843,13 +843,14 @@ class TransformationMatrix(Symbol_, ReferenceFrameMixin):
 class RotationMatrix(Symbol_, ReferenceFrameMixin):
     child_frame: Optional[Body]
 
-    def __init__(self, data: Optional[Union[TransformationMatrix,
-    RotationMatrix,
-    Expression,
-    Quaternion,
-    ca.SX,
-    np.ndarray,
-    Iterable[Iterable[symbol_expr_float]]]] = None,
+    def __init__(self,
+                 data: Optional[Union[TransformationMatrix,
+                 RotationMatrix,
+                 Expression,
+                 Quaternion,
+                 ca.SX,
+                 np.ndarray,
+                 Iterable[Iterable[symbol_expr_float]]]] = None,
                  reference_frame: Optional[Body] = None,
                  child_frame: Optional[Body] = None,
                  sanity_check: bool = True):
@@ -1166,40 +1167,11 @@ class Point3(Symbol_, ReferenceFrameMixin):
     def z(self, value: symbol_expr_float):
         self[2] = value
 
-    @overload
-    def __matmul__(self, other: Point3) -> Expression:
-        ...
-
-    @overload
-    def __matmul__(self, other: Vector3) -> Expression:
-        ...
-
-    def __matmul__(self, other):
-        return self.dot(other)
-
-    @overload
-    def __add__(self, other: Union[Vector3, Symbol, Expression]) -> Point3:
-        ...
-
-    @overload
-    def __add__(self, other: float) -> Point3:
-        ...
-
-    def __add__(self, other):
-        if isinstance(other, (int, float)):
-            result = Point3.from_iterable(self.s.__add__(other))
-        elif isinstance(other, (Vector3, Expression, Symbol)):
+    def __add__(self, other: Vector3) -> Point3:
+        if isinstance(other, Vector3):
             result = Point3.from_iterable(self.s.__add__(other.s))
         else:
             raise _operation_type_error(self, '+', other)
-        result.reference_frame = self.reference_frame
-        return result
-
-    def __radd__(self, other: float) -> Point3:
-        if isinstance(other, (int, float)):
-            result = Point3.from_iterable(self.s.__add__(other))
-        else:
-            raise _operation_type_error(other, '+', self)
         result.reference_frame = self.reference_frame
         return result
 
@@ -1211,75 +1183,13 @@ class Point3(Symbol_, ReferenceFrameMixin):
     def __sub__(self, other: Vector3) -> Point3:
         ...
 
-    @overload
-    def __sub__(self, other: Union[Symbol, Expression, float]) -> Point3:
-        ...
-
     def __sub__(self, other):
-        if isinstance(other, (int, float)):
-            result = Point3.from_iterable(self.s.__sub__(other))
-        elif isinstance(other, Point3):
+        if isinstance(other, Point3):
             result = Vector3.from_iterable(self.s.__sub__(other.s))
-        elif isinstance(other, (Symbol, Expression, Vector3)):
+        elif isinstance(other, Vector3):
             result = Point3.from_iterable(self.s.__sub__(other.s))
         else:
             raise _operation_type_error(self, '-', other)
-        result.reference_frame = self.reference_frame
-        return result
-
-    def __rsub__(self, other: float) -> Point3:
-        if isinstance(other, (int, float)):
-            result = Point3.from_iterable(self.s.__rsub__(other))
-        else:
-            raise _operation_type_error(other, '-', self)
-        result.reference_frame = self.reference_frame
-        return result
-
-    def __mul__(self, other: Union[Symbol, Expression, float]) -> Point3:
-        if isinstance(other, (int, float)):
-            result = Point3.from_iterable(self.s.__mul__(other))
-        elif isinstance(other, (Symbol, Expression)):
-            result = Point3.from_iterable(self.s.__mul__(other.s))
-        else:
-            raise _operation_type_error(self, '*', other)
-        result.reference_frame = self.reference_frame
-        return result
-
-    def __rmul__(self, other: float) -> Point3:
-        if isinstance(other, (int, float)):
-            result = Point3.from_iterable(self.s.__mul__(other))
-        else:
-            raise _operation_type_error(other, '*', self)
-        result.reference_frame = self.reference_frame
-        return result
-
-    @overload
-    def __truediv__(self, other: Symbol) -> Point3:
-        ...
-
-    @overload
-    def __truediv__(self, other: Expression) -> Point3:
-        ...
-
-    @overload
-    def __truediv__(self, other: float) -> Point3:
-        ...
-
-    def __truediv__(self, other):
-        if isinstance(other, (int, float)):
-            result = Point3.from_iterable(self.s.__truediv__(other))
-        elif isinstance(other, (Symbol, Expression)):
-            result = Point3.from_iterable(self.s.__truediv__(other.s))
-        else:
-            raise _operation_type_error(self, '/', other)
-        result.reference_frame = self.reference_frame
-        return result
-
-    def __rtruediv__(self, other: float) -> Point3:
-        if isinstance(other, (int, float)):
-            result = Point3.from_iterable(self.s.__rtruediv__(other))
-        else:
-            raise _operation_type_error(other, '/', self)
         result.reference_frame = self.reference_frame
         return result
 
@@ -1287,29 +1197,6 @@ class Point3(Symbol_, ReferenceFrameMixin):
         result = Point3.from_iterable(self.s.__neg__())
         result.reference_frame = self.reference_frame
         return result
-
-    def __pow__(self, other: symbol_expr_float) -> Point3:
-        if isinstance(other, (int, float)):
-            result = Point3.from_iterable(self.s.__pow__(other))
-        elif isinstance(other, (Symbol, Expression)):
-            result = Point3.from_iterable(self.s.__pow__(other.s))
-        else:
-            raise _operation_type_error(self, '**', other)
-        result.reference_frame = self.reference_frame
-        return result
-
-    def __rpow__(self, other: float) -> Point3:
-        if isinstance(other, (int, float)):
-            result = Point3.from_iterable(self.s.__rpow__(other))
-        else:
-            raise _operation_type_error(other, '**', self)
-        result.reference_frame = self.reference_frame
-        return result
-
-    def dot(self, other: Union[Point3, Vector3]) -> Expression:
-        if isinstance(other, (Point3, Vector3)):
-            return Expression(ca.mtimes(self[:3].T.s, other[:3].s))
-        raise _operation_type_error(self, 'dot', other)
 
 
 class Vector3(Symbol_, ReferenceFrameMixin):
@@ -1386,94 +1273,25 @@ class Vector3(Symbol_, ReferenceFrameMixin):
     def z(self, value: symbol_expr_float):
         self[2] = value
 
-    def __matmul__(self, other: Union[Point3, Vector3]) -> Expression:
-        return self.dot(other)
-
-    @overload
-    def __add__(self, other: Point3) -> Point3:
-        ...
-
-    @overload
     def __add__(self, other: Vector3) -> Vector3:
-        ...
-
-    @overload
-    def __add__(self, other: Symbol) -> Vector3:
-        ...
-
-    @overload
-    def __add__(self, other: Expression) -> Vector3:
-        ...
-
-    @overload
-    def __add__(self, other: float) -> Vector3:
-        ...
-
-    def __add__(self, other):
-        if isinstance(other, (int, float)):
-            result = Vector3.from_iterable(self.s.__add__(other))
-        elif isinstance(other, Point3):
-            result = Point3.from_iterable(self.s.__add__(other.s))
-        elif isinstance(other, (Vector3, Expression, Symbol)):
+        if isinstance(other, Vector3):
             result = Vector3.from_iterable(self.s.__add__(other.s))
         else:
             raise _operation_type_error(self, '+', other)
         result.reference_frame = self.reference_frame
         return result
 
-    def __radd__(self, other: float) -> Vector3:
-        if isinstance(other, (int, float)):
-            result = Vector3.from_iterable(self.s.__add__(other))
-        else:
-            raise _operation_type_error(other, '+', self)
-        result.reference_frame = self.reference_frame
-        return result
-
-    @overload
     def __sub__(self, other: Vector3) -> Vector3:
-        ...
-
-    @overload
-    def __sub__(self, other: Point3) -> Point3:
-        ...
-
-    @overload
-    def __sub__(self, other: Symbol) -> Vector3:
-        ...
-
-    @overload
-    def __sub__(self, other: Expression) -> Vector3:
-        ...
-
-    @overload
-    def __sub__(self, other: float) -> Vector3:
-        ...
-
-    def __sub__(self, other):
-        if isinstance(other, (int, float)):
-            result = Vector3.from_iterable(self.s.__sub__(other))
-        elif isinstance(other, Point3):
-            result = Point3.from_iterable(self.s.__sub__(other.s))
-        elif isinstance(other, (Symbol, Expression, Vector3)):
+        if isinstance(other, Vector3):
             result = Vector3.from_iterable(self.s.__sub__(other.s))
         else:
             raise _operation_type_error(self, '-', other)
         result.reference_frame = self.reference_frame
         return result
 
-    def __rsub__(self, other: float):
-        if isinstance(other, (int, float)):
-            result = Vector3.from_iterable(self.s.__rsub__(other))
-        else:
-            raise _operation_type_error(other, '-', self)
-        result.reference_frame = self.reference_frame
-        return result
-
     def __mul__(self, other: symbol_expr_float) -> Vector3:
-        if isinstance(other, (int, float)):
-            result = Vector3.from_iterable(self.s.__mul__(other))
-        elif isinstance(other, (Symbol, Expression)):
-            result = Vector3.from_iterable(self.s.__mul__(other.s))
+        if isinstance(other, (int, float, Symbol, Expression)):
+            result = Vector3.from_iterable(self.s.__mul__(_to_sx(other)))
         else:
             raise _operation_type_error(self, '*', other)
         result.reference_frame = self.reference_frame
@@ -1487,39 +1305,11 @@ class Vector3(Symbol_, ReferenceFrameMixin):
         result.reference_frame = self.reference_frame
         return result
 
-    def __pow__(self, other: symbol_expr_float) -> Vector3:
-        if isinstance(other, (int, float)):
-            result = Vector3.from_iterable(self.s.__pow__(other))
-        elif isinstance(other, (Symbol, Expression)):
-            result = Vector3.from_iterable(self.s.__pow__(other.s))
-        else:
-            raise _operation_type_error(self, '**', other)
-        result.reference_frame = self.reference_frame
-        return result
-
-    def __rpow__(self, other: float) -> Vector3:
-        if isinstance(other, (int, float)):
-            result = Vector3.from_iterable(self.s.__rpow__(other))
-        else:
-            raise _operation_type_error(other, '**', self)
-        result.reference_frame = self.reference_frame
-        return result
-
     def __truediv__(self, other: symbol_expr_float) -> Vector3:
-        if isinstance(other, (int, float)):
-            result = Vector3.from_iterable(self.s.__truediv__(other))
-        elif isinstance(other, (Symbol, Expression)):
-            result = Vector3.from_iterable(self.s.__truediv__(other.s))
+        if isinstance(other, (int, float, Symbol, Expression)):
+            result = Vector3.from_iterable(self.s.__truediv__(_to_sx(other)))
         else:
             raise _operation_type_error(self, '/', other)
-        result.reference_frame = self.reference_frame
-        return result
-
-    def __rtruediv__(self, other: float) -> Vector3:
-        if isinstance(other, (int, float)):
-            result = Vector3.from_iterable(self.s.__rtruediv__(other))
-        else:
-            raise _operation_type_error(other, '/', self)
         result.reference_frame = self.reference_frame
         return result
 
@@ -1528,10 +1318,13 @@ class Vector3(Symbol_, ReferenceFrameMixin):
         result.reference_frame = self.reference_frame
         return result
 
-    def dot(self, other: Union[Point3, Vector3]) -> Expression:
-        if isinstance(other, (Point3, Vector3)):
+    def dot(self, other: Vector3) -> Expression:
+        if isinstance(other, Vector3):
             return Expression(ca.mtimes(self[:3].T.s, other[:3].s))
         raise _operation_type_error(self, 'dot', other)
+
+    def __matmul__(self, other: Vector3) -> Expression:
+        return self.dot(other)
 
     def cross(self, other: Vector3) -> Vector3:
         result = ca.cross(self.s[:3], other.s[:3])
@@ -2229,12 +2022,11 @@ def if_less_eq_cases(a: symbol_expr_float,
 
 
 def _to_sx(thing: Union[ca.SX, all_expressions]) -> ca.SX:
-    try:
+    if isinstance(thing, Symbol_):
         return thing.s
-    except AttributeError:
-        if isinstance(thing, (int, float)):
-            return ca.SX(thing)
+    if isinstance(thing, ca.SX):
         return thing
+    return ca.SX(thing)
 
 
 def cross(u: Union[Vector3, Expression], v: Union[Vector3, Expression]) -> Vector3:
@@ -2518,17 +2310,17 @@ def distance_point_to_line_segment(frame_P_current: Point3, frame_P_line_start: 
     frame_P_current = Point3.from_iterable(frame_P_current)
     frame_P_line_start = Point3.from_iterable(frame_P_line_start)
     frame_P_line_end = Point3.from_iterable(frame_P_line_end)
-    line_vec = frame_P_line_end - frame_P_line_start
+    frame_V_line_vec = frame_P_line_end - frame_P_line_start
     pnt_vec = frame_P_current - frame_P_line_start
-    line_len = norm(line_vec)
-    line_unitvec = line_vec / line_len
+    line_len = norm(frame_V_line_vec)
+    line_unitvec = frame_V_line_vec / line_len
     pnt_vec_scaled = pnt_vec / line_len
-    t = line_unitvec.dot(pnt_vec_scaled)
+    t = line_unitvec @ pnt_vec_scaled
     t = limit(t, lower_limit=0.0, upper_limit=1.0)
-    nearest = line_vec * t
-    dist = norm(nearest - pnt_vec)
-    nearest = nearest + frame_P_line_start
-    return dist, Point3.from_iterable(nearest)
+    frame_V_offset = frame_V_line_vec * t
+    dist = norm(frame_V_offset - pnt_vec)
+    frame_P_nearest = frame_P_line_start + frame_V_offset
+    return dist, frame_P_nearest
 
 
 def distance_point_to_line(frame_P_point: Point3, frame_P_line_point: Point3, frame_V_line_direction: Vector3) \
@@ -2539,11 +2331,14 @@ def distance_point_to_line(frame_P_point: Point3, frame_P_line_point: Point3, fr
     return distance
 
 
-def distance_point_to_plane(frame_P_current: Point3, frame_V_v1: Vector3,
+def distance_point_to_plane(frame_P_current: Point3,
+                            frame_V_v1: Vector3,
                             frame_V_v2: Vector3) -> \
         Tuple[Expression, Point3]:
     normal = cross(frame_V_v1, frame_V_v2)
-    d = normal.dot(frame_P_current)
+    # since the plane is in origin, our vector to the point is trivial
+    frame_V_current = Vector3.from_iterable(frame_P_current)
+    d = normal @ frame_V_current
     normal.scale(d)
     nearest = frame_P_current - normal
     return norm(nearest - frame_P_current), nearest
@@ -2554,7 +2349,9 @@ def distance_point_to_plane_signed(frame_P_current: Point3, frame_V_v1: Vector3,
         Tuple[Expression, Point3]:
     normal = cross(frame_V_v1, frame_V_v2)
     normal = normal / norm(normal)  # Normalize the normal vector
-    d = normal.dot(frame_P_current)  # Signed distance to the plane
+    # since the plane is in origin, our vector to the point is trivial
+    frame_V_current = Vector3.from_iterable(frame_P_current)
+    d = normal @ frame_V_current
     offset = (normal * d)
     nearest = frame_P_current - offset  # Nearest point on the plane
     return d, nearest
@@ -2563,7 +2360,7 @@ def distance_point_to_plane_signed(frame_P_current: Point3, frame_V_v1: Vector3,
 def project_to_cone(frame_V_current: Vector3, frame_V_cone_axis: Vector3,
                     cone_theta: Union[Symbol, float, Expression]) -> Vector3:
     frame_V_cone_axis_norm = frame_V_cone_axis / norm(frame_V_cone_axis)
-    beta = dot(frame_V_current, frame_V_cone_axis_norm)
+    beta = frame_V_current @ frame_V_cone_axis_norm
     norm_v = norm(frame_V_current)
 
     # Compute the perpendicular component.
@@ -2583,7 +2380,9 @@ def project_to_cone(frame_V_current: Vector3, frame_V_cone_axis: Vector3,
                          else_result=project_on_cone_boundary)
 
 
-def project_to_plane(frame_V_plane_vector1: Vector3, frame_V_plane_vector2: Vector3, frame_P_point: Point3) -> Point3:
+def project_to_plane(frame_V_plane_vector1: Vector3,
+                     frame_V_plane_vector2: Vector3,
+                     frame_P_point: Point3) -> Point3:
     """
     Projects a point onto a plane defined by two vectors.
     This function assumes that all parameters are defined with respect to the same reference frame.
@@ -2595,9 +2394,11 @@ def project_to_plane(frame_V_plane_vector1: Vector3, frame_V_plane_vector2: Vect
     """
     normal = cross(frame_V_plane_vector1, frame_V_plane_vector2)
     normal.scale(1)
-    d = normal.dot(frame_P_point)
+    # since the plane is in origin, our vector to the point is trivial
+    frame_V_current = Vector3.from_iterable(frame_P_point)
+    d = normal @ frame_V_current
     projection = frame_P_point - normal * d
-    return Point3(projection, reference_frame=frame_P_point.reference_frame)
+    return projection
 
 
 def angle_between_vector(v1: Vector3, v2: Vector3) -> Expression:
@@ -2806,8 +2607,6 @@ def substitute(expression: Union[Symbol, Expression], old_symbols: List[Symbol],
 
 
 def matrix_inverse(a: Expression) -> Expression:
-    if isinstance(a, TransformationMatrix):
-        return a.inverse()
     return Expression(ca.inv(a.s))
 
 
@@ -2817,7 +2616,8 @@ def gradient(ex: Expression, arg: Expression) -> Expression:
 
 def is_true_symbol(expr: Expression) -> bool:
     try:
-        return (expr == BinaryTrue).to_np()
+        equality_expr = expr == BinaryTrue
+        return bool(equality_expr.to_np())
     except Exception as e:
         return False
 
@@ -2826,16 +2626,16 @@ def is_true3(expr: Union[Symbol, Expression]) -> Expression:
     return equal(expr, TrinaryTrue)
 
 
-def is_true3_symbol(expr: Expression) -> Expression:
+def is_true3_symbol(expr: Expression) -> bool:
     try:
-        return (expr == TrinaryTrue).to_np()
+        return bool((expr == TrinaryTrue).to_np())
     except Exception as e:
         return False
 
 
 def is_false_symbol(expr: Expression) -> bool:
     try:
-        return (expr == BinaryFalse).to_np()
+        return bool((expr == BinaryFalse).to_np())
     except Exception as e:
         return False
 
@@ -2844,9 +2644,9 @@ def is_false3(expr: Union[Symbol, Expression]) -> Expression:
     return equal(expr, TrinaryFalse)
 
 
-def is_false3_symbol(expr: Expression) -> Expression:
+def is_false3_symbol(expr: Expression) -> bool:
     try:
-        return (expr == TrinaryFalse).to_np()
+        return bool((expr == TrinaryFalse).to_np())
     except Exception as e:
         return False
 
@@ -2855,9 +2655,9 @@ def is_unknown3(expr: Union[Symbol, Expression]) -> Expression:
     return equal(expr, TrinaryUnknown)
 
 
-def is_unknown3_symbol(expr: Expression) -> Expression:
+def is_unknown3_symbol(expr: Expression) -> bool:
     try:
-        return (expr == TrinaryUnknown).to_np()
+        return bool((expr == TrinaryUnknown).to_np())
     except Exception as e:
         return False
 
@@ -2874,13 +2674,14 @@ def det(expr: Union[Expression, RotationMatrix, TransformationMatrix]) -> Expres
 
 def distance_projected_on_vector(point1: Point3, point2: Point3, vector: Vector3) -> Expression:
     dist = point1 - point2
-    projection = dot(dist, vector)
+    projection = dist @ vector
     return projection
 
 
 def distance_vector_projected_on_plane(point1: Point3, point2: Point3, normal_vector: Vector3) -> Vector3:
     dist = point1 - point2
-    projection = dist - dot(dist, normal_vector) * normal_vector
+    angle = dist @ normal_vector
+    projection = dist - normal_vector * angle
     return projection
 
 

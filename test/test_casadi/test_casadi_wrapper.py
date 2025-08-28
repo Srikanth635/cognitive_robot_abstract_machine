@@ -46,6 +46,17 @@ def logic_or(a, b):
         raise ValueError(f'Invalid truth values: {a}, {b}')
 
 
+example_spatial_objects = [
+    cas.Symbol('s'),
+    cas.Expression(1),
+    cas.Point3(),
+    cas.Vector3(),
+    cas.Quaternion(),
+    cas.RotationMatrix(),
+    cas.TransformationMatrix()
+]
+
+
 class TestLogic3:
     values = [cas.TrinaryTrue, cas.TrinaryFalse, cas.TrinaryUnknown]
 
@@ -783,84 +794,6 @@ class TestPoint3:
         with pytest.raises(ValueError):
             cas.Point3.from_iterable(t.to_np())
 
-    def test_matmul_type_preservation(self):
-        s = cas.Symbol('s')
-        e = cas.Expression(1)
-        v = cas.Vector3(1, 1, 1)
-        p = cas.Point3(1, 1, 1)
-        r = cas.RotationMatrix()
-        q = cas.Quaternion()
-        t = cas.TransformationMatrix()
-
-        # Point3 dot operations
-        with pytest.raises(TypeError):
-            p @ s  # Point @ Symbol - not mathematically meaningful
-        with pytest.raises(TypeError):
-            p @ e  # Point @ Expression(scalar) - not mathematically meaningful
-        assert isinstance(p @ v, cas.Expression)  # Point @ Vector3 = scalar (dot product)
-        assert isinstance(p @ p, cas.Expression)  # Point @ Point3 = scalar (dot product)
-        with pytest.raises(TypeError):
-            p @ r  # Point @ RotationMatrix - not directly meaningful
-        with pytest.raises(TypeError):
-            p @ q  # Point @ Quaternion - not directly meaningful
-        with pytest.raises(TypeError):
-            p @ t  # Point @ TransformationMatrix - not directly meaningful
-
-        # Reverse operations (what can be dotted with Point3)
-        with pytest.raises(TypeError):
-            s @ p  # Symbol @ Point3 - not meaningful
-        with pytest.raises(TypeError):
-            e @ p  # Expression(scalar) @ Point3 - not meaningful
-        assert isinstance(v @ p, cas.Expression)  # Vector3 @ Point3 = scalar
-        # Note: p @ p already tested above
-        with pytest.raises(TypeError):
-            q @ p  # Quaternion @ Point3 - not meaningful
-        assert isinstance(t @ p, cas.Point3)
-        with pytest.raises(TypeError):
-            assert r @ p
-
-    def test_sub(self):
-        p1 = cas.Point3(1, 1, 1)
-        p2 = cas.Point3(1, 1, 1)
-        p3 = p1 - p2
-        assert isinstance(p3, cas.Vector3)
-        assert p3[0] == 0
-        assert p3[1] == 0
-        assert p3[2] == 0
-        assert p3[3] == 0
-
-    def test_add_vector3(self):
-        p1 = cas.Point3(1, 1, 1)
-        v1 = cas.Vector3(1, 1, 1)
-        p3 = p1 + v1
-        assert isinstance(p3, cas.Point3)
-        assert p3[0] == 2
-        assert p3[1] == 2
-        assert p3[2] == 2
-        assert p3[3] == 1
-
-    def test_mul(self):
-        p1 = cas.Point3(1, 1, 1)
-        s = cas.Symbol('s')
-        p3 = p1 * s
-        assert isinstance(p3, cas.Point3)
-        f = 2
-        p3 = p1 / f
-        assert isinstance(p3, cas.Point3)
-        assert p3[0] == 0.5
-        assert p3[1] == 0.5
-        assert p3[2] == 0.5
-        assert p3[3] == 1
-
-    @given(lists_of_same_length([float_no_nan_no_inf(), float_no_nan_no_inf()], min_length=3, max_length=3))
-    def test_dot(self, vectors):
-        u, v = vectors
-        u = np.array(u)
-        v = np.array(v)
-        result = cas.Point3.from_iterable(u).dot(cas.Point3.from_iterable(v))
-        expected = np.dot(u, v.T)
-        assert_allclose(result, expected)
-
     @given(float_no_nan_no_inf(), vector(3), vector(3))
     def test_if_greater_zero(self, condition, if_result, else_result):
         actual = cas.if_greater_zero(condition,
@@ -870,59 +803,86 @@ class TestPoint3:
         assert_allclose(actual[:3], expected)
 
     def test_arithmetic_operations(self):
-        """Test all arithmetic operations with proper type checking and homogeneous coordinates"""
+        """Test all allowed arithmetic operations on Point3"""
         p1 = cas.Point3(1, 2, 3)
         p2 = cas.Point3(4, 5, 6)
         v = cas.Vector3(1, 1, 1)
-        s = cas.Symbol('s')
-        e = cas.Expression(2)
 
-        # Addition - Point + Vector = Point
+        # Test Point + Vector = Point (translate point by vector)
         result = p1 + v
         assert isinstance(result, cas.Point3)
+        assert result.x == 2 and result.y == 3 and result.z == 4
         assert result[3] == 1  # Homogeneous coordinate preserved
-        assert result[0] == 2 and result[1] == 3 and result[2] == 4
+        assert result.reference_frame == p1.reference_frame
 
-        # Addition - Point + Scalar
-        result = p1 + 2.5
-        assert isinstance(result, cas.Point3)
-        assert result[3] == 1
-
-        result = p1 + s
-        assert isinstance(result, cas.Point3)
-        assert result[3] == 1
-
-        # Subtraction - Point - Point = Vector
-        result = p1 - p2
+        # Test Point - Point = Vector (displacement between points)
+        result = p2 - p1
         assert isinstance(result, cas.Vector3)
-        assert result[3] == 0  # Vector homogeneous coordinate
-        assert result[0] == -3 and result[1] == -3 and result[2] == -3
+        assert result.x == 3 and result.y == 3 and result.z == 3
+        assert result[3] == 0  # Vector has 0 in homogeneous coordinate
+        assert result.reference_frame == p2.reference_frame
 
-        # Subtraction - Point - Vector = Point
-        result = p1 - v
+        # Test Point - Vector = Point (translate point by negative vector)
+        result = p2 - v
+        assert isinstance(result, cas.Point3)
+        assert result.x == 3 and result.y == 4 and result.z == 5
+        assert result[3] == 1
+        assert result.reference_frame == p2.reference_frame
+
+        # Test -Point = Point (negate all coordinates)
+        result = -p1
+        assert isinstance(result, cas.Point3)
+        assert result.x == -1 and result.y == -2 and result.z == -3
+        assert result[3] == 1
+        assert result.reference_frame == p1.reference_frame
+
+        # Test Point.norm() = scalar (distance from origin)
+        result = p1.norm()
+        assert isinstance(result, cas.Expression)
+        expected_norm = np.sqrt(1 ** 2 + 2 ** 2 + 3 ** 2)
+        assert_allclose(result, expected_norm)
+
+        # Test invalid operations that should raise TypeError
+        with pytest.raises(TypeError):
+            p1 + p2  # Point + Point not allowed
+
+        with pytest.raises(TypeError):
+            p1 * 2  # Point * scalar not allowed (scaling a position is meaningless)
+
+        with pytest.raises(TypeError):
+            2 * p1  # scalar * Point not allowed
+
+        with pytest.raises(TypeError):
+            p1 / 2  # Point / scalar not allowed
+
+        with pytest.raises(TypeError):
+            p1 ** 2  # Point ** scalar not allowed
+
+        with pytest.raises(TypeError):
+            p1 @ p2  # Point @ Point not allowed
+
+        with pytest.raises(TypeError):
+            p1 @ v  # Point @ Vector not allowed
+
+        # Test operations with symbolic expressions
+        x = cas.Symbol('x')
+        p_symbolic = cas.Point3(x, 2, 3)
+        result = p_symbolic + v
         assert isinstance(result, cas.Point3)
         assert result[3] == 1
-        assert result[0] == 0 and result[1] == 1 and result[2] == 2
 
-        # Subtraction - Point - Scalar = Point
-        result = p1 - 1
-        assert isinstance(result, cas.Point3)
-        assert result[3] == 1
+        # Test property access
+        assert p1.x == 1
+        assert p1.y == 2
+        assert p1.z == 3
 
-        # Multiplication and division
-        result = p1 * 2
-        assert isinstance(result, cas.Point3)
-        assert result[0] == 2 and result[1] == 4 and result[2] == 6
-        assert result[3] == 1
-
-        result = p1 / 2
-        assert isinstance(result, cas.Point3)
-        assert result[0] == 0.5 and result[1] == 1 and result[2] == 1.5
-        assert result[3] == 1
-
-        result = p1 ** 2
-        assert isinstance(result, cas.Point3)
-        assert result[3] == 1
+        # Test property assignment
+        p_copy = cas.Point3(1, 2, 3)
+        p_copy.x = 10
+        p_copy.y = 20
+        p_copy.z = 30
+        assert p_copy[0] == 10 and p_copy[1] == 20 and p_copy[2] == 30
+        assert p_copy[3] == 1
 
     def test_properties(self):
         """Test x, y, z property getters and setters"""
@@ -969,9 +929,6 @@ class TestPoint3:
         result = p1 + v
         assert result.reference_frame == p1.reference_frame
 
-        result = p1 * 2
-        assert result.reference_frame == p1.reference_frame
-
         result = -p1
         assert result.reference_frame == p1.reference_frame
 
@@ -980,17 +937,6 @@ class TestPoint3:
         result = p1 - p2
         assert isinstance(result, cas.Vector3)
         assert result.reference_frame == p1.reference_frame
-
-    def test_negation(self):
-        """Test unary negation operator"""
-        p = cas.Point3(1, -2, 3)
-        result = -p
-
-        assert isinstance(result, cas.Point3)
-        assert result[0] == -1
-        assert result[1] == 2
-        assert result[2] == -3
-        assert result[3] == 1  # Homogeneous coordinate preserved
 
     def test_invalid_operations(self):
         """Test operations that should raise TypeError"""
@@ -1105,25 +1051,6 @@ class TestPoint3:
         symbol_names = [s.name for s in symbols if hasattr(s, 'name')]
         assert 'x' in symbol_names and 'y' in symbol_names and 'z' in symbol_names
 
-    @given(vector(3))
-    def test_homogeneous_coordinate_invariant(self, coords):
-        """Property-based test ensuring homogeneous coordinate is always 1 for points"""
-        p = cas.Point3.from_iterable(coords)
-        assert p[3] == 1
-
-        # After operations, homogeneous coordinate should remain 1
-        result = p + cas.Vector3(1, 1, 1)
-        assert isinstance(result, cas.Point3)
-        assert result[3] == 1
-
-        result = p * 2.5
-        assert isinstance(result, cas.Point3)
-        assert result[3] == 1
-
-        result = -p
-        assert isinstance(result, cas.Point3)
-        assert result[3] == 1
-
 
 class TestVector3:
     def test_init(self):
@@ -1158,40 +1085,15 @@ class TestVector3:
         with pytest.raises(ValueError):
             cas.Vector3.from_iterable(t.to_np())
 
-    def test_matmul_type_preservation(self):
-        s = cas.Symbol('s')
-        e = cas.Expression(1)
-        v = cas.Vector3(1, 1, 1)
-        p = cas.Point3(1, 1, 1)
-        r = cas.RotationMatrix()
-        q = cas.Quaternion()
-        t = cas.TransformationMatrix()
+    @given(vector(3))
+    def test_is_length_1(self, v):
+        assume(abs(v[0]) > 0.00001 or abs(v[1]) > 0.00001 or abs(v[2]) > 0.00001)
+        unit_v = cas.Vector3.unit_vector(*v)
+        assert_allclose(unit_v.norm(), 1)
 
-        # Vector3 dot operations
-        with pytest.raises(TypeError):
-            v @ s  # Vector @ Symbol - not mathematically meaningful
-        with pytest.raises(TypeError):
-            v @ e  # Vector @ Expression(scalar) - not mathematically meaningful
-        assert isinstance(v @ v, cas.Expression)  # Vector @ Vector3 = scalar (dot product)
-        assert isinstance(v @ p, cas.Expression)  # Vector @ Point3 = scalar (dot product)
-        with pytest.raises(TypeError):
-            v @ r  # Vector @ RotationMatrix - not directly meaningful
-        with pytest.raises(TypeError):
-            v @ q  # Vector @ Quaternion - not directly meaningful
-        with pytest.raises(TypeError):
-            v @ t  # Vector @ TransformationMatrix - not directly meaningful
-
-        # Reverse operations (what can be dotted with Vector3)
-        with pytest.raises(TypeError):
-            s @ v  # Symbol @ Vector3 - not meaningful
-        with pytest.raises(TypeError):
-            e @ v  # Expression(scalar) @ Vector3 - not meaningful
-        # v @ v already tested above
-        assert isinstance(p @ v, cas.Expression)  # Point3 @ Vector3 = scalar
-        with pytest.raises(TypeError):
-            q @ v  # Quaternion @ Vector3 - not meaningful
-        assert isinstance(r @ v, cas.Vector3)  # RotationMatrix @ Vector3 = Vector3 (transformation)
-        assert isinstance(t @ v, cas.Vector3)  # TransformationMatrix @ Vector3 = Vector3 (transformation)
+    def test_length_0(self):
+        unit_v = cas.Vector3.unit_vector(x=0, y=0, z=0)
+        assert np.isnan(unit_v.norm().to_np())
 
     @given(vector(3))
     def test_norm(self, v):
@@ -1374,18 +1276,6 @@ class TestVector3:
         compiled_cross = cas.Vector3(2, 3, 4).cross(cas.Vector3(1, 2, 3))
         expected_cross = np.cross([2, 3, 4], [1, 2, 3])
         assert_allclose(compiled_cross[:3], expected_cross)
-
-
-class TestUnitVector3:
-    @given(vector(3))
-    def test_is_length_1(self, v):
-        assume(abs(v[0]) > 0.00001 or abs(v[1]) > 0.00001 or abs(v[2]) > 0.00001)
-        unit_v = cas.Vector3.unit_vector(*v)
-        assert_allclose(unit_v.norm(), 1)
-
-    def test_length_0(self):
-        unit_v = cas.Vector3.unit_vector(x=0, y=0, z=0)
-        assert np.isnan(unit_v.norm().to_np())
 
 
 class TestTransformationMatrix:
@@ -2100,267 +1990,6 @@ class TestCASWrapper:
         assert_allclose(f(), expected)
         assert_allclose(f.fast_call(np.array([])), expected)
 
-    def test_add(self):
-        s2 = 'muh'
-        f = 1.0
-        s = cas.Symbol('s')
-        e = cas.Expression(1)
-        v = cas.Vector3(1, 1, 1)
-        p = cas.Point3(1, 1, 1)
-        t = cas.TransformationMatrix()
-        r = cas.RotationMatrix()
-        q = cas.Quaternion()
-        # float
-        assert isinstance(s + f, cas.Expression)
-        assert isinstance(f + s, cas.Expression)
-        assert isinstance(e + f, cas.Expression)
-        assert isinstance(f + e, cas.Expression)
-        assert isinstance(v + f, cas.Vector3)
-        assert isinstance(f + v, cas.Vector3)
-        assert isinstance(p + f, cas.Point3)
-        assert isinstance(f + p, cas.Point3)
-        with pytest.raises(TypeError):
-            t + f
-        with pytest.raises(TypeError):
-            f + t
-        with pytest.raises(TypeError):
-            r + f
-        with pytest.raises(TypeError):
-            f + r
-        with pytest.raises(TypeError):
-            q + f
-        with pytest.raises(TypeError):
-            f + q
-
-        # Symbol
-        assert isinstance(s + s, cas.Expression)
-        assert isinstance(s + e, cas.Expression)
-        assert isinstance(e + s, cas.Expression)
-        assert isinstance(s + v, cas.Vector3)
-        assert isinstance(v + s, cas.Vector3)
-        assert (s + v)[3].to_np() == 0 == (v + s)[3].to_np()
-        assert isinstance(s + p, cas.Point3)
-        assert isinstance(p + s, cas.Point3)
-        assert (s + p)[3].to_np() == 1 == (p + s)[3].to_np()
-        with pytest.raises(TypeError):
-            s + t
-        with pytest.raises(TypeError):
-            t + s
-        with pytest.raises(TypeError):
-            s + r
-        with pytest.raises(TypeError):
-            r + s
-        with pytest.raises(TypeError):
-            s + q
-        with pytest.raises(TypeError):
-            q + s
-        with pytest.raises(TypeError):
-            s + s2
-        with pytest.raises(TypeError):
-            s2 + s
-        # Expression
-        assert isinstance(e + e, cas.Expression)
-        assert isinstance(e + v, cas.Vector3)
-        assert isinstance(v + e, cas.Vector3)
-        assert (e + v)[3].to_np() == 0 == (v + e)[3].to_np()
-        assert isinstance(e + p, cas.Point3)
-        assert isinstance(p + e, cas.Point3)
-        assert (e + p)[3].to_np() == 1 == (p + e)[3].to_np()
-        with pytest.raises(TypeError):
-            e + t
-        with pytest.raises(TypeError):
-            t + e
-        with pytest.raises(TypeError):
-            e + r
-        with pytest.raises(TypeError):
-            r + e
-        with pytest.raises(TypeError):
-            e + q
-        with pytest.raises(TypeError):
-            q + e
-        # Vector3
-        assert isinstance(v + v, cas.Vector3)
-        assert (v + v)[3].to_np() == 0
-        assert isinstance(v + p, cas.Point3)
-        assert isinstance(p + v, cas.Point3)
-        assert (v + p)[3].to_np() == 1 == (p + v)[3].to_np()
-        with pytest.raises(TypeError):
-            v + t
-        with pytest.raises(TypeError):
-            t + v
-        with pytest.raises(TypeError):
-            v + r
-        with pytest.raises(TypeError):
-            r + v
-        with pytest.raises(TypeError):
-            v + q
-        with pytest.raises(TypeError):
-            q + v
-        # Point3
-        with pytest.raises(TypeError):
-            p + p
-        with pytest.raises(TypeError):
-            p + t
-        with pytest.raises(TypeError):
-            t + p
-        with pytest.raises(TypeError):
-            p + r
-        with pytest.raises(TypeError):
-            r + p
-        with pytest.raises(TypeError):
-            p + q
-        with pytest.raises(TypeError):
-            q + p
-        # TransMatrix
-        with pytest.raises(TypeError):
-            t + t
-        with pytest.raises(TypeError):
-            t + r
-        with pytest.raises(TypeError):
-            r + t
-        with pytest.raises(TypeError):
-            t + q
-        with pytest.raises(TypeError):
-            q + t
-        # RotationMatrix
-        with pytest.raises(TypeError):
-            r + r
-        with pytest.raises(TypeError):
-            r + q
-        with pytest.raises(TypeError):
-            q + r
-        # Quaternion
-        with pytest.raises(TypeError):
-            q + q
-
-    def test_sub(self):
-        s2 = 'muh'
-        f = 1.0
-        s = cas.Symbol('s')
-        e = cas.Expression(1)
-        v = cas.Vector3(1, 1, 1)
-        p = cas.Point3(1, 1, 1)
-        t = cas.TransformationMatrix()
-        r = cas.RotationMatrix()
-        q = cas.Quaternion()
-        # float
-        assert isinstance(s - f, cas.Expression)
-        assert isinstance(f - s, cas.Expression)
-        assert isinstance(e - f, cas.Expression)
-        assert isinstance(f - e, cas.Expression)
-        assert isinstance(v - f, cas.Vector3)
-        assert isinstance(f - v, cas.Vector3)
-        assert isinstance(p - f, cas.Point3)
-        assert isinstance(f - p, cas.Point3)
-        with pytest.raises(TypeError):
-            t - f
-        with pytest.raises(TypeError):
-            f - t
-        with pytest.raises(TypeError):
-            r - f
-        with pytest.raises(TypeError):
-            f - r
-        with pytest.raises(TypeError):
-            q - f
-        with pytest.raises(TypeError):
-            f - q
-        # Symbol
-        assert isinstance(s - s, cas.Expression)
-        assert isinstance(s - e, cas.Expression)
-        assert isinstance(e - s, cas.Expression)
-        assert isinstance(s - v, cas.Vector3)
-        assert isinstance(v - s, cas.Vector3)
-        assert (s - v)[3].to_np() == 0 == (v - s)[3].to_np()
-        assert isinstance(s - p, cas.Point3)
-        assert isinstance(p - s, cas.Point3)
-        assert (s - p)[3].to_np() == 1 == (p - s)[3].to_np()
-        with pytest.raises(TypeError):
-            s - t
-        with pytest.raises(TypeError):
-            t - s
-        with pytest.raises(TypeError):
-            s - r
-        with pytest.raises(TypeError):
-            r - s
-        with pytest.raises(TypeError):
-            s - q
-        with pytest.raises(TypeError):
-            q - s
-        # Expression
-        assert isinstance(e - e, cas.Expression)
-        assert isinstance(e - v, cas.Vector3)
-        assert isinstance(v - e, cas.Vector3)
-        assert (e - v)[3].to_np() == 0 == (v - e)[3].to_np()
-        assert isinstance(e - p, cas.Point3)
-        assert isinstance(p - e, cas.Point3)
-        assert (e - p)[3].to_np() == 1 == (p - e)[3].to_np()
-        with pytest.raises(TypeError):
-            e - t
-        with pytest.raises(TypeError):
-            t - e
-        with pytest.raises(TypeError):
-            e - r
-        with pytest.raises(TypeError):
-            r - e
-        with pytest.raises(TypeError):
-            e - q
-        with pytest.raises(TypeError):
-            q - e
-        # Vector3
-        assert isinstance(v - v, cas.Vector3)
-        assert (v - v)[3].to_np() == 0
-        assert isinstance(v - p, cas.Point3)
-        assert isinstance(p - v, cas.Point3)
-        assert (v - p)[3].to_np() == 1 == (p - v)[3].to_np()
-        with pytest.raises(TypeError):
-            v - t
-        with pytest.raises(TypeError):
-            t - v
-        with pytest.raises(TypeError):
-            v - r
-        with pytest.raises(TypeError):
-            r - v
-        with pytest.raises(TypeError):
-            v - q
-        with pytest.raises(TypeError):
-            q - v
-        # Point3
-        assert isinstance(p - p, cas.Vector3)
-        assert (p - p)[3].to_np() == 0
-        with pytest.raises(TypeError):
-            p - t
-        with pytest.raises(TypeError):
-            t - p
-        with pytest.raises(TypeError):
-            p - r
-        with pytest.raises(TypeError):
-            r - p
-        with pytest.raises(TypeError):
-            p - q
-        with pytest.raises(TypeError):
-            q - p
-        # TransMatrix
-        with pytest.raises(TypeError):
-            t - t
-        with pytest.raises(TypeError):
-            t - r
-        with pytest.raises(TypeError):
-            r - t
-        with pytest.raises(TypeError):
-            t - q
-        with pytest.raises(TypeError):
-            q - t
-        # RotationMatrix
-        with pytest.raises(TypeError):
-            r - r
-        with pytest.raises(TypeError):
-            r - q
-        with pytest.raises(TypeError):
-            q - r
-        # Quaternion
-        with pytest.raises(TypeError):
-            q - q
-
     def test_basic_operation_with_string(self):
         str_ = 'muh23'
         things = [cas.Symbol('s'),
@@ -2384,131 +2013,6 @@ class TestCASWrapper:
                     with pytest.raises(TypeError) as e:
                         getattr(thing, fn)(str_)
                     assert 'NotImplementedType' not in str(e), error_msg
-
-    def test_mul_truediv_pow(self):
-        f = 1.0
-        s = cas.Symbol('s')
-        e = cas.Expression(1)
-        v = cas.Vector3(1, 1, 1)
-        p = cas.Point3(1, 1, 1)
-        t = cas.TransformationMatrix()
-        r = cas.RotationMatrix()
-        q = cas.Quaternion()
-        functions = [lambda a, b: a * b, lambda a, b: a / b, lambda a, b: a ** b]
-        for fn in functions:
-            # float
-            assert isinstance(fn(f, s), cas.Expression)
-            assert isinstance(fn(s, f), cas.Expression)
-            assert isinstance(fn(f, v), cas.Vector3)
-            assert isinstance(fn(v, f), cas.Vector3)
-            assert isinstance(fn(f, p), cas.Point3)
-            assert isinstance(fn(p, f), cas.Point3)
-            with pytest.raises(TypeError):
-                fn(f, t)
-            with pytest.raises(TypeError):
-                fn(t, f)
-            with pytest.raises(TypeError):
-                fn(f, r)
-            with pytest.raises(TypeError):
-                fn(r, f)
-            with pytest.raises(TypeError):
-                fn(f, q)
-            with pytest.raises(TypeError):
-                fn(q, f)
-
-            # Symbol
-            assert isinstance(fn(s, s), cas.Expression)
-            assert isinstance(fn(s, e), cas.Expression)
-            assert isinstance(fn(e, s), cas.Expression)
-            assert isinstance(fn(v, s), cas.Vector3)
-            assert 0 == (fn(v, s))[3].to_np()
-            assert isinstance(fn(p, s), cas.Point3)
-            assert 1 == (fn(p, s))[3].to_np()
-            with pytest.raises(TypeError):
-                fn(s, t)
-            with pytest.raises(TypeError):
-                fn(t, s)
-            with pytest.raises(TypeError):
-                fn(s, r)
-            with pytest.raises(TypeError):
-                fn(r, s)
-            with pytest.raises(TypeError):
-                fn(s, q)
-            with pytest.raises(TypeError):
-                fn(q, s)
-            # Expression
-            assert isinstance(fn(e, e), cas.Expression)
-            assert isinstance(fn(v, e), cas.Vector3)
-            assert 0 == (fn(v, e))[3].to_np()
-            assert isinstance(fn(p, e), cas.Point3)
-            assert 1 == (fn(p, e))[3].to_np()
-            with pytest.raises(TypeError):
-                fn(e, t)
-            with pytest.raises(TypeError):
-                fn(t, e)
-            with pytest.raises(TypeError):
-                fn(e, r)
-            with pytest.raises(TypeError):
-                fn(r, e)
-            with pytest.raises(TypeError):
-                fn(e, q)
-            with pytest.raises(TypeError):
-                fn(q, e)
-            # Vector3
-            with pytest.raises(TypeError):
-                fn(v, v)
-            with pytest.raises(TypeError):
-                fn(v, p)
-            with pytest.raises(TypeError):
-                fn(p, v)
-            with pytest.raises(TypeError):
-                fn(v, t)
-            with pytest.raises(TypeError):
-                fn(t, v)
-            with pytest.raises(TypeError):
-                fn(v, r)
-            with pytest.raises(TypeError):
-                fn(r, v)
-            with pytest.raises(TypeError):
-                fn(v, q)
-            with pytest.raises(TypeError):
-                fn(q, v)
-            # Point3
-            with pytest.raises(TypeError):
-                fn(p, p)
-            with pytest.raises(TypeError):
-                fn(p, t)
-            with pytest.raises(TypeError):
-                fn(t, p)
-            with pytest.raises(TypeError):
-                fn(p, r)
-            with pytest.raises(TypeError):
-                fn(r, p)
-            with pytest.raises(TypeError):
-                fn(p, q)
-            with pytest.raises(TypeError):
-                fn(q, p)
-            # TransMatrix
-            with pytest.raises(TypeError):
-                fn(t, t)
-            with pytest.raises(TypeError):
-                fn(t, r)
-            with pytest.raises(TypeError):
-                fn(r, t)
-            with pytest.raises(TypeError):
-                fn(t, q)
-            with pytest.raises(TypeError):
-                fn(q, t)
-            # RotationMatrix
-            with pytest.raises(TypeError):
-                fn(r, r)
-            with pytest.raises(TypeError):
-                fn(r, q)
-            with pytest.raises(TypeError):
-                fn(q, r)
-            # Quaternion
-            with pytest.raises(TypeError):
-                fn(q, q)
 
     def test_free_symbols(self):
         m = cas.Expression(cas.var('a b c d'))
