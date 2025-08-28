@@ -497,6 +497,8 @@ class World:
                 world=kinematic_structure_entity._world,
                 type_trying_to_add=KinematicStructureEntity,
             )
+        elif kinematic_structure_entity.name in [ke.name for ke in self.kinematic_structure_entities]:
+            raise AttributeError("A kinematic structure entity with the name already exists in the world.")
 
         kinematic_structure_entity.index = self.kinematic_structure.add_node(
             kinematic_structure_entity

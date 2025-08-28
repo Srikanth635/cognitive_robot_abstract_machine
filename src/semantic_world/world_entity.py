@@ -7,7 +7,7 @@ from collections import deque
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from dataclasses import fields
-from functools import reduce, lru_cache
+from functools import reduce, lru_cache, cached_property
 from typing import (
     Deque,
     Type,
@@ -19,8 +19,10 @@ from typing import Set
 
 import numpy as np
 from scipy.stats import geom
+from trimesh import Trimesh
 from trimesh.proximity import closest_point, nearby_faces
 from trimesh.sample import sample_surface
+from trimesh.util import concatenate
 from typing_extensions import ClassVar
 
 from .geometry import BoundingBoxCollection, BoundingBox
@@ -164,6 +166,16 @@ class Body(KinematicStructureEntity):
     """
     The index of the entity in `_world.kinematic_structure`.
     """
+
+    @cached_property
+    def combined_collision_mesh(self) -> Trimesh:
+        transformed_meshes = []
+        for shape in self.collision:
+            transform = shape.origin.to_np()
+            mesh = shape.mesh.copy()
+            mesh.apply_transform(transform)
+            transformed_meshes.append(mesh)
+        return concatenate(transformed_meshes)
 
     def get_collision_config(self) -> CollisionCheckingConfig:
         if self.temp_collision_config is not None:
