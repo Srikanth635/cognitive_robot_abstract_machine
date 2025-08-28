@@ -68,25 +68,20 @@ class WorldStatePublisherTestCase(unittest.TestCase):
         session2 = session_maker()
 
         w1 = self.create_dummy_world()
-        w2 = self.create_dummy_world()
+        w2 = World()
 
         synchronizer_1 = WorldSynchronizer(
             self.node, w1, subscribe=False, session=session1
         )
         synchronizer_2 = WorldSynchronizer(self.node, w2, session=session2)
 
-        with w1.modify_world():
-            new_body = Body(name=PrefixedName("b3"))
-            w1.add_kinematic_structure_entity(new_body)
-            parent = w1.get_kinematic_structure_entity_by_name("b2")
-            c = Connection6DoF(parent, new_body, _world=w1)
-            w1.add_connection(c)
+        synchronizer_1.publish_reload_model()
         time.sleep(0.1)
-        self.assertEqual(len(w2.kinematic_structure_entities), 3)
+        self.assertEqual(len(w2.kinematic_structure_entities), 2)
 
         query = session1.scalars(select(WorldMappingDAO)).all()
         assert len(query) == 1
-        assert w2.get_kinematic_structure_entity_by_name("b3")
+        assert w2.get_kinematic_structure_entity_by_name("b2")
 
     def test_model_synchronization(self):
 

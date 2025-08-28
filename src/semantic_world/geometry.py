@@ -31,6 +31,11 @@ id_generator = IDGenerator()
 def transformation_from_json(data: Dict[str, Any]) -> TransformationMatrix:
     return TransformationMatrix.from_xyz_quat(*data['position'], *data['quaternion'])
 
+def transformation_to_json(transformation: TransformationMatrix) -> Dict[str, Any]:
+    position = symbol_manager.evaluate_expr(transformation.to_position()).tolist()
+    quaternion = symbol_manager.evaluate_expr(transformation.to_quaternion()).tolist()
+    return {'position': position, 'quaternion': quaternion}
+
 @dataclass
 class Color(SubclassJSONSerializer):
     """
@@ -118,9 +123,7 @@ class Shape(ABC, SubclassJSONSerializer):
         ...
 
     def to_json(self) -> Dict[str, Any]:
-        position = symbol_manager.evaluate_expr(self.origin.to_position()).tolist()
-        quaternion = symbol_manager.evaluate_expr(self.origin.to_quaternion()).tolist()
-        return {**super().to_json(), "position": position, "quaternion": quaternion}
+        return {**super().to_json(), "origin": transformation_to_json(self.origin),}
 
 @dataclass
 class Mesh(Shape):
@@ -201,7 +204,7 @@ class TriangleMesh(Shape):
     @classmethod
     def _from_json(cls, data: Dict[str, Any]) -> "TriangleMesh":
         mesh = trimesh.Trimesh(vertices=data["mesh"]["vertices"], faces=data["mesh"]["faces"])
-        origin = transformation_from_json(data)
+        origin = transformation_from_json(data["origin"])
         scale = Scale.from_json(data["scale"])
         return cls(mesh=mesh, origin=origin, scale=scale)
 
@@ -246,7 +249,7 @@ class Sphere(Primitive):
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(radius=data["radius"], origin=transformation_from_json(data),
+        return cls(radius=data["radius"], origin=transformation_from_json(data["origin"]),
                    color=Color.from_json(data["color"]))
 
 @dataclass
@@ -280,7 +283,7 @@ class Cylinder(Primitive):
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(width=data["width"], height=data["height"], origin=transformation_from_json(data),
+        return cls(width=data["width"], height=data["height"], origin=transformation_from_json(data["origin"]),
                    color=Color.from_json(data["color"]))
 
 @dataclass
@@ -322,7 +325,7 @@ class Box(Primitive):
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(scale=Scale.from_json(data["scale"]), origin=transformation_from_json(data),
+        return cls(scale=Scale.from_json(data["scale"]), origin=transformation_from_json(data["origin"]),
                    color=Color.from_json(data["color"]))
 
 @dataclass

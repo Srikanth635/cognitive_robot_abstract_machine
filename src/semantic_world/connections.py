@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, TYPE_CHECKING, Union
+from typing import List, TYPE_CHECKING, Union, Dict, Any, Self
 
 import numpy as np
 
@@ -12,7 +12,7 @@ from .prefixed_name import PrefixedName
 from .spatial_types.derivatives import DerivativeMap
 from .spatial_types.math import quaternion_from_rotation_matrix
 from .types import NpMatrix4x4
-from .world_entity import Connection
+from .world_entity import Connection, Body
 
 if TYPE_CHECKING:
     from .world import World
@@ -179,6 +179,19 @@ class PrismaticConnection(ActiveConnection, Has1DOFState):
     def __hash__(self):
         return hash((self.parent, self.child))
 
+    def to_json(self) -> Dict[str, Any]:
+        return {**super().to_json(), "dof": self.dof.to_json(), "multiplier": self.multiplier, "offset": self.offset,
+                "axis": self.axis.to_np().tolist()}
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> PrismaticConnection:
+        dof = DegreeOfFreedom.from_json(data["dof"])
+        return cls(parent=Body.from_json(data["parent"]),
+                   child=Body.from_json(data["child"]),
+                   dof=dof,
+                   multiplier=data["multiplier"],
+                   offset=data["offset"],
+                   axis=cas.Vector3.from_iterable(data["axis"]))
 
 @dataclass
 class RevoluteConnection(ActiveConnection, Has1DOFState):
@@ -245,6 +258,19 @@ class RevoluteConnection(ActiveConnection, Has1DOFState):
     def __hash__(self):
         return hash((self.parent, self.child))
 
+    def to_json(self) -> Dict[str, Any]:
+        return {**super().to_json(), "dof": self.dof.to_json(), "axis": self.axis.to_np().tolist(),
+                "multiplier": self.multiplier, "offset": self.offset}
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self:
+        dof = DegreeOfFreedom.from_json(data["dof"])
+        return cls(parent=Body.from_json(data["parent"]),
+                   child=Body.from_json(data["child"]),
+                   dof=dof,
+                   multiplier=data["multiplier"],
+                   offset=data["offset"],
+                   axis=cas.Vector3.from_iterable(data["axis"]))
 
 @dataclass
 class Connection6DoF(PassiveConnection):
@@ -337,6 +363,21 @@ class Connection6DoF(PassiveConnection):
         self._world.state[self.qw.name].position = orientation[3]
         self._world.notify_state_change()
 
+    def to_json(self) -> Dict[str, Any]:
+        return {**super().to_json(), "x": self.x.to_json(), "y": self.y.to_json(), "z": self.z.to_json(),
+                "qx": self.qx.to_json(), "qy": self.qy.to_json(), "qz": self.qz.to_json(), "qw": self.qw.to_json()}
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self:
+        return cls(parent=Body.from_json(data["parent"]),
+                   child=Body.from_json(data["child"]),
+                   x=DegreeOfFreedom.from_json(data["x"]),
+                   y=DegreeOfFreedom.from_json(data["y"]),
+                   z=DegreeOfFreedom.from_json(data["z"]),
+                   qx=DegreeOfFreedom.from_json(data["qx"]),
+                   qy=DegreeOfFreedom.from_json(data["qy"]),
+                   qz=DegreeOfFreedom.from_json(data["qz"]),
+                   qw=DegreeOfFreedom.from_json(data["qw"]))
 
 @dataclass
 class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
@@ -444,3 +485,27 @@ class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
 
     def get_free_variable_names(self) -> List[PrefixedName]:
         return [self.x.name, self.y.name, self.yaw.name]
+
+    def to_json(self) -> Dict[str, Any]:
+        return {**super().to_json(), "x": self.x.to_json(), "y": self.y.to_json(), "z": self.z.to_json(),
+                "roll": self.roll.to_json(), "pitch": self.pitch.to_json(), "yaw": self.yaw.to_json(),
+                "x_vel": self.x_vel.to_json(), "y_vel": self.y_vel.to_json(),
+                "translation_velocity_limits": self.translation_velocity_limits,
+                "rotation_velocity_limits": self.rotation_velocity_limits}
+    
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self:
+        return cls(name=PrefixedName.from_json(data["name"]),
+            parent=Body.from_json(data["parent"]),
+                   child=Body.from_json(data["child"]),
+                   x=DegreeOfFreedom.from_json(data["x"]),
+                   y=DegreeOfFreedom.from_json(data["y"]),
+                   z=DegreeOfFreedom.from_json(data["z"]),
+                   roll=DegreeOfFreedom.from_json(data["roll"]),
+                   pitch=DegreeOfFreedom.from_json(data["pitch"]),
+                   yaw=DegreeOfFreedom.from_json(data["yaw"]),
+                   x_vel=DegreeOfFreedom.from_json(data["x_vel"]),
+                   y_vel=DegreeOfFreedom.from_json(data["y_vel"]),
+                   translation_velocity_limits=data["translation_velocity_limits"],
+                   rotation_velocity_limits=data["rotation_velocity_limits"]
+                   )

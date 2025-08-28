@@ -25,7 +25,7 @@ from trimesh.proximity import closest_point, nearby_faces
 from trimesh.sample import sample_surface
 from typing_extensions import ClassVar
 
-from .geometry import BoundingBoxCollection, BoundingBox
+from .geometry import BoundingBoxCollection, BoundingBox, transformation_to_json
 from .geometry import Shape
 from .prefixed_name import PrefixedName
 from .spatial_types import spatial_types as cas
@@ -391,7 +391,7 @@ class EnvironmentView(RootedView):
 
 
 @dataclass
-class Connection(WorldEntity):
+class Connection(WorldEntity, SubclassJSONSerializer):
     """
     Represents a connection between two entities in the world.
     """
@@ -476,6 +476,9 @@ class Connection(WorldEntity):
 
         return dofs
 
+    def to_json(self) -> Dict[str, Any]:
+        return {**super().to_json(), 'parent_name': self.parent.name.to_json(), 'child_name': self.child.name.to_json(),
+                "origin_expression": transformation_to_json(self.origin_expression)}
 
 def _is_entity_view_or_iterable(obj: object, aggregation_type: Type[KinematicStructureEntity]) -> bool:
     """
