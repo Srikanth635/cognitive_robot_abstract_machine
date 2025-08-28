@@ -56,14 +56,19 @@ class WorldSynchronizer:
     The subscriber to the world state.
     """
 
-    model_subscriber: Optional[Subscription] = field(default=None, init=False)
+    model_change_subscriber: Optional[Subscription] = field(default=None, init=False)
     """
     The subscriber to the model changes.
     """
 
-    publish_model_callback: Optional[Callable] = field(default=None, init=False)
+    reload_model_subscriber: Optional[Subscription] = field(default=None, init=False)
     """
-    Pointer to the callback used to publish the world model.
+    The subscriber to the reloading the model from the database.
+    """
+
+    reload_model_callback: Optional[Callable] = field(default=None, init=False)
+    """
+    Pointer to the callback used to signal the reload of the world model from the database.
     This is used to avoid calling the callback multiple times.
     """
 
@@ -75,9 +80,10 @@ class WorldSynchronizer:
 
         if self.publish:
             self.world.state_change_callbacks.append(lambda: self.publish_state())
+
             if self.session:
-                self.publish_model_callback = lambda: self.publish_model()
-                self.world.model_change_callbacks.append(self.publish_model_callback)
+                self.reload_model_callback = lambda: self.publish_reload_model()
+                self.world.model_change_callbacks.append(self.reload_model_callback)
         self.update_previous_world_state()
 
         if self.subscribe:
@@ -89,10 +95,10 @@ class WorldSynchronizer:
             )
 
             if self.session:
-                self.model_subscriber = self.node.create_subscription(
-                    semantic_world_msgs.msg.WorldModel,
-                    topic="/semantic_world/world_model",
-                    callback=self.update_model,
+                self.reload_model_subscriber = self.node.create_subscription(
+                    semantic_world_msgs.msg.WorldModelReload,
+                    topic="/semantic_world/reload_model",
+                    callback=self.reload_model,
                     qos_profile=10,
                 )
 
@@ -111,10 +117,18 @@ class WorldSynchronizer:
         )
 
     @cached_property
-    def model_publisher(self):
+    def reload_model_publisher(self):
         return self.node.create_publisher(
-            semantic_world_msgs.msg.WorldModel,
-            topic="/semantic_world/world_model",
+            semantic_world_msgs.msg.WorldModelReload,
+            topic="/semantic_world/reload_model",
+            qos_profile=10,
+        )
+
+    @cached_property
+    def model_change_publisher(self):
+        return self.node.create_publisher(
+            semantic_world_msgs.msg.WorldModelModificationBlock,
+            topic="/semantic_world/model_change",
             qos_profile=10,
         )
 
@@ -151,7 +165,7 @@ class WorldSynchronizer:
         # removed blocking sleep that stalled callbacks
         self.update_previous_world_state()
 
-    def publish_model(self):
+    def publish_reload_model(self):
         """
         Save the current world model to the database and publish the primary key to the ROS topic such that other
         processes can subscribe to the model changes and update their worlds.
@@ -159,10 +173,10 @@ class WorldSynchronizer:
         dao: WorldMappingDAO = to_dao(self.world)
         self.session.add(dao)
         self.session.commit()
-        message = semantic_world_msgs.msg.WorldModel(primary_key=dao.id)
-        self.model_publisher.publish(message)
+        message = semantic_world_msgs.msg.WorldModelReload(primary_key=dao.id)
+        self.reload_model_publisher.publish(message)
 
-    def update_model(self, msg: semantic_world_msgs.msg.WorldModel):
+    def reload_model(self, msg: semantic_world_msgs.msg.WorldModelReload):
         """
         Update the world with the new model by fetching it from the database.
 
@@ -171,7 +185,7 @@ class WorldSynchronizer:
         query = select(WorldMappingDAO).where(WorldMappingDAO.id == msg.primary_key)
         new_world = self.session.scalars(query).one().from_dao()
         self._replace_world(new_world)
-        self.world._notify_model_change([self.publish_model_callback])
+        self.world._notify_model_change([self.reload_model_callback])
 
     def _replace_world(self, new_world: World):
         """
@@ -208,3 +222,9 @@ class WorldSynchronizer:
             self.world.state.data[0, indices] = np.asarray(positions, dtype=float)
             self.update_previous_world_state()
             self.world.notify_state_change()
+
+    def publish_model_change(self):
+        ...
+
+    def apply_model_change(self, msg: semantic_world_msgs.msg.WorldModelModificationBlock):
+        ...

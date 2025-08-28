@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+import itertools
 from abc import abstractmethod
 import os
 from collections import deque
@@ -11,13 +12,14 @@ from functools import reduce, lru_cache
 from typing import (
     Deque,
     Type,
-    TypeVar,
+    TypeVar, Dict, Any, Self,
 )
 from os.path import dirname
 from typing import List, Optional, TYPE_CHECKING, Tuple
 from typing import Set
 
 import numpy as np
+from random_events.utils import SubclassJSONSerializer
 from scipy.stats import geom
 from trimesh.proximity import closest_point, nearby_faces
 from trimesh.sample import sample_surface
@@ -106,7 +108,7 @@ class KinematicStructureEntity(WorldEntity):
 
 
 @dataclass
-class Body(KinematicStructureEntity):
+class Body(KinematicStructureEntity, SubclassJSONSerializer):
     """
     Represents a body in the world.
     A body is a semantic atom, meaning that it cannot be decomposed into meaningful smaller parts.
@@ -227,6 +229,28 @@ class Body(KinematicStructureEntity):
 
         return BoundingBoxCollection(reference_frame, world_bboxes)
 
+    def to_json(self) -> Dict[str, Any]:
+        result = super().to_json()
+        result["name"] = self.name.to_json()
+        result["collision"] = [shape.to_json() for shape in self.collision]
+        result["visual"] = [shape.to_json() for shape in self.visual]
+        return result
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self:
+
+        result = cls(name=PrefixedName.from_json(data["name"]))
+
+        collision = [Shape.from_json(data) for data in data["collision"]]
+        visual = [Shape.from_json(data) for data in data["visual"]]
+
+        for shape in itertools.chain(collision, visual):
+            shape.origin.reference_frame = result
+
+        result.collision = collision
+        result.visual = visual
+
+        return result
 
 @dataclass
 class Region(KinematicStructureEntity):

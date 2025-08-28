@@ -5,12 +5,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 
-set(MSG_FILES
-  msg/DegreeOfFreedomState.msg
-  msg/PrefixedName.msg
-  msg/WorldModel.msg
-  msg/WorldState.msg
-)
+file(GLOB MSG_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "msg/*.msg")
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   ${MSG_FILES}

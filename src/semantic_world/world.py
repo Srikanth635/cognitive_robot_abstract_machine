@@ -1,12 +1,13 @@
 from __future__ import absolute_import
 from __future__ import annotations
 
+import inspect
 import logging
 from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import wraps, lru_cache
-from typing import Dict, Tuple, OrderedDict, Optional, TypeVar, Union, Callable
+from typing import Dict, Tuple, OrderedDict, Optional, TypeVar, Union, Callable, Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -42,6 +43,7 @@ from .world_entity import (
     Region,
     GenericKinematicStructureEntity,
 )
+from .world_modification import WorldModelModificationBlock
 from .world_state import WorldState
 
 logger = logging.getLogger(__name__)
@@ -50,6 +52,7 @@ id_generator = IDGenerator()
 
 GenericView = TypeVar("GenericView", bound=View)
 
+FunctionStack = List[Tuple[Callable, Dict[str, Any]]]
 
 class PlotAlignment(IntEnum):
     HORIZONTAL = 0
@@ -200,7 +203,21 @@ class WorldModelUpdateContextManager:
     This class manages that updates to the world within the context of this class only trigger recomputations after all
     desired updates have been performed.
     """
+
     first: bool = True
+    """
+    First time flag.
+    """
+
+    modification: Callable = None
+    """
+    Modification function.
+    """
+
+    arguments: Dict[str, Any] = None
+    """
+    Arguments of the modification function.
+    """
 
     def __init__(self, world: World):
         self.world = world
@@ -209,23 +226,43 @@ class WorldModelUpdateContextManager:
         if self.world.world_is_being_modified:
             self.first = False
         self.world.world_is_being_modified = True
+
+        if self.first:
+            self.world._current_modification_block =[]
+
         return self.world
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.world._current_modification_block.append((self.modification, self.arguments))
         if self.first:
             self.world.world_is_being_modified = False
             if exc_type is None:
                 self.world._notify_model_change()
+
+            self.world._modifications.append(self.world._current_modification_block)
+            self.world._current_modification_block = None
 
 
 def modifies_world(func):
     """
     Decorator that marks a method as a modification to the state or model of a world.
     """
+    sig = inspect.signature(func)
 
     @wraps(func)
     def wrapper(self: World, *args, **kwargs):
+
+        # bind args and kwargs
+        bound = sig.bind_partial(*args, **kwargs)  # use bind() if you require all args
+        bound.apply_defaults()  # fill in default values
+
+
         with self.modify_world() as context_manager:
+
+            # record function call
+            context_manager.modification = func
+            context_manager.arguments = bound.arguments
+
             result = func(self, *args, **kwargs)
             return result
 
@@ -286,16 +323,35 @@ class World:
     """
 
     state_change_callbacks: List[Callable] = field(default_factory=list, repr=False)
+    """
+    Callbacks to be called when the state of the world changes.
+    """
 
     model_change_callbacks: List[Callable] = field(default_factory=list, repr=False)
+    """
+    Callbacks to be called when the model of the world changes.
+    """
+
+    _modifications: List[FunctionStack] = field(default_factory=list, repr=False, init=False)
+    """
+    List of modifications to the world, used for synchronization across worlds.
+    """
+
+    _current_modification_block: Optional[FunctionStack] = field(default=None, repr=False, init=False)
+    """
+    The current modification block called within one context of @modifies_world.
+    """
 
     @property
-    def root(self) -> KinematicStructureEntity:
+    def root(self) -> Optional[KinematicStructureEntity]:
         """
         The root of the world is the unique node with in-degree 0.
 
         :return: The root of the world.
         """
+
+        if not self.kinematic_structure_entities:
+            return None
         possible_roots = [node for node in self.kinematic_structure_entities if self.kinematic_structure.in_degree(node.index) == 0]
         if len(possible_roots) == 1:
             return possible_roots[0]
@@ -314,6 +370,8 @@ class World:
         The world must be a tree.
         :return: True if the world is valid, raises an AssertionError otherwise.
         """
+        if self.empty:
+            return True
         assert len(self.kinematic_structure_entities) == (len(self.connections) + 1)
         assert rx.is_weakly_connected(self.kinematic_structure)
         actual_dofs = set()
@@ -381,7 +439,8 @@ class World:
         """
         # self.compute_fk.cache_clear()
         # self.compute_fk_with_collision_offset_np.cache_clear()
-        self._recompute_forward_kinematics()
+        if not self.empty:
+            self._recompute_forward_kinematics()
         self._state_version += 1
 
         [callback() for callback in self.state_change_callbacks]
@@ -635,21 +694,19 @@ class World:
         self.degrees_of_freedom.extend(other.degrees_of_freedom)
 
         # do not trigger computations in other
-        other.world_is_being_modified = True
-        for connection in other.connections:
-            other.remove_kinematic_structure_entity(connection.parent)
-            other.remove_kinematic_structure_entity(connection.child)
-            self.add_connection(connection)
-        for kinematic_structure_entity in other.kinematic_structure_entities:
-            if kinematic_structure_entity._world is not None:
-                other.remove_kinematic_structure_entity(kinematic_structure_entity)
+        with other.modify_world():
+            for connection in other.connections:
+                other.remove_kinematic_structure_entity(connection.parent)
+                other.remove_kinematic_structure_entity(connection.child)
+                self.add_connection(connection)
+            for kinematic_structure_entity in other.kinematic_structure_entities:
+                if kinematic_structure_entity._world is not None:
+                    other.remove_kinematic_structure_entity(kinematic_structure_entity)
 
-        other_views = [view for view in other.views]
-        for view in other_views:
-            other.remove_view(view)
-            self.add_view(view)
-
-        other.world_is_being_modified = False
+            other_views = [view for view in other.views]
+            for view in other_views:
+                other.remove_view(view)
+                self.add_view(view)
 
         connection = root_connection or Connection6DoF(
             parent=self_root, child=other_root, _world=self
@@ -913,6 +970,13 @@ class World:
         return root_connections, tip_connections
 
     @property
+    def empty(self):
+        """
+        :return: Returns True if the world contains kinematic_structure_entities, else False.
+        """
+        return len(self.kinematic_structure_entities) == 0
+
+    @property
     def layers(self) -> List[List[KinematicStructureEntity]]:
         return rx.layers(self.kinematic_structure, [self.root.index], index_output=False)
 
@@ -989,6 +1053,10 @@ class World:
         """
         Traverse the kinematic structure and compile forward kinematics expressions for fast evaluation.
         """
+
+        if self.empty:
+            return
+
         new_fks = ForwardKinematicsVisitor(self)
         self._travel_branch(self.root, new_fks)
         new_fks.compile_forward_kinematics()
