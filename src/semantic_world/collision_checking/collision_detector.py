@@ -31,7 +31,7 @@ class CollisionCheck:
     def bodies(self) -> Tuple[Body, Body]:
         return self.body_a, self.body_b
 
-    def _validate(self, world: World) -> None:
+    def _validate(self) -> None:
         """Validates the collision check parameters."""
         if self.distance <= 0:
             raise ValueError(f'Distance must be positive, got {self.distance}')
@@ -45,13 +45,13 @@ class CollisionCheck:
         if not self.body_b.has_collision():
             raise ValueError(f'Body {self.body_b.name} has no collision geometry')
 
-        if self.body_a not in world.bodies_with_enabled_collision:
+        if self.body_a not in self._world.bodies_with_enabled_collision:
             raise ValueError(f'Body {self.body_a.name} is not in list of bodies with collisions')
 
-        if self.body_b not in world.bodies_with_enabled_collision:
+        if self.body_b not in self._world.bodies_with_enabled_collision:
             raise ValueError(f'Body {self.body_b.name} is not in list of bodies with collisions')
 
-        root_chain, tip_chain = world.compute_split_chain_of_connections(self.body_a, self.body_b)
+        root_chain, tip_chain = self._world.compute_split_chain_of_connections(self.body_a, self.body_b)
         if all(not isinstance(c, ActiveConnection) for c in chain(root_chain, tip_chain)):
             raise ValueError(f'Relative pose between {self.body_a.name} and {self.body_b.name} is fixed')
 
@@ -63,10 +63,9 @@ class CollisionCheck:
         Returns None if the check should be skipped (e.g., bodies are linked).
         """
         collision_check = cls(body_a=body_a, body_b=body_b, distance=distance, _world=world)
-        collision_check._validate(world)
+        collision_check._validate()
         return collision_check
 
-    @classmethod
     def sort_bodies(self, body_a: Body, body_b: Body) -> Tuple[Body, Body]:
         """
         Sort both bodies in a consistent manner, needed to avoid checking B with A, when A with B is already checked.
@@ -115,10 +114,12 @@ class Collision:
         return str(self)
 
 
+@dataclass
 class CollisionDetector(abc.ABC):
     """
     Abstract class for collision detectors.
     """
+    _world: World
 
     @abc.abstractmethod
     def sync_world_model(self) -> None:
