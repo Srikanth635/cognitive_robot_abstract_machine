@@ -1,7 +1,10 @@
 from dataclasses import dataclass, field
-from typing import Optional, Set, List
+from itertools import product, repeat, combinations
+from typing import Optional, Set, List, Dict
 
-from trimesh.collision import CollisionManager
+import fcl
+from line_profiler import profile
+from trimesh.collision import CollisionManager, mesh_to_BVH
 
 from .collision_detector import CollisionDetector, CollisionCheck, Collision
 from ..world import World
@@ -24,21 +27,21 @@ class TrimeshCollisionDetector(CollisionDetector):
     """
     _manager_objects: set[Body] = field(default_factory=set, init=False)
 
+    _collision_objects: Dict[Body, fcl.CollisionObject] = field(default_factory=dict, init=False)
+
+
     def sync_world_model(self) -> None:
         """
         Synchronize the collision checker with the current world model
         """
         if self._last_synced_model == self._world._model_version:
             return
-        bodies_to_be_removed = self._manager_objects - set(self._world.bodies_with_enabled_collision)
-        for body in bodies_to_be_removed:
-            self.collision_manager.remove_object(body.name.name)
-            self._manager_objects.remove(body)
-        bodies_to_be_added = set(self._world.bodies_with_enabled_collision) - self._manager_objects
+        bodies_to_be_added  = set(self._world.bodies_with_enabled_collision) - set(self._collision_objects.keys())
         for body in bodies_to_be_added:
-            self.collision_manager.add_object(body.name.name, body.combined_collision_mesh, body.global_pose.to_np())
-            self._manager_objects.add(body)
-        self._last_synced_model = self._world._model_version
+            self._collision_objects[body] = fcl.CollisionObject(mesh_to_BVH(body.combined_collision_mesh), fcl.Transform(body.global_pose.to_np()[:3, :3], body.global_pose.to_np()[:3, 3]))
+        bodies_to_be_removed = set(self._collision_objects.keys()) - set(self._world.bodies_with_enabled_collision)
+        for body in bodies_to_be_removed:
+            del self._collision_objects[body]
 
     def sync_world_state(self) -> None:
         """
@@ -46,10 +49,10 @@ class TrimeshCollisionDetector(CollisionDetector):
         """
         if self._last_synced_state == self._world._state_version:
             return
-        for body in self._world.bodies_with_enabled_collision:
-            self.collision_manager.set_transform(body.name.name, body.global_pose.to_np())
-        self._last_synced_state = self._world._state_version
+        for body, coll_obj in self._collision_objects.items():
+            coll_obj.setTransform(fcl.Transform(body.global_pose.to_np()[:3, :3], body.global_pose.to_np()[:3, 3]))
 
+    @profile
     def check_collisions(self,
                          collision_matrix: Optional[Set[CollisionCheck]] = None) -> List[Collision]:
         """
@@ -62,21 +65,17 @@ class TrimeshCollisionDetector(CollisionDetector):
         """
         self.sync_world_model()
         self.sync_world_state()
-        collisions = self.collision_manager.in_collision_internal(return_names=True, return_data=True)
-        collision_pairs = [(self._world.get_kinematic_structure_entity_by_name(pair[0]),
-                            self._world.get_kinematic_structure_entity_by_name(pair[1])) for pair in collisions[1]]
-        result_set = set()
-        for pair in collision_pairs:
-            if (pair in [(c.body_a, c.body_b) for c in collision_matrix or []]
-                or (pair[1], pair[0]) in [(c.body_a, c.body_b) for c in collision_matrix or []]
-                or collision_matrix is None):
-                for data in collisions[2]:
-                    if data.names == {pair[0].name.name, pair[1].name.name} or data.names == {
-                        pair[1].name.name, pair[0].name.name}:
-                        result_set.add(
-                            Collision(0.0, pair[0], pair[1], map_P_pa=data.point))
 
-        return list(result_set)
+        collision_pairs = [(cc.body_a, cc.body_b, cc.distance) for cc in collision_matrix] if collision_matrix else None or ((body_a, body_b, 0.1) for body_a, body_b in  combinations(self._world.bodies_with_enabled_collision, 2))
+        result = []
+        for body_a, body_b, distance in collision_pairs:
+            distance_request = fcl.DistanceRequest(enable_nearest_points=True, enable_signed_distance=True)
+            distance_result = fcl.DistanceResult()
+            fcl.distance(self._collision_objects[body_a], self._collision_objects[body_b], distance_request, distance_result)
+            if distance_result.min_distance <= distance:
+                result.append(Collision(distance_result.min_distance, body_a, body_b, map_P_pa=distance_result.nearest_points[0], map_P_pb=distance_result.nearest_points[1], map_V_n_input=distance_result.nearest_points[0]-distance_result.nearest_points[1]))
+
+        return result
 
     def check_collision_between_bodies(self, body_a: Body, body_b: Body) -> Optional[Collision]:
         collision = self.check_collisions({CollisionCheck(body_a, body_b, 0.0, self._world)})
