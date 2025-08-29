@@ -25,9 +25,10 @@ class TrimeshCollisionDetector(CollisionDetector):
     """
     Last synced model version of the world
     """
-    _manager_objects: set[Body] = field(default_factory=set, init=False)
-
     _collision_objects: Dict[Body, fcl.CollisionObject] = field(default_factory=dict, init=False)
+    """
+    The FCL collision objects for each body in the world
+    """
 
 
     def sync_world_model(self) -> None:
@@ -52,7 +53,6 @@ class TrimeshCollisionDetector(CollisionDetector):
         for body, coll_obj in self._collision_objects.items():
             coll_obj.setTransform(fcl.Transform(body.global_pose.to_np()[:3, :3], body.global_pose.to_np()[:3, 3]))
 
-    @profile
     def check_collisions(self,
                          collision_matrix: Optional[Set[CollisionCheck]] = None) -> List[Collision]:
         """
