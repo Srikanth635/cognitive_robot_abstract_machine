@@ -6,6 +6,7 @@ from hypothesis import given, assume
 
 import semantic_world.spatial_types.math as giskard_math
 import semantic_world.spatial_types.spatial_types as cas
+from semantic_world.exceptions import ExpressionHasFreeSymbolsError
 from .utils_for_tests import float_no_nan_no_inf, quaternion, random_angle, unit_vector, compare_axis_angle, \
     angle_positive, vector, lists_of_same_length, compare_orientations, sq_matrix, assert_allclose
 
@@ -241,6 +242,12 @@ class TestExpression:
         e = m ** 1
         e = 1 ** m
         assert isinstance(e, cas.Expression)
+
+    def test_to_np_fail(self):
+        s1, s2 = cas.Symbol('s1'), cas.Symbol('s2')
+        e = s1 + s2
+        with pytest.raises(ExpressionHasFreeSymbolsError):
+            e.to_np()
 
     def test_get_attr(self):
         m = cas.Expression(np.eye(4))

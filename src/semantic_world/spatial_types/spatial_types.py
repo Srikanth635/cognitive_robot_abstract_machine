@@ -15,6 +15,8 @@ import casadi as ca
 import numpy as np
 from scipy import sparse as sp
 
+from ..exceptions import ExpressionHasFreeSymbolsError
+
 if TYPE_CHECKING:
     from ..world_entity import KinematicStructureEntity
 
@@ -288,19 +290,17 @@ class SymbolicType:
     def __hash__(self) -> int:
         return self.s.__hash__()
 
-    def __getitem__(self, item: Union[
-        np.ndarray, Union[int, slice], Tuple[Union[int, slice], Union[int, slice]]]) -> Expression:
+    def __getitem__(self,
+                    item: Union[np.ndarray, Union[int, slice], Tuple[Union[int, slice], Union[int, slice]]]) \
+            -> Expression:
         if isinstance(item, np.ndarray) and item.dtype == bool:
             item = (np.where(item)[0], slice(None, None))
         return Expression(self.s[item])
 
-    def __setitem__(self, key: Union[Union[int, slice], Tuple[Union[int, slice], Union[int, slice]]],
+    def __setitem__(self,
+                    key: Union[Union[int, slice], Tuple[Union[int, slice], Union[int, slice]]],
                     value: ScalarData):
-        try:
-            value = value.s
-        except AttributeError:
-            pass
-        self.s[key] = value
+        self.s[key] = value.s if hasattr(value, 's') else value
 
     @property
     def shape(self) -> Tuple[int, int]:
@@ -317,7 +317,7 @@ class SymbolicType:
 
     def to_np(self) -> Union[float, np.ndarray]:
         if not self.is_constant():
-            raise ValueError('Only expressions with no free symbols can be converted to numpy arrays.')
+            raise ExpressionHasFreeSymbolsError(self.free_symbols())
         if not hasattr(self, 'np_data'):
             if self.shape[0] == self.shape[1] == 0:
                 self.np_data = np.eye(0)
@@ -349,6 +349,12 @@ class Symbol(SymbolicType):
         instance.name = name
         cls._registry[name] = instance
         return instance
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return f'"{self}"'
 
     @overload
     def __add__(self, other: Point3) -> Point3:
