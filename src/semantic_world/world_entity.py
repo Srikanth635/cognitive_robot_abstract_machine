@@ -1,36 +1,36 @@
 from __future__ import annotations
 
+import abc
 import inspect
 import itertools
-from abc import abstractmethod
-import os
+from abc import abstractmethod, ABC
 from collections import deque
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from dataclasses import fields
-from functools import reduce, lru_cache
+from functools import lru_cache
 from typing import (
     Deque,
     Type,
-    TypeVar, Dict, Any, Self,
+    TypeVar,
+    Dict,
+    Any,
+    Self,
 )
-from os.path import dirname
 from typing import List, Optional, TYPE_CHECKING, Tuple
 from typing import Set
 
 import numpy as np
-from random_events.utils import SubclassJSONSerializer
+from random_events.utils import SubclassJSONSerializer, get_full_class_name
 from scipy.stats import geom
 from trimesh.proximity import closest_point, nearby_faces
 from trimesh.sample import sample_surface
-from typing_extensions import ClassVar
 
-from .geometry import BoundingBoxCollection, BoundingBox, transformation_to_json
+from .geometry import BoundingBoxCollection, BoundingBox
 from .geometry import Shape
 from .prefixed_name import PrefixedName
 from .spatial_types import spatial_types as cas
 from .spatial_types.spatial_types import TransformationMatrix, Expression
-from .types import NpMatrix4x4
 from .utils import IDGenerator
 
 if TYPE_CHECKING:
@@ -147,8 +147,9 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
     def has_collision(self) -> bool:
         return len(self.collision) > 0
 
-    def compute_closest_points_multi(self, others: list[Body], sample_size=25) -> Tuple[
-        np.ndarray, np.ndarray, np.ndarray]:
+    def compute_closest_points_multi(
+        self, others: list[Body], sample_size=25
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Computes the closest points to each given body respectively.
 
@@ -169,33 +170,50 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
         query_points = []
         for other in others:
             # Calculate the closest vertex on this body to the other body
-            closest_vert_id = \
-                self.collision[0].mesh.kdtree.query(
-                    (self._world.compute_forward_kinematics_np(self, other) @ other.collision[0].origin.to_np())[:3, 3],
-                    k=1)[1]
+            closest_vert_id = self.collision[0].mesh.kdtree.query(
+                (
+                    self._world.compute_forward_kinematics_np(self, other)
+                    @ other.collision[0].origin.to_np()
+                )[:3, 3],
+                k=1,
+            )[1]
             closest_vert = self.collision[0].mesh.vertices[closest_vert_id]
 
             # Compute the closest faces on the other body to the closes vertex
-            faces = nearby_faces(other.collision[0].mesh,
-                                 [(self._world.compute_forward_kinematics_np(other, self) @ self.collision[
-                                     0].origin.to_np())[:3, 3] + closest_vert])[0]
+            faces = nearby_faces(
+                other.collision[0].mesh,
+                [
+                    (
+                        self._world.compute_forward_kinematics_np(other, self)
+                        @ self.collision[0].origin.to_np()
+                    )[:3, 3]
+                    + closest_vert
+                ],
+            )[0]
             face_weights = np.zeros(len(other.collision[0].mesh.faces))
 
             # Assign weights to the faces based on a geometric distribution
             face_weights[faces] = evaluated_geometric_distribution(len(faces))
 
             # Sample points on the surface of the other body
-            q = sample_surface(other.collision[0].mesh, sample_size, face_weight=face_weights, seed=420)[0]
+            q = sample_surface(
+                other.collision[0].mesh, sample_size, face_weight=face_weights, seed=420
+            )[0]
             # Make 4x4 transformation matrix from points
             points = np.tile(np.eye(4, dtype=np.float32), (len(q), 1, 1))
             points[:, :3, 3] = q
 
             # Transform from the mesh to the other mesh
-            transform = np.linalg.inv(self.collision[0].origin.to_np()) @ self._world.compute_forward_kinematics_np(
-                self, other) @ other.collision[0].origin.to_np()
+            transform = (
+                np.linalg.inv(self.collision[0].origin.to_np())
+                @ self._world.compute_forward_kinematics_np(self, other)
+                @ other.collision[0].origin.to_np()
+            )
             points = points @ transform
 
-            points = points[:, :3, 3]  # Extract the points from the transformation matrix
+            points = points[
+                :, :3, 3
+            ]  # Extract the points from the transformation matrix
 
             query_points.extend(points)
 
@@ -206,8 +224,9 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
         dists = np.array(dists).reshape(len(others), sample_size)
         dist_min = np.min(dists, axis=1)
         points_min_self = points[np.arange(len(others)), np.argmin(dists, axis=1), :]
-        points_min_other = np.array(query_points).reshape(len(others), sample_size, 3)[np.arange(len(others)),
-                           np.argmin(dists, axis=1), :]
+        points_min_other = np.array(query_points).reshape(len(others), sample_size, 3)[
+            np.arange(len(others)), np.argmin(dists, axis=1), :
+        ]
         return points_min_self, points_min_other, dist_min
 
     def as_bounding_box_collection_in_frame(
@@ -252,6 +271,7 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
 
         return result
 
+
 @dataclass
 class Region(KinematicStructureEntity):
     """
@@ -276,7 +296,12 @@ class Region(KinematicStructureEntity):
         bbs = [bb.transform_to_frame(reference_frame) for bb in bbs]
         return BoundingBoxCollection(reference_frame, bbs)
 
-GenericKinematicStructureEntity = TypeVar("GenericKinematicStructureEntity", bound=KinematicStructureEntity)
+
+GenericKinematicStructureEntity = TypeVar(
+    "GenericKinematicStructureEntity", bound=KinematicStructureEntity
+)
+
+
 @dataclass
 class View(WorldEntity):
     """
@@ -285,7 +310,9 @@ class View(WorldEntity):
     This class can hold references to certain bodies that gain meaning in this context.
     """
 
-    def _kinematic_structure_entities(self, visited: Set[int], aggregation_type: Type[GenericKinematicStructureEntity]) -> Set[GenericKinematicStructureEntity]:
+    def _kinematic_structure_entities(
+        self, visited: Set[int], aggregation_type: Type[GenericKinematicStructureEntity]
+    ) -> Set[GenericKinematicStructureEntity]:
         """
         Recursively collects all entities that are part of this view.
         """
@@ -308,11 +335,17 @@ class View(WorldEntity):
 
                 case Mapping():
                     stack.extend(
-                        v for v in obj.values() if _is_entity_view_or_iterable(v, aggregation_type)
+                        v
+                        for v in obj.values()
+                        if _is_entity_view_or_iterable(v, aggregation_type)
                     )
 
                 case Iterable() if not isinstance(obj, (str, bytes, bytearray)):
-                    stack.extend(v for v in obj if _is_entity_view_or_iterable(v, aggregation_type))
+                    stack.extend(
+                        v
+                        for v in obj
+                        if _is_entity_view_or_iterable(v, aggregation_type)
+                    )
 
         return entities
 
@@ -333,7 +366,6 @@ class View(WorldEntity):
         If this behaviour is not desired for a specific view, it can be overridden by implementing the `bodies` property.
         """
         return self._kinematic_structure_entities(set(), Body)
-
 
     @property
     def regions(self) -> Iterable[Region]:
@@ -371,6 +403,7 @@ class RootedView(View):
     """
     Represents a view that is rooted in a specific KinematicStructureEntity.
     """
+
     root: KinematicStructureEntity = field(default=None)
 
 
@@ -385,13 +418,13 @@ class EnvironmentView(RootedView):
         """
         Returns a set of all KinematicStructureEntity in the environment view.
         """
-        return set(self._world.compute_descendent_child_kinematic_structure_entities(self.root)) | {
-            self.root
-        }
+        return set(
+            self._world.compute_descendent_child_kinematic_structure_entities(self.root)
+        ) | {self.root}
 
 
 @dataclass
-class Connection(WorldEntity, SubclassJSONSerializer):
+class Connection(WorldEntity):
     """
     Represents a connection between two entities in the world.
     """
@@ -417,7 +450,10 @@ class Connection(WorldEntity, SubclassJSONSerializer):
         self.origin_expression.reference_frame = self.parent
         self.origin_expression.child_frame = self.child
         if self.name is None:
-            self.name = PrefixedName(f'{self.parent.name.name}_T_{self.child.name.name}', prefix=self.child.name.prefix)
+            self.name = PrefixedName(
+                f"{self.parent.name.name}_T_{self.child.name.name}",
+                prefix=self.child.name.prefix,
+            )
 
     def _post_init_world_part(self):
         """
@@ -469,18 +505,17 @@ class Connection(WorldEntity, SubclassJSONSerializer):
         """
         dofs = set()
 
-        if hasattr(self, 'active_dofs'):
+        if hasattr(self, "active_dofs"):
             dofs.update(set(self.active_dofs))
-        if hasattr(self, 'passive_dofs'):
+        if hasattr(self, "passive_dofs"):
             dofs.update(set(self.passive_dofs))
 
         return dofs
 
-    def to_json(self) -> Dict[str, Any]:
-        return {**super().to_json(), 'parent_name': self.parent.name.to_json(), 'child_name': self.child.name.to_json(),
-                "origin_expression": transformation_to_json(self.origin_expression)}
 
-def _is_entity_view_or_iterable(obj: object, aggregation_type: Type[KinematicStructureEntity]) -> bool:
+def _is_entity_view_or_iterable(
+    obj: object, aggregation_type: Type[KinematicStructureEntity]
+) -> bool:
     """
     Determines if an object is a KinematicStructureEntity, a View, or an Iterable (excluding strings and bytes).
     """
@@ -489,7 +524,9 @@ def _is_entity_view_or_iterable(obj: object, aggregation_type: Type[KinematicStr
     )
 
 
-def _attr_values(view: View, aggregation_type: Type[GenericKinematicStructureEntity]) -> Iterable[object]:
+def _attr_values(
+    view: View, aggregation_type: Type[GenericKinematicStructureEntity]
+) -> Iterable[object]:
     """
     Yields all dataclass fields and set properties of this view.
     Skips private fields (those starting with '_'), as well as the 'bodies' property.
@@ -497,14 +534,18 @@ def _attr_values(view: View, aggregation_type: Type[GenericKinematicStructureEnt
     :param view: The view to extract attributes from.
     """
     for f in fields(view):
-        if f.name.startswith('_'):
+        if f.name.startswith("_"):
             continue
         v = getattr(view, f.name, None)
         if _is_entity_view_or_iterable(v, aggregation_type):
             yield v
 
     for name, prop in inspect.getmembers(type(view), lambda o: isinstance(o, property)):
-        if name in {"kinematic_structure_entities", "bodies", "regions"} or name.startswith("_"):
+        if name in {
+            "kinematic_structure_entities",
+            "bodies",
+            "regions",
+        } or name.startswith("_"):
             continue
         try:
             v = getattr(view, name)
@@ -512,3 +553,4 @@ def _attr_values(view: View, aggregation_type: Type[GenericKinematicStructureEnt
             continue
         if _is_entity_view_or_iterable(v, aggregation_type):
             yield v
+
