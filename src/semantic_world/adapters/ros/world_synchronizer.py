@@ -251,7 +251,7 @@ class WorldSynchronizer:
             self.world.notify_state_change()
 
     def publish_model_change(self):
-        latest_changes = self.parse_latest_modification_block()
+        latest_changes = WorldModelModificationBlock.from_modifications(self.world._modifications[-1])
         msg = semantic_world_msgs.msg.WorldModelModificationBlock(modifications=[json.dumps(m.to_json()) for m in latest_changes.modifications])
         self.model_change_publisher.publish(msg)
 
@@ -260,22 +260,4 @@ class WorldSynchronizer:
                                                              for m in msg.modifications], skip_callbacks=[self.model_change_callback])
         changes(self.world)
 
-    def parse_latest_modification_block(self):
 
-        latest_calls = self.world._modifications[-1]
-
-        result = WorldModelModificationBlock([])
-
-        for call, kwargs in latest_calls:
-            if call.__name__ == self.world.add_kinematic_structure_entity.__name__:
-                modification = AddBodyModification(kwargs["kinematic_structure_entity"])
-            elif call.__name__ == self.world.remove_kinematic_structure_entity.__name__:
-                modification = RemoveBodyModification(kwargs["kinematic_structure_entity"].name)
-            elif call.__name__ == self.world.add_connection.__name__:
-                modification = AddConnectionModification(kwargs["connection"])
-            else:
-                raise NotImplementedError
-
-            result.modifications.append(modification)
-
-        return result
