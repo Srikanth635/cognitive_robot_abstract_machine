@@ -282,6 +282,9 @@ def _operation_type_error(arg1: object, operation: str, arg2: object) -> TypeErr
 
 
 class SymbolicType:
+    """
+    A wrapper around CasADi's ca.SX, with better usability
+    """
     s: Union[ca.SX, np.ndarray]
     np_data: Optional[Union[np.ndarray, float]]
 
@@ -322,14 +325,16 @@ class SymbolicType:
     def is_constant(self) -> bool:
         return len(self.free_symbols()) == 0
 
-    def to_np(self) -> Union[float, np.ndarray]:
+    def to_np(self) -> np.ndarray:
+        """
+        Transforms the data into a numpy array.
+        Only works if the expression has no free symbols.
+        """
         if not self.is_constant():
             raise HasFreeSymbolsError(self.free_symbols())
         if not hasattr(self, 'np_data'):
             if self.shape[0] == self.shape[1] == 0:
                 self.np_data = np.eye(0)
-            elif self.s.shape[0] * self.s.shape[1] <= 1:
-                self.np_data = float(ca.evalf(self.s))
             elif self.s.shape[0] == 1 or self.s.shape[1] == 1:
                 self.np_data = np.array(ca.evalf(self.s)).ravel()
             else:
@@ -354,8 +359,134 @@ class SymbolicType:
         return CompiledFunction(self, parameters, sparse)
 
 
-class Symbol(SymbolicType):
+class BasicOperatorMixin:
+    """
+    Base class providing arithmetic operations for symbolic types.
+    """
+    s: ca.SX
+
+    def _binary_operation(self,
+                          other: ScalarData,
+                          operation_name: str,
+                          reverse: bool = False) -> Expression:
+        """
+        Performs a binary operation between the current instance and another operand.
+
+        Symbol only allows ScalarData on the righthand sight and implements the reverse version only for NumericalScalaer
+
+        :param other: The operand to be used in the binary operation. Either `ScalarData`
+            or `NumericalScalar` types are expected, depending on the context.
+        :param operation_name: The name of the binary operation (e.g., "add", "sub", "mul").
+        :param reverse: A boolean indicating whether the operation is a reverse operation.
+            Defaults to `False`.
+        :return: An `Expression` instance resulting from the binary operation, or
+            `NotImplemented` if the operand type does not match the expected type.
+        """
+        if reverse:
+            # For reverse operations, check if other is NumericalScalar
+            if not isinstance(other, NumericalScalar):
+                return NotImplemented
+            return Expression(getattr(self.s, f'__r{operation_name}__')(other))
+        else:
+            # For regular operations, check if other is ScalarData
+            if not isinstance(other, ScalarData):
+                return NotImplemented
+            if isinstance(other, SymbolicScalar):
+                other = other.s
+            return Expression(getattr(self.s, f'__{operation_name}__')(other))
+
+    # %% arthimetic operators
+    def __neg__(self) -> Expression:
+        return Expression(self.s.__neg__())
+
+    def __add__(self, other: ScalarData) -> Expression:
+        return self._binary_operation(other, 'add')
+
+    def __radd__(self, other: NumericalScalar) -> Expression:
+        return self._binary_operation(other, 'add', reverse=True)
+
+    def __sub__(self, other: ScalarData) -> Expression:
+        return self._binary_operation(other, 'sub')
+
+    def __rsub__(self, other: NumericalScalar) -> Expression:
+        return self._binary_operation(other, 'sub', reverse=True)
+
+    def __mul__(self, other: ScalarData) -> Expression:
+        return self._binary_operation(other, 'mul')
+
+    def __rmul__(self, other: NumericalScalar) -> Expression:
+        return self._binary_operation(other, 'mul', reverse=True)
+
+    def __truediv__(self, other: ScalarData) -> Expression:
+        return self._binary_operation(other, 'truediv')
+
+    def __rtruediv__(self, other: NumericalScalar) -> Expression:
+        return self._binary_operation(other, 'truediv', reverse=True)
+
+    def __pow__(self, other: ScalarData) -> Expression:
+        return self._binary_operation(other, 'pow')
+
+    def __rpow__(self, other: NumericalScalar) -> Expression:
+        return self._binary_operation(other, 'pow', reverse=True)
+
+    def __floordiv__(self, other: ScalarData) -> Expression:
+        return floor(self / other)
+
+    def __rfloordiv__(self, other: ScalarData) -> Expression:
+        return floor(other / self)
+
+    def __mod__(self, other: ScalarData) -> Expression:
+        return fmod(self.s, other)
+
+    def __rmod__(self, other: ScalarData) -> Expression:
+        return fmod(other, self.s)
+
+    def __divmod__(self, other: ScalarData) -> Tuple[Expression, Expression]:
+        return self // other, self % other
+
+    def __rdivmod__(self, other: ScalarData) -> Tuple[Expression, Expression]:
+        return other // self, other % self
+
+    # %% logical operators
+
+    def __invert__(self) -> Expression:
+        return logic_not(self.s)
+
+    def __eq__(self, other: ScalarData) -> Expression:
+        if isinstance(other, SymbolicType):
+            other = other.s
+        return Expression(self.s.__eq__(other))
+
+    def __ne__(self, other):
+        if isinstance(other, SymbolicType):
+            other = other.s
+        return Expression(self.s.__ne__(other))
+
+    def __or__(self, other: ScalarData) -> Expression:
+        return logic_or(self.s, other)
+
+    def __and__(self, other: ScalarData) -> Expression:
+        return logic_and(self.s, other)
+
+    def __lt__(self, other: ScalarData) -> Expression:
+        return self._binary_operation(other, 'lt')
+
+    def __le__(self, other: ScalarData) -> Expression:
+        return self._binary_operation(other, 'le')
+
+    def __gt__(self, other: ScalarData) -> Expression:
+        return self._binary_operation(other, 'gt')
+
+    def __ge__(self, other: ScalarData) -> Expression:
+        return self._binary_operation(other, 'ge')
+
+
+class Symbol(SymbolicType, BasicOperatorMixin):
     _registry: Dict[str, Symbol] = {}
+    """
+    To avoid two symbols with the same name, references to existing symbols are stored on a class level.
+    """
+
     name: str
 
     def __new__(cls, name: str):
@@ -374,231 +505,15 @@ class Symbol(SymbolicType):
         return self.name
 
     def __repr__(self):
-        return f'"{self}"'
-
-    @overload
-    def __add__(self, other: Point3) -> Point3:
-        ...
-
-    @overload
-    def __add__(self, other: Vector3) -> Vector3:
-        ...
-
-    @overload
-    def __add__(self, other: Union[Symbol, Expression, float, Quaternion]) -> Expression:
-        ...
-
-    def __add__(self, other):
-        if isinstance(other, (int, float)):
-            return Expression(self.s.__add__(other))
-        if isinstance(other, SymbolicType):
-            sum_ = self.s.__add__(other.s)
-            if isinstance(other, (Symbol, Expression)):
-                return Expression(sum_)
-            elif isinstance(other, Vector3):
-                return Vector3.from_iterable(sum_)
-            elif isinstance(other, Point3):
-                return Point3.from_iterable(sum_)
-        raise _operation_type_error(self, '+', other)
-
-    def __radd__(self, other: float) -> Expression:
-        if isinstance(other, (int, float)):
-            return Expression(self.s.__radd__(other))
-        raise _operation_type_error(other, '+', self)
-
-    @overload
-    def __sub__(self, other: Point3) -> Point3:
-        ...
-
-    @overload
-    def __sub__(self, other: Vector3) -> Vector3:
-        ...
-
-    @overload
-    def __sub__(self, other: RotationMatrix) -> RotationMatrix:
-        ...
-
-    @overload
-    def __sub__(self, other: TransformationMatrix) -> TransformationMatrix:
-        ...
-
-    @overload
-    def __sub__(self, other: Union[Symbol, Expression, float, Quaternion]) -> Expression:
-        ...
-
-    def __sub__(self, other):
-        if isinstance(other, (int, float)):
-            return Expression(self.s.__sub__(other))
-        if isinstance(other, SymbolicType):
-            result = self.s.__sub__(other.s)
-            if isinstance(other, (Symbol, Expression)):
-                return Expression(result)
-            elif isinstance(other, Vector3):
-                return Vector3.from_iterable(result)
-            elif isinstance(other, Point3):
-                return Point3.from_iterable(result)
-        raise _operation_type_error(self, '-', other)
-
-    def __rsub__(self, other: float) -> Expression:
-        if isinstance(other, (int, float)):
-            return Expression(self.s.__rsub__(other))
-        raise _operation_type_error(other, '-', self)
-
-    @overload
-    def __mul__(self, other: Point3) -> Point3:
-        ...
-
-    @overload
-    def __mul__(self, other: Vector3) -> Vector3:
-        ...
-
-    @overload
-    def __mul__(self, other: RotationMatrix) -> RotationMatrix:
-        ...
-
-    @overload
-    def __mul__(self, other: TransformationMatrix) -> TransformationMatrix:
-        ...
-
-    @overload
-    def __mul__(self, other: Union[Symbol, Expression, float, Quaternion]) -> Expression:
-        ...
-
-    def __mul__(self, other):
-        if isinstance(other, (int, float)):
-            return Expression(self.s.__mul__(other))
-        if isinstance(other, SymbolicType):
-            result = self.s.__mul__(other.s)
-            if isinstance(other, (Symbol, Expression)):
-                return Expression(result)
-            elif isinstance(other, Vector3):
-                return Vector3.from_iterable(result)
-            elif isinstance(other, Point3):
-                return Point3.from_iterable(result)
-        raise _operation_type_error(self, '*', other)
-
-    def __rmul__(self, other: float) -> Expression:
-        if isinstance(other, (int, float)):
-            return Expression(self.s.__rmul__(other))
-        raise _operation_type_error(other, '*', self)
-
-    @overload
-    def __truediv__(self, other: Point3) -> Point3:
-        ...
-
-    @overload
-    def __truediv__(self, other: Vector3) -> Vector3:
-        ...
-
-    @overload
-    def __truediv__(self, other: RotationMatrix) -> RotationMatrix:
-        ...
-
-    @overload
-    def __truediv__(self, other: TransformationMatrix) -> TransformationMatrix:
-        ...
-
-    @overload
-    def __truediv__(self, other: Union[Symbol, Expression, float, Quaternion]) -> Expression:
-        ...
-
-    def __truediv__(self, other):
-        if isinstance(other, (int, float)):
-            return Expression(self.s.__truediv__(other))
-        if isinstance(other, SymbolicType):
-            result = self.s.__truediv__(other.s)
-            if isinstance(other, (Symbol, Expression)):
-                return Expression(result)
-            elif isinstance(other, Vector3):
-                return Vector3.from_iterable(result)
-            elif isinstance(other, Point3):
-                return Point3.from_iterable(result)
-        raise _operation_type_error(self, '/', other)
-
-    def __rtruediv__(self, other: float) -> Expression:
-        if isinstance(other, (int, float)):
-            return Expression(self.s.__rtruediv__(other))
-        raise _operation_type_error(other, '/', self)
-
-    def __floordiv__(self, other: ScalarData) -> Expression:
-        return floor(self / other)
-
-    def __mod__(self, other: ScalarData) -> Expression:
-        return fmod(self, other)
-
-    def __divmod__(self, other: ScalarData) -> Tuple[Expression, Expression]:
-        return self // other, self % other
-
-    def __rfloordiv__(self, other: ScalarData) -> Expression:
-        return floor(other / self)
-
-    def __rmod__(self, other: ScalarData) -> Expression:
-        return fmod(other, self)
-
-    def __rdivmod__(self, other: ScalarData) -> Tuple[Expression, Expression]:
-        return other // self, other % self
-
-    def __lt__(self, other: ScalarData) -> Expression:
-        if isinstance(other, SymbolicType):
-            other = other.s
-        return Expression(self.s.__lt__(other))
-
-    def __le__(self, other: ScalarData) -> Expression:
-        if isinstance(other, SymbolicType):
-            other = other.s
-        return Expression(self.s.__le__(other))
-
-    def __gt__(self, other: ScalarData) -> Expression:
-        if isinstance(other, SymbolicType):
-            other = other.s
-        return Expression(self.s.__gt__(other))
-
-    def __ge__(self, other: ScalarData) -> Expression:
-        if isinstance(other, SymbolicType):
-            other = other.s
-        return Expression(self.s.__ge__(other))
-
-    def __eq__(self, other: object) -> bool:
-        return hash(self) == hash(other)
-
-    def __ne__(self, other: object) -> bool:
-        return hash(self) != hash(other)
-
-    def __neg__(self) -> Expression:
-        return Expression(self.s.__neg__())
-
-    def __invert__(self) -> Expression:
-        return logic_not(self)
-
-    def __or__(self, other: ScalarData) -> Expression:
-        return logic_or(self, other)
-
-    def __and__(self, other: ScalarData) -> Expression:
-        return logic_and(self, other)
-
-    def __pow__(self, other: ScalarData) -> Expression:
-        if isinstance(other, (int, float)):
-            return Expression(self.s.__pow__(other))
-        if isinstance(other, SymbolicType):
-            result = self.s.__pow__(other.s)
-            if isinstance(other, (Symbol, Expression)):
-                return Expression(result)
-        raise _operation_type_error(self, '**', other)
-
-    def __rpow__(self, other: ScalarData) -> Expression:
-        if isinstance(other, (int, float)):
-            return Expression(self.s.__rpow__(other))
-        raise _operation_type_error(other, '**', self)
+        return f'Symbol({self})'
 
     def __hash__(self):
         return hash(self.name)
 
 
-class Expression(SymbolicType):
+class Expression(SymbolicType, BasicOperatorMixin):
 
-    def __init__(self, data: Optional[Union[
-        Symbol, Expression, float, Vector3, Point3, TransformationMatrix, RotationMatrix, Quaternion, Iterable[
-            ScalarData], Iterable[Iterable[ScalarData]], np.ndarray]] = None):
+    def __init__(self, data: Optional[Union[ScalarData, SpatialType, Iterable]] = None):
         if data is None:
             data = []
         if isinstance(data, ca.SX):
@@ -608,6 +523,9 @@ class Expression(SymbolicType):
         elif isinstance(data, (int, float, np.ndarray)):
             self.s = ca.SX(data)
         else:
+            self._create_from_iterable(data)
+
+    def _create_from_iterable(self, data):
             x = len(data)
             if x == 0:
                 self.s = ca.SX()
@@ -637,178 +555,6 @@ class Expression(SymbolicType):
 
     def __copy__(self) -> Expression:
         return Expression(copy(self.s))
-
-    @overload
-    def __add__(self, other: Point3) -> Point3:
-        ...
-
-    @overload
-    def __add__(self, other: Vector3) -> Vector3:
-        ...
-
-    @overload
-    def __add__(self, other: Union[
-        Symbol, Expression, float, TransformationMatrix, RotationMatrix, Quaternion]) -> Expression:
-        ...
-
-    def __add__(self, other):
-        if isinstance(other, (int, float)):
-            return Expression(self.s.__add__(other))
-        if isinstance(other, Point3):
-            return Point3.from_iterable(self.s.__add__(other.s))
-        if isinstance(other, Vector3):
-            return Vector3.from_iterable(self.s.__add__(other.s))
-        if isinstance(other, (Expression, Symbol)):
-            return Expression(self.s.__add__(other.s))
-        raise _operation_type_error(self, '+', other)
-
-    def __radd__(self, other: float) -> Expression:
-        if isinstance(other, (int, float)):
-            return Expression(self.s.__radd__(other))
-        raise _operation_type_error(other, '+', self)
-
-    def __sub__(self, other: ScalarData) -> Expression:
-        if isinstance(other, (int, float)):
-            return Expression(self.s.__sub__(other))
-        if isinstance(other, (Expression, Symbol)):
-            return Expression(self.s.__sub__(other.s))
-        raise _operation_type_error(self, '-', other)
-
-    def __rsub__(self, other: float) -> Expression:
-        if isinstance(other, (int, float)):
-            return Expression(self.s.__rsub__(other))
-        raise _operation_type_error(other, '-', self)
-
-    @overload
-    def __truediv__(self, other: Point3) -> Point3:
-        ...
-
-    @overload
-    def __truediv__(self, other: Vector3) -> Vector3:
-        ...
-
-    @overload
-    def __truediv__(self, other: Union[
-        Symbol, Expression, float, RotationMatrix, TransformationMatrix, Quaternion]) -> Expression:
-        ...
-
-    def __truediv__(self, other):
-        if isinstance(other, (int, float)):
-            return Expression(self.s.__truediv__(other))
-        if isinstance(other, Point3):
-            return Point3.from_iterable(self.s.__truediv__(other.s))
-        if isinstance(other, Vector3):
-            return Vector3.from_iterable(self.s.__truediv__(other.s))
-        if isinstance(other, (Expression, Symbol)):
-            return Expression(self.s.__truediv__(other.s))
-        raise _operation_type_error(self, '/', other)
-
-    def __rtruediv__(self, other: float) -> Expression:
-        if isinstance(other, (int, float)):
-            return Expression(self.s.__rtruediv__(other))
-        raise _operation_type_error(other, '/', self)
-
-    def __floordiv__(self, other: ScalarData) -> Expression:
-        return floor(self / other)
-
-    def __mod__(self, other: ScalarData) -> Expression:
-        return fmod(self, other)
-
-    def __divmod__(self, other: ScalarData) -> Tuple[Expression, Expression]:
-        return self // other, self % other
-
-    def __rfloordiv__(self, other: ScalarData) -> Expression:
-        return floor(other / self)
-
-    def __rmod__(self, other: ScalarData) -> Expression:
-        return fmod(other, self)
-
-    def __rdivmod__(self, other: ScalarData) -> Tuple[Expression, Expression]:
-        return other // self, other % self
-
-    def __abs__(self):
-        return abs(self)
-
-    def __floor__(self):
-        return floor(self)
-
-    def __ceil__(self):
-        return ceil(self)
-
-    def __ge__(self, other: ScalarData) -> Expression:
-        return greater_equal(self, other)
-
-    def __gt__(self, other: ScalarData) -> Expression:
-        return greater(self, other)
-
-    def __le__(self, other: ScalarData) -> Expression:
-        return less_equal(self, other)
-
-    def __lt__(self, other: ScalarData) -> Expression:
-        return less(self, other)
-
-    @overload
-    def __mul__(self, other: Point3) -> Point3:
-        ...
-
-    @overload
-    def __mul__(self, other: Vector3) -> Vector3:
-        ...
-
-    @overload
-    def __mul__(self, other: Union[
-        Symbol, Expression, float, RotationMatrix, TransformationMatrix, Quaternion]) -> Expression:
-        ...
-
-    def __mul__(self, other):
-        if isinstance(other, (int, float)):
-            return Expression(self.s.__mul__(other))
-        if isinstance(other, Point3):
-            return Point3.from_iterable(self.s.__mul__(other.s))
-        if isinstance(other, Vector3):
-            return Vector3.from_iterable(self.s.__mul__(other.s))
-        if isinstance(other, (Expression, Symbol)):
-            return Expression(self.s.__mul__(other.s))
-        raise _operation_type_error(self, '*', other)
-
-    def __rmul__(self, other: float) -> Expression:
-        if isinstance(other, (int, float)):
-            return Expression(self.s.__rmul__(other))
-        raise _operation_type_error(other, '*', self)
-
-    def __neg__(self) -> Expression:
-        return Expression(self.s.__neg__())
-
-    def __invert__(self) -> Expression:
-        return logic_not(self)
-
-    def __pow__(self, other: ScalarData) -> Expression:
-        if isinstance(other, (int, float)):
-            return Expression(self.s.__pow__(other))
-        if isinstance(other, (Expression, Symbol)):
-            return Expression(self.s.__pow__(other.s))
-        raise _operation_type_error(self, '**', other)
-
-    def __rpow__(self, other: ScalarData) -> Expression:
-        if isinstance(other, (int, float)):
-            return Expression(self.s.__rpow__(other))
-        raise _operation_type_error(other, '**', self)
-
-    def __eq__(self, other: ScalarData) -> Expression:
-        if isinstance(other, SymbolicType):
-            other = other.s
-        return Expression(self.s.__eq__(other))
-
-    def __or__(self, other: ScalarData) -> Expression:
-        return logic_or(self, other)
-
-    def __and__(self, other: ScalarData) -> Expression:
-        return logic_and(self, other)
-
-    def __ne__(self, other):
-        if isinstance(other, SymbolicType):
-            other = other.s
-        return Expression(self.s.__ne__(other))
 
     def dot(self, other: Expression) -> Expression:
         if isinstance(other, Expression):

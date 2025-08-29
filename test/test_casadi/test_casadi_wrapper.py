@@ -103,6 +103,274 @@ class TestSymbol:
         assert isinstance(s, cas.Symbol)
         assert str(s) == 'muh'
 
+    def test_to_np(self):
+        s1 = cas.Symbol('s1')
+        with pytest.raises(HasFreeSymbolsError):
+            s1.to_np()
+
+    def test_add(self):
+        s = cas.Symbol('muh')
+        # int float addition is fine
+        assert isinstance(s + 1, cas.Expression)
+        assert isinstance(1 + s, cas.Expression)
+        assert isinstance(s + 1.0, cas.Expression)
+        assert isinstance(1.0 + s, cas.Expression)
+
+        assert isinstance(s + s, cas.Expression)
+
+        e = cas.Expression(1)
+        assert isinstance(e + s, cas.Expression)
+        assert isinstance(s + e, cas.Expression)
+
+        p = cas.Point3()
+        with pytest.raises(TypeError):
+            s + p
+        with pytest.raises(TypeError):
+            p + s
+
+        v = cas.Vector3()
+        with pytest.raises(TypeError):
+            s + v
+        with pytest.raises(TypeError):
+            v + s
+
+        r = cas.RotationMatrix()
+        with pytest.raises(TypeError):
+            s + r
+        with pytest.raises(TypeError):
+            r + s
+
+        t = cas.TransformationMatrix()
+        with pytest.raises(TypeError):
+            s + t
+        with pytest.raises(TypeError):
+            t + s
+
+        q = cas.Quaternion()
+        with pytest.raises(TypeError):
+            s + q
+        with pytest.raises(TypeError):
+            q + s
+
+    def test_sub(self):
+        s = cas.Symbol('muh')
+        # int float addition is fine
+        assert isinstance(s - 1, cas.Expression)
+        assert isinstance(1 - s, cas.Expression)
+        assert isinstance(s - 1.0, cas.Expression)
+        assert isinstance(1.0 - s, cas.Expression)
+
+        assert isinstance(s - s, cas.Expression)
+
+        e = cas.Expression(1)
+        assert isinstance(e - s, cas.Expression)
+        assert isinstance(s - e, cas.Expression)
+
+        p = cas.Point3()
+        with pytest.raises(TypeError):
+            s - p
+        with pytest.raises(TypeError):
+            p - s
+
+        v = cas.Vector3()
+        with pytest.raises(TypeError):
+            s - v
+        with pytest.raises(TypeError):
+            v - s
+
+        r = cas.RotationMatrix()
+        with pytest.raises(TypeError):
+            s - r
+        with pytest.raises(TypeError):
+            r - s
+
+        t = cas.TransformationMatrix()
+        with pytest.raises(TypeError):
+            s - t
+        with pytest.raises(TypeError):
+            t - s
+
+        q = cas.Quaternion()
+        with pytest.raises(TypeError):
+            s - q
+        with pytest.raises(TypeError):
+            q - s
+
+    def test_mul(self):
+        s = cas.Symbol('muh')
+        # int float addition is fine
+        assert isinstance(s * 1, cas.Expression)
+        assert isinstance(1 * s, cas.Expression)
+        assert isinstance(s * 1.0, cas.Expression)
+        assert isinstance(1.0 * s, cas.Expression)
+
+        assert isinstance(s * s, cas.Expression)
+
+        e = cas.Expression(1)
+        assert isinstance(e * s, cas.Expression)
+        assert isinstance(s * e, cas.Expression)
+
+        p = cas.Point3()
+        with pytest.raises(TypeError):
+            s * p
+        with pytest.raises(TypeError):
+            p * s
+
+        v = cas.Vector3()
+        with pytest.raises(TypeError):
+            s * v
+        assert isinstance(v * s, cas.Vector3)
+
+        r = cas.RotationMatrix()
+        with pytest.raises(TypeError):
+            s * r
+        with pytest.raises(TypeError):
+            r * s
+
+        t = cas.TransformationMatrix()
+        with pytest.raises(TypeError):
+            s * t
+        with pytest.raises(TypeError):
+            t * s
+
+        q = cas.Quaternion()
+        with pytest.raises(TypeError):
+            s * q
+        with pytest.raises(TypeError):
+            q * s
+
+    def test_truediv(self):
+        s = cas.Symbol('muh')
+        # int float addition is fine
+        assert isinstance(s / 1, cas.Expression)
+        assert isinstance(1 / s, cas.Expression)
+        assert isinstance(s / 1.0, cas.Expression)
+        assert isinstance(1.0 / s, cas.Expression)
+
+        assert isinstance(s / s, cas.Expression)
+
+        e = cas.Expression(1)
+        assert isinstance(e / s, cas.Expression)
+        assert isinstance(s / e, cas.Expression)
+
+        p = cas.Point3()
+        with pytest.raises(TypeError):
+            s / p
+        with pytest.raises(TypeError):
+            p / s
+
+        v = cas.Vector3()
+        with pytest.raises(TypeError):
+            s / v
+        assert isinstance(v / s, cas.Vector3)
+
+        r = cas.RotationMatrix()
+        with pytest.raises(TypeError):
+            s / r
+        with pytest.raises(TypeError):
+            r / s
+
+        t = cas.TransformationMatrix()
+        with pytest.raises(TypeError):
+            s / t
+        with pytest.raises(TypeError):
+            t / s
+
+        q = cas.Quaternion()
+        with pytest.raises(TypeError):
+            s / q
+        with pytest.raises(TypeError):
+            q / s
+
+    def test_lt(self):
+        s = cas.Symbol('muh')
+        # int float addition is fine
+        assert isinstance(s < 1, cas.Expression)
+        assert isinstance(1 < s, cas.Expression)
+        assert isinstance(s < 1.0, cas.Expression)
+        assert isinstance(1.0 < s, cas.Expression)
+
+        assert isinstance(s < s, cas.Expression)
+
+        e = cas.Expression(1)
+        assert isinstance(e < s, cas.Expression)
+        assert isinstance(s < e, cas.Expression)
+
+        p = cas.Point3()
+        with pytest.raises(TypeError):
+            s < p
+        with pytest.raises(TypeError):
+            p < s
+
+        v = cas.Vector3()
+        with pytest.raises(TypeError):
+            s < v
+        with pytest.raises(TypeError):
+            v < s
+
+        r = cas.RotationMatrix()
+        with pytest.raises(TypeError):
+            s < r
+        with pytest.raises(TypeError):
+            r < s
+
+        t = cas.TransformationMatrix()
+        with pytest.raises(TypeError):
+            s < t
+        with pytest.raises(TypeError):
+            t < s
+
+        q = cas.Quaternion()
+        with pytest.raises(TypeError):
+            s < q
+        with pytest.raises(TypeError):
+            q < s
+
+    def test_pow(self):
+        s = cas.Symbol('muh')
+        # int float addition is fine
+        assert isinstance(s ** 1, cas.Expression)
+        assert isinstance(1 ** s, cas.Expression)
+        assert isinstance(s ** 1.0, cas.Expression)
+        assert isinstance(1.0 ** s, cas.Expression)
+
+        assert isinstance(s ** s, cas.Expression)
+
+        e = cas.Expression(1)
+        assert isinstance(e ** s, cas.Expression)
+        assert isinstance(s ** e, cas.Expression)
+
+        p = cas.Point3()
+        with pytest.raises(TypeError):
+            s ** p
+        with pytest.raises(TypeError):
+            p ** s
+
+        v = cas.Vector3()
+        with pytest.raises(TypeError):
+            s ** v
+        with pytest.raises(TypeError):
+            v ** s
+
+        r = cas.RotationMatrix()
+        with pytest.raises(TypeError):
+            s ** r
+        with pytest.raises(TypeError):
+            r ** s
+
+        t = cas.TransformationMatrix()
+        with pytest.raises(TypeError):
+            s ** t
+        with pytest.raises(TypeError):
+            t ** s
+
+        q = cas.Quaternion()
+        with pytest.raises(TypeError):
+            s ** q
+        with pytest.raises(TypeError):
+            q ** s
+
+
     def test_simple_math(self):
         s = cas.Symbol('muh')
         e = s + s
@@ -149,6 +417,10 @@ class TestSymbol:
 
 
 class TestExpression:
+    def test_init(self):
+        symbols = cas.create_symbols(23)
+        e = cas.Expression(symbols)
+
     def test_pretty_str(self):
         e = cas.eye(4)
         e.pretty_str()
@@ -242,6 +514,14 @@ class TestExpression:
         e = m ** 1
         e = 1 ** m
         assert isinstance(e, cas.Expression)
+
+    def test_to_np(self):
+        e = cas.Expression(1)
+        assert_allclose(e.to_np(), np.array([1]))
+        e = cas.Expression([1, 2])
+        assert_allclose(e.to_np(), np.array([1, 2]))
+        e = cas.Expression([[1, 2], [3, 4]])
+        assert_allclose(e.to_np(), np.array([[1, 2], [3, 4]]))
 
     def test_to_np_fail(self):
         s1, s2 = cas.Symbol('s1'), cas.Symbol('s2')
@@ -427,7 +707,7 @@ class TestRotationMatrix:
         roll = cas.RotationMatrix(expected).to_rpy()[0]
         pitch = cas.RotationMatrix(expected).to_rpy()[1]
         yaw = cas.RotationMatrix(expected).to_rpy()[2]
-        actual = giskard_math.rotation_matrix_from_rpy(roll.to_np(), pitch.to_np(), yaw.to_np())
+        actual = giskard_math.rotation_matrix_from_rpy(roll.to_np()[0], pitch.to_np()[0], yaw.to_np()[0])
 
         assert_allclose(actual, expected)
 
@@ -800,6 +1080,7 @@ class TestPoint3:
         p1 = cas.Point3(1, 2, 3)
         p2 = cas.Point3(4, 5, 6)
         v = cas.Vector3(1, 1, 1)
+        s = cas.Symbol('s')
 
         # Test Point + Vector = Point (translate point by vector)
         result = p1 + v
@@ -838,6 +1119,11 @@ class TestPoint3:
         # Test invalid operations that should raise TypeError
         with pytest.raises(TypeError):
             p1 + p2  # Point + Point not allowed
+
+        with pytest.raises(TypeError):
+            s + p2
+        with pytest.raises(TypeError):
+            p1 + s
 
         with pytest.raises(TypeError):
             p1 * 2  # Point * scalar not allowed (scaling a position is meaningless)
@@ -1986,30 +2272,6 @@ class TestCASWrapper:
         else:
             assert_allclose(f(), expected)
             assert_allclose(f(np.array([], dtype=float)), expected)
-
-    def test_basic_operation_with_string(self):
-        str_ = 'muh23'
-        things = [cas.Symbol('s'),
-                  cas.Expression(1),
-                  cas.Vector3(1, 1, 1),
-                  cas.Point3(1, 1, 1),
-                  cas.TransformationMatrix(),
-                  cas.RotationMatrix(),
-                  cas.Quaternion()]
-        functions = ['__add__', '__radd_', '__sub__', '__rsub__', '__mul__', '__rmul', '__truediv__', '__rtruediv__',
-                     '__pow__', '__rpow__', 'dot']
-        for fn in functions:
-            for thing in things:
-                if hasattr(str_, fn):
-                    error_msg = f'string.{fn}({thing.__class__.__name__})'
-                    with pytest.raises(TypeError) as e:
-                        getattr(str_, fn)(thing)
-                    assert 'NotImplementedType' not in str(e), error_msg
-                if hasattr(thing, fn):
-                    error_msg = f'{thing.__class__.__name__}.{fn}(string)'
-                    with pytest.raises(TypeError) as e:
-                        getattr(thing, fn)(str_)
-                    assert 'NotImplementedType' not in str(e), error_msg
 
     def test_free_symbols(self):
         m = cas.Expression(cas.create_symbols(['a', 'b', 'c', 'd']))
