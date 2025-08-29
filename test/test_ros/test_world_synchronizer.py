@@ -22,7 +22,7 @@ if rclpy_installed():
 
 
 @skipUnless(rclpy_installed(), "rclpy required")
-class WorldStatePublisherTestCase(unittest.TestCase):
+class WorldSynchronizerTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
