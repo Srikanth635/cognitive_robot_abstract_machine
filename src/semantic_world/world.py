@@ -1333,8 +1333,8 @@ class World:
             self.add_disabled_collision_pair(body_a, body_b)
 
     @property
-    def bodies_with_enabled_collision(self) -> Set[Body]:
-        return set(b for b in self.bodies
+    def bodies_with_enabled_collision(self) -> List[Body]:
+        return list(b for b in self.bodies
                    if b.has_collision() and b.get_collision_config and not b.get_collision_config().disabled)
 
     @property
