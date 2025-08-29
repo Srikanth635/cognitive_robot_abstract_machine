@@ -223,7 +223,6 @@ class WorldModelUpdateContextManager:
     This class manages that updates to the world within the context of this class only trigger recomputations after all
     desired updates have been performed.
     """
-
     first: bool = True
     """
     First time flag.
@@ -239,11 +238,8 @@ class WorldModelUpdateContextManager:
     Arguments of the modification function.
     """
 
-    skip_callbacks: Optional[List] = None
-
-    def __init__(self, world: World, skip_callbacks: Optional[List] = None):
+    def __init__(self, world: World):
         self.world = world
-        self.skip_callbacks = skip_callbacks
 
     def __enter__(self):
         if self.world.world_is_being_modified:
@@ -251,36 +247,34 @@ class WorldModelUpdateContextManager:
         self.world.world_is_being_modified = True
 
         if self.first:
-            self.world._current_modification_block = []
+            self.world._current_modification_block =[]
 
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.modification is not None:
-            self.world._current_modification_block.append(
-                (self.modification, self.arguments)
-            )
+            self.world._current_modification_block.append((self.modification, self.arguments))
         if self.first:
             self.world.world_is_being_modified = False
             self.world._modifications.append(self.world._current_modification_block)
             self.world._current_modification_block = None
             if exc_type is None:
-                self.world._notify_model_change(self.skip_callbacks)
+                self.world._notify_model_change()
 
+class TryingToLockALockedWorldError(Exception):
+    pass
 
-def modifies_world(func):
-    """
-    Decorator that marks a method as an atomic modification to the state or model of a world.
-    Use this decorator only to mark methods that modify the world state and do not call other methods that modify
-    the world state.
-
-    If you want to modify the world state and call other methods that modify the world state,
-    use the world.modify_world to manage that.
-    """
+def locks_world(func):
     sig = inspect.signature(func)
 
     @wraps(func)
     def wrapper(self: World, *args, **kwargs):
+        # if self._context_manager is None:
+        #     raise MissingContextError(f"Tried to call a method that locks the world without a context manager."
+        #                               f"Make sure to only do this inside a `with world.modify_world():` block.")
+        if self._is_locked:
+            raise TryingToLockALockedWorldError(f"World {self} is locked.")
+        self._is_locked = True
 
         # bind args and kwargs
         bound = sig.bind_partial(
@@ -288,14 +282,13 @@ def modifies_world(func):
         )  # use bind() if you require all args
         bound.apply_defaults()  # fill in default values
 
-        with self.modify_world() as context_manager:
+        # record function call
+        self._current_modification_block.append((func, bound.arguments))
 
-            # record function call
-            context_manager.modification = func
-            context_manager.arguments = bound.arguments
+        result = func(self, *args, **kwargs)
 
-            result = func(self, *args, **kwargs)
-            return result
+        self._is_locked = False
+        return result
 
     return wrapper
 
@@ -346,7 +339,7 @@ class World:
 
     world_is_being_modified: bool = False
     """
-    Is set to True, when a function with @modifies_world is called or world.modify_world context is used.
+    Is set to True, when a function with @locks_world is called or world.modify_world context is used.
     """
 
     name: Optional[str] = None
@@ -375,7 +368,16 @@ class World:
         default=None, repr=False, init=False
     )
     """
-    The current modification block called within one context of @modifies_world.
+    The current modification block called within one context of @locks_world.
+    """
+
+    _is_locked: bool = field(init=False, default=False)
+    """
+    Is set to True, when the world is locked.
+    During a locked world, modifications are not allowed.
+    This lock is used to record atomic changes to the world and construct the world from them.
+    This is different to the world_is_being_modified flag, which is used to track modifications made by the user.
+    This does not directly trigger recomputations.
     """
 
     @property
@@ -424,20 +426,21 @@ class World:
         ), "self.degrees_of_freedom does not match the actual dofs used in connections. Did you forget to call deleted_orphaned_dof()?"
         return True
 
-    @modifies_world
-    def add_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
+    @locks_world
+    def _add_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
         """
-        Adds degree of freedom in the world.
-        This is used to register DoFs that are not created by the world, but are part of the world model.
-        :param dof: The degree of freedom to register.
-        """
-        if dof._world is self and dof in self.degrees_of_freedom:
-            return
-        if dof._world is not None:
-            raise AlreadyBelongsToAWorldError(
-                world=dof._world, type_trying_to_add=DegreeOfFreedom
-            )
+        Adds a degree of freedom to the current system and initializes its state.
 
+        This method modifies the internal state of the system by adding a new
+        degree of freedom (DOF). It sets the initial position of the DOF based
+        on its configured lower and upper position limits, ensuring it respects
+        both constraints. The DOF is then added to the list of degrees of freedom
+        in the system.
+
+        :param dof: The degree of freedom to be added to the system.
+        :type dof: DegreeOfFreedom
+        :return: None
+        """
         dof._world = self
 
         initial_position = 0
@@ -450,10 +453,30 @@ class World:
         self.state[dof.name].position = initial_position
         self.degrees_of_freedom.append(dof)
 
-    def modify_world(
-        self, skip_callbacks: Optional[List] = None
-    ) -> WorldModelUpdateContextManager:
-        return WorldModelUpdateContextManager(self, skip_callbacks=skip_callbacks)
+    def add_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
+        """
+        Adds degree of freedom in the world.
+        This is used to register DoFs that are not created by the world, but are part of the world model.
+        :param dof: The degree of freedom to register.
+        """
+        if dof._world is self and dof in self.degrees_of_freedom:
+            return
+        if dof._world is not None:
+            raise AlreadyBelongsToAWorldError(
+                world=dof._world, type_trying_to_add=DegreeOfFreedom
+            )
+        self._add_degree_of_freedom(dof)
+
+    @locks_world
+    def remove_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
+        self.degrees_of_freedom.remove(dof)
+        del self.state[dof.name]
+
+    def modify_world(self) -> WorldModelUpdateContextManager:
+        return WorldModelUpdateContextManager(self)
+        if self._context_manager is not None:
+            return self._context_manager
+        return WorldModelUpdateContextManager(self)
 
     def reset_state_context(self) -> ResetStateContextManager:
         return ResetStateContextManager(self)
@@ -478,39 +501,27 @@ class World:
         for dof in self.degrees_of_freedom:
             dof.reset_cache()
 
-    def notify_state_change(self, skip_callbacks: Optional[List] = None) -> None:
+    def notify_state_change(self) -> None:
         """
         If you have changed the state of the world, call this function to trigger necessary events and increase
         the state version.
         """
-
-        if skip_callbacks is None:
-            skip_callbacks = []
-
         # self.compute_fk.cache_clear()
         # self.compute_fk_with_collision_offset_np.cache_clear()
         if not self.empty:
             self._recompute_forward_kinematics()
         self._state_version += 1
-
         [
             callback()
             for callback in self.state_change_callbacks
-            if callback not in skip_callbacks
         ]
 
-    def _notify_model_change(self, skip_callbacks: Optional[List] = None) -> None:
+    def _notify_model_change(self) -> None:
         """
         Notifies the system of a model change and updates necessary states, caches,
         and forward kinematics expressions while also triggering registered callbacks
-        for model changes. Optionally, certain callbacks can be skipped.
-
-        :param skip_callbacks: List of callbacks to be skipped during model change
-            notification if provided. Defaults to None, meaning no callbacks are
-            skipped.
+        for model changes.
         """
-        if skip_callbacks is None:
-            skip_callbacks = []
         if not self.world_is_being_modified:
             self.reset_cache()
             self.compile_forward_kinematics_expressions()
@@ -520,7 +531,6 @@ class World:
             [
                 callback()
                 for callback in self.model_change_callbacks
-                if callback not in skip_callbacks
             ]
 
             self.validate()
@@ -581,12 +591,24 @@ class World:
         """
         return list(self.kinematic_structure.edges())
 
-    @modifies_world
-    def add_kinematic_structure_entity(
+    @locks_world
+    def _add_kinematic_structure_entity(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> None:
         """
         Add an kinematic_structure_entity to the world.
+        Do not call this function directly, use add_kinematic_structure_entity instead.
+
+        :param kinematic_structure_entity: The kinematic_structure_entity to add.
+        """
+        kinematic_structure_entity.index = self.kinematic_structure.add_node(
+            kinematic_structure_entity
+        )
+        kinematic_structure_entity._world = self
+
+    def add_kinematic_structure_entity(self, kinematic_structure_entity: KinematicStructureEntity) -> None:
+        """
+        Add a kinematic_structure_entity to the world if it does not exist already.
 
         :param kinematic_structure_entity: The kinematic_structure_entity to add.
         """
@@ -607,13 +629,24 @@ class World:
                 world=kinematic_structure_entity._world,
                 type_trying_to_add=KinematicStructureEntity,
             )
+        self._add_kinematic_structure_entity(kinematic_structure_entity)
 
-        kinematic_structure_entity.index = self.kinematic_structure.add_node(
-            kinematic_structure_entity
+    @locks_world
+    def _add_connection(self, connection: Connection):
+        """
+        Adds a connection to the kinematic structure.
+
+        The method updates the connection instance to associate it with the current
+        world instance and reflects the connection in the kinematic structure.
+        Do not call this function directly, use add_connection instead.
+
+        :param connection: The connection to be added to the kinematic structure.
+        """
+        connection._world = self
+        self.kinematic_structure.add_edge(
+            connection.parent.index, connection.child.index, connection
         )
-        kinematic_structure_entity._world = self
 
-    @modifies_world
     def add_connection(self, connection: Connection) -> None:
         """
         Add a connection and the entities it connects to the world.
@@ -622,10 +655,7 @@ class World:
         """
         self.add_kinematic_structure_entity(connection.parent)
         self.add_kinematic_structure_entity(connection.child)
-        connection._world = self
-        self.kinematic_structure.add_edge(
-            connection.parent.index, connection.child.index, connection
-        )
+        self._add_connection(connection)
 
     def add_view(self, view: View, exists_ok: bool = False) -> None:
         """
@@ -698,26 +728,47 @@ class World:
         """
         return [view for view in self.views if isinstance(view, view_type)]
 
-    @modifies_world
+    @locks_world
+    def _remove_kinematic_structure_entity(
+        self, kinematic_structure_entity: KinematicStructureEntity
+    ) -> None:
+        """
+        Removes a kinematic_structure_entity from the world.
+
+        Do not call this function directly, use `remove_kinematic_structure_entity` instead.
+
+        :param kinematic_structure_entity: The kinematic_structure_entity to remove.
+        """
+        self.kinematic_structure.remove_node(kinematic_structure_entity.index)
+        kinematic_structure_entity._world = None
+        kinematic_structure_entity.index = None
+
     def remove_kinematic_structure_entity(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> None:
         """
-        Removes an kinematic_structure_entity from the world.
+        Removes a kinematic_structure_entity from the world.
+
+        :param kinematic_structure_entity: The kinematic_structure_entity to remove.
         """
         if (
             kinematic_structure_entity._world is self
             and kinematic_structure_entity.index is not None
         ):
-            self.kinematic_structure.remove_node(kinematic_structure_entity.index)
-            kinematic_structure_entity._world = None
-            kinematic_structure_entity.index = None
+            self._remove_kinematic_structure_entity(kinematic_structure_entity)
         else:
             logger.debug(
                 "Trying to remove an kinematic_structure_entity that is not part of this world."
             )
 
-    @modifies_world
+    @locks_world
+    def _remove_connection(self, connection: Connection) -> None:
+        self.kinematic_structure.remove_edge(
+            connection.parent.index, connection.child.index
+        )
+        connection._world = None
+        connection.index = None
+
     def remove_connection(self, connection: Connection) -> None:
         """
         Removes a connection and deletes the corresponding degree of freedom, if it was only used by this connection.
@@ -731,15 +782,12 @@ class World:
                 continue
             remaining_dofs.update(remaining_connection.dofs)
 
-        for dof in connection.dofs:
-            if dof not in remaining_dofs:
-                self.degrees_of_freedom.remove(dof)
-                del self.state[dof.name]
-        self.kinematic_structure.remove_edge(
-            connection.parent.index, connection.child.index
-        )
+        with self.modify_world():
+            for dof in connection.dofs:
+                if dof not in remaining_dofs:
+                    self.remove_degree_of_freedom(dof)
+            self._remove_connection(connection)
 
-    @modifies_world
     def merge_world(self, other: World, root_connection: Connection = None) -> None:
         """
         Merge a world into the existing one by merging degrees of freedom, states, connections, and bodies.
@@ -751,39 +799,39 @@ class World:
         """
         assert other is not self, "Cannot merge a world with itself."
 
-        self_root = self.root
-        other_root = other.root
-        for dof in other.degrees_of_freedom:
-            self.state[dof.name].position = other.state[dof.name].position
-            self.state[dof.name].velocity = other.state[dof.name].velocity
-            self.state[dof.name].acceleration = other.state[dof.name].acceleration
-            self.state[dof.name].jerk = other.state[dof.name].jerk
-            dof._world = self
-        self.degrees_of_freedom.extend(other.degrees_of_freedom)
+        with self.modify_world():
+            self_root = self.root
+            other_root = other.root
+            for dof in other.degrees_of_freedom:
+                self.state[dof.name].position = other.state[dof.name].position
+                self.state[dof.name].velocity = other.state[dof.name].velocity
+                self.state[dof.name].acceleration = other.state[dof.name].acceleration
+                self.state[dof.name].jerk = other.state[dof.name].jerk
+                dof._world = self
+            self.degrees_of_freedom.extend(other.degrees_of_freedom)
 
-        # do not trigger computations in other
-        with other.modify_world():
-            for connection in other.connections:
-                other.remove_kinematic_structure_entity(connection.parent)
-                other.remove_kinematic_structure_entity(connection.child)
-                self.add_connection(connection)
-            for kinematic_structure_entity in other.kinematic_structure_entities:
-                if kinematic_structure_entity._world is not None:
-                    other.remove_kinematic_structure_entity(kinematic_structure_entity)
+            # do not trigger computations in other
+            with other.modify_world():
+                for connection in other.connections:
+                    other.remove_kinematic_structure_entity(connection.parent)
+                    other.remove_kinematic_structure_entity(connection.child)
+                    self.add_connection(connection)
+                for kinematic_structure_entity in other.kinematic_structure_entities:
+                    if kinematic_structure_entity._world is not None:
+                        other.remove_kinematic_structure_entity(kinematic_structure_entity)
 
-            other_views = [view for view in other.views]
-            for view in other_views:
-                other.remove_view(view)
-                self.add_view(view)
+                other_views = [view for view in other.views]
+                for view in other_views:
+                    other.remove_view(view)
+                    self.add_view(view)
 
-        connection = root_connection or Connection6DoF(
-            parent=self_root, child=other_root, _world=self
-        )
-        for dof in connection.dofs:
-            self.add_degree_of_freedom(dof)
-        self.add_connection(connection)
+            connection = root_connection or Connection6DoF(
+                parent=self_root, child=other_root, _world=self
+            )
+            for dof in connection.dofs:
+                self.add_degree_of_freedom(dof)
+            self.add_connection(connection)
 
-    @modifies_world
     def merge_world_at_pose(self, other: World, pose: cas.TransformationMatrix) -> None:
         """
         Merge another world into the existing one, creates a 6DoF connection between the root of this world and the root
@@ -791,11 +839,12 @@ class World:
         :param other: The world to be added.
         :param pose: world_root_T_other_root, the pose of the other world's root with respect to the current world's root
         """
-        root_connection = Connection6DoF(
-            parent=self.root, child=other.root, _world=self
-        )
-        root_connection.origin = pose
-        self.merge_world(other, root_connection)
+        with self.modify_world():
+            root_connection = Connection6DoF(
+                parent=self.root, child=other.root, _world=self
+            )
+            root_connection.origin = pose
+            self.merge_world(other, root_connection)
 
     def __str__(self):
         return f"{self.__class__.__name__} with {len(self.kinematic_structure_entities)} bodies."

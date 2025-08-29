@@ -24,7 +24,8 @@ class GCSTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         world = World()
-        world.add_kinematic_structure_entity(Body())
+        with world.modify_world():
+            world.add_kinematic_structure_entity(Body())
         gcs = GraphOfConvexSets(world)
 
         obstacle = BoundingBox(0, 0, 0, 1, 1, 1, world.root)

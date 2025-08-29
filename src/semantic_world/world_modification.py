@@ -41,7 +41,7 @@ class WorldModelModification(SubclassJSONSerializer, ABC):
 @dataclass
 class AddBodyModification(WorldModelModification):
     body: Body
-    name = World.add_kinematic_structure_entity.__name__
+    name = World._add_kinematic_structure_entity.__name__
 
     @classmethod
     def _from_kwargs(cls, kwargs: Dict[str, Any]):
@@ -61,7 +61,7 @@ class AddBodyModification(WorldModelModification):
 @dataclass
 class RemoveBodyModification(WorldModelModification):
     body_name: PrefixedName
-    name = World.remove_kinematic_structure_entity.__name__
+    name = World._remove_kinematic_structure_entity.__name__
 
     @classmethod
     def _from_kwargs(cls, kwargs: Dict[str, Any]):
@@ -83,7 +83,7 @@ class RemoveBodyModification(WorldModelModification):
 @dataclass
 class AddConnectionModification(WorldModelModification):
     connection_factory: ConnectionFactory
-    name = World.add_connection.__name__
+    name = World._add_connection.__name__
 
     @classmethod
     def _from_kwargs(cls, kwargs: Dict[str, Any]):
@@ -113,7 +113,7 @@ class AddConnectionModification(WorldModelModification):
 @dataclass
 class RemoveConnectionModification(WorldModelModification):
     connection_name: PrefixedName
-    name = World.remove_connection.__name__
+    name = World._remove_connection.__name__
 
     @classmethod
     def _from_kwargs(cls, kwargs: Dict[str, Any]):
@@ -137,7 +137,7 @@ class RemoveConnectionModification(WorldModelModification):
 class AddDegreeOfFreedomModification(WorldModelModification):
     dof: DegreeOfFreedom
 
-    name = World.add_degree_of_freedom.__name__
+    name = World._add_degree_of_freedom.__name__
 
     @classmethod
     def _from_kwargs(cls, kwargs: Dict[str, Any]):
@@ -166,10 +166,8 @@ class WorldModelModificationBlock:
 
     modifications: List[WorldModelModification]
 
-    skip_callbacks: Optional[List] = None
-
     def __call__(self, world: World):
-        with world.modify_world(skip_callbacks=self.skip_callbacks):
+        with world.modify_world():
             for modification in self.modifications:
                 modification(world)
 

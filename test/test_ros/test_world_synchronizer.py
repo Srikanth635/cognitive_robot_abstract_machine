@@ -18,6 +18,7 @@ from semantic_world.world_entity import Body
 
 if rclpy_installed():
     import rclpy
+    from uuid import uuid4
 
 
 @skipUnless(rclpy_installed(), "rclpy required")
@@ -26,11 +27,26 @@ class WorldStatePublisherTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         rclpy.init()
-        cls.node = rclpy.create_node("WorldStatePublisher")
-        cls.synch_thread = threading.Thread(
-            target=rclpy.spin, args=(cls.node,), daemon=False
+        # cls.node = rclpy.create_node("WorldStatePublisher")
+        # cls.synch_thread = threading.Thread(
+        #     target=rclpy.spin, args=(cls.node,), daemon=False
+        # )
+        # cls.synch_thread.start()
+
+    def setUp(self):
+        # Create an isolated node per test to avoid cross-talk across tests
+        self.node = rclpy.create_node(f"WorldStatePublisher_{uuid4().hex}")
+        self.synch_thread = threading.Thread(
+            target=rclpy.spin, args=(self.node,), daemon=True
         )
-        cls.synch_thread.start()
+        self.synch_thread.start()
+
+    def tearDown(self):
+        # Ensure all subscriptions/publishers are destroyed between tests
+        self.node.destroy_node()
+        # Give the spin thread a moment to exit
+        self.synch_thread.join(timeout=1.0)
+
 
     @staticmethod
     def create_dummy_world():
@@ -52,7 +68,7 @@ class WorldStatePublisherTestCase(unittest.TestCase):
 
         w1.state.data[0, 0] = 1.0
         w1.notify_state_change()
-        time.sleep(1.0)
+        time.sleep(2.0)
         assert w1.state.data[0, 0] == 1.0
         assert w1.state.data[0, 0] == w2.state.data[0, 0]
 
@@ -129,7 +145,7 @@ class WorldStatePublisherTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.node.destroy_node()
+        # cls.node.destroy_node()
         rclpy.shutdown()
 
 

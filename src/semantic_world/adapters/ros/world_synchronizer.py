@@ -1,4 +1,5 @@
 import json
+import os
 import time
 from dataclasses import dataclass, field
 from functools import cached_property
@@ -70,21 +71,14 @@ class WorldSynchronizer:
     The subscriber to the model changes.
     """
 
-    model_change_callback: Optional[Callable] = field(default=None, init=False)
-    """
-    Pointer to the callback used to signal the model change.
-    This is used to avoid calling the callback multiple times.
-    """
-
     reload_model_subscriber: Optional[Subscription] = field(default=None, init=False)
     """
     The subscriber to the reloading the model from the database.
     """
 
-    reload_model_callback: Optional[Callable] = field(default=None, init=False)
+    synchronizer_id: str = field(init=False)
     """
-    Pointer to the callback used to signal the reload of the world model from the database.
-    This is used to avoid calling the callback multiple times.
+    The unique identifier for this synchronizer. Used to ensure a synchronizer does not apply its own changes.
     """
 
     def __post_init__(self):
@@ -92,16 +86,14 @@ class WorldSynchronizer:
         Initializes callbacks and subscriptions for publishing or subscribing to updates
         from the world's state and model.
         """
-
+        self.synchronizer_id = f"{os.getpid()}_{self.world.name}"
         if self.publish:
             self.world.state_change_callbacks.append(lambda: self.publish_state())
-            self.model_change_callback = lambda: self.publish_model_change()
-
-            self.world.model_change_callbacks.append(self.model_change_callback)
+            self.world.model_change_callbacks.append(lambda: self.publish_model_change())
 
             if self.session:
-                self.reload_model_callback = lambda: self.publish_reload_model()
-                # self.world.model_change_callbacks.append(self.reload_model_callback)
+                ...
+                # self.world.model_change_callbacks.append(lambda: self.publish_reload_model())
 
         self.update_previous_world_state()
 
@@ -212,7 +204,7 @@ class WorldSynchronizer:
         query = select(WorldMappingDAO).where(WorldMappingDAO.id == msg.primary_key)
         new_world = self.session.scalars(query).one().from_dao()
         self._replace_world(new_world)
-        self.world._notify_model_change([self.reload_model_callback])
+        self.world._notify_model_change()
 
     def _replace_world(self, new_world: World):
         """
@@ -236,6 +228,7 @@ class WorldSynchronizer:
 
         :param msg: The message containing the new state information.
         """
+
         # Parse incoming states: WorldState has 'states' only
         indices = [
             self.world.state._index[
@@ -252,12 +245,13 @@ class WorldSynchronizer:
 
     def publish_model_change(self):
         latest_changes = WorldModelModificationBlock.from_modifications(self.world._modifications[-1])
-        msg = semantic_world_msgs.msg.WorldModelModificationBlock(modifications=[json.dumps(m.to_json()) for m in latest_changes.modifications])
+        msg = semantic_world_msgs.msg.WorldModelModificationBlock(source_id=self.synchronizer_id, version=self.world._model_version, modifications=[json.dumps(m.to_json()) for m in latest_changes.modifications])
         self.model_change_publisher.publish(msg)
 
     def apply_model_change(self, msg: semantic_world_msgs.msg.WorldModelModificationBlock):
-        changes = WorldModelModificationBlock(modifications=[WorldModelModification.from_json(json.loads(m))
-                                                             for m in msg.modifications], skip_callbacks=[self.model_change_callback])
-        changes(self.world)
+        if msg.source_id != self.synchronizer_id:
+            changes = WorldModelModificationBlock(modifications=[WorldModelModification.from_json(json.loads(m))
+                                                                 for m in msg.modifications])
+            changes(self.world)
 
 

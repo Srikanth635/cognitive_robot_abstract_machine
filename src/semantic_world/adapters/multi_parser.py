@@ -96,9 +96,9 @@ class MultiParser:
         factory.import_model()
         bodies = [self.parse_body(body_builder) for body_builder in factory.world_builder.body_builders]
         world = World()
-        world.add_kinematic_structure_entity(bodies[0])
 
         with world.modify_world():
+            world.add_kinematic_structure_entity(bodies[0])
             for body in bodies:
                 world.add_kinematic_structure_entity(body)
             joints = []
