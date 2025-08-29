@@ -319,32 +319,6 @@ class Connection6DoF(PassiveConnection):
         self._world.state[self.qw.name].position = orientation[3]
         self._world.notify_state_change()
 
-    def to_json(self) -> Dict[str, Any]:
-        return {
-            **super().to_json(),
-            "x": self.x.to_json(),
-            "y": self.y.to_json(),
-            "z": self.z.to_json(),
-            "qx": self.qx.to_json(),
-            "qy": self.qy.to_json(),
-            "qz": self.qz.to_json(),
-            "qw": self.qw.to_json(),
-        }
-
-    @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(
-            parent=Body.from_json(data["parent"]),
-            child=Body.from_json(data["child"]),
-            x=DegreeOfFreedom.from_json(data["x"]),
-            y=DegreeOfFreedom.from_json(data["y"]),
-            z=DegreeOfFreedom.from_json(data["z"]),
-            qx=DegreeOfFreedom.from_json(data["qx"]),
-            qy=DegreeOfFreedom.from_json(data["qy"]),
-            qz=DegreeOfFreedom.from_json(data["qz"]),
-            qw=DegreeOfFreedom.from_json(data["qw"]),
-        )
-
 
 @dataclass
 class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
@@ -464,36 +438,3 @@ class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
 
     def get_free_variable_names(self) -> List[PrefixedName]:
         return [self.x.name, self.y.name, self.yaw.name]
-
-    def to_json(self) -> Dict[str, Any]:
-        return {
-            **super().to_json(),
-            "x": self.x.to_json(),
-            "y": self.y.to_json(),
-            "z": self.z.to_json(),
-            "roll": self.roll.to_json(),
-            "pitch": self.pitch.to_json(),
-            "yaw": self.yaw.to_json(),
-            "x_vel": self.x_vel.to_json(),
-            "y_vel": self.y_vel.to_json(),
-            "translation_velocity_limits": self.translation_velocity_limits,
-            "rotation_velocity_limits": self.rotation_velocity_limits,
-        }
-
-    @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(
-            name=PrefixedName.from_json(data["name"]),
-            parent=Body.from_json(data["parent"]),
-            child=Body.from_json(data["child"]),
-            x=DegreeOfFreedom.from_json(data["x"]),
-            y=DegreeOfFreedom.from_json(data["y"]),
-            z=DegreeOfFreedom.from_json(data["z"]),
-            roll=DegreeOfFreedom.from_json(data["roll"]),
-            pitch=DegreeOfFreedom.from_json(data["pitch"]),
-            yaw=DegreeOfFreedom.from_json(data["yaw"]),
-            x_vel=DegreeOfFreedom.from_json(data["x_vel"]),
-            y_vel=DegreeOfFreedom.from_json(data["y_vel"]),
-            translation_velocity_limits=data["translation_velocity_limits"],
-            rotation_velocity_limits=data["rotation_velocity_limits"],
-        )
