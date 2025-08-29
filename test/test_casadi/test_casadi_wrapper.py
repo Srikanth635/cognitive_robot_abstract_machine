@@ -1,6 +1,7 @@
 import hypothesis.strategies as st
 import numpy as np
 import pytest
+import scipy
 from hypothesis import given, assume
 
 import semantic_world.spatial_types.math as giskard_math
@@ -53,7 +54,7 @@ class TestLogic3:
         for i in self.values:
             for j in self.values:
                 expected = logic_and(i, j)
-                actual = f(a=i, b=j)
+                actual = f(np.array([i, j]))
                 assert expected == actual, f'a={i}, b={j}, expected {expected}, actual {actual}'
 
     def test_or3(self):
@@ -64,7 +65,7 @@ class TestLogic3:
         for i in self.values:
             for j in self.values:
                 expected = logic_or(i, j)
-                actual = f(a=i, b=j)
+                actual = f(np.array([i, j]))
                 assert expected == actual, f'a={i}, b={j}, expected {expected}, actual {actual}'
 
     def test_not3(self):
@@ -73,7 +74,7 @@ class TestLogic3:
         f = expr.compile()
         for i in self.values:
             expected = logic_not(i)
-            actual = f(muh=i)
+            actual = f(np.array([i]))
             assert expected == actual, f'a={i}, expected {expected}, actual {actual}'
 
     def test_sub_logic_operators(self):
@@ -90,7 +91,7 @@ class TestLogic3:
         for i in self.values:
             for j in self.values:
                 for k in self.values:
-                    computed_result = f(a=i, b=j, c=k)
+                    computed_result = f(np.array([i, j, k]))
                     expected_result = reference_function(i, j, k)
                     assert computed_result == expected_result, f"Mismatch for inputs i={i}, j={j}, k={k}. Expected {expected_result}, got {computed_result}"
 
@@ -1972,8 +1973,12 @@ class TestCASWrapper:
             expected = np.array([1, 2, 3])
         e = cas.Expression(expected)
         f = e.compile(sparse=sparse)
-        assert_allclose(f(), expected)
-        assert_allclose(f.fast_call(np.array([])), expected)
+        if sparse:
+            assert_allclose(f().toarray(), expected)
+            assert_allclose(f(np.array([], dtype=float)).toarray(), expected)
+        else:
+            assert_allclose(f(), expected)
+            assert_allclose(f(np.array([], dtype=float)), expected)
 
     def test_basic_operation_with_string(self):
         str_ = 'muh23'
@@ -2044,8 +2049,8 @@ class TestCASWrapper:
             [bd_s * cas.sin(b_s), ad_s * cas.sin(b_s) + a_s * bd_s * cas.cos(b_s)],
             # [4 * bd * b ** 3, 4 * ad * b ** 3 + 12 * a * bd * b ** 2]
         ])
-        actual = jac.compile()(**kwargs)
-        expected = expected_expr.compile()(**kwargs)
+        actual = jac.compile().call_with_kwargs(**kwargs)
+        expected = expected_expr.compile().call_with_kwargs(**kwargs)
         assert_allclose(actual, expected)
 
     @given(float_no_nan_no_inf(outer_limit=1e2),
@@ -2082,7 +2087,7 @@ class TestCASWrapper:
             [bdd * np.cos(b),
              bdd * -a * np.sin(b) + 2 * ad * bd * np.cos(b)],
         ])
-        actual = jac.compile()(**kwargs)
+        actual = jac.compile().call_with_kwargs(**kwargs)
         assert_allclose(actual, expected)
 
     @given(float_no_nan_no_inf(),
@@ -2108,7 +2113,7 @@ class TestCASWrapper:
         bdd_s = cas.Symbol('bdd')
         m = cas.Expression(a_s * b_s ** 2)
         jac = cas.second_order_total_derivative(m, [a_s, b_s], [ad_s, bd_s], [add_s, bdd_s])
-        actual = jac.compile()(**kwargs)
+        actual = jac.compile().call_with_kwargs(**kwargs)
         expected = bdd * 2 * a + 2 * ad * bd * 2 * b
         assert_allclose(actual, expected)
 
@@ -2145,7 +2150,7 @@ class TestCASWrapper:
         m = cas.Expression(a_s * b_s ** 2 * c_s ** 3)
         jac = cas.second_order_total_derivative(m, [a_s, b_s, c_s], [ad_s, bd_s, cd_s], [add_s, bdd_s, cdd_s])
         # expected_expr = cas.Expression(add_s + bdd_s*2*a*c**3 + 4*ad_s*)
-        actual = jac.compile()(**kwargs)
+        actual = jac.compile().call_with_kwargs(**kwargs)
         # expected = expected_expr.compile()(**kwargs)
         expected = bdd * 2 * a * c ** 3 \
                    + cdd * 6 * a * b ** 2 * c \
@@ -2585,3 +2590,52 @@ class TestCASWrapper:
         a = cas.Expression(np.array([1, 2, 3, 4]))
         b = cas.Expression(np.array([2, 2, 2, 2]))
         assert not cas.logic_all(cas.less_equal(a, b)).to_np()
+
+
+class TestCompiledFunction:
+    def test_dense(self):
+        s1_value = 420.
+        s2_value = 69.
+        s1, s2 = cas.create_symbols(['s1', 's2'])
+        e = cas.sqrt(cas.cos(s1) + cas.sin(s2))
+        e_f = e.compile()
+        actual = e_f(np.array([s1_value, s2_value]))
+        expected = np.sqrt(np.cos(s1_value) + np.sin(s2_value))
+        assert_allclose(actual, expected)
+
+    def test_dense_two_params(self):
+        s1_value = 420.
+        s2_value = 69.
+        s1, s2 = cas.create_symbols(['s1', 's2'])
+        e = cas.sqrt(cas.cos(s1) + cas.sin(s2))
+        e_f = e.compile(parameters=[[s1], [s2]])
+        actual = e_f(np.array([s1_value]), np.array([s2_value]))
+        expected = np.sqrt(np.cos(s1_value) + np.sin(s2_value))
+        assert_allclose(actual, expected)
+
+    def test_sparse(self):
+        s1_value = 420.
+        s2_value = 69.
+        s1, s2 = cas.create_symbols(['s1', 's2'])
+        e = cas.sqrt(cas.cos(s1) + cas.sin(s2))
+        e_f = e.compile(sparse=True)
+        actual = e_f(np.array([s1_value, s2_value]))
+        assert isinstance(actual, scipy.sparse.csc_matrix)
+        expected = np.sqrt(np.cos(s1_value) + np.sin(s2_value))
+        assert_allclose(actual.toarray(), expected)
+
+    def test_stacked_compiled_function_dense(self):
+        s1_value = 420.
+        s2_value = 69.
+        s1, s2 = cas.create_symbols(['s1', 's2'])
+        e1 = cas.sqrt(cas.cos(s1) + cas.sin(s2))
+        e2 = s1 + s2
+        e_f = cas.CompiledFunctionWithViews(
+            expressions=[e1, e2],
+            symbol_parameters=[[s1, s2]]
+        )
+        actual_e1, actual_e2 = e_f(np.array([s1_value, s2_value]))
+        expected_e1 = np.sqrt(np.cos(s1_value) + np.sin(s2_value))
+        expected_e2 = s1_value + s2_value
+        assert_allclose(actual_e1, expected_e1)
+        assert_allclose(actual_e2, expected_e2)

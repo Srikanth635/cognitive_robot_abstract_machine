@@ -342,11 +342,11 @@ class QPProblem:
     def evaluate_at_state(self, solver_state) -> QPMatrices:
         """Evaluate QP matrices at the current solver state."""
         return QPMatrices(
-            H=np.diag(self.quadratic_weights_f.fast_call(solver_state.position, solver_state.passive_position)),
-            g=self.linear_weights_f.fast_call(solver_state.position, solver_state.passive_position),
-            A=self.A_f.fast_call(solver_state.position, solver_state.passive_position),
-            l=self.l_f.fast_call(solver_state.position, solver_state.passive_position),
-            u=self.u_f.fast_call(solver_state.position, solver_state.passive_position),
+            H=np.diag(self.quadratic_weights_f(solver_state.position, solver_state.passive_position)),
+            g=self.linear_weights_f(solver_state.position, solver_state.passive_position),
+            A=self.A_f(solver_state.position, solver_state.passive_position),
+            l=self.l_f(solver_state.position, solver_state.passive_position),
+            u=self.u_f(solver_state.position, solver_state.passive_position),
         )
 
 

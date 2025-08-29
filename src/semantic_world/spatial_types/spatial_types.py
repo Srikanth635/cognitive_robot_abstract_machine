@@ -6,7 +6,7 @@ import functools
 import math
 import sys
 from copy import copy, deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import IntEnum
 from typing import Union, TypeVar, TYPE_CHECKING, Optional, List, Tuple, overload, Iterable, Dict, Callable, Sequence, \
     Any, Type
@@ -31,113 +31,240 @@ class ReferenceFrameMixin:
     reference_frame: Optional[KinematicStructureEntity]
 
 
-class StackedCompiledFunction:
-    compiled_f: CompiledFunction
-    split_out_view: List[np.ndarray]
-    symbol_parameters: List[Symbol]
-
-    def __init__(self,
-                 expressions: List[Expression],
-                 parameters: Optional[Union[List[Symbol], List[List[Symbol]]]] = None,
-                 additional_views: Optional[List[slice]] = None):
-        combined_expression = vstack(expressions)
-        self.compiled_f = combined_expression.compile(parameters=parameters)
-        self.symbol_parameters = self.compiled_f.symbol_parameters
-        slices = []
-        start = 0
-        for expression in expressions[:-1]:
-            end = start + expression.shape[0]
-            slices.append(end)
-            start = end
-        self.split_out_view = np.split(self.compiled_f.out, slices)
-        if additional_views is not None:
-            for expression_slice in additional_views:
-                self.split_out_view.append(self.compiled_f.out[expression_slice])
-
-    def fast_call(self, *args: np.ndarray) -> List[np.ndarray]:
-        self.compiled_f.fast_call(*args)
-        return self.split_out_view
-
-
+@dataclass
 class CompiledFunction:
-    symbol_parameters: List[Symbol]
-    compiled_casadi_function: ca.Function
-    function_buffer: ca.FunctionBuffer
-    function_evaluator: functools.partial
-    out: Union[np.ndarray, sp.csc_matrix]
-    sparse: bool
+    """
+    A compiled symbolic function that can be efficiently evaluated with CasADi.
 
-    def __init__(self,
-                 expression: SymbolicType,
-                 parameters: Optional[Union[List[Symbol], List[List[Symbol]]]] = None,
-                 sparse: bool = False):
-        from scipy import sparse as sp
+    This class compiles symbolic expressions into optimized CasADi functions that can be
+    evaluated efficiently. It supports both sparse and dense matrices and handles
+    parameter substitution automatically.
+    """
 
-        self.sparse = sparse
-        if parameters is None:
-            parameters = expression.free_symbols()
-        if parameters and not isinstance(parameters[0], list):
-            parameters = [parameters]
+    expression: SymbolicType
+    """
+    The symbolic expression to compile.
+    """
+    symbol_parameters: Optional[List[List[Symbol]]] = None
+    """
+    The input parameters for the compiled symbolic expression.
+    """
+    sparse: bool = False
+    """
+    Whether to return a sparse matrix or a dense numpy matrix
+    """
 
-        self.symbol_parameters = parameters
+    compiled_casadi_function: ca.Function = field(init=False)
 
-        if len(parameters) > 0:
-            parameters = [Expression(p).s for p in parameters]
+    function_buffer: ca.FunctionBuffer = field(init=False)
+    function_evaluator: functools.partial = field(init=False)
+    """
+    Helpers to avoid new memory allocation during function evaluation
+    """
 
-        if len(expression) == 0:
-            if self.sparse:
-                result = sp.csc_matrix(np.empty(expression.shape))
-                self.__call__ = lambda **kwargs: result
-                self.fast_call = lambda *args: result
-                return
-        if self.sparse:
-            expression.s = ca.sparsify(expression.s)
-            try:
-                self.compiled_casadi_function = ca.Function('f', parameters, [expression.s])
-            except Exception:
-                self.compiled_casadi_function = ca.Function('f', parameters, expression.s)
-            self.function_buffer, self.function_evaluator = self.compiled_casadi_function.buffer()
-            self.csc_indices, self.csc_indptr = expression.s.sparsity().get_ccs()
-            self.out = sp.csc_matrix((np.zeros(expression.s.nnz()), self.csc_indptr, self.csc_indices),
-                                     shape=expression.shape)
-            self.function_buffer.set_res(0, memoryview(self.out.data))
-        else:
-            try:
-                self.compiled_casadi_function = ca.Function('f', parameters, [ca.densify(expression.s)])
-            except Exception as e:
-                self.compiled_casadi_function = ca.Function('f', parameters, ca.densify(expression.s))
-            self.function_buffer, self.function_evaluator = self.compiled_casadi_function.buffer()
-            if expression.shape[1] <= 1:
-                shape = expression.shape[0]
-            else:
-                shape = expression.shape
-            self.out = np.zeros(shape, order='F')
-            self.function_buffer.set_res(0, memoryview(self.out))
+    out: Union[np.ndarray, sp.csc_matrix] = field(init=False)
+    """
+    The result of a function evaluation is stored in this variable.
+    """
+
+    def __post_init__(self):
+        if self.symbol_parameters is None:
+            self.symbol_parameters = [self.expression.free_symbols()]
+
+        if len(self.expression) == 0:
+            self._setup_empty_result()
+            return
+
+        self._setup_compiled_function()
+        self._setup_output_buffer()
+
         if len(self.symbol_parameters) == 0:
-            self.function_evaluator()
-            if self.sparse:
-                result = self.out.toarray()
-            else:
-                result = self.out
-            self.__call__ = lambda **kwargs: result
-            self.fast_call = lambda *args: result
+            self._setup_constant_result()
 
-    def __call__(self, **kwargs) -> np.ndarray:
-        args = []
-        for params in self.symbol_parameters:
-            for param in params:
-                args.append(kwargs[str(param)])
-        filtered_args = np.array(args, dtype=float)
-        return self.fast_call(filtered_args)
-
-    def fast_call(self, *args: np.ndarray) -> Union[np.ndarray, sp.csc_matrix]:
+    def _setup_empty_result(self) -> None:
         """
-        :param args: parameter values in the same order as was used during the creation
+        Setup result for empty expressions.
+        """
+        if self.sparse:
+            result = sp.csc_matrix(np.empty(self.expression.shape))
+        else:
+            result = np.empty(self.expression.shape)
+        self.__call__ = lambda *args: result
+
+    def _setup_compiled_function(self) -> None:
+        """
+        Setup the CasADi compiled function.
+        """
+        casadi_parameters = []
+        if len(self.symbol_parameters) > 0:
+            # create an array for each List[Symbol]
+            casadi_parameters = [Expression(p).s for p in self.symbol_parameters]
+
+        if self.sparse:
+            self._compile_sparse_function(casadi_parameters)
+        else:
+            self._compile_dense_function(casadi_parameters)
+
+    def _compile_sparse_function(self, casadi_parameters: List[Expression]) -> None:
+        """
+        Compile function for sparse matrices.
+        """
+        casadi_expression = ca.sparsify(self.expression.s)
+        self.compiled_casadi_function = ca.Function('f', casadi_parameters, [casadi_expression])
+
+        self.function_buffer, self.function_evaluator = self.compiled_casadi_function.buffer()
+        self.csc_indices, self.csc_indptr = casadi_expression.sparsity().get_ccs()
+
+    def _compile_dense_function(self,
+                                casadi_parameters: List[Symbol]) -> None:
+        """
+        Compile function for dense matrices.
+
+        :param expression: The symbolic expression to compile
+        :param casadi_parameters: List of CasADi parameters for the function
+        """
+        casadi_expression = ca.densify(self.expression.s)
+        self.compiled_casadi_function = ca.Function('f', casadi_parameters, [casadi_expression])
+
+        self.function_buffer, self.function_evaluator = self.compiled_casadi_function.buffer()
+
+    def _setup_output_buffer(self) -> None:
+        """
+        Setup the output buffer for the compiled function.
+        """
+        if self.sparse:
+            self._setup_sparse_output_buffer()
+        else:
+            self._setup_dense_output_buffer()
+
+    def _setup_sparse_output_buffer(self) -> None:
+        """
+        Setup output buffer for sparse matrices.
+        """
+        self.out = sp.csc_matrix(arg1=(np.zeros(self.expression.s.nnz()),
+                                       self.csc_indptr,
+                                       self.csc_indices),
+                                 shape=self.expression.shape)
+        self.function_buffer.set_res(0, memoryview(self.out.data))
+
+    def _setup_dense_output_buffer(self) -> None:
+        """
+        Setup output buffer for dense matrices.
+        """
+        if self.expression.shape[1] <= 1:
+            shape = self.expression.shape[0]
+        else:
+            shape = self.expression.shape
+        self.out = np.zeros(shape, order='F')
+        self.function_buffer.set_res(0, memoryview(self.out))
+
+    def _setup_constant_result(self) -> None:
+        """
+        Setup result for constant expressions (no parameters).
+
+        For expressions with no free parameters, we can evaluate once and return
+        the constant result for all future calls.
+        """
+        self.function_evaluator()
+        if self.sparse:
+            result = self.out.toarray()
+        else:
+            result = self.out
+        self.__call__ = lambda *args: result
+
+    def __call__(self, *args: np.ndarray) -> Union[np.ndarray, sp.csc_matrix]:
+        """
+        Efficiently evaluate the compiled function with positional arguments, by directly writing the memory of the
+        numpy arrays to the memoryview of the compiled function.
+        Similarly, the result will be written to the output buffer and doesn't allocate new memory on each eval.
+
+        (Yes, this makes a significant speed different.)
+
+        :param args: A numpy array for each List[Symbol] in self.symbol_parameters.
+            !!! Make sure the numpy array is of type float !!! (check is too expensive)
+        :return: The evaluated result as numpy array or sparse matrix
         """
         for arg_idx, arg in enumerate(args):
             self.function_buffer.set_arg(arg_idx, memoryview(arg))
         self.function_evaluator()
         return self.out
+
+    def call_with_kwargs(self, **kwargs: float) -> np.ndarray:
+        """
+        Call the object instance with the provided keyword arguments. This method retrieves
+        the required arguments from the keyword arguments based on the defined
+        `symbol_parameters`, compiles them into an array, and then calls the instance
+        with the constructed array.
+
+        :param kwargs: A dictionary of keyword arguments containing the parameters
+            that match the symbols defined in `symbol_parameters`.
+        :return: A NumPy array resulting from invoking the callable object instance
+            with the filtered arguments.
+        """
+        args = []
+        for params in self.symbol_parameters:
+            for param in params:
+                args.append(kwargs[str(param)])
+        filtered_args = np.array(args, dtype=float)
+        return self(filtered_args)
+
+
+@dataclass
+class CompiledFunctionWithViews:
+    """
+    A wrapper for CompiledFunction which automatically splits the result array into multiple views, with minimal
+    overhead.
+    Useful, when many arrays must be evaluated at the same time, especially when they depend on the same symbols.
+    """
+
+    expressions: List[Expression]
+    """
+    The list of expressions to be compiled, the first len(expressions) many results of __call__ correspond to those
+    """
+
+    symbol_parameters: List[List[Symbol]]
+    """
+    The input parameters for the compiled symbolic expression.
+    """
+
+    additional_views: Optional[List[slice]] = None
+    """
+    If additional views are required that don't correspond to the expressions directly.
+    """
+
+    compiled_function: CompiledFunction = field(init=False)
+    """
+    Reference to the compiled function.
+    """
+
+    split_out_view: List[np.ndarray] = field(init=False)
+    """
+    Views to the out buffer of the compiled function.
+    """
+
+    def __post_init__(self):
+        combined_expression = vstack(self.expressions)
+        self.compiled_function = combined_expression.compile(parameters=self.symbol_parameters,
+                                                             sparse=False)
+        slices = []
+        start = 0
+        for expression in self.expressions[:-1]:
+            end = start + expression.shape[0]
+            slices.append(end)
+            start = end
+        self.split_out_view = np.split(self.compiled_function.out, slices)
+        if self.additional_views is not None:
+            for expression_slice in self.additional_views:
+                self.split_out_view.append(self.compiled_function.out[expression_slice])
+
+    def __call__(self, *args: np.ndarray) -> List[np.ndarray]:
+        """
+        :param args: A numpy array for each List[Symbol] in self.symbol_parameters.
+        :return: A np array for each expression, followed by arrays corresponding to the additional views.
+            They are all views on self.compiled_function.out.
+        """
+        self.compiled_function(*args)
+        return self.split_out_view
 
 
 def _operation_type_error(arg1: object, operation: str, arg2: object) -> TypeError:
@@ -202,7 +329,7 @@ class SymbolicType:
                 self.np_data = np.array(ca.evalf(self.s))
         return self.np_data
 
-    def compile(self, parameters: Optional[Union[List[Symbol], List[List[Symbol]]]] = None, sparse: bool = False) \
+    def compile(self, parameters: Optional[List[List[Symbol]]] = None, sparse: bool = False) \
             -> CompiledFunction:
         return CompiledFunction(self, parameters, sparse)
 
@@ -2682,10 +2809,10 @@ def solve_for(expression: Expression, target_value: float, start_value: float = 
     f = expression.compile()
     x = start_value
     for tries in range(max_tries):
-        err = f.fast_call(np.array([x]))[0] - target_value
+        err = f(np.array([x]))[0] - target_value
         if builtin_abs(err) < eps:
             return x
-        slope = f_dx.fast_call(np.array([x]))[0]
+        slope = f_dx(np.array([x]))[0]
         if slope == 0:
             if start_value > 0:
                 slope = -0.001
