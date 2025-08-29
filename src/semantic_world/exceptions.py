@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Iterable
+
 from typing_extensions import Optional, List, Type, TYPE_CHECKING
 
 from .prefixed_name import PrefixedName
@@ -34,9 +36,12 @@ class DuplicateViewError(UsageError):
         super().__init__(msg)
 
 
-class ExpressionHasFreeSymbolsError(UsageError):
-    def __init__(self, symbols: List[Symbol]):
-        msg = f'Operation can\'t be performed on expression with free symbols: {symbols}.'
+class HasFreeSymbolsError(UsageError):
+    """
+    Raised when an operation can't be performed on an expression with free symbols.
+    """
+    def __init__(self, symbols: Iterable[Symbol]):
+        msg = f'Operation can\'t be performed on expression with free symbols: {list(symbols)}.'
         super().__init__(msg)
 
 
@@ -44,6 +49,7 @@ class ParsingError(Exception):
     """
     An error that happens during parsing of files.
     """
+
     def __init__(self, file_path: Optional[str] = None, msg: Optional[str] = None):
         if not msg:
             if file_path:
@@ -57,6 +63,7 @@ class ViewNotFoundError(UsageError):
     def __init__(self, name: PrefixedName):
         msg = f'View with name {name} not found'
         super().__init__(msg)
+
 
 class AlreadyBelongsToAWorldError(UsageError):
     def __init__(self, world: World, type_trying_to_add: Type[WorldEntity]):

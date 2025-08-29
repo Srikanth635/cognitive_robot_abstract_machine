@@ -15,7 +15,7 @@ import casadi as ca
 import numpy as np
 from scipy import sparse as sp
 
-from ..exceptions import ExpressionHasFreeSymbolsError
+from ..exceptions import HasFreeSymbolsError
 
 if TYPE_CHECKING:
     from ..world_entity import KinematicStructureEntity
@@ -72,6 +72,13 @@ class CompiledFunction:
     def __post_init__(self):
         if self.symbol_parameters is None:
             self.symbol_parameters = [self.expression.free_symbols()]
+        else:
+            symbols = set()
+            for symbol_parameter in self.symbol_parameters:
+                symbols.update(set(symbol_parameter))
+            missing_symbols = symbols ^ set(self.expression.free_symbols())
+            if missing_symbols:
+                raise HasFreeSymbolsError(missing_symbols)
 
         if len(self.expression) == 0:
             self._setup_empty_result()
@@ -317,7 +324,7 @@ class SymbolicType:
 
     def to_np(self) -> Union[float, np.ndarray]:
         if not self.is_constant():
-            raise ExpressionHasFreeSymbolsError(self.free_symbols())
+            raise HasFreeSymbolsError(self.free_symbols())
         if not hasattr(self, 'np_data'):
             if self.shape[0] == self.shape[1] == 0:
                 self.np_data = np.eye(0)
@@ -329,8 +336,21 @@ class SymbolicType:
                 self.np_data = np.array(ca.evalf(self.s))
         return self.np_data
 
-    def compile(self, parameters: Optional[List[List[Symbol]]] = None, sparse: bool = False) \
+    def compile(self,
+                parameters: Optional[List[List[Symbol]]] = None,
+                sparse: bool = False) \
             -> CompiledFunction:
+        """
+        Compiles the function into a representation that can be executed efficiently. This method
+        allows for optional parameterization and the ability to specify whether the compilation
+        should consider a sparse representation.
+
+        :param parameters: A list of parameter sets, where each set contains symbols that define
+            the configuration for the compiled function. If set to None, no parameters are applied.
+        :param sparse: A boolean that determines whether the compiled function should use a
+            sparse representation. Defaults to False.
+        :return: The compiled function as an instance of CompiledFunction.
+        """
         return CompiledFunction(self, parameters, sparse)
 
 

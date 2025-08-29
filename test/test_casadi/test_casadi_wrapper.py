@@ -6,7 +6,7 @@ from hypothesis import given, assume
 
 import semantic_world.spatial_types.math as giskard_math
 import semantic_world.spatial_types.spatial_types as cas
-from semantic_world.exceptions import ExpressionHasFreeSymbolsError
+from semantic_world.exceptions import HasFreeSymbolsError
 from .utils_for_tests import float_no_nan_no_inf, quaternion, random_angle, unit_vector, compare_axis_angle, \
     angle_positive, vector, lists_of_same_length, compare_orientations, sq_matrix, assert_allclose
 
@@ -246,7 +246,7 @@ class TestExpression:
     def test_to_np_fail(self):
         s1, s2 = cas.Symbol('s1'), cas.Symbol('s2')
         e = s1 + s2
-        with pytest.raises(ExpressionHasFreeSymbolsError):
+        with pytest.raises(HasFreeSymbolsError):
             e.to_np()
 
     def test_get_attr(self):
@@ -2646,3 +2646,9 @@ class TestCompiledFunction:
         expected_e2 = s1_value + s2_value
         assert_allclose(actual_e1, expected_e1)
         assert_allclose(actual_e2, expected_e2)
+
+    def test_missing_free_symbols(self):
+        s1, s2 = cas.create_symbols(['s1', 's2'])
+        e = cas.sqrt(cas.cos(s1) + cas.sin(s2))
+        with pytest.raises(HasFreeSymbolsError):
+            e.compile(parameters=[[s1]])
