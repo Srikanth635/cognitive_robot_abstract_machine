@@ -270,7 +270,12 @@ class WorldModelUpdateContextManager:
 
 def modifies_world(func):
     """
-    Decorator that marks a method as a modification to the state or model of a world.
+    Decorator that marks a method as an atomic modification to the state or model of a world.
+    Use this decorator only to mark methods that modify the world state and do not call other methods that modify
+    the world state.
+
+    If you want to modify the world state and call other methods that modify the world state,
+    use the world.modify_world to manage that.
     """
     sig = inspect.signature(func)
 
@@ -585,10 +590,14 @@ class World:
 
         :param kinematic_structure_entity: The kinematic_structure_entity to add.
         """
+        logger.info(f"Trying to add kinematic_structure_entity with name {kinematic_structure_entity.name}")
         if (
             kinematic_structure_entity._world is self
             and kinematic_structure_entity.index is not None
         ):
+            logger.info(
+                f"Skipping since add kinematic_structure_entity already exists."
+            )
             return
         elif (
             kinematic_structure_entity._world is not None
