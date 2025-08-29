@@ -621,6 +621,21 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin):
                                    rotation_matrix: Optional[RotationMatrix] = None,
                                    reference_frame: Optional[KinematicStructureEntity] = None,
                                    child_frame: Optional[KinematicStructureEntity] = None) -> TransformationMatrix:
+        """
+        Constructs a TransformationMatrix object from a given point, a rotation matrix,
+        a reference frame, and a child frame.
+
+        :param point: The 3D point used to set the translation part of the
+            transformation matrix. If None, no translation is applied.
+        :param rotation_matrix: The rotation matrix defines the rotational component
+            of the transformation. If None, the identity matrix is assumed.
+        :param reference_frame: The reference frame for the transformation matrix.
+            It specifies the parent coordinate system.
+        :param child_frame: The child or target frame for the transformation. It
+            specifies the target coordinate system.
+        :return: A `TransformationMatrix` instance initialized with the provided
+            parameters or default values.
+        """
         if rotation_matrix is None:
             a_T_b = cls(reference_frame=reference_frame, child_frame=child_frame)
         else:
@@ -641,18 +656,51 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin):
                      yaw: Optional[ScalarData] = 0,
                      reference_frame: Optional[KinematicStructureEntity] = None,
                      child_frame: Optional[KinematicStructureEntity] = None) -> TransformationMatrix:
+        """
+        Creates a TransformationMatrix object from position (x, y, z) and Euler angles
+        (roll, pitch, yaw) values. The function also accepts optional reference and
+        child frame parameters.
+
+        :param x: The x-coordinate of the position
+        :param y: The y-coordinate of the position
+        :param z: The z-coordinate of the position
+        :param roll: The rotation around the x-axis
+        :param pitch: The rotation around the y-axis
+        :param yaw: The rotation around the z-axis
+        :param reference_frame: The reference frame for the transformation
+        :param child_frame: The child frame associated with the transformation
+        :return: A TransformationMatrix object created using the provided
+            position and orientation values
+        """
         p = Point3(x, y, z)
         r = RotationMatrix.from_rpy(roll, pitch, yaw)
         return cls.from_point_rotation_matrix(p, r, reference_frame=reference_frame, child_frame=child_frame)
 
     @classmethod
-    def from_xyz_quat(cls,
-                      pos_x: ScalarData = 0, pos_y: ScalarData = 0, pos_z: ScalarData = 00,
-                      quat_w: ScalarData = 0, quat_x: ScalarData = 0,
-                      quat_y: ScalarData = 0, quat_z: ScalarData = 1,
-                      reference_frame: Optional[KinematicStructureEntity] = None,
-                      child_frame: Optional[KinematicStructureEntity] = None) \
+    def from_xyz_quaternion(cls,
+                            pos_x: ScalarData = 0, pos_y: ScalarData = 0, pos_z: ScalarData = 00,
+                            quat_w: ScalarData = 0, quat_x: ScalarData = 0,
+                            quat_y: ScalarData = 0, quat_z: ScalarData = 1,
+                            reference_frame: Optional[KinematicStructureEntity] = None,
+                            child_frame: Optional[KinematicStructureEntity] = None) \
             -> TransformationMatrix:
+        """
+        Creates a `TransformationMatrix` instance from the provided position coordinates and quaternion
+        values representing rotation. This method constructs a 3D point for the position and a rotation
+        matrix derived from the quaternion, and initializes the transformation matrix with these along
+        with optional reference and child frame entities.
+
+        :param pos_x: X coordinate of the position in space.
+        :param pos_y: Y coordinate of the position in space.
+        :param pos_z: Z coordinate of the position in space.
+        :param quat_w: W component of the quaternion representing rotation.
+        :param quat_x: X component of the quaternion representing rotation.
+        :param quat_y: Y component of the quaternion representing rotation.
+        :param quat_z: Z component of the quaternion representing rotation.
+        :param reference_frame: Optional reference frame for the transformation matrix.
+        :param child_frame: Optional child frame for the transformation matrix.
+        :return: A `TransformationMatrix` object constructed from the given parameters.
+        """
         p = Point3(pos_x, pos_y, pos_z)
         r = RotationMatrix.from_quaternion(q=Quaternion(w=quat_w, x=quat_x, y=quat_y, z=quat_z))
         return cls.from_point_rotation_matrix(p, r, reference_frame=reference_frame, child_frame=child_frame)
@@ -723,7 +771,7 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin):
         r[2, 3] = self[2, 3]
         return TransformationMatrix(r, reference_frame=self.reference_frame, child_frame=None)
 
-    def to_rotation(self) -> RotationMatrix:
+    def to_rotation_matrix(self) -> RotationMatrix:
         return RotationMatrix(self)
 
     def to_quaternion(self) -> Quaternion:
@@ -731,7 +779,8 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin):
 
     def __deepcopy__(self, memo) -> TransformationMatrix:
         """
-        Even in a deep copy, we don't want to copy the reference and child frame, just the matrix itself.
+        Even in a deep copy, we don't want to copy the reference and child frame, just the matrix itself,
+        because are just references to kinematic structure entities.
         """
         if id(self) in memo:
             return memo[id(self)]
@@ -1024,9 +1073,26 @@ class Point3(SymbolicType, ReferenceFrameMixin):
 
     @classmethod
     def from_iterable(cls,
-                      data: Optional[
-                          Union[Expression, Point3, Vector3, ca.SX, np.ndarray, Iterable[ScalarData]]] = None,
+                      data: Union[ArrayLikeData, Vector3, Point3],
                       reference_frame: Optional[KinematicStructureEntity] = None) -> Point3:
+        """
+        Creates an instance of Point3 from provided iterable data.
+
+        This class method is used to construct a Point3 object by processing the given
+        data and optionally assigning a reference frame. The data can represent
+        different array-like objects compatible with the desired format for a Point3
+        instance. The provided iterable or array should follow a 1D structure to avoid
+        raised errors.
+
+        :param data: The array-like data or object such as a list, tuple, or numpy array
+            used to initialize the Point3 instance.
+        :param reference_frame: A reference to a `KinematicStructureEntity` object,
+            representing the frame of reference for the Point3 instance. If the data
+            has a `reference_frame` attribute, and this parameter is not specified,
+            it will be taken from the data.
+        :return: Returns an instance of Point3 initialized with the processed data
+            and an optional reference frame.
+        """
         if isinstance(data, (Quaternion, RotationMatrix, TransformationMatrix)):
             raise TypeError(f'Can\'t create a Point3 form {type(data)}')
         if hasattr(data, 'shape') and len(data.shape) > 1 and data.shape[1] != 1:
@@ -1109,11 +1175,27 @@ class Vector3(SymbolicType, ReferenceFrameMixin):
         self[3] = 0
 
     @classmethod
-    def from_iterable(cls, data: Optional[Union[Expression, Point3, Vector3,
-    ca.SX,
-    np.ndarray,
-    Iterable[ScalarData]]] = None,
+    def from_iterable(cls,
+                      data: Union[ArrayLikeData, Vector3, Point3],
                       reference_frame: Optional[KinematicStructureEntity] = None) -> Vector3:
+        """
+        Creates an instance of Vector3 from provided iterable data.
+
+        This class method is used to construct a Vector3 object by processing the given
+        data and optionally assigning a reference frame. The data can represent
+        different array-like objects compatible with the desired format for a Vector3
+        instance. The provided iterable or array should follow a 1D structure to avoid
+        raised errors.
+
+        :param data: The array-like data or object such as a list, tuple, or numpy array
+            used to initialize the Vector3 instance.
+        :param reference_frame: A reference to a `KinematicStructureEntity` object,
+            representing the frame of reference for the Vector3 instance. If the data
+            has a `reference_frame` attribute, and this parameter is not specified,
+            it will be taken from the data.
+        :return: Returns an instance of Vector3 initialized with the processed data
+            and an optional reference frame.
+        """
         if isinstance(data, (Quaternion, RotationMatrix, TransformationMatrix)):
             raise TypeError(f'Can\'t create a Vector3 form {type(data)}')
         if hasattr(data, 'shape') and len(data.shape) > 1 and data.shape[1] != 1:
@@ -1251,14 +1333,28 @@ class Quaternion(SymbolicType, ReferenceFrameMixin):
         return Quaternion.from_iterable(self.s.__neg__())
 
     @classmethod
-    def from_iterable(cls, data: Optional[Union[Expression,
-    Quaternion,
-    ca.SX,
-    Tuple[ScalarData,
-    ScalarData,
-    ScalarData,
-    ScalarData]]] = None,
+    def from_iterable(cls,
+                      data: Union[ArrayLikeData, Quaternion],
                       reference_frame: Optional[KinematicStructureEntity] = None) -> Quaternion:
+        """
+        Creates an instance of Quaternion from provided iterable data.
+
+        This class method is used to construct a Quaternion object by processing the given
+        data and optionally assigning a reference frame. The data can represent
+        different array-like objects compatible with the desired format for a Quaternion
+        instance. The provided iterable or array should follow a 1D structure to avoid
+        raised errors.
+
+        :param data: The array-like data or object such as a list, tuple, or numpy array
+            used to initialize the Quaternion instance.
+        :param reference_frame: A reference to a `KinematicStructureEntity` object,
+            representing the frame of reference for the Quaternion instance. If the data
+            has a `reference_frame` attribute, and this parameter is not specified,
+            it will be taken from the data.
+
+        :return: Returns an instance of Quaternion initialized with the processed data
+            and an optional reference frame.
+        """
         if isinstance(data, (Point3, Vector3, RotationMatrix, TransformationMatrix)):
             raise TypeError(f'Can\'t create a Quaternion form {type(data)}')
         if hasattr(data, 'shape') and len(data.shape) > 1 and data.shape[1] != 1:
@@ -1303,6 +1399,21 @@ class Quaternion(SymbolicType, ReferenceFrameMixin):
     def from_axis_angle(cls, axis: Vector3, angle: ScalarData,
                         reference_frame: Optional[KinematicStructureEntity] = None) \
             -> Quaternion:
+        """
+        Creates a quaternion from an axis-angle representation.
+
+        This method uses the axis of rotation and the rotation angle (in radians)
+        to construct a quaternion representation of the rotation. Optionally,
+        a reference frame can be specified to which the resulting quaternion is
+        associated.
+
+        :param axis: A 3D vector representing the axis of rotation.
+        :param angle: The rotation angle in radians.
+        :param reference_frame: An optional reference frame entity associated
+            with the quaternion, if applicable.
+        :return: A quaternion representing the rotation defined by
+            the given axis and angle.
+        """
         half_angle = angle / 2
         return cls(axis[0] * sin(half_angle),
                    axis[1] * sin(half_angle),
@@ -1313,6 +1424,21 @@ class Quaternion(SymbolicType, ReferenceFrameMixin):
     @classmethod
     def from_rpy(cls, roll: ScalarData, pitch: ScalarData, yaw: ScalarData,
                  reference_frame: Optional[KinematicStructureEntity] = None) -> Quaternion:
+        """
+        Creates a Quaternion instance from specified roll, pitch, and yaw angles.
+
+        The method computes the quaternion representation of the given roll, pitch,
+        and yaw angles using trigonometric transformations based on their
+        half-angle values for efficient calculations.
+
+        :param roll: The roll angle in radians.
+        :param pitch: The pitch angle in radians.
+        :param yaw: The yaw angle in radians.
+        :param reference_frame: Optional reference frame entity associated with
+            the quaternion.
+        :return: A Quaternion instance representing the rotation defined by the
+            specified roll, pitch, and yaw angles.
+        """
         roll = _to_sx(roll)
         pitch = _to_sx(pitch)
         yaw = _to_sx(yaw)
@@ -1341,6 +1467,18 @@ class Quaternion(SymbolicType, ReferenceFrameMixin):
 
     @classmethod
     def from_rotation_matrix(cls, r: Union[RotationMatrix, TransformationMatrix]) -> Quaternion:
+        """
+        Creates a Quaternion object initialized from a given rotation matrix.
+
+        This method constructs a quaternion representation of the provided rotation matrix. It is designed to handle
+        different cases of rotation matrix configurations to ensure numerical stability during computation. The resultant
+        quaternion adheres to the expected mathematical relationship with the given rotation matrix.
+
+        :param r: The input matrix representing a rotation. It can be either a `RotationMatrix` or `TransformationMatrix`.
+                  This matrix is expected to have a valid mathematical structure typical for rotation matrices.
+
+        :return: A new instance of `Quaternion` corresponding to the given rotation matrix `r`.
+        """
         q = Expression((0, 0, 0, 0))
         t = trace(r)
 
@@ -1448,6 +1586,12 @@ SymbolicVector = Union[
     Point3,
     Vector3,
     Expression,
+]
+
+ArrayLikeData = Union[
+    Expression,
+    Iterable,
+    np.ndarray
 ]
 
 RotationData = Union[

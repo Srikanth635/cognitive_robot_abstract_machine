@@ -1742,7 +1742,7 @@ class TestTransformationMatrix:
     def test_rot_of(self, x, y, z, q):
         r1 = cas.TransformationMatrix.from_point_rotation_matrix(point=cas.Point3(x, y, z),
                                                                  rotation_matrix=cas.RotationMatrix.from_quaternion(
-                                                                     cas.Quaternion(*q))).to_rotation()
+                                                                     cas.Quaternion(*q))).to_rotation_matrix()
         r2 = giskard_math.rotation_matrix_from_quaternion(*q)
         assert_allclose(r1, r2)
 
@@ -1751,7 +1751,7 @@ class TestTransformationMatrix:
         Test to make sure the function doesn't alter the original
         """
         f = cas.TransformationMatrix.from_xyz_rpy(1, 2, 3)
-        r = f.to_rotation()
+        r = f.to_rotation_matrix()
         assert f[0, 3] == 1
         assert f[0, 3] == 2
         assert f[0, 3] == 3
@@ -1854,7 +1854,7 @@ class TestTransformationMatrix:
 
     def test_from_xyz_quat(self):
         """Test construction from position and quaternion"""
-        t = cas.TransformationMatrix.from_xyz_quat(
+        t = cas.TransformationMatrix.from_xyz_quaternion(
             pos_x=1, pos_y=2, pos_z=3,
             quat_w=1, quat_x=0, quat_y=0, quat_z=0  # Identity quaternion
         )
@@ -1960,7 +1960,7 @@ class TestTransformationMatrix:
         assert position[3] == 1
 
         # Extract rotation
-        rotation = t.to_rotation()
+        rotation = t.to_rotation_matrix()
         assert isinstance(rotation, cas.RotationMatrix)
         # Should have zero translation
         assert rotation[0, 3] == 0
@@ -2145,7 +2145,7 @@ class TestTransformationMatrix:
     def test_quaternion_consistency(self, q):
         """Property-based test for quaternion consistency"""
         # Create transformation from quaternion
-        t = cas.TransformationMatrix.from_xyz_quat(
+        t = cas.TransformationMatrix.from_xyz_quaternion(
             pos_x=1, pos_y=2, pos_z=3,
             quat_w=q[3], quat_x=q[0], quat_y=q[1], quat_z=q[2]
         )
@@ -2154,7 +2154,7 @@ class TestTransformationMatrix:
         q_extracted = t.to_quaternion()
 
         # Create transformation from extracted quaternion
-        t_roundtrip = cas.TransformationMatrix.from_xyz_quat(
+        t_roundtrip = cas.TransformationMatrix.from_xyz_quaternion(
             pos_x=1, pos_y=2, pos_z=3,
             quat_w=q_extracted[3], quat_x=q_extracted[0],
             quat_y=q_extracted[1], quat_z=q_extracted[2]
