@@ -3,7 +3,6 @@ from itertools import product, repeat, combinations
 from typing import Optional, Set, List, Dict
 
 import fcl
-from line_profiler import profile
 from trimesh.collision import CollisionManager, mesh_to_BVH
 
 from .collision_detector import CollisionDetector, CollisionCheck, Collision
