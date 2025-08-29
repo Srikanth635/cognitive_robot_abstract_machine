@@ -292,7 +292,22 @@ class SymbolicType:
         return str(self.s)
 
     def pretty_str(self) -> List[List[str]]:
-        return to_str(self)
+        """
+        Turns a symbolic type into a more or less readable string.
+        """
+        result_list = np.zeros(self.shape).tolist()
+        for x_index in range(self.shape[0]):
+            for y_index in range(self.shape[1]):
+                s = str(self[x_index, y_index])
+                parts = s.split(', ')
+                result = parts[-1]
+                for x in reversed(parts[:-1]):
+                    equal_position = len(x.split('=')[0])
+                    index = x[:equal_position]
+                    sub = x[equal_position + 1:]
+                    result = result.replace(index, sub)
+                result_list[x_index][y_index] = result
+        return result_list
 
     def __repr__(self):
         return repr(self.s)
@@ -320,7 +335,7 @@ class SymbolicType:
         return self.shape[0]
 
     def free_symbols(self) -> List[Symbol]:
-        return free_symbols(self.s)
+        return [Symbol._registry[str(s)] for s in ca.symvar(self.s)]
 
     def is_constant(self) -> bool:
         return len(self.free_symbols()) == 0
@@ -526,24 +541,40 @@ class Expression(SymbolicType, BasicOperatorMixin):
             self._create_from_iterable(data)
 
     def _create_from_iterable(self, data):
-            x = len(data)
-            if x == 0:
-                self.s = ca.SX()
-                return
-            if isinstance(data[0], list) or isinstance(data[0], tuple) or isinstance(data[0], np.ndarray):
-                y = len(data[0])
+        x = len(data)
+        if x == 0:
+            self.s = ca.SX()
+            return
+        if isinstance(data[0], list) or isinstance(data[0], tuple) or isinstance(data[0], np.ndarray):
+            y = len(data[0])
+        else:
+            y = 1
+        self.s = ca.SX(x, y)
+        for i in range(self.shape[0]):
+            if y > 1:
+                for j in range(self.shape[1]):
+                    self[i, j] = data[i][j]
             else:
-                y = 1
-            self.s = ca.SX(x, y)
-            for i in range(self.shape[0]):
-                if y > 1:
-                    for j in range(self.shape[1]):
-                        self[i, j] = data[i][j]
+                if isinstance(data[i], Symbol):
+                    self[i] = data[i].s
                 else:
-                    if isinstance(data[i], Symbol):
-                        self[i] = data[i].s
-                    else:
-                        self[i] = data[i]
+                    self[i] = data[i]
+
+    @classmethod
+    def zeros(cls, rows: int, columns: int) -> Expression:
+        return cls(ca.SX.zeros(rows, columns))
+
+    @classmethod
+    def ones(cls, x: int, y: int) -> Expression:
+        return cls(ca.SX.ones(x, y))
+
+    @classmethod
+    def tri(cls, dimension: int) -> Expression:
+        return cls(np.tri(dimension))
+
+    @classmethod
+    def eye(cls, size: int) -> Expression:
+        return cls(ca.SX.eye(size))
 
     def remove(self, rows: List[int], columns: List[int]):
         self.s.remove(rows, columns)
@@ -569,6 +600,79 @@ class Expression(SymbolicType, BasicOperatorMixin):
 
     def reshape(self, new_shape: Tuple[int, int]) -> Expression:
         return Expression(self.s.reshape(new_shape))
+
+    def jacobian(self,
+                 symbols: Iterable[Symbol]) -> Expression:
+        """
+        Compute the Jacobian matrix of a vector of expressions with respect to a vector of symbols.
+
+        This function calculates the Jacobian matrix, which is a matrix of all first-order
+        partial derivatives of a vector of functions with respect to a vector of variables.
+
+        :param symbols: The symbols with respect to which the partial derivatives are taken.
+        :return: The Jacobian matrix as an Expression.
+        """
+        return Expression(ca.jacobian(self.s, Expression(symbols).s))
+
+    def jacobian_dot(self,
+                     symbols: Iterable[Symbol],
+                     symbols_dot: Iterable[Symbol]) -> Expression:
+        """
+        Compute the total derivative of the Jacobian matrix.
+
+        This function calculates the time derivative of a Jacobian matrix given
+        a set of expressions and symbols, along with their corresponding
+        derivatives. For each element in the Jacobian matrix, this method
+        computes the total derivative based on the provided symbols and
+        their time derivatives.
+
+        :param symbols: Iterable containing the symbols with respect to which
+            the Jacobian is calculated.
+        :param symbols_dot: Iterable containing the time derivatives of the
+            corresponding symbols in `symbols`.
+        :return: The time derivative of the Jacobian matrix.
+        """
+        Jd = self.jacobian(symbols)
+        for i in range(Jd.shape[0]):
+            for j in range(Jd.shape[1]):
+                Jd[i, j] = total_derivative(Jd[i, j], symbols, symbols_dot)
+        return Jd
+
+    def jacobian_ddot(self,
+                      symbols: Iterable[Symbol],
+                      symbols_dot: Iterable[Symbol],
+                      symbols_ddot: Iterable[Symbol]) -> Expression:
+        """
+        Compute the second-order total derivative of the Jacobian matrix.
+
+        This function computes the Jacobian matrix of the given expressions with
+        respect to specified symbols and further calculates the second-order
+        total derivative for each element in the Jacobian matrix with respect to
+        the provided symbols, their first-order derivatives, and their second-order
+        derivatives.
+
+        :param symbols: An iterable of symbolic variables representing the
+            primary variables with respect to which the Jacobian and derivatives
+            are calculated.
+        :param symbols_dot: An iterable of symbolic variables representing the
+            first-order derivatives of the primary variables.
+        :param symbols_ddot: An iterable of symbolic variables representing the
+            second-order derivatives of the primary variables.
+        :return: A symbolic matrix representing the second-order total derivative
+            of the Jacobian matrix of the provided expressions.
+        """
+        Jdd = self.jacobian(symbols)
+        for i in range(Jdd.shape[0]):
+            for j in range(Jdd.shape[1]):
+                Jdd[i, j] = second_order_total_derivative(Jdd[i, j], symbols, symbols_dot, symbols_ddot)
+        return Jdd
+
+    def inverse(self) -> Expression:
+        """
+        Computes the matrix inverse. Only works if the expression is square.
+        """
+        assert self.shape[0] == self.shape[1]
+        return Expression(ca.inv(self.s))
 
 
 TrinaryFalse: float = 0.0
@@ -1159,6 +1263,24 @@ class Point3(SymbolicType, ReferenceFrameMixin):
         result.reference_frame = self.reference_frame
         return result
 
+    def project_to_plane(self,
+                         frame_V_plane_vector1: Vector3,
+                         frame_V_plane_vector2: Vector3) -> Point3:
+        """
+        Projects a point onto a plane defined by two vectors.
+        This function assumes that all parameters are defined with respect to the same reference frame.
+
+        :param frame_V_plane_vector1: First vector defining the plane
+        :param frame_V_plane_vector2: Second vector defining the plane
+        :return: The projected point on the plane
+        """
+        normal = cross(frame_V_plane_vector1, frame_V_plane_vector2)
+        normal.scale(1)
+        # since the plane is in origin, our vector to the point is trivial
+        frame_V_current = Vector3.from_iterable(self)
+        d = normal @ frame_V_current
+        projection = self - normal * d
+        return projection
 
 class Vector3(SymbolicType, ReferenceFrameMixin):
     vis_frame: Optional[KinematicStructureEntity]
@@ -1317,6 +1439,43 @@ class Vector3(SymbolicType, ReferenceFrameMixin):
             self.s = ((self / self.norm()) * a).s
         else:
             self.s = (save_division(self, self.norm()) * a).s
+
+    def project_to_cone(self, frame_V_cone_axis: Vector3,
+                        cone_theta: Union[Symbol, float, Expression]) -> Vector3:
+        """
+        Projects a given vector onto the boundary of a cone defined by its axis and angle.
+
+        This function computes the projection of a vector onto the boundary of a
+        cone specified by its axis and half-angle. It handles special cases where
+        the input vector is collinear with the cone's axis. The projection ensures
+        the resulting vector lies within the cone's boundary.
+
+        :param frame_V_current: The vector to be projected.
+        :param frame_V_cone_axis: The axis of the cone.
+        :param cone_theta: The half-angle of the cone in radians. Can be a symbolic value or a float.
+        :return: The projection of the input vector onto the cone's boundary.
+        """
+        frame_V_current = self
+        frame_V_cone_axis_normed = Vector3.from_iterable(frame_V_cone_axis)
+        frame_V_cone_axis_normed.scale(1)
+        beta = frame_V_current @ frame_V_cone_axis_normed
+        norm_v = frame_V_current.norm()
+
+        # Compute the perpendicular component.
+        v_perp = frame_V_current - (frame_V_cone_axis_normed * beta)
+        norm_v_perp = norm(v_perp)
+        v_perp.scale(1)
+
+        s = beta * cos(cone_theta) + norm_v_perp * sin(cone_theta)
+        projected_vector = ((frame_V_cone_axis_normed * cos(cone_theta)) + (v_perp * sin(cone_theta))) * s
+        # Handle the case when v is collinear with a.
+        project_on_cone_boundary = if_less(a=norm_v_perp, b=1e-8,
+                                           if_result=frame_V_cone_axis_normed * norm_v * cos(cone_theta),
+                                           else_result=projected_vector)
+
+        return if_greater_eq(a=beta, b=norm_v * np.cos(cone_theta),
+                             if_result=frame_V_current,
+                             else_result=project_on_cone_boundary)
 
 
 class Quaternion(SymbolicType, ReferenceFrameMixin):
@@ -1574,6 +1733,43 @@ class Quaternion(SymbolicType, ReferenceFrameMixin):
             return Expression(ca.mtimes(self.s.T, other.s))
         raise _operation_type_error(self, 'dot', other)
 
+    def slerp(self, other: Quaternion, t: ScalarData) -> Quaternion:
+        """
+        spherical linear interpolation that takes into account that q == -q
+        :param q1: 4x1 Matrix
+        :param q2: 4x1 Matrix
+        :param t: float, 0-1
+        :return: 4x1 Matrix; Return spherical linear interpolation between two quaternions.
+        """
+        cos_half_theta = self.dot(other)
+
+        if0 = -cos_half_theta
+        other = if_greater_zero(if0, -other, other)
+        cos_half_theta = if_greater_zero(if0, -cos_half_theta, cos_half_theta)
+
+        if1 = abs(cos_half_theta) - 1.0
+
+        # enforce acos(x) with -1 < x < 1
+        cos_half_theta = min(1, cos_half_theta)
+        cos_half_theta = max(-1, cos_half_theta)
+
+        half_theta = acos(cos_half_theta)
+
+        sin_half_theta = sqrt(1.0 - cos_half_theta * cos_half_theta)
+        if2 = 0.001 - abs(sin_half_theta)
+
+        ratio_a = save_division(sin((1.0 - t) * half_theta), sin_half_theta)
+        ratio_b = save_division(sin(t * half_theta), sin_half_theta)
+
+        mid_quaternion = Quaternion.from_iterable(Expression(self) * 0.5 + Expression(other) * 0.5)
+        slerped_quaternion = Quaternion.from_iterable(Expression(self) * ratio_a + Expression(other) * ratio_b)
+
+        return Quaternion.from_iterable(if_greater_eq_zero(if1,
+                                                           self,
+                                                           if_greater_zero(if2,
+                                                                           mid_quaternion,
+                                                                           slerped_quaternion)))
+
 
 NumericalScalar = Union[int, float, IntEnum]
 NumericalVector = Union[np.ndarray, Iterable[NumericalScalar]]
@@ -1676,103 +1872,18 @@ def hessian(expressions: Expression,
     return Expression(ca.hessian(expressions, Expression(symbols).s)[0])
 
 
-def jacobian(expressions: Expression,
-             symbols: Iterable[Symbol]) -> Expression:
-    """
-    Compute the Jacobian matrix of a vector of expressions with respect to a vector of symbols.
-
-    This function calculates the Jacobian matrix, which is a matrix of all first-order
-    partial derivatives of a vector of functions with respect to a vector of variables.
-
-    :param expressions: The input expressions for which the Jacobian is to be computed.
-    :param symbols: The symbols with respect to which the partial derivatives are taken.
-    :return: The Jacobian matrix as an Expression.
-    """
-    expressions = Expression(expressions)
-    return Expression(ca.jacobian(expressions.s, Expression(symbols).s))
-
-
-def jacobian_dot(expressions: Expression,
-                 symbols: Iterable[Symbol],
-                 symbols_dot: Iterable[Symbol]) -> Expression:
-    """
-    Compute the total derivative of the Jacobian matrix.
-
-    This function calculates the time derivative of a Jacobian matrix given
-    a set of expressions and symbols, along with their corresponding
-    derivatives. For each element in the Jacobian matrix, this method
-    computes the total derivative based on the provided symbols and
-    their time derivatives.
-
-    :param expressions: A set of expressions for which the Jacobian matrix
-        is computed.
-    :param symbols: Iterable containing the symbols with respect to which
-        the Jacobian is calculated.
-    :param symbols_dot: Iterable containing the time derivatives of the
-        corresponding symbols in `symbols`.
-    :return: The time derivative of the Jacobian matrix.
-    """
-    Jd = jacobian(expressions, symbols)
-    for i in range(Jd.shape[0]):
-        for j in range(Jd.shape[1]):
-            Jd[i, j] = total_derivative(Jd[i, j], symbols, symbols_dot)
-    return Jd
-
-
-def jacobian_ddot(expressions: Expression,
-                  symbols: Iterable[Symbol],
-                  symbols_dot: Iterable[Symbol],
-                  symbols_ddot: Iterable[Symbol]) -> Expression:
-    """
-    Compute the second-order total derivative of the Jacobian matrix.
-
-    This function computes the Jacobian matrix of the given expressions with
-    respect to specified symbols and further calculates the second-order
-    total derivative for each element in the Jacobian matrix with respect to
-    the provided symbols, their first-order derivatives, and their second-order
-    derivatives.
-
-    :param expressions: A symbolic expression or a collection of symbolic
-        expressions for which the Jacobian matrix and its second-order
-        total derivatives are to be computed.
-    :param symbols: An iterable of symbolic variables representing the
-        primary variables with respect to which the Jacobian and derivatives
-        are calculated.
-    :param symbols_dot: An iterable of symbolic variables representing the
-        first-order derivatives of the primary variables.
-    :param symbols_ddot: An iterable of symbolic variables representing the
-        second-order derivatives of the primary variables.
-    :return: A symbolic matrix representing the second-order total derivative
-        of the Jacobian matrix of the provided expressions.
-    """
-    Jdd = jacobian(expressions, symbols)
-    for i in range(Jdd.shape[0]):
-        for j in range(Jdd.shape[1]):
-            Jdd[i, j] = second_order_total_derivative(Jdd[i, j], symbols, symbols_dot, symbols_ddot)
-    return Jdd
-
-
 def equivalent(expression1: ScalarData, expression2: ScalarData) -> bool:
+    """
+    Determines whether two scalar expressions are mathematically equivalent by simplifying
+    and comparing them.
+
+    :param expression1: First scalar expression to compare
+    :param expression2: Second scalar expression to compare
+    :return: True if the two expressions are equivalent, otherwise False
+    """
     expression1 = _to_sx(expression1)
     expression2 = _to_sx(expression2)
     return ca.is_equal(ca.simplify(expression1), ca.simplify(expression2), 5)
-
-
-def free_symbols(expression: SymbolicType) -> List[Symbol]:
-    expression = _to_sx(expression)
-    return [Symbol._registry[str(s)] for s in ca.symvar(expression)]
-
-
-def zeros(rows: int, columns: int) -> Expression:
-    return Expression(ca.SX.zeros(rows, columns))
-
-
-def ones(x: int, y: int) -> Expression:
-    return Expression(ca.SX.ones(x, y))
-
-
-def tri(dimension: int) -> Expression:
-    return Expression(np.tri(dimension))
 
 
 def abs(x: Union[SymbolicType]) -> Expression:
@@ -1800,15 +1911,36 @@ def limit(x: ScalarData,
 
 
 def _get_return_type(thing: Any):
+    """
+    Determines the return type based on the input's type and returns the appropriate type.
+    Used in "if" expressions.
+
+    :param thing: The input whose type is analyzed.
+    :return: The appropriate type based on the input type. If the input type is `int`, `float`, or `Symbol`,
+        the return type is `Expression`. Otherwise, the return type is the input's type.
+    """
     return_type = type(thing)
-    if return_type in (int, float):
-        return Expression
-    if return_type == Symbol:
+    if return_type in (int, float, Symbol):
         return Expression
     return return_type
 
 
 def _recreate_return_type(thing: Any, return_type: Type) -> Any:
+    """
+    Transforms the input object into the specified return type. Supports specialized
+    conversion for specific types like Point3, Vector3, and Quaternion. For these types,
+    it initializes the object using the `from_iterable` method. For other types,
+    a standard initialization is used.
+
+    Used in conjunction with `_get_return_type` in "if" expressions.
+
+    :param thing: An object that will be converted to the specified return type.
+    :param return_type: The type to which the input object will be converted.
+        If the type is Point3, Vector3, or Quaternion, the conversion will be
+        performed using `from_iterable`. Otherwise, the type's standard
+        constructor will be used.
+    :return: An object of the specified return type, initialized using the input object.
+    """
     if return_type in (Point3, Vector3, Quaternion):
         return return_type.from_iterable(thing)
     return return_type(thing)
@@ -2180,10 +2312,6 @@ def dot(e1: Expression, e2: Expression) -> Expression:
         raise _operation_type_error(e1, 'dot', e2)
 
 
-def eye(size: int) -> Expression:
-    return Expression(ca.SX.eye(size))
-
-
 def kron(m1: Expression, m2: Expression) -> Expression:
     """
     Compute the Kronecker product of two given matrices.
@@ -2289,40 +2417,7 @@ def shortest_angular_distance(from_angle: ScalarData, to_angle: ScalarData) -> E
     return normalize_angle(to_angle - from_angle)
 
 
-def quaternion_slerp(q1: Quaternion, q2: Quaternion, t: ScalarData) -> Quaternion:
-    """
-    spherical linear interpolation that takes into account that q == -q
-    :param q1: 4x1 Matrix
-    :param q2: 4x1 Matrix
-    :param t: float, 0-1
-    :return: 4x1 Matrix; Return spherical linear interpolation between two quaternions.
-    """
-    q1 = Expression(q1)
-    q2 = Expression(q2)
-    cos_half_theta = q1.dot(q2)
 
-    if0 = -cos_half_theta
-    q2 = if_greater_zero(if0, -q2, q2)
-    cos_half_theta = if_greater_zero(if0, -cos_half_theta, cos_half_theta)
-
-    if1 = abs(cos_half_theta) - 1.0
-
-    # enforce acos(x) with -1 < x < 1
-    cos_half_theta = min(1, cos_half_theta)
-    cos_half_theta = max(-1, cos_half_theta)
-
-    half_theta = acos(cos_half_theta)
-
-    sin_half_theta = sqrt(1.0 - cos_half_theta * cos_half_theta)
-    if2 = 0.001 - abs(sin_half_theta)
-
-    ratio_a = save_division(sin((1.0 - t) * half_theta), sin_half_theta)
-    ratio_b = save_division(sin(t * half_theta), sin_half_theta)
-    return Quaternion.from_iterable(if_greater_eq_zero(if1,
-                                                       q1,
-                                                       if_greater_zero(if2,
-                                                                       0.5 * q1 + 0.5 * q2,
-                                                                       ratio_a * q1 + ratio_b * q2)))
 
 
 def slerp(v1: Vector3, v2: Vector3, t: ScalarData) -> Vector3:
@@ -2492,63 +2587,6 @@ def distance_point_to_plane_signed(frame_P_current: Point3, frame_V_v1: Vector3,
     return d, nearest
 
 
-def project_to_cone(frame_V_current: Vector3, frame_V_cone_axis: Vector3,
-                    cone_theta: Union[Symbol, float, Expression]) -> Vector3:
-    """
-    Projects a given vector onto the boundary of a cone defined by its axis and angle.
-
-    This function computes the projection of a vector onto the boundary of a
-    cone specified by its axis and half-angle. It handles special cases where
-    the input vector is collinear with the cone's axis. The projection ensures
-    the resulting vector lies within the cone's boundary.
-
-    :param frame_V_current: The vector to be projected.
-    :param frame_V_cone_axis: The axis of the cone.
-    :param cone_theta: The half-angle of the cone in radians. Can be a symbolic value or a float.
-    :return: The projection of the input vector onto the cone's boundary.
-    """
-    frame_V_cone_axis_norm = frame_V_cone_axis / norm(frame_V_cone_axis)
-    beta = frame_V_current @ frame_V_cone_axis_norm
-    norm_v = norm(frame_V_current)
-
-    # Compute the perpendicular component.
-    v_perp = frame_V_current - beta * frame_V_cone_axis_norm
-    norm_v_perp = norm(v_perp)
-
-    s = beta * cos(cone_theta) + norm_v_perp * sin(cone_theta)
-
-    # Handle the case when v is collinear with a.
-    project_on_cone_boundary = if_less(a=norm_v_perp, b=1e-8,
-                                       if_result=norm_v * cos(cone_theta) * frame_V_cone_axis_norm,
-                                       else_result=s * (cos(cone_theta) * frame_V_cone_axis_norm + sin(cone_theta) * (
-                                               v_perp / norm_v_perp)))
-
-    return if_greater_eq(a=beta, b=norm_v * np.cos(cone_theta),
-                         if_result=frame_V_current,
-                         else_result=project_on_cone_boundary)
-
-
-def project_to_plane(frame_V_plane_vector1: Vector3,
-                     frame_V_plane_vector2: Vector3,
-                     frame_P_point: Point3) -> Point3:
-    """
-    Projects a point onto a plane defined by two vectors.
-    This function assumes that all parameters are defined with respect to the same reference frame.
-
-    :param frame_V_plane_vector1: First vector defining the plane
-    :param frame_V_plane_vector2: Second vector defining the plane
-    :param frame_P_point: Point to project onto the plane
-    :return: The projected point on the plane
-    """
-    normal = cross(frame_V_plane_vector1, frame_V_plane_vector2)
-    normal.scale(1)
-    # since the plane is in origin, our vector to the point is trivial
-    frame_V_current = Vector3.from_iterable(frame_P_point)
-    d = normal @ frame_V_current
-    projection = frame_P_point - normal * d
-    return projection
-
-
 def angle_between_vector(v1: Vector3, v2: Vector3) -> Expression:
     v1 = v1[:3]
     v2 = v2[:3]
@@ -2571,25 +2609,6 @@ def rotational_error(r1: RotationMatrix, r2: RotationMatrix) -> Expression:
     """
     r_distance = r1.dot(r2.inverse())
     return r_distance.to_angle()
-
-
-def to_str(expression: SymbolicType) -> List[List[str]]:
-    """
-    Turns expression into a more or less readable string.
-    """
-    result_list = np.zeros(expression.shape).tolist()
-    for x_index in range(expression.shape[0]):
-        for y_index in range(expression.shape[1]):
-            s = str(expression[x_index, y_index])
-            parts = s.split(', ')
-            result = parts[-1]
-            for x in reversed(parts[:-1]):
-                equal_position = len(x.split('=')[0])
-                index = x[:equal_position]
-                sub = x[equal_position + 1:]
-                result = result.replace(index, sub)
-            result_list[x_index][y_index] = result
-    return result_list
 
 
 def total_derivative(expr: Union[Symbol, Expression],
@@ -2776,22 +2795,6 @@ def substitute(expression: Union[Symbol, Expression], old_symbols: List[Symbol],
     result = copy(expression)
     result.s = sx
     return result
-
-
-def matrix_inverse(a: Expression) -> Expression:
-    return Expression(ca.inv(a.s))
-
-
-def gradient(expression: Expression, arg: Expression) -> Expression:
-    """
-    Computes the gradient of a mathematical expression with respect to a given argument. The gradient represents the
-    partial derivatives of the input expression with respect to each component of the argument.
-
-    :param expression: The mathematical expression for which the gradient will be computed.
-    :param arg: The argument with respect to which the gradient is calculated.
-    :return: An expression representing the gradient of the input expression with respect to the given argument.
-    """
-    return Expression(ca.gradient(expression.s, arg.s))
 
 
 def is_true_symbol(expr: Expression) -> bool:

@@ -370,7 +370,6 @@ class TestSymbol:
         with pytest.raises(TypeError):
             q ** s
 
-
     def test_simple_math(self):
         s = cas.Symbol('muh')
         e = s + s
@@ -1273,6 +1272,13 @@ class TestPoint3:
         with pytest.raises(TypeError):
             p @ t
 
+    def test_project_to_plane(self):
+        p = cas.Point3(0, 0, 1)
+        actual = p.project_to_plane(frame_V_plane_vector1=cas.Vector3(1, 0, 0),
+                                    frame_V_plane_vector2=cas.Vector3(0, 1, 0))
+        expected = cas.Point3(0, 0, 0)
+        assert_allclose(actual, expected)
+
     def test_compilation_and_execution(self):
         """Test that Point3 operations compile and execute correctly"""
         # Test point arithmetic compilation
@@ -1555,6 +1561,16 @@ class TestVector3:
         compiled_cross = cas.Vector3(2, 3, 4).cross(cas.Vector3(1, 2, 3))
         expected_cross = np.cross([2, 3, 4], [1, 2, 3])
         assert_allclose(compiled_cross[:3], expected_cross)
+
+    def test_project_to_cone(self):
+        v = cas.Vector3(1, 0, 0)
+        projected_cone = v.project_to_cone(frame_V_cone_axis=cas.Vector3(1, 1, 0), cone_theta=np.pi / 4)
+        expected = np.array([1, 0, 0, 0])
+        assert_allclose(projected_cone, expected, atol=1e-10)
+
+        # projected_cone = v.project_to_cone(frame_V_cone_axis=cas.Vector3(1,1,0), cone_theta=np.pi/2)
+        # expected = np.array([1, 0, 0, 0])
+        # assert_allclose(projected_cone, expected, atol=1e-10)
 
 
 class TestTransformationMatrix:
@@ -2741,7 +2757,7 @@ class TestCASWrapper:
            quaternion(),
            st.floats(allow_nan=False, allow_infinity=False, min_value=0, max_value=1))
     def test_slerp(self, q1, q2, t):
-        r1 = cas.quaternion_slerp(q1, q2, t)
+        r1 = cas.Quaternion.from_iterable(q1).slerp(cas.Quaternion.from_iterable(q2), t)
         r2 = giskard_math.quaternion_slerp(q1, q2, t)
         compare_orientations(r1, r2)
 
