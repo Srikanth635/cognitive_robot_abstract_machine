@@ -58,6 +58,11 @@ class WorldSynchronizer:
     Session used to communicate model changes through a database.
     """
 
+    # Topic names (configurable)
+    world_state_topic: str = "/semantic_world/world_state"
+    model_change_topic: str = "/semantic_world/model_change"
+    reload_model_topic: str = "/semantic_world/reload_model"
+
     previous_world_state_data: np.ndarray = field(init=False, default=None)
     """
     The previous world state data used to check if something changed.
@@ -122,17 +127,17 @@ class WorldSynchronizer:
 
             self.state_publisher = self.node.create_publisher(
             semantic_world_msgs.msg.WorldState,
-            topic="/semantic_world/world_state",
+            topic=self.world_state_topic,
             qos_profile=10)
 
             self.reload_model_publisher = self.node.create_publisher(
             semantic_world_msgs.msg.WorldModelReload,
-            topic="/semantic_world/reload_model",
+            topic=self.reload_model_topic,
             qos_profile=10)
 
             self.model_change_publisher = self.node.create_publisher(
             semantic_world_msgs.msg.WorldModelModificationBlock,
-            topic="/semantic_world/model_change",
+            topic=self.model_change_topic,
             qos_profile=10)
 
 
@@ -141,14 +146,14 @@ class WorldSynchronizer:
         if self.subscribe:
             self.state_subscriber = self.node.create_subscription(
                 semantic_world_msgs.msg.WorldState,
-                topic="/semantic_world/world_state",
+                topic=self.world_state_topic,
                 callback=self.update_state,
                 qos_profile=10,
             )
 
             self.model_change_subscriber = self.node.create_subscription(
                 semantic_world_msgs.msg.WorldModelModificationBlock,
-                topic="/semantic_world/model_change",
+                topic=self.model_change_topic,
                 callback=self.apply_model_change,
                 qos_profile=10,
             )
@@ -156,7 +161,7 @@ class WorldSynchronizer:
             if self.session:
                 self.reload_model_subscriber = self.node.create_subscription(
                     semantic_world_msgs.msg.WorldModelReload,
-                    topic="/semantic_world/reload_model",
+                    topic=self.reload_model_topic,
                     callback=self.reload_model,
                     qos_profile=10,
                 )
