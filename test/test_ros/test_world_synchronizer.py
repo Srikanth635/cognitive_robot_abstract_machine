@@ -154,6 +154,7 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         with w1.modify_world():
             new_body = Body(name=PrefixedName("b3"))
             w1.add_kinematic_structure_entity(new_body)
+            self.assertEqual(len(w1.kinematic_structure_entities), 1)
 
         time.sleep(0.1)
         self.assertEqual(len(w1.kinematic_structure_entities), 1)
@@ -164,47 +165,49 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         synchronizer_1.close()
         synchronizer_2.close()
         node.destroy_node()
-        synch_thread.join()
-    #
-    # def test_model_synchronization_creation_only(self):
-    #
-    #     w1 = World(name="w1")
-    #     w2 = World(name="w2")
-    #
-    #     synchronizer_1 = WorldSynchronizer(
-    #         self.node,
-    #         w1,
-    #         subscribe=False,
-    #         world_state_topic=self.world_state_topic,
-    #         model_change_topic=self.model_change_topic,
-    #         reload_model_topic=self.reload_model_topic,
-    #     )
-    #     synchronizer_2 = WorldSynchronizer(
-    #         self.node,
-    #         w2,
-    #         world_state_topic=self.world_state_topic,
-    #         model_change_topic=self.model_change_topic,
-    #         reload_model_topic=self.reload_model_topic,
-    #     )
-    #
-    #     with w1.modify_world():
-    #         b2 = Body(name=PrefixedName("b2"))
-    #         w1.add_kinematic_structure_entity(b2)
-    #
-    #         new_body = Body(name=PrefixedName("b3"))
-    #         w1.add_kinematic_structure_entity(new_body)
-    #
-    #         c = Connection6DoF(b2, new_body, _world=w1)
-    #         w1.add_connection(c)
-    #     time.sleep(0.1)
-    #     self.assertEqual(len(w1.kinematic_structure_entities), 2)
-    #     self.assertEqual(len(w2.kinematic_structure_entities), 2)
-    #     self.assertEqual(len(w1.connections), 1)
-    #     self.assertEqual(len(w2.connections), 1)
-    #
-    #
-    #     synchronizer_1.close()
-    #     synchronizer_2.close()
+        synch_thread.join(timeout=1)
+
+    def test_model_synchronization_creation_only(self):
+        # Create an isolated node per test to avoid cross-talk across tests
+        node = rclpy.create_node(f"WorldStatePublisher_test_model_synchronization_body_only")
+
+        synch_thread = threading.Thread(
+            target=rclpy.spin, args=(node,), daemon=True
+        )
+        synch_thread.start()
+        time.sleep(0.1)
+        w1 = World(name="w1")
+        w2 = World(name="w2")
+
+        synchronizer_1 = ModelSynchronizer(
+            node=node,
+            world=w1,
+        )
+        synchronizer_2 = ModelSynchronizer(
+            node=node,
+            world=w2,
+        )
+
+        with w1.modify_world():
+            b2 = Body(name=PrefixedName("b2"))
+            w1.add_kinematic_structure_entity(b2)
+
+            new_body = Body(name=PrefixedName("b3"))
+            w1.add_kinematic_structure_entity(new_body)
+
+            c = Connection6DoF(b2, new_body, _world=w1)
+            w1.add_connection(c)
+        time.sleep(0.1)
+        self.assertEqual(len(w1.kinematic_structure_entities), 2)
+        self.assertEqual(len(w2.kinematic_structure_entities), 2)
+        self.assertEqual(len(w1.connections), 1)
+        self.assertEqual(len(w2.connections), 1)
+
+
+        synchronizer_1.close()
+        synchronizer_2.close()
+        node.destroy_node()
+        synch_thread.join(timeout=1)
 
 
 if __name__ == "__main__":

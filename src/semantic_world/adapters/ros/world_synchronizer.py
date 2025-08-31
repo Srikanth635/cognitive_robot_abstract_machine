@@ -7,6 +7,7 @@ from typing import Callable
 
 import numpy as np
 import rclpy  # type: ignore
+import rclpy.node
 import semantic_world_msgs.msg
 from ormatic.dao import to_dao
 from rclpy.publisher import Publisher
@@ -27,7 +28,7 @@ class Synchronizer(ABC):
     It manages publishers and subscribers, ensuring proper cleanup after use.
     """
 
-    node: "rclpy.Node"
+    node: rclpy.node.Node
     """
     The rclpy node used to create the publishers and subscribers.
     """
@@ -59,7 +60,7 @@ class Synchronizer(ABC):
         The metadata of the synchronizer which can be used to compare origins of messages.
         """
         return semantic_world_msgs.msg.MetaData(
-            node=self.node.get_name(),
+            node_name=self.node.get_name(),
             process_id=os.getpid(),
             object_id=id(self)
         )
@@ -96,8 +97,35 @@ class SynchronizerOnCallback(Synchronizer, ABC):
     The callback function called by the world.
     """
 
+    _skip_next_world_callback: bool = False
+    """
+    Flag to indicate if the next world callback should be skipped.
+    Used when messages from external process trigger world calculations that should not be republished.
+    """
+
     def __post_init__(self):
-        self._callback = lambda: self.world_callback()
+        self._callback = lambda: self.world_callback_handler()
+
+
+    def subscription_callback(self, msg):
+        if msg.meta_data == self.meta_data:
+            return
+        self._skip_next_world_callback = True
+        self._subscription_callback(msg)
+
+    @abstractmethod
+    def _subscription_callback(self, msg):
+        raise NotImplementedError
+
+    def world_callback_handler(self):
+        """
+        Wrapper method around world_callback that checks if this time the callback should be triggered.
+        """
+        if self._skip_next_world_callback:
+            self._skip_next_world_callback = False
+        else:
+            self.world_callback()
+
 
     @abstractmethod
     def world_callback(self):
@@ -143,15 +171,12 @@ class StateSynchronizer(SynchronizerOnCallback):
         """
         self.previous_world_state_data = np.copy(self.world.state.positions)
 
-    def subscription_callback(self, msg: semantic_world_msgs.msg.WorldState):
+    def _subscription_callback(self, msg: semantic_world_msgs.msg.WorldState):
         """
         Update the world state with the provided message.
 
         :param msg: The message containing the new state information.
         """
-        if msg.meta_data == self.meta_data:
-            return
-
         # Parse incoming states: WorldState has 'states' only
         indices = [self.world.state._index[PrefixedName(dof_state.name.name, dof_state.name.prefix)] for dof_state in
             msg.states]
@@ -197,10 +222,7 @@ class ModelSynchronizer(SynchronizerOnCallback):
             topic=self.topic_name, callback=self.subscription_callback, qos_profile=10, )
         self.world.model_change_callbacks.append(self._callback)
 
-    def subscription_callback(self, msg: semantic_world_msgs.msg.WorldModelModificationBlock):
-        if msg.meta_data == self.meta_data:
-            return
-
+    def _subscription_callback(self, msg: semantic_world_msgs.msg.WorldModelModificationBlock):
         changes = WorldModelModificationBlock(
             modifications=[WorldModelModification.from_json(json.loads(m)) for m in msg.modifications])
         changes(self.world)
