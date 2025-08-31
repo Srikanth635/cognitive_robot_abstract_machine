@@ -1,7 +1,6 @@
 import json
 import os
-import time
-import traceback
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from functools import cached_property
 from typing import Callable
@@ -9,28 +8,23 @@ from typing import Callable
 import numpy as np
 import rclpy  # type: ignore
 import semantic_world_msgs.msg
-import sqlalchemy.orm
 from ormatic.dao import to_dao
 from rclpy.publisher import Publisher
 from rclpy.subscription import Subscription
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from ...orm.ormatic_interface import *
 from ...prefixed_name import PrefixedName
 from ...world import World
-from ...world_modification import (
-    WorldModelModificationBlock,
-    WorldModelModification,
-    AddBodyModification,
-    RemoveBodyModification,
-    AddConnectionModification,
-)
+from ...world_modification import (WorldModelModificationBlock, WorldModelModification, )
 
 
 @dataclass
-class WorldSynchronizer:
+class Synchronizer(ABC):
     """
-    A ros node that synchronizes the world between different processes.
+    Synchronizer class to manage world synchronizations between processes running semantic world.
+    It manages publishers and subscribers, ensuring proper cleanup after use.
     """
 
     node: "rclpy.Node"
@@ -43,128 +37,105 @@ class WorldSynchronizer:
     The world to synchronize.
     """
 
-    publish: bool = True
+    topic_name: str = None
     """
-    Whether to publish the world state.
-    """
-
-    subscribe: bool = True
-    """
-    Whether to subscribe to the world state.
+    The topic name of the publisher and subscriber.
     """
 
-    session: Optional[sqlalchemy.orm.Session] = None
+    publisher: Optional[Publisher] = field(init=False, default=None)
     """
-    Session used to communicate model changes through a database.
+    The publisher used to publish the world state.
     """
 
-    # Topic names (configurable)
-    world_state_topic: str = "/semantic_world/world_state"
-    model_change_topic: str = "/semantic_world/model_change"
-    reload_model_topic: str = "/semantic_world/reload_model"
+    subscriber: Optional[Subscription] = field(default=None, init=False)
+    """
+    The subscriber to the world state.
+    """
+
+
+    @cached_property
+    def meta_data(self) -> semantic_world_msgs.msg.MetaData:
+        """
+        The metadata of the synchronizer which can be used to compare origins of messages.
+        """
+        return semantic_world_msgs.msg.MetaData(
+            node=self.node.get_name(),
+            process_id=os.getpid(),
+            object_id=id(self)
+        )
+
+    @abstractmethod
+    def subscription_callback(self, msg):
+        raise NotImplementedError
+
+    def close(self):
+        """
+        Clean up publishers and subscribers.
+        """
+
+        # Destroy subscribers
+        if self.subscriber is not None:
+            self.node.destroy_subscription(self.subscriber)
+            self.subscriber = None
+
+        # Destroy publishers
+        if self.publisher is not None:
+            self.node.destroy_publisher(self.publisher)
+            self.publisher = None
+
+
+@dataclass
+class SynchronizerOnCallback(Synchronizer, ABC):
+    """
+    Synchronizer that does something on callbacks by the world.
+    Additionally, ensures that the callback is cleaned up on close.
+    """
+
+    _callback: Optional[Callable] = field(init=False, default=None)
+    """
+    The callback function called by the world.
+    """
+
+    def __post_init__(self):
+        self._callback = lambda: self.world_callback()
+
+    @abstractmethod
+    def world_callback(self):
+        """
+        Called when the world notifies an update.
+        """
+        raise NotImplementedError
+
+    def close(self):
+        if self._callback in self.world.state_change_callbacks:
+            self.world.state_change_callbacks.remove(self._callback)
+        if self._callback in self.world.model_change_callbacks:
+            self.world.model_change_callbacks.remove(self._callback)
+        self._callback = None
+        super().close()
+
+
+@dataclass
+class StateSynchronizer(SynchronizerOnCallback):
+    """
+    Synchronizes the state (values of free variables) of the semantic world with the associated ROS topic.
+    """
+
+    topic_name: str = "/semantic_world/world_state"
 
     previous_world_state_data: np.ndarray = field(init=False, default=None)
     """
     The previous world state data used to check if something changed.
     """
 
-    state_publisher: Optional[Publisher] = field(init=False, default=None)
-    """
-    The publisher used to publish the world state.
-    """
-
-    state_subscriber: Optional[Subscription] = field(default=None, init=False)
-    """
-    The subscriber to the world state.
-    """
-
-    state_change_callback: Optional[Callable] = field(init=False, default=None)
-    """
-    The callback function to receive the world state changes from the world and publish them.
-    """
-
-    model_change_publisher: Optional[Publisher] = field(init=False, default=None)
-    """
-    The publisher used to publish model changes.
-    """
-
-    model_change_subscriber: Optional[Subscription] = field(default=None, init=False)
-    """
-    The subscriber to the model changes.
-    """
-
-    model_change_callback: Optional[Callable] = field(init=False, default=None)
-    """
-    The callback function to receive the model changes from the world and publish them.
-    """
-
-    reload_model_publisher: Optional[Publisher] = field(init=False, default=None)
-    """
-    The publisher used to reload model changes.
-    """
-
-    reload_model_subscriber: Optional[Subscription] = field(default=None, init=False)
-    """
-    The subscriber to the reloading the model from the database.
-    """
-
-    synchronizer_id: str = field(init=False)
-    """
-    The unique identifier for this synchronizer. Used to ensure a synchronizer does not apply its own changes.
-    """
-
     def __post_init__(self):
-        """
-        Initializes callbacks and subscriptions for publishing or subscribing to updates
-        from the world's state and model.
-        """
-        self.synchronizer_id = f"{os.getpid()}_{self.world.name}"
-        if self.publish:
-            self.state_change_callback = lambda: self.publish_state()
-            self.world.state_change_callbacks.append(self.state_change_callback)
-            self.model_change_callback = lambda: self.publish_model_change()
-            self.world.model_change_callbacks.append(self.model_change_callback)
-
-            self.state_publisher = self.node.create_publisher(
-            semantic_world_msgs.msg.WorldState,
-            topic=self.world_state_topic,
-            qos_profile=10)
-
-            self.reload_model_publisher = self.node.create_publisher(
-            semantic_world_msgs.msg.WorldModelReload,
-            topic=self.reload_model_topic,
-            qos_profile=10)
-
-            self.model_change_publisher = self.node.create_publisher(
-            semantic_world_msgs.msg.WorldModelModificationBlock,
-            topic=self.model_change_topic,
-            qos_profile=10)
-
-
+        super().__post_init__()
         self.update_previous_world_state()
-
-        if self.subscribe:
-            self.state_subscriber = self.node.create_subscription(
-                semantic_world_msgs.msg.WorldState,
-                topic=self.world_state_topic,
-                callback=self.update_state,
-                qos_profile=10,
-            )
-
-            self.model_change_subscriber = self.node.create_subscription(
-                semantic_world_msgs.msg.WorldModelModificationBlock,
-                topic=self.model_change_topic,
-                callback=self.apply_model_change,
-                qos_profile=10,
-            )
-
-            if self.session:
-                self.reload_model_subscriber = self.node.create_subscription(
-                    semantic_world_msgs.msg.WorldModelReload,
-                    topic=self.reload_model_topic,
-                    callback=self.reload_model,
-                    qos_profile=10,
-                )
+        self.publisher = self.node.create_publisher(semantic_world_msgs.msg.WorldState, topic=self.topic_name,
+            qos_profile=10)
+        self.subscriber = self.node.create_subscription(semantic_world_msgs.msg.WorldState, topic=self.topic_name,
+            callback=self.subscription_callback, qos_profile=10, )
+        self.world.state_change_callbacks.append(self._callback)
 
     def update_previous_world_state(self):
         """
@@ -172,38 +143,99 @@ class WorldSynchronizer:
         """
         self.previous_world_state_data = np.copy(self.world.state.positions)
 
-    def publish_state(self):
+    def subscription_callback(self, msg: semantic_world_msgs.msg.WorldState):
+        """
+        Update the world state with the provided message.
+
+        :param msg: The message containing the new state information.
+        """
+        if msg.meta_data == self.meta_data:
+            return
+
+        # Parse incoming states: WorldState has 'states' only
+        indices = [self.world.state._index[PrefixedName(dof_state.name.name, dof_state.name.prefix)] for dof_state in
+            msg.states]
+        positions = [dof_state.position for dof_state in msg.states]
+
+        if indices:
+            self.world.state.data[0, indices] = np.asarray(positions, dtype=float)
+            self.update_previous_world_state()
+            self.world.notify_state_change()
+
+    def world_callback(self):
         """
         Publish the current world state to the ROS topic.
         """
-        changes = {
-            name: current_state
-            for name, previous_state, current_state in zip(
-                self.world.state.keys(),
-                self.previous_world_state_data,
-                self.world.state.positions,
-            )
-            if not np.allclose(previous_state, current_state)
-        }
+        changes = {name: current_state for name, previous_state, current_state in
+            zip(self.world.state.keys(), self.previous_world_state_data, self.world.state.positions, ) if
+            not np.allclose(previous_state, current_state)}
 
         if not changes:
             return
 
-        msg = semantic_world_msgs.msg.WorldState(
-            version=self.world._state_version,
-            states=[
-                semantic_world_msgs.msg.DegreeOfFreedomState(
-                    name=semantic_world_msgs.msg.PrefixedName(
-                        name=key.name, prefix=key.prefix
-                    ),
-                    position=value,
-                )
-                for key, value in changes.items()
-            ],
-        )
-        self.state_publisher.publish(msg)
-        # removed blocking sleep that stalled callbacks
+        msg = semantic_world_msgs.msg.WorldState(version=self.world._state_version, states=[
+            semantic_world_msgs.msg.DegreeOfFreedomState(
+                name=semantic_world_msgs.msg.PrefixedName(name=key.name, prefix=key.prefix), position=value, ) for
+            key, value in changes.items()], )
         self.update_previous_world_state()
+        self.publisher.publish(msg)
+
+
+@dataclass
+class ModelSynchronizer(SynchronizerOnCallback):
+    """
+    Synchronizes the model (addition/removal of bodies/DOFs/connections) with the associated ROS topic.
+    """
+
+    topic_name: str = "/semantic_world/world_model"
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.publisher = self.node.create_publisher(semantic_world_msgs.msg.WorldModelModificationBlock,
+            topic=self.topic_name, qos_profile=10)
+        self.subscriber = self.node.create_subscription(semantic_world_msgs.msg.WorldModelModificationBlock,
+            topic=self.topic_name, callback=self.subscription_callback, qos_profile=10, )
+        self.world.model_change_callbacks.append(self._callback)
+
+    def subscription_callback(self, msg: semantic_world_msgs.msg.WorldModelModificationBlock):
+        if msg.meta_data == self.meta_data:
+            return
+
+        changes = WorldModelModificationBlock(
+            modifications=[WorldModelModification.from_json(json.loads(m)) for m in msg.modifications])
+        changes(self.world)
+
+    def world_callback(self):
+        latest_changes = WorldModelModificationBlock.from_modifications(self.world._modifications[-1])
+        msg = semantic_world_msgs.msg.WorldModelModificationBlock(source_id=id(self), version=self.world._model_version,
+                                                                  modifications=[json.dumps(m.to_json()) for m in
+                                                                                 latest_changes.modifications])
+        self.publisher.publish(msg)
+
+
+@dataclass
+class ModelReloadSynchronizer(Synchronizer):
+    """
+    Synchronizes the model reloading process across different systems using ROS messaging.
+    The database must be the same across the different processes, otherwise the synchronizer will fail.
+
+    Use this when you did changes to the model that cannot be communicated via the ModelSynchronizer and hence need
+    to force all processes to load your world model. Note that this may take a couple of seconds.
+    """
+
+    session: Session = None
+    """
+    The session used to perform persistence interaction. 
+    """
+
+    topic_name: str = "/semantic_world/reload_model"
+
+    def __post_init__(self):
+        self.publisher = self.node.create_publisher(semantic_world_msgs.msg.WorldModelReload, topic=self.topic_name,
+            qos_profile=10)
+
+        self.subscriber = self.node.create_subscription(semantic_world_msgs.msg.WorldModelReload, topic=self.topic_name,
+            callback=self.subscription_callback, qos_profile=10, )
 
     def publish_reload_model(self):
         """
@@ -214,14 +246,18 @@ class WorldSynchronizer:
         self.session.add(dao)
         self.session.commit()
         message = semantic_world_msgs.msg.WorldModelReload(primary_key=dao.id)
-        self.reload_model_publisher.publish(message)
+        self.publisher.publish(message)
 
-    def reload_model(self, msg: semantic_world_msgs.msg.WorldModelReload):
+    def subscription_callback(self, msg: semantic_world_msgs.msg.WorldModelReload):
         """
         Update the world with the new model by fetching it from the database.
 
         :param msg: The message containing the primary key of the model to be fetched.
         """
+
+        if msg.meta_data == self.meta_data:
+            return
+
         query = select(WorldMappingDAO).where(WorldMappingDAO.id == msg.primary_key)
         new_world = self.session.scalars(query).one().from_dao()
         self._replace_world(new_world)
@@ -242,77 +278,3 @@ class WorldSynchronizer:
         self.world.kinematic_structure = new_world.kinematic_structure
         self.world.degrees_of_freedom = new_world.degrees_of_freedom
         self.world.views = new_world.views
-
-    def update_state(self, msg: semantic_world_msgs.msg.WorldState):
-        """
-        Update the world state with the provided message.
-
-        :param msg: The message containing the new state information.
-        """
-
-        # Parse incoming states: WorldState has 'states' only
-        indices = [
-            self.world.state._index[
-                PrefixedName(dof_state.name.name, dof_state.name.prefix)
-            ]
-            for dof_state in msg.states
-        ]
-        positions = [dof_state.position for dof_state in msg.states]
-
-        if indices:
-            self.world.state.data[0, indices] = np.asarray(positions, dtype=float)
-            self.update_previous_world_state()
-            self.world.notify_state_change()
-
-    def publish_model_change(self):
-        latest_changes = WorldModelModificationBlock.from_modifications(self.world._modifications[-1])
-        msg = semantic_world_msgs.msg.WorldModelModificationBlock(source_id=self.synchronizer_id, version=self.world._model_version, modifications=[json.dumps(m.to_json()) for m in latest_changes.modifications])
-        self.model_change_publisher.publish(msg)
-
-    def apply_model_change(self, msg: semantic_world_msgs.msg.WorldModelModificationBlock):
-        if msg.source_id != self.synchronizer_id:
-            changes = WorldModelModificationBlock(modifications=[WorldModelModification.from_json(json.loads(m))
-                                                                 for m in msg.modifications])
-            changes(self.world)
-
-    def close(self):
-        """
-        Clean up publishers, subscribers, and detach callbacks from the world to prevent leaks and cross-talk.
-        """
-        # Remove world callbacks if present
-        if self.state_change_callback is not None:
-            self.world.state_change_callbacks.remove(self.state_change_callback)
-        if self.model_change_callback is not None:
-            self.world.model_change_callbacks.remove(self.model_change_callback)
-
-        # Destroy subscribers
-        if self.state_subscriber is not None:
-            self.node.destroy_subscription(self.state_subscriber)
-            self.state_subscriber = None
-        if self.model_change_subscriber is not None:
-            self.node.destroy_subscription(self.model_change_subscriber)
-            self.model_change_subscriber = None
-        if self.reload_model_subscriber is not None:
-            self.node.destroy_subscription(self.reload_model_subscriber)
-            self.reload_model_subscriber = None
-
-        # Destroy publishers
-        if self.state_publisher is not None:
-            self.node.destroy_publisher(self.state_publisher)
-            self.state_publisher = None
-        if self.model_change_publisher is not None:
-            self.node.destroy_publisher(self.model_change_publisher)
-            self.model_change_publisher = None
-        if self.reload_model_publisher is not None:
-            self.node.destroy_publisher(self.reload_model_publisher)
-            self.reload_model_publisher = None
-
-    def __del__(self):
-        # Best-effort cleanup if the user forgot to call close()
-        try:
-            self.close()
-        except Exception as e:
-            traceback.print_exc()
-
-
-

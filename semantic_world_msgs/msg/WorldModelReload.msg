@@ -4,3 +4,4 @@
 
 # The table of the worlds primary key which can be used to identify the saved world model
 uint32 primary_key
+semantic_world_msgs/MetaData meta_data

@@ -1,2 +1,3 @@
 uint32 version
 semantic_world_msgs/DegreeOfFreedomState[] states
+semantic_world_msgs/MetaData meta_data
