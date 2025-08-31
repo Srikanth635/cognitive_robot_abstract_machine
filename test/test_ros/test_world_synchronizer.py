@@ -130,7 +130,6 @@ class WorldSynchronizerTestCase(unittest.TestCase):
 
 
     def test_model_synchronization_body_only(self):
-
         # Create an isolated node per test to avoid cross-talk across tests
         node = rclpy.create_node(f"WorldStatePublisher_test_model_synchronization_body_only")
 

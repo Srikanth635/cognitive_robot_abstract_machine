@@ -176,7 +176,7 @@ class StateSynchronizer(SynchronizerOnCallback):
         msg = semantic_world_msgs.msg.WorldState(version=self.world._state_version, states=[
             semantic_world_msgs.msg.DegreeOfFreedomState(
                 name=semantic_world_msgs.msg.PrefixedName(name=key.name, prefix=key.prefix), position=value, ) for
-            key, value in changes.items()], )
+            key, value in changes.items()], meta_data=self.meta_data,)
         self.update_previous_world_state()
         self.publisher.publish(msg)
 
@@ -207,9 +207,10 @@ class ModelSynchronizer(SynchronizerOnCallback):
 
     def world_callback(self):
         latest_changes = WorldModelModificationBlock.from_modifications(self.world._modifications[-1])
-        msg = semantic_world_msgs.msg.WorldModelModificationBlock(source_id=id(self), version=self.world._model_version,
+        msg = semantic_world_msgs.msg.WorldModelModificationBlock(version=self.world._model_version,
                                                                   modifications=[json.dumps(m.to_json()) for m in
-                                                                                 latest_changes.modifications])
+                                                                                 latest_changes.modifications],
+                                                                  meta_data=self.meta_data)
         self.publisher.publish(msg)
 
 
@@ -245,7 +246,7 @@ class ModelReloadSynchronizer(Synchronizer):
         dao: WorldMappingDAO = to_dao(self.world)
         self.session.add(dao)
         self.session.commit()
-        message = semantic_world_msgs.msg.WorldModelReload(primary_key=dao.id)
+        message = semantic_world_msgs.msg.WorldModelReload(primary_key=dao.id, meta_data=self.meta_data)
         self.publisher.publish(message)
 
     def subscription_callback(self, msg: semantic_world_msgs.msg.WorldModelReload):
