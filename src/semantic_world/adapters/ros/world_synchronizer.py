@@ -108,6 +108,9 @@ class SynchronizerOnCallback(Synchronizer, ABC):
 
 
     def subscription_callback(self, msg):
+        """
+        Wrap the origin subscription callback by self-skipping and disabling the next world callback.
+        """
         if msg.meta_data == self.meta_data:
             return
         self._skip_next_world_callback = True
@@ -115,6 +118,9 @@ class SynchronizerOnCallback(Synchronizer, ABC):
 
     @abstractmethod
     def _subscription_callback(self, msg):
+        """
+        Callback function called when receiving new messages from other publishers.
+        """
         raise NotImplementedError
 
     def world_callback_handler(self):
@@ -228,7 +234,7 @@ class ModelSynchronizer(SynchronizerOnCallback):
         changes(self.world)
 
     def world_callback(self):
-        latest_changes = WorldModelModificationBlock.from_modifications(self.world._modifications[-1])
+        latest_changes = WorldModelModificationBlock.from_modifications(self.world._atomic_modifications[-1])
         msg = semantic_world_msgs.msg.WorldModelModificationBlock(version=self.world._model_version,
                                                                   modifications=[json.dumps(m.to_json()) for m in
                                                                                  latest_changes.modifications],
@@ -254,6 +260,7 @@ class ModelReloadSynchronizer(Synchronizer):
     topic_name: str = "/semantic_world/reload_model"
 
     def __post_init__(self):
+        assert self.session is not None
         self.publisher = self.node.create_publisher(semantic_world_msgs.msg.WorldModelReload, topic=self.topic_name,
             qos_profile=10)
 

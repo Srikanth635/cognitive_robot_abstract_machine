@@ -247,24 +247,38 @@ class WorldModelUpdateContextManager:
         self.world.world_is_being_modified = True
 
         if self.first:
-            self.world._current_modification_block =[]
+            self.world._current_atomic_modifications =[]
 
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.modification is not None:
-            self.world._current_modification_block.append((self.modification, self.arguments))
+            self.world._current_atomic_modifications.append((self.modification, self.arguments))
         if self.first:
             self.world.world_is_being_modified = False
-            self.world._modifications.append(self.world._current_modification_block)
-            self.world._current_modification_block = None
+            self.world._atomic_modifications.append(self.world._current_atomic_modifications)
+            self.world._current_atomic_modifications = None
             if exc_type is None:
                 self.world._notify_model_change()
 
-class TryingToLockALockedWorldError(Exception):
-    pass
+class AtomicWorldModificationNotAtomic(Exception):
+    """
+    Exception raised when atomic world modifications are overlapping.
+    If this exception is raised, it means that somewhere in the code a function decorated with @atomic_world_modification
+    triggered another function decorated with it. This must not happen ever!
+    """
 
-def locks_world(func):
+def atomic_world_modification(func):
+    """
+    Decorator for ensuring atomicity in world modification operations.
+
+    This decorator ensures that no other atomic world modification is in progress when the decorated function is executed.
+    It records the function call along with its arguments for potential replay or tracking purposes.
+    If an operation is attempted when the world is locked, it raises an appropriate exception.
+
+    Raises:
+        AtomicWorldModificationNotAtomic: If the world is already locked during the execution of another atomic operation.
+    """
     sig = inspect.signature(func)
 
     @wraps(func)
@@ -272,9 +286,9 @@ def locks_world(func):
         # if self._context_manager is None:
         #     raise MissingContextError(f"Tried to call a method that locks the world without a context manager."
         #                               f"Make sure to only do this inside a `with world.modify_world():` block.")
-        if self._is_locked:
-            raise TryingToLockALockedWorldError(f"World {self} is locked.")
-        self._is_locked = True
+        if self._atomic_operation_is_being_executed:
+            raise AtomicWorldModificationNotAtomic(f"World {self} is locked.")
+        self._atomic_operation_is_being_executed = True
 
         # bind args and kwargs
         bound = sig.bind_partial(
@@ -283,11 +297,11 @@ def locks_world(func):
         bound.apply_defaults()  # fill in default values
 
         # record function call
-        self._current_modification_block.append((func, bound.arguments))
+        self._current_atomic_modifications.append((func, bound.arguments))
 
         result = func(self, *args, **kwargs)
 
-        self._is_locked = False
+        self._atomic_operation_is_being_executed = False
         return result
 
     return wrapper
@@ -357,27 +371,26 @@ class World:
     Callbacks to be called when the model of the world changes.
     """
 
-    _modifications: List[FunctionStack] = field(
+    _atomic_modifications: List[FunctionStack] = field(
         default_factory=list, repr=False, init=False
     )
     """
-    List of modifications to the world, used for synchronization across worlds.
+    All atomic modifications applied to the world. Tracked by @atomic_world_modification.
+    The field itself is a list of lists. The outer lists indicates when to trigger the model/state change callbacks.
+    The inner list is a block of modifications where change callbacks must not be called in between.
     """
 
-    _current_modification_block: Optional[FunctionStack] = field(
+    _current_atomic_modifications: Optional[FunctionStack] = field(
         default=None, repr=False, init=False
     )
     """
-    The current modification block called within one context of @locks_world.
+    The current modification block called within one context of @atomic_world_modification.
     """
 
-    _is_locked: bool = field(init=False, default=False)
+    _atomic_operation_is_being_executed: bool = field(init=False, default=False)
     """
-    Is set to True, when the world is locked.
-    During a locked world, modifications are not allowed.
-    This lock is used to record atomic changes to the world and construct the world from them.
-    This is different to the world_is_being_modified flag, which is used to track modifications made by the user.
-    This does not directly trigger recomputations.
+    Flag that indicates if an atomic world operation is currently being executed.
+    See `atomic_world_modification` for more information.
     """
 
     @property
@@ -426,7 +439,7 @@ class World:
         ), "self.degrees_of_freedom does not match the actual dofs used in connections. Did you forget to call deleted_orphaned_dof()?"
         return True
 
-    @locks_world
+    @atomic_world_modification
     def _add_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
         """
         Adds a degree of freedom to the current system and initializes its state.
@@ -467,7 +480,7 @@ class World:
             )
         self._add_degree_of_freedom(dof)
 
-    @locks_world
+    @atomic_world_modification
     def remove_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
         self.degrees_of_freedom.remove(dof)
         del self.state[dof.name]
@@ -591,7 +604,7 @@ class World:
         """
         return list(self.kinematic_structure.edges())
 
-    @locks_world
+    @atomic_world_modification
     def _add_kinematic_structure_entity(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> None:
@@ -631,7 +644,7 @@ class World:
             )
         self._add_kinematic_structure_entity(kinematic_structure_entity)
 
-    @locks_world
+    @atomic_world_modification
     def _add_connection(self, connection: Connection):
         """
         Adds a connection to the kinematic structure.
@@ -728,7 +741,7 @@ class World:
         """
         return [view for view in self.views if isinstance(view, view_type)]
 
-    @locks_world
+    @atomic_world_modification
     def _remove_kinematic_structure_entity(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> None:
@@ -761,7 +774,7 @@ class World:
                 "Trying to remove an kinematic_structure_entity that is not part of this world."
             )
 
-    @locks_world
+    @atomic_world_modification
     def _remove_connection(self, connection: Connection) -> None:
         self.kinematic_structure.remove_edge(
             connection.parent.index, connection.child.index
