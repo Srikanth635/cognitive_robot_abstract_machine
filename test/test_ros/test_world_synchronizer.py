@@ -36,6 +36,11 @@ class WorldSynchronizerTestCase(unittest.TestCase):
     def setUp(self):
         # Create an isolated node per test to avoid cross-talk across tests
         self.node = rclpy.create_node(f"WorldStatePublisher_{uuid4().hex}")
+        # Create unique topics per test to avoid cross-talk via shared topic names
+        unique = f"t_{uuid4().hex}"
+        self.world_state_topic = f"/semantic_world/{unique}/world_state"
+        self.model_change_topic = f"/semantic_world/{unique}/model_change"
+        self.reload_model_topic = f"/semantic_world/{unique}/reload_model"
         self.synch_thread = threading.Thread(
             target=rclpy.spin, args=(self.node,), daemon=True
         )
@@ -64,8 +69,24 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         w1 = self.create_dummy_world()
         w2 = self.create_dummy_world()
 
-        synchronizer_1 = WorldSynchronizer(self.node, w1, subscribe=False)
-        synchronizer_2 = WorldSynchronizer(self.node, w2)
+        synchronizer_1 = WorldSynchronizer(
+            self.node,
+            w1,
+            subscribe=False,
+            world_state_topic=self.world_state_topic,
+            model_change_topic=self.model_change_topic,
+            reload_model_topic=self.reload_model_topic,
+        )
+        synchronizer_2 = WorldSynchronizer(
+            self.node,
+            w2,
+            world_state_topic=self.world_state_topic,
+            model_change_topic=self.model_change_topic,
+            reload_model_topic=self.reload_model_topic,
+        )
+
+        # Allow time for publishers/subscribers to connect on unique topics
+        time.sleep(0.2)
 
         w1.state.data[0, 0] = 1.0
         w1.notify_state_change()
@@ -91,9 +112,22 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         w2 = World()
 
         synchronizer_1 = WorldSynchronizer(
-            self.node, w1, subscribe=False, session=session1
+            self.node,
+            w1,
+            subscribe=False,
+            session=session1,
+            world_state_topic=self.world_state_topic,
+            model_change_topic=self.model_change_topic,
+            reload_model_topic=self.reload_model_topic,
         )
-        synchronizer_2 = WorldSynchronizer(self.node, w2, session=session2)
+        synchronizer_2 = WorldSynchronizer(
+            self.node,
+            w2,
+            session=session2,
+            world_state_topic=self.world_state_topic,
+            model_change_topic=self.model_change_topic,
+            reload_model_topic=self.reload_model_topic,
+        )
 
         synchronizer_1.publish_reload_model()
         time.sleep(0.1)
@@ -112,9 +146,20 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         w2 = World(name="w2")
 
         synchronizer_1 = WorldSynchronizer(
-            self.node, w1, subscribe=False
+            self.node,
+            w1,
+            subscribe=False,
+            world_state_topic=self.world_state_topic,
+            model_change_topic=self.model_change_topic,
+            reload_model_topic=self.reload_model_topic,
         )
-        synchronizer_2 = WorldSynchronizer(self.node, w2)
+        synchronizer_2 = WorldSynchronizer(
+            self.node,
+            w2,
+            world_state_topic=self.world_state_topic,
+            model_change_topic=self.model_change_topic,
+            reload_model_topic=self.reload_model_topic,
+        )
 
         with w1.modify_world():
             new_body = Body(name=PrefixedName("b3"))
@@ -134,8 +179,21 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         w1 = World(name="w1")
         w2 = World(name="w2")
 
-        synchronizer_1 = WorldSynchronizer(self.node, w1, subscribe=False)
-        synchronizer_2 = WorldSynchronizer(self.node, w2)
+        synchronizer_1 = WorldSynchronizer(
+            self.node,
+            w1,
+            subscribe=False,
+            world_state_topic=self.world_state_topic,
+            model_change_topic=self.model_change_topic,
+            reload_model_topic=self.reload_model_topic,
+        )
+        synchronizer_2 = WorldSynchronizer(
+            self.node,
+            w2,
+            world_state_topic=self.world_state_topic,
+            model_change_topic=self.model_change_topic,
+            reload_model_topic=self.reload_model_topic,
+        )
 
         with w1.modify_world():
             b2 = Body(name=PrefixedName("b2"))
