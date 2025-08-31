@@ -1,6 +1,7 @@
 import json
 import os
 import time
+import traceback
 from dataclasses import dataclass, field
 from functools import cached_property
 from typing import Callable
@@ -10,6 +11,7 @@ import rclpy  # type: ignore
 import semantic_world_msgs.msg
 import sqlalchemy.orm
 from ormatic.dao import to_dao
+from rclpy.publisher import Publisher
 from rclpy.subscription import Subscription
 from sqlalchemy import select
 
@@ -61,14 +63,39 @@ class WorldSynchronizer:
     The previous world state data used to check if something changed.
     """
 
+    state_publisher: Optional[Publisher] = field(init=False, default=None)
+    """
+    The publisher used to publish the world state.
+    """
+
     state_subscriber: Optional[Subscription] = field(default=None, init=False)
     """
     The subscriber to the world state.
     """
 
+    state_change_callback: Optional[Callable] = field(init=False, default=None)
+    """
+    The callback function to receive the world state changes from the world and publish them.
+    """
+
+    model_change_publisher: Optional[Publisher] = field(init=False, default=None)
+    """
+    The publisher used to publish model changes.
+    """
+
     model_change_subscriber: Optional[Subscription] = field(default=None, init=False)
     """
     The subscriber to the model changes.
+    """
+
+    model_change_callback: Optional[Callable] = field(init=False, default=None)
+    """
+    The callback function to receive the model changes from the world and publish them.
+    """
+
+    reload_model_publisher: Optional[Publisher] = field(init=False, default=None)
+    """
+    The publisher used to reload model changes.
     """
 
     reload_model_subscriber: Optional[Subscription] = field(default=None, init=False)
@@ -88,12 +115,26 @@ class WorldSynchronizer:
         """
         self.synchronizer_id = f"{os.getpid()}_{self.world.name}"
         if self.publish:
-            self.world.state_change_callbacks.append(lambda: self.publish_state())
-            self.world.model_change_callbacks.append(lambda: self.publish_model_change())
+            self.state_change_callback = lambda: self.publish_state()
+            self.world.state_change_callbacks.append(self.state_change_callback)
+            self.model_change_callback = lambda: self.publish_model_change()
+            self.world.model_change_callbacks.append(self.model_change_callback)
 
-            if self.session:
-                ...
-                # self.world.model_change_callbacks.append(lambda: self.publish_reload_model())
+            self.state_publisher = self.node.create_publisher(
+            semantic_world_msgs.msg.WorldState,
+            topic="/semantic_world/world_state",
+            qos_profile=10)
+
+            self.reload_model_publisher = self.node.create_publisher(
+            semantic_world_msgs.msg.WorldModelReload,
+            topic="/semantic_world/reload_model",
+            qos_profile=10)
+
+            self.model_change_publisher = self.node.create_publisher(
+            semantic_world_msgs.msg.WorldModelModificationBlock,
+            topic="/semantic_world/model_change",
+            qos_profile=10)
+
 
         self.update_previous_world_state()
 
@@ -125,31 +166,6 @@ class WorldSynchronizer:
         Update the previous world state to reflect the current world positions.
         """
         self.previous_world_state_data = np.copy(self.world.state.positions)
-
-    @cached_property
-    def state_publisher(self):
-        return self.node.create_publisher(
-            semantic_world_msgs.msg.WorldState,
-            topic="/semantic_world/world_state",
-            qos_profile=10,
-        )
-
-    @cached_property
-    def reload_model_publisher(self):
-        return self.node.create_publisher(
-            semantic_world_msgs.msg.WorldModelReload,
-            topic="/semantic_world/reload_model",
-            qos_profile=10,
-        )
-
-    @cached_property
-    def model_change_publisher(self):
-        result =  self.node.create_publisher(
-            semantic_world_msgs.msg.WorldModelModificationBlock,
-            topic="/semantic_world/model_change",
-            qos_profile=10,
-        )
-        return result
 
     def publish_state(self):
         """
@@ -253,5 +269,45 @@ class WorldSynchronizer:
             changes = WorldModelModificationBlock(modifications=[WorldModelModification.from_json(json.loads(m))
                                                                  for m in msg.modifications])
             changes(self.world)
+
+    def close(self):
+        """
+        Clean up publishers, subscribers, and detach callbacks from the world to prevent leaks and cross-talk.
+        """
+        # Remove world callbacks if present
+        if self.state_change_callback is not None:
+            self.world.state_change_callbacks.remove(self.state_change_callback)
+        if self.model_change_callback is not None:
+            self.world.model_change_callbacks.remove(self.model_change_callback)
+
+        # Destroy subscribers
+        if self.state_subscriber is not None:
+            self.node.destroy_subscription(self.state_subscriber)
+            self.state_subscriber = None
+        if self.model_change_subscriber is not None:
+            self.node.destroy_subscription(self.model_change_subscriber)
+            self.model_change_subscriber = None
+        if self.reload_model_subscriber is not None:
+            self.node.destroy_subscription(self.reload_model_subscriber)
+            self.reload_model_subscriber = None
+
+        # Destroy publishers
+        if self.state_publisher is not None:
+            self.node.destroy_publisher(self.state_publisher)
+            self.state_publisher = None
+        if self.model_change_publisher is not None:
+            self.node.destroy_publisher(self.model_change_publisher)
+            self.model_change_publisher = None
+        if self.reload_model_publisher is not None:
+            self.node.destroy_publisher(self.reload_model_publisher)
+            self.reload_model_publisher = None
+
+    def __del__(self):
+        # Best-effort cleanup if the user forgot to call close()
+        try:
+            self.close()
+        except Exception as e:
+            traceback.print_exc()
+
 
 

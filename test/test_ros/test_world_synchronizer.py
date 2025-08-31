@@ -40,13 +40,14 @@ class WorldSynchronizerTestCase(unittest.TestCase):
             target=rclpy.spin, args=(self.node,), daemon=True
         )
         self.synch_thread.start()
+        time.sleep(0.1)
 
     def tearDown(self):
         # Ensure all subscriptions/publishers are destroyed between tests
         self.node.destroy_node()
         # Give the spin thread a moment to exit
         self.synch_thread.join(timeout=1.0)
-
+        time.sleep(0.1)
 
     @staticmethod
     def create_dummy_world():
@@ -71,6 +72,9 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         time.sleep(2.0)
         assert w1.state.data[0, 0] == 1.0
         assert w1.state.data[0, 0] == w2.state.data[0, 0]
+
+        synchronizer_1.close()
+        synchronizer_2.close()
 
     def test_model_reload(self):
         engine = sqlalchemy.create_engine(
@@ -99,6 +103,9 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         assert len(query) == 1
         assert w2.get_kinematic_structure_entity_by_name("b2")
 
+        synchronizer_1.close()
+        synchronizer_2.close()
+
     def test_model_synchronization_body_only(self):
 
         w1 = World(name="w1")
@@ -118,6 +125,9 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         self.assertEqual(len(w2.kinematic_structure_entities), 1)
 
         assert w2.get_kinematic_structure_entity_by_name("b3")
+
+        synchronizer_1.close()
+        synchronizer_2.close()
 
     def test_model_synchronization_creation_only(self):
 
@@ -141,6 +151,10 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         self.assertEqual(len(w2.kinematic_structure_entities), 2)
         self.assertEqual(len(w1.connections), 1)
         self.assertEqual(len(w2.connections), 1)
+
+
+        synchronizer_1.close()
+        synchronizer_2.close()
 
 
     @classmethod
