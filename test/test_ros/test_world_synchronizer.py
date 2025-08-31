@@ -80,6 +80,7 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         synchronizer_1.close()
         synchronizer_2.close()
         node.destroy_node()
+        synch_thread.join(timeout=1)
 
 
     def test_model_reload(self):
@@ -127,6 +128,7 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         synchronizer_1.close()
         synchronizer_2.close()
         node.destroy_node()
+        synch_thread.join(timeout=1)
 
 
     def test_model_synchronization_body_only(self):
