@@ -763,11 +763,10 @@ class RoomFactory(ViewFactory[Room]):
     The region that defines the room's boundaries and reference frame.
     """
 
-    def create(self) -> World:
+    def _create(self, world: World) -> World:
         """
         Return a world with a room view that contains the specified region.
         """
-        world = World()
         room_body = Body(name=self.name)
         world.add_kinematic_structure_entity(room_body)
 

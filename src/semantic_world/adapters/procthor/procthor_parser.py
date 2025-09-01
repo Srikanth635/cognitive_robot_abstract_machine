@@ -665,16 +665,17 @@ class ProcTHORParser:
         house_name = self.file_path.split("/")[-1].split(".")[0]
 
         world = World(name=house_name)
-        world_root = Body(name=PrefixedName(house_name))
-        world.add_kinematic_structure_entity(world_root)
+        with world.modify_world():
+            world_root = Body(name=PrefixedName(house_name))
+            world.add_kinematic_structure_entity(world_root)
 
-        self.import_rooms(world, house["rooms"])
+            self.import_rooms(world, house["rooms"])
 
-        # self.import_objects(world, house["objects"])
+            self.import_objects(world, house["objects"])
 
-        self.import_walls_and_doors(world, house["walls"], house["doors"])
+            self.import_walls_and_doors(world, house["walls"], house["doors"])
 
-        return world
+            return world
 
 
 def get_world_by_prefixed_name(
@@ -744,7 +745,7 @@ def main():
     session = Session(engine)
 
     parser = ProcTHORParser(
-        "../../../../resources/procthor_json/house_987654321.json", session
+        "../../../../resources/procthor_json/house_0.json", session
     )
     world = parser.parse()
 
