@@ -234,7 +234,7 @@ class ModelSynchronizer(SynchronizerOnCallback):
     def _subscription_callback(self, msg: semantic_world_msgs.msg.WorldModelModificationBlock):
         changes = WorldModelModificationBlock(
             modifications=[WorldModelModification.from_json(json.loads(m)) for m in msg.modifications])
-        changes(self.world)
+        changes.apply(self.world)
 
     def world_callback(self):
         latest_changes = WorldModelModificationBlock.from_modifications(self.world._atomic_modifications[-1])

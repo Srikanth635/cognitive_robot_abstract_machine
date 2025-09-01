@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import abc
 import inspect
 import itertools
-from abc import abstractmethod, ABC
 from collections import deque
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
@@ -21,7 +19,7 @@ from typing import List, Optional, TYPE_CHECKING, Tuple
 from typing import Set
 
 import numpy as np
-from random_events.utils import SubclassJSONSerializer, get_full_class_name
+from random_events.utils import SubclassJSONSerializer
 from scipy.stats import geom
 from trimesh.proximity import closest_point, nearby_faces
 from trimesh.sample import sample_surface
@@ -152,7 +150,9 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
     The poses of the shapes are relative to the link.
     """
 
-    collision_config: Optional[CollisionCheckingConfig] = field(default_factory=CollisionCheckingConfig)
+    collision_config: Optional[CollisionCheckingConfig] = field(
+        default_factory=CollisionCheckingConfig
+    )
     """
     Configuration for collision checking.
     """
@@ -174,14 +174,24 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
 
     def set_static_collision_config(self, collision_config: CollisionCheckingConfig):
         merged_config = CollisionCheckingConfig(
-            buffer_zone_distance=collision_config.buffer_zone_distance if collision_config.buffer_zone_distance is not None else self.collision_config.buffer_zone_distance,
+            buffer_zone_distance=(
+                collision_config.buffer_zone_distance
+                if collision_config.buffer_zone_distance is not None
+                else self.collision_config.buffer_zone_distance
+            ),
             violated_distance=collision_config.violated_distance,
-            disabled=collision_config.disabled if collision_config.disabled is not None else self.collision_config.disabled,
-            max_avoided_bodies=collision_config.max_avoided_bodies
+            disabled=(
+                collision_config.disabled
+                if collision_config.disabled is not None
+                else self.collision_config.disabled
+            ),
+            max_avoided_bodies=collision_config.max_avoided_bodies,
         )
         self.collision_config = merged_config
 
-    def set_static_collision_distances(self, buffer_zone_distance: float, violated_distance: float):
+    def set_static_collision_distances(
+        self, buffer_zone_distance: float, violated_distance: float
+    ):
         self.collision_config.buffer_zone_distance = buffer_zone_distance
         self.collision_config.violated_distance = violated_distance
 
@@ -209,7 +219,9 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
     def __eq__(self, other):
         return self.name == other.name and self._world is other._world
 
-    def has_collision(self, volume_threshold: float = 1.001e-6, surface_threshold: float = 0.00061) -> bool:
+    def has_collision(
+        self, volume_threshold: float = 1.001e-6, surface_threshold: float = 0.00061
+    ) -> bool:
         """
         Check if collision geometry is mesh or simple shape with volume/surface bigger than thresholds.
 
@@ -302,7 +314,7 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
         return points_min_self, points_min_other, dist_min
 
     def as_bounding_box_collection_in_frame(
-            self, reference_frame: KinematicStructureEntity
+        self, reference_frame: KinematicStructureEntity
     ) -> BoundingBoxCollection:
         """
         Provides the bounding box collection for this entity in the given reference frame.
@@ -359,7 +371,7 @@ class Region(KinematicStructureEntity):
         return id(self)
 
     def as_bounding_box_collection_in_frame(
-            self, reference_frame: KinematicStructureEntity
+        self, reference_frame: KinematicStructureEntity
     ) -> BoundingBoxCollection:
         """
         Returns a bounding box collection that contains the bounding boxes of all areas in this region.
@@ -373,6 +385,7 @@ GenericKinematicStructureEntity = TypeVar(
     "GenericKinematicStructureEntity", bound=KinematicStructureEntity
 )
 
+
 @dataclass
 class View(WorldEntity):
     """
@@ -382,10 +395,8 @@ class View(WorldEntity):
     """
 
     def _kinematic_structure_entities(
-        self, visited: Set[int],
-                                      aggregation_type: Type[GenericKinematicStructureEntity]
-    ) -> Set[
-        GenericKinematicStructureEntity]:
+        self, visited: Set[int], aggregation_type: Type[GenericKinematicStructureEntity]
+    ) -> Set[GenericKinematicStructureEntity]:
         """
         Recursively collects all entities that are part of this view.
         """
@@ -450,7 +461,7 @@ class View(WorldEntity):
         return self._kinematic_structure_entities(set(), Region)
 
     def as_bounding_box_collection_in_frame(
-            self, reference_frame: KinematicStructureEntity
+        self, reference_frame: KinematicStructureEntity
     ) -> BoundingBoxCollection:
         """
         Returns a bounding box collection that contains the bounding boxes of all bodies in this view.
@@ -493,8 +504,11 @@ class RootedView(View):
 
     @property
     def bodies_with_enabled_collision(self) -> Set[Body]:
-        return set(body for body in self.bodies if body.has_collision() and not body.get_collision_config().disabled)
-
+        return set(
+            body
+            for body in self.bodies
+            if body.has_collision() and not body.get_collision_config().disabled
+        )
 
 
 @dataclass(unsafe_hash=True)
@@ -610,7 +624,7 @@ def _is_entity_view_or_iterable(
     Determines if an object is a KinematicStructureEntity, a View, or an Iterable (excluding strings and bytes).
     """
     return isinstance(obj, (aggregation_type, View)) or (
-            isinstance(obj, Iterable) and not isinstance(obj, (str, bytes, bytearray))
+        isinstance(obj, Iterable) and not isinstance(obj, (str, bytes, bytearray))
     )
 
 
@@ -643,4 +657,3 @@ def _attr_values(
             continue
         if _is_entity_view_or_iterable(v, aggregation_type):
             yield v
-
