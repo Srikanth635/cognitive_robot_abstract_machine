@@ -503,6 +503,9 @@ class World:
         )
         kinematic_structure_entity._world = self
 
+    def add_body(self, body: Body) -> None:
+        self.add_kinematic_structure_entity(body)
+
     @modifies_world
     def add_connection(self, connection: Connection) -> None:
         """
@@ -825,6 +828,31 @@ class World:
         if matches:
             return matches[0]
         raise KeyError(f'KinematicStructureEntity with name {name} not found')
+
+    def get_body_by_name(self, name: Union[str, PrefixedName]) -> Body:
+        """
+        Retrieves a Body from the list of bodies based on its name.
+        If the input is of type `PrefixedName`, it checks whether the prefix is specified and looks for an
+        exact match. Otherwise, it matches based on the name's string representation.
+        If more than one body with the same name is found, an assertion error is raised.
+        If no matching body is found, a `ValueError` is raised.
+
+        :param name: The name of the body to search for. Can be a string or a `PrefixedName` object.
+        :return: The `Body` object that matches the given name.
+        :raises ValueError: If multiple or no bodies with the specified name are found.
+        """
+        if isinstance(name, PrefixedName):
+            if name.prefix is not None:
+                matches = [body for body in self.bodies if body.name == name]
+            else:
+                matches = [body for body in self.bodies if body.name.name == name.name]
+        else:
+            matches = [body for body in self.bodies if body.name.name == name]
+        if len(matches) > 1:
+            raise ValueError(f'Multiple bodies with name {name} found')
+        if matches:
+            return matches[0]
+        raise KeyError(f'Body with name {name} not found')
 
     def get_degree_of_freedom_by_name(self, name: Union[str, PrefixedName]) -> DegreeOfFreedom:
         """
