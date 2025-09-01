@@ -199,7 +199,7 @@ class ActiveConnection1DOF(ActiveConnection, Has1DOFState, ABC):
 @dataclass
 class PrismaticConnection(ActiveConnection1DOF):
     """
-    Allows the movement along an axis.
+    Allows translation along an axis.
     """
 
     def __post_init__(self):

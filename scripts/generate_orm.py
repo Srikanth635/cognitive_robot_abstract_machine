@@ -1,14 +1,15 @@
 import builtins
-import os
 from enum import Enum
+
+import trimesh
+from ormatic.ormatic import ORMatic
+from ormatic.utils import classes_of_module, recursive_subclasses
 
 import semantic_world.degree_of_freedom
 import semantic_world.geometry
 import semantic_world.robots
 import semantic_world.views.views
 import semantic_world.world_entity
-from ormatic.ormatic import ORMatic
-from ormatic.utils import classes_of_module, recursive_subclasses
 from semantic_world.connections import FixedConnection
 from semantic_world.orm.model import *
 from semantic_world.prefixed_name import PrefixedName
@@ -38,6 +39,7 @@ classes |= set(classes_of_module(semantic_world.robots))
 classes -= {ResetStateContextManager, WorldModelUpdateContextManager, HasUpdateState,
             World, ForwardKinematicsVisitor, Has1DOFState, DegreeOfFreedom}
 classes -= set(recursive_subclasses(Enum))
+classes -= set(recursive_subclasses(Exception))
 
 
 def generate_orm():
@@ -50,7 +52,7 @@ def generate_orm():
     # Generate the ORM classes
     ormatic.make_all_tables()
 
-    path = os.path.abspath(os.path.join(os.getcwd(), '../src/semantic_world/orm/'))
+    path = os.path.abspath(os.path.join(os.getcwd(), "..", "src", "semantic_world", "orm"))
     with builtins.open(os.path.join(path, 'ormatic_interface.py'), 'w') as f:
         ormatic.to_sqlalchemy_file(f)
 
