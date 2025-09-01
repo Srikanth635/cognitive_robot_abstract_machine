@@ -158,7 +158,7 @@ class WorldSynchronizerTestCase(unittest.TestCase):
             w1.add_kinematic_structure_entity(new_body)
             self.assertEqual(len(w1.kinematic_structure_entities), 1)
 
-        time.sleep(0.1)
+        time.sleep(0.2)
         self.assertEqual(len(w1.kinematic_structure_entities), 1)
         self.assertEqual(len(w2.kinematic_structure_entities), 1)
 

@@ -138,7 +138,6 @@ class Shape(ABC, SubclassJSONSerializer):
         """
         Returns the bounding box of the shape
         """
-        ...
 
     @property
     @abstractmethod
@@ -147,16 +146,16 @@ class Shape(ABC, SubclassJSONSerializer):
         The mesh object of the shape.
         This should be implemented by subclasses.
         """
-        ...
 
+    def to_json(self) -> Dict[str, Any]:
+        return {**super().to_json(),
+                "origin": transformation_to_json(self.origin),}
 
 @dataclass
 class Primitive(Shape):
     """
     A primitive shape.
     """
-
-
     def to_json(self) -> Dict[str, Any]:
         return {**super().to_json(), "origin": transformation_to_json(self.origin),}
 
