@@ -307,7 +307,6 @@ class ModelReloadSynchronizer(Synchronizer):
 
         :param new_world: The new world instance to replace the current world.
         """
-        self.world.state = new_world.state
-        self.world.kinematic_structure = new_world.kinematic_structure
-        self.world.degrees_of_freedom = new_world.degrees_of_freedom
-        self.world.views = new_world.views
+        with self.world.modify_world():
+            self.world.clear()
+            self.world.merge_world(new_world)
