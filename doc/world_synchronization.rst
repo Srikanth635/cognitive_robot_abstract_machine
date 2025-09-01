@@ -34,7 +34,6 @@ Classes:
 
 How it works
 ------------
-
 The world state is synchronized whenever the state_change_callbacks of a :class:`~semantic_world.world.World` are called 
 by publishing the changed free variables. The details are found in 
 :class:`semantic_world.adapters.ros.world_synchronizer.StateSynchronizer`.
@@ -50,7 +49,8 @@ If you ever have the case that you make changes to a world that are not repeatab
 process to load a new world, you can use the :class:`semantic_world.adapters.ros.world_synchronizer.ModelReloadSynchronizer` to force all worlds subscribed to that to do so.
 The details are found in :class:`semantic_world.adapters.ros.world_synchronizer.ModelReloadSynchronizer`.
 
-## Expanding Modifications
+Expanding Modifications
+----------------------
 If you want to expand the capability to communicate changes to the world's model via ROS2 topics, you have to check out the
 :mod:`semantic_world.world_modification` module. In there you find different ways of communicating different changes to the 
 world via data structures. This is not trivial, since ROS topics cannot communicate data structures that have many-to-one
