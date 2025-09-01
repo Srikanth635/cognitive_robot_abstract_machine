@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import Generic, TypeVar, List, Optional
+from typing import Generic, TypeVar, List, Optional, Dict, Any
+
+from random_events.utils import SubclassJSONSerializer
 
 T = TypeVar('T')
 
@@ -28,7 +30,7 @@ class Derivatives(IntEnum):
 
 
 @dataclass
-class DerivativeMap(Generic[T]):
+class DerivativeMap(Generic[T], SubclassJSONSerializer):
     """
     A container class that maps derivatives (position, velocity, acceleration, jerk) to values of type T.
 
@@ -82,3 +84,10 @@ class DerivativeMap(Generic[T]):
     @jerk.setter
     def jerk(self, value: T):
         self.data[Derivatives.jerk] = value
+
+    def to_json(self) -> Dict[str, Any]:
+        return {**super().to_json(), "data": self.data}
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> DerivativeMap[T]:
+        return cls(data=data["data"])

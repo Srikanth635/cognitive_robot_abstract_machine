@@ -253,7 +253,6 @@ def point_to_single_caster_angle(px, py, caster_v, forward_velocity):
         angular_velocity = min(max(angular_velocity, -max_angular_velocity), max_angular_velocity)
     else:
         angular_velocity = max_angular_velocity
-    print(f'angular velocity {angular_velocity}')
     return angle, c_V_goal
 
 
