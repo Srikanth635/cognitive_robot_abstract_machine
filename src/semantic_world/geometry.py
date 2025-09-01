@@ -29,12 +29,22 @@ id_generator = IDGenerator()
 
 
 def transformation_from_json(data: Dict[str, Any]) -> TransformationMatrix:
+    """
+    Creates a transformation matrix from a JSON-compatible dictionary.
+
+    Use this together with `transformation_to_json`.
+
+    This is needed since SpatialTypes cannot inherit from SubClassJSONSerializer.
+    They can't inherit since the conversion to JSON needs the symbol_manager, which would cause a cyclic dependency.
+    """
     return TransformationMatrix.from_xyz_quat(*data['position'], *data['quaternion'])
 
 
 def transformation_to_json(transformation: TransformationMatrix) -> Dict[str, Any]:
     """
     Converts a transformation matrix to a JSON-compatible dictionary.
+
+    Use this together with `transformation_from_json`.
 
     This is needed since SpatialTypes cannot inherit from SubClassJSONSerializer.
     They can't inherit since the conversion to JSON needs the symbol_manager, which would cause a cyclic dependency.

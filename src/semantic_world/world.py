@@ -1118,7 +1118,7 @@ class World:
     @property
     def empty(self):
         """
-        :return: Returns True if the world contains kinematic_structure_entities, else False.
+        :return: Returns True if the world contains no kinematic_structure_entities, else False.
         """
         return len(self.kinematic_structure_entities) == 0
 
