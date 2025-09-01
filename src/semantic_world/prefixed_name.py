@@ -24,3 +24,15 @@ class PrefixedName(SubclassJSONSerializer):
     @classmethod
     def _from_json(cls, data: Dict[str, Any]) -> Self:
         return cls(name=data["name"], prefix=data["prefix"])
+
+    def __lt__(self, other):
+        return str(self) < str(other)
+
+    def __le__(self, other):
+        return str(self) <= str(other)
+
+    def __gt__(self, other):
+        return str(self) > str(other)
+
+    def __ge__(self, other):
+        return str(self) >= str(other)
