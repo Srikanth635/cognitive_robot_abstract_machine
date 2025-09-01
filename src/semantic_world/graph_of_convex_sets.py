@@ -3,11 +3,13 @@ from __future__ import annotations
 import logging
 
 import matplotlib.pyplot as plt
+from docutils.nodes import reference
 
 from .geometry import BoundingBox, BoundingBoxCollection
 from .variables import SpatialVariables
 from .world import World
 from .world_entity import View, EnvironmentView
+from .spatial_types import TransformationMatrix
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +105,7 @@ class GraphOfConvexSets:
                 min(a_max[0], b_max[0]),
                 min(a_max[1], b_max[1]),
                 min(a_max[2], b_max[2]),
-                self.world.root,
+                TransformationMatrix(reference_frame=self.world.root),
             )
 
         # Build a 3-D R-tree
@@ -225,7 +227,7 @@ class GraphOfConvexSets:
         """
         if search_space is None:
             search_space = BoundingBox(
-                -np.inf, -np.inf, -np.inf, np.inf, np.inf, np.inf, world.root
+                -np.inf, -np.inf, -np.inf, np.inf, np.inf, np.inf, TransformationMatrix(reference_frame=world.root)
             ).as_collection()
         return search_space
 
@@ -266,7 +268,7 @@ class GraphOfConvexSets:
             world_root,
             [
                 bloat_obstacle(bb)
-                for bb in obstacle_view.as_bounding_box_collection_in_frame(world_root)
+                for bb in obstacle_view.as_bounding_box_collection_in_frame(TransformationMatrix(reference_frame=world_root))
             ],
         )
 
@@ -275,7 +277,7 @@ class GraphOfConvexSets:
                 world_root,
                 [
                     bloat_wall(bb)
-                    for bb in wall_view.as_bounding_box_collection_in_frame(world_root)
+                    for bb in wall_view.as_bounding_box_collection_in_frame(TransformationMatrix(reference_frame=world_root))
                 ],
             )
             bloated_obstacles.merge(bloated_walls)

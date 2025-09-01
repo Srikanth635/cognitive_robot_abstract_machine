@@ -287,11 +287,11 @@ class Body(KinematicStructureEntity):
         return points_min_self, points_min_other, dist_min
 
     def as_bounding_box_collection_in_frame(
-            self, reference_frame: KinematicStructureEntity
+            self, origin: TransformationMatrix
     ) -> BoundingBoxCollection:
         """
         Provides the bounding box collection for this entity in the given reference frame.
-        :param reference_frame: The reference frame to express the bounding boxes in.
+        :param origin: The reference frame to express the bounding boxes in.
         :returns: A collection of bounding boxes in world-space coordinates.
         """
         world_bboxes = []
@@ -300,10 +300,10 @@ class Body(KinematicStructureEntity):
             if shape.origin.reference_frame is None:
                 continue
             local_bb: BoundingBox = shape.local_frame_bounding_box
-            world_bb = local_bb.transform_to_frame(reference_frame)
+            world_bb = local_bb.transform_to_frame(origin)
             world_bboxes.append(world_bb)
 
-        return BoundingBoxCollection(reference_frame, world_bboxes)
+        return BoundingBoxCollection(origin.reference_frame, world_bboxes)
 
 
 @dataclass
@@ -472,7 +472,7 @@ class View(WorldEntity):
         return self._kinematic_structure_entities(set(), Region)
 
     def as_bounding_box_collection_in_frame(
-            self, reference_frame: KinematicStructureEntity
+            self, origin: TransformationMatrix
     ) -> BoundingBoxCollection:
         """
         Returns a bounding box collection that contains the bounding boxes of all bodies in this view.
@@ -481,11 +481,11 @@ class View(WorldEntity):
         """
 
         collections = iter(
-            entity.as_bounding_box_collection_in_frame(reference_frame)
+            entity.as_bounding_box_collection_in_frame(origin)
             for entity in self.kinematic_structure_entities
             if isinstance(entity, Body) and entity.has_collision()
         )
-        bbs = BoundingBoxCollection(reference_frame, [])
+        bbs = BoundingBoxCollection(origin.reference_frame, [])
 
         for bb_collection in collections:
             bbs = bbs.merge(bb_collection)

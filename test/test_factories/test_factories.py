@@ -1,9 +1,6 @@
 import time
 import unittest
 
-import rclpy
-
-from semantic_world.adapters.viz_marker import VizMarkerPublisher
 from semantic_world.geometry import Scale
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.spatial_types.spatial_types import TransformationMatrix
@@ -50,13 +47,6 @@ class TestFactories(unittest.TestCase):
         world = factory.create()
         door_views = world.get_views_by_type(Door)
         self.assertEqual(len(door_views), 1)
-
-        rclpy.init()
-        node = rclpy.create_node("viz_marker")
-
-        p = VizMarkerPublisher(world, node)
-
-        time.sleep(1000)
 
         door: Door = door_views[0]
         self.assertEqual(world.root, door.body)
