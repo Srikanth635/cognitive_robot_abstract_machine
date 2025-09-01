@@ -100,7 +100,10 @@ class SynchronizerOnCallback(Synchronizer, ABC):
     _skip_next_world_callback: bool = False
     """
     Flag to indicate if the next world callback should be skipped.
-    Used when messages from external process trigger world calculations that should not be republished.
+    
+    An incoming message from some other world might trigger a change in this world that produces a notify callback that 
+    will try to send a message. 
+    If the callback is triggered by a message, this synchronizer should not republish the change.
     """
 
     def __post_init__(self):

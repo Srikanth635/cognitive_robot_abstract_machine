@@ -20,6 +20,11 @@ class ConnectionFactory(HasGeneric[T], SubclassJSONSerializer, ABC):
     """
     Factory for creating connections.
     This class can be used to serialize connections indirectly.
+
+    This class and its subclasses are needed for communication.
+    These classes are serializable, alternative representations of connections such that other processes are able
+    to semantically repeat the creation of a connection.
+
     Check the documentation of the original class for more information and the fields.
     """
 

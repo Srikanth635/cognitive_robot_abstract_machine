@@ -283,9 +283,6 @@ def atomic_world_modification(func):
 
     @wraps(func)
     def wrapper(self: World, *args, **kwargs):
-        # if self._context_manager is None:
-        #     raise MissingContextError(f"Tried to call a method that locks the world without a context manager."
-        #                               f"Make sure to only do this inside a `with world.modify_world():` block.")
         if self._atomic_operation_is_being_executed:
             raise AtomicWorldModificationNotAtomic(f"World {self} is locked.")
         self._atomic_operation_is_being_executed = True

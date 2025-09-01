@@ -12,6 +12,21 @@ from .prefixed_name import PrefixedName
 from .world import World, FunctionStack
 from .world_entity import Body
 
+@dataclass
+class UnknownWorldModification(Exception):
+    """
+    Raised when an unknown world modification is attempted.
+    """
+
+    call: Callable
+    kwargs: Dict[str, Any]
+
+    def __post_init__(self):
+        super().__init__(f"Tried to parse an unknown world modification {self.call.__qualname__}."
+                         "Make sure that world modifications are atomic and that every atomic modification is "
+                         "represented by exactly one subclass of WorldModelModification."
+                         "This module might be incomplete, you can help by expanding it.")
+
 
 @dataclass
 class WorldModelModification(SubclassJSONSerializer, ABC):
@@ -20,34 +35,68 @@ class WorldModelModification(SubclassJSONSerializer, ABC):
     This includes add/remove body and add/remove connection.
     """
 
-    name: ClassVar[Optional[str]] = None
+    function_name: ClassVar[Optional[str]] = None
+    """
+    The name of the function that this modifications records.
+    """
 
     @abstractmethod
-    def __call__(self, world: World): ...
+    def apply(self, world: World):
+        """
+        Apply this change to the given world.
+
+        :param world: The world to modify.
+        """
 
     @classmethod
     @abstractmethod
-    def _from_kwargs(cls, kwargs: Dict[str, Any]):
+    def _from_kwargs(cls, kwargs: Dict[str, Any]) -> Self:
+        """
+        Factory to construct this change from the kwargs of a function call.
+
+        :param kwargs: The kwargs of the function call.
+        :return: A new instance.
+        """
         raise NotImplementedError
 
     @classmethod
-    def from_world_modification(cls, call: Callable, kwargs: Dict[str, Any]):
+    def from_world_modification(cls, call: Callable, kwargs: Dict[str, Any]) -> Self:
+        """
+        Factory to construct this change from a function and its kwargs.
+        These function - kwargs pairs are usually extracted from :attr:`World._atomic_modifications`.
+
+        This method searches through all subclasses and compares their :attr:`WorldModelModification.function_name`
+        with the given call.
+
+        :param call: The called function.
+        :param kwargs: The kwargs of the function call.
+        :return: A new instance.
+        """
+
         for subclass in recursive_subclasses(cls):
-            if subclass.name == call.__name__:
+            if subclass.function_name == call.__name__:
                 return subclass._from_kwargs(kwargs)
-        raise ValueError(f"Unknown world modification: {call.__name__}")
+        raise UnknownWorldModification(call, kwargs)
 
 
 @dataclass
 class AddBodyModification(WorldModelModification):
+    """
+    Addition of a body to the world.
+    """
+
     body: Body
-    name = World._add_kinematic_structure_entity.__name__
+    """
+    The body that was added.
+    """
+
+    function_name = World._add_kinematic_structure_entity.__name__
 
     @classmethod
     def _from_kwargs(cls, kwargs: Dict[str, Any]):
         return cls(kwargs["kinematic_structure_entity"])
 
-    def __call__(self, world: World):
+    def apply(self, world: World):
         world.add_kinematic_structure_entity(self.body)
 
     def to_json(self):
@@ -60,14 +109,22 @@ class AddBodyModification(WorldModelModification):
 
 @dataclass
 class RemoveBodyModification(WorldModelModification):
+    """
+    Removal of a body from the world.
+    """
+
     body_name: PrefixedName
-    name = World._remove_kinematic_structure_entity.__name__
+    """
+    The name of the body that was removed.
+    """
+
+    function_name = World._remove_kinematic_structure_entity.__name__
 
     @classmethod
     def _from_kwargs(cls, kwargs: Dict[str, Any]):
         return cls(kwargs["kinematic_structure_entity"].name)
 
-    def __call__(self, world: World):
+    def apply(self, world: World):
         world.remove_kinematic_structure_entity(
             world.get_kinematic_structure_entity_by_name(self.body_name)
         )
@@ -82,18 +139,22 @@ class RemoveBodyModification(WorldModelModification):
 
 @dataclass
 class AddConnectionModification(WorldModelModification):
+    """
+    Addition of a connection to the world.
+    """
+
     connection_factory: ConnectionFactory
-    name = World._add_connection.__name__
+    """
+    The connection factory that can be used to create the added connection again.
+    """
+
+    function_name = World._add_connection.__name__
 
     @classmethod
     def _from_kwargs(cls, kwargs: Dict[str, Any]):
         return cls(ConnectionFactory.from_connection(kwargs["connection"]))
 
-    @classmethod
-    def blacklisted_kwargs(cls):
-        return ["parent", "child", "_world", "_views"]
-
-    def __call__(self, world: World):
+    def apply(self, world: World):
         connection = self.connection_factory.create(world)
         world.add_connection(connection)
 
@@ -112,14 +173,21 @@ class AddConnectionModification(WorldModelModification):
 
 @dataclass
 class RemoveConnectionModification(WorldModelModification):
+    """
+    Removal of a connection from the world.
+    """
     connection_name: PrefixedName
-    name = World._remove_connection.__name__
+    """
+    The name of the connection that was removed.
+    """
+
+    function_name = World._remove_connection.__name__
 
     @classmethod
     def _from_kwargs(cls, kwargs: Dict[str, Any]):
         return cls(kwargs["connection"].name)
 
-    def __call__(self, world: World):
+    def apply(self, world: World):
         world.remove_connection(world.get_connection_by_name(self.connection_name))
 
     def to_json(self):
@@ -135,15 +203,21 @@ class RemoveConnectionModification(WorldModelModification):
 
 @dataclass
 class AddDegreeOfFreedomModification(WorldModelModification):
+    """
+    Addition of a degree of freedom to the world.
+    """
     dof: DegreeOfFreedom
+    """
+    The degree of freedom that was added.
+    """
 
-    name = World._add_degree_of_freedom.__name__
+    function_name = World._add_degree_of_freedom.__name__
 
     @classmethod
     def _from_kwargs(cls, kwargs: Dict[str, Any]):
         return cls(dof=kwargs["dof"])
 
-    def __call__(self, world: World):
+    def apply(self, world: World):
         world.add_degree_of_freedom(self.dof)
 
     def to_json(self):
@@ -161,15 +235,18 @@ class AddDegreeOfFreedomModification(WorldModelModification):
 @dataclass
 class WorldModelModificationBlock:
     """
-    A sequence of WorldModelModifications that were applied to the world within one @modifies_world call.
+    A sequence of WorldModelModifications that were applied to the world within one `with world.modify_world()` context.
     """
 
     modifications: List[WorldModelModification]
+    """
+    The list of modifications to apply to the world.
+    """
 
-    def __call__(self, world: World):
+    def apply(self, world: World):
         with world.modify_world():
             for modification in self.modifications:
-                modification(world)
+                modification.apply(world)
 
     @classmethod
     def from_modifications(cls, modifications: FunctionStack):

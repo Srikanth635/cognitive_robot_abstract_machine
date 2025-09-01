@@ -8,7 +8,8 @@ from semantic_world.connections import Connection6DoF, FixedConnection
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.world import World
 from semantic_world.world_entity import Body
-from semantic_world.world_modification import AddConnectionModification
+from semantic_world.world_modification import AddConnectionModification, WorldModelModificationBlock, \
+    UnknownWorldModification
 
 
 class ConnectionModificationTestCase(unittest.TestCase):
@@ -29,8 +30,10 @@ class ConnectionModificationTestCase(unittest.TestCase):
         factory = ConnectionFactory.from_connection(connection)
         assert isinstance(factory, FixedConnectionFactory)
 
-        # modification = AddConnectionModification.from_connection(connection)
-        # print(modification.to_json())
+    def test_raising(self):
+        with self.assertRaises(UnknownWorldModification):
+            WorldModelModificationBlock.from_modifications([(print, {"a": 123})])
+
 
 
 if __name__ == "__main__":
