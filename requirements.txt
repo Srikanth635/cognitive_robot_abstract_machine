@@ -21,3 +21,4 @@ rtree
 daqp
 pathlib
 probabilistic_model
+manifold3d

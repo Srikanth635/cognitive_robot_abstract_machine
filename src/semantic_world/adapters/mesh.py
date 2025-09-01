@@ -34,7 +34,8 @@ class MeshParser:
         body = Body(name=PrefixedName(file_name), collision=[mesh_shape], visual=[mesh_shape])
 
         world = World()
-        world.add_kinematic_structure_entity(body)
+        with world.modify_world():
+            world.add_kinematic_structure_entity(body)
 
         return world
 

@@ -2,8 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from functools import lru_cache
-from typing import Optional, Union
+from typing import Optional, Union, Dict, Any
 
+from random_events.utils import SubclassJSONSerializer
+
+from .prefixed_name import PrefixedName
 from .spatial_types import spatial_types as cas
 from .spatial_types.derivatives import Derivatives, DerivativeMap
 from .spatial_types.symbol_manager import symbol_manager
@@ -11,7 +14,7 @@ from .world_entity import WorldEntity
 
 
 @dataclass
-class DegreeOfFreedom(WorldEntity):
+class DegreeOfFreedom(WorldEntity, SubclassJSONSerializer):
     """
     A class representing a degree of freedom in a world model with associated derivatives and limits.
     
@@ -49,3 +52,13 @@ class DegreeOfFreedom(WorldEntity):
 
     def __hash__(self):
         return hash(id(self))
+
+    def to_json(self) -> Dict[str, Any]:
+        return {**super().to_json(), "lower_limits": self.lower_limits.to_json(),
+                "upper_limits": self.upper_limits.to_json(), "name": self.name.to_json()}
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> DegreeOfFreedom:
+        lower_limits = DerivativeMap.from_json(data["lower_limits"])
+        upper_limits = DerivativeMap.from_json(data["upper_limits"])
+        return cls(name=PrefixedName.from_json(data["name"]), lower_limits=lower_limits, upper_limits=upper_limits)
