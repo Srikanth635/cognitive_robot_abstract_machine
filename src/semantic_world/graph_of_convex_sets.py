@@ -268,7 +268,7 @@ class GraphOfConvexSets:
             world_root,
             [
                 bloat_obstacle(bb)
-                for bb in obstacle_view.as_bounding_box_collection_in_frame(TransformationMatrix(reference_frame=world_root))
+                for bb in obstacle_view.as_bounding_box_collection_at_origin(TransformationMatrix(reference_frame=world_root))
             ],
         )
 
@@ -277,7 +277,7 @@ class GraphOfConvexSets:
                 world_root,
                 [
                     bloat_wall(bb)
-                    for bb in wall_view.as_bounding_box_collection_in_frame(TransformationMatrix(reference_frame=world_root))
+                    for bb in wall_view.as_bounding_box_collection_at_origin(TransformationMatrix(reference_frame=world_root))
                 ],
             )
             bloated_obstacles.merge(bloated_walls)

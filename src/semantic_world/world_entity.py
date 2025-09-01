@@ -136,6 +136,17 @@ class KinematicStructureEntity(WorldEntity):
         """
         return self._world.compute_parent_kinematic_structure_entity(self)
 
+    @abstractmethod
+    def as_bounding_box_collection_at_origin(
+            self, origin: TransformationMatrix
+    ) -> BoundingBoxCollection:
+        """
+        Provides the bounding box collection for this entity given a transformation matrix as origin.
+        :param origin: The origin to express the bounding boxes from.
+        :returns: A collection of bounding boxes in world-space coordinates.
+        """
+        pass
+
 
 @dataclass
 class Body(KinematicStructureEntity):
@@ -286,12 +297,12 @@ class Body(KinematicStructureEntity):
                            np.argmin(dists, axis=1), :]
         return points_min_self, points_min_other, dist_min
 
-    def as_bounding_box_collection_in_frame(
+    def as_bounding_box_collection_at_origin(
             self, origin: TransformationMatrix
     ) -> BoundingBoxCollection:
         """
-        Provides the bounding box collection for this entity in the given reference frame.
-        :param origin: The reference frame to express the bounding boxes in.
+        Provides the bounding box collection for this entity given a transformation matrix as origin.
+        :param origin: The origin to express the bounding boxes from.
         :returns: A collection of bounding boxes in world-space coordinates.
         """
         world_bboxes = []
@@ -300,7 +311,7 @@ class Body(KinematicStructureEntity):
             if shape.origin.reference_frame is None:
                 continue
             local_bb: BoundingBox = shape.local_frame_bounding_box
-            world_bb = local_bb.transform_to_frame(origin)
+            world_bb = local_bb.transform_to_origin(origin)
             world_bboxes.append(world_bb)
 
         return BoundingBoxCollection(origin.reference_frame, world_bboxes)
@@ -320,15 +331,15 @@ class Region(KinematicStructureEntity):
     def __hash__(self):
         return id(self)
 
-    def as_bounding_box_collection_in_frame(
-            self, reference_frame: KinematicStructureEntity
+    def as_bounding_box_collection_at_origin(
+            self, origin: TransformationMatrix
     ) -> BoundingBoxCollection:
         """
         Returns a bounding box collection that contains the bounding boxes of all areas in this region.
         """
         bbs = [shape.local_frame_bounding_box for shape in self.area]
-        bbs = [bb.transform_to_frame(reference_frame) for bb in bbs]
-        return BoundingBoxCollection(reference_frame, bbs)
+        bbs = [bb.transform_to_origin(origin) for bb in bbs]
+        return BoundingBoxCollection(origin.reference_frame, bbs)
 
     @classmethod
     def from_3d_points(
@@ -471,7 +482,7 @@ class View(WorldEntity):
         """
         return self._kinematic_structure_entities(set(), Region)
 
-    def as_bounding_box_collection_in_frame(
+    def as_bounding_box_collection_at_origin(
             self, origin: TransformationMatrix
     ) -> BoundingBoxCollection:
         """
@@ -481,7 +492,7 @@ class View(WorldEntity):
         """
 
         collections = iter(
-            entity.as_bounding_box_collection_in_frame(origin)
+            entity.as_bounding_box_collection_at_origin(origin)
             for entity in self.kinematic_structure_entities
             if isinstance(entity, Body) and entity.has_collision()
         )

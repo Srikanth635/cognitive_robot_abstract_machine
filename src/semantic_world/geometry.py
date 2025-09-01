@@ -310,7 +310,7 @@ class BoundingBox:
 
     origin: TransformationMatrix
     """
-    The reference frame of the bounding box.
+    The origin of the bounding box.
     """
 
     def __hash__(self):
@@ -509,7 +509,7 @@ class BoundingBox:
         )
         return Box(origin=origin, scale=scale)
 
-    def transform_to_frame(self, reference_T_new_origin: TransformationMatrix) -> Self:
+    def transform_to_origin(self, reference_T_new_origin: TransformationMatrix) -> Self:
         """
         Transform the bounding box to a different reference frame.
         """
@@ -587,6 +587,7 @@ class BoundingBoxCollection:
         :param other: The other bounding box collection.
         :return: The merged bounding box collection.
         """
+        assert self.reference_frame == other.reference_frame, "The reference frames of the bounding box collections must be the same."
         return BoundingBoxCollection(
             self.reference_frame, self.bounding_boxes + other.bounding_boxes
         )
@@ -660,14 +661,16 @@ class BoundingBoxCollection:
         :param shapes: The list of shapes.
         :return: The bounding box collection.
         """
-        if not shapes:
-            return cls([])
+        assert len(shapes) > 0, "The list of shapes must not be empty."
+        for shape in shapes:
+            assert shape.origin.reference_frame == shapes[0].origin.reference_frame, "All shapes must have the same reference frame."
+
         if shapes:
             local_bbs = [shape.local_frame_bounding_box for shape in shapes]
             reference_frame = shapes[0].origin.reference_frame
             return cls(
                 reference_frame,
-                [bb.transform_to_frame(reference_frame) for bb in local_bbs],
+                [bb.transform_to_origin(bb.origin) for bb in local_bbs],
             )
 
     def as_shapes(self) -> List[Box]:

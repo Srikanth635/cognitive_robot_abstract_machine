@@ -675,7 +675,7 @@ class DresserFactory(ViewFactory[Dresser]):
         :param world: The world containing the dresser body as its root.
         """
         dresser_body: Body = world.root
-        container_event = dresser_body.as_bounding_box_collection_in_frame(TransformationMatrix(reference_frame=dresser_body)).event
+        container_event = dresser_body.as_bounding_box_collection_at_origin(TransformationMatrix(reference_frame=dresser_body)).event
 
         container_footprint = self.subtract_bodies_from_container_footprint(
             world, container_event
@@ -707,7 +707,7 @@ class DresserFactory(ViewFactory[Dresser]):
         for body in world.bodies:
             if body == dresser_body:
                 continue
-            body_footprint = body.as_bounding_box_collection_in_frame(
+            body_footprint = body.as_bounding_box_collection_at_origin(
                 TransformationMatrix(reference_frame=dresser_body)
             ).event.marginal(SpatialVariables.yz)
             container_footprint -= body_footprint
@@ -885,7 +885,7 @@ class WallFactory(ViewFactory[Wall]):
             door_thickness_spatial_variable = SpatialVariables.x.value
 
             for door in doors:
-                door_event = door.body.as_bounding_box_collection_in_frame(TransformationMatrix(reference_frame=temp_world.root)).event
+                door_event = door.body.as_bounding_box_collection_at_origin(TransformationMatrix(reference_frame=temp_world.root)).event
                 door_event = door_event.marginal(door_plane_spatial_variables)
                 door_event.fill_missing_variables([door_thickness_spatial_variable])
 
