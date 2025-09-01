@@ -18,6 +18,7 @@ from semantic_world.world_entity import Body
 
 if rclpy_installed():
     import rclpy
+    from rclpy.executors import SingleThreadedExecutor
     from uuid import uuid4
 
 
@@ -135,9 +136,11 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         # Create an isolated node per test to avoid cross-talk across tests
         node = rclpy.create_node(f"WorldStatePublisher_test_model_synchronization_body_only")
 
-        synch_thread = threading.Thread(
-            target=rclpy.spin, args=(node,), daemon=True
-        )
+        executor = SingleThreadedExecutor()
+        executor.add_node(node)
+
+        # Start spinning in a thread
+        synch_thread = threading.Thread(target=executor.spin, daemon=True)
         synch_thread.start()
         time.sleep(0.1)
 
@@ -167,11 +170,11 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         synchronizer_1.close()
         synchronizer_2.close()
         node.destroy_node()
-        synch_thread.join(timeout=1)
+        synch_thread.join(timeout=1.)
 
     def test_model_synchronization_creation_only(self):
         # Create an isolated node per test to avoid cross-talk across tests
-        node = rclpy.create_node(f"WorldStatePublisher_test_model_synchronization_body_only")
+        node = rclpy.create_node(f"WorldStatePublisher_test_model_synchronization_creation_only")
 
         synch_thread = threading.Thread(
             target=rclpy.spin, args=(node,), daemon=True
