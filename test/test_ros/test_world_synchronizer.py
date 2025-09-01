@@ -50,8 +50,11 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         # Create an isolated node per test to avoid cross-talk across tests
         node = rclpy.create_node(f"WorldStatePublisher_test_state_synchronization")
 
+        executor = SingleThreadedExecutor()
+        executor.add_node(node)
+
         synch_thread = threading.Thread(
-            target=rclpy.spin, args=(node,), daemon=True
+            target=executor.spin, daemon=True
         )
         synch_thread.start()
         time.sleep(0.1)
@@ -73,7 +76,7 @@ class WorldSynchronizerTestCase(unittest.TestCase):
 
         w1.state.data[0, 0] = 1.0
         w1.notify_state_change()
-        time.sleep(2.0)
+        time.sleep(0.2)
         assert w1.state.data[0, 0] == 1.0
         assert w1.state.data[0, 0] == w2.state.data[0, 0]
 
@@ -89,8 +92,11 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         # Create an isolated node per test to avoid cross-talk across tests
         node = rclpy.create_node(f"WorldStatePublisher_test_model_reload")
 
+        executor = SingleThreadedExecutor()
+        executor.add_node(node)
+
         synch_thread = threading.Thread(
-            target=rclpy.spin, args=(node,), daemon=True
+            target=executor.spin, daemon=True
         )
         synch_thread.start()
 
@@ -119,7 +125,7 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         )
 
         synchronizer_1.publish_reload_model()
-        time.sleep(0.1)
+        time.sleep(1.)
         self.assertEqual(len(w2.kinematic_structure_entities), 2)
 
         query = session1.scalars(select(WorldMappingDAO)).all()
@@ -176,8 +182,11 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         # Create an isolated node per test to avoid cross-talk across tests
         node = rclpy.create_node(f"WorldStatePublisher_test_model_synchronization_creation_only")
 
+        executor = SingleThreadedExecutor()
+        executor.add_node(node)
+
         synch_thread = threading.Thread(
-            target=rclpy.spin, args=(node,), daemon=True
+            target=executor.spin, daemon=True
         )
         synch_thread.start()
         time.sleep(0.1)
