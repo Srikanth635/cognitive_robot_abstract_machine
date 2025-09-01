@@ -11,6 +11,7 @@ from ..prefixed_name import PrefixedName
 from ..spatial_types import Point3
 from ..variables import SpatialVariables
 from ..world import View, Body
+from ..world_entity import Region
 
 
 @dataclass
@@ -118,6 +119,20 @@ class Components(View): ...
 @dataclass(unsafe_hash=True)
 class Furniture(View): ...
 
+@dataclass
+class SupportingSurface(View):
+    """
+    A view that represents a supporting surface.
+    """
+
+    region: Region
+    """
+    The body that represents the supporting surface.
+    """
+
+    def __post_init__(self):
+        if self.name is None:
+            self.name = self.region.name
 
 #################### subclasses von Components
 
@@ -198,6 +213,8 @@ class Cabinet(Cupboard):
 class Wardrobe(Cupboard):
     doors: List[Door] = field(default_factory=list)
 
+@dataclass
+class Room(SupportingSurface): ...
 
 @dataclass
 class Wall(View):

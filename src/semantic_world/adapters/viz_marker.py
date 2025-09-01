@@ -69,7 +69,7 @@ class VizMarkerPublisher:
         :return: An Array of Visualization Marker
         """
         marker_array = MarkerArray()
-        for body in self.world.kinematic_structure_entities:
+        for body in self.world.bodies:
             for i, collision in enumerate(body.collision):
                 msg = Marker()
                 msg.header.frame_id = self.reference_frame

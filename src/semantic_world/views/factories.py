@@ -29,9 +29,10 @@ from ..views.views import (
     Door,
     Wall,
     DoubleDoor,
+    Room,
 )
 from ..world import World
-from ..world_entity import Body
+from ..world_entity import Body, Region
 
 id_generator = IDGenerator()
 
@@ -736,6 +737,48 @@ class DresserFactory(ViewFactory[Dresser]):
         container_event |= container_footprint & limiting_event
 
         return container_event
+
+@dataclass
+class RoomFactory(ViewFactory[Room]):
+    """
+    Factory for creating a room with a specific region.
+    """
+
+    name: PrefixedName
+    """
+    The name of the room.
+    """
+
+    polytope: List[Point3]
+    """
+    The region that defines the room's boundaries and reference frame.
+    """
+
+    def create(self) -> World:
+        """
+        Return a world with a room view that contains the specified region.
+        """
+        world = World()
+        room_body = Body(name=self.name)
+        world.add_kinematic_structure_entity(room_body)
+
+        region = Region.from_3d_points(
+            points_3d=self.polytope,
+            drop_dimension=SpatialVariables.z,
+            name=PrefixedName(self.name.name + "_region", self.name.prefix),
+            reference_frame=room_body
+        )
+        connection = FixedConnection(
+            parent=room_body,
+            child=region,
+            origin_expression=TransformationMatrix(),
+        )
+        world.add_connection(connection)
+
+        room_view = Room(name=self.name, region=region)
+        world.add_view(room_view)
+
+        return world
 
 
 @dataclass

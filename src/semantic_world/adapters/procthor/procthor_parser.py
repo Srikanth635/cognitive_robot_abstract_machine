@@ -374,14 +374,9 @@ class ProcthorRoom:
         """
         Returns a World instance with this room as a Region at its root.
         """
-        region = Region.from_3d_points(
-            points_3d=self.centered_polytope,
-            drop_dimension=SpatialVariables.z,
-            name=PrefixedName(self.name.name + "_region"),
-            reference_frame=Body(name=self.name),
-        )
 
-        return RoomFactory(name=self.name, region=region).create()
+
+        return RoomFactory(name=self.name, polytope=self.centered_polytope).create()
 
 
 @dataclass
@@ -446,7 +441,7 @@ class ProcthorObject:
             )
             body_world = World(name=self.asset_name)
             body_world_root = Body(name=PrefixedName(self.asset_name))
-            body_world.add_body(body_world_root)
+            body_world.add_kinematic_structure_entity(body_world_root)
 
         for child in self.object_dict.get("children", {}):
             child_object = ProcthorObject(child, self.session)
@@ -671,11 +666,11 @@ class ProcTHORParser:
 
         world = World(name=house_name)
         world_root = Body(name=PrefixedName(house_name))
-        world.add_body(world_root)
+        world.add_kinematic_structure_entity(world_root)
 
         self.import_rooms(world, house["rooms"])
 
-        self.import_objects(world, house["objects"])
+        # self.import_objects(world, house["objects"])
 
         self.import_walls_and_doors(world, house["walls"], house["doors"])
 
@@ -739,28 +734,28 @@ def get_world_by_prefixed_name(
     return world_mapping.from_dao() if world_mapping is not None else None
 
 
-# def main():
-#     rclpy.init()
-#
-#     semantic_world_database_uri = os.environ.get("SEMANTIC_WORLD_DATABASE_URI")
-#
-#     # Create database engine and session
-#     engine = create_engine(f"mysql+pymysql://{semantic_world_database_uri}")
-#     session = Session(engine)
-#
-#     parser = ProcTHORParser(
-#         "../../../../resources/procthor_json/house_0.json", session
-#     )
-#     world = parser.parse()
-#
-#     node = rclpy.create_node("viz_marker")
-#
-#     p = VizMarkerPublisher(world, node)
-#
-#     time.sleep(1000)
-#     p._stop_publishing()
-#     rclpy.shutdown()
-#
-#
-# if __name__ == "__main__":
-#     main()
+def main():
+    rclpy.init()
+
+    semantic_world_database_uri = os.environ.get("SEMANTIC_WORLD_DATABASE_URI")
+
+    # Create database engine and session
+    engine = create_engine(f"mysql+pymysql://{semantic_world_database_uri}")
+    session = Session(engine)
+
+    parser = ProcTHORParser(
+        "../../../../resources/procthor_json/house_0.json", session
+    )
+    world = parser.parse()
+
+    node = rclpy.create_node("viz_marker")
+
+    p = VizMarkerPublisher(world, node)
+
+    time.sleep(1000)
+    p._stop_publishing()
+    rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()

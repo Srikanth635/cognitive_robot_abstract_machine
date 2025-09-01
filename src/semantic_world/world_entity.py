@@ -12,12 +12,17 @@ from typing import (
     Deque,
     Type,
     TypeVar,
+    Self,
 )
 from os.path import dirname
 from typing import List, Optional, TYPE_CHECKING, Tuple
 from typing import Set
 
 import numpy as np
+from random_events.interval import closed
+from random_events.polytope import Polytope
+from random_events.product_algebra import SimpleEvent
+from random_events.variable import Continuous
 from scipy.stats import geom
 from trimesh.proximity import closest_point, nearby_faces
 from trimesh.sample import sample_surface
@@ -27,9 +32,10 @@ from .geometry import BoundingBoxCollection, BoundingBox
 from .geometry import Shape
 from .prefixed_name import PrefixedName
 from .spatial_types import spatial_types as cas
-from .spatial_types.spatial_types import TransformationMatrix, Expression
+from .spatial_types.spatial_types import TransformationMatrix, Expression, Point3
 from .types import NpMatrix4x4
 from .utils import IDGenerator
+from .variables import SpatialVariables
 
 if TYPE_CHECKING:
     from .degree_of_freedom import DegreeOfFreedom
@@ -324,6 +330,75 @@ class Region(KinematicStructureEntity):
         bbs = [bb.transform_to_frame(reference_frame) for bb in bbs]
         return BoundingBoxCollection(reference_frame, bbs)
 
+    @classmethod
+    def from_3d_points(
+        cls,
+        points_3d: List[Point3],
+        drop_dimension: SpatialVariables,
+        name: Optional[PrefixedName] = None,
+        reference_frame: Optional[Body] = None,
+    ) -> Self:
+
+        """
+        Constructs a region from a set of 3D points. Requires one dimension to be 'dropped', to create a 2s polygon.
+        The min and max point of the dropped dimension still contribute to the region, but are not considered when
+        calculating the polygon. 'minimum_dropped_dimension_thickness'
+
+        :param points_3d: List of 3D points.
+        :param drop_dimension: Dimension to be dropped to calculate the 2d polygon
+        :param name: Optional prefixed name for the region.
+        :param reference_frame: Optional reference frame.
+
+        :return: Region object.
+        """
+
+        # Deterministic axis order to preserve original branch behavior
+        axis_order = [SpatialVariables.x, SpatialVariables.y, SpatialVariables.z]
+
+        # Keep the two axes that aren't dropped, preserving XYZ order
+        kept_axes = [ax for ax in axis_order if ax is not drop_dimension]
+        x_0, x_1 = kept_axes  # these become x_0 and x_1
+
+        points_2d = np.array(
+            [[getattr(p, x_0.name).to_np(), getattr(p, x_1.name).to_np()] for p in points_3d]
+        )
+
+        min_dropped_dimension_thickness = min(getattr(p, drop_dimension.name).to_np() for p in points_3d)
+        max_dropped_dimension_thickness = max(getattr(p, drop_dimension.name).to_np() for p in points_3d)
+
+        if min_dropped_dimension_thickness == max_dropped_dimension_thickness:
+            # intervall should not be 0, adding a minimal thickness
+            min_dropped_dimension_thickness -= 0.00001
+            max_dropped_dimension_thickness *= 0.00001
+
+        polytope = Polytope.from_2d_points(points_2d)
+        region_event = polytope.maximum_inner_box().to_simple_event().as_composite_set()
+
+        region_event = region_event.update_variables(
+            {
+                Continuous("x_0"): x_0.value,
+                Continuous("x_1"): x_1.value,
+            }
+        )
+
+        region_event.fill_missing_variables([drop_dimension.value])
+        floor_event = SimpleEvent(
+            {
+                drop_dimension.value: closed(
+                    min_dropped_dimension_thickness, max_dropped_dimension_thickness
+                ),
+            }
+        ).as_composite_set()
+        floor_event.fill_missing_variables(SpatialVariables.xz)
+
+        region_event = region_event & floor_event
+
+        region_bb_collection = BoundingBoxCollection.from_event(reference_frame=reference_frame, event=region_event)
+
+        region_shapes = region_bb_collection.as_shapes()
+
+        return cls(name=name, area=region_shapes)
+
 
 GenericKinematicStructureEntity = TypeVar("GenericKinematicStructureEntity", bound=KinematicStructureEntity)
 
@@ -440,7 +515,6 @@ class RootedView(View):
     @property
     def bodies_with_enabled_collision(self) -> Set[Body]:
         return set(body for body in self.bodies if body.has_collision() and not body.get_collision_config().disabled)
-
 
 
 @dataclass(unsafe_hash=True)
