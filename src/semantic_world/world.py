@@ -594,6 +594,9 @@ class World:
         elif (kinematic_structure_entity._world is not None and kinematic_structure_entity._world is not self):
             raise AlreadyBelongsToAWorldError(world=kinematic_structure_entity._world,
                 type_trying_to_add=KinematicStructureEntity, )
+        elif kinematic_structure_entity.name in [ke.name for ke in self.kinematic_structure_entities]:
+            raise AttributeError("A kinematic structure entity with the name already exists in the world.")
+
         self._add_kinematic_structure_entity(kinematic_structure_entity)
 
     def add_body(self, body: Body) -> None:
@@ -1441,8 +1444,8 @@ class World:
             self.add_disabled_collision_pair(body_a, body_b)
 
     @property
-    def bodies_with_enabled_collision(self) -> Set[Body]:
-        return set(b for b in self.bodies if
+    def bodies_with_enabled_collision(self) -> List[Body]:
+        return list(b for b in self.bodies if
                    b.has_collision() and b.get_collision_config and not b.get_collision_config().disabled)
 
     @property

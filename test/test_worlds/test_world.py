@@ -9,7 +9,7 @@ from semantic_world.spatial_types.math import rotation_matrix_from_rpy
 from semantic_world.spatial_types.spatial_types import TransformationMatrix
 from semantic_world.spatial_types.symbol_manager import symbol_manager
 from semantic_world.testing import world_setup, pr2_world
-from semantic_world.world_entity import View
+from semantic_world.world_entity import View, Body
 
 
 def test_set_state(world_setup):
@@ -379,3 +379,10 @@ def test_remove_connection(world_setup):
     with pytest.raises(ValueError):
         # if you remove a connection, the child must be connected some other way or deleted
         world.remove_connection(world.get_connection(r1, r2))
+
+def test_add_entity_with_duplicate_name(world_setup):
+    world, l1, l2, bf, r1, r2 = world_setup
+    body_duplicate = Body(name=PrefixedName('l1'))
+    with pytest.raises(AttributeError):
+        with world.modify_world():
+            world.add_kinematic_structure_entity(body_duplicate)
