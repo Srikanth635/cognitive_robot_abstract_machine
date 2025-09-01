@@ -119,7 +119,7 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         )
 
         synchronizer_1.publish_reload_model()
-        time.sleep(0.1)
+        time.sleep(1.)
         self.assertEqual(len(w2.kinematic_structure_entities), 2)
 
         query = session1.scalars(select(WorldMappingDAO)).all()
