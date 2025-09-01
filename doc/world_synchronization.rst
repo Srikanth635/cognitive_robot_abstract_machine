@@ -33,7 +33,7 @@ Classes:
 - :class:`semantic_world.world.World`
 
 How it works
------------_
+------------
 
 The world state is synchronized whenever the state_change_callbacks of a :class:`~semantic_world.world.World` are called 
 by publishing the changed free variables. The details are found in 
