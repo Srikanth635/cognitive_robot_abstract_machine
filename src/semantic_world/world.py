@@ -613,7 +613,6 @@ class World:
         connection._world = self
         self.kinematic_structure.add_edge(connection.parent.index, connection.child.index, connection)
 
-    @modifies_world
     def add_connection(self, connection: Connection) -> None:
         """
         Add a connection and the entities it connects to the world.
