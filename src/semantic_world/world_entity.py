@@ -3,18 +3,20 @@ from __future__ import annotations
 import inspect
 from abc import abstractmethod
 import os
+import itertools
 from collections import deque
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from dataclasses import fields
-from functools import reduce, lru_cache
+from functools import reduce, lru_cache, cached_property
 from typing import (
     Deque,
     Type,
     TypeVar,
+    Dict,
+    Any,
     Self,
 )
-from os.path import dirname
 from typing import List, Optional, TYPE_CHECKING, Tuple
 from typing import Set
 
@@ -23,9 +25,12 @@ from random_events.interval import closed
 from random_events.polytope import Polytope
 from random_events.product_algebra import SimpleEvent
 from random_events.variable import Continuous
+from random_events.utils import SubclassJSONSerializer
 from scipy.stats import geom
+from trimesh import Trimesh
 from trimesh.proximity import closest_point, nearby_faces
 from trimesh.sample import sample_surface
+from trimesh.util import concatenate
 from typing_extensions import ClassVar
 
 from .geometry import BoundingBoxCollection, BoundingBox
@@ -149,7 +154,7 @@ class KinematicStructureEntity(WorldEntity):
 
 
 @dataclass
-class Body(KinematicStructureEntity):
+class Body(KinematicStructureEntity, SubclassJSONSerializer):
     """
     Represents a body in the world.
     A body is a semantic atom, meaning that it cannot be decomposed into meaningful smaller parts.
@@ -167,7 +172,9 @@ class Body(KinematicStructureEntity):
     The poses of the shapes are relative to the link.
     """
 
-    collision_config: Optional[CollisionCheckingConfig] = field(default_factory=CollisionCheckingConfig)
+    collision_config: Optional[CollisionCheckingConfig] = field(
+        default_factory=CollisionCheckingConfig
+    )
     """
     Configuration for collision checking.
     """
@@ -182,6 +189,20 @@ class Body(KinematicStructureEntity):
     The index of the entity in `_world.kinematic_structure`.
     """
 
+    @cached_property
+    def combined_collision_mesh(self) -> Trimesh:
+        """
+        Combines all collision meshes into a single mesh, applying the respective transformations.
+        :return: A single Trimesh representing the combined collision geometry.
+        """
+        transformed_meshes = []
+        for shape in self.collision:
+            transform = shape.origin.to_np()
+            mesh = shape.mesh.copy()
+            mesh.apply_transform(transform)
+            transformed_meshes.append(mesh)
+        return concatenate(transformed_meshes)
+
     def get_collision_config(self) -> CollisionCheckingConfig:
         if self.temp_collision_config is not None:
             return self.temp_collision_config
@@ -189,14 +210,24 @@ class Body(KinematicStructureEntity):
 
     def set_static_collision_config(self, collision_config: CollisionCheckingConfig):
         merged_config = CollisionCheckingConfig(
-            buffer_zone_distance=collision_config.buffer_zone_distance if collision_config.buffer_zone_distance is not None else self.collision_config.buffer_zone_distance,
+            buffer_zone_distance=(
+                collision_config.buffer_zone_distance
+                if collision_config.buffer_zone_distance is not None
+                else self.collision_config.buffer_zone_distance
+            ),
             violated_distance=collision_config.violated_distance,
-            disabled=collision_config.disabled if collision_config.disabled is not None else self.collision_config.disabled,
-            max_avoided_bodies=collision_config.max_avoided_bodies
+            disabled=(
+                collision_config.disabled
+                if collision_config.disabled is not None
+                else self.collision_config.disabled
+            ),
+            max_avoided_bodies=collision_config.max_avoided_bodies,
         )
         self.collision_config = merged_config
 
-    def set_static_collision_distances(self, buffer_zone_distance: float, violated_distance: float):
+    def set_static_collision_distances(
+        self, buffer_zone_distance: float, violated_distance: float
+    ):
         self.collision_config.buffer_zone_distance = buffer_zone_distance
         self.collision_config.violated_distance = violated_distance
 
@@ -224,7 +255,9 @@ class Body(KinematicStructureEntity):
     def __eq__(self, other):
         return self.name == other.name and self._world is other._world
 
-    def has_collision(self, volume_threshold: float = 1.001e-6, surface_threshold: float = 0.00061) -> bool:
+    def has_collision(
+        self, volume_threshold: float = 1.001e-6, surface_threshold: float = 0.00061
+    ) -> bool:
         """
         Check if collision geometry is mesh or simple shape with volume/surface bigger than thresholds.
 
@@ -234,8 +267,9 @@ class Body(KinematicStructureEntity):
         """
         return len(self.collision) > 0
 
-    def compute_closest_points_multi(self, others: list[Body], sample_size=25) -> Tuple[
-        np.ndarray, np.ndarray, np.ndarray]:
+    def compute_closest_points_multi(
+        self, others: list[Body], sample_size=25
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Computes the closest points to each given body respectively.
 
@@ -256,33 +290,50 @@ class Body(KinematicStructureEntity):
         query_points = []
         for other in others:
             # Calculate the closest vertex on this body to the other body
-            closest_vert_id = \
-                self.collision[0].mesh.kdtree.query(
-                    (self._world.compute_forward_kinematics_np(self, other) @ other.collision[0].origin.to_np())[:3, 3],
-                    k=1)[1]
+            closest_vert_id = self.collision[0].mesh.kdtree.query(
+                (
+                    self._world.compute_forward_kinematics_np(self, other)
+                    @ other.collision[0].origin.to_np()
+                )[:3, 3],
+                k=1,
+            )[1]
             closest_vert = self.collision[0].mesh.vertices[closest_vert_id]
 
             # Compute the closest faces on the other body to the closes vertex
-            faces = nearby_faces(other.collision[0].mesh,
-                                 [(self._world.compute_forward_kinematics_np(other, self) @ self.collision[
-                                     0].origin.to_np())[:3, 3] + closest_vert])[0]
+            faces = nearby_faces(
+                other.collision[0].mesh,
+                [
+                    (
+                        self._world.compute_forward_kinematics_np(other, self)
+                        @ self.collision[0].origin.to_np()
+                    )[:3, 3]
+                    + closest_vert
+                ],
+            )[0]
             face_weights = np.zeros(len(other.collision[0].mesh.faces))
 
             # Assign weights to the faces based on a geometric distribution
             face_weights[faces] = evaluated_geometric_distribution(len(faces))
 
             # Sample points on the surface of the other body
-            q = sample_surface(other.collision[0].mesh, sample_size, face_weight=face_weights, seed=420)[0]
+            q = sample_surface(
+                other.collision[0].mesh, sample_size, face_weight=face_weights, seed=420
+            )[0]
             # Make 4x4 transformation matrix from points
             points = np.tile(np.eye(4, dtype=np.float32), (len(q), 1, 1))
             points[:, :3, 3] = q
 
             # Transform from the mesh to the other mesh
-            transform = np.linalg.inv(self.collision[0].origin.to_np()) @ self._world.compute_forward_kinematics_np(
-                self, other) @ other.collision[0].origin.to_np()
+            transform = (
+                np.linalg.inv(self.collision[0].origin.to_np())
+                @ self._world.compute_forward_kinematics_np(self, other)
+                @ other.collision[0].origin.to_np()
+            )
             points = points @ transform
 
-            points = points[:, :3, 3]  # Extract the points from the transformation matrix
+            points = points[
+                :, :3, 3
+            ]  # Extract the points from the transformation matrix
 
             query_points.extend(points)
 
@@ -293,8 +344,9 @@ class Body(KinematicStructureEntity):
         dists = np.array(dists).reshape(len(others), sample_size)
         dist_min = np.min(dists, axis=1)
         points_min_self = points[np.arange(len(others)), np.argmin(dists, axis=1), :]
-        points_min_other = np.array(query_points).reshape(len(others), sample_size, 3)[np.arange(len(others)),
-                           np.argmin(dists, axis=1), :]
+        points_min_other = np.array(query_points).reshape(len(others), sample_size, 3)[
+            np.arange(len(others)), np.argmin(dists, axis=1), :
+        ]
         return points_min_self, points_min_other, dist_min
 
     def as_bounding_box_collection_at_origin(
@@ -315,6 +367,29 @@ class Body(KinematicStructureEntity):
             world_bboxes.append(world_bb)
 
         return BoundingBoxCollection(origin.reference_frame, world_bboxes)
+
+    def to_json(self) -> Dict[str, Any]:
+        result = super().to_json()
+        result["name"] = self.name.to_json()
+        result["collision"] = [shape.to_json() for shape in self.collision]
+        result["visual"] = [shape.to_json() for shape in self.visual]
+        return result
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self:
+
+        result = cls(name=PrefixedName.from_json(data["name"]))
+
+        collision = [Shape.from_json(data) for data in data["collision"]]
+        visual = [Shape.from_json(data) for data in data["visual"]]
+
+        for shape in itertools.chain(collision, visual):
+            shape.origin.reference_frame = result
+
+        result.collision = collision
+        result.visual = visual
+
+        return result
 
 
 @dataclass
@@ -411,7 +486,9 @@ class Region(KinematicStructureEntity):
         return cls(name=name, area=region_shapes)
 
 
-GenericKinematicStructureEntity = TypeVar("GenericKinematicStructureEntity", bound=KinematicStructureEntity)
+GenericKinematicStructureEntity = TypeVar(
+    "GenericKinematicStructureEntity", bound=KinematicStructureEntity
+)
 
 
 @dataclass
@@ -422,9 +499,9 @@ class View(WorldEntity):
     This class can hold references to certain bodies that gain meaning in this context.
     """
 
-    def _kinematic_structure_entities(self, visited: Set[int],
-                                      aggregation_type: Type[GenericKinematicStructureEntity]) -> Set[
-        GenericKinematicStructureEntity]:
+    def _kinematic_structure_entities(
+        self, visited: Set[int], aggregation_type: Type[GenericKinematicStructureEntity]
+    ) -> Set[GenericKinematicStructureEntity]:
         """
         Recursively collects all entities that are part of this view.
         """
@@ -447,11 +524,17 @@ class View(WorldEntity):
 
                 case Mapping():
                     stack.extend(
-                        v for v in obj.values() if _is_entity_view_or_iterable(v, aggregation_type)
+                        v
+                        for v in obj.values()
+                        if _is_entity_view_or_iterable(v, aggregation_type)
                     )
 
                 case Iterable() if not isinstance(obj, (str, bytes, bytearray)):
-                    stack.extend(v for v in obj if _is_entity_view_or_iterable(v, aggregation_type))
+                    stack.extend(
+                        v
+                        for v in obj
+                        if _is_entity_view_or_iterable(v, aggregation_type)
+                    )
 
         return entities
 
@@ -509,6 +592,7 @@ class RootedView(View):
     """
     Represents a view that is rooted in a specific KinematicStructureEntity.
     """
+
     root: KinematicStructureEntity = field(default=None)
 
     @property
@@ -525,8 +609,11 @@ class RootedView(View):
 
     @property
     def bodies_with_enabled_collision(self) -> Set[Body]:
-        return set(body for body in self.bodies if body.has_collision() and not body.get_collision_config().disabled)
-
+        return set(
+            body
+            for body in self.bodies
+            if body.has_collision() and not body.get_collision_config().disabled
+        )
 
 @dataclass(unsafe_hash=True)
 class EnvironmentView(RootedView):
@@ -539,9 +626,9 @@ class EnvironmentView(RootedView):
         """
         Returns a set of all KinematicStructureEntity in the environment view.
         """
-        return set(self._world.compute_descendent_child_kinematic_structure_entities(self.root)) | {
-            self.root
-        }
+        return set(
+            self._world.compute_descendent_child_kinematic_structure_entities(self.root)
+        ) | {self.root}
 
 
 @dataclass
@@ -571,7 +658,10 @@ class Connection(WorldEntity):
         self.origin_expression.reference_frame = self.parent
         self.origin_expression.child_frame = self.child
         if self.name is None:
-            self.name = PrefixedName(f'{self.parent.name.name}_T_{self.child.name.name}', prefix=self.child.name.prefix)
+            self.name = PrefixedName(
+                f"{self.parent.name.name}_T_{self.child.name.name}",
+                prefix=self.child.name.prefix,
+            )
 
     def _post_init_world_part(self):
         """
@@ -623,24 +713,28 @@ class Connection(WorldEntity):
         """
         dofs = set()
 
-        if hasattr(self, 'active_dofs'):
+        if hasattr(self, "active_dofs"):
             dofs.update(set(self.active_dofs))
-        if hasattr(self, 'passive_dofs'):
+        if hasattr(self, "passive_dofs"):
             dofs.update(set(self.passive_dofs))
 
         return dofs
 
 
-def _is_entity_view_or_iterable(obj: object, aggregation_type: Type[KinematicStructureEntity]) -> bool:
+def _is_entity_view_or_iterable(
+    obj: object, aggregation_type: Type[KinematicStructureEntity]
+) -> bool:
     """
     Determines if an object is a KinematicStructureEntity, a View, or an Iterable (excluding strings and bytes).
     """
     return isinstance(obj, (aggregation_type, View)) or (
-            isinstance(obj, Iterable) and not isinstance(obj, (str, bytes, bytearray))
+        isinstance(obj, Iterable) and not isinstance(obj, (str, bytes, bytearray))
     )
 
 
-def _attr_values(view: View, aggregation_type: Type[GenericKinematicStructureEntity]) -> Iterable[object]:
+def _attr_values(
+    view: View, aggregation_type: Type[GenericKinematicStructureEntity]
+) -> Iterable[object]:
     """
     Yields all dataclass fields and set properties of this view.
     Skips private fields (those starting with '_'), as well as the 'bodies' property.
@@ -648,14 +742,18 @@ def _attr_values(view: View, aggregation_type: Type[GenericKinematicStructureEnt
     :param view: The view to extract attributes from.
     """
     for f in fields(view):
-        if f.name.startswith('_'):
+        if f.name.startswith("_"):
             continue
         v = getattr(view, f.name, None)
         if _is_entity_view_or_iterable(v, aggregation_type):
             yield v
 
     for name, prop in inspect.getmembers(type(view), lambda o: isinstance(o, property)):
-        if name in {"kinematic_structure_entities", "bodies", "regions"} or name.startswith("_"):
+        if name in {
+            "kinematic_structure_entities",
+            "bodies",
+            "regions",
+        } or name.startswith("_"):
             continue
         try:
             v = getattr(view, name)

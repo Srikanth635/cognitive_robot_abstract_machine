@@ -248,7 +248,7 @@ class TestExpression:
         assert m[1, 1] == cas.Expression(1)
         assert m[1, 0] == cas.Expression(0)
         assert isinstance(m[0, 0], cas.Expression)
-        print(m.shape)
+
 
     def test_comparisons(self):
         logic_functions = [

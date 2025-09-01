@@ -15,9 +15,21 @@ from semantic_world.world_entity import Body
 @dataclass
 class CollisionCheck:
     body_a: Body
+    """
+    First body in the collision check.
+    """
     body_b: Body
+    """
+    Second body in the collision check.
+    """
     distance: float
+    """
+    Minimum distance to check for collisions.
+    """
     _world: World
+    """
+    The world context for validation and sorting.
+    """
 
     def __post_init__(self):
         self.body_a, self.body_b = self.sort_bodies(self.body_a, self.body_b)
@@ -80,11 +92,17 @@ class CollisionCheck:
         return body_a, body_b
 
 
-@dataclass(unsafe_hash=True)
+@dataclass
 class Collision:
     contact_distance: float
     body_a: Body = field(default=None)
+    """
+    First body in the collision.
+    """
     body_b: Body = field(default=None)
+    """
+    Second body in the collision.
+    """
 
     map_P_pa: np.ndarray = field(default=None)
     """
@@ -112,6 +130,12 @@ class Collision:
 
     def __repr__(self):
         return str(self)
+
+    def __hash__(self):
+        return hash((self.body_a, self.body_b))
+
+    def __eq__(self, other: CollisionCheck):
+        return self.body_a == other.body_a and self.body_b == other.body_b
 
 
 @dataclass
