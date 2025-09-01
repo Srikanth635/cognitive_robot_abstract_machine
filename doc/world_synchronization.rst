@@ -13,6 +13,14 @@ The following ROS messages are relevant to understand the synchronization:
 - `WorldModelModificationBlock.msg`
 - `WorldModelReload.msg`
 
+You can build the messages for ROS2 by linking it to your ROS2 workspace.
+
+.. codeblock::
+    cd /your/ros2/workspace/src
+    ln -s /path/to/semantic_world/semantic_world_msgs
+    cd ..
+    colcon build --symlink-install
+
 In the semantic world package, the following classes and modules are needed to understand this document:
 
 Modules:
@@ -55,5 +63,5 @@ Why JSON?
 ---------
 Due to the limited capabilities of ROS2 communication, it is not trivial to reflect the definitions and mechanisms of 
 the classes of semantic world in ROS2 messages. If you choose a dedicated message for each class, you get issues with
-polymorphism, many-to-one references, back-references. Furthermore, maintaining the ROS2 messages when the 
+polymorphism, many-to-one references and back-references. Furthermore, maintaining the ROS2 messages when the
 datastructures change is complicated. JSON provides an easy fix to some of these problems. 
