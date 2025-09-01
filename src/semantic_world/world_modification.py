@@ -188,7 +188,7 @@ class RemoveConnectionModification(WorldModelModification):
         return cls(kwargs["connection"].name)
 
     def apply(self, world: World):
-        world.remove_connection(world.get_connection_by_name(self.connection_name))
+        world._remove_connection(world.get_connection_by_name(self.connection_name))
 
     def to_json(self):
         return {
@@ -230,10 +230,32 @@ class AddDegreeOfFreedomModification(WorldModelModification):
     def _from_json(cls, data: Dict[str, Any]) -> Self:
         return cls(dof=DegreeOfFreedom.from_json(data["dof"]))
 
+@dataclass
+class RemoveDegreeOfFreedomModification(WorldModelModification):
+    dof_name: PrefixedName
+
+    function_name = World.remove_degree_of_freedom.__name__
+
+    @classmethod
+    def _from_kwargs(cls, kwargs: Dict[str, Any]):
+        return cls(dof_name=kwargs["dof"].name)
+
+    def apply(self, world: World):
+        world.remove_degree_of_freedom(world.get_degree_of_freedom_by_name(self.dof_name))
+
+    def to_json(self):
+        return {
+            **super().to_json(),
+            "dof": self.dof_name.to_json(),
+        }
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self:
+        return cls(dof_name=PrefixedName.from_json(data["dof"]))
 
 
 @dataclass
-class WorldModelModificationBlock:
+class WorldModelModificationBlock(SubclassJSONSerializer):
     """
     A sequence of WorldModelModifications that were applied to the world within one `with world.modify_world()` context.
     """
@@ -256,3 +278,10 @@ class WorldModelModificationBlock:
                 for call, kwargs in modifications
             ]
         )
+
+    def to_json(self):
+        return {**super().to_json(), "modifications": [m.to_json() for m in self.modifications]}
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self:
+        return cls([WorldModelModification.from_json(d) for d in data["modifications"]])

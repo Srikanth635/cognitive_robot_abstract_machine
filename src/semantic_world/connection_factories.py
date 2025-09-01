@@ -5,15 +5,23 @@ from typing import Self, Dict, Any, TypeVar, Generic
 from ormatic.dao import HasGeneric
 from random_events.utils import SubclassJSONSerializer, recursive_subclasses
 
-from .connections import FixedConnection, PrismaticConnection, RevoluteConnection, Connection6DoF
+from .connections import (
+    FixedConnection,
+    PrismaticConnection,
+    RevoluteConnection,
+    Connection6DoF,
+)
 from .degree_of_freedom import DegreeOfFreedom
+from .geometry import transformation_from_json, transformation_to_json
 from .prefixed_name import PrefixedName
+from .spatial_types.spatial_types import TransformationMatrix
 from .spatial_types.symbol_manager import symbol_manager
 from .world import World
 from .world_entity import Connection
 from . import spatial_types as cas
 
-T = TypeVar('T')
+T = TypeVar("T")
+
 
 @dataclass
 class ConnectionFactory(HasGeneric[T], SubclassJSONSerializer, ABC):
@@ -31,6 +39,7 @@ class ConnectionFactory(HasGeneric[T], SubclassJSONSerializer, ABC):
     name: PrefixedName
     parent_name: PrefixedName
     child_name: PrefixedName
+    origin_expression: TransformationMatrix
 
     @classmethod
     def from_connection(cls, connection: Connection) -> Self:
@@ -66,133 +75,82 @@ class ConnectionFactory(HasGeneric[T], SubclassJSONSerializer, ABC):
             "name": self.name.to_json(),
             "parent_name": self.parent_name.to_json(),
             "child_name": self.child_name.to_json(),
+            "origin_expression": transformation_to_json(self.origin_expression),
         }
+
 
 @dataclass
 class FixedConnectionFactory(ConnectionFactory[FixedConnection]):
 
     @classmethod
     def _from_connection(cls, connection: Connection) -> Self:
-        return cls(name=connection.name,
-                   parent_name=connection.parent.name,
-                   child_name=connection.child.name,
-                   )
+        return cls(
+            name=connection.name,
+            parent_name=connection.parent.name,
+            child_name=connection.child.name,
+            origin_expression=connection.origin_expression,
+        )
 
     def create(self, world: World) -> Connection:
         parent = world.get_kinematic_structure_entity_by_name(self.parent_name)
         child = world.get_kinematic_structure_entity_by_name(self.child_name)
-        return self.original_class()(parent=parent, child=child, name=self.name)
+        return self.original_class()(parent=parent, child=child, name=self.name, origin_expression=self.origin_expression,
+                                     _world=world)
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(name=PrefixedName.from_json(data["name"]),
-                   parent_name=PrefixedName.from_json(data["parent_name"]),
-                   child_name=PrefixedName.from_json(data["child_name"]),
-                   )
+        return cls(
+            name=PrefixedName.from_json(data["name"]),
+            parent_name=PrefixedName.from_json(data["parent_name"]),
+            child_name=PrefixedName.from_json(data["child_name"]),
+            origin_expression=transformation_from_json(data["origin_expression"]),
+        )
+
 
 @dataclass
 class ActiveConnection1DOFFactory(ConnectionFactory[T]):
     axis: cas.Vector3
     multiplier: float
     offset: float
-    dof: DegreeOfFreedom
+    dof_name: PrefixedName
 
     @classmethod
     def _from_connection(cls, connection: PrismaticConnection) -> Self:
-        return cls(name=connection.name,
-                   parent_name=connection.parent.name,
-                   child_name=connection.child.name,
-                   axis=connection.axis,
-                   multiplier=connection.multiplier,
-                   offset=connection.offset,
-                   dof=connection.dof,
-                   )
+        return cls(
+            name=connection.name,
+            parent_name=connection.parent.name,
+            child_name=connection.child.name,
+            axis=connection.axis,
+            multiplier=connection.multiplier,
+            offset=connection.offset,
+            dof_name=connection.dof.name,
+            origin_expression=connection.origin_expression,
+        )
 
     def create(self, world: World) -> Connection:
         parent = world.get_kinematic_structure_entity_by_name(self.parent_name)
         child = world.get_kinematic_structure_entity_by_name(self.child_name)
-        return self.original_class()(parent=parent, child=child, name=self.name, axis=self.axis, multiplier=self.multiplier, offset=self.offset, dof=self.dof)
-
-    def to_json(self) -> Dict[str, Any]:
-        return {
-            "name": self.name.to_json(),
-            "parent_name": self.parent_name.to_json(),
-            "child_name": self.child_name.to_json(),
-            "axis": symbol_manager.evaluate_expr(self.axis).tolist(),
-            "multiplier": self.multiplier,
-            "offset": self.offset,
-            "dof": self.dof.to_json()
-        }
-
-    @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(name=PrefixedName.from_json(data["name"]),
-                   parent_name=PrefixedName.from_json(data["parent_name"]),
-                   child_name=PrefixedName.from_json(data["child_name"]),
-                   axis=cas.Vector3.from_iterable(data["axis"]),
-                   multiplier=data["multiplier"],
-                   offset=data["offset"],
-                   dof=DegreeOfFreedom.from_json(data["dof"]),
-                   )
-
-@dataclass
-class RevoluteConnectionFactory(ActiveConnection1DOFFactory[RevoluteConnection]):
-    ...
-
-@dataclass
-class PrismaticConnectionFactory(ActiveConnection1DOFFactory[PrismaticConnection]):
-    ...
-
-@dataclass
-class Connection6DoFFactory(ConnectionFactory[Connection6DoF]):
-    x: DegreeOfFreedom
-    y: DegreeOfFreedom
-    z: DegreeOfFreedom
-    qx: DegreeOfFreedom
-    qy: DegreeOfFreedom
-    qz: DegreeOfFreedom
-    qw: DegreeOfFreedom
-
-    @classmethod
-    def _from_connection(cls, connection: Connection6DoF) -> Self:
-        return cls(name=connection.name,
-                   parent_name=connection.parent.name,
-                   child_name=connection.child.name,
-                   x=connection.x,
-                   y=connection.y,
-                   z=connection.z,
-                   qx=connection.qx,
-                   qy=connection.qy,
-                   qz=connection.qz,
-                   qw=connection.qw,
-                   )
-
-    def create(self, world: World) -> Connection6DoF:
-        parent = world.get_kinematic_structure_entity_by_name(self.parent_name)
-        child = world.get_kinematic_structure_entity_by_name(self.child_name)
+        # print(self.dof)
+        # world.add_degree_of_freedom(self.dof)
         return self.original_class()(
             parent=parent,
             child=child,
             name=self.name,
-            x=self.x,
-            y=self.y,
-            z=self.z,
-            qx=self.qx,
-            qy=self.qy,
-            qz=self.qz,
-            qw=self.qw,
+            axis=self.axis,
+            multiplier=self.multiplier,
+            offset=self.offset,
+            dof=world.get_degree_of_freedom_by_name(self.dof_name.name),
+            origin_expression=self.origin_expression,
+            _world=world
         )
 
     def to_json(self) -> Dict[str, Any]:
         return {
             **super().to_json(),
-            "x": self.x.to_json(),
-            "y": self.y.to_json(),
-            "z": self.z.to_json(),
-            "qx": self.qx.to_json(),
-            "qy": self.qy.to_json(),
-            "qz": self.qz.to_json(),
-            "qw": self.qw.to_json(),
+            "axis": symbol_manager.evaluate_expr(self.axis).tolist(),
+            "multiplier": self.multiplier,
+            "offset": self.offset,
+            "dof": self.dof_name.to_json(),
         }
 
     @classmethod
@@ -201,11 +159,90 @@ class Connection6DoFFactory(ConnectionFactory[Connection6DoF]):
             name=PrefixedName.from_json(data["name"]),
             parent_name=PrefixedName.from_json(data["parent_name"]),
             child_name=PrefixedName.from_json(data["child_name"]),
-            x=DegreeOfFreedom.from_json(data["x"]),
-            y=DegreeOfFreedom.from_json(data["y"]),
-            z=DegreeOfFreedom.from_json(data["z"]),
-            qx=DegreeOfFreedom.from_json(data["qx"]),
-            qy=DegreeOfFreedom.from_json(data["qy"]),
-            qz=DegreeOfFreedom.from_json(data["qz"]),
-            qw=DegreeOfFreedom.from_json(data["qw"]),
+            axis=cas.Vector3.from_iterable(data["axis"]),
+            multiplier=data["multiplier"],
+            offset=data["offset"],
+            dof_name=PrefixedName.from_json(data["dof"]),
+            origin_expression=transformation_from_json(data["origin_expression"])
+        )
+
+
+@dataclass
+class RevoluteConnectionFactory(ActiveConnection1DOFFactory[RevoluteConnection]): ...
+
+
+@dataclass
+class PrismaticConnectionFactory(ActiveConnection1DOFFactory[PrismaticConnection]): ...
+
+
+@dataclass
+class Connection6DoFFactory(ConnectionFactory[Connection6DoF]):
+    x_name: PrefixedName
+    y_name: PrefixedName
+    z_name: PrefixedName
+    qx_name: PrefixedName
+    qy_name: PrefixedName
+    qz_name: PrefixedName
+    qw_name: PrefixedName
+
+    @classmethod
+    def _from_connection(cls, connection: Connection6DoF) -> Self:
+        return cls(
+            name=connection.name,
+            parent_name=connection.parent.name,
+            child_name=connection.child.name,
+            x_name=connection.x.name,
+            y_name=connection.y.name,
+            z_name=connection.z.name,
+            qx_name=connection.qx.name,
+            qy_name=connection.qy.name,
+            qz_name=connection.qz.name,
+            qw_name=connection.qw.name,
+            origin_expression=connection.origin_expression,
+        )
+
+    def create(self, world: World) -> Connection6DoF:
+        parent = world.get_kinematic_structure_entity_by_name(self.parent_name)
+        child = world.get_kinematic_structure_entity_by_name(self.child_name)
+        return self.original_class()(
+            parent=parent,
+            child=child,
+            name=self.name,
+            x=world.get_degree_of_freedom_by_name(self.x_name.name),
+            y=world.get_degree_of_freedom_by_name(self.y_name.name),
+            z=world.get_degree_of_freedom_by_name(self.z_name.name),
+            qx=world.get_degree_of_freedom_by_name(self.qx_name.name),
+            qy=world.get_degree_of_freedom_by_name(self.qy_name.name),
+            qz=world.get_degree_of_freedom_by_name(self.qz_name.name),
+            qw=world.get_degree_of_freedom_by_name(self.qw_name.name),
+            origin_expression=self.origin_expression,
+            _world=world
+        )
+
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            **super().to_json(),
+            "x": self.x_name.to_json(),
+            "y": self.y_name.to_json(),
+            "z": self.z_name.to_json(),
+            "qx": self.qx_name.to_json(),
+            "qy": self.qy_name.to_json(),
+            "qz": self.qz_name.to_json(),
+            "qw": self.qw_name.to_json(),
+        }
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self:
+        return cls(
+            name=PrefixedName.from_json(data["name"]),
+            parent_name=PrefixedName.from_json(data["parent_name"]),
+            child_name=PrefixedName.from_json(data["child_name"]),
+            x_name=PrefixedName.from_json(data["x"]),
+            y_name=PrefixedName.from_json(data["y"]),
+            z_name=PrefixedName.from_json(data["z"]),
+            qx_name=PrefixedName.from_json(data["qx"]),
+            qy_name=PrefixedName.from_json(data["qy"]),
+            qz_name=PrefixedName.from_json(data["qz"]),
+            qw_name=PrefixedName.from_json(data["qw"]),
+            origin_expression=transformation_from_json(data["origin_expression"])
         )
