@@ -12,6 +12,7 @@ from .prefixed_name import PrefixedName
 from .world import World, FunctionStack
 from .world_entity import Body
 
+
 @dataclass
 class UnknownWorldModification(Exception):
     """
@@ -21,7 +22,8 @@ class UnknownWorldModification(Exception):
     call: Callable
     kwargs: Dict[str, Any]
 
-                         " Make sure that world modifications are atomic and that every atomic modification is "
+    def __post_init__(self):
+        super().__init__(" Make sure that world modifications are atomic and that every atomic modification is "
                          "represented by exactly one subclass of WorldModelModification."
                          "This module might be incomplete, you can help by expanding it.")
 

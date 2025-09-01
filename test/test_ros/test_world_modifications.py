@@ -4,11 +4,11 @@ from semantic_world.connection_factories import (
     ConnectionFactory,
     FixedConnectionFactory,
 )
-from semantic_world.connections import Connection6DoF, FixedConnection
+from semantic_world.connections import FixedConnection
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.world import World
 from semantic_world.world_entity import Body
-from semantic_world.world_modification import AddConnectionModification, WorldModelModificationBlock, \
+from semantic_world.world_modification import WorldModelModificationBlock, \
     UnknownWorldModification
 
 
