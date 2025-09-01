@@ -744,7 +744,7 @@ def main():
     session = Session(engine)
 
     parser = ProcTHORParser(
-        "../../../../resources/procthor_json/house_0.json", session
+        "../../../../resources/procthor_json/house_987654321.json", session
     )
     world = parser.parse()
 
