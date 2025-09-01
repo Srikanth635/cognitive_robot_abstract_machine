@@ -23,5 +23,5 @@ RUN source $OVERLAY_WS/src/semantic_world-venv/bin/activate && pip install -r Mu
 RUN source /opt/ros/jazzy/setup.bash && cd $OVERLAY_WS && colcon build --symlink-install
 RUN echo "source $OVERLAY_WS/install/setup.bash" >> ~/.bashrc
 
-COPY docker/entrypoint.sh /entrypoint.sh
+COPY entrypoint.sh /
 ENTRYPOINT ["bash", "/entrypoint.sh"]
