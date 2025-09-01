@@ -504,7 +504,8 @@ class World:
         if not self.empty:
             self._recompute_forward_kinematics()
         self._state_version += 1
-        [callback() for callback in self.state_change_callbacks]
+        for callback in self.state_change_callbacks:
+            callback()
 
     def _notify_model_change(self) -> None:
         """
@@ -518,7 +519,8 @@ class World:
             self.notify_state_change()
             self._model_version += 1
 
-            [callback() for callback in self.model_change_callbacks]
+            for callback in self.model_change_callbacks:
+                callback()
 
             self.validate()
             self.disable_non_robot_collisions()
@@ -1495,14 +1497,18 @@ class World:
                 new_root = connection
                 break
         else:
-            raise KeyError(f'no controlled connection in chain between {root} and {tip}')
+            raise KeyError(
+                f"no controlled connection in chain between {root} and {tip}"
+            )
         for i, connection in enumerate(reversed(chain)):
             if (isinstance(connection,
                            ActiveConnection) and connection.is_controlled and not connection.frozen_for_collision_avoidance):
                 new_tip = connection
                 break
         else:
-            raise KeyError(f'no controlled connection in chain between {root} and {tip}')
+            raise KeyError(
+                f"no controlled connection in chain between {root} and {tip}"
+            )
 
         if new_root in upward_chain:
             new_root_body = new_root.parent
