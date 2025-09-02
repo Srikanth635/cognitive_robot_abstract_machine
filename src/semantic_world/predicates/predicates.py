@@ -1,5 +1,6 @@
 from typing_extensions import List, Optional
 
+from ..collision_checking.collision_detector import CollisionCheck
 from ..collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
 from ..robots import RobotView, Camera, Manipulator, Finger
 from ..spatial_types.spatial_types import Point3
@@ -21,22 +22,23 @@ def stable(obj: Body) -> bool:
 def contact(
     body1: Body,
     body2: Body,
+    threshold: float = 0.001,
 ) -> bool:
     """
     Checks if two objects are in contact or not.
 
     :param body1: The first object
     :param body2: The second object
+    :param threshold: The threshold for contact detection
     :return: True if the two objects are in contact False else
     """
     assert body1._world == body2._world, "Both bodies must be in the same world"
     tcd = TrimeshCollisionDetector(body1._world)
     result = tcd.check_collision_between_bodies(body1, body2)
-    if result is None:
-        return True
-    else:
-        return False
 
+    if result is None:
+        return False
+    return result.contact_distance < threshold
 
 def robot_contact(
     robot: RobotView, ignore_collision_with: Optional[List[Body]] = None
