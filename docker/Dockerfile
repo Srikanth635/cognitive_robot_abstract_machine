@@ -13,7 +13,6 @@ RUN source /opt/ros/jazzy/setup.bash && cd $OVERLAY_WS && colcon build --symlink
 RUN echo "source $OVERLAY_WS/install/setup.bash" >> ~/.bashrc
 
 WORKDIR /opt/ros
-RUN python3 -m venv semantic_world-venv --system-site-packages  && source semantic_world-venv/bin/activate && pip install -U pip && pip install -U setuptools && pip install -r $OVERLAY_WS/src/semantic_world/requirements.txt
 
 # Install the Multiverse Parser outside of the overlay workspace
 
