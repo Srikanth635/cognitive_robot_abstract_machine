@@ -3,13 +3,17 @@ import time
 import unittest
 
 import rclpy
+import pytest
 
 from semantic_world.adapters.viz_marker import VizMarkerPublisher
 from semantic_world.connections import Connection6DoF
 from semantic_world.geometry import Box, Scale, Color
-from semantic_world.predicates.predicates import contact
+from semantic_world.orm.ormatic_interface import PR2DAO
+from semantic_world.predicates.predicates import contact, robot_contact
 from semantic_world.prefixed_name import PrefixedName
+from semantic_world.robots import PR2
 from semantic_world.spatial_types.spatial_types import TransformationMatrix
+from semantic_world.testing import pr2_world
 from semantic_world.world import World
 from semantic_world.world_entity import Body
 
@@ -81,6 +85,36 @@ class PredicateTestCase(unittest.TestCase):
         assert contact(b2, b3)
         viz._stop_publishing()
 
+    @pytest.fixture(autouse=True)
+    def test_robot_in_contact(self, pr2_world: World):
+
+
+        pr2: PR2 = PR2.from_world(pr2_world)
+
+        body = Body(name=PrefixedName("test_body"))
+        collision1 = Box(
+            scale=Scale(1.0, 1.0, 1.0),
+            origin=TransformationMatrix.from_xyz_rpy(
+                0,
+                0,
+                0.0,
+                0,
+                0,
+                0,
+                reference_frame=body,
+            ),
+            color=Color(1.0, 0.0, 0.0),
+        )
+        body.collision = [collision1]
+
+        with pr2_world.modify_world():
+            pr2_world.add_connection(Connection6DoF(pr2_world.root, body, _world=pr2_world))
+
+        viz = VizMarkerPublisher(world=pr2_world, node=self.node)
+        time.sleep(1.0)
+        viz._stop_publishing()
+
+        robot_contact(pr2)
 
 if __name__ == "__main__":
     unittest.main()

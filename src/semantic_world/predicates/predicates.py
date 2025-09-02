@@ -1,8 +1,11 @@
+import itertools
+
+from entity_query_language import let, an, entity, contains, and_, not_
 from typing_extensions import List, Optional
 
 from ..collision_checking.collision_detector import CollisionCheck
 from ..collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
-from ..robots import RobotView, Camera, Manipulator, Finger
+from ..robots import RobotView, Camera, Manipulator, Finger, AbstractRobot
 from ..spatial_types.spatial_types import Point3
 from ..world_entity import Body, Region
 
@@ -40,8 +43,10 @@ def contact(
         return False
     return result.contact_distance < threshold
 
+
 def robot_contact(
-    robot: RobotView, ignore_collision_with: Optional[List[Body]] = None
+    robot: AbstractRobot, ignore_collision_with: Optional[List[Body]] = None,
+        threshold: float = 0.001,
 ) -> bool:
     """
     Check if the robot collides with any object in the world at the given pose.
@@ -54,7 +59,25 @@ def robot_contact(
 
     if ignore_collision_with is None:
         ignore_collision_with = []
-    raise NotImplementedError
+
+    body = let("body", type_=Body, domain=robot._world.bodies)
+    possible_collisions = an(
+        entity(
+            body,
+            and_(
+                not_(contains(robot.bodies, body)),
+                not_(contains(ignore_collision_with, body)),
+            ),
+        ),
+    ).evaluate()
+
+    tcd = TrimeshCollisionDetector(robot._world)
+
+    collisions = tcd.check_collisions({
+        CollisionCheck(robot_body, collision_body, 0.0, robot._world) for robot_body, collision_body in itertools.product(robot.bodies, possible_collisions)
+    })
+    print(collisions)
+
 
 
 def robot_holds_body(robot: RobotView, obj: Body) -> bool:
@@ -156,6 +179,7 @@ def is_body_in_region(body: Body, region: Region) -> bool:
     """
     raise NotImplementedError
 
+
 def left_of(body: Body, other: Body) -> bool:
     """
     Check if the body is left of the other body.
@@ -165,6 +189,7 @@ def left_of(body: Body, other: Body) -> bool:
     :return: True if the body is left of the other body, False otherwise
     """
     ...
+
 
 def right_of(body: Body, other: Body) -> bool:
     """
@@ -176,6 +201,7 @@ def right_of(body: Body, other: Body) -> bool:
     """
     ...
 
+
 def above(body: Body, other: Body) -> bool:
     """
     Check if the body is above the other body.
@@ -184,6 +210,7 @@ def above(body: Body, other: Body) -> bool:
     :param other: The other body.
     :return: True if the body is above the other body, False otherwise
     """
+
 
 def below(body: Body, other: Body) -> bool:
     """
