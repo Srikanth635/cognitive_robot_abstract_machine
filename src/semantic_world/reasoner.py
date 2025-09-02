@@ -4,7 +4,16 @@ from collections import UserDict
 from dataclasses import dataclass, field
 from os.path import dirname
 
-from typing_extensions import ClassVar, List, Dict, Any, TYPE_CHECKING, Optional, Callable, Type
+from typing_extensions import (
+    ClassVar,
+    List,
+    Dict,
+    Any,
+    TYPE_CHECKING,
+    Optional,
+    Callable,
+    Type,
+)
 
 from ripple_down_rules import GeneralRDR, CaseQuery
 from semantic_world.world_entity import View
@@ -13,12 +22,10 @@ if TYPE_CHECKING:
     from semantic_world.world import World
 
 
-class ReasoningResult(UserDict[str, Any]):
-    ...
+class ReasoningResult(UserDict[str, Any]): ...
 
 
-class CaseRDRs(UserDict[Type, GeneralRDR]):
-    ...
+class CaseRDRs(UserDict[Type, GeneralRDR]): ...
 
 
 @dataclass
@@ -36,6 +43,7 @@ class CaseReasoner:
      >>> reasoner = CaseReasoner(case)
      >>> reasoner.fit_attribute("attribute_name", [attribute_types,...], False)
     """
+
     case: Any
     """
     The case instance on which the reasoning is performed.
@@ -51,8 +59,10 @@ class CaseReasoner:
 
     def __post_init__(self):
         if self.case.__class__ not in self.rdrs:
-            self.rdrs[self.case.__class__] = GeneralRDR(save_dir=dirname(__file__),
-                                            model_name=f"{self.case.__class__.__name__.lower()}_rdr")
+            self.rdrs[self.case.__class__] = GeneralRDR(
+                save_dir=dirname(__file__),
+                model_name=f"{self.case.__class__.__name__.lower()}_rdr",
+            )
 
     @property
     def rdr(self) -> GeneralRDR:
@@ -72,11 +82,15 @@ class CaseReasoner:
         self.result = self.rdr.classify(self.case, modify_case=True)
         return self.result
 
-    def fit_attribute(self, attribute_name: str, attribute_types: List[Type[Any]],
-                      mutually_exclusive: bool,
-                      update_existing_rules: bool = False,
-                      case_factory: Optional[Callable] = None,
-                      scenario: Optional[Callable] = None) -> None:
+    def fit_attribute(
+        self,
+        attribute_name: str,
+        attribute_types: List[Type[Any]],
+        mutually_exclusive: bool,
+        update_existing_rules: bool = False,
+        case_factory: Optional[Callable] = None,
+        scenario: Optional[Callable] = None,
+    ) -> None:
         """
         Fit the view RDR to the required attribute types.
 
@@ -88,8 +102,14 @@ class CaseReasoner:
         :param case_factory: Optional callable that can be used to recreate the case object.
         :param scenario: Optional callable that represents the test method or scenario that is being executed.
         """
-        case_query = CaseQuery(self.case, attribute_name, tuple(attribute_types), mutually_exclusive,
-                               case_factory=case_factory, scenario=scenario)
+        case_query = CaseQuery(
+            self.case,
+            attribute_name,
+            tuple(attribute_types),
+            mutually_exclusive,
+            case_factory=case_factory,
+            scenario=scenario,
+        )
         self.rdr.fit_case(case_query, update_existing_rules=update_existing_rules)
 
 
@@ -98,6 +118,7 @@ class WorldReasoner:
     """
     A utility class that uses CaseReasoner for reasoning on the world concepts.
     """
+
     world: World
     """
     The world instance to reason on.
@@ -122,7 +143,7 @@ class WorldReasoner:
         :return: The inferred views of the world.
         """
         result = self.reason()
-        return result.get('views', [])
+        return result.get("views", [])
 
     def reason(self) -> Dict[str, Any]:
         """
@@ -143,16 +164,19 @@ class WorldReasoner:
         for attr_name, attr_value in self.reasoner.result.items():
             if isinstance(getattr(self.world, attr_name), list):
                 attr_value = list(attr_value)
-            if attr_name == 'views':
+            if attr_name == "views":
                 for view in attr_value:
                     self.world.add_view(view, exists_ok=True)
             else:
                 setattr(self.world, attr_name, attr_value)
 
-    def fit_views(self, required_views: List[Type[View]],
-                  update_existing_views: bool = False,
-                  world_factory: Optional[Callable] = None,
-                  scenario: Optional[Callable] = None) -> None:
+    def fit_views(
+        self,
+        required_views: List[Type[View]],
+        update_existing_views: bool = False,
+        world_factory: Optional[Callable] = None,
+        scenario: Optional[Callable] = None,
+    ) -> None:
         """
         Fit the world RDR to the required view types.
 
@@ -161,6 +185,11 @@ class WorldReasoner:
         :param world_factory: Optional callable that can be used to recreate the world object.
         :param scenario: Optional callable that represents the test method or scenario that is being executed.
         """
-        self.reasoner.fit_attribute("views", required_views, False,
-                           update_existing_rules=update_existing_views,
-                           case_factory=world_factory, scenario=scenario)
+        self.reasoner.fit_attribute(
+            "views",
+            required_views,
+            False,
+            update_existing_rules=update_existing_views,
+            case_factory=world_factory,
+            scenario=scenario,
+        )

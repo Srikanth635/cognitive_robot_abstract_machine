@@ -14,7 +14,9 @@ class JSONTestCase(unittest.TestCase):
 
     def test_json_serialization(self):
         body = Body(name=PrefixedName("body"))
-        collision = [Box(origin=TransformationMatrix.from_xyz_rpy(0, 1, 0, 0, 0, 1, body))]
+        collision = [
+            Box(origin=TransformationMatrix.from_xyz_rpy(0, 1, 0, 0, 0, 1, body))
+        ]
         body.collision = collision
 
         json_data = body.to_json()
@@ -29,7 +31,14 @@ class JSONTestCase(unittest.TestCase):
     def test_json_serialization_with_mesh(self):
         body: Body = (
             STLParser(
-                os.path.join(os.path.dirname(__file__), "..", "..", "resources", "stl", "milk.stl")
+                os.path.join(
+                    os.path.dirname(__file__),
+                    "..",
+                    "..",
+                    "resources",
+                    "stl",
+                    "milk.stl",
+                )
             )
             .parse()
             .root
