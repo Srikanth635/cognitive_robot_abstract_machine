@@ -359,7 +359,8 @@ class AbstractRobot(RootedView, ABC):
 
     default_collision_config: CollisionCheckingConfig = field(
         kw_only=True,
-        default_factory=lambda: CollisionCheckingConfig(buffer_zone_distance=0.05))
+        default_factory=lambda: CollisionCheckingConfig(buffer_zone_distance=0.05),
+    )
 
     @property
     def controlled_connections(self) -> Set[ActiveConnection]:
@@ -439,6 +440,7 @@ class AbstractRobot(RootedView, ABC):
         self._views.add(kinematic_chain)
         kinematic_chain.assign_to_robot(self)
 
+
 @dataclass
 class PR2(AbstractRobot):
     """
@@ -515,9 +517,7 @@ class PR2(AbstractRobot):
 
         robot = cls(
             name=PrefixedName(name="pr2", prefix=world.name),
-            root=world.get_kinematic_structure_entity_by_name(
-                "base_footprint"
-            ),
+            root=world.get_kinematic_structure_entity_by_name("base_footprint"),
             _world=world,
         )
 
@@ -546,9 +546,7 @@ class PR2(AbstractRobot):
 
         left_gripper = ParallelGripper(
             name=PrefixedName("left_gripper", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name(
-                "l_gripper_palm_link"
-            ),
+            root=world.get_kinematic_structure_entity_by_name("l_gripper_palm_link"),
             tool_frame=world.get_kinematic_structure_entity_by_name(
                 "l_gripper_tool_frame"
             ),
@@ -558,12 +556,8 @@ class PR2(AbstractRobot):
         )
         left_arm = Arm(
             name=PrefixedName("left_arm", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name(
-                "torso_lift_link"
-            ),
-            tip=world.get_kinematic_structure_entity_by_name(
-                "l_wrist_roll_link"
-            ),
+            root=world.get_kinematic_structure_entity_by_name("torso_lift_link"),
+            tip=world.get_kinematic_structure_entity_by_name("l_wrist_roll_link"),
             manipulator=left_gripper,
             _world=world,
         )
@@ -593,9 +587,7 @@ class PR2(AbstractRobot):
         )
         right_gripper = ParallelGripper(
             name=PrefixedName("right_gripper", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name(
-                "r_gripper_palm_link"
-            ),
+            root=world.get_kinematic_structure_entity_by_name("r_gripper_palm_link"),
             tool_frame=world.get_kinematic_structure_entity_by_name(
                 "r_gripper_tool_frame"
             ),
@@ -605,12 +597,8 @@ class PR2(AbstractRobot):
         )
         right_arm = Arm(
             name=PrefixedName("right_arm", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name(
-                "torso_lift_link"
-            ),
-            tip=world.get_kinematic_structure_entity_by_name(
-                "r_wrist_roll_link"
-            ),
+            root=world.get_kinematic_structure_entity_by_name("torso_lift_link"),
+            tip=world.get_kinematic_structure_entity_by_name("r_wrist_roll_link"),
             manipulator=right_gripper,
             _world=world,
         )
@@ -620,23 +608,21 @@ class PR2(AbstractRobot):
         # Create camera and neck
         camera = Camera(
             name=PrefixedName("wide_stereo_optical_frame", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name('wide_stereo_optical_frame'),
-                        forward_facing_axis=Vector3(0, 0, 1),
-                        field_of_view=FieldOfView(horizontal_angle=0.99483, vertical_angle=0.75049),
-                        minimal_height=1.27,
-                        maximal_height=1.60,
-                        _world=world,
+            root=world.get_kinematic_structure_entity_by_name(
+                "wide_stereo_optical_frame"
+            ),
+            forward_facing_axis=Vector3(0, 0, 1),
+            field_of_view=FieldOfView(horizontal_angle=0.99483, vertical_angle=0.75049),
+            minimal_height=1.27,
+            maximal_height=1.60,
+            _world=world,
         )
 
         neck = Neck(
             name=PrefixedName("neck", prefix=robot.name.name),
             sensors={camera},
-            root=world.get_kinematic_structure_entity_by_name(
-                "head_pan_link"
-            ),
-            tip=world.get_kinematic_structure_entity_by_name(
-                "head_tilt_link"
-            ),
+            root=world.get_kinematic_structure_entity_by_name("head_pan_link"),
+            tip=world.get_kinematic_structure_entity_by_name("head_tilt_link"),
             _world=world,
         )
         robot.add_neck(neck)
@@ -644,12 +630,8 @@ class PR2(AbstractRobot):
         # Create torso
         torso = Torso(
             name=PrefixedName("torso", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name(
-                "torso_lift_link"
-            ),
-            tip=world.get_kinematic_structure_entity_by_name(
-                "torso_lift_link"
-            ),
+            root=world.get_kinematic_structure_entity_by_name("torso_lift_link"),
+            tip=world.get_kinematic_structure_entity_by_name("torso_lift_link"),
             _world=world,
         )
         robot.add_torso(torso)
