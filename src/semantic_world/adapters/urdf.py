@@ -125,9 +125,8 @@ class URDFParser:
         root = [link for link in links if link.name.name == self.parsed.get_root()][0]
         world = World()
         world.name = self.prefix
-        world.add_kinematic_structure_entity(root)
-
         with world.modify_world():
+            world.add_kinematic_structure_entity(root)
             joints = []
             for joint in self.parsed.joints:
                 parent = [link for link in links if link.name.name == joint.parent][0]

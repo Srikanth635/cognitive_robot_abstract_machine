@@ -22,3 +22,4 @@ daqp
 pathlib
 probabilistic_model
 python-fcl
+manifold3d

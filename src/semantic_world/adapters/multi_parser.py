@@ -1,13 +1,25 @@
+import logging
 import os
 from dataclasses import dataclass
 from typing import Optional
 
 import numpy
-from multiverse_parser import (InertiaSource,
-                               UsdImporter, MjcfImporter, UrdfImporter,
-                               BodyBuilder,
-                               JointBuilder, JointType)
-from pxr import UsdUrdf
+try:
+    from multiverse_parser import (InertiaSource,
+                                   UsdImporter, MjcfImporter, UrdfImporter,
+                                   BodyBuilder,
+                                   JointBuilder, JointType)
+    from pxr import UsdUrdf
+except ImportError as e:
+    logging.info(e)
+    InertiaSource = None
+    UsdImporter = None
+    MjcfImporter = None
+    UrdfImporter = None
+    BodyBuilder = None
+    JointBuilder = None
+    JointType = None
+    UsdUrdf = None
 
 from ..connections import RevoluteConnection, PrismaticConnection, FixedConnection
 from ..degree_of_freedom import DegreeOfFreedom
@@ -84,9 +96,9 @@ class MultiParser:
         factory.import_model()
         bodies = [self.parse_body(body_builder) for body_builder in factory.world_builder.body_builders]
         world = World()
-        world.add_kinematic_structure_entity(bodies[0])
 
         with world.modify_world():
+            world.add_kinematic_structure_entity(bodies[0])
             for body in bodies:
                 world.add_kinematic_structure_entity(body)
             joints = []
