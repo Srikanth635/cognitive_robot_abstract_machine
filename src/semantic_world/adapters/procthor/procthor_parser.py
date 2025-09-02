@@ -9,6 +9,8 @@ from typing import Optional, List, Dict, Tuple, Union, Set
 
 import numpy as np
 import rclpy
+from entity_query_language import the, entity, let, an
+from ormatic.eql_interface import eql_to_sql
 from sqlalchemy import create_engine, literal
 from sqlalchemy import select, exists, and_, or_
 from sqlalchemy.orm import Session
@@ -16,6 +18,7 @@ from sqlalchemy.orm import Session
 from semantic_world.adapters.viz_marker import VizMarkerPublisher
 from semantic_world.connections import FixedConnection
 from semantic_world.geometry import Scale
+from semantic_world.orm.model import WorldMapping
 from semantic_world.orm.ormatic_interface import (
     WorldMappingDAO,
     BodyDAO,
@@ -375,7 +378,6 @@ class ProcthorRoom:
         Returns a World instance with this room as a Region at its root.
         """
 
-
         return RoomFactory(name=self.name, polytope=self.centered_polytope).create()
 
 
@@ -435,27 +437,36 @@ class ProcthorObject:
         asset_id = self.object_dict["assetId"]
         body_world: World = get_world_by_prefixed_name(self.session, name=asset_id)
 
+        if body_world is not None:
+            ...
+
         if body_world is None:
             logging.error(
                 f"Could not find asset {asset_id} in the database. Using virtual body and proceeding to process children"
             )
             body_world = World(name=self.asset_name)
-            body_world_root = Body(name=PrefixedName(self.asset_name))
-            body_world.add_kinematic_structure_entity(body_world_root)
+            with body_world.modify_world():
+                body_world_root = Body(name=PrefixedName(self.asset_name))
+                body_world.add_kinematic_structure_entity(body_world_root)
 
-        for child in self.object_dict.get("children", {}):
-            child_object = ProcthorObject(child, self.session)
-            world_T_child = child_object.world_T_obj
-            child_world = child_object.get_world()
-            obj_T_child = self.world_T_obj.inverse() @ world_T_child
-            child_connection = FixedConnection(
-                parent=body_world.root,
-                child=child_world.root,
-                origin_expression=obj_T_child,
-            )
-            body_world.merge_world(child_world, child_connection)
+        if asset_id == "Bowl_19":
+            ...
 
-        return body_world
+        with body_world.modify_world():
+
+            for child in self.object_dict.get("children", {}):
+                child_object = ProcthorObject(child, self.session)
+                world_T_child = child_object.world_T_obj
+                child_world = child_object.get_world()
+                obj_T_child = self.world_T_obj.inverse() @ world_T_child
+                child_connection = FixedConnection(
+                    parent=body_world.root,
+                    child=child_world.root,
+                    origin_expression=obj_T_child,
+                )
+                body_world.merge_world(child_world, child_connection)
+
+            return body_world
 
 
 def unity_to_semantic_digital_twin_transform(
@@ -535,8 +546,9 @@ class ProcTHORParser:
             key = _polygon_key(wall.get("polygon", []))
             groups.setdefault(key, []).append(wall)
 
-        procthor_walls = [ProcthorWall(wall_dicts=matched_walls) for matched_walls in groups.values()]
-
+        procthor_walls = [
+            ProcthorWall(wall_dicts=matched_walls) for matched_walls in groups.values()
+        ]
 
         return procthor_walls
 
@@ -684,55 +696,66 @@ def get_world_by_prefixed_name(
     """
     To be deleted as soon as ORM fully integrated the EQL interface
     """
+    #
+    # # Helper to build the name filter for PrefixedNameDAO
+    # def pn_filter():
+    #     base = PrefixedNameDAO.name == name
+    #     return (
+    #         and_(base, PrefixedNameDAO.prefix == prefix) if prefix is not None else base
+    #     )
+    #
+    # def query(filter):
+    #     # EXISTS subqueries for bodies, views, and connections
+    #     bodies_exist = exists(
+    #         select(BodyDAO.id)
+    #         .join(PrefixedNameDAO, BodyDAO.name)  # WorldEntity.name relationship
+    #         .where(BodyDAO.worldmappingdao_bodies_id == WorldMappingDAO.id, filter())
+    #         .limit(1)
+    #     )
+    #
+    #     views_exist = exists(
+    #         select(ViewDAO.id)
+    #         .join(PrefixedNameDAO, ViewDAO.name)
+    #         .where(ViewDAO.worldmappingdao_views_id == WorldMappingDAO.id, filter())
+    #         .limit(1)
+    #     )
+    #
+    #     conns_exist = exists(
+    #         select(ConnectionDAO.id)
+    #         .join(PrefixedNameDAO, ConnectionDAO.name)
+    #         .where(
+    #             ConnectionDAO.worldmappingdao_connections_id == WorldMappingDAO.id,
+    #             filter(),
+    #         )
+    #         .limit(1)
+    #     )
+    #
+    #     q = select(WorldMappingDAO).where(or_(bodies_exist, views_exist, conns_exist))
+    #     world_mapping = session.scalars(q).first()
+    #     return world_mapping
 
-    # Helper to build the name filter for PrefixedNameDAO
-    def pn_filter():
-        base = PrefixedNameDAO.name == name
-        return (
-            and_(base, PrefixedNameDAO.prefix == prefix) if prefix is not None else base
+    # def pn_filter2():
+    #     base = literal(name).contains(PrefixedNameDAO.name)
+    #     return (
+    #         and_(base, PrefixedNameDAO.prefix == prefix) if prefix is not None else base
+    #     )
+    #
+    # world_mapping = query(pn_filter)
+    # # if world_mapping is None:
+    # #     world_mapping = query(pn_filter2)
+    #
+    # return world_mapping.from_dao() if world_mapping is not None else None
+
+    expr = an(
+        entity(
+            world := let(name="world", type_=WorldMapping),
+            world.root.name.name == name,
         )
+    )
+    print("Querying name:", name, "prefix:", prefix)
+    world_mapping = eql_to_sql(expr, session).evaluate()
 
-    def query(filter):
-        # EXISTS subqueries for bodies, views, and connections
-        bodies_exist = exists(
-            select(BodyDAO.id)
-            .join(PrefixedNameDAO, BodyDAO.name)  # WorldEntity.name relationship
-            .where(BodyDAO.worldmappingdao_bodies_id == WorldMappingDAO.id, filter())
-            .limit(1)
-        )
-
-        views_exist = exists(
-            select(ViewDAO.id)
-            .join(PrefixedNameDAO, ViewDAO.name)
-            .where(ViewDAO.worldmappingdao_views_id == WorldMappingDAO.id, filter())
-            .limit(1)
-        )
-
-        conns_exist = exists(
-            select(ConnectionDAO.id)
-            .join(PrefixedNameDAO, ConnectionDAO.name)
-            .where(
-                ConnectionDAO.worldmappingdao_connections_id == WorldMappingDAO.id,
-                filter(),
-            )
-            .limit(1)
-        )
-
-        q = select(WorldMappingDAO).where(or_(bodies_exist, views_exist, conns_exist))
-        world_mapping = session.scalars(q).first()
-        return world_mapping
-
-    def pn_filter2():
-        base = literal(name).contains(PrefixedNameDAO.name)
-        return (
-            and_(base, PrefixedNameDAO.prefix == prefix) if prefix is not None else base
-        )
-
-    world_mapping = query(pn_filter)
-    if world_mapping is None:
-        world_mapping = query(pn_filter2)
-
-    return world_mapping.from_dao() if world_mapping is not None else None
+    return world_mapping[0].from_dao() if world_mapping else None
 
 
 def main():
@@ -745,7 +768,7 @@ def main():
     session = Session(engine)
 
     parser = ProcTHORParser(
-        "../../../../resources/procthor_json/house_0.json", session
+        "../../../../resources/procthor_json/house_987654321.json", session
     )
     world = parser.parse()
 
