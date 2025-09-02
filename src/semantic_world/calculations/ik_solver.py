@@ -3,18 +3,18 @@ from __future__ import annotations
 from ctypes import c_int
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, TYPE_CHECKING, List, Tuple
+from typing_extensions import Dict, TYPE_CHECKING, List, Tuple
 
 import daqp
 import numpy as np
 
-from .connections import ActiveConnection, PassiveConnection
-from .degree_of_freedom import DegreeOfFreedom
-from .spatial_types import spatial_types as cas
+from ..world_description import ActiveConnection, PassiveConnection
+from ..world_description.degree_of_freedom import DegreeOfFreedom
+from ..spatial_types import spatial_types as cas
 
 if TYPE_CHECKING:
-    from .world import World
-    from .world_entity import Body
+    from ..world import World
+    from ..world_description import Body
 
 
 _large_value = np.inf

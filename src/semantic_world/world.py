@@ -9,33 +9,34 @@ from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import wraps, lru_cache
 from itertools import combinations_with_replacement
-from typing import Dict, Tuple, OrderedDict, Optional, TypeVar, Union, Callable, Any
-from typing import Type, Set
+from typing_extensions import Dict, Tuple, OrderedDict, Optional, TypeVar, Union, Callable, Any
+from typing_extensions import Type, Set
 
 import matplotlib.pyplot as plt
 import numpy as np
 import rustworkx as rx
 import rustworkx.visit
 import rustworkx.visualization
+from line_profiler import profile
 from lxml import etree
 from typing_extensions import List
 
-from .connections import ActiveConnection, PassiveConnection, FixedConnection
-from .connections import (HasUpdateState, Has1DOFState, Connection6DoF, )
-from .degree_of_freedom import DegreeOfFreedom
+from .world_description import ActiveConnection, PassiveConnection, FixedConnection, Connection6DoF
+from .world_description.connections import HasUpdateState, Has1DOFState
+from .world_description.degree_of_freedom import DegreeOfFreedom
 from .exceptions import (DuplicateViewError, AddingAnExistingViewError, ViewNotFoundError,
-                         AlreadyBelongsToAWorldError, )
-from .ik_solver import InverseKinematicsSolver
-from .prefixed_name import PrefixedName
+                                       AlreadyBelongsToAWorldError, )
+from .calculations.ik_solver import InverseKinematicsSolver
+from .datastructures import PrefixedName
 from .robots import AbstractRobot
 from .spatial_types import spatial_types as cas
 from .spatial_types.derivatives import Derivatives
 from .spatial_types.math import inverse_frame
-from .types import NpMatrix4x4
+from .datastructures import NpMatrix4x4
 from .utils import IDGenerator, copy_lru_cache
-from .world_entity import (Body, Connection, View, KinematicStructureEntity, Region, GenericKinematicStructureEntity,
-                           CollisionCheckingConfig, )
-from .world_state import WorldState
+from .world_description.world_entity import (Body, Connection, View, KinematicStructureEntity, Region, GenericKinematicStructureEntity,
+                                                           CollisionCheckingConfig, )
+from .world_description.world_state import WorldState
 
 logger = logging.getLogger(__name__)
 
@@ -359,12 +360,12 @@ class World:
     See `atomic_world_modification` for more information.
     """
 
-    _disabled_collision_pairs: Set[Tuple[Body, Body]] = field(default_factory=lambda: set())
+    _disabled_collision_pairs: Set[Tuple[Body, Body]] = field(default_factory=lambda: set(), repr=False)
     """
     Collisions for these Body pairs is disabled.
     """
 
-    _temp_disabled_collision_pairs: Set[Tuple[Body, Body]] = field(default_factory=lambda: set())
+    _temp_disabled_collision_pairs: Set[Tuple[Body, Body]] = field(default_factory=lambda: set(), repr=False)
     """
     A set of Body pairs for which collisions are temporarily disabled.
     """
@@ -626,6 +627,7 @@ class World:
         self.add_kinematic_structure_entity(connection.child)
         self._add_connection(connection)
 
+    @profile
     def add_view(self, view: View, exists_ok: bool = False) -> None:
         """
         Adds a view to the current list of views if it doesn't already exist. Ensures

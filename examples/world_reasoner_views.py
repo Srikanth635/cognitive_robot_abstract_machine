@@ -1,6 +1,6 @@
 from os.path import join, dirname
 
-from semantic_world.reasoner import WorldReasoner
+from semantic_world.reasoning.world_reasoner import WorldReasoner
 from semantic_world.adapters.urdf import URDFParser
 
 

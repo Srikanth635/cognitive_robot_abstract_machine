@@ -1,20 +1,18 @@
 import os
-from typing import List
+from typing_extensions import List
 
 import numpy as np
 import pytest
 from rustworkx import NoPathFound
 
-from semantic_world.adapters.urdf import URDFParser
-from semantic_world.connections import OmniDrive, PrismaticConnection, RevoluteConnection
-from semantic_world.ik_solver import MaxIterationsException, UnreachableException
-from semantic_world.prefixed_name import PrefixedName
+from semantic_world.world_description import OmniDrive, PrismaticConnection, RevoluteConnection
+from semantic_world.calculations.ik_solver import MaxIterationsException, UnreachableException
+from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.robots import PR2, KinematicChain
 from semantic_world.spatial_types.derivatives import Derivatives
 from semantic_world.spatial_types.symbol_manager import symbol_manager
-from semantic_world.world import World, Body
+from semantic_world.world import World
 from semantic_world.testing import pr2_world
-from semantic_world.world_entity import RootedView
 
 
 def test_compute_chain_of_bodies_pr2(pr2_world):

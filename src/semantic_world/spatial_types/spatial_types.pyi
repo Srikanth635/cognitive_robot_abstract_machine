@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import functools
 from enum import IntEnum
-from typing import overload, Union, Iterable, Tuple, Optional, Callable, List, Sequence, Dict, TypeVar, \
+from typing_extensions import overload, Union, Iterable, Tuple, Optional, Callable, List, Sequence, Dict, TypeVar, \
     TYPE_CHECKING
 import numpy as np
 import casadi as ca
@@ -10,7 +10,7 @@ import casadi as ca
 from scipy import sparse as sp
 
 if TYPE_CHECKING:
-    from ..world_entity import KinematicStructureEntity
+    from ..world_description import KinematicStructureEntity
 
 all_expressions = Union[Symbol_, Symbol, Expression, Point3, Vector3, RotationMatrix, TransformationMatrix, Quaternion]
 all_expressions_float = Union[Symbol, Expression, Point3, Vector3, RotationMatrix, TransformationMatrix, float, Quaternion]

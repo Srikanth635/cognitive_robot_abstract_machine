@@ -4,10 +4,10 @@ import unittest
 import trimesh.boolean
 
 from semantic_world.adapters.mesh import STLParser
-from semantic_world.geometry import Box
-from semantic_world.prefixed_name import PrefixedName
+from semantic_world.world_description.geometry import Box
+from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.spatial_types.spatial_types import TransformationMatrix
-from semantic_world.world_entity import Body
+from semantic_world.world_description.world_entity import Body
 
 
 class JSONTestCase(unittest.TestCase):

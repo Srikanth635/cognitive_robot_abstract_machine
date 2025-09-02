@@ -2,7 +2,7 @@ import os.path
 import unittest
 
 from semantic_world.adapters.urdf import URDFParser
-from semantic_world.connections import FixedConnection
+from semantic_world.world_description.connections import FixedConnection
 
 
 class URDFParserTestCase(unittest.TestCase):

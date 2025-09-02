@@ -1,6 +1,6 @@
 import numpy as np
 
-from semantic_world.raytracer import RayTracer
+from semantic_world.calculations.raytracer import RayTracer
 from semantic_world.testing import world_setup_simple
 
 

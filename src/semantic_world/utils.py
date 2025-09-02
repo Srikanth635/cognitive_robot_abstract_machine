@@ -4,7 +4,7 @@ import os
 from contextlib import suppress
 from copy import deepcopy
 from functools import lru_cache, wraps
-from typing import Any, Tuple, Iterable
+from typing_extensions import Any, Tuple, Iterable
 from xml.etree import ElementTree as ET
 
 from sqlalchemy import Engine, inspect, text, MetaData

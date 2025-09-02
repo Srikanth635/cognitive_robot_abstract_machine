@@ -3,13 +3,12 @@ from __future__ import annotations
 import abc
 from dataclasses import dataclass, field
 from itertools import chain
-from typing import Tuple, Set, List, Optional
+from typing_extensions import Tuple, Set, List, Optional
 
 import numpy as np
 
-from semantic_world.connections import ActiveConnection
-from semantic_world.world import World
-from semantic_world.world_entity import Body
+from ..world_description import ActiveConnection, Body
+from ..world import World
 
 
 @dataclass

@@ -1,18 +1,17 @@
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import TypeVar, Generic
+from typing_extensions import TypeVar, Generic
 
 from numpy import ndarray
 from random_events.product_algebra import *
 
-from semantic_world.connections import (
+from ..world_description.connections import (
     PrismaticConnection,
     FixedConnection,
     RevoluteConnection,
 )
-from ..degree_of_freedom import DegreeOfFreedom
-from ..geometry import Scale, BoundingBoxCollection, Box
-from ..prefixed_name import PrefixedName
+from ..world_description import DegreeOfFreedom, Scale, BoundingBoxCollection, Box, Body
+from ..datastructures import PrefixedName, SpatialVariables
 from ..spatial_types.derivatives import DerivativeMap
 from ..spatial_types.spatial_types import (
     TransformationMatrix,
@@ -20,7 +19,6 @@ from ..spatial_types.spatial_types import (
     Point3,
 )
 from ..utils import IDGenerator
-from ..variables import SpatialVariables
 from ..views.views import (
     Container,
     Handle,
@@ -31,7 +29,6 @@ from ..views.views import (
     DoubleDoor,
 )
 from ..world import World
-from ..world_entity import Body
 
 id_generator = IDGenerator()
 

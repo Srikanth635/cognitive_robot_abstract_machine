@@ -1,7 +1,7 @@
 import logging
 import os
 from dataclasses import dataclass
-from typing import Optional
+from typing_extensions import Optional
 
 import numpy
 try:
@@ -21,9 +21,9 @@ except ImportError as e:
     JointType = None
     UsdUrdf = None
 
-from ..connections import RevoluteConnection, PrismaticConnection, FixedConnection
-from ..degree_of_freedom import DegreeOfFreedom
-from ..prefixed_name import PrefixedName
+from ..world_description import RevoluteConnection, PrismaticConnection, FixedConnection
+from ..world_description import DegreeOfFreedom
+from ..datastructures import PrefixedName
 from ..spatial_types import spatial_types as cas
 from ..spatial_types.derivatives import DerivativeMap
 from ..world import World, Body, Connection

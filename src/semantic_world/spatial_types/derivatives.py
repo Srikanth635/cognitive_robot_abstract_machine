@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import Generic, TypeVar, List, Optional, Dict, Any
+from typing_extensions import Generic, TypeVar, List, Optional, Dict, Any
 
 from random_events.utils import SubclassJSONSerializer
 

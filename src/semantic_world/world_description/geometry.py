@@ -5,7 +5,7 @@ import tempfile
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from functools import cached_property
-from typing import Optional, List, Iterator, TYPE_CHECKING, Dict, Any
+from typing_extensions import Optional, List, Iterator, TYPE_CHECKING, Dict, Any
 
 import numpy as np
 import trimesh
@@ -16,14 +16,14 @@ from random_events.utils import SubclassJSONSerializer
 from trimesh import Trimesh
 from typing_extensions import Self
 
-from .spatial_types import TransformationMatrix, Point3
-from .spatial_types.spatial_types import Expression
-from .spatial_types.symbol_manager import symbol_manager
-from .utils import IDGenerator
-from .variables import SpatialVariables
+from ..spatial_types import TransformationMatrix, Point3
+from ..spatial_types.spatial_types import Expression
+from ..spatial_types.symbol_manager import symbol_manager
+from ..utils import IDGenerator
+from ..datastructures import SpatialVariables
 
 if TYPE_CHECKING:
-    from .world_entity import KinematicStructureEntity
+    from ..world_description import KinematicStructureEntity
 
 id_generator = IDGenerator()
 

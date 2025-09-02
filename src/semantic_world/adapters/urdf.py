@@ -2,15 +2,14 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import Optional, Tuple, Union, List, Dict
+from typing_extensions import Optional, Tuple, Union, List, Dict
 
 from urdf_parser_py import urdf as urdfpy
 
-from ..connections import RevoluteConnection, PrismaticConnection, FixedConnection
-from ..degree_of_freedom import DegreeOfFreedom
+from ..world_description import (RevoluteConnection, PrismaticConnection, FixedConnection, DegreeOfFreedom)
 from ..exceptions import ParsingError
-from ..geometry import Box, Sphere, Cylinder, Mesh, Scale, Shape, Color
-from ..prefixed_name import PrefixedName
+from ..world_description.geometry import Box, Sphere, Cylinder, Mesh, Scale, Shape, Color
+from ..datastructures.prefixed_name import PrefixedName
 from ..spatial_types import spatial_types as cas
 from ..spatial_types.derivatives import Derivatives, DerivativeMap
 from ..spatial_types.spatial_types import TransformationMatrix, Vector3

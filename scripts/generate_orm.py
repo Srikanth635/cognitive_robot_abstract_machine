@@ -1,19 +1,16 @@
 import builtins
 from enum import Enum
 
-import trimesh
 from ormatic.ormatic import ORMatic
 from ormatic.utils import classes_of_module, recursive_subclasses
 
-import semantic_world.degree_of_freedom
-import semantic_world.geometry
+import semantic_world.world_description.degree_of_freedom
 import semantic_world.robots
 import semantic_world.views.views
-import semantic_world.world_entity
-from semantic_world.connections import FixedConnection
+import semantic_world.world_description.world_entity
+from semantic_world.world_description import FixedConnection
 from semantic_world.orm.model import *
-from semantic_world.prefixed_name import PrefixedName
-from semantic_world.world import *
+from semantic_world.datastructures.prefixed_name import PrefixedName
 
 # ----------------------------------------------------------------------------------------------------------------------
 # This script generates the ORM classes for the semantic_world package.
@@ -25,13 +22,13 @@ from semantic_world.world import *
 
 # create of classes that should be mapped
 classes = set(recursive_subclasses(AlternativeMapping))
-classes |= set(classes_of_module(semantic_world.geometry))
+classes |= set(classes_of_module(semantic_world.world_description.geometry))
 classes |= set(classes_of_module(semantic_world.world))
-classes |= set(classes_of_module(semantic_world.prefixed_name))
-classes |= set(classes_of_module(semantic_world.world_entity))
-classes |= set(classes_of_module(semantic_world.connections))
+classes |= set(classes_of_module(semantic_world.datastructures.prefixed_name))
+classes |= set(classes_of_module(semantic_world.world_description.world_entity))
+classes |= set(classes_of_module(semantic_world.world_description.connections))
 classes |= set(classes_of_module(semantic_world.views.views))
-classes |= set(classes_of_module(semantic_world.degree_of_freedom))
+classes |= set(classes_of_module(semantic_world.world_description.degree_of_freedom))
 classes |= set(classes_of_module(semantic_world.robots))
 #classes |= set(recursive_subclasses(ViewFactory))
 

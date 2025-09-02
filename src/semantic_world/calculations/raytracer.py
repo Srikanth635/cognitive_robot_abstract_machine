@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-from typing import Tuple, List, TYPE_CHECKING
+from typing_extensions import Tuple, List, TYPE_CHECKING
 
 import numpy as np
 import trimesh
 from trimesh import Scene
 
-from .types import NpMatrix4x4
-from .world_entity import Body
+from ..datastructures import NpMatrix4x4
+from ..world_description import Body
 
 if TYPE_CHECKING:
-    from .world import World
+    from ..world import World
 
 
 class RayTracer:

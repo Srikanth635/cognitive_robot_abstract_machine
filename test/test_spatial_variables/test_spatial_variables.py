@@ -3,7 +3,7 @@ import unittest
 from random_events.variable import Continuous
 from sortedcontainers import SortedSet
 
-from semantic_world.variables import SpatialVariables
+from semantic_world.datastructures.variables import SpatialVariables
 
 
 class TestSpatialVariables(unittest.TestCase):
