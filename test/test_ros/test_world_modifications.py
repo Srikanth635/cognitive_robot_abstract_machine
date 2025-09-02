@@ -55,16 +55,26 @@ class ConnectionModificationTestCase(unittest.TestCase):
             w.add_kinematic_structure_entity(b2)
             w.add_kinematic_structure_entity(b3)
             w.add_connection(Connection6DoF(b1, b2, _world=w))
-            w.add_connection(PrismaticConnection(parent=b2, child=b3, _world=w, axis=Vector3.from_iterable([0,0,1])))
+            w.add_connection(
+                PrismaticConnection(
+                    parent=b2, child=b3, _world=w, axis=Vector3.from_iterable([0, 0, 1])
+                )
+            )
 
-        modifications = WorldModelModificationBlock.from_modifications(w._atomic_modifications[-1])
+        modifications = WorldModelModificationBlock.from_modifications(
+            w._atomic_modifications[-1]
+        )
         self.assertEqual(len(modifications.modifications), 13)
 
-        add_body_modifications = [m for m in modifications.modifications if isinstance(m, AddBodyModification)]
+        add_body_modifications = [
+            m for m in modifications.modifications if isinstance(m, AddBodyModification)
+        ]
         self.assertEqual(len(add_body_modifications), 3)
 
         add_dof_modifications = [
-            m for m in modifications.modifications if isinstance(m, AddDegreeOfFreedomModification)
+            m
+            for m in modifications.modifications
+            if isinstance(m, AddDegreeOfFreedomModification)
         ]
         self.assertEqual(len(add_dof_modifications), 8)
 
@@ -79,22 +89,31 @@ class ConnectionModificationTestCase(unittest.TestCase):
         w2 = World()
 
         # copy modifications
-        modifications_copy = WorldModelModificationBlock.from_json(modifications.to_json())
+        modifications_copy = WorldModelModificationBlock.from_json(
+            modifications.to_json()
+        )
         modifications_copy.apply(w2)
         self.assertEqual(len(w2.bodies), 3)
         self.assertEqual(len(w2.connections), 2)
 
         with w.modify_world():
             w.remove_connection(w.connections[-1])
-            w.remove_kinematic_structure_entity(w.get_kinematic_structure_entity_by_name("b3"))
+            w.remove_kinematic_structure_entity(
+                w.get_kinematic_structure_entity_by_name("b3")
+            )
 
-        modifications = WorldModelModificationBlock.from_modifications(w._atomic_modifications[-1])
+        modifications = WorldModelModificationBlock.from_modifications(
+            w._atomic_modifications[-1]
+        )
         self.assertEqual(len(modifications.modifications), 3)
 
-        modifications_copy = WorldModelModificationBlock.from_json(modifications.to_json())
+        modifications_copy = WorldModelModificationBlock.from_json(
+            modifications.to_json()
+        )
         modifications_copy.apply(w2)
         self.assertEqual(len(w2.bodies), 2)
         self.assertEqual(len(w2.connections), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

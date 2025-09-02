@@ -23,9 +23,11 @@ class UnknownWorldModification(Exception):
     kwargs: Dict[str, Any]
 
     def __post_init__(self):
-        super().__init__(" Make sure that world modifications are atomic and that every atomic modification is "
-                         "represented by exactly one subclass of WorldModelModification."
-                         "This module might be incomplete, you can help by expanding it.")
+        super().__init__(
+            " Make sure that world modifications are atomic and that every atomic modification is "
+            "represented by exactly one subclass of WorldModelModification."
+            "This module might be incomplete, you can help by expanding it."
+        )
 
 
 @dataclass
@@ -176,6 +178,7 @@ class RemoveConnectionModification(WorldModelModification):
     """
     Removal of a connection from the world.
     """
+
     connection_name: PrefixedName
     """
     The name of the connection that was removed.
@@ -206,6 +209,7 @@ class AddDegreeOfFreedomModification(WorldModelModification):
     """
     Addition of a degree of freedom to the world.
     """
+
     dof: DegreeOfFreedom
     """
     The degree of freedom that was added.
@@ -230,6 +234,7 @@ class AddDegreeOfFreedomModification(WorldModelModification):
     def _from_json(cls, data: Dict[str, Any]) -> Self:
         return cls(dof=DegreeOfFreedom.from_json(data["dof"]))
 
+
 @dataclass
 class RemoveDegreeOfFreedomModification(WorldModelModification):
     dof_name: PrefixedName
@@ -241,7 +246,9 @@ class RemoveDegreeOfFreedomModification(WorldModelModification):
         return cls(dof_name=kwargs["dof"].name)
 
     def apply(self, world: World):
-        world.remove_degree_of_freedom(world.get_degree_of_freedom_by_name(self.dof_name))
+        world.remove_degree_of_freedom(
+            world.get_degree_of_freedom_by_name(self.dof_name)
+        )
 
     def to_json(self):
         return {
@@ -280,7 +287,10 @@ class WorldModelModificationBlock(SubclassJSONSerializer):
         )
 
     def to_json(self):
-        return {**super().to_json(), "modifications": [m.to_json() for m in self.modifications]}
+        return {
+            **super().to_json(),
+            "modifications": [m.to_json() for m in self.modifications],
+        }
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any]) -> Self:

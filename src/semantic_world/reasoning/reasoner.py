@@ -4,17 +4,24 @@ from collections import UserDict
 from dataclasses import dataclass, field
 from os.path import dirname
 
-from typing_extensions import ClassVar, List, Dict, Any, TYPE_CHECKING, Optional, Callable, Type
+from typing_extensions import (
+    ClassVar,
+    List,
+    Dict,
+    Any,
+    TYPE_CHECKING,
+    Optional,
+    Callable,
+    Type,
+)
 
 from ripple_down_rules import GeneralRDR, CaseQuery
 
 
-class ReasoningResult(UserDict[str, Any]):
-    ...
+class ReasoningResult(UserDict[str, Any]): ...
 
 
-class CaseRDRs(UserDict[Type, GeneralRDR]):
-    ...
+class CaseRDRs(UserDict[Type, GeneralRDR]): ...
 
 
 @dataclass
@@ -32,6 +39,7 @@ class CaseReasoner:
      >>> reasoner = CaseReasoner(case)
      >>> reasoner.fit_attribute("attribute_name", [attribute_types,...], False)
     """
+
     case: Any
     """
     The case instance on which the reasoning is performed.
@@ -72,11 +80,15 @@ class CaseReasoner:
         self.result = self.rdr.classify(self.case, modify_case=True)
         return self.result
 
-    def fit_attribute(self, attribute_name: str, attribute_types: List[Type[Any]],
-                      mutually_exclusive: bool,
-                      update_existing_rules: bool = False,
-                      case_factory: Optional[Callable] = None,
-                      scenario: Optional[Callable] = None) -> None:
+    def fit_attribute(
+        self,
+        attribute_name: str,
+        attribute_types: List[Type[Any]],
+        mutually_exclusive: bool,
+        update_existing_rules: bool = False,
+        case_factory: Optional[Callable] = None,
+        scenario: Optional[Callable] = None,
+    ) -> None:
         """
         Fit the view RDR to the required attribute types.
 
@@ -88,7 +100,13 @@ class CaseReasoner:
         :param case_factory: Optional callable that can be used to recreate the case object.
         :param scenario: Optional callable that represents the test method or scenario that is being executed.
         """
-        case_query = CaseQuery(self.case, attribute_name, tuple(attribute_types), mutually_exclusive,
-                               case_factory=case_factory, scenario=scenario)
+        case_query = CaseQuery(
+            self.case,
+            attribute_name,
+            tuple(attribute_types),
+            mutually_exclusive,
+            case_factory=case_factory,
+            scenario=scenario,
+        )
         self.rdr.fit_case(case_query, update_existing_rules=update_existing_rules)
 

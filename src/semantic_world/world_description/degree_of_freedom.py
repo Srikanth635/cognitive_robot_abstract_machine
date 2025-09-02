@@ -16,7 +16,7 @@ from .world_entity import WorldEntity
 class DegreeOfFreedom(WorldEntity, SubclassJSONSerializer):
     """
     A class representing a degree of freedom in a world model with associated derivatives and limits.
-    
+
     This class manages a variable that can freely change within specified limits, tracking its position,
     velocity, acceleration, and jerk. It maintains symbolic representations for each derivative order
     and provides methods to get and set limits for these derivatives.
@@ -28,7 +28,9 @@ class DegreeOfFreedom(WorldEntity, SubclassJSONSerializer):
     Lower and upper bounds for each derivative
     """
 
-    symbols: DerivativeMap[cas.Symbol] = field(default_factory=DerivativeMap, init=False)
+    symbols: DerivativeMap[cas.Symbol] = field(
+        default_factory=DerivativeMap, init=False
+    )
     """
     Symbolic representations for each derivative
     """
@@ -37,8 +39,10 @@ class DegreeOfFreedom(WorldEntity, SubclassJSONSerializer):
         self.lower_limits = self.lower_limits or DerivativeMap()
         self.upper_limits = self.upper_limits or DerivativeMap()
         for derivative in Derivatives.range(Derivatives.position, Derivatives.jerk):
-            s = symbol_manager.register_symbol_provider(f'{self.name}_{derivative}',
-                                                        lambda d=derivative: self._world.state[self.name][d])
+            s = symbol_manager.register_symbol_provider(
+                f"{self.name}_{derivative}",
+                lambda d=derivative: self._world.state[self.name][d],
+            )
             self.symbols.data[derivative] = s
 
     def has_position_limits(self) -> bool:
@@ -53,11 +57,19 @@ class DegreeOfFreedom(WorldEntity, SubclassJSONSerializer):
         return hash(id(self))
 
     def to_json(self) -> Dict[str, Any]:
-        return {**super().to_json(), "lower_limits": self.lower_limits.to_json(),
-                "upper_limits": self.upper_limits.to_json(), "name": self.name.to_json()}
+        return {
+            **super().to_json(),
+            "lower_limits": self.lower_limits.to_json(),
+            "upper_limits": self.upper_limits.to_json(),
+            "name": self.name.to_json(),
+        }
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any]) -> DegreeOfFreedom:
         lower_limits = DerivativeMap.from_json(data["lower_limits"])
         upper_limits = DerivativeMap.from_json(data["upper_limits"])
-        return cls(name=PrefixedName.from_json(data["name"]), lower_limits=lower_limits, upper_limits=upper_limits)
+        return cls(
+            name=PrefixedName.from_json(data["name"]),
+            lower_limits=lower_limits,
+            upper_limits=upper_limits,
+        )

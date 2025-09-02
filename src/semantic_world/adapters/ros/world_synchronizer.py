@@ -16,9 +16,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ...orm.ormatic_interface import *
-from semantic_world.datastructures.prefixed_name import PrefixedName
+from ...datastructures import PrefixedName
 from ...world import World
-from semantic_world.world_description import (WorldModelModificationBlock, WorldModelModification, )
+from ...world_description import (WorldModelModificationBlock, WorldModelModification, )
 
 
 @dataclass
@@ -53,16 +53,13 @@ class Synchronizer(ABC):
     The subscriber to the world state.
     """
 
-
     @cached_property
     def meta_data(self) -> semantic_world_msgs.msg.MetaData:
         """
         The metadata of the synchronizer which can be used to compare origins of messages.
         """
         return semantic_world_msgs.msg.MetaData(
-            node_name=self.node.get_name(),
-            process_id=os.getpid(),
-            object_id=id(self)
+            node_name=self.node.get_name(), process_id=os.getpid(), object_id=id(self)
         )
 
     @abstractmethod
@@ -109,7 +106,6 @@ class SynchronizerOnCallback(Synchronizer, ABC):
     def __post_init__(self):
         self._callback = lambda: self.world_callback_handler()
 
-
     def subscription_callback(self, msg):
         """
         Wrap the origin subscription callback by self-skipping and disabling the next world callback.
@@ -134,7 +130,6 @@ class SynchronizerOnCallback(Synchronizer, ABC):
             self._skip_next_world_callback = False
         else:
             self.world_callback()
-
 
     @abstractmethod
     def world_callback(self):
@@ -168,10 +163,15 @@ class StateSynchronizer(SynchronizerOnCallback):
     def __post_init__(self):
         super().__post_init__()
         self.update_previous_world_state()
-        self.publisher = self.node.create_publisher(semantic_world_msgs.msg.WorldState, topic=self.topic_name,
-            qos_profile=10)
-        self.subscriber = self.node.create_subscription(semantic_world_msgs.msg.WorldState, topic=self.topic_name,
-            callback=self.subscription_callback, qos_profile=10, )
+        self.publisher = self.node.create_publisher(
+            semantic_world_msgs.msg.WorldState, topic=self.topic_name, qos_profile=10
+        )
+        self.subscriber = self.node.create_subscription(
+            semantic_world_msgs.msg.WorldState,
+            topic=self.topic_name,
+            callback=self.subscription_callback,
+            qos_profile=10,
+        )
         self.world.state_change_callbacks.append(self._callback)
 
     def update_previous_world_state(self):
@@ -187,8 +187,12 @@ class StateSynchronizer(SynchronizerOnCallback):
         :param msg: The message containing the new state information.
         """
         # Parse incoming states: WorldState has 'states' only
-        indices = [self.world.state._index[PrefixedName(dof_state.name.name, dof_state.name.prefix)] for dof_state in
-            msg.states]
+        indices = [
+            self.world.state._index[
+                PrefixedName(dof_state.name.name, dof_state.name.prefix)
+            ]
+            for dof_state in msg.states
+        ]
         positions = [dof_state.position for dof_state in msg.states]
 
         if indices:
@@ -200,17 +204,32 @@ class StateSynchronizer(SynchronizerOnCallback):
         """
         Publish the current world state to the ROS topic.
         """
-        changes = {name: current_state for name, previous_state, current_state in
-            zip(self.world.state.keys(), self.previous_world_state_data, self.world.state.positions, ) if
-            not np.allclose(previous_state, current_state)}
+        changes = {
+            name: current_state
+            for name, previous_state, current_state in zip(
+                self.world.state.keys(),
+                self.previous_world_state_data,
+                self.world.state.positions,
+            )
+            if not np.allclose(previous_state, current_state)
+        }
 
         if not changes:
             return
 
-        msg = semantic_world_msgs.msg.WorldState(version=self.world._state_version, states=[
-            semantic_world_msgs.msg.DegreeOfFreedomState(
-                name=semantic_world_msgs.msg.PrefixedName(name=key.name, prefix=key.prefix), position=value, ) for
-            key, value in changes.items()], meta_data=self.meta_data,)
+        msg = semantic_world_msgs.msg.WorldState(
+            version=self.world._state_version,
+            states=[
+                semantic_world_msgs.msg.DegreeOfFreedomState(
+                    name=semantic_world_msgs.msg.PrefixedName(
+                        name=key.name, prefix=key.prefix
+                    ),
+                    position=value,
+                )
+                for key, value in changes.items()
+            ],
+            meta_data=self.meta_data,
+        )
         self.update_previous_world_state()
         self.publisher.publish(msg)
 
@@ -225,23 +244,41 @@ class ModelSynchronizer(SynchronizerOnCallback):
 
     def __post_init__(self):
         super().__post_init__()
-        self.publisher = self.node.create_publisher(semantic_world_msgs.msg.WorldModelModificationBlock,
-            topic=self.topic_name, qos_profile=10)
-        self.subscriber = self.node.create_subscription(semantic_world_msgs.msg.WorldModelModificationBlock,
-            topic=self.topic_name, callback=self.subscription_callback, qos_profile=10, )
+        self.publisher = self.node.create_publisher(
+            semantic_world_msgs.msg.WorldModelModificationBlock,
+            topic=self.topic_name,
+            qos_profile=10,
+        )
+        self.subscriber = self.node.create_subscription(
+            semantic_world_msgs.msg.WorldModelModificationBlock,
+            topic=self.topic_name,
+            callback=self.subscription_callback,
+            qos_profile=10,
+        )
         self.world.model_change_callbacks.append(self._callback)
 
-    def _subscription_callback(self, msg: semantic_world_msgs.msg.WorldModelModificationBlock):
+    def _subscription_callback(
+        self, msg: semantic_world_msgs.msg.WorldModelModificationBlock
+    ):
         changes = WorldModelModificationBlock(
-            modifications=[WorldModelModification.from_json(json.loads(m)) for m in msg.modifications])
+            modifications=[
+                WorldModelModification.from_json(json.loads(m))
+                for m in msg.modifications
+            ]
+        )
         changes.apply(self.world)
 
     def world_callback(self):
-        latest_changes = WorldModelModificationBlock.from_modifications(self.world._atomic_modifications[-1])
-        msg = semantic_world_msgs.msg.WorldModelModificationBlock(version=self.world._model_version,
-                                                                  modifications=[json.dumps(m.to_json()) for m in
-                                                                                 latest_changes.modifications],
-                                                                  meta_data=self.meta_data)
+        latest_changes = WorldModelModificationBlock.from_modifications(
+            self.world._atomic_modifications[-1]
+        )
+        msg = semantic_world_msgs.msg.WorldModelModificationBlock(
+            version=self.world._model_version,
+            modifications=[
+                json.dumps(m.to_json()) for m in latest_changes.modifications
+            ],
+            meta_data=self.meta_data,
+        )
         self.publisher.publish(msg)
 
 
@@ -264,11 +301,18 @@ class ModelReloadSynchronizer(Synchronizer):
 
     def __post_init__(self):
         assert self.session is not None
-        self.publisher = self.node.create_publisher(semantic_world_msgs.msg.WorldModelReload, topic=self.topic_name,
-            qos_profile=10)
+        self.publisher = self.node.create_publisher(
+            semantic_world_msgs.msg.WorldModelReload,
+            topic=self.topic_name,
+            qos_profile=10,
+        )
 
-        self.subscriber = self.node.create_subscription(semantic_world_msgs.msg.WorldModelReload, topic=self.topic_name,
-            callback=self.subscription_callback, qos_profile=10, )
+        self.subscriber = self.node.create_subscription(
+            semantic_world_msgs.msg.WorldModelReload,
+            topic=self.topic_name,
+            callback=self.subscription_callback,
+            qos_profile=10,
+        )
 
     def publish_reload_model(self):
         """
@@ -278,7 +322,9 @@ class ModelReloadSynchronizer(Synchronizer):
         dao: WorldMappingDAO = to_dao(self.world)
         self.session.add(dao)
         self.session.commit()
-        message = semantic_world_msgs.msg.WorldModelReload(primary_key=dao.id, meta_data=self.meta_data)
+        message = semantic_world_msgs.msg.WorldModelReload(
+            primary_key=dao.id, meta_data=self.meta_data
+        )
         self.publisher.publish(message)
 
     def subscription_callback(self, msg: semantic_world_msgs.msg.WorldModelReload):

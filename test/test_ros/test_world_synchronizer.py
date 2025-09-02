@@ -33,7 +33,6 @@ class WorldSynchronizerTestCase(unittest.TestCase):
     def tearDownClass(cls):
         rclpy.shutdown()
 
-
     @staticmethod
     def create_dummy_world():
         w = World()
@@ -53,9 +52,7 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         executor = SingleThreadedExecutor()
         executor.add_node(node)
 
-        synch_thread = threading.Thread(
-            target=executor.spin, daemon=True
-        )
+        synch_thread = threading.Thread(target=executor.spin, daemon=True)
         synch_thread.start()
         time.sleep(0.1)
 
@@ -80,12 +77,10 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         assert w1.state.data[0, 0] == 1.0
         assert w1.state.data[0, 0] == w2.state.data[0, 0]
 
-
         synchronizer_1.close()
         synchronizer_2.close()
         node.destroy_node()
         synch_thread.join(timeout=1)
-
 
     def test_model_reload(self):
 
@@ -95,9 +90,7 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         executor = SingleThreadedExecutor()
         executor.add_node(node)
 
-        synch_thread = threading.Thread(
-            target=executor.spin, daemon=True
-        )
+        synch_thread = threading.Thread(target=executor.spin, daemon=True)
         synch_thread.start()
 
         engine = sqlalchemy.create_engine(
@@ -125,7 +118,7 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         )
 
         synchronizer_1.publish_reload_model()
-        time.sleep(1.)
+        time.sleep(1.0)
         self.assertEqual(len(w2.kinematic_structure_entities), 2)
 
         query = session1.scalars(select(WorldMappingDAO)).all()
@@ -137,10 +130,11 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         node.destroy_node()
         synch_thread.join(timeout=1)
 
-
     def test_model_synchronization_body_only(self):
         # Create an isolated node per test to avoid cross-talk across tests
-        node = rclpy.create_node(f"WorldStatePublisher_test_model_synchronization_body_only")
+        node = rclpy.create_node(
+            f"WorldStatePublisher_test_model_synchronization_body_only"
+        )
 
         executor = SingleThreadedExecutor()
         executor.add_node(node)
@@ -176,18 +170,18 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         synchronizer_1.close()
         synchronizer_2.close()
         node.destroy_node()
-        synch_thread.join(timeout=1.)
+        synch_thread.join(timeout=1.0)
 
     def test_model_synchronization_creation_only(self):
         # Create an isolated node per test to avoid cross-talk across tests
-        node = rclpy.create_node(f"WorldStatePublisher_test_model_synchronization_creation_only")
+        node = rclpy.create_node(
+            f"WorldStatePublisher_test_model_synchronization_creation_only"
+        )
 
         executor = SingleThreadedExecutor()
         executor.add_node(node)
 
-        synch_thread = threading.Thread(
-            target=executor.spin, daemon=True
-        )
+        synch_thread = threading.Thread(target=executor.spin, daemon=True)
         synch_thread.start()
         time.sleep(0.1)
         w1 = World(name="w1")
@@ -216,7 +210,6 @@ class WorldSynchronizerTestCase(unittest.TestCase):
         self.assertEqual(len(w2.kinematic_structure_entities), 2)
         self.assertEqual(len(w1.connections), 1)
         self.assertEqual(len(w2.connections), 1)
-
 
         synchronizer_1.close()
         synchronizer_2.close()

@@ -93,8 +93,13 @@ class FixedConnectionFactory(ConnectionFactory[FixedConnection]):
     def create(self, world: World) -> Connection:
         parent = world.get_kinematic_structure_entity_by_name(self.parent_name)
         child = world.get_kinematic_structure_entity_by_name(self.child_name)
-        return self.original_class()(parent=parent, child=child, name=self.name, origin_expression=self.origin_expression,
-                                     _world=world)
+        return self.original_class()(
+            parent=parent,
+            child=child,
+            name=self.name,
+            origin_expression=self.origin_expression,
+            _world=world,
+        )
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any]) -> Self:
@@ -140,7 +145,7 @@ class ActiveConnection1DOFFactory(ConnectionFactory[T]):
             offset=self.offset,
             dof=world.get_degree_of_freedom_by_name(self.dof_name.name),
             origin_expression=self.origin_expression,
-            _world=world
+            _world=world,
         )
 
     def to_json(self) -> Dict[str, Any]:
@@ -162,7 +167,7 @@ class ActiveConnection1DOFFactory(ConnectionFactory[T]):
             multiplier=data["multiplier"],
             offset=data["offset"],
             dof_name=PrefixedName.from_json(data["dof"]),
-            origin_expression=transformation_from_json(data["origin_expression"])
+            origin_expression=transformation_from_json(data["origin_expression"]),
         )
 
 
@@ -215,7 +220,7 @@ class Connection6DoFFactory(ConnectionFactory[Connection6DoF]):
             qz=world.get_degree_of_freedom_by_name(self.qz_name.name),
             qw=world.get_degree_of_freedom_by_name(self.qw_name.name),
             origin_expression=self.origin_expression,
-            _world=world
+            _world=world,
         )
 
     def to_json(self) -> Dict[str, Any]:
@@ -243,5 +248,5 @@ class Connection6DoFFactory(ConnectionFactory[Connection6DoF]):
             qy_name=PrefixedName.from_json(data["qy"]),
             qz_name=PrefixedName.from_json(data["qz"]),
             qw_name=PrefixedName.from_json(data["qw"]),
-            origin_expression=transformation_from_json(data["origin_expression"])
+            origin_expression=transformation_from_json(data["origin_expression"]),
         )

@@ -88,6 +88,7 @@ class ViewFactory(Generic[T], ABC):
             world = self._create(world)
         return world
 
+
 @dataclass
 class ContainerFactory(ViewFactory[Container]):
     """
@@ -117,7 +118,9 @@ class ContainerFactory(ViewFactory[Container]):
         container_event = self.create_container_event()
 
         container_body = Body(name=self.name)
-        collision_shapes = BoundingBoxCollection.from_event(container_body, container_event).as_shapes()
+        collision_shapes = BoundingBoxCollection.from_event(
+            container_body, container_event
+        ).as_shapes()
         container_body.collision = collision_shapes
         container_body.visual = collision_shapes
 
@@ -274,6 +277,7 @@ class HandleFactory(ViewFactory[Handle]):
         )
 
         return inner_box
+
 
 @dataclass
 class EntryWayFactory(ViewFactory[T], ABC):
@@ -434,11 +438,12 @@ class DoubleDoorFactory(EntryWayFactory[DoubleDoor]):
 
         assert len(door_factories) == 2, "Double door must have exactly two doors"
 
-
-        left_door, right_door = self.add_doors_to_world(parent_world=world, door_factories=door_factories)
+        left_door, right_door = self.add_doors_to_world(
+            parent_world=world, door_factories=door_factories
+        )
 
         double_door_view = DoubleDoor(
-            body=double_door_body,left_door=left_door, right_door=right_door
+            body=double_door_body, left_door=left_door, right_door=right_door
         )
         world.add_view(double_door_view)
 
@@ -680,7 +685,9 @@ class DresserFactory(ViewFactory[Dresser]):
         :param world: The world containing the dresser body as its root.
         """
         dresser_body: Body = world.root
-        container_event = dresser_body.as_bounding_box_collection_in_frame(dresser_body).event
+        container_event = dresser_body.as_bounding_box_collection_in_frame(
+            dresser_body
+        ).event
 
         container_footprint = self.subtract_bodies_from_container_footprint(
             world, container_event
@@ -688,7 +695,9 @@ class DresserFactory(ViewFactory[Dresser]):
 
         container_event = self.fill_container_body(container_footprint, container_event)
 
-        collision_shapes = BoundingBoxCollection.from_event(dresser_body, container_event).as_shapes()
+        collision_shapes = BoundingBoxCollection.from_event(
+            dresser_body, container_event
+        ).as_shapes()
         dresser_body.collision = collision_shapes
         dresser_body.visual = collision_shapes
         return world
@@ -752,9 +761,7 @@ class WallFactory(ViewFactory[Wall]):
     The scale of the wall.
     """
 
-    door_factories: List[EntryWayFactory] = field(
-        default_factory=list
-    )
+    door_factories: List[EntryWayFactory] = field(default_factory=list)
     """
     The factories used to create the doors and double doors of the wall.
     """
@@ -769,9 +776,7 @@ class WallFactory(ViewFactory[Wall]):
         Return a world with the wall body at its root and potentially doors and double doors as children of the wall body.
         """
         wall_world = world
-        wall_body = Body(
-            name=self.name
-        )
+        wall_body = Body(name=self.name)
         wall_collision = self._create_wall_collision(wall_body)
         wall_body.collision = wall_collision
         wall_body.visual = wall_collision
@@ -798,7 +803,9 @@ class WallFactory(ViewFactory[Wall]):
 
         wall_event = self.remove_doors_from_wall_event(wall_event)
 
-        bounding_box_collection = BoundingBoxCollection.from_event(reference_frame, wall_event)
+        bounding_box_collection = BoundingBoxCollection.from_event(
+            reference_frame, wall_event
+        )
 
         wall_collision = bounding_box_collection.as_shapes()
         return wall_collision
@@ -848,7 +855,9 @@ class WallFactory(ViewFactory[Wall]):
             door_thickness_spatial_variable = SpatialVariables.x.value
 
             for door in doors:
-                door_event = door.body.as_bounding_box_collection_in_frame(temp_world.root).event
+                door_event = door.body.as_bounding_box_collection_in_frame(
+                    temp_world.root
+                ).event
                 door_event = door_event.marginal(door_plane_spatial_variables)
                 door_event.fill_missing_variables([door_thickness_spatial_variable])
 
@@ -917,6 +926,7 @@ class WallFactory(ViewFactory[Wall]):
                     )
 
                     wall_world.merge_world(door_world, connection)
+
 
 def add_door_to_world(
     door_factory: DoorFactory, parent_T_door: TransformationMatrix, parent_world: World

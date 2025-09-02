@@ -6,13 +6,14 @@ from typing_extensions import Generic, TypeVar, List, Optional, Dict, Any
 
 from random_events.utils import SubclassJSONSerializer
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class Derivatives(IntEnum):
     """
     Enumaration of interpretation for the order of derivativeson the spatial positions
     """
+
     position = 0
     velocity = 1
     acceleration = 2
