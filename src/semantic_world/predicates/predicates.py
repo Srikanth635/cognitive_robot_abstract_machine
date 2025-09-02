@@ -1,0 +1,153 @@
+from copy import deepcopy
+
+import numpy as np
+
+from ..robots import RobotView, Camera, Manipulator, Finger
+from ..spatial_types.spatial_types import TransformationMatrix, Point3
+from ..world_entity import Body, Region
+from trimesh import Trimesh
+from typing_extensions import List, Tuple, Optional, Union, Dict
+
+
+def stable(obj: Body) -> bool:
+    """
+    Checks if an object is stable in the world. Stable meaning that it's position will not change after simulating
+    physics in the World. This will be done by simulating the world for 10 seconds and compare
+    the previous coordinates with the coordinates after the simulation.
+
+    :param obj: The object which should be checked
+    :return: True if the given object is stable in the world False else
+    """
+    raise NotImplementedError
+
+def contact(
+        body1: Body,
+        body2: Body,) -> bool:
+    """
+    Checks if two objects are in contact or not.
+
+    :param body1: The first object
+    :param body2: The second object
+    :return: True if the two objects are in contact False else
+    """
+    raise NotImplementedError
+
+def prospect_robot_contact(robot: RobotView, ignore_collision_with: Optional[List[Body]] = None) -> bool:
+    """
+    Check if the robot collides with any object in the world at the given pose.
+
+    :param robot: The robot object
+
+    :param ignore_collision_with: A list of objects to ignore collision with
+    :return: True if the robot collides with any object, False otherwise
+    """
+
+    if ignore_collision_with is None:
+        ignore_collision_with = []
+    raise NotImplementedError
+
+
+def robot_holds_body(robot: RobotView, obj: Body) -> bool:
+    """
+    Check if a robot is holding an object.
+
+    :param robot: The robot object
+    :param obj: The object to check if it is picked
+    :return: True if the robot is holding the object, False otherwise
+    """
+    ...
+
+
+def get_visible_objects(camera: Camera) -> List[Body]:
+    """
+    Get all objects that are visible from the given camera.
+
+    :param camera: The camera for which the visible objects should be returned
+    :return: A list of objects that are visible from the camera
+    """
+    raise NotImplementedError
+
+
+def visible(camera: Camera, body: Body) -> bool:
+    """
+    Checks if a body is visible by the given camera.
+    """
+    raise NotImplementedError
+
+
+def occluding_bodies(
+        camera: Camera,
+        body: Body) -> List[Body]:
+    """
+    Get all bodies that are occluding the given body.
+    :param camera: The camera for which the occluding bodies should be returned
+    :param body: The body for which the occluding bodies should be returned
+    :return: A list of bodies that are occluding the given body.
+    """
+    raise NotImplementedError
+
+
+def reachable(position: Point3,
+              manipulator: Manipulator,
+              threshold: float = 0.05) -> bool:
+    """
+    Checks if a manipulator can reach a given position. To determine this the inverse kinematics are
+    calculated and applied. Afterward the distance between the position and the given manipulator is calculated, if
+    it is smaller than the threshold the reasoning query returns True, if not it returns False.
+
+    :param position: The position to reach
+    :param manipulator: The manipulator that should reach for the position
+    :param threshold: The threshold between the end effector and the position.
+    :return: True if the end effector is closer than the threshold to the target position, False in every other case
+    """
+    raise NotImplementedError
+
+
+def blocking(
+    position: Point3,
+    manipulator: Manipulator) -> Optional[List[Body]]:
+    """
+    Checks if any objects are blocking another object when a robot tries to pick it. This works
+    similar to the reachable predicate. First the inverse kinematics between the robot and the object will be
+    calculated and applied. Then it will be checked if the robot is in contact with any object except the given one.
+    If the given pose or Object is not reachable None will be returned
+
+    :param position: The position to reach
+    :param manipulator: The manipulator that should reach for the position
+    :return: A list of bodies the robot is in collision with when reaching for the specified object or None if the pose or object is not reachable.
+    """
+    raise NotImplementedError
+
+
+def supporting(
+        supported_body: Body,
+        supporting_body: Body) -> bool:
+    """
+    Checks if one object is supporting another object.
+
+    :param supported_body: Object that is supported
+    :param supporting_body: Object that potentially supports the first object
+    :return: True if the second object is supported by the first object, False otherwise
+    """
+    raise NotImplementedError
+
+
+def is_body_between_fingers(body: Body, fingers: List[Finger]) -> bool:
+    """
+    Check if the body is between the fingers.
+
+    :param body: The body for which the check should be done.
+    :param fingers: The fingers that should be checked.
+    :return: True if the body is between the fingers, False otherwise
+    """
+    raise NotImplementedError
+
+
+def is_body_in_region(body: Body, region: Region) -> bool:
+    """
+    Check if the body is in the region.
+
+    :param body: The body for which the check should be done.
+    :param region: The region to check if the body is in.
+    """
+    raise NotImplementedError
