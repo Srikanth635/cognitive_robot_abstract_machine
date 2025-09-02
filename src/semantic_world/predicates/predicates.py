@@ -1,12 +1,9 @@
-from copy import deepcopy
+from typing_extensions import List, Optional
 
-import numpy as np
-
+from ..collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
 from ..robots import RobotView, Camera, Manipulator, Finger
-from ..spatial_types.spatial_types import TransformationMatrix, Point3
+from ..spatial_types.spatial_types import Point3
 from ..world_entity import Body, Region
-from trimesh import Trimesh
-from typing_extensions import List, Tuple, Optional, Union, Dict
 
 
 def stable(obj: Body) -> bool:
@@ -20,9 +17,11 @@ def stable(obj: Body) -> bool:
     """
     raise NotImplementedError
 
+
 def contact(
-        body1: Body,
-        body2: Body,) -> bool:
+    body1: Body,
+    body2: Body,
+) -> bool:
     """
     Checks if two objects are in contact or not.
 
@@ -30,9 +29,18 @@ def contact(
     :param body2: The second object
     :return: True if the two objects are in contact False else
     """
-    raise NotImplementedError
+    assert body1._world == body2._world, "Both bodies must be in the same world"
+    tcd = TrimeshCollisionDetector(body1._world)
+    result = tcd.check_collision_between_bodies(body1, body2)
+    if result is None:
+        return True
+    else:
+        return False
 
-def prospect_robot_contact(robot: RobotView, ignore_collision_with: Optional[List[Body]] = None) -> bool:
+
+def robot_contact(
+    robot: RobotView, ignore_collision_with: Optional[List[Body]] = None
+) -> bool:
     """
     Check if the robot collides with any object in the world at the given pose.
 
@@ -75,9 +83,7 @@ def visible(camera: Camera, body: Body) -> bool:
     raise NotImplementedError
 
 
-def occluding_bodies(
-        camera: Camera,
-        body: Body) -> List[Body]:
+def occluding_bodies(camera: Camera, body: Body) -> List[Body]:
     """
     Get all bodies that are occluding the given body.
     :param camera: The camera for which the occluding bodies should be returned
@@ -87,9 +93,9 @@ def occluding_bodies(
     raise NotImplementedError
 
 
-def reachable(position: Point3,
-              manipulator: Manipulator,
-              threshold: float = 0.05) -> bool:
+def reachable(
+    position: Point3, manipulator: Manipulator, threshold: float = 0.05
+) -> bool:
     """
     Checks if a manipulator can reach a given position. To determine this the inverse kinematics are
     calculated and applied. Afterward the distance between the position and the given manipulator is calculated, if
@@ -103,9 +109,7 @@ def reachable(position: Point3,
     raise NotImplementedError
 
 
-def blocking(
-    position: Point3,
-    manipulator: Manipulator) -> Optional[List[Body]]:
+def blocking(position: Point3, manipulator: Manipulator) -> Optional[List[Body]]:
     """
     Checks if any objects are blocking another object when a robot tries to pick it. This works
     similar to the reachable predicate. First the inverse kinematics between the robot and the object will be
@@ -119,9 +123,7 @@ def blocking(
     raise NotImplementedError
 
 
-def supporting(
-        supported_body: Body,
-        supporting_body: Body) -> bool:
+def supporting(supported_body: Body, supporting_body: Body) -> bool:
     """
     Checks if one object is supporting another object.
 
@@ -151,3 +153,42 @@ def is_body_in_region(body: Body, region: Region) -> bool:
     :param region: The region to check if the body is in.
     """
     raise NotImplementedError
+
+def left_of(body: Body, other: Body) -> bool:
+    """
+    Check if the body is left of the other body.
+
+    :param body: The body for which the check should be done.
+    :param other: The other body.
+    :return: True if the body is left of the other body, False otherwise
+    """
+    ...
+
+def right_of(body: Body, other: Body) -> bool:
+    """
+    Check if the body is right of the other body.
+
+    :param body: The body for which the check should be done.
+    :param other: The other body.
+    :return: True if the body is right of the other body, False otherwise
+    """
+    ...
+
+def above(body: Body, other: Body) -> bool:
+    """
+    Check if the body is above the other body.
+
+    :param body: The body for which the check should be done.
+    :param other: The other body.
+    :return: True if the body is above the other body, False otherwise
+    """
+
+def below(body: Body, other: Body) -> bool:
+    """
+    Check if the body is below the other body.
+
+    :param body: The body for which the check should be done.
+    :param other: The other body.
+    :return: True if the body is below the other body, False otherwise
+    """
+    ...
