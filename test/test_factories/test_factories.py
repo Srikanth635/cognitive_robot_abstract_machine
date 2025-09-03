@@ -1,7 +1,7 @@
 import unittest
 
-from semantic_world.geometry import Scale
-from semantic_world.prefixed_name import PrefixedName
+from semantic_world.world_description.geometry import Scale
+from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.spatial_types.spatial_types import TransformationMatrix
 from semantic_world.views.views import Handle, Door, Container, Drawer, Dresser, Wall
 from semantic_world.views.factories import (

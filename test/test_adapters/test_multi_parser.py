@@ -7,7 +7,8 @@ try:
 except ImportError:
     multiparser_found = False
 
-from semantic_world.connections import FixedConnection
+from semantic_world.world_description.connections import FixedConnection
+
 
 
 @unittest.skipIf(not multiparser_found, "multiparser could not be imported.")

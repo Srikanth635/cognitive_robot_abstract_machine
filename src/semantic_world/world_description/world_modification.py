@@ -2,15 +2,15 @@ from __future__ import annotations
 
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
-from typing import List, Dict, Any, Self, Optional, Callable, ClassVar
+from typing_extensions import List, Dict, Any, Self, Optional, Callable, ClassVar
 
 from random_events.utils import SubclassJSONSerializer, recursive_subclasses
 
-from .connection_factories import ConnectionFactory
-from .degree_of_freedom import DegreeOfFreedom
-from .prefixed_name import PrefixedName
-from .world import World, FunctionStack
-from .world_entity import Body
+from semantic_world.world_description.connection_factories import ConnectionFactory
+from semantic_world.world_description.degree_of_freedom import DegreeOfFreedom
+from semantic_world.datastructures.prefixed_name import PrefixedName
+from semantic_world.world import World, FunctionStack
+from semantic_world.world_description.world_entity import Body
 
 
 @dataclass
