@@ -4,15 +4,15 @@ import pytest
 import rclpy
 
 from semantic_world.adapters.viz_marker import VizMarkerPublisher
-from semantic_world.connections import Connection6DoF
-from semantic_world.geometry import Box, Scale, Color
+from semantic_world.world_description.connections import Connection6DoF
+from semantic_world.world_description.geometry import Box, Scale, Color
 from semantic_world.predicates.predicates import contact, robot_in_collision
-from semantic_world.prefixed_name import PrefixedName
+from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.robots import PR2
 from semantic_world.spatial_types.spatial_types import TransformationMatrix
 from semantic_world.testing import pr2_world
 from semantic_world.world import World
-from semantic_world.world_entity import Body
+from semantic_world.world_description.world_entity import Body
 
 
 @pytest.fixture(scope="session")

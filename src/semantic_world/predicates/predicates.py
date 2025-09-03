@@ -7,7 +7,7 @@ from ..collision_checking.collision_detector import CollisionCheck
 from ..collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
 from ..robots import RobotView, Camera, Manipulator, Finger, AbstractRobot
 from ..spatial_types.spatial_types import Point3
-from ..world_entity import Body, Region
+from ..world_description.world_entity import Body, Region
 
 
 def stable(obj: Body) -> bool:
