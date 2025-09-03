@@ -5,7 +5,6 @@ import unittest
 
 import pytest
 from entity_query_language import an, entity, let, symbolic_mode, in_
-from line_profiler import profile
 from numpy.ma.testutils import assert_equal
 
 from semantic_world.world_description import FixedConnection, PrismaticConnection
@@ -202,7 +201,6 @@ class ViewTestCase(unittest.TestCase):
         drawers = list(query.evaluate())
         assert len(drawers) > 0
 
-    @profile
     def test_drawer_view(self):
         self.fit_rules_for_a_view_in_apartment(Drawer, scenario=self.test_drawer_view)
 

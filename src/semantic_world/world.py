@@ -17,7 +17,6 @@ import numpy as np
 import rustworkx as rx
 import rustworkx.visit
 import rustworkx.visualization
-from line_profiler import profile
 from lxml import etree
 from typing_extensions import List
 
@@ -697,7 +696,6 @@ class World:
         self.add_kinematic_structure_entity(connection.child)
         self._add_connection(connection)
 
-    @profile
     def add_view(self, view: View, exists_ok: bool = False) -> None:
         """
         Adds a view to the current list of views if it doesn't already exist. Ensures
