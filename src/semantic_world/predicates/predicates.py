@@ -1,8 +1,10 @@
 import itertools
 
+import numpy as np
 from entity_query_language import let, an, entity, contains, and_, not_
 from typing_extensions import List, Optional
 
+from ..calculations.raytracer import RayTracer
 from ..collision_checking.collision_detector import CollisionCheck
 from ..collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
 from ..robots import RobotView, Camera, Manipulator, Finger, AbstractRobot
@@ -104,7 +106,14 @@ def get_visible_objects(camera: Camera) -> List[Body]:
     :param camera: The camera for which the visible objects should be returned
     :return: A list of objects that are visible from the camera
     """
-    raise NotImplementedError
+    rt = RayTracer(camera._world)
+    rt.update_scene()
+
+    seg = rt.create_segmentation_mask(camera.root.global_pose.to_np(), resolution=256)
+
+    assert seg.shape == (256, 256)  # Assuming a standard resolution
+
+    hit, index, body = rt.ray_test(np.array([1, 0, 1]), np.array([-1, 0, 1]))
 
 
 def visible(camera: Camera, body: Body) -> bool:

@@ -6,9 +6,13 @@ import rclpy
 from semantic_world.adapters.viz_marker import VizMarkerPublisher
 from semantic_world.world_description.connections import Connection6DoF
 from semantic_world.world_description.geometry import Box, Scale, Color
-from semantic_world.predicates.predicates import contact, robot_in_collision
+from semantic_world.predicates.predicates import (
+    contact,
+    robot_in_collision,
+    get_visible_objects,
+)
 from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.robots import PR2
+from semantic_world.robots import PR2, Camera
 from semantic_world.spatial_types.spatial_types import TransformationMatrix
 from semantic_world.testing import pr2_world
 from semantic_world.world import World
@@ -100,7 +104,7 @@ def test_robot_in_contact(pr2_world: World, rclpy_node):
     with pr2_world.modify_world():
         pr2_world.add_connection(Connection6DoF(pr2_world.root, body, _world=pr2_world))
 
-    viz = VizMarkerPublisher(world=pr2_world, node=rclpy_node)
+
 
     # Ensure the call runs without raising
     assert robot_in_collision(pr2)
@@ -109,5 +113,13 @@ def test_robot_in_contact(pr2_world: World, rclpy_node):
         4, 0, 0.5, 0, 0, 0, pr2_world.root
     )
     assert not robot_in_collision(pr2)
+
+
+def test_get_visible_objects(pr2_world: World, rclpy_node):
+    viz = VizMarkerPublisher(world=pr2_world, node=rclpy_node)
+    pr2: PR2 = PR2.from_world(pr2_world)
+
+    camera = pr2_world.get_views_by_type(Camera)[0]
+    get_visible_objects(camera)
 
     viz._stop_publishing()
