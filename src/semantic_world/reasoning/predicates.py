@@ -4,7 +4,7 @@ import numpy as np
 from entity_query_language import let, an, entity, contains, and_, not_
 from typing_extensions import List, Optional
 
-from ..calculations.raytracer import RayTracer
+from ..spatial_computations.raytracer import RayTracer
 from ..collision_checking.collision_detector import CollisionCheck
 from ..collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
 from ..robots import RobotView, Camera, Manipulator, Finger, AbstractRobot
