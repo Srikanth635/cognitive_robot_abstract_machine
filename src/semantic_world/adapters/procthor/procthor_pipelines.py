@@ -32,7 +32,7 @@ def dresser_factory_replace(dresser: Body) -> DresserFactory:
 
             handle_factory = HandleFactory(
                 name=PrefixedName(child.name.name + "_handle", child.name.prefix),
-                scale=Scale(0.1, 0.1, 0.1),
+                scale=Scale(0.05, 0.1, 0.02),
             )
             container_factory = ContainerFactory(
                 name=PrefixedName(child.name.name + "_container", child.name.prefix),
@@ -53,7 +53,7 @@ def dresser_factory_replace(dresser: Body) -> DresserFactory:
             door_transforms.append(child.parent_connection.origin_expression)
             handle_factory = HandleFactory(
                 PrefixedName(child.name.name + "_handle", child.name.prefix),
-                Scale(0.1, 0.1, 0.1),
+                Scale(0.05, 0.1, 0.02),
             )
 
             door_factory = DoorFactory(

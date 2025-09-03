@@ -1,5 +1,6 @@
 import logging
 import re
+import time
 from abc import ABC
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -7,8 +8,10 @@ from typing import List, Optional, Callable
 
 import coacd
 import numpy as np
+import rclpy
 import trimesh
 
+from semantic_world.adapters.viz_marker import VizMarkerPublisher
 from semantic_world.geometry import TriangleMesh, Mesh
 from semantic_world.spatial_types import Point3
 from semantic_world.spatial_types.spatial_types import TransformationMatrix
@@ -78,7 +81,11 @@ class CenterLocalGeometryPreserveWorldPose(Step):
                 )
                 continue
 
-            center = np.vstack(vertices).mean(axis=0)
+            # Compute the axis-aligned bounding box center of all vertices
+            all_vertices = np.vstack(vertices)
+            mins = all_vertices.min(axis=0)
+            maxs = all_vertices.max(axis=0)
+            center = (mins + maxs) / 2.0
 
             for coll in body.collision:
                 if isinstance(coll, (Mesh, TriangleMesh)):

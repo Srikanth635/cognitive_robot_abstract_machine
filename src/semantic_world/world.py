@@ -1241,16 +1241,20 @@ class World:
     @lru_cache(maxsize=None)
     def compute_parent_connection(
         self, kinematic_structure_entity: KinematicStructureEntity
-    ) -> Connection:
+    ) -> Optional[Connection]:
         """
         Computes the parent connection of a given KinematicStructureEntity in the world.
         :param kinematic_structure_entity: The entityKinematicStructureEntity for which to compute the parent connection.
         :return: The parent connection of the given KinematicStructureEntity.
         """
+        parent = self.compute_parent_kinematic_structure_entity(
+            kinematic_structure_entity
+        )
+        if parent is None:
+            return None
+
         return self.kinematic_structure.get_edge_data(
-            self.compute_parent_kinematic_structure_entity(
-                kinematic_structure_entity
-            ).index,
+            parent.index,
             kinematic_structure_entity.index,
         )
 
@@ -1571,7 +1575,9 @@ class World:
         return self._fk_computer.collision_fks
 
     def transform(
-        self, spatial_object: cas.SpatialType, target_frame: KinematicStructureEntity
+        self,
+        spatial_object: cas.SpatialType,
+        target_frame: KinematicStructureEntity,
     ) -> cas.SpatialType:
         """
         Transform a given spatial object from its reference frame to a target frame.
@@ -1657,7 +1663,8 @@ class World:
 
         for i in range(derivative - 1, -1, -1):
             self.state.set_derivative(
-                i, self.state.get_derivative(i) + self.state.get_derivative(i + 1) * dt
+                i,
+                self.state.get_derivative(i) + self.state.get_derivative(i + 1) * dt,
             )
         for connection in self.connections:
             if isinstance(connection, HasUpdateState):

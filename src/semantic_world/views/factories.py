@@ -132,6 +132,7 @@ class ContainerFactory(ViewFactory[Container]):
 
         world.add_kinematic_structure_entity(container_body)
         world.add_view(container_view)
+        world.name = self.name.name
 
         return world
 
@@ -229,6 +230,7 @@ class HandleFactory(ViewFactory[Handle]):
 
         world.add_kinematic_structure_entity(handle)
         world.add_view(handle_view)
+        world.name = self.name.name
         return world
 
     def create_handle_event(self) -> Event:
@@ -336,6 +338,7 @@ class DoorFactory(EntryWayFactory[Door]):
 
         world.merge_world(handle_world, connection_door_T_handle)
         world.add_view(Door(name=self.name, handle=handle_view, body=body))
+        world.name = self.name.name
 
         return world
 
@@ -450,7 +453,7 @@ class DoubleDoorFactory(EntryWayFactory[DoubleDoor]):
             body=double_door_body, left_door=left_door, right_door=right_door
         )
         world.add_view(double_door_view)
-
+        world.name = self.name.name
         return world
 
     def create_door_factories(self) -> List[DoorFactory]:
@@ -543,7 +546,7 @@ class DrawerFactory(ViewFactory[Drawer]):
         handle_view: Handle = handle_world.get_views_by_type(Handle)[0]
 
         drawer_T_handle = TransformationMatrix.from_xyz_rpy(
-            (self.container_factory.scale.x / 2) + 0.03, 0, 0, 0, 0, 0
+            self.container_factory.scale.x / 2, 0, 0, 0, 0, 0
         )
         connection_drawer_T_handle = FixedConnection(
             parent=container_world.root,
@@ -556,6 +559,7 @@ class DrawerFactory(ViewFactory[Drawer]):
             name=self.name, container=container_view, handle=handle_view
         )
         container_world.add_view(drawer_view)
+        container_world.name = self.name.name
 
         return container_world
 
@@ -629,6 +633,7 @@ class DresserFactory(ViewFactory[Dresser]):
             doors=[door for door in dresser_world.get_views_by_type(Door)],
         )
         dresser_world.add_view(dresser_view, exists_ok=True)
+        dresser_world.name = self.name.name
 
         return dresser_world
 

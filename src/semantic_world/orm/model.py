@@ -20,25 +20,25 @@ from ..world_entity import Connection, View, KinematicStructureEntity
 
 @dataclass
 class WorldMapping(AlternativeMapping[World]):
-    root: KinematicStructureEntity
     kinematic_structure_entities: List[KinematicStructureEntity]
     connections: List[Connection]
     views: List[View]
     degrees_of_freedom: List[DegreeOfFreedom]
+    name: Optional[str] = field(default=None)
 
     @classmethod
     def create_instance(cls, obj: World):
         # return cls(obj.bodies[:2], [],[],[], )
         return cls(
-            obj.root,
             obj.kinematic_structure_entities,
             obj.connections,
             obj.views,
             list(obj.degrees_of_freedom),
+            obj.name,
         )
 
     def create_from_dao(self) -> World:
-        result = World()
+        result = World(name=self.name)
 
         with result.modify_world():
             for entity in self.kinematic_structure_entities:

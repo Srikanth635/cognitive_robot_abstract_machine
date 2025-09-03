@@ -19,7 +19,7 @@ from semantic_world.pipeline.pipeline import (
 )
 
 
-def parse_fbx_file(fbx_file, session):
+def parse_fbx_file(fbx_file) -> List[WorldMappingDAO]:
     dresser_pattern = re.compile(r"^.*dresser_(?!drawer\b).*$", re.IGNORECASE)
 
     pipeline = Pipeline(
@@ -28,13 +28,6 @@ def parse_fbx_file(fbx_file, session):
             BodyFilter(lambda x: not x.name.name.startswith("PS_")),
             BodyFilter(lambda x: not x.name.name.endswith("slice")),
             # COACDMeshDecomposer(search_iterations=60, max_convex_hull=1)
-            # BodyFactoryReplace(
-            #     body_condition=lambda b: bool(dresser_pattern.fullmatch(b.name.name))
-            #     and not (
-            #         "drawer" in b.name.name.lower() or "door" in b.name.name.lower()
-            #     ),
-            #     factory_creator=dresser_factory_replace,
-            # ),
         ]
     )
 
@@ -52,10 +45,27 @@ def parse_fbx_file(fbx_file, session):
     ]
 
     with world.modify_world():
+        procthor_factory_replace_pipeline = Pipeline(
+            [
+                BodyFactoryReplace(
+                    body_condition=lambda b: bool(
+                        dresser_pattern.fullmatch(b.name.name)
+                    )
+                    and not (
+                        "drawer" in b.name.name.lower() or "door" in b.name.name.lower()
+                    ),
+                    factory_creator=dresser_factory_replace,
+                )
+            ]
+        )
 
         worlds = [
             world.move_subgraph_from_root_to_new_world(child) for child in root_children
         ]
+        for world in worlds:
+            world.name = world.root.name.name
+
+        worlds = [procthor_factory_replace_pipeline.apply(w) for w in worlds]
 
     if worlds:
         # events = [
@@ -65,8 +75,8 @@ def parse_fbx_file(fbx_file, session):
 
         # go.Figure(event.plot()).show()
         daos = [to_dao(world) for world in worlds]
-
-        session.add_all(daos)
+        return daos
+    return []
 
 
 def main():
@@ -102,10 +112,21 @@ def main():
     Base.metadata.create_all(engine)
 
     start_time = time.time_ns()
+
+    dao_names = []
+    daos = []
+
     for fbx_file in tqdm.tqdm(fbx_files):
         # if not 'dressers_grp' in fbx_file:
         #     continue
-        parse_fbx_file(fbx_file, session)
+        for dao in parse_fbx_file(fbx_file):
+            # Some item names (for example "bowl_19") were used for multiple items. For now the solution is to just
+            # skip duplicate names.
+            if dao.name not in dao_names:
+                dao_names.append(dao.name)
+                daos.append(dao)
+
+    session.add_all(daos)
     session.commit()
     print(
         f"Parsing {len(fbx_files)} files took {time.time_ns() - start_time} ns. In seconds: {(time.time_ns() - start_time) / 1e9}"

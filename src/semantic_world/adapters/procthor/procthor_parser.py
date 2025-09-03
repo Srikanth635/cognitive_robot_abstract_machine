@@ -9,29 +9,24 @@ from typing import Optional, List, Dict, Tuple, Union, Set
 
 import numpy as np
 import rclpy
-from entity_query_language import the, entity, let, an
+from entity_query_language import the, entity, let, in_, or_, contains
 from ormatic.eql_interface import eql_to_sql
-from sqlalchemy import create_engine, literal
-from sqlalchemy import select, exists, and_, or_
+from sqlalchemy import create_engine
+from sqlalchemy import or_
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
+
+from semantic_world.orm.ormatic_interface import *
 
 from semantic_world.adapters.viz_marker import VizMarkerPublisher
 from semantic_world.connections import FixedConnection
 from semantic_world.geometry import Scale
 from semantic_world.orm.model import WorldMapping
-from semantic_world.orm.ormatic_interface import (
-    WorldMappingDAO,
-    BodyDAO,
-    ViewDAO,
-    ConnectionDAO,
-    PrefixedNameDAO,
-)
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.spatial_types.spatial_types import (
     TransformationMatrix,
     Point3,
 )
-from semantic_world.variables import SpatialVariables
 from semantic_world.views.factories import (
     DoorFactory,
     RoomFactory,
@@ -41,7 +36,7 @@ from semantic_world.views.factories import (
     DoubleDoorFactory,
 )
 from semantic_world.world import World
-from semantic_world.world_entity import Body, Region
+from semantic_world.world_entity import Body
 
 
 @dataclass
@@ -746,16 +741,59 @@ def get_world_by_prefixed_name(
     #
     # return world_mapping.from_dao() if world_mapping is not None else None
 
-    expr = an(
+    # expr = the(
+    #     entity(
+    #         world := let(name="world", type_=WorldMapping),
+    #         or_(world.name == name, contains(world.name, name)),
+    #     )
+    # )
+
+    # expr = or_(
+    #     the(
+    #         entity(
+    #             world := let(name="world", type_=WorldMapping),
+    #             world.name == name,
+    #         )
+    #     ),
+    #     the(
+    #         entity(
+    #             world := let(name="world", type_=WorldMapping),
+    #             world.name == other_possible_name,
+    #         )
+    #     ),
+    # )
+
+    # query1 = let("query1", type_=WorldMapping, domain=the(entity(world := let(name="world", type_=WorldMapping), world.name == name)).evaluate())
+    # query2 =  let("query2", type_=WorldMapping, domain=the(entity(world := let(name="world", type_=WorldMapping), world.name == other_possible_name)).evaluate())
+    # final_query = the(entity(world := let(name="world", type_=WorldMapping), or_(query1, query2)))
+
+    name = name.lower()
+    expr = the(
         entity(
             world := let(name="world", type_=WorldMapping),
-            world.root.name.name == name,
+            world.name == name,
+        )
+    )
+    other_possible_name = "_".join(name.split("_")[:-1]).lower()
+    expr2 = the(
+        entity(
+            world := let(name="world", type_=WorldMapping),
+            world.name == other_possible_name,
         )
     )
     print("Querying name:", name, "prefix:", prefix)
-    world_mapping = eql_to_sql(expr, session).evaluate()
+    try:
+        world_mapping = eql_to_sql(expr, session).evaluate()
+    except NoResultFound:
+        try:
+            world_mapping = eql_to_sql(expr2, session).evaluate()
+        except NoResultFound:
+            world_mapping = None
+            logging.warning(
+                f"Could not find world with name {name} or {other_possible_name}; Skipping."
+            )
 
-    return world_mapping[0].from_dao() if world_mapping else None
+    return world_mapping.from_dao() if world_mapping else None
 
 
 def main():
@@ -767,9 +805,7 @@ def main():
     engine = create_engine(f"mysql+pymysql://{semantic_world_database_uri}")
     session = Session(engine)
 
-    parser = ProcTHORParser(
-        "../../../../resources/procthor_json/house_987654321.json", session
-    )
+    parser = ProcTHORParser("../../../../resources/procthor_json/house_0.json", session)
     world = parser.parse()
 
     node = rclpy.create_node("viz_marker")
