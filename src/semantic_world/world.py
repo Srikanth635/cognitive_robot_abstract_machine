@@ -25,7 +25,7 @@ from .world_description.connections import HasUpdateState, Has1DOFState
 from .world_description.degree_of_freedom import DegreeOfFreedom
 from .exceptions import (DuplicateViewError, AddingAnExistingViewError, ViewNotFoundError,
                                        AlreadyBelongsToAWorldError, )
-from .calculations.ik_solver import InverseKinematicsSolver
+from .spatial_computations.ik_solver import InverseKinematicsSolver
 from .datastructures.prefixed_name import PrefixedName
 from .robots import AbstractRobot
 from .spatial_types import spatial_types as cas
