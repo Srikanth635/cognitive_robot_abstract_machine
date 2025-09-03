@@ -44,16 +44,17 @@ def contact(
     return result.contact_distance < threshold
 
 
-def robot_contact(
-    robot: AbstractRobot, ignore_collision_with: Optional[List[Body]] = None,
-        threshold: float = 0.001,
+def robot_in_collision(
+    robot: AbstractRobot,
+    ignore_collision_with: Optional[List[Body]] = None,
+    threshold: float = 0.001,
 ) -> bool:
     """
     Check if the robot collides with any object in the world at the given pose.
 
     :param robot: The robot object
-
     :param ignore_collision_with: A list of objects to ignore collision with
+    :param threshold: The threshold for contact detection
     :return: True if the robot collides with any object, False otherwise
     """
 
@@ -61,10 +62,11 @@ def robot_contact(
         ignore_collision_with = []
 
     body = let("body", type_=Body, domain=robot._world.bodies)
-    possible_collisions = an(
+    possible_collisions_bodies = an(
         entity(
             body,
             and_(
+                body.has_collision(),
                 not_(contains(robot.bodies, body)),
                 not_(contains(ignore_collision_with, body)),
             ),
@@ -73,19 +75,23 @@ def robot_contact(
 
     tcd = TrimeshCollisionDetector(robot._world)
 
-    collisions = tcd.check_collisions({
-        CollisionCheck(robot_body, collision_body, 0.0, robot._world) for robot_body, collision_body in itertools.product(robot.bodies, possible_collisions)
-    })
-    print(collisions)
+    collisions = tcd.check_collisions(
+        {
+            CollisionCheck(robot_body, collision_body, threshold, robot._world)
+            for robot_body, collision_body in itertools.product(
+                robot.bodies_with_collisions, possible_collisions_bodies
+            )
+        }
+    )
+    return len(collisions) > 0
 
 
-
-def robot_holds_body(robot: RobotView, obj: Body) -> bool:
+def robot_holds_body(robot: RobotView, body: Body) -> bool:
     """
     Check if a robot is holding an object.
 
     :param robot: The robot object
-    :param obj: The object to check if it is picked
+    :param body: The body to check if it is picked
     :return: True if the robot is holding the object, False otherwise
     """
     ...
