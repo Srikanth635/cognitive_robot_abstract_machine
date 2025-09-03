@@ -6,7 +6,7 @@ import pytest
 from rustworkx import NoPathFound
 
 from semantic_world.adapters.urdf import URDFParser
-from semantic_world.world_description import OmniDrive, PrismaticConnection, RevoluteConnection
+from semantic_world.world_description.connections import OmniDrive, PrismaticConnection, RevoluteConnection
 from semantic_world.calculations.ik_solver import MaxIterationsException, UnreachableException
 from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.robots import PR2, KinematicChain
