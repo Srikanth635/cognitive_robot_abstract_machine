@@ -1,10 +1,11 @@
 import threading
+import time
 
 import pytest
 import rclpy
 
 from semantic_world.adapters.viz_marker import VizMarkerPublisher
-from semantic_world.world_description.connections import Connection6DoF
+from semantic_world.world_description.connections import Connection6DoF, FixedConnection
 from semantic_world.world_description.geometry import Box, Scale, Color
 from semantic_world.reasoning.predicates import (
     contact,
@@ -82,7 +83,7 @@ def test_in_contact():
     assert contact(b2, b3)
 
 
-def test_robot_in_contact(pr2_world: World, rclpy_node):
+def test_robot_in_contact(pr2_world: World):
     pr2: PR2 = PR2.from_world(pr2_world)
 
     body = Body(name=PrefixedName("test_body"))
@@ -116,10 +117,30 @@ def test_robot_in_contact(pr2_world: World, rclpy_node):
 
 
 def test_get_visible_objects(pr2_world: World, rclpy_node):
-    viz = VizMarkerPublisher(world=pr2_world, node=rclpy_node)
+
     pr2: PR2 = PR2.from_world(pr2_world)
 
-    camera = pr2_world.get_views_by_type(Camera)[0]
-    get_visible_objects(camera)
+    body = Body(name=PrefixedName("test_body"))
+    collision1 = Box(
+        scale=Scale(1.0, 1.0, 1.0),
+        origin=TransformationMatrix.from_xyz_rpy(
+            1.,
+        1,
+            -2.5,
+            0,
+            0,
+            0,
+            reference_frame=body,
+        ),
+        color=Color(1.0, 0.0, 0.0),
+    )
+    body.collision = [collision1]
 
+    with pr2_world.modify_world():
+        pr2_world.add_connection(FixedConnection(pr2_world.root, body, _world=pr2_world))
+    viz = VizMarkerPublisher(world=pr2_world, node=rclpy_node)
+    camera = pr2_world.get_views_by_type(Camera)[0]
+    visible_objects = get_visible_objects(camera)
+    assert visible_objects == [body]
+    # time.sleep(10)
     viz._stop_publishing()

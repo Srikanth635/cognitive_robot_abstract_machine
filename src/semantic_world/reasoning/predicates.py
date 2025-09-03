@@ -8,8 +8,8 @@ from ..spatial_computations.raytracer import RayTracer
 from ..collision_checking.collision_detector import CollisionCheck
 from ..collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
 from ..robots import RobotView, Camera, Manipulator, Finger, AbstractRobot
-from ..spatial_types.spatial_types import Point3
-from ..world_description.world_entity import Body, Region
+from ..spatial_types.spatial_types import Point3, TransformationMatrix
+from ..world_description.world_entity import Body, Region, KinematicStructureEntity
 
 
 def stable(obj: Body) -> bool:
@@ -99,28 +99,28 @@ def robot_holds_body(robot: RobotView, body: Body) -> bool:
     raise NotImplementedError
 
 
-def get_visible_objects(camera: Camera) -> List[Body]:
+def get_visible_objects(camera: Camera) -> List[KinematicStructureEntity]:
     """
-    Get all objects that are visible from the given camera using a segmentation mask.
+    Get all bodies and regions that are visible from the given camera using a segmentation mask.
 
     :param camera: The camera for which the visible objects should be returned
-    :return: A list of objects that are visible from the camera
+    :return: A list of bodies/regions that are visible from the camera
     """
     rt = RayTracer(camera._world)
     rt.update_scene()
 
     seg = rt.create_segmentation_mask(camera.root.global_pose.to_np(), resolution=256)
+    print(seg)
+    indices = np.unique(seg)
+    indices = indices[indices != -1]
+    bodies = [camera._world.kinematic_structure[i] for i in indices]
+    return bodies
 
-    assert seg.shape == (256, 256)  # Assuming a standard resolution
-
-    hit, index, body = rt.ray_test(np.array([1, 0, 1]), np.array([-1, 0, 1]))
-
-
-def visible(camera: Camera, body: Body) -> bool:
+def visible(camera: Camera, obj: KinematicStructureEntity) -> bool:
     """
-    Checks if a body is visible by the given camera.
+    Checks if a body/region is visible by the given camera.
     """
-    raise NotImplementedError
+    return obj in get_visible_objects(camera)
 
 
 def occluding_bodies(camera: Camera, body: Body) -> List[Body]:
@@ -195,12 +195,13 @@ def is_body_in_region(body: Body, region: Region) -> bool:
     raise NotImplementedError
 
 
-def left_of(body: Body, other: Body) -> bool:
+def left_of(body: Body, other: Body, reference_frame: TransformationMatrix) -> bool:
     """
     Check if the body is left of the other body.
 
     :param body: The body for which the check should be done.
     :param other: The other body.
+    :param reference_frame: The reference frame in which the check
     :return: True if the body is left of the other body, False otherwise
     """
     ...
