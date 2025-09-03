@@ -94,12 +94,12 @@ def robot_holds_body(robot: RobotView, body: Body) -> bool:
     :param body: The body to check if it is picked
     :return: True if the robot is holding the object, False otherwise
     """
-    ...
+    raise NotImplementedError
 
 
 def get_visible_objects(camera: Camera) -> List[Body]:
     """
-    Get all objects that are visible from the given camera.
+    Get all objects that are visible from the given camera using a segmentation mask.
 
     :param camera: The camera for which the visible objects should be returned
     :return: A list of objects that are visible from the camera
