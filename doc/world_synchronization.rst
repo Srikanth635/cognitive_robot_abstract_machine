@@ -15,11 +15,13 @@ The following ROS messages are relevant to understand the synchronization:
 
 You can build the messages for ROS2 by linking it to your ROS2 workspace.
 
-.. codeblock::
+.. code-block:: bash
+
     cd /your/ros2/workspace/src
     ln -s /path/to/semantic_world/semantic_world_msgs
     cd ..
     colcon build --symlink-install
+    source install/setup.bash
 
 In the semantic world package, the following classes and modules are needed to understand this document:
 

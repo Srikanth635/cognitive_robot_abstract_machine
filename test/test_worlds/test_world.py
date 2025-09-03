@@ -528,4 +528,6 @@ def test_add_entity_with_duplicate_name(world_setup):
     body_duplicate = Body(name=PrefixedName("l1"))
     with pytest.raises(AttributeError):
         with world.modify_world():
-            world.add_kinematic_structure_entity(body_duplicate)
+            world.add_kinematic_structure_entity(
+                body_duplicate, handle_duplicates=False
+            )
