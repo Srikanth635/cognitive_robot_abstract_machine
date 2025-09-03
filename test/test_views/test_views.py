@@ -4,10 +4,12 @@ import sys
 import unittest
 
 import pytest
+from entity_query_language import an, entity, let, symbolic_mode, in_
 from numpy.ma.testutils import assert_equal
 
-from semantic_world.reasoner import WorldReasoner
-from semantic_world.world_entity import KinematicStructureEntity
+from semantic_world.world_description import FixedConnection, PrismaticConnection
+from semantic_world.reasoning.world_reasoner import WorldReasoner
+from semantic_world.world_description import KinematicStructureEntity
 
 try:
     from ripple_down_rules.user_interface.gui import RDRCaseViewer
@@ -23,7 +25,7 @@ from semantic_world.adapters.urdf import URDFParser
 from semantic_world.views.views import *
 
 try:
-    from semantic_world.world_rdr import world_rdr
+    from semantic_world.reasoning.world_rdr import world_rdr
 except ImportError as e:
     world_rdr = None
 from semantic_world.world import World
@@ -167,6 +169,14 @@ class ViewTestCase(unittest.TestCase):
             },
         )
 
+    def test_handle_view_eql(self):
+        world = self.apartment_world
+        with symbolic_mode():
+            body = let("body", type_=Body, domain=world.bodies)
+            query = an(entity(Handle(body=body), in_("handle", body.name.name.lower())))
+        handles = list(query.evaluate())
+        assert len(handles) > 0
+
     def test_handle_view(self):
         self.fit_rules_for_a_view_in_apartment(Handle, scenario=self.test_handle_view)
 
@@ -174,6 +184,22 @@ class ViewTestCase(unittest.TestCase):
         self.fit_rules_for_a_view_in_apartment(
             Container, scenario=self.test_container_view
         )
+
+    def test_drawer_view_eql(self):
+        world = self.apartment_world
+        with symbolic_mode():
+            cabinet_body = let("cabinet_body", type_=Body, domain=world.bodies)
+            drawer_body = let("drawer_body", type_=Body, domain=world.bodies)
+            handle_body = let("handle_body", type_=Body, domain=world.bodies)
+            fixed_conn = let("fixed_conn", type_=FixedConnection, domain=world.connections)
+            prismatic_conn = let("prismatic_conn", type_=PrismaticConnection, domain=world.connections)
+            query = an(entity(Drawer(handle=Handle(body=handle_body), container=Container(body=drawer_body)),
+                              cabinet_body == prismatic_conn.parent,
+                              drawer_body == prismatic_conn.child,
+                              handle_body == fixed_conn.child,
+                              drawer_body == fixed_conn.parent))
+        drawers = list(query.evaluate())
+        assert len(drawers) > 0
 
     def test_drawer_view(self):
         self.fit_rules_for_a_view_in_apartment(Drawer, scenario=self.test_drawer_view)
@@ -328,3 +354,8 @@ class ViewTestCase(unittest.TestCase):
         found_views = world_reasoner.infer_views()
 
         assert any(isinstance(v, view_type) for v in found_views)
+
+
+if __name__ == "__main__":
+    import pytest
+    pytest.main(["-s", "-k", "test_drawer_view"])

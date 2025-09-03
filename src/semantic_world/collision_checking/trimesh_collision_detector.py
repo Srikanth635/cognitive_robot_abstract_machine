@@ -1,13 +1,12 @@
 from dataclasses import dataclass, field
-from itertools import product, repeat, combinations
-from typing import Optional, Set, List, Dict
+from itertools import combinations
+from typing_extensions import Optional, Set, List, Dict
 
 import fcl
 from trimesh.collision import CollisionManager, mesh_to_BVH
 
 from .collision_detector import CollisionDetector, CollisionCheck, Collision
-from ..world import World
-from ..world_entity import Body
+from ..world_description.world_entity import Body
 
 
 @dataclass

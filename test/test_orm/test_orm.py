@@ -1,19 +1,13 @@
-import inspect
-import itertools
-import logging
 import os
-import sys
 import unittest
 
 import sqlalchemy
-from sqlalchemy import create_engine, select, text
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
 from semantic_world.adapters.urdf import URDFParser
-from semantic_world.connections import RevoluteConnection
-from semantic_world.geometry import Shape, Box, Scale, Color
-from semantic_world.orm.model import WorldMapping, QuaternionMapping
-from semantic_world.prefixed_name import PrefixedName
+from semantic_world.world_description.geometry import Box, Scale, Color
+from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.spatial_types.spatial_types import TransformationMatrix
 from semantic_world.world import Body
 from semantic_world.orm.ormatic_interface import *

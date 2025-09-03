@@ -3,25 +3,22 @@ import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from functools import cached_property
-from typing import Callable
+from typing_extensions import Callable
 
 import numpy as np
 import rclpy  # type: ignore
-import rclpy.node
+from rclpy.node import Node as RosNode
 import semantic_world_msgs.msg
-from ormatic.dao import to_dao
 from rclpy.publisher import Publisher
 from rclpy.subscription import Subscription
+from ormatic.dao import to_dao
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ...orm.ormatic_interface import *
-from ...prefixed_name import PrefixedName
+from ...datastructures import PrefixedName
 from ...world import World
-from ...world_modification import (
-    WorldModelModificationBlock,
-    WorldModelModification,
-)
+from ...world_description import (WorldModelModificationBlock, WorldModelModification, )
 
 
 @dataclass
@@ -31,7 +28,7 @@ class Synchronizer(ABC):
     It manages publishers and subscribers, ensuring proper cleanup after use.
     """
 
-    node: rclpy.node.Node
+    node: RosNode
     """
     The rclpy node used to create the publishers and subscribers.
     """

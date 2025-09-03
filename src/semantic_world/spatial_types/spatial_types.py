@@ -7,13 +7,13 @@ from collections import defaultdict
 from copy import copy, deepcopy
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Union, TypeVar, TYPE_CHECKING, Optional
+from typing_extensions import Union, TypeVar, TYPE_CHECKING, Optional
 
 import casadi as ca
 import numpy as np
 
 if TYPE_CHECKING:
-    from ..world_entity import KinematicStructureEntity
+    from ..world_description import KinematicStructureEntity
 
 builtin_max = builtins.max
 builtin_min = builtins.min

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Dict, Any, Self
+from typing_extensions import Optional, Dict, Any, Self
 
 from random_events.utils import SubclassJSONSerializer
 

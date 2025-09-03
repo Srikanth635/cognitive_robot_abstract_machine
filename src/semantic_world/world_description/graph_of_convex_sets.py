@@ -5,17 +5,16 @@ import logging
 import matplotlib.pyplot as plt
 
 from .geometry import BoundingBox, BoundingBoxCollection
-from .variables import SpatialVariables
-from .world import World
-from .world_entity import View, EnvironmentView
+from ..datastructures import SpatialVariables
+from ..world import World
+from ..world_description import View, EnvironmentView
 
 logger = logging.getLogger(__name__)
 
 import time
 from functools import reduce
 from operator import or_
-from typing import List, Optional, Dict
-
+from typing_extensions import List, Optional, Dict
 # typing.Self is available starting with Python 3.11
 from typing_extensions import Self
 
@@ -27,7 +26,7 @@ from random_events.product_algebra import SimpleEvent, Event
 from rtree import index
 from sortedcontainers import SortedSet
 
-from .spatial_types import Point3
+from ..spatial_types import Point3
 
 
 class PoseOccupiedError(Exception):

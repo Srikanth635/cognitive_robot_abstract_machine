@@ -7,7 +7,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from dataclasses import fields
 from functools import lru_cache, cached_property
-from typing import (
+from typing_extensions import (
     Deque,
     Type,
     TypeVar,
@@ -15,8 +15,8 @@ from typing import (
     Any,
     Self,
 )
-from typing import List, Optional, TYPE_CHECKING, Tuple
-from typing import Set
+from typing_extensions import List, Optional, TYPE_CHECKING, Tuple
+from typing_extensions import Set
 
 import numpy as np
 from random_events.utils import SubclassJSONSerializer
@@ -25,18 +25,16 @@ from trimesh import Trimesh
 from trimesh.proximity import closest_point, nearby_faces
 from trimesh.sample import sample_surface
 from trimesh.util import concatenate
-from typing_extensions import ClassVar
 
-from .geometry import BoundingBoxCollection, BoundingBox
-from .geometry import Shape
-from .prefixed_name import PrefixedName
-from .spatial_types import spatial_types as cas
-from .spatial_types.spatial_types import TransformationMatrix, Expression
-from .utils import IDGenerator
+from .geometry import BoundingBoxCollection, BoundingBox, Shape
+from ..datastructures import PrefixedName
+from ..spatial_types import spatial_types as cas
+from ..spatial_types.spatial_types import TransformationMatrix, Expression
+from ..utils import IDGenerator
 
 if TYPE_CHECKING:
-    from .degree_of_freedom import DegreeOfFreedom
-    from .world import World
+    from ..world_description import DegreeOfFreedom
+    from ..world import World
 
 id_generator = IDGenerator()
 

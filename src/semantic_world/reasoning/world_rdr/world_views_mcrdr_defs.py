@@ -1,12 +1,8 @@
 from typing_extensions import List, Union
 
-from semantic_world.views.views import Cabinet, Container, Door, Drawer, Fridge, Handle
-from semantic_world.connections import (
-    FixedConnection,
-    PrismaticConnection,
-    RevoluteConnection,
-)
-from semantic_world.world import World
+from ...views.views import Cabinet, Container, Door, Drawer, Fridge, Handle
+from ...world_description import FixedConnection, PrismaticConnection, RevoluteConnection
+from ...world import World
 
 
 def conditions_90574698325129464513441443063592862114(case) -> bool:

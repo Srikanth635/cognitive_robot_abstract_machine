@@ -3,16 +3,13 @@ from __future__ import annotations
 import logging
 from abc import abstractmethod, ABC
 from dataclasses import dataclass, field
-from functools import cached_property
-from typing import Iterable, Set, TYPE_CHECKING
+from typing_extensions import Iterable, Set, TYPE_CHECKING, Optional, Self
 
-from typing_extensions import Optional, Self
-
-from .connections import ActiveConnection, OmniDrive
-from .prefixed_name import PrefixedName
+from .world_description.connections import ActiveConnection, OmniDrive
+from .datastructures.prefixed_name import PrefixedName
 from .spatial_types.spatial_types import Vector3
-from .world_entity import Body, RootedView, Connection, CollisionCheckingConfig
-from .world_entity import KinematicStructureEntity, Region
+from .world_description.world_entity import Body, RootedView, Connection, CollisionCheckingConfig
+from .world_description.world_entity import KinematicStructureEntity, Region
 
 if TYPE_CHECKING:
     from .world import World

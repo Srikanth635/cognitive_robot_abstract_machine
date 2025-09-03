@@ -17,7 +17,8 @@ WORKDIR /opt/ros
 # Install the Multiverse Parser outside of the overlay workspace
 
 RUN git clone https://github.com/Multiverse-Framework/Multiverse-Parser.git
-RUN source /opt/ros/semantic_world-venv/bin/activate && pip install -r Multiverse-Parser/requirements.txt && pip install pyside6 pyopengl jinja2 &&  ./Multiverse-Parser/setup.sh --usd && pip install -e Multiverse-Parser
+RUN python3.12 -m venv /opt/ros/multiverse-venv
+RUN source /opt/ros/multiverse-venv/bin/activate && pip install -r Multiverse-Parser/requirements.txt && pip install pyside6 pyopengl jinja2 &&  ./Multiverse-Parser/setup.sh --usd && pip install -e Multiverse-Parser
 
 RUN source /opt/ros/jazzy/setup.bash && cd $OVERLAY_WS && colcon build --symlink-install
 RUN echo "source $OVERLAY_WS/install/setup.bash" >> ~/.bashrc

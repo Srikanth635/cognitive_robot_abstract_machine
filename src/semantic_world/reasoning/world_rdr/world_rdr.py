@@ -1,4 +1,4 @@
-from ..world import World
+from ...world import World
 from typing_extensions import Any, Dict
 from ripple_down_rules.datastructures.case import Case, create_case
 from ripple_down_rules.helpers import general_rdr_classify

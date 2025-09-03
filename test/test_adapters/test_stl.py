@@ -2,7 +2,7 @@ import os
 import unittest
 
 from semantic_world.adapters.mesh import STLParser
-from semantic_world.geometry import Mesh
+from semantic_world.world_description.geometry import Mesh
 
 
 class STLAdapterTestCase(unittest.TestCase):
