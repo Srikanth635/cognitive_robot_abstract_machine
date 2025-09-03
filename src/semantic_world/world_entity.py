@@ -143,7 +143,7 @@ class KinematicStructureEntity(WorldEntity):
 
     @abstractmethod
     def as_bounding_box_collection_at_origin(
-            self, origin: TransformationMatrix
+        self, origin: TransformationMatrix
     ) -> BoundingBoxCollection:
         """
         Provides the bounding box collection for this entity given a transformation matrix as origin.
@@ -350,7 +350,7 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
         return points_min_self, points_min_other, dist_min
 
     def as_bounding_box_collection_at_origin(
-            self, origin: TransformationMatrix
+        self, origin: TransformationMatrix
     ) -> BoundingBoxCollection:
         """
         Provides the bounding box collection for this entity given a transformation matrix as origin.
@@ -407,7 +407,7 @@ class Region(KinematicStructureEntity):
         return id(self)
 
     def as_bounding_box_collection_at_origin(
-            self, origin: TransformationMatrix
+        self, origin: TransformationMatrix
     ) -> BoundingBoxCollection:
         """
         Returns a bounding box collection that contains the bounding boxes of all areas in this region.
@@ -424,7 +424,6 @@ class Region(KinematicStructureEntity):
         name: Optional[PrefixedName] = None,
         reference_frame: Optional[Body] = None,
     ) -> Self:
-
         """
         Constructs a region from a set of 3D points. Requires one dimension to be 'dropped', to create a 2s polygon.
         The min and max point of the dropped dimension still contribute to the region, but are not considered when
@@ -446,11 +445,18 @@ class Region(KinematicStructureEntity):
         x_0, x_1 = kept_axes  # these become x_0 and x_1
 
         points_2d = np.array(
-            [[getattr(p, x_0.name).to_np(), getattr(p, x_1.name).to_np()] for p in points_3d]
+            [
+                [getattr(p, x_0.name).to_np(), getattr(p, x_1.name).to_np()]
+                for p in points_3d
+            ]
         )
 
-        min_dropped_dimension_thickness = min(getattr(p, drop_dimension.name).to_np() for p in points_3d)
-        max_dropped_dimension_thickness = max(getattr(p, drop_dimension.name).to_np() for p in points_3d)
+        min_dropped_dimension_thickness = min(
+            getattr(p, drop_dimension.name).to_np() for p in points_3d
+        )
+        max_dropped_dimension_thickness = max(
+            getattr(p, drop_dimension.name).to_np() for p in points_3d
+        )
 
         if min_dropped_dimension_thickness == max_dropped_dimension_thickness:
             # intervall should not be 0, adding a minimal thickness
@@ -479,7 +485,9 @@ class Region(KinematicStructureEntity):
 
         region_event = region_event & floor_event
 
-        region_bb_collection = BoundingBoxCollection.from_event(reference_frame=reference_frame, event=region_event)
+        region_bb_collection = BoundingBoxCollection.from_event(
+            reference_frame=reference_frame, event=region_event
+        )
 
         region_shapes = region_bb_collection.as_shapes()
 
@@ -566,7 +574,7 @@ class View(WorldEntity):
         return self._kinematic_structure_entities(set(), Region)
 
     def as_bounding_box_collection_at_origin(
-            self, origin: TransformationMatrix
+        self, origin: TransformationMatrix
     ) -> BoundingBoxCollection:
         """
         Returns a bounding box collection that contains the bounding boxes of all bodies in this view.
@@ -614,6 +622,7 @@ class RootedView(View):
             for body in self.bodies
             if body.has_collision() and not body.get_collision_config().disabled
         )
+
 
 @dataclass(unsafe_hash=True)
 class EnvironmentView(RootedView):

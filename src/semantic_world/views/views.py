@@ -68,6 +68,7 @@ class Fridge(View):
     """
     A view representing a fridge that has a door and a body.
     """
+
     body: Body
     door: Door
 
@@ -119,6 +120,7 @@ class Components(View): ...
 @dataclass(unsafe_hash=True)
 class Furniture(View): ...
 
+
 @dataclass
 class SupportingSurface(View):
     """
@@ -134,7 +136,9 @@ class SupportingSurface(View):
         if self.name is None:
             self.name = self.region.name
 
+
 #################### subclasses von Components
+
 
 @dataclass(unsafe_hash=True)
 class EntryWay(Components):
@@ -165,8 +169,8 @@ class Fridge(View):
 
 @dataclass(unsafe_hash=True)
 class DoubleDoor(EntryWay):
-    left_door : Door
-    right_door : Door
+    left_door: Door
+    right_door: Door
 
     def __post_init__(self):
         if self.name is None:
@@ -213,8 +217,10 @@ class Cabinet(Cupboard):
 class Wardrobe(Cupboard):
     doors: List[Door] = field(default_factory=list)
 
+
 @dataclass
 class Room(SupportingSurface): ...
+
 
 @dataclass
 class Wall(View):
