@@ -280,6 +280,10 @@ class COACDMeshDecomposer(Step):
 
 @dataclass
 class BodyFactoryReplace(Step):
+    """
+    Replace bodies in the world that match a given condition with new structures created by a factory.
+    """
+
     body_condition: Callable[[Body], bool] = lambda x: bool(
         re.compile(r"^dresser_\d+.*$").fullmatch(x.name.name)
     )

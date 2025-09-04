@@ -5,23 +5,21 @@ import os
 import time
 from dataclasses import dataclass, field
 from functools import cached_property
-from typing import Optional, List, Dict, Tuple, Union, Set
+from typing import Dict, Tuple, Union, Set
 
 import numpy as np
 import rclpy
-from entity_query_language import the, entity, let, in_, or_, contains
+from entity_query_language import the, entity, let
 from ormatic.eql_interface import eql_to_sql
 from sqlalchemy import create_engine
-from sqlalchemy import or_
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
-
-from semantic_world.orm.ormatic_interface import *
 
 from semantic_world.adapters.viz_marker import VizMarkerPublisher
 from semantic_world.connections import FixedConnection
 from semantic_world.geometry import Scale
 from semantic_world.orm.model import WorldMapping
+from semantic_world.orm.ormatic_interface import *
 from semantic_world.prefixed_name import PrefixedName
 from semantic_world.spatial_types.spatial_types import (
     TransformationMatrix,
@@ -218,9 +216,9 @@ class ProcthorWall:
         """
         Processes the wall polygons and doors, extracting the min/max coordinates and computing the name of the wall.
         If no doors are present, it uses the first wall polygon as the reference for min/max coordinates.
-        If doors are present, it uses the wall polygon that corresponds to the first door's 'wall0' reference, since
-        the door hole is defined relative to that wall polygon and using the other wall would result in the hole
-        being on the wrong side of the wall.
+        If doors are present, it uses the wall polygon that corresponds to the first door's 'wall0' reference.
+         This is because the door hole is defined relative to that wall polygon and using the other wall would result
+         in the hole being on the wrong side of the wall.
         """
         if self.door_dicts:
             used_wall = (
@@ -393,25 +391,12 @@ class ProcthorObject:
     SQLAlchemy session to interact with the database to import objects.
     """
 
-    imported_objects: List[str] = field(default_factory=list, init=False)
-    """
-    List of imported object names to avoid naming conflicts when importing the same asset multiple times.
-    """
-
-    def __post_init__(self):
-        asset_id = self.object_dict["assetId"]
-
-        # currently we have naming problems, when we import the same asset multiple times, since rn we only rename the
-        # root, not the children that were parsed from their fbx files
-        if asset_id in self.imported_objects:
-            self.asset_name = asset_id + f"_{len(self.imported_objects)}"
-        else:
-            self.asset_name = asset_id
-
-        self.imported_objects.append(self.asset_name)
-
     @cached_property
     def world_T_obj(self) -> TransformationMatrix:
+        """
+        Computes the object's world transformation matrix from its position and rotation. Converts Unity's
+        left-handed Y-up, Z-forward convention to the right-handed Z-up, X-forward convention.
+        """
         obj_position = self.object_dict["position"]
         obj_rotation = self.object_dict["rotation"]
         world_T_obj = TransformationMatrix.from_xyz_rpy(
@@ -427,25 +412,20 @@ class ProcthorObject:
             unity_to_semantic_digital_twin_transform(world_T_obj)
         )
 
-    def get_world(self) -> World:
-
+    def get_world(self) -> Optional[World]:
+        """
+        Returns a World instance with this object at its root, importing it from the database using its assetId.
+        If the object has children, they are imported recursively and connected to the parent object.
+        If the object cannot be found in the database, it's children are skipped as well.
+        """
         asset_id = self.object_dict["assetId"]
-        body_world: World = get_world_by_prefixed_name(self.session, name=asset_id)
-
-        if body_world is not None:
-            ...
+        body_world: World = get_world_by_asset_id(self.session, asset_id=asset_id)
 
         if body_world is None:
             logging.error(
-                f"Could not find asset {asset_id} in the database. Using virtual body and proceeding to process children"
+                f"Could not find asset {asset_id} in the database. Skipping object and its children."
             )
-            body_world = World(name=self.asset_name)
-            with body_world.modify_world():
-                body_world_root = Body(name=PrefixedName(self.asset_name))
-                body_world.add_kinematic_structure_entity(body_world_root)
-
-        if asset_id == "Bowl_19":
-            ...
+            return None
 
         with body_world.modify_world():
 
@@ -453,6 +433,8 @@ class ProcthorObject:
                 child_object = ProcthorObject(child, self.session)
                 world_T_child = child_object.world_T_obj
                 child_world = child_object.get_world()
+                if child_world is None:
+                    continue
                 obj_T_child = self.world_T_obj.inverse() @ world_T_child
                 child_connection = FixedConnection(
                     parent=body_world.root,
@@ -632,6 +614,8 @@ class ProcTHORParser:
         for obj in objects:
             procthor_object = ProcthorObject(object_dict=obj, session=self.session)
             obj_world = procthor_object.get_world()
+            if obj_world is None:
+                continue
             obj_connection = FixedConnection(
                 parent=world.root,
                 child=obj_world.root,
@@ -685,103 +669,25 @@ class ProcTHORParser:
             return world
 
 
-def get_world_by_prefixed_name(
-    session: Session, name: str, prefix: Optional[str] = None
-) -> Optional[World]:
+def get_world_by_asset_id(session: Session, asset_id: str) -> Optional[World]:
     """
-    To be deleted as soon as ORM fully integrated the EQL interface
+    Queries the database for a WorldMapping with the given asset_id provided by the procthor file.
     """
-    #
-    # # Helper to build the name filter for PrefixedNameDAO
-    # def pn_filter():
-    #     base = PrefixedNameDAO.name == name
-    #     return (
-    #         and_(base, PrefixedNameDAO.prefix == prefix) if prefix is not None else base
-    #     )
-    #
-    # def query(filter):
-    #     # EXISTS subqueries for bodies, views, and connections
-    #     bodies_exist = exists(
-    #         select(BodyDAO.id)
-    #         .join(PrefixedNameDAO, BodyDAO.name)  # WorldEntity.name relationship
-    #         .where(BodyDAO.worldmappingdao_bodies_id == WorldMappingDAO.id, filter())
-    #         .limit(1)
-    #     )
-    #
-    #     views_exist = exists(
-    #         select(ViewDAO.id)
-    #         .join(PrefixedNameDAO, ViewDAO.name)
-    #         .where(ViewDAO.worldmappingdao_views_id == WorldMappingDAO.id, filter())
-    #         .limit(1)
-    #     )
-    #
-    #     conns_exist = exists(
-    #         select(ConnectionDAO.id)
-    #         .join(PrefixedNameDAO, ConnectionDAO.name)
-    #         .where(
-    #             ConnectionDAO.worldmappingdao_connections_id == WorldMappingDAO.id,
-    #             filter(),
-    #         )
-    #         .limit(1)
-    #     )
-    #
-    #     q = select(WorldMappingDAO).where(or_(bodies_exist, views_exist, conns_exist))
-    #     world_mapping = session.scalars(q).first()
-    #     return world_mapping
-
-    # def pn_filter2():
-    #     base = literal(name).contains(PrefixedNameDAO.name)
-    #     return (
-    #         and_(base, PrefixedNameDAO.prefix == prefix) if prefix is not None else base
-    #     )
-    #
-    # world_mapping = query(pn_filter)
-    # # if world_mapping is None:
-    # #     world_mapping = query(pn_filter2)
-    #
-    # return world_mapping.from_dao() if world_mapping is not None else None
-
-    # expr = the(
-    #     entity(
-    #         world := let(name="world", type_=WorldMapping),
-    #         or_(world.name == name, contains(world.name, name)),
-    #     )
-    # )
-
-    # expr = or_(
-    #     the(
-    #         entity(
-    #             world := let(name="world", type_=WorldMapping),
-    #             world.name == name,
-    #         )
-    #     ),
-    #     the(
-    #         entity(
-    #             world := let(name="world", type_=WorldMapping),
-    #             world.name == other_possible_name,
-    #         )
-    #     ),
-    # )
-
-    # query1 = let("query1", type_=WorldMapping, domain=the(entity(world := let(name="world", type_=WorldMapping), world.name == name)).evaluate())
-    # query2 =  let("query2", type_=WorldMapping, domain=the(entity(world := let(name="world", type_=WorldMapping), world.name == other_possible_name)).evaluate())
-    # final_query = the(entity(world := let(name="world", type_=WorldMapping), or_(query1, query2)))
-
-    name = name.lower()
+    asset_id = asset_id.lower()
     expr = the(
         entity(
             world := let(name="world", type_=WorldMapping),
-            world.name == name,
+            world.name == asset_id,
         )
     )
-    other_possible_name = "_".join(name.split("_")[:-1]).lower()
+    other_possible_name = "_".join(asset_id.split("_")[:-1])
     expr2 = the(
         entity(
             world := let(name="world", type_=WorldMapping),
             world.name == other_possible_name,
         )
     )
-    print("Querying name:", name, "prefix:", prefix)
+    logging.info("Querying name:", asset_id)
     try:
         world_mapping = eql_to_sql(expr, session).evaluate()
     except NoResultFound:
@@ -790,7 +696,7 @@ def get_world_by_prefixed_name(
         except NoResultFound:
             world_mapping = None
             logging.warning(
-                f"Could not find world with name {name} or {other_possible_name}; Skipping."
+                f"Could not find world with name {asset_id} or {other_possible_name}; Skipping."
             )
 
     return world_mapping.from_dao() if world_mapping else None
@@ -805,7 +711,7 @@ def main():
     engine = create_engine(f"mysql+pymysql://{semantic_world_database_uri}")
     session = Session(engine)
 
-    parser = ProcTHORParser("../../../../resources/procthor_json/house_0.json", session)
+    parser = ProcTHORParser("../../../../resources/procthor_json/house_1.json", session)
     world = parser.parse()
 
     node = rclpy.create_node("viz_marker")
