@@ -8,6 +8,7 @@ import trimesh
 from fbxloader.nodes import Mesh as FBXMesh, Object3D, Scene
 
 from ..spatial_types.spatial_types import RotationMatrix
+from ..world_description.connections import FixedConnection
 from ..world_description.geometry import Mesh, TriangleMesh
 from ..datastructures.prefixed_name import PrefixedName
 from ..spatial_types import TransformationMatrix, Point3

@@ -16,11 +16,9 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 
 from semantic_world.adapters.viz_marker import VizMarkerPublisher
-from semantic_world.connections import FixedConnection
-from semantic_world.geometry import Scale
+from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.orm.model import WorldMapping
 from semantic_world.orm.ormatic_interface import *
-from semantic_world.prefixed_name import PrefixedName
 from semantic_world.spatial_types.spatial_types import (
     TransformationMatrix,
     Point3,
@@ -34,7 +32,9 @@ from semantic_world.views.factories import (
     DoubleDoorFactory,
 )
 from semantic_world.world import World
-from semantic_world.world_entity import Body
+from semantic_world.world_description.connections import FixedConnection
+from semantic_world.world_description.geometry import Scale
+from semantic_world.world_description.world_entity import Body
 
 
 @dataclass

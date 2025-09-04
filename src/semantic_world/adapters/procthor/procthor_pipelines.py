@@ -1,6 +1,6 @@
 import re
-import trimesh.boolean
 
+from ...datastructures.prefixed_name import PrefixedName
 from ...spatial_types.spatial_types import TransformationMatrix
 from ...views.factories import (
     HandleFactory,
@@ -10,11 +10,8 @@ from ...views.factories import (
     DoorFactory,
     DresserFactory,
 )
-from ...geometry import Scale, TriangleMesh, Mesh
-from ...pipeline.pipeline import Step
-from ...prefixed_name import PrefixedName
-from ...world import World
-from ...world_entity import Body
+from ...world_description.geometry import Scale
+from ...world_description.world_entity import Body
 
 
 def drawer_factory_from_body(drawer: Body) -> DrawerFactory:
