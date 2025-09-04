@@ -252,7 +252,7 @@ class ModelSynchronizer(SynchronizerOnCallback):
         super().__post_init__()
         self.world.model_change_callbacks.append(self._callback)
 
-    def _subscription_callback(self, msg: message_type):
+    def _subscription_callback(self, msg: ModificationBlock):
         msg.modifications.apply(self.world)
 
     def world_callback(self):
