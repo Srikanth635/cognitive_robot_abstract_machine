@@ -26,3 +26,4 @@ manifold3d
 entity_query_language
 polytope
 ortools
+fbxloader
