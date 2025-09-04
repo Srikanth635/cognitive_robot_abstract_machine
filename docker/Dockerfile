@@ -11,7 +11,6 @@ RUN apt update && apt install python3.12-venv ros-jazzy-xacro python3-vcstool gi
 RUN vcs import --input https://raw.githubusercontent.com/cram2/semantic_world/main/rosinstall/semantic_world-https.rosinstall
 RUN mv iai_maps /opt/ros/overlay_ws/src/iai_maps
 RUN mv iai_pr2 /opt/ros/overlay_ws/src/iai_pr2
-RUN mv semantic_world/semantic_world_msgs /opt/ros/overlay_ws/src/semantic_world_msgs
 RUN source /opt/ros/jazzy/setup.bash && cd $OVERLAY_WS && colcon build --symlink-install
 RUN echo "source $OVERLAY_WS/install/setup.bash" >> ~/.bashrc
 
