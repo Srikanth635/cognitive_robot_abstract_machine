@@ -1,6 +1,5 @@
 import logging
 import re
-import time
 from abc import ABC
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -8,10 +7,8 @@ from typing import List, Optional, Callable
 
 import coacd
 import numpy as np
-import rclpy
 import trimesh
 
-from semantic_world.adapters.viz_marker import VizMarkerPublisher
 from semantic_world.geometry import TriangleMesh, Mesh
 from semantic_world.spatial_types import Point3
 from semantic_world.spatial_types.spatial_types import TransformationMatrix
@@ -22,7 +19,16 @@ from semantic_world.world_entity import Body
 
 @dataclass
 class Step(ABC):
+    """
+    A Step is a transformation that takes a World as input and produces a modified World as output.
+    Steps are intended to be used in a Pipeline, where the output World of one Step is passed as the input World to the next Step.
+    Steps modify the World in-place, and return the modified World.
+    """
+
     world: Optional[World] = field(init=False, default=None)
+    """
+    World to be transformed by this Step. This is set when the Step is applied in a Pipeline.
+    """
 
     def _apply(self) -> World:
         raise NotImplementedError()
@@ -34,10 +40,18 @@ class Step(ABC):
 
 @dataclass
 class Pipeline:
+    """
+    A Pipeline is a sequence of Steps that are applied to a World in order, in-place.
+    Each Step takes the World as input and produces a modified World as output.
+    The output World of one Step is passed as the input World to the next Step.
+    """
 
     steps: List[Step]
+    """
+    The list of Steps to be applied in the Pipeline.
+    """
 
-    def apply(self, world: Optional[World] = None) -> World:
+    def apply(self, world: World) -> World:
         for step in self.steps:
             step.world = world
             world = step.apply()
@@ -46,6 +60,10 @@ class Pipeline:
 
 @dataclass
 class BodyFilter(Step):
+    """
+    Filters bodies in the world based on a given condition.
+    """
+
     condition: Callable[[Body], bool]
 
     def _apply(self) -> World:
@@ -77,7 +95,7 @@ class CenterLocalGeometryPreserveWorldPose(Step):
 
             if len(vertices) == 0:
                 logging.warning(
-                    f"Body {body.name.name} has no vertices in visual or collision shapes."
+                    f"Body {body.name.name} has no vertices in visual or collision shapes, skipping."
                 )
                 continue
 
@@ -225,7 +243,7 @@ class COACDMeshDecomposer(Step):
     Random seed used for sampling.
     """
 
-    def apply(self) -> World:
+    def _apply(self) -> World:
         for body in self.world.bodies:
             new_geometry = []
 
@@ -287,30 +305,32 @@ class BodyFactoryReplace(Step):
     body_condition: Callable[[Body], bool] = lambda x: bool(
         re.compile(r"^dresser_\d+.*$").fullmatch(x.name.name)
     )
+    """
+    Condition to filter bodies that should be replaced. Defaults to matching bodies containing "dresser_" followed by digits in their name.
+    """
+
     factory_creator: Callable[[Body], ViewFactory] = None
+    """
+    A callable that takes a Body and returns a ViewFactory to create the new structure.
+    """
 
-    def apply(self) -> World:
-
+    def _apply(self) -> World:
         filtered_bodies = [
             body for body in self.world.bodies if self.body_condition(body)
         ]
 
         for body in filtered_bodies:
-
             factory = self.factory_creator(body)
-
             parent_connection = body.parent_connection
             if parent_connection is None:
                 return factory.create()
 
-            with self.world.modify_world():
-                [
-                    self.world.remove_kinematic_structure_entity(b)
-                    for b in self.world.compute_descendent_child_kinematic_structure_entities(
-                        body
-                    )
-                ]
-                self.world.remove_kinematic_structure_entity(body)
+            for (
+                entity
+            ) in self.world.compute_descendent_child_kinematic_structure_entities(body):
+                self.world.remove_kinematic_structure_entity(entity)
+
+            self.world.remove_kinematic_structure_entity(body)
 
             new_world = factory.create()
             parent_connection.child = new_world.root

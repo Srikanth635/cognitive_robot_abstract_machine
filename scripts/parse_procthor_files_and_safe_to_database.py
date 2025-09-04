@@ -10,7 +10,9 @@ from sqlalchemy.orm import Session
 from typing_extensions import TYPE_CHECKING
 
 from semantic_world.adapters.mesh import FBXParser
-from semantic_world.adapters.procthor.procthor_pipelines import dresser_factory_replace
+from semantic_world.adapters.procthor.procthor_pipelines import (
+    dresser_factory_from_body,
+)
 from semantic_world.orm.ormatic_interface import *
 from semantic_world.pipeline.pipeline import (
     Pipeline,
@@ -61,7 +63,7 @@ def replace_dresser_meshes_with_factories(worlds, dresser_pattern) -> List[World
                 and not (
                     "drawer" in b.name.name.lower() or "door" in b.name.name.lower()
                 ),
-                factory_creator=dresser_factory_replace,
+                factory_creator=dresser_factory_from_body,
             )
         ]
     )
