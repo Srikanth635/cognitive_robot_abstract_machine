@@ -48,8 +48,8 @@ jobs:
 
       - name: Install python dependencies
         run: |
-          pip install --upgrade pip --root-user-action=ignore
           source /opt/ros/semantic_world-venv/bin/activate
+          pip install --upgrade pip --root-user-action=ignore
           cd /opt/ros/semantic_world
           pip install -r requirements.txt
           pip install jupytext treon
