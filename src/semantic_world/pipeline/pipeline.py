@@ -9,12 +9,12 @@ import coacd
 import numpy as np
 import trimesh
 
-from semantic_world.spatial_types import Point3
-from semantic_world.spatial_types.spatial_types import TransformationMatrix
-from semantic_world.views.factories import ViewFactory
-from semantic_world.world import World
-from semantic_world.world_description.geometry import TriangleMesh, Mesh
-from semantic_world.world_description.world_entity import Body
+from ..spatial_types import Point3
+from ..spatial_types.spatial_types import TransformationMatrix
+from ..views.factories import ViewFactory
+from ..world import World
+from ..world_description.geometry import TriangleMesh, Mesh
+from ..world_description.world_entity import Body
 
 
 @dataclass

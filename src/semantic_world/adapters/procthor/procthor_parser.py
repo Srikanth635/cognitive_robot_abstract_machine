@@ -15,15 +15,15 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 
-from semantic_world.adapters.viz_marker import VizMarkerPublisher
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.orm.model import WorldMapping
-from semantic_world.orm.ormatic_interface import *
-from semantic_world.spatial_types.spatial_types import (
+from ...adapters.viz_marker import VizMarkerPublisher
+from ...datastructures.prefixed_name import PrefixedName
+from ...orm.model import WorldMapping
+from ...orm.ormatic_interface import *
+from ...spatial_types.spatial_types import (
     TransformationMatrix,
     Point3,
 )
-from semantic_world.views.factories import (
+from ...views.factories import (
     DoorFactory,
     RoomFactory,
     WallFactory,
@@ -31,10 +31,10 @@ from semantic_world.views.factories import (
     Direction,
     DoubleDoorFactory,
 )
-from semantic_world.world import World
-from semantic_world.world_description.connections import FixedConnection
-from semantic_world.world_description.geometry import Scale
-from semantic_world.world_description.world_entity import Body
+from ...world import World
+from ...world_description.connections import FixedConnection
+from ...world_description.geometry import Scale
+from ...world_description.world_entity import Body
 
 
 @dataclass
@@ -492,7 +492,7 @@ class ProcTHORParser:
     File path to the Procthor JSON file.
     """
 
-    session: Session
+    session: Optional[Session] = field(default=None)
     """
     SQLAlchemy session to interact with the database to import objects.
     """
@@ -662,7 +662,10 @@ class ProcTHORParser:
 
             self.import_rooms(world, house["rooms"])
 
-            self.import_objects(world, house["objects"])
+            if self.session is not None:
+                self.import_objects(world, house["objects"])
+            else:
+                logging.warning("No database session provided, skipping object import.")
 
             self.import_walls_and_doors(world, house["walls"], house["doors"])
 
