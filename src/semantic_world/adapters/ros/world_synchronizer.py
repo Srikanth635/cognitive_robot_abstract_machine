@@ -5,26 +5,23 @@ from dataclasses import dataclass, field
 from functools import cached_property
 from typing import ClassVar
 
-from random_events.utils import SubclassJSONSerializer
-from typing_extensions import Callable
-
 import numpy as np
 import rclpy  # type: ignore
 import std_msgs.msg
+from ormatic.dao import to_dao
+from random_events.utils import SubclassJSONSerializer
 from rclpy.node import Node as RosNode
-import semantic_world_msgs.msg
 from rclpy.publisher import Publisher
 from rclpy.subscription import Subscription
-from ormatic.dao import to_dao
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from typing_extensions import Callable
 
 from .messages import MetaData, WorldStateUpdate, Message, ModificationBlock, LoadModel
 from ...orm.ormatic_interface import *
 from ...world import World
 from ...world_description.world_modification import (
     WorldModelModificationBlock,
-    WorldModelModification,
 )
 
 
