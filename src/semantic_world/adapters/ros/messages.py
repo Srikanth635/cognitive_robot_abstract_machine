@@ -127,7 +127,13 @@ class ModificationBlock(Message):
 
 @dataclass
 class LoadModel(Message):
+    """
+    Message for requesting the loading of a model identified by its primary key.
+    """
     primary_key: int
+    """
+    The primary key identifying the model to be loaded.
+    """
 
     def to_json(self) -> Dict[str, Any]:
         return {
