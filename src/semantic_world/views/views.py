@@ -222,7 +222,10 @@ class Wardrobe(Cupboard):
 
 
 @dataclass
-class Room(SupportingSurface): ...
+class Room(SupportingSurface):
+    """
+    A view that represents a closed area with a specific purpose
+    """
 
 
 @dataclass

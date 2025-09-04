@@ -5,7 +5,6 @@ import tempfile
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from functools import cached_property
-from typing_extensions import Optional, List, Iterator, TYPE_CHECKING, Dict, Any
 
 import numpy as np
 import trimesh
@@ -14,13 +13,14 @@ from random_events.interval import SimpleInterval, Bound
 from random_events.product_algebra import SimpleEvent, Event
 from random_events.utils import SubclassJSONSerializer
 from trimesh import Trimesh
+from typing_extensions import Optional, List, Iterator, TYPE_CHECKING, Dict, Any
 from typing_extensions import Self
 
+from ..datastructures.variables import SpatialVariables
 from ..spatial_types import TransformationMatrix, Point3
 from ..spatial_types.spatial_types import Expression
 from ..spatial_types.symbol_manager import symbol_manager
 from ..utils import IDGenerator
-from ..datastructures.variables import SpatialVariables
 
 if TYPE_CHECKING:
     from ..world_description.world_entity import KinematicStructureEntity
@@ -182,14 +182,10 @@ class Primitive(Shape, ABC):
 
 
 @dataclass
-class Mesh(Shape):
+class Mesh(Shape, ABC):
     """
-    A mesh shape.
-    """
-
-    filename: str = ""
-    """
-    Filename of the mesh.
+    Abstract mesh class.
+    Subclasses must provide a `mesh` property returning a trimesh.Trimesh.
     """
 
     scale: Scale = field(default_factory=Scale)
@@ -197,62 +193,17 @@ class Mesh(Shape):
     Scale of the mesh.
     """
 
-    @cached_property
+    @property
+    @abstractmethod
     def mesh(self) -> trimesh.Trimesh:
-        """
-        The mesh object.
-        """
-        mesh = trimesh.load_mesh(self.filename)
-        return mesh
+        """Return the loaded mesh object."""
+        raise NotImplementedError
 
     @property
     def local_frame_bounding_box(self) -> BoundingBox:
         """
         Returns the local bounding box of the mesh.
         The bounding box is axis-aligned and centered at the origin.
-        """
-        return BoundingBox.from_mesh(self.mesh, self.origin)
-
-    def as_triangle_mesh(self) -> TriangleMesh:
-        """
-        Returns a triangle mesh representation of the mesh.
-        """
-        return TriangleMesh(mesh=self.mesh, origin=self.origin, scale=self.scale)
-
-    def to_json(self) -> Dict[str, Any]:
-        return self.as_triangle_mesh().to_json()
-
-    @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
-        raise NotImplementedError(
-            f"{cls} does not support loading from JSON due to filenames across different systems."
-            f" Use TriangleMesh instead."
-        )
-
-
-@dataclass
-class TriangleMesh(Shape):
-    mesh: Optional[Trimesh] = None
-    """
-    The loaded mesh object.
-    """
-
-    scale: Scale = field(default_factory=Scale)
-    """
-    Scale of the mesh.
-    """
-
-    @cached_property
-    def file(self):
-        f = tempfile.NamedTemporaryFile(delete=False)
-        with open(f.name, "w") as fd:
-            fd.write(trimesh.exchange.stl.export_stl_ascii(self.mesh))
-        return f
-
-    @property
-    def local_frame_bounding_box(self) -> BoundingBox:
-        """
-        Returns the bounding box of the mesh.
         """
         return BoundingBox.from_mesh(self.mesh, self.origin)
 
@@ -264,7 +215,66 @@ class TriangleMesh(Shape):
         }
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> "TriangleMesh":
+    @abstractmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self: ...
+
+
+@dataclass
+class FileMesh(Mesh):
+    """
+    A mesh shape defined by a file.
+    """
+
+    filename: str = ""
+    """
+    Filename of the mesh.
+    """
+
+    @cached_property
+    def mesh(self) -> trimesh.Trimesh:
+        """
+        The mesh object.
+        """
+        mesh = trimesh.load_mesh(self.filename)
+        return mesh
+
+    def to_json(self) -> Dict[str, Any]:
+        json = {
+            **super().to_json(),
+            "mesh": self.mesh.to_dict(),
+            "scale": self.scale.to_json(),
+        }
+        json["type"] = json["type"].replace("FileMesh", "TriangleMesh")
+        return json
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self:
+        raise NotImplementedError(
+            f"{cls} does not support loading from JSON due to filenames across different systems."
+            f" Use TriangleMesh instead."
+        )
+
+
+@dataclass
+class TriangleMesh(Mesh):
+    """
+    A mesh shape defined by vertices and faces.
+    """
+
+    mesh: Optional[trimesh.Trimesh] = None
+    """
+    The loaded mesh object.
+    """
+
+    @cached_property
+    def file(self):
+        f = tempfile.NamedTemporaryFile(delete=False)
+        with open(f.name, "w") as fd:
+            fd.write(trimesh.exchange.stl.export_stl_ascii(self.mesh))
+        return f
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> TriangleMesh:
         mesh = trimesh.Trimesh(
             vertices=data["mesh"]["vertices"], faces=data["mesh"]["faces"]
         )

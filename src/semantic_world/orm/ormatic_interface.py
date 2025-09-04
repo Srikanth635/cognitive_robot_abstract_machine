@@ -406,7 +406,7 @@ class PrimitiveDAO(
 
 
 class MeshDAO(
-    ShapeDAO, DataAccessObject[semantic_world.world_description.geometry.Mesh]
+    ShapeDAO, DataAccessObject[semantic_world.world_description.geometry.FileMesh]
 ):
     __tablename__ = "MeshDAO"
 

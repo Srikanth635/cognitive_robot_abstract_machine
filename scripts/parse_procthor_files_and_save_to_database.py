@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import os
 import re
 import time
@@ -32,6 +33,9 @@ def remove_root_and_move_children_into_new_worlds(world: World) -> List[World]:
     Each child that has a parent with "grp" in its name and does not have "grp" in its own name
     will be moved to a new world, (sometimes groups are nested).
     The new world's name will be set to the child's name.
+
+    :param world: The World object to process. This world will be unusable after this operation.
+    :return: List of new World objects created from the root's children.
     """
     root_children = [
         entity
@@ -52,10 +56,16 @@ def remove_root_and_move_children_into_new_worlds(world: World) -> List[World]:
     return worlds
 
 
-def replace_dresser_meshes_with_factories(worlds, dresser_pattern) -> List[World]:
+def replace_dresser_meshes_with_factories(
+    worlds: List[World], dresser_pattern: re.Pattern[str]
+) -> List[World]:
     """
     Replace dresser meshes in the given worlds with dresser factories.
     A dresser is identified by its name matching the given dresser_pattern regex.
+
+    :param worlds: List of World objects to process.
+    :param dresser_pattern: A compiled regex pattern to identify dresser bodies.
+    :return: List of World objects with dresser meshes replaced by factories.
     """
     procthor_factory_replace_pipeline = Pipeline(
         [
@@ -72,9 +82,9 @@ def replace_dresser_meshes_with_factories(worlds, dresser_pattern) -> List[World
     return worlds
 
 
-def parse_fbx_file_to_world_mapping_daos(fbx_file) -> List[WorldMappingDAO]:
+def parse_fbx_file_to_world_mapping_daos(fbx_file_path: str) -> List[WorldMappingDAO]:
     """
-    Parse a Procthor FBX file and return a list of WorldMappingDAO objects.
+    Parse a Procthor FBX file path and return a list of WorldMappingDAO objects.
     """
     dresser_pattern = re.compile(r"^.*dresser_(?!drawer\b).*$", re.IGNORECASE)
 
@@ -83,11 +93,10 @@ def parse_fbx_file_to_world_mapping_daos(fbx_file) -> List[WorldMappingDAO]:
             CenterLocalGeometryPreserveWorldPose(),
             BodyFilter(lambda x: not x.name.name.startswith("PS_")),
             BodyFilter(lambda x: not x.name.name.endswith("slice")),
-            # COACDMeshDecomposer(search_iterations=60, max_convex_hull=1)
         ]
     )
 
-    parser = FBXParser(fbx_file)
+    parser = FBXParser(fbx_file_path)
     world = parser.parse()
     world = pipeline.apply(world)
 
@@ -98,7 +107,10 @@ def parse_fbx_file_to_world_mapping_daos(fbx_file) -> List[WorldMappingDAO]:
     return [to_dao(world) for world in worlds]
 
 
-def parse_procthor_files_and_safe_to_database():
+def parse_procthor_files_and_save_to_database(
+    fbx_file_pattern: re.Pattern[str] = re.compile(r".*_grp\.fbx$", re.IGNORECASE),
+    drop_existing_database: bool = False,
+):
     """
     Parse all Procthor FBX files and store the resulting WorldMappingDAO objects in a database.
     Currently, only grp files are parsed, and some files and names are excluded.
@@ -121,8 +133,6 @@ def parse_procthor_files_and_safe_to_database():
         len(files) > 0
     ), f"No files found in {procthor_root}, please set the correct path to the ai2thor directory."
 
-    pattern = re.compile(r".*_grp\.fbx$", re.IGNORECASE)
-
     excluded_words = [
         "FirstPersonCharacter",
         "SourceFiles_Procedural",
@@ -133,15 +143,15 @@ def parse_procthor_files_and_safe_to_database():
     fbx_files = [
         f
         for f in files
-        if not any([e in f for e in excluded_words]) and pattern.fullmatch(f)
+        if not any([e in f for e in excluded_words]) and fbx_file_pattern.fullmatch(f)
     ]
     # Create database engine and session
     engine = create_engine(f"mysql+pymysql://{semantic_world_database_uri}")
     session = Session(engine)
 
-    # update schema
-    drop_database(engine)
-    Base.metadata.create_all(engine)
+    if drop_existing_database:
+        drop_database(engine)
+        Base.metadata.create_all(engine)
 
     start_time = time.time_ns()
 
@@ -164,4 +174,4 @@ def parse_procthor_files_and_safe_to_database():
 
 
 if __name__ == "__main__":
-    parse_procthor_files_and_safe_to_database()
+    parse_procthor_files_and_save_to_database()

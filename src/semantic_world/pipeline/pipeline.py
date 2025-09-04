@@ -1,19 +1,16 @@
 import logging
 import re
 from abc import ABC
-from dataclasses import dataclass, field
-from enum import StrEnum
-from typing import List, Optional, Callable
+from dataclasses import dataclass
+from typing import List, Callable
 
-import coacd
 import numpy as np
-import trimesh
 
 from ..spatial_types import Point3
 from ..spatial_types.spatial_types import TransformationMatrix
 from ..views.factories import ViewFactory
 from ..world import World
-from ..world_description.geometry import TriangleMesh, Mesh
+from ..world_description.geometry import TriangleMesh, FileMesh
 from ..world_description.world_entity import Body
 
 
@@ -82,7 +79,7 @@ class CenterLocalGeometryPreserveWorldPose(Step):
             vertices = []
 
             for coll in body.collision:
-                if isinstance(coll, (Mesh, TriangleMesh)):
+                if isinstance(coll, (FileMesh, TriangleMesh)):
                     mesh = coll.mesh
                     if mesh.vertices.shape[0] > 0:
                         vertices.append(mesh.vertices.copy())
@@ -100,7 +97,7 @@ class CenterLocalGeometryPreserveWorldPose(Step):
             center = (mins + maxs) / 2.0
 
             for coll in body.collision:
-                if isinstance(coll, (Mesh, TriangleMesh)):
+                if isinstance(coll, (FileMesh, TriangleMesh)):
                     m = coll.mesh
                     if m.vertices.shape[0] > 0:
                         m.vertices -= center
@@ -120,171 +117,6 @@ class CenterLocalGeometryPreserveWorldPose(Step):
                 child.parent_connection.origin_expression = (
                     old_origin_T_new_origin.inverse() @ old_origin_T_child_origin
                 )
-        return world
-
-
-class ApproximationMode(StrEnum):
-    """
-    Approximation shape type
-    """
-
-    BOX = "box"
-    CONVEX_HULL = "ch"
-
-
-class PreprocessingMode(StrEnum):
-    """
-    Manifold preprocessing mode
-    """
-
-    AUTO = "auto"
-    """
-    Automatically chose based on the geometry.
-    """
-
-    ON = "on"
-    """
-    Force turn on the pre-processing
-    """
-
-    OFF = "off"
-    """
-    Force turn off the pre-processing
-    """
-
-
-@dataclass
-class COACDMeshDecomposer(Step):
-    """
-    COACDMeshDecomposer is a class for decomposing complex 3D meshes into simpler convex components
-    using the COACD (Convex Optimization for Approximate Convex Decomposition) algorithm. It is
-    designed to preprocess, analyze, and process 3D meshes with a focus on efficiency and scalability
-    in fields such as robotics, gaming, and simulation.
-
-    Check https://github.com/SarahWeiii/CoACD for further details.
-    """
-
-    threshold: float = 0.05
-    """
-    Concavity threshold for terminating the decomposition (0.01 - 1)
-    """
-
-    max_convex_hull: Optional[int] = None
-    """
-    Maximum number of convex hulls in the result. 
-    Works only when merge is enabled (may introduce convex hull with a concavity larger than the threshold)
-    """
-
-    preprocess_mode: PreprocessingMode = PreprocessingMode.AUTO
-    """
-    Manifold preprocessing mode.
-    """
-
-    preprocess_resolution: int = 50
-    """
-    Resolution for manifold preprocess (20~100)
-    """
-
-    resolution: int = 2000
-    """
-    Sampling resolution for Hausdorff distance calculation (1 000 - 10 000)
-    """
-
-    search_nodes: int = 20
-    """
-    Max number of child nodes in the monte carlo tree search (10 - 40).
-    """
-
-    search_iterations: int = 150
-    """
-    Number of search iterations in the monte carlo tree search (60 - 2000).
-    """
-
-    search_depth: int = 3
-    """
-    Maximum search depth in the monte carlo tree search (2 - 7).
-    """
-
-    pca: bool = False
-    """
-    Enable PCA pre-processing
-    """
-
-    merge: bool = True
-    """
-    Enable merge postprocessing.
-    """
-
-    max_convex_hull_vertices: Optional[int] = None
-    """
-    Maximum vertex value for each convex hull, only when decimate is enabled.
-    """
-
-    extrude_margin: Optional[float] = None
-    """
-    Extrude margin, only when extrude is enabled
-    """
-
-    approximation_mode: ApproximationMode = ApproximationMode.BOX
-    """
-    Approximation mode to use.
-    """
-
-    seed: int = field(default_factory=lambda: np.random.randint(2**32))
-    """
-    Random seed used for sampling.
-    """
-
-    def _apply(self, world: World) -> World:
-        for body in world.bodies:
-            new_geometry = []
-
-            for shape in body.visual:
-                if isinstance(shape, (Mesh, TriangleMesh)):
-                    mesh = shape.mesh
-
-                    if shape.scale.x == shape.scale.y == shape.scale.z:
-                        mesh.apply_scale(shape.scale.x)
-                    else:
-                        logging.warning(
-                            "Ambiguous scale for mesh, using uniform scale only."
-                        )
-
-                    mesh = coacd.Mesh(mesh.vertices, mesh.faces)
-                    if self.max_convex_hull is not None:
-                        max_convex_hull = self.max_convex_hull
-                    else:
-                        max_convex_hull = -1
-                    parts = coacd.run_coacd(
-                        mesh=mesh,
-                        apx_mode=str(self.approximation_mode),
-                        threshold=self.threshold,
-                        max_convex_hull=max_convex_hull,
-                        preprocess_mode=str(self.preprocess_mode),
-                        resolution=self.resolution,
-                        mcts_nodes=self.search_nodes,
-                        mcts_iterations=self.search_iterations,
-                        mcts_max_depth=self.search_depth,
-                        pca=self.pca,
-                        merge=self.merge,
-                        decimate=self.max_convex_hull_vertices is not None,
-                        max_ch_vertex=self.max_convex_hull_vertices or 256,
-                        extrude=self.extrude_margin is not None,
-                        extrude_margin=self.extrude_margin or 0.01,
-                        seed=self.seed,
-                    )
-
-                    for vs, fs in parts:
-                        new_geometry.append(
-                            TriangleMesh(
-                                mesh=trimesh.Trimesh(vs, fs), origin=shape.origin
-                            )
-                        )
-                else:
-                    new_geometry.append(shape)
-
-            body.collision = new_geometry
-
         return world
 
 

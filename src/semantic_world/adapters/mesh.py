@@ -9,7 +9,7 @@ from fbxloader.nodes import Mesh as FBXMesh, Object3D, Scene
 
 from ..spatial_types.spatial_types import RotationMatrix
 from ..world_description.connections import FixedConnection
-from ..world_description.geometry import Mesh, TriangleMesh
+from ..world_description.geometry import FileMesh, TriangleMesh
 from ..datastructures.prefixed_name import PrefixedName
 from ..spatial_types import TransformationMatrix, Point3
 from ..world import World
@@ -35,7 +35,7 @@ class MeshParser:
         """
         file_name = os.path.basename(self.file_path)
 
-        mesh_shape = Mesh(origin=TransformationMatrix(), filename=self.file_path)
+        mesh_shape = FileMesh(origin=TransformationMatrix(), filename=self.file_path)
         body = Body(
             name=PrefixedName(file_name), collision=[mesh_shape], visual=[mesh_shape]
         )
@@ -114,12 +114,25 @@ class CoordinateAxis(Enum):
 
 @dataclass
 class FBXGlobalSettings:
+    """
+    Class to handle FBX global settings, particularly the coordinate system.
+    This class extracts the up, front, and coordinate axes from the FBX file and provides
+    a method to get the transformation matrix from FBX to Semantic World coordinate system.
+    """
 
     fbx_loader: fbxloader.FBXLoader
+    """
+    The FBXLoader instance containing the loaded FBX file.
+    """
 
     up_axis: CoordinateAxis = field(init=False)
+    """The up axis of the FBX file."""
+
     front_axis: CoordinateAxis = field(init=False)
+    """The front axis of the FBX file."""
+
     coord_axis: CoordinateAxis = field(init=False)
+    """The final, third axis of the FBX file, called the coordinate axis."""
 
     def __post_init__(self):
         fbx = self.fbx_loader
