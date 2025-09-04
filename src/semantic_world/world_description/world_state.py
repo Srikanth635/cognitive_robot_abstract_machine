@@ -1,9 +1,9 @@
-from typing import MutableMapping, List, Dict
+from typing_extensions import MutableMapping, List, Dict
 
 import numpy as np
 
-from .prefixed_name import PrefixedName
-from .spatial_types.derivatives import Derivatives
+from ..datastructures.prefixed_name import PrefixedName
+from ..spatial_types.derivatives import Derivatives
 
 
 class WorldStateView:

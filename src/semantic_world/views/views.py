@@ -3,15 +3,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 import numpy as np
+from entity_query_language import symbol
 from probabilistic_model.probabilistic_circuit.rx.helper import uniform_measure_of_event
 from typing_extensions import List
 
-from ..geometry import BoundingBoxCollection
-from ..prefixed_name import PrefixedName
+from ..world_description.geometry import BoundingBoxCollection
+from ..datastructures.prefixed_name import PrefixedName
 from ..spatial_types import Point3
-from ..variables import SpatialVariables
-from ..world import View, Body
-from ..world_entity import Region
+from ..datastructures.variables import SpatialVariables
+from ..world_description.world_entity import View, Body, Region
 
 
 @dataclass
@@ -32,6 +32,7 @@ class HasDoors:
     doors: List[Door] = field(default_factory=list, hash=False)
 
 
+@symbol
 @dataclass(unsafe_hash=True)
 class Handle(View):
     body: Body
@@ -41,6 +42,7 @@ class Handle(View):
             self.name = PrefixedName(str(self.body.name), self.__class__.__name__)
 
 
+@symbol
 @dataclass(unsafe_hash=True)
 class Container(View):
     body: Body
@@ -177,6 +179,7 @@ class DoubleDoor(EntryWay):
             self.name = PrefixedName(str(self.body.name), self.__class__.__name__)
 
 
+@symbol
 @dataclass(unsafe_hash=True)
 class Drawer(Components):
     container: Container

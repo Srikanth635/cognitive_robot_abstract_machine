@@ -8,17 +8,16 @@ from ormatic.utils import drop_database
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from semantic_world.connections import Connection6DoF
+from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.orm.ormatic_interface import Base, WorldMappingDAO
-from semantic_world.prefixed_name import PrefixedName
 from semantic_world.utils import rclpy_installed
 from semantic_world.world import World
-from semantic_world.world_entity import Body
+from semantic_world.world_description.connections import Connection6DoF
+from semantic_world.world_description.world_entity import Body
 
 if rclpy_installed():
     import rclpy
     from rclpy.executors import SingleThreadedExecutor
-    from uuid import uuid4
     from semantic_world.adapters.ros.world_synchronizer import (
         StateSynchronizer,
         ModelReloadSynchronizer,

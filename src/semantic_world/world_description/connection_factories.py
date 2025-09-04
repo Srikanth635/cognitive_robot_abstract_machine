@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Self, Dict, Any, TypeVar, Generic
+from typing_extensions import Self, Dict, Any, TypeVar
 
 from ormatic.dao import HasGeneric
 from random_events.utils import SubclassJSONSerializer, recursive_subclasses
@@ -11,14 +11,13 @@ from .connections import (
     RevoluteConnection,
     Connection6DoF,
 )
-from .degree_of_freedom import DegreeOfFreedom
 from .geometry import transformation_from_json, transformation_to_json
-from .prefixed_name import PrefixedName
-from .spatial_types.spatial_types import TransformationMatrix
-from .spatial_types.symbol_manager import symbol_manager
-from .world import World
+from ..datastructures.prefixed_name import PrefixedName
+from ..spatial_types.spatial_types import TransformationMatrix
+from ..spatial_types.symbol_manager import symbol_manager
+from ..world import World
 from .world_entity import Connection
-from . import spatial_types as cas
+from .. import spatial_types as cas
 
 T = TypeVar("T")
 

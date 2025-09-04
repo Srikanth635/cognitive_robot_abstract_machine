@@ -1,24 +1,19 @@
 import os
-from typing import Tuple
+from typing_extensions import Tuple
 
 import pytest
 
 from .adapters.urdf import URDFParser
-from .connections import (
-    Connection6DoF,
-    PrismaticConnection,
-    RevoluteConnection,
-    FixedConnection,
-    OmniDrive,
-)
-from .degree_of_freedom import DegreeOfFreedom
-from .geometry import Box, Scale, Sphere
-from .prefixed_name import PrefixedName
+from .world_description.connections import (Connection6DoF, PrismaticConnection, RevoluteConnection,
+                                            FixedConnection, OmniDrive)
+from .world_description.degree_of_freedom import DegreeOfFreedom
+from .world_description.geometry import Box, Scale, Sphere
+from .datastructures.prefixed_name import PrefixedName
 from .spatial_types import TransformationMatrix
-from .spatial_types.derivatives import Derivatives, DerivativeMap
+from .spatial_types.derivatives import DerivativeMap
 from .spatial_types.spatial_types import Vector3
 from .world import World
-from .world_entity import Body
+from .world_description.world_entity import Body
 
 
 @pytest.fixture

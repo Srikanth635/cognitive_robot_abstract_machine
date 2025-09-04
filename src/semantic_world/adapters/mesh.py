@@ -7,13 +7,12 @@ import numpy as np
 import trimesh
 from fbxloader.nodes import Mesh as FBXMesh, Object3D, Scene
 
-from ..connections import Connection6DoF, FixedConnection
 from ..spatial_types.spatial_types import RotationMatrix
-from ..geometry import Mesh, TriangleMesh
-from ..prefixed_name import PrefixedName
-from ..spatial_types.spatial_types import TransformationMatrix, Point3
+from ..world_description.geometry import Mesh, TriangleMesh
+from ..datastructures.prefixed_name import PrefixedName
+from ..spatial_types import TransformationMatrix, Point3
 from ..world import World
-from ..world_entity import Body
+from ..world_description.world_entity import Body
 
 
 @dataclass

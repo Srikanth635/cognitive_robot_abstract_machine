@@ -2,21 +2,20 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, TYPE_CHECKING, Union
+from typing_extensions import List, TYPE_CHECKING, Union
 
 import numpy as np
 
-from . import spatial_types as cas
+from .. import spatial_types as cas
 from .degree_of_freedom import DegreeOfFreedom
-from .prefixed_name import PrefixedName
-from .spatial_types.derivatives import DerivativeMap
-from .spatial_types.math import quaternion_from_rotation_matrix
-from .types import NpMatrix4x4
-from .world_entity import CollisionCheckingConfig
-from .world_entity import Connection
+from ..datastructures.prefixed_name import PrefixedName
+from ..spatial_types.derivatives import DerivativeMap
+from ..spatial_types.math import quaternion_from_rotation_matrix
+from ..datastructures.types import NpMatrix4x4
+from .world_entity import CollisionCheckingConfig, Connection
 
 if TYPE_CHECKING:
-    from .world import World
+    from ..world import World
 
 
 class Has1DOFState:

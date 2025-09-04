@@ -1,19 +1,19 @@
 import unittest
 
-from semantic_world.connection_factories import (
+from semantic_world.world_description.connection_factories import (
     ConnectionFactory,
     FixedConnectionFactory,
 )
-from semantic_world.connections import (
+from semantic_world.world_description.connections import (
     FixedConnection,
     Connection6DoF,
     PrismaticConnection,
 )
-from semantic_world.prefixed_name import PrefixedName
+from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.spatial_types.spatial_types import Vector3
 from semantic_world.world import World
-from semantic_world.world_entity import Body
-from semantic_world.world_modification import (
+from semantic_world.world_description.world_entity import Body
+from semantic_world.world_description.world_modification import (
     WorldModelModificationBlock,
     UnknownWorldModification,
     AddBodyModification,

@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing_extensions import Tuple
 from unittest.mock import Mock
 
 import numpy as np

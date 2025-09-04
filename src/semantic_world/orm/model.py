@@ -1,21 +1,22 @@
 from dataclasses import dataclass, field
 from io import BytesIO
-from typing import List
-from typing import Optional
+from typing_extensions import List
+from typing_extensions import Optional
 
 import trimesh
 import trimesh.exchange.stl
 from ormatic.dao import AlternativeMapping
 from sqlalchemy import TypeDecorator, types
 
-from ..degree_of_freedom import DegreeOfFreedom
-from ..prefixed_name import PrefixedName
+from ..world_description.degree_of_freedom import DegreeOfFreedom
+from ..datastructures.prefixed_name import PrefixedName
 from ..spatial_types import RotationMatrix, Vector3, Point3, TransformationMatrix
 from ..spatial_types.derivatives import DerivativeMap
 from ..spatial_types.spatial_types import Quaternion
 from ..spatial_types.symbol_manager import symbol_manager
 from ..world import World, Body
-from ..world_entity import Connection, View, KinematicStructureEntity
+from ..world_description.connections import Connection
+from ..world_description.world_entity import View, KinematicStructureEntity
 
 
 @dataclass
