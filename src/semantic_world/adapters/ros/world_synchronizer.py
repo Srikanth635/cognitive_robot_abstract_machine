@@ -3,10 +3,14 @@ import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from functools import cached_property
+from typing import Dict, Any, Self, ClassVar
+
+from random_events.utils import SubclassJSONSerializer
 from typing_extensions import Callable
 
 import numpy as np
 import rclpy  # type: ignore
+import std_msgs.msg
 from rclpy.node import Node as RosNode
 import semantic_world_msgs.msg
 from rclpy.publisher import Publisher
@@ -18,7 +22,86 @@ from sqlalchemy.orm import Session
 from ...orm.ormatic_interface import *
 from ...datastructures.prefixed_name import PrefixedName
 from ...world import World
-from ...world_description.world_modification import (WorldModelModificationBlock, WorldModelModification, )
+from ...world_description.world_modification import (
+    WorldModelModificationBlock,
+    WorldModelModification,
+)
+
+
+@dataclass
+class MetaData(SubclassJSONSerializer):
+    """
+    Class for data describing the origin of a message.
+    """
+
+    node_name: str
+    """
+    The name of the node that published this message
+    """
+
+    process_id: int
+    """
+    The id of the process that published this message
+    """
+
+    object_id: int
+    """
+    The id of the object in the process that issues this publishing call
+    """
+
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            **super().to_json(),
+            "node_name": self.node_name,
+            "process_id": self.process_id,
+            "object_id": self.object_id,
+        }
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self:
+        return cls(
+            node_name=data["node_name"],
+            process_id=data["process_id"],
+            object_id=data["object_id"],
+        )
+
+
+@dataclass
+class WorldStateUpdate(SubclassJSONSerializer):
+    """
+    Class describing the updates of free varialbes of a world state.
+    """
+
+    meta_data: MetaData
+    """
+    Message origin meta data.
+    """
+
+    prefixed_names: List[PrefixedName]
+    """
+    The prefixed names of the changed free variables.
+    """
+
+    states: List[float]
+    """
+    The states of the changed free variables.
+    """
+
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            **super().to_json(),
+            "meta_data": self.meta_data.to_json(),
+            "prefixed_names": [n.to_json() for n in self.prefixed_names],
+            "states": list(self.states),
+        }
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self:
+        return cls(
+            meta_data=MetaData.from_json(data["meta_data"]),
+            prefixed_names=[PrefixedName.from_json(n) for n in data["prefixed_names"]],
+            states=data["states"],
+        )
 
 
 @dataclass
@@ -38,7 +121,7 @@ class Synchronizer(ABC):
     The world to synchronize.
     """
 
-    topic_name: str = None
+    topic_name: Optional[str] = None
     """
     The topic name of the publisher and subscriber.
     """
@@ -54,11 +137,11 @@ class Synchronizer(ABC):
     """
 
     @cached_property
-    def meta_data(self) -> semantic_world_msgs.msg.MetaData:
+    def meta_data(self) -> MetaData:
         """
         The metadata of the synchronizer which can be used to compare origins of messages.
         """
-        return semantic_world_msgs.msg.MetaData(
+        return MetaData(
             node_name=self.node.get_name(), process_id=os.getpid(), object_id=id(self)
         )
 
@@ -89,6 +172,8 @@ class SynchronizerOnCallback(Synchronizer, ABC):
     Additionally, ensures that the callback is cleaned up on close.
     """
 
+    message_type: ClassVar[Optional[Type[SubclassJSONSerializer]]] = None
+
     _callback: Optional[Callable] = field(init=False, default=None)
     """
     The callback function called by the world.
@@ -106,17 +191,18 @@ class SynchronizerOnCallback(Synchronizer, ABC):
     def __post_init__(self):
         self._callback = lambda: self.world_callback_handler()
 
-    def subscription_callback(self, msg):
+    def subscription_callback(self, msg: std_msgs.msg.String):
         """
         Wrap the origin subscription callback by self-skipping and disabling the next world callback.
         """
+        msg = self.message_type.from_json(json.loads(msg.data))
         if msg.meta_data == self.meta_data:
             return
         self._skip_next_world_callback = True
         self._subscription_callback(msg)
 
     @abstractmethod
-    def _subscription_callback(self, msg):
+    def _subscription_callback(self, msg: message_type):
         """
         Callback function called when receiving new messages from other publishers.
         """
@@ -153,6 +239,8 @@ class StateSynchronizer(SynchronizerOnCallback):
     Synchronizes the state (values of free variables) of the semantic world with the associated ROS topic.
     """
 
+    message_type: ClassVar[Optional[Type[SubclassJSONSerializer]]] = WorldStateUpdate
+
     topic_name: str = "/semantic_world/world_state"
 
     previous_world_state_data: np.ndarray = field(init=False, default=None)
@@ -164,10 +252,10 @@ class StateSynchronizer(SynchronizerOnCallback):
         super().__post_init__()
         self.update_previous_world_state()
         self.publisher = self.node.create_publisher(
-            semantic_world_msgs.msg.WorldState, topic=self.topic_name, qos_profile=10
+            std_msgs.msg.String, topic=self.topic_name, qos_profile=10
         )
         self.subscriber = self.node.create_subscription(
-            semantic_world_msgs.msg.WorldState,
+            std_msgs.msg.String,
             topic=self.topic_name,
             callback=self.subscription_callback,
             qos_profile=10,
@@ -180,23 +268,17 @@ class StateSynchronizer(SynchronizerOnCallback):
         """
         self.previous_world_state_data = np.copy(self.world.state.positions)
 
-    def _subscription_callback(self, msg: semantic_world_msgs.msg.WorldState):
+    def _subscription_callback(self, msg: message_type):
         """
         Update the world state with the provided message.
 
         :param msg: The message containing the new state information.
         """
         # Parse incoming states: WorldState has 'states' only
-        indices = [
-            self.world.state._index[
-                PrefixedName(dof_state.name.name, dof_state.name.prefix)
-            ]
-            for dof_state in msg.states
-        ]
-        positions = [dof_state.position for dof_state in msg.states]
+        indices = [self.world.state._index[n] for n in msg.prefixed_names]
 
         if indices:
-            self.world.state.data[0, indices] = np.asarray(positions, dtype=float)
+            self.world.state.data[0, indices] = np.asarray(msg.states, dtype=float)
             self.update_previous_world_state()
             self.world.notify_state_change()
 
@@ -217,21 +299,13 @@ class StateSynchronizer(SynchronizerOnCallback):
         if not changes:
             return
 
-        msg = semantic_world_msgs.msg.WorldState(
-            version=self.world._state_version,
-            states=[
-                semantic_world_msgs.msg.DegreeOfFreedomState(
-                    name=semantic_world_msgs.msg.PrefixedName(
-                        name=key.name, prefix=key.prefix
-                    ),
-                    position=value,
-                )
-                for key, value in changes.items()
-            ],
+        msg = WorldStateUpdate(
+            prefixed_names=list(changes.keys()),
+            states=list(changes.values()),
             meta_data=self.meta_data,
         )
         self.update_previous_world_state()
-        self.publisher.publish(msg)
+        self.publisher.publish(std_msgs.msg.String(data=json.dumps(msg.to_json())))
 
 
 @dataclass
