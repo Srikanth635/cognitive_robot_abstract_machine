@@ -3,7 +3,7 @@ import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from functools import cached_property
-from typing import Dict, Any, Self, ClassVar
+from typing import ClassVar
 
 from random_events.utils import SubclassJSONSerializer
 from typing_extensions import Callable
@@ -19,8 +19,8 @@ from ormatic.dao import to_dao
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .messages import MetaData, WorldStateUpdate, Message, ModificationBlock, LoadModel
 from ...orm.ormatic_interface import *
-from ...datastructures.prefixed_name import PrefixedName
 from ...world import World
 from ...world_description.world_modification import (
     WorldModelModificationBlock,
@@ -29,86 +29,11 @@ from ...world_description.world_modification import (
 
 
 @dataclass
-class MetaData(SubclassJSONSerializer):
-    """
-    Class for data describing the origin of a message.
-    """
-
-    node_name: str
-    """
-    The name of the node that published this message
-    """
-
-    process_id: int
-    """
-    The id of the process that published this message
-    """
-
-    object_id: int
-    """
-    The id of the object in the process that issues this publishing call
-    """
-
-    def to_json(self) -> Dict[str, Any]:
-        return {
-            **super().to_json(),
-            "node_name": self.node_name,
-            "process_id": self.process_id,
-            "object_id": self.object_id,
-        }
-
-    @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(
-            node_name=data["node_name"],
-            process_id=data["process_id"],
-            object_id=data["object_id"],
-        )
-
-
-@dataclass
-class WorldStateUpdate(SubclassJSONSerializer):
-    """
-    Class describing the updates of free varialbes of a world state.
-    """
-
-    meta_data: MetaData
-    """
-    Message origin meta data.
-    """
-
-    prefixed_names: List[PrefixedName]
-    """
-    The prefixed names of the changed free variables.
-    """
-
-    states: List[float]
-    """
-    The states of the changed free variables.
-    """
-
-    def to_json(self) -> Dict[str, Any]:
-        return {
-            **super().to_json(),
-            "meta_data": self.meta_data.to_json(),
-            "prefixed_names": [n.to_json() for n in self.prefixed_names],
-            "states": list(self.states),
-        }
-
-    @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(
-            meta_data=MetaData.from_json(data["meta_data"]),
-            prefixed_names=[PrefixedName.from_json(n) for n in data["prefixed_names"]],
-            states=data["states"],
-        )
-
-
-@dataclass
 class Synchronizer(ABC):
     """
-    Synchronizer class to manage world synchronizations between processes running semantic world.
+    Abstract Synchronizer class to manage world synchronizations between processes running semantic world.
     It manages publishers and subscribers, ensuring proper cleanup after use.
+    The communication is JSON string based.
     """
 
     node: RosNode
@@ -136,6 +61,19 @@ class Synchronizer(ABC):
     The subscriber to the world state.
     """
 
+    message_type: ClassVar[Optional[Type[SubclassJSONSerializer]]] = None
+
+    def __post_init__(self):
+        self.publisher = self.node.create_publisher(
+            std_msgs.msg.String, topic=self.topic_name, qos_profile=10
+        )
+        self.subscriber = self.node.create_subscription(
+            std_msgs.msg.String,
+            topic=self.topic_name,
+            callback=self.subscription_callback,
+            qos_profile=10,
+        )
+
     @cached_property
     def meta_data(self) -> MetaData:
         """
@@ -148,6 +86,9 @@ class Synchronizer(ABC):
     @abstractmethod
     def subscription_callback(self, msg):
         raise NotImplementedError
+
+    def publish(self, msg: Message):
+        self.publisher.publish(std_msgs.msg.String(data=json.dumps(msg.to_json())))
 
     def close(self):
         """
@@ -172,8 +113,6 @@ class SynchronizerOnCallback(Synchronizer, ABC):
     Additionally, ensures that the callback is cleaned up on close.
     """
 
-    message_type: ClassVar[Optional[Type[SubclassJSONSerializer]]] = None
-
     _callback: Optional[Callable] = field(init=False, default=None)
     """
     The callback function called by the world.
@@ -189,6 +128,7 @@ class SynchronizerOnCallback(Synchronizer, ABC):
     """
 
     def __post_init__(self):
+        super().__post_init__()
         self._callback = lambda: self.world_callback_handler()
 
     def subscription_callback(self, msg: std_msgs.msg.String):
@@ -202,7 +142,7 @@ class SynchronizerOnCallback(Synchronizer, ABC):
         self._subscription_callback(msg)
 
     @abstractmethod
-    def _subscription_callback(self, msg: message_type):
+    def _subscription_callback(self, msg):
         """
         Callback function called when receiving new messages from other publishers.
         """
@@ -251,15 +191,6 @@ class StateSynchronizer(SynchronizerOnCallback):
     def __post_init__(self):
         super().__post_init__()
         self.update_previous_world_state()
-        self.publisher = self.node.create_publisher(
-            std_msgs.msg.String, topic=self.topic_name, qos_profile=10
-        )
-        self.subscriber = self.node.create_subscription(
-            std_msgs.msg.String,
-            topic=self.topic_name,
-            callback=self.subscription_callback,
-            qos_profile=10,
-        )
         self.world.state_change_callbacks.append(self._callback)
 
     def update_previous_world_state(self):
@@ -305,7 +236,7 @@ class StateSynchronizer(SynchronizerOnCallback):
             meta_data=self.meta_data,
         )
         self.update_previous_world_state()
-        self.publisher.publish(std_msgs.msg.String(data=json.dumps(msg.to_json())))
+        self.publish(msg)
 
 
 @dataclass
@@ -314,46 +245,25 @@ class ModelSynchronizer(SynchronizerOnCallback):
     Synchronizes the model (addition/removal of bodies/DOFs/connections) with the associated ROS topic.
     """
 
+    message_type: ClassVar[Type[SubclassJSONSerializer]] = ModificationBlock
     topic_name: str = "/semantic_world/world_model"
 
     def __post_init__(self):
         super().__post_init__()
-        self.publisher = self.node.create_publisher(
-            semantic_world_msgs.msg.WorldModelModificationBlock,
-            topic=self.topic_name,
-            qos_profile=10,
-        )
-        self.subscriber = self.node.create_subscription(
-            semantic_world_msgs.msg.WorldModelModificationBlock,
-            topic=self.topic_name,
-            callback=self.subscription_callback,
-            qos_profile=10,
-        )
         self.world.model_change_callbacks.append(self._callback)
 
-    def _subscription_callback(
-        self, msg: semantic_world_msgs.msg.WorldModelModificationBlock
-    ):
-        changes = WorldModelModificationBlock(
-            modifications=[
-                WorldModelModification.from_json(json.loads(m))
-                for m in msg.modifications
-            ]
-        )
-        changes.apply(self.world)
+    def _subscription_callback(self, msg: message_type):
+        msg.modifications.apply(self.world)
 
     def world_callback(self):
         latest_changes = WorldModelModificationBlock.from_modifications(
             self.world._atomic_modifications[-1]
         )
-        msg = semantic_world_msgs.msg.WorldModelModificationBlock(
-            version=self.world._model_version,
-            modifications=[
-                json.dumps(m.to_json()) for m in latest_changes.modifications
-            ],
+        msg = ModificationBlock(
             meta_data=self.meta_data,
+            modifications=latest_changes,
         )
-        self.publisher.publish(msg)
+        self.publish(msg)
 
 
 @dataclass
@@ -366,6 +276,8 @@ class ModelReloadSynchronizer(Synchronizer):
     to force all processes to load your world model. Note that this may take a couple of seconds.
     """
 
+    message_type: ClassVar[Type[SubclassJSONSerializer]] = LoadModel
+
     session: Session = None
     """
     The session used to perform persistence interaction. 
@@ -374,19 +286,8 @@ class ModelReloadSynchronizer(Synchronizer):
     topic_name: str = "/semantic_world/reload_model"
 
     def __post_init__(self):
+        super().__post_init__()
         assert self.session is not None
-        self.publisher = self.node.create_publisher(
-            semantic_world_msgs.msg.WorldModelReload,
-            topic=self.topic_name,
-            qos_profile=10,
-        )
-
-        self.subscriber = self.node.create_subscription(
-            semantic_world_msgs.msg.WorldModelReload,
-            topic=self.topic_name,
-            callback=self.subscription_callback,
-            qos_profile=10,
-        )
 
     def publish_reload_model(self):
         """
@@ -396,17 +297,17 @@ class ModelReloadSynchronizer(Synchronizer):
         dao: WorldMappingDAO = to_dao(self.world)
         self.session.add(dao)
         self.session.commit()
-        message = semantic_world_msgs.msg.WorldModelReload(
-            primary_key=dao.id, meta_data=self.meta_data
-        )
-        self.publisher.publish(message)
+        message = LoadModel(primary_key=dao.id, meta_data=self.meta_data)
+        self.publish(message)
 
-    def subscription_callback(self, msg: semantic_world_msgs.msg.WorldModelReload):
+    def subscription_callback(self, msg: std_msgs.msg.String):
         """
         Update the world with the new model by fetching it from the database.
 
         :param msg: The message containing the primary key of the model to be fetched.
         """
+
+        msg = LoadModel.from_json(json.loads(msg.data))
 
         if msg.meta_data == self.meta_data:
             return
