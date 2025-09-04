@@ -199,7 +199,7 @@ class StateSynchronizer(SynchronizerOnCallback):
         """
         self.previous_world_state_data = np.copy(self.world.state.positions)
 
-    def _subscription_callback(self, msg: message_type):
+    def _subscription_callback(self, msg: WorldStateUpdate):
         """
         Update the world state with the provided message.
 
