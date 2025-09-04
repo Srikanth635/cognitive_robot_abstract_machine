@@ -84,6 +84,11 @@ class XYZParser(MeshParser):
 
 @dataclass
 class CoordinateAxis(Enum):
+    """
+    Enum for coordinate axes with direction.
+    The value is a tuple of (axis_index, sign), where axis_index is 0 for X, 1 for Y, and 2 for Z,
+    and sign is 1 for positive direction and -1 for negative direction.
+    """
 
     X = (0, 1)
     NEGATIVE_X = (0, -1)
@@ -100,6 +105,7 @@ class CoordinateAxis(Enum):
                 return member
 
     def to_vector(self):
+        """Convert the CoordinateAxis to a 3D unit vector."""
         idx, sgn = self.value
         v = np.zeros(3)
         v[idx] = float(sgn)

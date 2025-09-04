@@ -25,17 +25,12 @@ class Step(ABC):
     Steps modify the World in-place, and return the modified World.
     """
 
-    world: Optional[World] = field(init=False, default=None)
-    """
-    World to be transformed by this Step. This is set when the Step is applied in a Pipeline.
-    """
-
-    def _apply(self) -> World:
+    def _apply(self, world: World) -> World:
         raise NotImplementedError()
 
-    def apply(self) -> World:
-        with self.world.modify_world():
-            return self._apply()
+    def apply(self, world: World) -> World:
+        with world.modify_world():
+            return self._apply(world)
 
 
 @dataclass
@@ -53,8 +48,7 @@ class Pipeline:
 
     def apply(self, world: World) -> World:
         for step in self.steps:
-            step.world = world
-            world = step.apply()
+            world = step.apply(world)
         return world
 
 
@@ -66,11 +60,11 @@ class BodyFilter(Step):
 
     condition: Callable[[Body], bool]
 
-    def _apply(self) -> World:
-        for body in self.world.bodies:
+    def _apply(self, world: World) -> World:
+        for body in world.bodies:
             if not self.condition(body):
-                self.world.remove_kinematic_structure_entity(body)
-        return self.world
+                world.remove_kinematic_structure_entity(body)
+        return world
 
 
 @dataclass
@@ -82,8 +76,8 @@ class CenterLocalGeometryPreserveWorldPose(Step):
     at (0, 0, 0), even through the collision meshes are not centered around that point.
     """
 
-    def _apply(self) -> World:
-        for body in self.world.bodies_topologically_sorted:
+    def _apply(self, world: World) -> World:
+        for body in world.bodies_topologically_sorted:
 
             vertices = []
 
@@ -121,14 +115,12 @@ class CenterLocalGeometryPreserveWorldPose(Step):
                 parent_T_old_origin @ old_origin_T_new_origin
             )
 
-            for child in self.world.compute_child_kinematic_structure_entities(body):
+            for child in world.compute_child_kinematic_structure_entities(body):
                 old_origin_T_child_origin = child.parent_connection.origin_expression
                 child.parent_connection.origin_expression = (
                     old_origin_T_new_origin.inverse() @ old_origin_T_child_origin
                 )
-
-        self.world._notify_model_change()
-        return self.world
+        return world
 
 
 class ApproximationMode(StrEnum):
@@ -243,8 +235,8 @@ class COACDMeshDecomposer(Step):
     Random seed used for sampling.
     """
 
-    def _apply(self) -> World:
-        for body in self.world.bodies:
+    def _apply(self, world: World) -> World:
+        for body in world.bodies:
             new_geometry = []
 
             for shape in body.visual:
@@ -293,7 +285,7 @@ class COACDMeshDecomposer(Step):
 
             body.collision = new_geometry
 
-        return self.world
+        return world
 
 
 @dataclass
@@ -314,10 +306,8 @@ class BodyFactoryReplace(Step):
     A callable that takes a Body and returns a ViewFactory to create the new structure.
     """
 
-    def _apply(self) -> World:
-        filtered_bodies = [
-            body for body in self.world.bodies if self.body_condition(body)
-        ]
+    def _apply(self, world: World) -> World:
+        filtered_bodies = [body for body in world.bodies if self.body_condition(body)]
 
         for body in filtered_bodies:
             factory = self.factory_creator(body)
@@ -325,15 +315,15 @@ class BodyFactoryReplace(Step):
             if parent_connection is None:
                 return factory.create()
 
-            for (
-                entity
-            ) in self.world.compute_descendent_child_kinematic_structure_entities(body):
-                self.world.remove_kinematic_structure_entity(entity)
+            for entity in world.compute_descendent_child_kinematic_structure_entities(
+                body
+            ):
+                world.remove_kinematic_structure_entity(entity)
 
-            self.world.remove_kinematic_structure_entity(body)
+            world.remove_kinematic_structure_entity(body)
 
             new_world = factory.create()
             parent_connection.child = new_world.root
-            self.world.merge_world(new_world, parent_connection)
+            world.merge_world(new_world, parent_connection)
 
-        return self.world
+        return world
