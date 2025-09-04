@@ -690,11 +690,12 @@ def get_world_by_asset_id(session: Session, asset_id: str) -> Optional[World]:
             world.name == other_possible_name,
         )
     )
-    logging.info("Querying name:", asset_id)
+    logging.info(f"Querying name: {asset_id}")
     try:
         world_mapping = eql_to_sql(expr, session).evaluate()
     except NoResultFound:
         try:
+            logging.info(f"Querying name: {other_possible_name}")
             world_mapping = eql_to_sql(expr2, session).evaluate()
         except NoResultFound:
             world_mapping = None

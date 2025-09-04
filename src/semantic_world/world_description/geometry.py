@@ -10,7 +10,6 @@ from typing_extensions import Optional, List, Iterator, TYPE_CHECKING, Dict, Any
 import numpy as np
 import trimesh
 import trimesh.exchange.stl
-from docutils.nodes import reference
 from random_events.interval import SimpleInterval, Bound
 from random_events.product_algebra import SimpleEvent, Event
 from random_events.utils import SubclassJSONSerializer
@@ -742,7 +741,7 @@ class BoundingBoxCollection:
     Dataclass for storing a collection of bounding boxes.
     """
 
-    reference_frame: KinematicStructureEntity
+    reference_frame: Optional[KinematicStructureEntity] = field(default=None)
     """
     The reference frame of the bounding boxes.
     """
@@ -863,7 +862,8 @@ class BoundingBoxCollection:
         :param shapes: The list of shapes.
         :return: The bounding box collection.
         """
-        assert len(shapes) > 0, "The list of shapes must not be empty."
+        if not shapes:
+            return cls(bounding_boxes=[])
         for shape in shapes:
             assert (
                 shape.origin.reference_frame == shapes[0].origin.reference_frame
