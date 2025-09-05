@@ -141,10 +141,14 @@ def get_semantic_world_directory_root(file_path: str) -> str:
 
     current_dir = os.path.dirname(os.path.abspath(file_path))
 
-    while current_dir != "/":
+    # Loop until we reach the root directory (cross-platform)
+    while True:
         if os.path.exists(os.path.join(current_dir, "pyproject.toml")):
             return current_dir
-        current_dir = os.path.dirname(current_dir)
+        parent_dir = os.path.dirname(current_dir)
+        if parent_dir == current_dir:
+            break
+        current_dir = parent_dir
 
     raise ValueError(
         f"Could not find pyproject.toml in any parent directory of {file_path}"
