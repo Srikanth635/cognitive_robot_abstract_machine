@@ -1,4 +1,4 @@
-# Semantic World User Guide
+# Overview
 
 ## Prerequisites
 You’ll need to know a bit of Python. For a refresher, see the [Python tutorial](https://docs.python.org/3/tutorial/).
@@ -14,7 +14,7 @@ The user guide is divided into multiple chapters teaching you the following topi
   - [](visualizing-worlds)
   - [](creating-custom-bodies)
 - Advanced Topics
-  - World state manipulation 
+  - [](world-state-manipulation)
   - World structure manipulation
   - Regions
   - Semantic annotations (Views)
