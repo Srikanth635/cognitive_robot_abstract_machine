@@ -23,10 +23,10 @@ First, we need to compose the path to your world file.
 import logging
 import os
 
-
+from semantic_world.utils import get_semantic_world_directory_root
 
 logging.disable(logging.CRITICAL)
-apartment = os.path.join(os.getcwd(), "..", "resources", "urdf", "apartment.urdf")
+apartment = os.path.join(get_semantic_world_directory_root(os.getcwd()), "resources", "urdf", "apartment.urdf")
 
 ```
 
