@@ -12,7 +12,7 @@ The user guide is divided into multiple chapters teaching you the following topi
 - Fundamental topics
   - [](loading-worlds)
   - [](visualizing-worlds)
-  - Creating custom bodies
+  - [](creating-custom-bodies)
 - Advanced Topics
   - World state manipulation 
   - World structure manipulation
