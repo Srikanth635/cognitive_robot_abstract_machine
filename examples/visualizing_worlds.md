@@ -33,7 +33,7 @@ world = MultiParser(apartment).parse()
 
 ```
 
-For the RVIZ2 way, ROS2 is needed. A caviat of this approach is that you have to manage the lifecycle of a ROS2 node yourself.
+For the RVIZ2 way, ROS2 is needed. A caveat of this approach is that you have to manage the lifecycle of a ROS2 node yourself.
 We recommend to put the spinning into sperate threads and just shutdown the thread when exiting the system.
 
 ```python
