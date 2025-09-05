@@ -93,7 +93,7 @@ drawer = the(
 ).evaluate()
 ```
 
-We can update the drawers state by altering the the free variables positon of its prismatic connection to the dresser.
+We can update the drawer's state by altering the free variables position of its prismatic connection to the dresser.
 
 ```python
 time.sleep(1)
