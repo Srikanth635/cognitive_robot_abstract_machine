@@ -127,3 +127,25 @@ def rclpy_installed() -> bool:
         return True
     except ImportError:
         return False
+
+
+def get_semantic_world_directory_root(file_path: str) -> str:
+    """
+    Get the root directory of the semantic world given a file path that lays in it.
+
+    :param file_path: Path to the file
+    :return: Root directory of the semantic world
+    """
+    if not os.path.exists(file_path):
+        raise ValueError(f"File {file_path} does not exist")
+
+    current_dir = os.path.dirname(os.path.abspath(file_path))
+
+    while current_dir != "/":
+        if os.path.exists(os.path.join(current_dir, "pyproject.toml")):
+            return current_dir
+        current_dir = os.path.dirname(current_dir)
+
+    raise ValueError(
+        f"Could not find pyproject.toml in any parent directory of {file_path}"
+    )
