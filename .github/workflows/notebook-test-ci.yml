@@ -34,7 +34,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt install python3-cffi
+        sudo apt install python3-cffi -y
         cd /opt/ros/semantic_world
         source /opt/ros/semantic_world-venv/bin/activate
         git submodule init

@@ -11,6 +11,7 @@ jupyter:
     language: python
     name: python3
 ---
+
 (world-state-manipulation)=
 # World State Manipulation
 
@@ -43,6 +44,7 @@ from semantic_world.views.factories import (
     Direction,
 )
 from semantic_world.views.views import Drawer
+from semantic_world.world_description.degree_of_freedom import DegreeOfFreedom
 from semantic_world.world_description.geometry import Scale
 
 rclpy.init()
@@ -125,8 +127,24 @@ free_connection = world.root.child_kinematic_structure_entities[0].parent_connec
 time.sleep(1)
 with world.modify_world():
     free_connection.origin_expression = TransformationMatrix.from_xyz_rpy(1., 1., 0, 0., 0., 0.5 * np.pi)
-
 time.sleep(1)
+
+```
+
+The final way of manipulating the world state is the registry for all degrees of freedom, the {py:class}`semantic_world.world_description.world_state.WorldState`.
+This class acts as a dict like structure that maps degree of freedoms to their state.
+The state is an array of 4 values: the position, velocity, acceleration and jerk.
+Since it is an aggregation of all degree of freedoms existing in the world, it can be messy to access.
+We can close the drawer again as follows:
+
+```python
+dof = the(entity(name := let("degree_of_freedom", type_=PrefixedName, domain=world.state.keys()), name.name == "drawer_container_connection")).evaluate()
+with world.modify_world():
+    world.state[dof] = [0., 0, 0, 0.]
+time.sleep(1.)
+```
+
+```python
 viz._stop_publishing()
 node.destroy_node()
 rclpy.shutdown()

@@ -11,6 +11,7 @@ parts:
         - file: examples/creating_custom_bodies
         - file: examples/loading_worlds
         - file: examples/visualizing_worlds
+        - file: examples/world_state_manipulation
 - caption: Concepts
   chapters:
     - file: kinematic_world
