@@ -123,7 +123,7 @@ Now we can start moving the dresser everywhere and even rotate it.
 ```python
 from semantic_world.world_description.world_entity import Connection
 
-free_connection = world.root.child_kinematic_structure_entities[0].parent_connection
+free_connection = the(entity(connection := let("connection", type_=Connection, domain=world.connections), connection.parent == world.root)).evaluate()
 time.sleep(1)
 with world.modify_world():
     free_connection.origin_expression = TransformationMatrix.from_xyz_rpy(1., 1., 0, 0., 0., 0.5 * np.pi)

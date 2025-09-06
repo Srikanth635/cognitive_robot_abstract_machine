@@ -39,7 +39,7 @@ jobs:
         source /opt/ros/semantic_world-venv/bin/activate
         git submodule init
         git submodule update
-        pip install -U pip && pip install -r requirements.txt && pip install -e . && pip install pytest
+        pip install -U pip && pip install -U -r requirements.txt && pip install -e . && pip install pytest
         pip install -r doc/requirements.txt && pip install treon jupytext
         pip install -e ./src/ripple_down_rules_meta
 #        echo "PATH=/opt/ros/overlay_ws/src/Multiverse-Parser/ext/blender:/opt/ros/overlay_ws/src/Multiverse-Parser/USD/linux/lib/python:/opt/ros/overlay_ws/src/Multiverse-Parser/USD/linux/plugin/usd:$PATH" >> $GITHUB_ENV
