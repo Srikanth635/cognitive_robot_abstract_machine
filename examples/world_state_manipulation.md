@@ -21,7 +21,7 @@ Concepts Used:
 - [](visualizing-worlds)
 - Factories (TODO)
 - [Entity Query Language](https://abdelrhmanbassiouny.github.io/entity_query_language/intro.html)
-- World Structure Manipulation (TODO)
+- [](world-structure-manipulation)
 
 First, we create a dresser containing a single drawer using the respective factories.
 

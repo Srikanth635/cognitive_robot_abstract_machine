@@ -15,7 +15,7 @@ The user guide is divided into multiple chapters teaching you the following topi
   - [](creating-custom-bodies)
 - Advanced Topics
   - [](world-state-manipulation)
-  - World structure manipulation
+  - [](world-structure-manipulation)
   - Regions
   - Semantic annotations (Views)
   - Persistence of annotated worlds
