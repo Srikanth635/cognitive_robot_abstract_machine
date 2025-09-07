@@ -14,9 +14,9 @@ The user guide is divided into multiple chapters teaching you the following topi
   - [](visualizing-worlds)
   - [](creating-custom-bodies)
 - Advanced Topics
-  - [](world-state-manipulation)
   - [](world-structure-manipulation)
-  - Regions
+  - [](world-state-manipulation)
+  - [](regions)
   - Semantic annotations (Views)
   - Persistence of annotated worlds
   - Synchronizing worlds across multiple processes
@@ -26,3 +26,5 @@ The user guide is divided into multiple chapters teaching you the following topi
   - Inverse Kinematics
   - Collision Checking
   - Casadi
+
+
