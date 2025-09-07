@@ -14,6 +14,7 @@ parts:
         - file: examples/world_state_manipulation
         - file: examples/world_structure_manipulation
         - file: examples/regions
+        - file: examples/views
 - caption: Concepts
   chapters:
     - file: kinematic_world

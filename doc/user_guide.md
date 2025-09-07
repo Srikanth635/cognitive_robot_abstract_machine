@@ -17,7 +17,7 @@ The user guide is divided into multiple chapters teaching you the following topi
   - [](world-structure-manipulation)
   - [](world-state-manipulation)
   - [](regions)
-  - Semantic annotations (Views)
+  - [](semantic_annotations)
   - Persistence of annotated worlds
   - Synchronizing worlds across multiple processes
   - World factories
