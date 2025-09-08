@@ -73,12 +73,11 @@ def robot_in_collision(
     if ignore_collision_with is None:
         ignore_collision_with = []
 
-    body = let("body", type_=Body, domain=robot._world.bodies)
+    body = let("body", type_=Body, domain=robot._world.bodies_with_enabled_collision)
     possible_collisions_bodies = an(
         entity(
             body,
             and_(
-                body.has_collision(),
                 not_(contains(robot.bodies, body)),
                 not_(contains(ignore_collision_with, body)),
             ),
