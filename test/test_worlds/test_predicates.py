@@ -332,4 +332,4 @@ def test_is_body_in_gripper(
             )
         )
 
-    assert is_body_in_gripper(test_box, left_gripper)
+    assert is_body_in_gripper(test_box, left_gripper) > 0.0

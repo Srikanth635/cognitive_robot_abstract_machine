@@ -155,8 +155,8 @@ def occluding_bodies(camera: Camera, body: Body) -> List[Body]:
     rt.update_scene()
 
     # Camera origin (use same convention as get_visible_bodies: camera root position)
-    cam_T_w = camera.root.global_pose.to_np()
-    cam_origin = cam_T_w[:3, 3]
+    cam_T_world = camera.root.global_pose.to_np()
+    cam_origin = cam_T_world[:3, 3]
 
     # Sample points on the body's world-aligned bounding boxes
     # Use all collision shapes' bounding boxes transformed to world frame
@@ -251,16 +251,21 @@ def is_supported_by(supported_body: Body, supporting_body: Body) -> bool:
     )
 
 
-def is_body_in_gripper(body: Body, gripper: ParallelGripper) -> bool:
+def is_body_in_gripper(body: Body, gripper: ParallelGripper) -> float:
     """
     Check if the body in the gripper.
 
     :param body: The body for which the check should be done.
     :param gripper: The gripper for which the check should be done.
 
-    :return: True if the body is between any pair of the gripper fingertips, False otherwise
+    :return: The percentage of rays between the fingers that hit the body.
     """
-    # create a ray between this thumb and the finger and check if it collides with the bodies collision
+    rt = RayTracer(body._world)
+    rt.update_scene()
+
+    # cast rays from random points on the grippers thumb to random points on the gripper finger
+    # measure how many hit the body
+    # return the fraction of hits/total_rays
 
 
 def is_body_in_region(body: Body, region: Region) -> float:
