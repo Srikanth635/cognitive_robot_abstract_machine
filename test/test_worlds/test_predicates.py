@@ -11,7 +11,7 @@ from semantic_world.world_description.geometry import Box, Scale, Color
 from semantic_world.reasoning.predicates import (
     contact,
     robot_in_collision,
-    get_visible_objects,
+    get_visible_bodies,
     visible,
     above,
     below,

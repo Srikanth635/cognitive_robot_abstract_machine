@@ -101,7 +101,7 @@ def robot_holds_body(robot: RobotView, body: Body) -> bool:
     raise NotImplementedError
 
 
-def get_visible_objects(camera: Camera) -> List[KinematicStructureEntity]:
+def get_visible_bodies(camera: Camera) -> List[KinematicStructureEntity]:
     """
     Get all bodies and regions that are visible from the given camera using a segmentation mask.
 
@@ -128,12 +128,13 @@ def visible(camera: Camera, obj: KinematicStructureEntity) -> bool:
     """
     Checks if a body/region is visible by the given camera.
     """
-    return obj in get_visible_objects(camera)
+    return obj in get_visible_bodies(camera)
 
 
 def occluding_bodies(camera: Camera, body: Body) -> List[Body]:
     """
     Get all bodies that are occluding the given body.
+
     :param camera: The camera for which the occluding bodies should be returned
     :param body: The body for which the occluding bodies should be returned
     :return: A list of bodies that are occluding the given body.
@@ -243,7 +244,9 @@ def is_body_in_region(body: Body, region: Region) -> float:
     if hasattr(intersection, "volume"):
         intersection_volume = float(intersection.volume or 0.0)
     elif isinstance(intersection, (list, tuple)):
-        intersection_volume = float(sum(getattr(m, "volume", 0.0) or 0.0 for m in intersection))
+        intersection_volume = float(
+            sum(getattr(m, "volume", 0.0) or 0.0 for m in intersection)
+        )
     else:
         intersection_volume = 0.0
 
