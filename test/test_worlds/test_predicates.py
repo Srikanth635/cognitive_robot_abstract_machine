@@ -233,8 +233,7 @@ def test_body_in_region(two_block_world, rclpy_node):
             ),
         )
         center._world.add_connection(connection)
-
-    assert is_body_in_region(center, region) > 0.0
+    assert is_body_in_region(center, region) == 0.5
     assert is_body_in_region(top, region) == 0.0
 
     # time.sleep(10)

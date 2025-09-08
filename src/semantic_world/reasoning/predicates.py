@@ -195,29 +195,65 @@ def is_body_between_fingers(body: Body, fingers: List[Finger]) -> bool:
 
 def is_body_in_region(body: Body, region: Region) -> float:
     """
-    Check if the body is in the region.
+    Check if the body is in the region by computing the fraction of the body's
+    collision volume that lies inside the region's area volume.
+
+    Implementation detail: both the body and region meshes are defined in their
+    respective local frames; we must transform them into a common (world) frame
+    using their global poses before computing the boolean intersection.
 
     :param body: The body for which the check should be done.
     :param region: The region to check if the body is in.
-    :param: The percentage of the bodys volume that lies in the region.
+    :return: The percentage (0.0..1.0) of the body's volume that lies in the region.
     """
-    # Get trimesh representations
-    body_mesh = body.combined_collision_mesh
-    region_mesh = region.combined_area_mesh
+    # Retrieve meshes in local frames
+    body_mesh_local = body.combined_collision_mesh
+    region_mesh_local = region.combined_area_mesh
 
-    # Calculate intersection volume
-    intersection = trimesh.boolean.intersection([body_mesh, region_mesh])
-    if intersection is None:
+    # Defensive checks
+    if body_mesh_local is None or region_mesh_local is None:
         return 0.0
 
-    # Calculate percentage of body volume in region
-    body_volume = body_mesh.volume
-    intersection_volume = intersection.volume
+    # Transform copies of the meshes into the world frame
+    body_mesh = body_mesh_local.copy()
+    region_mesh = region_mesh_local.copy()
 
-    if body_volume < 1e-10:  # Handle case of effectively zero volume
+    T_bw = body.global_pose.to_np()
+    T_rw = region.global_pose.to_np()
+
+    body_mesh.apply_transform(T_bw)
+    region_mesh.apply_transform(T_rw)
+
+    # Compute intersection in world frame
+    try:
+        intersection = trimesh.boolean.intersection([body_mesh, region_mesh])
+    except Exception:
+        # In case boolean ops are unavailable or fail, conservatively return 0.0
         return 0.0
 
-    return intersection_volume / body_volume
+    # No intersection -> zero fraction
+    if not intersection:
+        return 0.0
+
+    # Compute volumes robustly (intersection can be a single mesh or a list)
+    body_volume = float(getattr(body_mesh, "volume", 0.0) or 0.0)
+    if body_volume <= 1e-12:
+        return 0.0
+
+    if hasattr(intersection, "volume"):
+        intersection_volume = float(intersection.volume or 0.0)
+    elif isinstance(intersection, (list, tuple)):
+        intersection_volume = float(sum(getattr(m, "volume", 0.0) or 0.0 for m in intersection))
+    else:
+        intersection_volume = 0.0
+
+    # Clamp for numerical stability
+    if intersection_volume < 1e-12:
+        return 0.0
+
+    ratio = intersection_volume / body_volume
+    # Ensure result is within [0, 1] allowing tiny numerical slack
+    return float(max(0.0, min(1.0, ratio)))
 
 
 def left_of(body: Body, other: Body, reference_point: TransformationMatrix) -> bool:
