@@ -14,7 +14,7 @@ RUN mv iai_pr2 /opt/ros/overlay_ws/src/iai_pr2
 RUN source /opt/ros/jazzy/setup.bash && cd $OVERLAY_WS && colcon build --symlink-install
 RUN echo "source $OVERLAY_WS/install/setup.bash" >> ~/.bashrc
 
-RUN python3 -m venv semantic_world-venv --system-site-packages  && source semantic_world-venv/bin/activate && pip install -U pip && pip install -U setuptools && pip install -r semantic_world/requirements.txt && pip install https://nc.uni-bremen.de/public.php/dav/files/fxWQigKXPBtnXsy/?accept=zip && pip install -e semantic_world
+RUN python3 -m venv semantic_world-venv --system-site-packages  && source semantic_world-venv/bin/activate && pip install -U pip && pip install -U setuptools && pip install -r semantic_world/requirements.txt && pip install https://nc.uni-bremen.de/public.php/dav/files/nxxi4QSBcYmmxba/?accept=zip && pip install -e semantic_world
 
 # Install the Multiverse Parser outside of the overlay workspace
 
