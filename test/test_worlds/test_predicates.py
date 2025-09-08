@@ -20,6 +20,7 @@ from semantic_world.reasoning.predicates import (
     behind,
     in_front_of,
     is_body_in_region,
+    occluding_bodies,
 )
 from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.robots import PR2, Camera
@@ -171,6 +172,48 @@ def test_get_visible_objects(pr2_world: World):
     camera = pr2_world.get_views_by_type(Camera)[0]
 
     assert visible(camera, body)
+
+
+def test_occluding_bodies(pr2_world: World):
+    pr2: PR2 = PR2.from_world(pr2_world)
+
+    def make_body(name: str) -> Body:
+        result = Body(name=PrefixedName(name))
+        collision = Box(
+            scale=Scale(1.0, 1.0, 1.0),
+            origin=TransformationMatrix.from_xyz_rpy(reference_frame=result),
+        )
+        result.collision = [collision]
+        return result
+
+    obstacle = make_body("obstalce")
+    occluded_body = make_body("occluded_body")
+
+    with pr2_world.modify_world():
+        root = pr2_world.root
+        c1 = FixedConnection(
+            parent=root,
+            child=obstacle,
+            _world=pr2_world,
+            origin_expression=TransformationMatrix.from_xyz_rpy(
+                reference_frame=root, x=3, z=0.8
+            ),
+        )
+        c2 = FixedConnection(
+            parent=root,
+            child=occluded_body,
+            _world=pr2_world,
+            origin_expression=TransformationMatrix.from_xyz_rpy(
+                reference_frame=root, x=10, z=0.5
+            ),
+        )
+        pr2_world.add_connection(c1)
+        pr2_world.add_connection(c2)
+
+    camera = pr2_world.get_views_by_type(Camera)[0]
+
+    bodies = occluding_bodies(camera, occluded_body)
+    assert bodies == [obstacle]
 
 
 def test_above_and_below(two_block_world):

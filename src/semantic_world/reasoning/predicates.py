@@ -133,13 +133,72 @@ def visible(camera: Camera, obj: KinematicStructureEntity) -> bool:
 
 def occluding_bodies(camera: Camera, body: Body) -> List[Body]:
     """
-    Get all bodies that are occluding the given body.
+    Determines the bodies that occlude a given body in the scene as seen from a specified camera.
+
+    This function uses a ray-tracing approach to check occlusion. Rays are cast from the camera's
+    origin towards points sampled on the given body's bounding boxes. If the rays are obstructed by
+    another body before reaching the target body, these obstructing bodies are identified as occluders.
 
     :param camera: The camera for which the occluding bodies should be returned
     :param body: The body for which the occluding bodies should be returned
     :return: A list of bodies that are occluding the given body.
     """
-    raise NotImplementedError
+    # Initialize ray tracer and ensure scene is up-to-date
+    rt = RayTracer(camera._world)
+    rt.update_scene()
+
+    # Camera origin (use same convention as get_visible_bodies: camera root position)
+    cam_T_w = camera.root.global_pose.to_np()
+    cam_origin = cam_T_w[:3, 3]
+
+    # Sample points on the body's world-aligned bounding boxes
+    # Use all collision shapes' bounding boxes transformed to world frame
+    bb_collection = body.as_bounding_box_collection_in_frame(camera._world.root)
+    target_points_list: List[np.ndarray] = []
+    for bb in bb_collection.bounding_boxes:
+        # 8 corners per bounding box
+        for pt in bb.get_points():
+            # Convert Point3 to numpy array in world frame
+            target_points_list.append(pt.to_np()[:3])
+
+    # Fallback: if no bounding boxes or points, use the center of mass
+    if not target_points_list:
+        com_world = _center_of_mass_in_world(body)
+        target_points_list.append(com_world)
+
+    target_points = np.asarray(target_points_list, dtype=float)
+    origin_points = np.repeat(cam_origin.reshape(1, 3), len(target_points), axis=0)
+
+    # Perform ray tests
+    hit_points, hit_indices, hit_bodies = rt.ray_test(origin_points, target_points)
+
+    occluders: list[Body] = []
+    seen = set()
+
+    # Map from local index in hit results to original ray index
+    # hit_indices are the indices into the input rays that had a hit
+    eps = 1e-9
+    for i_result, ray_idx in enumerate(hit_indices):
+        hit_body = hit_bodies[i_result]
+        if hit_body is None:
+            continue
+        # Ignore the target body itself
+        if hit_body == body:
+            continue
+
+        # Distances: camera -> first hit, camera -> target sample point
+        d_hit = float(np.linalg.norm(hit_points[i_result] - origin_points[ray_idx]))
+        d_target = float(
+            np.linalg.norm(target_points[ray_idx] - origin_points[ray_idx])
+        )
+
+        # If the first hit is before reaching the sample point on the target, it occludes that ray
+        if d_hit + eps < d_target:
+            if hit_body not in seen:
+                seen.add(hit_body)
+                occluders.append(hit_body)
+
+    return occluders
 
 
 def reachable(
