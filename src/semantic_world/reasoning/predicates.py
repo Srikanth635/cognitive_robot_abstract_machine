@@ -98,7 +98,7 @@ def robot_in_collision(
     return len(collisions) > 0
 
 
-def robot_holds_body(robot: RobotView, body: Body) -> bool:
+def robot_holds_body(robot: AbstractRobot, body: Body) -> bool:
     """
     Check if a robot is holding an object.
 
@@ -106,7 +106,13 @@ def robot_holds_body(robot: RobotView, body: Body) -> bool:
     :param body: The body to check if it is picked
     :return: True if the robot is holding the object, False otherwise
     """
-    raise NotImplementedError
+    grippers = an(
+        entity(
+            g := let("gripper", ParallelGripper, robot._world.views), g._robot == robot
+        )
+    ).evaluate()
+
+    return any([is_body_in_gripper(body, gripper) > 0.0 for gripper in grippers])
 
 
 def get_visible_bodies(camera: Camera) -> List[KinematicStructureEntity]:

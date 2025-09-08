@@ -24,6 +24,7 @@ from semantic_world.reasoning.predicates import (
     is_supported_by,
     _center_of_mass_in_world,
     is_body_in_gripper,
+    robot_holds_body,
 )
 from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.robots import PR2, Camera, Finger, ParallelGripper
@@ -333,6 +334,6 @@ def test_is_body_in_gripper(
         )
 
     assert is_body_in_gripper(test_box, left_gripper) > 0
-
+    assert robot_holds_body(pr2, test_box)
     connection.origin = TransformationMatrix()
     assert is_body_in_gripper(test_box, left_gripper) == 0
