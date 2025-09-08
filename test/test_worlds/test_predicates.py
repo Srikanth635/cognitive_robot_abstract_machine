@@ -188,7 +188,7 @@ def test_occluding_bodies(pr2_world: World):
         result.collision = [collision]
         return result
 
-    obstacle = make_body("obstalce")
+    obstacle = make_body("obstacle")
     occluded_body = make_body("occluded_body")
 
     with pr2_world.modify_world():
