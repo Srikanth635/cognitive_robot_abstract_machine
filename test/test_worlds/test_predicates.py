@@ -90,12 +90,7 @@ def test_robot_in_contact(pr2_world: World):
     collision1 = Box(
         scale=Scale(1.0, 1.0, 1.0),
         origin=TransformationMatrix.from_xyz_rpy(
-            0,
-            0,
-            0.5,
-            0,
-            0,
-            0,
+            z=0.5,
             reference_frame=body,
         ),
         color=Color(1.0, 0.0, 0.0),
@@ -104,8 +99,6 @@ def test_robot_in_contact(pr2_world: World):
 
     with pr2_world.modify_world():
         pr2_world.add_connection(Connection6DoF(pr2_world.root, body, _world=pr2_world))
-
-
 
     # Ensure the call runs without raising
     assert robot_in_collision(pr2)
@@ -124,12 +117,8 @@ def test_get_visible_objects(pr2_world: World, rclpy_node):
     collision1 = Box(
         scale=Scale(1.0, 1.0, 1.0),
         origin=TransformationMatrix.from_xyz_rpy(
-            1.,
-        1,
-            -2.5,
-            0,
-            0,
-            0,
+            x=2.0,
+            z=1.0,
             reference_frame=body,
         ),
         color=Color(1.0, 0.0, 0.0),
@@ -137,10 +126,14 @@ def test_get_visible_objects(pr2_world: World, rclpy_node):
     body.collision = [collision1]
 
     with pr2_world.modify_world():
-        pr2_world.add_connection(FixedConnection(pr2_world.root, body, _world=pr2_world))
+        pr2_world.add_connection(
+            FixedConnection(pr2_world.root, body, _world=pr2_world)
+        )
     viz = VizMarkerPublisher(world=pr2_world, node=rclpy_node)
     camera = pr2_world.get_views_by_type(Camera)[0]
     visible_objects = get_visible_objects(camera)
-    assert visible_objects == [body]
+    print(len(pr2_world.kinematic_structure_entities))
+
     # time.sleep(10)
     viz._stop_publishing()
+    assert visible_objects == [body]

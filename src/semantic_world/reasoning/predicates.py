@@ -110,9 +110,8 @@ def get_visible_objects(camera: Camera) -> List[KinematicStructureEntity]:
     rt.update_scene()
 
     seg = rt.create_segmentation_mask(camera.root.global_pose.to_np(), resolution=256)
-    print(seg)
     indices = np.unique(seg)
-    indices = indices[indices != -1]
+    indices = indices[indices > -1]
     bodies = [camera._world.kinematic_structure[i] for i in indices]
     return bodies
 
