@@ -3,6 +3,7 @@ import itertools
 import numpy as np
 import trimesh.boolean
 from entity_query_language import let, an, entity, contains, and_, not_
+from trimesh.ray.ray_triangle import RayMeshIntersector
 from typing_extensions import List, Optional, Tuple
 
 from ..spatial_computations.raytracer import RayTracer
@@ -251,21 +252,39 @@ def is_supported_by(supported_body: Body, supporting_body: Body) -> bool:
     )
 
 
-def is_body_in_gripper(body: Body, gripper: ParallelGripper) -> float:
+def is_body_in_gripper(
+    body: Body, gripper: ParallelGripper, sample_size: int = 100
+) -> float:
     """
     Check if the body in the gripper.
 
+    This method samples random rays between the finger and the thumb and returns the marginal probability that the rays
+    intersect.
+
     :param body: The body for which the check should be done.
     :param gripper: The gripper for which the check should be done.
+    :param sample_size: The number of rays to sample.
 
     :return: The percentage of rays between the fingers that hit the body.
     """
-    rt = RayTracer(body._world)
-    rt.update_scene()
 
-    # cast rays from random points on the grippers thumb to random points on the gripper finger
-    # measure how many hit the body
-    # return the fraction of hits/total_rays
+    # Retrieve meshes in local frames
+    thumb_mesh = gripper.thumb.tip.combined_collision_mesh.copy()
+    finger_mesh = gripper.finger.tip.combined_collision_mesh.copy()
+    body_mesh = body.combined_collision_mesh.copy()
+
+    # Transform copies of the meshes into the world frame
+    body_mesh.apply_transform(body.global_pose.to_np())
+    thumb_mesh.apply_transform(gripper.thumb.tip.global_pose.to_np())
+    finger_mesh.apply_transform(gripper.finger.tip.global_pose.to_np())
+
+    # get random points from thumb mesh
+    finger_points = trimesh.sample.sample_surface(finger_mesh, 100)[0]
+    thumb_points = trimesh.sample.sample_surface(thumb_mesh, 100)[0]
+
+    ray_intersector = RayMeshIntersector(body_mesh)
+    hit_indices = ray_intersector.intersects_id(finger_points, thumb_points)[1]
+    return len(hit_indices) / sample_size
 
 
 def is_body_in_region(body: Body, region: Region) -> float:

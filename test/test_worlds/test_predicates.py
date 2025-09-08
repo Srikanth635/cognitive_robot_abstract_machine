@@ -318,18 +318,21 @@ def test_is_body_in_gripper(
 
     # Add box to world
     with pr2_world.modify_world():
-        pr2_world.add_connection(
-            FixedConnection(
-                parent=pr2_world.root,
-                child=test_box,
-                _world=pr2_world,
-                origin_expression=TransformationMatrix.from_xyz_rpy(
-                    x=between_fingers[0],
-                    y=between_fingers[1],
-                    z=between_fingers[2],
-                    reference_frame=pr2_world.root,
-                ),
-            )
+        root = pr2_world.root
+        connection = Connection6DoF(
+            parent=root,
+            child=test_box,
+            _world=pr2_world,
+        )
+        pr2_world.add_connection(connection)
+        connection.origin = TransformationMatrix.from_xyz_rpy(
+            x=between_fingers[0],
+            y=between_fingers[1],
+            z=between_fingers[2],
+            reference_frame=root,
         )
 
-    assert is_body_in_gripper(test_box, left_gripper) > 0.0
+    assert is_body_in_gripper(test_box, left_gripper) > 0
+
+    connection.origin = TransformationMatrix()
+    assert is_body_in_gripper(test_box, left_gripper) == 0
