@@ -14,14 +14,14 @@ from ..world_description.world_entity import Body, Region, KinematicStructureEnt
 
 def stable(obj: Body) -> bool:
     """
-    Checks if an object is stable in the world. Stable meaning that it's position will not change after simulating
-    physics in the World. This will be done by simulating the world for 10 seconds and compare
+    Checks if an object is stable in the world. Stable meaning that its position will not change after simulating
+    physics in the World. This will be done by simulating the world for 10 seconds and comparing
     the previous coordinates with the coordinates after the simulation.
 
     :param obj: The object which should be checked
     :return: True if the given object is stable in the world False else
     """
-    raise NotImplementedError
+    raise NotImplementedError("Needs multiverse")
 
 
 def contact(
@@ -115,6 +115,7 @@ def get_visible_objects(camera: Camera) -> List[KinematicStructureEntity]:
     indices = indices[indices != -1]
     bodies = [camera._world.kinematic_structure[i] for i in indices]
     return bodies
+
 
 def visible(camera: Camera, obj: KinematicStructureEntity) -> bool:
     """
