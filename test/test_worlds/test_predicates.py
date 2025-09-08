@@ -19,13 +19,14 @@ from semantic_world.reasoning.predicates import (
     right_of,
     behind,
     in_front_of,
+    is_body_in_region,
 )
 from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.robots import PR2, Camera
 from semantic_world.spatial_types.spatial_types import TransformationMatrix
 from semantic_world.testing import pr2_world
 from semantic_world.world import World
-from semantic_world.world_description.world_entity import Body
+from semantic_world.world_description.world_entity import Body, Region
 
 
 @pytest.fixture(scope="session")
@@ -210,3 +211,31 @@ def test_behind_and_in_front_of(two_block_world):
     pov = TransformationMatrix.from_xyz_rpy(z=5, pitch=-np.pi / 2)
     assert in_front_of(top, center, pov)
     assert behind(center, top, pov)
+
+
+def test_body_in_region(two_block_world, rclpy_node):
+    center, top = two_block_world
+    viz = VizMarkerPublisher(node=rclpy_node, world=center._world)
+    region = Region(name=PrefixedName("test_region"))
+    region_box = Box(
+        scale=Scale(1.0, 1.0, 1.0),
+        origin=TransformationMatrix.from_xyz_rpy(reference_frame=region),
+    )
+    region.area = [region_box]
+
+    with center._world.modify_world():
+        connection = FixedConnection(
+            parent=center,
+            child=region,
+            _world=center._world,
+            origin_expression=TransformationMatrix.from_xyz_rpy(
+                z=0.5, reference_frame=center
+            ),
+        )
+        center._world.add_connection(connection)
+
+    assert is_body_in_region(center, region) > 0.0
+    assert is_body_in_region(top, region) == 0.0
+
+    # time.sleep(10)
+    viz._stop_publishing()

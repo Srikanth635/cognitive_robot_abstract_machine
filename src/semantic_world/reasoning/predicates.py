@@ -1,6 +1,7 @@
 import itertools
 
 import numpy as np
+import trimesh.boolean
 from entity_query_language import let, an, entity, contains, and_, not_
 from typing_extensions import List, Optional, Tuple
 
@@ -192,14 +193,31 @@ def is_body_between_fingers(body: Body, fingers: List[Finger]) -> bool:
     raise NotImplementedError
 
 
-def is_body_in_region(body: Body, region: Region) -> bool:
+def is_body_in_region(body: Body, region: Region) -> float:
     """
     Check if the body is in the region.
 
     :param body: The body for which the check should be done.
     :param region: The region to check if the body is in.
+    :param: The percentage of the bodys volume that lies in the region.
     """
-    raise NotImplementedError
+    # Get trimesh representations
+    body_mesh = body.combined_collision_mesh
+    region_mesh = region.combined_area_mesh
+
+    # Calculate intersection volume
+    intersection = trimesh.boolean.intersection([body_mesh, region_mesh])
+    if intersection is None:
+        return 0.0
+
+    # Calculate percentage of body volume in region
+    body_volume = body_mesh.volume
+    intersection_volume = intersection.volume
+
+    if body_volume < 1e-10:  # Handle case of effectively zero volume
+        return 0.0
+
+    return intersection_volume / body_volume
 
 
 def left_of(body: Body, other: Body, reference_point: TransformationMatrix) -> bool:

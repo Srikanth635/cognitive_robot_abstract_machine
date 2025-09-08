@@ -7,6 +7,8 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from dataclasses import fields
 from functools import lru_cache, cached_property
+
+import trimesh.boolean
 from typing_extensions import (
     Deque,
     Type,
@@ -394,6 +396,20 @@ class Region(KinematicStructureEntity):
         bbs = [shape.local_frame_bounding_box for shape in self.area]
         bbs = [bb.transform_to_frame(reference_frame) for bb in bbs]
         return BoundingBoxCollection(reference_frame, bbs)
+
+    @cached_property
+    def combined_area_mesh(self) -> Trimesh:
+        """
+        Combines all collision meshes into a single mesh, applying the respective transformations.
+        :return: A single Trimesh representing the combined collision geometry.
+        """
+        transformed_meshes = []
+        for shape in self.area:
+            transform = shape.origin.to_np()
+            mesh = shape.mesh.copy()
+            mesh.apply_transform(transform)
+            transformed_meshes.append(mesh)
+        return trimesh.boolean.union(transformed_meshes)
 
 
 GenericKinematicStructureEntity = TypeVar(
