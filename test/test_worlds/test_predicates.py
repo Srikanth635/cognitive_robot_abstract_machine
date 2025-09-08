@@ -21,9 +21,12 @@ from semantic_world.reasoning.predicates import (
     in_front_of,
     is_body_in_region,
     occluding_bodies,
+    is_supported_by,
+    _center_of_mass_in_world,
+    is_body_in_gripper,
 )
 from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.robots import PR2, Camera
+from semantic_world.robots import PR2, Camera, Finger, ParallelGripper
 from semantic_world.spatial_types.spatial_types import TransformationMatrix
 from semantic_world.testing import pr2_world
 from semantic_world.world import World
@@ -165,9 +168,7 @@ def test_get_visible_objects(pr2_world: World):
     body.collision = [collision1]
 
     with pr2_world.modify_world():
-        pr2_world.add_connection(
-            FixedConnection(pr2_world.root, body, _world=pr2_world)
-        )
+        pr2_world.add_connection(Connection6DoF(pr2_world.root, body, _world=pr2_world))
 
     camera = pr2_world.get_views_by_type(Camera)[0]
 
@@ -236,12 +237,12 @@ def test_left_and_right(two_block_world):
     center, top = two_block_world
 
     pov = TransformationMatrix.from_xyz_rpy(x=3, roll=np.pi / 2)
-    assert right_of(top, center, pov)
-    assert left_of(center, top, pov)
-
-    pov = TransformationMatrix.from_xyz_rpy(x=3, roll=-np.pi / 2)
     assert left_of(top, center, pov)
     assert right_of(center, top, pov)
+
+    pov = TransformationMatrix.from_xyz_rpy(x=3, roll=-np.pi / 2)
+    assert right_of(top, center, pov)
+    assert left_of(center, top, pov)
 
 
 def test_behind_and_in_front_of(two_block_world):
@@ -256,9 +257,8 @@ def test_behind_and_in_front_of(two_block_world):
     assert behind(center, top, pov)
 
 
-def test_body_in_region(two_block_world, rclpy_node):
+def test_body_in_region(two_block_world):
     center, top = two_block_world
-    viz = VizMarkerPublisher(node=rclpy_node, world=center._world)
     region = Region(name=PrefixedName("test_region"))
     region_box = Box(
         scale=Scale(1.0, 1.0, 1.0),
@@ -279,5 +279,57 @@ def test_body_in_region(two_block_world, rclpy_node):
     assert is_body_in_region(center, region) == 0.5
     assert is_body_in_region(top, region) == 0.0
 
-    # time.sleep(10)
-    viz._stop_publishing()
+
+def test_supporting(two_block_world):
+    center, top = two_block_world
+    with center._world.modify_world():
+        top.parent_connection.origin_expression = TransformationMatrix.from_xyz_rpy(
+            reference_frame=center, z=1.0
+        )
+    assert is_supported_by(top, center)
+
+
+def test_is_body_in_gripper(
+    pr2_world,
+):
+    pr2: PR2 = PR2.from_world(pr2_world)
+
+    gripper = pr2_world.get_views_by_type(ParallelGripper)
+
+    left_gripper = (
+        gripper[0]
+        if left_of(gripper[0].root, gripper[1].root, pr2.root.global_pose)
+        else gripper[1]
+    )
+
+    # Create test box between fingers
+    test_box = Body(name=PrefixedName("test_box"))
+    box_collision = Box(
+        scale=Scale(0.05, 0.01, 0.05),
+        origin=TransformationMatrix.from_xyz_rpy(reference_frame=test_box),
+        color=Color(1.0, 0.0, 0.0),
+    )
+    test_box.collision = [box_collision]
+
+    # Calculate position between fingers
+    finger1_pos = _center_of_mass_in_world(left_gripper.finger.tip)
+    finger2_pos = _center_of_mass_in_world(left_gripper.thumb.tip)
+    between_fingers = (finger1_pos + finger2_pos) / 2.0
+
+    # Add box to world
+    with pr2_world.modify_world():
+        pr2_world.add_connection(
+            FixedConnection(
+                parent=pr2_world.root,
+                child=test_box,
+                _world=pr2_world,
+                origin_expression=TransformationMatrix.from_xyz_rpy(
+                    x=between_fingers[0],
+                    y=between_fingers[1],
+                    z=between_fingers[2],
+                    reference_frame=pr2_world.root,
+                ),
+            )
+        )
+
+    assert is_body_in_gripper(test_box, left_gripper)

@@ -8,7 +8,14 @@ from typing_extensions import List, Optional, Tuple
 from ..spatial_computations.raytracer import RayTracer
 from ..collision_checking.collision_detector import CollisionCheck
 from ..collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
-from ..robots import RobotView, Camera, Manipulator, Finger, AbstractRobot
+from ..robots import (
+    RobotView,
+    Camera,
+    Manipulator,
+    Finger,
+    AbstractRobot,
+    ParallelGripper,
+)
 from ..spatial_types.spatial_types import Point3, TransformationMatrix
 from ..world_description.geometry import BoundingBoxCollection
 from ..world_description.world_entity import Body, Region, KinematicStructureEntity
@@ -231,7 +238,7 @@ def blocking(position: Point3, manipulator: Manipulator) -> Optional[List[Body]]
     raise NotImplementedError
 
 
-def supporting(supported_body: Body, supporting_body: Body) -> bool:
+def is_supported_by(supported_body: Body, supporting_body: Body) -> bool:
     """
     Checks if one object is supporting another object.
 
@@ -239,18 +246,21 @@ def supporting(supported_body: Body, supporting_body: Body) -> bool:
     :param supporting_body: Object that potentially supports the first object
     :return: True if the second object is supported by the first object, False otherwise
     """
-    raise NotImplementedError
+    return contact(supported_body, supporting_body) and above(
+        supported_body, supporting_body, TransformationMatrix()
+    )
 
 
-def is_body_between_fingers(body: Body, fingers: List[Finger]) -> bool:
+def is_body_in_gripper(body: Body, gripper: ParallelGripper) -> bool:
     """
-    Check if the body is between the fingers.
+    Check if the body in the gripper.
 
     :param body: The body for which the check should be done.
-    :param fingers: The fingers that should be checked.
-    :return: True if the body is between the fingers, False otherwise
+    :param gripper: The gripper for which the check should be done.
+
+    :return: True if the body is between any pair of the gripper fingertips, False otherwise
     """
-    raise NotImplementedError
+    # create a ray between this thumb and the finger and check if it collides with the bodies collision
 
 
 def is_body_in_region(body: Body, region: Region) -> float:
@@ -341,7 +351,7 @@ def left_of(body: Body, other: Body, reference_point: TransformationMatrix) -> b
     s_other = float(np.dot(left_norm, _center_of_mass_in_world(other)))
 
     eps = 1e-9
-    return s_body < s_other + eps
+    return s_body > s_other + eps
 
 
 def right_of(body: Body, other: Body, reference_point: TransformationMatrix) -> bool:
@@ -365,7 +375,7 @@ def right_of(body: Body, other: Body, reference_point: TransformationMatrix) -> 
     s_other = float(np.dot(left_norm, _center_of_mass_in_world(other)))
 
     eps = 1e-9
-    return s_body > s_other - eps
+    return s_body < s_other - eps
 
 
 def above(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
