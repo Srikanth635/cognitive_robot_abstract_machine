@@ -206,23 +206,50 @@ def left_of(body: Body, other: Body, reference_point: TransformationMatrix) -> b
     """
     Check if the body is left of the other body if you are looking from the reference point.
 
+    The "left" direction is taken as the -Y axis of the given reference_point.
+    The comparison is done using the centers of mass computed from the bodies' collision geometry.
+
     :param body: The body for which the check should be done.
     :param other: The other body.
     :param reference_point: The reference spot from where to look at the bodies.
     :return: True if the body is left of the other body, False otherwise
     """
-    ...
+    assert body._world == other._world, "Both bodies must be in the same world"
+
+    # Left direction in world coordinates from the reference_point (+Y axis)
+    ref_np = reference_point.to_np()
+    left_world = ref_np[:3, 1]
+    left_norm = left_world / (np.linalg.norm(left_world) + 1e-12)
+
+    s_body = float(np.dot(left_norm, _center_of_mass_in_world(body)))
+    s_other = float(np.dot(left_norm, _center_of_mass_in_world(other)))
+
+    eps = 1e-9
+    return s_body < s_other + eps
 
 
 def right_of(body: Body, other: Body, reference_point: TransformationMatrix) -> bool:
     """
     Check if the body is right of the other body if you are looking from the reference point.
 
+    The "right" direction is taken as the +Y axis of the given reference_point.
+    The comparison is done using the centers of mass computed from the bodies' collision geometry.
+
     :param body: The body for which the check should be done.
     :param other: The other body.
     :return: True if the body is right of the other body, False otherwise
     """
-    ...
+    assert body._world == other._world, "Both bodies must be in the same world"
+
+    ref_np = reference_point.to_np()
+    left_world = ref_np[:3, 1]
+    left_norm = left_world / (np.linalg.norm(left_world) + 1e-12)
+
+    s_body = float(np.dot(left_norm, _center_of_mass_in_world(body)))
+    s_other = float(np.dot(left_norm, _center_of_mass_in_world(other)))
+
+    eps = 1e-9
+    return s_body > s_other - eps
 
 
 def above(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
@@ -230,34 +257,25 @@ def above(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
     Check if the body is above the other body with respect to the point_of_view's up direction (+Z axis).
 
     The "up" direction is taken as the +Z axis of the given point_of_view.
+    The comparison is done using the centers of mass computed from the bodies' collision geometry.
 
     :param body: The body for which the check should be done.
     :param other: The other body.
     :param point_of_view: The reference pose that defines the up direction for the comparison.
-    :return: True if the lowest point of `body` along the up direction is higher than the highest point of `other`.
+    :return: True if the center of mass of "body" is above that of "other" along the point_of_view's +Z axis.
     """
     assert body._world == other._world, "Both bodies must be in the same world"
 
-    world = body._world
-    reference_frame = world.root  # Use a consistent frame for coordinates
+    # Up direction in world coordinates from the point_of_view (+Z axis)
+    pov_np = point_of_view.to_np()
+    up_world = pov_np[:3, 2]
+    up_norm = up_world / (np.linalg.norm(up_world) + 1e-12)
 
-    # Get AABBs in the chosen reference frame
-    body_bbs = body.as_bounding_box_collection_in_frame(reference_frame)
-    other_bbs = other.as_bounding_box_collection_in_frame(reference_frame)
+    s_body = float(np.dot(up_norm, _center_of_mass_in_world(body)))
+    s_other = float(np.dot(up_norm, _center_of_mass_in_world(other)))
 
-    if not body_bbs.bounding_boxes or not other_bbs.bounding_boxes:
-        return False
-
-    # Up vector from the point_of_view (+Z axis)
-    R = point_of_view.to_np()[:3, :3]
-    up = R[:, 2]
-    up_norm = up / (np.linalg.norm(up) + 1e-12)
-
-    body_min, _ = _proj_min_max(body_bbs, up_norm)
-    _, other_max = _proj_min_max(other_bbs, up_norm)
-
-    eps = 1e-6
-    return (body_min - other_max) > eps
+    eps = 1e-9
+    return s_body > s_other + eps
 
 
 def below(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
@@ -265,84 +283,88 @@ def below(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
     Check if the body is below the other body with respect to the point_of_view's up direction (+Z axis).
 
     The "below" direction is taken as the -Z axis of the given point_of_view.
+    The comparison is done using the centers of mass computed from the bodies' collision geometry.
 
     :param body: The body for which the check should be done.
     :param other: The other body.
     :param point_of_view: The reference pose that defines the up direction for the comparison.
-    :return: True if the highest point of `body` along the up direction is lower than the lowest point of `other`.
+    :return: True if the center of mass of "body" is below that of "other" along the point_of_view's +Z axis.
     """
     assert body._world == other._world, "Both bodies must be in the same world"
 
-    world = body._world
-    reference_frame = world.root
+    pov_np = point_of_view.to_np()
+    up_world = pov_np[:3, 2]
+    up_norm = up_world / (np.linalg.norm(up_world) + 1e-12)
 
-    # Get AABBs in the chosen reference frame
-    body_bbs = body.as_bounding_box_collection_in_frame(reference_frame)
-    other_bbs = other.as_bounding_box_collection_in_frame(reference_frame)
+    s_body = float(np.dot(up_norm, _center_of_mass_in_world(body)))
+    s_other = float(np.dot(up_norm, _center_of_mass_in_world(other)))
 
-    if not body_bbs.bounding_boxes or not other_bbs.bounding_boxes:
-        return False
-
-    # Up vector from the point_of_view (+Z axis)
-    R = point_of_view.to_np()[:3, :3]
-    up = R[:, 2]
-    up_norm = up / (np.linalg.norm(up) + 1e-12)
-
-    _, body_max = _proj_min_max(body_bbs, up_norm)
-    other_min, _ = _proj_min_max(other_bbs, up_norm)
-
-    eps = 1e-6
-    return (other_min - body_max) > eps
+    eps = 1e-9
+    return s_body < s_other - eps
 
 
 def behind(body: Body, other: Body, reference_point: TransformationMatrix) -> bool:
     """
     Check if the body is behind the other body if you are looking from the reference point.
 
+    The "behind" direction is defined as the -X axis of the given reference_point.
+    The comparison is done using the centers of mass computed from the bodies' collision
+    geometry.
+
     :param body: The body for which the check should be done.
     :param other: The other body.
     :param reference_point: The reference spot from where to look at the bodies.
     :return: True if the body is behind the other body, False otherwise
     """
+    assert body._world == other._world, "Both bodies must be in the same world"
+
+    # Front direction in world coordinates from the reference_point (+X axis)
+    ref_np = reference_point.to_np()
+    front_world = ref_np[:3, 0]
+    front_norm = front_world / (np.linalg.norm(front_world) + 1e-12)
+
+    s_body = float(np.dot(front_norm, _center_of_mass_in_world(body)))
+    s_other = float(np.dot(front_norm, _center_of_mass_in_world(other)))
+
+    eps = 1e-9
+    return s_body < s_other - eps
 
 
 def in_front_of(body: Body, other: Body, reference_point: TransformationMatrix) -> bool:
     """
     Check if the body is in front of another body if you are looking from the reference point.
 
+    The "front" direction is defined as the +X axis of the given reference_point.
+    The comparison is done using the centers of mass computed from the bodies' collision
+    geometry.
+
     :param body: The body for which the check should be done.
     :param other: The other body.
     :param reference_point: The reference spot from where to look at the bodies.
     :return: True if the body is in front of the other body, False otherwise
     """
+    assert body._world == other._world, "Both bodies must be in the same world"
+
+    ref_np = reference_point.to_np()
+    front_world = ref_np[:3, 0]
+    front_norm = front_world / (np.linalg.norm(front_world) + 1e-12)
+
+    s_body = float(np.dot(front_norm, _center_of_mass_in_world(body)))
+    s_other = float(np.dot(front_norm, _center_of_mass_in_world(other)))
+
+    eps = 1e-9
+    return s_body > s_other + eps
 
 
-def _proj_min_max(
-    bounding_boxes: BoundingBoxCollection, up_norm: np.ndarray
-) -> Tuple[float, float]:
+def _center_of_mass_in_world(b: Body) -> np.ndarray:
     """
-    Projects the bounding boxes onto a given normalized direction vector and calculates
-    the minimum and maximum projections along that vector.
-
-    This function iterates over all vertices of the given bounding boxes, projecting each
-    vertex onto the specified direction vector. It computes the minimum and maximum
-    projection values among all the vertices.
-
-    :param bounding_boxes: The bounding boxes to project onto.
-    :param up_norm: The normalized direction 3D vector.
-
-    :return: The minimum and maximum projection values.
+    Compute the center of mass of an object in the world coordinate frame.
+    :param b: The body to compute the center of mass of.
+    :return: The bodies center of mass as a 3D array.
     """
-    s_min = float("inf")
-    s_max = float("-inf")
-    ux, uy, uz = up_norm
-    for bb in bounding_boxes:
-        for x in (bb.min_x, bb.max_x):
-            for y in (bb.min_y, bb.max_y):
-                for z in (bb.min_z, bb.max_z):
-                    s = x * ux + y * uy + z * uz
-                    if s < s_min:
-                        s_min = s
-                    if s > s_max:
-                        s_max = s
-    return s_min, s_max
+    # Center of mass in the body's local frame (collision geometry)
+    com_local = b.combined_collision_mesh.center_mass  # (3,)
+    # Transform to world frame using the body's global pose
+    T_bw = b.global_pose.to_np()  # body -> world
+    com_h = np.array([com_local[0], com_local[1], com_local[2], 1.0], dtype=float)
+    return (T_bw @ com_h)[:3]

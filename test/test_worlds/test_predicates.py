@@ -15,6 +15,10 @@ from semantic_world.reasoning.predicates import (
     visible,
     above,
     below,
+    left_of,
+    right_of,
+    behind,
+    in_front_of,
 )
 from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.robots import PR2, Camera
@@ -184,18 +188,25 @@ def test_above_and_below(two_block_world):
     assert below(top, center, pov)
 
 
-#
-# def test_left_and_right(two_block_world):
-#     center, top = two_block_world
-#
-#     pov = TransformationMatrix.from_xyz_rpy(x=-3)
-#     assert above(top, center, pov)
-#     assert below(center, top, pov)
-#
-#     pov = TransformationMatrix.from_xyz_rpy(x=3, yaw=np.pi)
-#     assert above(top, center, pov)
-#     assert below(center, top, pov)
-#
-#     pov = TransformationMatrix.from_xyz_rpy(x=3, roll=np.pi)
-#     assert above(center, top, pov)
-#     assert below(top, center, pov)
+def test_left_and_right(two_block_world):
+    center, top = two_block_world
+
+    pov = TransformationMatrix.from_xyz_rpy(x=3, roll=np.pi / 2)
+    assert right_of(top, center, pov)
+    assert left_of(center, top, pov)
+
+    pov = TransformationMatrix.from_xyz_rpy(x=3, roll=-np.pi / 2)
+    assert left_of(top, center, pov)
+    assert right_of(center, top, pov)
+
+
+def test_behind_and_in_front_of(two_block_world):
+    center, top = two_block_world
+
+    pov = TransformationMatrix.from_xyz_rpy(z=-5, pitch=np.pi / 2)
+    assert behind(top, center, pov)
+    assert in_front_of(center, top, pov)
+
+    pov = TransformationMatrix.from_xyz_rpy(z=5, pitch=-np.pi / 2)
+    assert in_front_of(top, center, pov)
+    assert behind(center, top, pov)
