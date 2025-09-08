@@ -190,10 +190,10 @@ class RayTracer:
         self.scene.camera.resolution = (resolution, resolution)
         # By default, the camera is looking along the -z axis, so we need to rotate it to look along the x-axis.
         rotate = trimesh.transformations.rotation_matrix(
-            angle=np.radians(-90.0), direction=[0, 1, 0], point=self.scene.centroid
+            angle=np.radians(-90.0), direction=[0, 1, 0]
         )
         rotate_x = trimesh.transformations.rotation_matrix(
-            angle=np.radians(180.0), direction=[1, 0, 0], point=self.scene.centroid
+            angle=np.radians(180.0), direction=[1, 0, 0]
         )
 
         self.scene.camera.fov = (fov, fov)

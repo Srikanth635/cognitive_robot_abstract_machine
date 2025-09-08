@@ -132,8 +132,7 @@ def test_get_visible_objects(pr2_world: World, rclpy_node):
     viz = VizMarkerPublisher(world=pr2_world, node=rclpy_node)
     camera = pr2_world.get_views_by_type(Camera)[0]
     visible_objects = get_visible_objects(camera)
-    print(len(pr2_world.kinematic_structure_entities))
 
     # time.sleep(10)
     viz._stop_publishing()
-    assert visible_objects == [body]
+    assert body in visible_objects

@@ -109,10 +109,16 @@ def get_visible_objects(camera: Camera) -> List[KinematicStructureEntity]:
     rt = RayTracer(camera._world)
     rt.update_scene()
 
-    seg = rt.create_segmentation_mask(camera.root.global_pose.to_np(), resolution=256)
+    # Build a camera pose at the camera's position, looking along +X in world coordinates
+    # (RayTracer internally orients the camera to +X for an identity rotation).
+    cam_pose = np.eye(4, dtype=float)
+    cam_pose[:3, 3] = camera.root.global_pose.to_np()[:3, 3]
+
+    seg = rt.create_segmentation_mask(cam_pose, resolution=256)
     indices = np.unique(seg)
     indices = indices[indices > -1]
     bodies = [camera._world.kinematic_structure[i] for i in indices]
+
     return bodies
 
 
