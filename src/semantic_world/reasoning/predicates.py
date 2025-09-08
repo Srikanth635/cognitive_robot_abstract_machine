@@ -201,21 +201,21 @@ def is_body_in_region(body: Body, region: Region) -> bool:
     raise NotImplementedError
 
 
-def left_of(body: Body, other: Body, reference_frame: TransformationMatrix) -> bool:
+def left_of(body: Body, other: Body, reference_point: TransformationMatrix) -> bool:
     """
-    Check if the body is left of the other body.
+    Check if the body is left of the other body if you are looking from the reference point.
 
     :param body: The body for which the check should be done.
     :param other: The other body.
-    :param reference_frame: The reference frame in which the check
+    :param reference_point: The reference spot from where to look at the bodies.
     :return: True if the body is left of the other body, False otherwise
     """
     ...
 
 
-def right_of(body: Body, other: Body) -> bool:
+def right_of(body: Body, other: Body, reference_point: TransformationMatrix) -> bool:
     """
-    Check if the body is right of the other body.
+    Check if the body is right of the other body if you are looking from the reference point.
 
     :param body: The body for which the check should be done.
     :param other: The other body.
@@ -224,22 +224,46 @@ def right_of(body: Body, other: Body) -> bool:
     ...
 
 
-def above(body: Body, other: Body) -> bool:
+def above(body: Body, other: Body, reference_point: TransformationMatrix) -> bool:
     """
-    Check if the body is above the other body.
+    Check if the body is above the other body if you are looking from the reference point.
 
     :param body: The body for which the check should be done.
     :param other: The other body.
+    :param reference_point: The reference spot from where to look at the bodies.
     :return: True if the body is above the other body, False otherwise
     """
 
 
-def below(body: Body, other: Body) -> bool:
+def below(body: Body, other: Body, reference_point: TransformationMatrix) -> bool:
     """
-    Check if the body is below the other body.
+    Check if the body is below the other body if you are looking from the reference point.
 
     :param body: The body for which the check should be done.
     :param other: The other body.
+    :param reference_point: The reference spot from where to look at the bodies.
     :return: True if the body is below the other body, False otherwise
     """
     ...
+
+
+def behind(body: Body, other: Body, reference_point: TransformationMatrix) -> bool:
+    """
+    Check if the body is behind the other body if you are looking from the reference point.
+
+    :param body: The body for which the check should be done.
+    :param other: The other body.
+    :param reference_point: The reference spot from where to look at the bodies.
+    :return: True if the body is behind the other body, False otherwise
+    """
+
+
+def in_front_of(body: Body, other: Body, reference_point: TransformationMatrix) -> bool:
+    """
+    Check if the body is in front of another body if you are looking from the reference point.
+
+    :param body: The body for which the check should be done.
+    :param other: The other body.
+    :param reference_point: The reference spot from where to look at the bodies.
+    :return: True if the body is in front of the other body, False otherwise
+    """

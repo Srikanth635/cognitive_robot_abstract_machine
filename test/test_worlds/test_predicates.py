@@ -1,6 +1,7 @@
 import threading
 import time
 
+import numpy as np
 import pytest
 import rclpy
 
@@ -11,6 +12,9 @@ from semantic_world.reasoning.predicates import (
     contact,
     robot_in_collision,
     get_visible_objects,
+    visible,
+    above,
+    below,
 )
 from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.robots import PR2, Camera
@@ -31,6 +35,35 @@ def rclpy_node():
     finally:
         node.destroy_node()
         rclpy.shutdown()
+
+
+@pytest.fixture(scope="session")
+def two_block_world():
+    def make_body(name: str) -> Body:
+        result = Body(name=PrefixedName(name))
+        collision = Box(
+            scale=Scale(1.0, 1.0, 1.0),
+            origin=TransformationMatrix.from_xyz_rpy(reference_frame=result),
+        )
+        result.collision = [collision]
+        return result
+
+    world = World()
+
+    body_1 = make_body("body_1")
+    body_2 = make_body("body_2")
+
+    with world.modify_world():
+        connection = FixedConnection(
+            parent=body_1,
+            child=body_2,
+            _world=world,
+            origin_expression=TransformationMatrix.from_xyz_rpy(
+                z=3, reference_frame=body_1
+            ),
+        )
+        world.add_connection(connection)
+    return body_1, body_2
 
 
 def test_in_contact():
@@ -109,7 +142,7 @@ def test_robot_in_contact(pr2_world: World):
     assert not robot_in_collision(pr2)
 
 
-def test_get_visible_objects(pr2_world: World, rclpy_node):
+def test_get_visible_objects(pr2_world: World):
 
     pr2: PR2 = PR2.from_world(pr2_world)
 
@@ -129,10 +162,14 @@ def test_get_visible_objects(pr2_world: World, rclpy_node):
         pr2_world.add_connection(
             FixedConnection(pr2_world.root, body, _world=pr2_world)
         )
-    viz = VizMarkerPublisher(world=pr2_world, node=rclpy_node)
-    camera = pr2_world.get_views_by_type(Camera)[0]
-    visible_objects = get_visible_objects(camera)
 
-    # time.sleep(10)
-    viz._stop_publishing()
-    assert body in visible_objects
+    camera = pr2_world.get_views_by_type(Camera)[0]
+
+    assert visible(camera, body)
+
+
+def test_above_and_below(two_block_world):
+    center, top = two_block_world
+    pov = TransformationMatrix.from_xyz_rpy(x=3, yaw=np.pi)
+    assert above(top, center, pov)
+    assert below(center, top, pov)
