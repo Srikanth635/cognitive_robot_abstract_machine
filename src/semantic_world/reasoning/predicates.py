@@ -2,13 +2,14 @@ import itertools
 
 import numpy as np
 from entity_query_language import let, an, entity, contains, and_, not_
-from typing_extensions import List, Optional
+from typing_extensions import List, Optional, Tuple
 
 from ..spatial_computations.raytracer import RayTracer
 from ..collision_checking.collision_detector import CollisionCheck
 from ..collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
 from ..robots import RobotView, Camera, Manipulator, Finger, AbstractRobot
 from ..spatial_types.spatial_types import Point3, TransformationMatrix
+from ..world_description.geometry import BoundingBoxCollection
 from ..world_description.world_entity import Body, Region, KinematicStructureEntity
 
 
@@ -224,27 +225,74 @@ def right_of(body: Body, other: Body, reference_point: TransformationMatrix) -> 
     ...
 
 
-def above(body: Body, other: Body, reference_point: TransformationMatrix) -> bool:
+def above(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
     """
-    Check if the body is above the other body if you are looking from the reference point.
+    Check if the body is above the other body with respect to the point_of_view's up direction (+Z axis).
+
+    The "up" direction is taken as the +Z axis of the given point_of_view.
 
     :param body: The body for which the check should be done.
     :param other: The other body.
-    :param reference_point: The reference spot from where to look at the bodies.
-    :return: True if the body is above the other body, False otherwise
+    :param point_of_view: The reference pose that defines the up direction for the comparison.
+    :return: True if the lowest point of `body` along the up direction is higher than the highest point of `other`.
     """
+    assert body._world == other._world, "Both bodies must be in the same world"
+
+    world = body._world
+    reference_frame = world.root  # Use a consistent frame for coordinates
+
+    # Get AABBs in the chosen reference frame
+    body_bbs = body.as_bounding_box_collection_in_frame(reference_frame)
+    other_bbs = other.as_bounding_box_collection_in_frame(reference_frame)
+
+    if not body_bbs.bounding_boxes or not other_bbs.bounding_boxes:
+        return False
+
+    # Up vector from the point_of_view (+Z axis)
+    R = point_of_view.to_np()[:3, :3]
+    up = R[:, 2]
+    up_norm = up / (np.linalg.norm(up) + 1e-12)
+
+    body_min, _ = _proj_min_max(body_bbs, up_norm)
+    _, other_max = _proj_min_max(other_bbs, up_norm)
+
+    eps = 1e-6
+    return (body_min - other_max) > eps
 
 
-def below(body: Body, other: Body, reference_point: TransformationMatrix) -> bool:
+def below(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
     """
-    Check if the body is below the other body if you are looking from the reference point.
+    Check if the body is below the other body with respect to the point_of_view's up direction (+Z axis).
+
+    The "below" direction is taken as the -Z axis of the given point_of_view.
 
     :param body: The body for which the check should be done.
     :param other: The other body.
-    :param reference_point: The reference spot from where to look at the bodies.
-    :return: True if the body is below the other body, False otherwise
+    :param point_of_view: The reference pose that defines the up direction for the comparison.
+    :return: True if the highest point of `body` along the up direction is lower than the lowest point of `other`.
     """
-    ...
+    assert body._world == other._world, "Both bodies must be in the same world"
+
+    world = body._world
+    reference_frame = world.root
+
+    # Get AABBs in the chosen reference frame
+    body_bbs = body.as_bounding_box_collection_in_frame(reference_frame)
+    other_bbs = other.as_bounding_box_collection_in_frame(reference_frame)
+
+    if not body_bbs.bounding_boxes or not other_bbs.bounding_boxes:
+        return False
+
+    # Up vector from the point_of_view (+Z axis)
+    R = point_of_view.to_np()[:3, :3]
+    up = R[:, 2]
+    up_norm = up / (np.linalg.norm(up) + 1e-12)
+
+    _, body_max = _proj_min_max(body_bbs, up_norm)
+    other_min, _ = _proj_min_max(other_bbs, up_norm)
+
+    eps = 1e-6
+    return (other_min - body_max) > eps
 
 
 def behind(body: Body, other: Body, reference_point: TransformationMatrix) -> bool:
@@ -267,3 +315,34 @@ def in_front_of(body: Body, other: Body, reference_point: TransformationMatrix) 
     :param reference_point: The reference spot from where to look at the bodies.
     :return: True if the body is in front of the other body, False otherwise
     """
+
+
+def _proj_min_max(
+    bounding_boxes: BoundingBoxCollection, up_norm: np.ndarray
+) -> Tuple[float, float]:
+    """
+    Projects the bounding boxes onto a given normalized direction vector and calculates
+    the minimum and maximum projections along that vector.
+
+    This function iterates over all vertices of the given bounding boxes, projecting each
+    vertex onto the specified direction vector. It computes the minimum and maximum
+    projection values among all the vertices.
+
+    :param bounding_boxes: The bounding boxes to project onto.
+    :param up_norm: The normalized direction 3D vector.
+
+    :return: The minimum and maximum projection values.
+    """
+    s_min = float("inf")
+    s_max = float("-inf")
+    ux, uy, uz = up_norm
+    for bb in bounding_boxes:
+        for x in (bb.min_x, bb.max_x):
+            for y in (bb.min_y, bb.max_y):
+                for z in (bb.min_z, bb.max_z):
+                    s = x * ux + y * uy + z * uz
+                    if s < s_min:
+                        s_min = s
+                    if s > s_max:
+                        s_max = s
+    return s_min, s_max

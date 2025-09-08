@@ -178,3 +178,24 @@ def test_above_and_below(two_block_world):
     pov = TransformationMatrix.from_xyz_rpy(x=3, yaw=np.pi)
     assert above(top, center, pov)
     assert below(center, top, pov)
+
+    pov = TransformationMatrix.from_xyz_rpy(x=3, roll=np.pi)
+    assert above(center, top, pov)
+    assert below(top, center, pov)
+
+
+#
+# def test_left_and_right(two_block_world):
+#     center, top = two_block_world
+#
+#     pov = TransformationMatrix.from_xyz_rpy(x=-3)
+#     assert above(top, center, pov)
+#     assert below(center, top, pov)
+#
+#     pov = TransformationMatrix.from_xyz_rpy(x=3, yaw=np.pi)
+#     assert above(top, center, pov)
+#     assert below(center, top, pov)
+#
+#     pov = TransformationMatrix.from_xyz_rpy(x=3, roll=np.pi)
+#     assert above(center, top, pov)
+#     assert below(top, center, pov)
