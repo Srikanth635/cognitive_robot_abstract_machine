@@ -9,6 +9,14 @@ from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import wraps, lru_cache
 from itertools import combinations_with_replacement
+
+import matplotlib.pyplot as plt
+import numpy as np
+import rustworkx as rx
+import rustworkx.visit
+import rustworkx.visualization
+from lxml import etree
+from rustworkx import NoEdgeBetweenNodes
 from typing_extensions import (
     Dict,
     Tuple,
@@ -19,17 +27,23 @@ from typing_extensions import (
     Callable,
     Any,
 )
+from typing_extensions import List
 from typing_extensions import Type, Set
 
-import matplotlib.pyplot as plt
-import numpy as np
-import rustworkx as rx
-import rustworkx.visit
-import rustworkx.visualization
-from lxml import etree
-from rustworkx import NoEdgeBetweenNodes
-from typing_extensions import List
-
+from .datastructures.prefixed_name import PrefixedName
+from .datastructures.types import NpMatrix4x4
+from .exceptions import (
+    DuplicateViewError,
+    AddingAnExistingViewError,
+    ViewNotFoundError,
+    AlreadyBelongsToAWorldError,
+)
+from .robots import AbstractRobot
+from .spatial_computations.ik_solver import InverseKinematicsSolver
+from .spatial_types import spatial_types as cas
+from .spatial_types.derivatives import Derivatives
+from .spatial_types.math import inverse_frame
+from .utils import IDGenerator, copy_lru_cache
 from .world_description.connections import (
     ActiveConnection,
     PassiveConnection,
@@ -38,20 +52,6 @@ from .world_description.connections import (
 )
 from .world_description.connections import HasUpdateState, Has1DOFState
 from .world_description.degree_of_freedom import DegreeOfFreedom
-from .exceptions import (
-    DuplicateViewError,
-    AddingAnExistingViewError,
-    ViewNotFoundError,
-    AlreadyBelongsToAWorldError,
-)
-from .spatial_computations.ik_solver import InverseKinematicsSolver
-from .datastructures.prefixed_name import PrefixedName
-from .robots import AbstractRobot
-from .spatial_types import spatial_types as cas
-from .spatial_types.derivatives import Derivatives
-from .spatial_types.math import inverse_frame
-from .datastructures.types import NpMatrix4x4
-from .utils import IDGenerator, copy_lru_cache
 from .world_description.world_entity import (
     Body,
     Connection,
@@ -662,14 +662,14 @@ class World:
     def add_kinematic_structure_entity(
         self,
         kinematic_structure_entity: KinematicStructureEntity,
-        handle_duplicates=True,
+        handle_duplicates: bool = False,
     ) -> None:
         """
         Add a kinematic_structure_entity to the world if it does not exist already.
 
         :param kinematic_structure_entity: The kinematic_structure_entity to add.
         :param handle_duplicates: If True, the kinematic_structure_entity will not be added under a different name, if
-        the name already exists. If False, an error will be raised. Default is True.
+        the name already exists. If False, an error will be raised. Default is False.
         """
         logger.info(
             f"Trying to add kinematic_structure_entity with name {kinematic_structure_entity.name}"
@@ -704,8 +704,8 @@ class World:
 
         self._add_kinematic_structure_entity(kinematic_structure_entity)
 
-    def add_body(self, body: Body) -> None:
-        self.add_kinematic_structure_entity(body)
+    def add_body(self, body: Body, handle_duplicates: bool = False) -> None:
+        self.add_kinematic_structure_entity(body, handle_duplicates)
 
     @atomic_world_modification
     def _add_connection(self, connection: Connection):
@@ -1373,6 +1373,9 @@ class World:
     def kinematic_structure_entities_topologically_sorted(
         self,
     ) -> List[KinematicStructureEntity]:
+        """
+        Return a list of all kinematic_structure_entities in the world, sorted topologically.
+        """
         indices = rx.topological_sort(self.kinematic_structure)
 
         return [self.kinematic_structure[index] for index in indices]
@@ -1385,27 +1388,27 @@ class World:
             if isinstance(entity, Body)
         ]
 
-    def move_subgraph_from_root_to_new_world(
-        self, root: KinematicStructureEntity
+    def copy_subgraph_to_new_world(
+        self, new_root: KinematicStructureEntity
     ) -> World:
         """
         Copies the subgraph of the kinematic structure from the root body to a new world and removes it from the old world.
 
-        :param root: The root body of the subgraph to be copied.
+        :param new_root: The root body of the subgraph to be copied.
         :return: A new `World` instance containing the copied subgraph.
         """
         with self.modify_world():
             new_world = World(name=self.name)
             child_bodies = self.compute_descendent_child_kinematic_structure_entities(
-                root
+                new_root
             )
             child_body_parent_connections = [
                 body.parent_connection for body in child_bodies
             ]
 
             with new_world.modify_world():
-                self.remove_kinematic_structure_entity(root)
-                new_world.add_kinematic_structure_entity(root)
+                self.remove_kinematic_structure_entity(new_root)
+                new_world.add_kinematic_structure_entity(new_root)
 
                 for body in child_bodies:
                     self.remove_kinematic_structure_entity(body)

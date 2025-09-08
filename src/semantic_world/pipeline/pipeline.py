@@ -1,6 +1,6 @@
 import logging
 import re
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Callable
 
@@ -19,11 +19,11 @@ class Step(ABC):
     """
     A Step is a transformation that takes a World as input and produces a modified World as output.
     Steps are intended to be used in a Pipeline, where the output World of one Step is passed as the input World to the next Step.
-    Steps modify the World in-place, and return the modified World.
+    Steps modify the World return it.
     """
 
-    def _apply(self, world: World) -> World:
-        raise NotImplementedError()
+    @abstractmethod
+    def _apply(self, world: World) -> World: ...
 
     def apply(self, world: World) -> World:
         with world.modify_world():
@@ -33,7 +33,7 @@ class Step(ABC):
 @dataclass
 class Pipeline:
     """
-    A Pipeline is a sequence of Steps that are applied to a World in order, in-place.
+    A Pipeline is a sequence of Steps that are applied to a World in order.
     Each Step takes the World as input and produces a modified World as output.
     The output World of one Step is passed as the input World to the next Step.
     """

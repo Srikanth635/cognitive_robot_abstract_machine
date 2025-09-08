@@ -222,10 +222,19 @@ class Wardrobe(Cupboard):
 
 
 @dataclass
-class Room(SupportingSurface):
+class Room(View):
     """
     A view that represents a closed area with a specific purpose
     """
+
+    region: Region
+    """
+    The body that represents the Room.
+    """
+
+    def __post_init__(self):
+        if self.name is None:
+            self.name = self.region.name
 
 
 @dataclass

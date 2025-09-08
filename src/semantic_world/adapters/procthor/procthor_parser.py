@@ -658,7 +658,7 @@ class ProcTHORParser:
         world = World(name=house_name)
         with world.modify_world():
             world_root = Body(name=PrefixedName(house_name))
-            world.add_kinematic_structure_entity(world_root)
+            world.add_kinematic_structure_entity(world_root, handle_duplicates=True)
 
             self.import_rooms(world, house["rooms"])
 

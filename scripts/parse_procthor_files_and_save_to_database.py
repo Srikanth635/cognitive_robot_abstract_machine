@@ -48,7 +48,7 @@ def remove_root_and_move_children_into_new_worlds(world: World) -> List[World]:
     with world.modify_world():
 
         worlds = [
-            world.move_subgraph_from_root_to_new_world(child) for child in root_children
+            world.copy_subgraph_to_new_world(child) for child in root_children
         ]
         for world in worlds:
             world.name = world.root.name.name

@@ -8,6 +8,7 @@ import coacd
 import numpy as np
 import trimesh
 
+from semantic_world.pipeline.pipeline import Step
 from semantic_world.world import World
 from semantic_world.world_description.geometry import TriangleMesh, Shape, Mesh
 from semantic_world.world_description.world_entity import Body
@@ -44,7 +45,7 @@ class PreprocessingMode(StrEnum):
 
 
 @dataclass
-class MeshDecomposer(ABC):
+class MeshDecomposer(Step, ABC):
     """
     MeshDecomposer is an abstract base class for decomposing complex 3D meshes into simpler convex components.
     It provides methods to apply the decomposition to meshes, shapes, bodies, and entire worlds.
@@ -88,7 +89,7 @@ class MeshDecomposer(ABC):
         body.collision = new_geometry
         return body
 
-    def apply_to_world(self, world: World) -> World:
+    def _apply(self, world: World) -> World:
         """
         Apply the mesh decomposition to all bodies in a given world.
         Each body's collision shapes will be replaced with the decomposed shapes.

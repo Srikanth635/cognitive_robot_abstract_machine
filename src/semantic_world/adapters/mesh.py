@@ -90,11 +90,11 @@ class CoordinateAxis(Enum):
     and sign is 1 for positive direction and -1 for negative direction.
     """
 
-    X = (0, 1)
+    POSITIVE_X = (0, 1)
     NEGATIVE_X = (0, -1)
-    Y = (1, 1)
+    POSITIVE_Y = (1, 1)
     NEGATIVE_Y = (1, -1)
-    Z = (2, 1)
+    POSITIVE_Z = (2, 1)
     NEGATIVE_Z = (2, -1)
 
     @classmethod
