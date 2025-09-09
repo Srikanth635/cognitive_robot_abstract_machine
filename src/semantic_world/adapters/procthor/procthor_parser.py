@@ -366,7 +366,9 @@ class ProcthorRoom:
         Returns a World instance with this room as a Region at its root.
         """
 
-        return RoomFactory(name=self.name, polytope=self.centered_polytope).create()
+        return RoomFactory(
+            name=self.name, floor_polytope=self.centered_polytope
+        ).create()
 
 
 @dataclass

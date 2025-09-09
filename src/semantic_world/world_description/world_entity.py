@@ -1,14 +1,22 @@
 from __future__ import annotations
 
 import inspect
-from abc import abstractmethod
-import os
 import itertools
+from abc import abstractmethod
 from collections import deque
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from dataclasses import fields
-from functools import reduce, lru_cache, cached_property
+from functools import lru_cache, cached_property
+
+import numpy as np
+import trimesh
+from random_events.utils import SubclassJSONSerializer
+from scipy.stats import geom
+from trimesh import Trimesh
+from trimesh.proximity import closest_point, nearby_faces
+from trimesh.sample import sample_surface
+from trimesh.util import concatenate
 from typing_extensions import (
     Deque,
     Type,
@@ -20,22 +28,9 @@ from typing_extensions import (
 from typing_extensions import List, Optional, TYPE_CHECKING, Tuple
 from typing_extensions import Set
 
-import numpy as np
-from random_events.interval import closed
-from random_events.polytope import Polytope
-from random_events.product_algebra import SimpleEvent
-from random_events.variable import Continuous
-from random_events.utils import SubclassJSONSerializer
-from scipy.stats import geom
-from trimesh import Trimesh
-from trimesh.proximity import closest_point, nearby_faces
-from trimesh.sample import sample_surface
-from trimesh.util import concatenate
-
-from .geometry import BoundingBoxCollection, BoundingBox
+from .geometry import BoundingBoxCollection, BoundingBox, TriangleMesh
 from .geometry import Shape
 from ..datastructures.prefixed_name import PrefixedName
-from ..datastructures.variables import SpatialVariables
 from ..spatial_types import spatial_types as cas
 from ..spatial_types.spatial_types import TransformationMatrix, Expression, Point3
 from ..utils import IDGenerator
@@ -418,79 +413,68 @@ class Region(KinematicStructureEntity):
     @classmethod
     def from_3d_points(
         cls,
+        name: PrefixedName,
         points_3d: List[Point3],
-        drop_dimension: SpatialVariables,
-        name: Optional[PrefixedName] = None,
         reference_frame: Optional[Body] = None,
+        minimum_thickness: float = 0.005,
+        sv_ratio_tol: float = 1e-7,
     ) -> Self:
         """
-        Constructs a region from a set of 3D points. Requires one dimension to be 'dropped', to create a 2D polygon.
-        The min and max point of the dropped dimension still contribute to the region, but are not considered when
-        calculating the polygon. 'minimum_dropped_dimension_thickness'
+        Constructs a Region from a list of 3D points by creating a convex hull around them.
 
+        :param name: Prefixed name for the region.
         :param points_3d: List of 3D points.
-        :param drop_dimension: Dimension to be dropped to calculate the 2d polygon
-        :param name: Optional prefixed name for the region.
         :param reference_frame: Optional reference frame.
 
         :return: Region object.
         """
+        points = np.asarray([point.to_np()[:3] for point in points_3d], dtype=float)
+        points = np.unique(points, axis=0)
+        assert (
+            len(points) > 4
+        ), "At least 4 unique points are required to define a 3D region."
 
-        # Deterministic axis order to preserve original branch behavior
-        axis_order = [SpatialVariables.x, SpatialVariables.y, SpatialVariables.z]
+        centered_points = points - points.mean(axis=0, keepdims=True)
+        assert np.any(centered_points), "Points must not be all identical."
 
-        # Keep the two axes that aren't dropped, preserving XYZ order
-        kept_axes = [ax for ax in axis_order if ax is not drop_dimension]
-        x_0, x_1 = kept_axes  # these become x_0 and x_1
-
-        points_2d = np.array(
-            [
-                [getattr(p, x_0.name).to_np(), getattr(p, x_1.name).to_np()]
-                for p in points_3d
-            ]
+        _, variance, principal_axis = np.linalg.svd(
+            centered_points, full_matrices=False
+        )
+        smallest_variance_axis = principal_axis[-1]  # this is our normal
+        unit_vector_normal = smallest_variance_axis / np.linalg.norm(
+            smallest_variance_axis
         )
 
-        min_dropped_dimension_thickness = min(
-            getattr(p, drop_dimension.name).to_np() for p in points_3d
+        # Geometric thickness along the “smallest variance” axis
+        thickness_in_normal_direction = np.ptp(
+            centered_points @ unit_vector_normal
+        )  # max - min along smallest_variance_axis
+
+        is_near_planar = variance[0] > 0 and variance[-1] / variance[0] < sv_ratio_tol
+        thickness_padding = (
+            minimum_thickness / 2
+            if thickness_in_normal_direction < minimum_thickness or is_near_planar
+            else 0.0
         )
-        max_dropped_dimension_thickness = max(
-            getattr(p, drop_dimension.name).to_np() for p in points_3d
+        if thickness_padding > 0:
+            P_aug = np.vstack(
+                [
+                    points + thickness_padding * unit_vector_normal,
+                    points - thickness_padding * unit_vector_normal,
+                ]
+            )
+        else:
+            P_aug = points
+
+        hull = trimesh.points.PointCloud(P_aug).convex_hull
+        hull.remove_unreferenced_vertices()
+        hull.remove_degenerate_faces()
+        hull.process()
+
+        area_mesh = TriangleMesh(
+            mesh=hull, origin=TransformationMatrix(reference_frame=reference_frame)
         )
-
-        if min_dropped_dimension_thickness == max_dropped_dimension_thickness:
-            # intervall should not be 0, adding a minimal thickness
-            min_dropped_dimension_thickness -= 0.00001
-            max_dropped_dimension_thickness *= 0.00001
-
-        polytope = Polytope.from_2d_points(points_2d)
-        region_event = polytope.maximum_inner_box().to_simple_event().as_composite_set()
-
-        region_event = region_event.update_variables(
-            {
-                Continuous("x_0"): x_0.value,
-                Continuous("x_1"): x_1.value,
-            }
-        )
-
-        region_event.fill_missing_variables([drop_dimension.value])
-        floor_event = SimpleEvent(
-            {
-                drop_dimension.value: closed(
-                    min_dropped_dimension_thickness, max_dropped_dimension_thickness
-                ),
-            }
-        ).as_composite_set()
-        floor_event.fill_missing_variables(SpatialVariables.xz)
-
-        region_event = region_event & floor_event
-
-        region_bb_collection = BoundingBoxCollection.from_event(
-            reference_frame=reference_frame, event=region_event
-        )
-
-        region_shapes = region_bb_collection.as_shapes()
-
-        return cls(name=name, area=region_shapes)
+        return cls(name=name, area=[area_mesh])
 
 
 GenericKinematicStructureEntity = TypeVar(

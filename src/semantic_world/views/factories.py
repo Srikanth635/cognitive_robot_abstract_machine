@@ -31,6 +31,7 @@ from ..views.views import (
     Wall,
     DoubleDoor,
     Room,
+    Floor,
 )
 from ..world import World
 
@@ -773,7 +774,7 @@ class RoomFactory(ViewFactory[Room]):
     The name of the room.
     """
 
-    polytope: List[Point3]
+    floor_polytope: List[Point3]
     """
     The region that defines the room's boundaries and reference frame.
     """
@@ -786,8 +787,7 @@ class RoomFactory(ViewFactory[Room]):
         world.add_kinematic_structure_entity(room_body)
 
         region = Region.from_3d_points(
-            points_3d=self.polytope,
-            drop_dimension=SpatialVariables.z,
+            points_3d=self.floor_polytope,
             name=PrefixedName(self.name.name + "_region", self.name.prefix),
             reference_frame=room_body,
         )
@@ -798,7 +798,12 @@ class RoomFactory(ViewFactory[Room]):
         )
         world.add_connection(connection)
 
-        room_view = Room(name=self.name, floor=region)
+        floor = Floor(
+            name=PrefixedName(self.name.name + "_floor", self.name.prefix),
+            region=region,
+        )
+        world.add_view(floor)
+        room_view = Room(name=self.name, floor=floor)
         world.add_view(room_view)
 
         return world
