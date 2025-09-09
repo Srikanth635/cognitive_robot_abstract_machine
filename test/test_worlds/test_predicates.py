@@ -291,6 +291,7 @@ def test_supporting(two_block_world):
             reference_frame=center, z=1.
         )
     assert is_supported_by(top, center)
+    assert not is_supported_by(center, top)
 
 
 def test_is_body_in_gripper(

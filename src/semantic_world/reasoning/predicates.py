@@ -243,7 +243,8 @@ def is_supported_by(supported_body: Body, supporting_body: Body, max_intersectio
     If the intersection is higher than this value, the check returns False due to unhandled clipping.
     :return: True if the second object is supported by the first object, False otherwise
     """
-
+    if below(supported_body, supporting_body, supported_body.global_pose):
+        return False
     bounding_box_supported_body = supported_body.as_bounding_box_collection_in_frame(supported_body).event
     bounding_box_supporting_body = supporting_body.as_bounding_box_collection_in_frame(supported_body).event
 
