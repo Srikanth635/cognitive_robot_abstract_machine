@@ -304,52 +304,17 @@ def is_body_in_region(body: Body, region: Region) -> float:
     body_mesh_local = body.combined_collision_mesh
     region_mesh_local = region.combined_area_mesh
 
-    # Defensive checks
-    if body_mesh_local is None or region_mesh_local is None:
-        return 0.0
-
     # Transform copies of the meshes into the world frame
-    body_mesh = body_mesh_local.copy()
-    region_mesh = region_mesh_local.copy()
+    body_mesh = body_mesh_local.copy().apply_transform(body.global_pose.to_np())
+    region_mesh = region_mesh_local.copy().apply_transform(region.global_pose.to_np())
+    intersection = trimesh.boolean.intersection([body_mesh, region_mesh])
 
-    T_bw = body.global_pose.to_np()
-    T_rw = region.global_pose.to_np()
-
-    body_mesh.apply_transform(T_bw)
-    region_mesh.apply_transform(T_rw)
-
-    # Compute intersection in world frame
-    try:
-        intersection = trimesh.boolean.intersection([body_mesh, region_mesh])
-    except Exception:
-        # In case boolean ops are unavailable or fail, conservatively return 0.0
-        return 0.0
-
-    # No intersection -> zero fraction
-    if not intersection:
-        return 0.0
-
-    # Compute volumes robustly (intersection can be a single mesh or a list)
-    body_volume = float(getattr(body_mesh, "volume", 0.0) or 0.0)
+    # no body volume -> zero fraction
+    body_volume = body_mesh.volume
     if body_volume <= 1e-12:
         return 0.0
 
-    if hasattr(intersection, "volume"):
-        intersection_volume = float(intersection.volume or 0.0)
-    elif isinstance(intersection, (list, tuple)):
-        intersection_volume = float(
-            sum(getattr(m, "volume", 0.0) or 0.0 for m in intersection)
-        )
-    else:
-        intersection_volume = 0.0
-
-    # Clamp for numerical stability
-    if intersection_volume < 1e-12:
-        return 0.0
-
-    ratio = intersection_volume / body_volume
-    # Ensure result is within [0, 1] allowing tiny numerical slack
-    return float(max(0.0, min(1.0, ratio)))
+    return intersection.volume / body_volume
 
 
 def left_of(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
