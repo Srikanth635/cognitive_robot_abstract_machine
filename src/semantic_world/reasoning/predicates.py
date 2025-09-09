@@ -3,11 +3,13 @@ import itertools
 import numpy as np
 import trimesh.boolean
 from entity_query_language import let, an, entity, contains, and_, not_
+from random_events.interval import Interval
 from typing_extensions import List, Optional
 
 from ..collision_checking.collision_detector import CollisionCheck
 from ..collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
 from ..datastructures.prefixed_name import PrefixedName
+from ..datastructures.variables import SpatialVariables
 from ..robots import (
     Camera,
     Manipulator,
@@ -46,7 +48,6 @@ def contact(
     :param threshold: The threshold for contact detection
     :return: True if the two objects are in contact False else
     """
-    assert body1._world == body2._world, "Both bodies must be in the same world"
     tcd = TrimeshCollisionDetector(body1._world)
     result = tcd.check_collision_between_bodies(body1, body2)
 
@@ -232,18 +233,28 @@ def blocking(
     raise NotImplementedError
 
 
-def is_supported_by(supported_body: Body, supporting_body: Body) -> bool:
+def is_supported_by(supported_body: Body, supporting_body: Body, max_intersection_height: float = 0.1) -> bool:
     """
     Checks if one object is supporting another object.
 
     :param supported_body: Object that is supported
     :param supporting_body: Object that potentially supports the first object
+    :param max_intersection_height: Maximum height of the intersection between the two objects.
+    If the intersection is higher than this value, the check returns False due to unhandled clipping.
     :return: True if the second object is supported by the first object, False otherwise
     """
-    return contact(supported_body, supporting_body) and above(
-        supported_body, supporting_body, TransformationMatrix()
-    )
 
+    bounding_box_supported_body = supported_body.as_bounding_box_collection_in_frame(supported_body).event
+    bounding_box_supporting_body = supporting_body.as_bounding_box_collection_in_frame(supported_body).event
+
+    intersection = (bounding_box_supported_body & bounding_box_supporting_body).bounding_box()
+
+    if intersection.is_empty():
+        return False
+
+    z_intersection: Interval = intersection[SpatialVariables.z.value]
+    size = sum([si.upper - si.lower for si in z_intersection.simple_sets])
+    return size < max_intersection_height
 
 def is_body_in_gripper(
     body: Body, gripper: ParallelGripper, sample_size: int = 100

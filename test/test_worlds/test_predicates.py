@@ -285,9 +285,10 @@ def test_body_in_region(two_block_world):
 
 def test_supporting(two_block_world):
     center, top = two_block_world
+
     with center._world.modify_world():
         top.parent_connection.origin_expression = TransformationMatrix.from_xyz_rpy(
-            reference_frame=center, z=1.0
+            reference_frame=center, z=1.
         )
     assert is_supported_by(top, center)
 
