@@ -737,26 +737,8 @@ class World:
         for dof in connection.dofs:
             if dof._world is None:
                 self.add_degree_of_freedom(dof)
-        parent_index = self.add_kinematic_structure_entity(
-            connection.parent, handle_duplicates
-        )
-        child_index = self.add_kinematic_structure_entity(
-            connection.child, handle_duplicates
-        )
-
-        parent = (
-            self.kinematic_structure[parent_index]
-            if parent_index is not None
-            else connection.parent
-        )
-        child = (
-            self.kinematic_structure[child_index]
-            if child_index is not None
-            else connection.child
-        )
-
-        connection.parent = parent
-        connection.child = child
+        self.add_kinematic_structure_entity(connection.parent, handle_duplicates)
+        self.add_kinematic_structure_entity(connection.child, handle_duplicates)
 
         self._add_connection(connection)
 

@@ -1,5 +1,7 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Optional
 
 import fbxloader
 import numpy as np
@@ -31,13 +33,15 @@ class CoordinateAxis(Enum):
     NEGATIVE_Z = (2, -1)
 
     @classmethod
-    def from_fbx(cls, axis_value: int, sign: int):
+    def from_fbx(cls, axis_value: int, sign: int) -> CoordinateAxis:
         """Map FBX axis index + sign into a CoordinateAxis enum."""
+        assert axis_value in (0, 1, 2), "axis_value must be 0, 1, or 2"
+        assert sign in (1, -1), "sign must be 1 or -1"
         for member in cls:
             if member.value[0] == axis_value and member.value[1] == sign:
                 return member
 
-    def to_vector(self):
+    def to_vector(self) -> np.ndarray:
         """Convert the CoordinateAxis to a 3D unit vector."""
         idx, sgn = self.value
         v = np.zeros(3)
@@ -85,7 +89,7 @@ class FBXGlobalSettings:
             fbx.fbxtree["GlobalSettings"]["CoordAxisSign"]["value"],
         )
 
-    def get_semantic_world_T_fbx(self):
+    def get_semantic_world_T_fbx(self) -> np.ndarray:
         """
         Get the transformation matrix from FBX to Semantic World coordinate system.
         """
@@ -109,19 +113,25 @@ class FBXParser(MeshParser):
 
     @staticmethod
     def transform_vertices(
-        vertices: np.ndarray, semantic_world_T_fbx: np.ndarray
+        fbx_vertices: np.ndarray, semantic_world_T_fbx: np.ndarray
     ) -> np.ndarray:
         """
         Transform vertices from FBX coordinate system to Semantic World coordinate system.
         """
-        assert vertices.ndim == 2 and vertices.shape[1] == 3, "vertices must be (N,3)"
+        assert (
+            fbx_vertices.ndim == 2 and fbx_vertices.shape[1] == 3
+        ), "vertices must be (N,3)"
         assert semantic_world_T_fbx.shape == (4, 4), "semantic_world_T_fbx must be 4x4"
 
-        ones = np.ones((vertices.shape[0], 1), dtype=vertices.dtype)
-        vert_T_fbx = np.concatenate([vertices, ones], axis=1)
+        fbx_vertices_h = np.hstack(
+            [
+                fbx_vertices,
+                np.ones((fbx_vertices.shape[0], 1), dtype=fbx_vertices.dtype),
+            ]
+        )
 
-        vert_T_semantic_world = vert_T_fbx @ semantic_world_T_fbx.T
-        return vert_T_semantic_world[:, :3]
+        semantic_world_vertices = fbx_vertices_h @ np.linalg.inv(semantic_world_T_fbx)
+        return semantic_world_vertices[:, :3]
 
     def parse(self) -> World:
         """
@@ -147,7 +157,7 @@ class FBXParser(MeshParser):
                     meshes = []
                     for o in obj.children:
                         if isinstance(o, FBXMesh):
-                            aligned_vertices = (
+                            transformed_vertices = (
                                 self.transform_vertices(
                                     o.vertices, semantic_world_T_fbx
                                 )
@@ -157,7 +167,7 @@ class FBXParser(MeshParser):
                             t_mesh = TriangleMesh(
                                 origin=TransformationMatrix(),
                                 mesh=trimesh.Trimesh(
-                                    vertices=aligned_vertices, faces=o.faces
+                                    vertices=transformed_vertices, faces=o.faces
                                 ),
                             )
 
