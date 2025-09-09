@@ -335,7 +335,7 @@ def left_of(body: Body, other: Body, point_of_view: TransformationMatrix) -> boo
     :param point_of_view: The reference spot from where to look at the bodies.
     :return: True if the body is left of the other body, False otherwise
     """
-    return _signed_distance_along_direction(body, other, point_of_view, -1) > 0.0
+    return _signed_distance_along_direction(body, other, point_of_view, 1) > 0.0
 
 
 def right_of(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
