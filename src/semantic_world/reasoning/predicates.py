@@ -3,25 +3,21 @@ import itertools
 import numpy as np
 import trimesh.boolean
 from entity_query_language import let, an, entity, contains, and_, not_
-from trimesh.ray.ray_triangle import RayMeshIntersector
-from typing_extensions import List, Optional, Tuple
+from typing_extensions import List, Optional
 
-from ..datastructures.prefixed_name import PrefixedName
-from ..spatial_computations.raytracer import RayTracer
 from ..collision_checking.collision_detector import CollisionCheck
 from ..collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
+from ..datastructures.prefixed_name import PrefixedName
 from ..robots import (
-    RobotView,
     Camera,
     Manipulator,
-    Finger,
     AbstractRobot,
     ParallelGripper,
 )
-from ..spatial_types.spatial_types import Point3, TransformationMatrix
+from ..spatial_computations.raytracer import RayTracer
+from ..spatial_types.spatial_types import TransformationMatrix
 from ..world import World
 from ..world_description.connections import FixedConnection
-from ..world_description.geometry import BoundingBoxCollection
 from ..world_description.world_entity import Body, Region, KinematicStructureEntity
 
 
@@ -127,8 +123,6 @@ def get_visible_bodies(camera: Camera) -> List[KinematicStructureEntity]:
     rt = RayTracer(camera._world)
     rt.update_scene()
 
-    # Build a camera pose at the camera's position, looking along +X in world coordinates
-    # (RayTracer internally orients the camera to +X for an identity rotation).
     cam_pose = np.eye(4, dtype=float)
     cam_pose[:3, 3] = camera.root.global_pose.to_np()[:3, 3]
 
@@ -207,14 +201,14 @@ def occluding_bodies(camera: Camera, body: Body) -> List[Body]:
 
 
 def reachable(
-    position: Point3, manipulator: Manipulator, threshold: float = 0.05
+    pose: TransformationMatrix, manipulator: Manipulator, threshold: float = 0.05
 ) -> bool:
     """
     Checks if a manipulator can reach a given position. To determine this the inverse kinematics are
     calculated and applied. Afterward the distance between the position and the given manipulator is calculated, if
     it is smaller than the threshold the reasoning query returns True, if not it returns False.
 
-    :param position: The position to reach
+    :param pose: The pose to reach
     :param manipulator: The manipulator that should reach for the position
     :param threshold: The threshold between the end effector and the position.
     :return: True if the end effector is closer than the threshold to the target position, False in every other case
@@ -222,14 +216,16 @@ def reachable(
     raise NotImplementedError
 
 
-def blocking(position: Point3, manipulator: Manipulator) -> Optional[List[Body]]:
+def blocking(
+    pose: TransformationMatrix, manipulator: Manipulator
+) -> Optional[List[Body]]:
     """
     Checks if any objects are blocking another object when a robot tries to pick it. This works
     similar to the reachable predicate. First the inverse kinematics between the robot and the object will be
     calculated and applied. Then it will be checked if the robot is in contact with any object except the given one.
     If the given pose or Object is not reachable None will be returned
 
-    :param position: The position to reach
+    :param pose: The position to reach
     :param manipulator: The manipulator that should reach for the position
     :return: A list of bodies the robot is in collision with when reaching for the specified object or None if the pose or object is not reachable.
     """
@@ -279,9 +275,11 @@ def is_body_in_gripper(
     finger_points = trimesh.sample.sample_surface(finger_mesh, sample_size)[0]
     thumb_points = trimesh.sample.sample_surface(thumb_mesh, sample_size)[0]
 
-    ray_intersector = RayMeshIntersector(body_mesh)
-    hit_indices = ray_intersector.intersects_id(finger_points, thumb_points)[1]
-    return len(hit_indices) / sample_size
+    rt = RayTracer(gripper._world)
+    rt.update_scene()
+
+    points, index_ray, bodies = rt.ray_test(finger_points, thumb_points)
+    return len([b for b in bodies if b == body]) / sample_size
 
 
 def is_body_in_region(body: Body, region: Region) -> float:
@@ -316,9 +314,9 @@ def is_body_in_region(body: Body, region: Region) -> float:
 
 def left_of(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
     """
-    Check if the body is left of the other body if you are looking from the reference point.
+    Check if the body is left of the other body if you are looking from the point of view.
 
-    The "left" direction is taken as the -Y axis of the given reference_point.
+    The "left" direction is taken as the -Y axis of the given point of view.
     The comparison is done using the centers of mass computed from the bodies' collision geometry.
 
     :param body: The body for which the check should be done.
@@ -326,14 +324,14 @@ def left_of(body: Body, other: Body, point_of_view: TransformationMatrix) -> boo
     :param point_of_view: The reference spot from where to look at the bodies.
     :return: True if the body is left of the other body, False otherwise
     """
-    return _signed_distance_along_direction(body, other, point_of_view, 1) > 0.0
+    return _signed_distance_along_direction(body, other, point_of_view, -1) > 0.0
 
 
 def right_of(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
     """
-    Check if the body is right of the other body if you are looking from the reference point.
+    Check if the body is right of the other body if you are looking from the point of view.
 
-    The "right" direction is taken as the +Y axis of the given reference_point.
+    The "right" direction is taken as the +Y axis of the given point of view.
     The comparison is done using the centers of mass computed from the bodies' collision geometry.
 
     :param body: The body for which the check should be done.
@@ -361,9 +359,9 @@ def above(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
 
 def below(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
     """
-    Check if the body is below the other body with respect to the point_of_view's up direction (+Z axis).
+    Check if the body is below the other body with respect to the point of view's up direction (+Z axis).
 
-    The "below" direction is taken as the -Z axis of the given point_of_view.
+    The "below" direction is taken as the -Z axis of the given point of view.
     The comparison is done using the centers of mass computed from the bodies' collision geometry.
 
     :param body: The body for which the check should be done.
@@ -376,9 +374,9 @@ def below(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
 
 def behind(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
     """
-    Check if the body is behind the other body if you are looking from the reference point.
+    Check if the body is behind the other body if you are looking from the point of view.
 
-    The "behind" direction is defined as the -X axis of the given reference_point.
+    The "behind" direction is defined as the -X axis of the given point of view.
     The comparison is done using the centers of mass computed from the bodies' collision
     geometry.
 
@@ -392,9 +390,9 @@ def behind(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool
 
 def in_front_of(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
     """
-    Check if the body is in front of another body if you are looking from the reference point.
+    Check if the body is in front of another body if you are looking from the point of view.
 
-    The "front" direction is defined as the +X axis of the given reference_point.
+    The "front" direction is defined as the +X axis of the given point of view.
     The comparison is done using the centers of mass computed from the bodies' collision
     geometry.
 
