@@ -1,9 +1,26 @@
+import os
+import re
 import unittest
 from dataclasses import dataclass
 
+import numpy as np
+
+from semantic_world.adapters.fbx import FBXParser
+from semantic_world.adapters.procthor.procthor_pipelines import (
+    dresser_factory_from_body,
+    drawer_factory_from_body,
+    door_factory_from_body,
+)
 from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.pipeline.pipeline import Step, Pipeline, BodyFilter
+from semantic_world.pipeline.pipeline import (
+    Step,
+    Pipeline,
+    BodyFilter,
+    CenterLocalGeometryAndPreserveWorldPose,
+    BodyFactoryReplace,
+)
 from semantic_world.spatial_types.spatial_types import TransformationMatrix
+from semantic_world.utils import get_semantic_world_directory_root
 from semantic_world.world import World
 from semantic_world.world_description.connections import FixedConnection
 from semantic_world.world_description.world_entity import Body
@@ -22,6 +39,13 @@ class PipelineTestCase(unittest.TestCase):
             cls.dummy_world.add_body(b1)
             cls.dummy_world.add_body(b2)
             cls.dummy_world.add_connection(c1)
+
+        cls.fbx_path = os.path.join(
+            get_semantic_world_directory_root(os.getcwd()),
+            "resources",
+            "fbx",
+            "test_dressers.fbx",
+        )
 
     def test_pipeline_and_step(self):
 
@@ -53,14 +77,104 @@ class PipelineTestCase(unittest.TestCase):
         self.assertEqual(len(filtered_world.bodies), 1)
         self.assertEqual(filtered_world.root.name, PrefixedName("body1", "test"))
 
-    @unittest.skip("Not sure how we want to test this. Add a test fbx file to repo?")
-    def test_center_local_geometry_and_preserve_world_pose(self): ...
+    def test_center_local_geometry_and_preserve_world_pose(self):
+        world = FBXParser(self.fbx_path).parse()
 
-    @unittest.skip("If we load a test fbx file anyways, might as well use it here too")
-    def test_body_factory_replace(self): ...
+        original_bounding_boxes = [
+            body.as_bounding_box_collection_at_origin(
+                TransformationMatrix(reference_frame=world.root)
+            ).bounding_boxes[0]
+            for body in world.bodies_with_enabled_collision
+        ]
 
-    @unittest.skip("If we load a test fbx file anyways, might as well use it here too")
-    def test_dresser_factory_from_body(self): ...
+        original_global_poses = [
+            body.global_pose.to_np() for body in world.bodies_with_enabled_collision
+        ]
+        for pose in original_global_poses:
+            np.testing.assert_almost_equal(pose, np.eye(4))
+
+        pipeline = Pipeline(steps=[CenterLocalGeometryAndPreserveWorldPose()])
+
+        centered_world = pipeline.apply(world)
+
+        centered_global_poses = [
+            body.global_pose.to_np()
+            for body in centered_world.bodies_with_enabled_collision
+        ]
+        for original, centered in zip(original_global_poses, centered_global_poses):
+            assert not np.allclose(original, centered)
+
+        new_bounding_boxes = [
+            body.as_bounding_box_collection_at_origin(
+                TransformationMatrix(reference_frame=centered_world.root)
+            ).bounding_boxes[0]
+            for body in centered_world.bodies_with_enabled_collision
+        ]
+
+        self.assertEqual(original_bounding_boxes, new_bounding_boxes)
+
+    def test_body_factory_replace(self):
+        dresser_pattern = re.compile(r"^.*dresser_(?!drawer\b).*$", re.IGNORECASE)
+        world = FBXParser(self.fbx_path).parse()
+
+        self.assertIsNotNone(world.get_body_by_name("dresser_205"))
+        self.assertIsNotNone(world.get_body_by_name("dresser_217"))
+        self.assertFalse(world.views)
+
+        procthor_factory_replace_pipeline = Pipeline(
+            [
+                BodyFactoryReplace(
+                    body_condition=lambda b: bool(
+                        dresser_pattern.fullmatch(b.name.name)
+                    )
+                    and not (
+                        "drawer" in b.name.name.lower() or "door" in b.name.name.lower()
+                    ),
+                    factory_creator=dresser_factory_from_body,
+                )
+            ]
+        )
+
+        replaced_world = procthor_factory_replace_pipeline.apply(world)
+
+        self.assertRaises(KeyError, replaced_world.get_body_by_name, "dresser_205")
+        self.assertRaises(KeyError, replaced_world.get_body_by_name, "dresser_217")
+        self.assertTrue(replaced_world.views)
+        self.assertIsNotNone(replaced_world.get_view_by_name("dresser_205"))
+        self.assertIsNotNone(replaced_world.get_view_by_name("dresser_217"))
+
+    def test_dresser_factory_from_body(self):
+        world = FBXParser(self.fbx_path).parse()
+
+        self.assertIsNotNone(dresser := world.get_body_by_name("dresser_205"))
+
+        dresser_factory = dresser_factory_from_body(dresser)
+
+        self.assertEqual(dresser_factory.name.name, "dresser_205")
+        self.assertEqual(len(dresser_factory.drawers_factories), 4)
+        self.assertEqual(len(dresser_factory.drawer_transforms), 4)
+
+    def test_drawer_factory_from_body(self):
+        world = FBXParser(self.fbx_path).parse()
+
+        self.assertIsNotNone(drawer := world.get_body_by_name("dresser_drawer_205_1"))
+
+        drawer_factory = drawer_factory_from_body(drawer)
+
+        self.assertEqual(drawer_factory.name.name, "dresser_drawer_205_1")
+        self.assertIsNotNone(drawer_factory.handle_factory)
+        self.assertIsNotNone(drawer_factory.container_factory)
+
+    def test_door_factory_from_body(self):
+        world = FBXParser(self.fbx_path).parse()
+
+        self.assertIsNotNone(door := world.get_body_by_name("dresser_door_217_1"))
+
+        door_factory = door_factory_from_body(door)
+
+        self.assertEqual(door_factory.name.name, "dresser_door_217_1")
+        self.assertIsNotNone(door_factory.handle_factory)
+        self.assertIsNotNone(door_factory.scale)
 
 
 if __name__ == "__main__":
