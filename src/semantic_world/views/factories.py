@@ -798,7 +798,7 @@ class RoomFactory(ViewFactory[Room]):
         )
         world.add_connection(connection)
 
-        room_view = Room(name=self.name, region=region)
+        room_view = Room(name=self.name, floor=region)
         world.add_view(room_view)
 
         return world

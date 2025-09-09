@@ -419,14 +419,14 @@ class World:
     """
 
     _disabled_collision_pairs: Set[Tuple[Body, Body]] = field(
-        default_factory=lambda: set(), repr=False
+        default_factory=set, repr=False
     )
     """
     Collisions for these Body pairs is disabled.
     """
 
     _temp_disabled_collision_pairs: Set[Tuple[Body, Body]] = field(
-        default_factory=lambda: set(), repr=False
+        default_factory=set, repr=False
     )
     """
     A set of Body pairs for which collisions are temporarily disabled.
@@ -647,29 +647,32 @@ class World:
     @atomic_world_modification
     def _add_kinematic_structure_entity(
         self, kinematic_structure_entity: KinematicStructureEntity
-    ) -> None:
+    ) -> int:
         """
-        Add an kinematic_structure_entity to the world.
+        Add a kinematic_structure_entity to the world.
         Do not call this function directly, use add_kinematic_structure_entity instead.
 
         :param kinematic_structure_entity: The kinematic_structure_entity to add.
+        :return: The index of the added kinematic_structure_entity.
         """
-        kinematic_structure_entity.index = self.kinematic_structure.add_node(
+        index = kinematic_structure_entity.index = self.kinematic_structure.add_node(
             kinematic_structure_entity
         )
         kinematic_structure_entity._world = self
+        return index
 
     def add_kinematic_structure_entity(
         self,
         kinematic_structure_entity: KinematicStructureEntity,
         handle_duplicates: bool = False,
-    ) -> None:
+    ) -> Optional[int]:
         """
         Add a kinematic_structure_entity to the world if it does not exist already.
 
         :param kinematic_structure_entity: The kinematic_structure_entity to add.
         :param handle_duplicates: If True, the kinematic_structure_entity will not be added under a different name, if
         the name already exists. If False, an error will be raised. Default is False.
+        :return: The index of the added kinematic_structure_entity.
         """
         logger.info(
             f"Trying to add kinematic_structure_entity with name {kinematic_structure_entity.name}"
@@ -681,7 +684,7 @@ class World:
             logger.info(
                 f"Skipping since add kinematic_structure_entity already exists."
             )
-            return
+            return None
         elif (
             kinematic_structure_entity._world is not None
             and kinematic_structure_entity._world is not self
@@ -702,10 +705,10 @@ class World:
                 + f"_{id_generator(kinematic_structure_entity)}"
             )
 
-        self._add_kinematic_structure_entity(kinematic_structure_entity)
+        return self._add_kinematic_structure_entity(kinematic_structure_entity)
 
-    def add_body(self, body: Body, handle_duplicates: bool = False) -> None:
-        self.add_kinematic_structure_entity(body, handle_duplicates)
+    def add_body(self, body: Body, handle_duplicates: bool = False) -> Optional[int]:
+        return self.add_kinematic_structure_entity(body, handle_duplicates)
 
     @atomic_world_modification
     def _add_connection(self, connection: Connection):
@@ -723,7 +726,9 @@ class World:
             connection.parent.index, connection.child.index, connection
         )
 
-    def add_connection(self, connection: Connection) -> None:
+    def add_connection(
+        self, connection: Connection, handle_duplicates: bool = False
+    ) -> None:
         """
         Add a connection and the entities it connects to the world.
 
@@ -732,8 +737,27 @@ class World:
         for dof in connection.dofs:
             if dof._world is None:
                 self.add_degree_of_freedom(dof)
-        self.add_kinematic_structure_entity(connection.parent)
-        self.add_kinematic_structure_entity(connection.child)
+        parent_index = self.add_kinematic_structure_entity(
+            connection.parent, handle_duplicates
+        )
+        child_index = self.add_kinematic_structure_entity(
+            connection.child, handle_duplicates
+        )
+
+        parent = (
+            self.kinematic_structure[parent_index]
+            if parent_index is not None
+            else connection.parent
+        )
+        child = (
+            self.kinematic_structure[child_index]
+            if child_index is not None
+            else connection.child
+        )
+
+        connection.parent = parent
+        connection.child = child
+
         self._add_connection(connection)
 
     def add_view(self, view: View, exists_ok: bool = False) -> None:
@@ -948,13 +972,19 @@ class World:
                     self.remove_degree_of_freedom(dof)
             self._remove_connection(connection)
 
-    def merge_world(self, other: World, root_connection: Connection = None) -> None:
+    def merge_world(
+        self,
+        other: World,
+        root_connection: Connection = None,
+        handle_duplicates: bool = False,
+    ) -> None:
         """
         Merge a world into the existing one by merging degrees of freedom, states, connections, and bodies.
         This removes all bodies and connections from `other`.
 
         :param other: The world to be added.
         :param root_connection: If provided, this connection will be used to connect the two worlds. Otherwise, a new Connection6DoF will be created
+        :param handle_duplicates: If True, bodies and views with duplicate names will be renamed. If False, an error will be raised if duplicates are found.
         :return: None
         """
         assert other is not self, "Cannot merge a world with itself."
@@ -975,7 +1005,7 @@ class World:
                 for connection in other.connections:
                     other.remove_kinematic_structure_entity(connection.parent)
                     other.remove_kinematic_structure_entity(connection.child)
-                    self.add_connection(connection)
+                    self.add_connection(connection, handle_duplicates=handle_duplicates)
                 for kinematic_structure_entity in other.kinematic_structure_entities:
                     if kinematic_structure_entity._world is not None:
                         other.remove_kinematic_structure_entity(
@@ -992,7 +1022,7 @@ class World:
             )
             for dof in connection.dofs:
                 self.add_degree_of_freedom(dof)
-            self.add_connection(connection)
+            self.add_connection(connection, handle_duplicates=handle_duplicates)
 
     def move_branch(self, branch_root: Body, new_parent: Body) -> None:
         """
@@ -1388,9 +1418,7 @@ class World:
             if isinstance(entity, Body)
         ]
 
-    def copy_subgraph_to_new_world(
-        self, new_root: KinematicStructureEntity
-    ) -> World:
+    def copy_subgraph_to_new_world(self, new_root: KinematicStructureEntity) -> World:
         """
         Copies the subgraph of the kinematic structure from the root body to a new world and removes it from the old world.
 

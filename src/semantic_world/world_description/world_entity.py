@@ -424,7 +424,7 @@ class Region(KinematicStructureEntity):
         reference_frame: Optional[Body] = None,
     ) -> Self:
         """
-        Constructs a region from a set of 3D points. Requires one dimension to be 'dropped', to create a 2s polygon.
+        Constructs a region from a set of 3D points. Requires one dimension to be 'dropped', to create a 2D polygon.
         The min and max point of the dropped dimension still contribute to the region, but are not considered when
         calculating the polygon. 'minimum_dropped_dimension_thickness'
 

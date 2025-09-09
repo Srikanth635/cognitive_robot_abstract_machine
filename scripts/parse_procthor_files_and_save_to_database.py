@@ -11,7 +11,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from typing_extensions import TYPE_CHECKING
 
-from semantic_world.adapters.mesh import FBXParser
+from semantic_world.adapters.fbx import FBXParser
 from semantic_world.adapters.procthor.procthor_pipelines import (
     dresser_factory_from_body,
 )
@@ -20,7 +20,7 @@ from semantic_world.pipeline.pipeline import (
     Pipeline,
     BodyFilter,
     BodyFactoryReplace,
-    CenterLocalGeometryPreserveWorldPose,
+    CenterLocalGeometryAndPreserveWorldPose,
 )
 
 if TYPE_CHECKING:
@@ -47,9 +47,7 @@ def remove_root_and_move_children_into_new_worlds(world: World) -> List[World]:
 
     with world.modify_world():
 
-        worlds = [
-            world.copy_subgraph_to_new_world(child) for child in root_children
-        ]
+        worlds = [world.copy_subgraph_to_new_world(child) for child in root_children]
         for world in worlds:
             world.name = world.root.name.name
 
@@ -90,7 +88,7 @@ def parse_fbx_file_to_world_mapping_daos(fbx_file_path: str) -> List[WorldMappin
 
     pipeline = Pipeline(
         [
-            CenterLocalGeometryPreserveWorldPose(),
+            CenterLocalGeometryAndPreserveWorldPose(),
             BodyFilter(lambda x: not x.name.name.startswith("PS_")),
             BodyFilter(lambda x: not x.name.name.endswith("slice")),
         ]

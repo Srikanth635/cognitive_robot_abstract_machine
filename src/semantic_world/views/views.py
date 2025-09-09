@@ -131,7 +131,7 @@ class SupportingSurface(View):
 
     region: Region
     """
-    The body that represents the supporting surface.
+    The region that represents the supporting surface.
     """
 
     def __post_init__(self):
@@ -221,20 +221,23 @@ class Wardrobe(Cupboard):
     doors: List[Door] = field(default_factory=list)
 
 
+class Floor(SupportingSurface): ...
+
+
 @dataclass
 class Room(View):
     """
     A view that represents a closed area with a specific purpose
     """
 
-    region: Region
+    floor: Floor
     """
-    The body that represents the Room.
+    The room's floor.
     """
 
     def __post_init__(self):
         if self.name is None:
-            self.name = self.region.name
+            self.name = self.floor.name
 
 
 @dataclass

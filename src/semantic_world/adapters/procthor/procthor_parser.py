@@ -621,7 +621,7 @@ class ProcTHORParser:
                 child=obj_world.root,
                 origin_expression=procthor_object.world_T_obj,
             )
-            world.merge_world(obj_world, obj_connection)
+            world.merge_world(obj_world, obj_connection, handle_duplicates=True)
 
     def import_walls_and_doors(
         self, world: World, walls: List[Dict], doors: List[Dict]

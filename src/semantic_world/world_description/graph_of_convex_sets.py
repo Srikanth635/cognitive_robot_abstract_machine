@@ -241,13 +241,13 @@ class GraphOfConvexSets:
         """
         if search_space is None:
             search_space = BoundingBox(
-                -np.inf,
-                -np.inf,
-                -np.inf,
-                np.inf,
-                np.inf,
-                np.inf,
-                TransformationMatrix(reference_frame=world.root),
+                min_x=-np.inf,
+                min_y=-np.inf,
+                min_z=-np.inf,
+                max_x=np.inf,
+                max_y=np.inf,
+                max_z=np.inf,
+                origin=TransformationMatrix(reference_frame=world.root),
             ).as_collection()
         return search_space
 

@@ -714,14 +714,13 @@ class BoundingBox:
         reference_T_self: TransformationMatrix = reference_T_origin @ origin_T_self
 
         # Get all 8 corners of the BB in link-local space
-        list_origin_T_corner = [
-            TransformationMatrix.from_point_rotation_matrix(origin_P_corner)
-            for origin_P_corner in self.get_points()
+        list_self_T_corner = [
+            TransformationMatrix.from_point_rotation_matrix(self_T_corner)
+            for self_T_corner in self.get_points()
         ]  # shape (8, 3)
 
         list_reference_T_corner = [
-            reference_T_self @ origin_T_corner
-            for origin_T_corner in list_origin_T_corner
+            reference_T_self @ self_T_corner for self_T_corner in list_self_T_corner
         ]
 
         list_reference_P_corner = [

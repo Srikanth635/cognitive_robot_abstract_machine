@@ -19,7 +19,6 @@ class Step(ABC):
     """
     A Step is a transformation that takes a World as input and produces a modified World as output.
     Steps are intended to be used in a Pipeline, where the output World of one Step is passed as the input World to the next Step.
-    Steps modify the World return it.
     """
 
     @abstractmethod
@@ -65,7 +64,7 @@ class BodyFilter(Step):
 
 
 @dataclass
-class CenterLocalGeometryPreserveWorldPose(Step):
+class CenterLocalGeometryAndPreserveWorldPose(Step):
     """
     Adjusts the vertices of the collision meshes of each body in the world so that the origin is at the center of the
     mesh, and then updates the parent connection of the body to preserve the original world pose.
