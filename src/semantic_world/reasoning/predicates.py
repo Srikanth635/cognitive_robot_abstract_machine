@@ -279,8 +279,8 @@ def is_body_in_gripper(
     finger_mesh.apply_transform(gripper.finger.tip.global_pose.to_np())
 
     # get random points from thumb mesh
-    finger_points = trimesh.sample.sample_surface(finger_mesh, 100)[0]
-    thumb_points = trimesh.sample.sample_surface(thumb_mesh, 100)[0]
+    finger_points = trimesh.sample.sample_surface(finger_mesh, sample_size)[0]
+    thumb_points = trimesh.sample.sample_surface(thumb_mesh, sample_size)[0]
 
     ray_intersector = RayMeshIntersector(body_mesh)
     hit_indices = ray_intersector.intersects_id(finger_points, thumb_points)[1]
