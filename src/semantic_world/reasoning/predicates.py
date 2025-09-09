@@ -174,11 +174,6 @@ def occluding_bodies(camera: Camera, body: Body) -> List[Body]:
             # Convert Point3 to numpy array in world frame
             target_points_list.append(pt.to_np()[:3])
 
-    # Fallback: if no bounding boxes or points, use the center of mass
-    if not target_points_list:
-        com_world = _center_of_mass_in_world(body)
-        target_points_list.append(com_world)
-
     target_points = np.asarray(target_points_list, dtype=float)
     origin_points = np.repeat(cam_origin.reshape(1, 3), len(target_points), axis=0)
 
@@ -357,7 +352,7 @@ def is_body_in_region(body: Body, region: Region) -> float:
     return float(max(0.0, min(1.0, ratio)))
 
 
-def left_of(body: Body, other: Body, reference_point: TransformationMatrix) -> bool:
+def left_of(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
     """
     Check if the body is left of the other body if you are looking from the reference point.
 
@@ -366,24 +361,13 @@ def left_of(body: Body, other: Body, reference_point: TransformationMatrix) -> b
 
     :param body: The body for which the check should be done.
     :param other: The other body.
-    :param reference_point: The reference spot from where to look at the bodies.
+    :param point_of_view: The reference spot from where to look at the bodies.
     :return: True if the body is left of the other body, False otherwise
     """
-    assert body._world == other._world, "Both bodies must be in the same world"
-
-    # Left direction in world coordinates from the reference_point (+Y axis)
-    ref_np = reference_point.to_np()
-    left_world = ref_np[:3, 1]
-    left_norm = left_world / (np.linalg.norm(left_world) + 1e-12)
-
-    s_body = float(np.dot(left_norm, _center_of_mass_in_world(body)))
-    s_other = float(np.dot(left_norm, _center_of_mass_in_world(other)))
-
-    eps = 1e-9
-    return s_body > s_other + eps
+    return _signed_distance_along_direction(body, other, point_of_view, 1) > 0.0
 
 
-def right_of(body: Body, other: Body, reference_point: TransformationMatrix) -> bool:
+def right_of(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
     """
     Check if the body is right of the other body if you are looking from the reference point.
 
@@ -392,19 +376,10 @@ def right_of(body: Body, other: Body, reference_point: TransformationMatrix) -> 
 
     :param body: The body for which the check should be done.
     :param other: The other body.
+    :param point_of_view: The reference pose that defines the up direction for the comparison.
     :return: True if the body is right of the other body, False otherwise
     """
-    assert body._world == other._world, "Both bodies must be in the same world"
-
-    ref_np = reference_point.to_np()
-    left_world = ref_np[:3, 1]
-    left_norm = left_world / (np.linalg.norm(left_world) + 1e-12)
-
-    s_body = float(np.dot(left_norm, _center_of_mass_in_world(body)))
-    s_other = float(np.dot(left_norm, _center_of_mass_in_world(other)))
-
-    eps = 1e-9
-    return s_body < s_other - eps
+    return _signed_distance_along_direction(body, other, point_of_view, 1) < 0.0
 
 
 def above(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
@@ -419,18 +394,7 @@ def above(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
     :param point_of_view: The reference pose that defines the up direction for the comparison.
     :return: True if the center of mass of "body" is above that of "other" along the point_of_view's +Z axis.
     """
-    assert body._world == other._world, "Both bodies must be in the same world"
-
-    # Up direction in world coordinates from the point_of_view (+Z axis)
-    pov_np = point_of_view.to_np()
-    up_world = pov_np[:3, 2]
-    up_norm = up_world / (np.linalg.norm(up_world) + 1e-12)
-
-    s_body = float(np.dot(up_norm, _center_of_mass_in_world(body)))
-    s_other = float(np.dot(up_norm, _center_of_mass_in_world(other)))
-
-    eps = 1e-9
-    return s_body > s_other + eps
+    return _signed_distance_along_direction(body, other, point_of_view, 2) > 0.0
 
 
 def below(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
@@ -445,20 +409,10 @@ def below(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
     :param point_of_view: The reference pose that defines the up direction for the comparison.
     :return: True if the center of mass of "body" is below that of "other" along the point_of_view's +Z axis.
     """
-    assert body._world == other._world, "Both bodies must be in the same world"
-
-    pov_np = point_of_view.to_np()
-    up_world = pov_np[:3, 2]
-    up_norm = up_world / (np.linalg.norm(up_world) + 1e-12)
-
-    s_body = float(np.dot(up_norm, _center_of_mass_in_world(body)))
-    s_other = float(np.dot(up_norm, _center_of_mass_in_world(other)))
-
-    eps = 1e-9
-    return s_body < s_other - eps
+    return _signed_distance_along_direction(body, other, point_of_view, 2) < 0.0
 
 
-def behind(body: Body, other: Body, reference_point: TransformationMatrix) -> bool:
+def behind(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
     """
     Check if the body is behind the other body if you are looking from the reference point.
 
@@ -468,24 +422,13 @@ def behind(body: Body, other: Body, reference_point: TransformationMatrix) -> bo
 
     :param body: The body for which the check should be done.
     :param other: The other body.
-    :param reference_point: The reference spot from where to look at the bodies.
+    :param point_of_view: The reference spot from where to look at the bodies.
     :return: True if the body is behind the other body, False otherwise
     """
-    assert body._world == other._world, "Both bodies must be in the same world"
-
-    # Front direction in world coordinates from the reference_point (+X axis)
-    ref_np = reference_point.to_np()
-    front_world = ref_np[:3, 0]
-    front_norm = front_world / (np.linalg.norm(front_world) + 1e-12)
-
-    s_body = float(np.dot(front_norm, _center_of_mass_in_world(body)))
-    s_other = float(np.dot(front_norm, _center_of_mass_in_world(other)))
-
-    eps = 1e-9
-    return s_body < s_other - eps
+    return _signed_distance_along_direction(body, other, point_of_view, 0) < 0.0
 
 
-def in_front_of(body: Body, other: Body, reference_point: TransformationMatrix) -> bool:
+def in_front_of(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
     """
     Check if the body is in front of another body if you are looking from the reference point.
 
@@ -495,20 +438,10 @@ def in_front_of(body: Body, other: Body, reference_point: TransformationMatrix) 
 
     :param body: The body for which the check should be done.
     :param other: The other body.
-    :param reference_point: The reference spot from where to look at the bodies.
+    :param point_of_view: The reference spot from where to look at the bodies.
     :return: True if the body is in front of the other body, False otherwise
     """
-    assert body._world == other._world, "Both bodies must be in the same world"
-
-    ref_np = reference_point.to_np()
-    front_world = ref_np[:3, 0]
-    front_norm = front_world / (np.linalg.norm(front_world) + 1e-12)
-
-    s_body = float(np.dot(front_norm, _center_of_mass_in_world(body)))
-    s_other = float(np.dot(front_norm, _center_of_mass_in_world(other)))
-
-    eps = 1e-9
-    return s_body > s_other + eps
+    return _signed_distance_along_direction(body, other, point_of_view, 0) > 0.0
 
 
 def _center_of_mass_in_world(b: Body) -> np.ndarray:
@@ -523,3 +456,32 @@ def _center_of_mass_in_world(b: Body) -> np.ndarray:
     T_bw = b.global_pose.to_np()  # body -> world
     com_h = np.array([com_local[0], com_local[1], com_local[2], 1.0], dtype=float)
     return (T_bw @ com_h)[:3]
+
+
+def _signed_distance_along_direction(
+    body: Body, other: Body, point_of_view: TransformationMatrix, index: int
+) -> float:
+    """
+    Calculate the spatial relation between two bodies with respect to a given
+    reference point and a specified axis index. This function computes the
+    signed distance along a specified direction derived from the reference point
+    to compare the positions of the centers of mass of the two bodies.
+
+    :param body: The first body for which the spatial relation is calculated.
+    :param other: The second body to which the spatial relation is compared.
+    :param point_of_view: Transformation matrix that provides the reference
+        frame for the calculation.
+    :param index: The index of the axis in the transformation matrix along which
+        the spatial relation is computed.
+    :return: The signed distance between the first and the second body's centers
+        of mass along the given direction. A positive result indicates that the
+        first body's center of mass is further along the direction of the
+        specified axis than the second body's center of mass.
+    """
+    ref_np = point_of_view.to_np()
+    front_world = ref_np[:3, index]
+    front_norm = front_world / (np.linalg.norm(front_world) + 1e-12)
+
+    s_body = float(np.dot(front_norm, _center_of_mass_in_world(body)))
+    s_other = float(np.dot(front_norm, _center_of_mass_in_world(other)))
+    return s_body - s_other
