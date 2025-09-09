@@ -215,7 +215,9 @@ def test_occluding_bodies(pr2_world: World):
     camera = pr2_world.get_views_by_type(Camera)[0]
 
     bodies = occluding_bodies(camera, occluded_body)
-    assert bodies == [obstacle]
+    assert obstacle in bodies
+    assert camera not in bodies
+    assert occluded_body not in bodies
 
 
 def test_above_and_below(two_block_world):

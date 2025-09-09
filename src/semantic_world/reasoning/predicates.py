@@ -6,6 +6,7 @@ from entity_query_language import let, an, entity, contains, and_, not_
 from trimesh.ray.ray_triangle import RayMeshIntersector
 from typing_extensions import List, Optional, Tuple
 
+from ..datastructures.prefixed_name import PrefixedName
 from ..spatial_computations.raytracer import RayTracer
 from ..collision_checking.collision_detector import CollisionCheck
 from ..collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
@@ -18,6 +19,8 @@ from ..robots import (
     ParallelGripper,
 )
 from ..spatial_types.spatial_types import Point3, TransformationMatrix
+from ..world import World
+from ..world_description.connections import FixedConnection
 from ..world_description.geometry import BoundingBoxCollection
 from ..world_description.world_entity import Body, Region, KinematicStructureEntity
 
@@ -148,65 +151,59 @@ def occluding_bodies(camera: Camera, body: Body) -> List[Body]:
     """
     Determines the bodies that occlude a given body in the scene as seen from a specified camera.
 
-    This function uses a ray-tracing approach to check occlusion. Rays are cast from the camera's
-    origin towards points sampled on the given body's bounding boxes. If the rays are obstructed by
-    another body before reaching the target body, these obstructing bodies are identified as occluders.
+    This function uses a ray-tracing approach to check occlusion. Every body that hides anything from the target body
+    is an occluding body.
 
     :param camera: The camera for which the occluding bodies should be returned
     :param body: The body for which the occluding bodies should be returned
     :return: A list of bodies that are occluding the given body.
     """
-    # Initialize ray tracer and ensure scene is up-to-date
-    rt = RayTracer(camera._world)
-    rt.update_scene()
 
-    # Camera origin (use same convention as get_visible_bodies: camera root position)
-    cam_T_world = camera.root.global_pose.to_np()
-    cam_origin = cam_T_world[:3, 3]
+    # get camera pose
+    camera_pose = np.eye(4, dtype=float)
+    camera_pose[:3, 3] = camera.root.global_pose.to_np()[:3, 3]
 
-    # Sample points on the body's world-aligned bounding boxes
-    # Use all collision shapes' bounding boxes transformed to world frame
-    bb_collection = body.as_bounding_box_collection_in_frame(camera._world.root)
-    target_points_list: List[np.ndarray] = []
-    for bb in bb_collection.bounding_boxes:
-        # 8 corners per bounding box
-        for pt in bb.get_points():
-            # Convert Point3 to numpy array in world frame
-            target_points_list.append(pt.to_np()[:3])
-
-    target_points = np.asarray(target_points_list, dtype=float)
-    origin_points = np.repeat(cam_origin.reshape(1, 3), len(target_points), axis=0)
-
-    # Perform ray tests
-    hit_points, hit_indices, hit_bodies = rt.ray_test(origin_points, target_points)
-
-    occluders: list[Body] = []
-    seen = set()
-
-    # Map from local index in hit results to original ray index
-    # hit_indices are the indices into the input rays that had a hit
-    eps = 1e-9
-    for i_result, ray_idx in enumerate(hit_indices):
-        hit_body = hit_bodies[i_result]
-        if hit_body is None:
-            continue
-        # Ignore the target body itself
-        if hit_body == body:
-            continue
-
-        # Distances: camera -> first hit, camera -> target sample point
-        d_hit = float(np.linalg.norm(hit_points[i_result] - origin_points[ray_idx]))
-        d_target = float(
-            np.linalg.norm(target_points[ray_idx] - origin_points[ray_idx])
+    # create a world only containing the target body
+    world_without_occlusion = World()
+    root = Body(name=PrefixedName("root"))
+    with world_without_occlusion.modify_world():
+        world_without_occlusion.add_body(root)
+        copied_body = Body.from_json(body.to_json())
+        root_to_copied_body = FixedConnection(
+            parent=root,
+            child=copied_body,
+            _world=world_without_occlusion,
+            origin_expression=body.global_pose,
         )
+        world_without_occlusion.add_connection(root_to_copied_body)
 
-        # If the first hit is before reaching the sample point on the target, it occludes that ray
-        if d_hit + eps < d_target:
-            if hit_body not in seen:
-                seen.add(hit_body)
-                occluders.append(hit_body)
+    # get segmentation mask without occlusion
+    ray_tracer_without_occlusion = RayTracer(world_without_occlusion)
+    ray_tracer_without_occlusion.update_scene()
+    segmentation_mask_without_occlusion = (
+        ray_tracer_without_occlusion.create_segmentation_mask(
+            camera_pose, resolution=256
+        )
+    )
 
-    return occluders
+    # get segmentation mask with occlusion
+    ray_tracer_with_occlusion = RayTracer(camera._world)
+    ray_tracer_with_occlusion.update_scene()
+    segmentation_mask_with_occlusion = (
+        ray_tracer_with_occlusion.create_segmentation_mask(camera_pose, resolution=256)
+    )
+
+    mask_without_occluders = segmentation_mask_without_occlusion[
+        segmentation_mask_without_occlusion == copied_body.index
+    ].nonzero()
+
+    mask_with_occluders = segmentation_mask_with_occlusion[
+        mask_without_occluders != body.index
+    ]
+    indices = np.unique(mask_with_occluders)
+    indices = indices[indices > -1]
+    bodies = [camera._world.kinematic_structure[i] for i in indices]
+    return bodies
 
 
 def reachable(
