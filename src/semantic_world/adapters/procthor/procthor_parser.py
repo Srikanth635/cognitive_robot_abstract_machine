@@ -8,10 +8,7 @@ from typing import Dict, Tuple, Union, Set
 import numpy as np
 from entity_query_language import the, entity, let
 
-try:
-    from ormatic.eql_interface import eql_to_sql
-except:
-    ...
+from ormatic.eql_interface import eql_to_sql
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 
@@ -501,7 +498,7 @@ class ProcTHORParser:
     def parse(self) -> World:
         """
         Parses a JSON file from procthor into a world.
-        Rooms are represented as Regions
+        Room floor areas are constructed from the supplied polygons
         Walls and doors are constructed from the supplied polygons
         Objects are imported from the database
         """
