@@ -4,17 +4,19 @@ import unittest
 import trimesh.boolean
 
 from semantic_world.adapters.mesh import STLParser
-from semantic_world.geometry import Box
-from semantic_world.prefixed_name import PrefixedName
+from semantic_world.world_description.geometry import Box
+from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.spatial_types.spatial_types import TransformationMatrix
-from semantic_world.world_entity import Body
+from semantic_world.world_description.world_entity import Body
 
 
 class JSONTestCase(unittest.TestCase):
 
     def test_json_serialization(self):
         body = Body(name=PrefixedName("body"))
-        collision = [Box(origin=TransformationMatrix.from_xyz_rpy(0, 1, 0, 0, 0, 1, body))]
+        collision = [
+            Box(origin=TransformationMatrix.from_xyz_rpy(0, 1, 0, 0, 0, 1, body))
+        ]
         body.collision = collision
 
         json_data = body.to_json()
@@ -29,7 +31,14 @@ class JSONTestCase(unittest.TestCase):
     def test_json_serialization_with_mesh(self):
         body: Body = (
             STLParser(
-                os.path.join(os.path.dirname(__file__), "..", "..", "resources", "stl", "milk.stl")
+                os.path.join(
+                    os.path.dirname(__file__),
+                    "..",
+                    "..",
+                    "resources",
+                    "stl",
+                    "milk.stl",
+                )
             )
             .parse()
             .root
