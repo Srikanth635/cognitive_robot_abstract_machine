@@ -29,9 +29,10 @@ pip install -r requirements.txt
 
 
 # Tests
-The tests can be run using `pytest` after installing the package.
+The tests can be run with `pytest` directly in PyCharm or from the terminal after installing Semantic World as a python package.
 
 ```bash
+pip install -e .
 pytest test/
 ```
 
