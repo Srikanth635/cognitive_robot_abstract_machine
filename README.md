@@ -20,6 +20,14 @@ If you are interested in contributing, you can check out the source code from Gi
 git clone https://github.com/cram2/semantic_world.git
 ```
 
+### Development Dependencies
+
+```bash
+sudo apt install -y graphviz graphviz-dev
+pip install -r requirements.txt
+```
+
+
 # Tests
 The tests can be run using `pytest` after installing the package.
 
