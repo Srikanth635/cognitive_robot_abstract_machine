@@ -159,7 +159,7 @@ class Manipulator(RobotView, ABC):
     Abstract base class of robot manipulators. Always has a tool frame.
     """
 
-    tool_frame: KinematicStructureEntity = field(default=None)
+    tool_frame: Body = field(default=None)
 
     def assign_to_robot(self, robot: AbstractRobot):
         """

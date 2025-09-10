@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from itertools import combinations
-from typing_extensions import Optional, Set, List, Dict
+from typing_extensions import Optional, Set, List, Dict, Iterable
 
 import fcl
 from trimesh.collision import CollisionManager, mesh_to_BVH
@@ -68,7 +68,7 @@ class TrimeshCollisionDetector(CollisionDetector):
             )
 
     def check_collisions(
-        self, collision_matrix: Optional[Set[CollisionCheck]] = None
+        self, collision_matrix: Optional[Iterable[CollisionCheck]] = None
     ) -> List[Collision]:
         """
         Checks for collisions in the current world state. The collision manager from trimesh returns all collisions,
@@ -81,16 +81,11 @@ class TrimeshCollisionDetector(CollisionDetector):
         self.sync_world_model()
         self.sync_world_state()
 
+        if collision_matrix is None:
+            return []
+
         collision_pairs = (
             [(cc.body_a, cc.body_b, cc.distance) for cc in collision_matrix]
-            if collision_matrix
-            else None
-            or (
-                (body_a, body_b, 0.1)
-                for body_a, body_b in combinations(
-                    self._world.bodies_with_enabled_collision, 2
-                )
-            )
         )
         result = []
         for body_a, body_b, distance in collision_pairs:

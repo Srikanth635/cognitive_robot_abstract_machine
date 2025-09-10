@@ -519,7 +519,7 @@ class RootedView(View):
     Represents a view that is rooted in a specific KinematicStructureEntity.
     """
 
-    root: KinematicStructureEntity = field(default=None)
+    root: Body = field(default=None)
 
     @property
     def connections(self) -> List[Connection]:

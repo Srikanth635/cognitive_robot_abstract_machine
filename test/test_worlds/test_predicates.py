@@ -26,6 +26,7 @@ from semantic_world.reasoning.predicates import (
     is_body_in_gripper,
     robot_holds_body,
     reachable,
+    blocking,
 )
 from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.robots import PR2, Camera, Finger, ParallelGripper, Manipulator
@@ -347,11 +348,41 @@ def test_is_body_in_gripper(
 def test_reachable(pr2_world):
     pr2: PR2 = PR2.from_world(pr2_world)
 
-    point_in_front = TransformationMatrix.from_xyz_rpy(
+    point_in_front = TransformationMatrix.from_xyz_rpy(x=-0.2, y=0.3,
         reference_frame=pr2.left_arm.manipulator.tool_frame,
     )
 
-    manipulator = [
-        m for m in pr2_world.get_views_by_type(Manipulator) if "left" in m.name.name
-    ][0]
-    assert reachable(point_in_front, pr2.left_arm)
+    assert reachable(point_in_front, pr2.left_arm.root, pr2.left_arm.manipulator.tool_frame)
+    assert not blocking(point_in_front, pr2.left_arm.root, pr2.left_arm.manipulator.tool_frame)
+    unreachable_point = TransformationMatrix.from_xyz_rpy(x=10, y=10, reference_frame=pr2.left_arm.manipulator.tool_frame)
+    assert not reachable(unreachable_point, pr2.left_arm.root, pr2.left_arm.manipulator.tool_frame)
+
+def test_blocking(pr2_world):
+
+    pr2: PR2 = PR2.from_world(pr2_world)
+
+    obstacle = Body(name=PrefixedName("obstacle"))
+    collision = Box(
+        scale=Scale(3.0, 1.0, 1.0),
+        origin=TransformationMatrix.from_xyz_rpy(x=1., z=0.5),
+    )
+    obstacle.collision = [collision]
+
+    with pr2_world.modify_world():
+        new_root = Body(name=PrefixedName("new_root"))
+        pr2_world.add_connection(Connection6DoF(new_root, pr2_world.root, _world=pr2_world))
+        pr2_world.add_connection(
+            Connection6DoF(
+                parent=new_root,
+                child=obstacle,
+                _world=pr2_world,
+            )
+        )
+
+    assert obstacle not in pr2.bodies
+    assert robot_in_collision(pr2)
+
+    point_in_front = TransformationMatrix.from_xyz_rpy(x=-0.2, y=0.3,
+                                                       reference_frame=pr2.left_arm.manipulator.tool_frame,
+                                                       )
+    assert blocking(point_in_front, pr2.left_arm.root, pr2.left_arm.manipulator.tool_frame)

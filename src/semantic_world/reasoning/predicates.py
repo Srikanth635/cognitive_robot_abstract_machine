@@ -2,11 +2,11 @@ import itertools
 
 import numpy as np
 import trimesh.boolean
-from entity_query_language import let, an, entity, contains, and_, not_
+from entity_query_language import let, an, entity, contains, and_, not_, the
 from random_events.interval import Interval
 from typing_extensions import List, Optional
 
-from ..collision_checking.collision_detector import CollisionCheck
+from ..collision_checking.collision_detector import CollisionCheck, Collision
 from ..collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
 from ..datastructures.prefixed_name import PrefixedName
 from ..datastructures.variables import SpatialVariables
@@ -17,7 +17,7 @@ from ..robots import (
     ParallelGripper,
     Arm,
 )
-from ..spatial_computations.ik_solver import MaxIterationsException
+from ..spatial_computations.ik_solver import MaxIterationsException, UnreachableException
 from ..spatial_computations.raytracer import RayTracer
 from ..spatial_types.spatial_types import TransformationMatrix
 from ..world import World
@@ -62,7 +62,7 @@ def robot_in_collision(
     robot: AbstractRobot,
     ignore_collision_with: Optional[List[Body]] = None,
     threshold: float = 0.001,
-) -> bool:
+) -> List[Collision]:
     """
     Check if the robot collides with any object in the world at the given pose.
 
@@ -96,7 +96,7 @@ def robot_in_collision(
             )
         }
     )
-    return len(collisions) > 0
+    return collisions
 
 
 def robot_holds_body(robot: AbstractRobot, body: Body) -> bool:
@@ -204,44 +204,55 @@ def occluding_bodies(camera: Camera, body: Body) -> List[Body]:
 
 
 def reachable(
-    pose: TransformationMatrix, manipulator: Arm, threshold: float = 0.05
+    pose: TransformationMatrix, root: Body, tip: Body
 ) -> bool:
     """
-    Checks if a manipulator can reach a given position. To determine this the inverse kinematics are
-    calculated and applied. Afterward the distance between the position and the given manipulator is calculated, if
-    it is smaller than the threshold the reasoning query returns True, if not it returns False.
+    Checks if a manipulator can reach a given position.
+    This is determined by inverse kinematics.
 
     :param pose: The pose to reach
-    :param manipulator: The manipulator that should reach for the position
-    :param threshold: The threshold between the end effector and the position.
+    :param root: The root of the kinematic chain.
+    :param tip: The threshold between the end effector and the position.
     :return: True if the end effector is closer than the threshold to the target position, False in every other case
     """
     try:
-        result = manipulator._world.compute_inverse_kinematics(
-            root=manipulator.root,
-            tip=manipulator.tip,
+        root._world.compute_inverse_kinematics(
+            root=root,
+            tip=tip,
             target=pose,
+            max_iterations=1000
         )
     except MaxIterationsException as e:
         return False
-    print(result)
+    except UnreachableException as e:
+        return False
+    return True
 
 
 def blocking(
-    pose: TransformationMatrix, manipulator: Manipulator
-) -> Optional[List[Body]]:
+    pose: TransformationMatrix, root: Body, tip: Body,
+) -> List[Collision]:
     """
-    Checks if any objects are blocking another object when a robot tries to pick it. This works
-    similar to the reachable predicate. First the inverse kinematics between the robot and the object will be
-    calculated and applied. Then it will be checked if the robot is in contact with any object except the given one.
-    If the given pose or Object is not reachable None will be returned
+    Get the bodies that are blocking the robot from reaching a given position.
+    The blocking are all bodies that are in collision with the robot when reaching for the pose.
 
-    :param pose: The position to reach
-    :param manipulator: The manipulator that should reach for the position
+    :param pose: The pose to reach
+    :param root: The root of the kinematic chain.
+    :param tip: The threshold between the end effector and the position.
     :return: A list of bodies the robot is in collision with when reaching for the specified object or None if the pose or object is not reachable.
     """
-    raise NotImplementedError
+    result = root._world.compute_inverse_kinematics(
+        root=root,
+        tip=tip,
+        target=pose,
+        max_iterations=1000
+    )
+    with root._world.modify_world():
+        for dof, state in result.items():
+            root._world.state[dof.name].position = state
 
+    robot = the(entity(r := let("robot", AbstractRobot, root._world.views), tip in r.bodies)).evaluate()
+    return robot_in_collision(robot, [])
 
 def is_supported_by(
     supported_body: Body, supporting_body: Body, max_intersection_height: float = 0.1
