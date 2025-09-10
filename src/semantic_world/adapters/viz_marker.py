@@ -20,7 +20,7 @@ except ImportError as e:
 from scipy.spatial.transform import Rotation
 
 from ..world_description.geometry import (
-    Mesh,
+    FileMesh,
     Box,
     Sphere,
     Cylinder,
@@ -105,7 +105,7 @@ class VizMarkerPublisher:
                 )
                 msg.lifetime = Duration(sec=1)
 
-                if isinstance(collision, Mesh):
+                if isinstance(collision, FileMesh):
                     msg.type = Marker.MESH_RESOURCE
                     msg.mesh_resource = "file://" + collision.filename
                     msg.scale = Vector3(

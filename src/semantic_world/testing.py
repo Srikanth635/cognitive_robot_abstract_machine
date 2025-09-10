@@ -4,8 +4,13 @@ from typing_extensions import Tuple
 import pytest
 
 from .adapters.urdf import URDFParser
-from .world_description.connections import (Connection6DoF, PrismaticConnection, RevoluteConnection,
-                                            FixedConnection, OmniDrive)
+from .world_description.connections import (
+    Connection6DoF,
+    PrismaticConnection,
+    RevoluteConnection,
+    FixedConnection,
+    OmniDrive,
+)
 from .world_description.degree_of_freedom import DegreeOfFreedom
 from .world_description.geometry import Box, Scale, Sphere
 from .datastructures.prefixed_name import PrefixedName

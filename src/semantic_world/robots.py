@@ -8,7 +8,12 @@ from typing_extensions import Iterable, Set, TYPE_CHECKING, Optional, Self
 from .world_description.connections import ActiveConnection, OmniDrive
 from .datastructures.prefixed_name import PrefixedName
 from .spatial_types.spatial_types import Vector3
-from .world_description.world_entity import Body, RootedView, Connection, CollisionCheckingConfig
+from .world_description.world_entity import (
+    Body,
+    RootedView,
+    Connection,
+    CollisionCheckingConfig,
+)
 from .world_description.world_entity import KinematicStructureEntity, Region
 
 if TYPE_CHECKING:
