@@ -68,6 +68,8 @@ class TrimeshCollisionDetector(CollisionDetector):
         collision_pairs = [(cc.body_a, cc.body_b, cc.distance) for cc in collision_matrix] if collision_matrix else None or ((body_a, body_b, 0.1) for body_a, body_b in  combinations(self._world.bodies_with_enabled_collision, 2))
         result = []
         for body_a, body_b, distance in collision_pairs:
+            if body_a not in self._collision_objects or body_b not in self._collision_objects:
+                raise ValueError(f"One of the bodies {body_a.name}, {body_b.name} does not have collision enabled or is not part of the world.")
             distance_request = fcl.DistanceRequest(enable_nearest_points=True, enable_signed_distance=True)
             distance_result = fcl.DistanceResult()
             fcl.distance(self._collision_objects[body_a], self._collision_objects[body_b], distance_request, distance_result)

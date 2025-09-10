@@ -32,6 +32,8 @@ from .robots import AbstractRobot
 from .spatial_types import spatial_types as cas
 from .spatial_types.derivatives import Derivatives
 from .spatial_types.math import inverse_frame
+from .spatial_types.spatial_types import TransformationMatrix
+from .spatial_types.symbol_manager import SymbolManager
 from .types import NpMatrix4x4
 from .utils import IDGenerator, copy_lru_cache
 from .world_entity import (Body, Connection, View, KinematicStructureEntity, Region, GenericKinematicStructureEntity,
@@ -362,7 +364,7 @@ class World:
 
     _disabled_collision_pairs: Set[Tuple[Body, Body]] = field(default_factory=lambda: set())
     """
-    Collisions for these Body pairs is disabled.
+    Collisions for these Body pairs is disabled.f
     """
 
     _temp_disabled_collision_pairs: Set[Tuple[Body, Body]] = field(default_factory=lambda: set())
@@ -1384,14 +1386,15 @@ class World:
                 new_world.add_kinematic_structure_entity(new_body)
                 body_mapping[body] = new_body
             for dof in self.degrees_of_freedom:
-                new_dof = DegreeOfFreedom(name=dof.name, lower_limits=dof.lower_limits, upper_limits=dof.upper_limits,
-                                          _world=new_world)
-                new_world.degrees_of_freedom.append(new_dof)
+                new_dof = DegreeOfFreedom(name=dof.name, lower_limits=dof.lower_limits, upper_limits=dof.upper_limits)
+                new_world.add_degree_of_freedom(new_dof)
                 dof_mapping[dof] = new_dof
             for connection in self.connections:
-                origin_transform = deepcopy(connection.origin_expression)
-                origin_transform.reference_frame = body_mapping[connection.origin_expression.reference_frame]
-                origin_transform.child_frame = body_mapping[connection.origin_expression.child_frame]
+                sm = SymbolManager()
+                transform = sm.evaluate_expr(connection.origin_expression)
+                origin_transform = TransformationMatrix(transform,
+                                                        reference_frame=body_mapping[connection.origin_expression.reference_frame],
+                                                        child_frame=body_mapping[connection.origin_expression.child_frame])
                 if isinstance(connection, PrismaticConnection):
                     new_connection = PrismaticConnection(parent=body_mapping[connection.parent],
                                                          child=body_mapping[connection.child], axis=connection.axis,
@@ -1433,7 +1436,9 @@ class World:
                 else:
                     print(f"Unknown connection type {type(connection)}")
                 new_world.add_connection(new_connection)
-            new_world.state = deepcopy(self.state)
+            for dof in self.degrees_of_freedom:
+                new_world.state[dof.name] = self.state[dof.name].data
+            # new_world.state = deepcopy(self.state)
         return new_world
 
     def load_collision_srdf(self, file_path: str):
@@ -1514,6 +1519,14 @@ class World:
     @property
     def disabled_collision_pairs(self) -> Set[Tuple[Body, Body]]:
         return self._disabled_collision_pairs | self._temp_disabled_collision_pairs
+
+    @property
+    def enabled_collision_pairs(self) -> Set[Tuple[Body, Body]]:
+        """
+        The complement of disabled_collision_pairs with respect to all possible body combinations with enabled collision.
+        """
+        all_combinations = set(combinations_with_replacement(self.bodies_with_enabled_collision, 2))
+        return all_combinations - self.disabled_collision_pairs
 
     def add_disabled_collision_pair(self, body_a: Body, body_b: Body):
         """

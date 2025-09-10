@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import logging
+import os
 from abc import abstractmethod, ABC
 from dataclasses import dataclass, field
 from functools import cached_property
-from typing import Iterable, Set, TYPE_CHECKING
+from typing import Iterable, Set, TYPE_CHECKING, List
 
 from typing_extensions import Optional, Self
 
@@ -383,6 +384,13 @@ class AbstractRobot(RootedView, ABC):
         kw_only=True,
         default_factory=lambda: CollisionCheckingConfig(buffer_zone_distance=0.05))
 
+    @abstractmethod
+    def load_srdf(self):
+        """
+        Loads the SRDF file for the robot, if it exists. This method is expected to be implemented in subclasses.
+        """
+        ...
+
     @property
     def controlled_connections(self) -> Set[ActiveConnection]:
         """
@@ -524,6 +532,13 @@ class PR2(AbstractRobot):
             )
         self.neck = neck
         super().add_kinematic_chain(neck)
+
+    def load_srdf(self):
+        """
+        Loads the SRDF file for the PR2 robot, if it exists.
+        """
+        srdf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "resources", "collision_configs", "pr2.srdf")
+        self._world.load_collision_srdf(srdf_path)
 
     @classmethod
     def from_world(cls, world: World) -> Self:
@@ -675,6 +690,7 @@ class PR2(AbstractRobot):
             _world=world,
         )
         robot.add_torso(torso)
+        # robot.load_srdf()
 
         world.add_view(robot, exists_ok=True)
 

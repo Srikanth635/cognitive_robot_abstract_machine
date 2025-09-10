@@ -423,6 +423,14 @@ def test_world_different_entities(world_setup):
     for dof in world_copy.state:
         assert dof not in world.degrees_of_freedom
 
+def test_copy_pr2(pr2_world):
+    pr2_world.state[pr2_world.get_degree_of_freedom_by_name("torso_lift_joint").name].position = 0.3
+    pr2_world.notify_state_change()
+    pr2_copy = deepcopy(pr2_world)
+    assert pr2_world.get_kinematic_structure_entity_by_name("head_tilt_link").global_pose.to_np()[2, 3] == pytest.approx(1.472, abs=1e-3)
+    assert pr2_copy.get_kinematic_structure_entity_by_name("head_tilt_link").global_pose.to_np()[2, 3] == pytest.approx(1.472, abs=1e-3)
+
+
 
 
 def test_add_entity_with_duplicate_name(world_setup):
