@@ -238,6 +238,7 @@ class ProcTHORTestCase(unittest.TestCase):
             atol=1e-6,
         )
 
+    @unittest.skip("Requires Database, TBD")
     def test_world_T_obj(self):
         objects = self.house_json["objects"][0]
 
@@ -264,7 +265,7 @@ class ProcTHORTestCase(unittest.TestCase):
             decimal=6,
         )
 
-    @unittest.skip("Requires Database and EQL")
+    @unittest.skip("Requires Database, TBD")
     def test_object_get_world(self):
         objects = self.house_json["objects"][0]
 
