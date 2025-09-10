@@ -25,9 +25,10 @@ from semantic_world.reasoning.predicates import (
     _center_of_mass_in_world,
     is_body_in_gripper,
     robot_holds_body,
+    reachable,
 )
 from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.robots import PR2, Camera, Finger, ParallelGripper
+from semantic_world.robots import PR2, Camera, Finger, ParallelGripper, Manipulator
 from semantic_world.spatial_types.spatial_types import TransformationMatrix
 from semantic_world.testing import pr2_world
 from semantic_world.world import World
@@ -288,7 +289,7 @@ def test_supporting(two_block_world):
 
     with center._world.modify_world():
         top.parent_connection.origin_expression = TransformationMatrix.from_xyz_rpy(
-            reference_frame=center, z=1.
+            reference_frame=center, z=1.0
         )
     assert is_supported_by(top, center)
     assert not is_supported_by(center, top)
@@ -341,3 +342,16 @@ def test_is_body_in_gripper(
     assert robot_holds_body(pr2, test_box)
     connection.origin = TransformationMatrix()
     assert is_body_in_gripper(test_box, left_gripper) == 0
+
+
+def test_reachable(pr2_world):
+    pr2: PR2 = PR2.from_world(pr2_world)
+
+    point_in_front = TransformationMatrix.from_xyz_rpy(
+        reference_frame=pr2.left_arm.manipulator.tool_frame,
+    )
+
+    manipulator = [
+        m for m in pr2_world.get_views_by_type(Manipulator) if "left" in m.name.name
+    ][0]
+    assert reachable(point_in_front, pr2.left_arm)

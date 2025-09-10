@@ -15,7 +15,9 @@ from ..robots import (
     Manipulator,
     AbstractRobot,
     ParallelGripper,
+    Arm,
 )
+from ..spatial_computations.ik_solver import MaxIterationsException
 from ..spatial_computations.raytracer import RayTracer
 from ..spatial_types.spatial_types import TransformationMatrix
 from ..world import World
@@ -202,7 +204,7 @@ def occluding_bodies(camera: Camera, body: Body) -> List[Body]:
 
 
 def reachable(
-    pose: TransformationMatrix, manipulator: Manipulator, threshold: float = 0.05
+    pose: TransformationMatrix, manipulator: Arm, threshold: float = 0.05
 ) -> bool:
     """
     Checks if a manipulator can reach a given position. To determine this the inverse kinematics are
@@ -214,7 +216,15 @@ def reachable(
     :param threshold: The threshold between the end effector and the position.
     :return: True if the end effector is closer than the threshold to the target position, False in every other case
     """
-    raise NotImplementedError
+    try:
+        result = manipulator._world.compute_inverse_kinematics(
+            root=manipulator.root,
+            tip=manipulator.tip,
+            target=pose,
+        )
+    except MaxIterationsException as e:
+        return False
+    print(result)
 
 
 def blocking(
@@ -233,7 +243,9 @@ def blocking(
     raise NotImplementedError
 
 
-def is_supported_by(supported_body: Body, supporting_body: Body, max_intersection_height: float = 0.1) -> bool:
+def is_supported_by(
+    supported_body: Body, supporting_body: Body, max_intersection_height: float = 0.1
+) -> bool:
     """
     Checks if one object is supporting another object.
 
@@ -245,10 +257,16 @@ def is_supported_by(supported_body: Body, supporting_body: Body, max_intersectio
     """
     if below(supported_body, supporting_body, supported_body.global_pose):
         return False
-    bounding_box_supported_body = supported_body.as_bounding_box_collection_in_frame(supported_body).event
-    bounding_box_supporting_body = supporting_body.as_bounding_box_collection_in_frame(supported_body).event
+    bounding_box_supported_body = supported_body.as_bounding_box_collection_in_frame(
+        supported_body
+    ).event
+    bounding_box_supporting_body = supporting_body.as_bounding_box_collection_in_frame(
+        supported_body
+    ).event
 
-    intersection = (bounding_box_supported_body & bounding_box_supporting_body).bounding_box()
+    intersection = (
+        bounding_box_supported_body & bounding_box_supporting_body
+    ).bounding_box()
 
     if intersection.is_empty():
         return False
@@ -256,6 +274,7 @@ def is_supported_by(supported_body: Body, supporting_body: Body, max_intersectio
     z_intersection: Interval = intersection[SpatialVariables.z.value]
     size = sum([si.upper - si.lower for si in z_intersection.simple_sets])
     return size < max_intersection_height
+
 
 def is_body_in_gripper(
     body: Body, gripper: ParallelGripper, sample_size: int = 100
