@@ -10,7 +10,6 @@ except ImportError:
 from semantic_world.world_description.connections import FixedConnection
 
 
-
 @unittest.skipIf(not multiparser_found, "multiparser could not be imported.")
 class MultiParserTestCase(unittest.TestCase):
     urdf_dir = os.path.join(
