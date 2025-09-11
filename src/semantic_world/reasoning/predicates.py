@@ -17,7 +17,10 @@ from ..robots import (
     ParallelGripper,
     Arm,
 )
-from ..spatial_computations.ik_solver import MaxIterationsException, UnreachableException
+from ..spatial_computations.ik_solver import (
+    MaxIterationsException,
+    UnreachableException,
+)
 from ..spatial_computations.raytracer import RayTracer
 from ..spatial_types.spatial_types import TransformationMatrix
 from ..world import World
@@ -203,9 +206,7 @@ def occluding_bodies(camera: Camera, body: Body) -> List[Body]:
     return bodies
 
 
-def reachable(
-    pose: TransformationMatrix, root: Body, tip: Body
-) -> bool:
+def reachable(pose: TransformationMatrix, root: Body, tip: Body) -> bool:
     """
     Checks if a manipulator can reach a given position.
     This is determined by inverse kinematics.
@@ -217,10 +218,7 @@ def reachable(
     """
     try:
         root._world.compute_inverse_kinematics(
-            root=root,
-            tip=tip,
-            target=pose,
-            max_iterations=1000
+            root=root, tip=tip, target=pose, max_iterations=1000
         )
     except MaxIterationsException as e:
         return False
@@ -230,7 +228,9 @@ def reachable(
 
 
 def blocking(
-    pose: TransformationMatrix, root: Body, tip: Body,
+    pose: TransformationMatrix,
+    root: Body,
+    tip: Body,
 ) -> List[Collision]:
     """
     Get the bodies that are blocking the robot from reaching a given position.
@@ -242,17 +242,17 @@ def blocking(
     :return: A list of bodies the robot is in collision with when reaching for the specified object or None if the pose or object is not reachable.
     """
     result = root._world.compute_inverse_kinematics(
-        root=root,
-        tip=tip,
-        target=pose,
-        max_iterations=1000
+        root=root, tip=tip, target=pose, max_iterations=1000
     )
     with root._world.modify_world():
         for dof, state in result.items():
             root._world.state[dof.name].position = state
 
-    robot = the(entity(r := let("robot", AbstractRobot, root._world.views), tip in r.bodies)).evaluate()
+    robot = the(
+        entity(r := let("robot", AbstractRobot, root._world.views), tip in r.bodies)
+    ).evaluate()
     return robot_in_collision(robot, [])
+
 
 def is_supported_by(
     supported_body: Body, supporting_body: Body, max_intersection_height: float = 0.1
@@ -268,11 +268,11 @@ def is_supported_by(
     """
     if below(supported_body, supporting_body, supported_body.global_pose):
         return False
-    bounding_box_supported_body = supported_body.as_bounding_box_collection_in_frame(
-        supported_body
+    bounding_box_supported_body = supported_body.as_bounding_box_collection_at_origin(
+        TransformationMatrix(reference_frame=supported_body)
     ).event
-    bounding_box_supporting_body = supporting_body.as_bounding_box_collection_in_frame(
-        supported_body
+    bounding_box_supporting_body = supporting_body.as_bounding_box_collection_at_origin(
+        TransformationMatrix(reference_frame=supported_body)
     ).event
 
     intersection = (
