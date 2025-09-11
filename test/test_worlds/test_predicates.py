@@ -370,6 +370,30 @@ def test_reachable(pr2_world):
         pr2.left_arm.manipulator.tool_frame,
     )
 
+    tool_frame_T_rotated_reachable_goal = TransformationMatrix.from_xyz_rpy(
+        x=-0.2,
+        y=0.3,
+        yaw=np.pi / 2,
+        reference_frame=pr2.left_arm.manipulator.tool_frame,
+    )
+    assert reachable(
+        tool_frame_T_rotated_reachable_goal,
+        pr2.left_arm.root,
+        pr2.left_arm.manipulator.tool_frame,
+    )
+
+    tool_frame_T_rotated_unreachable_goal = TransformationMatrix.from_xyz_rpy(
+        x=-0.2,
+        y=0.3,
+        yaw=-np.pi / 2,
+        reference_frame=pr2.left_arm.manipulator.tool_frame,
+    )
+    assert not reachable(
+        tool_frame_T_rotated_unreachable_goal,
+        pr2.left_arm.root,
+        pr2.left_arm.manipulator.tool_frame,
+    )
+
 
 def test_blocking(pr2_world):
 
