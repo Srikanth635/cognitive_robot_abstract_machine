@@ -36,7 +36,7 @@ from .exceptions import (
     DuplicateViewError,
     AddingAnExistingViewError,
     ViewNotFoundError,
-    AlreadyBelongsToAWorldError,
+    AlreadyBelongsToAWorldError, DuplicateKinematicStructureEntityError,
 )
 from .robots import AbstractRobot
 from .spatial_computations.ik_solver import InverseKinematicsSolver
@@ -698,9 +698,7 @@ class World:
             ke.name for ke in self.kinematic_structure_entities
         ]:
             if not handle_duplicates:
-                raise AttributeError(
-                    f"A kinematic structure entity with the name {kinematic_structure_entity.name} already exists in the world."
-                )
+                raise DuplicateKinematicStructureEntityError([kinematic_structure_entity.name])
             kinematic_structure_entity.name.name = (
                 kinematic_structure_entity.name.name
                 + f"_{id_generator(kinematic_structure_entity)}"
