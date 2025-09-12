@@ -1,3 +1,4 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
@@ -21,6 +22,7 @@ class Callback(ABC):
         """
         Notify the callback of a change in the world.
         """
+        raise NotImplementedError
 
 
 @dataclass

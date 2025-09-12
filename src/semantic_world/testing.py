@@ -1,9 +1,13 @@
 import os
+import threading
+import time
+
 from typing_extensions import Tuple
 
 import pytest
 
 from .adapters.urdf import URDFParser
+from .utils import rclpy_installed
 from .world_description.connections import (
     Connection6DoF,
     PrismaticConnection,
@@ -150,3 +154,34 @@ def pr2_world():
         world.merge_world(world_with_pr2, c_root_bf)
 
     return world
+
+
+@pytest.fixture(scope="function")
+def rclpy_node():
+    if not rclpy_installed():
+        pytest.skip("ROS not installed")
+    import rclpy
+    from rclpy.executors import SingleThreadedExecutor
+
+    rclpy.init()
+    node = rclpy.create_node("test_node")
+
+    executor = SingleThreadedExecutor()
+    executor.add_node(node)
+
+    thread = threading.Thread(target=executor.spin, daemon=True, name="rclpy-executor")
+    thread.start()
+    time.sleep(0.1)
+    try:
+        yield node
+    finally:
+        # Stop executor cleanly and wait for the thread to exit
+        executor.shutdown()
+        thread.join(timeout=2.0)
+
+        # Remove the node from the executor and destroy it
+        # (executor.shutdown() takes care of spinning; add_node is safe to keep as-is)
+        node.destroy_node()
+
+        # Shut down the ROS client library
+        rclpy.shutdown()
