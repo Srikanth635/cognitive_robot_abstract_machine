@@ -555,6 +555,21 @@ def test_match_index(world_setup):
         new_body = world_copy.get_kinematic_structure_entity_by_name(body.name)
         assert body.index == new_body.index
 
+def test_copy_dof(world_setup):
+    world, l1, l2, bf, r1, r2 = world_setup
+    world_copy = deepcopy(world)
+    for dof in world.degrees_of_freedom:
+        new_dof = world_copy.get_degree_of_freedom_by_name(dof.name)
+        assert dof.name == new_dof.name
+        assert dof.lower_limits == new_dof.lower_limits
+        assert dof.upper_limits == new_dof.upper_limits
+
+def test_copy_pr2_world(pr2_world):
+    pr2_world.state[pr2_world.get_degree_of_freedom_by_name("torso_lift_joint").name].position = 0.3
+    pr2_world.notify_state_change()
+    pr2_copy = deepcopy(pr2_world)
+
+
 def test_world_different_entities(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
     world_copy = deepcopy(world)

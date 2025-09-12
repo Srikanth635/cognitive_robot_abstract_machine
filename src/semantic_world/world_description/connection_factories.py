@@ -10,7 +10,7 @@ from .connections import (
     FixedConnection,
     PrismaticConnection,
     RevoluteConnection,
-    Connection6DoF,
+    Connection6DoF, OmniDrive,
 )
 from .geometry import transformation_from_json, transformation_to_json
 from ..datastructures.prefixed_name import PrefixedName
@@ -145,7 +145,7 @@ class ActiveConnection1DOFFactory(ConnectionFactory[T]):
             axis=self.axis,
             multiplier=self.multiplier,
             offset=self.offset,
-            dof=world.get_degree_of_freedom_by_name(self.dof_name.name),
+            dof=world.get_degree_of_freedom_by_name(self.dof_name),
             origin_expression=self.origin_expression,
             _world=world,
         )
@@ -214,13 +214,13 @@ class Connection6DoFFactory(ConnectionFactory[Connection6DoF]):
             parent=parent,
             child=child,
             name=self.name,
-            x=world.get_degree_of_freedom_by_name(self.x_name.name),
-            y=world.get_degree_of_freedom_by_name(self.y_name.name),
-            z=world.get_degree_of_freedom_by_name(self.z_name.name),
-            qx=world.get_degree_of_freedom_by_name(self.qx_name.name),
-            qy=world.get_degree_of_freedom_by_name(self.qy_name.name),
-            qz=world.get_degree_of_freedom_by_name(self.qz_name.name),
-            qw=world.get_degree_of_freedom_by_name(self.qw_name.name),
+            x=world.get_degree_of_freedom_by_name(self.x_name),
+            y=world.get_degree_of_freedom_by_name(self.y_name),
+            z=world.get_degree_of_freedom_by_name(self.z_name),
+            qx=world.get_degree_of_freedom_by_name(self.qx_name),
+            qy=world.get_degree_of_freedom_by_name(self.qy_name),
+            qz=world.get_degree_of_freedom_by_name(self.qz_name),
+            qw=world.get_degree_of_freedom_by_name(self.qw_name),
             origin_expression=self.origin_expression,
             _world=world,
         )
