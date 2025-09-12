@@ -15,15 +15,11 @@ from rclpy.publisher import Publisher
 from rclpy.subscription import Subscription
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from typing_extensions import Callable
 
 from .messages import MetaData, WorldStateUpdate, Message, ModificationBlock, LoadModel
 from ...callbacks.callback import Callback, StateChangeCallback, ModelChangeCallback
 from ...orm.ormatic_interface import *
 from ...world import World
-from ...world_description.world_modification import (
-    WorldModelModificationBlock,
-)
 
 
 @dataclass
@@ -136,10 +132,6 @@ class SynchronizerOnCallback(Synchronizer, Callback, ABC):
     If the callback is triggered by a message, this synchronizer should not republish the change.
     """
 
-    def __post_init__(self):
-        super().__post_init__()
-        Callback.__post_init__(self)
-
     def notify(self):
         """
         Wrapper method around world_callback that checks if this time the callback should be triggered.
@@ -158,7 +150,7 @@ class SynchronizerOnCallback(Synchronizer, Callback, ABC):
 
 
 @dataclass
-class StateSynchronizer(SynchronizerOnCallback, StateChangeCallback):
+class StateSynchronizer(StateChangeCallback, SynchronizerOnCallback):
     """
     Synchronizes the state (values of free variables) of the semantic world with the associated ROS topic.
     """
@@ -174,7 +166,7 @@ class StateSynchronizer(SynchronizerOnCallback, StateChangeCallback):
 
     def __post_init__(self):
         super().__post_init__()
-        StateChangeCallback.__post_init__(self)
+        SynchronizerOnCallback.__post_init__(self)
         self.update_previous_world_state()
 
     def update_previous_world_state(self):
@@ -224,7 +216,10 @@ class StateSynchronizer(SynchronizerOnCallback, StateChangeCallback):
 
 
 @dataclass
-class ModelSynchronizer(SynchronizerOnCallback, ModelChangeCallback):
+class ModelSynchronizer(
+    ModelChangeCallback,
+    SynchronizerOnCallback,
+):
     """
     Synchronizes the model (addition/removal of bodies/DOFs/connections) with the associated ROS topic.
     """
@@ -234,7 +229,7 @@ class ModelSynchronizer(SynchronizerOnCallback, ModelChangeCallback):
 
     def __post_init__(self):
         super().__post_init__()
-        ModelChangeCallback.__post_init__(self)
+        SynchronizerOnCallback.__post_init__(self)
 
     def _subscription_callback(self, msg: ModificationBlock):
         msg.modifications.apply(self.world)

@@ -29,11 +29,6 @@ class Callback(ABC):
     The world this callback is listening on.
     """
 
-    _callback_function: Callable = field(init=False)
-
-    def __post_init__(self):
-        self._callback_function = lambda: self.notify()
-
     @abstractmethod
     def notify(self):
         """
@@ -49,14 +44,7 @@ class StateChangeCallback(Callback, ABC):
     """
 
     def __post_init__(self):
-        super().__post_init__()
-        self.world.state_change_callbacks.append(self._callback_function)
-
-    def __del__(self):
-        try:
-            self.world.state_change_callbacks.remove(self._callback_function)
-        except Exception as e:
-            logger.error(e)
+        self.world.state_change_callbacks.append(self)
 
 
 @dataclass
@@ -66,11 +54,4 @@ class ModelChangeCallback(Callback, ABC):
     """
 
     def __post_init__(self):
-        super().__post_init__()
-        self.world.model_change_callbacks.append(self._callback_function)
-
-    def __del__(self):
-        try:
-            self.world.model_change_callbacks.remove(self._callback_function)
-        except Exception as e:
-            logger.error(e)
+        self.world.model_change_callbacks.append(self)
