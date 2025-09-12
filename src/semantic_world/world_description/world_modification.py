@@ -91,7 +91,9 @@ class AddKinematicStructureEntityModification(WorldModelModification):
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(kinematic_structure_entity=KinematicStructureEntity.from_json(data["body"]))
+        return cls(
+            kinematic_structure_entity=KinematicStructureEntity.from_json(data["body"])
+        )
 
 
 @dataclass
