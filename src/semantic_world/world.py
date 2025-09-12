@@ -53,15 +53,26 @@ from .world_description.connections import (
 from .world_description.connections import HasUpdateState, Has1DOFState
 from .world_description.degree_of_freedom import DegreeOfFreedom
 from .world_description.world_entity import (
-    Body,
+    KinematicStructureEntity,
     Connection,
     View,
     KinematicStructureEntity,
     Region,
     GenericKinematicStructureEntity,
     CollisionCheckingConfig,
+    Body,
 )
 from .world_description.world_state import WorldState
+from .world_description.world_modification import (
+    WorldModelModification,
+    AddDegreeOfFreedomModification,
+    RemoveDegreeOfFreedomModification,
+    AddKinematicStructureEntityModification,
+    AddConnectionModification,
+    RemoveBodyModification,
+    RemoveConnectionModification,
+    WorldModelModificationBlock,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -175,7 +186,9 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
         return self.compiled_tf.fast_call(self.subs)
 
     @lru_cache(maxsize=None)
-    def compute_forward_kinematics_np(self, root: Body, tip: Body) -> NpMatrix4x4:
+    def compute_forward_kinematics_np(
+        self, root: KinematicStructureEntity, tip: KinematicStructureEntity
+    ) -> NpMatrix4x4:
         """
         Computes the forward kinematics from the root body to the tip body, root_T_tip.
 
@@ -269,21 +282,21 @@ class WorldModelUpdateContextManager:
         self.world.world_is_being_modified = True
 
         if self.first:
-            self.world._current_atomic_modifications = []
+            self.world._current_model_modification_block = WorldModelModificationBlock()
 
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.modification is not None:
-            self.world._current_atomic_modifications.append(
+            self.world._current_model_modification_block.append(
                 (self.modification, self.arguments)
             )
         if self.first:
             self.world.world_is_being_modified = False
-            self.world._atomic_modifications.append(
-                self.world._current_atomic_modifications
+            self.world._model_modification_blocks.append(
+                self.world._current_model_modification_block
             )
-            self.world._current_atomic_modifications = None
+            self.world._current_model_modification_block = None
             if exc_type is None:
                 self.world._notify_model_change()
 
@@ -296,7 +309,9 @@ class AtomicWorldModificationNotAtomic(Exception):
     """
 
 
-def atomic_world_modification(func):
+def atomic_world_modification(
+    func=None, modification: Type[WorldModelModification] = None
+):
     """
     Decorator for ensuring atomicity in world modification operations.
 
@@ -307,29 +322,42 @@ def atomic_world_modification(func):
     Raises:
         AtomicWorldModificationNotAtomic: If the world is already locked during the execution of another atomic operation.
     """
-    sig = inspect.signature(func)
 
-    @wraps(func)
-    def wrapper(self: World, *args, **kwargs):
-        if self._atomic_operation_is_being_executed:
-            raise AtomicWorldModificationNotAtomic(f"World {self} is locked.")
-        self._atomic_operation_is_being_executed = True
+    def _decorate(func):
 
-        # bind args and kwargs
-        bound = sig.bind_partial(
-            self, *args, **kwargs
-        )  # use bind() if you require all args
-        bound.apply_defaults()  # fill in default values
+        sig = inspect.signature(func)
 
-        # record function call
-        self._current_atomic_modifications.append((func, bound.arguments))
+        @wraps(func)
+        def wrapper(self: World, *args, **kwargs):
+            if self._atomic_modification_is_being_executed:
+                raise AtomicWorldModificationNotAtomic(f"World {self} is locked.")
+            self._atomic_modification_is_being_executed = True
 
-        result = func(self, *args, **kwargs)
+            # bind args and kwargs
+            bound = sig.bind_partial(
+                self, *args, **kwargs
+            )  # use bind() if you require all args
+            bound.apply_defaults()  # fill in default values
 
-        self._atomic_operation_is_being_executed = False
-        return result
+            # record function call
+            # Build a dict with all arguments (including positional), excluding 'self'
+            bound_args = dict(bound.arguments)
+            bound_args.pop("self", None)
+            self._current_model_modification_block.append(
+                modification.from_kwargs(bound_args)
+            )
 
-    return wrapper
+            result = func(self, *args, **kwargs)
+
+            self._atomic_modification_is_being_executed = False
+            return result
+
+        return wrapper
+
+    if func is None:
+        return _decorate
+
+    return _decorate(func)
 
 
 @dataclass
@@ -396,7 +424,7 @@ class World:
     Callbacks to be called when the model of the world changes.
     """
 
-    _atomic_modifications: List[FunctionStack] = field(
+    _model_modification_blocks: List[WorldModelModificationBlock] = field(
         default_factory=list, repr=False, init=False
     )
     """
@@ -405,29 +433,29 @@ class World:
     The inner list is a block of modifications where change callbacks must not be called in between.
     """
 
-    _current_atomic_modifications: Optional[FunctionStack] = field(
+    _current_model_modification_block: Optional[WorldModelModificationBlock] = field(
         default=None, repr=False, init=False
     )
     """
     The current modification block called within one context of @atomic_world_modification.
     """
 
-    _atomic_operation_is_being_executed: bool = field(init=False, default=False)
+    _atomic_modification_is_being_executed: bool = field(init=False, default=False)
     """
     Flag that indicates if an atomic world operation is currently being executed.
     See `atomic_world_modification` for more information.
     """
 
-    _disabled_collision_pairs: Set[Tuple[Body, Body]] = field(
-        default_factory=set, repr=False
-    )
+    _disabled_collision_pairs: Set[
+        Tuple[KinematicStructureEntity, KinematicStructureEntity]
+    ] = field(default_factory=set, repr=False)
     """
     Collisions for these Body pairs is disabled.
     """
 
-    _temp_disabled_collision_pairs: Set[Tuple[Body, Body]] = field(
-        default_factory=set, repr=False
-    )
+    _temp_disabled_collision_pairs: Set[
+        Tuple[KinematicStructureEntity, KinematicStructureEntity]
+    ] = field(default_factory=set, repr=False)
     """
     A set of Body pairs for which collisions are temporarily disabled.
     """
@@ -500,7 +528,7 @@ class World:
         ), "self.degrees_of_freedom does not match the actual dofs used in connections. Did you forget to call deleted_orphaned_dof()?"
         return True
 
-    @atomic_world_modification
+    @atomic_world_modification(modification=AddDegreeOfFreedomModification)
     def _add_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
         """
         Adds a degree of freedom to the current system and initializes its state.
@@ -541,7 +569,7 @@ class World:
             )
         self._add_degree_of_freedom(dof)
 
-    @atomic_world_modification
+    @atomic_world_modification(modification=RemoveDegreeOfFreedomModification)
     def remove_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
         dof._world = None
         self.degrees_of_freedom.remove(dof)
@@ -644,7 +672,7 @@ class World:
         """
         return list(self.kinematic_structure.edges())
 
-    @atomic_world_modification
+    @atomic_world_modification(modification=AddKinematicStructureEntityModification)
     def _add_kinematic_structure_entity(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> int:
@@ -707,10 +735,12 @@ class World:
 
         return self._add_kinematic_structure_entity(kinematic_structure_entity)
 
-    def add_body(self, body: Body, handle_duplicates: bool = False) -> Optional[int]:
+    def add_body(
+        self, body: KinematicStructureEntity, handle_duplicates: bool = False
+    ) -> Optional[int]:
         return self.add_kinematic_structure_entity(body, handle_duplicates)
 
-    @atomic_world_modification
+    @atomic_world_modification(modification=AddConnectionModification)
     def _add_connection(self, connection: Connection):
         """
         Adds a connection to the kinematic structure.
@@ -780,7 +810,9 @@ class World:
         except ViewNotFoundError:
             logger.debug(f"View {view.name} not found in the world. No action taken.")
 
-    def get_connections_of_branch(self, root: Body) -> List[Connection]:
+    def get_connections_of_branch(
+        self, root: KinematicStructureEntity
+    ) -> List[Connection]:
         """
         Collect all connections that are below root in the tree.
 
@@ -803,7 +835,9 @@ class World:
 
         return visitor.connections
 
-    def get_bodies_of_branch(self, root: Body) -> List[Body]:
+    def get_bodies_of_branch(
+        self, root: KinematicStructureEntity
+    ) -> List[KinematicStructureEntity]:
         """
         Collect all bodies that are below root in the tree.
 
@@ -891,7 +925,7 @@ class World:
         """
         return [view for view in self.views if isinstance(view, view_type)]
 
-    @atomic_world_modification
+    @atomic_world_modification(modification=RemoveBodyModification)
     def _remove_kinematic_structure_entity(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> None:
@@ -924,7 +958,7 @@ class World:
                 "Trying to remove an kinematic_structure_entity that is not part of this world."
             )
 
-    @atomic_world_modification
+    @atomic_world_modification(modification=RemoveConnectionModification)
     def _remove_connection(self, connection: Connection) -> None:
         try:
             self.kinematic_structure.remove_edge(
@@ -1006,7 +1040,11 @@ class World:
                 self.add_degree_of_freedom(dof)
             self.add_connection(connection, handle_duplicates=handle_duplicates)
 
-    def move_branch(self, branch_root: Body, new_parent: Body) -> None:
+    def move_branch(
+        self,
+        branch_root: KinematicStructureEntity,
+        new_parent: KinematicStructureEntity,
+    ) -> None:
         """
         Destroys the connection between branch_root and its parent, and moves it to a new parent using a new connection
         of the same type. The pose of body with respect to root stays the same.
@@ -1127,7 +1165,9 @@ class World:
             return matches[0]
         raise KeyError(f"KinematicStructureEntity with name {name} not found")
 
-    def get_body_by_name(self, name: Union[str, PrefixedName]) -> Body:
+    def get_body_by_name(
+        self, name: Union[str, PrefixedName]
+    ) -> KinematicStructureEntity:
         """
         Retrieves a Body from the list of bodies based on its name.
         If the input is of type `PrefixedName`, it checks whether the prefix is specified and looks for an
@@ -1393,11 +1433,11 @@ class World:
         return [self.kinematic_structure[index] for index in indices]
 
     @property
-    def bodies_topologically_sorted(self) -> List[Body]:
+    def bodies_topologically_sorted(self) -> List[KinematicStructureEntity]:
         return [
             entity
             for entity in self.kinematic_structure_entities_topologically_sorted
-            if isinstance(entity, Body)
+            if isinstance(entity, KinematicStructureEntity)
         ]
 
     def copy_subgraph_to_new_world(self, new_root: KinematicStructureEntity) -> World:
@@ -1731,11 +1771,11 @@ class World:
                 }:
                     body_a_srdf_name: str = child.attrib["link1"]
                     body_b_srdf_name: str = child.attrib["link2"]
-                    body_a: Body = self.get_kinematic_structure_entity_by_name(
-                        body_a_srdf_name
+                    body_a: KinematicStructureEntity = (
+                        self.get_kinematic_structure_entity_by_name(body_a_srdf_name)
                     )
-                    body_b: Body = self.get_kinematic_structure_entity_by_name(
-                        body_b_srdf_name
+                    body_b: KinematicStructureEntity = (
+                        self.get_kinematic_structure_entity_by_name(body_b_srdf_name)
                     )
                     if not body_a.has_collision():
                         continue
@@ -1743,8 +1783,10 @@ class World:
                         continue
                     self.add_disabled_collision_pair(body_a, body_b)
                 elif child.tag == SRDF_DISABLE_ALL_COLLISIONS:
-                    body: Body = self.get_kinematic_structure_entity_by_name(
-                        child.attrib["link"]
+                    body: KinematicStructureEntity = (
+                        self.get_kinematic_structure_entity_by_name(
+                            child.attrib["link"]
+                        )
                     )
                     collision_config = CollisionCheckingConfig(disabled=True)
                     body.set_static_collision_config(collision_config)
@@ -1760,7 +1802,9 @@ class World:
             if isinstance(c, ActiveConnection) and c.is_controlled
         )
 
-    def is_controlled_connection_in_chain(self, root: Body, tip: Body) -> bool:
+    def is_controlled_connection_in_chain(
+        self, root: KinematicStructureEntity, tip: KinematicStructureEntity
+    ) -> bool:
         root_part, tip_part = self.compute_split_chain_of_connections(root, tip)
         connections = root_part + tip_part
         for c in connections:
@@ -1804,17 +1848,23 @@ class World:
         )
 
     @property
-    def disabled_collision_pairs(self) -> Set[Tuple[Body, Body]]:
+    def disabled_collision_pairs(
+        self,
+    ) -> Set[Tuple[KinematicStructureEntity, KinematicStructureEntity]]:
         return self._disabled_collision_pairs | self._temp_disabled_collision_pairs
 
-    def add_disabled_collision_pair(self, body_a: Body, body_b: Body):
+    def add_disabled_collision_pair(
+        self, body_a: KinematicStructureEntity, body_b: KinematicStructureEntity
+    ):
         """
         Disable collision checking between two bodies
         """
         pair = tuple(sorted([body_a, body_b], key=lambda b: b.name))
         self._disabled_collision_pairs.add(pair)
 
-    def add_temp_disabled_collision_pair(self, body_a: Body, body_b: Body):
+    def add_temp_disabled_collision_pair(
+        self, body_a: KinematicStructureEntity, body_b: KinematicStructureEntity
+    ):
         """
         Disable collision checking between two bodies
         """
@@ -1823,7 +1873,7 @@ class World:
 
     def get_direct_child_bodies_with_collision(
         self, connection: Connection
-    ) -> Set[Body]:
+    ) -> Set[KinematicStructureEntity]:
         """
         Collect all child Bodies until a movable connection is found.
 
@@ -1856,7 +1906,9 @@ class World:
         return visitor.bodies
 
     @lru_cache(maxsize=None)
-    def get_controlled_parent_connection(self, body: Body) -> Connection:
+    def get_controlled_parent_connection(
+        self, body: KinematicStructureEntity
+    ) -> Connection:
         """
         Traverse the chain up until a controlled active connection is found.
         :param body: The body where the search starts.
@@ -1871,8 +1923,8 @@ class World:
         return self.get_controlled_parent_connection(body.parent_body)
 
     def compute_chain_reduced_to_controlled_joints(
-        self, root: Body, tip: Body
-    ) -> Tuple[Body, Body]:
+        self, root: KinematicStructureEntity, tip: KinematicStructureEntity
+    ) -> Tuple[KinematicStructureEntity, KinematicStructureEntity]:
         """
         Removes root and tip links until they are both connected with a controlled connection.
         Useful for implementing collision avoidance.
@@ -1938,7 +1990,7 @@ class World:
             for body_b in non_robot_bodies:
                 self.add_disabled_collision_pair(body_a, body_b)
 
-    def is_body_controlled(self, body: Body) -> bool:
+    def is_body_controlled(self, body: KinematicStructureEntity) -> bool:
         root_part, tip_part = self.compute_split_chain_of_connections(self.root, body)
         connections = root_part + tip_part
         for c in connections:

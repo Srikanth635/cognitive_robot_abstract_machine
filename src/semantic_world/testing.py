@@ -22,11 +22,18 @@ from .spatial_types import TransformationMatrix
 from .spatial_types.derivatives import DerivativeMap
 from .spatial_types.spatial_types import Vector3
 from .world import World
-from .world_description.world_entity import Body
+from .world_description.world_entity import KinematicStructureEntity, Body
 
 
 @pytest.fixture
-def world_setup() -> Tuple[World, Body, Body, Body, Body, Body]:
+def world_setup() -> Tuple[
+    World,
+    Body,
+    Body,
+    Body,
+    Body,
+    Body,
+]:
     world = World()
     root = Body(name=PrefixedName(name="root", prefix="world"))
     l1 = Body(name=PrefixedName("l1"))

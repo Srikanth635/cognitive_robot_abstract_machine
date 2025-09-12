@@ -14,9 +14,9 @@ from ..spatial_types import RotationMatrix, Vector3, Point3, TransformationMatri
 from ..spatial_types.derivatives import DerivativeMap
 from ..spatial_types.spatial_types import Quaternion
 from ..spatial_types.symbol_manager import symbol_manager
-from ..world import World, Body
+from ..world import World
 from ..world_description.connections import Connection
-from ..world_description.world_entity import View, KinematicStructureEntity
+from ..world_description.world_entity import View, KinematicStructureEntity, Body
 
 
 @dataclass

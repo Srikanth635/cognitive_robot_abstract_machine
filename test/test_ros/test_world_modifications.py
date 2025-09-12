@@ -12,11 +12,11 @@ from semantic_world.world_description.connections import (
 from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.spatial_types.spatial_types import Vector3
 from semantic_world.world import World
-from semantic_world.world_description.world_entity import Body
+from semantic_world.world_description.world_entity import KinematicStructureEntity, Body
 from semantic_world.world_description.world_modification import (
     WorldModelModificationBlock,
     UnknownWorldModification,
-    AddBodyModification,
+    AddKinematicStructureEntityModification,
     AddConnectionModification,
     AddDegreeOfFreedomModification,
 )
@@ -40,10 +40,6 @@ class ConnectionModificationTestCase(unittest.TestCase):
         factory = ConnectionFactory.from_connection(connection)
         assert isinstance(factory, FixedConnectionFactory)
 
-    def test_raising(self):
-        with self.assertRaises(UnknownWorldModification):
-            WorldModelModificationBlock.from_modifications([(print, {"a": 123})])
-
     def test_many_modifications(self):
         w = World()
 
@@ -61,13 +57,13 @@ class ConnectionModificationTestCase(unittest.TestCase):
                 )
             )
 
-        modifications = WorldModelModificationBlock.from_modifications(
-            w._atomic_modifications[-1]
-        )
+        modifications = w._model_modification_blocks[-1]
         self.assertEqual(len(modifications.modifications), 13)
 
         add_body_modifications = [
-            m for m in modifications.modifications if isinstance(m, AddBodyModification)
+            m
+            for m in modifications.modifications
+            if isinstance(m, AddKinematicStructureEntityModification)
         ]
         self.assertEqual(len(add_body_modifications), 3)
 
@@ -102,9 +98,7 @@ class ConnectionModificationTestCase(unittest.TestCase):
                 w.get_kinematic_structure_entity_by_name("b3")
             )
 
-        modifications = WorldModelModificationBlock.from_modifications(
-            w._atomic_modifications[-1]
-        )
+        modifications = w._model_modification_blocks[-1]
         self.assertEqual(len(modifications.modifications), 3)
 
         modifications_copy = WorldModelModificationBlock.from_json(

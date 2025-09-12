@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing_extensions import Self, Dict, Any, TypeVar
+from dataclasses import dataclass, field
+from typing_extensions import Self, Dict, Any, TypeVar, TYPE_CHECKING
 
 from ormatic.dao import HasGeneric
 from random_events.utils import SubclassJSONSerializer, recursive_subclasses
@@ -10,14 +12,18 @@ from .connections import (
     PrismaticConnection,
     RevoluteConnection,
     Connection6DoF,
+    OmniDrive,
 )
 from .geometry import transformation_from_json, transformation_to_json
 from ..datastructures.prefixed_name import PrefixedName
 from ..spatial_types.spatial_types import TransformationMatrix
 from ..spatial_types.symbol_manager import symbol_manager
-from ..world import World
+
 from .world_entity import Connection
 from .. import spatial_types as cas
+
+if TYPE_CHECKING:
+    from ..world import World
 
 T = TypeVar("T")
 
@@ -250,3 +256,40 @@ class Connection6DoFFactory(ConnectionFactory[Connection6DoF]):
             qw_name=PrefixedName.from_json(data["qw"]),
             origin_expression=transformation_from_json(data["origin_expression"]),
         )
+
+
+@dataclass
+class OmniDriveFactory(ConnectionFactory[OmniDrive]):
+
+    x_name: PrefixedName
+    y_name: PrefixedName
+    z_name: PrefixedName
+    roll_name: PrefixedName
+    pitch_name: PrefixedName
+    yaw_name: PrefixedName
+    x_velocity_name: PrefixedName
+    y_velocity_name: PrefixedName
+    translation_velocity_limits: float = field(default=0.6)
+    rotation_velocity_limits: float = field(default=0.5)
+
+    @classmethod
+    def _from_connection(cls, connection: OmniDrive) -> Self:
+        return cls(
+            name=connection.name,
+            parent_name=connection.parent.name,
+            child_name=connection.child.name,
+            x_name=connection.x.name,
+            y_name=connection.y.name,
+            z_name=connection.z.name,
+            roll_name=connection.roll.name,
+            pitch_name=connection.pitch.name,
+            yaw_name=connection.yaw.name,
+            x_velocity_name=connection.x_vel.name,
+            y_velocity_name=connection.y_vel.name,
+            translation_velocity_limits=connection.translation_velocity_limits,
+            rotation_velocity_limits=connection.rotation_velocity_limits,
+            origin_expression=connection.origin_expression,
+        )
+
+    def create(self, world: World) -> Connection:
+        raise NotImplementedError

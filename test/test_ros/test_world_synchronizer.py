@@ -16,7 +16,7 @@ from semantic_world.orm.ormatic_interface import Base, WorldMappingDAO
 from semantic_world.testing import rclpy_node
 from semantic_world.world import World
 from semantic_world.world_description.connections import Connection6DoF
-from semantic_world.world_description.world_entity import Body
+from semantic_world.world_description.world_entity import KinematicStructureEntity, Body
 
 
 def create_dummy_world():

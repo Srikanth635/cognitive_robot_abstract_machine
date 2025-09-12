@@ -240,12 +240,9 @@ class ModelSynchronizer(SynchronizerOnCallback, ModelChangeCallback):
         msg.modifications.apply(self.world)
 
     def world_callback(self):
-        latest_changes = WorldModelModificationBlock.from_modifications(
-            self.world._atomic_modifications[-1]
-        )
         msg = ModificationBlock(
             meta_data=self.meta_data,
-            modifications=latest_changes,
+            modifications=self.world._model_modification_blocks[-1],
         )
         self.publish(msg)
 
