@@ -52,7 +52,6 @@ viz = VizMarkerPublisher(world=world, node=node)
 When you want to stop visualizing, you have to stop the visualizer and afterwards clean up ROS2.
 
 ```python
-viz._stop_publishing()
 node.destroy_node()
 rclpy.shutdown()
 ```
