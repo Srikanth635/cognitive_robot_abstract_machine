@@ -27,7 +27,11 @@ except ImportError as e:
     JointType = None
     UsdUrdf = None
 
-from ..world_description.connections import RevoluteConnection, PrismaticConnection, FixedConnection
+from ..world_description.connections import (
+    RevoluteConnection,
+    PrismaticConnection,
+    FixedConnection,
+)
 from ..world_description.degree_of_freedom import DegreeOfFreedom
 from ..datastructures.prefixed_name import PrefixedName
 from ..spatial_types import spatial_types as cas

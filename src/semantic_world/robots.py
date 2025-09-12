@@ -9,7 +9,12 @@ from typing_extensions import Iterable, Set, TYPE_CHECKING, Optional, Self
 from .world_description.connections import ActiveConnection, OmniDrive
 from .datastructures.prefixed_name import PrefixedName
 from .spatial_types.spatial_types import Vector3, Quaternion
-from .world_description.world_entity import Body, RootedView, Connection, CollisionCheckingConfig
+from .world_description.world_entity import (
+    Body,
+    RootedView,
+    Connection,
+    CollisionCheckingConfig,
+)
 from .world_description.world_entity import KinematicStructureEntity, Region
 
 if TYPE_CHECKING:
@@ -51,7 +56,7 @@ class KinematicChain(RobotView, ABC):
     position of the manipulator or sensors in the kinematic chain
     """
 
-    tip: KinematicStructureEntity = field(default=None)
+    tip: Body = field(default=None)
     """
     The tip body of the kinematic chain, which is the last body in the chain.
     """
@@ -155,7 +160,7 @@ class Manipulator(RobotView, ABC):
     Abstract base class of robot manipulators. Always has a tool frame.
     """
 
-    tool_frame: KinematicStructureEntity = field(default=None)
+    tool_frame: Body = field(default=None)
 
     front_facing_orientation: Quaternion = field(default=None)
     """

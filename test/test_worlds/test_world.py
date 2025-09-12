@@ -3,8 +3,17 @@ from copy import deepcopy
 import numpy as np
 import pytest
 
-from semantic_world.world_description.connections import PrismaticConnection, RevoluteConnection, Connection6DoF, FixedConnection
-from semantic_world.exceptions import AddingAnExistingViewError, DuplicateViewError, ViewNotFoundError
+from semantic_world.world_description.connections import (
+    PrismaticConnection,
+    RevoluteConnection,
+    Connection6DoF,
+    FixedConnection,
+)
+from semantic_world.exceptions import (
+    AddingAnExistingViewError,
+    DuplicateViewError,
+    ViewNotFoundError,
+)
 from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.spatial_types.derivatives import Derivatives
 from semantic_world.spatial_types.math import rotation_matrix_from_rpy
@@ -204,7 +213,7 @@ def test_compute_ik(world_setup):
             [0.0, 0.0, 0.0, 1.0],
         ]
     )
-    joint_state = world.compute_inverse_kinematics(l2, r2, target)
+    joint_state = world.compute_inverse_kinematics(l2, r2, TransformationMatrix(target, reference_frame=l2))
     for joint, state in joint_state.items():
         world.state[joint.name].position = state
     world.notify_state_change()

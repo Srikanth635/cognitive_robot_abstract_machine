@@ -20,7 +20,7 @@ except ImportError as e:
 from scipy.spatial.transform import Rotation
 
 from ..world_description.geometry import (
-    Mesh,
+    FileMesh,
     Box,
     Sphere,
     Cylinder,
@@ -103,13 +103,18 @@ class VizMarkerPublisher:
                     ).to_np()
                 )
                 msg.color = (
-                    body.color
-                    if isinstance(body, Primitive)
+                    ColorRGBA(
+                        r=float(collision.color.R),
+                        g=float(collision.color.G),
+                        b=float(collision.color.B),
+                        a=float(collision.color.A),
+                    )
+                    if isinstance(collision, Primitive)
                     else ColorRGBA(r=1.0, g=1.0, b=1.0, a=1.0)
                 )
                 msg.lifetime = Duration(sec=1)
 
-                if isinstance(collision, Mesh):
+                if isinstance(collision, FileMesh):
                     msg.type = Marker.MESH_RESOURCE
                     msg.mesh_resource = "file://" + collision.filename
                     msg.scale = Vector3(
