@@ -34,19 +34,6 @@ from semantic_world.world_description.world_entity import Body, Region
 
 
 @pytest.fixture(scope="session")
-def rclpy_node():
-    rclpy.init()
-    node = rclpy.create_node("test_node")
-    thread = threading.Thread(target=rclpy.spin, args=(node,), daemon=True)
-    thread.start()
-    try:
-        yield node
-    finally:
-        node.destroy_node()
-        rclpy.shutdown()
-
-
-@pytest.fixture(scope="session")
 def two_block_world():
     def make_body(name: str) -> Body:
         result = Body(name=PrefixedName(name))
