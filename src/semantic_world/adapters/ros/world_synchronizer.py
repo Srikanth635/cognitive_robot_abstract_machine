@@ -80,8 +80,21 @@ class Synchronizer(ABC):
             node_name=self.node.get_name(), process_id=os.getpid(), object_id=id(self)
         )
 
+    def subscription_callback(self, msg: std_msgs.msg.String):
+        """
+        Wrap the origin subscription callback by self-skipping and disabling the next world callback.
+        """
+        msg = self.message_type.from_json(json.loads(msg.data))
+        if msg.meta_data == self.meta_data:
+            return
+        self._skip_next_world_callback = True
+        self._subscription_callback(msg)
+
     @abstractmethod
-    def subscription_callback(self, msg):
+    def _subscription_callback(self, msg):
+        """
+        Callback function called when receiving new messages from other publishers.
+        """
         raise NotImplementedError
 
     def publish(self, msg: Message):
@@ -127,23 +140,6 @@ class SynchronizerOnCallback(Synchronizer, ABC):
     def __post_init__(self):
         super().__post_init__()
         self._callback = lambda: self.world_callback_handler()
-
-    def subscription_callback(self, msg: std_msgs.msg.String):
-        """
-        Wrap the origin subscription callback by self-skipping and disabling the next world callback.
-        """
-        msg = self.message_type.from_json(json.loads(msg.data))
-        if msg.meta_data == self.meta_data:
-            return
-        self._skip_next_world_callback = True
-        self._subscription_callback(msg)
-
-    @abstractmethod
-    def _subscription_callback(self, msg):
-        """
-        Callback function called when receiving new messages from other publishers.
-        """
-        raise NotImplementedError
 
     def world_callback_handler(self):
         """
@@ -297,18 +293,12 @@ class ModelReloadSynchronizer(Synchronizer):
         message = LoadModel(primary_key=dao.id, meta_data=self.meta_data)
         self.publish(message)
 
-    def subscription_callback(self, msg: std_msgs.msg.String):
+    def _subscription_callback(self, msg: LoadModel):
         """
         Update the world with the new model by fetching it from the database.
 
         :param msg: The message containing the primary key of the model to be fetched.
         """
-
-        msg = LoadModel.from_json(json.loads(msg.data))
-
-        if msg.meta_data == self.meta_data:
-            return
-
         query = select(WorldMappingDAO).where(WorldMappingDAO.id == msg.primary_key)
         new_world = self.session.scalars(query).one().from_dao()
         self._replace_world(new_world)
