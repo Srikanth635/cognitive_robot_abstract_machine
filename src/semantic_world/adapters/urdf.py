@@ -31,7 +31,8 @@ from ..utils import (
     hacky_urdf_parser_fix,
     robot_name_from_urdf_string,
 )
-from ..world import World, Body, Connection
+from ..world import World
+from ..world_description.world_entity import Body, Connection
 
 connection_type_map = {  # 'unknown': JointType.UNKNOWN,
     "revolute": RevoluteConnection,

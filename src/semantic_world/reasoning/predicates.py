@@ -395,7 +395,7 @@ def above(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
 
     :param body: The body for which the check should be done.
     :param other: The other body.
-    :param point_of_view: The reference pose that defines the up direction for the comparison.
+    :param point_of_view: The reference spot from where to look at the bodies.
     :return: True if the center of mass of "body" is above that of "other" along the point_of_view's +Z axis.
     """
     return _signed_distance_along_direction(body, other, point_of_view, 2) > 0.0
@@ -410,7 +410,7 @@ def below(body: Body, other: Body, point_of_view: TransformationMatrix) -> bool:
 
     :param body: The body for which the check should be done.
     :param other: The other body.
-    :param point_of_view: The reference pose that defines the up direction for the comparison.
+    :param point_of_view: The reference spot from where to look at the bodies.
     :return: True if the center of mass of "body" is below that of "other" along the point_of_view's +Z axis.
     """
     return _signed_distance_along_direction(body, other, point_of_view, 2) < 0.0

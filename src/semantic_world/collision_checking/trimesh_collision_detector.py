@@ -84,9 +84,9 @@ class TrimeshCollisionDetector(CollisionDetector):
         if collision_matrix is None:
             return []
 
-        collision_pairs = (
-            [(cc.body_a, cc.body_b, cc.distance) for cc in collision_matrix]
-        )
+        collision_pairs = [
+            (cc.body_a, cc.body_b, cc.distance) for cc in collision_matrix
+        ]
         result = []
         for body_a, body_b, distance in collision_pairs:
             if body_a not in self._collision_objects or body_b not in self._collision_objects:

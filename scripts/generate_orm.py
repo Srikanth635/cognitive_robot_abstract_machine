@@ -12,6 +12,8 @@ import semantic_world.world_description.world_entity
 from semantic_world.world import (
     ResetStateContextManager,
     WorldModelUpdateContextManager,
+)
+from semantic_world.spatial_computations.forward_kinematics import (
     ForwardKinematicsVisitor,
 )
 from semantic_world.world_description.connections import (
