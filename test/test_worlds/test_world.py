@@ -13,7 +13,7 @@ from semantic_world.world_description.connections import (
 from semantic_world.exceptions import (
     AddingAnExistingViewError,
     DuplicateViewError,
-    ViewNotFoundError,
+    ViewNotFoundError, DuplicateKinematicStructureEntityError,
 )
 from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.spatial_types.derivatives import Derivatives
@@ -580,6 +580,6 @@ def test_copy_pr2(pr2_world):
 def test_add_entity_with_duplicate_name(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
     body_duplicate = Body(name=PrefixedName("l1"))
-    with pytest.raises(AttributeError):
+    with pytest.raises(DuplicateKinematicStructureEntityError):
         with world.modify_world():
             world.add_kinematic_structure_entity(body_duplicate)
