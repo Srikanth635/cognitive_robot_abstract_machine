@@ -30,15 +30,8 @@ from typing_extensions import (
 from typing_extensions import List
 from typing_extensions import Type, Set
 
-from .world_description.connections import ActiveConnection, PassiveConnection, FixedConnection, Connection6DoF, \
-    PrismaticConnection, RevoluteConnection, OmniDrive
-from .world_description.connections import HasUpdateState, Has1DOFState
-from .world_description.degree_of_freedom import DegreeOfFreedom
-from .exceptions import (DuplicateViewError, AddingAnExistingViewError, ViewNotFoundError,
-                                       AlreadyBelongsToAWorldError, )
-from .spatial_computations.ik_solver import InverseKinematicsSolver
+from .world_description.connection_factories import ConnectionFactory
 from .datastructures.prefixed_name import PrefixedName
-from .datastructures.types import NpMatrix4x4
 from .exceptions import (
     DuplicateViewError,
     AddingAnExistingViewError,
@@ -50,8 +43,6 @@ from .spatial_computations.ik_solver import InverseKinematicsSolver
 from .spatial_types import spatial_types as cas
 from .spatial_types.derivatives import Derivatives
 from .spatial_types.math import inverse_frame
-from .spatial_types.spatial_types import TransformationMatrix
-from .spatial_types.symbol_manager import SymbolManager
 from .datastructures.types import NpMatrix4x4
 from .utils import IDGenerator, copy_lru_cache
 from .world_description.connections import (
@@ -1728,55 +1719,10 @@ class World:
                 new_world.add_degree_of_freedom(new_dof)
                 dof_mapping[dof] = new_dof
             for connection in self.connections:
-                sm = SymbolManager()
-                transform = sm.evaluate_expr(connection.origin_expression)
-                origin_transform = TransformationMatrix(transform,
-                                                        reference_frame=body_mapping[connection.origin_expression.reference_frame],
-                                                        child_frame=body_mapping[connection.origin_expression.child_frame])
-                if isinstance(connection, PrismaticConnection):
-                    new_connection = PrismaticConnection(parent=body_mapping[connection.parent],
-                                                         child=body_mapping[connection.child], axis=connection.axis,
-                                                         _world=new_world, name=connection.name,
-                                                         dof=dof_mapping[connection.dof], origin_expression=origin_transform)
-                elif isinstance(connection, RevoluteConnection):
-                    new_connection = RevoluteConnection(parent=body_mapping[connection.parent],
-                                                        child=body_mapping[connection.child], axis=connection.axis,
-                                                        _world=new_world, name=connection.name,
-                                                        dof=dof_mapping[connection.dof], origin_expression=origin_transform)
-                elif isinstance(connection, FixedConnection):
-                    new_connection = FixedConnection(parent=body_mapping[connection.parent],
-                                                     child=body_mapping[connection.child], name=connection.name, origin_expression=origin_transform)
-                elif isinstance(connection, Connection6DoF):
-                    new_connection = Connection6DoF(parent=body_mapping[connection.parent],
-                                                    x=dof_mapping[connection.x],
-                                                    y=dof_mapping[connection.y],
-                                                    z=dof_mapping[connection.z],
-                                                    qx=dof_mapping[connection.qx],
-                                                    qy=dof_mapping[connection.qy],
-                                                    qz=dof_mapping[connection.qz],
-                                                    qw=dof_mapping[connection.qw],
-                                                    child=body_mapping[connection.child],
-                                                    _world=new_world, name=connection.name, origin_expression=origin_transform)
-                elif isinstance(connection, OmniDrive):
-                    new_connection = OmniDrive(parent=body_mapping[connection.parent],
-                                               child=body_mapping[connection.child],
-                                               x=dof_mapping[connection.x],
-                                               y=dof_mapping[connection.y],
-                                               z=dof_mapping[connection.z],
-                                               roll=dof_mapping[connection.roll],
-                                               pitch=dof_mapping[connection.pitch],
-                                               yaw=dof_mapping[connection.yaw],
-                                               x_vel=dof_mapping[connection.x_vel],
-                                               y_vel=dof_mapping[connection.y_vel],
-                                               translation_velocity_limits=connection.translation_velocity_limits,
-                                               rotation_velocity_limits=connection.rotation_velocity_limits,
-                                               _world=new_world, name=connection.name, origin_expression=origin_transform)
-                else:
-                    print(f"Unknown connection type {type(connection)}")
-                new_world.add_connection(new_connection)
+                con_factory = ConnectionFactory.from_connection(connection)
+                new_world.add_connection(con_factory.create(new_world))
             for dof in self.degrees_of_freedom:
                 new_world.state[dof.name] = self.state[dof.name].data
-            # new_world.state = deepcopy(self.state)
         return new_world
 
     def load_collision_srdf(self, file_path: str):

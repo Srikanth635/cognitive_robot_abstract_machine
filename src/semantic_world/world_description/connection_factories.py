@@ -1,6 +1,7 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing_extensions import Self, Dict, Any, TypeVar
+from typing_extensions import Self, Dict, Any, TypeVar, TYPE_CHECKING
 
 from ormatic.dao import HasGeneric
 from random_events.utils import SubclassJSONSerializer, recursive_subclasses
@@ -15,10 +16,11 @@ from .geometry import transformation_from_json, transformation_to_json
 from ..datastructures.prefixed_name import PrefixedName
 from ..spatial_types.spatial_types import TransformationMatrix
 from ..spatial_types.symbol_manager import symbol_manager
-from ..world import World
 from .world_entity import Connection
 from .. import spatial_types as cas
 
+if TYPE_CHECKING:
+    from ..world import World
 T = TypeVar("T")
 
 
