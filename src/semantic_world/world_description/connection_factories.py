@@ -292,4 +292,56 @@ class OmniDriveFactory(ConnectionFactory[OmniDrive]):
         )
 
     def create(self, world: World) -> Connection:
-        raise NotImplementedError
+        parent = world.get_kinematic_structure_entity_by_name(self.parent_name)
+        child = world.get_kinematic_structure_entity_by_name(self.child_name)
+        return self.original_class()(
+            parent=parent,
+            child=child,
+            name=self.name,
+            x=world.get_degree_of_freedom_by_name(self.x_name),
+            y=world.get_degree_of_freedom_by_name(self.y_name),
+            z=world.get_degree_of_freedom_by_name(self.z_name),
+            roll=world.get_degree_of_freedom_by_name(self.roll_name),
+            pitch=world.get_degree_of_freedom_by_name(self.pitch_name),
+            yaw=world.get_degree_of_freedom_by_name(self.yaw_name),
+            x_vel=world.get_degree_of_freedom_by_name(self.x_velocity_name),
+            y_vel=world.get_degree_of_freedom_by_name(self.y_velocity_name),
+            translation_velocity_limits=self.translation_velocity_limits,
+            rotation_velocity_limits=self.rotation_velocity_limits,
+            origin_expression=self.origin_expression,
+            _world=world,
+        )
+
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            **super().to_json(),
+            "x": self.x_name.to_json(),
+            "y": self.y_name.to_json(),
+            "z": self.z_name.to_json(),
+            "roll": self.roll_name.to_json(),
+            "pitch": self.pitch_name.to_json(),
+            "yaw": self.yaw_name.to_json(),
+            "x_velocity": self.x_velocity_name.to_json(),
+            "y_velocity": self.y_velocity_name.to_json(),
+            "translation_velocity_limits": self.translation_velocity_limits,
+            "rotation_velocity_limits": self.rotation_velocity_limits,
+        }
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self:
+        return cls(
+            name=PrefixedName.from_json(data["name"]),
+            parent_name=PrefixedName.from_json(data["parent_name"]),
+            child_name=PrefixedName.from_json(data["child_name"]),
+            x_name=PrefixedName.from_json(data["x"]),
+            y_name=PrefixedName.from_json(data["y"]),
+            z_name=PrefixedName.from_json(data["z"]),
+            roll_name=PrefixedName.from_json(data["roll"]),
+            pitch_name=PrefixedName.from_json(data["pitch"]),
+            yaw_name=PrefixedName.from_json(data["yaw"]),
+            x_velocity_name=PrefixedName.from_json(data["x_velocity"]),
+            y_velocity_name=PrefixedName.from_json(data["y_velocity"]),
+            translation_velocity_limits=data["translation_velocity_limits"],
+            rotation_velocity_limits=data["rotation_velocity_limits"],
+            origin_expression=transformation_from_json(data["origin_expression"]),
+        )
