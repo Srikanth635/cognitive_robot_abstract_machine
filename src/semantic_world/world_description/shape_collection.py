@@ -13,7 +13,6 @@ from typing_extensions import List, TYPE_CHECKING, Optional, Iterator
 from .geometry import Shape, BoundingBox, Box
 from ..datastructures.variables import SpatialVariables
 from ..spatial_types import TransformationMatrix, Point3
-from ..spatial_types.spatial_types import TransformationMatrix
 
 if TYPE_CHECKING:
     from .world_entity import Body, KinematicStructureEntity
