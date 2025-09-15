@@ -9,7 +9,6 @@ from random_events.product_algebra import Event, SimpleEvent
 from random_events.utils import SubclassJSONSerializer
 from trimesh import Trimesh
 from trimesh.util import concatenate
-from typing_extensions import List, TYPE_CHECKING, Optional, Iterator
 from .geometry import Shape, BoundingBox, Box
 from ..datastructures.variables import SpatialVariables
 from ..spatial_types import TransformationMatrix, Point3
