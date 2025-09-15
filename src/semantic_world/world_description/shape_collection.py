@@ -36,7 +36,7 @@ class ShapeCollection(SubclassJSONSerializer):
     """
 
     def __post_init__(self):
-        if self.reference_frame is None:
+        if self.reference_frame is not None:
             for shape in self.shapes:
                 shape.origin.reference_frame = self.reference_frame
 
