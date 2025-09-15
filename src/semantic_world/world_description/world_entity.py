@@ -527,6 +527,13 @@ class View(WorldEntity):
     This class can hold references to certain bodies that gain meaning in this context.
     """
 
+    def __post_init__(self):
+        if self.name is None:
+            self.name = PrefixedName(
+                name=f"{self.__class__.name}_{id_generator(type(self))}",
+                prefix=self._world.name if self._world is not None else None,
+            )
+
     def _kinematic_structure_entities(
         self, visited: Set[int], aggregation_type: Type[GenericKinematicStructureEntity]
     ) -> Set[GenericKinematicStructureEntity]:
