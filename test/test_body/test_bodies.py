@@ -18,7 +18,7 @@ class JSONTestCase(unittest.TestCase):
         collision = [
             Box(origin=TransformationMatrix.from_xyz_rpy(0, 1, 0, 0, 0, 1, body))
         ]
-        body.collision = ShapeCollection(collision, kinematic_structure_entity=body)
+        body.collision = ShapeCollection(collision, reference_frame=body)
 
         json_data = body.to_json()
         body2 = Body.from_json(json_data)

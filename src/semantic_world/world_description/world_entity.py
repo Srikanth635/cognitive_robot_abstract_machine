@@ -187,8 +187,8 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
         for v in self.visual:
             v.origin.reference_frame = self
 
-        self.visual.kinematic_structure_entity = self
-        self.collision.kinematic_structure_entity = self
+        self.visual.reference_frame = self
+        self.collision.reference_frame = self
 
     def get_collision_config(self) -> CollisionCheckingConfig:
         if self.temp_collision_config is not None:
@@ -360,7 +360,7 @@ class Region(KinematicStructureEntity):
     """
 
     def __post_init__(self):
-        self.area.kinematic_structure_entity = self
+        self.area.reference_frame = self
 
     def __hash__(self):
         return id(self)
@@ -552,11 +552,11 @@ class View(WorldEntity):
         """
 
         collections = iter(
-            entity.as_bounding_box_collection_at_origin(origin)
+            entity.collision.as_bounding_box_collection_at_origin(origin)
             for entity in self.kinematic_structure_entities
             if isinstance(entity, Body) and entity.has_collision()
         )
-        bbs = BoundingBoxCollection(origin.reference_frame, [])
+        bbs = BoundingBoxCollection([], origin.reference_frame)
 
         for bb_collection in collections:
             bbs = bbs.merge(bb_collection)

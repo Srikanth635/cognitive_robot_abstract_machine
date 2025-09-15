@@ -7,7 +7,10 @@ from random_events.product_algebra import SimpleEvent
 
 from semantic_world.adapters.urdf import URDFParser
 from semantic_world.world_description.geometry import BoundingBox
-from semantic_world.world_description.shape_collection import BoundingBoxCollection
+from semantic_world.world_description.shape_collection import (
+    BoundingBoxCollection,
+    ShapeCollection,
+)
 from semantic_world.world_description.graph_of_convex_sets import (
     GraphOfConvexSets,
     PoseOccupiedError,
@@ -85,15 +88,20 @@ class GCSFromWorldTestCase(unittest.TestCase):
         cls.world = apartment_parser.parse()
 
     def test_from_world(self):
-        search_space = BoundingBox(
-            min_x=-5,
-            max_x=-2,
-            min_y=-1,
-            max_y=2,
-            min_z=0,
-            max_z=2,
-            origin=TransformationMatrix(reference_frame=self.world.root),
-        ).as_collection()
+        search_space = BoundingBoxCollection(
+            [
+                BoundingBox(
+                    min_x=-5,
+                    max_x=-2,
+                    min_y=-1,
+                    max_y=2,
+                    min_z=0,
+                    max_z=2,
+                    origin=TransformationMatrix(reference_frame=self.world.root),
+                )
+            ],
+            self.world.root,
+        )
         gcs = GraphOfConvexSets.free_space_from_world(
             self.world, search_space=search_space
         )
@@ -115,15 +123,20 @@ class GCSFromWorldTestCase(unittest.TestCase):
             gcs.path_from_to(start, target)
 
     def test_navigation_map_from_world(self):
-        search_space = BoundingBox(
-            min_x=-5,
-            max_x=-2,
-            min_y=-1,
-            max_y=2,
-            min_z=0,
-            max_z=2,
-            origin=TransformationMatrix(reference_frame=self.world.root),
-        ).as_collection()
+        search_space = BoundingBoxCollection(
+            [
+                BoundingBox(
+                    min_x=-5,
+                    max_x=-2,
+                    min_y=-1,
+                    max_y=2,
+                    min_z=0,
+                    max_z=2,
+                    origin=TransformationMatrix(reference_frame=self.world.root),
+                )
+            ],
+            self.world.root,
+        )
         gcs = GraphOfConvexSets.navigation_map_from_world(
             self.world, search_space=search_space
         )

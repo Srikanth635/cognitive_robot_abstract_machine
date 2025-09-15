@@ -30,15 +30,15 @@ class ShapeCollection(SubclassJSONSerializer):
     The shapes contained in this collection.
     """
 
-    kinematic_structure_entity: Optional[KinematicStructureEntity] = None
+    reference_frame: Optional[KinematicStructureEntity] = None
     """
     Backreference to the kinematic structure entity this collection belongs to.
     """
 
     def __post_init__(self):
-        if self.kinematic_structure_entity is None:
+        if self.reference_frame is None:
             for shape in self.shapes:
-                shape.origin.reference_frame = self.kinematic_structure_entity
+                shape.origin.reference_frame = self.reference_frame
 
     def __getitem__(self, index: int) -> Shape:
         return self.shapes[index]
@@ -125,7 +125,7 @@ class BoundingBoxCollection(ShapeCollection):
     def __post_init__(self):
         for box in self.bounding_boxes:
             assert (
-                box.origin.reference_frame == self.kinematic_structure_entity
+                box.origin.reference_frame == self.reference_frame
             ), "All bounding boxes must have the same reference frame."
 
     def __iter__(self) -> Iterator[BoundingBox]:
@@ -150,10 +150,10 @@ class BoundingBoxCollection(ShapeCollection):
         :return: The merged bounding box collection.
         """
         assert (
-            self.kinematic_structure_entity == other.kinematic_structure_entity
+            self.reference_frame == other.reference_frame
         ), "The reference frames of the bounding box collections must be the same."
         return BoundingBoxCollection(
-            kinematic_structure_entity=self.kinematic_structure_entity,
+            reference_frame=self.reference_frame,
             shapes=self.bounding_boxes + other.bounding_boxes,
         )
 
@@ -171,7 +171,7 @@ class BoundingBoxCollection(ShapeCollection):
         """
         return BoundingBoxCollection(
             [box.bloat(x_amount, y_amount, z_amount) for box in self.bounding_boxes],
-            self.kinematic_structure_entity,
+            self.reference_frame,
         )
 
     @classmethod
@@ -256,7 +256,7 @@ class BoundingBoxCollection(ShapeCollection):
     def as_shapes(self) -> ShapeCollection:
         return ShapeCollection(
             [box.as_shape() for box in self.bounding_boxes],
-            self.kinematic_structure_entity,
+            self.reference_frame,
         )
 
     def get_points(self) -> List[Point3]:
