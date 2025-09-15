@@ -122,6 +122,7 @@ class BoundingBoxCollection(ShapeCollection):
     shapes: List[BoundingBox]
 
     def __post_init__(self):
+        super().__post_init__()
         for box in self.bounding_boxes:
             assert (
                 box.origin.reference_frame == self.reference_frame
