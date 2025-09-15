@@ -42,7 +42,7 @@ def two_block_world():
             scale=Scale(1.0, 1.0, 1.0),
             origin=TransformationMatrix.from_xyz_rpy(reference_frame=result),
         )
-        result.collision = ShapeCollection([collision])
+        result.collision = ShapeCollection([collision], reference_frame=result)
         return result
 
     world = World()
