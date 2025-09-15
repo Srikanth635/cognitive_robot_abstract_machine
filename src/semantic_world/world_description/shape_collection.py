@@ -9,12 +9,14 @@ from random_events.product_algebra import Event, SimpleEvent
 from random_events.utils import SubclassJSONSerializer
 from trimesh import Trimesh
 from trimesh.util import concatenate
-from .geometry import Shape, BoundingBox, Box
+from typing_extensions import TYPE_CHECKING
+
+from .geometry import Shape, BoundingBox
 from ..datastructures.variables import SpatialVariables
 from ..spatial_types import TransformationMatrix, Point3
 
 if TYPE_CHECKING:
-    from .world_entity import Body, KinematicStructureEntity
+    from .world_entity import KinematicStructureEntity
 
 
 @dataclass
