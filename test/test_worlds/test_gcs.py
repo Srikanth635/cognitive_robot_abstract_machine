@@ -6,7 +6,8 @@ from random_events.interval import SimpleInterval
 from random_events.product_algebra import SimpleEvent
 
 from semantic_world.adapters.urdf import URDFParser
-from semantic_world.world_description.geometry import BoundingBox, BoundingBoxCollection
+from semantic_world.world_description.geometry import BoundingBox
+from semantic_world.world_description.shape_collection import BoundingBoxCollection
 from semantic_world.world_description.graph_of_convex_sets import (
     GraphOfConvexSets,
     PoseOccupiedError,

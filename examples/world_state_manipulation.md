@@ -99,7 +99,7 @@ We can update the drawer's state by altering the free variables position of its 
 
 ```python
 time.sleep(1)
-drawer.container.body.parent_connection.position = 0.1
+drawer.container.kinematic_structure_entity.parent_connection.position = 0.1
 time.sleep(1)
 ```
 

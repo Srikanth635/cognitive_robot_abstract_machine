@@ -3,7 +3,8 @@ from __future__ import annotations
 import logging
 
 import matplotlib.pyplot as plt
-from .geometry import BoundingBox, BoundingBoxCollection
+from .geometry import BoundingBox
+from .shape_collection import BoundingBoxCollection
 from ..datastructures.variables import SpatialVariables
 from ..world import World
 from .world_entity import View, EnvironmentView

@@ -7,7 +7,7 @@ from entity_query_language import symbol
 from probabilistic_model.probabilistic_circuit.rx.helper import uniform_measure_of_event
 from typing_extensions import List
 
-from ..world_description.geometry import BoundingBoxCollection
+from ..world_description.shape_collection import BoundingBoxCollection
 from ..datastructures.prefixed_name import PrefixedName
 from ..spatial_types import Point3
 from ..datastructures.variables import SpatialVariables

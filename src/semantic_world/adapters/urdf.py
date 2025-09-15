@@ -32,6 +32,7 @@ from ..utils import (
     robot_name_from_urdf_string,
 )
 from ..world import World
+from ..world_description.shape_collection import ShapeCollection
 from ..world_description.world_entity import Body, Connection
 
 connection_type_map = {  # 'unknown': JointType.UNKNOWN,
@@ -275,7 +276,7 @@ class URDFParser:
         self,
         geometry: Union[List[urdfpy.Collision], List[urdfpy.Visual]],
         parent_frame: PrefixedName,
-    ) -> List[Shape]:
+    ) -> ShapeCollection:
         """
         Parses a URDF geometry to the corresponding shapes.
         :param geometry: The URDF geometry to parse either the collisions of visuals.'
@@ -356,7 +357,7 @@ class URDFParser:
                         scale=Scale(*(geom.geometry.scale or (1, 1, 1))),
                     )
                 )
-        return res
+        return ShapeCollection(res)
 
     def parse_file_path(self, file_path: str) -> str:
         """

@@ -24,6 +24,7 @@ import semantic_world.world
 import semantic_world.world_description.connections
 import semantic_world.world_description.degree_of_freedom
 import semantic_world.world_description.geometry
+import semantic_world.world_description.shape_collection
 import semantic_world.world_description.world_entity
 import trimesh.base
 
@@ -361,7 +362,9 @@ class Point3MappingDAO(Base, DataAccessObject[semantic_world.orm.model.Point3Map
 
 class BoundingBoxCollectionDAO(
     Base,
-    DataAccessObject[semantic_world.world_description.geometry.BoundingBoxCollection],
+    DataAccessObject[
+        semantic_world.world_description.shape_collection.BoundingBoxCollection
+    ],
 ):
     __tablename__ = "BoundingBoxCollectionDAO"
 
