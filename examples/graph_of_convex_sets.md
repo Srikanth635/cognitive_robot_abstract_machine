@@ -36,6 +36,7 @@ Let's get hands on! First, we need to create a world that makes navigation non-t
 
 ```{code-cell} ipython2
 from semantic_world.world_description.geometry import Box, Scale, Color
+from semantic_world.world_description.shape_collection import ShapeCollection
 from semantic_world.world_description.world_entity import Body
 from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.spatial_types import TransformationMatrix
@@ -44,9 +45,10 @@ from semantic_world.world import World
 box_world = World()
 
 with box_world.modify_world():
-    box = Body(name=PrefixedName("box"), collision=[Box(scale=Scale(0.5, 0.5, 0.5),
+    box = Body(name=PrefixedName("box"), collision=ShapeCollection([Box(scale=Scale(0.5, 0.5, 0.5),
                                                         color=Color(1., 1., 1., 1.),
-                                                        origin=TransformationMatrix.from_xyz_rpy(0,0,0,0,0,0),) ])
+                                                        origin=TransformationMatrix.from_xyz_rpy(0,0,0,0,0,0),)],
+                                                        ))
     box_world.add_kinematic_structure_entity(box)
     
 ```
@@ -113,9 +115,9 @@ apartment = os.path.realpath(os.path.join(root, "resources", "urdf", "kitchen.ur
 apartment_parser = URDFParser.from_file(apartment)
 world = apartment_parser.parse()
 
-search_space = BoundingBox(min_x=-2, max_x=2,
+search_space = ShapeCollection([BoundingBox(min_x=-2, max_x=2,
                            min_y=-2, max_y=2,
-                           min_z=0., max_z=2, origin=TransformationMatrix(reference_frame=world.root)).as_collection()
+                           min_z=0., max_z=2, origin=TransformationMatrix(reference_frame=world.root))], world.root)
 gcs = GraphOfConvexSets.free_space_from_world(world, search_space=search_space)
 ```
 
