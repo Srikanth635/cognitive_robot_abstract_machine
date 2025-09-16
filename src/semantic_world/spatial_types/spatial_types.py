@@ -386,7 +386,6 @@ class SymbolicType:
     def is_constant(self) -> bool:
         return len(self.free_symbols()) == 0
 
-    @lru_cache()
     def to_np(self) -> np.ndarray:
         """
         Transforms the data into a numpy array.
@@ -739,7 +738,7 @@ class Expression(SymbolicType, BasicOperatorMixin):
         Jd = self.jacobian(symbols)
         for i in range(Jd.shape[0]):
             for j in range(Jd.shape[1]):
-                Jd[i, j] = total_derivative(Jd[i, j], symbols, symbols_dot)
+                Jd[i, j] = Jd[i, j].total_derivative(symbols, symbols_dot)
         return Jd
 
     def jacobian_ddot(
@@ -774,6 +773,26 @@ class Expression(SymbolicType, BasicOperatorMixin):
                     symbols, symbols_dot, symbols_ddot
                 )
         return Jdd
+
+    def total_derivative(
+        self,
+        symbols: Iterable[Symbol],
+        symbols_dot: Iterable[Symbol],
+    ) -> Expression:
+        """
+        Compute the total derivative of an expression with respect to given symbols and their derivatives
+        (dot symbols).
+
+        The total derivative accounts for a dependent relationship where the specified symbols represent
+        the variables of interest, and the dot symbols represent the time derivatives of those variables.
+
+        :param symbols: Iterable of symbols with respect to which the derivative is computed.
+        :param symbols_dot: Iterable of dot symbols representing the derivatives of the symbols.
+        :return: The expression resulting from the total derivative computation.
+        """
+        symbols = Expression(symbols)
+        symbols_dot = Expression(symbols_dot)
+        return Expression(ca.jtimes(self.s, symbols.s, symbols_dot.s))
 
     def second_order_total_derivative(
         self,
@@ -834,6 +853,25 @@ class Expression(SymbolicType, BasicOperatorMixin):
 
     def scale(self, a: ScalarData) -> Expression:
         return save_division(self, self.norm()) * a
+
+    def kron(self, other: Expression) -> Expression:
+        """
+        Compute the Kronecker product of two given matrices.
+
+        The Kronecker product is a block matrix construction, derived from the
+        direct product of two matrices. It combines the entries of the first
+        matrix (`m1`) with each entry of the second matrix (`m2`) by a rule
+        of scalar multiplication. This operation extends to any two matrices
+        of compatible shapes.
+
+        :param other: The second matrix to be used in calculating the Kronecker product.
+                   Supports symbolic or numerical matrix types.
+        :return: An Expression representing the resulting Kronecker product as a
+                 symbolic or numerical matrix of appropriate size.
+        """
+        m1 = _to_sx(self)
+        m2 = _to_sx(other)
+        return Expression(ca.kron(m1, m2))
 
 
 TrinaryFalse: float = 0.0
@@ -948,12 +986,12 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin):
     @classmethod
     def from_xyz_rpy(
         cls,
-        x: Optional[ScalarData] = 0,
-        y: Optional[ScalarData] = 0,
-        z: Optional[ScalarData] = 0,
-        roll: Optional[ScalarData] = 0,
-        pitch: Optional[ScalarData] = 0,
-        yaw: Optional[ScalarData] = 0,
+        x: ScalarData = 0,
+        y: ScalarData = 0,
+        z: ScalarData = 0,
+        roll: ScalarData = 0,
+        pitch: ScalarData = 0,
+        yaw: ScalarData = 0,
         reference_frame: Optional[KinematicStructureEntity] = None,
         child_frame: Optional[KinematicStructureEntity] = None,
     ) -> TransformationMatrix:
@@ -984,7 +1022,7 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin):
         cls,
         pos_x: ScalarData = 0,
         pos_y: ScalarData = 0,
-        pos_z: ScalarData = 00,
+        pos_z: ScalarData = 0,
         quat_w: ScalarData = 0,
         quat_x: ScalarData = 0,
         quat_y: ScalarData = 0,
@@ -2553,13 +2591,13 @@ def logic_or3(a: ScalarData, b: ScalarData) -> ScalarData:
     return max(cas_a, cas_b)
 
 
-def logic_not(expr: ScalarData) -> Expression:
-    cas_expr = _to_sx(expr)
+def logic_not(expression: ScalarData) -> Expression:
+    cas_expr = _to_sx(expression)
     return Expression(ca.logic_not(cas_expr))
 
 
-def logic_not3(expr: ScalarData) -> Expression:
-    return Expression(1 - expr)
+def logic_not3(expression: ScalarData) -> Expression:
+    return Expression(1 - expression)
 
 
 def if_greater(
@@ -2760,28 +2798,6 @@ def scale(v: Expression, a: ScalarData) -> Expression:
 
 def dot(e1: Expression, e2: Expression) -> Expression:
     return e1.dot(e2)
-
-
-def kron(m1: Expression, m2: Expression) -> Expression:
-    """
-    Compute the Kronecker product of two given matrices.
-
-    The Kronecker product is a block matrix construction, derived from the
-    direct product of two matrices. It combines the entries of the first
-    matrix (`m1`) with each entry of the second matrix (`m2`) by a rule
-    of scalar multiplication. This operation extends to any two matrices
-    of compatible shapes.
-
-    :param m1: The first matrix to be used in calculating the Kronecker product.
-               Supports symbolic or numerical matrix types.
-    :param m2: The second matrix to be used in calculating the Kronecker product.
-               Supports symbolic or numerical matrix types.
-    :return: An Expression representing the resulting Kronecker product as a
-             symbolic or numerical matrix of appropriate size.
-    """
-    m1 = _to_sx(m1)
-    m2 = _to_sx(m2)
-    return Expression(ca.kron(m1, m2))
 
 
 def trace(
@@ -2986,28 +3002,6 @@ def sum_column(matrix: Expression) -> Expression:
     return Expression(ca.sum2(matrix))
 
 
-def total_derivative(
-    expr: Union[Symbol, Expression],
-    symbols: Iterable[Symbol],
-    symbols_dot: Iterable[Symbol],
-) -> Expression:
-    """
-    Compute the total derivative of an expression with respect to given symbols and their derivatives
-    (dot symbols).
-
-    The total derivative accounts for a dependent relationship where the specified symbols represent
-    the variables of interest, and the dot symbols represent the time derivatives of those variables.
-
-    :param expr: The expression to be differentiated.
-    :param symbols: Iterable of symbols with respect to which the derivative is computed.
-    :param symbols_dot: Iterable of dot symbols representing the derivatives of the symbols.
-    :return: The expression resulting from the total derivative computation.
-    """
-    symbols = Expression(symbols)
-    symbols_dot = Expression(symbols_dot)
-    return Expression(ca.jtimes(expr.s, symbols.s, symbols_dot.s))
-
-
 def sign(x: ScalarData) -> Expression:
     x = _to_sx(x)
     return Expression(ca.sign(x))
@@ -3120,55 +3114,57 @@ def gauss(n: ScalarData) -> Expression:
     return (n**2 + n) / 2
 
 
-def is_true_symbol(expr: Expression) -> bool:
+def is_true_symbol(expression: Expression) -> bool:
     try:
-        equality_expr = expr == BinaryTrue
+        equality_expr = expression == BinaryTrue
         return bool(equality_expr.to_np())
     except Exception as e:
         return False
 
 
-def is_true3(expr: Union[Symbol, Expression]) -> Expression:
-    return equal(expr, TrinaryTrue)
+def is_true3(expressino: Union[Symbol, Expression]) -> Expression:
+    return equal(expressino, TrinaryTrue)
 
 
-def is_true3_symbol(expr: Expression) -> bool:
+def is_true3_symbol(expression: Expression) -> bool:
     try:
-        return bool((expr == TrinaryTrue).to_np())
+        return bool((expression == TrinaryTrue).to_np())
     except Exception as e:
         return False
 
 
-def is_false_symbol(expr: Expression) -> bool:
+def is_false_symbol(expression: Expression) -> bool:
     try:
-        return bool((expr == BinaryFalse).to_np())
+        return bool((expression == BinaryFalse).to_np())
     except Exception as e:
         return False
 
 
-def is_false3(expr: Union[Symbol, Expression]) -> Expression:
-    return equal(expr, TrinaryFalse)
+def is_false3(expression: Union[Symbol, Expression]) -> Expression:
+    return equal(expression, TrinaryFalse)
 
 
-def is_false3_symbol(expr: Expression) -> bool:
+def is_false3_symbol(expression: Expression) -> bool:
     try:
-        return bool((expr == TrinaryFalse).to_np())
+        return bool((expression == TrinaryFalse).to_np())
     except Exception as e:
         return False
 
 
-def is_unknown3(expr: Union[Symbol, Expression]) -> Expression:
-    return equal(expr, TrinaryUnknown)
+def is_unknown3(expression: Union[Symbol, Expression]) -> Expression:
+    return equal(expression, TrinaryUnknown)
 
 
-def is_unknown3_symbol(expr: Expression) -> bool:
+def is_unknown3_symbol(expression: Expression) -> bool:
     try:
-        return bool((expr == TrinaryUnknown).to_np())
+        return bool((expression == TrinaryUnknown).to_np())
     except Exception as e:
         return False
 
 
-def det(expr: Union[Expression, RotationMatrix, TransformationMatrix]) -> Expression:
+def det(
+    expression: Union[Expression, RotationMatrix, TransformationMatrix],
+) -> Expression:
     """
     Calculate the determinant of the given expression.
 
@@ -3176,15 +3172,15 @@ def det(expr: Union[Expression, RotationMatrix, TransformationMatrix]) -> Expres
     The input can be an instance of either `Expression`, `RotationMatrix`, or
     `TransformationMatrix`. The result is returned as an `Expression`.
 
-    :param expr: The mathematical expression for which the determinant is
+    :param expression: The mathematical expression for which the determinant is
         computed. It must be one of `Expression`, `RotationMatrix`, or
         `TransformationMatrix`.
     :return: An `Expression` representing the determinant of the input.
     """
-    return Expression(ca.det(expr.s))
+    return Expression(ca.det(expression.s))
 
 
-def replace_with_three_logic(expr: Expression) -> Expression:
+def replace_with_three_logic(expression: Expression) -> Expression:
     """
     Converts a given logical expression into a three-valued logic expression.
 
@@ -3193,16 +3189,16 @@ def replace_with_three_logic(expr: Expression) -> Expression:
     true, false, or an indeterminate state. The method identifies specific
     operations like NOT, AND, and OR and applies three-valued logic rules to them.
 
-    :param expr: The logical expression to be converted.
+    :param expression: The logical expression to be converted.
     :return: The converted logical expression in three-valued logic.
     """
-    cas_expr = _to_sx(expr)
+    cas_expr = _to_sx(expression)
     if cas_expr.n_dep() == 0:
         if is_true_symbol(cas_expr):
             return Expression(TrinaryTrue)
         if is_false_symbol(cas_expr):
             return Expression(TrinaryFalse)
-        return expr
+        return expression
     op = cas_expr.op()
     if op == ca.OP_NOT:
         return logic_not3(replace_with_three_logic(cas_expr.dep(0)))
@@ -3216,4 +3212,4 @@ def replace_with_three_logic(expr: Expression) -> Expression:
             replace_with_three_logic(cas_expr.dep(0)),
             replace_with_three_logic(cas_expr.dep(1)),
         )
-    return expr
+    return expression

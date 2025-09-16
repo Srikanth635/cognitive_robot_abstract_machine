@@ -6,7 +6,7 @@ from hypothesis import given, assume
 
 import semantic_world.spatial_types.math as giskard_math
 import semantic_world.spatial_types.spatial_types as cas
-from semantic_world.exceptions import HasFreeSymbolsError
+from semantic_world.exceptions import HasFreeSymbolsError, WrongDimensionsError
 from .utils_for_tests import (
     float_no_nan_no_inf,
     quaternion,
@@ -433,6 +433,12 @@ class TestSymbol:
 
 
 class TestExpression:
+    def test_kron(self):
+        m1 = np.eye(4)
+        r1 = cas.Expression(m1).kron(cas.Expression(m1))
+        r2 = np.kron(m1, m1)
+        assert_allclose(r1, r2)
+
     def test_jacobian(self):
         a = cas.Symbol("a")
         b = cas.Symbol("b")
@@ -1044,10 +1050,10 @@ class TestRotationMatrix:
         assert r[3, 3] == 1
 
         # Invalid shape should raise ValueError
-        with pytest.raises(ValueError):
+        with pytest.raises(WrongDimensionsError):
             cas.RotationMatrix(np.eye(3))  # 3x3 instead of 4x4
 
-        with pytest.raises(ValueError):
+        with pytest.raises(WrongDimensionsError):
             cas.RotationMatrix(np.ones((4, 5)))  # Wrong dimensions
 
     def test_orthogonality_properties(self):
@@ -2017,7 +2023,7 @@ class TestTransformationMatrix:
     @given(st.integers(min_value=1, max_value=10))
     def test_matrix(self, x_dim):
         data = list(range(x_dim))
-        with pytest.raises(ValueError):
+        with pytest.raises(WrongDimensionsError):
             cas.TransformationMatrix(data)
 
     @given(
@@ -2026,7 +2032,7 @@ class TestTransformationMatrix:
     def test_matrix2(self, x_dim, y_dim):
         data = [[i + (j * x_dim) for j in range(y_dim)] for i in range(x_dim)]
         if x_dim != 4 or y_dim != 4:
-            with pytest.raises(ValueError):
+            with pytest.raises(WrongDimensionsError):
                 m = cas.TransformationMatrix(data).to_np()
         else:
             m = cas.TransformationMatrix(data).to_np()
@@ -2203,10 +2209,10 @@ class TestTransformationMatrix:
         assert t[3, 3] == 1
 
         # Invalid shape should raise ValueError
-        with pytest.raises(ValueError):
+        with pytest.raises(WrongDimensionsError):
             cas.TransformationMatrix(np.eye(3))  # 3x3 instead of 4x4
 
-        with pytest.raises(ValueError):
+        with pytest.raises(WrongDimensionsError):
             cas.TransformationMatrix(np.ones((2, 5)))  # Wrong dimensions
 
     def test_properties(self):
@@ -3007,12 +3013,6 @@ class TestCASWrapper:
         m2 = giskard_math.rotation_matrix_from_quaternion(*q2)
         r1 = cas.entrywise_product(m1, m2)
         r2 = m1 * m2
-        assert_allclose(r1, r2)
-
-    def test_kron(self):
-        m1 = np.eye(4)
-        r1 = cas.kron(m1, m1)
-        r2 = np.kron(m1, m1)
         assert_allclose(r1, r2)
 
     @given(sq_matrix())
