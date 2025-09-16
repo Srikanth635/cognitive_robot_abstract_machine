@@ -1272,12 +1272,38 @@ class TestPoint3:
         with pytest.raises(TypeError):
             p @ t
 
+    def test_project_to_line(self):
+        point = cas.Point3(1, 2, 3)
+        line_point = cas.Point3(0, 0, 0)
+        line_direction = cas.Vector3(1, 2, 3)  # Point lies on this line
+        point, distance = point.project_to_line(line_point, line_direction)
+        assert_allclose(distance, 0.0)
+        assert_allclose(point, np.array([1, 2, 3, 1]))
+
+        point = cas.Point3(1, 0, 0)
+        line_point = cas.Point3(0, 0, 0)
+        line_direction = cas.Vector3(0, 1, 0)  # Y-axis
+        point, distance = point.project_to_line(line_point, line_direction)
+        assert_allclose(distance, 1.0)
+        assert_allclose(point, np.array([0, 0, 0, 1]))
+
+        point = cas.Point3(0, 0, 5)
+        line_point = cas.Point3(0, 0, 0)
+        line_direction = cas.Vector3(1, 0, 0)  # X-axis
+        point, distance = point.project_to_line(line_point, line_direction)
+        assert_allclose(distance, 5.0)
+        assert_allclose(point, np.array([0, 0, 0, 1]))
+
+    def test_distance_to_line_segment(self):
+        pass
+
     def test_project_to_plane(self):
         p = cas.Point3(0, 0, 1)
-        actual = p.project_to_plane(frame_V_plane_vector1=cas.Vector3(1, 0, 0),
-                                    frame_V_plane_vector2=cas.Vector3(0, 1, 0))
+        actual, distance = p.project_to_plane(frame_V_plane_vector1=cas.Vector3(1, 0, 0),
+                                              frame_V_plane_vector2=cas.Vector3(0, 1, 0))
         expected = cas.Point3(0, 0, 0)
         assert_allclose(actual, expected)
+        assert_allclose(distance, 1)
 
     def test_compilation_and_execution(self):
         """Test that Point3 operations compile and execute correctly"""

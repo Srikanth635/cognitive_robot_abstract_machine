@@ -1265,22 +1265,60 @@ class Point3(SymbolicType, ReferenceFrameMixin):
 
     def project_to_plane(self,
                          frame_V_plane_vector1: Vector3,
-                         frame_V_plane_vector2: Vector3) -> Point3:
+                         frame_V_plane_vector2: Vector3) -> Tuple[Point3, Expression]:
         """
         Projects a point onto a plane defined by two vectors.
         This function assumes that all parameters are defined with respect to the same reference frame.
 
         :param frame_V_plane_vector1: First vector defining the plane
         :param frame_V_plane_vector2: Second vector defining the plane
-        :return: The projected point on the plane
+        :return: Tuple of (projected point on the plane, signed distance from point to plane)
         """
         normal = cross(frame_V_plane_vector1, frame_V_plane_vector2)
         normal.scale(1)
-        # since the plane is in origin, our vector to the point is trivial
         frame_V_current = Vector3.from_iterable(self)
         d = normal @ frame_V_current
         projection = self - normal * d
-        return projection
+        return projection, d
+
+    def project_to_line(self, line_point: Point3, line_direction: Vector3) \
+            -> Tuple[Point3, Expression]:
+        """
+        :param line_point: a point that the line intersects, must have the same reference frame as self
+        :param line_direction: the direction of the line, must have the same reference frame as self
+        :return: tuple of (closest point on the line, shortest distance between self and the line)
+        """
+        lp_vector = self - line_point
+        cross_product = cross(lp_vector, line_direction)
+        distance = cross_product.norm() / line_direction.norm()
+
+        line_direction_unit = line_direction / line_direction.norm()
+        projection_length = lp_vector @ line_direction_unit
+        closest_point = line_point + line_direction_unit * projection_length
+
+        return closest_point, distance
+
+    def distance_to_line_segment(self, line_start: Point3, line_end: Point3) -> Tuple[Expression, Point3]:
+        """
+        All parameters must have the same reference frame as self.
+        :param line_start: start of the approached line
+        :param line_end: end of the approached line
+        :return: distance to line, the nearest point on the line
+        """
+        frame_P_current = self
+        frame_P_line_start = line_start
+        frame_P_line_end = line_end
+        frame_V_line_vec = frame_P_line_end - frame_P_line_start
+        pnt_vec = frame_P_current - frame_P_line_start
+        line_len = frame_V_line_vec.norm()
+        line_unitvec = frame_V_line_vec / line_len
+        pnt_vec_scaled = pnt_vec / line_len
+        t = line_unitvec @ pnt_vec_scaled
+        t = limit(t, lower_limit=0.0, upper_limit=1.0)
+        frame_V_offset = frame_V_line_vec * t
+        dist = (frame_V_offset - pnt_vec).norm()
+        frame_P_nearest = frame_P_line_start + frame_V_offset
+        return dist, frame_P_nearest
 
 class Vector3(SymbolicType, ReferenceFrameMixin):
     vis_frame: Optional[KinematicStructureEntity]
@@ -2306,10 +2344,7 @@ def scale(v: Expression, a: ScalarData) -> Expression:
 
 
 def dot(e1: Expression, e2: Expression) -> Expression:
-    try:
-        return e1.dot(e2)
-    except Exception as e:
-        raise _operation_type_error(e1, 'dot', e2)
+    return e1.dot(e2)
 
 
 def kron(m1: Expression, m2: Expression) -> Expression:
@@ -2529,62 +2564,15 @@ def sum_column(matrix: Expression) -> Expression:
     return Expression(ca.sum2(matrix))
 
 
-def distance_point_to_line_segment(frame_P_current: Point3, frame_P_line_start: Point3, frame_P_line_end: Point3) \
-        -> Tuple[Expression, Point3]:
-    """
-    :param frame_P_current: current position of an object (i. e.) gripper tip
-    :param frame_P_line_start: start of the approached line
-    :param frame_P_line_end: end of the approached line
-    :return: distance to line, the nearest point on the line
-    """
-    frame_P_current = Point3.from_iterable(frame_P_current)
-    frame_P_line_start = Point3.from_iterable(frame_P_line_start)
-    frame_P_line_end = Point3.from_iterable(frame_P_line_end)
-    frame_V_line_vec = frame_P_line_end - frame_P_line_start
-    pnt_vec = frame_P_current - frame_P_line_start
-    line_len = frame_V_line_vec.norm()
-    line_unitvec = frame_V_line_vec / line_len
-    pnt_vec_scaled = pnt_vec / line_len
-    t = line_unitvec @ pnt_vec_scaled
-    t = limit(t, lower_limit=0.0, upper_limit=1.0)
-    frame_V_offset = frame_V_line_vec * t
-    dist = (frame_V_offset - pnt_vec).norm()
-    frame_P_nearest = frame_P_line_start + frame_V_offset
-    return dist, frame_P_nearest
 
 
-def distance_point_to_line(frame_P_point: Point3, frame_P_line_point: Point3, frame_V_line_direction: Vector3) \
-        -> Expression:
-    lp_vector = frame_P_point - frame_P_line_point
-    cross_product = cross(lp_vector, frame_V_line_direction)
-    distance = cross_product.norm() / frame_V_line_direction.norm()
-    return distance
 
 
-def distance_point_to_plane(frame_P_current: Point3,
-                            frame_V_v1: Vector3,
-                            frame_V_v2: Vector3) -> \
-        Tuple[Expression, Point3]:
-    normal = cross(frame_V_v1, frame_V_v2)
-    # since the plane is in origin, our vector to the point is trivial
-    frame_V_current = Vector3.from_iterable(frame_P_current)
-    d = normal @ frame_V_current
-    normal.scale(d)
-    nearest = frame_P_current - normal
-    return norm(nearest - frame_P_current), nearest
 
 
-def distance_point_to_plane_signed(frame_P_current: Point3, frame_V_v1: Vector3,
-                                   frame_V_v2: Vector3) -> \
-        Tuple[Expression, Point3]:
-    normal = cross(frame_V_v1, frame_V_v2)
-    normal = normal / norm(normal)  # Normalize the normal vector
-    # since the plane is in origin, our vector to the point is trivial
-    frame_V_current = Vector3.from_iterable(frame_P_current)
-    d = normal @ frame_V_current
-    offset = (normal * d)
-    nearest = frame_P_current - offset  # Nearest point on the plane
-    return d, nearest
+
+
+
 
 
 def angle_between_vector(v1: Vector3, v2: Vector3) -> Expression:
