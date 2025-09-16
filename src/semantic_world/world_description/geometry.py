@@ -21,9 +21,6 @@ from ..spatial_types.spatial_types import Expression
 from ..spatial_types.symbol_manager import symbol_manager
 from ..utils import IDGenerator
 
-if TYPE_CHECKING:
-    pass
-
 id_generator = IDGenerator()
 
 
