@@ -38,11 +38,6 @@ class VizMarkerPublisher(StateChangeCallback):
     Publishes an Array of visualization marker which represent the situation in the World
     """
 
-    world: World
-    """
-    The World to which the Visualization Marker should be published.
-    """
-
     node: rclpy.node.Node
     """
     The ROS2 node that will be used to publish the visualization marker.
@@ -51,11 +46,6 @@ class VizMarkerPublisher(StateChangeCallback):
     topic_name: str = "/semworld/viz_marker"
     """
     The name of the topic to which the Visualization Marker should be published.
-    """
-
-    interval: float = 0.1
-    """
-    The interval at which the visualization marker should be published, in seconds.
     """
 
     reference_frame: str = "map"
