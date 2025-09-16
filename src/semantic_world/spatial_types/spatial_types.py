@@ -109,7 +109,7 @@ class CompiledFunction:
             symbols = set()
             for symbol_parameter in self.symbol_parameters:
                 symbols.update(set(symbol_parameter))
-            missing_symbols = symbols ^ set(self.expression.free_symbols())
+            missing_symbols = set(self.expression.free_symbols()).difference(symbols)
             if missing_symbols:
                 raise HasFreeSymbolsError(missing_symbols)
 

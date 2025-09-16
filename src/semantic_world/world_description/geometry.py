@@ -37,7 +37,9 @@ def transformation_from_json(data: Dict[str, Any]) -> TransformationMatrix:
     This is needed since SpatialTypes cannot inherit from SubClassJSONSerializer.
     They can't inherit since the conversion to JSON needs the symbol_manager, which would cause a cyclic dependency.
     """
-    return TransformationMatrix.from_xyz_quat(*data["position"], *data["quaternion"])
+    return TransformationMatrix.from_xyz_quaternion(
+        *data["position"], *data["quaternion"]
+    )
 
 
 def transformation_to_json(transformation: TransformationMatrix) -> Dict[str, Any]:

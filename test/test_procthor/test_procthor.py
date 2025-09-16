@@ -47,7 +47,9 @@ class ProcTHORTestCase(unittest.TestCase):
         m[0, 3] = 1.0
         result = unity_to_semantic_digital_twin_transform(TransformationMatrix(m))
         self.assertAlmostEqual(result.to_position().to_np()[1], -1.0)
-        np.testing.assert_allclose(result.to_rotation().to_np()[:3, :3], np.eye(3))
+        np.testing.assert_allclose(
+            result.to_rotation_matrix().to_np()[:3, :3], np.eye(3)
+        )
 
     def test_unity_to_semantic_digital_twin_transform_translation_along_z(self):
         """Unity +Z should map to semantic +X."""
@@ -55,7 +57,9 @@ class ProcTHORTestCase(unittest.TestCase):
         m[2, 3] = 2.0
         result = unity_to_semantic_digital_twin_transform(TransformationMatrix(m))
         self.assertAlmostEqual(result.to_position().to_np()[0], 2.0, places=6)
-        np.testing.assert_allclose(result.to_rotation().to_np()[:3, :3], np.eye(3))
+        np.testing.assert_allclose(
+            result.to_rotation_matrix().to_np()[:3, :3], np.eye(3)
+        )
 
     def test_unity_to_semantic_digital_twin_transform_rotation_y_90_degrees(self):
         """Unity +90° about Y should become –90° about Z in semantic frame."""
@@ -86,7 +90,7 @@ class ProcTHORTestCase(unittest.TestCase):
         room = self.house_json["rooms"][0]
         procthor_room = ProcthorRoom(room_dict=room)
         np.testing.assert_array_equal(
-            procthor_room.world_T_room.to_rotation().to_np(), np.eye(4)
+            procthor_room.world_T_room.to_rotation_matrix().to_np(), np.eye(4)
         )
         np.testing.assert_array_equal(
             procthor_room.world_T_room.to_translation().to_np()[:3, 3],

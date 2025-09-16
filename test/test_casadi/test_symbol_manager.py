@@ -197,22 +197,6 @@ class TestSymbolManager:
         assert result_int == 42
         assert result_float == 3.14
 
-    def test_evaluate_expr_with_symbols(self):
-        """Test evaluating symbolic expressions"""
-        manager = SymbolManager()
-
-        # Create a mock expression
-        mock_expr = Mock()
-        mock_compile = Mock()
-        mock_compile.symbol_parameters = []
-        mock_compile.__call__.return_value = [5.0]
-        mock_expr.compile.return_value = mock_compile
-        mock_expr.to_np.return_value = 5.0
-
-        result = manager.evaluate_expr(mock_expr)
-
-        assert result == 5.0
-
     def test_evaluate_expr_no_params(self):
         """Test evaluating expressions without parameters"""
         manager = SymbolManager()

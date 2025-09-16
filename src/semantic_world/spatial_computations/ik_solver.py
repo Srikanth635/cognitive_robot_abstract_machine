@@ -366,7 +366,7 @@ class QPProblem:
         self.lower_box_constraints, self.upper_box_constraints = (
             self.constraint_builder.build_box_constraints(self.active_dofs)
         )
-        self.box_constraint_matrix = cas.eye(len(self.lower_box_constraints))
+        self.box_constraint_matrix = cas.Expression.eye(len(self.lower_box_constraints))
 
         # Goal constraints
         self.eq_bound_expr, self.neq_matrix = (
@@ -387,7 +387,7 @@ class QPProblem:
         slack_weights = [2500 * (1.0 / 0.2) ** 2] * 6
 
         self.quadratic_weights = cas.Expression(dof_weights + slack_weights)
-        self.linear_weights = cas.zeros(*self.quadratic_weights.shape)
+        self.linear_weights = cas.Expression.zeros(*self.quadratic_weights.shape)
 
     def _compile_functions(self):
         """Compile all symbolic expressions into functions."""
@@ -496,8 +496,8 @@ class ConstraintBuilder:
         current_expr = cas.vstack([position_state, rotation_state])
         eq_bound_expr = cas.vstack([position_error, rotation_error])
 
-        J = cas.jacobian(current_expr, active_symbols)
-        neq_matrix = cas.hstack([J * self.dt, cas.eye(6) * self.dt])
+        J = current_expr.jacobian(active_symbols)
+        neq_matrix = cas.hstack([J * self.dt, cas.Expression.eye(6) * self.dt])
 
         return eq_bound_expr, neq_matrix
 
