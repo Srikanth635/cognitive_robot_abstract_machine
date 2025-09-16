@@ -1,8 +1,8 @@
 from __future__ import absolute_import, annotations
 
+from collections import OrderedDict
 from functools import lru_cache
 from typing import Dict, Tuple, TYPE_CHECKING
-from typing_extensions import OrderedDict
 
 import numpy as np
 import rustworkx.visit
