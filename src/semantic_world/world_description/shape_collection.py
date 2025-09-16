@@ -36,9 +36,36 @@ class ShapeCollection(SubclassJSONSerializer):
     """
 
     def __post_init__(self):
-        if self.reference_frame is not None:
-            for shape in self.shapes:
-                shape.origin.reference_frame = self.reference_frame
+        self.transform_all_shapes_to_own_frame()
+
+    def transform_all_shapes_to_own_frame(self):
+        """
+        Transform all shapes into this collections' frame in-place.
+        """
+        if self.reference_frame is None:
+            return
+        for shape in self.shapes:
+            self._transform_to_own_frame(shape)
+
+    def _transform_to_own_frame(self, shape: Shape):
+        """
+        Transform the shape to this collections' frame in-place.
+        :param shape: The shape to transform.
+        """
+        if (
+            shape.origin.reference_frame is None
+            and self.reference_frame is not None
+            and self.reference_frame._world is not None
+        ):
+            shape.origin.reference_frame = self.reference_frame._world.root
+        if (
+            shape.origin.reference_frame != self.reference_frame
+            and self.reference_frame._world is not None
+        ):
+            shape.origin = self.reference_frame._world.transform(
+                shape.origin.reference_frame.global_pose,
+                self.reference_frame,
+            )
 
     def __getitem__(self, index: int) -> Shape:
         return self.shapes[index]
@@ -53,6 +80,10 @@ class ShapeCollection(SubclassJSONSerializer):
         return shape in self.shapes
 
     def append(self, shape: Shape):
+        if self.reference_frame is not None:
+            self._transform_to_own_frame(
+                shape,
+            )
         self.shapes.append(shape)
 
     @cached_property
