@@ -30,7 +30,7 @@ import casadi as ca
 import numpy as np
 from scipy import sparse as sp
 
-from ..exceptions import HasFreeSymbolsError
+from ..exceptions import HasFreeSymbolsError, WrongDimensionsError
 
 if TYPE_CHECKING:
     from ..world_description import KinematicStructureEntity
@@ -54,6 +54,7 @@ class ReferenceFrameMixin:
     information.
 
     """
+
     reference_frame: Optional[KinematicStructureEntity]
     """
     The reference frame associated with the object. Can be None if no reference frame is required or applicable.
@@ -615,6 +616,16 @@ class Expression(SymbolicType, BasicOperatorMixin):
     """
 
     def __init__(self, data: Optional[Union[ScalarData, SpatialType, Iterable]] = None):
+        """
+        Initializes an instance with the given data.
+
+        This constructor allows the initialization of an object with various types of input
+        data, including scalars, symbolic data, or iterable collections. If data is not
+        provided, it defaults to an empty list.
+
+        :param data: Optional input to initialize the instance. If no data is provided,
+            the instance will be initialized with an empty list.
+        """
         if data is None:
             data = []
         if isinstance(data, ca.SX):
@@ -843,6 +854,7 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin):
     products, and create transformations from various inputs such as Euler angles or
     quaternions.
     """
+
     child_frame: Optional[KinematicStructureEntity]
     """
     The child or target frame associated with the transformation.
@@ -855,6 +867,18 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin):
         child_frame: Optional[KinematicStructureEntity] = None,
         sanity_check: bool = True,
     ):
+        """
+        Initializes an instance of the transformation matrix or related object with optional
+        data and frame references. Performs optional sanity check validation during initialization.
+
+        :param data: Optional data used to initialize the transformation matrix. It can be
+                     of type TransformationData, symbolic expression (ca.SX), Expression,
+                     RotationMatrix, or TransformationMatrix.
+        :param reference_frame: The reference frame of the transformation.
+        :param child_frame: The child frame associated with the transformation.
+        :param sanity_check: A boolean indicating whether a validation (sanity check) should
+                             be performed during initialization. Defaults to True.
+        """
         self.reference_frame = reference_frame
         self.child_frame = child_frame
         if data is None:
@@ -875,9 +899,8 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin):
 
     def _validate(self):
         if self.shape[0] != 4 or self.shape[1] != 4:
-            raise ValueError(
-                f"{self.__class__.__name__} can only be initialized with 4x4 shaped data, "
-                f"you have{self.shape}."
+            raise WrongDimensionsError(
+                expected_dimensions=(4, 4), actual_dimensions=self.shape
             )
         self[3, 0] = 0.0
         self[3, 1] = 0.0
@@ -1118,6 +1141,21 @@ class RotationMatrix(SymbolicType, ReferenceFrameMixin):
         child_frame: Optional[KinematicStructureEntity] = None,
         sanity_check: bool = True,
     ):
+        """
+        Initializes the instance with rotation, reference frame, and
+        child frame, and performs a sanity check to validate the shape.
+
+        :param data: Optional object representing the rotation or transformation. Can be of type
+            RotationData (e.g., casadi SX, Quaternion, RotationMatrix, TransformationMatrix) or None.
+        :param reference_frame: Optional KinematicStructureEntity instance representing the
+            reference frame of the rotation or transformation.
+        :param child_frame: Optional KinematicStructureEntity instance representing the child
+            frame of the rotation or transformation.
+        :param sanity_check: Boolean flag indicating whether to perform a sanity check to validate
+            the shape of the input data. Defaults to True.
+
+        :raises ValueError: If sanity_check is True and the shape of the input data is not 4x4.
+        """
         self.reference_frame = reference_frame
         self.child_frame = child_frame
         if isinstance(data, ca.SX):
@@ -1136,9 +1174,8 @@ class RotationMatrix(SymbolicType, ReferenceFrameMixin):
             self.s = Expression(data).s
         if sanity_check:
             if self.shape[0] != 4 or self.shape[1] != 4:
-                raise ValueError(
-                    f"{self.__class__.__name__} can only be initialized with 4x4 shaped data, "
-                    f"you have{self.shape}."
+                raise WrongDimensionsError(
+                    expected_dimensions=(4, 4), actual_dimensions=self.shape
                 )
             self[0, 3] = 0
             self[1, 3] = 0
@@ -1441,6 +1478,15 @@ class Point3(SymbolicType, ReferenceFrameMixin):
         z: ScalarData = 0,
         reference_frame: Optional[KinematicStructureEntity] = None,
     ):
+        """
+        Represents an initialization for a kinematic structure entity with specified
+        positional components and a reference frame.
+
+        :param x: Position component along the x-axis.
+        :param y: Position component along the y-axis.
+        :param z: Position component along the z-axis.
+        :param reference_frame: Reference frame entity associated with this instance.
+        """
         self.reference_frame = reference_frame
         # casadi can't be initialized with an array that mixes int/float and SX
         self.s = ca.SX([0, 0, 0, 1])
@@ -1511,7 +1557,7 @@ class Point3(SymbolicType, ReferenceFrameMixin):
         if isinstance(other, Vector3):
             result = Point3.from_iterable(self.s.__add__(other.s))
         else:
-            raise _operation_type_error(self, "+", other)
+            return NotImplemented
         result.reference_frame = self.reference_frame
         return result
 
@@ -1527,7 +1573,7 @@ class Point3(SymbolicType, ReferenceFrameMixin):
         elif isinstance(other, Vector3):
             result = Point3.from_iterable(self.s.__sub__(other.s))
         else:
-            raise _operation_type_error(self, "-", other)
+            return NotImplemented
         result.reference_frame = self.reference_frame
         return result
 
@@ -1624,6 +1670,20 @@ class Vector3(SymbolicType, ReferenceFrameMixin):
         z: ScalarData = 0,
         reference_frame: Optional[KinematicStructureEntity] = None,
     ):
+        """
+        Initializes a 3D point with optional reference frame.
+
+        This constructor creates a 3D point represented by `x`, `y`, and `z` coordinates
+        within a given reference frame. If no reference frame is specified, a default
+        frame will be assumed. The internal representation of the point is stored as a
+        `Point3` object, and its scalar coordinates and reference frame are then
+        directly accessible.
+
+        :param x: X-coordinate of the point. Defaults to 0.
+        :param y: Y-coordinate of the point. Defaults to 0.
+        :param z: Z-coordinate of the point. Defaults to 0.
+        :param reference_frame: Optional reference frame for the point. If not provided, defaults to None.
+        """
         point = Point3(x, y, z, reference_frame=reference_frame)
         self.s = point.s
         self.reference_frame = point.reference_frame
@@ -1717,7 +1777,7 @@ class Vector3(SymbolicType, ReferenceFrameMixin):
         if isinstance(other, Vector3):
             result = Vector3.from_iterable(self.s.__add__(other.s))
         else:
-            raise _operation_type_error(self, "+", other)
+            return NotImplemented
         result.reference_frame = self.reference_frame
         return result
 
@@ -1725,7 +1785,7 @@ class Vector3(SymbolicType, ReferenceFrameMixin):
         if isinstance(other, Vector3):
             result = Vector3.from_iterable(self.s.__sub__(other.s))
         else:
-            raise _operation_type_error(self, "-", other)
+            return NotImplemented
         result.reference_frame = self.reference_frame
         return result
 
@@ -1733,7 +1793,7 @@ class Vector3(SymbolicType, ReferenceFrameMixin):
         if isinstance(other, (int, float, Symbol, Expression)):
             result = Vector3.from_iterable(self.s.__mul__(_to_sx(other)))
         else:
-            raise _operation_type_error(self, "*", other)
+            return NotImplemented
         result.reference_frame = self.reference_frame
         return result
 
@@ -1741,7 +1801,7 @@ class Vector3(SymbolicType, ReferenceFrameMixin):
         if isinstance(other, (int, float)):
             result = Vector3.from_iterable(self.s.__mul__(other))
         else:
-            raise _operation_type_error(other, "*", self)
+            return NotImplemented
         result.reference_frame = self.reference_frame
         return result
 
@@ -1749,7 +1809,7 @@ class Vector3(SymbolicType, ReferenceFrameMixin):
         if isinstance(other, (int, float, Symbol, Expression)):
             result = Vector3.from_iterable(self.s.__truediv__(_to_sx(other)))
         else:
-            raise _operation_type_error(self, "/", other)
+            return NotImplemented
         result.reference_frame = self.reference_frame
         return result
 
@@ -1858,6 +1918,23 @@ class Quaternion(SymbolicType, ReferenceFrameMixin):
         w: ScalarData = 1.0,
         reference_frame: Optional[KinematicStructureEntity] = None,
     ):
+        """
+        Initializes a new instance of the class with scalar components x, y, z, w along
+        with an optional reference frame.
+
+        This constructor ensures that the provided x, y, z, w values are scalar data. If
+        they are not scalar values or their shapes are incompatible, a ValueError will
+        be raised.
+
+        :param x: The x component of the scalar data. Default is 0.0.
+        :param y: The y component of the scalar data. Default is 0.0.
+        :param z: The z component of the scalar data. Default is 0.0.
+        :param w: The w component of the scalar data. Default is 1.0.
+        :param reference_frame: The reference frame entity for the instance. Default is None.
+
+        :raises ValueError: If the shapes of x, y, z, or w are not scalars or their
+              shapes are incompatible as per allowed dimensions.
+        """
         if hasattr(x, "shape") and x.shape not in (tuple(), (1, 1)):
             raise ValueError("x, y, z, w must be scalars")
         self.reference_frame = reference_frame
@@ -2132,7 +2209,7 @@ class Quaternion(SymbolicType, ReferenceFrameMixin):
     def dot(self, other: Quaternion) -> Expression:
         if isinstance(other, Quaternion):
             return Expression(ca.mtimes(self.s.T, other.s))
-        raise _operation_type_error(self, "dot", other)
+        return NotImplemented
 
     def slerp(self, other: Quaternion, t: ScalarData) -> Quaternion:
         """

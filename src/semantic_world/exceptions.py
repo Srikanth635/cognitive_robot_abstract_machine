@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Iterable, Tuple
 
 from typing_extensions import Optional, List, Type, TYPE_CHECKING
 
@@ -46,7 +46,19 @@ class DuplicateKinematicStructureEntityError(UsageError):
         super().__init__(msg)
 
 
-class HasFreeSymbolsError(UsageError):
+class SpatialTypesError(UsageError):
+    pass
+
+
+class WrongDimensionsError(SpatialTypesError):
+    def __init__(
+        self, expected_dimensions: Tuple[int, int], actual_dimensions: Tuple[int, int]
+    ):
+        msg = f"Expected {expected_dimensions} dimensions, but got {actual_dimensions}."
+        super().__init__(msg)
+
+
+class HasFreeSymbolsError(SpatialTypesError):
     """
     Raised when an operation can't be performed on an expression with free symbols.
     """
