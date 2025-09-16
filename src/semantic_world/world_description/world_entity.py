@@ -182,13 +182,13 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
         if self._world is not None:
             self.index = self._world.kinematic_structure.add_node(self)
 
+        for c in self.collision:
+            c.origin.reference_frame = self
+        for v in self.visual:
+            v.origin.reference_frame = self
+
         self.visual.reference_frame = self
         self.collision.reference_frame = self
-
-        if self.collision is not None:
-            self.collision.transform_all_shapes_to_own_frame()
-        if self.visual is not None:
-            self.collision.transform_all_shapes_to_own_frame()
 
     def get_collision_config(self) -> CollisionCheckingConfig:
         if self.temp_collision_config is not None:

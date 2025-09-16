@@ -35,9 +35,6 @@ class ShapeCollection(SubclassJSONSerializer):
     Backreference to the kinematic structure entity this collection belongs to.
     """
 
-    def __post_init__(self):
-        self.transform_all_shapes_to_own_frame()
-
     def transform_all_shapes_to_own_frame(self):
         """
         Transform all shapes into this collections' frame in-place.
@@ -80,10 +77,10 @@ class ShapeCollection(SubclassJSONSerializer):
         return shape in self.shapes
 
     def append(self, shape: Shape):
-        if self.reference_frame is not None:
-            self._transform_to_own_frame(
-                shape,
-            )
+        # if self.reference_frame is not None:
+        #     self._transform_to_own_frame(
+        #         shape,
+        #     )
         self.shapes.append(shape)
 
     @cached_property

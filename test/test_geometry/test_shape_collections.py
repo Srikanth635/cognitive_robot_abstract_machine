@@ -31,7 +31,7 @@ def test_post_init_transformation():
         shapes=[shape],
         reference_frame=b1,
     )
-
+    shape_collection.transform_all_shapes_to_own_frame()
     assert shape.origin.reference_frame == b1
     assert shape.origin.to_position().x == 2.0
 
@@ -41,5 +41,6 @@ def test_post_init_transformation():
 
     shape_collection = ShapeCollection(reference_frame=b1)
     shape_collection.append(shape)
+    shape_collection.transform_all_shapes_to_own_frame()
     assert shape.origin.reference_frame == b1
     assert shape.origin.to_position().x == 2.0
