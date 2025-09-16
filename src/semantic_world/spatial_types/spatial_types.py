@@ -8,6 +8,7 @@ import sys
 from copy import copy, deepcopy
 from dataclasses import dataclass, field
 from enum import IntEnum
+from functools import lru_cache
 from typing import (
     Union,
     TypeVar,
@@ -44,7 +45,19 @@ pi: float = ca.pi
 
 @dataclass
 class ReferenceFrameMixin:
+    """
+    Provides functionality to associate a reference frame with an object.
+
+    This mixin class allows the inclusion of a reference frame within objects that
+    require spatial or kinematic context. The reference frame is represented by a
+    `KinematicStructureEntity`, which provides the necessary structural and spatial
+    information.
+
+    """
     reference_frame: Optional[KinematicStructureEntity]
+    """
+    The reference frame associated with the object. Can be None if no reference frame is required or applicable.
+    """
 
 
 @dataclass
@@ -311,7 +324,9 @@ class SymbolicType:
     """
 
     s: Union[ca.SX, np.ndarray]
-    np_data: Optional[Union[np.ndarray, float]]
+    """
+    Reference to the casadi data structure
+    """
 
     def __str__(self):
         return str(self.s)
@@ -370,6 +385,7 @@ class SymbolicType:
     def is_constant(self) -> bool:
         return len(self.free_symbols()) == 0
 
+    @lru_cache()
     def to_np(self) -> np.ndarray:
         """
         Transforms the data into a numpy array.
@@ -377,14 +393,12 @@ class SymbolicType:
         """
         if not self.is_constant():
             raise HasFreeSymbolsError(self.free_symbols())
-        if not hasattr(self, "np_data"):
-            if self.shape[0] == self.shape[1] == 0:
-                self.np_data = np.eye(0)
-            elif self.s.shape[0] == 1 or self.s.shape[1] == 1:
-                self.np_data = np.array(ca.evalf(self.s)).ravel()
-            else:
-                self.np_data = np.array(ca.evalf(self.s))
-        return self.np_data
+        if self.shape[0] == self.shape[1] == 0:
+            return np.eye(0)
+        elif self.s.shape[0] == 1 or self.s.shape[1] == 1:
+            return np.array(ca.evalf(self.s)).ravel()
+        else:
+            return np.array(ca.evalf(self.s))
 
     def compile(
         self, parameters: Optional[List[List[Symbol]]] = None, sparse: bool = False
@@ -553,6 +567,11 @@ class BasicOperatorMixin:
 
 
 class Symbol(SymbolicType, BasicOperatorMixin):
+    """
+    A symbolic expression, which should be only a single symbols.
+    No matrix and no numbers.
+    """
+
     _registry: Dict[str, Symbol] = {}
     """
     To avoid two symbols with the same name, references to existing symbols are stored on a class level.
@@ -583,6 +602,17 @@ class Symbol(SymbolicType, BasicOperatorMixin):
 
 
 class Expression(SymbolicType, BasicOperatorMixin):
+    """
+    Represents symbolic expressions with rich mathematical capabilities, including matrix
+    operations, derivatives, and manipulation of symbolic representations.
+
+    This class is designed to encapsulate symbolic mathematical expressions and provide a wide
+    range of features for computations, including matrix constructions (zeros, ones, identity),
+    derivative computations (Jacobian, total derivatives, Hessian), reshaping, and scaling.
+    It is integral to symbolic computation workflows in applications that require gradient
+    analysis, second-order derivatives, or other advanced mathematical operations. The class
+    leverages symbolic computation libraries for handling low-level symbolic details efficiently.
+    """
 
     def __init__(self, data: Optional[Union[ScalarData, SpatialType, Iterable]] = None):
         if data is None:
@@ -804,7 +834,19 @@ BinaryFalse = Expression(False)
 
 
 class TransformationMatrix(SymbolicType, ReferenceFrameMixin):
+    """
+    Represents a 4x4 transformation matrix used in kinematics and transformations.
+
+    A `TransformationMatrix` encapsulates relationships between a parent coordinate
+    system (reference frame) and a child coordinate system through rotation and
+    translation. It provides utilities to derive transformations, compute dot
+    products, and create transformations from various inputs such as Euler angles or
+    quaternions.
+    """
     child_frame: Optional[KinematicStructureEntity]
+    """
+    The child or target frame associated with the transformation.
+    """
 
     def __init__(
         self,
@@ -1054,7 +1096,20 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin):
 
 
 class RotationMatrix(SymbolicType, ReferenceFrameMixin):
+    """
+    Class to represent a 4x4 symbolic rotation matrix tied to kinematic references.
+
+    This class provides methods for creating and manipulating rotation matrices within the context
+    of kinematic structures. It supports initialization using data such as quaternions, axis-angle,
+    other matrices, or directly through vector definitions. The primary purpose is to facilitate
+    rotational transformations and computations in a symbolic context, particularly for applications
+    like robotic kinematics or mechanical engineering.
+    """
+
     child_frame: Optional[KinematicStructureEntity]
+    """
+    Child kinematic frame associated with this rotation matrix.
+    """
 
     def __init__(
         self,
@@ -1368,6 +1423,16 @@ class RotationMatrix(SymbolicType, ReferenceFrameMixin):
 
 
 class Point3(SymbolicType, ReferenceFrameMixin):
+    """
+    Represents a 3D point with reference frame handling.
+
+    This class provides a representation of a point in 3D space, including support
+    for operations such as addition, subtraction, projection onto planes/lines, and
+    distance calculations. It incorporates a reference frame for kinematic computations
+    and facilitates mathematical operations essential for 3D geometry modeling.
+
+    Note that it is represented as a 4d vector, where the last entry is always a 1.
+    """
 
     def __init__(
         self,
@@ -1533,7 +1598,24 @@ class Point3(SymbolicType, ReferenceFrameMixin):
 
 
 class Vector3(SymbolicType, ReferenceFrameMixin):
+    """
+    Representation of a 3D vector with reference frame support for homogenous transformations.
+
+    This class provides a structured representation of 3D vectors. It includes
+    support for operations such as addition, subtraction, scaling, dot product,
+    cross product, and more. It is compatible with symbolic computations and
+    provides methods to define standard basis vectors, normalize a vector, and
+    compute geometric properties such as the angle between vectors. The class
+    also includes support for working in different reference frames.
+
+    Note that it is represented as a 4d vector, where the last entry is always a 0.
+    """
+
     vis_frame: Optional[KinematicStructureEntity]
+    """
+    The reference frame associated with the vector, used for visualization purposes only. Optional.
+    It will be visualized at the origin of the vis_frame
+    """
 
     def __init__(
         self,
@@ -1756,6 +1838,18 @@ class Vector3(SymbolicType, ReferenceFrameMixin):
 
 
 class Quaternion(SymbolicType, ReferenceFrameMixin):
+    """
+    Represents a quaternion, which is a mathematical entity used to encode
+    rotations in three-dimensional space.
+
+    The Quaternion class provides methods for creating quaternion objects
+    from various representations, such as axis-angle, roll-pitch-yaw,
+    and rotation matrices. It supports operations to define and manipulate
+    rotations in 3D space efficiently. Quaternions are used extensively
+    in physics, computer graphics, robotics, and aerospace engineering
+    to represent orientations and rotations.
+    """
+
     def __init__(
         self,
         x: ScalarData = 0.0,
