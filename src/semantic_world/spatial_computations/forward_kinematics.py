@@ -85,9 +85,9 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
             collision_fks.append(self.child_body_to_fk_expr[body.name])
         collision_fks = cas.vstack(collision_fks)
         params = [v.symbols.position for v in self.world.degrees_of_freedom]
-        self.compiled_all_fks = all_fks.compile(parameters=params)
-        self.compiled_collision_fks = collision_fks.compile(parameters=params)
-        self.compiled_tf = tf.compile(parameters=params)
+        self.compiled_all_fks = all_fks.compile(parameters=[params])
+        self.compiled_collision_fks = collision_fks.compile(parameters=[params])
+        self.compiled_tf = tf.compile(parameters=[params])
         self.idx_start = {
             body.name: i * 4
             for i, body in enumerate(self.world.kinematic_structure_entities)
@@ -99,10 +99,8 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
         """
         self.compute_forward_kinematics_np.cache_clear()
         self.subs = self.world.state.positions
-        self.forward_kinematics_for_all_bodies = self.compiled_all_fks.fast_call(
-            self.subs
-        )
-        self.collision_fks = self.compiled_collision_fks.fast_call(self.subs)
+        self.forward_kinematics_for_all_bodies = self.compiled_all_fks(self.subs)
+        self.collision_fks = self.compiled_collision_fks(self.subs)
 
     def compute_tf(self) -> np.ndarray:
         """
@@ -113,7 +111,7 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
         This is not updated in 'recompute', because this functionality is only used with ROS.
         :return: A large matrix with all forward kinematics.
         """
-        return self.compiled_tf.fast_call(self.subs)
+        return self.compiled_tf(self.subs)
 
     @lru_cache(maxsize=None)
     def compute_forward_kinematics_np(

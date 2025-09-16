@@ -97,6 +97,11 @@ class CompiledFunction:
     The result of a function evaluation is stored in this variable.
     """
 
+    _is_constant: bool = False
+    """
+    Used to memorize if the result must be recomputed every time.
+    """
+
     def __post_init__(self):
         if self.symbol_parameters is None:
             self.symbol_parameters = [self.expression.free_symbols()]
@@ -108,13 +113,15 @@ class CompiledFunction:
             if missing_symbols:
                 raise HasFreeSymbolsError(missing_symbols)
 
+        if len(self.symbol_parameters) == 1 and len(self.symbol_parameters[0]) == 0:
+            self.symbol_parameters = []
+
         if len(self.expression) == 0:
             self._setup_empty_result()
             return
 
         self._setup_compiled_function()
         self._setup_output_buffer()
-
         if len(self.symbol_parameters) == 0:
             self._setup_constant_result()
 
@@ -123,10 +130,10 @@ class CompiledFunction:
         Setup result for empty expressions.
         """
         if self.sparse:
-            result = sp.csc_matrix(np.empty(self.expression.shape))
+            self.out = sp.csc_matrix(np.empty(self.expression.shape))
         else:
-            result = np.empty(self.expression.shape)
-        self.__call__ = lambda *args: result
+            self.out = np.empty(self.expression.shape)
+        self._is_constant = True
 
     def _setup_compiled_function(self) -> None:
         """
@@ -210,11 +217,7 @@ class CompiledFunction:
         the constant result for all future calls.
         """
         self.function_evaluator()
-        if self.sparse:
-            result = self.out.toarray()
-        else:
-            result = self.out
-        self.__call__ = lambda *args: result
+        self._is_constant = True
 
     def __call__(self, *args: np.ndarray) -> Union[np.ndarray, sp.csc_matrix]:
         """
@@ -228,6 +231,8 @@ class CompiledFunction:
             !!! Make sure the numpy array is of type float !!! (check is too expensive)
         :return: The evaluated result as numpy array or sparse matrix
         """
+        if self._is_constant:
+            return self.out
         for arg_idx, arg in enumerate(args):
             self.function_buffer.set_arg(arg_idx, memoryview(arg))
         self.function_evaluator()
