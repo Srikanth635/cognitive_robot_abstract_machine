@@ -133,7 +133,9 @@ def get_visible_bodies(camera: Camera) -> List[KinematicStructureEntity]:
     cam_pose = np.eye(4, dtype=float)
     cam_pose[:3, 3] = camera.root.global_pose.to_np()[:3, 3]
 
-    seg = rt.create_segmentation_mask(TransformationMatrix(cam_pose, camera._world.root), resolution=256)
+    seg = rt.create_segmentation_mask(
+        TransformationMatrix(cam_pose, camera._world.root), resolution=256
+    )
     indices = np.unique(seg)
     indices = indices[indices > -1]
     bodies = [camera._world.kinematic_structure[i] for i in indices]

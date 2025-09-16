@@ -107,8 +107,9 @@ class RayTracer:
                 )
                 self.scene.graph[body.name.name + f"_collision_{i}"] = transform
 
-    def create_segmentation_mask(self, camera_pose: SpatialType,
-                                 resolution: int = 512) -> np.ndarray:
+    def create_segmentation_mask(
+        self, camera_pose: SpatialType, resolution: int = 512
+    ) -> np.ndarray:
         """
         Creates a segmentation mask for the ray tracer scene from the camera position to the target position. Each pixel
         in the mask corresponds to the index of a body in the scene or -1 if no body is hit at that pixel.

@@ -39,6 +39,7 @@ class DuplicateViewError(UsageError):
         msg = f"Views {views} are duplicates, while views elements should be unique."
         super().__init__(msg)
 
+
 class DuplicateKinematicStructureEntityError(UsageError):
     def __init__(self, names: List[PrefixedName]):
         msg = f"Kinematic structure entities with names {names} are duplicates, while kinematic structure entity names should be unique."
@@ -49,8 +50,9 @@ class HasFreeSymbolsError(UsageError):
     """
     Raised when an operation can't be performed on an expression with free symbols.
     """
+
     def __init__(self, symbols: Iterable[Symbol]):
-        msg = f'Operation can\'t be performed on expression with free symbols: {list(symbols)}.'
+        msg = f"Operation can't be performed on expression with free symbols: {list(symbols)}."
         super().__init__(msg)
 
 

@@ -476,14 +476,22 @@ class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
         return super().origin
 
     @origin.setter
-    def origin(self, transformation: Union[NpMatrix4x4, cas.TransformationMatrix]) -> None:
+    def origin(
+        self, transformation: Union[NpMatrix4x4, cas.TransformationMatrix]
+    ) -> None:
         if isinstance(transformation, np.ndarray):
             transformation = cas.TransformationMatrix(transformation)
         position = transformation.to_position()
         roll, pitch, yaw = transformation.to_rotation().to_rpy()
-        assert position.z.to_np() == 0.0, "OmniDrive only supports planar movement in the XY plane, z must be 0"
-        assert roll.to_np() == 0.0, "OmniDrive only supports planar movement in the XY plane, roll must be 0"
-        assert pitch.to_np() == 0.0, "OmniDrive only supports planar movement in the XY plane, pitch must be 0"
+        assert (
+            position.z.to_np() == 0.0
+        ), "OmniDrive only supports planar movement in the XY plane, z must be 0"
+        assert (
+            roll.to_np() == 0.0
+        ), "OmniDrive only supports planar movement in the XY plane, roll must be 0"
+        assert (
+            pitch.to_np() == 0.0
+        ), "OmniDrive only supports planar movement in the XY plane, pitch must be 0"
         self._world.state[self.x.name].position = position.x.to_np()
         self._world.state[self.y.name].position = position.y.to_np()
         self._world.state[self.yaw.name].position = yaw.to_np()

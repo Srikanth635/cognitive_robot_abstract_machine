@@ -36,7 +36,8 @@ from .exceptions import (
     DuplicateViewError,
     AddingAnExistingViewError,
     ViewNotFoundError,
-    AlreadyBelongsToAWorldError, DuplicateKinematicStructureEntityError,
+    AlreadyBelongsToAWorldError,
+    DuplicateKinematicStructureEntityError,
 )
 from .robots import AbstractRobot
 from .spatial_computations.forward_kinematics import ForwardKinematicsVisitor
@@ -117,7 +118,8 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
     def __init__(self, world: World):
         self.world = world
         self.child_body_to_fk_expr: Dict[PrefixedName, cas.TransformationMatrix] = {
-            self.world.root.name: cas.TransformationMatrix()}
+            self.world.root.name: cas.TransformationMatrix()
+        }
         self.tf: Dict[Tuple[PrefixedName, PrefixedName], cas.Expression] = OrderedDict()
 
     def connection_call(self, edge: Tuple[int, int, Connection]):
@@ -126,8 +128,12 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
         """
         connection = edge[2]
         map_T_parent = self.child_body_to_fk_expr[connection.parent.name]
-        self.child_body_to_fk_expr[connection.child.name] = map_T_parent.dot(connection.origin_expression)
-        self.tf[(connection.parent.name, connection.child.name)] = connection.origin_as_position_quaternion()
+        self.child_body_to_fk_expr[connection.child.name] = map_T_parent.dot(
+            connection.origin_expression
+        )
+        self.tf[(connection.parent.name, connection.child.name)] = (
+            connection.origin_as_position_quaternion()
+        )
 
     tree_edge = connection_call
 
@@ -136,10 +142,16 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
         Compiles forward kinematics expressions for fast evaluation.
         """
         all_fks = cas.vstack(
-            [self.child_body_to_fk_expr[body.name] for body in self.world.kinematic_structure_entities])
+            [
+                self.child_body_to_fk_expr[body.name]
+                for body in self.world.kinematic_structure_entities
+            ]
+        )
         tf = cas.vstack([pose for pose in self.tf.values()])
         collision_fks = []
-        for body in sorted(self.world.bodies_with_enabled_collision, key=lambda b: b.name):
+        for body in sorted(
+            self.world.bodies_with_enabled_collision, key=lambda b: b.name
+        ):
             if body == self.world.root:
                 continue
             collision_fks.append(self.child_body_to_fk_expr[body.name])
@@ -148,7 +160,10 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
         self.compiled_all_fks = all_fks.compile(parameters=params)
         self.compiled_collision_fks = collision_fks.compile(parameters=params)
         self.compiled_tf = tf.compile(parameters=params)
-        self.idx_start = {body.name: i * 4 for i, body in enumerate(self.world.kinematic_structure_entities)}
+        self.idx_start = {
+            body.name: i * 4
+            for i, body in enumerate(self.world.kinematic_structure_entities)
+        }
 
     def recompute(self) -> None:
         """
@@ -189,13 +204,13 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
 
         if not tip_is_world:
             i = self.idx_start[tip]
-            map_T_tip = self.forward_kinematics_for_all_bodies[i:i + 4]
+            map_T_tip = self.forward_kinematics_for_all_bodies[i : i + 4]
             if root_is_world:
                 return map_T_tip
 
         if not root_is_world:
             i = self.idx_start[root]
-            map_T_root = self.forward_kinematics_for_all_bodies[i:i + 4]
+            map_T_root = self.forward_kinematics_for_all_bodies[i : i + 4]
             root_T_map = inverse_frame(map_T_root)
             if tip_is_world:
                 return root_T_map
@@ -708,7 +723,9 @@ class World:
             ke.name for ke in self.kinematic_structure_entities
         ]:
             if not handle_duplicates:
-                raise DuplicateKinematicStructureEntityError([kinematic_structure_entity.name])
+                raise DuplicateKinematicStructureEntityError(
+                    [kinematic_structure_entity.name]
+                )
             kinematic_structure_entity.name.name = (
                 kinematic_structure_entity.name.name
                 + f"_{id_generator(kinematic_structure_entity)}"
@@ -1594,7 +1611,9 @@ class World:
         :param tip: Tip KinematicStructureEntity to which the kinematics are computed.
         :return: Transformation matrix representing the relative pose of the tip KinematicStructureEntity with respect to the root KinematicStructureEntity.
         """
-        return cas.TransformationMatrix(self.compute_forward_kinematics_np(root, tip), reference_frame=root)
+        return cas.TransformationMatrix(
+            self.compute_forward_kinematics_np(root, tip), reference_frame=root
+        )
 
     def compute_forward_kinematics_np(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
@@ -1731,11 +1750,19 @@ class World:
         dof_mapping = {}
         with new_world.modify_world():
             for body in self.bodies:
-                new_body = Body(visual=body.visual, collision=body.collision, name=body.name, )
+                new_body = Body(
+                    visual=body.visual,
+                    collision=body.collision,
+                    name=body.name,
+                )
                 new_world.add_kinematic_structure_entity(new_body)
                 body_mapping[body] = new_body
             for dof in self.degrees_of_freedom:
-                new_dof = DegreeOfFreedom(name=dof.name, lower_limits=dof.lower_limits, upper_limits=dof.upper_limits)
+                new_dof = DegreeOfFreedom(
+                    name=dof.name,
+                    lower_limits=dof.lower_limits,
+                    upper_limits=dof.upper_limits,
+                )
                 new_world.add_degree_of_freedom(new_dof)
                 dof_mapping[dof] = new_dof
             for connection in self.connections:
@@ -1859,7 +1886,9 @@ class World:
         """
         The complement of disabled_collision_pairs with respect to all possible body combinations with enabled collision.
         """
-        all_combinations = set(combinations_with_replacement(self.bodies_with_enabled_collision, 2))
+        all_combinations = set(
+            combinations_with_replacement(self.bodies_with_enabled_collision, 2)
+        )
         return all_combinations - self.disabled_collision_pairs
 
     def add_disabled_collision_pair(

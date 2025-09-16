@@ -913,9 +913,15 @@ class BoundingBoxCollection:
 
         :return: A list of Point3 objects representing the corners of the bounding box.
         """
-        all_x = [bb.min_x for bb in self.bounding_boxes] + [bb.max_x for bb in self.bounding_boxes]
-        all_y = [bb.min_y for bb in self.bounding_boxes] + [bb.max_y for bb in self.bounding_boxes]
-        all_z = [bb.min_z for bb in self.bounding_boxes] + [bb.max_z for bb in self.bounding_boxes]
+        all_x = [bb.min_x for bb in self.bounding_boxes] + [
+            bb.max_x for bb in self.bounding_boxes
+        ]
+        all_y = [bb.min_y for bb in self.bounding_boxes] + [
+            bb.max_y for bb in self.bounding_boxes
+        ]
+        all_z = [bb.min_z for bb in self.bounding_boxes] + [
+            bb.max_z for bb in self.bounding_boxes
+        ]
         return [
             Point3(x, y, z)
             for x in [min(all_x), max(all_x)]
