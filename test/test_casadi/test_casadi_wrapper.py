@@ -7,8 +7,19 @@ from hypothesis import given, assume
 import semantic_world.spatial_types.math as giskard_math
 import semantic_world.spatial_types.spatial_types as cas
 from semantic_world.exceptions import HasFreeSymbolsError
-from .utils_for_tests import float_no_nan_no_inf, quaternion, random_angle, unit_vector, compare_axis_angle, \
-    angle_positive, vector, lists_of_same_length, compare_orientations, sq_matrix, assert_allclose
+from .utils_for_tests import (
+    float_no_nan_no_inf,
+    quaternion,
+    random_angle,
+    unit_vector,
+    compare_axis_angle,
+    angle_positive,
+    vector,
+    lists_of_same_length,
+    compare_orientations,
+    sq_matrix,
+    assert_allclose,
+)
 
 
 def logic_not(a):
@@ -19,7 +30,7 @@ def logic_not(a):
     elif a == cas.TrinaryUnknown:
         return cas.TrinaryUnknown
     else:
-        raise ValueError(f'Invalid truth value: {a}')
+        raise ValueError(f"Invalid truth value: {a}")
 
 
 def logic_and(a, b):
@@ -30,7 +41,7 @@ def logic_and(a, b):
     elif a == cas.TrinaryUnknown or b == cas.TrinaryUnknown:
         return cas.TrinaryUnknown
     else:
-        raise ValueError(f'Invalid truth values: {a}, {b}')
+        raise ValueError(f"Invalid truth values: {a}, {b}")
 
 
 def logic_or(a, b):
@@ -41,42 +52,46 @@ def logic_or(a, b):
     elif a == cas.TrinaryUnknown or b == cas.TrinaryUnknown:
         return cas.TrinaryUnknown
     else:
-        raise ValueError(f'Invalid truth values: {a}, {b}')
+        raise ValueError(f"Invalid truth values: {a}, {b}")
 
 
 class TestLogic3:
     values = [cas.TrinaryTrue, cas.TrinaryFalse, cas.TrinaryUnknown]
 
     def test_and3(self):
-        s = cas.Symbol('a')
-        s2 = cas.Symbol('b')
+        s = cas.Symbol("a")
+        s2 = cas.Symbol("b")
         expr = cas.logic_and3(s, s2)
         f = expr.compile()
         for i in self.values:
             for j in self.values:
                 expected = logic_and(i, j)
                 actual = f(np.array([i, j]))
-                assert expected == actual, f'a={i}, b={j}, expected {expected}, actual {actual}'
+                assert (
+                    expected == actual
+                ), f"a={i}, b={j}, expected {expected}, actual {actual}"
 
     def test_or3(self):
-        s = cas.Symbol('a')
-        s2 = cas.Symbol('b')
+        s = cas.Symbol("a")
+        s2 = cas.Symbol("b")
         expr = cas.logic_or3(s, s2)
         f = expr.compile()
         for i in self.values:
             for j in self.values:
                 expected = logic_or(i, j)
                 actual = f(np.array([i, j]))
-                assert expected == actual, f'a={i}, b={j}, expected {expected}, actual {actual}'
+                assert (
+                    expected == actual
+                ), f"a={i}, b={j}, expected {expected}, actual {actual}"
 
     def test_not3(self):
-        s = cas.Symbol('muh')
+        s = cas.Symbol("muh")
         expr = cas.logic_not3(s)
         f = expr.compile()
         for i in self.values:
             expected = logic_not(i)
             actual = f(np.array([i]))
-            assert expected == actual, f'a={i}, expected {expected}, actual {actual}'
+            assert expected == actual, f"a={i}, expected {expected}, actual {actual}"
 
     def test_sub_logic_operators(self):
         def reference_function(a, b, c):
@@ -85,7 +100,7 @@ class TestLogic3:
             result = logic_and(a, or_result)
             return result
 
-        a, b, c = cas.create_symbols(['a', 'b', 'c'])
+        a, b, c = cas.create_symbols(["a", "b", "c"])
         expr = cas.logic_and(a, cas.logic_or(b, cas.logic_not(c)))
         new_expr = cas.replace_with_three_logic(expr)
         f = new_expr.compile()
@@ -94,22 +109,24 @@ class TestLogic3:
                 for k in self.values:
                     computed_result = f(np.array([i, j, k]))
                     expected_result = reference_function(i, j, k)
-                    assert computed_result == expected_result, f"Mismatch for inputs i={i}, j={j}, k={k}. Expected {expected_result}, got {computed_result}"
+                    assert (
+                        computed_result == expected_result
+                    ), f"Mismatch for inputs i={i}, j={j}, k={k}. Expected {expected_result}, got {computed_result}"
 
 
 class TestSymbol:
     def test_from_name(self):
-        s = cas.Symbol('muh')
+        s = cas.Symbol("muh")
         assert isinstance(s, cas.Symbol)
-        assert str(s) == 'muh'
+        assert str(s) == "muh"
 
     def test_to_np(self):
-        s1 = cas.Symbol('s1')
+        s1 = cas.Symbol("s1")
         with pytest.raises(HasFreeSymbolsError):
             s1.to_np()
 
     def test_add(self):
-        s = cas.Symbol('muh')
+        s = cas.Symbol("muh")
         # int float addition is fine
         assert isinstance(s + 1, cas.Expression)
         assert isinstance(1 + s, cas.Expression)
@@ -153,7 +170,7 @@ class TestSymbol:
             q + s
 
     def test_sub(self):
-        s = cas.Symbol('muh')
+        s = cas.Symbol("muh")
         # int float addition is fine
         assert isinstance(s - 1, cas.Expression)
         assert isinstance(1 - s, cas.Expression)
@@ -197,7 +214,7 @@ class TestSymbol:
             q - s
 
     def test_mul(self):
-        s = cas.Symbol('muh')
+        s = cas.Symbol("muh")
         # int float addition is fine
         assert isinstance(s * 1, cas.Expression)
         assert isinstance(1 * s, cas.Expression)
@@ -240,7 +257,7 @@ class TestSymbol:
             q * s
 
     def test_truediv(self):
-        s = cas.Symbol('muh')
+        s = cas.Symbol("muh")
         # int float addition is fine
         assert isinstance(s / 1, cas.Expression)
         assert isinstance(1 / s, cas.Expression)
@@ -283,7 +300,7 @@ class TestSymbol:
             q / s
 
     def test_lt(self):
-        s = cas.Symbol('muh')
+        s = cas.Symbol("muh")
         # int float addition is fine
         assert isinstance(s < 1, cas.Expression)
         assert isinstance(1 < s, cas.Expression)
@@ -327,51 +344,51 @@ class TestSymbol:
             q < s
 
     def test_pow(self):
-        s = cas.Symbol('muh')
+        s = cas.Symbol("muh")
         # int float addition is fine
-        assert isinstance(s ** 1, cas.Expression)
-        assert isinstance(1 ** s, cas.Expression)
-        assert isinstance(s ** 1.0, cas.Expression)
-        assert isinstance(1.0 ** s, cas.Expression)
+        assert isinstance(s**1, cas.Expression)
+        assert isinstance(1**s, cas.Expression)
+        assert isinstance(s**1.0, cas.Expression)
+        assert isinstance(1.0**s, cas.Expression)
 
-        assert isinstance(s ** s, cas.Expression)
+        assert isinstance(s**s, cas.Expression)
 
         e = cas.Expression(1)
-        assert isinstance(e ** s, cas.Expression)
-        assert isinstance(s ** e, cas.Expression)
+        assert isinstance(e**s, cas.Expression)
+        assert isinstance(s**e, cas.Expression)
 
         p = cas.Point3()
         with pytest.raises(TypeError):
-            s ** p
+            s**p
         with pytest.raises(TypeError):
-            p ** s
+            p**s
 
         v = cas.Vector3()
         with pytest.raises(TypeError):
-            s ** v
+            s**v
         with pytest.raises(TypeError):
-            v ** s
+            v**s
 
         r = cas.RotationMatrix()
         with pytest.raises(TypeError):
-            s ** r
+            s**r
         with pytest.raises(TypeError):
-            r ** s
+            r**s
 
         t = cas.TransformationMatrix()
         with pytest.raises(TypeError):
-            s ** t
+            s**t
         with pytest.raises(TypeError):
-            t ** s
+            t**s
 
         q = cas.Quaternion()
         with pytest.raises(TypeError):
-            s ** q
+            s**q
         with pytest.raises(TypeError):
-            q ** s
+            q**s
 
     def test_simple_math(self):
-        s = cas.Symbol('muh')
+        s = cas.Symbol("muh")
         e = s + s
         assert isinstance(e, cas.Expression)
         e = s - s
@@ -380,11 +397,11 @@ class TestSymbol:
         assert isinstance(e, cas.Expression)
         e = s / s
         assert isinstance(e, cas.Expression)
-        e = s ** s
+        e = s**s
         assert isinstance(e, cas.Expression)
 
     def test_comparisons(self):
-        s = cas.Symbol('muh')
+        s = cas.Symbol("muh")
         e = s > s
         assert isinstance(e, cas.Expression)
         e = s >= s
@@ -397,9 +414,9 @@ class TestSymbol:
         assert isinstance(e, cas.Expression)
 
     def test_logic(self):
-        s1 = cas.Symbol('s1')
-        s2 = cas.Symbol('s2')
-        s3 = cas.Symbol('s3')
+        s1 = cas.Symbol("s1")
+        s2 = cas.Symbol("s2")
+        s3 = cas.Symbol("s3")
         e = s1 | s2
         assert isinstance(e, cas.Expression)
         e = s1 & s2
@@ -410,23 +427,253 @@ class TestSymbol:
         assert isinstance(e, cas.Expression)
 
     def test_hash(self):
-        s = cas.Symbol('muh')
+        s = cas.Symbol("muh")
         d = {s: 1}
         assert d[s] == 1
 
 
 class TestExpression:
+    def test_jacobian(self):
+        a = cas.Symbol("a")
+        b = cas.Symbol("b")
+        m = cas.Expression([a + b, a**2, b**2])
+        jac = m.jacobian([a, b])
+        expected = cas.Expression([[1, 1], [2 * a, 0], [0, 2 * b]])
+        for i in range(expected.shape[0]):
+            for j in range(expected.shape[1]):
+                assert cas.equivalent(jac[i, j], expected[i, j])
+
+    @given(
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+    )
+    def test_jacobian_dot(self, a, ad, b, bd):
+        kwargs = {
+            "a": a,
+            "ad": ad,
+            "b": b,
+            "bd": bd,
+        }
+        a_s = cas.Symbol("a")
+        ad_s = cas.Symbol("ad")
+        b_s = cas.Symbol("b")
+        bd_s = cas.Symbol("bd")
+        m = cas.Expression(
+            [
+                a_s**3 * b_s**3,
+                # b_s ** 2,
+                -a_s * cas.cos(b_s),
+                # a_s * b_s ** 4
+            ]
+        )
+        jac = m.jacobian_dot([a_s, b_s], [ad_s, bd_s])
+        expected_expr = cas.Expression(
+            [
+                [
+                    6 * ad_s * a_s * b_s**3 + 9 * a_s**2 * bd_s * b_s**2,
+                    9 * ad_s * a_s**2 * b_s**2 + 6 * a_s**3 * bd_s * b,
+                ],
+                # [0, 2 * bd_s],
+                [bd_s * cas.sin(b_s), ad_s * cas.sin(b_s) + a_s * bd_s * cas.cos(b_s)],
+                # [4 * bd * b ** 3, 4 * ad * b ** 3 + 12 * a * bd * b ** 2]
+            ]
+        )
+        actual = jac.compile().call_with_kwargs(**kwargs)
+        expected = expected_expr.compile().call_with_kwargs(**kwargs)
+        assert_allclose(actual, expected)
+
+    @given(
+        float_no_nan_no_inf(outer_limit=1e2),
+        float_no_nan_no_inf(outer_limit=1e2),
+        float_no_nan_no_inf(outer_limit=1e2),
+        float_no_nan_no_inf(outer_limit=1e2),
+        float_no_nan_no_inf(outer_limit=1e2),
+        float_no_nan_no_inf(outer_limit=1e2),
+    )
+    def test_jacobian_ddot(self, a, ad, add, b, bd, bdd):
+        kwargs = {
+            "a": a,
+            "ad": ad,
+            "add": add,
+            "b": b,
+            "bd": bd,
+            "bdd": bdd,
+        }
+        a_s = cas.Symbol("a")
+        ad_s = cas.Symbol("ad")
+        add_s = cas.Symbol("add")
+        b_s = cas.Symbol("b")
+        bd_s = cas.Symbol("bd")
+        bdd_s = cas.Symbol("bdd")
+        m = cas.Expression(
+            [
+                a_s**3 * b_s**3,
+                b_s**2,
+                -a_s * cas.cos(b_s),
+            ]
+        )
+        jac = m.jacobian_ddot([a_s, b_s], [ad_s, bd_s], [add_s, bdd_s])
+        expected = np.array(
+            [
+                [
+                    add * 6 * b**3 + bdd * 18 * a**2 * b + 2 * ad * bd * 18 * a * b**2,
+                    bdd * 6 * a**3 + add * 18 * b**2 * a + 2 * ad * bd * 18 * b * a**2,
+                ],
+                [0, 0],
+                [bdd * np.cos(b), bdd * -a * np.sin(b) + 2 * ad * bd * np.cos(b)],
+            ]
+        )
+        actual = jac.compile().call_with_kwargs(**kwargs)
+        assert_allclose(actual, expected)
+
+    @given(
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+    )
+    def test_total_derivative2(self, a, b, ad, bd, add, bdd):
+        kwargs = {
+            "a": a,
+            "ad": ad,
+            "add": add,
+            "b": b,
+            "bd": bd,
+            "bdd": bdd,
+        }
+        a_s = cas.Symbol("a")
+        ad_s = cas.Symbol("ad")
+        add_s = cas.Symbol("add")
+        b_s = cas.Symbol("b")
+        bd_s = cas.Symbol("bd")
+        bdd_s = cas.Symbol("bdd")
+        m = cas.Expression(a_s * b_s**2)
+        jac = m.second_order_total_derivative([a_s, b_s], [ad_s, bd_s], [add_s, bdd_s])
+        actual = jac.compile().call_with_kwargs(**kwargs)
+        expected = bdd * 2 * a + 2 * ad * bd * 2 * b
+        assert_allclose(actual, expected)
+
+    @given(
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+    )
+    def test_total_derivative2_2(self, a, b, c, ad, bd, cd, add, bdd, cdd):
+        kwargs = {
+            "a": a,
+            "ad": ad,
+            "add": add,
+            "b": b,
+            "bd": bd,
+            "bdd": bdd,
+            "c": c,
+            "cd": cd,
+            "cdd": cdd,
+        }
+        a_s = cas.Symbol("a")
+        ad_s = cas.Symbol("ad")
+        add_s = cas.Symbol("add")
+        b_s = cas.Symbol("b")
+        bd_s = cas.Symbol("bd")
+        bdd_s = cas.Symbol("bdd")
+        c_s = cas.Symbol("c")
+        cd_s = cas.Symbol("cd")
+        cdd_s = cas.Symbol("cdd")
+        m = cas.Expression(a_s * b_s**2 * c_s**3)
+        jac = m.second_order_total_derivative(
+            [a_s, b_s, c_s], [ad_s, bd_s, cd_s], [add_s, bdd_s, cdd_s]
+        )
+        # expected_expr = cas.Expression(add_s + bdd_s*2*a*c**3 + 4*ad_s*)
+        actual = jac.compile().call_with_kwargs(**kwargs)
+        # expected = expected_expr.compile()(**kwargs)
+        expected = (
+            bdd * 2 * a * c**3
+            + cdd * 6 * a * b**2 * c
+            + 4 * ad * bd * b * c**3
+            + 6 * ad * b**2 * cd * c**2
+            + 12 * a * bd * b * cd * c**2
+        )
+        assert_allclose(actual, expected)
+
+    def test_free_symbols(self):
+        m = cas.Expression(cas.create_symbols(["a", "b", "c", "d"]))
+        assert len(m.free_symbols()) == 4
+        a = cas.Symbol("a")
+        assert cas.equivalent(a, a.free_symbols()[0])
+
+    def test_diag(self):
+        result = cas.Expression.diag([1, 2, 3])
+        assert result[0, 0] == 1
+        assert result[0, 1] == 0
+        assert result[0, 2] == 0
+
+        assert result[1, 0] == 0
+        assert result[1, 1] == 2
+        assert result[1, 2] == 0
+
+        assert result[2, 0] == 0
+        assert result[2, 1] == 0
+        assert result[2, 2] == 3
+        assert cas.equivalent(cas.diag(cas.Expression([1, 2, 3])), cas.diag([1, 2, 3]))
+
+    @given(
+        lists_of_same_length(
+            [float_no_nan_no_inf(), float_no_nan_no_inf()], max_length=50
+        )
+    )
+    def test_dot(self, vectors):
+        u, v = vectors
+        result = cas.Expression(u).dot(cas.Expression(v))
+        u = np.array(u)
+        v = np.array(v)
+        assert_allclose(result, np.dot(u, v))
+
+    @given(
+        lists_of_same_length(
+            [
+                float_no_nan_no_inf(outer_limit=1000),
+                float_no_nan_no_inf(outer_limit=1000),
+            ],
+            min_length=16,
+            max_length=16,
+        )
+    )
+    def test_dot_matrix(self, vectors):
+        u, v = vectors
+        u = np.array(u).reshape((4, 4))
+        v = np.array(v).reshape((4, 4))
+        result = cas.Expression(u).dot(cas.Expression(v))
+        expected = np.dot(u, v)
+        assert_allclose(result, expected)
+
     def test_init(self):
         symbols = cas.create_symbols(23)
         e = cas.Expression(symbols)
 
     def test_pretty_str(self):
-        e = cas.eye(4)
+        e = cas.Expression.eye(4)
         e.pretty_str()
 
+    @given(st.lists(float_no_nan_no_inf(), min_size=1))
+    def test_norm(self, v):
+        actual = cas.Expression(v).norm()
+        expected = np.linalg.norm(v)
+        assume(not np.isinf(expected))
+        assert_allclose(actual, expected, equal_nan=True)
+
     def test_create(self):
-        cas.Expression(cas.Symbol('muh'))
-        cas.Expression([cas.ca.SX(1), cas.ca.SX.sym('muh')])
+        cas.Expression(cas.Symbol("muh"))
+        cas.Expression([cas.ca.SX(1), cas.ca.SX.sym("muh")])
         m = cas.Expression(np.eye(4))
         m = cas.Expression(m)
         assert_allclose(m, np.eye(4))
@@ -488,11 +735,11 @@ class TestExpression:
 
     def test_len(self):
         m = cas.Expression(np.eye(4))
-        assert (len(m) == len(np.eye(4)))
+        assert len(m) == len(np.eye(4))
 
     def test_simple_math(self):
         m = cas.Expression([1, 1])
-        s = cas.Symbol('muh')
+        s = cas.Symbol("muh")
         e = m + s
         e = m + 1
         e = 1 + m
@@ -509,9 +756,9 @@ class TestExpression:
         e = m / 1
         e = 1 / m
         assert isinstance(e, cas.Expression)
-        e = m ** s
-        e = m ** 1
-        e = 1 ** m
+        e = m**s
+        e = m**1
+        e = 1**m
         assert isinstance(e, cas.Expression)
 
     def test_to_np(self):
@@ -523,10 +770,19 @@ class TestExpression:
         assert_allclose(e.to_np(), np.array([[1, 2], [3, 4]]))
 
     def test_to_np_fail(self):
-        s1, s2 = cas.Symbol('s1'), cas.Symbol('s2')
+        s1, s2 = cas.Symbol("s1"), cas.Symbol("s2")
         e = s1 + s2
         with pytest.raises(HasFreeSymbolsError):
             e.to_np()
+
+    @given(vector(3), float_no_nan_no_inf())
+    def test_scale(self, v, a):
+        if np.linalg.norm(v) == 0:
+            expected = [0, 0, 0]
+        else:
+            expected = v / np.linalg.norm(v) * a
+        actual = cas.Expression(v).scale(a)
+        assert_allclose(actual, expected)
 
     def test_get_attr(self):
         m = cas.Expression(np.eye(4))
@@ -556,8 +812,8 @@ class TestExpression:
             np.all(r_np == r_cas)
 
     def test_logic_and(self):
-        s1 = cas.Symbol('s1')
-        s2 = cas.Symbol('s2')
+        s1 = cas.Symbol("s1")
+        s2 = cas.Symbol("s2")
         expr = cas.logic_and(cas.BinaryTrue, s1)
         assert not cas.is_true_symbol(expr) and not cas.is_false_symbol(expr)
         expr = cas.logic_and(cas.BinaryFalse, s1)
@@ -572,9 +828,9 @@ class TestExpression:
         assert not cas.is_true_symbol(expr) and not cas.is_false_symbol(expr)
 
     def test_logic_or(self):
-        s1 = cas.Symbol('s1')
-        s2 = cas.Symbol('s2')
-        s3 = cas.Symbol('s3')
+        s1 = cas.Symbol("s1")
+        s2 = cas.Symbol("s2")
+        s3 = cas.Symbol("s3")
         expr = cas.logic_or(cas.BinaryFalse, s1)
         assert not cas.is_true_symbol(expr) and not cas.is_false_symbol(expr)
         expr = cas.logic_or(cas.BinaryTrue, s1)
@@ -600,8 +856,30 @@ class TestExpression:
 
 
 class TestRotationMatrix:
+    @given(quaternion(), quaternion())
+    def test_rotation_distance(self, q1, q2):
+        m1 = giskard_math.rotation_matrix_from_quaternion(*q1)
+        m2 = giskard_math.rotation_matrix_from_quaternion(*q2)
+        actual_angle = cas.RotationMatrix(m1).rotational_error(cas.RotationMatrix(m2))
+        _, expected_angle = giskard_math.axis_angle_from_rotation_matrix(m1.T.dot(m2))
+        expected_angle = expected_angle
+        try:
+            assert_allclose(
+                giskard_math.shortest_angular_distance(
+                    actual_angle.to_np(), expected_angle
+                ),
+                0,
+            )
+        except AssertionError:
+            assert_allclose(
+                giskard_math.shortest_angular_distance(
+                    actual_angle.to_np(), -expected_angle
+                ),
+                0,
+            )
+
     def test_matmul_type_preservation(self):
-        s = cas.Symbol('s')
+        s = cas.Symbol("s")
         e = cas.Expression(1)
         v = cas.Vector3(1, 1, 1)
         p = cas.Point3(1, 1, 1)
@@ -632,7 +910,7 @@ class TestRotationMatrix:
         assert_allclose(R.z_vector(), R_ref[:, 2])
 
     def test_create_RotationMatrix(self):
-        s = cas.Symbol('s')
+        s = cas.Symbol("s")
         r = cas.RotationMatrix.from_rpy(1, 2, s)
         r = cas.RotationMatrix.from_rpy(1, 2, 3)
         assert isinstance(r, cas.RotationMatrix)
@@ -656,7 +934,9 @@ class TestRotationMatrix:
         assert_allclose(cas.RotationMatrix.from_vectors(x=x_unit, y=y_unit), R_ref)
         assert_allclose(cas.RotationMatrix.from_vectors(x=x_unit, z=z_unit), R_ref)
         assert_allclose(cas.RotationMatrix.from_vectors(y=y_unit, z=z_unit), R_ref)
-        assert_allclose(cas.RotationMatrix.from_vectors(x=x_unit, y=y_unit, z=z_unit), R_ref)
+        assert_allclose(
+            cas.RotationMatrix.from_vectors(x=x_unit, y=y_unit, z=z_unit), R_ref
+        )
 
     @given(quaternion())
     def test_from_quaternion(self, q):
@@ -664,19 +944,18 @@ class TestRotationMatrix:
         expected = giskard_math.rotation_matrix_from_quaternion(*q)
         assert_allclose(actual, expected)
 
-    @given(random_angle(),
-           random_angle(),
-           random_angle())
+    @given(random_angle(), random_angle(), random_angle())
     def test_from_rpy(self, roll, pitch, yaw):
         m1 = cas.RotationMatrix.from_rpy(roll, pitch, yaw)
         m2 = giskard_math.rotation_matrix_from_rpy(roll, pitch, yaw)
         assert_allclose(m1, m2)
 
-    @given(unit_vector(length=3),
-           random_angle())
+    @given(unit_vector(length=3), random_angle())
     def test_rotation3_axis_angle(self, axis, angle):
-        assert_allclose(cas.RotationMatrix.from_axis_angle(axis, angle),
-                        giskard_math.rotation_matrix_from_axis_angle(np.array(axis), angle))
+        assert_allclose(
+            cas.RotationMatrix.from_axis_angle(axis, angle),
+            giskard_math.rotation_matrix_from_axis_angle(np.array(axis), angle),
+        )
 
     @given(quaternion())
     def test_axis_angle_from_matrix(self, q):
@@ -690,8 +969,7 @@ class TestRotationMatrix:
 
         assert actual_axis[-1].to_np() == 0
 
-    @given(unit_vector(length=3),
-           angle_positive())
+    @given(unit_vector(length=3), angle_positive())
     def test_axis_angle_from_matrix2(self, expected_axis, expected_angle):
         m = giskard_math.rotation_matrix_from_axis_angle(expected_axis, expected_angle)
         actual_axis = cas.RotationMatrix(m).to_axis_angle()[0]
@@ -706,7 +984,9 @@ class TestRotationMatrix:
         roll = cas.RotationMatrix(expected).to_rpy()[0]
         pitch = cas.RotationMatrix(expected).to_rpy()[1]
         yaw = cas.RotationMatrix(expected).to_rpy()[2]
-        actual = giskard_math.rotation_matrix_from_rpy(roll.to_np()[0], pitch.to_np()[0], yaw.to_np()[0])
+        actual = giskard_math.rotation_matrix_from_rpy(
+            roll.to_np()[0], pitch.to_np()[0], yaw.to_np()[0]
+        )
 
         assert_allclose(actual, expected)
 
@@ -717,7 +997,7 @@ class TestRotationMatrix:
         pitch = cas.RotationMatrix(matrix).to_rpy()[1]
         yaw = cas.RotationMatrix(matrix).to_rpy()[2]
         r1 = cas.RotationMatrix.from_rpy(roll, pitch, yaw)
-        assert_allclose(r1, matrix, atol=1.e-4)
+        assert_allclose(r1, matrix, atol=1.0e-4)
 
     def test_initialization(self):
         """Test various ways to initialize RotationMatrix"""
@@ -863,8 +1143,8 @@ class TestRotationMatrix:
 
         result = r1 @ r2
         # Frame handling depends on implementation, test basic structure
-        assert hasattr(result, 'reference_frame')
-        assert hasattr(result, 'child_frame')
+        assert hasattr(result, "reference_frame")
+        assert hasattr(result, "child_frame")
 
     def test_to_conversions(self):
         """Test conversion methods to other representations"""
@@ -874,7 +1154,7 @@ class TestRotationMatrix:
         axis, angle = r.to_axis_angle()
         assert isinstance(axis, cas.Vector3)
         assert axis[3] == 0  # Should be a vector, not point
-        assert hasattr(angle, 'to_np')  # Should be Expression or similar
+        assert hasattr(angle, "to_np")  # Should be Expression or similar
 
         # Test conversion to RPY
         roll, pitch, yaw = r.to_rpy()
@@ -893,7 +1173,7 @@ class TestRotationMatrix:
     def test_invalid_matmul_operations(self):
         """Test invalid matrix multiplication operations"""
         r = cas.RotationMatrix()
-        s = cas.Symbol('s')
+        s = cas.Symbol("s")
         e = cas.Expression(1)
         p = cas.Point3(1, 2, 3)
         q = cas.Quaternion()
@@ -953,7 +1233,7 @@ class TestRotationMatrix:
 
     def test_symbolic_operations(self):
         """Test operations with symbolic expressions"""
-        angle_sym = cas.Symbol('theta')
+        angle_sym = cas.Symbol("theta")
 
         # Create symbolic rotation
         r_sym = cas.RotationMatrix.from_axis_angle(cas.Vector3.Z(), angle_sym)
@@ -966,13 +1246,15 @@ class TestRotationMatrix:
 
         # Should contain the symbol
         symbols = result.free_symbols()
-        symbol_names = [s.name for s in symbols if hasattr(s, 'name')]
-        assert 'theta' in symbol_names
+        symbol_names = [s.name for s in symbols if hasattr(s, "name")]
+        assert "theta" in symbol_names
 
     def test_compilation(self):
         """Test compilation and execution of rotation matrices"""
         # Test symbolic rotation compilation
-        compiled_rotation = cas.RotationMatrix.from_axis_angle(cas.Vector3.Z(), np.pi / 4)
+        compiled_rotation = cas.RotationMatrix.from_axis_angle(
+            cas.Vector3.Z(), np.pi / 4
+        )
 
         # Should be a valid 4x4 rotation matrix
         assert compiled_rotation.shape == (4, 4)
@@ -1023,10 +1305,47 @@ class TestRotationMatrix:
         for r in operations_to_test:
             rotation_part = r[:3, :3]
             det = cas.det(rotation_part)
-            assert_allclose(det, 1.0, atol=1e-10), f"Determinant {det} != 1.0 for operation"
+            assert_allclose(
+                det, 1.0, atol=1e-10
+            ), f"Determinant {det} != 1.0 for operation"
 
 
 class TestPoint3:
+    def test_distance_point_to_line_segment1(self):
+        p = cas.Point3(0, 0, 0)
+        start = cas.Point3(0, 0, 0)
+        end = cas.Point3(
+            0,
+            0,
+        )
+        distance = p.distance_to_line_segment(start, end)[0]
+        nearest = p.distance_to_line_segment(start, end)[1]
+        assert distance == 0
+        assert nearest[0] == 0
+        assert nearest[1] == 0
+        assert nearest[2] == 0
+
+    def test_distance_point_to_line_segment2(self):
+        p = cas.Point3(0, 1, 0.5)
+        start = cas.Point3(0, 0, 0)
+        end = cas.Point3(0, 0, 1)
+        distance = p.distance_to_line_segment(start, end)[0]
+        nearest = p.distance_to_line_segment(start, end)[1]
+        assert distance == 1
+        assert nearest[0] == 0
+        assert nearest[1] == 0
+        assert nearest[2] == 0.5
+
+    def test_distance_point_to_line_segment3(self):
+        p = cas.Point3(0, 1, 2)
+        start = cas.Point3(0, 0, 0)
+        end = cas.Point3(0, 0, 1)
+        distance = p.distance_to_line_segment(start, end)[0]
+        nearest = p.distance_to_line_segment(start, end)[1]
+        assert distance == 1.4142135623730951
+        assert nearest[0] == 0
+        assert nearest[1] == 0
+        assert nearest[2] == 1
 
     @given(vector(3))
     def test_norm(self, v):
@@ -1037,7 +1356,7 @@ class TestPoint3:
 
     def test_init(self):
         l = [1, 2, 3]
-        s = cas.Symbol('s')
+        s = cas.Symbol("s")
         e = cas.Expression(1)
         v = cas.Vector3(1, 1, 1)
         p = cas.Point3(l[0], l[1], l[2])
@@ -1068,9 +1387,11 @@ class TestPoint3:
 
     @given(float_no_nan_no_inf(), vector(3), vector(3))
     def test_if_greater_zero(self, condition, if_result, else_result):
-        actual = cas.if_greater_zero(condition,
-                                     cas.Point3.from_iterable(if_result),
-                                     cas.Point3.from_iterable(else_result))
+        actual = cas.if_greater_zero(
+            condition,
+            cas.Point3.from_iterable(if_result),
+            cas.Point3.from_iterable(else_result),
+        )
         expected = if_result if condition > 0 else else_result
         assert_allclose(actual[:3], expected)
 
@@ -1079,7 +1400,7 @@ class TestPoint3:
         p1 = cas.Point3(1, 2, 3)
         p2 = cas.Point3(4, 5, 6)
         v = cas.Vector3(1, 1, 1)
-        s = cas.Symbol('s')
+        s = cas.Symbol("s")
 
         # Test Point + Vector = Point (translate point by vector)
         result = p1 + v
@@ -1112,7 +1433,7 @@ class TestPoint3:
         # Test Point.norm() = scalar (distance from origin)
         result = p1.norm()
         assert isinstance(result, cas.Expression)
-        expected_norm = np.sqrt(1 ** 2 + 2 ** 2 + 3 ** 2)
+        expected_norm = np.sqrt(1**2 + 2**2 + 3**2)
         assert_allclose(result, expected_norm)
 
         # Test invalid operations that should raise TypeError
@@ -1134,7 +1455,7 @@ class TestPoint3:
             p1 / 2  # Point / scalar not allowed
 
         with pytest.raises(TypeError):
-            p1 ** 2  # Point ** scalar not allowed
+            p1**2  # Point ** scalar not allowed
 
         with pytest.raises(TypeError):
             p1 @ p2  # Point @ Point not allowed
@@ -1143,7 +1464,7 @@ class TestPoint3:
             p1 @ v  # Point @ Vector not allowed
 
         # Test operations with symbolic expressions
-        x = cas.Symbol('x')
+        x = cas.Symbol("x")
         p_symbolic = cas.Point3(x, 2, 3)
         result = p_symbolic + v
         assert isinstance(result, cas.Point3)
@@ -1192,7 +1513,7 @@ class TestPoint3:
         assert_allclose(distance, 5.0)  # 3-4-5 triangle
 
         # Midpoint calculation
-        midpoint = (p1 + (p2 - p1) * 0.5)
+        midpoint = p1 + (p2 - p1) * 0.5
         assert isinstance(midpoint, cas.Point3)
         assert_allclose(midpoint.x, 1.5)
         assert_allclose(midpoint.y, 2.0)
@@ -1299,8 +1620,10 @@ class TestPoint3:
 
     def test_project_to_plane(self):
         p = cas.Point3(0, 0, 1)
-        actual, distance = p.project_to_plane(frame_V_plane_vector1=cas.Vector3(1, 0, 0),
-                                              frame_V_plane_vector2=cas.Vector3(0, 1, 0))
+        actual, distance = p.project_to_plane(
+            frame_V_plane_vector1=cas.Vector3(1, 0, 0),
+            frame_V_plane_vector2=cas.Vector3(0, 1, 0),
+        )
         expected = cas.Point3(0, 0, 0)
         assert_allclose(actual, expected)
         assert_allclose(distance, 1)
@@ -1343,7 +1666,7 @@ class TestPoint3:
 
     def test_symbolic_operations(self):
         """Test operations with symbolic expressions"""
-        x, y, z = cas.create_symbols(['x', 'y', 'z'])
+        x, y, z = cas.create_symbols(["x", "y", "z"])
         p_symbolic = cas.Point3(x, y, z)
         p_numeric = cas.Point3(1, 2, 3)
 
@@ -1359,14 +1682,18 @@ class TestPoint3:
 
         # Verify symbolic expressions are preserved
         symbols = result.free_symbols()
-        symbol_names = [s.name for s in symbols if hasattr(s, 'name')]
-        assert 'x' in symbol_names and 'y' in symbol_names and 'z' in symbol_names
+        symbol_names = [s.name for s in symbols if hasattr(s, "name")]
+        assert "x" in symbol_names and "y" in symbol_names and "z" in symbol_names
 
 
 class TestVector3:
+    @given(vector(3), vector(3))
+    def test_cross(self, u, v):
+        assert_allclose(cas.Vector3(*u).cross(cas.Vector3(*v))[:3], np.cross(u, v))
+
     def test_init(self):
         l = [1, 2, 3]
-        s = cas.Symbol('s')
+        s = cas.Symbol("s")
         e = cas.Expression(1)
         v = cas.Vector3(1, 1, 1)
         p = cas.Point3(1, 1, 1)
@@ -1424,7 +1751,11 @@ class TestVector3:
         else:
             assert_allclose(result[:3], np.array(nominator) / denominator)
 
-    @given(lists_of_same_length([float_no_nan_no_inf(), float_no_nan_no_inf()], min_length=3, max_length=3))
+    @given(
+        lists_of_same_length(
+            [float_no_nan_no_inf(), float_no_nan_no_inf()], min_length=3, max_length=3
+        )
+    )
     def test_dot(self, vectors):
         u, v = vectors
         u = np.array(u)
@@ -1492,6 +1823,12 @@ class TestVector3:
         assert result[1] == 2
         assert result[2] == -3
         assert result[3] == 0
+
+    def test_angle_between(self):
+        v1 = cas.Vector3(1, 0, 0)
+        v2 = cas.Vector3(0, 1, 0)
+        angle = v1.angle_between(v2)
+        assert_allclose(angle, np.pi / 2)
 
     def test_scale_method(self):
         """Test the scale method with safe and unsafe modes"""
@@ -1573,7 +1910,7 @@ class TestVector3:
 
     def test_compilation_and_execution(self):
         """Test that Vector3 operations compile and execute correctly"""
-        v1 = cas.Vector3(cas.Symbol('x'), cas.Symbol('y'), cas.Symbol('z'))
+        v1 = cas.Vector3(cas.Symbol("x"), cas.Symbol("y"), cas.Symbol("z"))
         v2 = cas.Vector3(1, 2, 3)
 
         # Test dot product compilation
@@ -1590,7 +1927,9 @@ class TestVector3:
 
     def test_project_to_cone(self):
         v = cas.Vector3(1, 0, 0)
-        projected_cone = v.project_to_cone(frame_V_cone_axis=cas.Vector3(1, 1, 0), cone_theta=np.pi / 4)
+        projected_cone = v.project_to_cone(
+            frame_V_cone_axis=cas.Vector3(1, 1, 0), cone_theta=np.pi / 4
+        )
         expected = np.array([1, 0, 0, 0])
         assert_allclose(projected_cone, expected, atol=1e-10)
 
@@ -1602,7 +1941,7 @@ class TestVector3:
 class TestTransformationMatrix:
     def test_matmul_type_preservation(self):
         """Test that @ operator preserves correct types for TransformationMatrix"""
-        s = cas.Symbol('s')
+        s = cas.Symbol("s")
         e = cas.Expression(1)
         v = cas.Vector3(1, 1, 1)
         p = cas.Point3(1, 1, 1)
@@ -1621,8 +1960,12 @@ class TestTransformationMatrix:
         # TransformationMatrix @ valid types should return correct types
         assert isinstance(t @ v, cas.Vector3)  # Transform vector -> Vector3
         assert isinstance(t @ p, cas.Point3)  # Transform point -> Point3
-        assert isinstance(t @ r, cas.RotationMatrix)  # Transform rotation -> RotationMatrix
-        assert isinstance(t @ t, cas.TransformationMatrix)  # Transform transformation -> TransformationMatrix
+        assert isinstance(
+            t @ r, cas.RotationMatrix
+        )  # Transform rotation -> RotationMatrix
+        assert isinstance(
+            t @ t, cas.TransformationMatrix
+        )  # Transform transformation -> TransformationMatrix
 
         # Test reverse operations (other types @ TransformationMatrix)
         # RotationMatrix @ TransformationMatrix -> TransformationMatrix (already tested in RotationMatrix)
@@ -1652,9 +1995,7 @@ class TestTransformationMatrix:
         transformed_point_rot = t_rot @ p
         assert transformed_point_rot[3] == 1
 
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf())
+    @given(float_no_nan_no_inf(), float_no_nan_no_inf(), float_no_nan_no_inf())
     def test_translation3(self, x, y, z):
         r1 = cas.TransformationMatrix.from_xyz_rpy(x, y, z)
         r2 = np.identity(4)
@@ -1664,7 +2005,7 @@ class TestTransformationMatrix:
         assert_allclose(r1, r2)
 
     def test_dot(self):
-        s = cas.Symbol('x')
+        s = cas.Symbol("x")
         m1 = cas.TransformationMatrix()
         m2 = cas.TransformationMatrix.from_xyz_rpy(x=s)
         m1.dot(m2)
@@ -1679,8 +2020,9 @@ class TestTransformationMatrix:
         with pytest.raises(ValueError):
             cas.TransformationMatrix(data)
 
-    @given(st.integers(min_value=1, max_value=10),
-           st.integers(min_value=1, max_value=10))
+    @given(
+        st.integers(min_value=1, max_value=10), st.integers(min_value=1, max_value=10)
+    )
     def test_matrix2(self, x_dim, y_dim):
         data = [[i + (j * x_dim) for j in range(y_dim)] for i in range(x_dim)]
         if x_dim != 4 or y_dim != 4:
@@ -1693,54 +2035,63 @@ class TestTransformationMatrix:
             assert float(m[3, 2]) == 0
             assert float(m[x_dim - 1, y_dim - 1]) == 1
 
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           unit_vector(length=3),
-           random_angle())
+    @given(
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        unit_vector(length=3),
+        random_angle(),
+    )
     def test_frame3_axis_angle(self, x, y, z, axis, angle):
         r2 = giskard_math.rotation_matrix_from_axis_angle(np.array(axis), angle)
         r2[0, 3] = x
         r2[1, 3] = y
         r2[2, 3] = z
         r = cas.TransformationMatrix.from_point_rotation_matrix(
-            cas.Point3(x, y, z),
-            cas.RotationMatrix.from_axis_angle(axis, angle)
+            cas.Point3(x, y, z), cas.RotationMatrix.from_axis_angle(axis, angle)
         )
         assert_allclose(r, r2)
 
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           random_angle(),
-           random_angle(),
-           random_angle())
+    @given(
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        random_angle(),
+        random_angle(),
+        random_angle(),
+    )
     def test_frame3_rpy(self, x, y, z, roll, pitch, yaw):
         r2 = giskard_math.rotation_matrix_from_rpy(roll, pitch, yaw)
         r2[0, 3] = x
         r2[1, 3] = y
         r2[2, 3] = z
-        assert_allclose(cas.TransformationMatrix.from_xyz_rpy(x, y, z, roll, pitch, yaw),
-                        r2)
+        assert_allclose(
+            cas.TransformationMatrix.from_xyz_rpy(x, y, z, roll, pitch, yaw), r2
+        )
 
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           unit_vector(4))
+    @given(
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        unit_vector(4),
+    )
     def test_frame3_quaternion(self, x, y, z, q):
         r2 = giskard_math.rotation_matrix_from_quaternion(*q)
         r2[0, 3] = x
         r2[1, 3] = y
         r2[2, 3] = z
-        r = cas.TransformationMatrix.from_point_rotation_matrix(point=cas.Point3(x, y, z),
-                                                                rotation_matrix=cas.RotationMatrix.from_quaternion(
-                                                                    cas.Quaternion(*q)))
+        r = cas.TransformationMatrix.from_point_rotation_matrix(
+            point=cas.Point3(x, y, z),
+            rotation_matrix=cas.RotationMatrix.from_quaternion(cas.Quaternion(*q)),
+        )
         assert_allclose(r, r2)
 
-    @given(float_no_nan_no_inf(outer_limit=1000),
-           float_no_nan_no_inf(outer_limit=1000),
-           float_no_nan_no_inf(outer_limit=1000),
-           quaternion())
+    @given(
+        float_no_nan_no_inf(outer_limit=1000),
+        float_no_nan_no_inf(outer_limit=1000),
+        float_no_nan_no_inf(outer_limit=1000),
+        quaternion(),
+    )
     def test_inverse_frame(self, x, y, z, q):
         f = giskard_math.rotation_matrix_from_quaternion(*q)
         f[0, 3] = x
@@ -1749,42 +2100,50 @@ class TestTransformationMatrix:
         r = cas.TransformationMatrix(f).inverse()
 
         r2 = np.linalg.inv(f)
-        assert_allclose(r, r2, atol=1.e-4, rtol=1.e-4)
+        assert_allclose(r, r2, atol=1.0e-4, rtol=1.0e-4)
 
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           unit_vector(4))
+    @given(
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        unit_vector(4),
+    )
     def test_pos_of(self, x, y, z, q):
-        r1 = cas.TransformationMatrix.from_point_rotation_matrix(cas.Point3(x, y, z),
-                                                                 cas.RotationMatrix.from_quaternion(
-                                                                     cas.Quaternion(*q))).to_position()
+        r1 = cas.TransformationMatrix.from_point_rotation_matrix(
+            cas.Point3(x, y, z), cas.RotationMatrix.from_quaternion(cas.Quaternion(*q))
+        ).to_position()
         r2 = [x, y, z, 1]
         for i, e in enumerate(r2):
             assert_allclose(r1[i], e)
 
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           unit_vector(4))
+    @given(
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        unit_vector(4),
+    )
     def test_trans_of(self, x, y, z, q):
-        r1 = cas.TransformationMatrix.from_point_rotation_matrix(point=cas.Point3(x, y, z),
-                                                                 rotation_matrix=cas.RotationMatrix.from_quaternion(
-                                                                     cas.Quaternion(*q))).to_translation()
+        r1 = cas.TransformationMatrix.from_point_rotation_matrix(
+            point=cas.Point3(x, y, z),
+            rotation_matrix=cas.RotationMatrix.from_quaternion(cas.Quaternion(*q)),
+        ).to_translation()
         r2 = np.identity(4)
         r2[0, 3] = x
         r2[1, 3] = y
         r2[2, 3] = z
         assert_allclose(r1, r2)
 
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           unit_vector(4))
+    @given(
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        unit_vector(4),
+    )
     def test_rot_of(self, x, y, z, q):
-        r1 = cas.TransformationMatrix.from_point_rotation_matrix(point=cas.Point3(x, y, z),
-                                                                 rotation_matrix=cas.RotationMatrix.from_quaternion(
-                                                                     cas.Quaternion(*q))).to_rotation_matrix()
+        r1 = cas.TransformationMatrix.from_point_rotation_matrix(
+            point=cas.Point3(x, y, z),
+            rotation_matrix=cas.RotationMatrix.from_quaternion(cas.Quaternion(*q)),
+        ).to_rotation_matrix()
         r2 = giskard_math.rotation_matrix_from_quaternion(*q)
         assert_allclose(r1, r2)
 
@@ -1897,8 +2256,13 @@ class TestTransformationMatrix:
     def test_from_xyz_quat(self):
         """Test construction from position and quaternion"""
         t = cas.TransformationMatrix.from_xyz_quaternion(
-            pos_x=1, pos_y=2, pos_z=3,
-            quat_w=1, quat_x=0, quat_y=0, quat_z=0  # Identity quaternion
+            pos_x=1,
+            pos_y=2,
+            pos_z=3,
+            quat_w=1,
+            quat_x=0,
+            quat_y=0,
+            quat_z=0,  # Identity quaternion
         )
 
         assert isinstance(t, cas.TransformationMatrix)
@@ -1985,7 +2349,7 @@ class TestTransformationMatrix:
         assert_allclose(identity_check2, identity, atol=1e-10)
 
         # Test frame swapping
-        if hasattr(t, 'reference_frame') and hasattr(t, 'child_frame'):
+        if hasattr(t, "reference_frame") and hasattr(t, "child_frame"):
             assert t_inv.reference_frame == t.child_frame
             assert t_inv.child_frame == t.reference_frame
 
@@ -2038,13 +2402,13 @@ class TestTransformationMatrix:
 
         result = t1 @ t2
         # Frame handling depends on implementation
-        assert hasattr(result, 'reference_frame')
-        assert hasattr(result, 'child_frame')
+        assert hasattr(result, "reference_frame")
+        assert hasattr(result, "child_frame")
 
     def test_invalid_operations(self):
         """Test invalid operations that should raise TypeError"""
         t = cas.TransformationMatrix()
-        s = cas.Symbol('s')
+        s = cas.Symbol("s")
         e = cas.Expression(1)
         q = cas.Quaternion()
 
@@ -2078,9 +2442,9 @@ class TestTransformationMatrix:
 
     def test_symbolic_operations(self):
         """Test operations with symbolic expressions"""
-        x_sym = cas.Symbol('x')
-        y_sym = cas.Symbol('y')
-        angle_sym = cas.Symbol('theta')
+        x_sym = cas.Symbol("x")
+        y_sym = cas.Symbol("y")
+        angle_sym = cas.Symbol("theta")
 
         # Create symbolic transformation
         t_sym = cas.TransformationMatrix.from_xyz_rpy(x_sym, y_sym, 0, 0, 0, angle_sym)
@@ -2093,15 +2457,17 @@ class TestTransformationMatrix:
 
         # Should contain the symbols
         symbols = result.free_symbols()
-        symbol_names = [s.name for s in symbols if hasattr(s, 'name')]
-        assert 'x' in symbol_names
-        assert 'y' in symbol_names
-        assert 'theta' in symbol_names
+        symbol_names = [s.name for s in symbols if hasattr(s, "name")]
+        assert "x" in symbol_names
+        assert "y" in symbol_names
+        assert "theta" in symbol_names
 
     def test_compilation(self):
         """Test compilation and execution of transformation matrices"""
         # Test symbolic transformation compilation
-        compiled_transform = cas.TransformationMatrix.from_xyz_rpy(1, 2, 3, 0.1, 0.2, 0.3)
+        compiled_transform = cas.TransformationMatrix.from_xyz_rpy(
+            1, 2, 3, 0.1, 0.2, 0.3
+        )
 
         # Should be a valid 4x4 transformation matrix
         assert compiled_transform.shape == (4, 4)
@@ -2115,6 +2481,7 @@ class TestTransformationMatrix:
         t = cas.TransformationMatrix.from_xyz_rpy(1, 2, 3, 0.1, 0.2, 0.3)
 
         from copy import deepcopy
+
         t_copy = deepcopy(t)
 
         assert isinstance(t_copy, cas.TransformationMatrix)
@@ -2127,9 +2494,15 @@ class TestTransformationMatrix:
     def test_robot_kinematics(self):
         """Test transformation matrices in typical robotics scenarios"""
         # Forward kinematics chain: base -> link1 -> link2 -> end_effector
-        base_T_link1 = cas.TransformationMatrix.from_xyz_rpy(0, 0, 1, 0, 0, np.pi / 4)  # Lift and rotate
-        link1_T_link2 = cas.TransformationMatrix.from_xyz_rpy(1, 0, 0, 0, np.pi / 2, 0)  # Extend and bend
-        link2_T_ee = cas.TransformationMatrix.from_xyz_rpy(0.5, 0, 0)  # End effector offset
+        base_T_link1 = cas.TransformationMatrix.from_xyz_rpy(
+            0, 0, 1, 0, 0, np.pi / 4
+        )  # Lift and rotate
+        link1_T_link2 = cas.TransformationMatrix.from_xyz_rpy(
+            1, 0, 0, 0, np.pi / 2, 0
+        )  # Extend and bend
+        link2_T_ee = cas.TransformationMatrix.from_xyz_rpy(
+            0.5, 0, 0
+        )  # End effector offset
 
         # Forward kinematics
         base_T_ee = base_T_link1 @ link1_T_link2 @ link2_T_ee
@@ -2188,8 +2561,13 @@ class TestTransformationMatrix:
         """Property-based test for quaternion consistency"""
         # Create transformation from quaternion
         t = cas.TransformationMatrix.from_xyz_quaternion(
-            pos_x=1, pos_y=2, pos_z=3,
-            quat_w=q[3], quat_x=q[0], quat_y=q[1], quat_z=q[2]
+            pos_x=1,
+            pos_y=2,
+            pos_z=3,
+            quat_w=q[3],
+            quat_x=q[0],
+            quat_y=q[1],
+            quat_z=q[2],
         )
 
         # Extract quaternion back
@@ -2197,9 +2575,13 @@ class TestTransformationMatrix:
 
         # Create transformation from extracted quaternion
         t_roundtrip = cas.TransformationMatrix.from_xyz_quaternion(
-            pos_x=1, pos_y=2, pos_z=3,
-            quat_w=q_extracted[3], quat_x=q_extracted[0],
-            quat_y=q_extracted[1], quat_z=q_extracted[2]
+            pos_x=1,
+            pos_y=2,
+            pos_z=3,
+            quat_w=q_extracted[3],
+            quat_x=q_extracted[0],
+            quat_y=q_extracted[1],
+            quat_z=q_extracted[2],
         )
 
         # Should be the same (within numerical precision)
@@ -2228,15 +2610,23 @@ class TestTransformationMatrix:
 
 
 class TestQuaternion:
-    @given(unit_vector(length=3),
-           random_angle())
+    @given(
+        quaternion(),
+        quaternion(),
+        st.floats(allow_nan=False, allow_infinity=False, min_value=0, max_value=1),
+    )
+    def test_slerp(self, q1, q2, t):
+        r1 = cas.Quaternion.from_iterable(q1).slerp(cas.Quaternion.from_iterable(q2), t)
+        r2 = giskard_math.quaternion_slerp(q1, q2, t)
+        compare_orientations(r1, r2)
+
+    @given(unit_vector(length=3), random_angle())
     def test_quaternion_from_axis_angle1(self, axis, angle):
         actual = cas.Quaternion.from_axis_angle(cas.Vector3.from_iterable(axis), angle)
         expected = giskard_math.quaternion_from_axis_angle(axis, angle)
         assert_allclose(actual, expected)
 
-    @given(quaternion(),
-           quaternion())
+    @given(quaternion(), quaternion())
     def test_quaternion_multiply(self, q, p):
         q_expr = cas.Quaternion.from_iterable(q)
         p_expr = cas.Quaternion.from_iterable(p)
@@ -2250,13 +2640,14 @@ class TestQuaternion:
         expected = giskard_math.quaternion_conjugate(q)
         compare_orientations(actual, expected)
 
-    @given(quaternion(),
-           quaternion())
+    @given(quaternion(), quaternion())
     def test_quaternion_diff(self, q1, q2):
         q1_expr = cas.Quaternion.from_iterable(q1)
         q2_expr = cas.Quaternion.from_iterable(q2)
         actual = q1_expr.diff(q2_expr)
-        expected = giskard_math.quaternion_multiply(giskard_math.quaternion_conjugate(q1), q2)
+        expected = giskard_math.quaternion_multiply(
+            giskard_math.quaternion_conjugate(q1), q2
+        )
         compare_orientations(actual, expected)
 
     @given(quaternion())
@@ -2275,9 +2666,7 @@ class TestQuaternion:
         compare_axis_angle(angle, axis[:3], angle2, axis2)
         assert axis[-1] == 0
 
-    @given(random_angle(),
-           random_angle(),
-           random_angle())
+    @given(random_angle(), random_angle(), random_angle())
     def test_quaternion_from_rpy(self, roll, pitch, yaw):
         q = cas.Quaternion.from_rpy(roll, pitch, yaw)
         q2 = giskard_math.quaternion_from_rpy(roll, pitch, yaw)
@@ -2315,181 +2704,11 @@ class TestCASWrapper:
             assert_allclose(f(), expected)
             assert_allclose(f(np.array([], dtype=float)), expected)
 
-    def test_free_symbols(self):
-        m = cas.Expression(cas.create_symbols(['a', 'b', 'c', 'd']))
-        assert len(cas.free_symbols(m)) == 4
-        a = cas.Symbol('a')
-        assert cas.equivalent(a, cas.free_symbols(a)[0])
-
-    def test_jacobian(self):
-        a = cas.Symbol('a')
-        b = cas.Symbol('b')
-        m = cas.Expression([a + b, a ** 2, b ** 2])
-        jac = cas.jacobian(m, [a, b])
-        expected = cas.Expression([[1, 1], [2 * a, 0], [0, 2 * b]])
-        for i in range(expected.shape[0]):
-            for j in range(expected.shape[1]):
-                assert cas.equivalent(jac[i, j], expected[i, j])
-
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf())
-    def test_jacobian_dot(self, a, ad, b, bd):
-        kwargs = {
-            'a': a,
-            'ad': ad,
-            'b': b,
-            'bd': bd,
-        }
-        a_s = cas.Symbol('a')
-        ad_s = cas.Symbol('ad')
-        b_s = cas.Symbol('b')
-        bd_s = cas.Symbol('bd')
-        m = cas.Expression([
-            a_s ** 3 * b_s ** 3,
-            # b_s ** 2,
-            -a_s * cas.cos(b_s),
-            # a_s * b_s ** 4
-        ])
-        jac = cas.jacobian_dot(m, [a_s, b_s], [ad_s, bd_s])
-        expected_expr = cas.Expression([
-            [6 * ad_s * a_s * b_s ** 3 + 9 * a_s ** 2 * bd_s * b_s ** 2,
-             9 * ad_s * a_s ** 2 * b_s ** 2 + 6 * a_s ** 3 * bd_s * b],
-            # [0, 2 * bd_s],
-            [bd_s * cas.sin(b_s), ad_s * cas.sin(b_s) + a_s * bd_s * cas.cos(b_s)],
-            # [4 * bd * b ** 3, 4 * ad * b ** 3 + 12 * a * bd * b ** 2]
-        ])
-        actual = jac.compile().call_with_kwargs(**kwargs)
-        expected = expected_expr.compile().call_with_kwargs(**kwargs)
-        assert_allclose(actual, expected)
-
-    @given(float_no_nan_no_inf(outer_limit=1e2),
-           float_no_nan_no_inf(outer_limit=1e2),
-           float_no_nan_no_inf(outer_limit=1e2),
-           float_no_nan_no_inf(outer_limit=1e2),
-           float_no_nan_no_inf(outer_limit=1e2),
-           float_no_nan_no_inf(outer_limit=1e2))
-    def test_jacobian_ddot(self, a, ad, add, b, bd, bdd):
-        kwargs = {
-            'a': a,
-            'ad': ad,
-            'add': add,
-            'b': b,
-            'bd': bd,
-            'bdd': bdd,
-        }
-        a_s = cas.Symbol('a')
-        ad_s = cas.Symbol('ad')
-        add_s = cas.Symbol('add')
-        b_s = cas.Symbol('b')
-        bd_s = cas.Symbol('bd')
-        bdd_s = cas.Symbol('bdd')
-        m = cas.Expression([
-            a_s ** 3 * b_s ** 3,
-            b_s ** 2,
-            -a_s * cas.cos(b_s),
-        ])
-        jac = cas.jacobian_ddot(m, [a_s, b_s], [ad_s, bd_s], [add_s, bdd_s])
-        expected = np.array([
-            [add * 6 * b ** 3 + bdd * 18 * a ** 2 * b + 2 * ad * bd * 18 * a * b ** 2,
-             bdd * 6 * a ** 3 + add * 18 * b ** 2 * a + 2 * ad * bd * 18 * b * a ** 2],
-            [0, 0],
-            [bdd * np.cos(b),
-             bdd * -a * np.sin(b) + 2 * ad * bd * np.cos(b)],
-        ])
-        actual = jac.compile().call_with_kwargs(**kwargs)
-        assert_allclose(actual, expected)
-
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf())
-    def test_total_derivative2(self, a, b, ad, bd, add, bdd):
-        kwargs = {
-            'a': a,
-            'ad': ad,
-            'add': add,
-            'b': b,
-            'bd': bd,
-            'bdd': bdd,
-        }
-        a_s = cas.Symbol('a')
-        ad_s = cas.Symbol('ad')
-        add_s = cas.Symbol('add')
-        b_s = cas.Symbol('b')
-        bd_s = cas.Symbol('bd')
-        bdd_s = cas.Symbol('bdd')
-        m = cas.Expression(a_s * b_s ** 2)
-        jac = cas.second_order_total_derivative(m, [a_s, b_s], [ad_s, bd_s], [add_s, bdd_s])
-        actual = jac.compile().call_with_kwargs(**kwargs)
-        expected = bdd * 2 * a + 2 * ad * bd * 2 * b
-        assert_allclose(actual, expected)
-
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf())
-    def test_total_derivative2_2(self, a, b, c, ad, bd, cd, add, bdd, cdd):
-        kwargs = {
-            'a': a,
-            'ad': ad,
-            'add': add,
-            'b': b,
-            'bd': bd,
-            'bdd': bdd,
-            'c': c,
-            'cd': cd,
-            'cdd': cdd,
-        }
-        a_s = cas.Symbol('a')
-        ad_s = cas.Symbol('ad')
-        add_s = cas.Symbol('add')
-        b_s = cas.Symbol('b')
-        bd_s = cas.Symbol('bd')
-        bdd_s = cas.Symbol('bdd')
-        c_s = cas.Symbol('c')
-        cd_s = cas.Symbol('cd')
-        cdd_s = cas.Symbol('cdd')
-        m = cas.Expression(a_s * b_s ** 2 * c_s ** 3)
-        jac = cas.second_order_total_derivative(m, [a_s, b_s, c_s], [ad_s, bd_s, cd_s], [add_s, bdd_s, cdd_s])
-        # expected_expr = cas.Expression(add_s + bdd_s*2*a*c**3 + 4*ad_s*)
-        actual = jac.compile().call_with_kwargs(**kwargs)
-        # expected = expected_expr.compile()(**kwargs)
-        expected = bdd * 2 * a * c ** 3 \
-                   + cdd * 6 * a * b ** 2 * c \
-                   + 4 * ad * bd * b * c ** 3 \
-                   + 6 * ad * b ** 2 * cd * c ** 2 \
-                   + 12 * a * bd * b * cd * c ** 2
-        assert_allclose(actual, expected)
-
     def test_create_symbols(self):
-        result = cas.create_symbols(['a', 'b', 'c'])
-        assert str(result[0]) == 'a'
-        assert str(result[1]) == 'b'
-        assert str(result[2]) == 'c'
-
-    def test_diag(self):
-        result = cas.diag([1, 2, 3])
-        assert result[0, 0] == 1
-        assert result[0, 1] == 0
-        assert result[0, 2] == 0
-
-        assert result[1, 0] == 0
-        assert result[1, 1] == 2
-        assert result[1, 2] == 0
-
-        assert result[2, 0] == 0
-        assert result[2, 1] == 0
-        assert result[2, 2] == 3
-        assert cas.equivalent(cas.diag(cas.Expression([1, 2, 3])), cas.diag([1, 2, 3]))
+        result = cas.create_symbols(["a", "b", "c"])
+        assert str(result[0]) == "a"
+        assert str(result[1]) == "b"
+        assert str(result[2]) == "c"
 
     def test_vstack(self):
         m = np.eye(4)
@@ -2536,8 +2755,10 @@ class TestCASWrapper:
         row_counter = 0
         column_counter = 0
         for matrix in [m1_np, m2_np, m3_np]:
-            combined_matrix[row_counter:row_counter + matrix.shape[0],
-            column_counter:column_counter + matrix.shape[1]] = matrix
+            combined_matrix[
+                row_counter : row_counter + matrix.shape[0],
+                column_counter : column_counter + matrix.shape[1],
+            ] = matrix
             row_counter += matrix.shape[0]
             column_counter += matrix.shape[1]
         assert_allclose(r1, combined_matrix)
@@ -2546,19 +2767,15 @@ class TestCASWrapper:
     def test_abs(self, f1):
         assert_allclose(cas.abs(f1), abs(f1))
 
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf())
+    @given(float_no_nan_no_inf(), float_no_nan_no_inf())
     def test_max(self, f1, f2):
         assert_allclose(cas.max(f1, f2), max(f1, f2))
 
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf())
+    @given(float_no_nan_no_inf(), float_no_nan_no_inf())
     def test_save_division(self, f1, f2):
-        assert_allclose(cas.save_division(f1, f2),
-                        f1 / f2 if f2 != 0 else 0)
+        assert_allclose(cas.save_division(f1, f2), f1 / f2 if f2 != 0 else 0)
 
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf())
+    @given(float_no_nan_no_inf(), float_no_nan_no_inf())
     def test_min(self, f1, f2):
         assert_allclose(cas.min(f1, f2), min(f1, f2))
 
@@ -2566,81 +2783,115 @@ class TestCASWrapper:
     def test_sign(self, f1):
         assert_allclose(cas.sign(f1), np.sign(f1))
 
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf())
+    @given(float_no_nan_no_inf(), float_no_nan_no_inf(), float_no_nan_no_inf())
     def test_if_greater_zero(self, condition, if_result, else_result):
-        assert_allclose(cas.if_greater_zero(condition, if_result, else_result),
-                        float(if_result if condition > 0 else else_result))
+        assert_allclose(
+            cas.if_greater_zero(condition, if_result, else_result),
+            float(if_result if condition > 0 else else_result),
+        )
 
     def test_if_one_arg(self):
-        types = [cas.Point3, cas.Vector3, cas.Quaternion, cas.Expression, cas.TransformationMatrix, cas.RotationMatrix]
-        if_functions = [cas.if_else, cas.if_eq_zero, cas.if_greater_eq_zero, cas.if_greater_zero]
-        c = cas.Symbol('c')
+        types = [
+            cas.Point3,
+            cas.Vector3,
+            cas.Quaternion,
+            cas.Expression,
+            cas.TransformationMatrix,
+            cas.RotationMatrix,
+        ]
+        if_functions = [
+            cas.if_else,
+            cas.if_eq_zero,
+            cas.if_greater_eq_zero,
+            cas.if_greater_zero,
+        ]
+        c = cas.Symbol("c")
         for type_ in types:
             for if_function in if_functions:
                 if_result = type_()
                 else_result = type_()
                 result = if_function(c, if_result, else_result)
-                assert isinstance(result, type_), f'{type(result)} != {type_} for {if_function}'
+                assert isinstance(
+                    result, type_
+                ), f"{type(result)} != {type_} for {if_function}"
 
     def test_if_two_arg(self):
-        types = [cas.Point3, cas.Vector3, cas.Quaternion, cas.Expression, cas.TransformationMatrix, cas.RotationMatrix]
-        if_functions = [cas.if_eq, cas.if_greater, cas.if_greater_eq, cas.if_less, cas.if_less_eq]
-        a = cas.Symbol('a')
-        b = cas.Symbol('b')
+        types = [
+            cas.Point3,
+            cas.Vector3,
+            cas.Quaternion,
+            cas.Expression,
+            cas.TransformationMatrix,
+            cas.RotationMatrix,
+        ]
+        if_functions = [
+            cas.if_eq,
+            cas.if_greater,
+            cas.if_greater_eq,
+            cas.if_less,
+            cas.if_less_eq,
+        ]
+        a = cas.Symbol("a")
+        b = cas.Symbol("b")
         for type_ in types:
             for if_function in if_functions:
                 if_result = type_()
                 else_result = type_()
                 assert isinstance(if_function(a, b, if_result, else_result), type_)
 
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf())
+    @given(float_no_nan_no_inf(), float_no_nan_no_inf(), float_no_nan_no_inf())
     def test_if_greater_eq_zero(self, condition, if_result, else_result):
-        assert_allclose(cas.if_greater_eq_zero(condition, if_result, else_result),
-                        float(if_result if condition >= 0 else else_result))
+        assert_allclose(
+            cas.if_greater_eq_zero(condition, if_result, else_result),
+            float(if_result if condition >= 0 else else_result),
+        )
 
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf())
+    @given(
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+    )
     def test_if_greater_eq(self, a, b, if_result, else_result):
-        assert_allclose(cas.if_greater_eq(a, b, if_result, else_result),
-                        float(if_result if a >= b else else_result))
+        assert_allclose(
+            cas.if_greater_eq(a, b, if_result, else_result),
+            float(if_result if a >= b else else_result),
+        )
 
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf())
+    @given(
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+    )
     def test_if_less_eq(self, a, b, if_result, else_result):
-        assert_allclose(cas.if_less_eq(a, b, if_result, else_result),
-                        float(if_result if a <= b else else_result))
+        assert_allclose(
+            cas.if_less_eq(a, b, if_result, else_result),
+            float(if_result if a <= b else else_result),
+        )
 
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf())
+    @given(float_no_nan_no_inf(), float_no_nan_no_inf(), float_no_nan_no_inf())
     def test_if_eq_zero(self, condition, if_result, else_result):
-        assert_allclose(cas.if_eq_zero(condition, if_result, else_result),
-                        float(if_result if condition == 0 else else_result))
+        assert_allclose(
+            cas.if_eq_zero(condition, if_result, else_result),
+            float(if_result if condition == 0 else else_result),
+        )
 
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf())
+    @given(
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+    )
     def test_if_eq(self, a, b, if_result, else_result):
-        assert_allclose(cas.if_eq(a, b, if_result, else_result),
-                        float(if_result if a == b else else_result))
+        assert_allclose(
+            cas.if_eq(a, b, if_result, else_result),
+            float(if_result if a == b else else_result),
+        )
 
     @given(float_no_nan_no_inf())
     def test_if_eq_cases(self, a):
-        b_result_cases = [(1, 1),
-                          (3, 3),
-                          (4, 4),
-                          (-1, -1),
-                          (0.5, 0.5),
-                          (-0.5, -0.5)]
+        b_result_cases = [(1, 1), (3, 3), (4, 4), (-1, -1), (0.5, 0.5), (-0.5, -0.5)]
 
         def reference(a_, b_result_cases_, else_result):
             for b, if_result in b_result_cases_:
@@ -2654,12 +2905,7 @@ class TestCASWrapper:
 
     @given(float_no_nan_no_inf())
     def test_if_eq_cases_set(self, a):
-        b_result_cases = {(1, 1),
-                          (3, 3),
-                          (4, 4),
-                          (-1, -1),
-                          (0.5, 0.5),
-                          (-0.5, -0.5)}
+        b_result_cases = {(1, 1), (3, 3), (4, 4), (-1, -1), (0.5, 0.5), (-0.5, -0.5)}
 
         def reference(a_, b_result_cases_, else_result):
             for b, if_result in b_result_cases_:
@@ -2690,105 +2936,45 @@ class TestCASWrapper:
 
         assert_allclose(
             cas.if_less_eq_cases(a, b_result_cases, 0),
-            float(reference(a, b_result_cases, 0)))
+            float(reference(a, b_result_cases, 0)),
+        )
 
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf())
+    @given(
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+    )
     def test_if_greater(self, a, b, if_result, else_result):
         assert_allclose(
             cas.if_greater(a, b, if_result, else_result),
-            float(if_result if a > b else else_result))
+            float(if_result if a > b else else_result),
+        )
 
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf())
+    @given(
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+        float_no_nan_no_inf(),
+    )
     def test_if_less(self, a, b, if_result, else_result):
         assert_allclose(
             cas.if_less(a, b, if_result, else_result),
-            float(if_result if a < b else else_result))
+            float(if_result if a < b else else_result),
+        )
 
-    @given(vector(3),
-           vector(3))
-    def test_cross(self, u, v):
-        assert_allclose(
-            cas.cross(u, v)[:3],
-            np.cross(u, v))
-
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf(),
-           float_no_nan_no_inf())
+    @given(float_no_nan_no_inf(), float_no_nan_no_inf(), float_no_nan_no_inf())
     def test_limit(self, x, lower_limit, upper_limit):
         r1 = cas.limit(x, lower_limit, upper_limit)
         r2 = max(lower_limit, min(upper_limit, x))
         assert_allclose(r1, r2)
-
-    @given(st.lists(float_no_nan_no_inf(), min_size=1))
-    def test_norm(self, v):
-        actual = cas.norm(v)
-        expected = np.linalg.norm(v)
-        assume(not np.isinf(expected))
-        assert_allclose(actual, expected, equal_nan=True)
-
-    @given(vector(3),
-           float_no_nan_no_inf())
-    def test_scale(self, v, a):
-        if np.linalg.norm(v) == 0:
-            r2 = [0, 0, 0]
-        else:
-            r2 = v / np.linalg.norm(v) * a
-        assert_allclose(
-            cas.scale(cas.Expression(v), a),
-            r2)
-
-    @given(lists_of_same_length([float_no_nan_no_inf(), float_no_nan_no_inf()], max_length=50))
-    def test_dot(self, vectors):
-        u, v = vectors
-        result = cas.dot(cas.Expression(u), cas.Expression(v))
-        u = np.array(u)
-        v = np.array(v)
-        assert_allclose(result, np.dot(u, v))
-
-    @given(lists_of_same_length([float_no_nan_no_inf(outer_limit=1000), float_no_nan_no_inf(outer_limit=1000)],
-                                min_length=16, max_length=16))
-    def test_dot_matrix(self, vectors):
-        u, v = vectors
-        u = np.array(u).reshape((4, 4))
-        v = np.array(v).reshape((4, 4))
-        result = cas.dot(cas.Expression(u), cas.Expression(v))
-        expected = np.dot(u, v)
-        assert_allclose(result, expected)
 
     @given(unit_vector(4))
     def test_trace(self, q):
         m = giskard_math.rotation_matrix_from_quaternion(*q)
         assert_allclose(cas.trace(m), np.trace(m))
 
-    @given(quaternion(),
-           quaternion())
-    def test_rotation_distance(self, q1, q2):
-        m1 = giskard_math.rotation_matrix_from_quaternion(*q1)
-        m2 = giskard_math.rotation_matrix_from_quaternion(*q2)
-        actual_angle = cas.rotational_error(cas.RotationMatrix(m1), cas.RotationMatrix(m2))
-        _, expected_angle = giskard_math.axis_angle_from_rotation_matrix(m1.T.dot(m2))
-        expected_angle = expected_angle
-        try:
-            assert_allclose(giskard_math.shortest_angular_distance(actual_angle.to_np(), expected_angle), 0)
-        except AssertionError:
-            assert_allclose(giskard_math.shortest_angular_distance(actual_angle.to_np(), -expected_angle), 0)
-
-    @given(quaternion(),
-           quaternion(),
-           st.floats(allow_nan=False, allow_infinity=False, min_value=0, max_value=1))
-    def test_slerp(self, q1, q2, t):
-        r1 = cas.Quaternion.from_iterable(q1).slerp(cas.Quaternion.from_iterable(q2), t)
-        r2 = giskard_math.quaternion_slerp(q1, q2, t)
-        compare_orientations(r1, r2)
-
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf())
+    @given(float_no_nan_no_inf(), float_no_nan_no_inf())
     def test_fmod(self, a, b):
         ref_r = np.fmod(a, b)
         assert_allclose(cas.fmod(a, b), ref_r, equal_nan=True)
@@ -2797,15 +2983,16 @@ class TestCASWrapper:
     def test_normalize_angle_positive(self, a):
         expected = giskard_math.normalize_angle_positive(a)
         actual = cas.normalize_angle_positive(a)
-        assert_allclose(giskard_math.shortest_angular_distance(actual.to_np(), expected), 0.0)
+        assert_allclose(
+            giskard_math.shortest_angular_distance(actual.to_np(), expected), 0.0
+        )
 
     @given(float_no_nan_no_inf())
     def test_normalize_angle(self, a):
         ref_r = giskard_math.normalize_angle(a)
         assert_allclose(cas.normalize_angle(a), ref_r)
 
-    @given(float_no_nan_no_inf(),
-           float_no_nan_no_inf())
+    @given(float_no_nan_no_inf(), float_no_nan_no_inf())
     def test_shorted_angular_distance(self, angle1, angle2):
         try:
             expected = giskard_math.shortest_angular_distance(angle1, angle2)
@@ -2814,8 +3001,7 @@ class TestCASWrapper:
         actual = cas.shortest_angular_distance(angle1, angle2)
         assert_allclose(actual, expected, equal_nan=True)
 
-    @given(unit_vector(4),
-           unit_vector(4))
+    @given(unit_vector(4), unit_vector(4))
     def test_entrywise_product(self, q1, q2):
         m1 = giskard_math.rotation_matrix_from_quaternion(*q1)
         m2 = giskard_math.rotation_matrix_from_quaternion(*q2)
@@ -2833,7 +3019,7 @@ class TestCASWrapper:
     def test_sum(self, m):
         actual_sum = cas.sum(m)
         expected_sum = np.sum(m)
-        assert_allclose(actual_sum, expected_sum, rtol=1.e-4)
+        assert_allclose(actual_sum, expected_sum, rtol=1.0e-4)
 
     @given(sq_matrix())
     def test_sum_row(self, m):
@@ -2847,55 +3033,24 @@ class TestCASWrapper:
         expected_sum = np.sum(m, axis=1)
         assert_allclose(actual_sum, expected_sum)
 
-    def test_distance_point_to_line_segment1(self):
-        p = cas.Point3(0, 0, 0)
-        start = cas.Point3(0, 0, 0)
-        end = cas.Point3(0, 0, )
-        distance = cas.distance_point_to_line_segment(p, start, end)[0]
-        nearest = cas.distance_point_to_line_segment(p, start, end)[1]
-        assert distance == 0
-        assert nearest[0] == 0
-        assert nearest[1] == 0
-        assert nearest[2] == 0
-
-    def test_distance_point_to_line_segment2(self):
-        p = cas.Point3(0, 1, 0.5)
-        start = cas.Point3(0, 0, 0)
-        end = cas.Point3(0, 0, 1)
-        distance = cas.distance_point_to_line_segment(p, start, end)[0]
-        nearest = cas.distance_point_to_line_segment(p, start, end)[1]
-        assert distance == 1
-        assert nearest[0] == 0
-        assert nearest[1] == 0
-        assert nearest[2] == 0.5
-
-    def test_distance_point_to_line_segment3(self):
-        p = cas.Point3(0, 1, 2)
-        start = cas.Point3(0, 0, 0)
-        end = cas.Point3(0, 0, 1)
-        distance = cas.distance_point_to_line_segment(p, start, end)[0]
-        nearest = cas.distance_point_to_line_segment(p, start, end)[1]
-        assert distance == 1.4142135623730951
-        assert nearest[0] == 0
-        assert nearest[1] == 0
-        assert nearest[2] == 1
-
     def test_to_str(self):
-        axis = cas.Vector3(*cas.create_symbols(['v1', 'v2', 'v3']))
-        angle = cas.Symbol('alpha')
+        axis = cas.Vector3(*cas.create_symbols(["v1", "v2", "v3"]))
+        angle = cas.Symbol("alpha")
         q = cas.Quaternion.from_axis_angle(axis, angle)
-        expr = cas.norm(q)
-        assert cas.to_str(expr) == [['sqrt((((sq((v1*sin((alpha/2))))'
-                                     '+sq((v2*sin((alpha/2)))))'
-                                     '+sq((v3*sin((alpha/2)))))'
-                                     '+sq(cos((alpha/2)))))']]
-        assert cas.to_str(expr) == expr.pretty_str()
+        expr = q.norm()
+        assert expr.pretty_str() == [
+            [
+                "sqrt((((sq((v1*sin((alpha/2))))"
+                "+sq((v2*sin((alpha/2)))))"
+                "+sq((v3*sin((alpha/2)))))"
+                "+sq(cos((alpha/2)))))"
+            ]
+        ]
 
     def test_to_str2(self):
-        a, b = cas.create_symbols(['a', 'b'])
+        a, b = cas.create_symbols(["a", "b"])
         e = cas.if_eq(a, 0, a, b)
-        assert cas.to_str(e) == [['(((a==0)?a:0)+((!(a==0))?b:0))']]
-        assert cas.to_str(e) == e.pretty_str()
+        assert e.pretty_str() == [["(((a==0)?a:0)+((!(a==0))?b:0))"]]
 
     def test_leq_on_array(self):
         a = cas.Expression(np.array([1, 2, 3, 4]))
@@ -2905,9 +3060,9 @@ class TestCASWrapper:
 
 class TestCompiledFunction:
     def test_dense(self):
-        s1_value = 420.
-        s2_value = 69.
-        s1, s2 = cas.create_symbols(['s1', 's2'])
+        s1_value = 420.0
+        s2_value = 69.0
+        s1, s2 = cas.create_symbols(["s1", "s2"])
         e = cas.sqrt(cas.cos(s1) + cas.sin(s2))
         e_f = e.compile()
         actual = e_f(np.array([s1_value, s2_value]))
@@ -2915,9 +3070,9 @@ class TestCompiledFunction:
         assert_allclose(actual, expected)
 
     def test_dense_two_params(self):
-        s1_value = 420.
-        s2_value = 69.
-        s1, s2 = cas.create_symbols(['s1', 's2'])
+        s1_value = 420.0
+        s2_value = 69.0
+        s1, s2 = cas.create_symbols(["s1", "s2"])
         e = cas.sqrt(cas.cos(s1) + cas.sin(s2))
         e_f = e.compile(parameters=[[s1], [s2]])
         actual = e_f(np.array([s1_value]), np.array([s2_value]))
@@ -2925,9 +3080,9 @@ class TestCompiledFunction:
         assert_allclose(actual, expected)
 
     def test_sparse(self):
-        s1_value = 420.
-        s2_value = 69.
-        s1, s2 = cas.create_symbols(['s1', 's2'])
+        s1_value = 420.0
+        s2_value = 69.0
+        s1, s2 = cas.create_symbols(["s1", "s2"])
         e = cas.sqrt(cas.cos(s1) + cas.sin(s2))
         e_f = e.compile(sparse=True)
         actual = e_f(np.array([s1_value, s2_value]))
@@ -2936,14 +3091,13 @@ class TestCompiledFunction:
         assert_allclose(actual.toarray(), expected)
 
     def test_stacked_compiled_function_dense(self):
-        s1_value = 420.
-        s2_value = 69.
-        s1, s2 = cas.create_symbols(['s1', 's2'])
+        s1_value = 420.0
+        s2_value = 69.0
+        s1, s2 = cas.create_symbols(["s1", "s2"])
         e1 = cas.sqrt(cas.cos(s1) + cas.sin(s2))
         e2 = s1 + s2
         e_f = cas.CompiledFunctionWithViews(
-            expressions=[e1, e2],
-            symbol_parameters=[[s1, s2]]
+            expressions=[e1, e2], symbol_parameters=[[s1, s2]]
         )
         actual_e1, actual_e2 = e_f(np.array([s1_value, s2_value]))
         expected_e1 = np.sqrt(np.cos(s1_value) + np.sin(s2_value))
@@ -2952,7 +3106,7 @@ class TestCompiledFunction:
         assert_allclose(actual_e2, expected_e2)
 
     def test_missing_free_symbols(self):
-        s1, s2 = cas.create_symbols(['s1', 's2'])
+        s1, s2 = cas.create_symbols(["s1", "s2"])
         e = cas.sqrt(cas.cos(s1) + cas.sin(s2))
         with pytest.raises(HasFreeSymbolsError):
             e.compile(parameters=[[s1]])

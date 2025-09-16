@@ -22,6 +22,7 @@ from typing import (
     Sequence,
     Any,
     Type,
+    Self,
 )
 
 import casadi as ca
@@ -31,7 +32,7 @@ from scipy import sparse as sp
 from ..exceptions import HasFreeSymbolsError
 
 if TYPE_CHECKING:
-    from ..world_entity import KinematicStructureEntity
+    from ..world_description import KinematicStructureEntity
 
 builtin_max = builtins.max
 builtin_min = builtins.min
@@ -401,6 +402,33 @@ class SymbolicType:
         """
         return CompiledFunction(self, parameters, sparse)
 
+    def substitute(
+        self,
+        old_symbols: List[Symbol],
+        new_symbols: List[Union[Symbol, Expression]],
+    ) -> Self:
+        """
+        Replace symbols in an expression with new symbols or expressions.
+
+        This function substitutes symbols in the given expression with the provided
+        new symbols or expressions. It ensures that the original expression remains
+        unaltered and creates a new instance with the substitutions applied.
+
+        :param expression: The input mathematical expression that will undergo symbol replacement.
+        :param old_symbols: A list of symbols in the expression which need to be replaced.
+        :param new_symbols: A list of new symbols or expressions which will replace the old symbols.
+            The length of this list must correspond to the `old_symbols` list.
+        :return: A new expression with the specified symbols replaced.
+        """
+        old_symbols = Expression([_to_sx(s) for s in old_symbols]).s
+        new_symbols = Expression([_to_sx(s) for s in new_symbols]).s
+        result = copy(self)
+        result.s = ca.substitute(self.s, old_symbols, new_symbols)
+        return result
+
+    def norm(self) -> Expression:
+        return Expression(ca.norm_2(self.s))
+
 
 class BasicOperatorMixin:
     """
@@ -608,6 +636,10 @@ class Expression(SymbolicType, BasicOperatorMixin):
     def eye(cls, size: int) -> Expression:
         return cls(ca.SX.eye(size))
 
+    @classmethod
+    def diag(cls, args: Union[List[ScalarData], Expression]) -> Expression:
+        return cls(ca.diag(_to_sx(args)))
+
     def remove(self, rows: List[int], columns: List[int]):
         self.s.remove(rows, columns)
 
@@ -697,10 +729,60 @@ class Expression(SymbolicType, BasicOperatorMixin):
         Jdd = self.jacobian(symbols)
         for i in range(Jdd.shape[0]):
             for j in range(Jdd.shape[1]):
-                Jdd[i, j] = second_order_total_derivative(
-                    Jdd[i, j], symbols, symbols_dot, symbols_ddot
+                Jdd[i, j] = Jdd[i, j].second_order_total_derivative(
+                    symbols, symbols_dot, symbols_ddot
                 )
         return Jdd
+
+    def second_order_total_derivative(
+        self,
+        symbols: Iterable[Symbol],
+        symbols_dot: Iterable[Symbol],
+        symbols_ddot: Iterable[Symbol],
+    ) -> Expression:
+        """
+        Computes the second-order total derivative of an expression with respect to a set of symbols.
+
+        This function takes an expression and computes its second-order total derivative
+        using provided symbols, their first-order derivatives, and their second-order
+        derivatives. The computation internally constructs a Hessian matrix of the
+        expression and multiplies it by a vector that combines the provided derivative
+        data.
+
+        :param symbols: Iterable containing the symbols with respect to which the derivative is calculated.
+        :param symbols_dot: Iterable containing the first-order derivatives of the symbols.
+        :param symbols_ddot: Iterable containing the second-order derivatives of the symbols.
+        :return: The computed second-order total derivative, returned as an `Expression`.
+        """
+        symbols = Expression(symbols)
+        symbols_dot = Expression(symbols_dot)
+        symbols_ddot = Expression(symbols_ddot)
+        v = []
+        for i in range(len(symbols)):
+            for j in range(len(symbols)):
+                if i == j:
+                    v.append(symbols_ddot[i].s)
+                else:
+                    v.append(symbols_dot[i].s * symbols_dot[j].s)
+        v = Expression(v)
+        H = Expression(ca.hessian(self.s, symbols.s)[0])
+        H = H.reshape((1, len(H) ** 2))
+        return H.dot(v)
+
+    def hessian(self, symbols: Iterable[Symbol]) -> Expression:
+        """
+        Calculate the Hessian matrix of a given expression with respect to specified symbols.
+
+        The function computes the second-order partial derivatives (Hessian matrix) for a
+        provided mathematical expression using the specified symbols. It utilizes a symbolic
+        library for the internal operations to generate the Hessian.
+
+        :param symbols: An iterable containing the symbols with respect to which the derivatives
+            are calculated.
+        :return: The resulting Hessian matrix as an expression.
+        """
+        expressions = self.s
+        return Expression(ca.hessian(expressions, Expression(symbols).s)[0])
 
     def inverse(self) -> Expression:
         """
@@ -708,6 +790,9 @@ class Expression(SymbolicType, BasicOperatorMixin):
         """
         assert self.shape[0] == self.shape[1]
         return Expression(ca.inv(self.s))
+
+    def scale(self, a: ScalarData) -> Expression:
+        return save_division(self, self.norm()) * a
 
 
 TrinaryFalse: float = 0.0
@@ -927,7 +1012,7 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin):
             child_frame=self.reference_frame, reference_frame=self.child_frame
         )
         inv[:3, :3] = self[:3, :3].T
-        inv[:3, 3] = dot(-inv[:3, :3], self[:3, 3])
+        inv[:3, 3] = (-inv[:3, :3]).dot(self[:3, 3])
         return inv
 
     def to_position(self) -> Point3:
@@ -1259,13 +1344,27 @@ class RotationMatrix(SymbolicType, ReferenceFrameMixin):
     def normalize(self) -> None:
         """Scales each of the axes to the length of one."""
         scale_v = 1.0
-        self[:3, 0] = scale(self[:3, 0], scale_v)
-        self[:3, 1] = scale(self[:3, 1], scale_v)
-        self[:3, 2] = scale(self[:3, 2], scale_v)
+        self[:3, 0] = self[:3, 0].scale(scale_v)
+        self[:3, 1] = self[:3, 1].scale(scale_v)
+        self[:3, 2] = self[:3, 2].scale(scale_v)
 
     @property
     def T(self) -> RotationMatrix:
         return RotationMatrix(self.s.T, reference_frame=self.reference_frame)
+
+    def rotational_error(self, other: RotationMatrix) -> Expression:
+        """
+        Calculate the rotational error between two rotation matrices.
+
+        This function computes the angular difference between two rotation matrices
+        by computing the dot product of the first matrix and the inverse of the second.
+        Subsequently, it generates the angle of the resulting rotation matrix.
+
+        :param other: The second rotation matrix.
+        :return: The angular error between the two rotation matrices as an expression.
+        """
+        r_distance = self.dot(other.inverse())
+        return r_distance.to_angle()
 
 
 class Point3(SymbolicType, ReferenceFrameMixin):
@@ -1317,7 +1416,7 @@ class Point3(SymbolicType, ReferenceFrameMixin):
         return cls(data[0], data[1], data[2], reference_frame=reference_frame)
 
     def norm(self) -> Expression:
-        return norm(self)
+        return Expression(ca.norm_2(self[:3].s))
 
     @property
     def x(self) -> Expression:
@@ -1383,7 +1482,7 @@ class Point3(SymbolicType, ReferenceFrameMixin):
         :param frame_V_plane_vector2: Second vector defining the plane
         :return: Tuple of (projected point on the plane, signed distance from point to plane)
         """
-        normal = cross(frame_V_plane_vector1, frame_V_plane_vector2)
+        normal = frame_V_plane_vector1.cross(frame_V_plane_vector2)
         normal.scale(1)
         frame_V_current = Vector3.from_iterable(self)
         d = normal @ frame_V_current
@@ -1399,7 +1498,7 @@ class Point3(SymbolicType, ReferenceFrameMixin):
         :return: tuple of (closest point on the line, shortest distance between self and the line)
         """
         lp_vector = self - line_point
-        cross_product = cross(lp_vector, line_direction)
+        cross_product = lp_vector.cross(line_direction)
         distance = cross_product.norm() / line_direction.norm()
 
         line_direction_unit = line_direction / line_direction.norm()
@@ -1592,7 +1691,7 @@ class Vector3(SymbolicType, ReferenceFrameMixin):
         return result
 
     def norm(self) -> Expression:
-        return norm(self)
+        return Expression(ca.norm_2(self[:3].s))
 
     def scale(self, a: ScalarData, unsafe: bool = False):
         if unsafe:
@@ -1624,7 +1723,7 @@ class Vector3(SymbolicType, ReferenceFrameMixin):
 
         # Compute the perpendicular component.
         v_perp = frame_V_current - (frame_V_cone_axis_normed * beta)
-        norm_v_perp = norm(v_perp)
+        norm_v_perp = v_perp.norm()
         v_perp.scale(1)
 
         s = beta * cos(cone_theta) + norm_v_perp * sin(cone_theta)
@@ -1644,6 +1743,15 @@ class Vector3(SymbolicType, ReferenceFrameMixin):
             b=norm_v * np.cos(cone_theta),
             if_result=frame_V_current,
             else_result=project_on_cone_boundary,
+        )
+
+    def angle_between(self, other: Vector3) -> Expression:
+        return acos(
+            limit(
+                self @ other / (self.norm() * other.norm()),
+                lower_limit=-1,
+                upper_limit=1,
+            )
         )
 
 
@@ -1904,9 +2012,6 @@ class Quaternion(SymbolicType, ReferenceFrameMixin):
         """
         return self.conjugate().multiply(q)
 
-    def norm(self) -> Expression:
-        return norm(self)
-
     def normalize(self) -> None:
         norm_ = self.norm()
         self.x /= norm_
@@ -2049,23 +2154,6 @@ def diag(args: Union[List[ScalarData], Expression]) -> Expression:
         return Expression(ca.diag(args.s))
     except AttributeError:
         return Expression(ca.diag(_to_sx(args)))
-
-
-def hessian(expressions: Expression, symbols: Iterable[Symbol]) -> Expression:
-    """
-    Calculate the Hessian matrix of a given expression with respect to specified symbols.
-
-    The function computes the second-order partial derivatives (Hessian matrix) for a
-    provided mathematical expression using the specified symbols. It utilizes a symbolic
-    library for the internal operations to generate the Hessian.
-
-    :param expressions: The scalar expression for which the Hessian matrix is to be computed.
-    :param symbols: An iterable containing the symbols with respect to which the derivatives
-        are calculated.
-    :return: The resulting Hessian matrix as an expression.
-    """
-    expressions = _to_sx(expressions)
-    return Expression(ca.hessian(expressions, Expression(symbols).s)[0])
 
 
 def equivalent(expression1: ScalarData, expression2: ScalarData) -> bool:
@@ -2495,21 +2583,8 @@ def _to_sx(thing: Union[ca.SX, SymbolicType]) -> ca.SX:
     return ca.SX(thing)
 
 
-def cross(u: Union[Vector3, Expression], v: Union[Vector3, Expression]) -> Vector3:
-    u = Vector3.from_iterable(u)
-    v = Vector3.from_iterable(v)
-    return u.cross(v)
-
-
-def norm(v: Union[Vector3, Point3, Expression, Quaternion]) -> Expression:
-    if isinstance(v, (Point3, Vector3)):
-        return Expression(ca.norm_2(v[:3].s))
-    v = _to_sx(v)
-    return Expression(ca.norm_2(v))
-
-
 def scale(v: Expression, a: ScalarData) -> Expression:
-    return save_division(v, norm(v)) * a
+    return save_division(v, v.norm()) * a
 
 
 def dot(e1: Expression, e2: Expression) -> Expression:
@@ -2571,7 +2646,7 @@ def diag_stack(
 ) -> Expression:
     num_rows = int(math.fsum(e.shape[0] for e in list_of_matrices))
     num_columns = int(math.fsum(e.shape[1] for e in list_of_matrices))
-    combined_matrix = zeros(num_rows, num_columns)
+    combined_matrix = Expression.zeros(num_rows, num_columns)
     row_counter = 0
     column_counter = 0
     for matrix in list_of_matrices:
@@ -2584,17 +2659,10 @@ def diag_stack(
     return combined_matrix
 
 
-def cosine_distance(v0: ScalarData, v1: ScalarData) -> Expression:
-    """
-    cosine distance ranging from 0 to 2
-    :param v0: nx1 Matrix
-    :param v1: nx1 Matrix
-    """
-    return 1 - ((dot(v0.T, v1))[0] / (norm(v0) * norm(v1)))
-
-
 def euclidean_distance(v1: SymbolicVector, v2: SymbolicVector) -> Expression:
-    return norm(v1 - v2)
+    difference = v1 - v2
+    distance = difference.norm()
+    return distance
 
 
 def fmod(a: ScalarData, b: ScalarData) -> Expression:
@@ -2696,7 +2764,7 @@ def entrywise_product(matrix1: Expression, matrix2: Expression) -> Expression:
     :return: A new matrix of type `Expression` containing the entrywise product of `matrix1` and `matrix2`.
     """
     assert matrix1.shape == matrix2.shape
-    result = zeros(*matrix1.shape)
+    result = Expression.zeros(*matrix1.shape)
     for i in range(matrix1.shape[0]):
         for j in range(matrix1.shape[1]):
             result[i, j] = matrix1[i, j] * matrix2[i, j]
@@ -2747,30 +2815,6 @@ def sum_column(matrix: Expression) -> Expression:
     return Expression(ca.sum2(matrix))
 
 
-def angle_between_vector(v1: Vector3, v2: Vector3) -> Expression:
-    v1 = v1[:3]
-    v2 = v2[:3]
-    return acos(
-        limit(dot(v1.T, v2) / (norm(v1) * norm(v2)), lower_limit=-1, upper_limit=1)
-    )
-
-
-def rotational_error(r1: RotationMatrix, r2: RotationMatrix) -> Expression:
-    """
-    Calculate the rotational error between two rotation matrices.
-
-    This function computes the angular difference between two rotation matrices
-    by computing the dot product of the first matrix and the inverse of the second.
-    Subsequently, it generates the angle of the resulting rotation matrix.
-
-    :param r1: The first rotation matrix.
-    :param r2: The second rotation matrix.
-    :return: The angular error between the two rotation matrices as an expression.
-    """
-    r_distance = r1.dot(r2.inverse())
-    return r_distance.to_angle()
-
-
 def total_derivative(
     expr: Union[Symbol, Expression],
     symbols: Iterable[Symbol],
@@ -2791,43 +2835,6 @@ def total_derivative(
     symbols = Expression(symbols)
     symbols_dot = Expression(symbols_dot)
     return Expression(ca.jtimes(expr.s, symbols.s, symbols_dot.s))
-
-
-def second_order_total_derivative(
-    expr: Union[Symbol, Expression],
-    symbols: Iterable[Symbol],
-    symbols_dot: Iterable[Symbol],
-    symbols_ddot: Iterable[Symbol],
-) -> Expression:
-    """
-    Computes the second-order total derivative of an expression with respect to a set of symbols.
-
-    This function takes an expression and computes its second-order total derivative
-    using provided symbols, their first-order derivatives, and their second-order
-    derivatives. The computation internally constructs a Hessian matrix of the
-    expression and multiplies it by a vector that combines the provided derivative
-    data.
-
-    :param expr: The mathematical expression whose second-order total derivative is to be computed.
-    :param symbols: Iterable containing the symbols with respect to which the derivative is calculated.
-    :param symbols_dot: Iterable containing the first-order derivatives of the symbols.
-    :param symbols_ddot: Iterable containing the second-order derivatives of the symbols.
-    :return: The computed second-order total derivative, returned as an `Expression`.
-    """
-    symbols = Expression(symbols)
-    symbols_dot = Expression(symbols_dot)
-    symbols_ddot = Expression(symbols_ddot)
-    v = []
-    for i in range(len(symbols)):
-        for j in range(len(symbols)):
-            if i == j:
-                v.append(symbols_ddot[i].s)
-            else:
-                v.append(symbols_dot[i].s * symbols_dot[j].s)
-    v = Expression(v)
-    H = Expression(ca.hessian(expr.s, symbols.s)[0])
-    H = H.reshape((1, len(H) ** 2))
-    return H.dot(v)
 
 
 def sign(x: ScalarData) -> Expression:
@@ -2909,7 +2916,7 @@ def solve_for(
     :return: The estimated value of `x` that solves the equation for the given expression and target value.
     :raises ValueError: If no solution is found within the allowed number of steps or if convergence criteria are not met.
     """
-    f_dx = jacobian(expression, expression.free_symbols()).compile()
+    f_dx = expression.jacobian(expression.free_symbols()).compile()
     f = expression.compile()
     x = start_value
     for tries in range(max_tries):
@@ -2940,33 +2947,6 @@ def gauss(n: ScalarData) -> Expression:
     :return: The sum of the first `n` natural numbers.
     """
     return (n**2 + n) / 2
-
-
-def substitute(
-    expression: Union[Symbol, Expression],
-    old_symbols: List[Symbol],
-    new_symbols: List[Union[Symbol, Expression]],
-) -> Expression:
-    """
-    Replace symbols in an expression with new symbols or expressions.
-
-    This function substitutes symbols in the given expression with the provided
-    new symbols or expressions. It ensures that the original expression remains
-    unaltered and creates a new instance with the substitutions applied.
-
-    :param expression: The input mathematical expression that will undergo symbol replacement.
-    :param old_symbols: A list of symbols in the expression which need to be replaced.
-    :param new_symbols: A list of new symbols or expressions which will replace the old symbols.
-        The length of this list must correspond to the `old_symbols` list.
-    :return: A new expression with the specified symbols replaced.
-    """
-    sx = expression.s
-    old_symbols = Expression([_to_sx(s) for s in old_symbols]).s
-    new_symbols = Expression([_to_sx(s) for s in new_symbols]).s
-    sx = ca.substitute(sx, old_symbols, new_symbols)
-    result = copy(expression)
-    result.s = sx
-    return result
 
 
 def is_true_symbol(expr: Expression) -> bool:
@@ -3017,12 +2997,6 @@ def is_unknown3_symbol(expr: Expression) -> bool:
         return False
 
 
-def is_constant(expr: Expression) -> bool:
-    if isinstance(expr, (float, int)):
-        return True
-    return len(free_symbols(_to_sx(expr))) == 0
-
-
 def det(expr: Union[Expression, RotationMatrix, TransformationMatrix]) -> Expression:
     """
     Calculate the determinant of the given expression.
@@ -3037,23 +3011,6 @@ def det(expr: Union[Expression, RotationMatrix, TransformationMatrix]) -> Expres
     :return: An `Expression` representing the determinant of the input.
     """
     return Expression(ca.det(expr.s))
-
-
-def distance_projected_on_vector(
-    point1: Point3, point2: Point3, vector: Vector3
-) -> Expression:
-    dist = point1 - point2
-    projection = dist @ vector
-    return projection
-
-
-def distance_vector_projected_on_plane(
-    point1: Point3, point2: Point3, normal_vector: Vector3
-) -> Vector3:
-    dist = point1 - point2
-    angle = dist @ normal_vector
-    projection = dist - normal_vector * angle
-    return projection
 
 
 def replace_with_three_logic(expr: Expression) -> Expression:
@@ -3089,13 +3046,3 @@ def replace_with_three_logic(expr: Expression) -> Expression:
             replace_with_three_logic(cas_expr.dep(1)),
         )
     return expr
-
-
-def is_inf(expr: Expression) -> bool:
-    cas_expr = _to_sx(expr)
-    if is_constant(expr):
-        return np.isinf(ca.evalf(expr).full()[0][0])
-    for arg in range(cas_expr.n_dep()):
-        if is_inf(cas_expr.dep(arg)):
-            return True
-    return False
