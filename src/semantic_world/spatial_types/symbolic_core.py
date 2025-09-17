@@ -663,7 +663,7 @@ class Symbol(SymbolicType, BasicOperatorMixin):
 
     name: str
 
-    casadi_sx: ca.SX = field(init=False, default_factory=lambda: ca.SX.sym("s"))
+    casadi_sx: ca.SX = field(init=False)
 
     _registry: ClassVar[Dict[str, Symbol]] = {}
     """

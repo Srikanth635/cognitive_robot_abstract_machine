@@ -661,9 +661,43 @@ class TestExpression:
         expected = np.dot(u, v)
         assert_allclose(result, expected)
 
-    def test_init(self):
+    def test_from_iterable_symbols(self):
         symbols = cas.create_symbols(23)
         e = cas.Expression.from_iterable(symbols)
+        for i, s in enumerate(symbols):
+            assert s.equivalent(e[i])
+
+    def test_from_iterable_np(self):
+        reference = np.array([1, 2, 3, 4])
+        e = cas.Expression.from_iterable(reference)
+        assert_allclose(e, reference)
+
+    def test_from_iterable_np_2d(self):
+        reference = np.array([1, 2, 3, 4]).reshape((2, 2))
+        e = cas.Expression.from_iterable(reference)
+        assert_allclose(e, reference)
+
+    def test_from_iterable_list(self):
+        reference = [1, 2, 3, 4]
+        e = cas.Expression.from_iterable(reference)
+        assert_allclose(e, reference)
+
+    def test_from_iterable_list_2d(self):
+        reference = np.array([1, 2, 3, 4]).reshape((2, 2)).tolist()
+        e = cas.Expression.from_iterable(reference)
+        assert_allclose(e, reference)
+
+    def test_from_scalar(self):
+        assert_allclose(cas.Expression.from_scalar(1), 1)
+        assert_allclose(cas.Expression.from_scalar(1.337), 1.337)
+
+    def test_from_symbolic_type(self):
+        assert cas.Expression.from_symbolic_type(cas.Symbol("s")).equivalent(
+            cas.Symbol("s")
+        )
+        assert cas.Expression.from_symbolic_type(cas.TransformationMatrix()).equivalent(
+            cas.TransformationMatrix()
+        )
 
     def test_pretty_str(self):
         e = cas.Expression.eye(4)
@@ -2724,6 +2758,12 @@ class TestCASWrapper:
         assert str(result[0]) == "a"
         assert str(result[1]) == "b"
         assert str(result[2]) == "c"
+
+    def test_create_symbols2(self):
+        result = cas.create_symbols(3)
+        assert str(result[0]) == "s_0"
+        assert str(result[1]) == "s_1"
+        assert str(result[2]) == "s_2"
 
     def test_vstack(self):
         m = np.eye(4)

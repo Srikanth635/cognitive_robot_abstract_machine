@@ -1,5 +1,5 @@
 import keyword
-from typing import Union
+from typing import Union, Iterable
 
 import hypothesis.strategies as st
 import numpy as np
@@ -15,9 +15,7 @@ BIG_NUMBER = 1e100
 SMALL_NUMBER = 1e-100
 
 all_expressions_float_np = Union[
-    cas.SymbolicType,
-    float,
-    np.ndarray,
+    cas.SymbolicType, float, np.ndarray, Iterable[float], Iterable[Iterable[float]]
 ]
 
 
