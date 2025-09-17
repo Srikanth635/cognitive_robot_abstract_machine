@@ -1,2 +1,8 @@
-from .symbolic_core import *
-from .spatial_types import *
+from .spatial_types import (
+    RotationMatrix,
+    Vector3,
+    Point3,
+    TransformationMatrix,
+    ReferenceFrameMixin,
+    Quaternion,
+)

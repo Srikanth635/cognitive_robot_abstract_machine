@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable, Tuple
+from typing import Iterable, Tuple, Union
 
 from typing_extensions import Optional, List, Type, TYPE_CHECKING
 
@@ -52,7 +52,9 @@ class SpatialTypesError(UsageError):
 
 class WrongDimensionsError(SpatialTypesError):
     def __init__(
-        self, expected_dimensions: Tuple[int, int], actual_dimensions: Tuple[int, int]
+        self,
+        expected_dimensions: Union[Tuple[int, int], str],
+        actual_dimensions: Tuple[int, int],
     ):
         msg = f"Expected {expected_dimensions} dimensions, but got {actual_dimensions}."
         super().__init__(msg)
