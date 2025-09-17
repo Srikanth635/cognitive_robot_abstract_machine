@@ -4,8 +4,7 @@ import pytest
 import scipy
 from hypothesis import given, assume
 
-import semantic_world.spatial_types.math as giskard_math
-import semantic_world.spatial_types.spatial_types as cas
+import semantic_world.spatial_types as cas
 from semantic_world.exceptions import HasFreeSymbolsError, WrongDimensionsError
 from .utils_for_tests import (
     float_no_nan_no_inf,
@@ -61,7 +60,7 @@ class TestLogic3:
     def test_and3(self):
         s = cas.Symbol("a")
         s2 = cas.Symbol("b")
-        expr = cas.ternary_logic_and(s, s2)
+        expr = cas.trinary_logic_and(s, s2)
         f = expr.compile()
         for i in self.values:
             for j in self.values:
@@ -74,7 +73,7 @@ class TestLogic3:
     def test_or3(self):
         s = cas.Symbol("a")
         s2 = cas.Symbol("b")
-        expr = cas.ternary_logic_or(s, s2)
+        expr = cas.trinary_logic_or(s, s2)
         f = expr.compile()
         for i in self.values:
             for j in self.values:
@@ -86,7 +85,7 @@ class TestLogic3:
 
     def test_not3(self):
         s = cas.Symbol("muh")
-        expr = cas.ternary_logic_not(s)
+        expr = cas.trinary_logic_not(s)
         f = expr.compile()
         for i in self.values:
             expected = logic_not(i)
@@ -664,7 +663,7 @@ class TestExpression:
 
     def test_init(self):
         symbols = cas.create_symbols(23)
-        e = cas.Expression(symbols)
+        e = cas.Expression.from_iterable(symbols)
 
     def test_pretty_str(self):
         e = cas.Expression.eye(4)
@@ -864,21 +863,23 @@ class TestExpression:
 class TestRotationMatrix:
     @given(quaternion(), quaternion())
     def test_rotation_distance(self, q1, q2):
-        m1 = giskard_math.rotation_matrix_from_quaternion(*q1)
-        m2 = giskard_math.rotation_matrix_from_quaternion(*q2)
+        m1 = reference_implementations.rotation_matrix_from_quaternion(*q1)
+        m2 = reference_implementations.rotation_matrix_from_quaternion(*q2)
         actual_angle = cas.RotationMatrix(m1).rotational_error(cas.RotationMatrix(m2))
-        _, expected_angle = giskard_math.axis_angle_from_rotation_matrix(m1.T.dot(m2))
+        _, expected_angle = reference_implementations.axis_angle_from_rotation_matrix(
+            m1.T.dot(m2)
+        )
         expected_angle = expected_angle
         try:
             assert_allclose(
-                giskard_math.shortest_angular_distance(
+                reference_implementations.shortest_angular_distance(
                     actual_angle.to_np(), expected_angle
                 ),
                 0,
             )
         except AssertionError:
             assert_allclose(
-                giskard_math.shortest_angular_distance(
+                reference_implementations.shortest_angular_distance(
                     actual_angle.to_np(), -expected_angle
                 ),
                 0,
@@ -909,7 +910,7 @@ class TestRotationMatrix:
     def test_x_y_z_vector(self):
         v = np.array([1, 1, 1])
         v = v / np.linalg.norm(v)
-        R_ref = giskard_math.rotation_matrix_from_axis_angle(v, 1)
+        R_ref = reference_implementations.rotation_matrix_from_axis_angle(v, 1)
         R = cas.RotationMatrix().from_axis_angle(cas.Vector3.unit_vector(1, 1, 1), 1)
         assert_allclose(R.x_vector(), R_ref[:, 0])
         assert_allclose(R.y_vector(), R_ref[:, 1])
@@ -927,7 +928,7 @@ class TestRotationMatrix:
     def test_from_vectors(self):
         v = np.array([1, 1, 1])
         v = v / np.linalg.norm(v)
-        R_ref = giskard_math.rotation_matrix_from_axis_angle(v, 1)
+        R_ref = reference_implementations.rotation_matrix_from_axis_angle(v, 1)
         x = R_ref[:, 0]
         y = R_ref[:, 1]
         z = R_ref[:, 2]
@@ -947,37 +948,43 @@ class TestRotationMatrix:
     @given(quaternion())
     def test_from_quaternion(self, q):
         actual = cas.RotationMatrix.from_quaternion(cas.Quaternion.from_iterable(q))
-        expected = giskard_math.rotation_matrix_from_quaternion(*q)
+        expected = reference_implementations.rotation_matrix_from_quaternion(*q)
         assert_allclose(actual, expected)
 
     @given(random_angle(), random_angle(), random_angle())
     def test_from_rpy(self, roll, pitch, yaw):
         m1 = cas.RotationMatrix.from_rpy(roll, pitch, yaw)
-        m2 = giskard_math.rotation_matrix_from_rpy(roll, pitch, yaw)
+        m2 = reference_implementations.rotation_matrix_from_rpy(roll, pitch, yaw)
         assert_allclose(m1, m2)
 
     @given(unit_vector(length=3), random_angle())
     def test_rotation3_axis_angle(self, axis, angle):
         assert_allclose(
             cas.RotationMatrix.from_axis_angle(axis, angle),
-            giskard_math.rotation_matrix_from_axis_angle(np.array(axis), angle),
+            reference_implementations.rotation_matrix_from_axis_angle(
+                np.array(axis), angle
+            ),
         )
 
     @given(quaternion())
     def test_axis_angle_from_matrix(self, q):
-        m = giskard_math.rotation_matrix_from_quaternion(*q)
+        m = reference_implementations.rotation_matrix_from_quaternion(*q)
 
         actual_axis = cas.RotationMatrix(m).to_axis_angle()[0]
         actual_angle = cas.RotationMatrix(m).to_axis_angle()[1]
 
-        expected_axis, expected_angle = giskard_math.axis_angle_from_rotation_matrix(m)
+        expected_axis, expected_angle = (
+            reference_implementations.axis_angle_from_rotation_matrix(m)
+        )
         compare_axis_angle(actual_angle, actual_axis[:3], expected_angle, expected_axis)
 
         assert actual_axis[-1].to_np() == 0
 
     @given(unit_vector(length=3), angle_positive())
     def test_axis_angle_from_matrix2(self, expected_axis, expected_angle):
-        m = giskard_math.rotation_matrix_from_axis_angle(expected_axis, expected_angle)
+        m = reference_implementations.rotation_matrix_from_axis_angle(
+            expected_axis, expected_angle
+        )
         actual_axis = cas.RotationMatrix(m).to_axis_angle()[0]
         actual_angle = cas.RotationMatrix(m).to_axis_angle()[1]
         compare_axis_angle(actual_angle, actual_axis[:3], expected_angle, expected_axis)
@@ -985,12 +992,12 @@ class TestRotationMatrix:
 
     @given(unit_vector(4))
     def test_rpy_from_matrix(self, q):
-        expected = giskard_math.rotation_matrix_from_quaternion(*q)
+        expected = reference_implementations.rotation_matrix_from_quaternion(*q)
 
         roll = cas.RotationMatrix(expected).to_rpy()[0]
         pitch = cas.RotationMatrix(expected).to_rpy()[1]
         yaw = cas.RotationMatrix(expected).to_rpy()[2]
-        actual = giskard_math.rotation_matrix_from_rpy(
+        actual = reference_implementations.rotation_matrix_from_rpy(
             roll.to_np()[0], pitch.to_np()[0], yaw.to_np()[0]
         )
 
@@ -998,7 +1005,7 @@ class TestRotationMatrix:
 
     @given(unit_vector(4))
     def test_rpy_from_matrix2(self, q):
-        matrix = giskard_math.rotation_matrix_from_quaternion(*q)
+        matrix = reference_implementations.rotation_matrix_from_quaternion(*q)
         roll = cas.RotationMatrix(matrix).to_rpy()[0]
         pitch = cas.RotationMatrix(matrix).to_rpy()[1]
         yaw = cas.RotationMatrix(matrix).to_rpy()[2]
@@ -2049,7 +2056,9 @@ class TestTransformationMatrix:
         random_angle(),
     )
     def test_frame3_axis_angle(self, x, y, z, axis, angle):
-        r2 = giskard_math.rotation_matrix_from_axis_angle(np.array(axis), angle)
+        r2 = reference_implementations.rotation_matrix_from_axis_angle(
+            np.array(axis), angle
+        )
         r2[0, 3] = x
         r2[1, 3] = y
         r2[2, 3] = z
@@ -2067,7 +2076,7 @@ class TestTransformationMatrix:
         random_angle(),
     )
     def test_frame3_rpy(self, x, y, z, roll, pitch, yaw):
-        r2 = giskard_math.rotation_matrix_from_rpy(roll, pitch, yaw)
+        r2 = reference_implementations.rotation_matrix_from_rpy(roll, pitch, yaw)
         r2[0, 3] = x
         r2[1, 3] = y
         r2[2, 3] = z
@@ -2082,7 +2091,7 @@ class TestTransformationMatrix:
         unit_vector(4),
     )
     def test_frame3_quaternion(self, x, y, z, q):
-        r2 = giskard_math.rotation_matrix_from_quaternion(*q)
+        r2 = reference_implementations.rotation_matrix_from_quaternion(*q)
         r2[0, 3] = x
         r2[1, 3] = y
         r2[2, 3] = z
@@ -2099,7 +2108,7 @@ class TestTransformationMatrix:
         quaternion(),
     )
     def test_inverse_frame(self, x, y, z, q):
-        f = giskard_math.rotation_matrix_from_quaternion(*q)
+        f = reference_implementations.rotation_matrix_from_quaternion(*q)
         f[0, 3] = x
         f[1, 3] = y
         f[2, 3] = z
@@ -2150,7 +2159,7 @@ class TestTransformationMatrix:
             point=cas.Point3(x, y, z),
             rotation_matrix=cas.RotationMatrix.from_quaternion(cas.Quaternion(*q)),
         ).to_rotation_matrix()
-        r2 = giskard_math.rotation_matrix_from_quaternion(*q)
+        r2 = reference_implementations.rotation_matrix_from_quaternion(*q)
         assert_allclose(r1, r2)
 
     def test_rot_of2(self):
@@ -2623,13 +2632,13 @@ class TestQuaternion:
     )
     def test_slerp(self, q1, q2, t):
         r1 = cas.Quaternion.from_iterable(q1).slerp(cas.Quaternion.from_iterable(q2), t)
-        r2 = giskard_math.quaternion_slerp(q1, q2, t)
+        r2 = reference_implementations.quaternion_slerp(q1, q2, t)
         compare_orientations(r1, r2)
 
     @given(unit_vector(length=3), random_angle())
     def test_quaternion_from_axis_angle1(self, axis, angle):
         actual = cas.Quaternion.from_axis_angle(cas.Vector3.from_iterable(axis), angle)
-        expected = giskard_math.quaternion_from_axis_angle(axis, angle)
+        expected = reference_implementations.quaternion_from_axis_angle(axis, angle)
         assert_allclose(actual, expected)
 
     @given(quaternion(), quaternion())
@@ -2637,13 +2646,13 @@ class TestQuaternion:
         q_expr = cas.Quaternion.from_iterable(q)
         p_expr = cas.Quaternion.from_iterable(p)
         actual = q_expr.multiply(p_expr)
-        expected = giskard_math.quaternion_multiply(q, p)
+        expected = reference_implementations.quaternion_multiply(q, p)
         compare_orientations(actual, expected)
 
     @given(quaternion())
     def test_quaternion_conjugate(self, q):
         actual = cas.Quaternion.from_iterable(q).conjugate()
-        expected = giskard_math.quaternion_conjugate(q)
+        expected = reference_implementations.quaternion_conjugate(q)
         compare_orientations(actual, expected)
 
     @given(quaternion(), quaternion())
@@ -2651,14 +2660,14 @@ class TestQuaternion:
         q1_expr = cas.Quaternion.from_iterable(q1)
         q2_expr = cas.Quaternion.from_iterable(q2)
         actual = q1_expr.diff(q2_expr)
-        expected = giskard_math.quaternion_multiply(
-            giskard_math.quaternion_conjugate(q1), q2
+        expected = reference_implementations.quaternion_multiply(
+            reference_implementations.quaternion_conjugate(q1), q2
         )
         compare_orientations(actual, expected)
 
     @given(quaternion())
     def test_axis_angle_from_quaternion(self, q):
-        axis2, angle2 = giskard_math.axis_angle_from_quaternion(*q)
+        axis2, angle2 = reference_implementations.axis_angle_from_quaternion(*q)
         axis = cas.Quaternion.from_iterable(q).to_axis_angle()[0]
         angle = cas.Quaternion.from_iterable(q).to_axis_angle()[1]
         compare_axis_angle(angle, axis[:3], angle2, axis2)
@@ -2666,7 +2675,7 @@ class TestQuaternion:
 
     def test_axis_angle_from_quaternion2(self):
         q = (0, 0, 0, 1.0000001)
-        axis2, angle2 = giskard_math.axis_angle_from_quaternion(*q)
+        axis2, angle2 = reference_implementations.axis_angle_from_quaternion(*q)
         axis = cas.Quaternion.from_iterable(q).to_axis_angle()[0]
         angle = cas.Quaternion.from_iterable(q).to_axis_angle()[1]
         compare_axis_angle(angle, axis[:3], angle2, axis2)
@@ -2675,13 +2684,13 @@ class TestQuaternion:
     @given(random_angle(), random_angle(), random_angle())
     def test_quaternion_from_rpy(self, roll, pitch, yaw):
         q = cas.Quaternion.from_rpy(roll, pitch, yaw)
-        q2 = giskard_math.quaternion_from_rpy(roll, pitch, yaw)
+        q2 = reference_implementations.quaternion_from_rpy(roll, pitch, yaw)
         compare_orientations(q, q2)
 
     @given(quaternion())
     def test_quaternion_from_matrix(self, q):
-        matrix = giskard_math.rotation_matrix_from_quaternion(*q)
-        q2 = giskard_math.quaternion_from_rotation_matrix(matrix)
+        matrix = reference_implementations.rotation_matrix_from_quaternion(*q)
+        q2 = reference_implementations.quaternion_from_rotation_matrix(matrix)
         q1_2 = cas.Quaternion.from_rotation_matrix(cas.RotationMatrix(matrix))
         compare_orientations(q2, q1_2)
 
@@ -2977,7 +2986,7 @@ class TestCASWrapper:
 
     @given(unit_vector(4))
     def test_trace(self, q):
-        m = giskard_math.rotation_matrix_from_quaternion(*q)
+        m = reference_implementations.rotation_matrix_from_quaternion(*q)
         assert_allclose(cas.trace(m), np.trace(m))
 
     @given(float_no_nan_no_inf(), float_no_nan_no_inf())
@@ -2987,21 +2996,26 @@ class TestCASWrapper:
 
     @given(float_no_nan_no_inf())
     def test_normalize_angle_positive(self, a):
-        expected = giskard_math.normalize_angle_positive(a)
+        expected = reference_implementations.normalize_angle_positive(a)
         actual = cas.normalize_angle_positive(a)
         assert_allclose(
-            giskard_math.shortest_angular_distance(actual.to_np(), expected), 0.0
+            reference_implementations.shortest_angular_distance(
+                actual.to_np(), expected
+            ),
+            0.0,
         )
 
     @given(float_no_nan_no_inf())
     def test_normalize_angle(self, a):
-        ref_r = giskard_math.normalize_angle(a)
+        ref_r = reference_implementations.normalize_angle(a)
         assert_allclose(cas.normalize_angle(a), ref_r)
 
     @given(float_no_nan_no_inf(), float_no_nan_no_inf())
     def test_shorted_angular_distance(self, angle1, angle2):
         try:
-            expected = giskard_math.shortest_angular_distance(angle1, angle2)
+            expected = reference_implementations.shortest_angular_distance(
+                angle1, angle2
+            )
         except ValueError:
             expected = np.nan
         actual = cas.shortest_angular_distance(angle1, angle2)
@@ -3009,8 +3023,8 @@ class TestCASWrapper:
 
     @given(unit_vector(4), unit_vector(4))
     def test_entrywise_product(self, q1, q2):
-        m1 = giskard_math.rotation_matrix_from_quaternion(*q1)
-        m2 = giskard_math.rotation_matrix_from_quaternion(*q2)
+        m1 = reference_implementations.rotation_matrix_from_quaternion(*q1)
+        m2 = reference_implementations.rotation_matrix_from_quaternion(*q2)
         r1 = cas.entrywise_product(m1, m2)
         r2 = m1 * m2
         assert_allclose(r1, r2)

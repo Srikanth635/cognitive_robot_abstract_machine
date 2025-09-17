@@ -2,8 +2,8 @@ from typing_extensions import Tuple, Union, List
 
 import numpy as np
 
-from .derivatives import Derivatives
-from ..datastructures.types import NpMatrix4x4, AnyMatrix4x4
+from semantic_world.datastructures.types import AnyMatrix4x4, NpMatrix4x4
+from semantic_world.spatial_types.derivatives import Derivatives
 
 
 def quaternion_multiply(quaternion1: np.ndarray, quaternion0: np.ndarray) -> np.ndarray:
@@ -299,20 +299,6 @@ def point_to_single_caster_angle(px, py, caster_v, forward_velocity):
     else:
         angular_velocity = max_angular_velocity
     return angle, c_V_goal
-
-
-def point_to_caster_angles(px, py):
-    forward_velocity = 2
-    # center_P_fl = np.array([1, 1, 0, 1])
-    # print(f'fl {point_to_single_caster_angle(px, py, center_P_fl, forward_velocity)}')
-    # center_P_fr = np.array([1, -1, 0, 1])
-    # print(f'fr {point_to_single_caster_angle(px, py, center_P_fr, forward_velocity)}')
-    # center_P_bl = np.array([-1, 1, 0, 1])
-    # print(f'bl {point_to_single_caster_angle(px, py, center_P_bl, forward_velocity)}')
-    # center_P_br = np.array([-1, -1, 0, 1])
-    # print(f'br {point_to_single_caster_angle(px, py, center_P_br, forward_velocity)}')
-    center = np.array([0, 0, 0, 1])
-    print(f"center {point_to_single_caster_angle(px, py, center, forward_velocity)}")
 
 
 def shortest_angular_distance(from_angle, to_angle):
