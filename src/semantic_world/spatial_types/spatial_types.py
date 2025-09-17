@@ -32,10 +32,9 @@ import casadi as ca
 from scipy import sparse as sp
 
 from ..exceptions import HasFreeSymbolsError, NotSquareMatrixError, WrongDimensionsError
-from ..world_description.world_entity import KinematicStructureEntity
 
 if TYPE_CHECKING:
-    pass
+    from ..world_description.world_entity import KinematicStructureEntity
 
 EPS: float = sys.float_info.epsilon * 4.0
 pi: float = ca.pi
@@ -315,7 +314,7 @@ class SymbolicType:
     A wrapper around CasADi's ca.SX, with better usability
     """
 
-    casadi_sx: ca.SX = field(default_factory=ca.SX)
+    casadi_sx: ca.SX = field(kw_only=True, default_factory=ca.SX)
     """
     Reference to the casadi data structure of type casadi.SX
     """
@@ -672,7 +671,7 @@ class Symbol(SymbolicType, BasicOperatorMixin):
 
     name: str = field(kw_only=True)
 
-    casadi_sx: ca.SX = field(init=False, default=None)
+    casadi_sx: ca.SX = field(kw_only=True, init=False, default=None)
 
     _registry: ClassVar[Dict[str, Symbol]] = {}
     """
@@ -717,7 +716,7 @@ class Expression(
     leverages symbolic computation libraries for handling low-level symbolic details efficiently.
     """
 
-    casadi_sx: ca.SX = field(default_factory=lambda: ca.SX(0))
+    casadi_sx: ca.SX = field(kw_only=True, default_factory=lambda: ca.SX())
 
     data: InitVar[
         Optional[
@@ -744,10 +743,6 @@ class Expression(
             ]
         ],
     ):
-        if not isinstance(self.casadi_sx, ca.SX):
-            raise TypeError(
-                f'The argument "data" must be of type {ca.SX}, not {type(data)}'
-            )
         if data is None:
             return
         if isinstance(data, ca.SX):
@@ -765,6 +760,7 @@ class Expression(
         x = len(data)
         if x == 0:
             self.casadi_sx = ca.SX()
+            return
         if (
             isinstance(data[0], list)
             or isinstance(data[0], tuple)
@@ -1492,8 +1488,10 @@ def _recreate_return_type(thing: Any, return_type: Type) -> Any:
 
 
 def if_else(
-    condition: ScalarData, if_result: AnyCasType, else_result: AnyCasType
-) -> AnyCasType:
+    condition: ScalarData,
+    if_result: GenericSymbolicType,
+    else_result: GenericSymbolicType,
+) -> GenericSymbolicType:
     """
     Creates an expression that represents:
     if condition:
@@ -1521,8 +1519,11 @@ def if_else(
 
 
 def if_greater(
-    a: ScalarData, b: ScalarData, if_result: AnyCasType, else_result: AnyCasType
-) -> AnyCasType:
+    a: ScalarData,
+    b: ScalarData,
+    if_result: GenericSymbolicType,
+    else_result: GenericSymbolicType,
+) -> GenericSymbolicType:
     """
     Creates an expression that represents:
     if a > b:
@@ -1536,8 +1537,11 @@ def if_greater(
 
 
 def if_less(
-    a: ScalarData, b: ScalarData, if_result: AnyCasType, else_result: AnyCasType
-) -> AnyCasType:
+    a: ScalarData,
+    b: ScalarData,
+    if_result: GenericSymbolicType,
+    else_result: GenericSymbolicType,
+) -> GenericSymbolicType:
     """
     Creates an expression that represents:
     if a < b:
@@ -1551,8 +1555,10 @@ def if_less(
 
 
 def if_greater_zero(
-    condition: ScalarData, if_result: AnyCasType, else_result: AnyCasType
-) -> AnyCasType:
+    condition: ScalarData,
+    if_result: GenericSymbolicType,
+    else_result: GenericSymbolicType,
+) -> GenericSymbolicType:
     """
     Creates an expression that represents:
     if condition > 0:
@@ -1565,8 +1571,10 @@ def if_greater_zero(
 
 
 def if_greater_eq_zero(
-    condition: ScalarData, if_result: AnyCasType, else_result: AnyCasType
-) -> AnyCasType:
+    condition: ScalarData,
+    if_result: GenericSymbolicType,
+    else_result: GenericSymbolicType,
+) -> GenericSymbolicType:
     """
     Creates an expression that represents:
     if condition >= 0:
@@ -1578,8 +1586,11 @@ def if_greater_eq_zero(
 
 
 def if_greater_eq(
-    a: ScalarData, b: ScalarData, if_result: AnyCasType, else_result: AnyCasType
-) -> AnyCasType:
+    a: ScalarData,
+    b: ScalarData,
+    if_result: GenericSymbolicType,
+    else_result: GenericSymbolicType,
+) -> GenericSymbolicType:
     """
     Creates an expression that represents:
     if a >= b:
@@ -1593,8 +1604,11 @@ def if_greater_eq(
 
 
 def if_less_eq(
-    a: ScalarData, b: ScalarData, if_result: AnyCasType, else_result: AnyCasType
-) -> AnyCasType:
+    a: ScalarData,
+    b: ScalarData,
+    if_result: GenericSymbolicType,
+    else_result: GenericSymbolicType,
+) -> GenericSymbolicType:
     """
     Creates an expression that represents:
     if a <= b:
@@ -1606,8 +1620,10 @@ def if_less_eq(
 
 
 def if_eq_zero(
-    condition: ScalarData, if_result: AnyCasType, else_result: AnyCasType
-) -> AnyCasType:
+    condition: ScalarData,
+    if_result: GenericSymbolicType,
+    else_result: GenericSymbolicType,
+) -> GenericSymbolicType:
     """
     Creates an expression that represents:
     if condition == 0:
@@ -1619,8 +1635,11 @@ def if_eq_zero(
 
 
 def if_eq(
-    a: ScalarData, b: ScalarData, if_result: AnyCasType, else_result: AnyCasType
-) -> AnyCasType:
+    a: ScalarData,
+    b: ScalarData,
+    if_result: GenericSymbolicType,
+    else_result: GenericSymbolicType,
+) -> GenericSymbolicType:
     """
     Creates an expression that represents:
     if a == b:
@@ -1635,9 +1654,9 @@ def if_eq(
 
 def if_eq_cases(
     a: ScalarData,
-    b_result_cases: Iterable[Tuple[ScalarData, AnyCasType]],
-    else_result: AnyCasType,
-) -> AnyCasType:
+    b_result_cases: Iterable[Tuple[ScalarData, GenericSymbolicType]],
+    else_result: GenericSymbolicType,
+) -> GenericSymbolicType:
     """
     if a == b_result_cases[0][0]:
         return b_result_cases[0][1]
@@ -1658,8 +1677,9 @@ def if_eq_cases(
 
 
 def if_cases(
-    cases: Sequence[Tuple[ScalarData, AnyCasType]], else_result: AnyCasType
-) -> AnyCasType:
+    cases: Sequence[Tuple[ScalarData, GenericSymbolicType]],
+    else_result: GenericSymbolicType,
+) -> GenericSymbolicType:
     """
     if cases[0][0]:
         return cases[0][1]
@@ -1681,9 +1701,9 @@ def if_cases(
 
 def if_less_eq_cases(
     a: ScalarData,
-    b_result_cases: Sequence[Tuple[ScalarData, AnyCasType]],
-    else_result: AnyCasType,
-) -> AnyCasType:
+    b_result_cases: Sequence[Tuple[ScalarData, GenericSymbolicType]],
+    else_result: GenericSymbolicType,
+) -> GenericSymbolicType:
     """
     This only works if b_result_cases is sorted in ascending order.
     if a <= b_result_cases[0][0]:
@@ -1719,7 +1739,9 @@ class ReferenceFrameMixin:
 
     """
 
-    reference_frame: Optional[KinematicStructureEntity] = None
+    reference_frame: Optional[KinematicStructureEntity] = field(
+        kw_only=True, default=None
+    )
     """
     The reference frame associated with the object. Can be None if no reference frame is required or applicable.
     """
@@ -1752,12 +1774,12 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMi
     Whether to perform a sanity check on the matrix data. Can be skipped for performance reasons.
     """
 
-    casadi_sx: ca.SX = field(default_factory=lambda: ca.SX.eye(4))
+    casadi_sx: ca.SX = field(kw_only=True, default_factory=lambda: ca.SX.eye(4))
 
     def __post_init__(self, data: Optional[Matrix2dData], sanity_check: bool):
         if data is None:
             return
-        self.casadi_sx = Expression(data=data).casadi_sx
+        self.casadi_sx = copy(Expression(data=data).casadi_sx)
         if sanity_check:
             self._validate()
 
@@ -1905,7 +1927,9 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMi
     def z(self, value: ScalarData):
         self[2, 3] = value
 
-    def dot(self, other: HomogeneousSpatialType) -> HomogeneousSpatialType:
+    def dot(
+        self, other: GenericHomogeneousSpatialType
+    ) -> GenericHomogeneousSpatialType:
         if isinstance(other, (Vector3, Point3, RotationMatrix, TransformationMatrix)):
             result = ca.mtimes(self.casadi_sx, other.casadi_sx)
             if isinstance(other, Vector3):
@@ -1935,7 +1959,7 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMi
                 return result
         raise _operation_type_error(self, "dot", other)
 
-    def __matmul__(self, other: SpatialType) -> SpatialType:
+    def __matmul__(self, other: GenericSpatialType) -> GenericSpatialType:
         return self.dot(other)
 
     def inverse(self) -> TransformationMatrix:
@@ -2006,13 +2030,13 @@ class RotationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMixin):
     Whether to perform a sanity check on the matrix data. Can be skipped for performance reasons.
     """
 
-    casadi_sx: ca.SX = field(default_factory=lambda: ca.SX.eye(4))
+    casadi_sx: ca.SX = field(kw_only=True, default_factory=lambda: ca.SX.eye(4))
 
     def __post_init__(self, data: Optional[Matrix2dData], sanity_check: bool):
         if data is None:
             return
         if isinstance(data, (RotationMatrix, TransformationMatrix)):
-            self.casadi_sx = copy(data.casadi_sx)
+            self.casadi_sx[:3, :3] = copy(data.casadi_sx)[:3, :3]
             return
         self.casadi_sx = Expression(data=data).casadi_sx
         if sanity_check:
@@ -2034,7 +2058,7 @@ class RotationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMixin):
     @classmethod
     def from_axis_angle(
         cls,
-        axis: Vector3,
+        axis: Union[Vector3, NumericalArray],
         angle: ScalarData,
         reference_frame: Optional[KinematicStructureEntity] = None,
     ) -> RotationMatrix:
@@ -2043,8 +2067,8 @@ class RotationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMixin):
         https://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToMatrix/index.htm
         """
         # use casadi to prevent a bunch of Expression.__init__.py calls
-        axis = axis.casadi_sx
-        angle = angle.casadi_sx
+        axis = to_sx(axis)
+        angle = to_sx(angle)
         ct = ca.cos(angle)
         st = ca.sin(angle)
         vt = 1 - ct
@@ -2117,20 +2141,22 @@ class RotationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMixin):
             reference_frame=self.reference_frame,
         )
 
-    def dot(self, other: RotatableSpatialType) -> RotatableSpatialType:
+    def dot(self, other: GenericRotatableSpatialType) -> GenericRotatableSpatialType:
         if isinstance(other, (Vector3, RotationMatrix, TransformationMatrix)):
             result = ca.mtimes(self.casadi_sx, other.casadi_sx)
             if isinstance(other, Vector3):
                 result = Vector3.from_iterable(result)
             elif isinstance(other, RotationMatrix):
-                result = RotationMatrix(result, sanity_check=False)
+                result = RotationMatrix(data=result, sanity_check=False)
             elif isinstance(other, TransformationMatrix):
                 result = TransformationMatrix(result, sanity_check=False)
             result.reference_frame = self.reference_frame
             return result
         raise _operation_type_error(self, "dot", other)
 
-    def __matmul__(self, other: RotatableSpatialType) -> RotatableSpatialType:
+    def __matmul__(
+        self, other: GenericRotatableSpatialType
+    ) -> GenericRotatableSpatialType:
         return self.dot(other)
 
     def to_axis_angle(self) -> Tuple[Vector3, Expression]:
@@ -2205,18 +2231,10 @@ class RotationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMixin):
         roll = 0 if roll is None else roll
         pitch = 0 if pitch is None else pitch
         yaw = 0 if yaw is None else yaw
-        try:
-            roll = roll.casadi_sx
-        except AttributeError:
-            pass
-        try:
-            pitch = pitch.casadi_sx
-        except AttributeError:
-            pass
-        try:
-            yaw = yaw.casadi_sx
-        except AttributeError:
-            pass
+        roll = to_sx(roll)
+        pitch = to_sx(pitch)
+        yaw = to_sx(yaw)
+
         s = ca.SX.eye(4)
 
         s[0, 0] = ca.cos(yaw) * ca.cos(pitch)
@@ -2302,25 +2320,30 @@ class Point3(SymbolicType, ReferenceFrameMixin):
     Note that it is represented as a 4d vector, where the last entry is always a 1.
     """
 
-    x_init: InitVar[ScalarData] = 0
+    x_init: InitVar[Optional[ScalarData]] = None
     """
     X-coordinate of the point. Defaults to 0.
     """
-    y_init: InitVar[ScalarData] = 0
+    y_init: InitVar[Optional[ScalarData]] = None
     """
     Y-coordinate of the point. Defaults to 0.
     """
-    z_init: InitVar[ScalarData] = 0
+    z_init: InitVar[Optional[ScalarData]] = None
     """
     Z-coordinate of the point. Defaults to 0.
     """
 
-    casadi_sx: ca.SX = field(default_factory=lambda: ca.SX([0.0, 0.0, 0.0, 1.0]))
+    casadi_sx: ca.SX = field(
+        kw_only=True, default_factory=lambda: ca.SX([0.0, 0.0, 0.0, 1.0])
+    )
 
     def __post_init__(self, x_init: ScalarData, y_init: ScalarData, z_init: ScalarData):
-        self[0] = x_init
-        self[1] = y_init
-        self[2] = z_init
+        if x_init is not None:
+            self[0] = x_init
+        if y_init is not None:
+            self[1] = y_init
+        if z_init is not None:
+            self[2] = z_init
 
     @classmethod
     def from_iterable(
@@ -2478,7 +2501,9 @@ class Point3(SymbolicType, ReferenceFrameMixin):
         return dist, frame_P_nearest
 
     def to_vector3(self) -> Vector3:
-        return Vector3(casadi_sx=self.casadi_sx, reference_frame=self.reference_frame)
+        return Vector3(
+            casadi_sx=copy(self.casadi_sx), reference_frame=self.reference_frame
+        )
 
 
 @dataclass(eq=False)
@@ -2496,15 +2521,15 @@ class Vector3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
     Note that it is represented as a 4d vector, where the last entry is always a 0.
     """
 
-    x_init: InitVar[ScalarData] = 0
+    x_init: InitVar[Optional[ScalarData]] = None
     """
     X-coordinate of the point. Defaults to 0.
     """
-    y_init: InitVar[ScalarData] = 0
+    y_init: InitVar[Optional[ScalarData]] = None
     """
     Y-coordinate of the point. Defaults to 0.
     """
-    z_init: InitVar[ScalarData] = 0
+    z_init: InitVar[Optional[ScalarData]] = None
     """
     Z-coordinate of the point. Defaults to 0.
     """
@@ -2515,12 +2540,17 @@ class Vector3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
     It will be visualized at the origin of the vis_frame
     """
 
-    casadi_sx: ca.SX = field(default_factory=lambda: ca.SX([0.0, 0.0, 0.0, 0.0]))
+    casadi_sx: ca.SX = field(
+        kw_only=True, default_factory=lambda: ca.SX([0.0, 0.0, 0.0, 0.0])
+    )
 
     def __post_init__(self, x_init: ScalarData, y_init: ScalarData, z_init: ScalarData):
-        self[0] = x_init
-        self[1] = y_init
-        self[2] = z_init
+        if x_init is not None:
+            self[0] = x_init
+        if y_init is not None:
+            self[1] = y_init
+        if z_init is not None:
+            self[2] = z_init
 
     @classmethod
     def from_iterable(
@@ -2627,7 +2657,7 @@ class Vector3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
         return result
 
     def __mul__(self, other: ScalarData) -> Vector3:
-        if isinstance(other, (int, float, Symbol, Expression)):
+        if isinstance(other, ScalarData):
             result = Vector3.from_iterable(self.casadi_sx.__mul__(to_sx(other)))
         else:
             return NotImplemented
@@ -2643,7 +2673,7 @@ class Vector3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
         return result
 
     def __truediv__(self, other: ScalarData) -> Vector3:
-        if isinstance(other, (int, float, Symbol, Expression)):
+        if isinstance(other, ScalarData):
             result = Vector3.from_iterable(self.casadi_sx.__truediv__(to_sx(other)))
         else:
             return NotImplemented
@@ -2654,7 +2684,7 @@ class Vector3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
         self,
         other: ScalarData,
         if_nan: Optional[Vector3] = None,
-    ) -> AnyCasType:
+    ) -> GenericSymbolicType:
         """
         A version of division where no sub-expression is ever NaN. The expression would evaluate to 'if_nan', but
         you should probably never work with the 'if_nan' result. However, if one sub-expressions is NaN, the whole expression
@@ -2712,7 +2742,7 @@ class Vector3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
         :return: The projection of the input vector onto the cone's boundary.
         """
         frame_V_current = self
-        frame_V_cone_axis_normed = deepcopy(frame_V_cone_axis)
+        frame_V_cone_axis_normed = copy(frame_V_cone_axis)
         frame_V_cone_axis_normed.scale(1)
         beta = frame_V_current @ frame_V_cone_axis_normed
         norm_v = frame_V_current.norm()
@@ -2767,7 +2797,9 @@ class Vector3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
         )
 
     def to_point3(self) -> Point3:
-        return Point3(casadi_sx=self.casadi_sx, reference_frame=self.reference_frame)
+        return Point3(
+            casadi_sx=copy(self.casadi_sx), reference_frame=self.reference_frame
+        )
 
 
 @dataclass(eq=False)
@@ -2784,19 +2816,19 @@ class Quaternion(SymbolicType, ReferenceFrameMixin):
     to represent orientations and rotations.
     """
 
-    x_init: InitVar[ScalarData] = 0
+    x_init: InitVar[Optional[ScalarData]] = None
     """
     X-coordinate of the point. Defaults to 0.
     """
-    y_init: InitVar[ScalarData] = 0
+    y_init: InitVar[Optional[ScalarData]] = None
     """
     Y-coordinate of the point. Defaults to 0.
     """
-    z_init: InitVar[ScalarData] = 0
+    z_init: InitVar[Optional[ScalarData]] = None
     """
     Z-coordinate of the point. Defaults to 0.
     """
-    w_init: InitVar[ScalarData] = 1
+    w_init: InitVar[Optional[ScalarData]] = None
     """
     W-coordinate of the point. Defaults to 0.
     """
@@ -2807,7 +2839,9 @@ class Quaternion(SymbolicType, ReferenceFrameMixin):
     It will be visualized at the origin of the vis_frame
     """
 
-    casadi_sx: ca.SX = field(default_factory=lambda: ca.SX([0.0, 0.0, 0.0, 1.0]))
+    casadi_sx: ca.SX = field(
+        kw_only=True, default_factory=lambda: ca.SX([0.0, 0.0, 0.0, 1.0])
+    )
 
     def __post_init__(
         self,
@@ -2816,10 +2850,14 @@ class Quaternion(SymbolicType, ReferenceFrameMixin):
         z_init: ScalarData,
         w_init: ScalarData,
     ):
-        self[0] = x_init
-        self[1] = y_init
-        self[2] = z_init
-        self[3] = w_init
+        if x_init is not None:
+            self[0] = x_init
+        if y_init is not None:
+            self[1] = y_init
+        if z_init is not None:
+            self[2] = z_init
+        if w_init is not None:
+            self[3] = w_init
 
     def __neg__(self) -> Quaternion:
         return Quaternion.from_iterable(self.casadi_sx.__neg__())
@@ -3155,20 +3193,29 @@ ArrayData = Union[NumericalArray, SymbolicArray]
 Matrix2dData = Union[Numerical2dMatrix, Symbolic2dMatrix]
 
 
-SpatialType = TypeVar(
-    "SpatialType", Point3, Vector3, TransformationMatrix, RotationMatrix, Quaternion
+GenericSpatialType = TypeVar(
+    "GenericSpatialType",
+    Point3,
+    Vector3,
+    TransformationMatrix,
+    RotationMatrix,
+    Quaternion,
 )
 
-HomogeneousSpatialType = TypeVar(
-    "HomogeneousSpatialType", Point3, Vector3, TransformationMatrix, RotationMatrix
+GenericHomogeneousSpatialType = TypeVar(
+    "GenericHomogeneousSpatialType",
+    Point3,
+    Vector3,
+    TransformationMatrix,
+    RotationMatrix,
 )
 
-RotatableSpatialType = TypeVar(
-    "RotatableSpatialType", Vector3, TransformationMatrix, RotationMatrix
+GenericRotatableSpatialType = TypeVar(
+    "GenericRotatableSpatialType", Vector3, TransformationMatrix, RotationMatrix
 )
 
-AnyCasType = TypeVar(
-    "AnyCasType",
+GenericSymbolicType = TypeVar(
+    "GenericSymbolicType",
     Symbol,
     Expression,
     Point3,

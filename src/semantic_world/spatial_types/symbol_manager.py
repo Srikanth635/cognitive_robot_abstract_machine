@@ -2,7 +2,8 @@ from typing_extensions import Dict, Callable, Union, Tuple, List
 
 import numpy as np
 
-from . import Symbol, Point3, Vector3, Quaternion, TransformationMatrix, Expression
+from . import Point3, Vector3, Quaternion, TransformationMatrix
+from .spatial_types import Symbol, Expression
 from ..datastructures.types import AnyMatrix4x4
 
 Provider = Union[float, Callable[[], float]]
@@ -74,7 +75,7 @@ class SymbolManager(metaclass=SingletonMeta):
         sx = self.register_symbol_provider(f"{name}.x", lambda: provider()[0])
         sy = self.register_symbol_provider(f"{name}.y", lambda: provider()[1])
         sz = self.register_symbol_provider(f"{name}.z", lambda: provider()[2])
-        p = Point3(sx, sy, sz)
+        p = Point3(x_init=sx, y_init=sy, z_init=sz)
         return p
 
     def register_vector3(
@@ -88,7 +89,7 @@ class SymbolManager(metaclass=SingletonMeta):
         sx = self.register_symbol_provider(f"{name}.x", lambda: provider()[0])
         sy = self.register_symbol_provider(f"{name}.y", lambda: provider()[1])
         sz = self.register_symbol_provider(f"{name}.z", lambda: provider()[2])
-        v = Vector3(sx, sy, sz)
+        v = Vector3(x_init=sx, y_init=sy, z_init=sz)
         return v
 
     def register_quaternion(
@@ -103,7 +104,7 @@ class SymbolManager(metaclass=SingletonMeta):
         sy = self.register_symbol_provider(f"{name}.y", lambda: provider()[1])
         sz = self.register_symbol_provider(f"{name}.z", lambda: provider()[2])
         sw = self.register_symbol_provider(f"{name}.w", lambda: provider()[3])
-        q = Quaternion(sx, sy, sz, sw)
+        q = Quaternion(x_init=sx, y_init=sy, z_init=sz, w_init=sw)
         return q
 
     def register_transformation_matrix(
@@ -125,7 +126,7 @@ class SymbolManager(metaclass=SingletonMeta):
                     )
                 )
         symbols.append([0, 0, 0, 1])
-        root_T_tip = TransformationMatrix.from_iterable(symbols)
+        root_T_tip = TransformationMatrix(data=symbols)
         return root_T_tip
 
     def resolve_symbols(

@@ -1508,9 +1508,9 @@ class World:
 
     def transform(
         self,
-        spatial_object: cas.SpatialType,
+        spatial_object: cas.GenericSpatialType,
         target_frame: KinematicStructureEntity,
-    ) -> cas.SpatialType:
+    ) -> cas.GenericSpatialType:
         """
         Transform a given spatial object from its reference frame to a target frame.
 

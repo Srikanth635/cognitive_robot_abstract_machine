@@ -7,7 +7,7 @@ from hypothesis import assume
 from hypothesis.strategies import composite
 from numpy import pi
 
-import semantic_world.spatial_types as cas
+import semantic_world.spatial_types.spatial_types as cas
 from test_casadi.reference_implementations import shortest_angular_distance
 
 BIG_NUMBER = 1e100
@@ -51,7 +51,7 @@ def random_angle():
 def compare_axis_angle(
     actual_angle: all_expressions_float_np,
     actual_axis: all_expressions_float_np,
-    expected_angle: ScalarData,
+    expected_angle: cas.ScalarData,
     expected_axis: all_expressions_float_np,
 ):
     actual_angle = to_float_or_np(actual_angle)
