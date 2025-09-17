@@ -374,9 +374,9 @@ class QPProblem:
         )
 
         # Combine constraints
-        self.l = cas.vstack([self.lower_box_constraints, self.eq_bound_expr])
-        self.u = cas.vstack([self.upper_box_constraints, self.eq_bound_expr])
-        self.A = cas.vstack([self.box_constraint_matrix, self.neq_matrix])
+        self.l = cas.Expression.vstack([self.lower_box_constraints, self.eq_bound_expr])
+        self.u = cas.Expression.vstack([self.upper_box_constraints, self.eq_bound_expr])
+        self.A = cas.Expression.vstack([self.box_constraint_matrix, self.neq_matrix])
 
     def _setup_weights(self):
         """Setup quadratic and linear weights for the QP problem."""
@@ -493,11 +493,13 @@ class ConstraintBuilder:
         rotation_state, rotation_error = self._compute_rotation_error(root_T_tip)
 
         # Current state and jacobian
-        current_expr = cas.vstack([position_state, rotation_state])
-        eq_bound_expr = cas.vstack([position_error, rotation_error])
+        current_expr = cas.Expression.vstack([position_state, rotation_state])
+        eq_bound_expr = cas.Expression.vstack([position_error, rotation_error])
 
         J = current_expr.jacobian(active_symbols)
-        neq_matrix = cas.hstack([J * self.dt, cas.Expression.eye(6) * self.dt])
+        neq_matrix = cas.Expression.hstack(
+            [J * self.dt, cas.Expression.eye(6) * self.dt]
+        )
 
         return eq_bound_expr, neq_matrix
 

@@ -58,6 +58,12 @@ class WrongDimensionsError(SpatialTypesError):
         super().__init__(msg)
 
 
+class NotSquareMatrixError(SpatialTypesError):
+    def __init__(self, actual_dimensions: Tuple[int, int]):
+        msg = f"Expected a square matrix, but got {actual_dimensions} dimensions."
+        super().__init__(msg)
+
+
 class HasFreeSymbolsError(SpatialTypesError):
     """
     Raised when an operation can't be performed on an expression with free symbols.

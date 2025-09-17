@@ -69,13 +69,13 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
         """
         Compiles forward kinematics expressions for fast evaluation.
         """
-        all_fks = cas.vstack(
+        all_fks = cas.Expression.vstack(
             [
                 self.child_body_to_fk_expr[body.name]
                 for body in self.world.kinematic_structure_entities
             ]
         )
-        tf = cas.vstack([pose for pose in self.tf.values()])
+        tf = cas.Expression.vstack([pose for pose in self.tf.values()])
         collision_fks = []
         for body in sorted(
             self.world.bodies_with_enabled_collision, key=lambda b: b.name
@@ -83,7 +83,7 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
             if body == self.world.root:
                 continue
             collision_fks.append(self.child_body_to_fk_expr[body.name])
-        collision_fks = cas.vstack(collision_fks)
+        collision_fks = cas.Expression.vstack(collision_fks)
         params = [v.symbols.position for v in self.world.degrees_of_freedom]
         self.compiled_all_fks = all_fks.compile(parameters=[params])
         self.compiled_collision_fks = collision_fks.compile(parameters=[params])

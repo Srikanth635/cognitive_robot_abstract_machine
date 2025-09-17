@@ -61,7 +61,7 @@ class TestLogic3:
     def test_and3(self):
         s = cas.Symbol("a")
         s2 = cas.Symbol("b")
-        expr = cas.logic_and3(s, s2)
+        expr = cas.ternary_logic_and(s, s2)
         f = expr.compile()
         for i in self.values:
             for j in self.values:
@@ -74,7 +74,7 @@ class TestLogic3:
     def test_or3(self):
         s = cas.Symbol("a")
         s2 = cas.Symbol("b")
-        expr = cas.logic_or3(s, s2)
+        expr = cas.ternary_logic_or(s, s2)
         f = expr.compile()
         for i in self.values:
             for j in self.values:
@@ -86,7 +86,7 @@ class TestLogic3:
 
     def test_not3(self):
         s = cas.Symbol("muh")
-        expr = cas.logic_not3(s)
+        expr = cas.ternary_logic_not(s)
         f = expr.compile()
         for i in self.values:
             expected = logic_not(i)
@@ -410,7 +410,7 @@ class TestSymbol:
         assert isinstance(e, cas.Expression)
         e = s <= s
         assert isinstance(e, cas.Expression)
-        e = cas.equal(s, s)
+        e = s == s
         assert isinstance(e, cas.Expression)
 
     def test_logic(self):
@@ -447,7 +447,7 @@ class TestExpression:
         expected = cas.Expression([[1, 1], [2 * a, 0], [0, 2 * b]])
         for i in range(expected.shape[0]):
             for j in range(expected.shape[1]):
-                assert cas.equivalent(jac[i, j], expected[i, j])
+                assert jac[i, j].equivalent(expected[i, j])
 
     @given(
         float_no_nan_no_inf(),
@@ -615,7 +615,7 @@ class TestExpression:
         m = cas.Expression(cas.create_symbols(["a", "b", "c", "d"]))
         assert len(m.free_symbols()) == 4
         a = cas.Symbol("a")
-        assert cas.equivalent(a, a.free_symbols()[0])
+        assert a.equivalent(a.free_symbols()[0])
 
     def test_diag(self):
         result = cas.Expression.diag([1, 2, 3])
@@ -630,7 +630,7 @@ class TestExpression:
         assert result[2, 0] == 0
         assert result[2, 1] == 0
         assert result[2, 2] == 3
-        assert cas.equivalent(cas.diag(cas.Expression([1, 2, 3])), cas.diag([1, 2, 3]))
+        assert cas.diag(cas.Expression([1, 2, 3])).equivalent(cas.diag([1, 2, 3]))
 
     @given(
         lists_of_same_length(
@@ -1066,7 +1066,7 @@ class TestRotationMatrix:
         assert_allclose(should_be_identity, np.eye(4), atol=1e-10)
 
         # Test that determinant is 1 (proper rotation, not reflection)
-        det = cas.det(r)
+        det = r.det()
         assert_allclose(det, 1.0, atol=1e-10)
 
     def test_transpose(self):
@@ -1112,7 +1112,7 @@ class TestRotationMatrix:
 
         # Note: Order matters in rotation composition, so this might not be exactly equal
         # but both should be valid rotation matrices
-        assert_allclose(cas.det(combined), 1.0)
+        assert_allclose(combined.det(), 1.0)
         assert_allclose(combined @ combined.T, np.eye(4), atol=1e-10)
 
     def test_vector_rotation(self):
@@ -1235,7 +1235,7 @@ class TestRotationMatrix:
         assert_allclose(rotation_part, np.eye(3), atol=1e-7)
 
         # But determinant should still be 1
-        assert_allclose(cas.det(rotation_part), 1.0, atol=1e-12)
+        assert_allclose(rotation_part.det(), 1.0, atol=1e-12)
 
     def test_symbolic_operations(self):
         """Test operations with symbolic expressions"""
@@ -1264,7 +1264,7 @@ class TestRotationMatrix:
 
         # Should be a valid 4x4 rotation matrix
         assert compiled_rotation.shape == (4, 4)
-        assert_allclose(cas.det(compiled_rotation), 1.0)
+        assert_allclose(compiled_rotation.det(), 1.0)
         assert_allclose(compiled_rotation @ compiled_rotation.T, np.eye(4), atol=1e-10)
 
     def test_edge_cases(self):
@@ -1310,7 +1310,7 @@ class TestRotationMatrix:
 
         for r in operations_to_test:
             rotation_part = r[:3, :3]
-            det = cas.det(rotation_part)
+            det = rotation_part.det()
             assert_allclose(
                 det, 1.0, atol=1e-10
             ), f"Determinant {det} != 1.0 for operation"
@@ -1751,7 +1751,7 @@ class TestVector3:
         nominator_expr = cas.Vector3.from_iterable(nominator)
         denominator_expr = cas.Expression(denominator)
         if_nan_expr = cas.Vector3.from_iterable(if_nan)
-        result = cas.save_division(nominator_expr, denominator_expr, if_nan_expr)
+        result = nominator_expr.safe_division(denominator_expr, if_nan_expr)
         if denominator == 0:
             assert_allclose(result[:3], if_nan)
         else:
@@ -2719,7 +2719,7 @@ class TestCASWrapper:
     def test_vstack(self):
         m = np.eye(4)
         m1 = cas.Expression(m)
-        e = cas.vstack([m1, m1])
+        e = cas.Expression.vstack([m1, m1])
         r1 = e
         r2 = np.vstack([m, m])
         assert_allclose(r1, r2)
@@ -2727,7 +2727,7 @@ class TestCASWrapper:
     def test_vstack_empty(self):
         m = np.eye(0)
         m1 = cas.Expression(m)
-        e = cas.vstack([m1, m1])
+        e = cas.Expression.vstack([m1, m1])
         r1 = e
         r2 = np.vstack([m, m])
         assert_allclose(r1, r2)
@@ -2735,7 +2735,7 @@ class TestCASWrapper:
     def test_hstack(self):
         m = np.eye(4)
         m1 = cas.Expression(m)
-        e = cas.hstack([m1, m1])
+        e = cas.Expression.hstack([m1, m1])
         r1 = e
         r2 = np.hstack([m, m])
         assert_allclose(r1, r2)
@@ -2743,7 +2743,7 @@ class TestCASWrapper:
     def test_hstack_empty(self):
         m = np.eye(0)
         m1 = cas.Expression(m)
-        e = cas.hstack([m1, m1])
+        e = cas.Expression.hstack([m1, m1])
         r1 = e
         r2 = np.hstack([m, m])
         assert_allclose(r1, r2)
@@ -2755,7 +2755,7 @@ class TestCASWrapper:
         m1_e = cas.Expression(m1_np)
         m2_e = cas.Expression(m2_np)
         m3_e = cas.Expression(m3_np)
-        e = cas.diag_stack([m1_e, m2_e, m3_e])
+        e = cas.Expression.diag_stack([m1_e, m2_e, m3_e])
         r1 = e
         combined_matrix = np.zeros((4 + 2 + 5, 4 + 5 + 3))
         row_counter = 0
@@ -2779,7 +2779,7 @@ class TestCASWrapper:
 
     @given(float_no_nan_no_inf(), float_no_nan_no_inf())
     def test_save_division(self, f1, f2):
-        assert_allclose(cas.save_division(f1, f2), f1 / f2 if f2 != 0 else 0)
+        assert_allclose(f1.safe_division(f2), f1 / f2 if f2 != 0 else 0)
 
     @given(float_no_nan_no_inf(), float_no_nan_no_inf())
     def test_min(self, f1, f2):
@@ -3055,7 +3055,7 @@ class TestCASWrapper:
     def test_leq_on_array(self):
         a = cas.Expression(np.array([1, 2, 3, 4]))
         b = cas.Expression(np.array([2, 2, 2, 2]))
-        assert not cas.logic_all(cas.less_equal(a, b)).to_np()
+        assert not cas.logic_all(a <= b).to_np()
 
 
 class TestCompiledFunction:

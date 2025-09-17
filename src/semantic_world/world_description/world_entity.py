@@ -733,7 +733,7 @@ class Connection(WorldEntity):
     def origin_as_position_quaternion(self) -> Expression:
         position = self.origin_expression.to_position()[:3]
         orientation = self.origin_expression.to_quaternion()
-        return cas.vstack([position, orientation]).T
+        return cas.Expression.vstack([position, orientation]).T
 
     @property
     def dofs(self) -> Set[DegreeOfFreedom]:
