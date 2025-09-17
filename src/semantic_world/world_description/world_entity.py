@@ -2,23 +2,20 @@ from __future__ import annotations
 
 import inspect
 import itertools
-from abc import abstractmethod, ABC
+from abc import ABC
 from collections import deque
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from dataclasses import fields
-from functools import lru_cache, cached_property
+from functools import lru_cache
 
 import numpy as np
 import trimesh
+import trimesh.boolean
 from random_events.utils import SubclassJSONSerializer
 from scipy.stats import geom
-from trimesh import Trimesh
 from trimesh.proximity import closest_point, nearby_faces
 from trimesh.sample import sample_surface
-from trimesh.util import concatenate
-
-import trimesh.boolean
 from typing_extensions import (
     Deque,
     Type,
@@ -30,8 +27,7 @@ from typing_extensions import (
 from typing_extensions import List, Optional, TYPE_CHECKING, Tuple
 from typing_extensions import Set
 
-from .geometry import BoundingBox, TriangleMesh
-from .geometry import Shape
+from .geometry import TriangleMesh
 from .shape_collection import ShapeCollection, BoundingBoxCollection
 from ..datastructures.prefixed_name import PrefixedName
 from ..spatial_types import spatial_types as cas
@@ -182,13 +178,10 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
         if self._world is not None:
             self.index = self._world.kinematic_structure.add_node(self)
 
-        for c in self.collision:
-            c.origin.reference_frame = self
-        for v in self.visual:
-            v.origin.reference_frame = self
-
         self.visual.reference_frame = self
         self.collision.reference_frame = self
+        self.collision.transform_all_shapes_to_own_frame()
+        self.visual.transform_all_shapes_to_own_frame()
 
     def get_collision_config(self) -> CollisionCheckingConfig:
         if self.temp_collision_config is not None:

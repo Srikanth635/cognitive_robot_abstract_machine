@@ -2,7 +2,7 @@ import itertools
 
 import numpy as np
 import trimesh.boolean
-from entity_query_language import let, an, entity, contains, and_, not_, the
+from entity_query_language import let, an, entity, contains, and_, not_, the, predicate
 from random_events.interval import Interval
 from typing_extensions import List, Optional
 

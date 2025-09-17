@@ -17,6 +17,7 @@ from ..spatial_types import TransformationMatrix, Point3
 
 if TYPE_CHECKING:
     from .world_entity import KinematicStructureEntity
+    from ..world import World
 
 
 @dataclass
@@ -35,6 +36,15 @@ class ShapeCollection(SubclassJSONSerializer):
     Backreference to the kinematic structure entity this collection belongs to.
     """
 
+    @property
+    def world(self) -> Optional[World]:
+        """
+        The world this collection belongs to.
+        """
+        if self.reference_frame is not None:
+            return self.reference_frame._world
+        return None
+
     def transform_all_shapes_to_own_frame(self):
         """
         Transform all shapes into this collections' frame in-place.
@@ -49,14 +59,12 @@ class ShapeCollection(SubclassJSONSerializer):
         Transform the shape to this collections' frame in-place.
         :param shape: The shape to transform.
         """
-        if (
-            shape.origin.reference_frame is None
-            and self.reference_frame is not None
-            and self.reference_frame._world is not None
-        ):
-            shape.origin.reference_frame = self.reference_frame._world.root
-        if (
-            shape.origin.reference_frame != self.reference_frame
+        if shape.origin.reference_frame is None:
+            # If we don’t have a world, fall back to the owning body/frame
+            shape.origin.reference_frame = self.reference_frame
+        elif (
+            self.reference_frame is not None
+            and shape.origin.reference_frame != self.reference_frame
             and self.reference_frame._world is not None
         ):
             shape.origin = self.reference_frame._world.transform(
@@ -259,27 +267,26 @@ class BoundingBoxCollection(ShapeCollection):
         )
 
     @classmethod
-    def from_shapes(cls, shapes: List[Shape]) -> Self:
+    def from_shapes(cls, shapes: ShapeCollection) -> Self:
         """
         Create a bounding box collection from a list of shapes.
 
         :param shapes: The list of shapes.
         :return: The bounding box collection.
         """
-        if not shapes:
+        if len(shapes) == 0:
             return cls(shapes=[])
         for shape in shapes:
             assert (
                 shape.origin.reference_frame == shapes[0].origin.reference_frame
             ), "All shapes must have the same reference frame."
 
-        if shapes:
-            local_bbs = [shape.local_frame_bounding_box for shape in shapes]
-            reference_frame = shapes[0].origin.reference_frame
-            return cls(
-                [bb.transform_to_origin(bb.origin) for bb in local_bbs],
-                reference_frame,
-            )
+        local_bbs = [shape.local_frame_bounding_box for shape in shapes]
+        reference_frame = shapes[0].origin.reference_frame
+        return cls(
+            [bb.transform_to_origin(bb.origin) for bb in local_bbs],
+            reference_frame,
+        )
 
     def as_shapes(self) -> ShapeCollection:
         return ShapeCollection(
@@ -287,7 +294,7 @@ class BoundingBoxCollection(ShapeCollection):
             self.reference_frame,
         )
 
-    def get_points(self) -> List[Point3]:
+    def bounding_box(self) -> BoundingBox:
         """
         Get the 8 corners of a bounding box that contains all bounding boxes in the collection.
 
@@ -302,9 +309,12 @@ class BoundingBoxCollection(ShapeCollection):
         all_z = [bb.min_z for bb in self.bounding_boxes] + [
             bb.max_z for bb in self.bounding_boxes
         ]
-        return [
-            Point3(x, y, z)
-            for x in [min(all_x), max(all_x)]
-            for y in [min(all_y), max(all_y)]
-            for z in [min(all_z), max(all_z)]
-        ]
+        return BoundingBox(
+            min(all_x),
+            min(all_y),
+            min(all_z),
+            max(all_x),
+            max(all_y),
+            max(all_z),
+            self.reference_frame.global_pose,
+        )
