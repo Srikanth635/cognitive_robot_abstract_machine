@@ -60,7 +60,7 @@ class SymbolManager(metaclass=SingletonMeta):
         """
         Creates a new symbol with the given name and associates it with a provider.
         """
-        symbol = Symbol(name)
+        symbol = Symbol(name=name)
         self.symbol_to_provider[symbol] = provider
         return symbol
 

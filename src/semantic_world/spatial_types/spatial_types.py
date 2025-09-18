@@ -1779,7 +1779,7 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMi
     def __post_init__(self, data: Optional[Matrix2dData], sanity_check: bool):
         if data is None:
             return
-        self.casadi_sx = copy(Expression(data=data).casadi_sx)
+        self.casadi_sx[:3, :4] = copy(Expression(data=data).casadi_sx)[:3, :4]
         if sanity_check:
             self._validate()
 
@@ -1871,10 +1871,10 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMi
         pos_x: ScalarData = 0,
         pos_y: ScalarData = 0,
         pos_z: ScalarData = 0,
-        quat_w: ScalarData = 0,
         quat_x: ScalarData = 0,
         quat_y: ScalarData = 0,
-        quat_z: ScalarData = 1,
+        quat_z: ScalarData = 0,
+        quat_w: ScalarData = 1,
         reference_frame: Optional[KinematicStructureEntity] = None,
         child_frame: Optional[KinematicStructureEntity] = None,
     ) -> TransformationMatrix:

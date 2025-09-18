@@ -244,21 +244,6 @@ def limit(a: float, lower_limit: float, upper_limit: float) -> float:
     return max(lower_limit, min(upper_limit, a))
 
 
-def inverse_frame(f1_T_f2: NpMatrix4x4) -> NpMatrix4x4:
-    """
-    :param f1_T_f2: 4x4 Matrix
-    :return: f2_T_f1
-    """
-    R = f1_T_f2[:3, :3]
-    t = f1_T_f2[:3, 3]
-    Rt = R.T
-    f2_T_f1 = np.empty((4, 4), dtype=f1_T_f2.dtype)
-    f2_T_f1[:3, :3] = Rt
-    f2_T_f1[:3, 3] = -Rt @ t
-    f2_T_f1[3] = [0, 0, 0, 1]
-    return f2_T_f1
-
-
 def angle_between_vector(v1: np.ndarray, v2: np.ndarray) -> float:
     """
     :param v1: vector length 3
