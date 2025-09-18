@@ -3,7 +3,7 @@ from __future__ import annotations
 import itertools
 import tempfile
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from functools import cached_property
 
 import numpy as np
@@ -33,7 +33,9 @@ def transformation_from_json(data: Dict[str, Any]) -> TransformationMatrix:
     This is needed since SpatialTypes cannot inherit from SubClassJSONSerializer.
     They can't inherit since the conversion to JSON needs the symbol_manager, which would cause a cyclic dependency.
     """
-    return TransformationMatrix.from_xyz_quat(*data["position"], *data["quaternion"])
+    return TransformationMatrix.from_xyz_quaternion(
+        *data["position"][:3], *data["quaternion"]
+    )
 
 
 def transformation_to_json(transformation: TransformationMatrix) -> Dict[str, Any]:
@@ -163,8 +165,28 @@ class Shape(ABC, SubclassJSONSerializer):
             "origin": transformation_to_json(self.origin),
         }
 
+    def __eq__(self, other: Shape) -> bool:
+        """Custom equality comparison that handles TransformationMatrix equivalence"""
+        if not isinstance(other, self.__class__):
+            return False
 
-@dataclass
+        # Get all field names from the dataclass
+        field_names = [f.name for f in fields(self)]
+
+        for field_name in field_names:
+            self_value = getattr(self, field_name)
+            other_value = getattr(other, field_name)
+
+            if field_name != "origin":
+                if self_value != other_value:
+                    return False
+        if not np.allclose(self.origin.to_np(), other.origin.to_np()):
+            return False
+
+        return True
+
+
+@dataclass(eq=False)
 class Primitive(Shape, ABC):
     """
     A primitive shape.
@@ -177,7 +199,7 @@ class Primitive(Shape, ABC):
         }
 
 
-@dataclass
+@dataclass(eq=False)
 class Mesh(Shape, ABC):
     """
     Abstract mesh class.
@@ -215,7 +237,7 @@ class Mesh(Shape, ABC):
     def _from_json(cls, data: Dict[str, Any]) -> Self: ...
 
 
-@dataclass
+@dataclass(eq=False)
 class FileMesh(Mesh):
     """
     A mesh shape defined by a file.
@@ -251,7 +273,7 @@ class FileMesh(Mesh):
         )
 
 
-@dataclass
+@dataclass(eq=False)
 class TriangleMesh(Mesh):
     """
     A mesh shape defined by vertices and faces.
@@ -279,7 +301,7 @@ class TriangleMesh(Mesh):
         return cls(mesh=mesh, origin=origin, scale=scale)
 
 
-@dataclass
+@dataclass(eq=False)
 class Primitive(Shape, ABC):
     """
     A primitive shape.
@@ -291,7 +313,7 @@ class Primitive(Shape, ABC):
         return {**super().to_json(), "color": self.color.to_json()}
 
 
-@dataclass
+@dataclass(eq=False)
 class Sphere(Primitive):
     """
     A sphere shape.
@@ -336,7 +358,7 @@ class Sphere(Primitive):
         )
 
 
-@dataclass
+@dataclass(eq=False)
 class Cylinder(Primitive):
     """
     A cylinder shape.
@@ -385,7 +407,7 @@ class Cylinder(Primitive):
         )
 
 
-@dataclass
+@dataclass(eq=False)
 class Box(Primitive):
     """
     A box shape. Pivot point is at the center of the box.
@@ -432,7 +454,7 @@ class Box(Primitive):
         )
 
 
-@dataclass
+@dataclass(eq=False)
 class BoundingBox:
     min_x: float
     """
@@ -746,5 +768,5 @@ class BoundingBox:
             and np.isclose(self.max_x, other.max_x)
             and np.isclose(self.max_y, other.max_y)
             and np.isclose(self.max_z, other.max_z)
-            and self.origin == other.origin
+            and np.allclose(self.origin.to_np(), other.origin.to_np())
         )
