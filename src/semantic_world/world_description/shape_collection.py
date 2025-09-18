@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import itertools
+import logging
 from dataclasses import dataclass, field
 from functools import cached_property
 from typing import Dict, Any, Self, Optional, List, Iterator
@@ -18,6 +19,8 @@ from ..spatial_types import TransformationMatrix, Point3
 if TYPE_CHECKING:
     from .world_entity import KinematicStructureEntity
     from ..world import World
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -67,6 +70,10 @@ class ShapeCollection(SubclassJSONSerializer):
             and shape.origin.reference_frame != self.reference_frame
             and self.reference_frame._world is not None
         ):
+            logger.warning(
+                f"Transformed shape {shape} to {self.reference_frame} since it was in a different "
+                f"reference frame than the collection."
+            )
             shape.origin = self.reference_frame._world.transform(
                 shape.origin.reference_frame.global_pose,
                 self.reference_frame,
@@ -85,10 +92,10 @@ class ShapeCollection(SubclassJSONSerializer):
         return shape in self.shapes
 
     def append(self, shape: Shape):
-        # if self.reference_frame is not None:
-        #     self._transform_to_own_frame(
-        #         shape,
-        #     )
+        if self.world is not None:
+            self._transform_to_own_frame(
+                shape,
+            )
         self.shapes.append(shape)
 
     @cached_property
