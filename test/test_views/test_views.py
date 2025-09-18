@@ -218,9 +218,6 @@ class ViewTestCase(unittest.TestCase):
     def test_drawer_view(self):
         self.fit_rules_for_a_view_in_apartment(Drawer, scenario=self.test_drawer_view)
 
-    @pytest.mark.skip(
-        reason="Interactive RDR fitting required for Cabinet in apartment"
-    )
     def test_cabinet_view(self):
         self.fit_rules_for_a_view_in_apartment(Cabinet, scenario=self.test_cabinet_view)
 
