@@ -462,6 +462,14 @@ class View(WorldEntity):
     Represents a view on a set of bodies in the world.
 
     This class can hold references to certain bodies that gain meaning in this context.
+
+    .. warning::
+
+        The hash of a view is based on the hash of its type and kinematic structure entities.
+        Overwrite this with extreme care and only if you know what you are doing. Hashes are used inside rules to check if
+        a new view has been created. If you, for instance, just use the object identity, this will fail since python assigns
+        new memory pointers always. The same holds for the equality operator.
+        If you do not want to change the behavior, make sure to use @dataclass(eq=False) to decorate your class.
     """
 
     def __post_init__(self):
@@ -470,6 +478,17 @@ class View(WorldEntity):
                 name=f"{self.__class__.__name__}_{id_generator(self)}",
                 prefix=self._world.name if self._world is not None else None,
             )
+
+    def __hash__(self):
+        return hash(
+            tuple(
+                [self.__class__]
+                + sorted([kse.index for kse in self.kinematic_structure_entities])
+            )
+        )
+
+    def __eq__(self, other):
+        return hash(self) == hash(other)
 
     def _kinematic_structure_entities(
         self, visited: Set[int], aggregation_type: Type[GenericKinematicStructureEntity]
@@ -559,7 +578,7 @@ class View(WorldEntity):
         return bbs
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(eq=False)
 class RootedView(View):
     """
     Represents a view that is rooted in a specific KinematicStructureEntity.
@@ -588,7 +607,7 @@ class RootedView(View):
         )
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(eq=False)
 class EnvironmentView(RootedView):
     """
     Represents a view of the environment.

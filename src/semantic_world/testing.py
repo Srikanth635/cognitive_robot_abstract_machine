@@ -173,6 +173,21 @@ def pr2_world():
     return world
 
 
+@pytest.fixture
+def apartment_world() -> World:
+    """
+    Return the apartment world parsed from the URDF file.
+    """
+    urdf_dir = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "..", "..", "resources", "urdf"
+    )
+    apartment = os.path.join(urdf_dir, "apartment.urdf")
+    parser = URDFParser.from_file(file_path=apartment)
+    world = parser.parse()
+    world.validate()
+    return world
+
+
 @pytest.fixture(scope="function")
 def rclpy_node():
     if not rclpy_installed():
