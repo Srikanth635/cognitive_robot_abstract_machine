@@ -1481,7 +1481,7 @@ class World:
         :return: Transformation matrix representing the relative pose of the tip KinematicStructureEntity with respect to the root KinematicStructureEntity.
         """
         return cas.TransformationMatrix(
-            self.compute_forward_kinematics_np(root, tip), reference_frame=root
+            data=self.compute_forward_kinematics_np(root, tip), reference_frame=root
         )
 
     def compute_forward_kinematics_np(

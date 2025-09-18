@@ -458,7 +458,7 @@ class Box(Primitive):
         )
 
 
-@dataclass
+@dataclass(eq=False)
 class BoundingBox:
     min_x: float
     """
@@ -780,7 +780,7 @@ class BoundingBox:
             and np.isclose(self.max_x, other.max_x)
             and np.isclose(self.max_y, other.max_y)
             and np.isclose(self.max_z, other.max_z)
-            and self.origin == other.origin
+            and np.allclose(self.origin.to_np(), other.origin.to_np())
         )
 
 

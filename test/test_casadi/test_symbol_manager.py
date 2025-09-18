@@ -182,7 +182,7 @@ class TestSymbolManager:
         manager = SymbolManager()
 
         # Create a symbol that's not registered
-        unregistered_symbol = cas.Symbol("unregistered")
+        unregistered_symbol = cas.Symbol(name="unregistered")
 
         with pytest.raises(KeyError, match="Cannot resolve"):
             manager.resolve_symbols([unregistered_symbol])

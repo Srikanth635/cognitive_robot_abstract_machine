@@ -1759,7 +1759,7 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMi
     quaternions.
     """
 
-    child_frame: Optional[KinematicStructureEntity] = None
+    child_frame: Optional[KinematicStructureEntity] = field(kw_only=True, default=None)
     """
     child_frame: Optional[KinematicStructureEntity]
     """
@@ -1769,7 +1769,7 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMi
     A 4x4 matrix of some form that represents the rotation matrix.
     """
 
-    sanity_check: InitVar[bool] = True
+    sanity_check: InitVar[bool] = field(kw_only=True, default=True)
     """
     Whether to perform a sanity check on the matrix data. Can be skipped for performance reasons.
     """
@@ -1779,7 +1779,7 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMi
     def __post_init__(self, data: Optional[Matrix2dData], sanity_check: bool):
         if data is None:
             return
-        self.casadi_sx[:3, :4] = copy(Expression(data=data).casadi_sx)[:3, :4]
+        self.casadi_sx = copy(Expression(data=data).casadi_sx)
         if sanity_check:
             self._validate()
 
@@ -2025,7 +2025,7 @@ class RotationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMixin):
     A 4x4 matrix of some form that represents the rotation matrix.
     """
 
-    sanity_check: InitVar[bool] = True
+    sanity_check: InitVar[bool] = field(kw_only=True, default=True)
     """
     Whether to perform a sanity check on the matrix data. Can be skipped for performance reasons.
     """
@@ -2534,7 +2534,7 @@ class Vector3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
     Z-coordinate of the point. Defaults to 0.
     """
 
-    vis_frame: Optional[KinematicStructureEntity] = None
+    vis_frame: Optional[KinematicStructureEntity] = field(kw_only=True, default=None)
     """
     The reference frame associated with the vector, used for visualization purposes only. Optional.
     It will be visualized at the origin of the vis_frame
@@ -2831,12 +2831,6 @@ class Quaternion(SymbolicType, ReferenceFrameMixin):
     w_init: InitVar[Optional[ScalarData]] = None
     """
     W-coordinate of the point. Defaults to 0.
-    """
-
-    vis_frame: Optional[KinematicStructureEntity] = None
-    """
-    The reference frame associated with the vector, used for visualization purposes only. Optional.
-    It will be visualized at the origin of the vis_frame
     """
 
     casadi_sx: ca.SX = field(
