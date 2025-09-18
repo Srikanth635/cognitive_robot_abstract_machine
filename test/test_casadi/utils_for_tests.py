@@ -8,7 +8,7 @@ from hypothesis.strategies import composite
 from numpy import pi
 
 import semantic_world.spatial_types.spatial_types as cas
-from test_casadi.reference_implementations import shortest_angular_distance
+from .reference_implementations import shortest_angular_distance
 
 BIG_NUMBER = 1e100
 SMALL_NUMBER = 1e-100

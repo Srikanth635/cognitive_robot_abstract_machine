@@ -1,11 +1,27 @@
 import hypothesis.strategies as st
+import numpy as np
 import pytest
 import scipy
-from hypothesis import given, assume, reproduce_failure
+from hypothesis import given, assume
 
 import semantic_world.spatial_types.spatial_types as cas
 from semantic_world.exceptions import HasFreeSymbolsError, WrongDimensionsError
-from .reference_implementations import *
+from .reference_implementations import (
+    rotation_matrix_from_quaternion,
+    axis_angle_from_rotation_matrix,
+    shortest_angular_distance,
+    rotation_matrix_from_axis_angle,
+    rotation_matrix_from_rpy,
+    quaternion_slerp,
+    quaternion_from_axis_angle,
+    axis_angle_from_quaternion,
+    quaternion_multiply,
+    quaternion_conjugate,
+    quaternion_from_rpy,
+    quaternion_from_rotation_matrix,
+    normalize_angle_positive,
+    normalize_angle,
+)
 from .utils_for_tests import (
     float_no_nan_no_inf,
     quaternion,
