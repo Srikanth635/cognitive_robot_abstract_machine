@@ -467,7 +467,7 @@ class View(WorldEntity):
     def __post_init__(self):
         if self.name is None:
             self.name = PrefixedName(
-                name=f"{self.__class__.__name__}_{id_generator((self))}",
+                name=f"{self.__class__.__name__}_{id_generator(self)}",
                 prefix=self._world.name if self._world is not None else None,
             )
 
