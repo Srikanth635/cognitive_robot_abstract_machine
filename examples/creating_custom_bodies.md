@@ -70,7 +70,7 @@ When modifying your world, keep in mind that you need to open a `world.modify_wo
 ```python
 with world.modify_world():
     world.add_body(body)
-    
+
 from semantic_world.spatial_computations.raytracer import RayTracer
 rt = RayTracer(world)
 rt.update_scene()
