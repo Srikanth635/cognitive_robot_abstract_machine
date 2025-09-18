@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import operator
 from enum import IntEnum
 
 import numpy as np
@@ -10,7 +11,7 @@ import math
 import sys
 from copy import copy, deepcopy
 from dataclasses import dataclass, field, InitVar
-from typing import (
+from typing_extensions import (
     Optional,
     List,
     Tuple,
@@ -37,7 +38,6 @@ if TYPE_CHECKING:
     from ..world_description.world_entity import KinematicStructureEntity
 
 EPS: float = sys.float_info.epsilon * 4.0
-pi: float = ca.pi
 
 
 @dataclass
@@ -63,15 +63,15 @@ class CompiledFunction:
     Whether to return a sparse matrix or a dense numpy matrix
     """
 
-    compiled_casadi_function: ca.Function = field(init=False)
+    _compiled_casadi_function: ca.Function = field(init=False)
 
-    function_buffer: ca.FunctionBuffer = field(init=False)
-    function_evaluator: functools.partial = field(init=False)
+    _function_buffer: ca.FunctionBuffer = field(init=False)
+    _function_evaluator: functools.partial = field(init=False)
     """
     Helpers to avoid new memory allocation during function evaluation
     """
 
-    out: Union[np.ndarray, sp.csc_matrix] = field(init=False)
+    _out: Union[np.ndarray, sp.csc_matrix] = field(init=False)
     """
     The result of a function evaluation is stored in this variable.
     """
@@ -109,9 +109,9 @@ class CompiledFunction:
         Setup result for empty expressions.
         """
         if self.sparse:
-            self.out = sp.csc_matrix(np.empty(self.expression.shape))
+            self._out = sp.csc_matrix(np.empty(self.expression.shape))
         else:
-            self.out = np.empty(self.expression.shape)
+            self._out = np.empty(self.expression.shape)
         self._is_constant = True
 
     def _setup_compiled_function(self) -> None:
@@ -135,12 +135,12 @@ class CompiledFunction:
         Compile function for sparse matrices.
         """
         casadi_expression = ca.sparsify(self.expression.casadi_sx)
-        self.compiled_casadi_function = ca.Function(
+        self._compiled_casadi_function = ca.Function(
             "f", casadi_parameters, [casadi_expression]
         )
 
-        self.function_buffer, self.function_evaluator = (
-            self.compiled_casadi_function.buffer()
+        self._function_buffer, self._function_evaluator = (
+            self._compiled_casadi_function.buffer()
         )
         self.csc_indices, self.csc_indptr = casadi_expression.sparsity().get_ccs()
 
@@ -151,12 +151,12 @@ class CompiledFunction:
         :param casadi_parameters: List of CasADi parameters for the function
         """
         casadi_expression = ca.densify(self.expression.casadi_sx)
-        self.compiled_casadi_function = ca.Function(
+        self._compiled_casadi_function = ca.Function(
             "f", casadi_parameters, [casadi_expression]
         )
 
-        self.function_buffer, self.function_evaluator = (
-            self.compiled_casadi_function.buffer()
+        self._function_buffer, self._function_evaluator = (
+            self._compiled_casadi_function.buffer()
         )
 
     def _setup_output_buffer(self) -> None:
@@ -172,7 +172,7 @@ class CompiledFunction:
         """
         Setup output buffer for sparse matrices.
         """
-        self.out = sp.csc_matrix(
+        self._out = sp.csc_matrix(
             arg1=(
                 np.zeros(self.expression.casadi_sx.nnz()),
                 self.csc_indptr,
@@ -180,7 +180,7 @@ class CompiledFunction:
             ),
             shape=self.expression.shape,
         )
-        self.function_buffer.set_res(0, memoryview(self.out.data))
+        self._function_buffer.set_res(0, memoryview(self._out.data))
 
     def _setup_dense_output_buffer(self) -> None:
         """
@@ -190,8 +190,8 @@ class CompiledFunction:
             shape = self.expression.shape[0]
         else:
             shape = self.expression.shape
-        self.out = np.zeros(shape, order="F")
-        self.function_buffer.set_res(0, memoryview(self.out))
+        self._out = np.zeros(shape, order="F")
+        self._function_buffer.set_res(0, memoryview(self._out))
 
     def _setup_constant_result(self) -> None:
         """
@@ -200,7 +200,7 @@ class CompiledFunction:
         For expressions with no free parameters, we can evaluate once and return
         the constant result for all future calls.
         """
-        self.function_evaluator()
+        self._function_evaluator()
         self._is_constant = True
 
     def __call__(self, *args: np.ndarray) -> Union[np.ndarray, sp.csc_matrix]:
@@ -212,15 +212,15 @@ class CompiledFunction:
         (Yes, this makes a significant speed different.)
 
         :param args: A numpy array for each List[Symbol] in self.symbol_parameters.
-            !!! Make sure the numpy array is of type float !!! (check is too expensive)
+            .. warning:: Make sure the numpy array is of type float! (check is too expensive)
         :return: The evaluated result as numpy array or sparse matrix
         """
         if self._is_constant:
-            return self.out
+            return self._out
         for arg_idx, arg in enumerate(args):
-            self.function_buffer.set_arg(arg_idx, memoryview(arg))
-        self.function_evaluator()
-        return self.out
+            self._function_buffer.set_arg(arg_idx, memoryview(arg))
+        self._function_evaluator()
+        return self._out
 
     def call_with_kwargs(self, **kwargs: float) -> np.ndarray:
         """
@@ -286,10 +286,12 @@ class CompiledFunctionWithViews:
             end = start + expression.shape[0]
             slices.append(end)
             start = end
-        self.split_out_view = np.split(self.compiled_function.out, slices)
+        self.split_out_view = np.split(self.compiled_function._out, slices)
         if self.additional_views is not None:
             for expression_slice in self.additional_views:
-                self.split_out_view.append(self.compiled_function.out[expression_slice])
+                self.split_out_view.append(
+                    self.compiled_function._out[expression_slice]
+                )
 
     def __call__(self, *args: np.ndarray) -> List[np.ndarray]:
         """
@@ -452,9 +454,12 @@ class BasicOperatorMixin:
     """
 
     casadi_sx: ca.SX
+    """
+    Reference to the casadi data structure of type casadi.SX
+    """
 
     def _binary_operation(
-        self, other: ScalarData, operation_name: str, reverse: bool = False
+        self, other: ScalarData, operation: Callable, reverse: bool = False
     ) -> Expression:
         """
         Performs a binary operation between the current instance and another operand.
@@ -473,48 +478,48 @@ class BasicOperatorMixin:
             # For reverse operations, check if other is NumericalScalar
             if not isinstance(other, NumericalScalar):
                 return NotImplemented
-            return Expression(getattr(self.casadi_sx, f"__r{operation_name}__")(other))
+            return Expression(operation(other, self.casadi_sx))
         else:
             # For regular operations, check if other is ScalarData
             if isinstance(other, SymbolicScalar):
                 other = other.casadi_sx
             elif not isinstance(other, NumericalScalar):
                 return NotImplemented
-            return Expression(getattr(self.casadi_sx, f"__{operation_name}__")(other))
+            return Expression(operation(self.casadi_sx, other))
 
     # %% arthimetic operators
     def __neg__(self) -> Expression:
         return Expression(self.casadi_sx.__neg__())
 
     def __add__(self, other: ScalarData) -> Expression:
-        return self._binary_operation(other, "add")
+        return self._binary_operation(other, operator.add)
 
     def __radd__(self, other: NumericalScalar) -> Expression:
-        return self._binary_operation(other, "add", reverse=True)
+        return self._binary_operation(other, operator.add, reverse=True)
 
     def __sub__(self, other: ScalarData) -> Expression:
-        return self._binary_operation(other, "sub")
+        return self._binary_operation(other, operator.sub)
 
     def __rsub__(self, other: NumericalScalar) -> Expression:
-        return self._binary_operation(other, "sub", reverse=True)
+        return self._binary_operation(other, operator.sub, reverse=True)
 
     def __mul__(self, other: ScalarData) -> Expression:
-        return self._binary_operation(other, "mul")
+        return self._binary_operation(other, operator.mul)
 
     def __rmul__(self, other: NumericalScalar) -> Expression:
-        return self._binary_operation(other, "mul", reverse=True)
+        return self._binary_operation(other, operator.mul, reverse=True)
 
     def __truediv__(self, other: ScalarData) -> Expression:
-        return self._binary_operation(other, "truediv")
+        return self._binary_operation(other, operator.truediv)
 
     def __rtruediv__(self, other: NumericalScalar) -> Expression:
-        return self._binary_operation(other, "truediv", reverse=True)
+        return self._binary_operation(other, operator.truediv, reverse=True)
 
     def __pow__(self, other: ScalarData) -> Expression:
-        return self._binary_operation(other, "pow")
+        return self._binary_operation(other, operator.pow)
 
     def __rpow__(self, other: NumericalScalar) -> Expression:
-        return self._binary_operation(other, "pow", reverse=True)
+        return self._binary_operation(other, operator.pow, reverse=True)
 
     def __floordiv__(self, other: ScalarData) -> Expression:
         return floor(self / other)
@@ -556,16 +561,16 @@ class BasicOperatorMixin:
         return logic_and(self.casadi_sx, other)
 
     def __lt__(self, other: ScalarData) -> Expression:
-        return self._binary_operation(other, "lt")
+        return self._binary_operation(other, operator.lt)
 
     def __le__(self, other: ScalarData) -> Expression:
-        return self._binary_operation(other, "le")
+        return self._binary_operation(other, operator.le)
 
     def __gt__(self, other: ScalarData) -> Expression:
-        return self._binary_operation(other, "gt")
+        return self._binary_operation(other, operator.gt)
 
     def __ge__(self, other: ScalarData) -> Expression:
-        return self._binary_operation(other, "ge")
+        return self._binary_operation(other, operator.ge)
 
     def safe_division(
         self,
@@ -590,6 +595,9 @@ class BasicOperatorMixin:
 
 class VectorOperationsMixin:
     casadi_sx: ca.SX
+    """
+    Reference to the casadi data structure of type casadi.SX
+    """
 
     def euclidean_distance(self, other: Self) -> Expression:
         difference = self - other
@@ -599,6 +607,9 @@ class VectorOperationsMixin:
 
 class MatrixOperationsMixin:
     casadi_sx: ca.SX
+    """
+    Reference to the casadi data structure of type casadi.SX
+    """
     shape: Tuple[int, int]
 
     def sum(self) -> Expression:
@@ -711,7 +722,7 @@ class Expression(
     This class is designed to encapsulate symbolic mathematical expressions and provide a wide
     range of features for computations, including matrix constructions (zeros, ones, identity),
     derivative computations (Jacobian, total derivatives, Hessian), reshaping, and scaling.
-    It is integral to symbolic computation workflows in applications that require gradient
+    It is essential to symbolic computation workflows in applications that require gradient
     analysis, second-order derivatives, or other advanced mathematical operations. The class
     leverages symbolic computation libraries for handling low-level symbolic details efficiently.
     """
@@ -1071,7 +1082,7 @@ def diag_stack(args: Union[List[Expression], Expression]) -> Expression:
     return Expression.diag_stack(args)
 
 
-def abs(x: Union[SymbolicType]) -> Expression:
+def abs(x: SymbolicType) -> Expression:
     x_sx = to_sx(x)
     result = ca.fabs(x_sx)
     return Expression(result)
@@ -2090,7 +2101,7 @@ class RotationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMixin):
         return cls(casadi_sx=s, reference_frame=reference_frame, sanity_check=False)
 
     @classmethod
-    def __quaternion_to_rotation_matrix(cls, q: Quaternion) -> RotationMatrix:
+    def from_quaternion(cls, q: Quaternion) -> RotationMatrix:
         """
         Unit quaternion to 4x4 rotation matrix according to:
         https://github.com/orocos/orocos_kinematics_dynamics/blob/master/orocos_kdl/src/frames.cpp#L167
@@ -2105,17 +2116,28 @@ class RotationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMixin):
         w2 = w * w
         return cls(
             data=[
-                [w2 + x2 - y2 - z2, 2 * x * y - 2 * w * z, 2 * x * z + 2 * w * y, 0],
-                [2 * x * y + 2 * w * z, w2 - x2 + y2 - z2, 2 * y * z - 2 * w * x, 0],
-                [2 * x * z - 2 * w * y, 2 * y * z + 2 * w * x, w2 - x2 - y2 + z2, 0],
+                [
+                    w2 + x2 - y2 - z2,
+                    2 * x * y - 2 * w * z,
+                    2 * x * z + 2 * w * y,
+                    0,
+                ],
+                [
+                    2 * x * y + 2 * w * z,
+                    w2 - x2 + y2 - z2,
+                    2 * y * z - 2 * w * x,
+                    0,
+                ],
+                [
+                    2 * x * z - 2 * w * y,
+                    2 * y * z + 2 * w * x,
+                    w2 - x2 - y2 + z2,
+                    0,
+                ],
                 [0, 0, 0, 1],
             ],
             reference_frame=q.reference_frame,
         )
-
-    @classmethod
-    def from_quaternion(cls, q: Quaternion) -> RotationMatrix:
-        return cls.__quaternion_to_rotation_matrix(q)
 
     def x_vector(self) -> Vector3:
         return Vector3(
@@ -2317,7 +2339,7 @@ class Point3(SymbolicType, ReferenceFrameMixin):
     distance calculations. It incorporates a reference frame for kinematic computations
     and facilitates mathematical operations essential for 3D geometry modeling.
 
-    Note that it is represented as a 4d vector, where the last entry is always a 1.
+    .. note:: this is represented as a 4d vector, where the last entry is always a 1.
     """
 
     x_init: InitVar[Optional[ScalarData]] = None
@@ -2518,7 +2540,7 @@ class Vector3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
     compute geometric properties such as the angle between vectors. The class
     also includes support for working in different reference frames.
 
-    Note that it is represented as a 4d vector, where the last entry is always a 0.
+    .. note:: this is represented as a 4d vector, where the last entry is always a 0.
     """
 
     x_init: InitVar[Optional[ScalarData]] = None
