@@ -69,10 +69,9 @@ When modifying your world, keep in mind that you need to open a `world.modify_wo
 ```{code-cell} ipython2
 with world.modify_world():
     world.add_body(body)
-from semantic_world.spatial_computations.raytracer import RayTracer
-rt = RayTracer(world)
-rt.update_scene()
-rt.scene.show("jupyter")
+
+from semantic_world.world import visualize_current_world_snapshot_in_jupyter
+visualize_current_world_snapshot_in_jupyter(world)
 ```
 
 If you want to see your generated world, check out the [](visualizing-worlds) tutorial.

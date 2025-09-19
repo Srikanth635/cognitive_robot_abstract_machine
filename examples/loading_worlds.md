@@ -1,15 +1,14 @@
 ---
-jupyter:
-  jupytext:
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.3'
-      jupytext_version: 1.17.3
-  kernelspec:
-    display_name: Python 3
-    language: python
-    name: python3
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.16.4
+kernelspec:
+  display_name: Python 3
+  language: python
+  name: python3
 ---
 
 (loading-worlds)=
@@ -19,7 +18,7 @@ This tutorial shows how to load a world description from a file into a `World` o
 
 First, we need to compose the path to your world file.
 
-```python
+```{code-cell} ipython2
 import logging
 import os
 
@@ -32,12 +31,14 @@ apartment = os.path.join(get_semantic_world_directory_root(os.getcwd()), "resour
 
 Next we need to initialize a parser that reads this file. There are many parsers available.
 
-```python
-from semantic_world.adapters.urdf import URDFParser  
-  
-parser = URDFParser.from_file(apartment)  
-world = parser.parse()  
-print(world)
+```{code-cell} ipython2
+from semantic_world.adapters.urdf import URDFParser
+
+parser = URDFParser.from_file(apartment)
+world = parser.parse()
+
+from semantic_world.world import visualize_current_world_snapshot
+visualize_current_world_snapshot(world)
 ```
 
 This constructs a world you can visualize, interact and annotate. Be aware that worlds loaded from files have no semantic annotations and serve as purely kinematic models.

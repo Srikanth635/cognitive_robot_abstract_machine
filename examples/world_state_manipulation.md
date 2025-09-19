@@ -1,15 +1,14 @@
 ---
-jupyter:
-  jupytext:
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.3'
-      jupytext_version: 1.17.3
-  kernelspec:
-    display_name: Python 3
-    language: python
-    name: python3
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.16.4
+kernelspec:
+  display_name: Python 3
+  language: python
+  name: python3
 ---
 
 (world-state-manipulation)=
@@ -30,10 +29,8 @@ import threading
 import time
 
 import numpy as np
-import rclpy
 from entity_query_language import the, entity, let
 
-from semantic_world.adapters.viz_marker import VizMarkerPublisher
 from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.spatial_types.spatial_types import TransformationMatrix
 from semantic_world.views.factories import (
@@ -46,8 +43,8 @@ from semantic_world.views.factories import (
 from semantic_world.views.views import Drawer
 from semantic_world.world_description.degree_of_freedom import DegreeOfFreedom
 from semantic_world.world_description.geometry import Scale
+from semantic_world.world import visualize_current_world_snapshot_in_jupyter
 
-rclpy.init()
 
 drawer_factory = DrawerFactory(
     name=PrefixedName("drawer"),
@@ -72,16 +69,8 @@ dresser_factory = DresserFactory(
 )
 
 world = dresser_factory.create()
-```
 
-Next, we creat the visualizer.
-
-```python
-node = rclpy.create_node("semantic_world")
-thread = threading.Thread(target=rclpy.spin, args=(node,), daemon=True)
-thread.start()
-viz = VizMarkerPublisher(world=world, node=node)
-
+visualize_current_world_snapshot_in_jupyter(world)
 ```
 
 Let's get a reference to the drawer we built above.
@@ -98,9 +87,8 @@ drawer = the(
 We can update the drawer's state by altering the free variables position of its prismatic connection to the dresser.
 
 ```python
-time.sleep(1)
 drawer.container.body.parent_connection.position = 0.1
-time.sleep(1)
+visualize_current_world_snapshot_in_jupyter(world)
 ```
 
 Note that this only works in this simple way for connections that only have one degree of freedom. For multiple degrees of freedom you either have to set the entire transformation or use the world state directly.
@@ -113,6 +101,12 @@ from semantic_world.world_description.world_entity import Body
 with world.modify_world():
     old_root = world.root
     new_root = Body(name=PrefixedName("virtual root"))
+    
+    # Add a visual for the new root so we can see the change of position in the visualization
+    box_origin = TransformationMatrix.from_xyz_rpy(reference_frame=new_root)
+    box = Box(origin=box_origin, scale=Scale(0.1, 0.1, 0.1), color=Color(1., 0., 0., 1., ))
+    new_root.collision = [box]
+    
     world.add_body(new_root)
     root_T_dresser = Connection6DoF(new_root, old_root, _world=world)
     world.add_connection(root_T_dresser)
@@ -124,11 +118,10 @@ Now we can start moving the dresser everywhere and even rotate it.
 from semantic_world.world_description.world_entity import Connection
 
 free_connection = the(entity(connection := let("connection", type_=Connection, domain=world.connections), connection.parent == world.root)).evaluate()
-time.sleep(1)
+
 with world.modify_world():
     free_connection.origin_expression = TransformationMatrix.from_xyz_rpy(1., 1., 0, 0., 0., 0.5 * np.pi)
-time.sleep(1)
-
+visualize_current_world_snapshot_in_jupyter(world)
 ```
 
 The final way of manipulating the world state is the registry for all degrees of freedom, the {py:class}`semantic_world.world_description.world_state.WorldState`.
@@ -141,10 +134,5 @@ We can close the drawer again as follows:
 dof = the(entity(name := let("degree_of_freedom", type_=PrefixedName, domain=world.state.keys()), name.name == "drawer_container_connection")).evaluate()
 with world.modify_world():
     world.state[dof] = [0., 0, 0, 0.]
-time.sleep(1.)
-```
-
-```python
-node.destroy_node()
-rclpy.shutdown()
+visualize_current_world_snapshot_in_jupyter(world)
 ```
