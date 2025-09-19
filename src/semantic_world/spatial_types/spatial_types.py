@@ -713,6 +713,11 @@ class Symbol(SymbolicType, BasicOperatorMixin):
     def __hash__(self):
         return hash(self.name)
 
+    def __eq__(self, other):
+        if isinstance(other, Symbol):
+            return self.name == other.name
+        return super().__eq__(other)
+
 
 @dataclass(eq=False)
 class Expression(
