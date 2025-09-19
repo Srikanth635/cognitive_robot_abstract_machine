@@ -42,7 +42,7 @@ from semantic_world.views.factories import (
 )
 from semantic_world.views.views import Drawer
 from semantic_world.world_description.degree_of_freedom import DegreeOfFreedom
-from semantic_world.world_description.geometry import Scale, Box
+from semantic_world.world_description.geometry import Scale, Box, Color
 from semantic_world.spatial_computations.raytracer import RayTracer
 
 drawer_factory = DrawerFactory(
