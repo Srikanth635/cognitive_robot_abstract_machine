@@ -57,6 +57,6 @@ rclpy.shutdown()
 
 The multiverse way relies on multiverse and is WIP. Do it faster giang.
 
-If you have followed the guide until here, you have probably noticed that we have used the `visualize_current_world_snapshot` function
-a few times. This method is a convenient way of visualizing a world inside a notebook, like in these guides, but it is not recommended 
+If you have followed the guide until here, you have probably noticed that we have used the RayTracer to visualize the world 
+a few times. This is a convenient way of visualizing a world inside a notebook, like in these guides, but it is not recommended 
 for normal usage.

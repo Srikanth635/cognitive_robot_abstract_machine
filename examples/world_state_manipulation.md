@@ -42,9 +42,8 @@ from semantic_world.views.factories import (
 )
 from semantic_world.views.views import Drawer
 from semantic_world.world_description.degree_of_freedom import DegreeOfFreedom
-from semantic_world.world_description.geometry import Scale
-from semantic_world.world import visualize_current_world_snapshot
-
+from semantic_world.world_description.geometry import Scale, Box
+from semantic_world.spatial_computations.raytracer import RayTracer
 
 drawer_factory = DrawerFactory(
     name=PrefixedName("drawer"),
@@ -70,7 +69,9 @@ dresser_factory = DresserFactory(
 
 world = dresser_factory.create()
 
-visualize_current_world_snapshot(world)
+rt = RayTracer(world)
+rt.update_scene()
+rt.scene.show("jupyter")
 ```
 
 Let's get a reference to the drawer we built above.
@@ -88,7 +89,9 @@ We can update the drawer's state by altering the free variables position of its 
 
 ```{code-cell} ipython2
 drawer.container.body.parent_connection.position = 0.1
-visualize_current_world_snapshot(world)
+rt = RayTracer(world)
+rt.update_scene()
+rt.scene.show("jupyter")
 ```
 
 Note that this only works in this simple way for connections that only have one degree of freedom. For multiple degrees of freedom you either have to set the entire transformation or use the world state directly.
@@ -121,7 +124,9 @@ free_connection = the(entity(connection := let("connection", type_=Connection, d
 
 with world.modify_world():
     free_connection.origin_expression = TransformationMatrix.from_xyz_rpy(1., 1., 0, 0., 0., 0.5 * np.pi)
-visualize_current_world_snapshot(world)
+rt = RayTracer(world)
+rt.update_scene()
+rt.scene.show("jupyter")
 ```
 
 The final way of manipulating the world state is the registry for all degrees of freedom, the {py:class}`semantic_world.world_description.world_state.WorldState`.
@@ -134,5 +139,7 @@ We can close the drawer again as follows:
 dof = the(entity(name := let("degree_of_freedom", type_=PrefixedName, domain=world.state.keys()), name.name == "drawer_container_connection")).evaluate()
 with world.modify_world():
     world.state[dof] = [0., 0, 0, 0.]
-visualize_current_world_snapshot(world)
+rt = RayTracer(world)
+rt.update_scene()
+rt.scene.show("jupyter")
 ```

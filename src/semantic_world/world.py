@@ -1908,15 +1908,3 @@ class World:
             ):
                 return True
         return False
-
-def visualize_current_world_snapshot(world: World) -> None:
-    """
-    Visualizes the current state of the world.
-
-    :param world: The World instance to visualize.
-    """
-    from semantic_world.spatial_computations.raytracer import RayTracer
-
-    rt = RayTracer(world)
-    rt.update_scene()
-    rt.scene.show("jupyter")
