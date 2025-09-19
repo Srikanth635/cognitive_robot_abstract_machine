@@ -1909,7 +1909,7 @@ class World:
                 return True
         return False
 
-def visualize_current_world_snapshot(world: World) -> None:
+def visualize_current_world_snapshot_in_jupyter(world: World) -> None:
     """
     Visualizes the current state of the world.
 
