@@ -66,18 +66,30 @@ def urdf_joint_to_limits(
         upper = limit.upper if limit is not None else None
 
         safety_controller = getattr(urdf_joint, "safety_controller", None)
-        lower = max(safety_controller.soft_lower_limit, limit.lower) if safety_controller is not None else lower
-        upper = min(safety_controller.soft_upper_limit, limit.upper) if safety_controller is not None else upper
+        lower = (
+            max(safety_controller.soft_lower_limit, limit.lower)
+            if safety_controller is not None and limit is not None
+            else lower
+        )
+        upper = (
+            min(safety_controller.soft_upper_limit, limit.upper)
+            if safety_controller is not None and limit is not None
+            else upper
+        )
 
         lower_limits.position = lower
         upper_limits.position = upper
 
-    velocity = getattr(limit, "velocity", None)
+    velocity = getattr(limit, "velocity", None) if limit is not None else None
     lower_limits.velocity = -velocity if velocity is not None else None
     upper_limits.velocity = velocity if velocity is not None else None
 
     if urdf_joint.mimic is not None:
-        multiplier = urdf_joint.mimic.multiplier if urdf_joint.mimic.multiplier is not None else 1
+        multiplier = (
+            urdf_joint.mimic.multiplier
+            if urdf_joint.mimic.multiplier is not None
+            else 1
+        )
         offset = urdf_joint.mimic.offset if urdf_joint.mimic.offset is not None else 0
 
         for d2 in Derivatives.range(Derivatives.position, Derivatives.velocity):
