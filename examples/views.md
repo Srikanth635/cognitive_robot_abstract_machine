@@ -50,9 +50,10 @@ from semantic_world.world_description.geometry import Sphere, Scale
 from semantic_world.world_description.world_entity import View, Body
 from semantic_world.spatial_computations.raytracer import RayTracer
 
+
 world = DrawerFactory(
     name=PrefixedName("drawer"),
-    container_factory=ContainerFactory(name=PrefixedName("container")),
+    container_factory=ContainerFactory(name=PrefixedName("container"), direction=Direction.Z),
     handle_factory=HandleFactory(name=PrefixedName("handle")),
 ).create()
 
