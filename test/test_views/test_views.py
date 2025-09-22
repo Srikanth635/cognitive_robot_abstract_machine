@@ -32,7 +32,7 @@ try:
 except ImportError as e:
     world_rdr = None
 from semantic_world.world import World
-from semantic_world.testing import apartment_world
+from semantic_world.testing import *
 
 
 @dataclass
