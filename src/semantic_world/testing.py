@@ -228,3 +228,14 @@ def cleanup_after_test():
     for c in Variable._cache_.values():
         c.clear()
     Variable._cache_.clear()
+
+
+@pytest.fixture()
+def kitchen_world():
+    path = os.path.join(
+        os.path.dirname(__file__), "..", "..", "resources", "urdf", "kitchen-small.urdf"
+    )
+    parser = URDFParser.from_file(file_path=path)
+    world = parser.parse()
+    world.validate()
+    return world
