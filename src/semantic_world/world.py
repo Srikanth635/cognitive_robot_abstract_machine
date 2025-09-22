@@ -897,7 +897,7 @@ class World:
                 other_views = [view for view in other.views]
                 for view in other_views:
                     other.remove_view(view)
-                    self.add_view(view)
+                    self.add_view(view, exists_ok=handle_duplicates)
 
             connection = root_connection or Connection6DoF(
                 parent=self_root, child=other_root, _world=self

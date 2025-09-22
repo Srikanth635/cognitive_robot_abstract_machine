@@ -163,8 +163,9 @@ class ProcTHORTestCase(unittest.TestCase):
         door_factory = procthor_door.get_factory()
 
         self.assertEqual(door_factory.name.name, "Doorway_Double_7_room1_room4")
-        self.assertEqual(door_factory.scale, Scale(0.03, 2.0, 2.1))
-        self.assertEqual(door_factory.one_door_scale, Scale(0.03, 1.0, 2.1))
+        self.assertEqual(len(door_factory.door_factories), 2)
+        self.assertEqual(len(door_factory.door_transforms), 2)
+        self.assertEqual(door_factory.door_factories[0].scale, Scale(0.03, 1.0, 2.1))
 
     def test_wall_creation(self):
         parser = ProcTHORParser(self.file_path, None)

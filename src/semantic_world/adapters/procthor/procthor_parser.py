@@ -7,7 +7,6 @@ from typing import Dict, Tuple, Union, Set
 
 import numpy as np
 from entity_query_language import the, entity, let
-
 from ormatic.eql_interface import eql_to_sql
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
@@ -135,14 +134,51 @@ class ProcthorDoor:
         Returns a Factory for the door, either a DoorFactory or a DoubleDoorFactory,
         depending on its name. If the door's name contains "double", it is treated as a double door.
         """
-        handle_name = PrefixedName(f"{self.name.name}_handle", self.name.prefix)
+
         if "double" in self.name.name.lower():
+            one_door_scale = Scale(self.thickness, self.scale.y * 0.5, self.scale.z)
+            x_direction: float = one_door_scale.x / 2
+            y_direction: float = one_door_scale.y / 2
+            z_direction: float = one_door_scale.z / 2
+            handle_directions = [Direction.Y, Direction.NEGATIVE_Y]
+
+            door_factories = []
+            door_transforms = []
+
+            for index, direction in enumerate(handle_directions):
+                handle_factory = HandleFactory(
+                    name=PrefixedName(
+                        f"{self.name.name}_{index}_handle", self.name.prefix
+                    ),
+                )
+
+                door_factory = DoorFactory(
+                    name=PrefixedName(f"{self.name.name}_{index}", self.name.prefix),
+                    scale=one_door_scale,
+                    handle_factory=handle_factory,
+                    handle_direction=direction,
+                )
+
+                door_factories.append(door_factory)
+
+                if door_factory.handle_direction == Direction.Y:
+                    y_direction = -y_direction
+                parent_T_door = TransformationMatrix.from_point_rotation_matrix(
+                    Point3(
+                        x_direction,
+                        y_direction,
+                        z_direction,
+                    )
+                )
+                door_transforms.append(parent_T_door)
+
             door_factory = DoubleDoorFactory(
                 name=self.name,
-                scale=self.scale,
-                handle_factory=HandleFactory(name=handle_name),
+                door_factories=door_factories,
+                door_transforms=door_transforms,
             )
         else:
+            handle_name = PrefixedName(f"{self.name.name}_handle", self.name.prefix)
             door_factory = DoorFactory(
                 name=self.name,
                 scale=self.scale,
