@@ -189,7 +189,7 @@ class ViewTestCase(unittest.TestCase):
     def test_handle_view_eql(self):
         world = self.apartment_world
         with symbolic_mode():
-            body = let("body", type_=Body, domain=world.bodies)
+            body = let(type_=Body, domain=world.bodies)
             query = an(entity(Handle(body=body), in_("handle", body.name.name.lower())))
         handles = list(query.evaluate())
         assert len(handles) > 0
@@ -205,15 +205,11 @@ class ViewTestCase(unittest.TestCase):
     def test_drawer_view_eql(self):
         world = self.apartment_world
         with symbolic_mode():
-            cabinet_body = let("cabinet_body", type_=Body, domain=world.bodies)
-            drawer_body = let("drawer_body", type_=Body, domain=world.bodies)
-            handle_body = let("handle_body", type_=Body, domain=world.bodies)
-            fixed_conn = let(
-                "fixed_conn", type_=FixedConnection, domain=world.connections
-            )
-            prismatic_conn = let(
-                "prismatic_conn", type_=PrismaticConnection, domain=world.connections
-            )
+            cabinet_body = let(type_=Body, domain=world.bodies)
+            drawer_body = let(type_=Body, domain=world.bodies)
+            handle_body = let(type_=Body, domain=world.bodies)
+            fixed_conn = let(type_=FixedConnection, domain=world.connections)
+            prismatic_conn = let(type_=PrismaticConnection, domain=world.connections)
             query = an(
                 entity(
                     Drawer(

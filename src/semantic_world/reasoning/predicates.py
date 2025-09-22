@@ -78,7 +78,7 @@ def robot_in_collision(
     if ignore_collision_with is None:
         ignore_collision_with = []
 
-    body = let("body", type_=Body, domain=robot._world.bodies_with_enabled_collision)
+    body = let(type_=Body, domain=robot._world.bodies_with_enabled_collision)
     possible_collisions_bodies = an(
         entity(
             body,
@@ -111,9 +111,7 @@ def robot_holds_body(robot: AbstractRobot, body: Body) -> bool:
     :return: True if the robot is holding the object, False otherwise
     """
     grippers = an(
-        entity(
-            g := let("gripper", ParallelGripper, robot._world.views), g._robot == robot
-        )
+        entity(g := let(ParallelGripper, robot._world.views), g._robot == robot)
     ).evaluate()
 
     return any([is_body_in_gripper(body, gripper) > 0.0 for gripper in grippers])
@@ -254,7 +252,7 @@ def blocking(
             root._world.state[dof.name].position = state
 
     robot = the(
-        entity(r := let("robot", AbstractRobot, root._world.views), tip in r.bodies)
+        entity(r := let(AbstractRobot, root._world.views), tip in r.bodies)
     ).evaluate()
     return robot_in_collision(robot, [])
 
