@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from typing import Optional, Callable, Type, List
 
 import pytest
-from entity_query_language import an, entity, let, symbolic_mode, in_
+from entity_query_language import an, entity, let, symbolic_mode, in_, infer, rule_mode
 from numpy.ma.testutils import (
     assert_equal,
 )  # You could replace this with numpy's regular assert for better compatibility
@@ -127,13 +127,12 @@ def test_aggregate_bodies(kitchen_world):
     )
 
 
-@pytest.mark.skip
 def test_handle_view_eql(apartment_world):
-    with symbolic_mode():
+    with rule_mode():
         body = let(
             type_=Body,
         )
-        query = an(entity(Handle(body=body), in_("handle", body.name.name.lower())))
+        query = infer(entity(Handle(body=body), in_("handle", body.name.name.lower())))
 
     handles = list(query.evaluate())
     assert len(handles) > 0

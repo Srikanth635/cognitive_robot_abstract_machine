@@ -23,7 +23,7 @@ pathlib
 probabilistic_model
 python-fcl
 manifold3d
-entity_query_language>=2.0.2
+entity_query_language>=2.0.5
 polytope
 ortools
 fbxloader
