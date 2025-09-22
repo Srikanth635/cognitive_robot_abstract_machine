@@ -32,7 +32,7 @@ Core Parts
 
 - :py:mod:`semantic_world.world`: The central scene-graph/kinematic container you interact with. It owns bodies, connections, and degrees of freedom; validates and updates the kinematic structure; provides forward/inverse kinematics, collision-related utilities, callbacks for state/model changes, and orchestration of higher-level semantics like views.
 
-- :py:mod:`semantic_world.orm`: The database layer. It maps world entities and relationships to SQL databases via SQLAlchemy (auto-generated with `ormatic <https://github.com/tomsch420/ormatic>`_), enabling serialization, persistence, and retrieval of complete worlds. It defines the SQL types and a thin interface to store/load worlds reproducibly. If you are unhappy with the storage and retrievel of data from databases you most likely have to change something here
+- :py:mod:`semantic_world.orm`: The database layer. It maps world entities and relationships to SQL databases via SQLAlchemy (auto-generated with `ormatic`), enabling serialization, persistence, and retrieval of complete worlds. It defines the SQL types and a thin interface to store/load worlds reproducibly. If you are unhappy with the storage and retrieval of data from databases you most likely have to change something here
 
 - :py:mod:`semantic_world.spatial_types`: Numeric/symbolic geometric primitives and transformations used across the package (e.g., `TransformationMatrix`, points, vectors, expressions, derivatives). They support composing poses, doing kinematics, and differentiating expressions for solvers.
 
@@ -73,7 +73,7 @@ We aim for documentation coverage of >95%.
 When developing complete features, we want an example that explains the high-level usage showcasing the most important use-cases.
 The examples should be a `jupyter notebook <https://jupyter.org/>`_. 
 Do not commit the jupyter notebook directly to git as this will bloat up the commit and lead to unreadable diffs.
-Convert the jupyter notebook to a `myst-notebook <https://jupyterbook.org/en/stable/file-types/myst-notebooks.html>`_, e. g.
+Convert the jupyter notebook to a `myst-notebook <https://jupyterbook.org/en/stable/file-types/myst-notebooks.html>`_, e.g.
 
 .. code-block:: bash
 
