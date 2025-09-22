@@ -88,14 +88,14 @@ with world.modify_world():
 If we now evaluate the handle query, we see that multiple options exist.
 
 ```python
-print(*list(an(entity(let("handle", Handle, world.views))).evaluate()), sep="\n")
+print(*list(an(entity(let(Handle, world.views))).evaluate()), sep="\n")
 ```
 
 We can refine the handle the agent wants by saying it must belong to a drawer
 
 ```python
-drawer = let("drawer", Drawer, world.views)
-handle = let("handle", Handle, world.views)
+drawer = let(Drawer, world.views)
+handle = let(Handle, world.views)
 print(*list(an(entity(handle, drawer.handle == handle)).evaluate()), sep="\n")
 ```
 
