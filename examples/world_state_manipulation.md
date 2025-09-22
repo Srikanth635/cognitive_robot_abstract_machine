@@ -113,6 +113,9 @@ with world.modify_world():
     world.add_body(new_root)
     root_T_dresser = Connection6DoF(new_root, old_root, _world=world)
     world.add_connection(root_T_dresser)
+rt = RayTracer(world)
+rt.update_scene()
+rt.scene.show("jupyter")
 ```
 
 Now we can start moving the dresser everywhere and even rotate it.
