@@ -75,9 +75,6 @@ with world.modify_world():
 print(f"Bodies after additions: {[str(b.name) for b in world.bodies]}")
 print(f"Connections after additions: {[str(c.name) for c in world.connections]}")
 print(f"Number of DoFs after additions: {len(world.degrees_of_freedom)}")
-rt = RayTracer(world)
-rt.update_scene()
-rt.scene.show("jupyter")
 ```
 
 Now we want to remove the RevoluteConnection. This will also remove its DoF if no other connection uses it.
@@ -92,9 +89,6 @@ with world.modify_world():
 print(f"Final bodies: {[str(b.name) for b in world.bodies]}")
 print(f"Final connections: {[str(c.name) for c in world.connections]}")
 print(f"Final number of DoFs: {len(world.degrees_of_freedom)}")
-rt = RayTracer(world)
-rt.update_scene()
-rt.scene.show("jupyter")
 ```
 
 Another world structure manipulation is the addition/removal of a DoF.

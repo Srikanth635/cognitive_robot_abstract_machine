@@ -74,9 +74,6 @@ with world.modify_world():
         _world=world,
     )
     world.add_connection(leg_to_top)
-rt = RayTracer(world)
-rt.update_scene()
-rt.scene.show("jupyter")
 ```
 
 Next, we create a region describing the top of the table. We declare that the region is a very thin box that sits on top of the table-top.
@@ -102,9 +99,7 @@ with world.modify_world():
     world.add_kinematic_structure_entity(table_surface)
     connection = FixedConnection(table_top, table_surface, _world=world)
     world.add_connection(connection)
-rt = RayTracer(world)
-rt.update_scene()
-rt.scene.show("jupyter")
+print(world.regions)
 ```
 
 We can now see that if we move the table, we also move the region.
