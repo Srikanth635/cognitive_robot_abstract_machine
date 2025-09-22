@@ -52,7 +52,7 @@ drawer_factory = DrawerFactory(
         direction=Direction.Z,
         scale=Scale(0.3, 0.3, 0.2),
     ),
-    handle_factory=HandleFactory(name=PrefixedName("drawer_handle")),
+    handle_factory=HandleFactory(name=PrefixedName("drawer_handle"))
 )
 drawer_transform = TransformationMatrix()
 
@@ -107,7 +107,7 @@ with world.modify_world():
     
     # Add a visual for the new root so we can see the change of position in the visualization
     box_origin = TransformationMatrix.from_xyz_rpy(reference_frame=new_root)
-    box = Box(origin=box_origin, scale=Scale(0.1, 0.1, 0.1), color=Color(1., 0., 0., 1., ))
+    box = Box(origin=box_origin, scale=Scale(0.1, 0.1, 0.1), color=Color(1., 0., 0., 1.))
     new_root.collision = [box]
     
     world.add_body(new_root)
