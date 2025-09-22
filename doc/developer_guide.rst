@@ -73,7 +73,7 @@ We aim for documentation coverage of >95%.
 When developing complete features, we want an example that explains the high-level usage showcasing the most important use-cases.
 The examples should be a `jupyter notebook <https://jupyter.org/>`_. 
 Do not commit the jupyter notebook directly to git as this will bloat up the commit and lead to unreadable diffs.
-Convert the jupyter notebook to a `myst-notebook <https://jupyterbook.org/en/stable/file-types/myst-notebooks.html>`_, e. g.
+Convert the jupyter notebook to a `myst-notebook <https://jupyterbook.org/en/stable/file-types/myst-notebooks.html>`_, e.g.
 
 .. code-block:: bash
 
