@@ -893,6 +893,7 @@ class World:
                     if allow_empty_self:
                         other.remove_kinematic_structure_entity(other_root)
                         self.add_kinematic_structure_entity(other_root)
+                        self_root = other_root if self_root is None else self_root
                 for kinematic_structure_entity in other.kinematic_structure_entities:
                     if kinematic_structure_entity._world is not None:
                         other.remove_kinematic_structure_entity(
@@ -905,7 +906,7 @@ class World:
                     self.add_view(view, exists_ok=handle_duplicates)
 
             connection = root_connection
-            if not connection:
+            if not connection and self_root and not (self_root == other_root):
                 connection = Connection6DoF(
                     parent=self_root, child=other_root, _world=self
                 )
