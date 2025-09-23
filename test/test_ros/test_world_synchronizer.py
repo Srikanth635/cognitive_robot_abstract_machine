@@ -11,11 +11,17 @@ from semantic_world.adapters.ros.world_synchronizer import (
     ModelReloadSynchronizer,
     ModelSynchronizer,
 )
+from semantic_world.adapters.urdf import URDFParser
 from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.orm.ormatic_interface import Base, WorldMappingDAO
+from semantic_world.spatial_types import Vector3
 from semantic_world.testing import rclpy_node
 from semantic_world.world import World
-from semantic_world.world_description.connections import Connection6DoF
+from semantic_world.world_description.connections import (
+    Connection6DoF,
+    RevoluteConnection,
+)
+from semantic_world.world_description.degree_of_freedom import DegreeOfFreedom
 from semantic_world.world_description.world_entity import KinematicStructureEntity, Body
 
 
@@ -152,6 +158,41 @@ def test_model_synchronization_creation_only(rclpy_node):
     assert len(w2.kinematic_structure_entities) == 2
     assert len(w1.connections) == 1
     assert len(w2.connections) == 1
+
+    synchronizer_1.close()
+    synchronizer_2.close()
+
+
+def test_model_synchronization_merge_full_world(rclpy_node):
+
+    w1 = World(name="w1")
+    w2 = World(name="w2")
+
+    synchronizer_1 = ModelSynchronizer(
+        node=rclpy_node,
+        world=w1,
+    )
+    synchronizer_2 = ModelSynchronizer(
+        node=rclpy_node,
+        world=w2,
+    )
+
+    pr2_world = URDFParser.from_file(
+        "/home/luca-krohm/work/semantic_world/resources/urdf/pr2_kinematic_tree.urdf"
+    ).parse()
+
+    with w1.modify_world():
+        new_body = Body(name=PrefixedName("b3"))
+        w1.add_kinematic_structure_entity(new_body)
+
+    w1.merge_world(pr2_world)
+    time.sleep(0.5)
+    body_names_1 = [body.name for body in w1.kinematic_structure_entities]
+    body_names_2 = [body.name for body in w2.kinematic_structure_entities]
+    assert body_names_1 == body_names_2
+    assert len(w1.kinematic_structure_entities) == len(w2.kinematic_structure_entities)
+    assert len(w1.connections) == len(w2.connections)
+    assert len(w2.degrees_of_freedom) == len(w1.degrees_of_freedom)
 
     synchronizer_1.close()
     synchronizer_2.close()
