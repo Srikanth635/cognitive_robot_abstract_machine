@@ -75,6 +75,23 @@ class HasDoorFactories(ABC):
     The transformations for the doors relative to the dresser container.
     """
 
+    def create_door_upper_lower_limits(
+        self, door_factory: DoorFactory
+    ) -> Tuple[DerivativeMap[float], DerivativeMap[float]]:
+
+        lower_limits = DerivativeMap[float]()
+        upper_limits = DerivativeMap[float]()
+        lower_limits.position = -np.pi / 2
+        upper_limits.position = 0.0
+
+        if door_factory.handle_direction in {
+            Direction.NEGATIVE_X,
+            Direction.NEGATIVE_Y,
+        }:
+            lower_limits.position = 0.0
+            upper_limits.position = np.pi / 2
+        return upper_limits, lower_limits
+
     def add_door_to_world(
         self,
         door_factory: DoorFactory,
@@ -91,40 +108,24 @@ class HasDoorFactories(ABC):
         :param parent_world: The world to which the door will be added.
         """
         door_world = door_factory.create()
+        root = door_world.root
 
-        door_view: Door = door_world.get_views_by_type(Door)[0]
-        door_body = door_view.body
-
-        lower_limits = DerivativeMap[float]()
-        upper_limits = DerivativeMap[float]()
-
-        lower_limits.position = -np.pi / 2
-        upper_limits.position = 0.0
-
-        if door_factory.handle_direction in {
-            Direction.NEGATIVE_X,
-            Direction.NEGATIVE_Y,
-        }:
-            lower_limits.position = 0.0
-            upper_limits.position = np.pi / 2
+        upper_limits, lower_limits = self.create_door_upper_lower_limits(door_factory)
 
         dof = DegreeOfFreedom(
-            name=PrefixedName(
-                f"{door_body.name.name}_connection", door_body.name.prefix
-            ),
+            name=PrefixedName(f"{root.name.name}_connection", root.name.prefix),
             lower_limits=lower_limits,
             upper_limits=upper_limits,
         )
         with parent_world.modify_world():
-            parent_world.add_degree_of_freedom(dof)
-
+            door_view: Door = door_world.get_views_by_type(Door)[0]
             pivot_point = self.calculate_door_pivot_point(
                 door_view, parent_T_door, door_factory.scale
             )
 
             connection = RevoluteConnection(
                 parent=parent_world.root,
-                child=door_body,
+                child=root,
                 origin_expression=pivot_point,
                 multiplier=1.0,
                 offset=0.0,
@@ -151,7 +152,7 @@ class HasDoorFactories(ABC):
             )
 
     def calculate_door_pivot_point(
-        self, door_view, door_transform: TransformationMatrix, scale: Scale
+        self, door_view: Door, door_transform: TransformationMatrix, scale: Scale
     ) -> TransformationMatrix:
         """
         Calculate the door pivot point based on the handle position and the door scale. The pivot point is on the opposite
@@ -181,6 +182,25 @@ class HasDoorFactories(ABC):
 
         return door_transform
 
+    def get_door_transforms(
+        self, doors, door_factory, door_transform
+    ) -> TransformationMatrix:
+        """
+        Calculate the door pivot point based on the door factory and the door transform.
+        """
+        match door_factory:
+            case DoorFactory():
+                door_transform = self.calculate_door_pivot_point(
+                    doors[0], door_transform, door_factory.scale
+                )
+            case DoubleDoorFactory():
+                translation = door_transform.to_position().to_np()
+                door_transform = TransformationMatrix.from_point_rotation_matrix(
+                    Point3(translation[0], translation[1], 0)
+                )
+
+        return door_transform
+
 
 @dataclass
 class HasHandleFactory(ABC):
@@ -189,7 +209,7 @@ class HasHandleFactory(ABC):
     The factory used to create the handle of the door.
     """
 
-    handle_direction: Optional[Direction] = field(default=None)
+    handle_direction: Direction = field(default=Direction.Y)
     """
     The direction on the door in which the handle positioned.
     """
@@ -276,21 +296,17 @@ class HasDrawerFactories(ABC):
             drawer_factory
         )
         drawer_world = drawer_factory.create()
-
-        drawer_view: Drawer = drawer_world.get_views_by_type(Drawer)[0]
-        drawer_body = drawer_view.container.body
+        root = drawer_world.root
 
         dof = DegreeOfFreedom(
-            name=PrefixedName(
-                f"{drawer_body.name.name}_connection", drawer_body.name.prefix
-            ),
+            name=PrefixedName(f"{root.name.name}_connection", root.name.prefix),
             lower_limits=lower_limits,
             upper_limits=upper_limits,
         )
 
         connection = PrismaticConnection(
             parent=parent_world.root,
-            child=drawer_body,
+            child=root,
             origin_expression=parent_T_drawer,
             multiplier=1.0,
             offset=0.0,
@@ -322,8 +338,8 @@ class HasDrawerFactories(ABC):
         Return the upper and lower limits for the drawer's degree of freedom.
         """
         lower_limits = DerivativeMap[float]()
-        lower_limits.position = 0.0
         upper_limits = DerivativeMap[float]()
+        lower_limits.position = 0.0
         upper_limits.position = drawer_factory.container_factory.scale.x * 0.75
 
         return upper_limits, lower_limits
@@ -382,7 +398,7 @@ class ContainerFactory(ViewFactory[Container]):
     The thickness of the walls of the container.
     """
 
-    direction: Direction = Direction.X
+    direction: Direction = field(default=Direction.X)
     """
     The direction in which the container is open.
     """
@@ -557,14 +573,7 @@ class HandleFactory(ViewFactory[Handle]):
 
 
 @dataclass
-class EntryWayFactory(ViewFactory[T], ABC):
-    """
-    Abstract factory for creating an entryway with a body.
-    """
-
-
-@dataclass
-class DoorFactory(EntryWayFactory[Door], HasHandleFactory):
+class DoorFactory(ViewFactory[Door], HasHandleFactory):
     """
     Factory for creating a door with a handle. The door is defined by its scale and handle direction.
     The doors origin is at the pivot point of the door, not at the center.
@@ -637,7 +646,7 @@ class DoorFactory(EntryWayFactory[Door], HasHandleFactory):
 
 
 @dataclass
-class DoubleDoorFactory(EntryWayFactory[DoubleDoor], HasDoorFactories):
+class DoubleDoorFactory(ViewFactory[DoubleDoor], HasDoorFactories):
     """
     Factory for creating a double door with two doors and their handles.
     """
@@ -973,25 +982,6 @@ class WallFactory(ViewFactory[Wall], HasDoorFactories):
                 wall_event -= door_event
 
         return wall_event
-
-    def get_door_transforms(
-        self, doors, door_factory, door_transform
-    ) -> TransformationMatrix:
-        """
-        Calculate the door pivot point based on the door factory and the door transform.
-        """
-        match door_factory:
-            case DoorFactory():
-                door_transform = self.calculate_door_pivot_point(
-                    doors[0], door_transform, door_factory.scale
-                )
-            case DoubleDoorFactory():
-                translation = door_transform.to_position().to_np()
-                door_transform = TransformationMatrix.from_point_rotation_matrix(
-                    Point3(translation[0], translation[1], 0)
-                )
-
-        return door_transform
 
     def build_temp_world(
         self, door_world: World, door_transform: TransformationMatrix
