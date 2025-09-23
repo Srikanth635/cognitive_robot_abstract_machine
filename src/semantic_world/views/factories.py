@@ -61,7 +61,7 @@ def event_from_scale(scale: Scale):
 
 
 @dataclass
-class HasDoorFactory(ABC):
+class HasDoorFactories(ABC):
 
     door_factories: List[DoorFactory] = field(default_factory=list, hash=False)
     """
@@ -184,7 +184,9 @@ class HasHandleFactory(ABC):
     The direction on the door in which the handle positioned.
     """
 
-    def create_parent_T_handle_from_scale(self, scale: Scale) -> Optional[TransformationMatrix]:
+    def create_parent_T_handle_from_scale(
+        self, scale: Scale
+    ) -> Optional[TransformationMatrix]:
         """
         Return a transformation matrix that defines the position and orientation of the handle relative to the door.
         :raises: NotImplementedError if the handle direction is Z or NEGATIVE_Z.
@@ -220,7 +222,7 @@ JointLimits = Tuple[DerivativeMap[float], DerivativeMap[float]]
 
 
 @dataclass
-class HasDrawerFactory(ABC):
+class HasDrawerFactories(ABC):
 
     drawers_factories: List[DrawerFactory] = field(default_factory=list, hash=False)
     """
@@ -599,7 +601,7 @@ class DoorFactory(EntryWayFactory[Door], HasHandleFactory):
 
 
 @dataclass
-class DoubleDoorFactory(EntryWayFactory[DoubleDoor], HasDoorFactory):
+class DoubleDoorFactory(EntryWayFactory[DoubleDoor], HasDoorFactories):
     """
     Factory for creating a double door with two doors and their handles.
     """
@@ -701,7 +703,7 @@ class DrawerFactory(ViewFactory[Drawer]):
 
 
 @dataclass
-class DresserFactory(ViewFactory[Dresser], HasDoorFactory, HasDrawerFactory):
+class DresserFactory(ViewFactory[Dresser], HasDoorFactories, HasDrawerFactories):
     """
     Factory for creating a dresser with drawers, and doors.
     """
@@ -867,7 +869,7 @@ class RoomFactory(ViewFactory[Room]):
 
 
 @dataclass
-class WallFactory(ViewFactory[Wall], HasDoorFactory):
+class WallFactory(ViewFactory[Wall], HasDoorFactories):
 
     scale: Scale = field(kw_only=True)
     """
