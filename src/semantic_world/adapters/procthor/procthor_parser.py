@@ -129,6 +129,69 @@ class ProcthorDoor:
             Point3(0, -width_origin_center, height_origin_center)
         )
 
+    def _get_double_door_factory(self) -> DoubleDoorFactory:
+        """
+        Parses the parameters according to the double door assumptions, and returns a double door factory.
+        """
+        one_door_scale = Scale(self.thickness, self.scale.y * 0.5, self.scale.z)
+        x_direction: float = one_door_scale.x / 2
+        y_direction: float = one_door_scale.y / 2
+        z_direction: float = one_door_scale.z / 2
+        handle_directions = [Direction.Y, Direction.NEGATIVE_Y]
+
+        door_factories = []
+        door_transforms = []
+
+        for index, direction in enumerate(handle_directions):
+            single_door_name = PrefixedName(
+                f"{self.name.name}_{index}", self.name.prefix
+            )
+            door_factory = self._get_single_door_factory(
+                single_door_name, one_door_scale, direction
+            )
+
+            door_factories.append(door_factory)
+
+            parent_T_door = TransformationMatrix.from_point_rotation_matrix(
+                Point3(
+                    x_direction,
+                    (
+                        y_direction
+                        if door_factory.handle_direction == Direction.NEGATIVE_Y
+                        else -y_direction
+                    ),
+                    z_direction,
+                )
+            )
+            door_transforms.append(parent_T_door)
+
+        double_door_factory = DoubleDoorFactory(
+            name=self.name,
+            door_factories=door_factories,
+            door_transforms=door_transforms,
+        )
+        return double_door_factory
+
+    def _get_single_door_factory(
+        self,
+        name: Optional[PrefixedName] = None,
+        scale: Optional[Scale] = None,
+        handle_direction: Direction = Direction.Y,
+    ):
+        """
+        Parses the parameters according to the single door assumptions, and returns a single door factory.
+        """
+        name = self.name if name is None else name
+        scale = self.scale if scale is None else scale
+        handle_name = PrefixedName(f"{name.name}_handle", name.prefix)
+        door_factory = DoorFactory(
+            name=name,
+            scale=scale,
+            handle_factory=HandleFactory(name=handle_name),
+            handle_direction=handle_direction,
+        )
+        return door_factory
+
     def get_factory(self) -> Union[DoorFactory, DoubleDoorFactory]:
         """
         Returns a Factory for the door, either a DoorFactory or a DoubleDoorFactory,
@@ -136,57 +199,9 @@ class ProcthorDoor:
         """
 
         if "double" in self.name.name.lower():
-            one_door_scale = Scale(self.thickness, self.scale.y * 0.5, self.scale.z)
-            x_direction: float = one_door_scale.x / 2
-            y_direction: float = one_door_scale.y / 2
-            z_direction: float = one_door_scale.z / 2
-            handle_directions = [Direction.Y, Direction.NEGATIVE_Y]
-
-            door_factories = []
-            door_transforms = []
-
-            for index, direction in enumerate(handle_directions):
-                handle_factory = HandleFactory(
-                    name=PrefixedName(
-                        f"{self.name.name}_{index}_handle", self.name.prefix
-                    ),
-                )
-
-                door_factory = DoorFactory(
-                    name=PrefixedName(f"{self.name.name}_{index}", self.name.prefix),
-                    scale=one_door_scale,
-                    handle_factory=handle_factory,
-                    handle_direction=direction,
-                )
-
-                door_factories.append(door_factory)
-
-                if door_factory.handle_direction == Direction.Y:
-                    y_direction = -y_direction
-                parent_T_door = TransformationMatrix.from_point_rotation_matrix(
-                    Point3(
-                        x_direction,
-                        y_direction,
-                        z_direction,
-                    )
-                )
-                door_transforms.append(parent_T_door)
-
-            door_factory = DoubleDoorFactory(
-                name=self.name,
-                door_factories=door_factories,
-                door_transforms=door_transforms,
-            )
+            return self._get_double_door_factory()
         else:
-            handle_name = PrefixedName(f"{self.name.name}_handle", self.name.prefix)
-            door_factory = DoorFactory(
-                name=self.name,
-                scale=self.scale,
-                handle_factory=HandleFactory(name=handle_name),
-                handle_direction=Direction.Y,
-            )
-
-        return door_factory
+            return self._get_single_door_factory()
 
 
 @dataclass

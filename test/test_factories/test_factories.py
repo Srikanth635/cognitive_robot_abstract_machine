@@ -72,7 +72,7 @@ class TestFactories(unittest.TestCase):
         factory = DoubleDoorFactory(
             name=PrefixedName("double_door"),
             door_factories=door_factories,
-            door_transforms=door_transforms
+            door_transforms=door_transforms,
         )
         world = factory.create()
         door_views = world.get_views_by_type(Door)
@@ -169,7 +169,7 @@ class TestFactories(unittest.TestCase):
         double_door_factory = DoubleDoorFactory(
             name=PrefixedName("double_door"),
             door_factories=door_factories,
-            door_transforms=door_transforms
+            door_transforms=door_transforms,
         )
         double_door_transform = TransformationMatrix()
 
@@ -179,7 +179,6 @@ class TestFactories(unittest.TestCase):
             handle_direction=Direction.Y,
         )
         single_door_transform = TransformationMatrix.from_xyz_rpy(y=-1.5)
-
 
         factory = WallFactory(
             name=PrefixedName("wall"),
