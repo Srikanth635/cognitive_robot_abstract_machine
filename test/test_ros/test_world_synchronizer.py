@@ -1,3 +1,4 @@
+import os
 import time
 import unittest
 
@@ -15,6 +16,7 @@ from semantic_world.adapters.urdf import URDFParser
 from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.orm.ormatic_interface import Base, WorldMappingDAO
 from semantic_world.testing import rclpy_node
+from semantic_world.utils import get_semantic_world_directory_root
 from semantic_world.world import World
 from semantic_world.world_description.connections import (
     Connection6DoF,
@@ -175,7 +177,12 @@ def test_model_synchronization_merge_full_world(rclpy_node):
     )
 
     pr2_world = URDFParser.from_file(
-        "/home/luca-krohm/work/semantic_world/resources/urdf/pr2_kinematic_tree.urdf"
+        os.path.join(
+            get_semantic_world_directory_root(os.getcwd()),
+            "resources",
+            "urdf",
+            "pr2_kinematic_tree.urdf",
+        )
     ).parse()
 
     with w1.modify_world():
@@ -183,9 +190,22 @@ def test_model_synchronization_merge_full_world(rclpy_node):
         w1.add_kinematic_structure_entity(new_body)
 
     w1.merge_world(pr2_world)
-    time.sleep(0.5)
-    body_names_1 = [body.name for body in w1.kinematic_structure_entities]
-    body_names_2 = [body.name for body in w2.kinematic_structure_entities]
+
+    def wait_for_sync(timeout=2.0, interval=0.05):
+        start = time.time()
+        while time.time() - start < timeout:
+            body_names_1 = [body.name for body in w1.kinematic_structure_entities]
+            body_names_2 = [body.name for body in w2.kinematic_structure_entities]
+            if body_names_1 == body_names_2:
+                return body_names_1, body_names_2
+            time.sleep(interval)
+
+        body_names_1 = [body.name for body in w1.kinematic_structure_entities]
+        body_names_2 = [body.name for body in w2.kinematic_structure_entities]
+        return body_names_1, body_names_2
+
+    body_names_1, body_names_2 = wait_for_sync()
+
     assert body_names_1 == body_names_2
     assert len(w1.kinematic_structure_entities) == len(w2.kinematic_structure_entities)
     assert len(w1.connections) == len(w2.connections)
