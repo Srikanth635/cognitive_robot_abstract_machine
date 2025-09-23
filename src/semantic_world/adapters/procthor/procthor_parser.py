@@ -490,7 +490,7 @@ class ProcthorObject:
                     child=child_world.root,
                     origin_expression=obj_T_child,
                 )
-                body_world.merge_world(child_world, child_connection)
+                body_world.merge_world(child_world, child_connection, handle_duplicates=True)
 
             return body_world
 
@@ -589,7 +589,7 @@ class ProcTHORParser:
                 child=room_world.root,
                 origin_expression=procthor_room.world_T_room,
             )
-            world.merge_world(room_world, room_connection)
+            world.merge_world(room_world, room_connection, handle_duplicates=True)
 
     def import_objects(self, world: World, objects: List[Dict]):
         """
@@ -629,7 +629,7 @@ class ProcTHORParser:
                 child=wall_world.root,
                 origin_expression=procthor_wall.world_T_wall,
             )
-            world.merge_world(wall_world, wall_connection)
+            world.merge_world(wall_world, wall_connection, handle_duplicates=True)
 
     @staticmethod
     def _build_procthor_wall_from_polygon(
