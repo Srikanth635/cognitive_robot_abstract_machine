@@ -80,7 +80,7 @@ class HasDoorFactories(ABC):
         door_factory: DoorFactory,
         parent_T_door: TransformationMatrix,
         parent_world: World,
-    ) -> Door:
+    ):
         """
         Adds a door to the parent world with a revolute connection. The Door's pivot point is on the opposite side of the
         handle.
@@ -89,8 +89,6 @@ class HasDoorFactories(ABC):
         :param parent_T_door: The transformation matrix defining the door's position and orientation relative
         to the parent world.
         :param parent_world: The world to which the door will be added.
-
-        :return: The door view that was added to the parent world.
         """
         door_world = door_factory.create()
 
@@ -136,9 +134,21 @@ class HasDoorFactories(ABC):
 
             parent_world.merge_world(door_world, connection)
 
-            door_view = parent_world.get_views_by_type(Door)[0]
-
-            return door_view
+    def add_doors_to_world(
+        self,
+        parent_world: World,
+    ):
+        """
+        Adds doors to the parent world.
+        """
+        for door_factory, door_transform in zip(
+            self.door_factories, self.door_transforms
+        ):
+            self.add_door_to_world(
+                door_factory=door_factory,
+                parent_T_door=door_transform,
+                parent_world=parent_world,
+            )
 
     def calculate_door_pivot_point(
         self, door_view, door_transform: TransformationMatrix, scale: Scale
@@ -174,17 +184,17 @@ class HasDoorFactories(ABC):
 
 @dataclass
 class HasHandleFactory(ABC):
-    handle_factory: HandleFactory = field(default=None)
+    handle_factory: HandleFactory = field(kw_only=True)
     """
     The factory used to create the handle of the door.
     """
 
-    handle_direction: Direction = Direction.Y
+    handle_direction: Optional[Direction] = field(default=None)
     """
     The direction on the door in which the handle positioned.
     """
 
-    def create_parent_T_handle_from_scale(
+    def create_parent_T_handle_from_parent_scale(
         self, scale: Scale
     ) -> Optional[TransformationMatrix]:
         """
@@ -217,8 +227,27 @@ class HasHandleFactory(ABC):
                     f"Handle Creation for handle_direction NEGATIVE_Z is not implemented yet"
                 )
 
+    def add_handle_to_world(
+        self,
+        parent_T_handle: TransformationMatrix,
+        parent_world: World,
+    ):
+        """
+        Adds a handle to the parent world with a fixed connection.
 
-JointLimits = Tuple[DerivativeMap[float], DerivativeMap[float]]
+        :param parent_T_handle: The transformation matrix defining the handle's position and orientation relative
+        to the parent world.
+        :param parent_world: The world to which the handle will be added.
+        """
+        handle_world = self.handle_factory.create()
+
+        connection = FixedConnection(
+            parent=parent_world.root,
+            child=handle_world.root,
+            origin_expression=parent_T_handle,
+        )
+
+        parent_world.merge_world(handle_world, connection)
 
 
 @dataclass
@@ -236,53 +265,68 @@ class HasDrawerFactories(ABC):
     The transformations for the drawers relative to the dresser container.
     """
 
+    def add_drawer_to_world(
+        self,
+        drawer_factory: DrawerFactory,
+        parent_T_drawer: TransformationMatrix,
+        parent_world: World,
+    ):
+
+        lower_limits, upper_limits = self.create_drawer_upper_lower_limits(
+            drawer_factory
+        )
+        drawer_world = drawer_factory.create()
+
+        drawer_view: Drawer = drawer_world.get_views_by_type(Drawer)[0]
+        drawer_body = drawer_view.container.body
+
+        dof = DegreeOfFreedom(
+            name=PrefixedName(
+                f"{drawer_body.name.name}_connection", drawer_body.name.prefix
+            ),
+            lower_limits=lower_limits,
+            upper_limits=upper_limits,
+        )
+
+        connection = PrismaticConnection(
+            parent=parent_world.root,
+            child=drawer_body,
+            origin_expression=parent_T_drawer,
+            multiplier=1.0,
+            offset=0.0,
+            axis=Vector3.X(),
+            dof=dof,
+        )
+
+        parent_world.merge_world(drawer_world, connection)
+
     def add_drawers_to_world(self, parent_world: World):
         """
         Adds drawers to the parent world. A prismatic connection is created for each drawer.
         """
-        joint_limits = self.create_drawers_upper_lower_limits()
-        for drawer_factory, transform, joint_limit in zip(
-            self.drawers_factories, self.drawer_transforms, joint_limits
+
+        for drawer_factory, transform in zip(
+            self.drawers_factories, self.drawer_transforms
         ):
-            lower_limits, upper_limits = joint_limit
-            drawer_world = drawer_factory.create()
-
-            drawer_view: Drawer = drawer_world.get_views_by_type(Drawer)[0]
-            drawer_body = drawer_view.container.body
-
-            dof = DegreeOfFreedom(
-                name=PrefixedName(
-                    f"{drawer_body.name.name}_connection", drawer_body.name.prefix
-                ),
-                lower_limits=lower_limits,
-                upper_limits=upper_limits,
+            self.add_drawer_to_world(
+                drawer_factory=drawer_factory,
+                parent_T_drawer=transform,
+                parent_world=parent_world,
             )
 
-            connection = PrismaticConnection(
-                parent=parent_world.root,
-                child=drawer_body,
-                origin_expression=transform,
-                multiplier=1.0,
-                offset=0.0,
-                axis=Vector3.X(),
-                dof=dof,
-            )
-
-            parent_world.merge_world(drawer_world, connection)
-
-    def create_drawers_upper_lower_limits(self) -> List[JointLimits]:
+    @staticmethod
+    def create_drawer_upper_lower_limits(
+        drawer_factory: DrawerFactory,
+    ) -> Tuple[DerivativeMap[float], DerivativeMap[float]]:
         """
         Return the upper and lower limits for the drawer's degree of freedom.
         """
-        joint_limits = []
-        for drawer_factory in self.drawers_factories:
-            lower_limits = DerivativeMap[float]()
-            lower_limits.position = 0.0
-            upper_limits = DerivativeMap[float]()
-            upper_limits.position = drawer_factory.container_factory.scale.x * 0.75
-            joint_limits.append((lower_limits, upper_limits))
+        lower_limits = DerivativeMap[float]()
+        lower_limits.position = 0.0
+        upper_limits = DerivativeMap[float]()
+        upper_limits.position = drawer_factory.container_factory.scale.x * 0.75
 
-        return joint_limits
+        return upper_limits, lower_limits
 
 
 T = TypeVar("T")
@@ -316,7 +360,7 @@ class ViewFactory(Generic[T], ABC):
 
         :return: The world.
         """
-        world = World()
+        world = World(name=self.name.name)
         with world.modify_world():
             world = self._create(world)
         return world
@@ -361,7 +405,6 @@ class ContainerFactory(ViewFactory[Container]):
 
         world.add_kinematic_structure_entity(container_body)
         world.add_view(container_view)
-        world.name = self.name.name
 
         return world
 
@@ -459,7 +502,6 @@ class HandleFactory(ViewFactory[Handle]):
 
         world.add_kinematic_structure_entity(handle)
         world.add_view(handle_view)
-        world.name = self.name.name
         return world
 
     def create_handle_event(self) -> Event:
@@ -548,16 +590,10 @@ class DoorFactory(EntryWayFactory[Door], HasHandleFactory):
 
         world.add_kinematic_structure_entity(body)
 
-        handle_world = self.handle_factory.create()
-        handle_view: Handle = handle_world.get_views_by_type(Handle)[0]
-        door_T_handle = self.create_parent_T_handle_from_scale(self.scale)
-        connection_door_T_handle = FixedConnection(
-            world.root, handle_world.root, door_T_handle
-        )
-
-        world.merge_world(handle_world, connection_door_T_handle)
+        door_T_handle = self.create_parent_T_handle_from_parent_scale(self.scale)
+        self.add_handle_to_world(door_T_handle, world)
+        handle_view: Handle = world.get_views_by_type(Handle)[0]
         world.add_view(Door(name=self.name, handle=handle_view, body=body))
-        world.name = self.name.name
 
         return world
 
@@ -614,58 +650,35 @@ class DoubleDoorFactory(EntryWayFactory[DoubleDoor], HasDoorFactories):
         double_door_body = Body(name=self.name)
         world.add_kinematic_structure_entity(double_door_body)
 
-        assert len(self.door_factories) == 2, "Double door must have exactly two doors"
+        assert (
+            len(self.door_factories) == 2
+        ), "Double door must have exactly two door factories"
 
-        left_door, right_door = self.add_doors_to_world(
+        self.add_doors_to_world(
             parent_world=world,
-            door_factories=self.door_factories,
-            door_transforms=self.door_transforms,
         )
+
+        door_views = world.get_views_by_type(Door)
+        assert len(door_views) == 2, "Double door must have exactly two doors views"
+
+        left_door, right_door = door_views
+        if (
+            left_door.body.parent_connection.origin_expression.y
+            > right_door.body.parent_connection.origin_expression.y
+        ):
+            right_door, left_door = door_views[0], door_views[1]
 
         double_door_view = DoubleDoor(
             body=double_door_body, left_door=left_door, right_door=right_door
         )
         world.add_view(double_door_view)
-        world.name = self.name.name
         return world
-
-    def add_doors_to_world(
-        self,
-        parent_world: World,
-        door_factories: List[DoorFactory],
-        door_transforms: List[TransformationMatrix],
-    ) -> tuple[Door, Door]:
-        """
-        Adds doors to the parent world.
-        """
-        left_door = None
-        right_door = None
-
-        for door_factory, door_transforms in zip(door_factories, door_transforms):
-
-            door = self.add_door_to_world(
-                door_factory=door_factory,
-                parent_T_door=door_transforms,
-                parent_world=parent_world,
-            )
-            if door_factory.handle_direction == Direction.Y:
-                right_door = door
-            else:
-                left_door = door
-
-        assert (left_door is not None) and (right_door is not None)
-        return left_door, right_door
 
 
 @dataclass
-class DrawerFactory(ViewFactory[Drawer]):
+class DrawerFactory(ViewFactory[Drawer], HasHandleFactory):
     """
     Factory for creating a drawer with a handle and a container.
-    """
-
-    handle_factory: HandleFactory = field(default=None)
-    """
-    The factory used to create the handle of the drawer.
     """
 
     container_factory: ContainerFactory = field(default=None)
@@ -677,29 +690,24 @@ class DrawerFactory(ViewFactory[Drawer]):
         """
         Return a world with a drawer at its root. The drawer consists of a container and a handle.
         """
-        container_world = self.container_factory.create()
-        container_view: Container = container_world.get_views_by_type(Container)[0]
 
-        handle_world = self.handle_factory.create()
-        handle_view: Handle = handle_world.get_views_by_type(Handle)[0]
+        container_world = self.container_factory.create()
+        world.merge_world(container_world)
 
         drawer_T_handle = TransformationMatrix.from_xyz_rpy(
             self.container_factory.scale.x / 2, 0, 0, 0, 0, 0
         )
-        connection_drawer_T_handle = FixedConnection(
-            parent=container_world.root,
-            child=handle_world.root,
-            origin_expression=drawer_T_handle,
-        )
 
-        container_world.merge_world(handle_world, connection_drawer_T_handle)
+        self.add_handle_to_world(drawer_T_handle, world)
+
+        container_view: Container = world.get_views_by_type(Container)[0]
+        handle_view: Handle = world.get_views_by_type(Handle)[0]
         drawer_view = Drawer(
             name=self.name, container=container_view, handle=handle_view
         )
-        container_world.add_view(drawer_view)
-        container_world.name = self.name.name
+        world.add_view(drawer_view)
 
-        return container_world
+        return world
 
 
 @dataclass
@@ -723,7 +731,7 @@ class DresserFactory(ViewFactory[Dresser], HasDoorFactories, HasDrawerFactories)
         ), "Number of drawers must match number of transforms"
 
         dresser_world = self.make_dresser_world()
-
+        dresser_world.name = world.name
         return self.make_interior(dresser_world)
 
     def make_dresser_world(self) -> World:
@@ -733,10 +741,7 @@ class DresserFactory(ViewFactory[Dresser], HasDoorFactories, HasDrawerFactories)
         dresser_world = self.container_factory.create()
         container_view: Container = dresser_world.get_views_by_type(Container)[0]
 
-        for door_factory, parent_T_door in zip(
-            self.door_factories, self.door_transforms
-        ):
-            self.add_door_to_world(door_factory, parent_T_door, dresser_world)
+        self.add_doors_to_world(dresser_world)
 
         self.add_drawers_to_world(dresser_world)
 
@@ -880,23 +885,22 @@ class WallFactory(ViewFactory[Wall], HasDoorFactories):
         """
         Return a world with the wall body at its root and potentially doors and double doors as children of the wall body.
         """
-        wall_world = world
         wall_body = Body(name=self.name)
         wall_collision = self._create_wall_collision(wall_body)
         wall_body.collision = wall_collision
         wall_body.visual = wall_collision
-        wall_world.add_kinematic_structure_entity(wall_body)
+        world.add_kinematic_structure_entity(wall_body)
 
-        self.add_doors_and_double_doors_to_world(wall_world)
+        self.add_doors_and_double_doors_to_world(world)
 
         wall = Wall(
             name=self.name,
             body=wall_body,
         )
 
-        wall_world.add_view(wall)
+        world.add_view(wall)
 
-        return wall_world
+        return world
 
     def _create_wall_collision(self, reference_frame: Body) -> ShapeCollection:
         """

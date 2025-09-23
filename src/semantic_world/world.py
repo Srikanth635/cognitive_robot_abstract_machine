@@ -29,9 +29,9 @@ from typing_extensions import (
 from typing_extensions import List
 from typing_extensions import Type, Set
 
-from .world_description.connection_factories import ConnectionFactory
 from .callbacks.callback import StateChangeCallback, ModelChangeCallback
 from .datastructures.prefixed_name import PrefixedName
+from .datastructures.types import NpMatrix4x4
 from .exceptions import (
     DuplicateViewError,
     AddingAnExistingViewError,
@@ -44,8 +44,8 @@ from .spatial_computations.forward_kinematics import ForwardKinematicsVisitor
 from .spatial_computations.ik_solver import InverseKinematicsSolver
 from .spatial_types import spatial_types as cas
 from .spatial_types.derivatives import Derivatives
-from .datastructures.types import NpMatrix4x4
 from .utils import IDGenerator, copy_lru_cache
+from .world_description.connection_factories import ConnectionFactory
 from .world_description.connections import (
     ActiveConnection,
     PassiveConnection,
@@ -888,6 +888,9 @@ class World:
                     other.remove_kinematic_structure_entity(connection.parent)
                     other.remove_kinematic_structure_entity(connection.child)
                     self.add_connection(connection, handle_duplicates=handle_duplicates)
+                else:
+                    other.remove_kinematic_structure_entity(other_root)
+                    self.add_kinematic_structure_entity(other_root)
                 for kinematic_structure_entity in other.kinematic_structure_entities:
                     if kinematic_structure_entity._world is not None:
                         other.remove_kinematic_structure_entity(
@@ -899,12 +902,16 @@ class World:
                     other.remove_view(view)
                     self.add_view(view, exists_ok=handle_duplicates)
 
-            connection = root_connection or Connection6DoF(
-                parent=self_root, child=other_root, _world=self
-            )
-            for dof in connection.dofs:
-                self.add_degree_of_freedom(dof)
-            self.add_connection(connection, handle_duplicates=handle_duplicates)
+            connection = root_connection
+            if not connection and self_root:
+                connection = Connection6DoF(
+                    parent=self_root, child=other_root, _world=self
+                )
+
+            if connection:
+                for dof in connection.dofs:
+                    self.add_degree_of_freedom(dof)
+                self.add_connection(connection, handle_duplicates=handle_duplicates)
 
     def move_branch(
         self,
