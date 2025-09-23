@@ -29,9 +29,9 @@ from typing_extensions import (
 from typing_extensions import List
 from typing_extensions import Type, Set
 
-from .world_description.connection_factories import ConnectionFactory
 from .callbacks.callback import StateChangeCallback, ModelChangeCallback
 from .datastructures.prefixed_name import PrefixedName
+from .datastructures.types import NpMatrix4x4
 from .exceptions import (
     DuplicateViewError,
     AddingAnExistingViewError,
@@ -44,8 +44,8 @@ from .spatial_computations.forward_kinematics import ForwardKinematicsVisitor
 from .spatial_computations.ik_solver import InverseKinematicsSolver
 from .spatial_types import spatial_types as cas
 from .spatial_types.derivatives import Derivatives
-from .datastructures.types import NpMatrix4x4
 from .utils import IDGenerator, copy_lru_cache
+from .world_description.connection_factories import ConnectionFactory
 from .world_description.connections import (
     ActiveConnection,
     PassiveConnection,

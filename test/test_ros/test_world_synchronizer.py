@@ -14,15 +14,12 @@ from semantic_world.adapters.ros.world_synchronizer import (
 from semantic_world.adapters.urdf import URDFParser
 from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.orm.ormatic_interface import Base, WorldMappingDAO
-from semantic_world.spatial_types import Vector3
 from semantic_world.testing import rclpy_node
 from semantic_world.world import World
 from semantic_world.world_description.connections import (
     Connection6DoF,
-    RevoluteConnection,
 )
-from semantic_world.world_description.degree_of_freedom import DegreeOfFreedom
-from semantic_world.world_description.world_entity import KinematicStructureEntity, Body
+from semantic_world.world_description.world_entity import Body
 
 
 def create_dummy_world():
