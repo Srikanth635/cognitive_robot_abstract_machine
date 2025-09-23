@@ -865,6 +865,7 @@ class World:
         other: World,
         root_connection: Connection = None,
         handle_duplicates: bool = False,
+        allow_empty_self: bool = True,
     ) -> None:
         """
         Merge a world into the existing one by merging degrees of freedom, states, connections, and bodies.
@@ -889,8 +890,9 @@ class World:
                     other.remove_kinematic_structure_entity(connection.child)
                     self.add_connection(connection, handle_duplicates=handle_duplicates)
                 else:
-                    other.remove_kinematic_structure_entity(other_root)
-                    self.add_kinematic_structure_entity(other_root)
+                    if allow_empty_self:
+                        other.remove_kinematic_structure_entity(other_root)
+                        self.add_kinematic_structure_entity(other_root)
                 for kinematic_structure_entity in other.kinematic_structure_entities:
                     if kinematic_structure_entity._world is not None:
                         other.remove_kinematic_structure_entity(
@@ -903,7 +905,7 @@ class World:
                     self.add_view(view, exists_ok=handle_duplicates)
 
             connection = root_connection
-            if not connection and self_root:
+            if not connection:
                 connection = Connection6DoF(
                     parent=self_root, child=other_root, _world=self
                 )

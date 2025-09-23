@@ -329,4 +329,4 @@ class ModelReloadSynchronizer(Synchronizer):
         """
         with self.world.modify_world():
             self.world.clear()
-            self.world.merge_world(new_world)
+            self.world.merge_world(new_world, allow_empty_self=False)
