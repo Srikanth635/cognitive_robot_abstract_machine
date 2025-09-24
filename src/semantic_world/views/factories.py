@@ -146,11 +146,18 @@ class HasDoorFactories(ABC):
         for door_factory, door_transform in zip(
             self.door_factories, self.door_transforms
         ):
-            self.add_door_to_world(
-                door_factory=door_factory,
-                parent_T_door=door_transform,
-                parent_world=parent_world,
-            )
+            if isinstance(door_factory, DoorFactory):
+                self.add_door_to_world(
+                    door_factory=door_factory,
+                    parent_T_door=door_transform,
+                    parent_world=parent_world,
+                )
+            elif isinstance(door_factory, DoubleDoorFactory):
+                self.add_double_door_to_world(
+                    door_factory=door_factory,
+                    parent_T_door=door_transform,
+                    parent_world=parent_world,
+                )
 
     def calculate_door_pivot_point(
         self, door_view: Door, parent_T_door: TransformationMatrix, scale: Scale
@@ -180,23 +187,20 @@ class HasDoorFactories(ABC):
 
         return parent_T_hinge
 
-    def get_door_transforms(
-        self, doors, door_factory, door_transform
-    ) -> TransformationMatrix:
-        """
-        Calculate the door pivot point based on the door factory and the door transform.
-        """
-        match door_factory:
-            case DoorFactory():
-                ...
+    def add_double_door_to_world(
+        self,
+        door_factory: DoubleDoorFactory,
+        parent_T_door: TransformationMatrix,
+        parent_world: World,
+    ):
+        door_world = door_factory.create()
+        connection = FixedConnection(
+            parent=parent_world.root,
+            child=door_world.root,
+            origin_expression=parent_T_door,
+        )
 
-            case DoubleDoorFactory():
-                translation = door_transform.to_position().to_np()
-                door_transform = TransformationMatrix.from_point_rotation_matrix(
-                    Point3(translation[0], translation[1], 0)
-                )
-
-        return door_transform
+        parent_world.merge_world(door_world, connection)
 
 
 class DirectionInterval(SimpleInterval, Enum): ...
@@ -1137,9 +1141,6 @@ class WallFactory(ViewFactory[Wall], HasDoorFactories):
         ):
             door_world = door_factory.create()
             doors: List[Door] = door_world.get_views_by_type(Door)
-            door_transform = self.get_door_transforms(
-                doors, door_factory, door_transform
-            )
 
             temp_world = self.build_temp_world(
                 door_world=door_world, door_transform=door_transform
@@ -1189,16 +1190,17 @@ class WallFactory(ViewFactory[Wall], HasDoorFactories):
                 case DoorFactory():
                     self.add_door_to_world(door_factory, transform, wall_world)
                 case DoubleDoorFactory():
+                    self.add_doors_to_world(parent_world=wall_world)
                     # This code is reachable, not sure why pycharm says its not
-                    door_world = door_factory.create()
-                    translation = transform.to_position().to_np()
-                    transform = TransformationMatrix.from_point_rotation_matrix(
-                        Point3(translation[0], translation[1], 0)
-                    )
-                    connection = FixedConnection(
-                        parent=wall_world.root,
-                        child=door_world.root,
-                        origin_expression=transform,
-                    )
-
-                    wall_world.merge_world(door_world, connection)
+                    # door_world = door_factory.create()
+                    # translation = transform.to_position().to_np()
+                    # transform = TransformationMatrix.from_point_rotation_matrix(
+                    #     Point3(translation[0], translation[1], 0)
+                    # )
+                    # connection = FixedConnection(
+                    #     parent=wall_world.root,
+                    #     child=door_world.root,
+                    #     origin_expression=transform,
+                    # )
+                    #
+                    # wall_world.merge_world(door_world, connection)

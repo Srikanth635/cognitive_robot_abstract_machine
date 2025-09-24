@@ -146,10 +146,9 @@ class ProcthorDoor:
             single_door_name = PrefixedName(
                 f"{self.name.name}_{index}", self.name.prefix
             )
+            handle_offset = y_direction - 0.1 if direction == Direction.Y else -(y_direction - 0.1)
             door_T_handle = TransformationMatrix.from_xyz_rpy(
-                        y=y_direction - 0.1
-                        if direction == Direction.Y
-                        else -(y_direction - 0.1)
+                        y = handle_offset
             )
             door_factory = self._get_single_door_factory(
                 door_T_handle, single_door_name, one_door_scale
@@ -157,16 +156,9 @@ class ProcthorDoor:
 
             door_factories.append(door_factory)
 
-            parent_T_door = TransformationMatrix.from_point_rotation_matrix(
-                Point3(
-                    x_direction,
-                    (
-                        y_direction
-                        if direction == Direction.NEGATIVE_Y
-                        else -y_direction
-                    ),
-                    z_direction,
-                )
+            parent_T_door = TransformationMatrix.from_xyz_rpy(
+                    x=x_direction,
+                    y=y_direction if direction == Direction.NEGATIVE_Y else -y_direction
             )
             door_transforms.append(parent_T_door)
 
