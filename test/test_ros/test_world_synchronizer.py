@@ -208,6 +208,10 @@ def test_model_synchronization_merge_full_world(rclpy_node):
 
     assert body_names_1 == body_names_2
     assert len(w1.kinematic_structure_entities) == len(w2.kinematic_structure_entities)
+
+    w1_connection_names = [c.name for c in w1.connections]
+    w2_connection_names = [c.name for c in w2.connections]
+    assert w1_connection_names == w2_connection_names
     assert len(w1.connections) == len(w2.connections)
     assert len(w2.degrees_of_freedom) == len(w1.degrees_of_freedom)
 
