@@ -646,6 +646,9 @@ class Connection(WorldEntity):
     A symbolic expression describing the origin of the connection.
     """
 
+    def add_to_world(self, world: World):
+        self._world = world
+
     def __post_init__(self):
         if self.origin_expression is None:
             self.origin_expression = TransformationMatrix()

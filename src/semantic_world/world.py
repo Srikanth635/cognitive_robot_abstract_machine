@@ -655,6 +655,7 @@ class World:
 
         :param connection: The connection to add.
         """
+        connection.add_to_world(self)
         for dof in connection.dofs:
             if dof._world is None:
                 self.add_degree_of_freedom(dof)
@@ -983,8 +984,8 @@ class World:
             root_connection = Connection6DoF(
                 parent=self.root, child=other.root, _world=self
             )
-            root_connection.origin = pose
             self.merge_world(other, root_connection)
+            root_connection.origin = pose
 
     def __str__(self):
         return f"{self.__class__.__name__} with {len(self.kinematic_structure_entities)} bodies."
@@ -1659,7 +1660,10 @@ class World:
                 dof_mapping[dof] = new_dof
             for connection in self.connections:
                 con_factory = ConnectionFactory.from_connection(connection)
-                new_world.add_connection(con_factory.create(new_world))
+                new_connection = con_factory.create(new_world)
+                origin_expression = new_connection.origin_expression
+                new_world.add_connection(new_connection)
+                new_connection.origin_expression = origin_expression
             for dof in self.degrees_of_freedom:
                 new_world.state[dof.name] = self.state[dof.name].data
         return new_world
