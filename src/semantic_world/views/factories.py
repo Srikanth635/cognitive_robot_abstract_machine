@@ -26,6 +26,7 @@ from ..views.views import (
     DoubleDoor,
     Room,
     Floor,
+    Cabinet,
 )
 from ..world import World
 from ..world_description.connections import (
@@ -717,6 +718,128 @@ class DrawerFactory(ViewFactory[Drawer], HasHandleFactory):
         world.add_view(drawer_view)
 
         return world
+
+
+@dataclass
+class CabinetFactory(ViewFactory[Cabinet], HasDoorFactories, HasDrawerFactories):
+    """
+    Factory for creating a dresser with drawers, and doors.
+    """
+
+    container_factory: ContainerFactory = field(default=None)
+    """
+    The factory used to create the container of the dresser.
+    """
+
+    def _create(self, world: World) -> World:
+        """
+        Return a world with a dresser at its root. The dresser consists of a container, potentially drawers, and doors.
+        Assumes that the number of drawers matches the number of drawer transforms.
+        """
+        assert len(self.drawers_factories) == len(
+            self.drawer_transforms
+        ), "Number of drawers must match number of transforms"
+
+        dresser_world = self.make_dresser_world()
+        dresser_world.name = world.name
+        return self.make_interior(dresser_world)
+
+    def make_dresser_world(self) -> World:
+        """
+        Create a world with a dresser view that contains a container, drawers, and doors, but no interior yet.
+        """
+        dresser_world = self.container_factory.create()
+        container_view: Container = dresser_world.get_views_by_type(Container)[0]
+
+        self.add_doors_to_world(dresser_world)
+
+        self.add_drawers_to_world(dresser_world)
+
+        dresser_view = Cabinet(
+            name=self.name,
+            container=container_view,
+            drawers=dresser_world.get_views_by_type(Drawer),
+            doors=dresser_world.get_views_by_type(Door),
+        )
+        dresser_world.add_view(dresser_view, exists_ok=True)
+        dresser_world.name = self.name.name
+
+        return dresser_world
+
+    def make_interior(self, world: World) -> World:
+        """
+        Create the interior of the dresser by subtracting the drawers and doors from the container, and filling  with
+        the remaining space.
+
+        :param world: The world containing the dresser body as its root.
+        """
+        dresser_body: Body = world.root
+        container_event = dresser_body.collision.as_bounding_box_collection_at_origin(
+            TransformationMatrix(reference_frame=dresser_body)
+        ).event
+
+        container_footprint = self.subtract_bodies_from_container_footprint(
+            world, container_event
+        )
+
+        container_event = self.fill_container_body(container_footprint, container_event)
+
+        collision_shapes = BoundingBoxCollection.from_event(
+            dresser_body, container_event
+        ).as_shapes()
+        dresser_body.collision = collision_shapes
+        dresser_body.visual = collision_shapes
+        return world
+
+    def subtract_bodies_from_container_footprint(
+        self, world: World, container_event: Event
+    ) -> Event:
+        """
+        Subtract the bounding boxes of all bodies in the world from the container event,
+        except for the dresser body itself. This creates a frontal footprint of the container
+
+        :param world: The world containing the dresser body as its root.
+        :param container_event: The event representing the container.
+
+        :return: An event representing the footprint of the container after subtracting other bodies.
+        """
+        dresser_body = world.root
+
+        container_footprint = container_event.marginal(SpatialVariables.yz)
+
+        for body in world.bodies:
+            if body == dresser_body:
+                continue
+            body_footprint = body.collision.as_bounding_box_collection_at_origin(
+                TransformationMatrix(reference_frame=dresser_body)
+            ).event.marginal(SpatialVariables.yz)
+            container_footprint -= body_footprint
+
+        return container_footprint
+
+    def fill_container_body(
+        self, container_footprint: Event, container_event: Event
+    ) -> Event:
+        """
+        Expand container footprint into 3d space and fill the space of the resulting container body.
+
+        :param container_footprint: The footprint of the container in the yz-plane.
+        :param container_event: The event representing the container.
+
+        :return: An event representing the container body with the footprint filled in the x-direction.
+        """
+
+        container_footprint.fill_missing_variables([SpatialVariables.x.value])
+
+        depth_interval = container_event.bounding_box()[SpatialVariables.x.value]
+        limiting_event = SimpleEvent(
+            {SpatialVariables.x.value: depth_interval}
+        ).as_composite_set()
+        limiting_event.fill_missing_variables(SpatialVariables.yz)
+
+        container_event |= container_footprint & limiting_event
+
+        return container_event
 
 
 @dataclass
