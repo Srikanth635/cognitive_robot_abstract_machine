@@ -71,7 +71,7 @@ class HasDoorLikeFactories(ABC):
     The transformations for the doors relative their parent container.
     """
 
-    def create_door_upper_lower_limits(
+    def _create_door_upper_lower_limits(
         self, door_view: Door
     ) -> Tuple[DerivativeMap[float], DerivativeMap[float]]:
         """
@@ -91,7 +91,7 @@ class HasDoorLikeFactories(ABC):
             upper_limits.position = np.pi / 2
         return upper_limits, lower_limits
 
-    def add_hinge_to_door(
+    def _add_hinge_to_door(
         self, door_factory: DoorFactory, parent_T_door: TransformationMatrix
     ):
         """
@@ -106,7 +106,7 @@ class HasDoorLikeFactories(ABC):
         door_hinge = Body(
             name=PrefixedName(f"{root.name.name}_door_hinge", root.name.prefix)
         )
-        parent_T_hinge = self.calculate_door_pivot_point(
+        parent_T_hinge = self._calculate_door_pivot_point(
             door_view, parent_T_door, door_factory.scale
         )
         hinge_T_door = parent_T_hinge.inverse() @ parent_T_door
@@ -119,7 +119,7 @@ class HasDoorLikeFactories(ABC):
 
         return door_world, parent_T_hinge
 
-    def add_door_to_world(
+    def _add_door_to_world(
         self,
         door_factory: DoorFactory,
         parent_T_door: TransformationMatrix,
@@ -134,11 +134,11 @@ class HasDoorLikeFactories(ABC):
         :param parent_world: The world to which the door will be added.
         """
         with parent_world.modify_world():
-            door_world, parent_T_hinge = self.add_hinge_to_door(
+            door_world, parent_T_hinge = self._add_hinge_to_door(
                 door_factory, parent_T_door
             )
             door_view: Door = door_world.get_views_by_type(Door)[0]
-            upper_limits, lower_limits = self.create_door_upper_lower_limits(door_view)
+            upper_limits, lower_limits = self._create_door_upper_lower_limits(door_view)
 
             root = door_world.root
             dof = DegreeOfFreedom(
@@ -158,7 +158,7 @@ class HasDoorLikeFactories(ABC):
 
             parent_world.merge_world(door_world, connection)
 
-    def add_doors_to_world(
+    def add_door_like_views_to_world(
         self,
         parent_world: World,
     ):
@@ -169,19 +169,19 @@ class HasDoorLikeFactories(ABC):
             self.door_factories, self.door_transforms
         ):
             if isinstance(door_factory, DoorFactory):
-                self.add_door_to_world(
+                self._add_door_to_world(
                     door_factory=door_factory,
                     parent_T_door=door_transform,
                     parent_world=parent_world,
                 )
             elif isinstance(door_factory, DoubleDoorFactory):
-                self.add_double_door_to_world(
+                self._add_double_door_to_world(
                     door_factory=door_factory,
                     parent_T_door=door_transform,
                     parent_world=parent_world,
                 )
 
-    def calculate_door_pivot_point(
+    def _calculate_door_pivot_point(
         self, door_view: Door, parent_T_door: TransformationMatrix, scale: Scale
     ) -> TransformationMatrix:
         """
@@ -209,7 +209,7 @@ class HasDoorLikeFactories(ABC):
 
         return parent_T_hinge
 
-    def add_double_door_to_world(
+    def _add_double_door_to_world(
         self,
         door_factory: DoubleDoorFactory,
         parent_T_door: TransformationMatrix,
@@ -227,49 +227,76 @@ class HasDoorLikeFactories(ABC):
     def remove_doors_from_world(
         self, parent_world: World, wall_event_thickness: float = 0.1
     ):
-        root = parent_world.root
         doors: List[Door] = parent_world.get_views_by_type(Door)
+        if not doors:
+            return
+        all_bodies_not_door = self._get_all_bodies_excluding_doors(doors)
+
+        all_doors_event = self._build_all_doors_event_from_views(
+            doors, wall_event_thickness
+        )
+
+        if not all_doors_event.is_empty():
+            self._remove_doors_from_bodies(all_bodies_not_door, all_doors_event)
+
+    def _get_all_bodies_excluding_doors(self, doors: List[Door]) -> List[Body]:
+        world = doors[0]._world
         all_door_bodies = []
         for door in doors:
             all_door_bodies.extend(list(door.bodies))
         bodies_not_in_door_bodies = [
             body
-            for body in parent_world.kinematic_structure_entities
+            for body in world.bodies_with_enabled_collision
             if body not in all_door_bodies
         ]
+        return bodies_not_in_door_bodies
+
+    def _build_all_doors_event_from_views(
+        self, doors: List[Door], wall_event_thickness: float = 0.1
+    ) -> Event:
+        door_events = [
+            self._build_single_door_event(door, wall_event_thickness) for door in doors
+        ]
+        if door_events:
+            return reduce(or_, door_events)
+        return Event()
+
+    def _build_single_door_event(
+        self, door: Door, wall_event_thickness: float = 0.1
+    ) -> Event:
+        door_event = door.body.collision.as_bounding_box_collection_in_frame(
+            door._world.root
+        ).event
+
         door_plane_spatial_variables = SpatialVariables.yz
         door_thickness_spatial_variable = SpatialVariables.x.value
-        door_events = []
-        for door in doors:
-            door_event = door.body.collision.as_bounding_box_collection_in_frame(
-                root
-            ).event
-            door_event = door_event.marginal(door_plane_spatial_variables)
-            door_event.fill_missing_variables([door_thickness_spatial_variable])
-            thickness_event = SimpleEvent(
-                {
-                    door_thickness_spatial_variable: closed(
-                        -wall_event_thickness / 2, wall_event_thickness / 2
-                    )
-                }
-            ).as_composite_set()
-            thickness_event.fill_missing_variables(door_plane_spatial_variables)
-            door_event = door_event & thickness_event
+        door_event = door_event.marginal(door_plane_spatial_variables)
+        door_event.fill_missing_variables([door_thickness_spatial_variable])
+        thickness_event = SimpleEvent(
+            {
+                door_thickness_spatial_variable: closed(
+                    -wall_event_thickness / 2, wall_event_thickness / 2
+                )
+            }
+        ).as_composite_set()
+        thickness_event.fill_missing_variables(door_plane_spatial_variables)
+        door_event = door_event & thickness_event
 
-            door_events.append(door_event)
-        if door_events:
-            door_events = reduce(or_, door_events)
+        return door_event
 
-            for body in bodies_not_in_door_bodies:
-                body_event = body.collision.as_bounding_box_collection_in_frame(root).event - door_events
-                new_collision = BoundingBoxCollection.from_event(
-                    root, body_event
-                ).as_shapes()
-                body.collision = new_collision
-                body.visual = new_collision
+    def _remove_doors_from_bodies(self, bodies: List[Body], all_doors_event: Event):
+        for body in bodies:
+            self._remove_door_from_body(body, all_doors_event)
 
-
-
+    def _remove_door_from_body(self, body: Body, all_doors_event: Event):
+        root = body._world.root
+        body_event = (
+            body.collision.as_bounding_box_collection_in_frame(root).event
+            - all_doors_event
+        )
+        new_collision = BoundingBoxCollection.from_event(root, body_event).as_shapes()
+        body.collision = new_collision
+        body.visual = new_collision
 
 
 class DirectionInterval(SimpleInterval, Enum): ...
@@ -755,6 +782,11 @@ class DoubleDoorFactory(DoorLikeFactory[DoubleDoor], HasDoorLikeFactories):
     Factory for creating a double door with two doors and their handles.
     """
 
+    def __post_init__(self):
+        assert (
+            len(self.door_factories) == len(self.door_transforms) == 2
+        ), "Double door must have exactly two door factories and transforms"
+
     def _create(self, world: World) -> World:
         """
         Return a world with a virtual body at its root that is the parent of the two doors making up the double door.
@@ -763,11 +795,7 @@ class DoubleDoorFactory(DoorLikeFactory[DoubleDoor], HasDoorLikeFactories):
         double_door_body = Body(name=self.name)
         world.add_kinematic_structure_entity(double_door_body)
 
-        assert (
-            len(self.door_factories) == 2
-        ), "Double door must have exactly two door factories"
-
-        self.add_doors_to_world(
+        self.add_door_like_views_to_world(
             parent_world=world,
         )
 
@@ -854,7 +882,7 @@ class CabinetFactory(ViewFactory[Cabinet], HasDoorLikeFactories, HasDrawerFactor
         dresser_world = self.container_factory.create()
         container_view: Container = dresser_world.get_views_by_type(Container)[0]
 
-        self.add_doors_to_world(dresser_world)
+        self.add_door_like_views_to_world(dresser_world)
 
         self.add_drawers_to_world(dresser_world)
 
@@ -976,7 +1004,7 @@ class DresserFactory(ViewFactory[Dresser], HasDoorLikeFactories, HasDrawerFactor
         dresser_world = self.container_factory.create()
         container_view: Container = dresser_world.get_views_by_type(Container)[0]
 
-        self.add_doors_to_world(dresser_world)
+        self.add_door_like_views_to_world(dresser_world)
 
         self.add_drawers_to_world(dresser_world)
 
@@ -1121,7 +1149,7 @@ class WallFactory(ViewFactory[Wall], HasDoorLikeFactories):
         Return a world with the wall body at its root and potentially doors and double doors as children of the wall body.
         """
         wall_world = self.create_wall_world()
-        self.add_doors_to_world(wall_world)
+        self.add_door_like_views_to_world(wall_world)
         self.remove_doors_from_world(wall_world)
         world.merge_world(wall_world)
 
@@ -1151,9 +1179,7 @@ class WallFactory(ViewFactory[Wall], HasDoorLikeFactories):
         doors are removed from the wall event. The resulting bounding box collection is converted to shapes.
         """
 
-        wall_event = self.create_wall_event().as_composite_set()
-
-        # wall_event = self.remove_doors_from_wall_event(wall_event)
+        wall_event = self._create_wall_event().as_composite_set()
 
         bounding_box_collection = BoundingBoxCollection.from_event(
             reference_frame, wall_event
@@ -1162,7 +1188,7 @@ class WallFactory(ViewFactory[Wall], HasDoorLikeFactories):
         wall_collision = bounding_box_collection.as_shapes()
         return wall_collision
 
-    def create_wall_event(self) -> SimpleEvent:
+    def _create_wall_event(self) -> SimpleEvent:
         """
         Return a wall event created from its scale. The height origin is on the ground, not in the center of the wall.
         """
@@ -1178,24 +1204,3 @@ class WallFactory(ViewFactory[Wall], HasDoorLikeFactories):
             }
         )
         return wall_event
-
-    def build_temp_world(
-        self, door_world: World, door_transform: TransformationMatrix
-    ) -> World:
-        """
-        Create a temporary world to merge the door world into the wall world. This temporary world is used to then cut
-        out the doors from the wall event.
-        """
-        temp_world = World()
-        with temp_world.modify_world():
-            temp_world.add_kinematic_structure_entity(Body())
-
-            connection = FixedConnection(
-                parent=temp_world.root,
-                child=door_world.root,
-                origin_expression=door_transform,
-            )
-
-            temp_world.merge_world(door_world, connection)
-
-        return temp_world
