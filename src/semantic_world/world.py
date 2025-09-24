@@ -502,8 +502,8 @@ class World:
         for model changes.
         """
         if not self.world_is_being_modified:
-            self.clear_all_lru_caches()
             self.compile_forward_kinematics_expressions()
+            self.clear_all_lru_caches()
             self.notify_state_change()
             self._model_version += 1
 
