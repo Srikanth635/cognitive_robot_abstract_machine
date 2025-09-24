@@ -151,26 +151,23 @@ class Drawer(Components):
 
 ############################### subclasses to Furniture
 @dataclass(eq=False)
-class Cupboard(Furniture): ...
-
-
-@dataclass(eq=False)
-class Dresser(Furniture):
+class Cabinet(Furniture):
     container: Container
     drawers: List[Drawer] = field(default_factory=list, hash=False)
-    doors: List[Door] = field(default_factory=list, hash=False)
-
-
-############################### subclasses to Cupboard
-@dataclass(eq=False)
-class Cabinet(Cupboard):
-    container: Container
-    drawers: list[Drawer] = field(default_factory=list, hash=False)
-
-
-@dataclass(eq=False)
-class Wardrobe(Cupboard):
     doors: List[Door] = field(default_factory=list)
+
+
+############################### subclasses to Cabinet
+@dataclass(eq=False)
+class Dresser(Cabinet): ...
+
+
+@dataclass(eq=False)
+class Cupboard(Cabinet): ...
+
+
+@dataclass(eq=False)
+class Wardrobe(Cabinet): ...
 
 
 class Floor(SupportingSurface): ...
