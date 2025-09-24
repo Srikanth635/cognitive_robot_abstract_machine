@@ -1,4 +1,5 @@
 import unittest
+from time import sleep
 
 from semantic_world.world_description.geometry import Scale
 from semantic_world.datastructures.prefixed_name import PrefixedName
@@ -13,6 +14,9 @@ from semantic_world.views.factories import (
     DrawerFactory,
     DresserFactory,
     WallFactory,
+    SemanticPositionDescription,
+    HorizontalDirection,
+    VerticalDirection,
 )
 
 
@@ -41,7 +45,21 @@ class TestFactories(unittest.TestCase):
         factory = DoorFactory(
             name=PrefixedName("door"),
             handle_factory=HandleFactory(name=PrefixedName("handle")),
-            handle_direction=Direction.Y,
+            semantic_position=SemanticPositionDescription(
+                [
+                    HorizontalDirection.RIGHT,
+                    HorizontalDirection.RIGHT,
+                    HorizontalDirection.RIGHT,
+                    HorizontalDirection.RIGHT,
+                    HorizontalDirection.RIGHT,
+                    HorizontalDirection.RIGHT,
+                    VerticalDirection.CENTER,
+                    VerticalDirection.CENTER,
+                    VerticalDirection.CENTER,
+                    VerticalDirection.CENTER,
+                    VerticalDirection.CENTER,
+                ]
+            ),
         )
         world = factory.create()
         door_views = world.get_views_by_type(Door)
@@ -50,6 +68,17 @@ class TestFactories(unittest.TestCase):
         door: Door = door_views[0]
         self.assertEqual(world.root, door.body)
         self.assertIsInstance(door.handle, Handle)
+
+        from semantic_world.adapters.viz_marker import VizMarkerPublisher
+        import threading
+        import rclpy
+
+        rclpy.init()
+
+        node = rclpy.create_node("semantic_world")
+
+        viz = VizMarkerPublisher(world=world, node=node)
+        sleep(3)
 
     def test_double_door_factory(self):
         door_factory = DoorFactory(

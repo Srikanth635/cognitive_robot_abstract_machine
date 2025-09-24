@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
-from enum import IntEnum
+from enum import IntEnum, Enum
 
 from numpy import ndarray
+from probabilistic_model.probabilistic_circuit.rx.helper import uniform_measure_of_event
+from random_events.interval import Bound
 from random_events.product_algebra import *
 from typing_extensions import TypeVar, Generic
 
@@ -49,16 +52,6 @@ class Direction(IntEnum):
     NEGATIVE_X = 3
     NEGATIVE_Y = 4
     NEGATIVE_Z = 5
-
-
-def event_from_scale(scale: Scale):
-    return SimpleEvent(
-        {
-            SpatialVariables.x.value: closed(-scale.x / 2, scale.x / 2),
-            SpatialVariables.y.value: closed(-scale.y / 2, scale.y / 2),
-            SpatialVariables.z.value: closed(-scale.z / 2, scale.z / 2),
-        }
-    )
 
 
 @dataclass
@@ -203,17 +196,96 @@ class HasDoorFactories(ABC):
         return door_transform
 
 
+class DirectionInterval(SimpleInterval, Enum): ...
+
+
+class HorizontalDirection(DirectionInterval):
+    RIGHT = (2 / 3, 1, Bound.CLOSED, Bound.CLOSED)
+    CENTER = (1 / 3, 2 / 3, Bound.OPEN, Bound.OPEN)
+    LEFT = (0, 1 / 3, Bound.CLOSED, Bound.CLOSED)
+
+
+class VerticalDirection(DirectionInterval):
+    TOP = (0, 1 / 3, Bound.CLOSED, Bound.CLOSED)
+    CENTER = (1 / 3, 2 / 3, Bound.OPEN, Bound.OPEN)
+    BOTTOM = (2 / 3, 1, Bound.CLOSED, Bound.CLOSED)
+
+
+@dataclass
+class SemanticPositionDescription:
+    direction_chain: List[DirectionInterval]
+
+    @staticmethod
+    def _zoom_interval(base: SimpleInterval, target: SimpleInterval) -> SimpleInterval:
+        """
+        Zoom 'base' interval by the percentage interval 'target' (0..1),
+        preserving the base's boundary styles.
+        """
+        span = base.upper - base.lower
+        new_lower = base.lower + span * target.lower
+        new_upper = base.lower + span * target.upper
+        return SimpleInterval(new_lower, new_upper, base.left, base.right)
+
+    def apply_zoom(self, simple_event: SimpleEvent) -> SimpleEvent:
+        """
+        Apply zooms in order over (x, y) and return the resulting intervals.
+        """
+        assert all(
+            [
+                variable
+                in {
+                    SpatialVariables.y.value,
+                    SpatialVariables.z.value,
+                }
+                for variable in simple_event.variables
+            ]
+        ), f"Tried to apply zoom to event with variables {simple_event.variables}. Maybe we need to allow for 3D?"
+        cur_y = simple_event[SpatialVariables.y.value].simple_sets[0]
+        cur_z = simple_event[SpatialVariables.z.value].simple_sets[0]
+        for step in self.direction_chain:
+            match step:
+                case HorizontalDirection():
+                    cur_y = self._zoom_interval(cur_y, step)
+                case VerticalDirection():
+                    cur_z = self._zoom_interval(cur_z, step)
+        return SimpleEvent(
+            {SpatialVariables.y.value: cur_y, SpatialVariables.z.value: cur_z}
+        )
+
+    def sample_point_from_event(self, event: Event):
+        event_of_interest = self.apply_zoom(event.bounding_box()).as_composite_set()
+        event_circuit = uniform_measure_of_event(event_of_interest)
+        return event_circuit.sample(amount=1)[0]
+
+
 @dataclass
 class HasHandleFactory(ABC):
+    """
+    Mixin for factories receiving a HandleFactory.
+    If both parent_T_handle and semantic_position are set, parent_T_handle will be
+    prioritized.
+    """
+
     handle_factory: HandleFactory = field(kw_only=True)
     """
     The factory used to create the handle of the door.
     """
 
-    handle_direction: Direction = field(default=Direction.Y)
+    semantic_position: Optional[SemanticPositionDescription] = field(default=None)
     """
     The direction on the door in which the handle positioned.
     """
+
+    parent_T_handle: Optional[TransformationMatrix] = field(default=None)
+
+    def __post_init__(self):
+        assert (
+            self.parent_T_handle is not None or self.semantic_position is not None
+        ), "Either parent_T_handle or semantic_position must be set."
+        if self.parent_T_handle is not None and self.semantic_position is not None:
+            logging.warning(
+                f"During the creation of a factory, both parent_T_handle and semantic_position were set. Prioritizing parent_T_handle."
+            )
 
     def create_parent_T_handle_from_parent_scale(
         self, scale: Scale
@@ -222,31 +294,14 @@ class HasHandleFactory(ABC):
         Return a transformation matrix that defines the position and orientation of the handle relative to its parent.
         :raises: NotImplementedError if the handle direction is Z or NEGATIVE_Z.
         """
-        match self.handle_direction:
-            case Direction.X:
-                return TransformationMatrix.from_xyz_rpy(
-                    scale.x - 0.1, 0.05, 0, 0, 0, np.pi / 2
-                )
-            case Direction.Y:
-                return TransformationMatrix.from_xyz_rpy(
-                    0.05, (scale.y - 0.1), 0, 0, 0, 0
-                )
-            case Direction.Z:
-                raise NotImplementedError(
-                    f"Handle Creation for handle_direction Z is not implemented yet"
-                )
-            case Direction.NEGATIVE_X:
-                return TransformationMatrix.from_xyz_rpy(
-                    -(scale.x - 0.1), 0.05, 0, 0, 0, np.pi / 2
-                )
-            case Direction.NEGATIVE_Y:
-                return TransformationMatrix.from_xyz_rpy(
-                    0.05, -(scale.y - 0.1), 0, 0, 0, 0
-                )
-            case Direction.NEGATIVE_Z:
-                raise NotImplementedError(
-                    f"Handle Creation for handle_direction NEGATIVE_Z is not implemented yet"
-                )
+        assert self.semantic_position is not None
+        sampled_2d_point = self.semantic_position.sample_point_from_event(
+            scale.simple_event.as_composite_set().marginal(SpatialVariables.yz)
+        )
+
+        return TransformationMatrix.from_xyz_rpy(
+            x=0.05, y=sampled_2d_point[0], z=sampled_2d_point[1]
+        )
 
     def add_handle_to_world(
         self,
@@ -263,7 +318,7 @@ class HasHandleFactory(ABC):
         handle_world = self.handle_factory.create()
 
         connection = FixedConnection(
-            parent=parent_world.root,
+            parent=parent_world.get_views_by_type(Door)[0].body,
             child=handle_world.root,
             origin_expression=parent_T_handle,
         )
@@ -429,13 +484,13 @@ class ContainerFactory(ViewFactory[Container]):
         """
         Return an event representing a container with walls of a specified thickness.
         """
-        outer_box = event_from_scale(self.scale)
+        outer_box = self.scale.simple_event
         inner_scale = Scale(
             self.scale.x - self.wall_thickness,
             self.scale.y - self.wall_thickness,
             self.scale.z - self.wall_thickness,
         )
-        inner_box = event_from_scale(inner_scale)
+        inner_box = inner_scale.simple_event
 
         inner_box = self.extend_inner_event_in_direction(
             inner_event=inner_box, inner_scale=inner_scale
@@ -617,23 +672,24 @@ class DoorFactory(ViewFactory[Door], HasHandleFactory):
         y_interval = closed(-self.scale.y / 2, self.scale.y / 2)
         z_interval = closed(-self.scale.z / 2, self.scale.z / 2)
 
-        match self.handle_direction:
-            case Direction.X:
-                x_interval = closed(0, self.scale.x)
-            case Direction.Y:
-                y_interval = closed(0, self.scale.y)
-            case Direction.Z:
-                raise NotImplementedError(
-                    f"Door Creation for handle_direction Z is not implemented yet"
-                )
-            case Direction.NEGATIVE_X:
-                x_interval = closed(-self.scale.x, 0)
-            case Direction.NEGATIVE_Y:
-                y_interval = closed(-self.scale.y, 0)
-            case Direction.NEGATIVE_Z:
-                raise NotImplementedError(
-                    f"Door Creation for handle_direction NEGATIVE_Z is not implemented yet"
-                )
+        y_interval = closed(0, self.scale.y)
+        # match self.handle_direction:
+        #     case Direction.X:
+        #         x_interval = closed(0, self.scale.x)
+        #     case Direction.Y:
+        #         y_interval = closed(0, self.scale.y)
+        #     case Direction.Z:
+        #         raise NotImplementedError(
+        #             f"Door Creation for handle_direction Z is not implemented yet"
+        #         )
+        #     case Direction.NEGATIVE_X:
+        #         x_interval = closed(-self.scale.x, 0)
+        #     case Direction.NEGATIVE_Y:
+        #         y_interval = closed(-self.scale.y, 0)
+        #     case Direction.NEGATIVE_Z:
+        #         raise NotImplementedError(
+        #             f"Door Creation for handle_direction NEGATIVE_Z is not implemented yet"
+        #         )
 
         door_event = SimpleEvent(
             {
