@@ -7,7 +7,9 @@ defaults:
     
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - merge_world_fix
   pull_request:
     branches: [ main ]
 
