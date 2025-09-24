@@ -70,7 +70,7 @@ class HasDoorFactories(ABC):
     """
 
     def create_door_upper_lower_limits(
-        self, door_factory: DoorFactory
+        self, door_view: Door
     ) -> Tuple[DerivativeMap[float], DerivativeMap[float]]:
 
         lower_limits = DerivativeMap[float]()
@@ -78,10 +78,11 @@ class HasDoorFactories(ABC):
         lower_limits.position = -np.pi / 2
         upper_limits.position = 0.0
 
-        if door_factory.handle_direction in {
-            Direction.NEGATIVE_X,
-            Direction.NEGATIVE_Y,
-        }:
+        parent_connection = door_view.handle.body.parent_connection
+        door_P_handle: ndarray[float] = (
+            parent_connection.origin_expression.to_position().to_np()
+        )
+        if np.sign(door_P_handle[1]) < 0:
             lower_limits.position = 0.0
             upper_limits.position = np.pi / 2
         return upper_limits, lower_limits
@@ -103,8 +104,8 @@ class HasDoorFactories(ABC):
         """
         door_world = door_factory.create()
         root = door_world.root
-
-        upper_limits, lower_limits = self.create_door_upper_lower_limits(door_factory)
+        door_view: Door = door_world.get_views_by_type(Door)[0]
+        upper_limits, lower_limits = self.create_door_upper_lower_limits(door_view)
 
         dof = DegreeOfFreedom(
             name=PrefixedName(f"{root.name.name}_connection", root.name.prefix),
@@ -112,7 +113,6 @@ class HasDoorFactories(ABC):
             upper_limits=upper_limits,
         )
         with parent_world.modify_world():
-            door_view: Door = door_world.get_views_by_type(Door)[0]
             door_hinge = Body(name=PrefixedName(f"{root.name.name}_door_hinge", root.name.prefix))
             parent_T_hinge = self.calculate_door_pivot_point(
                 door_view, parent_T_door, door_factory.scale
@@ -121,7 +121,8 @@ class HasDoorFactories(ABC):
             hinge_T_door = parent_T_hinge.inverse() @ parent_T_door
 
             hinge_door_connection = FixedConnection(parent=door_hinge, child=root, origin_expression=hinge_T_door)
-            door_world.add_connection(hinge_door_connection)
+            with door_world.modify_world():
+                door_world.add_connection(hinge_door_connection)
 
             connection = RevoluteConnection(
                 parent=parent_world.root,
@@ -152,35 +153,32 @@ class HasDoorFactories(ABC):
             )
 
     def calculate_door_pivot_point(
-        self, door_view: Door, door_transform: TransformationMatrix, scale: Scale
+        self, door_view: Door, parent_T_door: TransformationMatrix, scale: Scale
     ) -> TransformationMatrix:
         """
         Calculate the door pivot point based on the handle position and the door scale. The pivot point is on the opposite
         side of the handle.
 
         :param door_view: The door view containing the handle.
-        :param door_transform: The transformation matrix defining the door's position and orientation.
+        :param parent_T_door: The transformation matrix defining the door's position and orientation.
         :param scale: The scale of the door.
 
         :return: The transformation matrix defining the door's pivot point.
         """
-        parent_connection = door_view.handle.body.parent_connection
-        if parent_connection is None:
-            raise ValueError(
-                "Handle's body does not have a parent_connection; cannot compute handle_position."
-            )
-        handle_position: ndarray[float] = (
-            parent_connection.origin_expression.to_position().to_np()
+        connection = door_view.handle.body.parent_connection
+        door_P_handle: ndarray[float] = (
+            connection.origin_expression.to_position().to_np()
         )
 
-        offset = -np.sign(handle_position[1]) * (scale.y / 2)
-        door_position = door_transform.to_np()[:3, 3] + np.array([0, offset, 0])
+        sign = np.sign(door_P_handle[1]) if door_P_handle[1] != 0 else 1
+        offset = sign  * (scale.y / 2)
+        parent_P_hinge = parent_T_door.to_np()[:3, 3] + np.array([0, offset, 0])
 
-        door_transform = TransformationMatrix.from_point_rotation_matrix(
-            Point3(*door_position)
+        parent_T_hinge = TransformationMatrix.from_point_rotation_matrix(
+            Point3(*parent_P_hinge)
         )
 
-        return door_transform
+        return parent_T_hinge
 
     def get_door_transforms(
         self, doors, door_factory, door_transform
@@ -190,9 +188,8 @@ class HasDoorFactories(ABC):
         """
         match door_factory:
             case DoorFactory():
-                door_transform = self.calculate_door_pivot_point(
-                    doors[0], door_transform, door_factory.scale
-                )
+                ...
+
             case DoubleDoorFactory():
                 translation = door_transform.to_position().to_np()
                 door_transform = TransformationMatrix.from_point_rotation_matrix(
@@ -661,51 +658,51 @@ class DoorFactory(ViewFactory[Door], HasHandleFactory):
 
         world.add_kinematic_structure_entity(body)
 
-        door_T_handle = self.create_parent_T_handle_from_parent_scale(self.scale)
+        door_T_handle = self.parent_T_handle or self.create_parent_T_handle_from_parent_scale(self.scale)
         self.add_handle_to_world(door_T_handle, world)
         handle_view: Handle = world.get_views_by_type(Handle)[0]
         world.add_view(Door(name=self.name, handle=handle_view, body=body))
 
         return world
 
-    def create_door_event(self) -> SimpleEvent:
-        """
-        Return an event representing a door with a specified scale and handle direction. The origin of the door is not
-        at the center of the door, but at the pivot point of the door.
-        """
-
-        x_interval = closed(-self.scale.x / 2, self.scale.x / 2)
-        y_interval = closed(-self.scale.y / 2, self.scale.y / 2)
-        z_interval = closed(-self.scale.z / 2, self.scale.z / 2)
-
-        y_interval = closed(0, self.scale.y)
-        # match self.handle_direction:
-        #     case Direction.X:
-        #         x_interval = closed(0, self.scale.x)
-        #     case Direction.Y:
-        #         y_interval = closed(0, self.scale.y)
-        #     case Direction.Z:
-        #         raise NotImplementedError(
-        #             f"Door Creation for handle_direction Z is not implemented yet"
-        #         )
-        #     case Direction.NEGATIVE_X:
-        #         x_interval = closed(-self.scale.x, 0)
-        #     case Direction.NEGATIVE_Y:
-        #         y_interval = closed(-self.scale.y, 0)
-        #     case Direction.NEGATIVE_Z:
-        #         raise NotImplementedError(
-        #             f"Door Creation for handle_direction NEGATIVE_Z is not implemented yet"
-        #         )
-
-        door_event = SimpleEvent(
-            {
-                SpatialVariables.x.value: x_interval,
-                SpatialVariables.y.value: y_interval,
-                SpatialVariables.z.value: z_interval,
-            }
-        )
-
-        return door_event
+    # def create_door_event(self) -> SimpleEvent:
+    #     """
+    #     Return an event representing a door with a specified scale and handle direction. The origin of the door is not
+    #     at the center of the door, but at the pivot point of the door.
+    #     """
+    #
+    #     x_interval = closed(-self.scale.x / 2, self.scale.x / 2)
+    #     y_interval = closed(-self.scale.y / 2, self.scale.y / 2)
+    #     z_interval = closed(-self.scale.z / 2, self.scale.z / 2)
+    #
+    #     y_interval = closed(0, self.scale.y)
+    #     # match self.handle_direction:
+    #     #     case Direction.X:
+    #     #         x_interval = closed(0, self.scale.x)
+    #     #     case Direction.Y:
+    #     #         y_interval = closed(0, self.scale.y)
+    #     #     case Direction.Z:
+    #     #         raise NotImplementedError(
+    #     #             f"Door Creation for handle_direction Z is not implemented yet"
+    #     #         )
+    #     #     case Direction.NEGATIVE_X:
+    #     #         x_interval = closed(-self.scale.x, 0)
+    #     #     case Direction.NEGATIVE_Y:
+    #     #         y_interval = closed(-self.scale.y, 0)
+    #     #     case Direction.NEGATIVE_Z:
+    #     #         raise NotImplementedError(
+    #     #             f"Door Creation for handle_direction NEGATIVE_Z is not implemented yet"
+    #     #         )
+    #
+    #     door_event = SimpleEvent(
+    #         {
+    #             SpatialVariables.x.value: x_interval,
+    #             SpatialVariables.y.value: y_interval,
+    #             SpatialVariables.z.value: z_interval,
+    #         }
+    #     )
+    #
+    #     return door_event
 
 
 @dataclass
@@ -1147,12 +1144,6 @@ class WallFactory(ViewFactory[Wall], HasDoorFactories):
             temp_world = self.build_temp_world(
                 door_world=door_world, door_transform=door_transform
             )
-
-            if isinstance(door_factory, DoorFactory):
-                assert door_factory.handle_direction in {
-                    Direction.Y,
-                    Direction.NEGATIVE_Y,
-                }, "Currently only handles are only supported in Y direction"
 
             door_plane_spatial_variables = SpatialVariables.yz
             door_thickness_spatial_variable = SpatialVariables.x.value

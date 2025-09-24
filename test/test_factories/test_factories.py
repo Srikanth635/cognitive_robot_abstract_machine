@@ -66,7 +66,6 @@ class TestFactories(unittest.TestCase):
         self.assertIsInstance(door.handle, Handle)
 
         from semantic_world.adapters.viz_marker import VizMarkerPublisher
-        import threading
         import rclpy
 
         rclpy.init()
