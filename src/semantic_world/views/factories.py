@@ -65,14 +65,14 @@ class HasDoorFactories(ABC):
 
     door_factories: List[DoorFactory] = field(default_factory=list, hash=False)
     """
-    The factories used to create the doors of the dresser.
+    The factories used to create the doors.
     """
 
     door_transforms: List[TransformationMatrix] = field(
         default_factory=list, hash=False
     )
     """
-    The transformations for the doors relative to the dresser container.
+    The transformations for the doors relative their parent container.
     """
 
     def create_door_upper_lower_limits(
@@ -218,7 +218,7 @@ class HasHandleFactory(ABC):
         self, scale: Scale
     ) -> Optional[TransformationMatrix]:
         """
-        Return a transformation matrix that defines the position and orientation of the handle relative to the door.
+        Return a transformation matrix that defines the position and orientation of the handle relative to its parent.
         :raises: NotImplementedError if the handle direction is Z or NEGATIVE_Z.
         """
         match self.handle_direction:
@@ -275,14 +275,14 @@ class HasDrawerFactories(ABC):
 
     drawers_factories: List[DrawerFactory] = field(default_factory=list, hash=False)
     """
-    The factories used to create the drawers of the dresser.
+    The factories used to create drawers.
     """
 
     drawer_transforms: List[TransformationMatrix] = field(
         default_factory=list, hash=False
     )
     """
-    The transformations for the drawers relative to the dresser container.
+    The transformations for the drawers their parent container.
     """
 
     def add_drawer_to_world(
