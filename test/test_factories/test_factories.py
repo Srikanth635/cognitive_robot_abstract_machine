@@ -48,11 +48,7 @@ class TestFactories(unittest.TestCase):
             semantic_position=SemanticPositionDescription(
                 [
                     HorizontalDirection.RIGHT,
-                    HorizontalDirection.RIGHT,
-                    HorizontalDirection.RIGHT,
-                    HorizontalDirection.RIGHT,
-                    HorizontalDirection.RIGHT,
-                    HorizontalDirection.RIGHT,
+                    HorizontalDirection.CENTER,
                     VerticalDirection.CENTER,
                     VerticalDirection.CENTER,
                     VerticalDirection.CENTER,

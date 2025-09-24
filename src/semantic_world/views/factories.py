@@ -113,14 +113,20 @@ class HasDoorFactories(ABC):
         )
         with parent_world.modify_world():
             door_view: Door = door_world.get_views_by_type(Door)[0]
-            pivot_point = self.calculate_door_pivot_point(
+            door_hinge = Body(name=PrefixedName(f"{root.name.name}_door_hinge", root.name.prefix))
+            parent_T_hinge = self.calculate_door_pivot_point(
                 door_view, parent_T_door, door_factory.scale
             )
 
+            hinge_T_door = parent_T_hinge.inverse() @ parent_T_door
+
+            hinge_door_connection = FixedConnection(parent=door_hinge, child=root, origin_expression=hinge_T_door)
+            door_world.add_connection(hinge_door_connection)
+
             connection = RevoluteConnection(
                 parent=parent_world.root,
-                child=root,
-                origin_expression=pivot_point,
+                child=door_hinge,
+                origin_expression=parent_T_hinge,
                 multiplier=1.0,
                 offset=0.0,
                 axis=Vector3.Z(),
@@ -318,7 +324,7 @@ class HasHandleFactory(ABC):
         handle_world = self.handle_factory.create()
 
         connection = FixedConnection(
-            parent=parent_world.get_views_by_type(Door)[0].body,
+            parent=parent_world.root,
             child=handle_world.root,
             origin_expression=parent_T_handle,
         )
@@ -645,7 +651,7 @@ class DoorFactory(ViewFactory[Door], HasHandleFactory):
         Return a world with a door body at its root. The door has a handle and is defined by its scale and handle direction.
         """
 
-        door_event = self.create_door_event().as_composite_set()
+        door_event = self.scale.simple_event.as_composite_set()
 
         body = Body(name=self.name)
         bounding_box_collection = BoundingBoxCollection.from_event(body, door_event)
