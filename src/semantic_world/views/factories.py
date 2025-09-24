@@ -8,7 +8,7 @@ from numpy import ndarray
 from probabilistic_model.probabilistic_circuit.rx.helper import uniform_measure_of_event
 from random_events.interval import Bound
 from random_events.product_algebra import *
-from typing_extensions import TypeVar, Generic
+from typing_extensions import Generic, TypeVar
 
 from ..datastructures.prefixed_name import PrefixedName
 from ..datastructures.variables import SpatialVariables
@@ -55,9 +55,9 @@ class Direction(IntEnum):
 
 
 @dataclass
-class HasDoorFactories(ABC):
+class HasDoorLikeFactories(ABC):
 
-    door_factories: List[DoorFactory] = field(default_factory=list, hash=False)
+    door_factories: List[DoorLikeFactory] = field(default_factory=list, hash=False)
     """
     The factories used to create the doors.
     """
@@ -72,7 +72,9 @@ class HasDoorFactories(ABC):
     def create_door_upper_lower_limits(
         self, door_view: Door
     ) -> Tuple[DerivativeMap[float], DerivativeMap[float]]:
-
+        """
+        Return the upper and lower limits for the door's degree of freedom.
+        """
         lower_limits = DerivativeMap[float]()
         upper_limits = DerivativeMap[float]()
         lower_limits.position = -np.pi / 2
@@ -87,6 +89,32 @@ class HasDoorFactories(ABC):
             upper_limits.position = np.pi / 2
         return upper_limits, lower_limits
 
+    def add_hinge_to_door(self, door_factory: DoorFactory, parent_T_door: TransformationMatrix):
+        """
+        Adds a hinge to the door. The hinge's pivot point is on the opposite side of the handle.
+        :param door_factory: The factory used to create the door.
+        :param parent_T_door: The transformation matrix defining the door's position and orientation relative
+        """
+        door_world = door_factory.create()
+        root = door_world.root
+        door_view: Door = door_world.get_views_by_type(Door)[0]
+
+        door_hinge = Body(
+            name=PrefixedName(f"{root.name.name}_door_hinge", root.name.prefix)
+        )
+        parent_T_hinge = self.calculate_door_pivot_point(
+            door_view, parent_T_door, door_factory.scale
+        )
+        hinge_T_door = parent_T_hinge.inverse() @ parent_T_door
+
+        hinge_door_connection = FixedConnection(
+            parent=door_hinge, child=root, origin_expression=hinge_T_door
+        )
+        with door_world.modify_world():
+            door_world.add_connection(hinge_door_connection)
+
+        return door_world, parent_T_hinge
+
     def add_door_to_world(
         self,
         door_factory: DoorFactory,
@@ -94,39 +122,27 @@ class HasDoorFactories(ABC):
         parent_world: World,
     ):
         """
-        Adds a door to the parent world with a revolute connection. The Door's pivot point is on the opposite side of the
-        handle.
+        Adds a door to the parent world using a new door hinge body with a revolute connection.
 
         :param door_factory: The factory used to create the door.
         :param parent_T_door: The transformation matrix defining the door's position and orientation relative
         to the parent world.
         :param parent_world: The world to which the door will be added.
         """
-        door_world = door_factory.create()
-        root = door_world.root
-        door_view: Door = door_world.get_views_by_type(Door)[0]
-        upper_limits, lower_limits = self.create_door_upper_lower_limits(door_view)
-
-        dof = DegreeOfFreedom(
-            name=PrefixedName(f"{root.name.name}_connection", root.name.prefix),
-            lower_limits=lower_limits,
-            upper_limits=upper_limits,
-        )
         with parent_world.modify_world():
-            door_hinge = Body(name=PrefixedName(f"{root.name.name}_door_hinge", root.name.prefix))
-            parent_T_hinge = self.calculate_door_pivot_point(
-                door_view, parent_T_door, door_factory.scale
+            door_world, parent_T_hinge = self.add_hinge_to_door(door_factory, parent_T_door)
+            door_view: Door = door_world.get_views_by_type(Door)[0]
+            upper_limits, lower_limits = self.create_door_upper_lower_limits(door_view)
+
+            root = door_world.root
+            dof = DegreeOfFreedom(
+                name=PrefixedName(f"{root.name.name}_connection", root.name.prefix),
+                lower_limits=lower_limits,
+                upper_limits=upper_limits,
             )
-
-            hinge_T_door = parent_T_hinge.inverse() @ parent_T_door
-
-            hinge_door_connection = FixedConnection(parent=door_hinge, child=root, origin_expression=hinge_T_door)
-            with door_world.modify_world():
-                door_world.add_connection(hinge_door_connection)
-
             connection = RevoluteConnection(
                 parent=parent_world.root,
-                child=door_hinge,
+                child=root,
                 origin_expression=parent_T_hinge,
                 multiplier=1.0,
                 offset=0.0,
@@ -178,7 +194,7 @@ class HasDoorFactories(ABC):
         )
 
         sign = np.sign(door_P_handle[1]) if door_P_handle[1] != 0 else 1
-        offset = sign  * (scale.y / 2)
+        offset = sign * (scale.y / 2)
         parent_P_hinge = parent_T_door.to_np()[:3, 3] + np.array([0, offset, 0])
 
         parent_T_hinge = TransformationMatrix.from_point_rotation_matrix(
@@ -636,7 +652,14 @@ class HandleFactory(ViewFactory[Handle]):
 
 
 @dataclass
-class DoorFactory(ViewFactory[Door], HasHandleFactory):
+class DoorLikeFactory(ViewFactory[T], ABC):
+    """
+    Abstract factory for creating door-like factories such as doors or double doors.
+    """
+
+
+@dataclass
+class DoorFactory(DoorLikeFactory[Door], HasHandleFactory):
     """
     Factory for creating a door with a handle. The door is defined by its scale and handle direction.
     The doors origin is at the pivot point of the door, not at the center.
@@ -662,55 +685,19 @@ class DoorFactory(ViewFactory[Door], HasHandleFactory):
 
         world.add_kinematic_structure_entity(body)
 
-        door_T_handle = self.parent_T_handle or self.create_parent_T_handle_from_parent_scale(self.scale)
+        door_T_handle = (
+            self.parent_T_handle
+            or self.create_parent_T_handle_from_parent_scale(self.scale)
+        )
         self.add_handle_to_world(door_T_handle, world)
         handle_view: Handle = world.get_views_by_type(Handle)[0]
         world.add_view(Door(name=self.name, handle=handle_view, body=body))
 
         return world
 
-    # def create_door_event(self) -> SimpleEvent:
-    #     """
-    #     Return an event representing a door with a specified scale and handle direction. The origin of the door is not
-    #     at the center of the door, but at the pivot point of the door.
-    #     """
-    #
-    #     x_interval = closed(-self.scale.x / 2, self.scale.x / 2)
-    #     y_interval = closed(-self.scale.y / 2, self.scale.y / 2)
-    #     z_interval = closed(-self.scale.z / 2, self.scale.z / 2)
-    #
-    #     y_interval = closed(0, self.scale.y)
-    #     # match self.handle_direction:
-    #     #     case Direction.X:
-    #     #         x_interval = closed(0, self.scale.x)
-    #     #     case Direction.Y:
-    #     #         y_interval = closed(0, self.scale.y)
-    #     #     case Direction.Z:
-    #     #         raise NotImplementedError(
-    #     #             f"Door Creation for handle_direction Z is not implemented yet"
-    #     #         )
-    #     #     case Direction.NEGATIVE_X:
-    #     #         x_interval = closed(-self.scale.x, 0)
-    #     #     case Direction.NEGATIVE_Y:
-    #     #         y_interval = closed(-self.scale.y, 0)
-    #     #     case Direction.NEGATIVE_Z:
-    #     #         raise NotImplementedError(
-    #     #             f"Door Creation for handle_direction NEGATIVE_Z is not implemented yet"
-    #     #         )
-    #
-    #     door_event = SimpleEvent(
-    #         {
-    #             SpatialVariables.x.value: x_interval,
-    #             SpatialVariables.y.value: y_interval,
-    #             SpatialVariables.z.value: z_interval,
-    #         }
-    #     )
-    #
-    #     return door_event
-
 
 @dataclass
-class DoubleDoorFactory(ViewFactory[DoubleDoor], HasDoorFactories):
+class DoubleDoorFactory(DoorLikeFactory[DoubleDoor], HasDoorLikeFactories):
     """
     Factory for creating a double door with two doors and their handles.
     """
@@ -784,7 +771,7 @@ class DrawerFactory(ViewFactory[Drawer], HasHandleFactory):
 
 
 @dataclass
-class CabinetFactory(ViewFactory[Cabinet], HasDoorFactories, HasDrawerFactories):
+class CabinetFactory(ViewFactory[Cabinet], HasDoorLikeFactories, HasDrawerFactories):
     """
     Factory for creating a dresser with drawers, and doors.
     """
@@ -906,7 +893,7 @@ class CabinetFactory(ViewFactory[Cabinet], HasDoorFactories, HasDrawerFactories)
 
 
 @dataclass
-class DresserFactory(ViewFactory[Dresser], HasDoorFactories, HasDrawerFactories):
+class DresserFactory(ViewFactory[Dresser], HasDoorLikeFactories, HasDrawerFactories):
     """
     Factory for creating a dresser with drawers, and doors.
     """
@@ -1069,7 +1056,7 @@ class RoomFactory(ViewFactory[Room]):
 
 
 @dataclass
-class WallFactory(ViewFactory[Wall], HasDoorFactories):
+class WallFactory(ViewFactory[Wall], HasDoorLikeFactories):
 
     scale: Scale = field(kw_only=True)
     """
@@ -1086,7 +1073,7 @@ class WallFactory(ViewFactory[Wall], HasDoorFactories):
         wall_body.visual = wall_collision
         world.add_kinematic_structure_entity(wall_body)
 
-        self.add_doors_and_double_doors_to_world(world)
+        self.add_doors_to_world(world)
 
         wall = Wall(
             name=self.name,
@@ -1136,6 +1123,9 @@ class WallFactory(ViewFactory[Wall], HasDoorFactories):
         Remove doors from the wall event by subtracting the door events from the wall event.
         The doors are created from the door factories and their transforms.
         """
+
+
+
         for door_factory, door_transform in zip(
             self.door_factories, self.door_transforms
         ):
@@ -1180,27 +1170,3 @@ class WallFactory(ViewFactory[Wall], HasDoorFactories):
             temp_world.merge_world(door_world, connection)
 
         return temp_world
-
-    def add_doors_and_double_doors_to_world(self, wall_world: World):
-        """
-        Adds doors and double doors to the wall world.
-        """
-        for door_factory, transform in zip(self.door_factories, self.door_transforms):
-            match door_factory:
-                case DoorFactory():
-                    self.add_door_to_world(door_factory, transform, wall_world)
-                case DoubleDoorFactory():
-                    self.add_doors_to_world(parent_world=wall_world)
-                    # This code is reachable, not sure why pycharm says its not
-                    # door_world = door_factory.create()
-                    # translation = transform.to_position().to_np()
-                    # transform = TransformationMatrix.from_point_rotation_matrix(
-                    #     Point3(translation[0], translation[1], 0)
-                    # )
-                    # connection = FixedConnection(
-                    #     parent=wall_world.root,
-                    #     child=door_world.root,
-                    #     origin_expression=transform,
-                    # )
-                    #
-                    # wall_world.merge_world(door_world, connection)
