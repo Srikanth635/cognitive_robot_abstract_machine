@@ -3,11 +3,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
-import numpy as np
-from typing_extensions import Self, Dict, Any, TypeVar, TYPE_CHECKING
-
 from ormatic.dao import HasGeneric
 from random_events.utils import SubclassJSONSerializer, recursive_subclasses
+from typing_extensions import Self, Dict, Any, TypeVar, TYPE_CHECKING
 
 from .connections import (
     FixedConnection,
@@ -17,13 +15,11 @@ from .connections import (
     OmniDrive,
 )
 from .geometry import transformation_from_json, transformation_to_json
-from ..datastructures.prefixed_name import PrefixedName
-from ..spatial_types import RotationMatrix
-from ..spatial_types.spatial_types import TransformationMatrix
-from ..spatial_types.symbol_manager import symbol_manager, SymbolManager
-
 from .world_entity import Connection
 from .. import spatial_types as cas
+from ..datastructures.prefixed_name import PrefixedName
+from ..spatial_types.spatial_types import TransformationMatrix
+from ..spatial_types.symbol_manager import symbol_manager
 
 if TYPE_CHECKING:
     from ..world import World
@@ -102,7 +98,7 @@ class FixedConnectionFactory(ConnectionFactory[FixedConnection]):
     def create(self, world: World) -> None:
         parent = world.get_kinematic_structure_entity_by_name(self.parent_name)
         child = world.get_kinematic_structure_entity_by_name(self.child_name)
-        connection =  self.original_class()(
+        connection = self.original_class()(
             parent=parent,
             child=child,
             name=self.name,
@@ -145,7 +141,7 @@ class ActiveConnection1DOFFactory(ConnectionFactory[T]):
         parent = world.get_kinematic_structure_entity_by_name(self.parent_name)
         child = world.get_kinematic_structure_entity_by_name(self.child_name)
 
-        connection =  self.original_class()(
+        connection = self.original_class()(
             parent=parent,
             child=child,
             name=self.name,

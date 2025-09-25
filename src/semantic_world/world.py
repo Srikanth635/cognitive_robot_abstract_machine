@@ -8,13 +8,13 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import wraps, lru_cache, cached_property
-from itertools import combinations_with_replacement
 
 import matplotlib.pyplot as plt
 import numpy as np
 import rustworkx as rx
 import rustworkx.visit
 import rustworkx.visualization
+from itertools import combinations_with_replacement
 from lxml import etree
 from rustworkx import NoEdgeBetweenNodes
 from typing_extensions import (

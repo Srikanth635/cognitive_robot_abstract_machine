@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import inspect
-import itertools
 from abc import ABC
 from collections import deque
 from collections.abc import Iterable, Mapping
@@ -9,6 +8,7 @@ from dataclasses import dataclass, field
 from dataclasses import fields
 from functools import lru_cache
 
+import itertools
 import numpy as np
 import trimesh
 import trimesh.boolean

@@ -2,16 +2,16 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing_extensions import List, TYPE_CHECKING, Union
 
 import numpy as np
+from typing_extensions import List, TYPE_CHECKING, Union
 
-from .. import spatial_types as cas
 from .degree_of_freedom import DegreeOfFreedom
-from ..datastructures.prefixed_name import PrefixedName
-from ..spatial_types.derivatives import DerivativeMap
-from ..datastructures.types import NpMatrix4x4
 from .world_entity import CollisionCheckingConfig, Connection
+from .. import spatial_types as cas
+from ..datastructures.prefixed_name import PrefixedName
+from ..datastructures.types import NpMatrix4x4
+from ..spatial_types.derivatives import DerivativeMap
 
 if TYPE_CHECKING:
     from ..world import World
