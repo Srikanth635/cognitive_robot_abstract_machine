@@ -17,6 +17,7 @@ from entity_query_language import (
     set_of,
     a,
     From,
+    merge,
 )
 from numpy import ndarray
 from probabilistic_model.probabilistic_circuit.rx.helper import uniform_measure_of_event
@@ -243,49 +244,26 @@ class HasDoorLikeFactories(ABC):
         doors: List[Door] = parent_world.get_views_by_type(Door)
         if not doors:
             return
-        all_bodies_not_door = self._get_all_bodies_excluding_doors(doors)
-
         all_doors_event = self._build_all_doors_event_from_views(
             doors, wall_event_thickness
         )
 
+        all_bodies_not_door = self._get_all_bodies_excluding_doors_from_world(parent_world)
+
         if not all_doors_event.is_empty():
             self._remove_doors_from_bodies(all_bodies_not_door, all_doors_event)
 
-    # def _get_all_bodies_excluding_doors(self, doors: List[Door]) -> List[Body]:
-    #     world = doors[0]._world
-    #     all_door_bodies = []
-    #     for door in doors:
-    #         all_door_bodies.extend(list(door.bodies))
-    #     bodies_not_in_door_bodies = [
-    #         body
-    #         for body in world.bodies_with_enabled_collision
-    #         if body not in all_door_bodies
-    #     ]
-    #     return bodies_not_in_door_bodies
-
-    def _get_all_bodies_excluding_doors(self, doors: List[Door]) -> List[Body]:
-
-        world = doors[0]._world
+    def _get_all_bodies_excluding_doors_from_world(self, world: World) -> List[Body]:
         with symbolic_mode():
-            all_entryways = Door(From(world.views))
-            door_bodies = all_entryways.bodies
+            all_doors = Door(From(world.views))
+            door_bodies = merge(all_doors.bodies)
             other_body = let(type_=Body, domain=world.bodies_with_enabled_collision)
-            query = an(entity(other_body, not_(in_(other_body, door_bodies))))
-            q = a(entity(door_bodies))
+            bodies_without_excluded_bodies_query = an(
+                entity(other_body, not_(in_(other_body, door_bodies)))
+            )
 
-        result = list(door_bodies._evaluate__())
-        result_2 = list(q.evaluate())
-        return result
-        # all_door_bodies = []
-        # for door in doors:
-        #     all_door_bodies.extend(list(door.bodies))
-        # bodies_not_in_door_bodies = [
-        #     body
-        #     for body in world.bodies_with_enabled_collision
-        #     if body not in all_door_bodies
-        # ]
-        # return bodies_not_in_door_bodies
+        filtered_bodies = list(bodies_without_excluded_bodies_query.evaluate())
+        return filtered_bodies
 
     def _build_all_doors_event_from_views(
         self, doors: List[Door], wall_event_thickness: float = 0.1
