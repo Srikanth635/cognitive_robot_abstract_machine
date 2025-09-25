@@ -1660,10 +1660,7 @@ class World:
                 dof_mapping[dof] = new_dof
             for connection in self.connections:
                 con_factory = ConnectionFactory.from_connection(connection)
-                new_connection = con_factory.create(new_world)
-                origin_expression = new_connection.origin_expression
-                new_world.add_connection(new_connection)
-                new_connection.origin_expression = origin_expression
+                con_factory.create(new_world)
             for dof in self.degrees_of_freedom:
                 new_world.state[dof.name] = self.state[dof.name].data
         return new_world

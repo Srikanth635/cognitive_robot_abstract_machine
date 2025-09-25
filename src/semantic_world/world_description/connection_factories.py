@@ -99,16 +99,17 @@ class FixedConnectionFactory(ConnectionFactory[FixedConnection]):
             origin_expression=connection.origin_expression,
         )
 
-    def create(self, world: World) -> Connection:
+    def create(self, world: World) -> None:
         parent = world.get_kinematic_structure_entity_by_name(self.parent_name)
         child = world.get_kinematic_structure_entity_by_name(self.child_name)
-        return self.original_class()(
+        connection =  self.original_class()(
             parent=parent,
             child=child,
             name=self.name,
             origin_expression=self.origin_expression,
             _world=world,
         )
+        world.add_connection(connection)
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any]) -> Self:
@@ -140,7 +141,7 @@ class ActiveConnection1DOFFactory(ConnectionFactory[T]):
             origin_expression=connection.origin_expression,
         )
 
-    def create(self, world: World) -> Connection:
+    def create(self, world: World) -> None:
         parent = world.get_kinematic_structure_entity_by_name(self.parent_name)
         child = world.get_kinematic_structure_entity_by_name(self.child_name)
 
@@ -155,10 +156,10 @@ class ActiveConnection1DOFFactory(ConnectionFactory[T]):
             origin_expression=self.origin_expression,
             _world=world,
         )
+        world.add_connection(connection)
         # The init of the  connection adds a new transformation to the origin expression but since this is already done \
         # to this origin we just use it as is
         connection.origin_expression = self.origin_expression
-        return connection
 
     def to_json(self) -> Dict[str, Any]:
         return {
@@ -217,10 +218,10 @@ class Connection6DoFFactory(ConnectionFactory[Connection6DoF]):
             origin_expression=connection.origin_expression,
         )
 
-    def create(self, world: World) -> Connection6DoF:
+    def create(self, world: World) -> None:
         parent = world.get_kinematic_structure_entity_by_name(self.parent_name)
         child = world.get_kinematic_structure_entity_by_name(self.child_name)
-        return self.original_class()(
+        connection = self.original_class()(
             parent=parent,
             child=child,
             name=self.name,
@@ -234,6 +235,10 @@ class Connection6DoFFactory(ConnectionFactory[Connection6DoF]):
             origin_expression=self.origin_expression,
             _world=world,
         )
+        world.add_connection(connection)
+        # The init of the  connection adds a new transformation to the origin expression but since this is already done \
+        # to this origin we just use it as is
+        connection.origin_expression = self.origin_expression
 
     def to_json(self) -> Dict[str, Any]:
         return {
@@ -297,10 +302,10 @@ class OmniDriveFactory(ConnectionFactory[OmniDrive]):
             origin_expression=connection.origin_expression,
         )
 
-    def create(self, world: World) -> Connection:
+    def create(self, world: World) -> None:
         parent = world.get_kinematic_structure_entity_by_name(self.parent_name)
         child = world.get_kinematic_structure_entity_by_name(self.child_name)
-        return self.original_class()(
+        connection = self.original_class()(
             parent=parent,
             child=child,
             name=self.name,
@@ -317,6 +322,10 @@ class OmniDriveFactory(ConnectionFactory[OmniDrive]):
             origin_expression=self.origin_expression,
             _world=world,
         )
+        world.add_connection(connection)
+        # The init of the  connection adds a new transformation to the origin expression but since this is already done \
+        # to this origin we just use it as is
+        connection.origin_expression = self.origin_expression
 
     def to_json(self) -> Dict[str, Any]:
         return {
