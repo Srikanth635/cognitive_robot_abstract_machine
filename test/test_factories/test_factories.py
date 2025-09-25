@@ -15,8 +15,9 @@ from semantic_world.views.factories import (
     DresserFactory,
     WallFactory,
     SemanticPositionDescription,
-    HorizontalDirection,
-    VerticalDirection,
+    ProabilisticHorizontalDirection,
+    ProabilisticVerticalDirection,
+    ExactVerticalDirection, ExactHorizontalDirection,
 )
 
 
@@ -46,15 +47,11 @@ class TestFactories(unittest.TestCase):
             name=PrefixedName("door"),
             handle_factory=HandleFactory(name=PrefixedName("handle")),
             semantic_position=SemanticPositionDescription(
-                [
-                    HorizontalDirection.RIGHT,
-                    HorizontalDirection.CENTER,
-                    VerticalDirection.CENTER,
-                    VerticalDirection.CENTER,
-                    VerticalDirection.CENTER,
-                    VerticalDirection.CENTER,
-                    VerticalDirection.CENTER,
-                ]
+                horizontal_direction_chain=[
+                    ProabilisticHorizontalDirection.RIGHT,
+                    ExactHorizontalDirection.CENTER,
+                ],
+                vertical_direction_chain=[ExactVerticalDirection.CENTER],
             ),
         )
         world = factory.create()

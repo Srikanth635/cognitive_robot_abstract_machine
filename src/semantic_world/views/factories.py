@@ -12,15 +12,23 @@ from entity_query_language import (
     an,
     entity,
     not_,
-    contains,
     in_,
-    set_of,
-    a,
     From,
     merge,
 )
 from numpy import ndarray
-from probabilistic_model.probabilistic_circuit.rx.helper import uniform_measure_of_event
+from probabilistic_model.distributions import (
+    UnivariateDistribution,
+)
+from probabilistic_model.distributions.helper import make_dirac
+from probabilistic_model.probabilistic_circuit.rx.helper import (
+    uniform_measure_of_simple_event,
+)
+from probabilistic_model.probabilistic_circuit.rx.probabilistic_circuit import (
+    ProductUnit,
+    leaf,
+    ProbabilisticCircuit,
+)
 from random_events.interval import Bound
 from random_events.product_algebra import *
 from typing_extensions import Generic, TypeVar
@@ -44,8 +52,6 @@ from ..views.views import (
     DoubleDoor,
     Room,
     Floor,
-    Cabinet,
-    EntryWay,
 )
 from ..world import World
 from ..world_description.connections import (
@@ -56,7 +62,7 @@ from ..world_description.connections import (
 from ..world_description.degree_of_freedom import DegreeOfFreedom
 from ..world_description.geometry import Scale
 from ..world_description.shape_collection import BoundingBoxCollection, ShapeCollection
-from ..world_description.world_entity import Body, Region, View
+from ..world_description.world_entity import Body, Region
 
 id_generator = IDGenerator()
 
@@ -248,7 +254,9 @@ class HasDoorLikeFactories(ABC):
             doors, wall_event_thickness
         )
 
-        all_bodies_not_door = self._get_all_bodies_excluding_doors_from_world(parent_world)
+        all_bodies_not_door = self._get_all_bodies_excluding_doors_from_world(
+            parent_world
+        )
 
         if not all_doors_event.is_empty():
             self._remove_doors_from_bodies(all_bodies_not_door, all_doors_event)
@@ -313,19 +321,40 @@ class HasDoorLikeFactories(ABC):
         body.visual = new_collision
 
 
-class DirectionInterval(SimpleInterval, Enum): ...
+class SemanticDirection(Enum): ...
 
 
-class HorizontalDirection(DirectionInterval):
-    RIGHT = (2 / 3, 1, Bound.CLOSED, Bound.CLOSED)
-    CENTER = (1 / 3, 2 / 3, Bound.OPEN, Bound.OPEN)
+class HorizontalSemanticDirection(SemanticDirection): ...
+
+
+class VerticalSemanticDirection(SemanticDirection): ...
+
+
+class DirectionDirac(float): ...
+
+
+class ProabilisticHorizontalDirection(SimpleInterval, HorizontalSemanticDirection):
     LEFT = (0, 1 / 3, Bound.CLOSED, Bound.CLOSED)
+    CENTER = (1 / 3, 2 / 3, Bound.OPEN, Bound.OPEN)
+    RIGHT = (2 / 3, 1, Bound.CLOSED, Bound.CLOSED)
 
 
-class VerticalDirection(DirectionInterval):
+class ExactHorizontalDirection(DirectionDirac, HorizontalSemanticDirection):
+    LEFT = 0
+    CENTER = 0.5
+    RIGHT = 1
+
+
+class ProabilisticVerticalDirection(SimpleInterval, VerticalSemanticDirection):
     TOP = (0, 1 / 3, Bound.CLOSED, Bound.CLOSED)
     CENTER = (1 / 3, 2 / 3, Bound.OPEN, Bound.OPEN)
     BOTTOM = (2 / 3, 1, Bound.CLOSED, Bound.CLOSED)
+
+
+class ExactVerticalDirection(DirectionDirac, VerticalSemanticDirection):
+    TOP = 0
+    CENTER = 0.5
+    BOTTOM = 1
 
 
 @dataclass
@@ -334,14 +363,20 @@ class SemanticPositionDescription:
     Describes a position by mapping semantic concepts (RIGHT, CENTER, LEFT, TOP, BOTTOM) to instances of
     random_events.intervals.SimpleInterval, which are then used to "zoom" into specific regions of an event.
     Each DirectionInterval divides the original event into three parts, either vertically or horizontally, and zooms into
-    one of them depending on which specific direction was chosen. The next entry inside `direction_chain` then does the same
-    thing, but on resulting event of the last iteration.
+    one of them depending on which specific direction was chosen.
+    The sequence of zooms is defined by the order of directions in the horizontal_direction_chain and
+    vertical_direction_chain lists.
     Finally, we can sample aa 2d pose from the resulting event
     """
 
-    direction_chain: List[DirectionInterval]
+    horizontal_direction_chain: List[HorizontalSemanticDirection]
     """
-    Describes the sequence of zooms that should be applied to the event
+    Describes the sequence of zooms in the horizontal direction (Y axis).
+    """
+
+    vertical_direction_chain: List[VerticalSemanticDirection]
+    """
+    Describes the sequence of zooms in the vertical direction (Z axis).
     """
 
     @staticmethod
@@ -355,35 +390,75 @@ class SemanticPositionDescription:
         new_upper = base.lower + span * target.upper
         return SimpleInterval(new_lower, new_upper, base.left, base.right)
 
-    def _apply_zoom(self, simple_event: SimpleEvent) -> SimpleEvent:
+    @staticmethod
+    def _zoom_dirac(base: SimpleInterval, target: DirectionDirac) -> float:
+        """
+        Zoom 'base' interval to the dirac point 'target' (0..1),
+        preserving the base's boundary styles.
+        """
+        span = base.upper - base.lower
+        new_point = base.lower + span * target
+        return new_point
+
+    def _apply_zoom(
+        self, simple_event: SimpleEvent
+    ) -> Tuple[SimpleEvent, List[UnivariateDistribution]]:
         """
         Apply zooms in order and return the resulting intervals.
         """
-        assert all(
-            [
-                variable
-                in {
-                    SpatialVariables.y.value,
-                    SpatialVariables.z.value,
-                }
-                for variable in simple_event.variables
-            ]
-        ), f"Tried to apply zoom to event with variables {simple_event.variables}. Maybe we need to allow for 3D?"
-        cur_y = simple_event[SpatialVariables.y.value].simple_sets[0]
-        cur_z = simple_event[SpatialVariables.z.value].simple_sets[0]
-        for step in self.direction_chain:
+
+        areas = [
+            self._apply_zoom_in_one_direction(
+                axis,
+                assignment.simple_sets[0],
+            )
+            for axis, assignment in simple_event.items()
+        ]
+
+        simple_events = [area for area in areas if isinstance(area, SimpleEvent)]
+        simple_event = reduce(or_, simple_events) if simple_events else SimpleEvent()
+        distributions = [
+            area for area in areas if isinstance(area, UnivariateDistribution)
+        ]
+
+        return simple_event, distributions
+
+    def _build_circuit(
+        self, simple_event: SimpleEvent, distributions: List[UnivariateDistribution]
+    ) -> ProbabilisticCircuit:
+
+        event_circuit = uniform_measure_of_simple_event(simple_event)
+        root: ProductUnit = event_circuit.root
+        for distribution in distributions:
+            root.add_subcircuit(leaf(distribution, event_circuit))
+        return event_circuit
+
+    def _apply_zoom_in_one_direction(
+        self, axis: Continuous, current_interval: SimpleInterval
+    ) -> Union[SimpleEvent, UnivariateDistribution]:
+        current_dirac = None
+        if axis == SpatialVariables.y.value:
+            directions = self.horizontal_direction_chain
+        elif axis == SpatialVariables.z.value:
+            directions = self.vertical_direction_chain
+        else:
+            raise NotImplementedError
+
+        for step in directions:
             match step:
-                case HorizontalDirection():
-                    cur_y = self._zoom_interval(cur_y, step)
-                case VerticalDirection():
-                    cur_z = self._zoom_interval(cur_z, step)
-        return SimpleEvent(
-            {SpatialVariables.y.value: cur_y, SpatialVariables.z.value: cur_z}
-        )
+                case SimpleInterval():
+                    current_interval = self._zoom_interval(current_interval, step)
+                case DirectionDirac():
+                    current_dirac = self._zoom_dirac(current_interval, step)
+                    current_dirac = make_dirac(axis, float(current_dirac))
+                    break
+
+        return current_dirac or SimpleEvent({axis: current_interval})
 
     def sample_point_from_event(self, event: Event):
-        event_of_interest = self._apply_zoom(event.bounding_box()).as_composite_set()
-        event_circuit = uniform_measure_of_event(event_of_interest)
+        simple_event, distributions = self._apply_zoom(event.bounding_box())
+        event_circuit = self._build_circuit(simple_event, distributions)
+
         return event_circuit.sample(amount=1)[0]
 
 
@@ -864,11 +939,7 @@ class DrawerFactory(ViewFactory[Drawer], HasHandleFactory):
         container_world = self.container_factory.create()
         world.merge_world(container_world)
 
-        drawer_T_handle = TransformationMatrix.from_xyz_rpy(
-            self.container_factory.scale.x / 2, 0, 0, 0, 0, 0
-        )
-
-        self.add_handle_to_world(drawer_T_handle, world)
+        self.add_handle_to_world(self.parent_T_handle, world)
 
         container_view: Container = world.get_views_by_type(Container)[0]
         handle_view: Handle = world.get_views_by_type(Handle)[0]
