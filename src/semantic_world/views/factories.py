@@ -158,12 +158,12 @@ class HasDoorLikeFactories(ABC):
 
             parent_world.merge_world(door_world, connection)
 
-    def add_door_like_views_to_world(
+    def add_doorlike_views_to_world(
         self,
         parent_world: World,
     ):
         """
-        Adds doors to the parent world.
+        Adds door-like views to the parent world.
         """
         for door_factory, door_transform in zip(
             self.door_factories, self.door_transforms
@@ -316,7 +316,19 @@ class VerticalDirection(DirectionInterval):
 
 @dataclass
 class SemanticPositionDescription:
+    """
+    Describes a position by mapping semantic concepts (RIGHT, CENTER, LEFT, TOP, BOTTOM) to instances of
+    random_events.intervals.SimpleInterval, which are then used to "zoom" into specific regions of an event.
+    Each DirectionInterval divides the original event into three parts, either vertically or horizontally, and zooms into
+    one of them depending on which specific direction was chosen. The next entry inside `direction_chain` then does the same
+    thing, but on resulting event of the last iteration.
+    Finally, we can sample aa 2d pose from the resulting event
+    """
+
     direction_chain: List[DirectionInterval]
+    """
+    Describes the sequence of zooms that should be applied to the event
+    """
 
     @staticmethod
     def _zoom_interval(base: SimpleInterval, target: SimpleInterval) -> SimpleInterval:
@@ -329,9 +341,9 @@ class SemanticPositionDescription:
         new_upper = base.lower + span * target.upper
         return SimpleInterval(new_lower, new_upper, base.left, base.right)
 
-    def apply_zoom(self, simple_event: SimpleEvent) -> SimpleEvent:
+    def _apply_zoom(self, simple_event: SimpleEvent) -> SimpleEvent:
         """
-        Apply zooms in order over (x, y) and return the resulting intervals.
+        Apply zooms in order and return the resulting intervals.
         """
         assert all(
             [
@@ -356,7 +368,7 @@ class SemanticPositionDescription:
         )
 
     def sample_point_from_event(self, event: Event):
-        event_of_interest = self.apply_zoom(event.bounding_box()).as_composite_set()
+        event_of_interest = self._apply_zoom(event.bounding_box()).as_composite_set()
         event_circuit = uniform_measure_of_event(event_of_interest)
         return event_circuit.sample(amount=1)[0]
 
@@ -380,6 +392,9 @@ class HasHandleFactory(ABC):
     """
 
     parent_T_handle: Optional[TransformationMatrix] = field(default=None)
+    """
+    The transformation matrix of the handle from the parent
+    """
 
     def __post_init__(self):
         assert (
@@ -444,14 +459,14 @@ class HasDrawerFactories(ABC):
     The transformations for the drawers their parent container.
     """
 
-    def add_drawer_to_world(
+    def _add_drawer_to_world(
         self,
         drawer_factory: DrawerFactory,
         parent_T_drawer: TransformationMatrix,
         parent_world: World,
     ):
 
-        lower_limits, upper_limits = self.create_drawer_upper_lower_limits(
+        lower_limits, upper_limits = self._create_drawer_upper_lower_limits(
             drawer_factory
         )
         drawer_world = drawer_factory.create()
@@ -483,14 +498,14 @@ class HasDrawerFactories(ABC):
         for drawer_factory, transform in zip(
             self.drawers_factories, self.drawer_transforms
         ):
-            self.add_drawer_to_world(
+            self._add_drawer_to_world(
                 drawer_factory=drawer_factory,
                 parent_T_drawer=transform,
                 parent_world=parent_world,
             )
 
     @staticmethod
-    def create_drawer_upper_lower_limits(
+    def _create_drawer_upper_lower_limits(
         drawer_factory: DrawerFactory,
     ) -> Tuple[DerivativeMap[float], DerivativeMap[float]]:
         """
@@ -567,7 +582,7 @@ class ContainerFactory(ViewFactory[Container]):
         Return a world with a container body at its root.
         """
 
-        container_event = self.create_container_event()
+        container_event = self._create_container_event()
 
         container_body = Body(name=self.name)
         collision_shapes = BoundingBoxCollection.from_event(
@@ -583,7 +598,7 @@ class ContainerFactory(ViewFactory[Container]):
 
         return world
 
-    def create_container_event(self) -> Event:
+    def _create_container_event(self) -> Event:
         """
         Return an event representing a container with walls of a specified thickness.
         """
@@ -595,7 +610,7 @@ class ContainerFactory(ViewFactory[Container]):
         )
         inner_box = inner_scale.simple_event
 
-        inner_box = self.extend_inner_event_in_direction(
+        inner_box = self._extend_inner_event_in_direction(
             inner_event=inner_box, inner_scale=inner_scale
         )
 
@@ -603,7 +618,7 @@ class ContainerFactory(ViewFactory[Container]):
 
         return container_event
 
-    def extend_inner_event_in_direction(
+    def _extend_inner_event_in_direction(
         self, inner_event: SimpleEvent, inner_scale: Scale
     ) -> SimpleEvent:
         """
@@ -666,7 +681,7 @@ class HandleFactory(ViewFactory[Handle]):
         Create a world with a handle body at its root.
         """
 
-        handle_event = self.create_handle_event()
+        handle_event = self._create_handle_event()
 
         handle = Body(name=self.name)
         collision = BoundingBoxCollection.from_event(handle, handle_event).as_shapes()
@@ -679,20 +694,20 @@ class HandleFactory(ViewFactory[Handle]):
         world.add_view(handle_view)
         return world
 
-    def create_handle_event(self) -> Event:
+    def _create_handle_event(self) -> Event:
         """
         Return an event representing a handle.
         """
 
-        handle_event = self.create_outer_box_event().as_composite_set()
+        handle_event = self._create_outer_box_event().as_composite_set()
 
-        inner_box = self.create_inner_box_event().as_composite_set()
+        inner_box = self._create_inner_box_event().as_composite_set()
 
         handle_event -= inner_box
 
         return handle_event
 
-    def create_outer_box_event(self) -> SimpleEvent:
+    def _create_outer_box_event(self) -> SimpleEvent:
         """
         Return an event representing the main body of a handle.
         """
@@ -710,7 +725,7 @@ class HandleFactory(ViewFactory[Handle]):
 
         return handle_event
 
-    def create_inner_box_event(self) -> SimpleEvent:
+    def _create_inner_box_event(self) -> SimpleEvent:
         """
         Return an event used to cut out the inner part of the handle.
         """
@@ -795,7 +810,7 @@ class DoubleDoorFactory(DoorLikeFactory[DoubleDoor], HasDoorLikeFactories):
         double_door_body = Body(name=self.name)
         world.add_kinematic_structure_entity(double_door_body)
 
-        self.add_door_like_views_to_world(
+        self.add_doorlike_views_to_world(
             parent_world=world,
         )
 
@@ -852,128 +867,6 @@ class DrawerFactory(ViewFactory[Drawer], HasHandleFactory):
 
 
 @dataclass
-class CabinetFactory(ViewFactory[Cabinet], HasDoorLikeFactories, HasDrawerFactories):
-    """
-    Factory for creating a dresser with drawers, and doors.
-    """
-
-    container_factory: ContainerFactory = field(default=None)
-    """
-    The factory used to create the container of the dresser.
-    """
-
-    def _create(self, world: World) -> World:
-        """
-        Return a world with a dresser at its root. The dresser consists of a container, potentially drawers, and doors.
-        Assumes that the number of drawers matches the number of drawer transforms.
-        """
-        assert len(self.drawers_factories) == len(
-            self.drawer_transforms
-        ), "Number of drawers must match number of transforms"
-
-        dresser_world = self.make_dresser_world()
-        dresser_world.name = world.name
-        return self.make_interior(dresser_world)
-
-    def make_dresser_world(self) -> World:
-        """
-        Create a world with a dresser view that contains a container, drawers, and doors, but no interior yet.
-        """
-        dresser_world = self.container_factory.create()
-        container_view: Container = dresser_world.get_views_by_type(Container)[0]
-
-        self.add_door_like_views_to_world(dresser_world)
-
-        self.add_drawers_to_world(dresser_world)
-
-        dresser_view = Cabinet(
-            name=self.name,
-            container=container_view,
-            drawers=dresser_world.get_views_by_type(Drawer),
-            doors=dresser_world.get_views_by_type(Door),
-        )
-        dresser_world.add_view(dresser_view, exists_ok=True)
-        dresser_world.name = self.name.name
-
-        return dresser_world
-
-    def make_interior(self, world: World) -> World:
-        """
-        Create the interior of the dresser by subtracting the drawers and doors from the container, and filling  with
-        the remaining space.
-
-        :param world: The world containing the dresser body as its root.
-        """
-        dresser_body: Body = world.root
-        container_event = dresser_body.collision.as_bounding_box_collection_at_origin(
-            TransformationMatrix(reference_frame=dresser_body)
-        ).event
-
-        container_footprint = self.subtract_bodies_from_container_footprint(
-            world, container_event
-        )
-
-        container_event = self.fill_container_body(container_footprint, container_event)
-
-        collision_shapes = BoundingBoxCollection.from_event(
-            dresser_body, container_event
-        ).as_shapes()
-        dresser_body.collision = collision_shapes
-        dresser_body.visual = collision_shapes
-        return world
-
-    def subtract_bodies_from_container_footprint(
-        self, world: World, container_event: Event
-    ) -> Event:
-        """
-        Subtract the bounding boxes of all bodies in the world from the container event,
-        except for the dresser body itself. This creates a frontal footprint of the container
-
-        :param world: The world containing the dresser body as its root.
-        :param container_event: The event representing the container.
-
-        :return: An event representing the footprint of the container after subtracting other bodies.
-        """
-        dresser_body = world.root
-
-        container_footprint = container_event.marginal(SpatialVariables.yz)
-
-        for body in world.bodies:
-            if body == dresser_body:
-                continue
-            body_footprint = body.collision.as_bounding_box_collection_at_origin(
-                TransformationMatrix(reference_frame=dresser_body)
-            ).event.marginal(SpatialVariables.yz)
-            container_footprint -= body_footprint
-
-        return container_footprint
-
-    def fill_container_body(
-        self, container_footprint: Event, container_event: Event
-    ) -> Event:
-        """
-        Expand container footprint into 3d space and fill the space of the resulting container body.
-
-        :param container_footprint: The footprint of the container in the yz-plane.
-        :param container_event: The event representing the container.
-
-        :return: An event representing the container body with the footprint filled in the x-direction.
-        """
-
-        container_footprint.fill_missing_variables([SpatialVariables.x.value])
-
-        depth_interval = container_event.bounding_box()[SpatialVariables.x.value]
-        limiting_event = SimpleEvent(
-            {SpatialVariables.x.value: depth_interval}
-        ).as_composite_set()
-        limiting_event.fill_missing_variables(SpatialVariables.yz)
-
-        container_event |= container_footprint & limiting_event
-
-        return container_event
-
-
-@dataclass
 class DresserFactory(ViewFactory[Dresser], HasDoorLikeFactories, HasDrawerFactories):
     """
     Factory for creating a dresser with drawers, and doors.
@@ -993,18 +886,18 @@ class DresserFactory(ViewFactory[Dresser], HasDoorLikeFactories, HasDrawerFactor
             self.drawer_transforms
         ), "Number of drawers must match number of transforms"
 
-        dresser_world = self.make_dresser_world()
+        dresser_world = self._make_dresser_world()
         dresser_world.name = world.name
-        return self.make_interior(dresser_world)
+        return self._make_interior(dresser_world)
 
-    def make_dresser_world(self) -> World:
+    def _make_dresser_world(self) -> World:
         """
         Create a world with a dresser view that contains a container, drawers, and doors, but no interior yet.
         """
         dresser_world = self.container_factory.create()
         container_view: Container = dresser_world.get_views_by_type(Container)[0]
 
-        self.add_door_like_views_to_world(dresser_world)
+        self.add_doorlike_views_to_world(dresser_world)
 
         self.add_drawers_to_world(dresser_world)
 
@@ -1019,7 +912,7 @@ class DresserFactory(ViewFactory[Dresser], HasDoorLikeFactories, HasDrawerFactor
 
         return dresser_world
 
-    def make_interior(self, world: World) -> World:
+    def _make_interior(self, world: World) -> World:
         """
         Create the interior of the dresser by subtracting the drawers and doors from the container, and filling  with
         the remaining space.
@@ -1031,11 +924,13 @@ class DresserFactory(ViewFactory[Dresser], HasDoorLikeFactories, HasDrawerFactor
             TransformationMatrix(reference_frame=dresser_body)
         ).event
 
-        container_footprint = self.subtract_bodies_from_container_footprint(
+        container_footprint = self._subtract_bodies_from_container_footprint(
             world, container_event
         )
 
-        container_event = self.fill_container_body(container_footprint, container_event)
+        container_event = self._fill_container_body(
+            container_footprint, container_event
+        )
 
         collision_shapes = BoundingBoxCollection.from_event(
             dresser_body, container_event
@@ -1044,7 +939,7 @@ class DresserFactory(ViewFactory[Dresser], HasDoorLikeFactories, HasDrawerFactor
         dresser_body.visual = collision_shapes
         return world
 
-    def subtract_bodies_from_container_footprint(
+    def _subtract_bodies_from_container_footprint(
         self, world: World, container_event: Event
     ) -> Event:
         """
@@ -1070,7 +965,7 @@ class DresserFactory(ViewFactory[Dresser], HasDoorLikeFactories, HasDrawerFactor
 
         return container_footprint
 
-    def fill_container_body(
+    def _fill_container_body(
         self, container_footprint: Event, container_event: Event
     ) -> Event:
         """
@@ -1148,14 +1043,14 @@ class WallFactory(ViewFactory[Wall], HasDoorLikeFactories):
         """
         Return a world with the wall body at its root and potentially doors and double doors as children of the wall body.
         """
-        wall_world = self.create_wall_world()
-        self.add_door_like_views_to_world(wall_world)
+        wall_world = self._create_wall_world()
+        self.add_doorlike_views_to_world(wall_world)
         self.remove_doors_from_world(wall_world)
         world.merge_world(wall_world)
 
         return world
 
-    def create_wall_world(self) -> World:
+    def _create_wall_world(self) -> World:
         wall_world = World()
         wall_body = Body(name=self.name)
         wall_collision = self._create_wall_collision(wall_body)
