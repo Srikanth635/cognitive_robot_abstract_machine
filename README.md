@@ -13,6 +13,9 @@ Semantic World translates raw environment data into structured knowledge.
 
 ## Assimilated Technologies
 
+![Fancy logo](doc/_static/images/assimilation_dark_mode.png#gh-dark-mode-only)
+![Fancy logo](doc/_static/images/assimilation.png#gh-light-mode-only)
+
 <image alt="Assimilation Icon" src="doc/_static/images/assimilation.png" style="width: 300px; height: auto; object-fit: contain;"></image>
 
 🌍 **Model full kinematic worlds, not just meshes**. Define bodies, regions, connections, and degrees of freedom as primary, first-class entities within a clean, composable Python API.
