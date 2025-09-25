@@ -8,7 +8,7 @@ from typing_extensions import Tuple
 import pytest
 
 from .adapters.urdf import URDFParser
-from .utils import rclpy_installed
+from .utils import rclpy_installed, tracy_installed
 from .world_description.connections import (
     Connection6DoF,
     PrismaticConnection,
@@ -175,6 +175,8 @@ def pr2_world():
 
 @pytest.fixture
 def tracy_world():
+    if not tracy_installed():
+        pytest.skip("Tracy not installed")
     urdf_dir = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..", "..", "resources", "urdf"
     )
