@@ -1,10 +1,12 @@
 # Semantic World
 
 Introducing Semantic World: A unified interface for scene data and asserted meaning.
+
 The Semantic World Python package streamlines the integration and management of scene graphs with explicit semantic assertions.
-Agents and autonomous systems require more than just coordinates—they need contextual understanding. 
+Agents and autonomous systems require more than just coordinates, they need contextual understanding. 
 Semantic World bridges geometry, kinematics, and meaning, allowing systems for planning, 
 learning, and reasoning to process the environment through actionable, high-level concepts.
+
 This enables the construction of environments that can be readily understood,
 queried, transformed, and shared across projects.
 Whether for research prototypes or robust data pipelines,
