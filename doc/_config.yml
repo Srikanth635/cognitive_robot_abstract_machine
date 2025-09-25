@@ -38,10 +38,11 @@ sphinx:
       - show-inheritance
       - show-module-summary
     autoapi_add_toctree_entry: True
+    html_static_path: ["_static"]
     html_theme_options:
       logo:
-        image_light: "images/semantic_world_logo.png"
-        image_dark: "images/semantic_world_logo_dark_mode.png"
+        image_light: "_staitc/images/semantic_world_logo.png"
+        image_dark: "_static/images/semantic_world_logo_dark_mode.png"
 
 
 # Information about where the book exists on the web
