@@ -6,6 +6,18 @@ from enum import IntEnum, Enum
 from functools import reduce
 from operator import or_
 
+from entity_query_language import (
+    symbolic_mode,
+    let,
+    an,
+    entity,
+    not_,
+    contains,
+    in_,
+    set_of,
+    a,
+    From,
+)
 from numpy import ndarray
 from probabilistic_model.probabilistic_circuit.rx.helper import uniform_measure_of_event
 from random_events.interval import Bound
@@ -32,6 +44,7 @@ from ..views.views import (
     Room,
     Floor,
     Cabinet,
+    EntryWay,
 )
 from ..world import World
 from ..world_description.connections import (
@@ -42,7 +55,7 @@ from ..world_description.connections import (
 from ..world_description.degree_of_freedom import DegreeOfFreedom
 from ..world_description.geometry import Scale
 from ..world_description.shape_collection import BoundingBoxCollection, ShapeCollection
-from ..world_description.world_entity import Body, Region
+from ..world_description.world_entity import Body, Region, View
 
 id_generator = IDGenerator()
 
@@ -239,17 +252,40 @@ class HasDoorLikeFactories(ABC):
         if not all_doors_event.is_empty():
             self._remove_doors_from_bodies(all_bodies_not_door, all_doors_event)
 
+    # def _get_all_bodies_excluding_doors(self, doors: List[Door]) -> List[Body]:
+    #     world = doors[0]._world
+    #     all_door_bodies = []
+    #     for door in doors:
+    #         all_door_bodies.extend(list(door.bodies))
+    #     bodies_not_in_door_bodies = [
+    #         body
+    #         for body in world.bodies_with_enabled_collision
+    #         if body not in all_door_bodies
+    #     ]
+    #     return bodies_not_in_door_bodies
+
     def _get_all_bodies_excluding_doors(self, doors: List[Door]) -> List[Body]:
+
         world = doors[0]._world
-        all_door_bodies = []
-        for door in doors:
-            all_door_bodies.extend(list(door.bodies))
-        bodies_not_in_door_bodies = [
-            body
-            for body in world.bodies_with_enabled_collision
-            if body not in all_door_bodies
-        ]
-        return bodies_not_in_door_bodies
+        with symbolic_mode():
+            all_entryways = Door(From(world.views))
+            door_bodies = all_entryways.bodies
+            other_body = let(type_=Body, domain=world.bodies_with_enabled_collision)
+            query = an(entity(other_body, not_(in_(other_body, door_bodies))))
+            q = a(entity(door_bodies))
+
+        result = list(door_bodies._evaluate__())
+        result_2 = list(q.evaluate())
+        return result
+        # all_door_bodies = []
+        # for door in doors:
+        #     all_door_bodies.extend(list(door.bodies))
+        # bodies_not_in_door_bodies = [
+        #     body
+        #     for body in world.bodies_with_enabled_collision
+        #     if body not in all_door_bodies
+        # ]
+        # return bodies_not_in_door_bodies
 
     def _build_all_doors_event_from_views(
         self, doors: List[Door], wall_event_thickness: float = 0.1

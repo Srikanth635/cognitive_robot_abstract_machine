@@ -45,16 +45,6 @@ class Container(View):
 
 
 @dataclass(eq=False)
-class Door(View):  # Door has a Footprint
-    """
-    Door in a body that has a Handle and can open towards or away from the user.
-    """
-
-    handle: Handle
-    body: Body
-
-
-@dataclass(eq=False)
 class Fridge(View):
     """
     A view representing a fridge that has a door and a body.
@@ -157,17 +147,24 @@ class Cabinet(Furniture):
     doors: List[Door] = field(default_factory=list)
 
 
-############################### subclasses to Cabinet
 @dataclass(eq=False)
-class Dresser(Cabinet): ...
-
-
-@dataclass(eq=False)
-class Cupboard(Cabinet): ...
+class Dresser(Furniture):
+    container: Container
+    drawers: List[Drawer] = field(default_factory=list, hash=False)
+    doors: List[Door] = field(default_factory=list)
 
 
 @dataclass(eq=False)
-class Wardrobe(Cabinet): ...
+class Cupboard(Furniture):
+    container: Container
+    doors: List[Door] = field(default_factory=list)
+
+
+@dataclass(eq=False)
+class Wardrobe(Furniture):
+    container: Container
+    drawers: List[Drawer] = field(default_factory=list, hash=False)
+    doors: List[Door] = field(default_factory=list)
 
 
 class Floor(SupportingSurface): ...
