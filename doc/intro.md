@@ -1,15 +1,14 @@
 # Semantic World
 
-Welcome to the semantic world: The bridge between geometric worlds and machine-understandable meaning!
-The semantic world is a python package that unifies the access and manipulation of scene graphs with the assertion
-of meaning.
-
-Robots and agents don’t just need coordinates—they need context. 
-Semantic World fuses geometry, kinematics, and meaning so planners, learners, 
-and reasoning systems can operate on the world the way humans think about it: as actionable, relatable concepts.
-Build worlds that you and your agents can understand, query, and transform—then store, share, and iterate. 
-From research prototypes to data-driven pipelines, 
-Semantic World turns environments into knowledge.
+Introducing Semantic World: A unified interface for scene data and asserted meaning.
+The Semantic World Python package streamlines the integration and management of scene graphs with explicit semantic assertions.
+Agents and autonomous systems require more than just coordinates—they need contextual understanding. 
+Semantic World bridges geometry, kinematics, and meaning, allowing systems for planning, 
+learning, and reasoning to process the environment through actionable, high-level concepts.
+This enables the construction of environments that can be readily understood,
+queried, transformed, and shared across projects.
+Whether for research prototypes or robust data pipelines,
+Semantic World translates raw environment data into structured knowledge.
 
 ## Assimilated Technologies
 ```{raw} html
