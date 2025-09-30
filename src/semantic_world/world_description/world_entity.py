@@ -594,7 +594,7 @@ class RootedView(View):
 
     @property
     def bodies(self) -> List[Body]:
-        return self._world.get_bodies_of_branch(self.root)
+        return self._world.get_kinematic_structure_entities_of_branch(self.root)
 
     @property
     def bodies_with_collisions(self) -> List[Body]:
@@ -621,7 +621,7 @@ class EnvironmentView(RootedView):
         Returns a set of all KinematicStructureEntity in the environment view.
         """
         return set(
-            self._world.compute_descendent_child_kinematic_structure_entities(self.root)
+            self._world.get_kinematic_structure_entities_of_branch(self.root)
         ) | {self.root}
 
 

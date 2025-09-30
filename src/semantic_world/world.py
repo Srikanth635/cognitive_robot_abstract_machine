@@ -726,7 +726,7 @@ class World:
 
         return visitor.connections
 
-    def get_bodies_of_branch(
+    def get_kinematic_structure_entities_of_branch(
         self, root: KinematicStructureEntity
     ) -> List[KinematicStructureEntity]:
         """
@@ -735,22 +735,10 @@ class World:
         :param root: The root body of the branch
         :return: List of all bodies in the subtree rooted at the given body (including the root)
         """
-
-        # Create a custom visitor to collect bodies
-        class BodyCollector(rustworkx.visit.DFSVisitor):
-            def __init__(self, world: World):
-                self.world = world
-                self.bodies = []
-
-            def discover_vertex(self, node_index: int, time: int) -> None:
-                """Called when a vertex is first discovered during DFS traversal"""
-                body = self.world.kinematic_structure[node_index]
-                self.bodies.append(body)
-
-        visitor = BodyCollector(self)
-        rx.dfs_search(self.kinematic_structure, [root.index], visitor)
-
-        return visitor.bodies
+        descendants_indices = rx.descendants(self.kinematic_structure, root.index)
+        return [root] + [
+            self.kinematic_structure[index] for index in descendants_indices
+        ]
 
     def get_view_by_name(self, name: Union[str, PrefixedName]) -> Optional[View]:
         """
@@ -1055,9 +1043,7 @@ class World:
             return matches[0]
         raise KeyError(f"KinematicStructureEntity with name {name} not found")
 
-    def get_body_by_name(
-        self, name: Union[str, PrefixedName]
-    ) -> KinematicStructureEntity:
+    def get_body_by_name(self, name: Union[str, PrefixedName]) -> Body:
         """
         Retrieves a Body from the list of bodies based on its name.
         If the input is of type `PrefixedName`, it checks whether the prefix is specified and looks for an
@@ -1156,24 +1142,6 @@ class World:
         return list(
             self.kinematic_structure.successors(kinematic_structure_entity.index)
         )
-
-    @lru_cache(maxsize=None)
-    def compute_descendent_child_kinematic_structure_entities(
-        self, kinematic_structure_entity: KinematicStructureEntity
-    ) -> List[KinematicStructureEntity]:
-        """
-        Computes all child entities of a given KinematicStructureEntity in the world recursively.
-        :param kinematic_structure_entity: The KinematicStructureEntity for which to compute children.
-        :return: A list of all child KinematicStructureEntities.
-        """
-        children = self.compute_child_kinematic_structure_entities(
-            kinematic_structure_entity
-        )
-        for child in children:
-            children.extend(
-                self.compute_descendent_child_kinematic_structure_entities(child)
-            )
-        return children
 
     @lru_cache(maxsize=None)
     def compute_parent_kinematic_structure_entity(
