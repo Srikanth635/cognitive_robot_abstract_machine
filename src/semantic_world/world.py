@@ -47,6 +47,7 @@ from .spatial_computations.ik_solver import InverseKinematicsSolver
 from .spatial_computations.raytracer import RayTracer
 from .spatial_types import spatial_types as cas
 from .spatial_types.derivatives import Derivatives
+from .spatial_types.symbol_manager import symbol_manager
 from .utils import IDGenerator, copy_lru_cache
 from .world_description.connection_factories import ConnectionFactory
 from .world_description.connections import (
@@ -429,6 +430,7 @@ class World:
         :return: None
         """
         dof._world = self
+        dof.create_and_register_symbols()
 
         initial_position = 0
         lower_limit = dof.lower_limits.position
