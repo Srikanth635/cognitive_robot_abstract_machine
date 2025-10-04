@@ -98,7 +98,7 @@ def fetch_world_from_service(
     :param timeout_seconds: Maximum time to wait for service availability and response.
     :return: The fetched modification blocks.
     """
-
+    # get matching services
     available_services = node.get_service_names_and_types()
     matching_services = [
         service_name
@@ -107,6 +107,7 @@ def fetch_world_from_service(
         and service_type == ["std_srvs/srv/Trigger"]
     ]
 
+    # select service
     if not matching_services:
         raise NoServiceFoundError(service_suffix)
 
@@ -119,6 +120,7 @@ def fetch_world_from_service(
             f"WorldFetcher service '{chosen_service}' not available after {timeout_seconds} seconds"
         )
 
+    # fetch world
     response = client.call(Trigger.Request())
 
     modifications = [
