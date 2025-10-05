@@ -34,7 +34,7 @@ from .shape_collection import ShapeCollection, BoundingBoxCollection
 from ..datastructures.prefixed_name import PrefixedName
 from ..spatial_types import spatial_types as cas
 from ..spatial_types.spatial_types import TransformationMatrix, Expression, Point3
-from ..utils import IDGenerator
+from ..utils import IDGenerator, type_string_to_type
 
 if TYPE_CHECKING:
     from ..world_description.degree_of_freedom import DegreeOfFreedom
@@ -507,20 +507,12 @@ class View(WorldEntity, SubclassJSONSerializer):
     def _from_json(cls, data: Dict[str, Any]) -> Self:
         view_fields = {f.name: f for f in fields(cls)}
 
-        def string_to_type(type_string):
-            try:
-                module_path, class_name = type_string.rsplit(".", 1)
-                module = importlib.import_module(module_path)
-                return getattr(module, class_name)
-            except (ImportError, AttributeError, ValueError) as e:
-                raise ValueError(f"Cannot import type '{type_string}': {e}")
-
         init_args = {}
 
         for k, v in view_fields.items():
             if k not in data.keys():
                 continue
-            field_type = string_to_type(data[k]["type"])
+            field_type = type_string_to_type(data[k]["type"])
             if issubclass(field_type, SubclassJSONSerializer):
                 init_args[k] = field_type.from_json(data[k])
 
