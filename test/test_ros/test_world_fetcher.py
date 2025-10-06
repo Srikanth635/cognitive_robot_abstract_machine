@@ -63,9 +63,8 @@ def test_service_callback_success(rclpy_node):
     modifications_list = [
         WorldModelModificationBlock.from_json(d) for d in json.loads(result.message)
     ]
-    assert isinstance(modifications_list, list)
-    assert len(modifications_list) == 1
-    assert len(modifications_list[0].modifications) == 10
+
+    assert modifications_list == world._model_modification_blocks
 
     fetcher.close()
 
