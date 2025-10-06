@@ -14,7 +14,7 @@ from entity_query_language import (
     not_,
     in_,
     From,
-    merge,
+    for_all,
 )
 from numpy import ndarray
 from probabilistic_model.distributions import (
@@ -264,10 +264,10 @@ class HasDoorLikeFactories(ABC):
     def _get_all_bodies_excluding_doors_from_world(self, world: World) -> List[Body]:
         with symbolic_mode():
             all_doors = Door(From(world.views))
-            door_bodies = merge(all_doors.bodies)
-            other_body = let(type_=Body, domain=world.bodies_with_enabled_collision)
+            other_body = let(type_=Body, domain=world.bodies)
+            door_bodies = all_doors.bodies
             bodies_without_excluded_bodies_query = an(
-                entity(other_body, not_(in_(other_body, door_bodies)))
+                entity(other_body, for_all(door_bodies, not_(in_(other_body, door_bodies))))
             )
 
         filtered_bodies = list(bodies_without_excluded_bodies_query.evaluate())
@@ -323,38 +323,21 @@ class HasDoorLikeFactories(ABC):
 
 class SemanticDirection(Enum): ...
 
-
-class HorizontalSemanticDirection(SemanticDirection): ...
-
-
-class VerticalSemanticDirection(SemanticDirection): ...
-
-
-class DirectionDirac(float): ...
-
-
-class ProabilisticHorizontalDirection(SimpleInterval, HorizontalSemanticDirection):
+class HorizontalSemanticDirection(SimpleInterval, SemanticDirection):
+    FULLY_LEFT = (0, 0, Bound.CLOSED, Bound.CLOSED)
     LEFT = (0, 1 / 3, Bound.CLOSED, Bound.CLOSED)
     CENTER = (1 / 3, 2 / 3, Bound.OPEN, Bound.OPEN)
+    FULLY_CENTER = (0.5, 0.5, Bound.CLOSED, Bound.CLOSED)
     RIGHT = (2 / 3, 1, Bound.CLOSED, Bound.CLOSED)
+    FULLY_RIGHT = (1, 1, Bound.CLOSED, Bound.CLOSED)
 
-
-class ExactHorizontalDirection(DirectionDirac, HorizontalSemanticDirection):
-    LEFT = 0
-    CENTER = 0.5
-    RIGHT = 1
-
-
-class ProabilisticVerticalDirection(SimpleInterval, VerticalSemanticDirection):
+class VerticalSemanticDirection(SimpleInterval, SemanticDirection):
+    FULLY_TOP = (0, 0, Bound.CLOSED, Bound.CLOSED)
     TOP = (0, 1 / 3, Bound.CLOSED, Bound.CLOSED)
     CENTER = (1 / 3, 2 / 3, Bound.OPEN, Bound.OPEN)
+    FULLY_CENTER = (0.5, 0.5, Bound.CLOSED, Bound.CLOSED)
     BOTTOM = (2 / 3, 1, Bound.CLOSED, Bound.CLOSED)
-
-
-class ExactVerticalDirection(DirectionDirac, VerticalSemanticDirection):
-    TOP = 0
-    CENTER = 0.5
-    BOTTOM = 1
+    FULLY_BOTTOM = (1, 1, Bound.CLOSED, Bound.CLOSED)
 
 
 @dataclass
@@ -390,24 +373,14 @@ class SemanticPositionDescription:
         new_upper = base.lower + span * target.upper
         return SimpleInterval(new_lower, new_upper, base.left, base.right)
 
-    @staticmethod
-    def _zoom_dirac(base: SimpleInterval, target: DirectionDirac) -> float:
-        """
-        Zoom 'base' interval to the dirac point 'target' (0..1),
-        preserving the base's boundary styles.
-        """
-        span = base.upper - base.lower
-        new_point = base.lower + span * target
-        return new_point
-
     def _apply_zoom(
         self, simple_event: SimpleEvent
-    ) -> Tuple[SimpleEvent, List[UnivariateDistribution]]:
+    ) -> SimpleEvent:
         """
         Apply zooms in order and return the resulting intervals.
         """
 
-        areas = [
+        simple_events = [
             self._apply_zoom_in_one_direction(
                 axis,
                 assignment.simple_sets[0],
@@ -415,28 +388,14 @@ class SemanticPositionDescription:
             for axis, assignment in simple_event.items()
         ]
 
-        simple_events = [area for area in areas if isinstance(area, SimpleEvent)]
-        simple_event = reduce(or_, simple_events) if simple_events else SimpleEvent()
-        distributions = [
-            area for area in areas if isinstance(area, UnivariateDistribution)
-        ]
+        if not simple_events:
+            return SimpleEvent()
 
-        return simple_event, distributions
-
-    def _build_circuit(
-        self, simple_event: SimpleEvent, distributions: List[UnivariateDistribution]
-    ) -> ProbabilisticCircuit:
-
-        event_circuit = uniform_measure_of_simple_event(simple_event)
-        root: ProductUnit = event_circuit.root
-        for distribution in distributions:
-            root.add_subcircuit(leaf(distribution, event_circuit))
-        return event_circuit
+        return reduce(or_, simple_events)
 
     def _apply_zoom_in_one_direction(
         self, axis: Continuous, current_interval: SimpleInterval
-    ) -> Union[SimpleEvent, UnivariateDistribution]:
-        current_dirac = None
+    ) -> SimpleEvent:
         if axis == SpatialVariables.y.value:
             directions = self.horizontal_direction_chain
         elif axis == SpatialVariables.z.value:
@@ -445,20 +404,13 @@ class SemanticPositionDescription:
             raise NotImplementedError
 
         for step in directions:
-            match step:
-                case SimpleInterval():
-                    current_interval = self._zoom_interval(current_interval, step)
-                case DirectionDirac():
-                    current_dirac = self._zoom_dirac(current_interval, step)
-                    current_dirac = make_dirac(axis, float(current_dirac))
-                    break
+            current_interval = self._zoom_interval(current_interval, step)
 
-        return current_dirac or SimpleEvent({axis: current_interval})
+        return SimpleEvent({axis: current_interval})
 
     def sample_point_from_event(self, event: Event):
-        simple_event, distributions = self._apply_zoom(event.bounding_box())
-        event_circuit = self._build_circuit(simple_event, distributions)
-
+        simple_event = self._apply_zoom(event.bounding_box())
+        event_circuit = uniform_measure_of_simple_event(simple_event)
         return event_circuit.sample(amount=1)[0]
 
 
@@ -507,7 +459,7 @@ class HasHandleFactory(ABC):
         )
 
         return TransformationMatrix.from_xyz_rpy(
-            x=0.05, y=sampled_2d_point[0], z=sampled_2d_point[1]
+            x=scale.x/2, y=sampled_2d_point[0], z=sampled_2d_point[1]
         )
 
     def add_handle_to_world(
@@ -938,8 +890,9 @@ class DrawerFactory(ViewFactory[Drawer], HasHandleFactory):
 
         container_world = self.container_factory.create()
         world.merge_world(container_world)
+        parent_T_handle = self.create_parent_T_handle_from_parent_scale(self.container_factory.scale)
 
-        self.add_handle_to_world(self.parent_T_handle, world)
+        self.add_handle_to_world(parent_T_handle, world)
 
         container_view: Container = world.get_views_by_type(Container)[0]
         handle_view: Handle = world.get_views_by_type(Handle)[0]
