@@ -42,6 +42,9 @@ from semantic_world.views.factories import (
     ContainerFactory,
     HandleFactory,
     Direction,
+    SemanticPositionDescription,
+    HorizontalSemanticDirection,
+    VerticalSemanticDirection,
 )
 from semantic_world.views.views import Drawer, Handle, Container
 from semantic_world.world import World

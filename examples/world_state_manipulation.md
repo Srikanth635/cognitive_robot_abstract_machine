@@ -39,6 +39,9 @@ from semantic_world.views.factories import (
     HandleFactory,
     DrawerFactory,
     Direction,
+    SemanticPositionDescription,
+    HorizontalSemanticDirection,
+    VerticalSemanticDirection,
 )
 from semantic_world.views.views import Drawer
 from semantic_world.world_description.degree_of_freedom import DegreeOfFreedom
