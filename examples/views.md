@@ -55,6 +55,12 @@ world = DrawerFactory(
     name=PrefixedName("drawer"),
     container_factory=ContainerFactory(name=PrefixedName("container"), direction=Direction.Z),
     handle_factory=HandleFactory(name=PrefixedName("handle")),
+    semantic_position=SemanticPositionDescription(
+        horizontal_direction_chain=[
+            HorizontalSemanticDirection.FULLY_CENTER,
+        ],
+        vertical_direction_chain=[VerticalSemanticDirection.FULLY_CENTER],
+    ),
 ).create()
 
 print(*world.views, sep="\n")
