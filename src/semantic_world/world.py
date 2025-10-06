@@ -899,6 +899,7 @@ class World:
         assert other is not self, "Cannot merge a world with itself."
 
         with self.modify_world():
+            old_state = deepcopy(other.state)
             self_root = self.root
             other_root = other.root
             with other.modify_world():
@@ -931,6 +932,9 @@ class World:
 
             if connection:
                 self.add_connection(connection, handle_duplicates=handle_duplicates)
+
+            for dof_name in old_state.keys():
+                self.state[dof_name] = old_state[dof_name]
 
     def move_branch(
         self,

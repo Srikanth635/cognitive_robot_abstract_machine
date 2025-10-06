@@ -192,7 +192,7 @@ def occluding_bodies(camera: Camera, body: Body) -> List[Body]:
             parent=root,
             child=copied_body,
             _world=world_without_occlusion,
-            origin_expression=body.global_pose,
+            parent_T_connection_expression=body.global_pose,
         )
         world_without_occlusion.add_connection(root_to_copied_body)
 

@@ -641,19 +641,31 @@ class Connection(WorldEntity):
     The child KinematicStructureEntity of the connection.
     """
 
-    origin_expression: TransformationMatrix = field(default=None)
+    parent_T_connection_expression: TransformationMatrix = field(
+        default_factory=TransformationMatrix
+    )
     """
     A symbolic expression describing the origin of the connection.
     """
+
+    connection_T_child_expression: TransformationMatrix = field(
+        default_factory=TransformationMatrix
+    )
+    """
+    A symbolic expression describing how the connection's transform changes based on its degrees of freedom.
+    """
+
+    @property
+    def origin_expression(self) -> TransformationMatrix:
+        return self.parent_T_connection_expression @ self.connection_T_child_expression
 
     def add_to_world(self, world: World):
         self._world = world
 
     def __post_init__(self):
-        if self.origin_expression is None:
-            self.origin_expression = TransformationMatrix()
-        self.origin_expression.reference_frame = self.parent
-        self.origin_expression.child_frame = self.child
+        self.parent_T_connection_expression.reference_frame = self.parent
+        self.connection_T_child_expression.child_frame = self.child
+
         if self.name is None:
             self.name = PrefixedName(
                 f"{self.parent.name.name}_T_{self.child.name.name}",
