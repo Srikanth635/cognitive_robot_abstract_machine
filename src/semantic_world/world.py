@@ -7,14 +7,14 @@ import os
 from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import IntEnum
-from functools import wraps, lru_cache
-from itertools import combinations_with_replacement
+from functools import wraps, lru_cache, cached_property
 
 import matplotlib.pyplot as plt
 import numpy as np
 import rustworkx as rx
 import rustworkx.visit
 import rustworkx.visualization
+from itertools import combinations_with_replacement
 from lxml import etree
 from rustworkx import NoEdgeBetweenNodes
 from typing_extensions import (
@@ -30,6 +30,8 @@ from typing_extensions import List
 from typing_extensions import Type, Set
 
 from .callbacks.callback import StateChangeCallback, ModelChangeCallback
+from .collision_checking.collision_detector import CollisionDetector
+from .collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
 from .datastructures.prefixed_name import PrefixedName
 from .datastructures.types import NpMatrix4x4
 from .exceptions import (
@@ -42,6 +44,7 @@ from .exceptions import (
 from .robots import AbstractRobot
 from .spatial_computations.forward_kinematics import ForwardKinematicsVisitor
 from .spatial_computations.ik_solver import InverseKinematicsSolver
+from .spatial_computations.raytracer import RayTracer
 from .spatial_types import spatial_types as cas
 from .spatial_types.derivatives import Derivatives
 from .utils import IDGenerator, copy_lru_cache
@@ -375,6 +378,22 @@ class World:
                 dofs.update(set(connection.passive_dofs))
         return dofs
 
+    @cached_property
+    def collision_detector(self) -> CollisionDetector:
+        """
+        A collision detector for the world.
+        :return: A collision detector for the world.
+        """
+        return TrimeshCollisionDetector(self)
+
+    @cached_property
+    def ray_tracer(self) -> RayTracer:
+        """
+        A ray tracer for the world.
+        :return: A ray tracer for the world.
+        """
+        return RayTracer(self)
+
     def validate(self) -> bool:
         """
         Validate the world.
@@ -410,6 +429,7 @@ class World:
         :return: None
         """
         dof._world = self
+        dof.create_and_register_symbols()
 
         initial_position = 0
         lower_limit = dof.lower_limits.position
@@ -483,8 +503,8 @@ class World:
         for model changes.
         """
         if not self.world_is_being_modified:
-            self.clear_all_lru_caches()
             self.compile_forward_kinematics_expressions()
+            self.clear_all_lru_caches()
             self.notify_state_change()
             self._model_version += 1
 
@@ -636,6 +656,7 @@ class World:
 
         :param connection: The connection to add.
         """
+        connection.add_to_world(self)
         for dof in connection.dofs:
             if dof._world is None:
                 self.add_degree_of_freedom(dof)
@@ -964,8 +985,8 @@ class World:
             root_connection = Connection6DoF(
                 parent=self.root, child=other.root, _world=self
             )
-            root_connection.origin = pose
             self.merge_world(other, root_connection)
+            root_connection.origin = pose
 
     def __str__(self):
         return f"{self.__class__.__name__} with {len(self.kinematic_structure_entities)} bodies."
@@ -1640,7 +1661,7 @@ class World:
                 dof_mapping[dof] = new_dof
             for connection in self.connections:
                 con_factory = ConnectionFactory.from_connection(connection)
-                new_world.add_connection(con_factory.create(new_world))
+                con_factory.create(new_world)
             for dof in self.degrees_of_freedom:
                 new_world.state[dof.name] = self.state[dof.name].data
         return new_world
