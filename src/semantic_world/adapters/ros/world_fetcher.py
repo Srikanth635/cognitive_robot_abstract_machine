@@ -11,7 +11,7 @@ from ...world_description.world_modification import WorldModelModificationBlock
 
 
 @dataclass
-class WorldFetcher:
+class FetchWorldService:
     """
     A ros service that allows other processes to fetch the entire world modification list from this world.
     The modification list is sent via a JSON string message.

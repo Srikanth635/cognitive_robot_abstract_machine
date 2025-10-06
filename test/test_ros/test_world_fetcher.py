@@ -1,6 +1,6 @@
 import json
 from semantic_world.adapters.ros.world_fetcher import (
-    WorldFetcher,
+    FetchWorldService,
     fetch_world_from_service,
 )
 from semantic_world.datastructures.prefixed_name import PrefixedName
@@ -34,7 +34,7 @@ def test_get_modifications_as_json_empty_world(rclpy_node):
     Test that get_modifications_as_json returns an empty list for a world with no modifications.
     """
     world = World()
-    fetcher = WorldFetcher(node=rclpy_node, world=world)
+    fetcher = FetchWorldService(node=rclpy_node, world=world)
 
     modifications_json = fetcher.get_modifications_as_json()
     modifications_list = json.loads(modifications_json)
@@ -48,7 +48,7 @@ def test_service_callback_success(rclpy_node):
     Test that the service callback returns success with the modifications JSON.
     """
     world = create_dummy_world()
-    fetcher = WorldFetcher(node=rclpy_node, world=world)
+    fetcher = FetchWorldService(node=rclpy_node, world=world)
 
     # Create a mock request and response
     request = Trigger.Request()
@@ -74,7 +74,7 @@ def test_service_callback_with_multiple_modifications(rclpy_node):
     Test that the service callback returns all modifications when multiple changes are made.
     """
     world = World()
-    fetcher = WorldFetcher(node=rclpy_node, world=world)
+    fetcher = FetchWorldService(node=rclpy_node, world=world)
 
     # Make multiple modifications
     body_1 = Body(name=PrefixedName("body_1"))
@@ -106,7 +106,7 @@ def test_service_callback_with_multiple_modifications(rclpy_node):
 
 def test_world_fetching(rclpy_node):
     world = create_dummy_world()
-    fetcher = WorldFetcher(node=rclpy_node, world=world)
+    fetcher = FetchWorldService(node=rclpy_node, world=world)
 
     world2 = fetch_world_from_service(
         rclpy_node,
