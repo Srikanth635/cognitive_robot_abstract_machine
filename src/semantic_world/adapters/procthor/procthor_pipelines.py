@@ -9,6 +9,9 @@ from ...views.factories import (
     DrawerFactory,
     DoorFactory,
     DresserFactory,
+    SemanticPositionDescription,
+    HorizontalSemanticDirection,
+    VerticalSemanticDirection,
 )
 from ...world_description.geometry import Scale
 from ...world_description.world_entity import Body
@@ -64,7 +67,13 @@ def door_factory_from_body(door: Body) -> DoorFactory:
         .bounding_boxes[0]
         .scale,
         handle_factory=handle_factory,
-        handle_direction=Direction.Y,
+        semantic_position=SemanticPositionDescription(
+            horizontal_direction_chain=[
+                HorizontalSemanticDirection.RIGHT,
+                HorizontalSemanticDirection.FULLY_CENTER,
+            ],
+            vertical_direction_chain=[VerticalSemanticDirection.FULLY_CENTER],
+        ),
     )
     return door_factory
 

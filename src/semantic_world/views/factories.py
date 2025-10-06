@@ -890,7 +890,7 @@ class DrawerFactory(ViewFactory[Drawer], HasHandleFactory):
 
         container_world = self.container_factory.create()
         world.merge_world(container_world)
-        parent_T_handle = self.create_parent_T_handle_from_parent_scale(self.container_factory.scale)
+        parent_T_handle = self.parent_T_handle or self.create_parent_T_handle_from_parent_scale(self.container_factory.scale)
 
         self.add_handle_to_world(parent_T_handle, world)
 
@@ -993,13 +993,15 @@ class DresserFactory(ViewFactory[Dresser], HasDoorLikeFactories, HasDrawerFactor
 
         container_footprint = container_event.marginal(SpatialVariables.yz)
 
-        for body in world.bodies:
+        for body in world.bodies_with_enabled_collision:
             if body == dresser_body:
                 continue
             body_footprint = body.collision.as_bounding_box_collection_at_origin(
                 TransformationMatrix(reference_frame=dresser_body)
             ).event.marginal(SpatialVariables.yz)
             container_footprint -= body_footprint
+            if container_footprint.is_empty():
+                return Event()
 
         return container_footprint
 

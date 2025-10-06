@@ -61,15 +61,15 @@ class TestFactories(unittest.TestCase):
         self.assertEqual(world.root, door.body)
         self.assertIsInstance(door.handle, Handle)
 
-        from semantic_world.adapters.viz_marker import VizMarkerPublisher
-        import rclpy
-
-        rclpy.init()
-
-        node = rclpy.create_node("semantic_world")
-
-        viz = VizMarkerPublisher(world=world, node=node)
-        sleep(3)
+        # from semantic_world.adapters.viz_marker import VizMarkerPublisher
+        # import rclpy
+        #
+        # rclpy.init()
+        #
+        # node = rclpy.create_node("semantic_world")
+        #
+        # viz = VizMarkerPublisher(world=world, node=node)
+        # sleep(3)
 
     def test_double_door_factory(self):
         door_factory = DoorFactory(
@@ -165,6 +165,7 @@ class TestFactories(unittest.TestCase):
         door_factory = DoorFactory(
             name=PrefixedName("door"),
             handle_factory=HandleFactory(name=PrefixedName("door_handle")),
+            scale=Scale(1.0, 1.0, 1.0),
             semantic_position=SemanticPositionDescription(
                 horizontal_direction_chain=[
                     HorizontalSemanticDirection.RIGHT,

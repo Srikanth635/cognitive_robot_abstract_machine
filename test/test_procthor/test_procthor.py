@@ -297,16 +297,16 @@ class ProcTHORTestCase(unittest.TestCase):
             )
         ).parse()
 
-        from semantic_world.adapters.viz_marker import VizMarkerPublisher
-        import threading
-        import rclpy
-
-        rclpy.init()
-
-        node = rclpy.create_node("semantic_world")
-
-        viz = VizMarkerPublisher(world=world, node=node)
-        sleep(3)
+        # from semantic_world.adapters.viz_marker import VizMarkerPublisher
+        # import threading
+        # import rclpy
+        #
+        # rclpy.init()
+        #
+        # node = rclpy.create_node("semantic_world")
+        #
+        # viz = VizMarkerPublisher(world=world, node=node)
+        # sleep(3)
 
         assert world is not None
 
