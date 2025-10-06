@@ -100,10 +100,7 @@ def test_service_callback_with_multiple_modifications(rclpy_node):
     modifications_list = [
         WorldModelModificationBlock.from_json(d) for d in json.loads(result.message)
     ]
-    assert isinstance(modifications_list, list)
-    assert len(modifications_list) == 2
-    assert len(modifications_list[0].modifications) == 1
-    assert len(modifications_list[1].modifications) == 18
+    assert modifications_list == world._model_modification_blocks
     fetcher.close()
 
 
@@ -114,6 +111,4 @@ def test_world_fetching(rclpy_node):
     world2 = fetch_world_from_service(
         rclpy_node,
     )
-    assert len(world2.bodies) == 2
-    assert len(world2.connections) == 1
-    assert len(world2._model_modification_blocks) == 1
+    assert world2._model_modification_blocks == world._model_modification_blocks
