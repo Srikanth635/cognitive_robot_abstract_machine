@@ -26,6 +26,7 @@ Semantic World translates raw environment data into structured knowledge.
     <p>💡 <b>Intelligent Querying.</b> Use a high-level entity query language to precisely locate relevant elements—e.g., "the handle attached to the drawer that is currently accessible"—to enable targeted interaction.</p>
   </div>
 </div>
+```
 
 🛢️️ **Reproducible Persistence and Replay.** 
 Serialize annotated worlds into a SQL format, allowing for faithful reconstruction as consistent, interactive objects. 
