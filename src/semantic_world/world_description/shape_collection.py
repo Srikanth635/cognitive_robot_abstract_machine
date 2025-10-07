@@ -182,6 +182,8 @@ class BoundingBoxCollection(ShapeCollection):
     shapes: List[BoundingBox]
 
     def __post_init__(self):
+        if not self.reference_frame:
+            raise ValueError("BoundingBoxCollection must have a reference frame.")
         for box in self.bounding_boxes:
             assert (
                 box.origin.reference_frame == self.reference_frame
@@ -339,5 +341,5 @@ class BoundingBoxCollection(ShapeCollection):
             max(all_x),
             max(all_y),
             max(all_z),
-            self.reference_frame.global_pose,
+            TransformationMatrix.from_xyz_quaternion(reference_frame=self.reference_frame),
         )
