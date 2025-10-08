@@ -697,7 +697,6 @@ class Connection(WorldEntity):
         """
         return self._world.compute_forward_kinematics(self.parent, self.child)
 
-    # @lru_cache(maxsize=None)
     def origin_as_position_quaternion(self) -> Expression:
         position = self.origin_expression.to_position()[:3]
         orientation = self.origin_expression.to_quaternion()

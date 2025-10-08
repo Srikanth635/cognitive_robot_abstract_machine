@@ -96,23 +96,25 @@ class ActiveConnection(Connection):
     Has one or more degrees of freedom that can be actively controlled, e.g., robot joints.
     """
 
-    is_controlled: bool = False
-    """
-    Whether this connection is linked to a controller and can therefore respond to control commands.
-    
-    E.g. the caster wheels of a PR2 are active, because they have a DOF, but they are not directly controlled. 
-    Instead a the omni drive connection is directly controlled and a low level controller translates these commands
-    to commands for the caster wheels.
-    
-    A door hinge is also active but cannot be controlled.
-    """
-
     frozen_for_collision_avoidance: bool = False
     """
     Should be treated as fixed for collision avoidance.
     Common example are gripper joints, you generally don't want to avoid collisions by closing the fingers, 
     but by moving the whole hand away.
     """
+
+    @property
+    def has_hardware_interface(self) -> bool:
+        """
+        Whether this connection is linked to a controller and can therefore respond to control commands.
+
+        E.g. the caster wheels of a PR2 are active, because they have a DOF, but they are not directly controlled.
+        Instead a the omni drive connection is directly controlled and a low level controller translates these commands
+        to commands for the caster wheels.
+
+        A door hinge is also active but cannot be controlled.
+        """
+        return len([dof for dof in self.dofs if dof.has_hardware_interface]) > 0
 
     @property
     def active_dofs(self) -> List[DegreeOfFreedom]:
@@ -185,7 +187,7 @@ class ActiveConnection1DOF(ActiveConnection, Has1DOFState, ABC):
             )
             self._world.add_degree_of_freedom(self.dof)
         if self.dof._world is None:
-           self._world.add_degree_of_freedom(self.dof)
+            self._world.add_degree_of_freedom(self.dof)
 
     def _post_init_without_world(self):
         if self.dof is None:

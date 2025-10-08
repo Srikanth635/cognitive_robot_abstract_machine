@@ -25,6 +25,7 @@ from typing_extensions import (
     Union,
     Callable,
     Any,
+    Iterable,
 )
 from typing_extensions import List
 from typing_extensions import Type, Set
@@ -75,6 +76,7 @@ from .world_description.world_modification import (
     RemoveBodyModification,
     RemoveConnectionModification,
     WorldModelModificationBlock,
+    ChangeDofHasHardwareInterface,
 )
 from .world_description.world_state import WorldState
 
@@ -647,6 +649,11 @@ class World:
         self.kinematic_structure.add_edge(
             connection.parent.index, connection.child.index, connection
         )
+
+    @atomic_world_modification(modification=ChangeDofHasHardwareInterface)
+    def flag_dofs_as_controlled(self, dofs: Iterable[DegreeOfFreedom], value: bool):
+        for dof in dofs:
+            dof.has_hardware_interface = value
 
     def add_connection(
         self, connection: Connection, handle_duplicates: bool = False
@@ -1721,7 +1728,7 @@ class World:
         return set(
             c
             for c in self.connections
-            if isinstance(c, ActiveConnection) and c.is_controlled
+            if isinstance(c, ActiveConnection) and c.has_hardware_interface
         )
 
     def is_controlled_connection_in_chain(
@@ -1732,7 +1739,7 @@ class World:
         for c in connections:
             if (
                 isinstance(c, ActiveConnection)
-                and c.is_controlled
+                and c.has_hardware_interface
                 and not c.frozen_for_collision_avoidance
             ):
                 return True
@@ -1827,7 +1834,7 @@ class World:
                 parent_index, child_index, e = args
                 if (
                     isinstance(e, ActiveConnection)
-                    and e.is_controlled
+                    and e.has_hardware_interface
                     and not e.frozen_for_collision_avoidance
                 ):
                     raise rx.visit.PruneSearch()
@@ -1876,7 +1883,7 @@ class World:
         for i, connection in enumerate(chain):
             if (
                 isinstance(connection, ActiveConnection)
-                and connection.is_controlled
+                and connection.has_hardware_interface
                 and not connection.frozen_for_collision_avoidance
             ):
                 new_root = connection
@@ -1888,7 +1895,7 @@ class World:
         for i, connection in enumerate(reversed(chain)):
             if (
                 isinstance(connection, ActiveConnection)
-                and connection.is_controlled
+                and connection.has_hardware_interface
                 and not connection.frozen_for_collision_avoidance
             ):
                 new_tip = connection
@@ -1928,7 +1935,7 @@ class World:
         for c in connections:
             if (
                 isinstance(c, ActiveConnection)
-                and c.is_controlled
+                and c.has_hardware_interface
                 and not c.frozen_for_collision_avoidance
             ):
                 return True
