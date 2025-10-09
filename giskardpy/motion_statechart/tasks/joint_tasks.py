@@ -6,19 +6,20 @@ from giskardpy.data_types.exceptions import GoalInitalizationException
 from giskardpy.god_map import god_map
 from giskardpy.motion_statechart.monitors.joint_monitors import JointGoalReached
 from giskardpy.motion_statechart.tasks.task import Task, WEIGHT_BELOW_CA
+from semantic_world.datastructures.prefixed_name import PrefixedName
+from semantic_world.spatial_types.derivatives import Derivatives
 from semantic_world.world_description.connections import (
     Has1DOFState,
     RevoluteConnection,
     ActiveConnection,
     PrismaticConnection,
+    ActiveConnection1DOF,
 )
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.spatial_types.derivatives import Derivatives
 
 
 @dataclass
 class JointPositionList(Task):
-    goal_state: Dict[Union[PrefixedName, str], float]
+    goal_state: Dict[ActiveConnection1DOF, float]
     threshold: float = 0.01
     weight: float = WEIGHT_BELOW_CA
     max_velocity: float = 1.0
@@ -31,12 +32,11 @@ class JointPositionList(Task):
         if len(self.goal_state) == 0:
             raise GoalInitalizationException(f"Can't initialize {self} with no joints.")
 
-        for joint_name, goal_position in self.goal_state.items():
-            connection = god_map.world.get_connection_by_name(joint_name)
+        for connection, goal_position in self.goal_state.items():
             self.connections.append(connection)
             if not isinstance(connection, Has1DOFState):
                 raise GoalInitalizationException(
-                    f"Connection {joint_name} must be of type Has1DOFState"
+                    f"Connection {connection.name} must be of type Has1DOFState"
                 )
 
             ul_pos = connection.dof.upper_limits.position
@@ -74,8 +74,8 @@ class JointPositionList(Task):
                 task_expression=current,
             )
         joint_monitor = JointGoalReached(
-            goal_state=self.goal_state, threshold=self.threshold
-        ,
+            goal_state=self.goal_state,
+            threshold=self.threshold,
             name=f"{self.name}_monitor",
         )
         self.observation_expression = joint_monitor.observation_expression
@@ -101,8 +101,7 @@ class MirrorJointPosition(Task):
         for joint_name, target_joint_name in self.mapping.items():
             connection = god_map.world.get_connection_by_name(joint_name)
             self.connections.append(connection)
-            target_connection = god_map.world.get_connection_by_name(
-                target_joint_name)
+            target_connection = god_map.world.get_connection_by_name(target_joint_name)
 
             ll_vel = connection.dof.lower_limits
             ul_vel = connection.dof.upper_limits
@@ -164,8 +163,7 @@ class JointPositionLimitList(Task):
             raise GoalInitalizationException(f"Can't initialize {self} with no joints.")
 
         for joint_name, (lower_limit, upper_limit) in self.lower_upper_limits.items():
-            connection: Has1DOFState = god_map.world.get_connection_by_name(
-                joint_name)
+            connection: Has1DOFState = god_map.world.get_connection_by_name(joint_name)
             self.connections.append(connection)
 
             ll_pos = connection.dof.lower_limits.position
@@ -372,8 +370,7 @@ class AvoidJointLimits(Task):
         else:
             connection_list = god_map.world.controlled_joints
         for connection in connection_list:
-            if isinstance(connection, RevoluteConnection
-            ) or isinstance(
+            if isinstance(connection, RevoluteConnection) or isinstance(
                 connection, PrismaticConnection
             ):
                 weight = self.weight
