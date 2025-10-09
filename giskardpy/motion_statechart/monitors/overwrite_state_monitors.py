@@ -25,12 +25,11 @@ class SetSeedConfiguration(PayloadMonitor):
     :param group_name: if joint names are not unique, it will search in this group for matches.
     """
 
-    seed_configuration: Dict[Union[str, PrefixedName], float]
+    seed_configuration: Dict[Connection, float]
 
     def __post_init__(self):
         self.seed_configuration = {
-            god_map.world.get_connection_by_name(joint_name).dof.name: v
-            for joint_name, v in self.seed_configuration.items()
+            connection.dof.name: v for connection, v in self.seed_configuration.items()
         }
         if self.name is None:
             self.name = (

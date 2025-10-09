@@ -57,7 +57,7 @@ class DebugExpressionManager:
             free_symbols.update(expr.free_symbols())
         free_symbols = list(free_symbols)
         for name, expr in self.debug_expressions.items():
-            self.compiled_debug_expressions[name] = expr.compile(free_symbols)
+            self.compiled_debug_expressions[name] = expr.compile([free_symbols])
         num_debug_expressions = len(self.compiled_debug_expressions)
         if num_debug_expressions > 0:
             get_middleware().loginfo(
@@ -68,8 +68,8 @@ class DebugExpressionManager:
     def eval_debug_expressions(self, log_traj: bool = True):  # renamed
         self.evaluated_debug_expressions = {}
         for name, f in self.compiled_debug_expressions.items():
-            params = symbol_manager.resolve_symbols(f.params)
-            self.evaluated_debug_expressions[name] = f.fast_call(*params).copy()
+            params = symbol_manager.resolve_symbols(f.symbol_parameters)
+            self.evaluated_debug_expressions[name] = f(*params).copy()
         if log_traj:
             self.log_debug_expressions()
         return self.evaluated_debug_expressions

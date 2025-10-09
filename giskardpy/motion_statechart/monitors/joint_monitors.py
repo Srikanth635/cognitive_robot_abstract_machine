@@ -1,32 +1,30 @@
 from dataclasses import dataclass
-from typing import Dict, Optional, Union
+from typing import Dict
 
 import semantic_world.spatial_types.spatial_types as cas
 from giskardpy.data_types.exceptions import GoalInitalizationException
-from giskardpy.motion_statechart.monitors.monitors import Monitor
 from giskardpy.god_map import god_map
+from giskardpy.motion_statechart.monitors.monitors import Monitor
 from semantic_world.world_description.connections import (
     Has1DOFState,
     RevoluteConnection,
     ActiveConnection,
+    ActiveConnection1DOF,
 )
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.spatial_types.derivatives import Derivatives
 
 
 @dataclass
 class JointGoalReached(Monitor):
-    goal_state: Dict[Union[PrefixedName, str], float]
+    goal_state: Dict[ActiveConnection1DOF, float]
     threshold: float = 0.01
 
     def __post_init__(self):
         comparison_list = []
-        for joint_name, goal in self.goal_state.items():
-            connection: Has1DOFState = god_map.world.get_connection_by_name(joint_name)
+        for connection, goal in self.goal_state.items():
             current = connection.dof.symbols.position
             if (
                 isinstance(connection, RevoluteConnection)
-                and connection.dof.has_position_limits()
+                and not connection.dof.has_position_limits()
             ):
                 error = cas.shortest_angular_distance(current, goal)
             else:
