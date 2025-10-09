@@ -146,10 +146,10 @@ class ProcthorDoor:
             single_door_name = PrefixedName(
                 f"{self.name.name}_{index}", self.name.prefix
             )
-            handle_offset = y_direction - 0.1 if direction == Direction.Y else -(y_direction - 0.1)
-            door_T_handle = TransformationMatrix.from_xyz_rpy(
-                        y = handle_offset
+            handle_offset = (
+                y_direction - 0.1 if direction == Direction.Y else -(y_direction - 0.1)
             )
+            door_T_handle = TransformationMatrix.from_xyz_rpy(y=handle_offset)
             door_factory = self._get_single_door_factory(
                 door_T_handle, single_door_name, one_door_scale
             )
@@ -157,8 +157,8 @@ class ProcthorDoor:
             door_factories.append(door_factory)
 
             parent_T_door = TransformationMatrix.from_xyz_rpy(
-                    x=x_direction,
-                    y=y_direction if direction == Direction.NEGATIVE_Y else -y_direction
+                x=x_direction,
+                y=y_direction if direction == Direction.NEGATIVE_Y else -y_direction,
             )
             door_transforms.append(parent_T_door)
 
@@ -198,7 +198,9 @@ class ProcthorDoor:
         if "double" in self.name.name.lower():
             return self._get_double_door_factory()
         else:
-            return self._get_single_door_factory(TransformationMatrix.from_xyz_rpy(y=-(self.scale.y / 2 - 0.1)))
+            return self._get_single_door_factory(
+                TransformationMatrix.from_xyz_rpy(y=-(self.scale.y / 2 - 0.1))
+            )
 
 
 @dataclass
@@ -487,9 +489,11 @@ class ProcthorObject:
                 child_connection = FixedConnection(
                     parent=body_world.root,
                     child=child_world.root,
-                    origin_expression=obj_T_child,
+                    parent_T_connection_expression=obj_T_child,
                 )
-                body_world.merge_world(child_world, child_connection, handle_duplicates=True)
+                body_world.merge_world(
+                    child_world, child_connection, handle_duplicates=True
+                )
 
             return body_world
 
@@ -586,7 +590,7 @@ class ProcTHORParser:
             room_connection = FixedConnection(
                 parent=world.root,
                 child=room_world.root,
-                origin_expression=procthor_room.world_T_room,
+                parent_T_connection_expression=procthor_room.world_T_room,
             )
             world.merge_world(room_world, room_connection, handle_duplicates=True)
 
@@ -605,7 +609,7 @@ class ProcTHORParser:
             obj_connection = FixedConnection(
                 parent=world.root,
                 child=obj_world.root,
-                origin_expression=procthor_object.world_T_obj,
+                parent_T_connection_expression=procthor_object.world_T_obj,
             )
             world.merge_world(obj_world, obj_connection, handle_duplicates=True)
 
@@ -626,7 +630,7 @@ class ProcTHORParser:
             wall_connection = FixedConnection(
                 parent=world.root,
                 child=wall_world.root,
-                origin_expression=procthor_wall.world_T_wall,
+                parent_T_connection_expression=procthor_wall.world_T_wall,
             )
             world.merge_world(wall_world, wall_connection, handle_duplicates=True)
 

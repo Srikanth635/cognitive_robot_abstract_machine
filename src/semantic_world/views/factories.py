@@ -132,7 +132,7 @@ class HasDoorLikeFactories(ABC):
         hinge_T_door = parent_T_hinge.inverse() @ parent_T_door
 
         hinge_door_connection = FixedConnection(
-            parent=door_hinge, child=root, origin_expression=hinge_T_door
+            parent=door_hinge, child=root, parent_T_connection_expression=hinge_T_door
         )
         with door_world.modify_world():
             door_world.add_connection(hinge_door_connection)
@@ -169,7 +169,7 @@ class HasDoorLikeFactories(ABC):
             connection = RevoluteConnection(
                 parent=parent_world.root,
                 child=root,
-                origin_expression=parent_T_hinge,
+                parent_T_connection_expression=parent_T_hinge,
                 multiplier=1.0,
                 offset=0.0,
                 axis=Vector3.Z(),
@@ -239,7 +239,7 @@ class HasDoorLikeFactories(ABC):
         connection = FixedConnection(
             parent=parent_world.root,
             child=door_world.root,
-            origin_expression=parent_T_door,
+            parent_T_connection_expression=parent_T_door,
         )
 
         parent_world.merge_world(door_world, connection)
@@ -267,7 +267,9 @@ class HasDoorLikeFactories(ABC):
             other_body = let(type_=Body, domain=world.bodies)
             door_bodies = all_doors.bodies
             bodies_without_excluded_bodies_query = an(
-                entity(other_body, for_all(door_bodies, not_(in_(other_body, door_bodies))))
+                entity(
+                    other_body, for_all(door_bodies, not_(in_(other_body, door_bodies)))
+                )
             )
 
         filtered_bodies = list(bodies_without_excluded_bodies_query.evaluate())
@@ -323,6 +325,7 @@ class HasDoorLikeFactories(ABC):
 
 class SemanticDirection(Enum): ...
 
+
 class HorizontalSemanticDirection(SimpleInterval, SemanticDirection):
     FULLY_LEFT = (0, 0, Bound.CLOSED, Bound.CLOSED)
     LEFT = (0, 1 / 3, Bound.CLOSED, Bound.CLOSED)
@@ -330,6 +333,7 @@ class HorizontalSemanticDirection(SimpleInterval, SemanticDirection):
     FULLY_CENTER = (0.5, 0.5, Bound.CLOSED, Bound.CLOSED)
     RIGHT = (2 / 3, 1, Bound.CLOSED, Bound.CLOSED)
     FULLY_RIGHT = (1, 1, Bound.CLOSED, Bound.CLOSED)
+
 
 class VerticalSemanticDirection(SimpleInterval, SemanticDirection):
     FULLY_TOP = (0, 0, Bound.CLOSED, Bound.CLOSED)
@@ -373,9 +377,7 @@ class SemanticPositionDescription:
         new_upper = base.lower + span * target.upper
         return SimpleInterval(new_lower, new_upper, base.left, base.right)
 
-    def _apply_zoom(
-        self, simple_event: SimpleEvent
-    ) -> SimpleEvent:
+    def _apply_zoom(self, simple_event: SimpleEvent) -> SimpleEvent:
         """
         Apply zooms in order and return the resulting intervals.
         """
@@ -459,7 +461,7 @@ class HasHandleFactory(ABC):
         )
 
         return TransformationMatrix.from_xyz_rpy(
-            x=scale.x/2, y=sampled_2d_point[0], z=sampled_2d_point[1]
+            x=scale.x / 2, y=sampled_2d_point[0], z=sampled_2d_point[1]
         )
 
     def add_handle_to_world(
@@ -479,7 +481,7 @@ class HasHandleFactory(ABC):
         connection = FixedConnection(
             parent=parent_world.root,
             child=handle_world.root,
-            origin_expression=parent_T_handle,
+            parent_T_connection_expression=parent_T_handle,
         )
 
         parent_world.merge_world(handle_world, connection)
@@ -522,7 +524,7 @@ class HasDrawerFactories(ABC):
         connection = PrismaticConnection(
             parent=parent_world.root,
             child=root,
-            origin_expression=parent_T_drawer,
+            parent_T_connection_expression=parent_T_drawer,
             multiplier=1.0,
             offset=0.0,
             axis=Vector3.X(),
@@ -890,7 +892,12 @@ class DrawerFactory(ViewFactory[Drawer], HasHandleFactory):
 
         container_world = self.container_factory.create()
         world.merge_world(container_world)
-        parent_T_handle = self.parent_T_handle or self.create_parent_T_handle_from_parent_scale(self.container_factory.scale)
+        parent_T_handle = (
+            self.parent_T_handle
+            or self.create_parent_T_handle_from_parent_scale(
+                self.container_factory.scale
+            )
+        )
 
         self.add_handle_to_world(parent_T_handle, world)
 
@@ -1056,7 +1063,7 @@ class RoomFactory(ViewFactory[Room]):
         connection = FixedConnection(
             parent=room_body,
             child=region,
-            origin_expression=TransformationMatrix(),
+            parent_T_connection_expression=TransformationMatrix(),
         )
         world.add_connection(connection)
 
