@@ -107,13 +107,14 @@ class TestFactories(unittest.TestCase):
             door_transforms=door_transforms,
         )
         world = factory.create()
-        door_views = world.get_views_by_type(Door)
-        self.assertEqual(len(door_views), 2)
-
-        doors: list[Door] = door_views
+        doors = world.get_views_by_type(Door)
+        self.assertEqual(len(doors), 2)
         self.assertEqual(
             set(world.root.child_kinematic_structure_entities),
-            {doors[0].body.parent_kinematic_structure_entity, doors[1].body.parent_kinematic_structure_entity},
+            {
+                doors[0].body.parent_kinematic_structure_entity,
+                doors[1].body.parent_kinematic_structure_entity,
+            },
         )
         self.assertIsInstance(doors[0].handle, Handle)
         self.assertIsInstance(doors[1].handle, Handle)

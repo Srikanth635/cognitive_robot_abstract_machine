@@ -136,7 +136,6 @@ class ProcthorDoor:
         one_door_scale = Scale(self.thickness, self.scale.y * 0.5, self.scale.z)
         x_direction: float = one_door_scale.x / 2
         y_direction: float = one_door_scale.y / 2
-        z_direction: float = one_door_scale.z / 2
         handle_directions = [Direction.Y, Direction.NEGATIVE_Y]
 
         door_factories = []
@@ -174,7 +173,7 @@ class ProcthorDoor:
         door_T_handle: TransformationMatrix,
         name: Optional[PrefixedName] = None,
         scale: Optional[Scale] = None,
-    ):
+    ) -> DoorFactory:
         """
         Parses the parameters according to the single door assumptions, and returns a single door factory.
         """
@@ -343,10 +342,8 @@ class ProcthorWall:
 
         for door in self.door_dicts:
             door = ProcthorDoor(door_dict=door, parent_wall_width=self.scale.y)
-            factory = door.get_factory()
-            if factory is not None:
-                door_factories.append(door.get_factory())
-                list_wall_T_door.append(door.wall_T_door)
+            door_factories.append(door.get_factory())
+            list_wall_T_door.append(door.wall_T_door)
 
         wall_factory = WallFactory(
             name=self.name,
