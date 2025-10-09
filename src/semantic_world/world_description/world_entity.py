@@ -664,6 +664,10 @@ class Connection(WorldEntity):
     def origin_expression(self) -> TransformationMatrix:
         return self.parent_T_connection_expression @ self.connection_T_child_expression
 
+    @property
+    def has_hardware_interface(self) -> bool:
+        return False
+
     def add_to_world(self, world: World):
         self._world = world
 

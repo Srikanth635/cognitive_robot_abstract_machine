@@ -116,6 +116,11 @@ class ActiveConnection(Connection):
         """
         return len([dof for dof in self.dofs if dof.has_hardware_interface]) > 0
 
+    @has_hardware_interface.setter
+    def has_hardware_interface(self, value: bool) -> None:
+        for dof in self.dofs:
+            dof.has_hardware_interface = value
+
     @property
     def active_dofs(self) -> List[DegreeOfFreedom]:
         return []
@@ -507,3 +512,13 @@ class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
 
     def __hash__(self):
         return hash(self.name)
+
+    @property
+    def has_hardware_interface(self) -> bool:
+        return self.x_vel.has_hardware_interface
+
+    @has_hardware_interface.setter
+    def has_hardware_interface(self, value: bool) -> None:
+        self.x_vel.has_hardware_interface = value
+        self.y_vel.has_hardware_interface = value
+        self.yaw.has_hardware_interface = value
