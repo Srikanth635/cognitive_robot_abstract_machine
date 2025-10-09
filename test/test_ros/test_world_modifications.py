@@ -57,7 +57,7 @@ class ConnectionModificationTestCase(unittest.TestCase):
         assert connection.dof.has_hardware_interface is False
 
         with w.modify_world():
-            w.flag_dofs_as_controlled(connection.dofs, True)
+            w.set_dofs_has_hardware_interface(connection.dofs, True)
         assert connection.dof.has_hardware_interface is True
 
         connection = w.connections[0]

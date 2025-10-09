@@ -298,7 +298,7 @@ class WorldModelModificationBlock(SubclassJSONSerializer):
 
 
 @dataclass
-class ChangeDofHasHardwareInterface(WorldModelModification):
+class SetDofHasHardwareInterface(WorldModelModification):
     degree_of_freedom_names: List[PrefixedName]
     value: bool
 

@@ -76,7 +76,7 @@ from .world_description.world_modification import (
     RemoveBodyModification,
     RemoveConnectionModification,
     WorldModelModificationBlock,
-    ChangeDofHasHardwareInterface,
+    SetDofHasHardwareInterface,
 )
 from .world_description.world_state import WorldState
 
@@ -650,8 +650,24 @@ class World:
             connection.parent.index, connection.child.index, connection
         )
 
-    @atomic_world_modification(modification=ChangeDofHasHardwareInterface)
-    def flag_dofs_as_controlled(self, dofs: Iterable[DegreeOfFreedom], value: bool):
+    @atomic_world_modification(modification=SetDofHasHardwareInterface)
+    def set_dofs_has_hardware_interface(
+        self, dofs: Iterable[DegreeOfFreedom], value: bool
+    ):
+        """
+        Sets whether the specified degrees of freedom (DOFs) have a hardware interface or not.
+
+        This method allows controlling the presence of a hardware interface for multiple
+        DOFs at once. The modification is atomic, ensuring that all DOFs are updated as
+        a single operation and the state remains consistent. The method iterates through
+        the given DOFs and updates their `has_hardware_interface` attribute to the provided
+        value.
+
+        :param dofs: An iterable collection of DegreeOfFreedom instances whose
+                     `has_hardware_interface` attribute is to be updated.
+        :param value: A boolean value indicating whether the DOFs should have a hardware
+                      interface (True) or not (False).
+        """
         for dof in dofs:
             dof.has_hardware_interface = value
 
