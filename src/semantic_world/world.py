@@ -30,6 +30,7 @@ from typing_extensions import (
 from typing_extensions import List
 from typing_extensions import Type, Set
 
+from .adapters.ros.world_synchronizer import StateSynchronizer
 from .callbacks.callback import StateChangeCallback, ModelChangeCallback
 from .collision_checking.collision_detector import CollisionDetector
 from .collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
@@ -512,6 +513,10 @@ class World:
 
         for callback in self.model_change_callbacks:
             callback.notify()
+
+        for callback in self.state_change_callbacks:
+            if isinstance(callback, StateSynchronizer):
+                callback.update_previous_world_state()
 
         self.validate()
         self.disable_non_robot_collisions()
