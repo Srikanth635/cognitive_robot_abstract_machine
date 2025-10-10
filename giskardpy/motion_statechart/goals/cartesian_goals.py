@@ -24,34 +24,6 @@ from semantic_world.world_description.world_entity import Body
 
 
 @dataclass
-class ToDriveOrNotToDrive(Goal):
-    tip_link: Body
-    xyz: List[float]
-    weight: float = WEIGHT_ABOVE_CA
-
-    def __post_init__(self):
-        self.joint: OmniDrive = god_map.world.get_connections_by_type(OmniDrive)
-        no_base = NoBase(weight=self.weight, name=f"{self.name}/no base")
-        keep_in_workspace = KeepInWorkspace(
-            tip_link=self.tip_link,
-            xyz=self.xyz,
-            weight=self.weight,
-            name=f"{self.name}/keep in workspace",
-        )
-        is_in_workspace = InWorldSpace(
-            tip_link=self.tip_link, xyz=self.xyz, name=f"{self.name}/in workspace"
-        )
-        self.add_task(no_base)
-        self.add_task(keep_in_workspace)
-        self.add_monitor(is_in_workspace)
-
-        no_base.pause_condition = f"not {is_in_workspace}"
-        keep_in_workspace.pause_condition = f"{is_in_workspace}"
-
-        self.observation_expression = is_in_workspace.observation_expression
-
-
-@dataclass
 class DiffDriveBaseGoal(Goal):
     root_link: Body
     tip_link: Body
