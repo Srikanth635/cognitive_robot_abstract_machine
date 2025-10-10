@@ -899,6 +899,7 @@ class World:
         assert other is not self, "Cannot merge a world with itself."
 
         with self.modify_world():
+            old_state = deepcopy(other.state)
             self_root = self.root
             other_root = other.root
             with other.modify_world():
@@ -932,6 +933,9 @@ class World:
             if connection:
                 self.add_connection(connection, handle_duplicates=handle_duplicates)
 
+            for dof_name in old_state.keys():
+                self.state[dof_name] = old_state[dof_name]
+
     def move_branch(
         self,
         branch_root: KinematicStructureEntity,
@@ -955,7 +959,7 @@ class World:
                     parent=new_parent,
                     child=branch_root,
                     _world=self,
-                    origin_expression=new_parent_T_root,
+                    parent_T_connection_expression=new_parent_T_root,
                 )
                 self.add_connection(new_connection)
                 self.remove_connection(old_connection)

@@ -126,7 +126,7 @@ class HasDoorLikeFactories(ABC):
         hinge_T_door = parent_T_hinge.inverse() @ parent_T_door
 
         hinge_door_connection = FixedConnection(
-            parent=door_hinge, child=root, origin_expression=hinge_T_door
+            parent=door_hinge, child=root, parent_T_connection_expression=hinge_T_door
         )
         with door_world.modify_world():
             door_world.add_connection(hinge_door_connection)
@@ -163,7 +163,7 @@ class HasDoorLikeFactories(ABC):
             connection = RevoluteConnection(
                 parent=parent_world.root,
                 child=root,
-                origin_expression=parent_T_hinge,
+                parent_T_connection_expression=parent_T_hinge,
                 multiplier=1.0,
                 offset=0.0,
                 axis=Vector3.Z(),
@@ -240,7 +240,7 @@ class HasDoorLikeFactories(ABC):
         connection = FixedConnection(
             parent=parent_world.root,
             child=door_world.root,
-            origin_expression=parent_T_door,
+            parent_T_connection_expression=parent_T_door,
         )
 
         parent_world.merge_world(door_world, connection)
@@ -366,6 +366,7 @@ class IntervalConstants:
     """
     Predefined intervals for semantic directions.
     """
+
     ZERO_DIRAC = (0, 0, Bound.CLOSED, Bound.CLOSED)
     ZERO_TO_ONE_THIRD = (0, 1 / 3, Bound.CLOSED, Bound.CLOSED)
     ONE_THIRD_TO_TWO_THIRD = (1 / 3, 2 / 3, Bound.OPEN, Bound.OPEN)
@@ -381,6 +382,7 @@ class HorizontalSemanticDirection(SimpleInterval, SemanticDirection):
     """
     Semantic directions for horizontal positioning.
     """
+
     FULLY_LEFT = IntervalConstants.ZERO_DIRAC
     LEFT = IntervalConstants.ZERO_TO_ONE_THIRD
     CENTER = IntervalConstants.ONE_THIRD_TO_TWO_THIRD
@@ -393,6 +395,7 @@ class VerticalSemanticDirection(SimpleInterval, SemanticDirection):
     """
     Semantic directions for vertical positioning.
     """
+
     FULLY_TOP = IntervalConstants.ZERO_DIRAC
     TOP = IntervalConstants.ZERO_TO_ONE_THIRD
     CENTER = IntervalConstants.ONE_THIRD_TO_TWO_THIRD
@@ -557,7 +560,7 @@ class HasHandleFactory(ABC):
         connection = FixedConnection(
             parent=parent_world.root,
             child=handle_world.root,
-            origin_expression=parent_T_handle,
+            parent_T_connection_expression=parent_T_handle,
         )
 
         parent_world.merge_world(handle_world, connection)
@@ -603,7 +606,7 @@ class HasDrawerFactories(ABC):
         connection = PrismaticConnection(
             parent=parent_world.root,
             child=root,
-            origin_expression=parent_T_drawer,
+            parent_T_connection_expression=parent_T_drawer,
             multiplier=1.0,
             offset=0.0,
             axis=Vector3.X(),
@@ -1142,7 +1145,7 @@ class RoomFactory(ViewFactory[Room]):
         connection = FixedConnection(
             parent=room_body,
             child=region,
-            origin_expression=TransformationMatrix(),
+            parent_T_connection_expression=TransformationMatrix(),
         )
         world.add_connection(connection)
 

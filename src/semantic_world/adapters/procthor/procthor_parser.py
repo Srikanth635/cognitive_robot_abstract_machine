@@ -149,7 +149,11 @@ class ProcthorDoor:
                 f"{self.name.name}_{index}", self.name.prefix
             )
 
-            horizontal_direction = HorizontalSemanticDirection.RIGHT if direction == Direction.Y else HorizontalSemanticDirection.LEFT
+            horizontal_direction = (
+                HorizontalSemanticDirection.RIGHT
+                if direction == Direction.Y
+                else HorizontalSemanticDirection.LEFT
+            )
             semantic_position = SemanticPositionDescription(
                 horizontal_direction_chain=[
                     horizontal_direction,
@@ -165,8 +169,8 @@ class ProcthorDoor:
             door_factories.append(door_factory)
 
             parent_T_door = TransformationMatrix.from_xyz_rpy(
-                    x=x_direction,
-                    y=(-y_direction) if direction == Direction.Y else y_direction
+                x=x_direction,
+                y=(-y_direction) if direction == Direction.Y else y_direction,
             )
             door_transforms.append(parent_T_door)
 
@@ -182,7 +186,7 @@ class ProcthorDoor:
         semantic_position: SemanticPositionDescription,
         name: Optional[PrefixedName] = None,
         scale: Optional[Scale] = None,
-    ):
+    ) -> DoorFactory:
         """
         Parses the parameters according to the single door assumptions, and returns a single door factory.
         """
@@ -213,9 +217,7 @@ class ProcthorDoor:
                 ],
                 vertical_direction_chain=[VerticalSemanticDirection.FULLY_CENTER],
             )
-            return self._get_single_door_factory(
-                semantic_position=semantic_position
-            )
+            return self._get_single_door_factory(semantic_position=semantic_position)
 
 
 @dataclass
@@ -358,10 +360,8 @@ class ProcthorWall:
 
         for door in self.door_dicts:
             door = ProcthorDoor(door_dict=door, parent_wall_width=self.scale.y)
-            factory = door.get_factory()
-            if factory is not None:
-                door_factories.append(door.get_factory())
-                list_wall_T_door.append(door.wall_T_door)
+            door_factories.append(door.get_factory())
+            list_wall_T_door.append(door.wall_T_door)
 
         wall_factory = WallFactory(
             name=self.name,
@@ -504,9 +504,11 @@ class ProcthorObject:
                 child_connection = FixedConnection(
                     parent=body_world.root,
                     child=child_world.root,
-                    origin_expression=obj_T_child,
+                    parent_T_connection_expression=obj_T_child,
                 )
-                body_world.merge_world(child_world, child_connection, handle_duplicates=True)
+                body_world.merge_world(
+                    child_world, child_connection, handle_duplicates=True
+                )
 
             return body_world
 
@@ -603,7 +605,7 @@ class ProcTHORParser:
             room_connection = FixedConnection(
                 parent=world.root,
                 child=room_world.root,
-                origin_expression=procthor_room.world_T_room,
+                parent_T_connection_expression=procthor_room.world_T_room,
             )
             world.merge_world(room_world, room_connection, handle_duplicates=True)
 
@@ -622,7 +624,7 @@ class ProcTHORParser:
             obj_connection = FixedConnection(
                 parent=world.root,
                 child=obj_world.root,
-                origin_expression=procthor_object.world_T_obj,
+                parent_T_connection_expression=procthor_object.world_T_obj,
             )
             world.merge_world(obj_world, obj_connection, handle_duplicates=True)
 
@@ -643,7 +645,7 @@ class ProcTHORParser:
             wall_connection = FixedConnection(
                 parent=world.root,
                 child=wall_world.root,
-                origin_expression=procthor_wall.world_T_wall,
+                parent_T_connection_expression=procthor_wall.world_T_wall,
             )
             world.merge_world(wall_world, wall_connection, handle_duplicates=True)
 
