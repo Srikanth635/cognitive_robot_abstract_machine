@@ -345,6 +345,7 @@ def test_load_collision_config_srdf(pr2_world):
     assert len([b for b in pr2_world.bodies if b.get_collision_config().disabled]) == 20
     assert len(pr2_world.disabled_collision_pairs) == 1128
 
+
 def test_tracy_view(tracy_world):
     tracy = Tracy.from_world(tracy_world)
 

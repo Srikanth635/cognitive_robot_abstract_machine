@@ -167,10 +167,13 @@ def pr2_world():
         localization_body = Body(name=PrefixedName("odom_combined"))
         world_with_pr2.add_kinematic_structure_entity(localization_body)
         # world_with_pr2.plot_kinematic_structure()
-        c_root_bf = OmniDrive(parent=localization_body, child=pr2_root, _world=world_with_pr2)
+        c_root_bf = OmniDrive(
+            parent=localization_body, child=pr2_root, _world=world_with_pr2
+        )
         world_with_pr2.add_connection(c_root_bf)
 
     return world_with_pr2
+
 
 @pytest.fixture
 def tracy_world():
@@ -195,6 +198,7 @@ def tracy_world():
         world.merge_world(world_with_tracy, c_root_bf)
 
     return world
+
 
 @pytest.fixture
 def apartment_world() -> World:

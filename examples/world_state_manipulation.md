@@ -39,6 +39,9 @@ from semantic_world.views.factories import (
     HandleFactory,
     DrawerFactory,
     Direction,
+    SemanticPositionDescription,
+    HorizontalSemanticDirection,
+    VerticalSemanticDirection,
 )
 from semantic_world.views.views import Drawer
 from semantic_world.world_description.degree_of_freedom import DegreeOfFreedom
@@ -52,7 +55,13 @@ drawer_factory = DrawerFactory(
         direction=Direction.Z,
         scale=Scale(0.3, 0.3, 0.2),
     ),
-    handle_factory=HandleFactory(name=PrefixedName("drawer_handle"))
+    handle_factory=HandleFactory(name=PrefixedName("drawer_handle")),
+    semantic_position=SemanticPositionDescription(
+        horizontal_direction_chain=[
+            HorizontalSemanticDirection.FULLY_CENTER,
+        ],
+        vertical_direction_chain=[VerticalSemanticDirection.FULLY_CENTER],
+    ),
 )
 drawer_transform = TransformationMatrix()
 

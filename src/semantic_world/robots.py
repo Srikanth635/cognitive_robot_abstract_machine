@@ -469,6 +469,7 @@ class AbstractRobot(RootedView, ABC):
         self._views.add(kinematic_chain)
         kinematic_chain.assign_to_robot(self)
 
+
 @dataclass
 class TwoArmedAbstractRobot(AbstractRobot, ABC):
     """
@@ -702,6 +703,7 @@ class PR2(TwoArmedAbstractRobot):
         world.add_view(robot, exists_ok=True)
 
         return robot
+
 
 class Tracy(TwoArmedAbstractRobot):
 
