@@ -195,6 +195,7 @@ def test_view_serde_once(apartment_world):
     door_se = door.to_json()
     door_de = Door.from_json(door_se)
 
+    assert door == door_de
     assert type(door.handle) == type(door_de.handle)
     assert type(door.body) == type(door_de.body)
 
@@ -212,11 +213,13 @@ def test_view_serde_multiple(apartment_world):
     door_se1 = door.to_json()
     door_de1 = Door.from_json(door_se1)
 
+    assert door == door_de1
     assert type(door.handle) == type(door_de1.handle)
     assert type(door.body) == type(door_de1.body)
 
     door_se2 = door_de1.to_json()
     door_de2 = Door.from_json(door_se2)
 
+    assert door == door_de2
     assert type(door.handle) == type(door_de2.handle)
     assert type(door.body) == type(door_de2.body)
