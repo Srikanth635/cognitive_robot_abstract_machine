@@ -199,7 +199,6 @@ def test_model_synchronization_merge_full_world(rclpy_node):
         body_names_2 = [body.name for body in w2.kinematic_structure_entities]
         return body_names_1, body_names_2
 
-
     with w1.modify_world():
         new_body = Body(name=PrefixedName("b3"))
         w1.add_kinematic_structure_entity(new_body)

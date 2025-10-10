@@ -42,6 +42,9 @@ from semantic_world.views.factories import (
     ContainerFactory,
     HandleFactory,
     Direction,
+    SemanticPositionDescription,
+    HorizontalSemanticDirection,
+    VerticalSemanticDirection,
 )
 from semantic_world.views.views import Drawer, Handle, Container
 from semantic_world.world import World
@@ -55,6 +58,12 @@ world = DrawerFactory(
     name=PrefixedName("drawer"),
     container_factory=ContainerFactory(name=PrefixedName("container"), direction=Direction.Z),
     handle_factory=HandleFactory(name=PrefixedName("handle")),
+    semantic_position=SemanticPositionDescription(
+        horizontal_direction_chain=[
+            HorizontalSemanticDirection.FULLY_CENTER,
+        ],
+        vertical_direction_chain=[VerticalSemanticDirection.FULLY_CENTER],
+    ),
 ).create()
 
 print(*world.views, sep="\n")

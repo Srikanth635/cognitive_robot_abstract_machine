@@ -139,6 +139,7 @@ def rclpy_installed() -> bool:
 def tracy_installed() -> bool:
     try:
         from ament_index_python.packages import has_package
+
         pkg_name = "iai_tracy_description"
 
         if has_package(pkg_name):
