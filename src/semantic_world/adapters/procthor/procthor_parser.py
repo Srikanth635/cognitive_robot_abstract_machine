@@ -25,6 +25,9 @@ from ...views.factories import (
     HandleFactory,
     Direction,
     DoubleDoorFactory,
+    HorizontalSemanticDirection,
+    SemanticPositionDescription,
+    VerticalSemanticDirection,
 )
 from ...world import World
 from ...world_description.connections import FixedConnection
@@ -136,7 +139,6 @@ class ProcthorDoor:
         one_door_scale = Scale(self.thickness, self.scale.y * 0.5, self.scale.z)
         x_direction: float = one_door_scale.x / 2
         y_direction: float = one_door_scale.y / 2
-        z_direction: float = one_door_scale.z / 2
         handle_directions = [Direction.Y, Direction.NEGATIVE_Y]
 
         door_factories = []
@@ -146,19 +148,25 @@ class ProcthorDoor:
             single_door_name = PrefixedName(
                 f"{self.name.name}_{index}", self.name.prefix
             )
-            handle_offset = y_direction - 0.1 if direction == Direction.Y else -(y_direction - 0.1)
-            door_T_handle = TransformationMatrix.from_xyz_rpy(
-                        y = handle_offset
+
+            horizontal_direction = HorizontalSemanticDirection.RIGHT if direction == Direction.Y else HorizontalSemanticDirection.LEFT
+            semantic_position = SemanticPositionDescription(
+                horizontal_direction_chain=[
+                    horizontal_direction,
+                    HorizontalSemanticDirection.FULLY_CENTER,
+                ],
+                vertical_direction_chain=[VerticalSemanticDirection.FULLY_CENTER],
             )
+
             door_factory = self._get_single_door_factory(
-                door_T_handle, single_door_name, one_door_scale
+                semantic_position, single_door_name, one_door_scale
             )
 
             door_factories.append(door_factory)
 
             parent_T_door = TransformationMatrix.from_xyz_rpy(
                     x=x_direction,
-                    y=y_direction if direction == Direction.NEGATIVE_Y else -y_direction
+                    y=(-y_direction) if direction == Direction.Y else y_direction
             )
             door_transforms.append(parent_T_door)
 
@@ -171,7 +179,7 @@ class ProcthorDoor:
 
     def _get_single_door_factory(
         self,
-        door_T_handle: TransformationMatrix,
+        semantic_position: SemanticPositionDescription,
         name: Optional[PrefixedName] = None,
         scale: Optional[Scale] = None,
     ):
@@ -185,7 +193,7 @@ class ProcthorDoor:
             name=name,
             scale=scale,
             handle_factory=HandleFactory(name=handle_name),
-            parent_T_handle=door_T_handle,
+            semantic_position=semantic_position,
         )
         return door_factory
 
@@ -198,7 +206,16 @@ class ProcthorDoor:
         if "double" in self.name.name.lower():
             return self._get_double_door_factory()
         else:
-            return self._get_single_door_factory(TransformationMatrix.from_xyz_rpy(y=-(self.scale.y / 2 - 0.1)))
+            semantic_position = SemanticPositionDescription(
+                horizontal_direction_chain=[
+                    HorizontalSemanticDirection.RIGHT,
+                    HorizontalSemanticDirection.FULLY_CENTER,
+                ],
+                vertical_direction_chain=[VerticalSemanticDirection.FULLY_CENTER],
+            )
+            return self._get_single_door_factory(
+                semantic_position=semantic_position
+            )
 
 
 @dataclass

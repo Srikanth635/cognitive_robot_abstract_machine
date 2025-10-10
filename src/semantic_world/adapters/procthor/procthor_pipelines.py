@@ -37,7 +37,7 @@ def drawer_factory_from_body(drawer: Body) -> DrawerFactory:
         direction=Direction.Z,
     )
     drawer_T_handle = TransformationMatrix.from_xyz_rpy(
-        container_factory.scale.x / 2, 0, 0, 0, 0, 0
+        x=container_factory.scale.x / 2
     )
     drawer_factory = DrawerFactory(
         name=drawer.name,

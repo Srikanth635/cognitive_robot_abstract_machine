@@ -17,17 +17,8 @@ from entity_query_language import (
     for_all,
 )
 from numpy import ndarray
-from probabilistic_model.distributions import (
-    UnivariateDistribution,
-)
-from probabilistic_model.distributions.helper import make_dirac
 from probabilistic_model.probabilistic_circuit.rx.helper import (
     uniform_measure_of_simple_event,
-)
-from probabilistic_model.probabilistic_circuit.rx.probabilistic_circuit import (
-    ProductUnit,
-    leaf,
-    ProbabilisticCircuit,
 )
 from random_events.interval import Bound
 from random_events.product_algebra import *
@@ -78,6 +69,9 @@ class Direction(IntEnum):
 
 @dataclass
 class HasDoorLikeFactories(ABC):
+    """
+    Mixin for factories receiving multiple DoorLikeFactories.
+    """
 
     door_factories: List[DoorLikeFactory] = field(default_factory=list, hash=False)
     """
@@ -235,6 +229,13 @@ class HasDoorLikeFactories(ABC):
         parent_T_door: TransformationMatrix,
         parent_world: World,
     ):
+        """
+        Adds a double door to the parent world with a fixed connection.
+        :param door_factory: The factory used to create the double door.
+        :param parent_T_door: The transformation matrix defining the double door's position and orientation relative
+        to the parent world.
+        :param parent_world: The world to which the double door will be added.
+        """
         door_world = door_factory.create()
         connection = FixedConnection(
             parent=parent_world.root,
@@ -247,6 +248,12 @@ class HasDoorLikeFactories(ABC):
     def remove_doors_from_world(
         self, parent_world: World, wall_event_thickness: float = 0.1
     ):
+        """
+        Remove the door volumes from all bodies in the world that are not doors.
+
+        :param parent_world: The world from which to remove the door volumes.
+        :param wall_event_thickness: The thickness of the wall event used to create the door events.
+        """
         doors: List[Door] = parent_world.get_views_by_type(Door)
         if not doors:
             return
@@ -262,12 +269,20 @@ class HasDoorLikeFactories(ABC):
             self._remove_doors_from_bodies(all_bodies_not_door, all_doors_event)
 
     def _get_all_bodies_excluding_doors_from_world(self, world: World) -> List[Body]:
+        """
+        Return all bodies in the world that are not part of any door view.
+
+        :param world: The world from which to get the bodies.
+        :return: A list of bodies that are not part of any door view.
+        """
         with symbolic_mode():
             all_doors = Door(From(world.views))
             other_body = let(type_=Body, domain=world.bodies)
             door_bodies = all_doors.bodies
             bodies_without_excluded_bodies_query = an(
-                entity(other_body, for_all(door_bodies, not_(in_(other_body, door_bodies))))
+                entity(
+                    other_body, for_all(door_bodies, not_(in_(other_body, door_bodies)))
+                )
             )
 
         filtered_bodies = list(bodies_without_excluded_bodies_query.evaluate())
@@ -276,6 +291,13 @@ class HasDoorLikeFactories(ABC):
     def _build_all_doors_event_from_views(
         self, doors: List[Door], wall_event_thickness: float = 0.1
     ) -> Event:
+        """
+        Build a single event representing all doors by combining the events of each door.
+
+        :param doors: The list of door views to build the event from.
+        :param wall_event_thickness: The thickness of the wall event used to create the door events.
+        :return: An event representing all doors.
+        """
         door_events = [
             self._build_single_door_event(door, wall_event_thickness) for door in doors
         ]
@@ -286,6 +308,13 @@ class HasDoorLikeFactories(ABC):
     def _build_single_door_event(
         self, door: Door, wall_event_thickness: float = 0.1
     ) -> Event:
+        """
+        Build an event representing a single door by creating a bounding box event around the door's collision shapes
+
+        :param door: The door view to build the event from.
+        :param wall_event_thickness: The thickness of the wall event used to create the door event.
+        :return: An event representing the door.
+        """
         door_event = door.body.collision.as_bounding_box_collection_in_frame(
             door._world.root
         ).event
@@ -307,10 +336,22 @@ class HasDoorLikeFactories(ABC):
         return door_event
 
     def _remove_doors_from_bodies(self, bodies: List[Body], all_doors_event: Event):
+        """
+        Remove the door volumes from the given bodies by subtracting the all_doors_event from each body's collision event.
+
+        :param bodies: The list of bodies from which to remove the door volumes.
+        :param all_doors_event: The event representing all doors.
+        """
         for body in bodies:
             self._remove_door_from_body(body, all_doors_event)
 
     def _remove_door_from_body(self, body: Body, all_doors_event: Event):
+        """
+        Remove the door volumes from the given body by subtracting the all_doors_event from the body's collision event.
+
+        :param body: The body from which to remove the door volumes.
+        :param all_doors_event: The event representing all doors.
+        """
         root = body._world.root
         body_event = (
             body.collision.as_bounding_box_collection_in_frame(root).event
@@ -321,23 +362,43 @@ class HasDoorLikeFactories(ABC):
         body.visual = new_collision
 
 
+class IntervalConstants:
+    """
+    Predefined intervals for semantic directions.
+    """
+    ZERO_DIRAC = (0, 0, Bound.CLOSED, Bound.CLOSED)
+    ZERO_TO_ONE_THIRD = (0, 1 / 3, Bound.CLOSED, Bound.CLOSED)
+    ONE_THIRD_TO_TWO_THIRD = (1 / 3, 2 / 3, Bound.OPEN, Bound.OPEN)
+    HALF_DIRAC = (0.5, 0.5, Bound.CLOSED, Bound.CLOSED)
+    TWO_THIRD_TO_ONE = (2 / 3, 1, Bound.CLOSED, Bound.CLOSED)
+    ONE_DIRAC = (1, 1, Bound.CLOSED, Bound.CLOSED)
+
+
 class SemanticDirection(Enum): ...
 
+
 class HorizontalSemanticDirection(SimpleInterval, SemanticDirection):
-    FULLY_LEFT = (0, 0, Bound.CLOSED, Bound.CLOSED)
-    LEFT = (0, 1 / 3, Bound.CLOSED, Bound.CLOSED)
-    CENTER = (1 / 3, 2 / 3, Bound.OPEN, Bound.OPEN)
-    FULLY_CENTER = (0.5, 0.5, Bound.CLOSED, Bound.CLOSED)
-    RIGHT = (2 / 3, 1, Bound.CLOSED, Bound.CLOSED)
-    FULLY_RIGHT = (1, 1, Bound.CLOSED, Bound.CLOSED)
+    """
+    Semantic directions for horizontal positioning.
+    """
+    FULLY_LEFT = IntervalConstants.ZERO_DIRAC
+    LEFT = IntervalConstants.ZERO_TO_ONE_THIRD
+    CENTER = IntervalConstants.ONE_THIRD_TO_TWO_THIRD
+    FULLY_CENTER = IntervalConstants.HALF_DIRAC
+    RIGHT = IntervalConstants.TWO_THIRD_TO_ONE
+    FULLY_RIGHT = IntervalConstants.ONE_DIRAC
+
 
 class VerticalSemanticDirection(SimpleInterval, SemanticDirection):
-    FULLY_TOP = (0, 0, Bound.CLOSED, Bound.CLOSED)
-    TOP = (0, 1 / 3, Bound.CLOSED, Bound.CLOSED)
-    CENTER = (1 / 3, 2 / 3, Bound.OPEN, Bound.OPEN)
-    FULLY_CENTER = (0.5, 0.5, Bound.CLOSED, Bound.CLOSED)
-    BOTTOM = (2 / 3, 1, Bound.CLOSED, Bound.CLOSED)
-    FULLY_BOTTOM = (1, 1, Bound.CLOSED, Bound.CLOSED)
+    """
+    Semantic directions for vertical positioning.
+    """
+    FULLY_TOP = IntervalConstants.ZERO_DIRAC
+    TOP = IntervalConstants.ZERO_TO_ONE_THIRD
+    CENTER = IntervalConstants.ONE_THIRD_TO_TWO_THIRD
+    FULLY_CENTER = IntervalConstants.HALF_DIRAC
+    BOTTOM = IntervalConstants.TWO_THIRD_TO_ONE
+    FULLY_BOTTOM = IntervalConstants.ONE_DIRAC
 
 
 @dataclass
@@ -367,19 +428,23 @@ class SemanticPositionDescription:
         """
         Zoom 'base' interval by the percentage interval 'target' (0..1),
         preserving the base's boundary styles.
+
+        :param base: The base interval to be zoomed in.
+        :param target: The target interval defining the zoom percentage (0..1).
+        :return: A new SimpleInterval representing the zoomed-in interval.
         """
         span = base.upper - base.lower
         new_lower = base.lower + span * target.lower
         new_upper = base.lower + span * target.upper
         return SimpleInterval(new_lower, new_upper, base.left, base.right)
 
-    def _apply_zoom(
-        self, simple_event: SimpleEvent
-    ) -> SimpleEvent:
+    def _apply_zoom(self, simple_event: SimpleEvent) -> SimpleEvent:
         """
         Apply zooms in order and return the resulting intervals.
-        """
 
+        :param simple_event: The event to zoom in.
+        :return: A SimpleEvent containing the resulting intervals after applying all zooms.
+        """
         simple_events = [
             self._apply_zoom_in_one_direction(
                 axis,
@@ -396,6 +461,13 @@ class SemanticPositionDescription:
     def _apply_zoom_in_one_direction(
         self, axis: Continuous, current_interval: SimpleInterval
     ) -> SimpleEvent:
+        """
+        Apply zooms in one direction (Y, horizontal or Z, vertical) in order and return the resulting interval.
+
+        :param axis: The axis to zoom in (SpatialVariables.y or SpatialVariables.z).
+        :param current_interval: The current interval to zoom in.
+        :return: A SimpleEvent containing the resulting interval after applying all zooms in the specified direction.
+        """
         if axis == SpatialVariables.y.value:
             directions = self.horizontal_direction_chain
         elif axis == SpatialVariables.z.value:
@@ -408,7 +480,13 @@ class SemanticPositionDescription:
 
         return SimpleEvent({axis: current_interval})
 
-    def sample_point_from_event(self, event: Event):
+    def sample_point_from_event(self, event: Event) -> Tuple[float, float]:
+        """
+        Sample a 2D point from the given event by applying the zooms defined in the semantic position description.
+
+        :param event: The event to sample from.
+        :return: A sampled 2D point as a tuple (y, z).
+        """
         simple_event = self._apply_zoom(event.bounding_box())
         event_circuit = uniform_measure_of_simple_event(simple_event)
         return event_circuit.sample(amount=1)[0]
@@ -459,7 +537,7 @@ class HasHandleFactory(ABC):
         )
 
         return TransformationMatrix.from_xyz_rpy(
-            x=scale.x/2, y=sampled_2d_point[0], z=sampled_2d_point[1]
+            x=scale.x / 2, y=sampled_2d_point[0], z=sampled_2d_point[1]
         )
 
     def add_handle_to_world(
@@ -487,6 +565,9 @@ class HasHandleFactory(ABC):
 
 @dataclass
 class HasDrawerFactories(ABC):
+    """
+    Mixin for factories receiving multiple DrawerFactories.
+    """
 
     drawers_factories: List[DrawerFactory] = field(default_factory=list, hash=False)
     """
@@ -890,7 +971,12 @@ class DrawerFactory(ViewFactory[Drawer], HasHandleFactory):
 
         container_world = self.container_factory.create()
         world.merge_world(container_world)
-        parent_T_handle = self.parent_T_handle or self.create_parent_T_handle_from_parent_scale(self.container_factory.scale)
+        parent_T_handle = (
+            self.parent_T_handle
+            or self.create_parent_T_handle_from_parent_scale(
+                self.container_factory.scale
+            )
+        )
 
         self.add_handle_to_world(parent_T_handle, world)
 
