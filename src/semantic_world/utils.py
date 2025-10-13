@@ -147,7 +147,7 @@ def tracy_installed() -> bool:
         if get_package_share_directory(pkg_name):
             return True
         return False
-    except ImportError:
+    except (ImportError, PackageNotFoundError, ValueError):
         return False
 
 def hsrb_installed() -> bool:
