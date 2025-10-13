@@ -574,17 +574,17 @@ class PR2(TwoArmedAbstractRobot):
 
         robot = cls(
             name=PrefixedName(name="pr2", prefix=world.name),
-            root=world.get_kinematic_structure_entity_by_name("base_footprint"),
+            root=world.get_body_by_name("base_footprint"),
             _world=world,
         )
 
         # Create left arm
         left_gripper_thumb = Finger(
             name=PrefixedName("left_gripper_thumb", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name(
+            root=world.get_body_by_name(
                 "l_gripper_l_finger_link"
             ),
-            tip=world.get_kinematic_structure_entity_by_name(
+            tip=world.get_body_by_name(
                 "l_gripper_l_finger_tip_link"
             ),
             _world=world,
@@ -592,10 +592,10 @@ class PR2(TwoArmedAbstractRobot):
 
         left_gripper_finger = Finger(
             name=PrefixedName("left_gripper_finger", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name(
+            root=world.get_body_by_name(
                 "l_gripper_r_finger_link"
             ),
-            tip=world.get_kinematic_structure_entity_by_name(
+            tip=world.get_body_by_name(
                 "l_gripper_r_finger_tip_link"
             ),
             _world=world,
@@ -603,8 +603,8 @@ class PR2(TwoArmedAbstractRobot):
 
         left_gripper = ParallelGripper(
             name=PrefixedName("left_gripper", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name("l_gripper_palm_link"),
-            tool_frame=world.get_kinematic_structure_entity_by_name(
+            root=world.get_body_by_name("l_gripper_palm_link"),
+            tool_frame=world.get_body_by_name(
                 "l_gripper_tool_frame"
             ),
             front_facing_orientation=Quaternion(0, 0, 0, 1),
@@ -615,8 +615,8 @@ class PR2(TwoArmedAbstractRobot):
         )
         left_arm = Arm(
             name=PrefixedName("left_arm", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name("torso_lift_link"),
-            tip=world.get_kinematic_structure_entity_by_name("l_wrist_roll_link"),
+            root=world.get_body_by_name("torso_lift_link"),
+            tip=world.get_body_by_name("l_wrist_roll_link"),
             manipulator=left_gripper,
             _world=world,
         )
@@ -626,28 +626,28 @@ class PR2(TwoArmedAbstractRobot):
         # Create right arm
         right_gripper_thumb = Finger(
             name=PrefixedName("right_gripper_thumb", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name(
+            root=world.get_body_by_name(
                 "r_gripper_l_finger_link"
             ),
-            tip=world.get_kinematic_structure_entity_by_name(
+            tip=world.get_body_by_name(
                 "r_gripper_l_finger_tip_link"
             ),
             _world=world,
         )
         right_gripper_finger = Finger(
             name=PrefixedName("right_gripper_finger", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name(
+            root=world.get_body_by_name(
                 "r_gripper_r_finger_link"
             ),
-            tip=world.get_kinematic_structure_entity_by_name(
+            tip=world.get_body_by_name(
                 "r_gripper_r_finger_tip_link"
             ),
             _world=world,
         )
         right_gripper = ParallelGripper(
             name=PrefixedName("right_gripper", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name("r_gripper_palm_link"),
-            tool_frame=world.get_kinematic_structure_entity_by_name(
+            root=world.get_body_by_name("r_gripper_palm_link"),
+            tool_frame=world.get_body_by_name(
                 "r_gripper_tool_frame"
             ),
             front_facing_orientation=Quaternion(0, 0, 0, 1),
@@ -658,8 +658,8 @@ class PR2(TwoArmedAbstractRobot):
         )
         right_arm = Arm(
             name=PrefixedName("right_arm", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name("torso_lift_link"),
-            tip=world.get_kinematic_structure_entity_by_name("r_wrist_roll_link"),
+            root=world.get_body_by_name("torso_lift_link"),
+            tip=world.get_body_by_name("r_wrist_roll_link"),
             manipulator=right_gripper,
             _world=world,
         )
@@ -669,7 +669,7 @@ class PR2(TwoArmedAbstractRobot):
         # Create camera and neck
         camera = Camera(
             name=PrefixedName("wide_stereo_optical_frame", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name(
+            root=world.get_body_by_name(
                 "wide_stereo_optical_frame"
             ),
             forward_facing_axis=Vector3(0, 0, 1),
@@ -682,10 +682,10 @@ class PR2(TwoArmedAbstractRobot):
         neck = Neck(
             name=PrefixedName("neck", prefix=robot.name.name),
             sensors={camera},
-            root=world.get_kinematic_structure_entity_by_name("head_pan_link"),
-            tip=world.get_kinematic_structure_entity_by_name("head_tilt_link"),
-            pitch_body=world.get_kinematic_structure_entity_by_name("head_tilt_link"),
-            yaw_body=world.get_kinematic_structure_entity_by_name("head_pan_link"),
+            root=world.get_body_by_name("head_pan_link"),
+            tip=world.get_body_by_name("head_tilt_link"),
+            pitch_body=world.get_body_by_name("head_tilt_link"),
+            yaw_body=world.get_body_by_name("head_pan_link"),
             _world=world,
         )
         robot.add_neck(neck)
@@ -693,8 +693,8 @@ class PR2(TwoArmedAbstractRobot):
         # Create torso
         torso = Torso(
             name=PrefixedName("torso", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name("torso_lift_link"),
-            tip=world.get_kinematic_structure_entity_by_name("torso_lift_link"),
+            root=world.get_body_by_name("torso_lift_link"),
+            tip=world.get_body_by_name("torso_lift_link"),
             _world=world,
         )
         robot.add_torso(torso)
@@ -727,17 +727,17 @@ class Tracy(TwoArmedAbstractRobot):
 
         robot = cls(
             name=PrefixedName(name="tracy", prefix=world.name),
-            root=world.get_kinematic_structure_entity_by_name("table"),
+            root=world.get_body_by_name("table"),
             _world=world,
         )
 
         # Create left arm
         left_gripper_thumb = Finger(
             name=PrefixedName("left_gripper_thumb", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name(
+            root=world.get_body_by_name(
                 "left_robotiq_85_left_knuckle_link"
             ),
-            tip=world.get_kinematic_structure_entity_by_name(
+            tip=world.get_body_by_name(
                 "left_robotiq_85_left_finger_tip_link"
             ),
             _world=world,
@@ -745,10 +745,10 @@ class Tracy(TwoArmedAbstractRobot):
 
         left_gripper_finger = Finger(
             name=PrefixedName("left_gripper_finger", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name(
+            root=world.get_body_by_name(
                 "left_robotiq_85_right_knuckle_link"
             ),
-            tip=world.get_kinematic_structure_entity_by_name(
+            tip=world.get_body_by_name(
                 "left_robotiq_85_right_finger_tip_link"
             ),
             _world=world,
@@ -756,10 +756,10 @@ class Tracy(TwoArmedAbstractRobot):
 
         left_gripper = ParallelGripper(
             name=PrefixedName("left_gripper", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name(
+            root=world.get_body_by_name(
                 "left_robotiq_85_base_link"
             ),
-            tool_frame=world.get_kinematic_structure_entity_by_name(
+            tool_frame=world.get_body_by_name(
                 "l_gripper_tool_frame"
             ),
             front_facing_orientation=Quaternion(0.5, 0.5, 0.5, 0.5),
@@ -770,8 +770,8 @@ class Tracy(TwoArmedAbstractRobot):
         )
         left_arm = Arm(
             name=PrefixedName("left_arm", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name("table"),
-            tip=world.get_kinematic_structure_entity_by_name("left_wrist_3_link"),
+            root=world.get_body_by_name("table"),
+            tip=world.get_body_by_name("left_wrist_3_link"),
             manipulator=left_gripper,
             _world=world,
         )
@@ -780,30 +780,30 @@ class Tracy(TwoArmedAbstractRobot):
 
         right_gripper_thumb = Finger(
             name=PrefixedName("right_gripper_thumb", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name(
+            root=world.get_body_by_name(
                 "right_robotiq_85_left_knuckle_link"
             ),
-            tip=world.get_kinematic_structure_entity_by_name(
+            tip=world.get_body_by_name(
                 "right_robotiq_85_left_finger_tip_link"
             ),
             _world=world,
         )
         right_gripper_finger = Finger(
             name=PrefixedName("right_gripper_finger", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name(
+            root=world.get_body_by_name(
                 "right_robotiq_85_right_knuckle_link"
             ),
-            tip=world.get_kinematic_structure_entity_by_name(
+            tip=world.get_body_by_name(
                 "right_robotiq_85_right_finger_tip_link"
             ),
             _world=world,
         )
         right_gripper = ParallelGripper(
             name=PrefixedName("right_gripper", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name(
+            root=world.get_body_by_name(
                 "right_robotiq_85_base_link"
             ),
-            tool_frame=world.get_kinematic_structure_entity_by_name(
+            tool_frame=world.get_body_by_name(
                 "r_gripper_tool_frame"
             ),
             front_facing_orientation=Quaternion(0.5, 0.5, 0.5, 0.5),
@@ -814,8 +814,8 @@ class Tracy(TwoArmedAbstractRobot):
         )
         right_arm = Arm(
             name=PrefixedName("right_arm", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name("table"),
-            tip=world.get_kinematic_structure_entity_by_name("right_wrist_3_link"),
+            root=world.get_body_by_name("table"),
+            tip=world.get_body_by_name("right_wrist_3_link"),
             manipulator=right_gripper,
             _world=world,
         )
@@ -823,7 +823,7 @@ class Tracy(TwoArmedAbstractRobot):
 
         camera = Camera(
             name=PrefixedName("camera", prefix=robot.name.name),
-            root=world.get_kinematic_structure_entity_by_name("camera_link"),
+            root=world.get_body_by_name("camera_link"),
             forward_facing_axis=Vector3(0, 0, 1),
             field_of_view=FieldOfView(horizontal_angle=1.047, vertical_angle=0.785),
             minimal_height=0.8,
@@ -835,8 +835,8 @@ class Tracy(TwoArmedAbstractRobot):
         neck = Neck(
             name=PrefixedName("neck", prefix=robot.name.name),
             sensors={camera},
-            root=world.get_kinematic_structure_entity_by_name("camera_pole"),
-            tip=world.get_kinematic_structure_entity_by_name("camera_link"),
+            root=world.get_body_by_name("camera_pole"),
+            tip=world.get_body_by_name("camera_link"),
             _world=world,
         )
 

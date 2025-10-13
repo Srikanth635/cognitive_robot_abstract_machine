@@ -1063,7 +1063,7 @@ class World:
 
     def get_body_by_name(
         self, name: Union[str, PrefixedName]
-    ) -> KinematicStructureEntity:
+    ) -> Body:
         """
         Retrieves a Body from the list of bodies based on its name.
         If the input is of type `PrefixedName`, it checks whether the prefix is specified and looks for an
