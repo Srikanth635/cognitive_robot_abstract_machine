@@ -485,7 +485,7 @@ class View(WorldEntity, SubclassJSONSerializer):
         return hash(
             tuple(
                 [self.__class__]
-                + sorted([kse.index for kse in self.kinematic_structure_entities])
+                + sorted([kse.name for kse in self.kinematic_structure_entities])
             )
         )
 

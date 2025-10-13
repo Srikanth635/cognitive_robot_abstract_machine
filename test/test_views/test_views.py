@@ -69,7 +69,7 @@ class TestView(View):
 def test_view_hash(apartment_world):
     view1 = Handle(body=apartment_world.bodies[0])
     apartment_world.add_view(view1)
-    assert hash(view1) == hash((Handle, apartment_world.bodies[0].index))
+    assert hash(view1) == hash((Handle, apartment_world.bodies[0].name))
 
     view2 = Handle(body=apartment_world.bodies[0])
     assert view1 == view2
