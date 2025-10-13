@@ -514,11 +514,9 @@ class World:
             callback.notify()
 
         for callback in self.state_change_callbacks:
-            try:
-                callback.update_previous_world_state()
-            except AttributeError:
+            if hasattr(callback, "update_previous_world_state"):
                 # can't import the class for isinstance check, because then the world gets a ros dep
-                pass
+                callback.update_previous_world_state()
 
         self.validate()
         self.disable_non_robot_collisions()

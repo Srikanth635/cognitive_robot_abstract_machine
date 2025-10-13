@@ -1,6 +1,7 @@
 import os
 import time
 import unittest
+from typing import Optional
 
 import sqlalchemy
 from ormatic.utils import drop_database
@@ -25,8 +26,9 @@ from semantic_world.world_description.connections import (
 from semantic_world.world_description.world_entity import Body
 
 
-def create_dummy_world():
-    w = World()
+def create_dummy_world(w: Optional[World] = None) -> World:
+    if w is None:
+        w = World()
     b1 = Body(name=PrefixedName("b1"))
     b2 = Body(name=PrefixedName("b2"))
     with w.modify_world():
@@ -45,6 +47,34 @@ def test_state_synchronization(rclpy_node):
         node=rclpy_node,
         world=w1,
     )
+    synchronizer_2 = StateSynchronizer(
+        node=rclpy_node,
+        world=w2,
+    )
+
+    # Allow time for publishers/subscribers to connect on unique topics
+    time.sleep(0.2)
+
+    w1.state.data[0, 0] = 1.0
+    w1.notify_state_change()
+    time.sleep(0.2)
+    assert w1.state.data[0, 0] == 1.0
+    assert w1.state.data[0, 0] == w2.state.data[0, 0]
+
+    synchronizer_1.close()
+    synchronizer_2.close()
+
+
+def test_state_synchronization_world_model_change_after_init(rclpy_node):
+    w1 = World()
+    w2 = World()
+
+    synchronizer_1 = StateSynchronizer(
+        node=rclpy_node,
+        world=w1,
+    )
+    create_dummy_world(w1)
+    create_dummy_world(w2)
     synchronizer_2 = StateSynchronizer(
         node=rclpy_node,
         world=w2,
