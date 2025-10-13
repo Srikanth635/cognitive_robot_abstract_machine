@@ -3,29 +3,38 @@ from __future__ import annotations
 import logging
 from abc import abstractmethod, ABC
 from dataclasses import dataclass, field
+from functools import cached_property
 
-from typing_extensions import Iterable, Set, TYPE_CHECKING, Optional, Self, List
+from typing_extensions import (
+    Iterable,
+    Set,
+    TYPE_CHECKING,
+    Optional,
+    Self,
+    List,
+    Union,
+    Type,
+)
 
-from semantic_world.reasoning.predicates import LeftOf
-from semantic_world.spatial_types.spatial_types import (
+from ..reasoning.predicates import LeftOf, RightOf
+from ..spatial_types.spatial_types import (
     Vector3,
     Quaternion,
-    TransformationMatrix,
 )
-from semantic_world.world_description.connections import ActiveConnection, OmniDrive
-from semantic_world.world_description.world_entity import (
+from ..world_description.connections import ActiveConnection, OmniDrive
+from ..world_description.world_entity import (
     Body,
     RootedView,
     Connection,
     CollisionCheckingConfig,
 )
-from semantic_world.world_description.world_entity import (
+from ..world_description.world_entity import (
     KinematicStructureEntity,
     Region,
 )
 
 if TYPE_CHECKING:
-    from semantic_world.world import World
+    from ..world import World
 
 
 @dataclass
@@ -482,6 +491,9 @@ class HasNeck(ABC):
     """
 
     neck: Neck = field(default=None)
+    """
+    The neck kinematic chain of the robot, if it exists.
+    """
 
     def add_neck(self, neck: Neck):
         """
@@ -502,10 +514,13 @@ class HasNeck(ABC):
 @dataclass
 class HasArms(ABC):
     """
-    Represents a robot with two arms, each with a parallel gripper, a head with a camera, and a prismatic torso.
+    Mixin class for robots that have arms.
     """
 
     arms: List[Arm] = field(default_factory=list)
+    """
+    A collection of arms in the robot.
+    """
 
     def add_arm(self, arm: Arm):
         """
@@ -522,25 +537,35 @@ class HasArms(ABC):
 
 @dataclass
 class SpecifiesLeftRightArm(HasArms, ABC):
-    left_arm: Arm = field(default=None)
-    right_arm: Arm = field(default=None)
+    """
+    Mixin class for robots that have two arms and can specify which is the left and which is the right arm.
+    """
 
-    def assign_left_right_arms(self):
+    @cached_property
+    def left_arm(self):
+        return self._assign_left_right_arms(LeftOf)
+
+    @cached_property
+    def right_arm(self):
+        return self._assign_left_right_arms(RightOf)
+
+    def _assign_left_right_arms(self, relation: Type[Union[LeftOf, RightOf]]) -> Arm:
+        """
+        Assigns the left and right arms based on their position relative to the robot's root body.
+        :param relation: The relation to use for determining left or right (LeftOf or RightOf).
+        :return: The arm that is on the left or right side of the robot.
+        """
         assert (
             len(self.arms) == 2
-        ), "Must have exactly two arms to specify left and right arm"
+        ), f"Must have exactly two arms to specify left and right arm, but found {len(self.arms)}."
         pov = self.root.global_pose
         first_arm = self.arms[0]
         second_arm = self.arms[1]
         first_arm_chain = list(first_arm.bodies)
         second_arm_chain = list(second_arm.bodies)
 
-        self.left_arm, self.right_arm = (
-            (first_arm, second_arm)
-            if LeftOf(
+        return first_arm if relation(
                 first_arm_chain[1],
                 second_arm_chain[1],
                 pov,
-            )()
-            else (second_arm, first_arm)
-        )
+            )() else second_arm

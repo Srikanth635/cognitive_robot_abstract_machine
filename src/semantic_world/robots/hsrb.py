@@ -20,7 +20,7 @@ from ..world import World
 
 
 @dataclass
-class HumanSupportRobotB(AbstractRobot, HasArms, HasNeck):
+class HSRB(AbstractRobot, HasArms, HasNeck):
     """
     Class that describes the Human Support Robot variant B (https://upmroboticclub.wordpress.com/robot/).
     """
@@ -55,6 +55,7 @@ class HumanSupportRobotB(AbstractRobot, HasArms, HasNeck):
             name=PrefixedName("finger", prefix=hsrb.name.name),
             root=world.get_body_by_name("hand_r_proximal_link"),
             tip=world.get_body_by_name("hand_r_finger_tip_frame"),
+            _world=world,
         )
 
         gripper = ParallelGripper(

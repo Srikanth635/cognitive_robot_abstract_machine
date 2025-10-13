@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 
+from ament_index_python import PackageNotFoundError
 from typing_extensions import Optional, Tuple, Union, List, Dict
 from urdf_parser_py import urdf as urdfpy
 
@@ -236,7 +237,7 @@ class URDFParser:
             )
             world.add_degree_of_freedom(dof)
 
-        joint_axis = joint.axis if joint.axis is not None else (0, 0, 0)
+        assert joint.axis is not None, f"Joint axis is None for joint {joint.name}"
         result = connection_type(
             name=connection_name,
             parent=parent,
@@ -244,7 +245,7 @@ class URDFParser:
             parent_T_connection_expression=parent_T_connection,
             multiplier=multiplier,
             offset=offset,
-            axis=Vector3(*map(int, joint_axis), reference_frame=parent),
+            axis=Vector3(*map(int, joint.axis), reference_frame=parent),
             dof=dof,
         )
         return result
@@ -358,7 +359,7 @@ class URDFParser:
                 from ament_index_python.packages import get_package_share_directory
 
                 package_path = get_package_share_directory(package_name)
-            except (ImportError, LookupError):
+            except (ImportError, LookupError, PackageNotFoundError):
                 if self.package_resolver:
                     if package_name in self.package_resolver:
                         package_path = self.package_resolver[package_name]

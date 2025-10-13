@@ -4,23 +4,21 @@ import os
 from dataclasses import dataclass, field
 from typing import Self
 
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.robots.robot import (
+from ..datastructures.prefixed_name import PrefixedName
+from ..robots.robot import (
     Neck,
-    KinematicChain,
     Finger,
     ParallelGripper,
     Arm,
     Camera,
     FieldOfView,
     Torso,
-    HasArms,
     HasNeck,
     AbstractRobot,
     SpecifiesLeftRightArm,
 )
-from semantic_world.spatial_types import Quaternion, Vector3
-from semantic_world.world import World
+from ..spatial_types import Quaternion, Vector3
+from ..world import World
 
 
 @dataclass
@@ -186,5 +184,4 @@ class PR2(AbstractRobot, SpecifiesLeftRightArm, HasNeck):
         # robot.load_srdf()
 
         world.add_view(robot, exists_ok=True)
-        robot.assign_left_right_arms()
         return robot

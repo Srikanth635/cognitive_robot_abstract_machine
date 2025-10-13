@@ -41,7 +41,7 @@ from .exceptions import (
     AlreadyBelongsToAWorldError,
     DuplicateKinematicStructureEntityError,
 )
-from semantic_world.robots.robot import AbstractRobot
+from .robots.robot import AbstractRobot
 from .spatial_computations.forward_kinematics import ForwardKinematicsVisitor
 from .spatial_computations.ik_solver import InverseKinematicsSolver
 from .spatial_computations.raytracer import RayTracer

@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import field
 from typing import Self
 
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.robots.robot import (
+from ..datastructures.prefixed_name import PrefixedName
+from ..robots.robot import (
     KinematicChain,
     Finger,
     ParallelGripper,
@@ -14,11 +14,10 @@ from semantic_world.robots.robot import (
     Neck,
     AbstractRobot,
     HasNeck,
-    HasArms,
     SpecifiesLeftRightArm,
 )
-from semantic_world.spatial_types import Quaternion, Vector3
-from semantic_world.world import World
+from ..spatial_types import Quaternion, Vector3
+from ..world import World
 
 
 class Tracy(AbstractRobot, SpecifiesLeftRightArm, HasNeck):
@@ -158,5 +157,4 @@ class Tracy(AbstractRobot, SpecifiesLeftRightArm, HasNeck):
 
         robot.add_kinematic_chain(neck)
         world.add_view(robot, exists_ok=True)
-        robot.assign_left_right_arms()
         return robot

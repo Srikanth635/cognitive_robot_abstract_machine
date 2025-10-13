@@ -6,12 +6,12 @@ from typing import Optional, List
 import trimesh.sample
 from entity_query_language import symbolic_mode, let, an, entity, and_, not_, contains, the
 
-from semantic_world.collision_checking.collision_detector import Collision, CollisionCheck
-from semantic_world.collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
-from semantic_world.robots.robot import AbstractRobot, ParallelGripper
-from semantic_world.spatial_computations.raytracer import RayTracer
-from semantic_world.spatial_types import TransformationMatrix
-from semantic_world.world_description.world_entity import Body
+from ..collision_checking.collision_detector import Collision, CollisionCheck
+from ..collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
+from ..robots.robot import AbstractRobot, ParallelGripper
+from ..spatial_computations.raytracer import RayTracer
+from ..spatial_types import TransformationMatrix
+from ..world_description.world_entity import Body
 
 
 def robot_in_collision(

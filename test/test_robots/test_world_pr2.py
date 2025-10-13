@@ -6,7 +6,7 @@ import pytest
 from rustworkx import NoPathFound
 
 from semantic_world.reasoning.predicates import LeftOf
-from semantic_world.robots.hsrb import HumanSupportRobotB
+from semantic_world.robots.hsrb import HSRB
 from semantic_world.spatial_types.spatial_types import TransformationMatrix
 from semantic_world.world_description.connections import (
     OmniDrive,
@@ -374,7 +374,7 @@ def test_tracy_view(tracy_world):
     assert list(tracy.sensor_chains)[0].sensors == tracy.sensors
 
 def test_hsrb_view(hsrb_world):
-    hsrb = HumanSupportRobotB.from_world(hsrb_world)
+    hsrb = HSRB.from_world(hsrb_world)
 
     hsrb_world._notify_model_change()
 

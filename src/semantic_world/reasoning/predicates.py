@@ -25,7 +25,7 @@ from ..world_description.connections import FixedConnection
 from ..world_description.world_entity import Body, Region, KinematicStructureEntity
 
 if TYPE_CHECKING:
-    from semantic_world.robots.robot import (
+    from ..robots.robot import (
         Camera,
     )
 
