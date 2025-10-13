@@ -140,11 +140,11 @@ def rclpy_installed() -> bool:
 
 def tracy_installed() -> bool:
     try:
-        from ament_index_python.packages import has_package
+        from ament_index_python.packages import get_package_share_directory
 
         pkg_name = "iai_tracy_description"
 
-        if has_package(pkg_name):
+        if get_package_share_directory(pkg_name):
             return True
         return False
     except ImportError:

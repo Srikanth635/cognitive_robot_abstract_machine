@@ -21,10 +21,9 @@ from ..world import World
 
 
 class Tracy(AbstractRobot, SpecifiesLeftRightArm, HasNeck):
-
-    left_arm: KinematicChain = field(default=None)
-    right_arm: KinematicChain = field(default=None)
-
+    """
+    Represents the TraceBot robot.
+    """
     def __hash__(self):
         return hash(self.name)
 
