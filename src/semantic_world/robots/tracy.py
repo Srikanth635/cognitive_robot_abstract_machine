@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import field
+from dataclasses import field, dataclass
 from typing import Self
 
 from ..datastructures.prefixed_name import PrefixedName
 from ..robots.robot import (
-    KinematicChain,
     Finger,
     ParallelGripper,
     Arm,
@@ -19,7 +18,7 @@ from ..robots.robot import (
 from ..spatial_types import Quaternion, Vector3
 from ..world import World
 
-
+@dataclass
 class Tracy(AbstractRobot, SpecifiesLeftRightArm, HasNeck):
     """
     Represents the TraceBot robot.
