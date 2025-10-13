@@ -1,13 +1,7 @@
-import threading
-
 import numpy as np
-import pytest
-import rclpy
 
-from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.reasoning.predicates import (
     contact,
-    robot_in_collision,
     visible,
     Above,
     Below,
@@ -18,13 +12,11 @@ from semantic_world.reasoning.predicates import (
     is_body_in_region,
     occluding_bodies,
     is_supported_by,
-    is_body_in_gripper,
-    robot_holds_body,
     reachable,
-    blocking,
 )
-from semantic_world.robots import PR2, Camera, ParallelGripper
-from semantic_world.spatial_types.spatial_types import TransformationMatrix
+from semantic_world.reasoning.robot_predicates import robot_in_collision, robot_holds_body, blocking, is_body_in_gripper
+from semantic_world.robots.robot import Camera, ParallelGripper
+from semantic_world.robots.pr2 import PR2
 from semantic_world.testing import *
 from semantic_world.world import World
 from semantic_world.world_description.connections import Connection6DoF, FixedConnection

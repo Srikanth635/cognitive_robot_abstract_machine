@@ -5,7 +5,8 @@ import numpy as np
 import pytest
 from rustworkx import NoPathFound
 
-from semantic_world.adapters.urdf import URDFParser
+from semantic_world.reasoning.predicates import LeftOf
+from semantic_world.robots.hsrb import HumanSupportRobotB
 from semantic_world.spatial_types.spatial_types import TransformationMatrix
 from semantic_world.world_description.connections import (
     OmniDrive,
@@ -17,11 +18,13 @@ from semantic_world.spatial_computations.ik_solver import (
     UnreachableException,
 )
 from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.robots import PR2, KinematicChain, Tracy
+from semantic_world.robots.robot import KinematicChain
+from semantic_world.robots.tracy import Tracy
+from semantic_world.robots.pr2 import PR2
 from semantic_world.spatial_types.derivatives import Derivatives
 from semantic_world.spatial_types.symbol_manager import symbol_manager
 from semantic_world.world import World
-from semantic_world.testing import pr2_world, tracy_world
+from semantic_world.testing import pr2_world, tracy_world, hsrb_world
 
 
 def test_compute_chain_of_bodies_pr2(pr2_world):
@@ -320,6 +323,18 @@ def test_pr2_view(pr2_world):
     assert pr2.torso.name.name == "torso"
     assert len(pr2.torso.sensors) == 0
     assert list(pr2.sensor_chains)[0].sensors == pr2.sensors
+    assert pr2.left_arm and pr2.right_arm
+    assert pr2.left_arm != pr2.right_arm
+
+def test_specifies_left_right_arm_mixin(pr2_world):
+    pr2 = PR2.from_world(pr2_world)
+    left_arm_chain = list(pr2.left_arm.bodies)
+    right_arm_chain = list(pr2.right_arm.bodies)
+    assert LeftOf(
+        left_arm_chain[1],
+        right_arm_chain[1],
+        pr2.root.global_pose,
+    )()
 
 
 def test_kinematic_chains(pr2_world):
@@ -357,3 +372,17 @@ def test_tracy_view(tracy_world):
     assert len(tracy.sensor_chains) == 1
     assert tracy.torso is None
     assert list(tracy.sensor_chains)[0].sensors == tracy.sensors
+
+def test_hsrb_view(hsrb_world):
+    hsrb = HumanSupportRobotB.from_world(hsrb_world)
+
+    hsrb_world._notify_model_change()
+
+    assert len(hsrb.manipulators) == 1
+    assert len(hsrb.manipulator_chains) == 1
+    assert hsrb.neck is not None
+    assert len(hsrb.arms) == 1
+
+    assert len(hsrb.sensors) == 5
+    assert len(hsrb.sensor_chains) == 2
+    assert hsrb.torso is not None

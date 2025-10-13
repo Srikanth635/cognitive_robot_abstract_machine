@@ -1,24 +1,31 @@
 from __future__ import annotations
 
 import logging
-import os
 from abc import abstractmethod, ABC
 from dataclasses import dataclass, field
-from typing_extensions import Iterable, Set, TYPE_CHECKING, Optional, Self
 
-from .world_description.connections import ActiveConnection, OmniDrive
-from .datastructures.prefixed_name import PrefixedName
-from .spatial_types.spatial_types import Vector3, Quaternion
-from .world_description.world_entity import (
+from typing_extensions import Iterable, Set, TYPE_CHECKING, Optional, Self, List
+
+from semantic_world.reasoning.predicates import LeftOf
+from semantic_world.spatial_types.spatial_types import (
+    Vector3,
+    Quaternion,
+    TransformationMatrix,
+)
+from semantic_world.world_description.connections import ActiveConnection, OmniDrive
+from semantic_world.world_description.world_entity import (
     Body,
     RootedView,
     Connection,
     CollisionCheckingConfig,
 )
-from .world_description.world_entity import KinematicStructureEntity, Region
+from semantic_world.world_description.world_entity import (
+    KinematicStructureEntity,
+    Region,
+)
 
 if TYPE_CHECKING:
-    from .world import World
+    from semantic_world.world import World
 
 
 @dataclass
@@ -230,8 +237,6 @@ class ParallelGripper(Manipulator):
         if self._robot is not None:
             return
         self._robot = robot
-        robot.add_kinematic_chain(self.finger)
-        robot.add_kinematic_chain(self.thumb)
 
     def __hash__(self):
         """
@@ -471,19 +476,38 @@ class AbstractRobot(RootedView, ABC):
 
 
 @dataclass
-class TwoArmedAbstractRobot(AbstractRobot, ABC):
+class HasNeck(ABC):
+    """
+    Mixin class for robots that have a neck.
+    """
+
+    neck: Neck = field(default=None)
+
+    def add_neck(self, neck: Neck):
+        """
+        Adds a neck kinematic chain to the robot.
+
+        :param neck: The neck kinematic chain to add.
+        """
+        if not neck.sensors:
+            raise ValueError(
+                f"Neck kinematic chain {neck.name} must have at least one sensor."
+            )
+        if self.neck is not None:
+            raise ValueError(f"Robot {self.name} already has a neck: {self.neck.name}.")
+        self.neck = neck
+        self.add_kinematic_chain(neck)
+
+
+@dataclass
+class HasArms(ABC):
     """
     Represents a robot with two arms, each with a parallel gripper, a head with a camera, and a prismatic torso.
     """
 
-    left_arm: KinematicChain = field(default=None)
-    right_arm: KinematicChain = field(default=None)
-    neck: Neck = field(default=None)
+    arms: List[Arm] = field(default_factory=list)
 
-    def __hash__(self):
-        return hash(self.name)
-
-    def _add_arm(self, arm: KinematicChain, arm_side: str):
+    def add_arm(self, arm: Arm):
         """
         Adds a kinematic chain to the PR2 robot's collection of kinematic chains.
         If the kinematic chain is an arm, it will be added to the left or right arm accordingly.
@@ -492,354 +516,31 @@ class TwoArmedAbstractRobot(AbstractRobot, ABC):
         """
         if arm.manipulator is None:
             raise ValueError(f"Arm kinematic chain {arm.name} must have a manipulator.")
-
-        if arm_side == "left":
-            self.left_arm = arm
-        elif arm_side == "right":
-            self.right_arm = arm
-        else:
-            raise ValueError(
-                f"Invalid arm side: {arm_side}. Must be 'left' or 'right'."
-            )
-
-        super().add_kinematic_chain(arm)
-
-    def add_left_arm(self, kinematic_chain: KinematicChain):
-        """
-        Adds a left arm kinematic chain to the PR2 robot.
-
-        :param kinematic_chain: The kinematic chain representing the left arm.
-        """
-        self._add_arm(kinematic_chain, "left")
-
-    def add_right_arm(self, kinematic_chain: KinematicChain):
-        """
-        Adds a right arm kinematic chain to the PR2 robot.
-
-        :param kinematic_chain: The kinematic chain representing the right arm.
-        """
-        self._add_arm(kinematic_chain, "right")
+        self.arms.append(arm)
+        self.add_kinematic_chain(arm)
 
 
 @dataclass
-class PR2(TwoArmedAbstractRobot):
-    """
-    Represents the Personal Robot 2 (PR2), which was originally created by Willow Garage.
-    The PR2 robot consists of two arms, each with a parallel gripper, a head with a camera, and a prismatic torso
-    """
+class SpecifiesLeftRightArm(HasArms, ABC):
+    left_arm: Arm = field(default=None)
+    right_arm: Arm = field(default=None)
 
-    neck: Neck = field(default=None)
-    left_arm: KinematicChain = field(default=None)
-    right_arm: KinematicChain = field(default=None)
+    def assign_left_right_arms(self):
+        assert (
+            len(self.arms) == 2
+        ), "Must have exactly two arms to specify left and right arm"
+        pov = self.root.global_pose
+        first_arm = self.arms[0]
+        second_arm = self.arms[1]
+        first_arm_chain = list(first_arm.bodies)
+        second_arm_chain = list(second_arm.bodies)
 
-    def __hash__(self):
-        return hash(self.name)
-
-    def add_neck(self, neck: Neck):
-        """
-        Adds a neck kinematic chain to the PR2 robot.
-
-        :param neck: The neck kinematic chain to add.
-        """
-        if not neck.sensors:
-            raise ValueError(
-                f"Neck kinematic chain {neck.name} must have at least one sensor."
-            )
-        self.neck = neck
-        super().add_kinematic_chain(neck)
-
-    def load_srdf(self):
-        """
-        Loads the SRDF file for the PR2 robot, if it exists.
-        """
-        srdf_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "..",
-            "..",
-            "resources",
-            "collision_configs",
-            "pr2.srdf",
+        self.left_arm, self.right_arm = (
+            (first_arm, second_arm)
+            if LeftOf(
+                first_arm_chain[1],
+                second_arm_chain[1],
+                pov,
+            )()
+            else (second_arm, first_arm)
         )
-        self._world.load_collision_srdf(srdf_path)
-
-    @classmethod
-    def from_world(cls, world: World) -> Self:
-        """
-        Creates a PR2 robot view from the given world.
-
-        :param world: The world from which to create the robot view.
-
-        :return: A PR2 robot view.
-        """
-
-        robot = cls(
-            name=PrefixedName(name="pr2", prefix=world.name),
-            root=world.get_body_by_name("base_footprint"),
-            _world=world,
-        )
-
-        # Create left arm
-        left_gripper_thumb = Finger(
-            name=PrefixedName("left_gripper_thumb", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "l_gripper_l_finger_link"
-            ),
-            tip=world.get_body_by_name(
-                "l_gripper_l_finger_tip_link"
-            ),
-            _world=world,
-        )
-
-        left_gripper_finger = Finger(
-            name=PrefixedName("left_gripper_finger", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "l_gripper_r_finger_link"
-            ),
-            tip=world.get_body_by_name(
-                "l_gripper_r_finger_tip_link"
-            ),
-            _world=world,
-        )
-
-        left_gripper = ParallelGripper(
-            name=PrefixedName("left_gripper", prefix=robot.name.name),
-            root=world.get_body_by_name("l_gripper_palm_link"),
-            tool_frame=world.get_body_by_name(
-                "l_gripper_tool_frame"
-            ),
-            front_facing_orientation=Quaternion(0, 0, 0, 1),
-            front_facing_axis=Vector3(1, 0, 0),
-            thumb=left_gripper_thumb,
-            finger=left_gripper_finger,
-            _world=world,
-        )
-        left_arm = Arm(
-            name=PrefixedName("left_arm", prefix=robot.name.name),
-            root=world.get_body_by_name("torso_lift_link"),
-            tip=world.get_body_by_name("l_wrist_roll_link"),
-            manipulator=left_gripper,
-            _world=world,
-        )
-
-        robot.add_left_arm(left_arm)
-
-        # Create right arm
-        right_gripper_thumb = Finger(
-            name=PrefixedName("right_gripper_thumb", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "r_gripper_l_finger_link"
-            ),
-            tip=world.get_body_by_name(
-                "r_gripper_l_finger_tip_link"
-            ),
-            _world=world,
-        )
-        right_gripper_finger = Finger(
-            name=PrefixedName("right_gripper_finger", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "r_gripper_r_finger_link"
-            ),
-            tip=world.get_body_by_name(
-                "r_gripper_r_finger_tip_link"
-            ),
-            _world=world,
-        )
-        right_gripper = ParallelGripper(
-            name=PrefixedName("right_gripper", prefix=robot.name.name),
-            root=world.get_body_by_name("r_gripper_palm_link"),
-            tool_frame=world.get_body_by_name(
-                "r_gripper_tool_frame"
-            ),
-            front_facing_orientation=Quaternion(0, 0, 0, 1),
-            front_facing_axis=Vector3(1, 0, 0),
-            thumb=right_gripper_thumb,
-            finger=right_gripper_finger,
-            _world=world,
-        )
-        right_arm = Arm(
-            name=PrefixedName("right_arm", prefix=robot.name.name),
-            root=world.get_body_by_name("torso_lift_link"),
-            tip=world.get_body_by_name("r_wrist_roll_link"),
-            manipulator=right_gripper,
-            _world=world,
-        )
-
-        robot.add_right_arm(right_arm)
-
-        # Create camera and neck
-        camera = Camera(
-            name=PrefixedName("wide_stereo_optical_frame", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "wide_stereo_optical_frame"
-            ),
-            forward_facing_axis=Vector3(0, 0, 1),
-            field_of_view=FieldOfView(horizontal_angle=0.99483, vertical_angle=0.75049),
-            minimal_height=1.27,
-            maximal_height=1.60,
-            _world=world,
-        )
-
-        neck = Neck(
-            name=PrefixedName("neck", prefix=robot.name.name),
-            sensors={camera},
-            root=world.get_body_by_name("head_pan_link"),
-            tip=world.get_body_by_name("head_tilt_link"),
-            pitch_body=world.get_body_by_name("head_tilt_link"),
-            yaw_body=world.get_body_by_name("head_pan_link"),
-            _world=world,
-        )
-        robot.add_neck(neck)
-
-        # Create torso
-        torso = Torso(
-            name=PrefixedName("torso", prefix=robot.name.name),
-            root=world.get_body_by_name("torso_lift_link"),
-            tip=world.get_body_by_name("torso_lift_link"),
-            _world=world,
-        )
-        robot.add_torso(torso)
-        # robot.load_srdf()
-
-        world.add_view(robot, exists_ok=True)
-
-        return robot
-
-
-class Tracy(TwoArmedAbstractRobot):
-
-    left_arm: KinematicChain = field(default=None)
-    right_arm: KinematicChain = field(default=None)
-
-    def __hash__(self):
-        return hash(self.name)
-
-    def load_srdf(self): ...
-
-    @classmethod
-    def from_world(cls, world: World) -> Self:
-        """
-        Creates a Tracy robot view from the given world.
-
-        :param world: The world from which to create the robot view.
-
-        :return: A Tracy robot view.
-        """
-
-        robot = cls(
-            name=PrefixedName(name="tracy", prefix=world.name),
-            root=world.get_body_by_name("table"),
-            _world=world,
-        )
-
-        # Create left arm
-        left_gripper_thumb = Finger(
-            name=PrefixedName("left_gripper_thumb", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "left_robotiq_85_left_knuckle_link"
-            ),
-            tip=world.get_body_by_name(
-                "left_robotiq_85_left_finger_tip_link"
-            ),
-            _world=world,
-        )
-
-        left_gripper_finger = Finger(
-            name=PrefixedName("left_gripper_finger", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "left_robotiq_85_right_knuckle_link"
-            ),
-            tip=world.get_body_by_name(
-                "left_robotiq_85_right_finger_tip_link"
-            ),
-            _world=world,
-        )
-
-        left_gripper = ParallelGripper(
-            name=PrefixedName("left_gripper", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "left_robotiq_85_base_link"
-            ),
-            tool_frame=world.get_body_by_name(
-                "l_gripper_tool_frame"
-            ),
-            front_facing_orientation=Quaternion(0.5, 0.5, 0.5, 0.5),
-            front_facing_axis=Vector3(0, 0, 1),
-            thumb=left_gripper_thumb,
-            finger=left_gripper_finger,
-            _world=world,
-        )
-        left_arm = Arm(
-            name=PrefixedName("left_arm", prefix=robot.name.name),
-            root=world.get_body_by_name("table"),
-            tip=world.get_body_by_name("left_wrist_3_link"),
-            manipulator=left_gripper,
-            _world=world,
-        )
-
-        robot.add_left_arm(left_arm)
-
-        right_gripper_thumb = Finger(
-            name=PrefixedName("right_gripper_thumb", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "right_robotiq_85_left_knuckle_link"
-            ),
-            tip=world.get_body_by_name(
-                "right_robotiq_85_left_finger_tip_link"
-            ),
-            _world=world,
-        )
-        right_gripper_finger = Finger(
-            name=PrefixedName("right_gripper_finger", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "right_robotiq_85_right_knuckle_link"
-            ),
-            tip=world.get_body_by_name(
-                "right_robotiq_85_right_finger_tip_link"
-            ),
-            _world=world,
-        )
-        right_gripper = ParallelGripper(
-            name=PrefixedName("right_gripper", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "right_robotiq_85_base_link"
-            ),
-            tool_frame=world.get_body_by_name(
-                "r_gripper_tool_frame"
-            ),
-            front_facing_orientation=Quaternion(0.5, 0.5, 0.5, 0.5),
-            front_facing_axis=Vector3(0, 0, 1),
-            thumb=right_gripper_thumb,
-            finger=right_gripper_finger,
-            _world=world,
-        )
-        right_arm = Arm(
-            name=PrefixedName("right_arm", prefix=robot.name.name),
-            root=world.get_body_by_name("table"),
-            tip=world.get_body_by_name("right_wrist_3_link"),
-            manipulator=right_gripper,
-            _world=world,
-        )
-        robot.add_right_arm(right_arm)
-
-        camera = Camera(
-            name=PrefixedName("camera", prefix=robot.name.name),
-            root=world.get_body_by_name("camera_link"),
-            forward_facing_axis=Vector3(0, 0, 1),
-            field_of_view=FieldOfView(horizontal_angle=1.047, vertical_angle=0.785),
-            minimal_height=0.8,
-            maximal_height=1.7,
-            _world=world,
-        )
-
-        # Probably should be classified as "Neck", as that implies that i can move.
-        neck = Neck(
-            name=PrefixedName("neck", prefix=robot.name.name),
-            sensors={camera},
-            root=world.get_body_by_name("camera_pole"),
-            tip=world.get_body_by_name("camera_link"),
-            _world=world,
-        )
-
-        robot.add_kinematic_chain(neck)
-        world.add_view(robot, exists_ok=True)
-        return robot

@@ -236,6 +236,7 @@ class URDFParser:
             )
             world.add_degree_of_freedom(dof)
 
+        joint_axis = joint.axis if joint.axis is not None else (0, 0, 0)
         result = connection_type(
             name=connection_name,
             parent=parent,
@@ -243,7 +244,7 @@ class URDFParser:
             parent_T_connection_expression=parent_T_connection,
             multiplier=multiplier,
             offset=offset,
-            axis=Vector3(*map(int, joint.axis), reference_frame=parent),
+            axis=Vector3(*map(int, joint_axis), reference_frame=parent),
             dof=dof,
         )
         return result
@@ -357,7 +358,7 @@ class URDFParser:
                 from ament_index_python.packages import get_package_share_directory
 
                 package_path = get_package_share_directory(package_name)
-            except ImportError:
+            except (ImportError, LookupError):
                 if self.package_resolver:
                     if package_name in self.package_resolver:
                         package_path = self.package_resolver[package_name]
