@@ -21,11 +21,12 @@ from ..spatial_computations.ik_solver import (
 from ..spatial_computations.raytracer import RayTracer
 from ..spatial_types import Vector3
 from ..spatial_types.spatial_types import TransformationMatrix
+from ..world import World
 from ..world_description.connections import FixedConnection
 from ..world_description.world_entity import Body, Region, KinematicStructureEntity
 
 if TYPE_CHECKING:
-    from ..robots.robot import (
+    from ..robots.abstract_robot import (
         Camera,
     )
 
@@ -113,8 +114,7 @@ def occluding_bodies(camera: Camera, body: Body) -> List[Body]:
     camera_pose = TransformationMatrix(camera_pose, reference_frame=camera._world.root)
 
     # create a world only containing the target body
-    world_without_occlusion = deepcopy(camera._world)
-    world_without_occlusion.clear()
+    world_without_occlusion = World()
     root = Body(name=PrefixedName("root"))
     with world_without_occlusion.modify_world():
         world_without_occlusion.add_body(root)

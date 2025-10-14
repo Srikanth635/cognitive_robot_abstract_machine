@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Self
 
-from .robot import (
+from .abstract_robot import (
     AbstractRobot,
     Arm,
     Neck,
@@ -10,9 +10,8 @@ from .robot import (
     Camera,
     Torso,
     FieldOfView,
-    HasArms,
-    HasNeck,
 )
+from .robot_mixins import HasNeck, HasArms
 from ..datastructures.prefixed_name import PrefixedName
 from ..spatial_types import Quaternion
 from ..spatial_types.spatial_types import Vector3

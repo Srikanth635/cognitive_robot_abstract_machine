@@ -15,7 +15,7 @@ from semantic_world.reasoning.predicates import (
     reachable,
 )
 from semantic_world.reasoning.robot_predicates import robot_in_collision, robot_holds_body, blocking, is_body_in_gripper
-from semantic_world.robots.robot import Camera, ParallelGripper
+from semantic_world.robots.abstract_robot import Camera, ParallelGripper
 from semantic_world.robots.pr2 import PR2
 from semantic_world.testing import *
 from semantic_world.world import World

@@ -18,7 +18,7 @@ from semantic_world.spatial_computations.ik_solver import (
     UnreachableException,
 )
 from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.robots.robot import KinematicChain
+from semantic_world.robots.abstract_robot import KinematicChain
 from semantic_world.robots.tracy import Tracy
 from semantic_world.robots.pr2 import PR2
 from semantic_world.spatial_types.derivatives import Derivatives

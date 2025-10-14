@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from typing import Self
 
 from ..datastructures.prefixed_name import PrefixedName
-from ..robots.robot import (
+from ..robots.abstract_robot import (
     Neck,
     Finger,
     ParallelGripper,
@@ -13,10 +13,9 @@ from ..robots.robot import (
     Camera,
     FieldOfView,
     Torso,
-    HasNeck,
     AbstractRobot,
-    SpecifiesLeftRightArm,
 )
+from .robot_mixins import HasNeck, SpecifiesLeftRightArm
 from ..spatial_types import Quaternion, Vector3
 from ..world import World
 
