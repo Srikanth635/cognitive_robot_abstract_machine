@@ -168,10 +168,13 @@ def test_nested_with_blocks_illegal_state(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
 
     with world.modify_world():
-        connection = world.get_connection(l1, l2)
-        world.remove_connection(connection)
+        connection1 = world.get_connection(l1, l2)
+        world.remove_connection(connection1)
         with world.modify_world():
-            world.add_connection(connection)
+            connection2 = world.get_connection(r1, r2)
+            world.remove_connection(connection2)
+        world.add_connection(connection1)
+        world.add_connection(connection2)
 
 
 def test_compute_fk_connection6dof(world_setup):
