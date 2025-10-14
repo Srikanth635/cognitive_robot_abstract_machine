@@ -46,6 +46,18 @@ class DuplicateKinematicStructureEntityError(UsageError):
         super().__init__(msg)
 
 
+class SymbolManagerException(Exception):
+    pass
+
+
+class SymbolResolutionError(SymbolManagerException):
+    def __init__(self, symbol: Symbol, original_exception: Exception):
+        super().__init__(
+            f'Symbol "{symbol.name}" could not be resolved. '
+            f"({original_exception.__class__.__name__}: {str(original_exception)})"
+        )
+
+
 class SpatialTypesError(UsageError):
     pass
 
