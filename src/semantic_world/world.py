@@ -55,8 +55,9 @@ from .world_description.connections import (
     PassiveConnection,
     FixedConnection,
     Connection6DoF,
+    ActiveConnection1DOF,
 )
-from .world_description.connections import HasUpdateState, Has1DOFState
+from .world_description.connections import HasUpdateState
 from .world_description.degree_of_freedom import DegreeOfFreedom
 from .world_description.world_entity import (
     Connection,
@@ -1087,9 +1088,7 @@ class World:
             return matches[0]
         raise KeyError(f"KinematicStructureEntity with name {name} not found")
 
-    def get_body_by_name(
-        self, name: Union[str, PrefixedName]
-    ) -> Body:
+    def get_body_by_name(self, name: Union[str, PrefixedName]) -> Body:
         """
         Retrieves a Body from the list of bodies based on its name.
         If the input is of type `PrefixedName`, it checks whether the prefix is specified and looks for an
@@ -1659,7 +1658,7 @@ class World:
         self.notify_state_change()
 
     def set_positions_1DOF_connection(
-        self, new_state: Dict[Has1DOFState, float]
+        self, new_state: Dict[ActiveConnection1DOF, float]
     ) -> None:
         """
         Set the positions of 1DOF connections and notify the world of the state change.

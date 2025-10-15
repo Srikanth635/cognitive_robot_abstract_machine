@@ -547,12 +547,13 @@ def test_merge_with_pose_rotation(world_setup, pr2_world):
 def test_remove_connection(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
     connection = world.get_connection(l1, l2)
+    num_dofs = len(world.degrees_of_freedom)
     with world.modify_world():
         world.remove_connection(connection)
         world.remove_kinematic_structure_entity(l2)
     assert connection not in world.connections
-    # dof should still exist because it was a mimic connection.
-    assert connection.dof.name in world.state
+    # dof should still exist because it was a mimic connection, so the number didn't change.
+    assert num_dofs == len(world.degrees_of_freedom)
 
     with world.modify_world():
         world.remove_connection(world.get_connection(r1, r2))

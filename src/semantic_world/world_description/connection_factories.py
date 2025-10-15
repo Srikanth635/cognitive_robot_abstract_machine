@@ -152,7 +152,7 @@ class ActiveConnection1DOFFactory(ConnectionFactory[T]):
             axis=self.axis,
             multiplier=self.multiplier,
             offset=self.offset,
-            dof=world.get_degree_of_freedom_by_name(self.dof_name),
+            dof_name=self.dof_name,
             parent_T_connection_expression=self.parent_T_connection_expression,
             _world=world,
         )

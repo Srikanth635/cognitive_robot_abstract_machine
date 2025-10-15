@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass, field
 from typing_extensions import Dict, Any
 
@@ -87,3 +88,15 @@ class DegreeOfFreedom(WorldEntity, SubclassJSONSerializer):
             lower_limits=lower_limits,
             upper_limits=upper_limits,
         )
+
+    def __deepcopy__(self, memo):
+        result = DegreeOfFreedom(
+            lower_limits=deepcopy(self.lower_limits),
+            upper_limits=deepcopy(self.upper_limits),
+            name=self.name,
+            has_hardware_interface=self.has_hardware_interface,
+        )
+        result._world = self._world
+        # there can't be two symbols with the same name anyway
+        result.symbols = self.symbols
+        return result
