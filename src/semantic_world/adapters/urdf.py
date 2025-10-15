@@ -236,6 +236,7 @@ class URDFParser:
             )
             world.add_degree_of_freedom(dof)
 
+        assert joint.axis is not None, f"Joint axis is None for joint {joint.name}"
         result = connection_type(
             name=connection_name,
             parent=parent,
@@ -357,7 +358,7 @@ class URDFParser:
                 from ament_index_python.packages import get_package_share_directory
 
                 package_path = get_package_share_directory(package_name)
-            except ImportError:
+            except (ImportError, LookupError):
                 if self.package_resolver:
                     if package_name in self.package_resolver:
                         package_path = self.package_resolver[package_name]

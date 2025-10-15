@@ -2,6 +2,7 @@ import json
 import os
 import unittest
 from dataclasses import asdict
+from time import sleep
 
 import numpy as np
 from sqlalchemy import create_engine
@@ -295,6 +296,8 @@ class ProcTHORTestCase(unittest.TestCase):
                 "house_987654321.json",
             )
         ).parse()
+
+        assert world is not None
 
 
 if __name__ == "__main__":
