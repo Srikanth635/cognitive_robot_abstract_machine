@@ -18,7 +18,8 @@ class AlignPlanes(Task):
     tip_normal: cas.Vector3
     threshold: float = 0.01
     reference_velocity: float = 0.5
-    weight: Optional[str] = None
+    weight: float = WEIGHT_ABOVE_CA
+
     def __post_init__(self):
         """
         This goal will use the kinematic chain between tip and root to align tip_normal with goal_normal.
@@ -29,7 +30,9 @@ class AlignPlanes(Task):
         :param reference_velocity: rad/s
         :param weight:
         """
-        self.tip_V_tip_normal = god_map.world.transform(target_frame=self.tip_link, spatial_object=self.tip_normal)
+        self.tip_V_tip_normal = god_map.world.transform(
+            target_frame=self.tip_link, spatial_object=self.tip_normal
+        )
         self.tip_V_tip_normal.scale(1)
 
         self.root_V_root_normal = god_map.world.transform(

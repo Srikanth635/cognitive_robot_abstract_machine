@@ -21,6 +21,7 @@ class Pointing(Task):
     max_velocity: float = 0.3
     threshold: float = 0.01
     weight: float = WEIGHT_BELOW_CA
+
     def __post_init__(self):
         """
         Will orient pointing_axis at goal_point.
@@ -31,7 +32,9 @@ class Pointing(Task):
         :param max_velocity: rad/s
         :param weight:
         """
-        self.root_P_goal_point = god_map.world.transform(target_frame=self.root_link, spatial_object=self.goal_point).to_np()
+        self.root_P_goal_point = god_map.world.transform(
+            target_frame=self.root_link, spatial_object=self.goal_point
+        ).to_np()
 
         self.tip_V_pointing_axis = god_map.world.transform(
             target_frame=self.tip_link, spatial_object=self.pointing_axis
@@ -69,7 +72,7 @@ class Pointing(Task):
             weight=self.weight,
         )
         self.observation_expression = (
-            root_V_pointing_axis.angle_between(root_V_goal_axis) <= threshold
+            root_V_pointing_axis.angle_between(root_V_goal_axis) <= self.threshold
         )
 
 
@@ -83,6 +86,7 @@ class PointingCone(Task):
     max_velocity: float = 0.3
     threshold: float = 0.01
     weight: float = WEIGHT_BELOW_CA
+
     def __post_init__(self):
         """
         Will orient pointing_axis at goal_point.
@@ -93,7 +97,9 @@ class PointingCone(Task):
         :param max_velocity: rad/s
         :param weight:
         """
-        self.root_P_goal_point = god_map.world.transform(target_frame=self.root_link, spatial_object=self.goal_point).to_np()
+        self.root_P_goal_point = god_map.world.transform(
+            target_frame=self.root_link, spatial_object=self.goal_point
+        ).to_np()
 
         self.tip_V_pointing_axis = god_map.world.transform(
             target_frame=self.tip_link, spatial_object=self.pointing_axis
@@ -108,7 +114,7 @@ class PointingCone(Task):
             provider=lambda: self.root_P_goal_point,
         )
         root_P_goal_point.reference_frame = self.root_link
-        tip_V_pointing_axis = cas.Vector3(self.tip_V_pointing_axis)
+        tip_V_pointing_axis = cas.Vector3.from_iterable(self.tip_V_pointing_axis)
 
         root_V_goal_axis = root_P_goal_point - root_T_tip.to_position()
         root_V_goal_axis.scale(1)

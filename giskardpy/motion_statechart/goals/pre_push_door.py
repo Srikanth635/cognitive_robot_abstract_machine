@@ -8,6 +8,7 @@ from giskardpy.motion_statechart.tasks.task import WEIGHT_BELOW_CA, Task
 
 import numpy as np
 
+from semantic_world.world_description.connections import ActiveConnection1DOF
 from semantic_world.world_description.world_entity import Body
 
 
@@ -25,8 +26,8 @@ class PrePushDoor(Goal):
         """
         The objective is to push the object until desired rotation is reached
         """
-        object_joint_name = god_map.world.get_controlled_parent_connection(
-            self.door_object
+        object_joint_name = self.door_object.get_first_parent_connection_of_type(
+            ActiveConnection1DOF
         )
         object_V_object_rotation_axis = cas.Vector3(
             god_map.world.get_joint(object_joint_name).axis

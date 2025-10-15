@@ -15,26 +15,27 @@ from semantic_world.world_description.world_entity import Body, Connection
 
 @dataclass
 class Open(Goal):
+    """
+    Open a container in an environment.
+    Only works with the environment was added as urdf.
+    Assumes that a handle has already been grasped.
+    Can only handle containers with 1 dof, e.g. drawers or doors.
+    """
+
     tip_link: Body
+    """end effector that is grasping the handle"""
+
     environment_link: Body
+    """name of the handle that was grasped"""
+
     goal_joint_state: Optional[float] = None
-    max_velocity: float = 100
+    """goal state for the container. default is maximum joint state."""
+
     weight: float = WEIGHT_ABOVE_CA
 
     def __post_init__(self):
-        """
-        Open a container in an environment.
-        Only works with the environment was added as urdf.
-        Assumes that a handle has already been grasped.
-        Can only handle containers with 1 dof, e.g. drawers or doors.
-        :param tip_link: end effector that is grasping the handle
-        :param environment_link: name of the handle that was grasped
-        :param goal_joint_state: goal state for the container. default is maximum joint state.
-        :param weight:
-        """
-        self.handle_link = self.environment_link
-        self.connection: Union[ActiveConnection1DOF, Connection] = (
-            god_map.world.get_controlled_parent_connection(self.handle_link)
+        self.connection = self.environment_link.get_first_parent_connection_of_type(
+            ActiveConnection1DOF
         )
 
         max_position = self.connection.dof.upper_limits.position
@@ -43,7 +44,7 @@ class Open(Goal):
         else:
             self.goal_joint_state = min(max_position, self.goal_joint_state)
 
-        goal_state = {self.connection.name: self.goal_joint_state}
+        goal_state = {self.connection: self.goal_joint_state}
         hinge_goal = JointPositionList(
             goal_state=goal_state, name=f"{self.name}/hinge", weight=self.weight
         )
@@ -54,7 +55,7 @@ class Open(Goal):
         )
 
         hold_handle = CartesianPose(
-            root_link=self.handle_link,
+            root_link=self.environment_link,
             tip_link=self.tip_link,
             name=f"{self.name}/hold handle",
             goal_pose=handle_pose,
@@ -68,13 +69,13 @@ class Open(Goal):
 
 @dataclass
 class Close(Open):
+    """
+    Same as Open, but will use minimum value as default for goal_joint_state
+    """
 
     def __post_init__(self):
-        """
-        Same as Open, but will use minimum value as default for goal_joint_state
-        """
-        self.connection: Union[ActiveConnection1DOF, Connection] = (
-            god_map.world.get_controlled_parent_connection(self.handle_link)
+        self.connection = self.environment_link.get_first_parent_connection_of_type(
+            ActiveConnection1DOF
         )
         min_position = self.connection.dof.lower_limits.position
         if self.goal_joint_state is None:
