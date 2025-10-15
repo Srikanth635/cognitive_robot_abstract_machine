@@ -32,7 +32,12 @@ from typing_extensions import (
 import casadi as ca
 from scipy import sparse as sp
 
-from ..exceptions import HasFreeSymbolsError, NotSquareMatrixError, WrongDimensionsError
+from ..exceptions import (
+    HasFreeSymbolsError,
+    NotSquareMatrixError,
+    WrongDimensionsError,
+    SpatialTypesError,
+)
 
 if TYPE_CHECKING:
     from ..world_description.world_entity import KinematicStructureEntity, Connection
@@ -1831,6 +1836,23 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMi
         :return: A `TransformationMatrix` instance initialized with the provided
             parameters or default values.
         """
+        if reference_frame is None:
+            point_ref_frame = point.reference_frame if point is not None else None
+            rotation_ref_frame = (
+                rotation_matrix.reference_frame if rotation_matrix is not None else None
+            )
+
+            if point_ref_frame is not None and rotation_ref_frame is not None:
+                if point_ref_frame != rotation_ref_frame:
+                    raise SpatialTypesError(
+                        f"Reference frames of point ({point_ref_frame}) and rotation matrix ({rotation_ref_frame}) must be equal"
+                    )
+                reference_frame = point_ref_frame
+            elif point_ref_frame is not None:
+                reference_frame = point_ref_frame
+            elif rotation_ref_frame is not None:
+                reference_frame = rotation_ref_frame
+
         if rotation_matrix is None:
             a_T_b = cls(reference_frame=reference_frame, child_frame=child_frame)
         else:
@@ -2041,7 +2063,7 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMi
         )
 
     def to_rotation_matrix(self) -> RotationMatrix:
-        return RotationMatrix(data=self)
+        return RotationMatrix(data=self, reference_frame=self.reference_frame)
 
     def to_quaternion(self) -> Quaternion:
         return Quaternion.from_rotation_matrix(self)
@@ -2258,7 +2280,8 @@ class RotationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMixin):
         - y and z provided: x = y × z
         - x, y, and z provided: all three used directly
         """
-
+        if x is None and y is None and z is None:
+            raise SpatialTypesError("from_vectors requires at least two vectors")
         if x is not None and y is not None and z is None:
             z = x.cross(y)
         elif x is not None and y is None and z is not None:
