@@ -1866,23 +1866,6 @@ class World:
 
         return visitor.bodies
 
-    @lru_cache(maxsize=None)
-    def get_controlled_parent_connection(
-        self, body: KinematicStructureEntity
-    ) -> Connection:
-        """
-        Traverse the chain up until a controlled active connection is found.
-        :param body: The body where the search starts.
-        :return: The controlled active connection.
-        """
-        if body == self.root:
-            raise ValueError(
-                f"Cannot get controlled parent connection for root body {self.root.name}."
-            )
-        if body.parent_connection in self.controlled_connections:
-            return body.parent_connection
-        return self.get_controlled_parent_connection(body.parent_body)
-
     def compute_chain_reduced_to_controlled_joints(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> Tuple[KinematicStructureEntity, KinematicStructureEntity]:

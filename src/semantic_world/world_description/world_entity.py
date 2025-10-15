@@ -136,6 +136,22 @@ class KinematicStructureEntity(WorldEntity, SubclassJSONSerializer, ABC):
         """
         return self._world.compute_parent_kinematic_structure_entity(self)
 
+    def get_first_parent_connection_of_type(
+        self, connection_type: Type[GenericConnection]
+    ) -> GenericConnection:
+        """
+        Traverse the chain up until an active connection is found.
+        """
+        if self == self._world.root:
+            raise ValueError(
+                f"Cannot get controlled parent connection for root body {self._world.root.name}."
+            )
+        if isinstance(self.parent_connection, connection_type):
+            return self.parent_connection
+        return self.parent_connection.parent.get_first_parent_connection_of_type(
+            connection_type
+        )
+
 
 @dataclass
 class Body(KinematicStructureEntity, SubclassJSONSerializer):
@@ -748,6 +764,9 @@ class Connection(WorldEntity):
             dofs.update(set(self.passive_dofs))
 
         return dofs
+
+
+GenericConnection = TypeVar("GenericConnection", bound=Connection)
 
 
 def _is_entity_view_or_iterable(
