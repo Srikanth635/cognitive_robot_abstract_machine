@@ -41,7 +41,7 @@ from .exceptions import (
     AlreadyBelongsToAWorldError,
     DuplicateKinematicStructureEntityError,
 )
-from .robots import AbstractRobot
+from .robots.abstract_robot import AbstractRobot
 from .spatial_computations.forward_kinematics import ForwardKinematicsVisitor
 from .spatial_computations.ik_solver import InverseKinematicsSolver
 from .spatial_computations.raytracer import RayTracer
@@ -1066,7 +1066,7 @@ class World:
 
     def get_body_by_name(
         self, name: Union[str, PrefixedName]
-    ) -> KinematicStructureEntity:
+    ) -> Body:
         """
         Retrieves a Body from the list of bodies based on its name.
         If the input is of type `PrefixedName`, it checks whether the prefix is specified and looks for an
