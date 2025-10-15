@@ -17,13 +17,21 @@ from .robot_mixins import HasNeck, SpecifiesLeftRightArm
 from ..spatial_types import Quaternion, Vector3
 from ..world import World
 
+
 @dataclass
 class Tracy(AbstractRobot, SpecifiesLeftRightArm, HasNeck):
     """
-    Represents the TraceBot robot.
+    Represents two UR10e Arms on a table, with a pole between them holding a small camera.
+     Example can be found at: https://vib.ai.uni-bremen.de/page/comingsoon/the-tracebot-laboratory/
     """
+
     def __hash__(self):
-        return hash(self.name)
+        return hash(
+            tuple(
+                [self.__class__]
+                + sorted([kse.name for kse in self.kinematic_structure_entities])
+            )
+        )
 
     def load_srdf(self): ...
 
@@ -46,34 +54,22 @@ class Tracy(AbstractRobot, SpecifiesLeftRightArm, HasNeck):
         # Create left arm
         left_gripper_thumb = Finger(
             name=PrefixedName("left_gripper_thumb", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "left_robotiq_85_left_knuckle_link"
-            ),
-            tip=world.get_body_by_name(
-                "left_robotiq_85_left_finger_tip_link"
-            ),
+            root=world.get_body_by_name("left_robotiq_85_left_knuckle_link"),
+            tip=world.get_body_by_name("left_robotiq_85_left_finger_tip_link"),
             _world=world,
         )
 
         left_gripper_finger = Finger(
             name=PrefixedName("left_gripper_finger", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "left_robotiq_85_right_knuckle_link"
-            ),
-            tip=world.get_body_by_name(
-                "left_robotiq_85_right_finger_tip_link"
-            ),
+            root=world.get_body_by_name("left_robotiq_85_right_knuckle_link"),
+            tip=world.get_body_by_name("left_robotiq_85_right_finger_tip_link"),
             _world=world,
         )
 
         left_gripper = ParallelGripper(
             name=PrefixedName("left_gripper", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "left_robotiq_85_base_link"
-            ),
-            tool_frame=world.get_body_by_name(
-                "l_gripper_tool_frame"
-            ),
+            root=world.get_body_by_name("left_robotiq_85_base_link"),
+            tool_frame=world.get_body_by_name("l_gripper_tool_frame"),
             front_facing_orientation=Quaternion(0.5, 0.5, 0.5, 0.5),
             front_facing_axis=Vector3(0, 0, 1),
             thumb=left_gripper_thumb,
@@ -92,32 +88,20 @@ class Tracy(AbstractRobot, SpecifiesLeftRightArm, HasNeck):
 
         right_gripper_thumb = Finger(
             name=PrefixedName("right_gripper_thumb", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "right_robotiq_85_left_knuckle_link"
-            ),
-            tip=world.get_body_by_name(
-                "right_robotiq_85_left_finger_tip_link"
-            ),
+            root=world.get_body_by_name("right_robotiq_85_left_knuckle_link"),
+            tip=world.get_body_by_name("right_robotiq_85_left_finger_tip_link"),
             _world=world,
         )
         right_gripper_finger = Finger(
             name=PrefixedName("right_gripper_finger", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "right_robotiq_85_right_knuckle_link"
-            ),
-            tip=world.get_body_by_name(
-                "right_robotiq_85_right_finger_tip_link"
-            ),
+            root=world.get_body_by_name("right_robotiq_85_right_knuckle_link"),
+            tip=world.get_body_by_name("right_robotiq_85_right_finger_tip_link"),
             _world=world,
         )
         right_gripper = ParallelGripper(
             name=PrefixedName("right_gripper", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "right_robotiq_85_base_link"
-            ),
-            tool_frame=world.get_body_by_name(
-                "r_gripper_tool_frame"
-            ),
+            root=world.get_body_by_name("right_robotiq_85_base_link"),
+            tool_frame=world.get_body_by_name("r_gripper_tool_frame"),
             front_facing_orientation=Quaternion(0.5, 0.5, 0.5, 0.5),
             front_facing_axis=Vector3(0, 0, 1),
             thumb=right_gripper_thumb,

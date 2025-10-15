@@ -24,12 +24,19 @@ class HSRB(AbstractRobot, HasArms, HasNeck):
     Class that describes the Human Support Robot variant B (https://upmroboticclub.wordpress.com/robot/).
     """
 
+    def __hash__(self):
+        return hash(
+            tuple(
+                [self.__class__]
+                + sorted([kse.name for kse in self.kinematic_structure_entities])
+            )
+        )
+
     def load_srdf(self):
         """
         Loads the SRDF file for the PR2 robot, if it exists.
         """
         ...
-
 
     @classmethod
     def from_world(cls, world: World) -> Self:
@@ -132,7 +139,12 @@ class HSRB(AbstractRobot, HasArms, HasNeck):
 
         neck = Neck(
             name=PrefixedName("neck", prefix=hsrb.name.name),
-            sensors={head_center_camera, head_r_camera, head_l_camera, head_rgbd_camera},
+            sensors={
+                head_center_camera,
+                head_r_camera,
+                head_l_camera,
+                head_rgbd_camera,
+            },
             root=world.get_body_by_name("head_pan_link"),
             tip=world.get_body_by_name("head_tilt_link"),
             _world=world,

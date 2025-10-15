@@ -28,7 +28,12 @@ class PR2(AbstractRobot, SpecifiesLeftRightArm, HasNeck):
     """
 
     def __hash__(self):
-        return hash(self.name)
+        return hash(
+            tuple(
+                [self.__class__]
+                + sorted([kse.name for kse in self.kinematic_structure_entities])
+            )
+        )
 
     def load_srdf(self):
         """
@@ -63,32 +68,22 @@ class PR2(AbstractRobot, SpecifiesLeftRightArm, HasNeck):
         # Create left arm
         left_gripper_thumb = Finger(
             name=PrefixedName("left_gripper_thumb", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "l_gripper_l_finger_link"
-            ),
-            tip=world.get_body_by_name(
-                "l_gripper_l_finger_tip_link"
-            ),
+            root=world.get_body_by_name("l_gripper_l_finger_link"),
+            tip=world.get_body_by_name("l_gripper_l_finger_tip_link"),
             _world=world,
         )
 
         left_gripper_finger = Finger(
             name=PrefixedName("left_gripper_finger", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "l_gripper_r_finger_link"
-            ),
-            tip=world.get_body_by_name(
-                "l_gripper_r_finger_tip_link"
-            ),
+            root=world.get_body_by_name("l_gripper_r_finger_link"),
+            tip=world.get_body_by_name("l_gripper_r_finger_tip_link"),
             _world=world,
         )
 
         left_gripper = ParallelGripper(
             name=PrefixedName("left_gripper", prefix=robot.name.name),
             root=world.get_body_by_name("l_gripper_palm_link"),
-            tool_frame=world.get_body_by_name(
-                "l_gripper_tool_frame"
-            ),
+            tool_frame=world.get_body_by_name("l_gripper_tool_frame"),
             front_facing_orientation=Quaternion(0, 0, 0, 1),
             front_facing_axis=Vector3(1, 0, 0),
             thumb=left_gripper_thumb,
@@ -108,30 +103,20 @@ class PR2(AbstractRobot, SpecifiesLeftRightArm, HasNeck):
         # Create right arm
         right_gripper_thumb = Finger(
             name=PrefixedName("right_gripper_thumb", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "r_gripper_l_finger_link"
-            ),
-            tip=world.get_body_by_name(
-                "r_gripper_l_finger_tip_link"
-            ),
+            root=world.get_body_by_name("r_gripper_l_finger_link"),
+            tip=world.get_body_by_name("r_gripper_l_finger_tip_link"),
             _world=world,
         )
         right_gripper_finger = Finger(
             name=PrefixedName("right_gripper_finger", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "r_gripper_r_finger_link"
-            ),
-            tip=world.get_body_by_name(
-                "r_gripper_r_finger_tip_link"
-            ),
+            root=world.get_body_by_name("r_gripper_r_finger_link"),
+            tip=world.get_body_by_name("r_gripper_r_finger_tip_link"),
             _world=world,
         )
         right_gripper = ParallelGripper(
             name=PrefixedName("right_gripper", prefix=robot.name.name),
             root=world.get_body_by_name("r_gripper_palm_link"),
-            tool_frame=world.get_body_by_name(
-                "r_gripper_tool_frame"
-            ),
+            tool_frame=world.get_body_by_name("r_gripper_tool_frame"),
             front_facing_orientation=Quaternion(0, 0, 0, 1),
             front_facing_axis=Vector3(1, 0, 0),
             thumb=right_gripper_thumb,
@@ -151,9 +136,7 @@ class PR2(AbstractRobot, SpecifiesLeftRightArm, HasNeck):
         # Create camera and neck
         camera = Camera(
             name=PrefixedName("wide_stereo_optical_frame", prefix=robot.name.name),
-            root=world.get_body_by_name(
-                "wide_stereo_optical_frame"
-            ),
+            root=world.get_body_by_name("wide_stereo_optical_frame"),
             forward_facing_axis=Vector3(0, 0, 1),
             field_of_view=FieldOfView(horizontal_angle=0.99483, vertical_angle=0.75049),
             minimal_height=1.27,
