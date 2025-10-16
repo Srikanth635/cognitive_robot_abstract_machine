@@ -68,7 +68,7 @@ You can query for components of the created furniture using EQL. For example, ge
 ```{code-cell} ipython2
 with symbolic_mode():
     handles = an(entity(let(Handle, world.views)))
-print(*handles.evaluate(), sep="/n")
+print(*handles.evaluate(), sep="\n")
 ```
 
 ## Add another handle and filter by context

@@ -353,8 +353,19 @@ class InFrontOf(SpatialRelation):
 
 @dataclass(frozen=True)
 class ContainsType(Predicate):
-    iterable: Iterable
-    obj_type: Type
+    """
+    Predicate that checks if any object in the iterable is of the given type.
+    """
 
-    def __call__(self):
+    iterable: Iterable
+    """
+    Iterable to check for objects of the given type.
+    """
+
+    obj_type: Type
+    """
+    Object type to check for.
+    """
+
+    def __call__(self) -> bool:
         return any(isinstance(obj, self.obj_type) for obj in self.iterable)
