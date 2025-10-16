@@ -1837,21 +1837,7 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMi
             parameters or default values.
         """
         if reference_frame is None:
-            point_ref_frame = point.reference_frame if point is not None else None
-            rotation_ref_frame = (
-                rotation_matrix.reference_frame if rotation_matrix is not None else None
-            )
-
-            if point_ref_frame is not None and rotation_ref_frame is not None:
-                if point_ref_frame != rotation_ref_frame:
-                    raise SpatialTypesError(
-                        f"Reference frames of point ({point_ref_frame}) and rotation matrix ({rotation_ref_frame}) must be equal"
-                    )
-                reference_frame = point_ref_frame
-            elif point_ref_frame is not None:
-                reference_frame = point_ref_frame
-            elif rotation_ref_frame is not None:
-                reference_frame = rotation_ref_frame
+            reference_frame = cls._ensure_consistent_frame([point, rotation_matrix])
 
         if rotation_matrix is None:
             a_T_b = cls(reference_frame=reference_frame, child_frame=child_frame)
@@ -1867,6 +1853,41 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMi
             a_T_b[1, 3] = point.y
             a_T_b[2, 3] = point.z
         return a_T_b
+
+    @staticmethod
+    def _ensure_consistent_frame(
+        spatial_objects: List[Optional[ReferenceFrameMixin]],
+    ) -> Optional[KinematicStructureEntity]:
+        """
+        Ensures that all provided spatial objects have a consistent reference frame. If a mismatch
+        in the reference frames is detected among the non-null spatial objects, an exception is
+        raised. If the list contains only null objects, None is returned.
+
+        This method is primarily used to validate the reference frames of spatial objects before
+        proceeding with further operations.
+
+        :param spatial_objects: A list containing zero or more spatial objects, which can either
+            be instances of ReferenceFrameMixin or None.
+        :return: The common reference frame of the spatial objects if consistent, or None if no
+            valid reference frame exists.
+
+        :raises SpatialTypesError: Raised when the reference frames of provided input spatial
+            objects are inconsistent.
+        """
+        reference_frame = None
+        for spatial_object in spatial_objects:
+            if (
+                spatial_object is not None
+                and spatial_object.reference_frame is not None
+            ):
+                if reference_frame is None:
+                    reference_frame = spatial_object.reference_frame
+                    continue
+                if reference_frame != spatial_object.reference_frame:
+                    raise SpatialTypesError(
+                        f"Reference frames of input parameters don't match ({reference_frame} != {spatial_object.reference_frame})."
+                    )
+        return reference_frame
 
     @classmethod
     def from_xyz_rpy(
