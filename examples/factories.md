@@ -92,6 +92,8 @@ rt.scene.show("jupyter")
 With two handles in the world, the simple handle query yields multiple results:
 
 ```{code-cell} ipython2
+with symbolic_mode():
+    handles = an(entity(let(Handle, world.views)))
 print(*handles.evaluate(), sep="\n")
 ```
 
