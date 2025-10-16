@@ -60,7 +60,7 @@ world = World()
 with world.modify_world():
     root = Body(name=PrefixedName("root"))
 
-    # Our first apple is just a body with a spherical gerometry
+    # Our first apple
     apple_body = Body(name=PrefixedName("apple_body"))
     sphere = Sphere(radius=0.15, origin=TransformationMatrix(reference_frame=apple_body))
     apple_body.collision = [sphere]
@@ -69,7 +69,7 @@ with world.modify_world():
     world.add_connection(Connection6DoF(parent=root, child=apple_body, _world=world))
     world.add_view(Apple(body=apple_body, name=PrefixedName("apple1")))
 
-    # Second apple
+    # Our second apple
     apple_body_2 = Body(name=PrefixedName("apple_body_2"))
     sphere2 = Sphere(radius=0.15, origin=TransformationMatrix(reference_frame=apple_body_2))
     apple_body_2.collision = [sphere2]
@@ -135,8 +135,8 @@ you mean. Interoperability comes for free without hidden formats or conversion i
 
 ---
 
-We can also the attributes of our Views into our reasoning.
-To demonstrate this, let's first create another fruitbox, but which is empty this time.
+We can incorporate the attributes of our Views into our reasoning.
+To demonstrate this, let's first create another FruitBox, but which is empty this time.
 
 ```{code-cell} ipython2
 with world.modify_world():

@@ -41,12 +41,14 @@ from semantic_world.views.factories import (
 )
 from semantic_world.views.views import Drawer, Handle
 from semantic_world.spatial_computations.raytracer import RayTracer
+from semantic_world.world_description.geometry import Scale
+
 
 # Build a simple drawer with a centered handle
 world = DrawerFactory(
     name=PrefixedName("drawer"),
-    container_factory=ContainerFactory(name=PrefixedName("container"), direction=Direction.Z),
-    handle_factory=HandleFactory(name=PrefixedName("handle")),
+    container_factory=ContainerFactory(name=PrefixedName("container"), direction=Direction.Z, scale=Scale(0.2, 0.4, 0.2),),
+    handle_factory=HandleFactory(name=PrefixedName("handle"), scale=Scale(0.05, 0.1, 0.02)),
     semantic_position=SemanticPositionDescription(
         horizontal_direction_chain=[
             HorizontalSemanticDirection.FULLY_CENTER,
@@ -90,7 +92,7 @@ rt.scene.show("jupyter")
 With two handles in the world, the simple handle query yields multiple results:
 
 ```{code-cell} ipython2
-print(*handles.evaluate(), sep="\n")
+print(list(handles.evaluate()))
 ```
 
 We can refine the query to get only the handle that belongs to a drawer:
