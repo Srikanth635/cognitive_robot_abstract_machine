@@ -15,6 +15,7 @@ parts:
         - file: examples/world_structure_manipulation
         - file: examples/regions
         - file: examples/views
+        - file: examples/factories
         - file: examples/persistence_of_annotated_worlds
 - caption: Developer Guide
   chapters:

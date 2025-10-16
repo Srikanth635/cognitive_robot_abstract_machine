@@ -1,6 +1,5 @@
 from __future__ import annotations
 from abc import ABC
-from copy import deepcopy
 from dataclasses import dataclass
 
 import numpy as np
@@ -9,7 +8,7 @@ from entity_query_language import (
     Predicate,
 )
 from random_events.interval import Interval
-from typing_extensions import List, TYPE_CHECKING
+from typing_extensions import List, TYPE_CHECKING, Iterable, Type
 
 from ..collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
 from ..datastructures.prefixed_name import PrefixedName
@@ -350,3 +349,12 @@ class InFrontOf(SpatialRelation):
 
     def __call__(self) -> bool:
         return self._signed_distance_along_direction(0) > 0.0
+
+
+@dataclass(frozen=True)
+class ContainsType(Predicate):
+    iterable: Iterable
+    obj_type: Type
+
+    def __call__(self):
+        return any(isinstance(obj, self.obj_type) for obj in self.iterable)
