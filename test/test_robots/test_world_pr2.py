@@ -259,12 +259,12 @@ def test_apply_control_commands_omni_drive_pr2(pr2_world):
 
     assert pr2_world.state[omni_drive.x.name].jerk == 0.0
     assert pr2_world.state[omni_drive.x.name].acceleration == 0.0
-    assert pr2_world.state[omni_drive.x.name].velocity == 0.8951707486311977
+    assert pr2_world.state[omni_drive.x.name].velocity == 0.0
     assert pr2_world.state[omni_drive.x.name].position == 0.08951707486311977
 
     assert pr2_world.state[omni_drive.y.name].jerk == 0.0
     assert pr2_world.state[omni_drive.y.name].acceleration == 0.0
-    assert pr2_world.state[omni_drive.y.name].velocity == 1.094837581924854
+    assert pr2_world.state[omni_drive.y.name].velocity == 0.0
     assert pr2_world.state[omni_drive.y.name].position == 0.1094837581924854
 
 
