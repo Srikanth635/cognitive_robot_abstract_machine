@@ -172,9 +172,21 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
         A reference to the Degree of Freedom associated with this connection, WITH multiplier and offset applied.
         """
         result = deepcopy(self.raw_dof)
-        result.lower_limits = result.lower_limits * self.multiplier + self.offset
-        result.upper_limits = result.upper_limits * self.multiplier + self.offset
-        result.symbols = result.symbols * self.multiplier + self.offset
+        result.symbols = result.symbols * self.multiplier
+        if self.multiplier < 0:
+            # if multiplier is negative, we need to swap the limits
+            result.lower_limits, result.upper_limits = (
+                result.upper_limits,
+                result.lower_limits,
+            )
+        result.lower_limits = result.lower_limits * self.multiplier
+        result.upper_limits = result.upper_limits * self.multiplier
+
+        result.symbols.position += self.offset
+        if result.lower_limits.position is not None:
+            result.lower_limits.position = result.lower_limits.position + self.offset
+        if result.upper_limits.position is not None:
+            result.upper_limits.position = result.upper_limits.position + self.offset
         return result
 
     @property

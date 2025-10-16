@@ -106,6 +106,17 @@ class DegreeOfFreedom(WorldEntity, SubclassJSONSerializer):
         new_lower_limits: DerivativeMap[float],
         new_upper_limits: DerivativeMap[float],
     ):
+        """
+        Overwrites the degree-of-freedom (DOF) limits for a range of derivatives. This updates
+        lower and upper limits based on the given new limits. For each derivative, if the
+        new limit is provided and it is more restrictive than the original limit, the limit
+        will be updated accordingly.
+
+        :param new_lower_limits: A mapping of new lower limits for the specified derivatives.
+            If a new lower limit is None, no change is applied for that derivative.
+        :param new_upper_limits: A mapping of new upper limits for the specified derivatives.
+            If a new upper limit is None, no change is applied for that derivative.
+        """
         for derivative in Derivatives.range(Derivatives.position, Derivatives.jerk):
             if new_lower_limits.data[derivative] is not None:
                 if self.lower_limits.data[derivative] is None:

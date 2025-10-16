@@ -443,6 +443,18 @@ class AbstractRobot(RootedView, ABC):
         self,
         new_limits: DefaultDict[ActiveConnection1DOF, float],
     ):
+        """
+        Convenience method for tightening the velocity limits of all one degree-of-freedom (1DOF)
+        active connections in the system.
+
+        The method iterates through all connections of type `ActiveConnection1DOF`
+        and configures their velocity limits by overwriting the existing
+        lower and upper limit values with the provided ones.
+
+        :param new_limits: A dictionary linking 1DOF connections to their corresponding
+            new velocity limits. The keys are of type `ActiveConnection1DOF`, and the
+            values represent the new velocity limits specific to each connection.
+        """
         for connection in self._world.get_connections_by_type(ActiveConnection1DOF):
             connection.raw_dof._overwrite_dof_limits(
                 new_lower_limits=DerivativeMap(
