@@ -315,3 +315,21 @@ class SetDofHasHardwareInterface(WorldModelModification):
         return cls(
             degree_of_freedom_names=degree_of_freedom_names, value=kwargs["value"]
         )
+
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            **super().to_json(),
+            "degree_of_freedom_names": [
+                dof.to_json() for dof in self.degree_of_freedom_names
+            ],
+            "value": self.value,
+        }
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self:
+        return cls(
+            degree_of_freedom_names=[
+                PrefixedName.from_json(dof) for dof in data["degree_of_freedom_names"]
+            ],
+            value=data["value"],
+        )
