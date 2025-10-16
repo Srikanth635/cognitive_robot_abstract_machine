@@ -16,12 +16,15 @@ from semantic_world.adapters.ros.world_synchronizer import (
 from semantic_world.adapters.urdf import URDFParser
 from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.orm.ormatic_interface import Base, WorldMappingDAO
+from semantic_world.spatial_types import Vector3
 from semantic_world.testing import rclpy_node
 from semantic_world.utils import get_semantic_world_directory_root
 from semantic_world.world import World
 from semantic_world.world_description.connections import (
     Connection6DoF,
     FixedConnection,
+    ActiveConnection1DOF,
+    PrismaticConnection,
 )
 from semantic_world.world_description.world_entity import Body
 
@@ -293,6 +296,52 @@ def test_callback_pausing(rclpy_node):
     assert len(w2.kinematic_structure_entities) == 2
     assert len(w1.connections) == 1
     assert len(w2.connections) == 1
+
+
+def test_ChangeDifHasHardwareInterface(rclpy_node):
+
+    w1 = World(name="w1")
+    w2 = World(name="w2")
+
+    synchronizer_1 = ModelSynchronizer(
+        node=rclpy_node,
+        world=w1,
+    )
+    synchronizer_2 = ModelSynchronizer(
+        node=rclpy_node,
+        world=w2,
+    )
+
+    with w1.modify_world():
+        body1 = Body(name=PrefixedName("b1"))
+        body2 = Body(name=PrefixedName("b2"))
+        w1.add_kinematic_structure_entity(body1)
+        w1.add_kinematic_structure_entity(body2)
+        connection = PrismaticConnection(
+            parent=body1, child=body2, _world=w1, axis=Vector3(1, 1, 1)
+        )
+        w1.add_connection(connection)
+    assert len(w1.kinematic_structure_entities) == 2
+    assert len(w1.connections) == 1
+
+    time.sleep(0.2)
+    assert len(w1.kinematic_structure_entities) == 2
+    assert len(w2.kinematic_structure_entities) == 2
+    assert len(w2.connections) == 1
+    assert not w2.connections[0].dof.has_hardware_interface
+    assert not w2.connections[0].dof.has_hardware_interface
+
+    assert w2.get_kinematic_structure_entity_by_name("b2")
+
+    with w1.modify_world():
+        w1.set_dofs_has_hardware_interface(w1.degrees_of_freedom, True)
+
+    time.sleep(0.2)
+    assert w1.connections[0].dof.has_hardware_interface
+    assert w2.connections[0].dof.has_hardware_interface
+
+    synchronizer_1.close()
+    synchronizer_2.close()
 
 
 if __name__ == "__main__":
