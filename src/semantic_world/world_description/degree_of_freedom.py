@@ -100,3 +100,30 @@ class DegreeOfFreedom(WorldEntity, SubclassJSONSerializer):
         # there can't be two symbols with the same name anyway
         result.symbols = self.symbols
         return result
+
+    def _overwrite_dof_limits(
+        self,
+        new_lower_limits: DerivativeMap[float],
+        new_upper_limits: DerivativeMap[float],
+    ):
+        for derivative in Derivatives.range(Derivatives.position, Derivatives.jerk):
+            if new_lower_limits.data[derivative] is not None:
+                if self.lower_limits.data[derivative] is None:
+                    self.lower_limits.data[derivative] = new_lower_limits.data[
+                        derivative
+                    ]
+                else:
+                    self.lower_limits.data[derivative] = max(
+                        new_lower_limits.data[derivative],
+                        self.lower_limits.data[derivative],
+                    )
+            if new_upper_limits.data[derivative] is not None:
+                if self.upper_limits.data[derivative] is None:
+                    self.upper_limits.data[derivative] = new_upper_limits.data[
+                        derivative
+                    ]
+                else:
+                    self.upper_limits.data[derivative] = min(
+                        new_upper_limits.data[derivative],
+                        self.upper_limits.data[derivative],
+                    )

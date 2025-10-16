@@ -10,13 +10,19 @@ from typing_extensions import (
     TYPE_CHECKING,
     Optional,
     Self,
+    DefaultDict,
 )
 
+from ..spatial_types.derivatives import DerivativeMap
 from ..spatial_types.spatial_types import (
     Vector3,
     Quaternion,
 )
-from ..world_description.connections import ActiveConnection, OmniDrive
+from ..world_description.connections import (
+    ActiveConnection,
+    OmniDrive,
+    ActiveConnection1DOF,
+)
 from ..world_description.world_entity import (
     Body,
     RootedView,
@@ -433,6 +439,20 @@ class AbstractRobot(RootedView, ABC):
         except AttributeError:
             pass
 
+    def tighten_dof_velocity_limits_of_1dof_connections(
+        self,
+        new_limits: DefaultDict[ActiveConnection1DOF, float],
+    ):
+        for connection in self._world.get_connections_by_type(ActiveConnection1DOF):
+            connection.raw_dof._overwrite_dof_limits(
+                new_lower_limits=DerivativeMap(
+                    [None, -new_limits[connection], None, None]
+                ),
+                new_upper_limits=DerivativeMap(
+                    [None, new_limits[connection], None, None]
+                ),
+            )
+
     def add_manipulator(self, manipulator: Manipulator):
         """
         Adds a manipulator to the robot's collection of manipulators.
@@ -477,5 +497,3 @@ class AbstractRobot(RootedView, ABC):
             self.sensor_chains.add(kinematic_chain)
         self._views.add(kinematic_chain)
         kinematic_chain.assign_to_robot(self)
-
-

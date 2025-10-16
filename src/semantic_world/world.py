@@ -65,6 +65,7 @@ from .world_description.world_entity import (
     KinematicStructureEntity,
     Region,
     GenericKinematicStructureEntity,
+    GenericConnection,
     CollisionCheckingConfig,
     Body,
 )
@@ -1031,8 +1032,8 @@ class World:
         return self.kinematic_structure.get_edge_data(parent.index, child.index)
 
     def get_connections_by_type(
-        self, connection_type: Union[Type[Connection], Tuple[Type[Connection], ...]]
-    ) -> List[Connection]:
+        self, connection_type: Type[GenericConnection]
+    ) -> List[GenericConnection]:
         return [c for c in self.connections if isinstance(c, connection_type)]
 
     def clear(self):
