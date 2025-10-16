@@ -16,6 +16,7 @@ from semantic_world.exceptions import (
     DuplicateViewError,
     ViewNotFoundError,
     DuplicateKinematicStructureEntityError,
+    UsageError,
 )
 from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.spatial_types.derivatives import Derivatives, DerivativeMap
@@ -733,6 +734,11 @@ def test_overwrite_dof_limits_mimic(world_setup):
     )
 
     new_limits = DerivativeMap([0.69, 0.42, 1337, 23])
+
+    with pytest.raises(UsageError):
+        mimic_connection.dof._overwrite_dof_limits(
+            new_lower_limits=new_limits * -1, new_upper_limits=new_limits
+        )
 
     mimic_connection.raw_dof._overwrite_dof_limits(
         new_lower_limits=new_limits * -1, new_upper_limits=new_limits

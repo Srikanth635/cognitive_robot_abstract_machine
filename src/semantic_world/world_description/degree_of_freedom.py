@@ -7,6 +7,7 @@ from typing_extensions import Dict, Any
 from random_events.utils import SubclassJSONSerializer
 
 from ..datastructures.prefixed_name import PrefixedName
+from ..exceptions import UsageError
 from ..spatial_types import spatial_types as cas
 from ..spatial_types.derivatives import Derivatives, DerivativeMap
 from ..spatial_types.symbol_manager import symbol_manager
@@ -117,6 +118,10 @@ class DegreeOfFreedom(WorldEntity, SubclassJSONSerializer):
         :param new_upper_limits: A mapping of new upper limits for the specified derivatives.
             If a new upper limit is None, no change is applied for that derivative.
         """
+        if not isinstance(self.symbols.position, cas.Symbol):
+            raise UsageError(
+                "Cannot overwrite limits of mimic DOFs, use .raw_dof._overwrite_dof_limits instead."
+            )
         for derivative in Derivatives.range(Derivatives.position, Derivatives.jerk):
             if new_lower_limits.data[derivative] is not None:
                 if self.lower_limits.data[derivative] is None:
