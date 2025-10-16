@@ -42,7 +42,7 @@ from .exceptions import (
     AlreadyBelongsToAWorldError,
     DuplicateKinematicStructureEntityError,
 )
-from .robots import AbstractRobot
+from .robots.abstract_robot import AbstractRobot
 from .spatial_computations.forward_kinematics import ForwardKinematicsVisitor
 from .spatial_computations.ik_solver import InverseKinematicsSolver
 from .spatial_computations.raytracer import RayTracer
@@ -159,13 +159,13 @@ class WorldModelUpdateContextManager:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.first:
-            self.world.world_is_being_modified = False
             self.world._model_modification_blocks.append(
                 self.world._current_model_modification_block
             )
             self.world._current_model_modification_block = None
             if exc_type is None:
                 self.world._notify_model_change()
+            self.world.world_is_being_modified = False
 
 
 class AtomicWorldModificationNotAtomic(Exception):
@@ -504,18 +504,21 @@ class World:
         and forward kinematics expressions while also triggering registered callbacks
         for model changes.
         """
-        if not self.world_is_being_modified:
-            self.compile_forward_kinematics_expressions()
-            self.clear_all_lru_caches()
-            self.notify_state_change()
-            self._model_version += 1
+        # if not self.world_is_being_modified:
+        self.compile_forward_kinematics_expressions()
+        self.clear_all_lru_caches()
+        self.notify_state_change()
+        self._model_version += 1
 
-            for callback in self.model_change_callbacks:
-                callback.notify()
+        for callback in self.model_change_callbacks:
+            callback.notify()
 
-            self.validate()
-            self.disable_non_robot_collisions()
-            self.disable_collisions_for_adjacent_bodies()
+        for callback in self.state_change_callbacks:
+            callback.update_previous_world_state()
+
+        self.validate()
+        self.disable_non_robot_collisions()
+        self.disable_collisions_for_adjacent_bodies()
 
     def delete_orphaned_dofs(self):
         actual_dofs = set()
@@ -1086,7 +1089,7 @@ class World:
 
     def get_body_by_name(
         self, name: Union[str, PrefixedName]
-    ) -> KinematicStructureEntity:
+    ) -> Body:
         """
         Retrieves a Body from the list of bodies based on its name.
         If the input is of type `PrefixedName`, it checks whether the prefix is specified and looks for an

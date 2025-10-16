@@ -4,6 +4,8 @@ import os
 from contextlib import suppress
 from copy import deepcopy
 from functools import lru_cache, wraps
+
+from ament_index_python import PackageNotFoundError
 from typing_extensions import Any, Tuple, Iterable
 from xml.etree import ElementTree as ET
 import weakref
@@ -138,13 +140,26 @@ def rclpy_installed() -> bool:
 
 def tracy_installed() -> bool:
     try:
-        from ament_index_python.packages import has_package
+        from ament_index_python.packages import get_package_share_directory
+
         pkg_name = "iai_tracy_description"
 
-        if has_package(pkg_name):
+        if get_package_share_directory(pkg_name):
             return True
         return False
-    except ImportError:
+    except (ImportError, PackageNotFoundError, ValueError):
+        return False
+
+def hsrb_installed() -> bool:
+    try:
+        from ament_index_python.packages import get_package_share_directory
+
+        pkg_name = "hsr_description"
+
+        if get_package_share_directory(pkg_name):
+            return True
+        return False
+    except (ImportError, PackageNotFoundError, ValueError):
         return False
 
 

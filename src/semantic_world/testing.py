@@ -8,7 +8,7 @@ from typing_extensions import Tuple
 import pytest
 
 from .adapters.urdf import URDFParser
-from .utils import rclpy_installed, tracy_installed
+from .utils import rclpy_installed, tracy_installed, hsrb_installed
 from .world_description.connections import (
     Connection6DoF,
     PrismaticConnection,
@@ -167,10 +167,13 @@ def pr2_world():
         localization_body = Body(name=PrefixedName("odom_combined"))
         world_with_pr2.add_kinematic_structure_entity(localization_body)
         # world_with_pr2.plot_kinematic_structure()
-        c_root_bf = OmniDrive(parent=localization_body, child=pr2_root, _world=world_with_pr2)
+        c_root_bf = OmniDrive(
+            parent=localization_body, child=pr2_root, _world=world_with_pr2
+        )
         world_with_pr2.add_connection(c_root_bf)
 
     return world_with_pr2
+
 
 @pytest.fixture
 def tracy_world():
@@ -193,6 +196,29 @@ def tracy_world():
             parent=localization_body, child=tracy_root, _world=world
         )
         world.merge_world(world_with_tracy, c_root_bf)
+
+    return world
+
+@pytest.fixture
+def hsrb_world():
+    if not hsrb_installed():
+        pytest.skip("HSRB not installed")
+    urdf_dir = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "..", "..", "resources", "urdf"
+    )
+    hsrb = os.path.join(urdf_dir, "hsrb.urdf")
+    world = World()
+    with world.modify_world():
+        localization_body = Body(name=PrefixedName("odom_combined"))
+        world.add_kinematic_structure_entity(localization_body)
+
+        hsrb_parser = URDFParser.from_file(file_path=hsrb)
+        world_with_hsrb = hsrb_parser.parse()
+        hsrb_root = world_with_hsrb.root
+        c_root_bf = Connection6DoF(
+            parent=localization_body, child=hsrb_root, _world=world
+        )
+        world.merge_world(world_with_hsrb, c_root_bf)
 
     return world
 
