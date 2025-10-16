@@ -25,11 +25,11 @@ The user guide is divided into multiple chapters teaching you the following topi
   - [](loading-worlds)
   - [](visualizing-worlds)
   - [](creating-custom-bodies)
+  - [](semantic_annotations)
 - Advanced Topics
   - [](world-structure-manipulation)
   - [](world-state-manipulation)
   - [](regions)
-  - [](semantic_annotations)
   - [](view_factories)
   - [](persistence-of-annotated-worlds)
   - Synchronizing worlds across multiple processes
