@@ -597,7 +597,7 @@ class World:
         Add a kinematic_structure_entity to the world if it does not exist already.
 
         :param kinematic_structure_entity: The kinematic_structure_entity to add.
-        :param handle_duplicates: If True, the kinematic_structure_entity will not be added under a different name, if
+        :param handle_duplicates: If True, the kinematic_structure_entity will be added under a different name, if
         the name already exists. If False, an error will be raised. Default is False.
         :return: The index of the added kinematic_structure_entity.
         """
