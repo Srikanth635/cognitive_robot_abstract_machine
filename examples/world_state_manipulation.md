@@ -71,7 +71,7 @@ container_factory = ContainerFactory(
 
 dresser_factory = DresserFactory(
     name=PrefixedName("dresser"),
-    drawer_transforms=[drawer_transform],
+    parent_T_drawers=[drawer_transform],
     drawers_factories=[drawer_factory],
     container_factory=container_factory,
 )
