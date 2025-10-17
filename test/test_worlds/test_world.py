@@ -724,13 +724,13 @@ def test_overwrite_dof_limits_mimic(world_setup):
         world.add_connection(mimic_connection)
 
     # when the multiplier is negative, the vel limits shouldn't be swapped
-    assert (
-        mimic_connection.dof.lower_limits.velocity
-        == connection.dof.lower_limits.velocity * 2
+    assert np.isclose(
+        mimic_connection.dof.lower_limits.velocity,
+        connection.dof.lower_limits.velocity * 2,
     )
-    assert (
-        mimic_connection.dof.upper_limits.velocity
-        == connection.dof.upper_limits.velocity * 2
+    assert np.isclose(
+        mimic_connection.dof.upper_limits.velocity,
+        connection.dof.upper_limits.velocity * 2,
     )
 
     new_limits = DerivativeMap([0.69, 0.42, 1337, 23])
@@ -748,24 +748,32 @@ def test_overwrite_dof_limits_mimic(world_setup):
     # Position limits: swapped due to negative multiplier, then scaled and offset applied
     # Lower becomes: new_limits.position * (-2) + 23 = 0.69 * (-2) + 23 = -1.38 + 23 = 21.62
     # Upper becomes: (new_limits * -1).position * (-2) + 23 = -0.69 * (-2) + 23 = 1.38 + 23 = 24.38
-    assert mimic_connection.dof.lower_limits.position == 21.62
-    assert mimic_connection.dof.upper_limits.position == 24.38
+    assert np.isclose(mimic_connection.dof.lower_limits.position, 21.62)
+    assert np.isclose(mimic_connection.dof.upper_limits.position, 24.38)
 
     # Velocity limits: only multiplier applied (no offset), but absolute value for limits
     # Since we're dealing with limits, velocity should use abs(multiplier) = 2
-    assert mimic_connection.dof.lower_limits.velocity == (new_limits * -1).velocity * 2
-    assert mimic_connection.dof.upper_limits.velocity == new_limits.velocity * 2
+    assert np.isclose(
+        mimic_connection.dof.lower_limits.velocity, (new_limits * -1).velocity * 2
+    )
+    assert np.isclose(
+        mimic_connection.dof.upper_limits.velocity, new_limits.velocity * 2
+    )
 
     # Acceleration limits: only multiplier applied (no offset), absolute value for limits
-    assert (
-        mimic_connection.dof.lower_limits.acceleration
-        == (new_limits * -1).acceleration * 2
+    assert np.isclose(
+        mimic_connection.dof.lower_limits.acceleration,
+        (new_limits * -1).acceleration * 2,
     )
-    assert mimic_connection.dof.upper_limits.acceleration == new_limits.acceleration * 2
+    assert np.isclose(
+        mimic_connection.dof.upper_limits.acceleration, new_limits.acceleration * 2
+    )
 
     # Jerk limits: only multiplier applied (no offset), absolute value for limits
-    assert mimic_connection.dof.lower_limits.jerk == (new_limits * -1).jerk * 2
-    assert mimic_connection.dof.upper_limits.jerk == new_limits.jerk * 2
+    assert np.isclose(
+        mimic_connection.dof.lower_limits.jerk, (new_limits * -1).jerk * 2
+    )
+    assert np.isclose(mimic_connection.dof.upper_limits.jerk, new_limits.jerk * 2)
 
     # limits are only applied if the new ones are lower
     new_limits2 = DerivativeMap([3333, 3333, 3333, 3333])
@@ -774,17 +782,25 @@ def test_overwrite_dof_limits_mimic(world_setup):
         new_lower_limits=new_limits2 * -1, new_upper_limits=new_limits2
     )
 
-    assert mimic_connection.dof.lower_limits.position == 21.62
-    assert mimic_connection.dof.upper_limits.position == 24.38
+    assert np.isclose(mimic_connection.dof.lower_limits.position, 21.62)
+    assert np.isclose(mimic_connection.dof.upper_limits.position, 24.38)
 
-    assert mimic_connection.dof.lower_limits.velocity == (new_limits * -1).velocity * 2
-    assert mimic_connection.dof.upper_limits.velocity == new_limits.velocity * 2
-
-    assert (
-        mimic_connection.dof.lower_limits.acceleration
-        == (new_limits * -1).acceleration * 2
+    assert np.isclose(
+        mimic_connection.dof.lower_limits.velocity, (new_limits * -1).velocity * 2
     )
-    assert mimic_connection.dof.upper_limits.acceleration == new_limits.acceleration * 2
+    assert np.isclose(
+        mimic_connection.dof.upper_limits.velocity, new_limits.velocity * 2
+    )
 
-    assert mimic_connection.dof.lower_limits.jerk == (new_limits * -1).jerk * 2
-    assert mimic_connection.dof.upper_limits.jerk == new_limits.jerk * 2
+    assert np.isclose(
+        mimic_connection.dof.lower_limits.acceleration,
+        (new_limits * -1).acceleration * 2,
+    )
+    assert np.isclose(
+        mimic_connection.dof.upper_limits.acceleration, new_limits.acceleration * 2
+    )
+
+    assert np.isclose(
+        mimic_connection.dof.lower_limits.jerk, (new_limits * -1).jerk * 2
+    )
+    assert np.isclose(mimic_connection.dof.upper_limits.jerk, new_limits.jerk * 2)
