@@ -70,7 +70,7 @@ class ReferenceFrameMismatchError(SpatialTypesError):
     def __init__(
         self, frame1: KinematicStructureEntity, frame2: KinematicStructureEntity
     ):
-        msg = f"Reference frames {frame1} and {frame2} are not the same."
+        msg = f"Reference frames {frame1.name} and {frame2.name} are not the same."
         super().__init__(msg)
 
 
