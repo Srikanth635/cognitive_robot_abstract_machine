@@ -100,6 +100,7 @@ class FixedConnectionFactory(ConnectionFactory[FixedConnection]):
     def create(self, world: World) -> None:
         parent = world.get_kinematic_structure_entity_by_name(self.parent_name)
         child = world.get_kinematic_structure_entity_by_name(self.child_name)
+        self.parent_T_connection_expression.reference_frame = parent
         connection = self.original_class()(
             parent=parent,
             child=child,
@@ -144,6 +145,7 @@ class ActiveConnection1DOFFactory(ConnectionFactory[T]):
     def create(self, world: World) -> None:
         parent = world.get_kinematic_structure_entity_by_name(self.parent_name)
         child = world.get_kinematic_structure_entity_by_name(self.child_name)
+        self.parent_T_connection_expression.reference_frame = parent
 
         connection = self.original_class()(
             parent=parent,
@@ -223,6 +225,7 @@ class Connection6DoFFactory(ConnectionFactory[Connection6DoF]):
     def create(self, world: World) -> None:
         parent = world.get_kinematic_structure_entity_by_name(self.parent_name)
         child = world.get_kinematic_structure_entity_by_name(self.child_name)
+        self.parent_T_connection_expression.reference_frame = parent
         connection = self.original_class()(
             parent=parent,
             child=child,
@@ -309,6 +312,7 @@ class OmniDriveFactory(ConnectionFactory[OmniDrive]):
     def create(self, world: World) -> None:
         parent = world.get_kinematic_structure_entity_by_name(self.parent_name)
         child = world.get_kinematic_structure_entity_by_name(self.child_name)
+        self.parent_T_connection_expression.reference_frame = parent
         connection = self.original_class()(
             parent=parent,
             child=child,

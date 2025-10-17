@@ -8,7 +8,11 @@ from .datastructures.prefixed_name import PrefixedName
 
 if TYPE_CHECKING:
     from .world import World
-    from .world_description.world_entity import View, WorldEntity
+    from .world_description.world_entity import (
+        View,
+        WorldEntity,
+        KinematicStructureEntity,
+    )
     from .spatial_types.spatial_types import Symbol
 
 
@@ -60,6 +64,14 @@ class SymbolResolutionError(SymbolManagerException):
 
 class SpatialTypesError(UsageError):
     pass
+
+
+class ReferenceFrameMismatchError(SpatialTypesError):
+    def __init__(
+        self, frame1: KinematicStructureEntity, frame2: KinematicStructureEntity
+    ):
+        msg = f"Reference frames {frame1} and {frame2} are not the same."
+        super().__init__(msg)
 
 
 class WrongDimensionsError(SpatialTypesError):

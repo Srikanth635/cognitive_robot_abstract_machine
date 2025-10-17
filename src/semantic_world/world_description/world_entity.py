@@ -31,6 +31,7 @@ from typing_extensions import Set
 from .geometry import TriangleMesh
 from .shape_collection import ShapeCollection, BoundingBoxCollection
 from ..datastructures.prefixed_name import PrefixedName
+from ..exceptions import ReferenceFrameMismatchError
 from ..spatial_types import spatial_types as cas
 from ..spatial_types.spatial_types import TransformationMatrix, Expression, Point3
 from ..utils import IDGenerator
@@ -710,9 +711,8 @@ class Connection(WorldEntity):
             self.parent_T_connection_expression.reference_frame is not None
             and self.parent_T_connection_expression.reference_frame != self.parent
         ):
-            raise ValueError(
-                f"parent_T_connection_expression of {self.name} must be relative to {self.parent}, "
-                f"but is {self.parent_T_connection_expression.reference_frame}."
+            raise ReferenceFrameMismatchError(
+                self.parent, self.parent_T_connection_expression.reference_frame
             )
 
         self.parent_T_connection_expression.reference_frame = self.parent
