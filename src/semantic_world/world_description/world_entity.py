@@ -700,14 +700,23 @@ class Connection(WorldEntity):
         self._world = world
 
     def __post_init__(self):
-        self.parent_T_connection_expression.reference_frame = self.parent
-        self.connection_T_child_expression.child_frame = self.child
-
         if self.name is None:
             self.name = PrefixedName(
                 f"{self.parent.name.name}_T_{self.child.name.name}",
                 prefix=self.child.name.prefix,
             )
+
+        if (
+            self.parent_T_connection_expression.reference_frame is not None
+            and self.parent_T_connection_expression.reference_frame != self.parent
+        ):
+            raise ValueError(
+                f"parent_T_connection_expression of {self.name} must be relative to {self.parent}, "
+                f"but is {self.parent_T_connection_expression.reference_frame}."
+            )
+
+        self.parent_T_connection_expression.reference_frame = self.parent
+        self.connection_T_child_expression.child_frame = self.child
 
     def _post_init_world_part(self):
         """
