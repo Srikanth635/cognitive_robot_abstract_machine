@@ -23,7 +23,8 @@ Source: [Jupyter quiz](https://pypi.org/project/jupyterquiz/#description). $ $
 :tags: [remove-input]
 from jupyterquiz import display_quiz
 
-questions = {
+questions = [
+    {
       "question": "What is the purpose of the `PrefixedName` data structure?",
       "type": "multiple_choice",
       "answers": [
@@ -134,6 +135,7 @@ questions = {
       ],
       "explanation": "Call after `rt.update_scene()` to render."
     }
+  ]
 
 display_quiz(quiz)
 ```
