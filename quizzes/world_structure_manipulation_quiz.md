@@ -1,0 +1,85 @@
+---
+jupytext:
+    formats: md:myst
+    text_representation:
+        extension: .md
+        format_name: myst
+kernelspec:
+    display_name: Python 3 (ipykernel)
+    language: python
+    name: python3
+---
+
+(world-structure-manipulation-quiz)=
+# World Structure Manipulation — Self Assessment
+
+This page provides a self-check quiz for the tutorial: [](world-structure-manipulation).  
+Source: Jupyter quiz. $ $
+
+% NOTE: The lone `$ $` above ensures some math is rendered before the quiz,
+% which fixes a known math-rendering quirk inside the quiz widget.
+
+```{code-cell} ipython3
+:tags: [remove-input]
+from jupyterquiz import display_quiz
+
+questions = [
+    {
+      "question": "Why must structural changes be grouped inside with world.modify_world():?",
+      "type": "multiple_choice",
+      "answers": [
+        {"answer": "To ensure world validity is checked after the block", "correct": True},
+        {"answer": "To enable GPU acceleration", "correct": False},
+        {"answer": "To auto-serialize the world", "correct": False},
+        {"answer": "To compile C extensions", "correct": False}
+      ],
+      "explanation": "The world is validated on exit to maintain the tree constraint."
+    },
+    {
+      "question": "Which of the following is a valid structural entity to add/remove?",
+      "type": "multiple_select",
+      "answers": [
+        {"answer": "Body", "correct": True},
+        {"answer": "Connection", "correct": True},
+        {"answer": "DegreeOfFreedom", "correct": True},
+        {"answer": "RayTracer", "correct": False}
+      ],
+      "explanation": "Bodies, connections, and DoFs form the kinematic structure."
+    },
+    {
+      "question": "How do you create a custom DoF and use it in a RevoluteConnection?",
+      "type": "multiple_choice",
+      "answers": [
+        {"answer": "Add the DoF to the world, then reference it in RevoluteConnection", "correct": True},
+        {"answer": "Create RevoluteConnection first; DoFs auto-appear", "correct": False},
+        {"answer": "Set world.state['joint'] = 0 and it is created", "correct": False},
+        {"answer": "Use FixedConnection with a DoF", "correct": False}
+      ],
+      "explanation": "The example adds the DoF explicitly before creating the revolute connection."
+    },
+    {
+      "question": "What happens when removing a RevoluteConnection whose DoF is unused elsewhere?",
+      "type": "multiple_choice",
+      "answers": [
+        {"answer": "Its DoF is removed as well", "correct": True},
+        {"answer": "The DoF persists forever", "correct": False},
+        {"answer": "All DoFs are cleared", "correct": False},
+        {"answer": "World validation is skipped", "correct": False}
+      ],
+      "explanation": "Unused DoFs referenced only by that connection can be removed."
+    },
+    {
+      "question": "What is the kinematic structure required to be?",
+      "type": "multiple_choice",
+      "answers": [
+        {"answer": "A tree", "correct": True},
+        {"answer": "A cyclic graph", "correct": False},
+        {"answer": "A lattice", "correct": False},
+        {"answer": "A complete graph", "correct": False}
+      ],
+      "explanation": "The world's kinematic structure must remain a tree."
+    }
+]
+
+display_quiz(questions)
+```
