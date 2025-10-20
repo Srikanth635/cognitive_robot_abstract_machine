@@ -9,7 +9,8 @@ logo: "images/semantic_world_logo.png"
 # See https://jupyterbook.org/content/execute.html
 execute:
   execute_notebooks: force
-
+  exclude_tags:
+    - exercise
 
 # Define the name of the latex output file for PDF builds
 latex:
@@ -28,6 +29,7 @@ sphinx:
     - sphinx.ext.autodoc
     - sphinxcontrib.plantuml
   config:
+    nb_remove_cell_tags: ["exercise"]
     bibtex_bibfiles:
       - references.bib
     # AutoAPI configuration
