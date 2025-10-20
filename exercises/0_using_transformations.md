@@ -145,7 +145,6 @@ box_T_moved_box = TransformationMatrix.from_xyz_rpy(x=0.3, y=-0.4, yaw=yaw, refe
 table_world_T_moved_box = table_world_T_box @ box_T_moved_box
 with table_world.modify_world():
     box_parent_connection.origin = table_world_T_moved_box
-rt = RayTracer(table_world); rt.update_scene(); rt.scene.show("jupyter")
 ```
 
 ```{code-cell} ipython3
