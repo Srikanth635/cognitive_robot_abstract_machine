@@ -29,10 +29,10 @@ quiz = {
       "question": "What is the purpose of the `PrefixedName` data structure?",
       "type": "multiple_choice",
       "answers": [
-        { "answer": "To generate unique names for entities with an optional prefix.", "correct": true },
-        { "answer": "To store rotation matrices.", "correct": false },
-        { "answer": "To define collision geometry.", "correct": false },
-        { "answer": "To manage ray-tracing parameters.", "correct": false }
+        { "answer": "To generate unique names for entities with an optional prefix.", "correct": True },
+        { "answer": "To store rotation matrices.", "correct": False },
+        { "answer": "To define collision geometry.", "correct": False },
+        { "answer": "To manage ray-tracing parameters.", "correct": False }
       ],
       "explanation": "`PrefixedName` combines a name with an optional prefix to keep entity identifiers unique."
     },
@@ -40,10 +40,10 @@ quiz = {
       "question": "Which two shape collections can a body have?",
       "type": "multiple_choice",
       "answers": [
-        { "answer": "Visual and collision", "correct": true },
-        { "answer": "Static and dynamic", "correct": false },
-        { "answer": "Physical and logical", "correct": false },
-        { "answer": "Primary and secondary", "correct": false }
+        { "answer": "Visual and collision", "correct": True },
+        { "answer": "Static and dynamic", "correct": False },
+        { "answer": "Physical and logical", "correct": False },
+        { "answer": "Primary and secondary", "correct": False }
       ],
       "explanation": "Visual is for rendering; collision is for physics/collision computations."
     },
@@ -51,11 +51,11 @@ quiz = {
       "question": "Which shapes are supported?",
       "type": "multiple_select",
       "answers": [
-        { "answer": "Box", "correct": true },
-        { "answer": "Sphere", "correct": true },
-        { "answer": "Cylinder", "correct": true },
-        { "answer": "FileMesh/TriangleMesh", "correct": true },
-        { "answer": "Cone", "correct": false }
+        { "answer": "Box", "correct": True },
+        { "answer": "Sphere", "correct": True },
+        { "answer": "Cylinder", "correct": True },
+        { "answer": "FileMesh/TriangleMesh", "correct": True },
+        { "answer": "Cone", "correct": False }
       ],
       "explanation": "Box, Sphere, Cylinder, and FileMesh (TriangleMesh) are supported; Cone is not listed."
     },
@@ -63,10 +63,10 @@ quiz = {
       "question": "How should you add a body to the world?",
       "type": "multiple_choice",
       "answers": [
-        { "answer": "with world.modify_world(): world.add_body(body)", "correct": true },
-        { "answer": "world.add_body(body)", "correct": false },
-        { "answer": "world.create_body(body)", "correct": false },
-        { "answer": "world.append(body)", "correct": false }
+        { "answer": "with world.modify_world(): world.add_body(body)", "correct": True },
+        { "answer": "world.add_body(body)", "correct": False },
+        { "answer": "world.create_body(body)", "correct": False },
+        { "answer": "world.append(body)", "correct": False }
       ],
       "explanation": "All changes to the world must happen within `with world.modify_world():`."
     },
@@ -74,10 +74,10 @@ quiz = {
       "question": "What does the `RayTracer` do in the example?",
       "type": "multiple_choice",
       "answers": [
-        { "answer": "It traces rays for visualization or computation and can render the scene.", "correct": true },
-        { "answer": "It loads STL meshes.", "correct": false },
-        { "answer": "It defines coordinate frames.", "correct": false },
-        { "answer": "It manages world validation.", "correct": false }
+        { "answer": "It traces rays for visualization or computation and can render the scene.", "correct": True },
+        { "answer": "It loads STL meshes.", "correct": False },
+        { "answer": "It defines coordinate frames.", "correct": False },
+        { "answer": "It manages world validation.", "correct": False }
       ],
       "explanation": "After `rt.update_scene()`, `rt.scene.show('jupyter')` visualizes the scene."
     },
@@ -85,10 +85,10 @@ quiz = {
       "question": "What issue can occur when creating multiple unconnected bodies?",
       "type": "multiple_choice",
       "answers": [
-        { "answer": "World validation fails.", "correct": true },
-        { "answer": "Rendering always crashes.", "correct": false },
-        { "answer": "Meshes are auto-merged.", "correct": false },
-        { "answer": "Textures are dropped.", "correct": false }
+        { "answer": "World validation fails.", "correct": True },
+        { "answer": "Rendering always crashes.", "correct": False },
+        { "answer": "Meshes are auto-merged.", "correct": False },
+        { "answer": "Textures are dropped.", "correct": False }
       ],
       "explanation": "Unconnected bodies trigger validation problems; see the world-structure-manipulation tutorial."
     },
@@ -96,10 +96,10 @@ quiz = {
       "question": "Which method constructs a transform from position and quaternion?",
       "type": "multiple_choice",
       "answers": [
-        { "answer": "TransformationMatrix.from_xyz_quaternion()", "correct": true },
-        { "answer": "TransformationMatrix.from_point_rotation_matrix()", "correct": false },
-        { "answer": "RotationMatrix.from_axis_angle()", "correct": false },
-        { "answer": "Point3.from_iterable()", "correct": false }
+        { "answer": "TransformationMatrix.from_xyz_quaternion()", "correct": True },
+        { "answer": "TransformationMatrix.from_point_rotation_matrix()", "correct": False },
+        { "answer": "RotationMatrix.from_axis_angle()", "correct": False },
+        { "answer": "Point3.from_iterable()", "correct": False }
       ],
       "explanation": "`from_xyz_quaternion()` builds a transform from position and quaternion components."
     },
@@ -107,10 +107,10 @@ quiz = {
       "question": "What does `get_semantic_world_directory_root()` help with?",
       "type": "multiple_choice",
       "answers": [
-        { "answer": "Locating the Semantic World resource root (e.g., STL files).", "correct": true },
-        { "answer": "Creating output folders.", "correct": false },
-        { "answer": "Validating shapes.", "correct": false },
-        { "answer": "Spawning default entities.", "correct": false }
+        { "answer": "Locating the Semantic World resource root (e.g., STL files).", "correct": True },
+        { "answer": "Creating output folders.", "correct": False },
+        { "answer": "Validating shapes.", "correct": False },
+        { "answer": "Spawning default entities.", "correct": False }
       ],
       "explanation": "It’s used to find packaged resources like `resources/stl/milk.stl`."
     },
@@ -118,10 +118,10 @@ quiz = {
       "question": "What does the `Scale` class specify for a `Box`?",
       "type": "multiple_choice",
       "answers": [
-        { "answer": "Dimensions along x, y, z.", "correct": true },
-        { "answer": "Rotation about axes.", "correct": false },
-        { "answer": "Texture mapping parameters.", "correct": false },
-        { "answer": "Color intensity.", "correct": false }
+        { "answer": "Dimensions along x, y, z.", "correct": True },
+        { "answer": "Rotation about axes.", "correct": False },
+        { "answer": "Texture mapping parameters.", "correct": False },
+        { "answer": "Color intensity.", "correct": False }
       ],
       "explanation": "Scale sets the box size on each axis."
     },
@@ -129,10 +129,10 @@ quiz = {
       "question": "How do you visualize the scene in Jupyter in the example?",
       "type": "multiple_choice",
       "answers": [
-        { "answer": "rt.scene.show('jupyter')", "correct": true },
-        { "answer": "world.show()", "correct": false },
-        { "answer": "body.display()", "correct": false },
-        { "answer": "Scene.visualize()", "correct": false }
+        { "answer": "rt.scene.show('jupyter')", "correct": True },
+        { "answer": "world.show()", "correct": False },
+        { "answer": "body.display()", "correct": False },
+        { "answer": "Scene.visualize()", "correct": False }
       ],
       "explanation": "Call after `rt.update_scene()` to render."
     }
