@@ -28,7 +28,7 @@ Used Concepts:
 
 First, let's create a simple world that contains a couple of apples.
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 from dataclasses import dataclass
 from typing import List
 
@@ -89,7 +89,7 @@ rt.scene.show("jupyter")
 
 Thanks to the semantic annotations, an agent can query for apples directly using EQL:
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 with symbolic_mode():
     apples = an(entity(let(Apple, world.views)))
 print(*apples.evaluate(), sep="\n")
@@ -97,7 +97,7 @@ print(*apples.evaluate(), sep="\n")
 
 Views can become arbitrarily expressive. For instance, we can define a FruitBox that groups a container and a list of apples.
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 from semantic_world.views.factories import ContainerFactory, Direction
 
 @dataclass
@@ -138,7 +138,7 @@ you mean. Interoperability comes for free without hidden formats or conversion i
 We can incorporate the attributes of our Views into our reasoning.
 To demonstrate this, let's first create another FruitBox, but which is empty this time.
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 with world.modify_world():
     empty_fruit_box_container_world = ContainerFactory(
         name=PrefixedName("empty_fruit_box_container"), direction=Direction.Z, scale=Scale(1.0, 1.0, 0.3)
@@ -160,7 +160,7 @@ rt.scene.show("jupyter")
 
 We can now use EQL to get us only the FruitBoxes that actually contain apples!
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 from semantic_world.reasoning.predicates import ContainsType
 from entity_query_language import a
 

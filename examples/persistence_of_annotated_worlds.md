@@ -27,7 +27,7 @@ Let's go into an example where we create a world, store it, retrieve and reconst
 
 First, let's load a world from a URDF file.
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 import logging
 import os
 
@@ -53,7 +53,7 @@ world = URDFParser.from_file(table).parse()
 
 Next, we create a semantic annotation that describes the table.
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 table_view = Table([b for b in world.bodies if "top" in str(b.name)][0])
 world.add_view(table_view)
 print(table_view)
@@ -61,7 +61,7 @@ print(table_view)
 
 Now, let's store the world to a database. For that, we need to convert it to its data access object which than can be stored in the database.
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 dao = to_dao(world)
 session.add(dao)
 session.commit()
@@ -69,7 +69,7 @@ session.commit()
 
 We can now query the database about the world and reconstruct it to the original instance. As you can see the semantic annotations are also available and fully working.
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 queried_world = session.scalars(select(WorldMappingDAO)).one()
 reconstructed_world = queried_world.from_dao()
 table = [view for view in reconstructed_world.views if isinstance(view, Table)][0]

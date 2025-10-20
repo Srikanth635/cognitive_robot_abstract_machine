@@ -16,7 +16,7 @@ kernelspec:
 The tutorial demonstrates the creation of a body and its visual and collision information
 In our kinematic structure, each entity needs to have a unique name. For this we can use a simple datastructure called `PrefixedName`. You always need to provide a name, but the prefix is optional.
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.spatial_types.spatial_types import TransformationMatrix, RotationMatrix
 from semantic_world.utils import get_semantic_world_directory_root
@@ -39,7 +39,7 @@ Supported Shapes are:
 - Cylinder
 - FileMesh/TriangleMesh
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 import os
 from semantic_world.spatial_types import Point3, Vector3
 from semantic_world.world_description.shape_collection import ShapeCollection
@@ -67,7 +67,7 @@ body.visual = ShapeCollection([mesh], body)
 
 When modifying your world, keep in mind that you need to open a `world.modify_world()` whenever you want to add or remove things to/from your world
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 with world.modify_world():
     world.add_body(body)
 

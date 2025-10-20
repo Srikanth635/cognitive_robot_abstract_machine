@@ -30,7 +30,7 @@ You will:
 Just execute this cell without changing anything.
 Imports the required classes and sets up the environment used in this exercise. If import errors occur, ensure you run this notebook from the project repository environment.
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 import logging
 import math
 import os
@@ -78,7 +78,9 @@ Your goal:
 
 Store your transform in a variable named `new_table_world_T_box`.
 
-```{code-cell} ipython2 tags=["exercise"]
+```{code-cell} ipython3
+:tags: [exercise]
+
 # TODO: set the cube on top of the table by crafting a transform
 new_table_world_T_box = None
 
@@ -86,7 +88,8 @@ new_table_world_T_box = None
 rt = RayTracer(table_world); rt.update_scene(); rt.scene.show("jupyter")
 ```
 
-```{code-cell} ipython2 tags=["example-solution"]
+```{code-cell} ipython3
+:tags: [example-solution]
 new_table_world_T_box = TransformationMatrix.from_xyz_rpy(
     z=0.72,
     reference_frame=table_world.root,
@@ -96,7 +99,7 @@ with table_world.modify_world():
     table_world_T_box.origin = new_table_world_T_box
 ```
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 # Quick checks
 assert new_table_world_T_box is not None, "Create and assign a TransformationMatrix to place the cube on the table."
 assert isinstance(new_table_world_T_box, TransformationMatrix), "Use a TransformationMatrix for `T_root_cube_on_table`."
@@ -118,7 +121,8 @@ You may accomplish both tasks at once by constructing a single transform and app
 
 Store your updated transform in `table_world_T_moved_box` and apply it to `box_parent_connection.origin`.
 
-```{code-cell} ipython2 tags=["exercise"]
+```{code-cell} ipython3 
+:tags: [exercise]
 # TODO: translate and rotate the cube
 box_parent_connection = box_body.parent_connection
 table_world_T_box = box_parent_connection.origin
@@ -128,7 +132,9 @@ table_world_T_moved_box = None
 rt = RayTracer(table_world); rt.update_scene(); rt.scene.show("jupyter")
 ```
 
-```{code-cell} ipython2 tags=["example-solution"]
+```{code-cell} ipython3
+:tags: [example-solution]
+
 yaw = math.radians(45)
 box_T_moved_box = TransformationMatrix.from_xyz_rpy(x=0.3, y=-0.4, yaw=yaw, reference_frame=box_body)
 table_world_T_moved_box = table_world_T_box @ box_T_moved_box
@@ -137,7 +143,7 @@ with table_world.modify_world():
 rt = RayTracer(table_world); rt.update_scene(); rt.scene.show("jupyter")
 ```
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 
 # Quick checks
 assert table_world_T_moved_box is not None, "Craft a new transform to move and rotate the cube and assign it to `table_world_T_moved_box`."
