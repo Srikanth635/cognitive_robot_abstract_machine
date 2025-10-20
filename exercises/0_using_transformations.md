@@ -96,7 +96,7 @@ new_table_world_T_box = TransformationMatrix.from_xyz_rpy(
 )
 
 with table_world.modify_world():
-    table_world_T_box.origin = new_table_world_T_box
+    table_world_C_box.origin = new_table_world_T_box
 ```
 
 ```{code-cell} ipython3
