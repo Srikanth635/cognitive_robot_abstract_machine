@@ -23,7 +23,7 @@ The user guide is divided into multiple chapters teaching you the following topi
 
 - Fundamental topics
   - [](creating-custom-bodies)
-  - [](jupyter-quiz)
+  - [](creating-custom-bodies-quiz)
   - [](loading-worlds)
   - [](visualizing-worlds)
   - [](semantic_annotations)
