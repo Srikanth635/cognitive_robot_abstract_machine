@@ -8,7 +8,6 @@ parts:
   chapters:
     - file: user_guide
       sections:
-        - file: examples/creating_custom_bodies
         - file: examples/loading_worlds
         - file: examples/visualizing_worlds
         - file: examples/views
