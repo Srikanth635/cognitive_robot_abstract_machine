@@ -31,6 +31,8 @@ Just execute this cell without changing anything.
 Imports the required classes and sets up the environment used in this exercise. If import errors occur, ensure you run this notebook from the project repository environment.
 
 ```{code-cell} ipython3
+:tags: [setup]
+
 import logging
 import math
 import os
