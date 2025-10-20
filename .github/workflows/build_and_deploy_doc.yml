@@ -61,6 +61,56 @@ jobs:
         path: doc/_build/.jupyter_cache
         key: jupyter-book-cache-${{ hashFiles('requirements.txt') }}
 
+    - name: Prefilter sources (convert & strip exercise cells)
+      run: |
+        set -eux
+        SRC=/opt/ros/semantic_world/doc
+        TMP=/tmp/book_src
+        rm -rf "$TMP"
+        mkdir -p "$TMP"
+
+        # Copy the book sources (exclude any previous build artifacts)
+        rsync -a --delete --exclude '_build/' "$SRC/" "$TMP/"
+
+        # Convert MyST markdown pages to notebooks (side-by-side .ipynb)
+        # We skip config/toc files and non-content md (keep it simple with a find filter).
+        source /opt/ros/semantic_world-venv/bin/activate
+        find "$TMP" -type f -name "*.md" \
+          ! -name "_config.md" \
+          ! -name "_toc.md" \
+          ! -path "*/_build/*" \
+          -print0 | xargs -0 -I{} sh -c '
+            # Only convert files that contain a MyST code-cell directive to avoid touching prose-only pages
+            if grep -q "^{code-cell}" "{}"; then
+              jupytext --from md:myst --to ipynb --set-kernel -o "{.ipynb}" "{}"
+            fi
+          '
+
+        # Strip any cells tagged "exercise" from all produced notebooks
+        # (no-op if none exist)
+        if ls "$TMP"/*.ipynb "$TMP"/**/*.ipynb >/dev/null 2>&1; then
+          # Process notebooks at any depth
+          find "$TMP" -type f -name "*.ipynb" -print0 | xargs -0 -I{} \
+            jupyter nbconvert \
+              --to notebook --inplace \
+              --TagRemovePreprocessor.enabled=True \
+              --TagRemovePreprocessor.remove_cell_tags='["exercise"]' \
+              {}
+        fi
+
+        # Optional: remove the original .md pages that were converted so JB uses the cleaned .ipynb
+        # Comment this block out if your _toc.yml explicitly references .md
+        while IFS= read -r -d '' nb; do
+          md="${nb%.ipynb}.md"
+          if [ -f "$md" ]; then rm -f "$md"; fi
+        done < <(find "$TMP" -type f -name "*.ipynb" -print0)
+
+        # Show a quick tree for debugging
+        echo "---- Prefiltered source tree ----"
+        find "$TMP" -maxdepth 2 -print
+
+        echo "JB_SRC=$TMP" >> $GITHUB_ENV
+
     # Build the book
     - name: Build the book
       run: |

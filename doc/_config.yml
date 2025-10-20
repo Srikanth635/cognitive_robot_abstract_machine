@@ -29,7 +29,6 @@ sphinx:
     - sphinx.ext.autodoc
     - sphinxcontrib.plantuml
   config:
-    nb_remove_cell_tags: ["exercise"]
     bibtex_bibfiles:
       - references.bib
     # AutoAPI configuration

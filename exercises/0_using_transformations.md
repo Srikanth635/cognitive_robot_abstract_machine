@@ -12,7 +12,7 @@ kernelspec:
 ---
 
 
-# Using Transformations — Beginner Exercise
+# Using Transformations
 
 This exercise gives you a hands-on introduction to rigid-body transformations in Semantic World:
 - What a transformation is (position + orientation)
