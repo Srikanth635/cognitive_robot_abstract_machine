@@ -102,7 +102,7 @@ with table_world.modify_world():
 ```
 
 ```{code-cell} ipython3
-:tags: [verify-solution]
+:tags: [verify-solution, remove-input]
 
 assert new_table_world_T_box is not None, "Create and assign a TransformationMatrix to place the cube on the table."
 assert isinstance(new_table_world_T_box, TransformationMatrix), "Use a TransformationMatrix for `T_root_cube_on_table`."
@@ -149,7 +149,7 @@ rt = RayTracer(table_world); rt.update_scene(); rt.scene.show("jupyter")
 ```
 
 ```{code-cell} ipython3
-:tags: [verify-solution]
+:tags: [verify-solution, remove-input]
 
 # Quick checks
 assert table_world_T_moved_box is not None, "Craft a new transform to move and rotate the cube and assign it to `table_world_T_moved_box`."
@@ -158,6 +158,7 @@ assert isinstance(table_world_T_moved_box, TransformationMatrix), "`table_world_
 assert abs(table_world_T_moved_box.x.to_np() - 0.3) < 1e-5, "The cube should be at x=0.3 after the move."
 assert abs(table_world_T_moved_box.y.to_np() + 0.4) < 1e-5, "The cube should be at y=-0.4 after the move."
 assert abs(table_world_T_moved_box.z.to_np() - new_table_world_T_box.z.to_np()) < 1e-5, "The cube should stay on top of the table after the move."
+rt = RayTracer(table_world); rt.update_scene(); rt.scene.show("jupyter")
 ```
 
 ## Final Notes
