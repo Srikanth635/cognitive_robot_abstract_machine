@@ -70,9 +70,8 @@ jobs:
           # md:myst -> ipynb
           jupytext --from md:myst --to ipynb "$f" -o "$ipynb"
           # drop cells tagged "exercise"
-          jupyter nbconvert --to notebook --inplace \
-            --TagRemovePreprocessor.enabled=True \
-            --TagRemovePreprocessor.remove_cell_tags='["exercise"]' \
+          jupyter nbconvert --config /opt/ros/semantic_world/scripts/configs/nb_remove_exercises.json \
+            --to notebook --inplace \
             "$ipynb"
           # ipynb -> md:myst (overwrite original .md)
           jupytext --to md:myst "$ipynb" -o "$f"

@@ -151,7 +151,6 @@ rt = RayTracer(table_world); rt.update_scene(); rt.scene.show("jupyter")
 ```{code-cell} ipython3
 :tags: [verify-solution, remove-input]
 
-# Quick checks
 assert table_world_T_moved_box is not None, "Craft a new transform to move and rotate the cube and assign it to `table_world_T_moved_box`."
 assert isinstance(table_world_T_moved_box, TransformationMatrix), "`table_world_T_moved_box` must be a TransformationMatrix."
 
