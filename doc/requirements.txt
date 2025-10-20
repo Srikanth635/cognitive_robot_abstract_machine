@@ -5,3 +5,4 @@ sphinx-autoapi
 sphinxcontrib-plantuml
 pylint
 jupytext
+nbconvert
