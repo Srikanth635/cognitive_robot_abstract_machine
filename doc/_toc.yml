@@ -30,6 +30,9 @@ parts:
 - caption: Examples
   chapters:
     - file: examples/graph_of_convex_sets
+- caption: Exercise Example Solutions
+  chapters:
+    - file: exercises/0_using_transformations
 - caption: References
   chapters:
     - file: autoapi/index
