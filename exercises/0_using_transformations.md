@@ -114,15 +114,17 @@ rt = RayTracer(table_world); rt.update_scene(); rt.scene.show("jupyter")
 ```
 
 ## 2. Move the cube around with rotations and translations
-For the next part, we want to do our first transform multiplication. For this it is essential that you really understand what transforms are, what the different numerical values (x, y, z, roll, pitch, yaw) mean, and maybe most importantly, what the importance of the `reference_frame` is. You also need to know how to read our notation for transforms (eg. `table_world_T_box`).
+For the next part, we want to do our first transform multiplication. For this it is essential that you really understand what transforms are, what the different numerical values (x, y, z, roll, pitch, yaw) mean, and maybe most importantly, what the importance of the `reference_frame` is. You also need to know how to read our notation for transforms (eg. `table_world_T_box`). 
 
 - Task A: Move the cube to `x = 0.3`, `y = -0.4` while keeping it on top of the table (keep the same `z`). Do this by taking the current transform `table_world_T_box` and multiplying it with `box_T_moved_box` which is a transformation matrix that moves the cube along the x and y axis by 0.3 and -0.4.
 
 - Task B: Rotate the cube by 45 degrees around the Z axis while keeping its position. This works similarly to Task A. To get the correct radians, you can use `math.radians`.
 
-You may accomplish both tasks at once by constructing a single transform and applying it to the connection.
+You may accomplish both tasks at once by constructing a single transform and applying it to the connection. 
 
 Store your updated transform in `table_world_T_moved_box` and apply it to `box_parent_connection.origin`.
+
+If you don't know how to combine two transforms, you can check out [the appropriate section in our style guide](https://cram2.github.io/semantic_world/style_guide.html#combine-multiple-transformations)!.
 
 ```{code-cell} ipython3 
 :tags: [exercise]
