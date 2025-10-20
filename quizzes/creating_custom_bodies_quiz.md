@@ -20,5 +20,5 @@ This page provides a self-check quiz for the tutorial: [](creating-custom-bodies
 from jupyterquiz import display_quiz
 
 # Load questions from a local JSON file in the same directory as this page
-display_quiz("creating_custom_bodies_questions.json")
+display_quiz("jsons/creating_custom_bodies_questions.json")
 ```
