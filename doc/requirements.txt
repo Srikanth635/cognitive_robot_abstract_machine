@@ -6,3 +6,4 @@ sphinxcontrib-plantuml
 pylint
 jupytext
 nbconvert
+jupyterquiz
