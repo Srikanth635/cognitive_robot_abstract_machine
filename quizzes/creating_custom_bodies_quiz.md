@@ -137,5 +137,5 @@ questions = [
     }
   ]
 
-display_quiz(quiz)
+display_quiz(questions)
 ```
