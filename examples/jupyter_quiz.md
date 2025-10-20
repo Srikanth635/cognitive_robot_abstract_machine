@@ -10,6 +10,7 @@ kernelspec:
   language: python
   name: python3
 ---
+(jupyter-quiz)=
 
 # Creating Custom Bodies — Self Assessment
 
