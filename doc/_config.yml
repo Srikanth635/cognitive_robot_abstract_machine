@@ -28,7 +28,6 @@ sphinx:
     - autoapi.extension  # Add the AutoAPI extension
     - sphinx.ext.autodoc
     - sphinxcontrib.plantuml
-    - jupyterquiz
   config:
     bibtex_bibfiles:
       - references.bib

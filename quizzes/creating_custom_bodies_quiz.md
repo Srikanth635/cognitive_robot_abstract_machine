@@ -13,12 +13,131 @@ kernelspec:
 (creating-custom-bodies-quiz)=
 # Creating Custom Bodies — Self Assessment
 
-This page provides a self-check quiz for the tutorial: [](creating-custom-bodies). 
+This page provides a self-check quiz for the tutorial: [](creating-custom-bodies).  
+Source: [Jupyter quiz](https://pypi.org/project/jupyterquiz/#description). $ $
+
+% NOTE: The lone `$ $` above ensures some math is rendered before the quiz,
+% which fixes a known math-rendering quirk inside the quiz widget.
 
 ```{code-cell} ipython3
 :tags: [remove-input]
 from jupyterquiz import display_quiz
 
-# Load questions from a local JSON file in the same directory as this page
-display_quiz("jsons/creating_custom_bodies_questions.json")
+quiz = {
+  "questions": [
+    {
+      "question": "What is the purpose of the `PrefixedName` data structure?",
+      "type": "multiple_choice",
+      "answers": [
+        { "answer": "To generate unique names for entities with an optional prefix.", "correct": true },
+        { "answer": "To store rotation matrices.", "correct": false },
+        { "answer": "To define collision geometry.", "correct": false },
+        { "answer": "To manage ray-tracing parameters.", "correct": false }
+      ],
+      "explanation": "`PrefixedName` combines a name with an optional prefix to keep entity identifiers unique."
+    },
+    {
+      "question": "Which two shape collections can a body have?",
+      "type": "multiple_choice",
+      "answers": [
+        { "answer": "Visual and collision", "correct": true },
+        { "answer": "Static and dynamic", "correct": false },
+        { "answer": "Physical and logical", "correct": false },
+        { "answer": "Primary and secondary", "correct": false }
+      ],
+      "explanation": "Visual is for rendering; collision is for physics/collision computations."
+    },
+    {
+      "question": "Which shapes are supported?",
+      "type": "multiple_select",
+      "answers": [
+        { "answer": "Box", "correct": true },
+        { "answer": "Sphere", "correct": true },
+        { "answer": "Cylinder", "correct": true },
+        { "answer": "FileMesh/TriangleMesh", "correct": true },
+        { "answer": "Cone", "correct": false }
+      ],
+      "explanation": "Box, Sphere, Cylinder, and FileMesh (TriangleMesh) are supported; Cone is not listed."
+    },
+    {
+      "question": "How should you add a body to the world?",
+      "type": "multiple_choice",
+      "answers": [
+        { "answer": "with world.modify_world(): world.add_body(body)", "correct": true },
+        { "answer": "world.add_body(body)", "correct": false },
+        { "answer": "world.create_body(body)", "correct": false },
+        { "answer": "world.append(body)", "correct": false }
+      ],
+      "explanation": "All changes to the world must happen within `with world.modify_world():`."
+    },
+    {
+      "question": "What does the `RayTracer` do in the example?",
+      "type": "multiple_choice",
+      "answers": [
+        { "answer": "It traces rays for visualization or computation and can render the scene.", "correct": true },
+        { "answer": "It loads STL meshes.", "correct": false },
+        { "answer": "It defines coordinate frames.", "correct": false },
+        { "answer": "It manages world validation.", "correct": false }
+      ],
+      "explanation": "After `rt.update_scene()`, `rt.scene.show('jupyter')` visualizes the scene."
+    },
+    {
+      "question": "What issue can occur when creating multiple unconnected bodies?",
+      "type": "multiple_choice",
+      "answers": [
+        { "answer": "World validation fails.", "correct": true },
+        { "answer": "Rendering always crashes.", "correct": false },
+        { "answer": "Meshes are auto-merged.", "correct": false },
+        { "answer": "Textures are dropped.", "correct": false }
+      ],
+      "explanation": "Unconnected bodies trigger validation problems; see the world-structure-manipulation tutorial."
+    },
+    {
+      "question": "Which method constructs a transform from position and quaternion?",
+      "type": "multiple_choice",
+      "answers": [
+        { "answer": "TransformationMatrix.from_xyz_quaternion()", "correct": true },
+        { "answer": "TransformationMatrix.from_point_rotation_matrix()", "correct": false },
+        { "answer": "RotationMatrix.from_axis_angle()", "correct": false },
+        { "answer": "Point3.from_iterable()", "correct": false }
+      ],
+      "explanation": "`from_xyz_quaternion()` builds a transform from position and quaternion components."
+    },
+    {
+      "question": "What does `get_semantic_world_directory_root()` help with?",
+      "type": "multiple_choice",
+      "answers": [
+        { "answer": "Locating the Semantic World resource root (e.g., STL files).", "correct": true },
+        { "answer": "Creating output folders.", "correct": false },
+        { "answer": "Validating shapes.", "correct": false },
+        { "answer": "Spawning default entities.", "correct": false }
+      ],
+      "explanation": "It’s used to find packaged resources like `resources/stl/milk.stl`."
+    },
+    {
+      "question": "What does the `Scale` class specify for a `Box`?",
+      "type": "multiple_choice",
+      "answers": [
+        { "answer": "Dimensions along x, y, z.", "correct": true },
+        { "answer": "Rotation about axes.", "correct": false },
+        { "answer": "Texture mapping parameters.", "correct": false },
+        { "answer": "Color intensity.", "correct": false }
+      ],
+      "explanation": "Scale sets the box size on each axis."
+    },
+    {
+      "question": "How do you visualize the scene in Jupyter in the example?",
+      "type": "multiple_choice",
+      "answers": [
+        { "answer": "rt.scene.show('jupyter')", "correct": true },
+        { "answer": "world.show()", "correct": false },
+        { "answer": "body.display()", "correct": false },
+        { "answer": "Scene.visualize()", "correct": false }
+      ],
+      "explanation": "Call after `rt.update_scene()` to render."
+    }
+  ]
+}
+
+display_quiz(quiz)
 ```
