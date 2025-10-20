@@ -72,7 +72,7 @@ jobs:
           # drop cells tagged "exercise"
           jupyter nbconvert --to notebook --inplace \
             --TagRemovePreprocessor.enabled=True \
-            --TagRemovePreprocessor.remove_cell_tags='["exercise"]' \
+            --TagRemovePreprocessor.remove_cell_tags='["exercise", "verify-solution"]' \
             "$ipynb"
           # ipynb -> md:myst (overwrite original .md)
           jupytext --to md:myst "$ipynb" -o "$f"

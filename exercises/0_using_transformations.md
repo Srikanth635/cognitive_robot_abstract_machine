@@ -56,9 +56,9 @@ box_body = Body(
     collision=ShapeCollection([cube]),
     visual=ShapeCollection([cube]),
 )
-table_world_T_box = Connection6DoF(table_world.root, box_body)
+table_world_C_box = Connection6DoF(table_world.root, box_body)
 with table_world.modify_world():
-    table_world.add_connection(table_world_T_box)
+    table_world.add_connection(table_world_C_box)
 
 rt = RayTracer(table_world); rt.update_scene(); rt.scene.show("jupyter")
 ```
@@ -100,7 +100,8 @@ with table_world.modify_world():
 ```
 
 ```{code-cell} ipython3
-# Quick checks
+:tags: [verify-solution]
+
 assert new_table_world_T_box is not None, "Create and assign a TransformationMatrix to place the cube on the table."
 assert isinstance(new_table_world_T_box, TransformationMatrix), "Use a TransformationMatrix for `T_root_cube_on_table`."
 assert abs(new_table_world_T_box.x.to_np()) < 1e-5, "The cube should be at the middle of the table."
@@ -135,6 +136,8 @@ rt = RayTracer(table_world); rt.update_scene(); rt.scene.show("jupyter")
 ```{code-cell} ipython3
 :tags: [example-solution]
 
+box_parent_connection = box_body.parent_connection
+table_world_T_box = box_parent_connection.origin
 yaw = math.radians(45)
 box_T_moved_box = TransformationMatrix.from_xyz_rpy(x=0.3, y=-0.4, yaw=yaw, reference_frame=box_body)
 table_world_T_moved_box = table_world_T_box @ box_T_moved_box
@@ -144,6 +147,7 @@ rt = RayTracer(table_world); rt.update_scene(); rt.scene.show("jupyter")
 ```
 
 ```{code-cell} ipython3
+:tags: [verify-solution]
 
 # Quick checks
 assert table_world_T_moved_box is not None, "Craft a new transform to move and rotate the cube and assign it to `table_world_T_moved_box`."
