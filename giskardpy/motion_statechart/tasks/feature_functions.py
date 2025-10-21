@@ -79,7 +79,7 @@ class AlignPerpendicular(FeatureFunctionGoal):
     root_link: Body
     tip_normal: cas.Vector3
     reference_normal: cas.Vector3
-    weight: int = WEIGHT_BELOW_CA
+    weight: float = WEIGHT_BELOW_CA
     max_vel: float = 0.2
     threshold: float = 0.01
 
@@ -118,7 +118,7 @@ class HeightGoal(FeatureFunctionGoal):
     reference_point: cas.Point3
     lower_limit: float
     upper_limit: float
-    weight: int = WEIGHT_BELOW_CA
+    weight: float = WEIGHT_BELOW_CA
     max_vel: float = 0.2
 
     def __post_init__(self):
@@ -160,7 +160,7 @@ class DistanceGoal(FeatureFunctionGoal):
     reference_point: cas.Point3
     lower_limit: float
     upper_limit: float
-    weight: int = WEIGHT_BELOW_CA
+    weight: float = WEIGHT_BELOW_CA
     max_vel: float = 0.2
 
     def __post_init__(self):
@@ -215,7 +215,7 @@ class AngleGoal(FeatureFunctionGoal):
     reference_vector: cas.Vector3
     lower_angle: float
     upper_angle: float
-    weight: int = WEIGHT_BELOW_CA
+    weight: float = WEIGHT_BELOW_CA
     max_vel: float = 0.2
 
     def __post_init__(self):
