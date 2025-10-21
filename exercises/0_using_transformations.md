@@ -76,7 +76,7 @@ Our `TransformationMatrix` class has multiple factory methods to create transfor
 
 Your goal:
 - Create a translation-only transform using `TransformationMatrix.from_xyz_rpy(x=..., y=..., z=..., reference_frame=table_world.root)`
-- Choose a assignment of x, y, and z coordinates that place the cube on top of the table, right in the middle.
+- Choose an assignment of x, y, and z coordinates that place the cube on top of the table, right in the middle.
 
 Store your transform in a variable named `new_table_world_T_box`.
 
