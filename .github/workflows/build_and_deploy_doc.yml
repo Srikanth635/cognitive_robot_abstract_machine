@@ -61,7 +61,7 @@ jobs:
         path: doc/_build/.jupyter_cache
         key: jupyter-book-cache-${{ hashFiles('requirements.txt') }}
 
-    - name: Strip exercise-tagged cells in exercises/
+    - name: Strip exercise-tagged cells in self_assessment/exercises/
       run: |
         cd /opt/ros/semantic_world/doc/exercises
         source /opt/ros/semantic_world-venv/bin/activate

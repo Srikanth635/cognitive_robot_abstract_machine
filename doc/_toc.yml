@@ -9,23 +9,15 @@ parts:
     - file: user_guide
       sections:
         - file: examples/creating_custom_bodies
-        - file: quizzes/creating_custom_bodies_quiz
         - file: examples/loading_worlds
-        - file: quizzes/loading_worlds_quiz
         - file: examples/visualizing_worlds
-        - file: quizzes/visualizing_worlds_quiz
         - file: examples/views
-        - file: quizzes/views_quiz
         - file: examples/world_state_manipulation
-        - file: quizzes/world_state_manipulation_quiz
         - file: examples/world_structure_manipulation
-        - file: quizzes/world_structure_manipulation_quiz
         - file: examples/regions
-        - file: quizzes/regions_quiz
         - file: examples/factories
-        - file: quizzes/factories_quiz
         - file: examples/persistence_of_annotated_worlds
-        - file: quizzes/persistence_of_annotated_worlds_quiz
+        - file: examples/graph_of_convex_sets
 - caption: Developer Guide
   chapters:
     - file: developer_guide
@@ -36,14 +28,21 @@ parts:
     - file: world_reasoner
     - file: world_synchronization
     - file: style_guide
-- caption: Examples
+- caption: Self-Assessment
   chapters:
-    - file: examples/graph_of_convex_sets
-      sections:
-        - file: quizzes/graph_of_convex_sets_quiz
+    - file: self_assessment/quizzes/creating_custom_bodies_quiz
+    - file: self_assessment/quizzes/loading_worlds_quiz
+    - file: self_assessment/quizzes/visualizing_worlds_quiz
+    - file: self_assessment/quizzes/views_quiz
+    - file: self_assessment/quizzes/world_state_manipulation_quiz
+    - file: self_assessment/quizzes/world_structure_manipulation_quiz
+    - file: self_assessment/quizzes/regions_quiz
+    - file: self_assessment/quizzes/factories_quiz
+    - file: self_assessment/quizzes/persistence_of_annotated_worlds_quiz
+    - file: self_assessment/quizzes/graph_of_convex_sets_quiz
 - caption: Exercise Example Solutions
   chapters:
-    - file: exercises/0_using_transformations
+    - file: self_assessment/exercises/0_using_transformations
 - caption: References
   chapters:
     - file: autoapi/index

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Determine the directory of this script and change to the exercises directory relative to it
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-EXAMPLES_DIR="$(cd "$SCRIPT_DIR/../exercises" && pwd)"
+EXAMPLES_DIR="$(cd "$SCRIPT_DIR/../self_assessment/exercises" && pwd)"
 CONFIG_FILE="$SCRIPT_DIR/configs/nb_remove_solutions.json"
 
 echo "Using config file: $CONFIG_FILE"

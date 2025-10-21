@@ -2,7 +2,7 @@
 source /opt/ros/jazzy/setup.bash
 # Determine the directory of this script and change to the quizzes directory relative to it
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-QUIZZES_DIR="$(cd "$SCRIPT_DIR/../quizzes" && pwd)"
+QUIZZES_DIR="$(cd "$SCRIPT_DIR/../self_assessment/quizzes" && pwd)"
 cd "$QUIZZES_DIR"
 rm -rf tmp
 mkdir tmp
