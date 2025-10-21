@@ -75,7 +75,7 @@ Our goal is now to place the cube on top of the table. For this you need to crea
 Our `TransformationMatrix` class has multiple factory methods to create transforms, but for now you can focus on the `from_xyz_rpy` method, which creates a transform from a position (x, y, and z coordinates) and orientation. The orientation is represented by roll (rotation around the x-axis), pitch (rotation around the y-axis), and yaw (rotation around the z-axis)), all in radians.
 
 Your goal:
-- Create a translation-only transform using `TransformationMatrix.from_xyz_rpy(x=..., y=..., z=..., reference_frame=world.root)`
+- Create a translation-only transform using `TransformationMatrix.from_xyz_rpy(x=..., y=..., z=..., reference_frame=table_world.root)`
 - Choose a assignment of x, y, and z coordinates that place the cube on top of the table, right in the middle.
 
 Store your transform in a variable named `new_table_world_T_box`.
@@ -84,7 +84,7 @@ Store your transform in a variable named `new_table_world_T_box`.
 :tags: [exercise]
 
 # TODO: set the cube on top of the table by crafting a transform
-new_table_world_T_box = None
+new_table_world_T_box = ...
 
 # Visualization
 rt = RayTracer(table_world); rt.update_scene(); rt.scene.show("jupyter")
@@ -104,7 +104,7 @@ with table_world.modify_world():
 ```{code-cell} ipython3
 :tags: [verify-solution, remove-input]
 
-assert new_table_world_T_box is not None, "Create and assign a TransformationMatrix to place the cube on the table."
+assert new_table_world_T_box is not ..., "Create and assign a TransformationMatrix to place the cube on the table."
 assert isinstance(new_table_world_T_box, TransformationMatrix), "Use a TransformationMatrix for `T_root_cube_on_table`."
 assert abs(new_table_world_T_box.x.to_np()) < 1e-5, "The cube should be at the middle of the table."
 assert abs(new_table_world_T_box.y.to_np()) < 1e-5, "The cube should be at the middle of the table."
@@ -131,8 +131,8 @@ If you don't know how to combine two transforms, you can check out [the appropri
 # TODO: translate and rotate the cube
 box_parent_connection = box_body.parent_connection
 table_world_T_box = box_parent_connection.origin
-box_T_moved_box = None
-table_world_T_moved_box = None
+box_T_moved_box = ...
+table_world_T_moved_box = ...
 
 rt = RayTracer(table_world); rt.update_scene(); rt.scene.show("jupyter")
 ```
@@ -152,7 +152,7 @@ with table_world.modify_world():
 ```{code-cell} ipython3
 :tags: [verify-solution, remove-input]
 
-assert table_world_T_moved_box is not None, "Craft a new transform to move and rotate the cube and assign it to `table_world_T_moved_box`."
+assert table_world_T_moved_box is not ..., "Craft a new transform to move and rotate the cube and assign it to `table_world_T_moved_box`."
 assert isinstance(table_world_T_moved_box, TransformationMatrix), "`table_world_T_moved_box` must be a TransformationMatrix."
 
 assert abs(table_world_T_moved_box.x.to_np() - 0.3) < 1e-5, "The cube should be at x=0.3 after the move."
