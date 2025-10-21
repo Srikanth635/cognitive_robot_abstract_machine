@@ -70,7 +70,7 @@ class ActiveConnection(Connection):
 
         A door hinge is also active but cannot be controlled.
         """
-        return len([dof for dof in self.dofs if dof.has_hardware_interface]) > 0
+        return any(dof.has_hardware_interface for dof in self.dofs)
 
     @has_hardware_interface.setter
     def has_hardware_interface(self, value: bool) -> None:
@@ -169,7 +169,8 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
     @property
     def dof(self) -> DegreeOfFreedom:
         """
-        A reference to the Degree of Freedom associated with this connection, WITH multiplier and offset applied.
+        A reference to the Degree of Freedom associated with this connection.
+        .. warning:: WITH multiplier and offset applied.
         """
         result = deepcopy(self.raw_dof)
         result.symbols = result.symbols * self.multiplier
@@ -192,7 +193,8 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
     @property
     def raw_dof(self) -> DegreeOfFreedom:
         """
-        A reference to the Degree of Freedom associated with this connection, WITHOUT multiplier and offset applied.
+        A reference to the Degree of Freedom associated with this connection.
+        .. warning:: WITHOUT multiplier and offset applied.
         """
         return self._world.get_degree_of_freedom_by_name(self.dof_name)
 
