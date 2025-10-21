@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import field
 from typing import Optional, Dict, List, Tuple, Union
 
 import semantic_world.spatial_types.spatial_types as cas
@@ -81,7 +81,7 @@ class JointPositionList(Task):
         self.observation_expression = joint_monitor.observation_expression
 
 
-@dataclass(kw_only=True)
+@validated_dataclass
 class MirrorJointPosition(Task):
     mapping: Dict[Union[PrefixedName, str], str] = field(default_factory=lambda: dict)
     threshold: float = 0.01
@@ -212,7 +212,7 @@ class JointPositionLimitList(Task):
             )
 
 
-@dataclass
+@validated_dataclass
 class JustinTorsoLimit(Task):
     connection: ActiveConnection
     lower_limit: Optional[float] = None
@@ -258,7 +258,7 @@ class JustinTorsoLimit(Task):
         )
 
 
-@dataclass
+@validated_dataclass
 class JointVelocityLimit(Task):
     joints: List[ActiveConnection1DOF]
     weight: float = WEIGHT_BELOW_CA
@@ -302,7 +302,7 @@ class JointVelocityLimit(Task):
                 )
 
 
-@dataclass
+@validated_dataclass
 class JointVelocity(Task):
     connections: List[ActiveConnection1DOF]
     vel_goal: float
@@ -335,7 +335,7 @@ class JointVelocity(Task):
             )
 
 
-@dataclass
+@validated_dataclass
 class UnlimitedJointGoal(Task):
     connection: ActiveConnection1DOF
     goal_position: float
@@ -350,7 +350,7 @@ class UnlimitedJointGoal(Task):
         )
 
 
-@dataclass
+@validated_dataclass
 class AvoidJointLimits(Task):
     """
     Calls AvoidSingleJointLimits for each joint in joint_list

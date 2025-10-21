@@ -1,14 +1,13 @@
 from __future__ import division
 
-from dataclasses import dataclass
 from typing import Optional
 
 import numpy as np
 
 import semantic_world.spatial_types.spatial_types as cas
+from giskardpy.god_map import god_map
 from giskardpy.motion_statechart.goals.goal import Goal
 from giskardpy.motion_statechart.tasks.task import WEIGHT_ABOVE_CA, Task
-from giskardpy.god_map import god_map
 from giskardpy.utils.decorators import validated_dataclass
 from semantic_world.world_description.world_entity import Body
 
@@ -48,8 +47,8 @@ class InsertCylinder(Goal):
             self.root, self.tip
         )
         root_P_tip = root_T_tip.to_position()
-        tip_P_cylinder_bottom = cas.Vector3(0, 0, self.cylinder_height / 2)
-        root_P_cylinder_bottom = root_T_tip.dot(tip_P_cylinder_bottom)
+        tip_P_cylinder_bottom = cas.Vector3.Z() * self.cylinder_height / 2
+        root_P_cylinder_bottom = root_T_tip @ tip_P_cylinder_bottom
         root_P_tip = root_P_tip + root_P_cylinder_bottom
         root_V_cylinder_z = root_T_tip @ -cas.Vector3.Z()
 

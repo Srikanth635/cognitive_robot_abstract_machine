@@ -1,17 +1,16 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import field
 from functools import cached_property
 from typing import Optional, Union
 
 import semantic_world.spatial_types.spatial_types as cas
 from giskardpy.god_map import god_map
-from giskardpy.utils.decorators import validate_types
+from giskardpy.utils.decorators import validated_dataclass
 from giskardpy.utils.utils import string_shortener, quote_node_names
 
 
-@validate_types
-@dataclass
+@validated_dataclass
 class MotionStatechartNode:
     name: str
 

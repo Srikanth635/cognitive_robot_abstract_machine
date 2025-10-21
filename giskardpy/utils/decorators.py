@@ -1,16 +1,15 @@
 from __future__ import division
 
-# I only do this, because otherwise test/test_integration_pr2.py::TestWorldManipulation::test_unsupported_options
-# fails on github actions
-
 from collections import defaultdict
 from copy import deepcopy
 from dataclasses import fields, dataclass
+from functools import wraps
 from time import time
+from typing import Any, TypeVar
 from typing import Callable, get_type_hints, get_origin, Union, get_args
 
-from functools import wraps
-from typing import Any, TypeVar
+# I only do this, because otherwise test/test_integration_pr2.py::TestWorldManipulation::test_unsupported_options
+# fails on github actions
 
 T = TypeVar("T", bound=Callable)
 
@@ -201,12 +200,14 @@ def validate_types(cls):
             field_name = field_info.name
             if field_name in type_hints:
                 expected_type = type_hints[field_name]
+                if expected_type == float:
+                    expected_type = Union[int, float]
                 value = getattr(self, field_name)
                 if not _check_type(value, expected_type):
                     expected_str = str(expected_type).replace("typing.", "")
                     raise TypeError(
-                        f"Field '{field_name}' expected {expected_str}, "
-                        f"got {type(value).__name__} = {repr(value)}"
+                        f"Field '{field_name}' in '{self.__class__.__name__}' expected {expected_str}, "
+                        f"got {type(value).__name__} = {str(value)}"
                     )
 
         # THEN call the original __post_init__ if it existed

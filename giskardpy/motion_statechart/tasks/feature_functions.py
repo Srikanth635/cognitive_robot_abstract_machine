@@ -1,29 +1,34 @@
 from __future__ import division
 
-from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Union
 
 import semantic_world.spatial_types.spatial_types as cas
 from giskardpy.god_map import god_map
 from giskardpy.motion_statechart.tasks.task import WEIGHT_BELOW_CA, Task
+from giskardpy.utils.decorators import validated_dataclass
 from semantic_world.world_description.geometry import Color
-from semantic_world.datastructures.prefixed_name import PrefixedName
 from semantic_world.world_description.world_entity import Body
 
 
-@dataclass
+@validated_dataclass
 class FeatureFunctionGoal(Task):
     """
     Parent class of all feature function tasks. It instantiates the controlles and reference features in the correct
     way and sets the debug function.
     """
+
     tip_link: Body
     root_link: Body
     controlled_feature: Union[cas.Point3, cas.Vector3]
     reference_feature: Union[cas.Point3, cas.Vector3]
+
     def __post_init__(self):
-        root_reference_feature = god_map.world.transform(target_frame=self.root_link, spatial_object=self.reference_feature)
-        tip_controlled_feature = god_map.world.transform(target_frame=self.tip_link, spatial_object=self.controlled_feature)
+        root_reference_feature = god_map.world.transform(
+            target_frame=self.root_link, spatial_object=self.reference_feature
+        )
+        tip_controlled_feature = god_map.world.transform(
+            target_frame=self.tip_link, spatial_object=self.controlled_feature
+        )
 
         root_T_tip = god_map.world.compose_forward_kinematics_expression(
             self.root_link, self.tip_link
@@ -63,13 +68,14 @@ class FeatureFunctionGoal(Task):
             )
 
 
-@dataclass
+@validated_dataclass
 class AlignPerpendicular(FeatureFunctionGoal):
     """
     Aligns the tip_normal to the reference_normal such that they are perepndicular to each other.
     :param tip_normal: Tip normal to be controlled.
     :param reference_normal: Reference normal to align the tip normal to.
     """
+
     tip_link: Body
     root_link: Body
     tip_normal: cas.Vector3
@@ -97,7 +103,7 @@ class AlignPerpendicular(FeatureFunctionGoal):
         self.observation_expression = cas.abs(0 - expr) < self.threshold
 
 
-@dataclass
+@validated_dataclass
 class HeightGoal(FeatureFunctionGoal):
     """
     Moves the tip_point to be the specified distance away from the reference_point along the z-axis of the map frame.
@@ -106,6 +112,7 @@ class HeightGoal(FeatureFunctionGoal):
     :param lower_limit: Lower limit to control the distance away from the reference_point.
     :param upper_limit: Upper limit to control the distance away from the reference_point.
     """
+
     tip_link: Body
     root_link: Body
     tip_point: cas.Point3
@@ -139,7 +146,7 @@ class HeightGoal(FeatureFunctionGoal):
         )
 
 
-@dataclass
+@validated_dataclass
 class DistanceGoal(FeatureFunctionGoal):
     """
     Moves the tip_point to be the specified distance away from the reference_point measured in the x-y-plane of the map frame.
@@ -148,6 +155,7 @@ class DistanceGoal(FeatureFunctionGoal):
     :param lower_limit: Lower limit to control the distance away from the reference_point.
     :param upper_limit: Upper limit to control the distance away from the reference_point.
     """
+
     tip_link: Body
     root_link: Body
     tip_point: cas.Point3
@@ -156,14 +164,17 @@ class DistanceGoal(FeatureFunctionGoal):
     upper_limit: float
     weight: int = WEIGHT_BELOW_CA
     max_vel: float = 0.2
+
     def __post_init__(self):
         self.controlled_feature = self.tip_point
         self.reference_feature = self.reference_point
         super().__post_init__()
 
-        projected_vector = self.root_P_controlled_feature.distance_vector_projected_on_plane(
-            self.root_P_reference_feature,
-            cas.Vector3.Z(),
+        projected_vector = (
+            self.root_P_controlled_feature.distance_vector_projected_on_plane(
+                self.root_P_reference_feature,
+                cas.Vector3.Z(),
+            )
         )
         expr = projected_vector.norm()
 
@@ -185,12 +196,16 @@ class DistanceGoal(FeatureFunctionGoal):
             names=[f"{self.name}_extra1", f"{self.name}_extra2", f"{self.name}_extra3"],
         )
         self.observation_expression = cas.logic_and(
-            cas.if_less_eq(expr, self.upper_limit, cas.Expression(1), cas.Expression(0)),
-            cas.if_greater_eq(expr, self.lower_limit, cas.Expression(1), cas.Expression(0)),
+            cas.if_less_eq(
+                expr, self.upper_limit, cas.Expression(1), cas.Expression(0)
+            ),
+            cas.if_greater_eq(
+                expr, self.lower_limit, cas.Expression(1), cas.Expression(0)
+            ),
         )
 
 
-@dataclass
+@validated_dataclass
 class AngleGoal(FeatureFunctionGoal):
     """
     Controls the angle between the tip_vector and the reference_vector to be between lower_angle and upper_angle.
@@ -199,6 +214,7 @@ class AngleGoal(FeatureFunctionGoal):
     :param lower_angle: Lower limit to control the angle between the tip_vector and the reference_vector.
     :param upper_angle: Upper limit to control the angle between the tip_vector and the reference_vector.
     """
+
     tip_link: Body
     root_link: Body
     tip_vector: cas.Vector3
@@ -207,6 +223,7 @@ class AngleGoal(FeatureFunctionGoal):
     upper_angle: float
     weight: int = WEIGHT_BELOW_CA
     max_vel: float = 0.2
+
     def __post_init__(self):
         self.controlled_feature = self.tip_vector
         self.reference_feature = self.reference_vector
