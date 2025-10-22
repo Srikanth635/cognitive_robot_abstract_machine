@@ -35,32 +35,27 @@ class BaseArmWeightScaling(Task):
         scaling_exp = root_P_goal - root_P_tip
 
         list_gains = []
-        for t in range(god_map.qp_controller.prediction_horizon):
+        for t in range(god_map.qp_controller.config.prediction_horizon):
             gains = defaultdict(dict)
             arm_v = None
             for name in self.arm_joints:
-                vs = god_map.world.get_connection_by_name(name).dofs
+                vs = god_map.world.get_connection_by_name(name).active_dofs
                 for v in vs:
-                    v_gain = self.gain * cas.norm(
-                        scaling_exp / v.get_upper_limit(Derivatives.velocity)
-                    )
+                    v_gain = self.gain * (
+                        scaling_exp / v.upper_limits.velocity
+                    ).norm()
                     arm_v = v
                     gains[Derivatives.velocity][v] = v_gain
                     gains[Derivatives.acceleration][v] = v_gain
                     gains[Derivatives.jerk][v] = v_gain
             base_v = None
             for name in self.base_joints:
-                vs = god_map.world.get_connection_by_name(name).dofs
+                vs = god_map.world.get_connection_by_name(name).active_dofs
                 for v in vs:
                     v_gain = (
                         self.gain
                         / 100
-                        * cas.save_division(
-                            1,
-                            cas.norm(
-                                scaling_exp / v.get_upper_limit(Derivatives.velocity)
-                            ),
-                        )
+                        * cas.Expression(1).safe_division((scaling_exp / v.upper_limits.velocity).norm())
                     )
                     base_v = v
                     gains[Derivatives.velocity][v] = v_gain
@@ -71,20 +66,18 @@ class BaseArmWeightScaling(Task):
         god_map.debug_expression_manager.add_debug_expression(
             "base_scaling",
             self.gain
-            * cas.save_division(
-                1, cas.norm(scaling_exp / base_v.get_upper_limit(Derivatives.velocity))
-            ),
-        )
+            * cas.Expression(1).safe_division((scaling_exp / base_v.upper_limits.velocity).norm())
+            )
         god_map.debug_expression_manager.add_debug_expression(
             "arm_scaling",
             self.gain
-            * cas.norm(scaling_exp / arm_v.get_upper_limit(Derivatives.velocity)),
+            * (scaling_exp / arm_v.upper_limits.velocity).norm(),
         )
         god_map.debug_expression_manager.add_debug_expression(
-            "norm", cas.norm(scaling_exp)
+            "norm", scaling_exp.norm()
         )
         god_map.debug_expression_manager.add_debug_expression(
-            "division", 1 / cas.norm(scaling_exp)
+            "division", 1 / scaling_exp.norm()
         )
         self.add_quadratic_weight_gain("baseToArmScaling", gains=list_gains)
 
@@ -121,11 +114,11 @@ class MaxManipulability(Task):
         )
 
         god_map.debug_expression_manager.add_debug_expression(
-            f"mIndex {self.tip_link}", m, derivatives_to_plot=[0, 1]
+            f"mIndex {self.tip_link.name.name}", m, derivatives_to_plot=[0, 1]
         )
         god_map.debug_expression_manager.add_debug_expression(
-            f"mIndex {self.tip_link} threshold",
+            f"mIndex {self.tip_link.name.name} threshold",
             self.m_threshold,
             derivatives_to_plot=[0, 1],
         )
-        self.observation_expression = cas.abs(self.m_threshold - m) <= 0.0005
+        self.observation_expression = cas.abs(self.m_threshold - m) <= 0.01
