@@ -9,15 +9,15 @@ echo "Using config file: $CONFIG_FILE"
 cd "$EXAMPLES_DIR" || exit 1
 
 # Clean and recreate tmp directory
-rm -rf self_assessment_tmp
-mkdir self_assessment_tmp
+rm -rf exercises_tmp
+mkdir exercises_tmp
 
 # Convert all MyST markdown files to notebooks
 jupytext --to notebook *.md
 
 # Move notebooks into tmp for processing
-mv *.ipynb self_assessment_tmp
-cd self_assessment_tmp || exit 1
+mv *.ipynb exercises_tmp
+cd exercises_tmp || exit 1
 
 # Run nbconvert on each notebook with the shared config
 for nb in *.ipynb; do

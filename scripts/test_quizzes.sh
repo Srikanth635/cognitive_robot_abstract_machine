@@ -4,9 +4,9 @@ source /opt/ros/jazzy/setup.bash
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 QUIZZES_DIR="$(cd "$SCRIPT_DIR/../self_assessment/quizzes" && pwd)"
 cd "$QUIZZES_DIR"
-rm -rf tmp
-mkdir tmp
+rm -rf test_tmp
+mkdir test_tmp
 jupytext --to notebook *.md
-mv *.ipynb tmp
-cd tmp
+mv *.ipynb test_tmp
+cd test_tmp
 treon --thread 1 -v
