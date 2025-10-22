@@ -14,7 +14,7 @@ kernelspec:
 # Creating Custom Bodies
 
 The tutorial demonstrates the creation of a body and its visual and collision information
-In our kinematic structure, each entity needs to have a unique name. For this we can use a simple datastructure called `PrefixedName`. You always need to provide a name, but the prefix is optional.
+First, let's create a world.
 
 ```{code-cell} ipython3
 from semantic_world.datastructures.prefixed_name import PrefixedName
@@ -24,7 +24,6 @@ from semantic_world.world import World
 from semantic_world.world_description.world_entity import Body
 
 world = World()
-body = Body(name=PrefixedName("my first body", "my first prefix"))
 ```
 
 Next, let's create the visual and collision information for our body.
@@ -38,6 +37,8 @@ Supported Shapes are:
 - Sphere
 - Cylinder
 - FileMesh/TriangleMesh
+
+Finally, in our kinematic structure, each entity needs to have a unique name. For this we can use a simple datastructure called `PrefixedName`. You always need to provide a name, but the prefix is optional.
 
 ```{code-cell} ipython3
 import os
@@ -61,8 +62,9 @@ cylinder = Cylinder(origin=cylinder_origin, width=0.05, height=0.5)
 mesh = FileMesh(origin=TransformationMatrix.from_xyz_rpy(reference_frame=body),
             filename=os.path.join(get_semantic_world_directory_root(os.getcwd()), "resources", "stl", "milk.stl"))
 
-body.collision = ShapeCollection([cylinder, sphere, box], body)
-body.visual = ShapeCollection([mesh], body)
+collision = ShapeCollection([cylinder, sphere, box])
+visual = ShapeCollection([mesh])
+body = Body(name=PrefixedName("my first body", "my first prefix"), visual=visual, collision=collision)
 ```
 
 When modifying your world, keep in mind that you need to open a `world.modify_world()` whenever you want to add or remove things to/from your world
@@ -78,7 +80,7 @@ rt.scene.show("jupyter")
 ```
 
 If you think you have understood everything in this tutorial, you may try out 
-[our self-assessment quiz for this user guide](../self_assessment/quizzes/creating_custom_bodies_quiz)
+[our self-assessment quiz for this user guide](creating-custom-bodies-quiz)
 
 ```{warning}
 Using the raytracer to visualize your world only really makes sense in a notebook setting like this.

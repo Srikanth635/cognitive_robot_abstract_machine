@@ -23,12 +23,11 @@ The user guide is divided into multiple chapters teaching you the following topi
 
 - Fundamental topics
   - [](creating-custom-bodies)
-  - [](creating-custom-bodies-quiz)
   - [](loading-worlds)
   - [](visualizing-worlds)
+  - [](world-structure-manipulation)
   - [](semantic_annotations)
 - Advanced Topics
-  - [](world-structure-manipulation)
   - [](world-state-manipulation)
   - [](regions)
   - [](view_factories)

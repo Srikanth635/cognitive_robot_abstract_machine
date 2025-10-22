@@ -1,0 +1,84 @@
+---
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.17.3
+kernelspec:
+  display_name: Python 3
+  language: python
+  name: python3
+---
+
+# Visualizing Worlds (Exercise)
+
+This exercise demonstrates a lightweight way to visualize a world inside a notebook using the RayTracer.
+
+You will:
+- Load a simple world from URDF
+- Create a RayTracer and render the scene
+
+## 0. Setup
+
+```{code-cell} ipython3
+:tags: [remove-input]
+import os
+import logging
+
+from semantic_world.adapters.urdf import URDFParser
+from semantic_world.utils import get_semantic_world_directory_root
+from semantic_world.spatial_computations.raytracer import RayTracer
+
+logging.disable(logging.CRITICAL)
+root = get_semantic_world_directory_root(os.getcwd())
+table_urdf = os.path.join(root, "resources", "urdf", "table.urdf")
+world = URDFParser.from_file(table_urdf).parse()
+```
+
+## 1. Visualize with the RayTracer
+Your goal:
+- Construct a `RayTracer` for the loaded `world`
+- Call `update_scene()` and show the scene with `rt.scene.show("jupyter")`
+
+Store your tracer in a variable named `rt`.
+
+```{code-cell} ipython3
+:tags: [exercise]
+from semantic_world.adapters.viz_marker import VizMarkerPublisher
+import threading
+import rclpy
+
+# TODO: create a viz marker publisher and store it in a variable named `viz`
+viz = ...
+```
+
+```{code-cell} ipython3
+:tags: [example-solution]
+from semantic_world.utils import rclpy_installed
+
+# In your case you should not need the if statement below. 
+# The reason it is here is that ROS is not installed on the backend running these docs yet.
+if rclpy_installed():
+    from semantic_world.adapters.viz_marker import VizMarkerPublisher
+    import threading
+    import rclpy
+    rclpy.init()
+    
+    node = rclpy.create_node("semantic_world")
+    thread = threading.Thread(target=rclpy.spin, args=(node,), daemon=True)
+    thread.start()
+    
+    viz = VizMarkerPublisher(world=world, node=node)
+else:
+    rt = RayTracer(world); rt.update_scene(); rt.scene.show("jupyter")
+```
+
+```{code-cell} ipython3
+:tags: [verify-solution, remove-input]
+from semantic_world.utils import rclpy_installed
+
+if rclpy_installed():
+    assert viz is not ..., "Instantiate a VizMarkerPublisher and assign it to `viz`."
+    assert isinstance(viz, VizMarkerPublisher), "Make sure you are using the VizMarkerPublisher"
+```

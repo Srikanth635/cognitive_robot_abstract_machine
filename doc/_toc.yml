@@ -11,9 +11,9 @@ parts:
         - file: examples/creating_custom_bodies
         - file: examples/loading_worlds
         - file: examples/visualizing_worlds
+        - file: examples/world_structure_manipulation
         - file: examples/views
         - file: examples/world_state_manipulation
-        - file: examples/world_structure_manipulation
         - file: examples/regions
         - file: examples/factories
         - file: examples/persistence_of_annotated_worlds
@@ -35,9 +35,9 @@ parts:
         - file: self_assessment/quizzes/creating_custom_bodies_quiz
         - file: self_assessment/quizzes/loading_worlds_quiz
         - file: self_assessment/quizzes/visualizing_worlds_quiz
+        - file: self_assessment/quizzes/world_structure_manipulation_quiz
         - file: self_assessment/quizzes/views_quiz
         - file: self_assessment/quizzes/world_state_manipulation_quiz
-        - file: self_assessment/quizzes/world_structure_manipulation_quiz
         - file: self_assessment/quizzes/regions_quiz
         - file: self_assessment/quizzes/factories_quiz
         - file: self_assessment/quizzes/persistence_of_annotated_worlds_quiz
@@ -45,6 +45,13 @@ parts:
     - file: self_assessment/exercises_intro
       sections:
         - file: self_assessment/exercises/0_using_transformations
+        - file: self_assessment/exercises/1_creating_custom_bodies
+        - file: self_assessment/exercises/2_loading_worlds
+        - file: self_assessment/exercises/3_visualizing_worlds
+        - file: self_assessment/exercises/4_world_structure_manipulation
+        - file: self_assessment/exercises/5_views
+        - file: self_assessment/exercises/6_world_state_manipulation
+        - file: self_assessment/exercises/7_regions
 - caption: References
   chapters:
     - file: autoapi/index

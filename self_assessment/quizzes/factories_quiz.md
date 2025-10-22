@@ -11,7 +11,7 @@ kernelspec:
 ---
 
 (view-factories-quiz)=
-# Factories — Self Assessment
+# Factories Quiz
 
 This page provides a self-check quiz for the tutorial: [](view_factories).  
 Source: Jupyter quiz. $ $
