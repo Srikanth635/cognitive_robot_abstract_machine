@@ -83,8 +83,6 @@ bottle_body = Body(name=PrefixedName("bottle1"),
 with world.modify_world():
     world.add_body(bottle_body)
     world.add_view(Bottle(body=bottle_body))
-
-rt = RayTracer(world); rt.update_scene(); rt.scene.show("jupyter")
 ```
 
 ```{code-cell} ipython3
@@ -92,7 +90,7 @@ rt = RayTracer(world); rt.update_scene(); rt.scene.show("jupyter")
 assert len(world.views) == 1, "There should be exactly one view in the world."
 assert world.get_views_by_type(Bottle) != [], "There should be a Bottle view in the world."
 assert world.get_views_by_type(Bottle)[0].body == bottle_body, "The Bottle view should reference the correct body."
-
+rt = RayTracer(world); rt.update_scene(); rt.scene.show("jupyter")
 ```
 
 ## 2. Query for bottles with EQL
@@ -102,19 +100,22 @@ Your goal:
 
 ```{code-cell} ipython3
 :tags: [exercise]
-# TODO: create an EQL query for Bottle views
-bottles_query = ...
+# TODO: create an EQL query for Bottle views and store the result of the query in `query_result`.
+
+query_result: list[Bottle] = ...
 ```
 
 ```{code-cell} ipython3
 :tags: [example-solution]
 with symbolic_mode():
     bottles_query = an(entity(let(Bottle, world.views)))
+    
+query_result = list(bottles_query.evaluate())
+print(query_result)
 ```
 
 ```{code-cell} ipython3
 :tags: [verify-solution, remove-input]
-assert bottles_query is not ..., "Create an EQL query named `bottles_query`."
-result = list(bottles_query.evaluate())
-assert len(result) == 1, "There should be exactly one Bottle returned by the query."
+assert query_result is not ..., "The query result should be stored in a variable."
+assert len(query_result) == 1, "There should be exactly one Bottle returned by the query."
 ```

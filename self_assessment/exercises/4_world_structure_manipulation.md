@@ -88,8 +88,6 @@ base_C_body = ...
 ```{code-cell} ipython3
 :tags: [example-solution]
 
-
-# eql query
 with symbolic_mode():
     base_C_body_query = the(entity(let(RevoluteConnection, world.connections)))
 

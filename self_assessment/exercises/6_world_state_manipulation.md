@@ -39,11 +39,11 @@ Your goal:
 - Add a small red box shape to `root`, and a small green box shape to `slider` for visibility
 - Add a `PrismaticConnection` along the X axis from `root` to `slider`
 - Keep a reference to this connection in a variable named `root_C_slider`
-- Set `root_C_slider.position = 0.1`
+- Set `root_C_slider.position = 0.2`
 
 ```{code-cell} ipython3
 :tags: [exercise]
-# TODO: build the world and set the prismatic connection position to 0.1
+# TODO: build the world and set the prismatic connection position to 0.2
 world = ...
 red_box = ...
 green_box = ...
@@ -73,8 +73,11 @@ root_C_slider: PrismaticConnection = PrismaticConnection(
 )
 with world.modify_world():
     world.add_connection(root_C_slider)
-
-root_C_slider.position = 0.1
+rt = RayTracer(world); rt.update_scene(); rt.scene.show("jupyter")
+```
+```{code-cell} ipython3
+:tags: [example-solution]
+root_C_slider.position = 0.2
 ```
 
 ```{code-cell} ipython3
@@ -86,6 +89,6 @@ assert root_C_slider is not ..., "The prismatic connection should be created."
 assert isinstance(root, Body), "`root` must be a Body."
 assert isinstance(slider, Body), "`slider` must be a Body."
 assert isinstance(root_C_slider, PrismaticConnection), "`root_C_slider` must be a PrismaticConnection."
-assert abs(root_C_slider.position - 0.1) < 1e-6, "The slider should be at position 0.1 along X."
+assert abs(root_C_slider.position - 0.2) < 1e-6, "The slider should be at position 0.1 along X."
 rt = RayTracer(world); rt.update_scene(); rt.scene.show("jupyter")
 ```

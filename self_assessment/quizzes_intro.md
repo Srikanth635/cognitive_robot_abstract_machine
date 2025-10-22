@@ -1,4 +1,4 @@
-# Self-Assessment Quizzes
+# Quizzes
 
 This section contains quick quizzes that help you verify your grasp of the core ideas before moving on. 
 Quizzes are short, focused, and map directly to the topics in the User Guide.

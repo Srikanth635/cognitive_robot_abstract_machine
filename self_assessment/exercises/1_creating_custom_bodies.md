@@ -70,8 +70,6 @@ visual = ShapeCollection([visual_sphere])
 body = Body(name=PrefixedName("exercise_body"), collision=collision, visual=visual)
 with world.modify_world():
     world.add_body(body)
-    
-rt = RayTracer(world); rt.update_scene(); rt.scene.show("jupyter")
 ```
 
 ```{code-cell} ipython3

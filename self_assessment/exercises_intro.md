@@ -1,4 +1,4 @@
-# Self-Assessment: Example Solutions for our Hands-On Exercises
+# Example Solutions for our Hands-On Exercises
 
 This section contains short, focused exercises that help you practice the concepts introduced in the User Guide. Each exercise is designed to be run as a notebook and to guide you from problem statement to a working solution.
 
