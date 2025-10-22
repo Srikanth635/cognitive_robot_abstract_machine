@@ -146,7 +146,7 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
             dof = self._world.get_degree_of_freedom_by_name(self.dof_name)
         except KeyError:
             # catch the case where the dof_name is set, but a dof of that name doesn't exist in the world (anymore)
-            # can happen if you remove and readd a connection
+            # can happen if you remove and re-add a connection
             self.dof_name = None
         if self.dof_name is None:
             dof = DegreeOfFreedom(
