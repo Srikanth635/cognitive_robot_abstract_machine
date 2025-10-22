@@ -11,7 +11,7 @@ kernelspec:
 ---
 
 (creating-custom-bodies-quiz)=
-# Creating Custom Bodies — Self Assessment
+# Creating Custom Bodies Quiz
 
 This page provides a self-check quiz for the tutorial: [](creating-custom-bodies).  
 Source: [Jupyter quiz](https://pypi.org/project/jupyterquiz/#description). $ $
@@ -28,27 +28,26 @@ questions = [
       "question": "What is the purpose of the `PrefixedName` data structure?",
       "type": "multiple_choice",
       "answers": [
-        { "answer": "To generate unique names for entities with an optional prefix.", "correct": True },
-        { "answer": "To store rotation matrices.", "correct": False },
-        { "answer": "To define collision geometry.", "correct": False },
-        { "answer": "To manage ray-tracing parameters.", "correct": False }
+        { "answer": "To give world entities unique names.", "correct": True, "feedback": "Correct! PrefixedNames are assumed to be unique." },
+        { "answer": "To act as unique variable names.", "correct": False, "feedback": "Incorrect! Try again." },
+        { "answer": "To identify the world a world entity belongs to.", "correct": False, "feedback": "Incorrect! Try again." },
+        { "answer": "To manage ray-tracing parameters.", "correct": False, "feedback": "Incorrect! Try again."   }
       ],
-      "explanation": "`PrefixedName` combines a name with an optional prefix to keep entity identifiers unique."
     },
     {
       "question": "Which two shape collections can a body have?",
       "type": "multiple_choice",
       "answers": [
-        { "answer": "Visual and collision", "correct": True },
-        { "answer": "Static and dynamic", "correct": False },
-        { "answer": "Physical and logical", "correct": False },
-        { "answer": "Primary and secondary", "correct": False }
+        { "answer": "Visual and collision", "correct": True, "feedback": "Correct! If a body doesn't have a visual, then the collision shape is used instead."},
+        { "answer": "Static and dynamic", "correct": False, "feedback": "Incorrect! Try again."},
+        { "answer": "Physical and logical", "correct": False, "feedback": "Incorrect! Try again." },
+        { "answer": "Primary and secondary", "correct": False, "feedback": "Incorrect! Try again." }
       ],
-      "explanation": "Visual is for rendering; collision is for physics/collision computations."
     },
     {
       "question": "Which shapes are supported?",
-      "type": "multiple_select",
+      "type": "many_choice",
+      "answer_cols": 4,
       "answers": [
         { "answer": "Box", "correct": True },
         { "answer": "Sphere", "correct": True },
@@ -56,84 +55,58 @@ questions = [
         { "answer": "FileMesh/TriangleMesh", "correct": True },
         { "answer": "Cone", "correct": False }
       ],
-      "explanation": "Box, Sphere, Cylinder, and FileMesh (TriangleMesh) are supported; Cone is not listed."
     },
     {
       "question": "How should you add a body to the world?",
       "type": "multiple_choice",
       "answers": [
-        { "answer": "with world.modify_world(): world.add_body(body)", "correct": True },
-        { "answer": "world.add_body(body)", "correct": False },
-        { "answer": "world.create_body(body)", "correct": False },
-        { "answer": "world.append(body)", "correct": False }
+        { "answer": "with world.modify_world(): \n world.add_body(body)", "correct": True, "feedback": "Correct! The world must be modified within a `with` block. To know why, check out own cross-process-synchronization tutorial (TBD)" },
+        { "answer": "world.add_body(body)", "correct": False, "feedback": "Incorrect! Try again." }
+        { "answer": "world.create_body(body)", "correct": False, "feedback": "Incorrect! Try again." }
+        { "answer": "world.append(body)", "correct": False, "feedback": "Incorrect! Try again." }
       ],
-      "explanation": "All changes to the world must happen within `with world.modify_world():`."
     },
     {
-      "question": "What does the `RayTracer` do in the example?",
+      "question": "What issue will occur when creating multiple unconnected bodies?",
       "type": "multiple_choice",
       "answers": [
-        { "answer": "It traces rays for visualization or computation and can render the scene.", "correct": True },
-        { "answer": "It loads STL meshes.", "correct": False },
-        { "answer": "It defines coordinate frames.", "correct": False },
-        { "answer": "It manages world validation.", "correct": False }
+        { "answer": "World validation fails.", "correct": True, "feedback": "Correct! Since two unconnected bodies would mean an ambiguous root in the world-structure, validation fails." },
+        { "answer": "Rendering always crashes.", "correct": False, "feedback": "Incorrect! Try again." },
+        { "answer": "Meshes are auto-merged.", "correct": False, "feedback": "Incorrect! Try again." },
+        { "answer": "Textures are dropped.", "correct": False, "feedback": "Incorrect! Try again." }
       ],
-      "explanation": "After `rt.update_scene()`, `rt.scene.show('jupyter')` visualizes the scene."
     },
     {
-      "question": "What issue can occur when creating multiple unconnected bodies?",
+      "question": "Which ways of constructing a TransformationMatrix did you learn?",
       "type": "multiple_choice",
-      "answers": [
-        { "answer": "World validation fails.", "correct": True },
-        { "answer": "Rendering always crashes.", "correct": False },
-        { "answer": "Meshes are auto-merged.", "correct": False },
-        { "answer": "Textures are dropped.", "correct": False }
-      ],
-      "explanation": "Unconnected bodies trigger validation problems; see the world-structure-manipulation tutorial."
-    },
-    {
-      "question": "Which method constructs a transform from position and quaternion?",
-      "type": "multiple_choice",
+      "type": "many_choice",
+      "answer_cols": 3,
       "answers": [
         { "answer": "TransformationMatrix.from_xyz_quaternion()", "correct": True },
-        { "answer": "TransformationMatrix.from_point_rotation_matrix()", "correct": False },
-        { "answer": "RotationMatrix.from_axis_angle()", "correct": False },
-        { "answer": "Point3.from_iterable()", "correct": False }
+        { "answer": "TransformationMatrix.from_point_rotation_matrix()", "correct": True },
+        { "answer": "TransformationMatrix.from_xyz_rpy()", "correct": True },
+        { "answer": "TransformationMatrix.from_xyz_euler()", "correct": False },
       ],
-      "explanation": "`from_xyz_quaternion()` builds a transform from position and quaternion components."
     },
     {
       "question": "What does `get_semantic_world_directory_root()` help with?",
       "type": "multiple_choice",
       "answers": [
-        { "answer": "Locating the Semantic World resource root (e.g., STL files).", "correct": True },
-        { "answer": "Creating output folders.", "correct": False },
-        { "answer": "Validating shapes.", "correct": False },
-        { "answer": "Spawning default entities.", "correct": False }
+        { "answer": "Locating the Semantic World project root.", "correct": True, "feedback": "Correct! This makes it easy to reference paths from anywhere in the project." },
+        { "answer": "Gives you permissions to push onto the Semantic World cram2/main branch without doing Pull Requests.", "correct": False, "feedback": "YOU MONSTER! SHAME. ON. YOU. >:C" },
+        { "answer": "Gives you read and write access to a world.", "correct": False, "feedback": "Incorrect! Try again." },
+        { "answer": "Get the root of your world.", "correct": False, "feedback": "Incorrect! Try again." }
       ],
-      "explanation": "It’s used to find packaged resources like `resources/stl/milk.stl`."
     },
     {
-      "question": "What does the `Scale` class specify for a `Box`?",
+      "question": "What does a `Box` take for its `scale` parameter?",
       "type": "multiple_choice",
       "answers": [
-        { "answer": "Dimensions along x, y, z.", "correct": True },
-        { "answer": "Rotation about axes.", "correct": False },
-        { "answer": "Texture mapping parameters.", "correct": False },
-        { "answer": "Color intensity.", "correct": False }
+        { "answer": "Scale(x=x, y=y, z=z)", "correct": True, "feedback": "Correct!" },
+        { "answer": "Tuple[x, y, z]", "correct": False, "feedback": "Incorrect! Please refer to https://testing.googleblog.com/2017/11/obsessed-with-primitives.html" },
+        { "answer": "List[x, y, z].", "correct": False, "feedback": "Incorrect! Please refer to https://testing.googleblog.com/2017/11/obsessed-with-primitives.html" },
+        { "answer": "None of the above, its individual x_scale, y_scale and z_scale parameters", "correct": False, "feedback": "Incorrect! Please refer to https://testing.googleblog.com/2017/11/obsessed-with-primitives.html" }
       ],
-      "explanation": "Scale sets the box size on each axis."
-    },
-    {
-      "question": "How do you visualize the scene in Jupyter in the example?",
-      "type": "multiple_choice",
-      "answers": [
-        { "answer": "rt.scene.show('jupyter')", "correct": True },
-        { "answer": "world.show()", "correct": False },
-        { "answer": "body.display()", "correct": False },
-        { "answer": "Scene.visualize()", "correct": False }
-      ],
-      "explanation": "Call after `rt.update_scene()` to render."
     }
   ]
 

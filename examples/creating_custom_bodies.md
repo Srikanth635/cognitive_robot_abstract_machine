@@ -77,7 +77,14 @@ rt.update_scene()
 rt.scene.show("jupyter")
 ```
 
-If you want to see your generated world, check out the [](visualizing-worlds) tutorial.
+If you think you have understood everything in this tutorial, you may try out 
+[our self-assessment quiz for this user guide](quizzes/creating_custom_bodies_quiz)
+
+```{warning}
+Using the raytracer to visualize your world only really makes sense in a notebook setting like this.
+If you want learn how to properly visualize your worlds, check out the [](visualizing-worlds) tutorial.
+```
+
 ```{warning}
 If you are trying to create multiple bodies without connecting them,
 you will run into trouble with the world validation.
