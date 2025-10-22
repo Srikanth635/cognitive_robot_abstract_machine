@@ -103,6 +103,13 @@ class KinematicStructureEntity(WorldEntity, SubclassJSONSerializer, ABC):
     An entity that is part of the kinematic structure of the world.
     """
 
+    _world: Optional[World] = field(
+        default=None, repr=False, kw_only=True, hash=False, init=False
+    )
+    """
+    Setting init=False because it should only be set by the World, not during initialization.
+    """
+
     index: Optional[int] = field(default=None, init=False)
     """
     The index of the entity in `_world.kinematic_structure`.
@@ -193,9 +200,6 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
     def __post_init__(self):
         if not self.name:
             self.name = PrefixedName(f"body_{id_generator(self)}")
-
-        if self._world is not None:
-            self.index = self._world.kinematic_structure.add_node(self)
 
         self.visual.reference_frame = self
         self.collision.reference_frame = self

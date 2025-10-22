@@ -23,7 +23,6 @@ from semantic_world.world import World
 from semantic_world.world_description.connections import (
     Connection6DoF,
     FixedConnection,
-    ActiveConnection1DOF,
     PrismaticConnection,
 )
 from semantic_world.world_description.world_entity import Body
@@ -35,8 +34,6 @@ def create_dummy_world(w: Optional[World] = None) -> World:
     b1 = Body(name=PrefixedName("b1"))
     b2 = Body(name=PrefixedName("b2"))
     with w.modify_world():
-        w.add_kinematic_structure_entity(b1)
-        w.add_kinematic_structure_entity(b2)
         w.add_connection(Connection6DoF(b1, b2, _world=w))
     return w
 
