@@ -1,34 +1,29 @@
-import unittest
 from copy import deepcopy
 
 import numpy as np
 import pytest
 
+from semantic_world.datastructures.prefixed_name import PrefixedName
+from semantic_world.exceptions import (
+    AddingAnExistingViewError,
+    DuplicateViewError,
+    DuplicateKinematicStructureEntityError,
+    UsageError,
+)
 from semantic_world.spatial_types import Vector3
+from semantic_world.spatial_types.derivatives import Derivatives, DerivativeMap
+from semantic_world.spatial_types.spatial_types import (
+    TransformationMatrix,
+    RotationMatrix,
+)
+from semantic_world.spatial_types.symbol_manager import symbol_manager
+from semantic_world.testing import world_setup, pr2_world
 from semantic_world.world_description.connections import (
     PrismaticConnection,
     RevoluteConnection,
     Connection6DoF,
     FixedConnection,
 )
-from semantic_world.exceptions import (
-    AddingAnExistingViewError,
-    DuplicateViewError,
-    ViewNotFoundError,
-    DuplicateKinematicStructureEntityError,
-    UsageError,
-)
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.spatial_types.derivatives import Derivatives, DerivativeMap
-
-# from semantic_world.spatial_types.math import rotation_matrix_from_rpy
-from semantic_world.spatial_types.spatial_types import (
-    TransformationMatrix,
-    Point3,
-    RotationMatrix,
-)
-from semantic_world.spatial_types.symbol_manager import symbol_manager
-from semantic_world.testing import world_setup, pr2_world
 from semantic_world.world_description.world_entity import View, Body
 
 
@@ -445,7 +440,6 @@ def test_merge_with_connection(world_setup, pr2_world):
         parent=world.root,
         child=pr2_world.root,
         parent_T_connection_expression=origin,
-        _world=world,
     )
 
     world.merge_world(pr2_world, new_connection)

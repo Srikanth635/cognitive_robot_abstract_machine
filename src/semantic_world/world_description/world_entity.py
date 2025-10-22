@@ -103,9 +103,7 @@ class KinematicStructureEntity(WorldEntity, SubclassJSONSerializer, ABC):
     An entity that is part of the kinematic structure of the world.
     """
 
-    _world: Optional[World] = field(
-        default=None, repr=False, kw_only=True, hash=False, init=False
-    )
+    _world: Optional[World] = field(default=None, repr=False, hash=False, init=False)
     """
     Setting init=False because it should only be set by the World, not during initialization.
     """
@@ -690,6 +688,11 @@ class Connection(WorldEntity):
     Represents a connection between two entities in the world.
     """
 
+    _world: Optional[World] = field(default=None, repr=False, hash=False, init=False)
+    """
+    Setting init=False because it should only be set by the World, not during initialization.
+    """
+
     parent: KinematicStructureEntity
     """
     The parent KinematicStructureEntity of the connection.
@@ -700,12 +703,8 @@ class Connection(WorldEntity):
     The child KinematicStructureEntity of the connection.
     """
 
-    parent_T_connection_expression: TransformationMatrix = field(
-        default_factory=TransformationMatrix
-    )
-    connection_T_child_expression: TransformationMatrix = field(
-        default_factory=TransformationMatrix
-    )
+    parent_T_connection_expression: TransformationMatrix = field(default=None)
+    connection_T_child_expression: TransformationMatrix = field(default=None)
     """
     The origin expression of a connection is split into 2 transforms:
     1. parent_T_connection describes the pose of the connection and is always constant.
@@ -736,6 +735,11 @@ class Connection(WorldEntity):
                 f"{self.parent.name.name}_T_{self.child.name.name}",
                 prefix=self.child.name.prefix,
             )
+
+        if self.parent_T_connection_expression is None:
+            self.parent_T_connection_expression = TransformationMatrix()
+        if self.connection_T_child_expression is None:
+            self.connection_T_child_expression = TransformationMatrix()
 
         if (
             self.parent_T_connection_expression.reference_frame is not None

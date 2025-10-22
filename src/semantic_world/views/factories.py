@@ -24,6 +24,7 @@ from random_events.interval import Bound
 from random_events.product_algebra import *
 from typing_extensions import Generic, TypeVar
 
+from .views import GenericBody
 from ..datastructures.prefixed_name import PrefixedName
 from ..datastructures.variables import SpatialVariables
 from ..spatial_types.derivatives import DerivativeMap
@@ -53,7 +54,7 @@ from ..world_description.connections import (
 from ..world_description.degree_of_freedom import DegreeOfFreedom
 from ..world_description.geometry import Scale
 from ..world_description.shape_collection import BoundingBoxCollection, ShapeCollection
-from ..world_description.world_entity import Body, Region
+from ..world_description.world_entity import Body, Region, CollisionCheckingConfig
 
 id_generator = IDGenerator()
 
@@ -601,7 +602,9 @@ class HasDrawerFactories(ABC):
         parent_T_drawer.reference_frame = parent_root
 
         dof = DegreeOfFreedom(
-            name=PrefixedName(f"{child_root.name.name}_connection", child_root.name.prefix),
+            name=PrefixedName(
+                f"{child_root.name.name}_connection", child_root.name.prefix
+            ),
             lower_limits=lower_limits,
             upper_limits=upper_limits,
         )
@@ -1231,3 +1234,22 @@ class WallFactory(ViewFactory[Wall], HasDoorLikeFactories):
             }
         )
         return wall_event
+
+
+@dataclass
+class GenericBodyFactory(ViewFactory[GenericBody]):
+    shape: ShapeCollection
+    collision_config: CollisionCheckingConfig
+
+    def _create(self, world: World) -> World:
+        body = Body(
+            name=self.name,
+            collision=self.shape,
+            visual=self.shape,
+            collision_config=self.collision_config,
+        )
+        world.add_kinematic_structure_entity(body)
+
+        body_view = GenericBody(name=self.name, body=body)
+        world.add_view(body_view)
+        return world

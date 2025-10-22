@@ -954,8 +954,8 @@ class World:
 
             connection = root_connection
             if not connection and self_root:
-                connection = Connection6DoF(
-                    parent=self_root, child=other_root, _world=self
+                connection = Connection6DoF.with_auto_generated_dofs(
+                    parent=self_root, child=other_root, world=self
                 )
 
             if connection:
@@ -1014,8 +1014,8 @@ class World:
         :param pose: world_root_T_other_root, the pose of the other world's root with respect to the current world's root
         """
         with self.modify_world():
-            root_connection = Connection6DoF(
-                parent=self.root, child=other.root, _world=self
+            root_connection = Connection6DoF.with_auto_generated_dofs(
+                parent=self.root, child=other.root, world=self
             )
             self.merge_world(other, root_connection)
             root_connection.origin = pose

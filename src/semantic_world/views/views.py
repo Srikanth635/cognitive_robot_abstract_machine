@@ -33,6 +33,12 @@ class HasDoors:
 
 
 @symbol
+@dataclass
+class GenericBody(View):
+    body: Body
+
+
+@symbol
 @dataclass(eq=False)
 class Handle(View):
     body: Body

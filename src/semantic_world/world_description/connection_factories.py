@@ -106,7 +106,6 @@ class FixedConnectionFactory(ConnectionFactory[FixedConnection]):
             child=child,
             name=self.name,
             parent_T_connection_expression=self.parent_T_connection_expression,
-            _world=world,
         )
         world.add_connection(connection)
 
@@ -156,7 +155,6 @@ class ActiveConnection1DOFFactory(ConnectionFactory[T]):
             offset=self.offset,
             dof_name=self.dof_name,
             parent_T_connection_expression=self.parent_T_connection_expression,
-            _world=world,
         )
         world.add_connection(connection)
         # The init of the connection adds a new transformation to the origin expression but since this is already done \
@@ -238,7 +236,6 @@ class Connection6DoFFactory(ConnectionFactory[Connection6DoF]):
             qz=world.get_degree_of_freedom_by_name(self.qz_name),
             qw=world.get_degree_of_freedom_by_name(self.qw_name),
             parent_T_connection_expression=self.parent_T_connection_expression,
-            _world=world,
         )
         world.add_connection(connection)
         # The init of the  connection adds a new transformation to the origin expression but since this is already done \
@@ -281,7 +278,6 @@ class OmniDriveFactory(ConnectionFactory[OmniDrive]):
 
     x_name: PrefixedName
     y_name: PrefixedName
-    z_name: PrefixedName
     roll_name: PrefixedName
     pitch_name: PrefixedName
     yaw_name: PrefixedName
@@ -298,12 +294,11 @@ class OmniDriveFactory(ConnectionFactory[OmniDrive]):
             child_name=connection.child.name,
             x_name=connection.x.name,
             y_name=connection.y.name,
-            z_name=connection.z.name,
             roll_name=connection.roll.name,
             pitch_name=connection.pitch.name,
             yaw_name=connection.yaw.name,
-            x_velocity_name=connection.x_vel.name,
-            y_velocity_name=connection.y_vel.name,
+            x_velocity_name=connection.x_velocity.name,
+            y_velocity_name=connection.y_velocity.name,
             translation_velocity_limits=connection.translation_velocity_limits,
             rotation_velocity_limits=connection.rotation_velocity_limits,
             parent_T_connection_expression=connection.parent_T_connection_expression,
@@ -319,7 +314,6 @@ class OmniDriveFactory(ConnectionFactory[OmniDrive]):
             name=self.name,
             x=world.get_degree_of_freedom_by_name(self.x_name),
             y=world.get_degree_of_freedom_by_name(self.y_name),
-            z=world.get_degree_of_freedom_by_name(self.z_name),
             roll=world.get_degree_of_freedom_by_name(self.roll_name),
             pitch=world.get_degree_of_freedom_by_name(self.pitch_name),
             yaw=world.get_degree_of_freedom_by_name(self.yaw_name),
@@ -328,7 +322,6 @@ class OmniDriveFactory(ConnectionFactory[OmniDrive]):
             translation_velocity_limits=self.translation_velocity_limits,
             rotation_velocity_limits=self.rotation_velocity_limits,
             parent_T_connection_expression=self.parent_T_connection_expression,
-            _world=world,
         )
         world.add_connection(connection)
         # The init of the  connection adds a new transformation to the origin expression but since this is already done \
@@ -340,7 +333,6 @@ class OmniDriveFactory(ConnectionFactory[OmniDrive]):
             **super().to_json(),
             "x": self.x_name.to_json(),
             "y": self.y_name.to_json(),
-            "z": self.z_name.to_json(),
             "roll": self.roll_name.to_json(),
             "pitch": self.pitch_name.to_json(),
             "yaw": self.yaw_name.to_json(),
@@ -358,7 +350,6 @@ class OmniDriveFactory(ConnectionFactory[OmniDrive]):
             child_name=PrefixedName.from_json(data["child_name"]),
             x_name=PrefixedName.from_json(data["x"]),
             y_name=PrefixedName.from_json(data["y"]),
-            z_name=PrefixedName.from_json(data["z"]),
             roll_name=PrefixedName.from_json(data["roll"]),
             pitch_name=PrefixedName.from_json(data["pitch"]),
             yaw_name=PrefixedName.from_json(data["yaw"]),

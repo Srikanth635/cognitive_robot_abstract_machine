@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, MISSING, InitVar
 
 import numpy as np
-from typing_extensions import List, TYPE_CHECKING, Union
+from typing_extensions import List, TYPE_CHECKING, Union, Optional
 
 from .degree_of_freedom import DegreeOfFreedom
-from .world_entity import CollisionCheckingConfig, Connection
+from .world_entity import CollisionCheckingConfig, Connection, KinematicStructureEntity
 from .. import spatial_types as cas
 from ..datastructures.prefixed_name import PrefixedName
 from ..datastructures.types import NpMatrix4x4
@@ -123,7 +123,7 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
     Movement along the axis is offset by this value. Useful if Connections share DoFs.
     """
 
-    dof_name: PrefixedName = field(default=None)
+    dof_name: PrefixedName = field(kw_only=True)
     """
     Name of a Degree of freedom to control movement along the axis.
     """
@@ -139,32 +139,6 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
         else:
             self.offset = self.offset
         self.axis = self.axis
-        self._post_init_world_part()
-
-    def _post_init_with_world(self):
-        try:
-            dof = self._world.get_degree_of_freedom_by_name(self.dof_name)
-        except KeyError:
-            # catch the case where the dof_name is set, but a dof of that name doesn't exist in the world (anymore)
-            # can happen if you remove and re-add a connection
-            self.dof_name = None
-        if self.dof_name is None:
-            dof = DegreeOfFreedom(
-                name=self.name,
-            )
-            self._world.add_degree_of_freedom(dof)
-            self.dof_name = dof.name
-            return
-
-        if dof._world is None:
-            self._world.add_degree_of_freedom(dof)
-
-    def _post_init_without_world(self):
-        if self.dof_name is None:
-            raise ValueError(
-                f"{self.__class__.__name__} cannot be created without a world "
-                "if the dof is not provided."
-            )
 
     @property
     def dof(self) -> DegreeOfFreedom:
@@ -293,23 +267,23 @@ class Connection6DoF(PassiveConnection):
     Useful for synchronizing with transformations from external providers.
     """
 
-    x: DegreeOfFreedom = field(default=None)
+    x: DegreeOfFreedom = field(kw_only=True)
     """
     Displacement of child KinematicStructureEntity with respect to parent KinematicStructureEntity along the x-axis.
     """
-    y: DegreeOfFreedom = field(default=None)
+    y: DegreeOfFreedom = field(kw_only=True)
     """
     Displacement of child KinematicStructureEntity with respect to parent KinematicStructureEntity along the y-axis.
     """
-    z: DegreeOfFreedom = field(default=None)
+    z: DegreeOfFreedom = field(kw_only=True)
     """
     Displacement of child KinematicStructureEntity with respect to parent KinematicStructureEntity along the z-axis.
     """
 
-    qx: DegreeOfFreedom = field(default=None)
-    qy: DegreeOfFreedom = field(default=None)
-    qz: DegreeOfFreedom = field(default=None)
-    qw: DegreeOfFreedom = field(default=None)
+    qx: DegreeOfFreedom = field(kw_only=True)
+    qy: DegreeOfFreedom = field(kw_only=True)
+    qz: DegreeOfFreedom = field(kw_only=True)
+    qw: DegreeOfFreedom = field(kw_only=True)
     """
     Rotation of child KinematicStructureEntity with respect to parent KinematicStructureEntity represented as a quaternion.
     """
@@ -319,7 +293,6 @@ class Connection6DoF(PassiveConnection):
 
     def add_to_world(self, world: World):
         super().add_to_world(world)
-        self._post_init_world_part()
         parent_P_child = cas.Point3(
             x_init=self.x.symbols.position,
             y_init=self.y.symbols.position,
@@ -339,36 +312,48 @@ class Connection6DoF(PassiveConnection):
             )
         )
 
-    def _post_init_with_world(self):
-        if all(dof is None for dof in self.passive_dofs):
-            with self._world.modify_world():
-                self.x = DegreeOfFreedom(name=PrefixedName("x", str(self.name)))
-                self._world.add_degree_of_freedom(self.x)
-                self.y = DegreeOfFreedom(name=PrefixedName("y", str(self.name)))
-                self._world.add_degree_of_freedom(self.y)
-                self.z = DegreeOfFreedom(name=PrefixedName("z", str(self.name)))
-                self._world.add_degree_of_freedom(self.z)
-                self.qx = DegreeOfFreedom(name=PrefixedName("qx", str(self.name)))
-                self._world.add_degree_of_freedom(self.qx)
-                self.qy = DegreeOfFreedom(name=PrefixedName("qy", str(self.name)))
-                self._world.add_degree_of_freedom(self.qy)
-                self.qz = DegreeOfFreedom(name=PrefixedName("qz", str(self.name)))
-                self._world.add_degree_of_freedom(self.qz)
-                self.qw = DegreeOfFreedom(name=PrefixedName("qw", str(self.name)))
-                self._world.add_degree_of_freedom(self.qw)
-                self._world.state[self.qw.name].position = 1.0
-        elif any(dof is None for dof in self.passive_dofs):
-            raise ValueError(
-                "Connection6DoF can only be created "
-                "if you provide all or none of the passive degrees of freedom"
-            )
+    @classmethod
+    def with_auto_generated_dofs(
+        cls,
+        world: World,
+        parent: KinematicStructureEntity,
+        child: KinematicStructureEntity,
+        name: Optional[PrefixedName] = None,
+        parent_T_connection_expression: Optional[cas.TransformationMatrix] = None,
+    ):
+        if name is None:
+            name = PrefixedName(f"{parent.name.name}_T_{child.name.name}")
 
-    def _post_init_without_world(self):
-        if any(dof is None for dof in self.passive_dofs):
-            raise ValueError(
-                "Connection6DoF cannot be created without a world "
-                "if some passive degrees of freedom are not provided."
-            )
+        with world.modify_world():
+            x = DegreeOfFreedom(name=PrefixedName("x", str(name)))
+            world.add_degree_of_freedom(x)
+            y = DegreeOfFreedom(name=PrefixedName("y", str(name)))
+            world.add_degree_of_freedom(y)
+            z = DegreeOfFreedom(name=PrefixedName("z", str(name)))
+            world.add_degree_of_freedom(z)
+            qx = DegreeOfFreedom(name=PrefixedName("qx", str(name)))
+            world.add_degree_of_freedom(qx)
+            qy = DegreeOfFreedom(name=PrefixedName("qy", str(name)))
+            world.add_degree_of_freedom(qy)
+            qz = DegreeOfFreedom(name=PrefixedName("qz", str(name)))
+            world.add_degree_of_freedom(qz)
+            qw = DegreeOfFreedom(name=PrefixedName("qw", str(name)))
+            world.add_degree_of_freedom(qw)
+            world.state[qw.name].position = 1.0
+
+        return cls(
+            parent=parent,
+            child=child,
+            parent_T_connection_expression=parent_T_connection_expression,
+            name=name,
+            x=x,
+            y=y,
+            z=z,
+            qx=qx,
+            qy=qy,
+            qz=qz,
+            qw=qw,
+        )
 
     @property
     def passive_dofs(self) -> List[DegreeOfFreedom]:
@@ -398,33 +383,75 @@ class Connection6DoF(PassiveConnection):
 
 @dataclass
 class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
-    x: DegreeOfFreedom = field(default=None)
-    y: DegreeOfFreedom = field(default=None)
-    z: DegreeOfFreedom = field(default=None)
-    roll: DegreeOfFreedom = field(default=None)
-    pitch: DegreeOfFreedom = field(default=None)
-    yaw: DegreeOfFreedom = field(default=None)
-    x_vel: DegreeOfFreedom = field(default=None)
-    y_vel: DegreeOfFreedom = field(default=None)
+    """
+    A connection describing an omnidirectional drive.
+    It can rotate about its z-axis and drive on the x-y plane simultaneously.
+    - x/y: Passive dofs describing the measured odometry with respect to parent frame.
+        We assume that the robot can't fly, and we can't measure its z-axis position, so z=0.
+        The odometry sensors typically provide velocity measurements with respect to the child frame,
+        therefore the velocity values of x/y must stay 0.
+    - x_vel/y_vel: The measured and commanded velocity is represented with respect to the child frame with these
+        active dofs. It must be ensured that their position values stay 0.
+    - roll/pitch: Some robots, like the PR2, have sensors to measure pitch and roll using an IMU,
+        we therefore have passive dofs for them.
+    - yaw: Since the robot can only rotate about its z-axis, we don't need different dofs for position and velocity of yaw.
+        They are combined into one active dof.
+    """
 
-    translation_velocity_limits: float = field(default=0.6)
-    rotation_velocity_limits: float = field(default=0.5)
+    x: DegreeOfFreedom = field(kw_only=True)
+    """
+    A passive dof.
+    Displacement of child KinematicStructureEntity with respect to parent KinematicStructureEntity along the x-axis.
+    """
+    y: DegreeOfFreedom = field(kw_only=True)
+    """
+    A passive dof.
+    Displacement of child KinematicStructureEntity with respect to parent KinematicStructureEntity along the y-axis.
+    """
+    roll: DegreeOfFreedom = field(kw_only=True)
+    """
+    A passive dof.
+    Rotation of child KinematicStructureEntity with respect to parent KinematicStructureEntity around the x-axis.
+    """
+    pitch: DegreeOfFreedom = field(kw_only=True)
+    """
+    A passive dof.
+    Rotation of child KinematicStructureEntity with respect to parent KinematicStructureEntity around the y-axis.
+    """
+
+    yaw: DegreeOfFreedom = field(kw_only=True)
+    """
+    An active dof.
+    Rotation of child KinematicStructureEntity with respect to parent KinematicStructureEntity around the z-axis.
+    """
+    x_velocity: DegreeOfFreedom = field(kw_only=True)
+    """
+    An active dof.
+    Velocity of child KinematicStructureEntity with respect to parent KinematicStructureEntity along the x-axis.
+    """
+    y_velocity: DegreeOfFreedom = field(kw_only=True)
+    """
+    An active dof.
+    Velocity of child KinematicStructureEntity with respect to parent KinematicStructureEntity along the y-axis.
+    """
+
+    translation_velocity_limits: float = 0.6
+    rotation_velocity_limits: float = 0.5
 
     def add_to_world(self, world: World):
         super().add_to_world(world)
-        self._post_init_world_part()
         odom_T_bf = cas.TransformationMatrix.from_xyz_rpy(
             x=self.x.symbols.position,
             y=self.y.symbols.position,
             yaw=self.yaw.symbols.position,
         )
         bf_T_bf_vel = cas.TransformationMatrix.from_xyz_rpy(
-            x=self.x_vel.symbols.position, y=self.y_vel.symbols.position
+            x=self.x_velocity.symbols.position, y=self.y_velocity.symbols.position
         )
         bf_vel_T_bf = cas.TransformationMatrix.from_xyz_rpy(
             x=0,
             y=0,
-            z=self.z.symbols.position,
+            z=0,
             roll=self.roll.symbols.position,
             pitch=self.pitch.symbols.position,
             yaw=0,
@@ -432,70 +459,80 @@ class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
         self.connection_T_child_expression = odom_T_bf @ bf_T_bf_vel @ bf_vel_T_bf
         self.connection_T_child_expression.child_frame = self.child
 
-    def _post_init_with_world(self):
-        if all(dof is None for dof in self.dofs):
-            stringified_name = str(self.name)
+    @classmethod
+    def with_auto_generated_dofs(
+        cls,
+        world: World,
+        parent: KinematicStructureEntity,
+        child: KinematicStructureEntity,
+        name: Optional[PrefixedName] = None,
+        parent_T_connection_expression: Optional[cas.TransformationMatrix] = None,
+        translation_velocity_limits: float = 0.6,
+        rotation_velocity_limits: float = 0.5,
+    ):
+        with world.modify_world():
+            stringified_name = str(name)
             lower_translation_limits = DerivativeMap()
-            lower_translation_limits.velocity = -self.translation_velocity_limits
+            lower_translation_limits.velocity = -translation_velocity_limits
             upper_translation_limits = DerivativeMap()
-            upper_translation_limits.velocity = self.translation_velocity_limits
+            upper_translation_limits.velocity = translation_velocity_limits
             lower_rotation_limits = DerivativeMap()
-            lower_rotation_limits.velocity = -self.rotation_velocity_limits
+            lower_rotation_limits.velocity = -rotation_velocity_limits
             upper_rotation_limits = DerivativeMap()
-            upper_rotation_limits.velocity = self.rotation_velocity_limits
+            upper_rotation_limits.velocity = rotation_velocity_limits
 
-            with self._world.modify_world():
-                self.x = DegreeOfFreedom(name=PrefixedName("x", stringified_name))
-                self._world.add_degree_of_freedom(self.x)
-                self.y = DegreeOfFreedom(name=PrefixedName("y", stringified_name))
-                self._world.add_degree_of_freedom(self.y)
-                self.z = DegreeOfFreedom(name=PrefixedName("z", stringified_name))
-                self._world.add_degree_of_freedom(self.z)
-                self.roll = DegreeOfFreedom(name=PrefixedName("roll", stringified_name))
-                self._world.add_degree_of_freedom(self.roll)
-                self.pitch = DegreeOfFreedom(
-                    name=PrefixedName("pitch", stringified_name)
-                )
-                self._world.add_degree_of_freedom(self.pitch)
-                self.yaw = DegreeOfFreedom(
+            with world.modify_world():
+                x = DegreeOfFreedom(name=PrefixedName("x", stringified_name))
+                world.add_degree_of_freedom(x)
+                y = DegreeOfFreedom(name=PrefixedName("y", stringified_name))
+                world.add_degree_of_freedom(y)
+                roll = DegreeOfFreedom(name=PrefixedName("roll", stringified_name))
+                world.add_degree_of_freedom(roll)
+                pitch = DegreeOfFreedom(name=PrefixedName("pitch", stringified_name))
+                world.add_degree_of_freedom(pitch)
+                yaw = DegreeOfFreedom(
                     name=PrefixedName("yaw", stringified_name),
                     lower_limits=lower_rotation_limits,
                     upper_limits=upper_rotation_limits,
                 )
-                self._world.add_degree_of_freedom(self.yaw)
+                world.add_degree_of_freedom(yaw)
 
-                self.x_vel = DegreeOfFreedom(
+                x_vel = DegreeOfFreedom(
                     name=PrefixedName("x_vel", stringified_name),
                     lower_limits=lower_translation_limits,
                     upper_limits=upper_translation_limits,
                 )
-                self._world.add_degree_of_freedom(self.x_vel)
-                self.y_vel = DegreeOfFreedom(
+                world.add_degree_of_freedom(x_vel)
+                y_vel = DegreeOfFreedom(
                     name=PrefixedName("y_vel", stringified_name),
                     lower_limits=lower_translation_limits,
                     upper_limits=upper_translation_limits,
                 )
-                self._world.add_degree_of_freedom(self.y_vel)
-        elif any(dof is None for dof in self.passive_dofs):
-            raise ValueError(
-                "OmniDrive can only be created "
-                "if you provide all or none of the passive degrees of freedom"
-            )
+                world.add_degree_of_freedom(y_vel)
 
-    def _post_init_without_world(self):
-        if any(dof is None for dof in self.dofs):
-            raise ValueError(
-                "OmniDrive cannot be created without a world "
-                "if some passive degrees of freedom are not provided."
-            )
+        return cls(
+            parent=parent,
+            child=child,
+            parent_T_connection_expression=parent_T_connection_expression,
+            name=name,
+            x=x,
+            y=y,
+            roll=roll,
+            pitch=pitch,
+            yaw=yaw,
+            x_velocity=x_vel,
+            y_velocity=y_vel,
+            translation_velocity_limits=translation_velocity_limits,
+            rotation_velocity_limits=rotation_velocity_limits,
+        )
 
     @property
     def active_dofs(self) -> List[DegreeOfFreedom]:
-        return [self.x_vel, self.y_vel, self.yaw]
+        return [self.x_velocity, self.y_velocity, self.yaw]
 
     @property
     def passive_dofs(self) -> List[DegreeOfFreedom]:
-        return [self.x, self.y, self.z, self.roll, self.pitch]
+        return [self.x, self.y, self.roll, self.pitch]
 
     @property
     def dofs(self) -> List[DegreeOfFreedom]:
@@ -503,11 +540,11 @@ class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
 
     def update_state(self, dt: float) -> None:
         state = self._world.state
-        state[self.x_vel.name].position = 0
-        state[self.y_vel.name].position = 0
+        state[self.x_velocity.name].position = 0
+        state[self.y_velocity.name].position = 0
 
-        x_vel = state[self.x_vel.name].velocity
-        y_vel = state[self.y_vel.name].velocity
+        x_vel = state[self.x_velocity.name].velocity
+        y_vel = state[self.y_velocity.name].velocity
         delta = state[self.yaw.name].position
         x_velocity = np.cos(delta) * x_vel - np.sin(delta) * y_vel
         state[self.x.name].position += x_velocity * dt
@@ -548,10 +585,10 @@ class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
 
     @property
     def has_hardware_interface(self) -> bool:
-        return self.x_vel.has_hardware_interface
+        return self.x_velocity.has_hardware_interface
 
     @has_hardware_interface.setter
     def has_hardware_interface(self, value: bool) -> None:
-        self.x_vel.has_hardware_interface = value
-        self.y_vel.has_hardware_interface = value
+        self.x_velocity.has_hardware_interface = value
+        self.y_velocity.has_hardware_interface = value
         self.yaw.has_hardware_interface = value

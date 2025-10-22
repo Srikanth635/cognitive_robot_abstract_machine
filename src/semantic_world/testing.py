@@ -69,7 +69,9 @@ def world_setup() -> Tuple[
         world.add_connection(c_r1_r2)
         world.add_connection(bf_root_l1)
         world.add_connection(bf_root_r1)
-        c_root_bf = Connection6DoF(parent=root, child=bf, _world=world)
+        c_root_bf = Connection6DoF.with_auto_generated_dofs(
+            parent=root, child=bf, world=world
+        )
         world.add_connection(c_root_bf)
 
     return world, l1, l2, bf, r1, r2
@@ -159,16 +161,14 @@ def pr2_world():
         os.path.dirname(os.path.abspath(__file__)), "..", "..", "resources", "urdf"
     )
     pr2 = os.path.join(urdf_dir, "pr2_kinematic_tree.urdf")
-    world = World()
     pr2_parser = URDFParser.from_file(file_path=pr2)
     world_with_pr2 = pr2_parser.parse()
     with world_with_pr2.modify_world():
         pr2_root = world_with_pr2.root
         localization_body = Body(name=PrefixedName("odom_combined"))
         world_with_pr2.add_kinematic_structure_entity(localization_body)
-        # world_with_pr2.plot_kinematic_structure()
-        c_root_bf = OmniDrive(
-            parent=localization_body, child=pr2_root, _world=world_with_pr2
+        c_root_bf = OmniDrive.with_auto_generated_dofs(
+            parent=localization_body, child=pr2_root, world=world_with_pr2
         )
         world_with_pr2.add_connection(c_root_bf)
 

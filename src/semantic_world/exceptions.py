@@ -132,6 +132,19 @@ class HasFreeSymbolsError(SpatialTypesError):
 
 
 @dataclass
+class DuplicateSymbolsError(SpatialTypesError):
+    """
+    Raised when duplicate symbols are found in an operation that requires unique symbols.
+    """
+
+    symbols: Iterable[Symbol]
+
+    def __post_init__(self):
+        msg = f"Operation failed due to duplicate symbols: {list(self.symbols)}. All symbols must be unique."
+        super().__init__(msg)
+
+
+@dataclass
 class ParsingError(Exception):
     """
     An error that happens during parsing of files.
