@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import importlib
 import inspect
+import itertools
 from abc import ABC
 from collections import deque
 from collections.abc import Iterable, Mapping
@@ -8,7 +10,6 @@ from dataclasses import dataclass, field
 from dataclasses import fields
 from functools import lru_cache
 
-import itertools
 import numpy as np
 import trimesh
 import trimesh.boolean
@@ -31,12 +32,12 @@ from typing_extensions import Set
 from .geometry import TriangleMesh
 from .shape_collection import ShapeCollection, BoundingBoxCollection
 from ..datastructures.prefixed_name import PrefixedName
+from ..exceptions import ReferenceFrameMismatchError
 from ..spatial_types import spatial_types as cas
 from ..spatial_types.spatial_types import TransformationMatrix, Expression, Point3
-from ..utils import IDGenerator
+from ..utils import IDGenerator, type_string_to_type
 
 if TYPE_CHECKING:
-
     from ..world_description.degree_of_freedom import DegreeOfFreedom
     from ..world import World
 
@@ -135,6 +136,22 @@ class KinematicStructureEntity(WorldEntity, SubclassJSONSerializer, ABC):
         Returns the parent KinematicStructureEntity of this entity.
         """
         return self._world.compute_parent_kinematic_structure_entity(self)
+
+    def get_first_parent_connection_of_type(
+        self, connection_type: Type[GenericConnection]
+    ) -> GenericConnection:
+        """
+        Traverse the chain up until an active connection is found.
+        """
+        if self == self._world.root:
+            raise ValueError(
+                f"Cannot get controlled parent connection for root body {self._world.root.name}."
+            )
+        if isinstance(self.parent_connection, connection_type):
+            return self.parent_connection
+        return self.parent_connection.parent.get_first_parent_connection_of_type(
+            connection_type
+        )
 
 
 @dataclass
@@ -459,7 +476,7 @@ GenericKinematicStructureEntity = TypeVar(
 
 
 @dataclass
-class View(WorldEntity):
+class View(WorldEntity, SubclassJSONSerializer):
     """
     Represents a view on a set of bodies in the world.
 
@@ -485,12 +502,38 @@ class View(WorldEntity):
         return hash(
             tuple(
                 [self.__class__]
-                + sorted([kse.index for kse in self.kinematic_structure_entities])
+                + sorted([kse.name for kse in self.kinematic_structure_entities])
             )
         )
 
     def __eq__(self, other):
         return hash(self) == hash(other)
+
+    def to_json(self) -> Dict[str, Any]:
+        result = {
+            **super().to_json(),
+        }
+
+        for view_field in fields(self):
+            value = getattr(self, view_field.name)
+            if issubclass(type(value), SubclassJSONSerializer):
+                result[view_field.name] = value.to_json()
+        return result
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self:
+        view_fields = {f.name: f for f in fields(cls)}
+
+        init_args = {}
+
+        for k, v in view_fields.items():
+            if k not in data.keys():
+                continue
+            field_type = type_string_to_type(data[k]["type"])
+            if issubclass(field_type, SubclassJSONSerializer):
+                init_args[k] = field_type.from_json(data[k])
+
+        return cls(**init_args)
 
     def _kinematic_structure_entities(
         self, visited: Set[int], aggregation_type: Type[GenericKinematicStructureEntity]
@@ -684,14 +727,22 @@ class Connection(WorldEntity):
         self._world = world
 
     def __post_init__(self):
-        self.parent_T_connection_expression.reference_frame = self.parent
-        self.connection_T_child_expression.child_frame = self.child
-
         if self.name is None:
             self.name = PrefixedName(
                 f"{self.parent.name.name}_T_{self.child.name.name}",
                 prefix=self.child.name.prefix,
             )
+
+        if (
+            self.parent_T_connection_expression.reference_frame is not None
+            and self.parent_T_connection_expression.reference_frame != self.parent
+        ):
+            raise ReferenceFrameMismatchError(
+                self.parent, self.parent_T_connection_expression.reference_frame
+            )
+
+        self.parent_T_connection_expression.reference_frame = self.parent
+        self.connection_T_child_expression.child_frame = self.child
 
     def _post_init_world_part(self):
         """
@@ -748,6 +799,9 @@ class Connection(WorldEntity):
             dofs.update(set(self.passive_dofs))
 
         return dofs
+
+
+GenericConnection = TypeVar("GenericConnection", bound=Connection)
 
 
 def _is_entity_view_or_iterable(
