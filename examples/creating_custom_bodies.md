@@ -78,7 +78,7 @@ rt.scene.show("jupyter")
 ```
 
 If you think you have understood everything in this tutorial, you may try out 
-[our self-assessment quiz for this user guide](quizzes/creating_custom_bodies_quiz)
+[our self-assessment quiz for this user guide](../self_assessment/quizzes/creating_custom_bodies_quiz)
 
 ```{warning}
 Using the raytracer to visualize your world only really makes sense in a notebook setting like this.

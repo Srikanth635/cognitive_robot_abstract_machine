@@ -61,9 +61,9 @@ questions = [
       "type": "multiple_choice",
       "answers": [
         { "answer": "with world.modify_world(): \n world.add_body(body)", "correct": True, "feedback": "Correct! The world must be modified within a `with` block. To know why, check out own cross-process-synchronization tutorial (TBD)" },
-        { "answer": "world.add_body(body)", "correct": False, "feedback": "Incorrect! Try again." }
-        { "answer": "world.create_body(body)", "correct": False, "feedback": "Incorrect! Try again." }
-        { "answer": "world.append(body)", "correct": False, "feedback": "Incorrect! Try again." }
+        { "answer": "world.add_body(body)", "correct": False, "feedback": "Incorrect! Try again." },
+        { "answer": "world.create_body(body)", "correct": False, "feedback": "Incorrect! Try again." },
+        { "answer": "world.append(body)", "correct": False, "feedback": "Incorrect! Try again." },
       ],
     },
     {
@@ -85,7 +85,7 @@ questions = [
         { "answer": "TransformationMatrix.from_xyz_quaternion()", "correct": True },
         { "answer": "TransformationMatrix.from_point_rotation_matrix()", "correct": True },
         { "answer": "TransformationMatrix.from_xyz_rpy()", "correct": True },
-        { "answer": "TransformationMatrix.from_xyz_euler()", "correct": False },
+        { "answer": "TransformationMatrix.from_xyz_euler()", "correct": False }
       ],
     },
     {
