@@ -16,7 +16,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     container:
-      image: "pycram/semantic_digital_twin:jazzy"
+      image: "pycram/semantic_world:jazzy"
     steps:
     - uses: actions/checkout@v4
       with:

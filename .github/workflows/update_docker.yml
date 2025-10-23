@@ -29,4 +29,4 @@ jobs:
         with:
           context: ./docker
           push: true
-          tags: pycram/semantic_digital_twin:jazzy
+          tags: pycram/semantic_world:jazzy

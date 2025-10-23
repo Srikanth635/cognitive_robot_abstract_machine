@@ -24,7 +24,7 @@ jobs:
   deploy-book:
     runs-on: ubuntu-latest
     container:
-      image: "pycram/semantic_digital_twin:jazzy"
+      image: "pycram/semantic_world:jazzy"
     permissions:
       pages: write
       id-token: write
