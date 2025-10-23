@@ -20,21 +20,21 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        path: "ros/src/semantic_digital_twin"
+        path: "ros/src/semantic_world"
         repository: ${{ github.repository }}
         ref: ${{ github.ref }}
         submodules: 'false'
     - name: Update semantic_digital_twin source files
       run: |
-        rm -rf /opt/ros/semantic_digital_twin/* 
-        cd /opt/ros//semantic_digital_twin
+        rm -rf /opt/ros/semantic_world/* 
+        cd /opt/ros//semantic_world
         rm -rf .git .github .gitignore .gitmodules .readthedocs.yaml
-        cp -r /__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}/ros/src/semantic_digital_twin /opt/ros/
+        cp -r /__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}/ros/src/semantic_world /opt/ros/
 
     - name: Install dependencies
       run: |
         sudo apt-get update
-        cd /opt/ros/semantic_digital_twin
+        cd /opt/ros/semantic_world
         source /opt/ros/semantic_digital_twin-venv/bin/activate
         git submodule init
         git submodule update
@@ -48,5 +48,5 @@ jobs:
       run: |
         source /opt/ros/overlay_ws/install/setup.bash
         source /opt/ros/semantic_digital_twin-venv/bin/activate
-        cd /opt/ros/semantic_digital_twin
+        cd /opt/ros/semantic_world
         python -m pytest -v test/
