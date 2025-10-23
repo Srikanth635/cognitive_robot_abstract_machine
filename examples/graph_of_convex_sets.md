@@ -13,11 +13,11 @@ kernelspec:
 
 # Graph of Convex Sets
 
-This notebook walks through the way the semantic world navigates spaces that are challenging to navigate.
+This notebook walks through the way the semantic digital twin navigates spaces that are challenging to navigate.
 Usually, navigation is done in spaces that are convex, meaning that every point is reachable via a straight line without collision.
 Unfortunately, the real world is not like this.
 
-The semantic world internally represents the objects in the world using some implementation of a scene description format. 
+The semantic digital twin internally represents the objects in the world using some implementation of a scene description format. 
 These formats include collision information for every object. The collision information is often approximated using a set of boxes.
 
 These collision boxes are converted to their algebraic representation using the [random-events](https://github.com/tomsch420/random-events) package.
@@ -35,12 +35,12 @@ You can read more about GCS [here](https://arxiv.org/abs/2101.11565).
 Let's get hands on! First, we need to create a world that makes navigation non-trivial.
 
 ```{code-cell} ipython3
-from semantic_world.world_description.geometry import Box, Scale, Color
-from semantic_world.world_description.shape_collection import ShapeCollection, BoundingBoxCollection
-from semantic_world.world_description.world_entity import Body
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.spatial_types import TransformationMatrix
-from semantic_world.world import World
+from semantic_digital_twin.world_description.geometry import Box, Scale, Color
+from semantic_digital_twin.world_description.shape_collection import ShapeCollection, BoundingBoxCollection
+from semantic_digital_twin.world_description.world_entity import Body
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.spatial_types import TransformationMatrix
+from semantic_digital_twin.world import World
 
 box_world = World()
 
@@ -59,8 +59,8 @@ be unable to fly by constraining the z-axis. Otherwise, he would get the idea to
 
 ```{code-cell} ipython3
 from random_events.interval import SimpleInterval
-from semantic_world.world_description.graph_of_convex_sets import GraphOfConvexSets
-from semantic_world.world_description.geometry import BoundingBox
+from semantic_digital_twin.world_description.graph_of_convex_sets import GraphOfConvexSets
+from semantic_digital_twin.world_description.geometry import BoundingBox
 
 search_space = BoundingBoxCollection([BoundingBox(min_x=-1, max_x=1,
                            min_y=-1, max_y=1,
@@ -90,7 +90,7 @@ gcs.draw()
 Let's use graph theory to find a path!
 
 ```{code-cell} ipython3
-from semantic_world.spatial_types import Point3
+from semantic_digital_twin.spatial_types import Point3
 
 start = Point3(-0.75, 0, 0.15)
 goal = Point3(0.75, 0, 0.15)
@@ -103,7 +103,7 @@ This minimal example demonstrates a concept that can be applied to the entire be
 ```{code-cell} ipython3
 import os
 from pathlib import Path
-from semantic_world.adapters.urdf import URDFParser
+from semantic_digital_twin.adapters.urdf import URDFParser
 root = next(
     parent
     for parent in [Path.cwd(), *Path.cwd().parents]

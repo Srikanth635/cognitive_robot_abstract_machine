@@ -27,16 +27,16 @@ You will:
 import os
 import logging
 
-from semantic_world.adapters.urdf import URDFParser
-from semantic_world.utils import get_semantic_world_directory_root
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.spatial_types.spatial_types import TransformationMatrix
-from semantic_world.world_description.connections import FixedConnection, Connection6DoF
-from semantic_world.world_description.geometry import Box, Scale
-from semantic_world.world_description.world_entity import Body, Region
+from semantic_digital_twin.adapters.urdf import URDFParser
+from semantic_digital_twin.utils import get_semantic_digital_twin_directory_root
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.spatial_types.spatial_types import TransformationMatrix
+from semantic_digital_twin.world_description.connections import FixedConnection, Connection6DoF
+from semantic_digital_twin.world_description.geometry import Box, Scale
+from semantic_digital_twin.world_description.world_entity import Body, Region
 
 logging.disable(logging.CRITICAL)
-root_path = get_semantic_world_directory_root(os.getcwd())
+root_path = get_semantic_digital_twin_directory_root(os.getcwd())
 table_urdf = os.path.join(root_path, "resources", "urdf", "table.urdf")
 ```
 

@@ -11,12 +11,12 @@ kernelspec:
   name: python3
 ---
 
-(view_factories)=
+(semantic_annotation_factories)=
 # Factories
 
-Factories are convenience builders that create consistent worlds and their semantic annotations (views) for you.
+Factories are convenience builders that create consistent worlds and their semantic annotations for you.
 They are ideal for quickly setting up structured environments such as drawers, containers, and handles without
-having to wire all bodies, connections, and views manually.
+having to wire all bodies, connections, and semantic annotations manually.
 
 Used Concepts:
 - [](world-structure-manipulation)
@@ -28,9 +28,9 @@ Used Concepts:
 ```{code-cell} ipython3
 from entity_query_language import entity, an, let, symbolic_mode
 
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.spatial_types.spatial_types import TransformationMatrix
-from semantic_world.views.factories import (
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.spatial_types.spatial_types import TransformationMatrix
+from semantic_digital_twin.semantic_annotations.factories import (
     DrawerFactory,
     ContainerFactory,
     HandleFactory,
@@ -39,9 +39,9 @@ from semantic_world.views.factories import (
     HorizontalSemanticDirection,
     VerticalSemanticDirection,
 )
-from semantic_world.views.views import Drawer, Handle
-from semantic_world.spatial_computations.raytracer import RayTracer
-from semantic_world.world_description.geometry import Scale
+from semantic_digital_twin.semantic_annotations.semantic_annotations import Drawer, Handle
+from semantic_digital_twin.spatial_computations.raytracer import RayTracer
+from semantic_digital_twin.world_description.geometry import Scale
 
 
 # Build a simple drawer with a centered handle
@@ -57,7 +57,7 @@ world = DrawerFactory(
     ),
 ).create()
 
-print(*world.views, sep="\n")
+print(*world.semantic_annotations, sep="\n")
 rt = RayTracer(world)
 rt.update_scene()
 rt.scene.show("jupyter")
@@ -67,7 +67,7 @@ You can query for components of the created furniture using EQL. For example, ge
 
 ```{code-cell} ipython3
 with symbolic_mode():
-    handles = an(entity(let(Handle, world.views)))
+    handles = an(entity(let(Handle, world.semantic_annotations)))
 print(*handles.evaluate(), sep="\n")
 ```
 
@@ -76,7 +76,7 @@ print(*handles.evaluate(), sep="\n")
 ```{code-cell} ipython3
 # Create an extra handle world and merge it into the existing world at a different pose
 useless_handle_world = HandleFactory(name=PrefixedName("useless_handle")).create()
-print(useless_handle_world.views)
+print(useless_handle_world.semantic_annotations)
 
 with world.modify_world():
     world.merge_world_at_pose(
@@ -93,7 +93,7 @@ With two handles in the world, the simple handle query yields multiple results:
 
 ```{code-cell} ipython3
 with symbolic_mode():
-    handles = an(entity(let(Handle, world.views)))
+    handles = an(entity(let(Handle, world.semantic_annotations)))
 print(*handles.evaluate(), sep="\n")
 ```
 
@@ -101,8 +101,8 @@ We can refine the query to get only the handle that belongs to a drawer:
 
 ```{code-cell} ipython3
 with symbolic_mode():
-    drawer = let(Drawer, world.views)
-    handle = let(Handle, world.views)
+    drawer = let(Drawer, world.semantic_annotations)
+    handle = let(Handle, world.semantic_annotations)
     result = an(entity(handle, drawer.handle == handle))
 print(*result.evaluate(), sep="\n")
 ```

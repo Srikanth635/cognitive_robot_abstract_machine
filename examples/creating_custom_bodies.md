@@ -17,11 +17,11 @@ The tutorial demonstrates the creation of a body and its visual and collision in
 First, let's create a world.
 
 ```{code-cell} ipython3
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.spatial_types.spatial_types import TransformationMatrix, RotationMatrix
-from semantic_world.utils import get_semantic_world_directory_root
-from semantic_world.world import World
-from semantic_world.world_description.world_entity import Body
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.spatial_types.spatial_types import TransformationMatrix, RotationMatrix
+from semantic_digital_twin.utils import get_semantic_digital_twin_directory_root
+from semantic_digital_twin.world import World
+from semantic_digital_twin.world_description.world_entity import Body
 
 world = World()
 ```
@@ -42,9 +42,9 @@ Finally, in our kinematic structure, each entity needs to have a unique name. Fo
 
 ```{code-cell} ipython3
 import os
-from semantic_world.spatial_types import Point3, Vector3
-from semantic_world.world_description.shape_collection import ShapeCollection
-from semantic_world.world_description.geometry import Box, Scale, Sphere, Cylinder, FileMesh, Color
+from semantic_digital_twin.spatial_types import Point3, Vector3
+from semantic_digital_twin.world_description.shape_collection import ShapeCollection
+from semantic_digital_twin.world_description.geometry import Box, Scale, Sphere, Cylinder, FileMesh, Color
 
 box_origin = TransformationMatrix.from_xyz_rpy(x=0, y=0, z=0, roll=0, pitch=0, yaw=0)
 box = Box(origin=box_origin, scale=Scale(1., 1., 0.5), color=Color(1., 0., 0., 1., ))
@@ -59,7 +59,7 @@ cylinder_origin = TransformationMatrix.from_point_rotation_matrix(point=Point3.f
 cylinder = Cylinder(origin=cylinder_origin, width=0.05, height=0.5)
 
 mesh = FileMesh(origin=TransformationMatrix(),
-            filename=os.path.join(get_semantic_world_directory_root(os.getcwd()), "resources", "stl", "milk.stl"))
+            filename=os.path.join(get_semantic_digital_twin_directory_root(os.getcwd()), "resources", "stl", "milk.stl"))
 
 collision = ShapeCollection([cylinder, sphere, box])
 visual = ShapeCollection([mesh])
@@ -72,7 +72,7 @@ When modifying your world, keep in mind that you need to open a `world.modify_wo
 with world.modify_world():
     world.add_body(body)
 
-from semantic_world.spatial_computations.raytracer import RayTracer
+from semantic_digital_twin.spatial_computations.raytracer import RayTracer
 rt = RayTracer(world)
 rt.update_scene()
 rt.scene.show("jupyter")

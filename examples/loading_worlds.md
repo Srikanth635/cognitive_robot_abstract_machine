@@ -23,10 +23,10 @@ First, we need to compose the path to your world file.
 import logging
 import os
 
-from semantic_world.utils import get_semantic_world_directory_root
+from semantic_digital_twin.utils import get_semantic_digital_twin_directory_root
 
 logging.disable(logging.CRITICAL)
-apartment = os.path.join(get_semantic_world_directory_root(os.getcwd()), "resources", "urdf", "apartment.urdf")
+apartment = os.path.join(get_semantic_digital_twin_directory_root(os.getcwd()), "resources", "urdf", "apartment.urdf")
 
 ```
 
@@ -35,7 +35,7 @@ To read this specific urdf file, the `https://github.com/code-iai/iai_maps/tree/
 inside your ROS2 workspace.
 
 ```python
-from semantic_world.adapters.urdf import URDFParser  
+from semantic_digital_twin.adapters.urdf import URDFParser  
   
 parser = URDFParser.from_file(apartment)  
 world = parser.parse()  

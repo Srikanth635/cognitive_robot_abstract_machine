@@ -37,17 +37,17 @@ import logging
 import math
 import os
 
-from semantic_world.adapters.urdf import URDFParser
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.spatial_types.spatial_types import TransformationMatrix
-from semantic_world.utils import get_semantic_world_directory_root
-from semantic_world.world_description.world_entity import Body
-from semantic_world.world_description.connections import Connection6DoF
-from semantic_world.world_description.geometry import Box, Scale, Color
-from semantic_world.world_description.shape_collection import ShapeCollection
-from semantic_world.spatial_computations.raytracer import RayTracer
+from semantic_digital_twin.adapters.urdf import URDFParser
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.spatial_types.spatial_types import TransformationMatrix
+from semantic_digital_twin.utils import get_semantic_digital_twin_directory_root
+from semantic_digital_twin.world_description.world_entity import Body
+from semantic_digital_twin.world_description.connections import Connection6DoF
+from semantic_digital_twin.world_description.geometry import Box, Scale, Color
+from semantic_digital_twin.world_description.shape_collection import ShapeCollection
+from semantic_digital_twin.spatial_computations.raytracer import RayTracer
 
-root = get_semantic_world_directory_root(os.getcwd())
+root = get_semantic_digital_twin_directory_root(os.getcwd())
 urdf_path = os.path.join(root, "resources", "urdf", "table.urdf")
 table_world = URDFParser.from_file(urdf_path).parse()
 table_world.get_body_by_name("left_front_leg").parent_connection.parent_T_connection_expression = TransformationMatrix.from_xyz_rpy(x=-0.5, y=-0.5)
@@ -68,7 +68,7 @@ rt = RayTracer(table_world); rt.update_scene(); rt.scene.show("jupyter")
 ## 1. Craft a transform: Place the cube on top of the table
 Now we will move the cube using a rigid transform. The pose of a 6DoF connection can be set via
 the `origin`, which is a `TransformationMatrix` from the parent (world root) to the connection frame (cube).
-This naming style, while not strictly pythonic, makes calculating with transformations a lot easier. To learn more about this naming convention, please refer to our [style guide](https://cram2.github.io/semantic_world/style_guide.html)!
+This naming style, while not strictly pythonic, makes calculating with transformations a lot easier. To learn more about this naming convention, please refer to our [style guide](https://cram2.github.io/semantic_digital_twin/style_guide.html)!
 
 Our goal is now to place the cube on top of the table. For this you need to create a transform `new_table_world_T_box` below, and then comment in the rest of the code in the code in the cell, which will apply the transform to the Connection6DoF which connects the cube to the table.
 
@@ -124,7 +124,7 @@ You may accomplish both tasks at once by constructing a single transform and app
 
 Store your updated transform in `table_world_T_moved_box` and apply it to `box_parent_connection.origin`.
 
-If you don't know how to combine two transforms, you can check out [the appropriate section in our style guide](https://cram2.github.io/semantic_world/style_guide.html#combine-multiple-transformations)!.
+If you don't know how to combine two transforms, you can check out [the appropriate section in our style guide](https://cram2.github.io/semantic_digital_twin/style_guide.html#combine-multiple-transformations)!.
 
 ```{code-cell} ipython3 
 :tags: [exercise]
@@ -163,5 +163,5 @@ rt = RayTracer(table_world); rt.update_scene(); rt.scene.show("jupyter")
 
 ## Final Notes
 
-This is just a very basic introduction to transformations. To learn more about transformations, please refer to the [Wikipedia Article about transformations](https://en.wikipedia.org/wiki/Transformation_matrix), as well as our [TransformationMatrix API](https://cram2.github.io/semantic_world/autoapi/semantic_world/spatial_types/spatial_types/index.html#semantic_world.spatial_types.spatial_types.TransformationMatrix) for further details.
+This is just a very basic introduction to transformations. To learn more about transformations, please refer to the [Wikipedia Article about transformations](https://en.wikipedia.org/wiki/Transformation_matrix), as well as our [TransformationMatrix API](https://cram2.github.io/semantic_digital_twin/autoapi/semantic_digital_twin/spatial_types/spatial_types/index.html#semantic_digital_twin.spatial_types.spatial_types.TransformationMatrix) for further details.
 

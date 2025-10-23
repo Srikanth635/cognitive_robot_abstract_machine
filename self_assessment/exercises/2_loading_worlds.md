@@ -27,12 +27,12 @@ Just execute this cell without changing anything.
 import logging
 import os
 
-from semantic_world.adapters.urdf import URDFParser
-from semantic_world.utils import get_semantic_world_directory_root
-from semantic_world.spatial_computations.raytracer import RayTracer
+from semantic_digital_twin.adapters.urdf import URDFParser
+from semantic_digital_twin.utils import get_semantic_digital_twin_directory_root
+from semantic_digital_twin.spatial_computations.raytracer import RayTracer
 
 logging.disable(logging.CRITICAL)
-root = get_semantic_world_directory_root(os.getcwd())
+root = get_semantic_digital_twin_directory_root(os.getcwd())
 table_urdf = os.path.join(root, "resources", "urdf", "table.urdf")
 ```
 
@@ -55,7 +55,7 @@ world = URDFParser.from_file(table_urdf).parse()
 
 ```{code-cell} ipython3
 :tags: [verify-solution, remove-input]
-from semantic_world.world import World
+from semantic_digital_twin.world import World
 assert world is not ..., "Create a World by parsing the URDF file."
 assert isinstance(world, World), "`world` must be an instance of World."
 assert len(world.bodies) == 6, "The loaded world must contain 6 bodies."

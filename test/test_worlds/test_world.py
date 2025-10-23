@@ -4,32 +4,35 @@ from copy import deepcopy
 import numpy as np
 import pytest
 
-from semantic_world.spatial_types import Vector3
-from semantic_world.world_description.connections import (
+from semantic_digital_twin.spatial_types import Vector3
+from semantic_digital_twin.world_description.connections import (
     PrismaticConnection,
     RevoluteConnection,
     Connection6DoF,
     FixedConnection,
 )
-from semantic_world.exceptions import (
-    AddingAnExistingViewError,
-    DuplicateViewError,
-    ViewNotFoundError,
+from semantic_digital_twin.exceptions import (
+    AddingAnExistingSemanticAnnotationError,
+    DuplicateSemanticAnnotationError,
+    SemanticAnnotationNotFoundError,
     DuplicateKinematicStructureEntityError,
     UsageError,
 )
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.spatial_types.derivatives import Derivatives, DerivativeMap
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.spatial_types.derivatives import Derivatives, DerivativeMap
 
-# from semantic_world.spatial_types.math import rotation_matrix_from_rpy
-from semantic_world.spatial_types.spatial_types import (
+# from semantic_digital_twin.spatial_types.math import rotation_matrix_from_rpy
+from semantic_digital_twin.spatial_types.spatial_types import (
     TransformationMatrix,
     Point3,
     RotationMatrix,
 )
-from semantic_world.spatial_types.symbol_manager import symbol_manager
-from semantic_world.testing import world_setup, pr2_world
-from semantic_world.world_description.world_entity import View, Body
+from semantic_digital_twin.spatial_types.symbol_manager import symbol_manager
+from semantic_digital_twin.testing import world_setup, pr2_world
+from semantic_digital_twin.world_description.world_entity import (
+    SemanticAnnotation,
+    Body,
+)
 
 
 def test_set_state(world_setup):
@@ -357,22 +360,22 @@ def test_compute_relative_pose_only_rotation(world_setup):
     np.testing.assert_array_almost_equal(relative_pose.to_np(), expected_pose)
 
 
-def test_add_view(world_setup):
+def test_add_semantic_annotation(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
-    v = View(name=PrefixedName("muh"))
-    world.add_view(v)
-    with pytest.raises(AddingAnExistingViewError):
-        world.add_view(v, exists_ok=False)
-    assert world.get_view_by_name(v.name) == v
+    v = SemanticAnnotation(name=PrefixedName("muh"))
+    world.add_semantic_annotation(v)
+    with pytest.raises(AddingAnExistingSemanticAnnotationError):
+        world.add_semantic_annotation(v, exists_ok=False)
+    assert world.get_semantic_annotation_by_name(v.name) == v
 
 
-def test_duplicate_view(world_setup):
+def test_duplicate_semantic_annotation(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
-    v = View(name=PrefixedName("muh"))
-    world.add_view(v)
-    world.views.append(v)
-    with pytest.raises(DuplicateViewError):
-        world.get_view_by_name(v.name)
+    v = SemanticAnnotation(name=PrefixedName("muh"))
+    world.add_semantic_annotation(v)
+    world.semantic_annotations.append(v)
+    with pytest.raises(DuplicateSemanticAnnotationError):
+        world.get_semantic_annotation_by_name(v.name)
 
 
 def test_merge_world(world_setup, pr2_world):

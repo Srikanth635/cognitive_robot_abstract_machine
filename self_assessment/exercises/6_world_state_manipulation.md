@@ -23,14 +23,14 @@ You will:
 
 ```{code-cell} ipython3
 :tags: [remove-input]
-from semantic_world.world import World
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.world_description.world_entity import Body
-from semantic_world.world_description.connections import PrismaticConnection
-from semantic_world.spatial_types.spatial_types import Vector3, TransformationMatrix
-from semantic_world.world_description.geometry import Box, Scale, Color
-from semantic_world.world_description.shape_collection import ShapeCollection
-from semantic_world.spatial_computations.raytracer import RayTracer
+from semantic_digital_twin.world import World
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.world_description.world_entity import Body
+from semantic_digital_twin.world_description.connections import PrismaticConnection
+from semantic_digital_twin.spatial_types.spatial_types import Vector3, TransformationMatrix
+from semantic_digital_twin.world_description.geometry import Box, Scale, Color
+from semantic_digital_twin.world_description.shape_collection import ShapeCollection
+from semantic_digital_twin.spatial_computations.raytracer import RayTracer
 ```
 
 ## 1. Create and move a prismatic connection

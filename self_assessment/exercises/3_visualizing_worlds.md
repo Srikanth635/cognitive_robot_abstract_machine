@@ -26,12 +26,12 @@ You will:
 import os
 import logging
 
-from semantic_world.adapters.urdf import URDFParser
-from semantic_world.utils import get_semantic_world_directory_root
-from semantic_world.spatial_computations.raytracer import RayTracer
+from semantic_digital_twin.adapters.urdf import URDFParser
+from semantic_digital_twin.utils import get_semantic_digital_twin_directory_root
+from semantic_digital_twin.spatial_computations.raytracer import RayTracer
 
 logging.disable(logging.CRITICAL)
-root = get_semantic_world_directory_root(os.getcwd())
+root = get_semantic_digital_twin_directory_root(os.getcwd())
 table_urdf = os.path.join(root, "resources", "urdf", "table.urdf")
 world = URDFParser.from_file(table_urdf).parse()
 ```
@@ -45,7 +45,7 @@ Store your tracer in a variable named `rt`.
 
 ```{code-cell} ipython3
 :tags: [exercise]
-from semantic_world.adapters.viz_marker import VizMarkerPublisher
+from semantic_digital_twin.adapters.viz_marker import VizMarkerPublisher
 import threading
 import rclpy
 
@@ -55,17 +55,17 @@ viz = ...
 
 ```{code-cell} ipython3
 :tags: [example-solution]
-from semantic_world.utils import rclpy_installed
+from semantic_digital_twin.utils import rclpy_installed
 
 # In your case you should not need the if statement below. 
 # The reason it is here is that ROS is not installed on the backend running these docs yet.
 if rclpy_installed():
-    from semantic_world.adapters.viz_marker import VizMarkerPublisher
+    from semantic_digital_twin.adapters.viz_marker import VizMarkerPublisher
     import threading
     import rclpy
     rclpy.init()
     
-    node = rclpy.create_node("semantic_world")
+    node = rclpy.create_node("semantic_digital_twin")
     thread = threading.Thread(target=rclpy.spin, args=(node,), daemon=True)
     thread.start()
     
@@ -76,7 +76,7 @@ else:
 
 ```{code-cell} ipython3
 :tags: [verify-solution, remove-input]
-from semantic_world.utils import rclpy_installed
+from semantic_digital_twin.utils import rclpy_installed
 
 if rclpy_installed():
     assert viz is not ..., "Instantiate a VizMarkerPublisher and assign it to `viz`."
