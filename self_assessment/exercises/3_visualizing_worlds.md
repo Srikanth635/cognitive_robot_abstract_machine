@@ -55,30 +55,22 @@ viz = ...
 
 ```{code-cell} ipython3
 :tags: [example-solution]
-from semantic_digital_twin.utils import rclpy_installed
 
-# In your case you should not need the if statement below. 
-# The reason it is here is that ROS is not installed on the backend running these docs yet.
-if rclpy_installed():
-    from semantic_digital_twin.adapters.viz_marker import VizMarkerPublisher
-    import threading
-    import rclpy
-    rclpy.init()
-    
-    node = rclpy.create_node("semantic_digital_twin")
-    thread = threading.Thread(target=rclpy.spin, args=(node,), daemon=True)
-    thread.start()
-    
-    viz = VizMarkerPublisher(world=world, node=node)
-else:
-    rt = RayTracer(world); rt.update_scene(); rt.scene.show("jupyter")
+from semantic_digital_twin.adapters.viz_marker import VizMarkerPublisher
+import threading
+import rclpy
+rclpy.init()
+
+node = rclpy.create_node("semantic_digital_twin")
+thread = threading.Thread(target=rclpy.spin, args=(node,), daemon=True)
+thread.start()
+
+viz = VizMarkerPublisher(world=world, node=node)
 ```
 
 ```{code-cell} ipython3
 :tags: [verify-solution, remove-input]
-from semantic_digital_twin.utils import rclpy_installed
 
-if rclpy_installed():
-    assert viz is not ..., "Instantiate a VizMarkerPublisher and assign it to `viz`."
-    assert isinstance(viz, VizMarkerPublisher), "Make sure you are using the VizMarkerPublisher"
+assert viz is not ..., "Instantiate a VizMarkerPublisher and assign it to `viz`."
+assert isinstance(viz, VizMarkerPublisher), "Make sure you are using the VizMarkerPublisher"
 ```

@@ -32,8 +32,6 @@ from semantic_digital_twin.utils import get_semantic_digital_twin_directory_root
 from semantic_digital_twin.spatial_computations.raytracer import RayTracer
 
 logging.disable(logging.CRITICAL)
-root = get_semantic_digital_twin_directory_root(os.getcwd())
-table_urdf = os.path.join(root, "resources", "urdf", "table.urdf")
 ```
 
 ## 1. Load the table world
@@ -43,6 +41,9 @@ Your goal:
 
 ```{code-cell} ipython3
 :tags: [exercise]
+root = get_semantic_digital_twin_directory_root(os.getcwd())
+table_urdf = os.path.join(root, "resources", "urdf", "table.urdf")
+
 # TODO: parse the URDF into a World
 world = ...
 
@@ -50,6 +51,9 @@ world = ...
 
 ```{code-cell} ipython3
 :tags: [example-solution]
+root = get_semantic_digital_twin_directory_root(os.getcwd())
+table_urdf = os.path.join(root, "resources", "urdf", "table.urdf")
+
 world = URDFParser.from_file(table_urdf).parse()
 ```
 

@@ -27,3 +27,9 @@ author = "AICOR Institute for Artificial Intelligence"
 version = ""
 # The full version, including alpha/beta/rc tags
 release = ""
+
+# Default: execute in CI
+nb_execution_mode = "cache"   # or "force"
+# But on Read the Docs, do not execute
+if os.environ.get("READTHEDOCS") == "True":
+    nb_execution_mode = "off"
