@@ -31,16 +31,16 @@ Since the addition of a body to the world would, in most cases, violate the tree
 Let's create a simple world.
 
 ```{code-cell} ipython2
-from semantic_world.world import World
-from semantic_world.world_description.world_entity import Body
-from semantic_world.world_description.degree_of_freedom import DegreeOfFreedom
-from semantic_world.world_description.connections import (
+from semantic_digital_twin.world import World
+from semantic_digital_twin.world_description.world_entity import Body
+from semantic_digital_twin.world_description.degree_of_freedom import DegreeOfFreedom
+from semantic_digital_twin.world_description.connections import (
     Connection6DoF,
     RevoluteConnection,
 )
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.spatial_types.spatial_types import Vector3
-from semantic_world.spatial_computations.raytracer import RayTracer
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.spatial_types.spatial_types import Vector3
+from semantic_digital_twin.spatial_computations.raytracer import RayTracer
 
 world = World()
 

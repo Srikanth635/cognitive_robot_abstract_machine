@@ -23,11 +23,11 @@ Let's load a world first to get started.
 import logging
 import os
 
-from semantic_world.adapters.urdf import URDFParser 
-from semantic_world.utils import get_semantic_world_directory_root
+from semantic_digital_twin.adapters.urdf import URDFParser 
+from semantic_digital_twin.utils import get_semantic_digital_twin_directory_root
 
 logging.disable(logging.CRITICAL)
-apartment = os.path.join(get_semantic_world_directory_root(os.getcwd()), "resources", "urdf", "apartment.urdf")
+apartment = os.path.join(get_semantic_digital_twin_directory_root(os.getcwd()), "resources", "urdf", "apartment.urdf")
 world = URDFParser.from_file(apartment).parse()
 
 ```
@@ -36,12 +36,12 @@ For the RVIZ2 way, ROS2 is needed. A caveat of this approach is that you have to
 We recommend to put the spinning into sperate threads and just shutdown the thread when exiting the system.
 
 ```python
-from semantic_world.adapters.viz_marker import VizMarkerPublisher
+from semantic_digital_twin.adapters.viz_marker import VizMarkerPublisher
 import threading
 import rclpy
 rclpy.init()
 
-node = rclpy.create_node("semantic_world")
+node = rclpy.create_node("semantic_digital_twin")
 thread = threading.Thread(target=rclpy.spin, args=(node,), daemon=True)
 thread.start()
 

@@ -3,9 +3,9 @@ repositories:
     type: git
     url: https://github.com/code-iai/iai_maps.git
     version: ros-jazzy
-  semantic_world:
+  semantic_digital_twin:
     type: git
-    url: https://github.com/cram2/semantic_world.git
+    url: https://github.com/cram2/semantic_digital_twin.git
     version: main
   iai_pr2:
     type: git

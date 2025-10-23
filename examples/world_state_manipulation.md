@@ -31,9 +31,9 @@ import time
 import numpy as np
 from entity_query_language import the, entity, let, symbolic_mode, in_
 
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.spatial_types.spatial_types import TransformationMatrix
-from semantic_world.views.factories import (
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.spatial_types.spatial_types import TransformationMatrix
+from semantic_digital_twin.semantic_annotation.factories import (
     DresserFactory,
     ContainerFactory,
     HandleFactory,
@@ -43,10 +43,10 @@ from semantic_world.views.factories import (
     HorizontalSemanticDirection,
     VerticalSemanticDirection,
 )
-from semantic_world.views.views import Drawer
-from semantic_world.world_description.degree_of_freedom import DegreeOfFreedom
-from semantic_world.world_description.geometry import Scale, Box, Color
-from semantic_world.spatial_computations.raytracer import RayTracer
+from semantic_digital_twin.semantic_annotations.semantic_annotations import Drawer
+from semantic_digital_twin.world_description.degree_of_freedom import DegreeOfFreedom
+from semantic_digital_twin.world_description.geometry import Scale, Box, Color
+from semantic_digital_twin.spatial_computations.raytracer import RayTracer
 
 drawer_factory = DrawerFactory(
     name=PrefixedName("drawer"),
@@ -89,7 +89,7 @@ Let's get a reference to the drawer we built above.
 with symbolic_mode():
     drawer = the(
         entity(
-            let(type_=Drawer, domain=world.views),
+            let(type_=Drawer, domain=world.semantic_annotations),
         )
     ).evaluate()
 ```
@@ -107,8 +107,8 @@ Note that this only works in this simple way for connections that only have one 
 To show this we first create a new root for the world and make a free connection from the new root to the dresser.
 
 ```{code-cell} ipython2
-from semantic_world.world_description.connections import Connection6DoF, PrismaticConnection
-from semantic_world.world_description.world_entity import Body
+from semantic_digital_twin.world_description.connections import Connection6DoF, PrismaticConnection
+from semantic_digital_twin.world_description.world_entity import Body
 
 with world.modify_world():
     old_root = world.root
@@ -130,7 +130,7 @@ rt.scene.show("jupyter")
 Now we can start moving the dresser everywhere and even rotate it.
 
 ```{code-cell} ipython2
-from semantic_world.world_description.world_entity import Connection
+from semantic_digital_twin.world_description.world_entity import Connection
 
 with symbolic_mode():
     free_connection = the(entity(connection := let(type_=Connection, domain=world.connections), connection.parent == world.root)).evaluate()
@@ -141,7 +141,7 @@ rt.update_scene()
 rt.scene.show("jupyter")
 ```
 
-The final way of manipulating the world state is the registry for all degrees of freedom, the {py:class}`semantic_world.world_description.world_state.WorldState`.
+The final way of manipulating the world state is the registry for all degrees of freedom, the {py:class}`semantic_digital_twin.world_description.world_state.WorldState`.
 This class acts as a dict like structure that maps degree of freedoms to their state.
 The state is an array of 4 values: the position, velocity, acceleration and jerk.
 Since it is an aggregation of all degree of freedoms existing in the world, it can be messy to access.

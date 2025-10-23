@@ -13,7 +13,7 @@ make sure to use paths with respect to your custom setup.
 If you want to convert the examples to Jupyter notebooks, you can use
 ```bash
 pip install jupytext
-cd semantic_world/examples
+cd semantic_digital_twin/examples
 jupytext --to notebook *.md
 ```
 
@@ -30,7 +30,7 @@ The user guide is divided into multiple chapters teaching you the following topi
   - [](world-structure-manipulation)
   - [](world-state-manipulation)
   - [](regions)
-  - [](view_factories)
+  - [](semantic_annotation_factories)
   - [](persistence-of-annotated-worlds)
   - Synchronizing worlds across multiple processes
   - Pipelines
