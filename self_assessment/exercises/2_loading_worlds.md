@@ -64,4 +64,5 @@ assert world is not ..., "Create a World by parsing the URDF file."
 assert isinstance(world, World), "`world` must be an instance of World."
 assert len(world.bodies) == 6, "The loaded world must contain 6 bodies."
 assert world.get_connection_by_name("left_front_leg_to_top") is not None, "The world should contain a connection named 'left_front_leg_to_top'."
+rt = RayTracer(world); rt.update_scene(); rt.scene.show("jupyter")
 ```

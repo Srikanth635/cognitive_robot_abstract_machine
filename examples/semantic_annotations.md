@@ -49,12 +49,12 @@ class Apple(SemanticAnnotation):
 
     body: Body
 
-    def __post_init__(self):
-        # Give the semantic_annotation a default name if none was specified
-        if self.name is None:
-            self.name = PrefixedName(str(self.body.name), self.__class__.__name__)
+```
 
+Semantic annotations are world entities, so it needs to have a unique ´PrefixedName`. You can either provide it directly
+when creating the semantic annotation or let semantic_digital_twin generate a unique name for you. 
 
+```{code-cell} ipython3
 world = World()
 with world.modify_world():
     root = Body(name=PrefixedName("root"))
@@ -103,11 +103,6 @@ from semantic_digital_twin.semantic_annotations.factories import ContainerFactor
 class FruitBox(SemanticAnnotation):
     box: Container
     fruits: List[Apple]
-
-    def __post_init__(self):
-        if self.name is None:
-            self.name = PrefixedName(str(self.box.name), self.__class__.__name__)
-
 
 with world.modify_world():
     # To create a hollowed out box in this case we use a "ContainerFactory". 
