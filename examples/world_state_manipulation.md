@@ -33,7 +33,7 @@ from entity_query_language import the, entity, let, symbolic_mode, in_
 
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.spatial_types import TransformationMatrix
-from semantic_digital_twin.semantic_annotation.factories import (
+from semantic_digital_twin.semantic_annotations.factories import (
     DresserFactory,
     ContainerFactory,
     HandleFactory,
