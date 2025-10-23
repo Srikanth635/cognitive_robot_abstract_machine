@@ -3,11 +3,11 @@
 #
 # try:
 #     multiparser_found = True
-#     from semantic_world.adapters.multi_parser import MultiParser
+#     from semantic_digital_twin.adapters.multi_parser import MultiParser
 # except ImportError:
 #     multiparser_found = False
 #
-# from semantic_world.world_description.connections import FixedConnection
+# from semantic_digital_twin.world_description.connections import FixedConnection
 #
 #
 # @unittest.skipIf(not multiparser_found, "multiparser could not be imported.")

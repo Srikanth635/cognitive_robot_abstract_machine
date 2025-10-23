@@ -5,13 +5,13 @@ import sqlalchemy
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
-from semantic_world.adapters.urdf import URDFParser
-from semantic_world.world_description.geometry import Box, Scale, Color
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.spatial_types.spatial_types import TransformationMatrix
-from semantic_world.world_description.shape_collection import ShapeCollection
-from semantic_world.world_description.world_entity import Body
-from semantic_world.orm.ormatic_interface import *
+from semantic_digital_twin.adapters.urdf import URDFParser
+from semantic_digital_twin.world_description.geometry import Box, Scale, Color
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.spatial_types.spatial_types import TransformationMatrix
+from semantic_digital_twin.world_description.shape_collection import ShapeCollection
+from semantic_digital_twin.world_description.world_entity import Body
+from semantic_digital_twin.orm.ormatic_interface import *
 from ormatic.dao import to_dao
 
 

@@ -8,25 +8,25 @@ from ormatic.utils import drop_database
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from semantic_world.adapters.ros.world_synchronizer import (
+from semantic_digital_twin.adapters.ros.world_synchronizer import (
     StateSynchronizer,
     ModelReloadSynchronizer,
     ModelSynchronizer,
 )
-from semantic_world.adapters.urdf import URDFParser
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.orm.ormatic_interface import Base, WorldMappingDAO
-from semantic_world.spatial_types import Vector3
-from semantic_world.testing import rclpy_node
-from semantic_world.utils import get_semantic_world_directory_root
-from semantic_world.world import World
-from semantic_world.world_description.connections import (
+from semantic_digital_twin.adapters.urdf import URDFParser
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.orm.ormatic_interface import Base, WorldMappingDAO
+from semantic_digital_twin.spatial_types import Vector3
+from semantic_digital_twin.testing import rclpy_node
+from semantic_digital_twin.utils import get_semantic_digital_twin_directory_root
+from semantic_digital_twin.world import World
+from semantic_digital_twin.world_description.connections import (
     Connection6DoF,
     FixedConnection,
     PrismaticConnection,
 )
-from semantic_world.world_description.degree_of_freedom import DegreeOfFreedom
-from semantic_world.world_description.world_entity import Body
+from semantic_digital_twin.world_description.degree_of_freedom import DegreeOfFreedom
+from semantic_digital_twin.world_description.world_entity import Body
 
 
 def create_dummy_world(w: Optional[World] = None) -> World:
@@ -212,7 +212,7 @@ def test_model_synchronization_merge_full_world(rclpy_node):
 
     pr2_world = URDFParser.from_file(
         os.path.join(
-            get_semantic_world_directory_root(os.getcwd()),
+            get_semantic_digital_twin_directory_root(os.getcwd()),
             "resources",
             "urdf",
             "pr2_kinematic_tree.urdf",
