@@ -18,7 +18,7 @@ from ...spatial_types.spatial_types import (
     TransformationMatrix,
     Point3,
 )
-from ...views.factories import (
+from ...semantic_annotations.factories import (
     DoorFactory,
     RoomFactory,
     WallFactory,

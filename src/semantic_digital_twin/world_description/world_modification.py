@@ -15,7 +15,7 @@ from typing_extensions import (
 
 from .connection_factories import ConnectionFactory
 from .degree_of_freedom import DegreeOfFreedom
-from .world_entity import KinematicStructureEntity, View
+from .world_entity import KinematicStructureEntity, SemanticAnnotation
 from ..datastructures.prefixed_name import PrefixedName
 
 if TYPE_CHECKING:
@@ -257,47 +257,55 @@ class RemoveDegreeOfFreedomModification(WorldModelModification):
 
 
 @dataclass
-class AddViewModification(WorldModelModification):
-    view: View
+class AddSemanticSnnotationModification(WorldModelModification):
+    semantic_annotation: SemanticAnnotation
 
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]):
-        return cls(view=kwargs["view"])
+        return cls(semantic_annotation=kwargs["semantic_annotation"])
 
     def apply(self, world: World):
-        world.add_view(self.view)
+        world.add_semantic_annotation(self.semantic_annotation)
 
     def to_json(self):
         return {
             **super().to_json(),
-            "view": self.view.to_json(),
+            "semantic_annotation": self.semantic_annotation.to_json(),
         }
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(view=View.from_json(data["view"]))
+        return cls(
+            semantic_annotation=SemanticAnnotation.from_json(
+                data["semantic_annotation"]
+            )
+        )
 
 
 @dataclass
-class RemoveViewModification(WorldModelModification):
-    view: View
+class RemoveSemanticAnnotationModification(WorldModelModification):
+    semantic_annotation: SemanticAnnotation
 
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]):
-        return cls(view=kwargs["view"])
+        return cls(semantic_annotation=kwargs["semantic_annotation"])
 
     def apply(self, world: World):
-        world.remove_view(self.view)
+        world.remove_semantic_annotation(self.semantic_annotation)
 
     def to_json(self):
         return {
             **super().to_json(),
-            "view": self.view.to_json(),
+            "semantic_annotation": self.semantic_annotation.to_json(),
         }
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(view=View.from_json(data["view"]))
+        return cls(
+            semantic_annotation=SemanticAnnotation.from_json(
+                data["semantic_annotation"]
+            )
+        )
 
 
 @dataclass

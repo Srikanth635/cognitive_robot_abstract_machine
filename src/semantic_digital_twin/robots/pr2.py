@@ -165,7 +165,7 @@ class PR2(AbstractRobot, SpecifiesLeftRightArm, HasNeck):
         )
         robot.add_torso(torso)
 
-        world.add_view(robot, exists_ok=True)
+        world.add_semantic_annotation(robot, exists_ok=True)
 
         vel_limits = defaultdict(
             lambda: 1,

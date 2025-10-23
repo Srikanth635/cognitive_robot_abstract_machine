@@ -18,7 +18,7 @@
 
 ## Design Principles
 - Always apply the SOLID principles of object-oriented programming 
-- If you have to create new view classes, stick to the design of existing views found in semantic_digital_twin.views.views
+- If you have to create new semantic annotation classes, stick to the design of existing semantic annotations found in semantic_digital_twin.semantic_annotations.semantic_annotations
 - Create meaningful custom exceptions
 - Eliminate YAGNI smells
 - Make interfaces hard to misuse

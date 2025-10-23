@@ -1,10 +1,10 @@
 from ripple_down_rules.utils import make_set
 from typing_extensions import Optional, Set
 from ripple_down_rules.datastructures.case import Case, create_case
-from .world_views_mcrdr_defs import *
+from .world_semantic_annotations_mcrdr_defs import *
 
 
-attribute_name = "views"
+attribute_name = "semantic_annotations"
 conclusion_type = (
     Drawer,
     Container,
@@ -14,7 +14,7 @@ conclusion_type = (
     Cabinet,
 )
 mutually_exclusive = False
-name = "views"
+name = "semantic_annotations"
 case_type = World
 case_name = "World"
 

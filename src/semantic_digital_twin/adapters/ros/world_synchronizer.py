@@ -300,7 +300,7 @@ class ModelReloadSynchronizer(Synchronizer):
         """
         Replaces the current world with a new one, updating all relevant attributes.
         This method modifies the existing world state, kinematic structure, degrees
-        of freedom, and views based on the `new_world` provided.
+        of freedom, and semantic annotation based on the `new_world` provided.
 
         If you encounter any issues with references to dead objects, it is most likely due to this method not doing
         everything needed.

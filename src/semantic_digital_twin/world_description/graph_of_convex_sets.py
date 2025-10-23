@@ -7,7 +7,7 @@ from .geometry import BoundingBox
 from .shape_collection import BoundingBoxCollection
 from ..datastructures.variables import SpatialVariables
 from ..world import World
-from .world_entity import View, EnvironmentView
+from .world_entity import SemanticAnnotation, semantic_environment_annotation
 
 logger = logging.getLogger(__name__)
 
@@ -258,21 +258,21 @@ class GraphOfConvexSets:
         return search_space
 
     @classmethod
-    def obstacles_from_views(
+    def obstacles_from_semantic_annotations(
         cls,
         search_space: BoundingBoxCollection,
-        obstacle_view: View,
-        wall_view: Optional[View] = None,
+        semantic_obstacle_annotation: SemanticAnnotation,
+        semantic_wall_annotation: Optional[SemanticAnnotation] = None,
         bloat_obstacles: float = 0.0,
         bloat_walls: float = 0.0,
         keep_z=True,
     ) -> Event:
         """
-        Create a connectivity graph from a list of views.
+        Create a connectivity graph from a list of semantic annotations.
 
         :param search_space: The search space for the connectivity graph.
-        :param obstacle_view: The view to create the connectivity graph from.
-        :param wall_view: An optional view containing walls to be considered as obstacles.
+        :param semantic_obstacle_annotation: The semantic annotation to create the connectivity graph from.
+        :param semantic_wall_annotation: An optional semantic annotation containing walls to be considered as obstacles.
         :param bloat_obstacles: The amount to bloat the obstacles.
         :param bloat_walls: The amount to bloat the walls.
         :param keep_z: If True, the z-axis is kept in the resulting event. Default is True.
@@ -294,18 +294,18 @@ class GraphOfConvexSets:
         bloated_obstacles: BoundingBoxCollection = BoundingBoxCollection(
             [
                 bloat_obstacle(bb)
-                for bb in obstacle_view.as_bounding_box_collection_at_origin(
+                for bb in semantic_obstacle_annotation.as_bounding_box_collection_at_origin(
                     TransformationMatrix(reference_frame=world_root)
                 )
             ],
             world_root,
         )
 
-        if wall_view is not None:
+        if semantic_wall_annotation is not None:
             bloated_walls: BoundingBoxCollection = BoundingBoxCollection(
                 [
                     bloat_wall(bb)
-                    for bb in wall_view.as_bounding_box_collection_at_origin(
+                    for bb in semantic_wall_annotation.as_bounding_box_collection_at_origin(
                         TransformationMatrix(reference_frame=world_root)
                     )
                 ],
@@ -351,15 +351,17 @@ class GraphOfConvexSets:
         try:
             return reduce(or_, events)
         except TypeError:
-            logger.warning("No obstacles found in the given views. Returning None.")
+            logger.warning(
+                "No obstacles found in the given semantic annotations. Returning None."
+            )
             return None
 
     @classmethod
-    def free_space_from_view(
+    def free_space_from_semantic_annotation(
         cls,
         search_space: BoundingBoxCollection,
-        obstacle_view: View,
-        wall_view: Optional[View] = None,
+        semantic_obstacle_annotation: SemanticAnnotation,
+        semantic_wall_annotation: Optional[SemanticAnnotation] = None,
         tolerance=0.001,
         bloat_obstacles: float = 0.0,
         bloat_walls: float = 0.0,
@@ -368,8 +370,8 @@ class GraphOfConvexSets:
         Create a connectivity graph from the free space in the belief state of the robot.
 
         :param search_space: The search space for the connectivity graph.
-        :param obstacle_view: The view containing the obstacles.
-        :param wall_view: An optional view containing walls to be considered as obstacles.
+        :param semantic_obstacle_annotation: The semantic annotation containing the obstacles.
+        :param semantic_wall_annotation: An optional semantic annotation containing walls to be considered as obstacles.
         :param tolerance: The tolerance for the intersection when calculating the connectivity.
         :param bloat_obstacles: The amount to bloat the obstacles.
         :param bloat_walls: The amount to bloat the walls.
@@ -378,10 +380,10 @@ class GraphOfConvexSets:
         """
 
         # get obstacles
-        obstacles = cls.obstacles_from_views(
+        obstacles = cls.obstacles_from_semantic_annotations(
             search_space,
-            obstacle_view,
-            wall_view,
+            semantic_obstacle_annotation,
+            semantic_wall_annotation,
             bloat_obstacles=bloat_obstacles,
             bloat_walls=bloat_walls,
         )
@@ -402,7 +404,9 @@ class GraphOfConvexSets:
         )
 
         # create a connectivity graph from the free space and calculate the edges
-        result = cls(search_space=search_space, world=obstacle_view._world)
+        result = cls(
+            search_space=search_space, world=semantic_obstacle_annotation._world
+        )
         [
             result.add_node(bb)
             for bb in BoundingBoxCollection.from_event(
@@ -438,21 +442,23 @@ class GraphOfConvexSets:
         :return: The connectivity graph.
         """
 
-        view = EnvironmentView(root=world.root, _world=world)
+        semantic_annotation = semantic_environment_annotation(
+            root=world.root, _world=world
+        )
 
-        return cls.free_space_from_view(
+        return cls.free_space_from_semantic_annotation(
             search_space=search_space,
-            obstacle_view=view,
+            semantic_obstacle_annotation=semantic_annotation,
             tolerance=tolerance,
             bloat_obstacles=bloat_obstacles,
         )
 
     @classmethod
-    def navigation_map_from_view(
+    def navigation_map_from_semantic_annotation(
         cls,
         search_space: BoundingBoxCollection,
-        obstacle_view: View,
-        wall_view: Optional[View] = None,
+        semantic_obstacle_annotation: SemanticAnnotation,
+        semantic_wall_annotation: Optional[SemanticAnnotation] = None,
         tolerance=0.001,
         bloat_obstacles: float = 0.0,
         bloat_walls: float = 0.0,
@@ -465,8 +471,8 @@ class GraphOfConvexSets:
         through the floor level obstacles.
 
         :param search_space: The search space for the connectivity graph.
-        :param obstacle_view: The view containing the obstacles.
-        :param wall_view: An optional view containing walls to be considered as obstacles.
+        :param semantic_obstacle_annotation: The semantic annotation containing the obstacles.
+        :param semantic_wall_annotation: An optional semantic annotation containing walls to be considered as obstacles.
         :param tolerance: The tolerance for the intersection when calculating the connectivity.
         :param bloat_obstacles: The amount to bloat the obstacles.
         :param bloat_walls: The amount to bloat the walls.
@@ -475,10 +481,10 @@ class GraphOfConvexSets:
         """
 
         # create search space for calculations
-        obstacles = cls.obstacles_from_views(
+        obstacles = cls.obstacles_from_semantic_annotations(
             search_space,
-            obstacle_view,
-            wall_view,
+            semantic_obstacle_annotation,
+            semantic_wall_annotation,
             bloat_obstacles,
             bloat_walls,
             keep_z=False,
@@ -539,8 +545,13 @@ class GraphOfConvexSets:
         :return: The connectivity graph.
         """
 
-        view = EnvironmentView(root=world.root, _world=world)
+        semantic_annotation = semantic_environment_annotation(
+            root=world.root, _world=world
+        )
 
-        return cls.navigation_map_from_view(
-            search_space, view, tolerance=tolerance, bloat_obstacles=bloat_obstacles
+        return cls.navigation_map_from_semantic_annotation(
+            search_space,
+            semantic_annotation,
+            tolerance=tolerance,
+            bloat_obstacles=bloat_obstacles,
         )

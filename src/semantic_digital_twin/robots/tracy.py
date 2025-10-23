@@ -39,11 +39,11 @@ class Tracy(AbstractRobot, SpecifiesLeftRightArm, HasNeck):
     @classmethod
     def from_world(cls, world: World) -> Self:
         """
-        Creates a Tracy robot view from the given world.
+        Creates a Tracy robot semantic annotation from the given world.
 
-        :param world: The world from which to create the robot view.
+        :param world: The world from which to create the robot semantic annotation.
 
-        :return: A Tracy robot view.
+        :return: A Tracy robot semantic annotation.
         """
 
         robot = cls(
@@ -138,7 +138,7 @@ class Tracy(AbstractRobot, SpecifiesLeftRightArm, HasNeck):
         )
 
         robot.add_kinematic_chain(neck)
-        world.add_view(robot, exists_ok=True)
+        world.add_semantic_annotation(robot, exists_ok=True)
 
         vel_limits = defaultdict(lambda: 0.2)
         robot.tighten_dof_velocity_limits_of_1dof_connections(new_limits=vel_limits)

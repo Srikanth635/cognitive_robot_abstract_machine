@@ -7,7 +7,7 @@ from ormatic.utils import classes_of_module, recursive_subclasses
 
 import semantic_digital_twin.world_description.degree_of_freedom
 import semantic_digital_twin.robots.abstract_robot
-import semantic_digital_twin.views.views
+import semantic_digital_twin.semantic_annotations.semantic_annotations
 import semantic_digital_twin.world_description.world_entity
 from semantic_digital_twin.world import (
     ResetStateContextManager,
@@ -41,7 +41,9 @@ classes |= set(classes_of_module(semantic_digital_twin.world))
 classes |= set(classes_of_module(semantic_digital_twin.datastructures.prefixed_name))
 classes |= set(classes_of_module(semantic_digital_twin.world_description.world_entity))
 classes |= set(classes_of_module(semantic_digital_twin.world_description.connections))
-classes |= set(classes_of_module(semantic_digital_twin.views.views))
+classes |= set(
+    classes_of_module(semantic_digital_twin.semantic_annotations.semantic_annotations)
+)
 classes |= set(
     classes_of_module(semantic_digital_twin.world_description.degree_of_freedom)
 )

@@ -311,7 +311,7 @@ def test_search_for_connections_of_type(pr2_world: World):
     assert len(connections) == 40
 
 
-def test_pr2_view(pr2_world):
+def test_pr2_semantic_annotation(pr2_world):
     pr2 = PR2.from_world(pr2_world)
 
     # Ensure there are no loose bodies
@@ -342,10 +342,10 @@ def test_specifies_left_right_arm_mixin(pr2_world):
 
 def test_kinematic_chains(pr2_world):
     pr2 = PR2.from_world(pr2_world)
-    kinematic_chain_views: List[KinematicChain] = pr2_world.get_views_by_type(
-        KinematicChain
+    semantic_kinematic_chain_annotation: List[KinematicChain] = (
+        pr2_world.get_semantic_annotations_by_type(KinematicChain)
     )
-    for chain in kinematic_chain_views:
+    for chain in semantic_kinematic_chain_annotation:
         assert chain.root
         assert chain.tip
 
@@ -364,7 +364,7 @@ def test_load_collision_config_srdf(pr2_world):
     assert len(pr2_world.disabled_collision_pairs) == 1128
 
 
-def test_tracy_view(tracy_world):
+def test_tracy_semantic_annotation(tracy_world):
     tracy = Tracy.from_world(tracy_world)
 
     tracy_world._notify_model_change()
@@ -377,7 +377,7 @@ def test_tracy_view(tracy_world):
     assert list(tracy.sensor_chains)[0].sensors == tracy.sensors
 
 
-def test_hsrb_view(hsrb_world):
+def test_hsrb_semantic_annotation(hsrb_world):
     hsrb = HSRB.from_world(hsrb_world)
 
     hsrb_world._notify_model_change()

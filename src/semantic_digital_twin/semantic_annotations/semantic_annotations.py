@@ -11,13 +11,13 @@ from ..world_description.shape_collection import BoundingBoxCollection
 from ..datastructures.prefixed_name import PrefixedName
 from ..spatial_types import Point3
 from ..datastructures.variables import SpatialVariables
-from ..world_description.world_entity import View, Body, Region
+from ..world_description.world_entity import SemanticAnnotation, Body, Region
 
 
 @dataclass(eq=False)
 class HasDrawers:
     """
-    A mixin class for views that have drawers.
+    A mixin class for semantic annotations that have drawers.
     """
 
     drawers: List[Drawer] = field(default_factory=list, hash=False)
@@ -26,7 +26,7 @@ class HasDrawers:
 @dataclass(eq=False)
 class HasDoors:
     """
-    A mixin class for views that have doors.
+    A mixin class for semantic annotations that have doors.
     """
 
     doors: List[Door] = field(default_factory=list, hash=False)
@@ -34,20 +34,20 @@ class HasDoors:
 
 @symbol
 @dataclass(eq=False)
-class Handle(View):
+class Handle(SemanticAnnotation):
     body: Body
 
 
 @symbol
 @dataclass(eq=False)
-class Container(View):
+class Container(SemanticAnnotation):
     body: Body
 
 
 @dataclass(eq=False)
-class Fridge(View):
+class Fridge(SemanticAnnotation):
     """
-    A view representing a fridge that has a door and a body.
+    A semantic annotation representing a fridge that has a door and a body.
     """
 
     body: Body
@@ -55,9 +55,9 @@ class Fridge(View):
 
 
 @dataclass(eq=False)
-class Table(View):
+class Table(SemanticAnnotation):
     """
-    A view that represents a table.
+    A semantic annotation that represents a table.
     """
 
     top: Body
@@ -88,17 +88,17 @@ class Table(View):
 
 
 @dataclass(eq=False)
-class Components(View): ...
+class Components(SemanticAnnotation): ...
 
 
 @dataclass(eq=False)
-class Furniture(View): ...
+class Furniture(SemanticAnnotation): ...
 
 
 @dataclass(eq=False)
-class SupportingSurface(View):
+class SupportingSurface(SemanticAnnotation):
     """
-    A view that represents a supporting surface.
+    A semantic annotation that represents a supporting surface.
     """
 
     region: Region
@@ -121,7 +121,7 @@ class Door(EntryWay):
 
 
 @dataclass(eq=False)
-class Fridge(View):
+class Fridge(SemanticAnnotation):
     body: Body
     door: Door
 
@@ -171,9 +171,9 @@ class Floor(SupportingSurface): ...
 
 
 @dataclass(eq=False)
-class Room(View):
+class Room(SemanticAnnotation):
     """
-    A view that represents a closed area with a specific purpose
+    A semantic annotation that represents a closed area with a specific purpose
     """
 
     floor: Floor
@@ -183,6 +183,6 @@ class Room(View):
 
 
 @dataclass(eq=False)
-class Wall(View):
+class Wall(SemanticAnnotation):
     body: Body
     doors: List[Door] = field(default_factory=list)

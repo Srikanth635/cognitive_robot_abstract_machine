@@ -119,7 +119,7 @@ class PipelineTestCase(unittest.TestCase):
 
         self.assertIsNotNone(world.get_body_by_name("dresser_205"))
         self.assertIsNotNone(world.get_body_by_name("dresser_217"))
-        self.assertFalse(world.views)
+        self.assertFalse(world.semantic_annotations)
 
         procthor_factory_replace_pipeline = Pipeline(
             [
@@ -139,9 +139,13 @@ class PipelineTestCase(unittest.TestCase):
 
         self.assertRaises(KeyError, replaced_world.get_body_by_name, "dresser_205")
         self.assertRaises(KeyError, replaced_world.get_body_by_name, "dresser_217")
-        self.assertTrue(replaced_world.views)
-        self.assertIsNotNone(replaced_world.get_view_by_name("dresser_205"))
-        self.assertIsNotNone(replaced_world.get_view_by_name("dresser_217"))
+        self.assertTrue(replaced_world.semantic_annotations)
+        self.assertIsNotNone(
+            replaced_world.get_semantic_annotation_by_name("dresser_205")
+        )
+        self.assertIsNotNone(
+            replaced_world.get_semantic_annotation_by_name("dresser_217")
+        )
 
     def test_dresser_factory_from_body(self):
         world = FBXParser(self.fbx_path).parse()

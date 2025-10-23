@@ -32,14 +32,13 @@ Core Parts
 
 - :py:mod:`semantic_digital_twin.adapters`: Bridges between the World and external ecosystems and file formats. They import/export world data and keep it in sync with tools like ROS2, simulators, and mesh/robot formats.
 
-- :py:mod:`semantic_digital_twin.world`: The central scene-graph/kinematic container you interact with. It owns bodies, connections, and degrees of freedom; validates and updates the kinematic structure; provides forward/inverse kinematics, collision-related utilities, callbacks for state/model changes, and orchestration of higher-level semantics like views.
+- :py:mod:`semantic_digital_twin.world`: The central scene-graph/kinematic container you interact with. It owns bodies, connections, and degrees of freedom; validates and updates the kinematic structure; provides forward/inverse kinematics, collision-related utilities, callbacks for state/model changes, and orchestration of higher-level semantics like semantic annotations.
 
 - :py:mod:`semantic_digital_twin.orm`: The database layer. It maps world entities and relationships to SQL databases via SQLAlchemy (auto-generated with `ormatic`), enabling serialization, persistence, and retrieval of complete worlds. It defines the SQL types and a thin interface to store/load worlds reproducibly. If you are unhappy with the storage and retrieval of data from databases you most likely have to change something here
 
 - :py:mod:`semantic_digital_twin.spatial_types`: Numeric/symbolic geometric primitives and transformations used across the package (e.g., `TransformationMatrix`, points, vectors, expressions, derivatives). They support composing poses, doing kinematics, and differentiating expressions for solvers.
 
-- :py:mod:`semantic_digital_twin.views`: Semantic abstractions built on top of raw bodies and connections. A `View` represents a higher-level concept (e.g., a drawer composed of a handle and a prismatic container) and can be inferred by rules. Views provide task-relevant groupings and behaviors without changing the underlying kinematic graph.
-
+- :py:mod:`semantic_digital_twin.semantic_annotations`: Semantic abstractions built on top of raw bodies and connections. A `SemanticAnnotation` represents a higher-level concept (e.g., a drawer composed of a handle and a prismatic container) and can be inferred by rules. semantic annotations provide task-relevant groupings and behaviors without changing the underlying kinematic graph.
 - :py:mod:`semantic_digital_twin.world_description`: The domain model for kinematic structure and geometry: `Body`, `Region`, `Connection` (fixed, passive/active joints, 6-DoF), `DegreeOfFreedom`, geometry/mesh types, state and modification objects. These classes define the structure and editable state that the `World` manages and reasoners and adapters consume.
 
 Testing

@@ -25,7 +25,7 @@ from ..world_description.connections import (
 )
 from ..world_description.world_entity import (
     Body,
-    RootedView,
+    RootedSemanticAnnotation,
     Connection,
     CollisionCheckingConfig,
 )
@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class RobotView(RootedView, ABC):
+class SemanticRobotAnnotation(RootedSemanticAnnotation, ABC):
     """
     Represents a collection of connected robot bodies, starting from a root body, and ending in a unspecified collection
     of tip bodies.
@@ -47,26 +47,26 @@ class RobotView(RootedView, ABC):
 
     _robot: AbstractRobot = field(default=None)
     """
-    The robot this view belongs to
+    The robot this semantic annotation belongs to
     """
 
     def __post_init__(self):
         if self._world is not None:
-            self._world.add_view(self, exists_ok=True)
+            self._world.add_semantic_annotation(self, exists_ok=True)
 
     @abstractmethod
     def assign_to_robot(self, robot: AbstractRobot):
         """
-        This method assigns the robot to the current view, and then iterates through its own fields to call the
+        This method assigns the robot to the current semantic annotation, and then iterates through its own fields to call the
         appropriate methods to att them to the robot.
 
-        :param robot: The robot to which this view should be assigned.
+        :param robot: The robot to which this semantic annotation should be assigned.
         """
         ...
 
 
 @dataclass
-class KinematicChain(RobotView, ABC):
+class KinematicChain(SemanticRobotAnnotation, ABC):
     """
     Abstract base class for kinematic chain in a robot, starting from a root body, and ending in a specific tip body.
     A kinematic chain can contain both a manipulator and sensors at the same time. There are no assumptions about the
@@ -172,7 +172,7 @@ class Arm(KinematicChain):
 
 
 @dataclass
-class Manipulator(RobotView, ABC):
+class Manipulator(SemanticRobotAnnotation, ABC):
     """
     Abstract base class of robot manipulators. Always has a tool frame.
     """
@@ -257,7 +257,7 @@ class ParallelGripper(Manipulator):
 
 
 @dataclass
-class Sensor(RobotView, ABC):
+class Sensor(SemanticRobotAnnotation, ABC):
     """
     Abstract base class for any kind of sensor in a robot.
     """
@@ -358,7 +358,7 @@ class Torso(KinematicChain):
 
 
 @dataclass
-class AbstractRobot(RootedView, ABC):
+class AbstractRobot(RootedSemanticAnnotation, ABC):
     """
     Specification of an abstract robot. A robot consists of:
     - a root body, which is the base of the robot
@@ -417,13 +417,13 @@ class AbstractRobot(RootedView, ABC):
     @abstractmethod
     def from_world(cls, world: World) -> Self:
         """
-        Creates a robot view from the given world.
-        This method constructs the robot view by identifying and organizing the various semantic components of the robot,
+        Creates a robot semantic annotation from the given world.
+        This method constructs the robot semantic annotation by identifying and organizing the various semantic components of the robot,
         such as manipulators, sensors, and kinematic chains. It is expected to be implemented in subclasses.
 
-        :param world: The world from which to create the robot view.
+        :param world: The world from which to create the robot semantic annotation.
 
-        :return: A robot view.
+        :return: A robot semantic annotation.
         """
         raise NotImplementedError("This method should be implemented in subclasses.")
 
@@ -470,7 +470,7 @@ class AbstractRobot(RootedView, ABC):
         Adds a manipulator to the robot's collection of manipulators.
         """
         self.manipulators.add(manipulator)
-        self._views.add(manipulator)
+        self._semantic_annotations.add(manipulator)
         manipulator.assign_to_robot(self)
 
     def add_sensor(self, sensor: Sensor):
@@ -478,7 +478,7 @@ class AbstractRobot(RootedView, ABC):
         Adds a sensor to the robot's collection of sensors.
         """
         self.sensors.add(sensor)
-        self._views.add(sensor)
+        self._semantic_annotations.add(sensor)
         sensor.assign_to_robot(self)
 
     def add_torso(self, torso: Torso):
@@ -490,7 +490,7 @@ class AbstractRobot(RootedView, ABC):
                 f"Robot {self.name} already has a torso: {self.torso.name}."
             )
         self.torso = torso
-        self._views.add(torso)
+        self._semantic_annotations.add(torso)
         torso.assign_to_robot(self)
 
     def add_kinematic_chain(self, kinematic_chain: KinematicChain):
@@ -507,5 +507,5 @@ class AbstractRobot(RootedView, ABC):
             self.manipulator_chains.add(kinematic_chain)
         if kinematic_chain.sensors:
             self.sensor_chains.add(kinematic_chain)
-        self._views.add(kinematic_chain)
+        self._semantic_annotations.add(kinematic_chain)
         kinematic_chain.assign_to_robot(self)

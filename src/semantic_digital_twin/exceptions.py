@@ -10,7 +10,7 @@ from .datastructures.prefixed_name import PrefixedName
 if TYPE_CHECKING:
     from .world import World
     from .world_description.world_entity import (
-        View,
+        SemanticAnnotation,
         WorldEntity,
         KinematicStructureEntity,
     )
@@ -30,22 +30,20 @@ class UsageError(LogicalError):
 
 
 @dataclass
-class AddingAnExistingViewError(UsageError):
-    view: View
+class AddingAnExistingSemanticAnnotationError(UsageError):
+    semantic_annotation: SemanticAnnotation
 
     def __post_init__(self):
-        msg = f"View {self.view} already exists."
+        msg = f"Semantic annotation {self.semantic_annotation} already exists."
         super().__init__(msg)
 
 
 @dataclass
-class DuplicateViewError(UsageError):
-    views: List[View]
+class DuplicateSemanticAnnotationError(UsageError):
+    semantic_annotations: List[SemanticAnnotation]
 
     def __post_init__(self):
-        msg = (
-            f"Views {self.views} are duplicates, while views elements should be unique."
-        )
+        msg = f"Semantic annotations {self.semantic_annotations} are duplicates, while semantic annotations elements should be unique."
         super().__init__(msg)
 
 
@@ -150,11 +148,11 @@ class ParsingError(Exception):
 
 
 @dataclass
-class ViewNotFoundError(UsageError):
+class SemanticAnnotationNotFoundError(UsageError):
     name: PrefixedName
 
     def __post_init__(self):
-        msg = f"View with name {self.name} not found"
+        msg = f"Semantic annotation with name {self.name} not found"
         super().__init__(msg)
 
 

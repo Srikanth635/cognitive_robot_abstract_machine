@@ -16,14 +16,18 @@ from ..spatial_types.spatial_types import Quaternion
 from ..spatial_types.symbol_manager import symbol_manager
 from ..world import World
 from ..world_description.connections import Connection
-from ..world_description.world_entity import View, KinematicStructureEntity, Body
+from ..world_description.world_entity import (
+    SemanticAnnotation,
+    KinematicStructureEntity,
+    Body,
+)
 
 
 @dataclass
 class WorldMapping(AlternativeMapping[World]):
     kinematic_structure_entities: List[KinematicStructureEntity]
     connections: List[Connection]
-    views: List[View]
+    semantic_annotations: List[SemanticAnnotation]
     degrees_of_freedom: List[DegreeOfFreedom]
     name: Optional[str] = field(default=None)
 
@@ -33,7 +37,7 @@ class WorldMapping(AlternativeMapping[World]):
         return cls(
             obj.kinematic_structure_entities,
             obj.connections,
-            obj.views,
+            obj.semantic_annotations,
             list(obj.degrees_of_freedom),
             obj.name,
         )
@@ -53,8 +57,8 @@ class WorldMapping(AlternativeMapping[World]):
                 result.add_degree_of_freedom(d)
             for connection in self.connections:
                 result.add_connection(connection)
-            for view in self.views:
-                result.add_view(view)
+            for semantic_annotation in self.semantic_annotations:
+                result.add_semantic_annotation(semantic_annotation)
             result.delete_orphaned_dofs()
 
         return result

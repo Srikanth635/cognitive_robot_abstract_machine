@@ -2,7 +2,7 @@ import re
 
 from ...datastructures.prefixed_name import PrefixedName
 from ...spatial_types.spatial_types import TransformationMatrix
-from ...views.factories import (
+from ...semantic_annotations.factories import (
     HandleFactory,
     ContainerFactory,
     Direction,

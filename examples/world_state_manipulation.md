@@ -33,7 +33,7 @@ from entity_query_language import the, entity, let, symbolic_mode, in_
 
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.spatial_types import TransformationMatrix
-from semantic_digital_twin.views.factories import (
+from semantic_digital_twin.semantic_annotation.factories import (
     DresserFactory,
     ContainerFactory,
     HandleFactory,
@@ -43,7 +43,7 @@ from semantic_digital_twin.views.factories import (
     HorizontalSemanticDirection,
     VerticalSemanticDirection,
 )
-from semantic_digital_twin.views.views import Drawer
+from semantic_digital_twin.semantic_annotations.semantic_annotations import Drawer
 from semantic_digital_twin.world_description.degree_of_freedom import DegreeOfFreedom
 from semantic_digital_twin.world_description.geometry import Scale, Box, Color
 from semantic_digital_twin.spatial_computations.raytracer import RayTracer
@@ -89,7 +89,7 @@ Let's get a reference to the drawer we built above.
 with symbolic_mode():
     drawer = the(
         entity(
-            let(type_=Drawer, domain=world.views),
+            let(type_=Drawer, domain=world.semantic_annotations),
         )
     ).evaluate()
 ```

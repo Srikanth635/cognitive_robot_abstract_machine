@@ -248,7 +248,7 @@ def is_body_in_region(body: Body, region: Region) -> float:
 @dataclass(frozen=True)
 class SpatialRelation(Predicate, ABC):
     """
-    Check if the body is spatially related to the other body if you are looking from the point of view.
+    Check if the body is spatially related to the other body if you are looking from the point of semantic annotation.
     The comparison is done using the centers of mass computed from the bodies' collision geometry.
     """
 
@@ -262,7 +262,7 @@ class SpatialRelation(Predicate, ABC):
     The other body.
      """
 
-    point_of_view: TransformationMatrix
+    point_of_semantic_annotation: TransformationMatrix
     """
     The reference spot from where to look at the bodies.
     """
@@ -271,7 +271,7 @@ class SpatialRelation(Predicate, ABC):
     def _signed_distance_along_direction(self, index: int) -> float:
         """
         Calculate the spatial relation between self.body and self.other with respect to a given
-        reference point (self.point_of_view) and a specified axis index. This function computes the
+        reference point (self.point_of_semantic_annotation) and a specified axis index. This function computes the
         signed distance along a specified direction derived from the reference point
         to compare the positions of the centers of mass of the two bodies.
 
@@ -280,14 +280,14 @@ class SpatialRelation(Predicate, ABC):
         :return: The signed distance between the first and the second body's centers
             of mass along the given direction.
         """
-        ref_np = self.point_of_view.to_np()
+        ref_np = self.point_of_semantic_annotation.to_np()
         front_world = ref_np[:3, index]
         front_norm = front_world / (np.linalg.norm(front_world) + self.eps)
         front_norm = Vector3(
             x_init=front_norm[0],
             y_init=front_norm[1],
             z_init=front_norm[2],
-            reference_frame=self.point_of_view.reference_frame,
+            reference_frame=self.point_of_semantic_annotation.reference_frame,
         )
 
         s_body = front_norm.dot(
@@ -301,7 +301,7 @@ class SpatialRelation(Predicate, ABC):
 
 class LeftOf(SpatialRelation):
     """
-    The "left" direction is taken as the -Y axis of the given point of view.
+    The "left" direction is taken as the -Y axis of the given point of semantic_annotation.
     """
 
     def __call__(self) -> bool:
@@ -310,7 +310,7 @@ class LeftOf(SpatialRelation):
 
 class RightOf(SpatialRelation):
     """
-    The "right" direction is taken as the +Y axis of the given point of view.
+    The "right" direction is taken as the +Y axis of the given point of semantic_annotation.
     """
 
     def __call__(self) -> bool:
@@ -319,7 +319,7 @@ class RightOf(SpatialRelation):
 
 class Above(SpatialRelation):
     """
-    The "above" direction is taken as the +Z axis of the given point of view.
+    The "above" direction is taken as the +Z axis of the given point of semantic_annotation.
     """
 
     def __call__(self) -> bool:
@@ -328,7 +328,7 @@ class Above(SpatialRelation):
 
 class Below(SpatialRelation):
     """
-    The "below" direction is taken as the -Z axis of the given point of view.
+    The "below" direction is taken as the -Z axis of the given point of semantic_annotation.
     """
 
     def __call__(self) -> bool:
@@ -337,7 +337,7 @@ class Below(SpatialRelation):
 
 class Behind(SpatialRelation):
     """
-    The "behind" direction is defined as the -X axis of the given point of view.
+    The "behind" direction is defined as the -X axis of the given point of semantic annotation.
     """
 
     def __call__(self) -> bool:
@@ -346,7 +346,7 @@ class Behind(SpatialRelation):
 
 class InFrontOf(SpatialRelation):
     """
-    The "in front of" direction is defined as the +X axis of the given point of view.
+    The "in front of" direction is defined as the +X axis of the given point of semantic annotation.
     """
 
     def __call__(self) -> bool:

@@ -36,9 +36,9 @@ from .collision_checking.trimesh_collision_detector import TrimeshCollisionDetec
 from .datastructures.prefixed_name import PrefixedName
 from .datastructures.types import NpMatrix4x4
 from .exceptions import (
-    DuplicateViewError,
-    AddingAnExistingViewError,
-    ViewNotFoundError,
+    DuplicateSemanticAnnotationError,
+    AddingAnExistingSemanticAnnotationError,
+    SemanticAnnotationNotFoundError,
     AlreadyBelongsToAWorldError,
     DuplicateKinematicStructureEntityError,
 )
@@ -61,7 +61,7 @@ from .world_description.connections import HasUpdateState
 from .world_description.degree_of_freedom import DegreeOfFreedom
 from .world_description.world_entity import (
     Connection,
-    View,
+    SemanticAnnotation,
     KinematicStructureEntity,
     Region,
     GenericKinematicStructureEntity,
@@ -86,7 +86,9 @@ logger = logging.getLogger(__name__)
 
 id_generator = IDGenerator()
 
-GenericView = TypeVar("GenericView", bound=View)
+GenericSemanticAnnotation = TypeVar(
+    "GenericSemanticAnnotation", bound=SemanticAnnotation
+)
 
 FunctionStack = List[Tuple[Callable, Dict[str, Any]]]
 
@@ -246,9 +248,11 @@ class World:
      in the world, and the edges represent connections between them.
     """
 
-    views: List[View] = field(default_factory=list, repr=False)
+    semantic_annotations: List[SemanticAnnotation] = field(
+        default_factory=list, repr=False
+    )
     """
-    All views the world is aware of.
+    All semantic annotations the world is aware of.
     """
 
     degrees_of_freedom: List[DegreeOfFreedom] = field(default_factory=list)
@@ -280,7 +284,7 @@ class World:
 
     name: Optional[str] = None
     """
-    Name of the world. May act as default namespace for all bodies and views in the world which do not have a prefix.
+    Name of the world. May act as default namespace for all bodies and semantic annotations in the world which do not have a prefix.
     """
 
     state_change_callbacks: List[StateChangeCallback] = field(
@@ -693,43 +697,51 @@ class World:
 
         self._add_connection(connection)
 
-    def add_view(self, view: View, exists_ok: bool = False) -> None:
+    def add_semantic_annotation(
+        self, semantic_annotation: SemanticAnnotation, exists_ok: bool = False
+    ) -> None:
         """
-        Adds a view to the current list of views if it doesn't already exist. Ensures
-        that the `view` is associated with the current instance and maintains the
-        integrity of unique view names.
+        Adds a semantic annotation to the current list of semantic annotations if it doesn't already exist. Ensures
+        that the `semantic_annotation` is associated with the current instance and maintains the
+        integrity of unique semantic annotation names.
 
-        :param view: The view instance to be added. Its name must be unique within
+        :param semantic_annotation: The semantic annotation instance to be added. Its name must be unique within
             the current context.
-        :param exists_ok: Whether to raise an error or not when a view already exists.
+        :param exists_ok: Whether to raise an error or not when a semantic annotation already exists.
 
-        :raises AddingAnExistingViewError: If exists_ok is False and a view with the same name and type already exists.
+        :raises AddingAnExistingSemanticAnnotationError: If exists_ok is False and a semantic annotation with the same name and type already exists.
         """
         try:
-            self.get_view_by_name(view.name)
+            self.get_semantic_annotation_by_name(semantic_annotation.name)
             if not exists_ok:
-                raise AddingAnExistingViewError(view)
-        except ViewNotFoundError:
-            view._world = self
-            self.views.append(view)
+                raise AddingAnExistingSemanticAnnotationError(semantic_annotation)
+        except SemanticAnnotationNotFoundError:
+            semantic_annotation._world = self
+            self.semantic_annotations.append(semantic_annotation)
 
-    def remove_view(self, view: View) -> None:
+    def remove_semantic_annotation(
+        self, semantic_annotation: SemanticAnnotation
+    ) -> None:
         """
-        Removes a view from the current list of views if it exists.
+        Removes a semantic annotation from the current list of semantic annotations if it exists.
 
-        :param view: The view instance to be removed.
+        :param semantic_annotation: The semantic annotation instance to be removed.
         """
         try:
-            existing_view = self.get_view_by_name(view.name)
-            if existing_view == view:
-                self.views.remove(existing_view)
-                view._world = None
+            existing_semantic_annotation = self.get_semantic_annotation_by_name(
+                semantic_annotation.name
+            )
+            if existing_semantic_annotation == semantic_annotation:
+                self.semantic_annotations.remove(existing_semantic_annotation)
+                semantic_annotation._world = None
             else:
                 raise ValueError(
-                    "The provided view instance does not match the existing view with the same name."
+                    "The provided semantic annotation instance does not match the existing semantic annotation with the same name."
                 )
-        except ViewNotFoundError:
-            logger.debug(f"View {view.name} not found in the world. No action taken.")
+        except SemanticAnnotationNotFoundError:
+            logger.debug(
+                f"semantic annotation {semantic_annotation.name} not found in the world. No action taken."
+            )
 
     def get_connections_of_branch(
         self, root: KinematicStructureEntity
@@ -782,31 +794,45 @@ class World:
 
         return visitor.bodies
 
-    def get_view_by_name(self, name: Union[str, PrefixedName]) -> Optional[View]:
+    def get_semantic_annotation_by_name(
+        self, name: Union[str, PrefixedName]
+    ) -> Optional[SemanticAnnotation]:
         """
-        Retrieves a View from the list of view based on its name.
+        Retrieves a semantic annotation from the list of semantic annotation based on its name.
         If the input is of type `PrefixedName`, it checks whether the prefix is specified and looks for an
         exact match. Otherwise, it matches based on the name's string representation.
         If more than one body with the same name is found, an assertion error is raised.
         If no matching body is found, a `ValueError` is raised.
 
-        :param name: The name of the view to search for. Can be a string or a `PrefixedName` object.
-        :return: The `View` object that matches the given name.
-        :raises ValueError: If multiple or no views with the specified name are found.
-        :raises KeyError: If no view is found.
+        :param name: The name of the semantic annotation to search for. Can be a string or a `PrefixedName` object.
+        :return: The `SemanticAnnotation` object that matches the given name.
+        :raises ValueError: If multiple or no semantic annotations with the specified name are found.
+        :raises KeyError: If no semantic annotation is found.
         """
         if isinstance(name, PrefixedName):
             if name.prefix is not None:
-                matches = [view for view in self.views if view.name == name]
+                matches = [
+                    semantic_annotation
+                    for semantic_annotation in self.semantic_annotations
+                    if semantic_annotation.name == name
+                ]
             else:
-                matches = [view for view in self.views if view.name.name == name.name]
+                matches = [
+                    semantic_annotation
+                    for semantic_annotation in self.semantic_annotations
+                    if semantic_annotation.name.name == name.name
+                ]
         else:
-            matches = [view for view in self.views if view.name.name == name]
+            matches = [
+                semantic_annotation
+                for semantic_annotation in self.semantic_annotations
+                if semantic_annotation.name.name == name
+            ]
         if len(matches) > 1:
-            raise DuplicateViewError(matches)
+            raise DuplicateSemanticAnnotationError(matches)
         if matches:
             return matches[0]
-        raise ViewNotFoundError(name)
+        raise SemanticAnnotationNotFoundError(name)
 
     def get_world_state_symbols(self) -> List[cas.Symbol]:
         """
@@ -837,14 +863,20 @@ class World:
         ]
         return positions + velocities + accelerations + jerks
 
-    def get_views_by_type(self, view_type: Type[GenericView]) -> List[GenericView]:
+    def get_semantic_annotations_by_type(
+        self, semantic_annotation_type: Type[GenericSemanticAnnotation]
+    ) -> List[GenericSemanticAnnotation]:
         """
-        Retrieves all views of a specific type from the world.
+        Retrieves all semantic annotations of a specific type from the world.
 
-        :param view_type: The class (type) of the views to search for.
-        :return: A list of `View` objects that match the given type.
+        :param semantic_annotation_type: The class (type) of the semantic annotations to search for.
+        :return: A list of `SemanticAnnotation` objects that match the given type.
         """
-        return [view for view in self.views if isinstance(view, view_type)]
+        return [
+            semantic_annotation
+            for semantic_annotation in self.semantic_annotations
+            if isinstance(semantic_annotation, semantic_annotation_type)
+        ]
 
     @atomic_world_modification(modification=RemoveBodyModification)
     def _remove_kinematic_structure_entity(
@@ -921,7 +953,7 @@ class World:
 
         :param other: The world to be added.
         :param root_connection: If provided, this connection will be used to connect the two worlds. Otherwise, a new Connection6DoF will be created
-        :param handle_duplicates: If True, bodies and views with duplicate names will be renamed. If False, an error will be raised if duplicates are found.
+        :param handle_duplicates: If True, bodies and semantic annotations with duplicate names will be renamed. If False, an error will be raised if duplicates are found.
         :return: None
         """
         assert other is not self, "Cannot merge a world with itself."
@@ -947,10 +979,15 @@ class World:
                             kinematic_structure_entity
                         )
 
-                other_views = [view for view in other.views]
-                for view in other_views:
-                    other.remove_view(view)
-                    self.add_view(view, exists_ok=handle_duplicates)
+                other_semantic_annotations = [
+                    semantic_annotation
+                    for semantic_annotation in other.semantic_annotations
+                ]
+                for semantic_annotation in other_semantic_annotations:
+                    other.remove_semantic_annotation(semantic_annotation)
+                    self.add_semantic_annotation(
+                        semantic_annotation, exists_ok=handle_duplicates
+                    )
 
             connection = root_connection
             if not connection and self_root:
@@ -1044,7 +1081,7 @@ class World:
             for body in list(self.bodies):
                 self.remove_kinematic_structure_entity(body)
 
-            self.views.clear()
+            self.semantic_annotations.clear()
             self.degrees_of_freedom.clear()
             self.state = WorldState()
 
@@ -1875,8 +1912,8 @@ class World:
         Useful for implementing collision avoidance.
 
         1. Compute the kinematic chain of bodies between root and tip.
-        2. Remove all entries from link_a downward until one is connected with a connection from this view.
-        2. Remove all entries from link_b upward until one is connected with a connection from this view.
+        2. Remove all entries from link_a downward until one is connected with a connection from this semantic annotation.
+        2. Remove all entries from link_b upward until one is connected with a connection from this semantic annotation.
 
         :param root: start of the chain
         :param tip: end of the chain
@@ -1927,7 +1964,7 @@ class World:
         """
         robot_bodies = set()
         robot: AbstractRobot
-        for robot in self.get_views_by_type(AbstractRobot):
+        for robot in self.get_semantic_annotations_by_type(AbstractRobot):
             robot_bodies.update(robot.bodies_with_collisions)
 
         non_robot_bodies = set(self.bodies_with_enabled_collision) - robot_bodies

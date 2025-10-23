@@ -157,7 +157,7 @@ def test_get_visible_objects(pr2_world: World):
     with pr2_world.modify_world():
         pr2_world.add_connection(Connection6DoF(pr2_world.root, body, _world=pr2_world))
 
-    camera = pr2_world.get_views_by_type(Camera)[0]
+    camera = pr2_world.get_semantic_annotations_by_type(Camera)[0]
 
     assert visible(camera, body)
 
@@ -198,7 +198,7 @@ def test_occluding_bodies(pr2_world: World):
         pr2_world.add_connection(c1)
         pr2_world.add_connection(c2)
 
-    camera = pr2_world.get_views_by_type(Camera)[0]
+    camera = pr2_world.get_semantic_annotations_by_type(Camera)[0]
 
     bodies = occluding_bodies(camera, occluded_body)
     assert obstacle in bodies
@@ -285,7 +285,7 @@ def test_is_body_in_gripper(
 ):
     pr2: PR2 = PR2.from_world(pr2_world)
 
-    gripper = pr2_world.get_views_by_type(ParallelGripper)
+    gripper = pr2_world.get_semantic_annotations_by_type(ParallelGripper)
 
     left_gripper = (
         gripper[0]

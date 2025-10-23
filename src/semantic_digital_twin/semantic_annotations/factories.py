@@ -33,7 +33,7 @@ from ..spatial_types.spatial_types import (
     Point3,
 )
 from ..utils import IDGenerator
-from ..views.views import (
+from ..semantic_annotations.semantic_annotations import (
     Container,
     Handle,
     Dresser,
@@ -86,7 +86,7 @@ class HasDoorLikeFactories(ABC):
     """
 
     def _create_door_upper_lower_limits(
-        self, door_view: Door
+        self, semantic_door_annotation: Door
     ) -> Tuple[DerivativeMap[float], DerivativeMap[float]]:
         """
         Return the upper and lower limits for the door's degree of freedom.
@@ -96,7 +96,7 @@ class HasDoorLikeFactories(ABC):
         lower_limits.position = -np.pi / 2
         upper_limits.position = 0.0
 
-        parent_connection = door_view.handle.body.parent_connection
+        parent_connection = semantic_door_annotation.handle.body.parent_connection
         door_P_handle: ndarray[float] = (
             parent_connection.origin_expression.to_position().to_np()
         )
@@ -115,13 +115,15 @@ class HasDoorLikeFactories(ABC):
         """
         door_world = door_factory.create()
         root = door_world.root
-        door_view: Door = door_world.get_views_by_type(Door)[0]
+        semantic_door_annotation: Door = door_world.get_semantic_annotations_by_type(
+            Door
+        )[0]
 
         door_hinge = Body(
             name=PrefixedName(f"{root.name.name}_door_hinge", root.name.prefix)
         )
         parent_T_hinge = self._calculate_door_pivot_point(
-            door_view, parent_T_door, door_factory.scale
+            semantic_door_annotation, parent_T_door, door_factory.scale
         )
         hinge_T_door = parent_T_hinge.inverse() @ parent_T_door
 
@@ -151,8 +153,12 @@ class HasDoorLikeFactories(ABC):
             door_world, parent_T_hinge = self._add_hinge_to_door(
                 door_factory, parent_T_door
             )
-            door_view: Door = door_world.get_views_by_type(Door)[0]
-            upper_limits, lower_limits = self._create_door_upper_lower_limits(door_view)
+            semantic_door_annotation: Door = (
+                door_world.get_semantic_annotations_by_type(Door)[0]
+            )
+            upper_limits, lower_limits = self._create_door_upper_lower_limits(
+                semantic_door_annotation
+            )
 
             root = door_world.root
             dof = DegreeOfFreedom(
@@ -172,12 +178,12 @@ class HasDoorLikeFactories(ABC):
 
             parent_world.merge_world(door_world, connection)
 
-    def add_doorlike_views_to_world(
+    def add_doorlike_semantic_annotation_to_world(
         self,
         parent_world: World,
     ):
         """
-        Adds door-like views to the parent world.
+        Adds door-like semantic annotations to the parent world.
         """
         for door_factory, door_transform in zip(
             self.door_factories, self.door_transforms
@@ -196,19 +202,22 @@ class HasDoorLikeFactories(ABC):
                 )
 
     def _calculate_door_pivot_point(
-        self, door_view: Door, parent_T_door: TransformationMatrix, scale: Scale
+        self,
+        semantic_door_annotation: Door,
+        parent_T_door: TransformationMatrix,
+        scale: Scale,
     ) -> TransformationMatrix:
         """
         Calculate the door pivot point based on the handle position and the door scale. The pivot point is on the opposite
         side of the handle.
 
-        :param door_view: The door view containing the handle.
+        :param semantic_door_annotation: The door semantic annotation containing the handle.
         :param parent_T_door: The transformation matrix defining the door's position and orientation.
         :param scale: The scale of the door.
 
         :return: The transformation matrix defining the door's pivot point.
         """
-        connection = door_view.handle.body.parent_connection
+        connection = semantic_door_annotation.handle.body.parent_connection
         door_P_handle: ndarray[float] = (
             connection.origin_expression.to_position().to_np()
         )
@@ -254,10 +263,10 @@ class HasDoorLikeFactories(ABC):
         :param parent_world: The world from which to remove the door volumes.
         :param wall_event_thickness: The thickness of the wall event used to create the door events.
         """
-        doors: List[Door] = parent_world.get_views_by_type(Door)
+        doors: List[Door] = parent_world.get_semantic_annotations_by_type(Door)
         if not doors:
             return
-        all_doors_event = self._build_all_doors_event_from_views(
+        all_doors_event = self._build_all_doors_event_from_semantic_annotations(
             doors, wall_event_thickness
         )
 
@@ -270,13 +279,13 @@ class HasDoorLikeFactories(ABC):
 
     def _get_all_bodies_excluding_doors_from_world(self, world: World) -> List[Body]:
         """
-        Return all bodies in the world that are not part of any door view.
+        Return all bodies in the world that are not part of any door semantic annotation.
 
         :param world: The world from which to get the bodies.
-        :return: A list of bodies that are not part of any door view.
+        :return: A list of bodies that are not part of any door semantic annotation.
         """
         with symbolic_mode():
-            all_doors = Door(From(world.views))
+            all_doors = Door(From(world.semantic_annotations))
             other_body = let(type_=Body, domain=world.bodies)
             door_bodies = all_doors.bodies
             bodies_without_excluded_bodies_query = an(
@@ -288,13 +297,13 @@ class HasDoorLikeFactories(ABC):
         filtered_bodies = list(bodies_without_excluded_bodies_query.evaluate())
         return filtered_bodies
 
-    def _build_all_doors_event_from_views(
+    def _build_all_doors_event_from_semantic_annotations(
         self, doors: List[Door], wall_event_thickness: float = 0.1
     ) -> Event:
         """
         Build a single event representing all doors by combining the events of each door.
 
-        :param doors: The list of door views to build the event from.
+        :param doors: The list of door semantic annotations to build the event from.
         :param wall_event_thickness: The thickness of the wall event used to create the door events.
         :return: An event representing all doors.
         """
@@ -311,7 +320,7 @@ class HasDoorLikeFactories(ABC):
         """
         Build an event representing a single door by creating a bounding box event around the door's collision shapes
 
-        :param door: The door view to build the event from.
+        :param door: The door semantic annotation to build the event from.
         :param wall_event_thickness: The thickness of the wall event used to create the door event.
         :return: An event representing the door.
         """
@@ -601,7 +610,9 @@ class HasDrawerFactories(ABC):
         parent_T_drawer.reference_frame = parent_root
 
         dof = DegreeOfFreedom(
-            name=PrefixedName(f"{child_root.name.name}_connection", child_root.name.prefix),
+            name=PrefixedName(
+                f"{child_root.name.name}_connection", child_root.name.prefix
+            ),
             lower_limits=lower_limits,
             upper_limits=upper_limits,
         )
@@ -651,30 +662,30 @@ T = TypeVar("T")
 
 
 @dataclass
-class ViewFactory(Generic[T], ABC):
+class SemanticAnnotationFactory(Generic[T], ABC):
     """
-    Abstract factory for the creation of worlds containing a single view of type T.
+    Abstract factory for the creation of worlds containing a single semantic annotation of type T.
     """
 
     name: PrefixedName = field(kw_only=True)
     """
-    The name of the view.
+    The name of the semantic annotation.
     """
 
     @abstractmethod
     def _create(self, world: World) -> World:
         """
-        Create the world containing a view of type T.
+        Create the world containing a semantic annotation of type T.
         Put the custom logic in here.
 
-        :param world: The world to create the view in.
+        :param world: The world to create the semantic annotation in.
         :return: The world.
         """
         raise NotImplementedError()
 
     def create(self) -> World:
         """
-        Create the world containing a view of type T.
+        Create the world containing a semantic annotation of type T.
 
         :return: The world.
         """
@@ -685,7 +696,7 @@ class ViewFactory(Generic[T], ABC):
 
 
 @dataclass
-class ContainerFactory(ViewFactory[Container]):
+class ContainerFactory(SemanticAnnotationFactory[Container]):
     """
     Factory for creating a container with walls of a specified thickness and its opening in direction.
     """
@@ -719,10 +730,10 @@ class ContainerFactory(ViewFactory[Container]):
         container_body.collision = collision_shapes
         container_body.visual = collision_shapes
 
-        container_view = Container(body=container_body, name=self.name)
+        semantic_container_annotation = Container(body=container_body, name=self.name)
 
         world.add_kinematic_structure_entity(container_body)
-        world.add_view(container_view)
+        world.add_semantic_annotation(semantic_container_annotation)
 
         return world
 
@@ -788,7 +799,7 @@ class ContainerFactory(ViewFactory[Container]):
 
 
 @dataclass
-class HandleFactory(ViewFactory[Handle]):
+class HandleFactory(SemanticAnnotationFactory[Handle]):
     """
     Factory for creating a handle with a specified scale and thickness.
     The handle is represented as a box with an inner cutout to create the handle shape.
@@ -816,10 +827,10 @@ class HandleFactory(ViewFactory[Handle]):
         handle.collision = collision
         handle.visual = collision
 
-        handle_view = Handle(name=self.name, body=handle)
+        semantic_handle_annotation = Handle(name=self.name, body=handle)
 
         world.add_kinematic_structure_entity(handle)
-        world.add_view(handle_view)
+        world.add_semantic_annotation(semantic_handle_annotation)
         return world
 
     def _create_handle_event(self) -> Event:
@@ -875,7 +886,7 @@ class HandleFactory(ViewFactory[Handle]):
 
 
 @dataclass
-class DoorLikeFactory(ViewFactory[T], ABC):
+class DoorLikeFactory(SemanticAnnotationFactory[T], ABC):
     """
     Abstract factory for creating door-like factories such as doors or double doors.
     """
@@ -913,8 +924,12 @@ class DoorFactory(DoorLikeFactory[Door], HasHandleFactory):
             or self.create_parent_T_handle_from_parent_scale(self.scale)
         )
         self.add_handle_to_world(door_T_handle, world)
-        handle_view: Handle = world.get_views_by_type(Handle)[0]
-        world.add_view(Door(name=self.name, handle=handle_view, body=body))
+        semantic_handle_annotation: Handle = world.get_semantic_annotations_by_type(
+            Handle
+        )[0]
+        world.add_semantic_annotation(
+            Door(name=self.name, handle=semantic_handle_annotation, body=body)
+        )
 
         return world
 
@@ -938,29 +953,34 @@ class DoubleDoorFactory(DoorLikeFactory[DoubleDoor], HasDoorLikeFactories):
         double_door_body = Body(name=self.name)
         world.add_kinematic_structure_entity(double_door_body)
 
-        self.add_doorlike_views_to_world(
+        self.add_doorlike_semantic_annotation_to_world(
             parent_world=world,
         )
 
-        door_views = world.get_views_by_type(Door)
-        assert len(door_views) == 2, "Double door must have exactly two doors views"
+        semantic_door_annotations = world.get_semantic_annotations_by_type(Door)
+        assert (
+            len(semantic_door_annotations) == 2
+        ), "Double door must have exactly two doors semantic annotations"
 
-        left_door, right_door = door_views
+        left_door, right_door = semantic_door_annotations
         if (
             left_door.body.parent_connection.origin_expression.y
             > right_door.body.parent_connection.origin_expression.y
         ):
-            right_door, left_door = door_views[0], door_views[1]
+            right_door, left_door = (
+                semantic_door_annotations[0],
+                semantic_door_annotations[1],
+            )
 
-        double_door_view = DoubleDoor(
+        semantic_double_door_annotation = DoubleDoor(
             body=double_door_body, left_door=left_door, right_door=right_door
         )
-        world.add_view(double_door_view)
+        world.add_semantic_annotation(semantic_double_door_annotation)
         return world
 
 
 @dataclass
-class DrawerFactory(ViewFactory[Drawer], HasHandleFactory):
+class DrawerFactory(SemanticAnnotationFactory[Drawer], HasHandleFactory):
     """
     Factory for creating a drawer with a handle and a container.
     """
@@ -986,18 +1006,26 @@ class DrawerFactory(ViewFactory[Drawer], HasHandleFactory):
 
         self.add_handle_to_world(parent_T_handle, world)
 
-        container_view: Container = world.get_views_by_type(Container)[0]
-        handle_view: Handle = world.get_views_by_type(Handle)[0]
-        drawer_view = Drawer(
-            name=self.name, container=container_view, handle=handle_view
+        semantic_container_annotation: Container = (
+            world.get_semantic_annotations_by_type(Container)[0]
         )
-        world.add_view(drawer_view)
+        semantic_handle_annotation: Handle = world.get_semantic_annotations_by_type(
+            Handle
+        )[0]
+        semantic_drawer_annotation = Drawer(
+            name=self.name,
+            container=semantic_container_annotation,
+            handle=semantic_handle_annotation,
+        )
+        world.add_semantic_annotation(semantic_drawer_annotation)
 
         return world
 
 
 @dataclass
-class DresserFactory(ViewFactory[Dresser], HasDoorLikeFactories, HasDrawerFactories):
+class DresserFactory(
+    SemanticAnnotationFactory[Dresser], HasDoorLikeFactories, HasDrawerFactories
+):
     """
     Factory for creating a dresser with drawers, and doors.
     """
@@ -1022,22 +1050,26 @@ class DresserFactory(ViewFactory[Dresser], HasDoorLikeFactories, HasDrawerFactor
 
     def _make_dresser_world(self) -> World:
         """
-        Create a world with a dresser view that contains a container, drawers, and doors, but no interior yet.
+        Create a world with a dresser semantic annotation that contains a container, drawers, and doors, but no interior yet.
         """
         dresser_world = self.container_factory.create()
-        container_view: Container = dresser_world.get_views_by_type(Container)[0]
+        semantic_container_annotation: Container = (
+            dresser_world.get_semantic_annotations_by_type(Container)[0]
+        )
 
-        self.add_doorlike_views_to_world(dresser_world)
+        self.add_doorlike_semantic_annotation_to_world(dresser_world)
 
         self.add_drawers_to_world(dresser_world)
 
-        dresser_view = Dresser(
+        semantic_dresser_annotation = Dresser(
             name=self.name,
-            container=container_view,
-            drawers=dresser_world.get_views_by_type(Drawer),
-            doors=dresser_world.get_views_by_type(Door),
+            container=semantic_container_annotation,
+            drawers=dresser_world.get_semantic_annotations_by_type(Drawer),
+            doors=dresser_world.get_semantic_annotations_by_type(Door),
         )
-        dresser_world.add_view(dresser_view, exists_ok=True)
+        dresser_world.add_semantic_annotation(
+            semantic_dresser_annotation, exists_ok=True
+        )
         dresser_world.name = self.name.name
 
         return dresser_world
@@ -1123,7 +1155,7 @@ class DresserFactory(ViewFactory[Dresser], HasDoorLikeFactories, HasDrawerFactor
 
 
 @dataclass
-class RoomFactory(ViewFactory[Room]):
+class RoomFactory(SemanticAnnotationFactory[Room]):
     """
     Factory for creating a room with a specific region.
     """
@@ -1135,7 +1167,7 @@ class RoomFactory(ViewFactory[Room]):
 
     def _create(self, world: World) -> World:
         """
-        Return a world with a room view that contains the specified region.
+        Return a world with a room semantic annotation that contains the specified region.
         """
         room_body = Body(name=self.name)
         world.add_kinematic_structure_entity(room_body)
@@ -1156,15 +1188,15 @@ class RoomFactory(ViewFactory[Room]):
             name=PrefixedName(self.name.name + "_floor", self.name.prefix),
             region=region,
         )
-        world.add_view(floor)
-        room_view = Room(name=self.name, floor=floor)
-        world.add_view(room_view)
+        world.add_semantic_annotation(floor)
+        semantic_room_annotation = Room(name=self.name, floor=floor)
+        world.add_semantic_annotation(semantic_room_annotation)
 
         return world
 
 
 @dataclass
-class WallFactory(ViewFactory[Wall], HasDoorLikeFactories):
+class WallFactory(SemanticAnnotationFactory[Wall], HasDoorLikeFactories):
 
     scale: Scale = field(kw_only=True)
     """
@@ -1176,7 +1208,7 @@ class WallFactory(ViewFactory[Wall], HasDoorLikeFactories):
         Return a world with the wall body at its root and potentially doors and double doors as children of the wall body.
         """
         wall_world = self._create_wall_world()
-        self.add_doorlike_views_to_world(wall_world)
+        self.add_doorlike_semantic_annotation_to_world(wall_world)
         self.remove_doors_from_world(wall_world)
         world.merge_world(wall_world)
 
@@ -1196,7 +1228,7 @@ class WallFactory(ViewFactory[Wall], HasDoorLikeFactories):
             body=wall_body,
         )
 
-        wall_world.add_view(wall)
+        wall_world.add_semantic_annotation(wall)
 
         return wall_world
 

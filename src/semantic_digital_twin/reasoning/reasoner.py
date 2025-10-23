@@ -75,7 +75,7 @@ class CaseReasoner:
 
     def reason(self) -> Dict[str, Any]:
         """
-        Perform rule-based reasoning on the current view and infer all possible concepts.
+        Perform rule-based reasoning on the current semantic annotation and infer all possible concepts.
 
         :return: The inferred concepts as a dictionary mapping concept name to all inferred values of that concept.
         """
@@ -92,7 +92,7 @@ class CaseReasoner:
         scenario: Optional[Callable] = None,
     ) -> None:
         """
-        Fit the view RDR to the required attribute types.
+        Fit the semantic annotation RDR to the required attribute types.
 
         :param attribute_name: The attribute name that the RDR should be fitted to.
         :param attribute_types: A list of attribute types that the RDR should be fitted to.

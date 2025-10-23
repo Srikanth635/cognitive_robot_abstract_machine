@@ -56,9 +56,11 @@ class WorldEntity:
     The backreference to the world this entity belongs to.
     """
 
-    _views: Set[View] = field(default_factory=set, init=False, repr=False, hash=False)
+    _semantic_annotations: Set[SemanticAnnotation] = field(
+        default_factory=set, init=False, repr=False, hash=False
+    )
     """
-    The views this entity is part of.
+    The semantic annotations this entity is part of.
     """
 
     name: PrefixedName = field(default=None, kw_only=True)
@@ -476,17 +478,17 @@ GenericKinematicStructureEntity = TypeVar(
 
 
 @dataclass
-class View(WorldEntity, SubclassJSONSerializer):
+class SemanticAnnotation(WorldEntity, SubclassJSONSerializer):
     """
-    Represents a view on a set of bodies in the world.
+    Represents a semantic annotation on a set of bodies in the world.
 
     This class can hold references to certain bodies that gain meaning in this context.
 
     .. warning::
 
-        The hash of a view is based on the hash of its type and kinematic structure entities.
+        The hash of a semantic annotation is based on the hash of its type and kinematic structure entities.
         Overwrite this with extreme care and only if you know what you are doing. Hashes are used inside rules to check if
-        a new view has been created. If you, for instance, just use the object identity, this will fail since python assigns
+        a new semantic annotation has been created. If you, for instance, just use the object identity, this will fail since python assigns
         new memory pointers always. The same holds for the equality operator.
         If you do not want to change the behavior, make sure to use @dataclass(eq=False) to decorate your class.
     """
@@ -514,19 +516,19 @@ class View(WorldEntity, SubclassJSONSerializer):
             **super().to_json(),
         }
 
-        for view_field in fields(self):
-            value = getattr(self, view_field.name)
+        for semantic_annotation_field in fields(self):
+            value = getattr(self, semantic_annotation_field.name)
             if issubclass(type(value), SubclassJSONSerializer):
-                result[view_field.name] = value.to_json()
+                result[semantic_annotation_field.name] = value.to_json()
         return result
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any]) -> Self:
-        view_fields = {f.name: f for f in fields(cls)}
+        semantic_annotation_fields = {f.name: f for f in fields(cls)}
 
         init_args = {}
 
-        for k, v in view_fields.items():
+        for k, v in semantic_annotation_fields.items():
             if k not in data.keys():
                 continue
             field_type = type_string_to_type(data[k]["type"])
@@ -539,7 +541,7 @@ class View(WorldEntity, SubclassJSONSerializer):
         self, visited: Set[int], aggregation_type: Type[GenericKinematicStructureEntity]
     ) -> Set[GenericKinematicStructureEntity]:
         """
-        Recursively collects all entities that are part of this view.
+        Recursively collects all entities that are part of this semantic annotation.
         """
         stack: Deque[object] = deque([self])
         entities: Set[aggregation_type] = set()
@@ -555,21 +557,25 @@ class View(WorldEntity, SubclassJSONSerializer):
                 case aggregation_type():
                     entities.add(obj)
 
-                case View():
+                case SemanticAnnotation():
                     stack.extend(_attr_values(obj, aggregation_type))
 
                 case Mapping():
                     stack.extend(
                         v
                         for v in obj.values()
-                        if _is_entity_view_or_iterable(v, aggregation_type)
+                        if _is_entity_semantic_annotation_or_iterable(
+                            v, aggregation_type
+                        )
                     )
 
                 case Iterable() if not isinstance(obj, (str, bytes, bytearray)):
                     stack.extend(
                         v
                         for v in obj
-                        if _is_entity_view_or_iterable(v, aggregation_type)
+                        if _is_entity_semantic_annotation_or_iterable(
+                            v, aggregation_type
+                        )
                     )
 
         return entities
@@ -577,27 +583,27 @@ class View(WorldEntity, SubclassJSONSerializer):
     @property
     def kinematic_structure_entities(self) -> Iterable[KinematicStructureEntity]:
         """
-        Returns a Iterable of all relevant KinematicStructureEntity in this view. The default behaviour is to aggregate all KinematicStructureEntity that are accessible
-        through the properties and fields of this view, recursively.
-        If this behaviour is not desired for a specific view, it can be overridden by implementing the `KinematicStructureEntity` property.
+        Returns a Iterable of all relevant KinematicStructureEntity in this semantic annotation. The default behaviour is to aggregate all KinematicStructureEntity that are accessible
+        through the properties and fields of this semantic annotation, recursively.
+        If this behaviour is not desired for a specific semantic annotation, it can be overridden by implementing the `KinematicStructureEntity` property.
         """
         return self._kinematic_structure_entities(set(), KinematicStructureEntity)
 
     @property
     def bodies(self) -> Iterable[Body]:
         """
-        Returns an Iterable of all relevant bodies in this view. The default behaviour is to aggregate all bodies that are accessible
-        through the properties and fields of this view, recursively.
-        If this behaviour is not desired for a specific view, it can be overridden by implementing the `bodies` property.
+        Returns an Iterable of all relevant bodies in this semantic annotation. The default behaviour is to aggregate all bodies that are accessible
+        through the properties and fields of this semantic annotation, recursively.
+        If this behaviour is not desired for a specific semantic annotation, it can be overridden by implementing the `bodies` property.
         """
         return self._kinematic_structure_entities(set(), Body)
 
     @property
     def regions(self) -> Iterable[Region]:
         """
-        Returns an Iterable of all relevant regions in this view. The default behaviour is to aggregate all regions that are accessible
-        through the properties and fields of this view, recursively.
-        If this behaviour is not desired for a specific view, it can be overridden by implementing the `regions` property.
+        Returns an Iterable of all relevant regions in this semantic annotation. The default behaviour is to aggregate all regions that are accessible
+        through the properties and fields of this semantic annotation, recursively.
+        If this behaviour is not desired for a specific semantic annotation, it can be overridden by implementing the `regions` property.
         """
         return self._kinematic_structure_entities(set(), Region)
 
@@ -605,7 +611,7 @@ class View(WorldEntity, SubclassJSONSerializer):
         self, origin: TransformationMatrix
     ) -> BoundingBoxCollection:
         """
-        Returns a bounding box collection that contains the bounding boxes of all bodies in this view.
+        Returns a bounding box collection that contains the bounding boxes of all bodies in this semantic annotation.
         :param reference_frame: The reference frame to express the bounding boxes in.
         :returns: A collection of bounding boxes in world-space coordinates.
         """
@@ -636,9 +642,9 @@ class View(WorldEntity, SubclassJSONSerializer):
 
 
 @dataclass(eq=False)
-class RootedView(View):
+class RootedSemanticAnnotation(SemanticAnnotation):
     """
-    Represents a view that is rooted in a specific KinematicStructureEntity.
+    Represents a semantic annotation that is rooted in a specific KinematicStructureEntity.
     """
 
     root: Body = field(default=None)
@@ -665,15 +671,15 @@ class RootedView(View):
 
 
 @dataclass(eq=False)
-class EnvironmentView(RootedView):
+class semantic_environment_annotation(RootedSemanticAnnotation):
     """
-    Represents a view of the environment.
+    Represents a semantic annotation of the environment.
     """
 
     @property
     def kinematic_structure_entities(self) -> Set[KinematicStructureEntity]:
         """
-        Returns a set of all KinematicStructureEntity in the environment view.
+        Returns a set of all KinematicStructureEntity in the environment semantic annotation.
         """
         return set(
             self._world.compute_descendent_child_kinematic_structure_entities(self.root)
@@ -804,34 +810,37 @@ class Connection(WorldEntity):
 GenericConnection = TypeVar("GenericConnection", bound=Connection)
 
 
-def _is_entity_view_or_iterable(
+def _is_entity_semantic_annotation_or_iterable(
     obj: object, aggregation_type: Type[KinematicStructureEntity]
 ) -> bool:
     """
-    Determines if an object is a KinematicStructureEntity, a View, or an Iterable (excluding strings and bytes).
+    Determines if an object is a KinematicStructureEntity, a semantic annotation, or an Iterable (excluding strings and bytes).
     """
-    return isinstance(obj, (aggregation_type, View)) or (
+    return isinstance(obj, (aggregation_type, SemanticAnnotation)) or (
         isinstance(obj, Iterable) and not isinstance(obj, (str, bytes, bytearray))
     )
 
 
 def _attr_values(
-    view: View, aggregation_type: Type[GenericKinematicStructureEntity]
+    semantic_annotation: SemanticAnnotation,
+    aggregation_type: Type[GenericKinematicStructureEntity],
 ) -> Iterable[object]:
     """
-    Yields all dataclass fields and set properties of this view.
+    Yields all dataclass fields and set properties of this semantic annotation.
     Skips private fields (those starting with '_'), as well as the 'bodies' property.
 
-    :param view: The view to extract attributes from.
+    :param semantic_annotation: The semantic annotation to extract attributes from.
     """
-    for f in fields(view):
+    for f in fields(semantic_annotation):
         if f.name.startswith("_"):
             continue
-        v = getattr(view, f.name, None)
-        if _is_entity_view_or_iterable(v, aggregation_type):
+        v = getattr(semantic_annotation, f.name, None)
+        if _is_entity_semantic_annotation_or_iterable(v, aggregation_type):
             yield v
 
-    for name, prop in inspect.getmembers(type(view), lambda o: isinstance(o, property)):
+    for name, prop in inspect.getmembers(
+        type(semantic_annotation), lambda o: isinstance(o, property)
+    ):
         if name in {
             "kinematic_structure_entities",
             "bodies",
@@ -839,8 +848,8 @@ def _attr_values(
         } or name.startswith("_"):
             continue
         try:
-            v = getattr(view, name)
+            v = getattr(semantic_annotation, name)
         except Exception:
             continue
-        if _is_entity_view_or_iterable(v, aggregation_type):
+        if _is_entity_semantic_annotation_or_iterable(v, aggregation_type):
             yield v

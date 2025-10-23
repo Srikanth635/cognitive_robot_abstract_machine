@@ -2,7 +2,7 @@ import unittest
 
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.spatial_types import Vector3
-from semantic_digital_twin.views.views import Handle, Door
+from semantic_digital_twin.semantic_annotations.semantic_annotations import Handle, Door
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connection_factories import (
     ConnectionFactory,
@@ -21,8 +21,8 @@ from semantic_digital_twin.world_description.world_modification import (
     AddKinematicStructureEntityModification,
     AddConnectionModification,
     AddDegreeOfFreedomModification,
-    AddViewModification,
-    RemoveViewModification,
+    AddSemanticSnnotationModification,
+    RemoveSemanticAnnotationModification,
 )
 
 
@@ -135,33 +135,33 @@ class ConnectionModificationTestCase(unittest.TestCase):
         self.assertEqual(len(w2.bodies), 2)
         self.assertEqual(len(w2.connections), 1)
 
-    def test_view_modifications(self):
+    def test_semantic_annotation_modifications(self):
         w = World()
         b1 = Body(name=PrefixedName("b1"))
         v1 = Handle(body=b1)
         v2 = Door(body=b1, handle=v1)
 
-        add_v1 = AddViewModification(v1)
-        add_v2 = AddViewModification(v2)
+        add_v1 = AddSemanticSnnotationModification(v1)
+        add_v2 = AddSemanticSnnotationModification(v2)
 
-        self.assertNotIn(v1, w.views)
-        self.assertNotIn(v2, w.views)
+        self.assertNotIn(v1, w.semantic_annotations)
+        self.assertNotIn(v2, w.semantic_annotations)
 
         with w.modify_world():
             add_v1.apply(w)
             add_v2.apply(w)
 
-        self.assertIn(v1, w.views)
-        self.assertIn(v2, w.views)
+        self.assertIn(v1, w.semantic_annotations)
+        self.assertIn(v2, w.semantic_annotations)
 
-        rm_v1 = RemoveViewModification(v1)
-        rm_v2 = RemoveViewModification(v2)
+        rm_v1 = RemoveSemanticAnnotationModification(v1)
+        rm_v2 = RemoveSemanticAnnotationModification(v2)
         with w.modify_world():
             rm_v1.apply(w)
             rm_v2.apply(w)
 
-        self.assertNotIn(v1, w.views)
-        self.assertNotIn(v2, w.views)
+        self.assertNotIn(v1, w.semantic_annotations)
+        self.assertNotIn(v2, w.semantic_annotations)
 
 
 if __name__ == "__main__":

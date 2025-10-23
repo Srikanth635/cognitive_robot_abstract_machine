@@ -4,7 +4,16 @@ import itertools
 from typing import Optional, List
 
 import trimesh.sample
-from entity_query_language import symbolic_mode, let, an, entity, and_, not_, contains, the
+from entity_query_language import (
+    symbolic_mode,
+    let,
+    an,
+    entity,
+    and_,
+    not_,
+    contains,
+    the,
+)
 
 from ..collision_checking.collision_detector import Collision, CollisionCheck
 from ..collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
@@ -67,7 +76,10 @@ def robot_holds_body(robot: AbstractRobot, body: Body) -> bool:
     """
     with symbolic_mode():
         grippers = an(
-            entity(g := let(ParallelGripper, robot._world.views), g._robot == robot)
+            entity(
+                g := let(ParallelGripper, robot._world.semantic_annotations),
+                g._robot == robot,
+            )
         )
 
     return any(
@@ -97,7 +109,12 @@ def blocking(
             root._world.state[dof.name].position = state
 
     with symbolic_mode():
-        robot = the(entity(r := let(AbstractRobot, root._world.views), tip in r.bodies))
+        robot = the(
+            entity(
+                r := let(AbstractRobot, root._world.semantic_annotations),
+                tip in r.bodies,
+            )
+        )
     return robot_in_collision(robot.evaluate(), [])
 
 

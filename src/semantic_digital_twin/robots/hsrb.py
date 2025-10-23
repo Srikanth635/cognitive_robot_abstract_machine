@@ -42,7 +42,7 @@ class HSRB(AbstractRobot, HasArms, HasNeck):
     @classmethod
     def from_world(cls, world: World) -> Self:
         """
-        Creates an HSRB (Human Support Robot B) view from a World that was parsed from
+        Creates an HSRB (Human Support Robot B) semantic annotation from a World that was parsed from
         resources/urdf/robots/hsrb.urdf. Assumes all URDF link names exist in the world.
         """
         hsrb = cls(
@@ -161,7 +161,7 @@ class HSRB(AbstractRobot, HasArms, HasNeck):
         )
         hsrb.add_torso(torso)
 
-        world.add_view(hsrb, exists_ok=True)
+        world.add_semantic_annotation(hsrb, exists_ok=True)
 
         vel_limits = defaultdict(lambda: 1)
         hsrb.tighten_dof_velocity_limits_of_1dof_connections(new_limits=vel_limits)

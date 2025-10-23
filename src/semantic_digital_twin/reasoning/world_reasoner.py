@@ -4,7 +4,7 @@ from os.path import dirname
 from typing_extensions import Optional, List, Dict, Any, Type, Callable, ClassVar
 
 from semantic_digital_twin.world import World
-from semantic_digital_twin.world_description.world_entity import View
+from semantic_digital_twin.world_description.world_entity import SemanticAnnotation
 from semantic_digital_twin.reasoning.reasoner import CaseReasoner
 
 
@@ -35,14 +35,14 @@ class WorldReasoner:
     def __post_init__(self):
         self.reasoner = CaseReasoner(self.world, model_directory=self.model_directory)
 
-    def infer_views(self) -> List[View]:
+    def infer_semantic_annotations(self) -> List[SemanticAnnotation]:
         """
-        Infer the views of the world by calling the :py:meth:`reason` method and extracting all inferred views.
+        Infer the semantic annotations of the world by calling the :py:meth:`reason` method and extracting all inferred semantic annotations.
 
-        :return: The inferred views of the world.
+        :return: The inferred semantic annotations of the world.
         """
         result = self.reason()
-        return result.get("views", [])
+        return result.get("semantic_annotations", [])
 
     def reason(self) -> Dict[str, Any]:
         """
@@ -63,32 +63,34 @@ class WorldReasoner:
         for attr_name, attr_value in self.reasoner.result.items():
             if isinstance(getattr(self.world, attr_name), list):
                 attr_value = list(attr_value)
-            if attr_name == "views":
-                for view in attr_value:
-                    self.world.add_view(view, exists_ok=True)
+            if attr_name == "semantic_annotations":
+                for semantic_annotation in attr_value:
+                    self.world.add_semantic_annotation(
+                        semantic_annotation, exists_ok=True
+                    )
             else:
                 setattr(self.world, attr_name, attr_value)
 
-    def fit_views(
+    def fit_semantic_annotations(
         self,
-        required_views: List[Type[View]],
-        update_existing_views: bool = False,
+        required_semantic_annotations: List[Type[SemanticAnnotation]],
+        update_existing_semantic_annotations: bool = False,
         world_factory: Optional[Callable] = None,
         scenario: Optional[Callable] = None,
     ) -> None:
         """
-        Fit the world RDR to the required view types.
+        Fit the world RDR to the required semantic annotation types.
 
-        :param required_views: A list of view types that the RDR should be fitted to.
-        :param update_existing_views: If True, existing views will be updated with new rules, else they will be skipped.
+        :param required_semantic_annotations: A list of semantic annotation types that the RDR should be fitted to.
+        :param update_existing_semantic_annotations: If True, existing semantic annotations will be updated with new rules, else they will be skipped.
         :param world_factory: Optional callable that can be used to recreate the world object.
         :param scenario: Optional callable that represents the test method or scenario that is being executed.
         """
         self.reasoner.fit_attribute(
-            "views",
-            required_views,
+            "semantic_annotations",
+            required_semantic_annotations,
             False,
-            update_existing_rules=update_existing_views,
+            update_existing_rules=update_existing_semantic_annotations,
             case_factory=world_factory,
             scenario=scenario,
         )

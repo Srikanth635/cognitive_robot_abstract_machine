@@ -8,7 +8,7 @@ import numpy as np
 
 from ..spatial_types import Point3
 from ..spatial_types.spatial_types import TransformationMatrix
-from ..views.factories import ViewFactory
+from ..semantic_annotations.factories import SemanticAnnotationFactory
 from ..world import World
 from ..world_description.geometry import TriangleMesh, FileMesh
 from ..world_description.world_entity import Body
@@ -137,7 +137,7 @@ class BodyFactoryReplace(Step):
     Condition to filter bodies that should be replaced. Defaults to matching bodies containing "dresser_" followed by digits in their name.
     """
 
-    factory_creator: Callable[[Body], ViewFactory] = None
+    factory_creator: Callable[[Body], SemanticAnnotationFactory] = None
     """
     A callable that takes a Body and returns a ViewFactory to create the new structure.
     """

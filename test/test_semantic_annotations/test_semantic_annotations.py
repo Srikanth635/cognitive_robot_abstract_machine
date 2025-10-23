@@ -7,7 +7,7 @@ from numpy.ma.testutils import (
 
 from semantic_digital_twin.reasoning.world_reasoner import WorldReasoner
 from semantic_digital_twin.testing import *
-from semantic_digital_twin.views.views import *
+from semantic_digital_twin.semantic_annotations.semantic_annotations import *
 
 try:
     from ripple_down_rules.user_interface.gui import RDRCaseViewer
@@ -24,16 +24,18 @@ except ImportError:
 
 
 @dataclass(eq=False)
-class TestView(View):
+class TestSemanticAnnotation(SemanticAnnotation):
     """
-    A Generic View for multiple bodies.
+    A Generic semantic annotation for multiple bodies.
     """
 
     _private_entity: KinematicStructureEntity = field(default=None)
     entity_list: List[KinematicStructureEntity] = field(
         default_factory=list, hash=False
     )
-    views: List[View] = field(default_factory=list, hash=False)
+    semantic_annotations: List[SemanticAnnotation] = field(
+        default_factory=list, hash=False
+    )
     root_entity_1: KinematicStructureEntity = field(default=None)
     root_entity_2: KinematicStructureEntity = field(default=None)
     tip_entity_1: KinematicStructureEntity = field(default=None)
@@ -41,11 +43,11 @@ class TestView(View):
 
     def add_entity(self, body: KinematicStructureEntity):
         self.entity_list.append(body)
-        body._views.add(self)
+        body._semantic_annotations.add(self)
 
-    def add_view(self, view: View):
-        self.views.append(view)
-        view._views.add(self)
+    def add_semantic_annotation(self, semantic_annotation: SemanticAnnotation):
+        self.semantic_annotations.append(semantic_annotation)
+        semantic_annotation._semantic_annotations.add(self)
 
     @property
     def chain(self) -> list[KinematicStructureEntity]:
@@ -66,47 +68,57 @@ class TestView(View):
         )
 
 
-def test_view_hash(apartment_world):
-    view1 = Handle(body=apartment_world.bodies[0])
-    apartment_world.add_view(view1)
-    assert hash(view1) == hash((Handle, apartment_world.bodies[0].name))
+def test_semantic_annotation_hash(apartment_world):
+    semantic_annotation1 = Handle(body=apartment_world.bodies[0])
+    apartment_world.add_semantic_annotation(semantic_annotation1)
+    assert hash(semantic_annotation1) == hash((Handle, apartment_world.bodies[0].name))
 
-    view2 = Handle(body=apartment_world.bodies[0])
-    assert view1 == view2
+    semantic_annotation2 = Handle(body=apartment_world.bodies[0])
+    assert semantic_annotation1 == semantic_annotation2
 
 
 def test_aggregate_bodies(kitchen_world):
-    world_view = TestView(_world=kitchen_world)
+    world_semantic_annotation = TestSemanticAnnotation(_world=kitchen_world)
 
     # Test bodies added to a private dataclass field are not aggregated
-    world_view._private_entity = kitchen_world.kinematic_structure_entities[0]
+    world_semantic_annotation._private_entity = (
+        kitchen_world.kinematic_structure_entities[0]
+    )
 
     # Test aggregation of bodies added in custom properties
-    world_view.root_entity_1 = kitchen_world.kinematic_structure_entities[1]
-    world_view.tip_entity_1 = kitchen_world.kinematic_structure_entities[4]
+    world_semantic_annotation.root_entity_1 = (
+        kitchen_world.kinematic_structure_entities[1]
+    )
+    world_semantic_annotation.tip_entity_1 = kitchen_world.kinematic_structure_entities[
+        4
+    ]
 
     # Test aggregation of normal dataclass field
     body_subset = kitchen_world.kinematic_structure_entities[5:10]
-    [world_view.add_entity(body) for body in body_subset]
+    [world_semantic_annotation.add_entity(body) for body in body_subset]
 
-    # Test aggregation of bodies in a new as well as a nested view
-    view1 = TestView()
-    view1_subset = kitchen_world.kinematic_structure_entities[10:18]
-    [view1.add_entity(body) for body in view1_subset]
+    # Test aggregation of bodies in a new as well as a nested semantic annotation
+    semantic_annotation1 = TestSemanticAnnotation()
+    semantic_annotation1_subset = kitchen_world.kinematic_structure_entities[10:18]
+    [semantic_annotation1.add_entity(body) for body in semantic_annotation1_subset]
 
-    view2 = TestView()
-    view2_subset = kitchen_world.kinematic_structure_entities[20:]
-    [view2.add_entity(body) for body in view2_subset]
+    semantic_annotation2 = TestSemanticAnnotation()
+    semantic_annotation2_subset = kitchen_world.kinematic_structure_entities[20:]
+    [semantic_annotation2.add_entity(body) for body in semantic_annotation2_subset]
 
-    view1.add_view(view2)
-    world_view.add_view(view1)
+    semantic_annotation1.add_semantic_annotation(semantic_annotation2)
+    world_semantic_annotation.add_semantic_annotation(semantic_annotation1)
 
     # Test that bodies added in a custom private property are not aggregated
-    world_view.root_entity_2 = kitchen_world.kinematic_structure_entities[18]
-    world_view.tip_entity_2 = kitchen_world.kinematic_structure_entities[20]
+    world_semantic_annotation.root_entity_2 = (
+        kitchen_world.kinematic_structure_entities[18]
+    )
+    world_semantic_annotation.tip_entity_2 = kitchen_world.kinematic_structure_entities[
+        20
+    ]
 
     assert_equal(
-        world_view.kinematic_structure_entities,
+        world_semantic_annotation.kinematic_structure_entities,
         set(kitchen_world.kinematic_structure_entities)
         - {
             kitchen_world.kinematic_structure_entities[0],
@@ -115,7 +127,7 @@ def test_aggregate_bodies(kitchen_world):
     )
 
 
-def test_handle_view_eql(apartment_world):
+def test_handle_semantic_annotation_eql(apartment_world):
     with rule_mode():
         body = let(
             type_=Body,
@@ -127,7 +139,7 @@ def test_handle_view_eql(apartment_world):
 
 
 @pytest.mark.parametrize(
-    "view_type, update_existing_views, scenario",
+    "semantic_annotation_type, update_existing_semantic_annotations, scenario",
     [
         (Handle, False, None),
         (Container, False, None),
@@ -136,61 +148,73 @@ def test_handle_view_eql(apartment_world):
         (Door, False, None),
     ],
 )
-def test_infer_apartment_view(
-    view_type, update_existing_views, scenario, apartment_world
+def test_infer_apartment_semantic_annotation(
+    semantic_annotation_type,
+    update_existing_semantic_annotations,
+    scenario,
+    apartment_world,
 ):
-    fit_rules_and_assert_views(
-        apartment_world, view_type, update_existing_views, scenario
+    fit_rules_and_assert_semantic_annotations(
+        apartment_world,
+        semantic_annotation_type,
+        update_existing_semantic_annotations,
+        scenario,
     )
 
 
 @pytest.mark.skipif(world_rdr is None, reason="requires world_rdr")
-def test_generated_views(kitchen_world):
-    found_views = world_rdr.classify(kitchen_world)["views"]
+def test_generated_semantic_annotations(kitchen_world):
+    found_semantic_annotations = world_rdr.classify(kitchen_world)[
+        "semantic_annotations"
+    ]
     drawer_container_names = [
-        v.body.name.name for v in found_views if isinstance(v, Container)
+        v.body.name.name for v in found_semantic_annotations if isinstance(v, Container)
     ]
     assert len(drawer_container_names) == 14
 
 
 @pytest.mark.order("second_to_last")
-def test_apartment_views(apartment_world):
+def test_apartment_semantic_annotations(apartment_world):
     world_reasoner = WorldReasoner(apartment_world)
-    world_reasoner.fit_views(
+    world_reasoner.fit_semantic_annotations(
         [Handle, Container, Drawer, Cabinet],
         world_factory=lambda: apartment_world,
         scenario=None,
     )
 
-    found_views = world_reasoner.infer_views()
+    found_semantic_annotations = world_reasoner.infer_semantic_annotations()
     drawer_container_names = [
-        v.body.name.name for v in found_views if isinstance(v, Container)
+        v.body.name.name for v in found_semantic_annotations if isinstance(v, Container)
     ]
     assert len(drawer_container_names) == 19
 
 
-def fit_rules_and_assert_views(world, view_type, update_existing_views, scenario):
+def fit_rules_and_assert_semantic_annotations(
+    world, semantic_annotation_type, update_existing_semantic_annotations, scenario
+):
     world_reasoner = WorldReasoner(world)
-    world_reasoner.fit_views(
-        [view_type],
-        update_existing_views=update_existing_views,
+    world_reasoner.fit_semantic_annotations(
+        [semantic_annotation_type],
+        update_existing_semantic_annotations=update_existing_semantic_annotations,
         world_factory=lambda: world,
         scenario=scenario,
     )
 
-    found_views = world_reasoner.infer_views()
-    assert any(isinstance(v, view_type) for v in found_views)
+    found_semantic_annotations = world_reasoner.infer_semantic_annotations()
+    assert any(
+        isinstance(v, semantic_annotation_type) for v in found_semantic_annotations
+    )
 
 
-def test_view_serde_once(apartment_world):
+def test_semantic_annotation_serde_once(apartment_world):
     handle_body = apartment_world.bodies[0]
     door_body = apartment_world.bodies[1]
 
     handle = Handle(body=handle_body)
     door = Door(body=door_body, handle=handle)
 
-    apartment_world.add_view(handle)
-    apartment_world.add_view(door)
+    apartment_world.add_semantic_annotation(handle)
+    apartment_world.add_semantic_annotation(door)
 
     door_se = door.to_json()
     door_de = Door.from_json(door_se)
@@ -200,15 +224,15 @@ def test_view_serde_once(apartment_world):
     assert type(door.body) == type(door_de.body)
 
 
-def test_view_serde_multiple(apartment_world):
+def test_semantic_annotation_serde_multiple(apartment_world):
     handle_body = apartment_world.bodies[0]
     door_body = apartment_world.bodies[1]
 
     handle = Handle(body=handle_body)
     door = Door(body=door_body, handle=handle)
 
-    apartment_world.add_view(handle)
-    apartment_world.add_view(door)
+    apartment_world.add_semantic_annotation(handle)
+    apartment_world.add_semantic_annotation(door)
 
     door_se1 = door.to_json()
     door_de1 = Door.from_json(door_se1)
