@@ -1,11 +1,18 @@
 import unittest
 from time import sleep
 
-from semantic_world.world_description.geometry import Scale
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.spatial_types.spatial_types import TransformationMatrix
-from semantic_world.views.views import Handle, Door, Container, Drawer, Dresser, Wall
-from semantic_world.views.factories import (
+from semantic_digital_twin.world_description.geometry import Scale
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.spatial_types.spatial_types import TransformationMatrix
+from semantic_digital_twin.views.views import (
+    Handle,
+    Door,
+    Container,
+    Drawer,
+    Dresser,
+    Wall,
+)
+from semantic_digital_twin.views.factories import (
     HandleFactory,
     Direction,
     DoorFactory,

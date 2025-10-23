@@ -1,22 +1,22 @@
 import unittest
 
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.spatial_types.spatial_types import Vector3
-from semantic_world.views.views import Handle, Door
-from semantic_world.world import World
-from semantic_world.world_description.connection_factories import (
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.spatial_types.spatial_types import Vector3
+from semantic_digital_twin.views.views import Handle, Door
+from semantic_digital_twin.world import World
+from semantic_digital_twin.world_description.connection_factories import (
     ConnectionFactory,
     FixedConnectionFactory,
     RevoluteConnectionFactory,
 )
-from semantic_world.world_description.connections import (
+from semantic_digital_twin.world_description.connections import (
     FixedConnection,
     Connection6DoF,
     PrismaticConnection,
     RevoluteConnection,
 )
-from semantic_world.world_description.world_entity import Body
-from semantic_world.world_description.world_modification import (
+from semantic_digital_twin.world_description.world_entity import Body
+from semantic_digital_twin.world_description.world_modification import (
     WorldModelModificationBlock,
     AddKinematicStructureEntityModification,
     AddConnectionModification,

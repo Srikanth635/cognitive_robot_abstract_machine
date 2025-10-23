@@ -14,7 +14,7 @@ kernelspec:
 (persistence-of-annotated-worlds)=
 # Persistence of annotated worlds
 
-The semantic world comes with an ORM attached to it that is derived from the python datastructures.
+The semantic digital twin comes with an ORM attached to it that is derived from the python datastructures.
 The ORM can be used to serialize entire worlds into an SQL database and retrieve them later. The semantic annotations (views) are stored alongside the kinematic information.
 The queried worlds are full objects that can be reconstructed into the original objects without any problems.
 The resulting SQL databases are perfect entry points for machine learning.
@@ -35,10 +35,10 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
 from ormatic.dao import to_dao
-from semantic_world.adapters.urdf import URDFParser
-from semantic_world.orm.ormatic_interface import *
-from semantic_world.views.views import Table
-from semantic_world.utils import get_semantic_world_directory_root
+from semantic_digital_twin.adapters.urdf import URDFParser
+from semantic_digital_twin.orm.ormatic_interface import *
+from semantic_digital_twin.views.views import Table
+from semantic_digital_twin.utils import get_semantic_digital_twin_directory_root
 logging.disable(logging.CRITICAL)
 # set up an in memory database
 engine = create_engine('sqlite:///:memory:')
@@ -46,7 +46,7 @@ session = Session(engine)
 Base.metadata.create_all(bind=session.bind)
 
 # load the table world from urdf
-urdf_dir = os.path.join(get_semantic_world_directory_root(os.getcwd()), "resources", "urdf")
+urdf_dir = os.path.join(get_semantic_digital_twin_directory_root(os.getcwd()), "resources", "urdf")
 table = os.path.join(urdf_dir, "table.urdf")
 world = URDFParser.from_file(table).parse()
 ```
@@ -79,7 +79,7 @@ print(table.points_on_table(2))
 
 ## Maintaining the ORM 🧰
 
-You can maintain the ORM by maintaining the [generate_orm.py](https://github.com/cram2/semantic_world/blob/main/scripts/generate_orm.py).
+You can maintain the ORM by maintaining the [generate_orm.py](https://github.com/cram2/semantic_digital_twin/blob/main/scripts/generate_orm.py).
 In there you have to list all the classes you want to generate mappings for and perhaps some type decorators for advanced use cases.
 Whenever you write a new dataclass that should appear or has semantic meaningful content make sure it appears in the set of classes.
 Pay attention to the logger during generation and see if it understands your datastructures correctly.

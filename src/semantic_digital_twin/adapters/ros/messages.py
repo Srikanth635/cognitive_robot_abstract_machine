@@ -5,8 +5,8 @@ from typing_extensions import Dict, Any, Self, List
 
 from random_events.utils import SubclassJSONSerializer
 
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.world_description.world_modification import (
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.world_description.world_modification import (
     WorldModelModificationBlock,
 )
 

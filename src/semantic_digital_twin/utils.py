@@ -150,6 +150,7 @@ def tracy_installed() -> bool:
     except (ImportError, PackageNotFoundError, ValueError):
         return False
 
+
 def hsrb_installed() -> bool:
     try:
         from ament_index_python.packages import get_package_share_directory
@@ -163,12 +164,12 @@ def hsrb_installed() -> bool:
         return False
 
 
-def get_semantic_world_directory_root(file_path: str) -> str:
+def get_semantic_digital_twin_directory_root(file_path: str) -> str:
     """
-    Get the root directory of the semantic world given a file path that lays in it.
+    Get the root directory of the semantic digital twin given a file path that lays in it.
 
     :param file_path: Path to the file
-    :return: Root directory of the semantic world
+    :return: Root directory of the semantic digital twin
     """
     if not os.path.exists(file_path):
         raise ValueError(f"File {file_path} does not exist")

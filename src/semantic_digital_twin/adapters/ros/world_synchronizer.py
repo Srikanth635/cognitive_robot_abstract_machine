@@ -25,7 +25,7 @@ from ...world import World
 @dataclass
 class Synchronizer(ABC):
     """
-    Abstract Synchronizer class to manage world synchronizations between processes running semantic world.
+    Abstract Synchronizer class to manage world synchronizations between processes running semantic digital twin.
     It manages publishers and subscribers, ensuring proper cleanup after use.
     The communication is JSON string based.
     """
@@ -181,12 +181,12 @@ class SynchronizerOnCallback(Synchronizer, Callback, ABC):
 @dataclass
 class StateSynchronizer(StateChangeCallback, SynchronizerOnCallback):
     """
-    Synchronizes the state (values of free variables) of the semantic world with the associated ROS topic.
+    Synchronizes the state (values of free variables) of the semantic digital twin with the associated ROS topic.
     """
 
     message_type: ClassVar[Optional[Type[SubclassJSONSerializer]]] = WorldStateUpdate
 
-    topic_name: str = "/semantic_world/world_state"
+    topic_name: str = "/semantic_digital_twin/world_state"
 
     def __post_init__(self):
         super().__post_init__()
@@ -234,7 +234,7 @@ class ModelSynchronizer(
     """
 
     message_type: ClassVar[Type[SubclassJSONSerializer]] = ModificationBlock
-    topic_name: str = "/semantic_world/world_model"
+    topic_name: str = "/semantic_digital_twin/world_model"
 
     def __post_init__(self):
         super().__post_init__()
@@ -268,7 +268,7 @@ class ModelReloadSynchronizer(Synchronizer):
     The session used to perform persistence interaction. 
     """
 
-    topic_name: str = "/semantic_world/reload_model"
+    topic_name: str = "/semantic_digital_twin/reload_model"
 
     def __post_init__(self):
         super().__post_init__()

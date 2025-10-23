@@ -17,7 +17,7 @@ kernelspec:
 Views are semantic annotations attached to world entities.
 For instance, they can be used to say that a certain body should be interpreted as a handle or that a combination of
 bodies should be interpreted as a drawer.
-Ontologies inspire views. The semantic world overcomes the technical limitations of ontologies by representing
+Ontologies inspire views. The semantic digital twin overcomes the technical limitations of ontologies by representing
 semantic annotations as Python classes and by using Python's typing together with the Entity Query Language (EQL) for reasoning.
 This tutorial shows you how to apply views to a world and how to create your own views.
 
@@ -34,14 +34,14 @@ from typing import List
 
 from entity_query_language import entity, an, let, symbolic_mode
 
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.spatial_types.spatial_types import TransformationMatrix
-from semantic_world.views.views import Container
-from semantic_world.world import World
-from semantic_world.world_description.connections import Connection6DoF
-from semantic_world.world_description.geometry import Sphere, Box, Scale
-from semantic_world.world_description.world_entity import View, Body
-from semantic_world.spatial_computations.raytracer import RayTracer
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.spatial_types.spatial_types import TransformationMatrix
+from semantic_digital_twin.views.views import Container
+from semantic_digital_twin.world import World
+from semantic_digital_twin.world_description.connections import Connection6DoF
+from semantic_digital_twin.world_description.geometry import Sphere, Box, Scale
+from semantic_digital_twin.world_description.world_entity import View, Body
+from semantic_digital_twin.spatial_computations.raytracer import RayTracer
 
 
 @dataclass
@@ -98,7 +98,7 @@ print(*apples.evaluate(), sep="\n")
 Views can become arbitrarily expressive. For instance, we can define a FruitBox that groups a container and a list of apples.
 
 ```{code-cell} ipython2
-from semantic_world.views.factories import ContainerFactory, Direction
+from semantic_digital_twin.views.factories import ContainerFactory, Direction
 
 @dataclass
 class FruitBox(View):
@@ -161,7 +161,7 @@ rt.scene.show("jupyter")
 We can now use EQL to get us only the FruitBoxes that actually contain apples!
 
 ```{code-cell} ipython2
-from semantic_world.reasoning.predicates import ContainsType
+from semantic_digital_twin.reasoning.predicates import ContainsType
 from entity_query_language import a
 
 with symbolic_mode():

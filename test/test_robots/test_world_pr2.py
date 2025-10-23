@@ -7,26 +7,26 @@ import numpy as np
 import pytest
 from rustworkx import NoPathFound
 
-from semantic_world.reasoning.predicates import LeftOf
-from semantic_world.robots.hsrb import HSRB
-from semantic_world.spatial_types.spatial_types import TransformationMatrix
-from semantic_world.world_description.connections import (
+from semantic_digital_twin.reasoning.predicates import LeftOf
+from semantic_digital_twin.robots.hsrb import HSRB
+from semantic_digital_twin.spatial_types.spatial_types import TransformationMatrix
+from semantic_digital_twin.world_description.connections import (
     OmniDrive,
     PrismaticConnection,
     RevoluteConnection,
 )
-from semantic_world.spatial_computations.ik_solver import (
+from semantic_digital_twin.spatial_computations.ik_solver import (
     MaxIterationsException,
     UnreachableException,
 )
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.robots.abstract_robot import KinematicChain
-from semantic_world.robots.tracy import Tracy
-from semantic_world.robots.pr2 import PR2
-from semantic_world.spatial_types.derivatives import Derivatives
-from semantic_world.spatial_types.symbol_manager import symbol_manager
-from semantic_world.world import World
-from semantic_world.testing import pr2_world, tracy_world, hsrb_world
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.robots.abstract_robot import KinematicChain
+from semantic_digital_twin.robots.tracy import Tracy
+from semantic_digital_twin.robots.pr2 import PR2
+from semantic_digital_twin.spatial_types.derivatives import Derivatives
+from semantic_digital_twin.spatial_types.symbol_manager import symbol_manager
+from semantic_digital_twin.world import World
+from semantic_digital_twin.testing import pr2_world, tracy_world, hsrb_world
 
 
 def test_compute_chain_of_bodies_pr2(pr2_world):

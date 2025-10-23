@@ -27,7 +27,7 @@ class FetchWorldServer:
     The world to fetch modifications from.
     """
 
-    service_name: str = "/semantic_world/fetch_world"
+    service_name: str = "/semantic_digital_twin/fetch_world"
     """
     The name of the service.
     """

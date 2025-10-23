@@ -5,9 +5,9 @@ from numpy.ma.testutils import (
     assert_equal,
 )  # You could replace this with numpy's regular assert for better compatibility
 
-from semantic_world.reasoning.world_reasoner import WorldReasoner
-from semantic_world.testing import *
-from semantic_world.views.views import *
+from semantic_digital_twin.reasoning.world_reasoner import WorldReasoner
+from semantic_digital_twin.testing import *
+from semantic_digital_twin.views.views import *
 
 try:
     from ripple_down_rules.user_interface.gui import RDRCaseViewer
@@ -18,7 +18,7 @@ except ImportError as e:
     RDRCaseViewer = None
 
 try:
-    from semantic_world.reasoning.world_rdr import world_rdr
+    from semantic_digital_twin.reasoning.world_rdr import world_rdr
 except ImportError:
     world_rdr = None
 

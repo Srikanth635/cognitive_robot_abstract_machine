@@ -8,10 +8,10 @@ import coacd
 import numpy as np
 import trimesh
 
-from semantic_world.pipeline.pipeline import Step
-from semantic_world.world import World
-from semantic_world.world_description.geometry import TriangleMesh, Shape, Mesh
-from semantic_world.world_description.world_entity import Body
+from semantic_digital_twin.pipeline.pipeline import Step
+from semantic_digital_twin.world import World
+from semantic_digital_twin.world_description.geometry import TriangleMesh, Shape, Mesh
+from semantic_digital_twin.world_description.world_entity import Body
 
 
 class ApproximationMode(StrEnum):

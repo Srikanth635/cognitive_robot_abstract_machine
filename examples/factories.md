@@ -28,9 +28,9 @@ Used Concepts:
 ```{code-cell} ipython2
 from entity_query_language import entity, an, let, symbolic_mode
 
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.spatial_types.spatial_types import TransformationMatrix
-from semantic_world.views.factories import (
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.spatial_types.spatial_types import TransformationMatrix
+from semantic_digital_twin.views.factories import (
     DrawerFactory,
     ContainerFactory,
     HandleFactory,
@@ -39,9 +39,9 @@ from semantic_world.views.factories import (
     HorizontalSemanticDirection,
     VerticalSemanticDirection,
 )
-from semantic_world.views.views import Drawer, Handle
-from semantic_world.spatial_computations.raytracer import RayTracer
-from semantic_world.world_description.geometry import Scale
+from semantic_digital_twin.views.views import Drawer, Handle
+from semantic_digital_twin.spatial_computations.raytracer import RayTracer
+from semantic_digital_twin.world_description.geometry import Scale
 
 
 # Build a simple drawer with a centered handle

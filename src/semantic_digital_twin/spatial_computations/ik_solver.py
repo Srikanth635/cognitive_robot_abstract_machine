@@ -119,7 +119,7 @@ class InverseKinematicsSolver:
 
     world: World
     """
-    Backreference to semantic world.
+    Backreference to semantic digital twin.
     """
 
     iterations: int = field(default=-1, init=False)
@@ -279,7 +279,7 @@ class QPProblem:
 
     world: World
     """
-    Backreference to semantic world.
+    Backreference to semantic digital twin.
     """
 
     root: KinematicStructureEntity
@@ -423,7 +423,7 @@ class ConstraintBuilder:
 
     world: World
     """
-    Backreference to semantic world.
+    Backreference to semantic digital twin.
     """
 
     root: KinematicStructureEntity
@@ -451,7 +451,7 @@ class ConstraintBuilder:
 
     maximum_velocity: float = field(default=1.0, init=False)
     """
-    Used to limit the velocity of the DOFs, because the default values defined in the semantic world are sometimes unreasonably high.
+    Used to limit the velocity of the DOFs, because the default values defined in the semantic digital twin are sometimes unreasonably high.
     """
 
     def build_box_constraints(

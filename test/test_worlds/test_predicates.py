@@ -1,6 +1,6 @@
 import numpy as np
 
-from semantic_world.reasoning.predicates import (
+from semantic_digital_twin.reasoning.predicates import (
     contact,
     visible,
     Above,
@@ -14,15 +14,23 @@ from semantic_world.reasoning.predicates import (
     is_supported_by,
     reachable,
 )
-from semantic_world.reasoning.robot_predicates import robot_in_collision, robot_holds_body, blocking, is_body_in_gripper
-from semantic_world.robots.abstract_robot import Camera, ParallelGripper
-from semantic_world.robots.pr2 import PR2
-from semantic_world.testing import *
-from semantic_world.world import World
-from semantic_world.world_description.connections import Connection6DoF, FixedConnection
-from semantic_world.world_description.geometry import Box, Scale, Color
-from semantic_world.world_description.shape_collection import ShapeCollection
-from semantic_world.world_description.world_entity import Body, Region
+from semantic_digital_twin.reasoning.robot_predicates import (
+    robot_in_collision,
+    robot_holds_body,
+    blocking,
+    is_body_in_gripper,
+)
+from semantic_digital_twin.robots.abstract_robot import Camera, ParallelGripper
+from semantic_digital_twin.robots.pr2 import PR2
+from semantic_digital_twin.testing import *
+from semantic_digital_twin.world import World
+from semantic_digital_twin.world_description.connections import (
+    Connection6DoF,
+    FixedConnection,
+)
+from semantic_digital_twin.world_description.geometry import Box, Scale, Color
+from semantic_digital_twin.world_description.shape_collection import ShapeCollection
+from semantic_digital_twin.world_description.world_entity import Body, Region
 
 
 @pytest.fixture(scope="function")

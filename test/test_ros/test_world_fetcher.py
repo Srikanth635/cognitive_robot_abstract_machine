@@ -1,14 +1,14 @@
 import json
-from semantic_world.adapters.ros.world_fetcher import (
+from semantic_digital_twin.adapters.ros.world_fetcher import (
     FetchWorldServer,
     fetch_world_from_service,
 )
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.testing import rclpy_node
-from semantic_world.world import World
-from semantic_world.world_description.connections import Connection6DoF
-from semantic_world.world_description.world_entity import Body
-from semantic_world.world_description.world_modification import (
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.testing import rclpy_node
+from semantic_digital_twin.world import World
+from semantic_digital_twin.world_description.connections import Connection6DoF
+from semantic_digital_twin.world_description.world_entity import Body
+from semantic_digital_twin.world_description.world_modification import (
     WorldModelModificationBlock,
 )
 

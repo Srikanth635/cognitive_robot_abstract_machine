@@ -13,7 +13,7 @@ make sure to use paths with respect to your custom setup.
 If you want to convert the examples to Jupyter notebooks, you can use
 ```bash
 pip install jupytext
-cd semantic_world/examples
+cd semantic_digital_twin/examples
 jupytext --to notebook *.md
 ```
 

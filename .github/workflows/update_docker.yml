@@ -5,7 +5,7 @@ on:
       - main
     paths:
       - 'docker/Dockerfile'
-      - 'semantic_world_msgs'
+      - 'semantic_digital_twin_msgs'
       - 'docker/entrypoint.sh'
 # only run when a commit has changes in the requirements.txt file
 
@@ -29,4 +29,4 @@ jobs:
         with:
           context: ./docker
           push: true
-          tags: pycram/semantic_world:jazzy
+          tags: pycram/semantic_digital_twin:jazzy

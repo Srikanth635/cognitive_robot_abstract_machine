@@ -8,14 +8,18 @@ import numpy as np
 import trimesh
 from fbxloader import Object3D, Mesh as FBXMesh, Scene
 
-from semantic_world.adapters.mesh import MeshParser
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.spatial_types import TransformationMatrix, Point3, RotationMatrix
-from semantic_world.world import World
-from semantic_world.world_description.connections import FixedConnection
-from semantic_world.world_description.geometry import TriangleMesh
-from semantic_world.world_description.shape_collection import ShapeCollection
-from semantic_world.world_description.world_entity import Body
+from semantic_digital_twin.adapters.mesh import MeshParser
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.spatial_types import (
+    TransformationMatrix,
+    Point3,
+    RotationMatrix,
+)
+from semantic_digital_twin.world import World
+from semantic_digital_twin.world_description.connections import FixedConnection
+from semantic_digital_twin.world_description.geometry import TriangleMesh
+from semantic_digital_twin.world_description.shape_collection import ShapeCollection
+from semantic_digital_twin.world_description.world_entity import Body
 
 
 @dataclass
@@ -55,7 +59,7 @@ class FBXGlobalSettings:
     """
     Class to handle FBX global settings, particularly the coordinate system.
     This class extracts the up, front, and coordinate axes from the FBX file and provides
-    a method to get the transformation matrix from FBX to Semantic World coordinate system.
+    a method to get the transformation matrix from FBX to Semantic Digital Twin coordinate system.
     """
 
     fbx_loader: fbxloader.FBXLoader
@@ -90,9 +94,9 @@ class FBXGlobalSettings:
             fbx.fbxtree["GlobalSettings"]["CoordAxisSign"]["value"],
         )
 
-    def get_semantic_world_T_fbx(self) -> np.ndarray:
+    def get_semantic_digital_twin_T_fbx(self) -> np.ndarray:
         """
-        Get the transformation matrix from FBX to Semantic World coordinate system.
+        Get the transformation matrix from FBX to Semantic Digital Twin coordinate system.
         """
         sX = self.front_axis.to_vector()
         sY = self.coord_axis.to_vector()
@@ -114,15 +118,18 @@ class FBXParser(MeshParser):
 
     @staticmethod
     def transform_vertices(
-        fbx_vertices: np.ndarray, semantic_world_T_fbx: np.ndarray
+        fbx_vertices: np.ndarray, semantic_digital_twin_T_fbx: np.ndarray
     ) -> np.ndarray:
         """
-        Transform vertices from FBX coordinate system to Semantic World coordinate system.
+        Transform vertices from FBX coordinate system to Semantic Digital Twin coordinate system.
         """
         assert (
             fbx_vertices.ndim == 2 and fbx_vertices.shape[1] == 3
         ), "vertices must be (N,3)"
-        assert semantic_world_T_fbx.shape == (4, 4), "semantic_world_T_fbx must be 4x4"
+        assert semantic_digital_twin_T_fbx.shape == (
+            4,
+            4,
+        ), "semantic_digital_twin_T_fbx must be 4x4"
 
         fbx_vertices_h = np.hstack(
             [
@@ -131,8 +138,10 @@ class FBXParser(MeshParser):
             ]
         )
 
-        semantic_world_vertices = fbx_vertices_h @ np.linalg.inv(semantic_world_T_fbx)
-        return semantic_world_vertices[:, :3]
+        semantic_digital_twin_vertices = fbx_vertices_h @ np.linalg.inv(
+            semantic_digital_twin_T_fbx
+        )
+        return semantic_digital_twin_vertices[:, :3]
 
     def parse(self) -> World:
         """
@@ -144,7 +153,7 @@ class FBXParser(MeshParser):
         fbx = fbxloader.FBXLoader(self.file_path)
 
         global_settings = FBXGlobalSettings(fbx)
-        semantic_world_T_fbx = global_settings.get_semantic_world_T_fbx()
+        semantic_digital_twin_T_fbx = global_settings.get_semantic_digital_twin_T_fbx()
 
         world = World()
 
@@ -160,7 +169,7 @@ class FBXParser(MeshParser):
                         if isinstance(o, FBXMesh):
                             transformed_vertices = (
                                 self.transform_vertices(
-                                    o.vertices, semantic_world_T_fbx
+                                    o.vertices, semantic_digital_twin_T_fbx
                                 )
                                 / 100
                             )

@@ -2,12 +2,12 @@ from os.path import dirname
 
 # World Reasoner
 
-The world reasoner {py:class}`semantic_world.reasoner.WorldReasoner` is a class that uses [Ripple Down Rules](https://github.com/AbdelrhmanBassiouny/ripple_down_rules/tree/main)
+The world reasoner {py:class}`semantic_digital_twin.reasoner.WorldReasoner` is a class that uses [Ripple Down Rules](https://github.com/AbdelrhmanBassiouny/ripple_down_rules/tree/main)
 to classify concepts and attributes of the world. This is done using a rule based classifier that benefits from incremental
 rule addition through querying the system and answering the prompts that pop up using python code.
 
 The benefit of that is the rules of the reasoner are based on the world datastructures and are updates as the datastructures
-are updated. Thus, the rules become a part of the semantic world repository and are update, migrated, and versioned with it.
+are updated. Thus, the rules become a part of the semantic digital twin repository and are update, migrated, and versioned with it.
 
 ## How to use:
 
@@ -24,8 +24,8 @@ The way to use the reasoner is like the following example:
 
 ```python
 from os.path import join, dirname
-from semantic_world.reasoning.world_reasoner import WorldReasoner
-from semantic_world.adapters.urdf import URDFParser
+from semantic_digital_twin.reasoning.world_reasoner import WorldReasoner
+from semantic_digital_twin.adapters.urdf import URDFParser
 
 kitchen_world = URDFParser.from_file(join(dirname(__file__), '..', 'resources', 'urdf', 'kitchen-small.urdf')).parse()
 reasoner = WorldReasoner(kitchen_world)
@@ -52,9 +52,9 @@ For example, let's say you want to improve an existing rule that classifies Draw
 
 ```python
 from os.path import join, dirname
-from semantic_world.reasoning.world_reasoner import WorldReasoner
-from semantic_world.adapters.urdf import URDFParser
-from semantic_world.views.views import Drawer
+from semantic_digital_twin.reasoning.world_reasoner import WorldReasoner
+from semantic_digital_twin.adapters.urdf import URDFParser
+from semantic_digital_twin.views.views import Drawer
 
 
 def create_kitchen_world():
@@ -88,10 +88,10 @@ from posixpath import dirname
 from typing_extensions import Any, Callable, ClassVar, Dict, List, Optional, Type, Union
 from ripple_down_rules.rdr import GeneralRDR
 from ripple_down_rules.datastructures.dataclasses import CaseQuery
-from semantic_world.world_description.world_entity import View
-from semantic_world.reasoning.world_reasoner import WorldReasoner
-from semantic_world.world import World
-from semantic_world.views.views import Drawer
+from semantic_digital_twin.world_description.world_entity import View
+from semantic_digital_twin.reasoning.world_reasoner import WorldReasoner
+from semantic_digital_twin.world import World
+from semantic_digital_twin.views.views import Drawer
 
 
 def world_views_of_type_drawer(case: World) -> List[Drawer]:
@@ -108,10 +108,10 @@ from posixpath import dirname
 from typing_extensions import Any, Callable, ClassVar, Dict, List, Optional, Type, Union
 from ripple_down_rules.rdr import GeneralRDR
 from ripple_down_rules.datastructures.dataclasses import CaseQuery
-from semantic_world.world_description.world_entity import View
-from semantic_world.reasoning.world_reasoner import WorldReasoner
-from semantic_world.world import World
-from semantic_world.views.views import Drawer
+from semantic_digital_twin.world_description.world_entity import View
+from semantic_digital_twin.reasoning.world_reasoner import WorldReasoner
+from semantic_digital_twin.world import World
+from semantic_digital_twin.views.views import Drawer
 
 
 def world_views_of_type_drawer(case: World) -> List[Drawer]:
@@ -142,7 +142,7 @@ width: 600px
 Accept the Rule in Ipython.
 ```
 
-If you also want to contribute to the semantic world package, then it's better to do that in the `test_views/test_views.py`
+If you also want to contribute to the semantic digital twin package, then it's better to do that in the `test_views/test_views.py`
 test file. Since there is already rules for Drawer, there would already be a test method for that. All you need to do is
 set the `update_existing_views` to `True` like this:
 
@@ -152,7 +152,7 @@ def test_drawer_view(self):
 ```
 then run the test from the terminal using `pytest` as follows:
 ```bash
-cd semantic_world/test/test_views && pytest -s -k "test_drawer_view"
+cd semantic_digital_twin/test/test_views && pytest -s -k "test_drawer_view"
 ```
 Then answer the prompt with the rule as described before. Now the rules for the Drawer view has been updated, Nice Work!
 
