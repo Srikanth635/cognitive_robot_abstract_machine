@@ -123,10 +123,18 @@ def world_setup_simple():
         world.add_kinematic_structure_entity(body3)
         world.add_kinematic_structure_entity(body4)
 
-        c_root_body1 = Connection6DoF(parent=root, child=body1, _world=world)
-        c_root_body2 = Connection6DoF(parent=root, child=body2, _world=world)
-        c_root_body3 = Connection6DoF(parent=root, child=body3, _world=world)
-        c_root_body4 = Connection6DoF(parent=root, child=body4, _world=world)
+        c_root_body1 = Connection6DoF.with_auto_generated_dofs(
+            world=world, parent=root, child=body1
+        )
+        c_root_body2 = Connection6DoF.with_auto_generated_dofs(
+            world=world, parent=root, child=body2
+        )
+        c_root_body3 = Connection6DoF.with_auto_generated_dofs(
+            world=world, parent=root, child=body3
+        )
+        c_root_body4 = Connection6DoF.with_auto_generated_dofs(
+            world=world, parent=root, child=body4
+        )
 
         world.add_connection(c_root_body1)
         world.add_connection(c_root_body2)

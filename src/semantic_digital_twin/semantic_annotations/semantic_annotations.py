@@ -34,7 +34,7 @@ class HasDoors:
 
 @symbol
 @dataclass
-class GenericBody(View):
+class GenericBody(SemanticAnnotation):
     body: Body
 
 

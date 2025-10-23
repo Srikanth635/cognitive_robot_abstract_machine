@@ -24,7 +24,7 @@ from random_events.interval import Bound
 from random_events.product_algebra import *
 from typing_extensions import Generic, TypeVar
 
-from .views import GenericBody
+from .semantic_annotations import GenericBody
 from ..datastructures.prefixed_name import PrefixedName
 from ..datastructures.variables import SpatialVariables
 from ..spatial_types.derivatives import DerivativeMap
@@ -1267,7 +1267,7 @@ class WallFactory(SemanticAnnotationFactory[Wall], HasDoorLikeFactories):
 
 
 @dataclass
-class GenericBodyFactory(ViewFactory[GenericBody]):
+class GenericBodyFactory(SemanticAnnotationFactory[GenericBody]):
     shape: ShapeCollection
     collision_config: CollisionCheckingConfig
 
@@ -1281,5 +1281,5 @@ class GenericBodyFactory(ViewFactory[GenericBody]):
         world.add_kinematic_structure_entity(body)
 
         body_view = GenericBody(name=self.name, body=body)
-        world.add_view(body_view)
+        world.add_semantic_annotation(body_view)
         return world
