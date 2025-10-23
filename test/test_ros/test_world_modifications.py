@@ -1,5 +1,7 @@
 import unittest
 
+from semantic_digital_twin.world_description.degree_of_freedom import DegreeOfFreedom
+
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.spatial_types import Vector3
 from semantic_digital_twin.semantic_annotations.semantic_annotations import Handle, Door
@@ -37,7 +39,7 @@ class ConnectionModificationTestCase(unittest.TestCase):
             w.add_kinematic_structure_entity(b1)
             w.add_kinematic_structure_entity(b2)
 
-            connection = FixedConnection(b1, b2, _world=w)
+            connection = FixedConnection(b1, b2)
             w.add_connection(connection)
 
         connection = w.connections[0]
@@ -53,8 +55,10 @@ class ConnectionModificationTestCase(unittest.TestCase):
             w.add_kinematic_structure_entity(b1)
             w.add_kinematic_structure_entity(b2)
 
+            dof = DegreeOfFreedom(name=PrefixedName("dofyboi"))
+            w.add_degree_of_freedom(dof)
             connection = RevoluteConnection(
-                b1, b2, _world=w, axis=Vector3.from_iterable([0, 0, 1])
+                b1, b2, axis=Vector3.from_iterable([0, 0, 1]), dof_name=dof.name
             )
             w.add_connection(connection)
         assert connection.dof.has_hardware_interface is False
@@ -77,10 +81,17 @@ class ConnectionModificationTestCase(unittest.TestCase):
             w.add_kinematic_structure_entity(b1)
             w.add_kinematic_structure_entity(b2)
             w.add_kinematic_structure_entity(b3)
-            w.add_connection(Connection6DoF(b1, b2, _world=w))
+            w.add_connection(
+                Connection6DoF.with_auto_generated_dofs(parent=b1, child=b2, world=w)
+            )
+            dof = DegreeOfFreedom(name=PrefixedName("dofyboi"))
+            w.add_degree_of_freedom(dof)
             w.add_connection(
                 PrismaticConnection(
-                    parent=b2, child=b3, _world=w, axis=Vector3.from_iterable([0, 0, 1])
+                    parent=b2,
+                    child=b3,
+                    axis=Vector3.from_iterable([0, 0, 1]),
+                    dof_name=dof.name,
                 )
             )
 

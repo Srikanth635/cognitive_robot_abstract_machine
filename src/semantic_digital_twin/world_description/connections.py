@@ -5,7 +5,10 @@ from copy import deepcopy
 from dataclasses import dataclass, field, MISSING, InitVar
 
 import numpy as np
-from typing_extensions import List, TYPE_CHECKING, Union, Optional
+from semantic_digital_twin.world_description.geometry import transformation_from_json
+
+from semantic_digital_twin.spatial_types.symbol_manager import symbol_manager
+from typing_extensions import List, TYPE_CHECKING, Union, Optional, Dict, Any, Self
 
 from .degree_of_freedom import DegreeOfFreedom
 from .world_entity import CollisionCheckingConfig, Connection, KinematicStructureEntity
@@ -171,6 +174,30 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
         .. warning:: WITHOUT multiplier and offset applied.
         """
         return self._world.get_degree_of_freedom_by_name(self.dof_name)
+
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            **super().to_json(),
+            "axis": symbol_manager.evaluate_expr(self.axis).tolist(),
+            "multiplier": self.multiplier,
+            "offset": self.offset,
+            "dof": self.dof_name.to_json(),
+        }
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self:
+        return cls(
+            name=PrefixedName.from_json(data["name"]),
+            parent_name=PrefixedName.from_json(data["parent_name"]),
+            child_name=PrefixedName.from_json(data["child_name"]),
+            axis=cas.Vector3.from_iterable(data["axis"]),
+            multiplier=data["multiplier"],
+            offset=data["offset"],
+            dof_name=PrefixedName.from_json(data["dof"]),
+            parent_T_connection_expression=transformation_from_json(
+                data["parent_T_connection_expression"]
+            ),
+        )
 
     @property
     def active_dofs(self) -> List[DegreeOfFreedom]:

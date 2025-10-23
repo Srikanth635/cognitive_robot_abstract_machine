@@ -16,6 +16,7 @@ import trimesh.boolean
 from entity_query_language import symbol
 from random_events.utils import SubclassJSONSerializer
 from scipy.stats import geom
+from semantic_digital_twin.world_description.geometry import transformation_to_json
 from trimesh.proximity import closest_point, nearby_faces
 from trimesh.sample import sample_surface
 from typing_extensions import (

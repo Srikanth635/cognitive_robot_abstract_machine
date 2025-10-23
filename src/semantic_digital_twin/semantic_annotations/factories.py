@@ -24,7 +24,6 @@ from random_events.interval import Bound
 from random_events.product_algebra import *
 from typing_extensions import Generic, TypeVar
 
-from .semantic_annotations import GenericBody
 from ..datastructures.prefixed_name import PrefixedName
 from ..datastructures.variables import SpatialVariables
 from ..spatial_types.derivatives import DerivativeMap
@@ -167,17 +166,19 @@ class HasDoorLikeFactories(ABC):
                 lower_limits=lower_limits,
                 upper_limits=upper_limits,
             )
-            connection = RevoluteConnection(
-                parent=parent_world.root,
-                child=root,
-                parent_T_connection_expression=parent_T_hinge,
-                multiplier=1.0,
-                offset=0.0,
-                axis=Vector3.Z(),
-                dof_name=dof.name,
-            )
+            with parent_world.modify_world():
+                parent_world.add_degree_of_freedom(dof)
+                connection = RevoluteConnection(
+                    parent=parent_world.root,
+                    child=root,
+                    parent_T_connection_expression=parent_T_hinge,
+                    multiplier=1.0,
+                    offset=0.0,
+                    axis=Vector3.Z(),
+                    dof_name=dof.name,
+                )
 
-            parent_world.merge_world(door_world, connection)
+                parent_world.merge_world(door_world, connection)
 
     def add_doorlike_semantic_annotation_to_world(
         self,
@@ -617,18 +618,19 @@ class HasDrawerFactories(ABC):
             lower_limits=lower_limits,
             upper_limits=upper_limits,
         )
+        with parent_world.modify_world():
+            parent_world.add_degree_of_freedom(dof)
+            connection = PrismaticConnection(
+                parent=parent_root,
+                child=child_root,
+                parent_T_connection_expression=parent_T_drawer,
+                multiplier=1.0,
+                offset=0.0,
+                axis=Vector3.X(),
+                dof_name=dof.name,
+            )
 
-        connection = PrismaticConnection(
-            parent=parent_root,
-            child=child_root,
-            parent_T_connection_expression=parent_T_drawer,
-            multiplier=1.0,
-            offset=0.0,
-            axis=Vector3.X(),
-            dof_name=dof.name,
-        )
-
-        parent_world.merge_world(drawer_world, connection)
+            parent_world.merge_world(drawer_world, connection)
 
     def add_drawers_to_world(self, parent_world: World):
         """
@@ -1264,22 +1266,3 @@ class WallFactory(SemanticAnnotationFactory[Wall], HasDoorLikeFactories):
             }
         )
         return wall_event
-
-
-@dataclass
-class GenericBodyFactory(SemanticAnnotationFactory[GenericBody]):
-    shape: ShapeCollection
-    collision_config: CollisionCheckingConfig
-
-    def _create(self, world: World) -> World:
-        body = Body(
-            name=self.name,
-            collision=self.shape,
-            visual=self.shape,
-            collision_config=self.collision_config,
-        )
-        world.add_kinematic_structure_entity(body)
-
-        body_view = GenericBody(name=self.name, body=body)
-        world.add_semantic_annotation(body_view)
-        return world

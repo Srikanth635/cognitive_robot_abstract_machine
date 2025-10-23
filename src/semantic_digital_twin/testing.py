@@ -124,16 +124,16 @@ def world_setup_simple():
         world.add_kinematic_structure_entity(body4)
 
         c_root_body1 = Connection6DoF.with_auto_generated_dofs(
-            world=world, parent=root, child=body1
+            parent=root, child=body1, world=world
         )
         c_root_body2 = Connection6DoF.with_auto_generated_dofs(
-            world=world, parent=root, child=body2
+            parent=root, child=body2, world=world
         )
         c_root_body3 = Connection6DoF.with_auto_generated_dofs(
-            world=world, parent=root, child=body3
+            parent=root, child=body3, world=world
         )
         c_root_body4 = Connection6DoF.with_auto_generated_dofs(
-            world=world, parent=root, child=body4
+            parent=root, child=body4, world=world
         )
 
         world.add_connection(c_root_body1)
@@ -158,7 +158,9 @@ def two_arm_robot_world():
         world_with_robot = robot_parser.parse()
         # world_with_pr2.plot_kinematic_structure()
         root = world_with_robot.root
-        c_root_bf = OmniDrive(parent=localization_body, child=root, _world=world)
+        c_root_bf = OmniDrive.with_auto_generated_dofs(
+            parent=localization_body, child=root, world=world
+        )
         world.merge_world(world_with_robot, root_connection=c_root_bf)
     return world
 
@@ -200,8 +202,8 @@ def tracy_world():
         world_with_tracy = tracy_parser.parse()
         # world_with_tracy.plot_kinematic_structure()
         tracy_root = world_with_tracy.root
-        c_root_bf = Connection6DoF(
-            parent=localization_body, child=tracy_root, _world=world
+        c_root_bf = Connection6DoF.with_auto_generated_dofs(
+            parent=localization_body, child=tracy_root, world=world
         )
         world.merge_world(world_with_tracy, c_root_bf)
 
@@ -224,8 +226,8 @@ def hsrb_world():
         hsrb_parser = URDFParser.from_file(file_path=hsrb)
         world_with_hsrb = hsrb_parser.parse()
         hsrb_root = world_with_hsrb.root
-        c_root_bf = Connection6DoF(
-            parent=localization_body, child=hsrb_root, _world=world
+        c_root_bf = Connection6DoF.with_auto_generated_dofs(
+            parent=localization_body, child=hsrb_root, world=world
         )
         world.merge_world(world_with_hsrb, c_root_bf)
 
