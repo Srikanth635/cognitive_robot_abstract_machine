@@ -723,6 +723,9 @@ class World:
 
     @atomic_world_modification(modification=AddSemanticAnnotationModification)
     def _add_semantic_annotation(self, semantic_annotation: SemanticAnnotation):
+        """
+        The atomic method that adds a semantic annotation to the current list of semantic annotations.
+        """
         semantic_annotation._world = self
         self.semantic_annotations.append(semantic_annotation)
 
@@ -751,6 +754,9 @@ class World:
 
     @atomic_world_modification(modification=RemoveSemanticAnnotationModification)
     def _remove_semantic_annotation(self, semantic_annotation: SemanticAnnotation):
+        """
+        The atomic method that removes a semantic annotation from the current list of semantic annotations.
+        """
         self.semantic_annotations.remove(semantic_annotation)
         semantic_annotation._world = None
 
