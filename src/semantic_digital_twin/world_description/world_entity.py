@@ -767,6 +767,7 @@ class Connection(WorldEntity, SubclassJSONSerializer):
                 prefix=self.child.name.prefix,
             )
 
+        # If I use default factories, I'd have to complicate the from_json, because I couldn't blindly pass these args
         if self.parent_T_connection_expression is None:
             self.parent_T_connection_expression = TransformationMatrix()
         if self.connection_T_child_expression is None:
@@ -782,30 +783,6 @@ class Connection(WorldEntity, SubclassJSONSerializer):
 
         self.parent_T_connection_expression.reference_frame = self.parent
         self.connection_T_child_expression.child_frame = self.child
-
-    def _post_init_world_part(self):
-        """
-        Executes post-initialization logic based on the presence of a world attribute.
-        """
-        if self._world is None:
-            self._post_init_without_world()
-        else:
-            self._post_init_with_world()
-
-    def _post_init_with_world(self):
-        """
-        Initialize or perform additional setup operations required after the main
-        initialization step. Use for world-related configurations or specific setup
-        details required post object creation.
-        """
-        pass
-
-    def _post_init_without_world(self):
-        """
-        Handle internal initialization processes when _world is None. Perform
-        operations post-initialization for internal use only.
-        """
-        pass
 
     def __hash__(self):
         return hash((self.parent, self.child))

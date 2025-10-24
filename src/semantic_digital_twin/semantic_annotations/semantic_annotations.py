@@ -33,12 +33,6 @@ class HasDoors:
 
 
 @symbol
-@dataclass
-class GenericBody(SemanticAnnotation):
-    body: Body
-
-
-@symbol
 @dataclass(eq=False)
 class Handle(SemanticAnnotation):
     body: Body

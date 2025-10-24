@@ -2,14 +2,12 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from dataclasses import dataclass, field, MISSING, InitVar
+from dataclasses import dataclass, field
 
 import numpy as np
-from semantic_digital_twin.world_description.geometry import transformation_from_json
-
-from semantic_digital_twin.spatial_types.symbol_manager import symbol_manager
 from typing_extensions import List, TYPE_CHECKING, Union, Optional, Dict, Any, Self
 
+from semantic_digital_twin.world_description.geometry import transformation_from_json
 from .degree_of_freedom import DegreeOfFreedom
 from .world_entity import CollisionCheckingConfig, Connection, KinematicStructureEntity
 from .. import spatial_types as cas
@@ -421,7 +419,26 @@ class Connection6DoF(PassiveConnection):
         child: KinematicStructureEntity,
         name: Optional[PrefixedName] = None,
         parent_T_connection_expression: Optional[cas.TransformationMatrix] = None,
-    ):
+    ) -> Self:
+        """
+        Creates an instance of the class with automatically generated degrees of freedom (DoFs)
+        for the provided parent and child kinematic entities within the specified world.
+
+        This method initializes and adds the required degrees of freedom to the world,
+        and sets their properties accordingly. It generates a name for the connection if
+        none is provided, and ensures valid initial state for relevant degrees of freedom.
+
+        :param world: The World object where the degrees of freedom are added and modified.
+        :param parent: The KinematicStructureEntity serving as the parent.
+        :param child: The KinematicStructureEntity serving as the child.
+        :param name: An optional PrefixedName for the connection. If None, it will be
+                     auto-generated based on the parent and child names.
+        :param parent_T_connection_expression: Optional transformation matrix specifying
+                                               the connection relationship between parent
+                                               and child entities.
+        :return: A new instance of the class representing the parent-child connection with
+                 automatically defined degrees of freedom.
+        """
         if name is None:
             name = PrefixedName(f"{parent.name.name}_T_{child.name.name}")
 
@@ -598,7 +615,29 @@ class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
         parent_T_connection_expression: Optional[cas.TransformationMatrix] = None,
         translation_velocity_limits: float = 0.6,
         rotation_velocity_limits: float = 0.5,
-    ):
+    ) -> Self:
+        """
+        Creates an instance of the class with automatically generated degrees of freedom
+        (DOFs) for translation on the x and y axes, rotation along roll, pitch, and yaw
+        axes, and velocity limits for translation and rotation.
+
+        This method modifies the provided world to add all required degrees of freedom
+        and their limits, based on the provided settings. Names for the degrees of
+        freedom are auto-generated using the stringified version of the provided name
+        or its default setting.
+
+        :param world: The world where the configuration is being applied, and degrees of freedom are added.
+        :param parent: The parent kinematic structure entity.
+        :param child: The child kinematic structure entity.
+        :param name: Name of the connection. If None, it will be auto-generated.
+        :param parent_T_connection_expression: Transformation matrix representing the
+            relative position/orientation of the child to the parent. Default is Identity.
+        :param translation_velocity_limits: The velocity limit applied to the
+            translation degrees of freedom (default is 0.6).
+        :param rotation_velocity_limits: The velocity limit applied to the rotation
+            degrees of freedom (default is 0.5).
+        :return: An instance of the class with the auto-generated DOFs incorporated.
+        """
         with world.modify_world():
             stringified_name = str(name)
             lower_translation_limits = DerivativeMap()

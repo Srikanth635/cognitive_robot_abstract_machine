@@ -180,12 +180,9 @@ class CompiledFunction:
         :param casadi_parameters: List of CasADi parameters for the function
         """
         self.expression.casadi_sx = ca.densify(self.expression.casadi_sx)
-        try:
-            self._compiled_casadi_function = ca.Function(
-                "f", casadi_parameters, [self.expression.casadi_sx]
-            )
-        except Exception as e:
-            pass
+        self._compiled_casadi_function = ca.Function(
+            "f", casadi_parameters, [self.expression.casadi_sx]
+        )
 
         self._function_buffer, self._function_evaluator = (
             self._compiled_casadi_function.buffer()
