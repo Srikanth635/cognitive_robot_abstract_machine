@@ -62,6 +62,23 @@ class ActiveConnection(Connection):
     but by moving the whole hand away.
     """
 
+    def to_json(self) -> Dict[str, Any]:
+        result = super().to_json()
+        result["frozen_for_collision_avoidance"] = self.frozen_for_collision_avoidance
+        return result
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self:
+        return cls(
+            name=PrefixedName.from_json(data["name"]),
+            parent=KinematicStructureEntity.from_json(data["parent"]),
+            child=KinematicStructureEntity.from_json(data["child"]),
+            parent_T_connection_expression=transformation_from_json(
+                data["parent_T_connection_expression"]
+            ),
+            frozen_for_collision_avoidance=data["frozen_for_collision_avoidance"],
+        )
+
     @property
     def has_hardware_interface(self) -> bool:
         """
@@ -131,6 +148,30 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
     Name of a Degree of freedom to control movement along the axis.
     """
 
+    def to_json(self) -> Dict[str, Any]:
+        result = super().to_json()
+        result["axis"] = self.axis.to_np().tolist()
+        result["multiplier"] = self.multiplier
+        result["offset"] = self.offset
+        result["dof_name"] = self.dof_name.to_json()
+        return result
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self:
+        return cls(
+            name=PrefixedName.from_json(data["name"]),
+            parent=KinematicStructureEntity.from_json(data["parent"]),
+            child=KinematicStructureEntity.from_json(data["child"]),
+            parent_T_connection_expression=transformation_from_json(
+                data["parent_T_connection_expression"]
+            ),
+            frozen_for_collision_avoidance=data["frozen_for_collision_avoidance"],
+            axis=cas.Vector3.from_iterable(data["axis"]),
+            multiplier=data["multiplier"],
+            offset=data["offset"],
+            dof_name=PrefixedName.from_json(data["dof_name"]),
+        )
+
     def add_to_world(self, world: World):
         super().add_to_world(world)
         if self.multiplier is None:
@@ -174,30 +215,6 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
         .. warning:: WITHOUT multiplier and offset applied.
         """
         return self._world.get_degree_of_freedom_by_name(self.dof_name)
-
-    def to_json(self) -> Dict[str, Any]:
-        return {
-            **super().to_json(),
-            "axis": symbol_manager.evaluate_expr(self.axis).tolist(),
-            "multiplier": self.multiplier,
-            "offset": self.offset,
-            "dof": self.dof_name.to_json(),
-        }
-
-    @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(
-            name=PrefixedName.from_json(data["name"]),
-            parent_name=PrefixedName.from_json(data["parent_name"]),
-            child_name=PrefixedName.from_json(data["child_name"]),
-            axis=cas.Vector3.from_iterable(data["axis"]),
-            multiplier=data["multiplier"],
-            offset=data["offset"],
-            dof_name=PrefixedName.from_json(data["dof"]),
-            parent_T_connection_expression=transformation_from_json(
-                data["parent_T_connection_expression"]
-            ),
-        )
 
     @property
     def active_dofs(self) -> List[DegreeOfFreedom]:
@@ -294,26 +311,83 @@ class Connection6DoF(PassiveConnection):
     Useful for synchronizing with transformations from external providers.
     """
 
-    x: DegreeOfFreedom = field(kw_only=True)
+    x_name: PrefixedName = field(kw_only=True)
     """
     Displacement of child KinematicStructureEntity with respect to parent KinematicStructureEntity along the x-axis.
     """
-    y: DegreeOfFreedom = field(kw_only=True)
+    y_name: PrefixedName = field(kw_only=True)
     """
     Displacement of child KinematicStructureEntity with respect to parent KinematicStructureEntity along the y-axis.
     """
-    z: DegreeOfFreedom = field(kw_only=True)
+    z_name: PrefixedName = field(kw_only=True)
     """
     Displacement of child KinematicStructureEntity with respect to parent KinematicStructureEntity along the z-axis.
     """
 
-    qx: DegreeOfFreedom = field(kw_only=True)
-    qy: DegreeOfFreedom = field(kw_only=True)
-    qz: DegreeOfFreedom = field(kw_only=True)
-    qw: DegreeOfFreedom = field(kw_only=True)
+    qx_name: PrefixedName = field(kw_only=True)
+    qy_name: PrefixedName = field(kw_only=True)
+    qz_name: PrefixedName = field(kw_only=True)
+    qw_name: PrefixedName = field(kw_only=True)
     """
     Rotation of child KinematicStructureEntity with respect to parent KinematicStructureEntity represented as a quaternion.
     """
+
+    def to_json(self) -> Dict[str, Any]:
+        result = super().to_json()
+        result["x_name"] = self.x_name.to_json()
+        result["y_name"] = self.y_name.to_json()
+        result["z_name"] = self.z_name.to_json()
+        result["qx_name"] = self.qx_name.to_json()
+        result["qy_name"] = self.qy_name.to_json()
+        result["qz_name"] = self.qz_name.to_json()
+        result["qw_name"] = self.qw_name.to_json()
+        return result
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self:
+        return cls(
+            name=PrefixedName.from_json(data["name"]),
+            parent=KinematicStructureEntity.from_json(data["parent"]),
+            child=KinematicStructureEntity.from_json(data["child"]),
+            parent_T_connection_expression=transformation_from_json(
+                data["parent_T_connection_expression"]
+            ),
+            x_name=PrefixedName.from_json(data["x_name"]),
+            y_name=PrefixedName.from_json(data["y_name"]),
+            z_name=PrefixedName.from_json(data["z_name"]),
+            qx_name=PrefixedName.from_json(data["qx_name"]),
+            qy_name=PrefixedName.from_json(data["qy_name"]),
+            qz_name=PrefixedName.from_json(data["qz_name"]),
+            qw_name=PrefixedName.from_json(data["qw_name"]),
+        )
+
+    @property
+    def x(self) -> DegreeOfFreedom:
+        return self._world.get_degree_of_freedom_by_name(self.x_name)
+
+    @property
+    def y(self) -> DegreeOfFreedom:
+        return self._world.get_degree_of_freedom_by_name(self.y_name)
+
+    @property
+    def z(self) -> DegreeOfFreedom:
+        return self._world.get_degree_of_freedom_by_name(self.z_name)
+
+    @property
+    def qx(self) -> DegreeOfFreedom:
+        return self._world.get_degree_of_freedom_by_name(self.qx_name)
+
+    @property
+    def qy(self) -> DegreeOfFreedom:
+        return self._world.get_degree_of_freedom_by_name(self.qy_name)
+
+    @property
+    def qz(self) -> DegreeOfFreedom:
+        return self._world.get_degree_of_freedom_by_name(self.qz_name)
+
+    @property
+    def qw(self) -> DegreeOfFreedom:
+        return self._world.get_degree_of_freedom_by_name(self.qw_name)
 
     def __hash__(self):
         return hash(self.name)
@@ -373,13 +447,13 @@ class Connection6DoF(PassiveConnection):
             child=child,
             parent_T_connection_expression=parent_T_connection_expression,
             name=name,
-            x=x,
-            y=y,
-            z=z,
-            qx=qx,
-            qy=qy,
-            qz=qz,
-            qw=qw,
+            x_name=x.name,
+            y_name=y.name,
+            z_name=z.name,
+            qx_name=qx.name,
+            qy_name=qy.name,
+            qz_name=qz.name,
+            qw_name=qw.name,
         )
 
     @property
@@ -425,45 +499,73 @@ class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
         They are combined into one active dof.
     """
 
-    x: DegreeOfFreedom = field(kw_only=True)
-    """
-    A passive dof.
-    Displacement of child KinematicStructureEntity with respect to parent KinematicStructureEntity along the x-axis.
-    """
-    y: DegreeOfFreedom = field(kw_only=True)
-    """
-    A passive dof.
-    Displacement of child KinematicStructureEntity with respect to parent KinematicStructureEntity along the y-axis.
-    """
-    roll: DegreeOfFreedom = field(kw_only=True)
-    """
-    A passive dof.
-    Rotation of child KinematicStructureEntity with respect to parent KinematicStructureEntity around the x-axis.
-    """
-    pitch: DegreeOfFreedom = field(kw_only=True)
-    """
-    A passive dof.
-    Rotation of child KinematicStructureEntity with respect to parent KinematicStructureEntity around the y-axis.
-    """
+    # passive dofs
+    x_name: PrefixedName = field(kw_only=True)
+    y_name: PrefixedName = field(kw_only=True)
+    roll_name: PrefixedName = field(kw_only=True)
+    pitch_name: PrefixedName = field(kw_only=True)
 
-    yaw: DegreeOfFreedom = field(kw_only=True)
-    """
-    An active dof.
-    Rotation of child KinematicStructureEntity with respect to parent KinematicStructureEntity around the z-axis.
-    """
-    x_velocity: DegreeOfFreedom = field(kw_only=True)
-    """
-    An active dof.
-    Velocity of child KinematicStructureEntity with respect to parent KinematicStructureEntity along the x-axis.
-    """
-    y_velocity: DegreeOfFreedom = field(kw_only=True)
-    """
-    An active dof.
-    Velocity of child KinematicStructureEntity with respect to parent KinematicStructureEntity along the y-axis.
-    """
+    # active dofs
+    yaw_name: PrefixedName = field(kw_only=True)
+    x_velocity_name: PrefixedName = field(kw_only=True)
+    y_velocity_name: PrefixedName = field(kw_only=True)
 
-    translation_velocity_limits: float = 0.6
-    rotation_velocity_limits: float = 0.5
+    def to_json(self) -> Dict[str, Any]:
+        result = super().to_json()
+        result["x_name"] = self.x_name.to_json()
+        result["y_name"] = self.y_name.to_json()
+        result["roll_name"] = self.roll_name.to_json()
+        result["pitch_name"] = self.pitch_name.to_json()
+        result["yaw_name"] = self.yaw_name.to_json()
+        result["x_velocity_name"] = self.x_velocity_name.to_json()
+        result["y_velocity_name"] = self.y_velocity_name.to_json()
+        return result
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self:
+        return cls(
+            name=PrefixedName.from_json(data["name"]),
+            parent=KinematicStructureEntity.from_json(data["parent"]),
+            child=KinematicStructureEntity.from_json(data["child"]),
+            parent_T_connection_expression=transformation_from_json(
+                data["parent_T_connection_expression"]
+            ),
+            x_name=PrefixedName.from_json(data["x_name"]),
+            y_name=PrefixedName.from_json(data["y_name"]),
+            roll_name=PrefixedName.from_json(data["roll_name"]),
+            pitch_name=PrefixedName.from_json(data["pitch_name"]),
+            yaw_name=PrefixedName.from_json(data["yaw_name"]),
+            x_velocity_name=PrefixedName.from_json(data["x_velocity_name"]),
+            y_velocity_name=PrefixedName.from_json(data["y_velocity_name"]),
+        )
+
+    @property
+    def x(self) -> DegreeOfFreedom:
+        return self._world.get_degree_of_freedom_by_name(self.x_name)
+
+    @property
+    def y(self) -> DegreeOfFreedom:
+        return self._world.get_degree_of_freedom_by_name(self.y_name)
+
+    @property
+    def roll(self) -> DegreeOfFreedom:
+        return self._world.get_degree_of_freedom_by_name(self.roll_name)
+
+    @property
+    def pitch(self) -> DegreeOfFreedom:
+        return self._world.get_degree_of_freedom_by_name(self.pitch_name)
+
+    @property
+    def yaw(self) -> DegreeOfFreedom:
+        return self._world.get_degree_of_freedom_by_name(self.yaw_name)
+
+    @property
+    def x_velocity(self) -> DegreeOfFreedom:
+        return self._world.get_degree_of_freedom_by_name(self.x_velocity_name)
+
+    @property
+    def y_velocity(self) -> DegreeOfFreedom:
+        return self._world.get_degree_of_freedom_by_name(self.y_velocity_name)
 
     def add_to_world(self, world: World):
         super().add_to_world(world)
@@ -542,15 +644,13 @@ class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
             child=child,
             parent_T_connection_expression=parent_T_connection_expression,
             name=name,
-            x=x,
-            y=y,
-            roll=roll,
-            pitch=pitch,
-            yaw=yaw,
-            x_velocity=x_vel,
-            y_velocity=y_vel,
-            translation_velocity_limits=translation_velocity_limits,
-            rotation_velocity_limits=rotation_velocity_limits,
+            x_name=x.name,
+            y_name=y.name,
+            roll_name=roll.name,
+            pitch_name=pitch.name,
+            yaw_name=yaw.name,
+            x_velocity_name=x_vel.name,
+            y_velocity_name=y_vel.name,
         )
 
     @property

@@ -16,6 +16,7 @@ import rustworkx.visit
 import rustworkx.visualization
 from itertools import combinations_with_replacement
 from lxml import etree
+from random_events.utils import SubclassJSONSerializer
 from rustworkx import NoEdgeBetweenNodes
 from semantic_digital_twin.world_description.world_modification import (
     RemoveSemanticAnnotationModification,
@@ -53,7 +54,6 @@ from .spatial_computations.raytracer import RayTracer
 from .spatial_types import spatial_types as cas
 from .spatial_types.derivatives import Derivatives
 from .utils import IDGenerator, copy_lru_cache
-from .world_description.connection_factories import ConnectionFactory
 from .world_description.connections import (
     ActiveConnection,
     PassiveConnection,
@@ -687,7 +687,10 @@ class World:
             dof.has_hardware_interface = value
 
     def add_connection(
-        self, connection: Connection, handle_duplicates: bool = False
+        self,
+        connection: Connection,
+        handle_duplicates: bool = False,
+        create_kinematic_structure_entity: bool = True,
     ) -> None:
         """
         Add a connection and the entities it connects to the world.
@@ -698,8 +701,9 @@ class World:
         for dof in connection.dofs:
             if dof._world is None:
                 self.add_degree_of_freedom(dof)
-        self.add_kinematic_structure_entity(connection.parent, handle_duplicates)
-        self.add_kinematic_structure_entity(connection.child, handle_duplicates)
+        if create_kinematic_structure_entity:
+            self.add_kinematic_structure_entity(connection.parent, handle_duplicates)
+            self.add_kinematic_structure_entity(connection.child, handle_duplicates)
 
         self._add_connection(connection)
 
@@ -1747,8 +1751,16 @@ class World:
                 new_world.add_degree_of_freedom(new_dof)
                 dof_mapping[dof] = new_dof
             for connection in self.connections:
-                con_factory = ConnectionFactory.from_connection(connection)
-                con_factory.create(new_world)
+                new_connection = SubclassJSONSerializer.from_json(connection.to_json())
+                new_connection.parent = (
+                    new_world.get_kinematic_structure_entity_by_name(
+                        new_connection.parent.name
+                    )
+                )
+                new_connection.child = new_world.get_kinematic_structure_entity_by_name(
+                    new_connection.child.name
+                )
+                new_world.add_connection(new_connection)
             for dof in self.degrees_of_freedom:
                 new_world.state[dof.name] = self.state[dof.name].data
         return new_world

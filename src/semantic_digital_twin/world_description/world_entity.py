@@ -16,7 +16,10 @@ import trimesh.boolean
 from entity_query_language import symbol
 from random_events.utils import SubclassJSONSerializer
 from scipy.stats import geom
-from semantic_digital_twin.world_description.geometry import transformation_to_json
+from semantic_digital_twin.world_description.geometry import (
+    transformation_to_json,
+    transformation_from_json,
+)
 from trimesh.proximity import closest_point, nearby_faces
 from trimesh.sample import sample_surface
 from typing_extensions import (
@@ -690,7 +693,7 @@ class semantic_environment_annotation(RootedSemanticAnnotation):
 
 
 @dataclass
-class Connection(WorldEntity):
+class Connection(WorldEntity, SubclassJSONSerializer):
     """
     Represents a connection between two entities in the world.
     """
@@ -724,6 +727,27 @@ class Connection(WorldEntity):
     This split is necessary for copying Connections, because they need parent_T_connection as an input parameter and 
     connection_T_child is generated in the __post_init__ method.
     """
+
+    def to_json(self) -> Dict[str, Any]:
+        result = super().to_json()
+        result["name"] = self.name.to_json()
+        result["parent"] = self.parent.to_json()
+        result["child"] = self.child.to_json()
+        result["parent_T_connection_expression"] = transformation_to_json(
+            self.parent_T_connection_expression
+        )
+        return result
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self:
+        return cls(
+            name=PrefixedName.from_json(data["name"]),
+            parent=KinematicStructureEntity.from_json(data["parent"]),
+            child=KinematicStructureEntity.from_json(data["child"]),
+            parent_T_connection_expression=transformation_from_json(
+                data["parent_T_connection_expression"]
+            ),
+        )
 
     @property
     def origin_expression(self) -> TransformationMatrix:

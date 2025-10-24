@@ -6,11 +6,6 @@ from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.spatial_types import Vector3
 from semantic_digital_twin.semantic_annotations.semantic_annotations import Handle, Door
 from semantic_digital_twin.world import World
-from semantic_digital_twin.world_description.connection_factories import (
-    ConnectionFactory,
-    FixedConnectionFactory,
-    RevoluteConnectionFactory,
-)
 from semantic_digital_twin.world_description.connections import (
     FixedConnection,
     Connection6DoF,
@@ -42,10 +37,6 @@ class ConnectionModificationTestCase(unittest.TestCase):
             connection = FixedConnection(b1, b2)
             w.add_connection(connection)
 
-        connection = w.connections[0]
-        factory = ConnectionFactory.from_connection(connection)
-        assert isinstance(factory, FixedConnectionFactory)
-
     def test_ChangeDofHasHardwareInterface(self):
         w = World()
 
@@ -66,10 +57,6 @@ class ConnectionModificationTestCase(unittest.TestCase):
         with w.modify_world():
             w.set_dofs_has_hardware_interface(connection.dofs, True)
         assert connection.dof.has_hardware_interface is True
-
-        connection = w.connections[0]
-        factory = ConnectionFactory.from_connection(connection)
-        assert isinstance(factory, RevoluteConnectionFactory)
 
     def test_many_modifications(self):
         w = World()
