@@ -690,7 +690,6 @@ class World:
         self,
         connection: Connection,
         handle_duplicates: bool = False,
-        create_kinematic_structure_entity: bool = True,
     ) -> None:
         """
         Add a connection and the entities it connects to the world.
@@ -701,9 +700,8 @@ class World:
         for dof in connection.dofs:
             if dof._world is None:
                 self.add_degree_of_freedom(dof)
-        if create_kinematic_structure_entity:
-            self.add_kinematic_structure_entity(connection.parent, handle_duplicates)
-            self.add_kinematic_structure_entity(connection.child, handle_duplicates)
+        self.add_kinematic_structure_entity(connection.parent, handle_duplicates)
+        self.add_kinematic_structure_entity(connection.child, handle_duplicates)
 
         self._add_connection(connection)
 
