@@ -62,7 +62,7 @@ class WorldMapping(AlternativeMapping[World]):
             for semantic_annotation in self.semantic_annotations:
                 result.add_semantic_annotation(semantic_annotation)
             result.delete_orphaned_dofs()
-            result.state.data = self.state.data
+            result.state = self.state
 
         return result
 
