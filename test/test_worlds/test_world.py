@@ -363,7 +363,8 @@ def test_compute_relative_pose_only_rotation(world_setup):
 def test_add_semantic_annotation(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
     v = SemanticAnnotation(name=PrefixedName("muh"))
-    world.add_semantic_annotation(v)
+    with world.modify_world():
+        world.add_semantic_annotation(v)
     with pytest.raises(AddingAnExistingSemanticAnnotationError):
         world.add_semantic_annotation(v, exists_ok=False)
     assert world.get_semantic_annotation_by_name(v.name) == v
@@ -372,8 +373,9 @@ def test_add_semantic_annotation(world_setup):
 def test_duplicate_semantic_annotation(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
     v = SemanticAnnotation(name=PrefixedName("muh"))
-    world.add_semantic_annotation(v)
-    world.semantic_annotations.append(v)
+    with world.modify_world():
+        world.add_semantic_annotation(v)
+        world.semantic_annotations.append(v)
     with pytest.raises(DuplicateSemanticAnnotationError):
         world.get_semantic_annotation_by_name(v.name)
 
