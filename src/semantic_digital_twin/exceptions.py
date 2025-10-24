@@ -39,11 +39,11 @@ class AddingAnExistingSemanticAnnotationError(UsageError):
 
 
 @dataclass
-class MissingWorldModificationStatementError(UsageError):
+class MissingWorldModificationContextError(UsageError):
     function: Callable
 
     def __post_init__(self):
-        msg = f"World function '{self.function.__name__}' was called without a with world.modify_world() context manager."
+        msg = f"World function '{self.function.__name__}' was called without a 'with world.modify_world():' context manager."
         super().__init__(msg)
 
 

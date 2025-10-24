@@ -44,7 +44,7 @@ from .exceptions import (
     SemanticAnnotationNotFoundError,
     AlreadyBelongsToAWorldError,
     DuplicateKinematicStructureEntityError,
-    MissingWorldModificationStatementError,
+    MissingWorldModificationContextError,
 )
 from .robots.abstract_robot import AbstractRobot
 from .spatial_computations.forward_kinematics import ForwardKinematicsVisitor
@@ -220,7 +220,7 @@ def atomic_world_modification(
             bound_args = dict(bound.arguments)
             bound_args.pop("self", None)
             if self._current_model_modification_block is None:
-                raise MissingWorldModificationStatementError(func)
+                raise MissingWorldModificationContextError(func)
             self._current_model_modification_block.append(
                 modification.from_kwargs(bound_args)
             )
