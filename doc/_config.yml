@@ -3,7 +3,6 @@
 
 title: Semantic Digital Twin
 author: AICOR Institute for Artificial Intelligence
-logo: "images/semantic_digital_twin_logo.png"
 
 # Force re-execution of notebooks on each build.
 # See https://jupyterbook.org/content/execute.html
@@ -41,8 +40,8 @@ sphinx:
     html_static_path: ["_static"]
     html_theme_options:
       logo:
-        image_light: "_static/images/semantic_digital_twin_logo.png"
-        image_dark: "_static/images/semantic_digital_twin_logo_dark_mode.png"
+        image_light: "_static/images/semantic_world_logo.png"
+        image_dark: "_static/images/semantic_world_logo_dark_mode.png"
 
 
 # Information about where the book exists on the web
