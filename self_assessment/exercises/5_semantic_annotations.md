@@ -11,7 +11,7 @@ kernelspec:
   name: python3
 ---
 
-(semantic-annotations)=
+(semantic-annotations-exercise)=
 # Semantic Annotations
 
 This exercise introduces creating custom SemanticAnnotations, connecting bodies with a free connection, and querying with the Entity Query Language (EQL).

@@ -11,7 +11,7 @@ kernelspec:
   name: python3
 ---
 
-(creating-custom-bodies)=
+(creating-custom-bodies-exercise)=
 # Creating Custom Bodies
 
 This exercise guides you through creating a simple Body with visual and collision shapes and adding it to a World.

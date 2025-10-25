@@ -11,7 +11,7 @@ kernelspec:
   name: python3
 ---
 
-(regions)=
+(regions-exercise)=
 # Regions
 
 This exercise demonstrates how to define a Region and connect it into the kinematic tree so it moves with a body.

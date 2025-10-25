@@ -11,7 +11,7 @@ kernelspec:
   name: python3
 ---
 
-(loading-worlds)=
+(loading-worlds-exercise)=
 # Loading Worlds
 
 This exercise shows how to load a world description from a URDF file using the URDFParser.

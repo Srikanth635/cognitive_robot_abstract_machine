@@ -11,7 +11,7 @@ kernelspec:
   name: python3
 ---
 
-(visualizing-worlds)=
+(visualizing-worlds-exercise)=
 # Visualizing Worlds
 
 This exercise demonstrates a lightweight way to visualize a world inside a notebook using the RayTracer.

@@ -11,7 +11,7 @@ kernelspec:
   name: python3
 ---
 
-(world-structure-manipulation)=
+(world-structure-manipulation-exercise)=
 # World Structure Manipulation
 
 This exercise demonstrates adding and removing entities from the kinematic structure.
