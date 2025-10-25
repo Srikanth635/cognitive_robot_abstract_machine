@@ -33,7 +33,6 @@ questions = [
         {"answer": "To auto-serialize the world", "correct": False},
         {"answer": "To compile C extensions", "correct": False}
       ],
-      "explanation": "The world is validated on exit to maintain the tree constraint."
     },
     {
       "question": "Which of the following is a valid structural entity to add/remove?",
@@ -44,7 +43,6 @@ questions = [
         {"answer": "DegreeOfFreedom", "correct": True},
         {"answer": "RayTracer", "correct": False}
       ],
-      "explanation": "Bodies, connections, and DoFs form the kinematic structure."
     },
     {
       "question": "How to handle DoFs when creating connections, for example a RevoluteConnection?",
@@ -56,7 +54,6 @@ questions = [
         {"answer": "Set world.state['joint'] = 0 and it is created", "correct": False},
         {"answer": "Use FixedConnection with a DoF", "correct": False}
       ],
-      "explanation": "The example adds the DoF explicitly before creating the revolute connection."
     },
     {
       "question": "What happens when removing a RevoluteConnection whose DoF is unused elsewhere?",
@@ -67,7 +64,6 @@ questions = [
         {"answer": "All DoFs are cleared", "correct": False},
         {"answer": "World validation is skipped", "correct": False}
       ],
-      "explanation": "Unused DoFs referenced only by that connection can be removed."
     },
     {
       "question": "What is the kinematic structure required to be?",
@@ -78,7 +74,6 @@ questions = [
         {"answer": "A lattice", "correct": False},
         {"answer": "A complete graph", "correct": False}
       ],
-      "explanation": "The world's kinematic structure must remain a tree."
     }
 ]
 

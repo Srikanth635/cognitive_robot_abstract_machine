@@ -33,7 +33,6 @@ questions = [
         {"answer": "RayTracer", "correct": False},
         {"answer": "SceneParser", "correct": False}
       ],
-      "explanation": "URDFParser.from_file(...).parse() loads a world from a URDF file."
     },
     {
       "question": "Which helper locates packaged resources (e.g., URDFs) in this repository?",
@@ -44,7 +43,6 @@ questions = [
         {"answer": "locate_resources()", "correct": False},
         {"answer": "get_data_dir()", "correct": False}
       ],
-      "explanation": "The example composes paths via get_semantic_world_directory_root(os.getcwd())."
     },
     {
       "question": "Loaded worlds from files typically contain which information?",
@@ -55,7 +53,6 @@ questions = [
         {"answer": "Robot motion plans", "correct": False},
         {"answer": "Texturing information only", "correct": False}
       ],
-      "explanation": "The tutorial notes that such worlds are purely kinematic; no semantic annotations are included."
     },
     {
       "question": "Which file formats are mentioned as supported in the tutorial?",
@@ -66,7 +63,6 @@ questions = [
         {"answer": "STL", "correct": True},
         {"answer": "FBX", "correct": False}
       ],
-      "explanation": "URDF, MJCF and STL are mentioned."
     },
     {
       "question": "What is the correct sequence to parse a URDF into a World?",
@@ -77,7 +73,6 @@ questions = [
         {"answer": "URDFParser(path).world()", "correct": False},
         {"answer": "parse_urdf_to_world(path)", "correct": False}
       ],
-      "explanation": "from_file(...).parse() is used."
     }
 ]
 

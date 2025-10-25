@@ -33,7 +33,6 @@ questions = [
         {"answer": "Rendering visualization in RViz2", "correct": False},
         {"answer": "Parsing URDF files", "correct": False}
       ],
-      "explanation": "Factories build kinematic structures together with semantic annotations."
     },
     {
       "question": "Which factory combination creates a drawer with a centered handle?",
@@ -44,7 +43,6 @@ questions = [
         {"answer": "URDFFactory only", "correct": False},
         {"answer": "RayTracerFactory", "correct": False}
       ],
-      "explanation": "The example composes DrawerFactory with ContainerFactory and HandleFactory."
     },
     {
       "question": "How is the handle centered semantically in the example?",
@@ -55,7 +53,6 @@ questions = [
         {"answer": "By passing center=True to HandleFactory", "correct": False},
         {"answer": "By rotating 180 degrees", "correct": False}
       ],
-      "explanation": "HorizontalSemanticDirection.FULLY_CENTER and VerticalSemanticDirection.FULLY_CENTER are used."
     },
     {
       "question": "How can an extra handle be merged into the world at a different pose?",
@@ -66,7 +63,6 @@ questions = [
         {"answer": "handle.attach_to(world)", "correct": False},
         {"answer": "URDFParser.merge(world)", "correct": False}
       ],
-      "explanation": "The example merges a HandleFactory-created world at a new pose."
     },
     {
       "question": "Which query returns all Handle views using EQL?",
@@ -77,7 +73,6 @@ questions = [
         {"answer": "select * from views where type='Handle'", "correct": False},
         {"answer": "handles = world.views['Handle']", "correct": False}
       ],
-      "explanation": "The tutorial demonstrates EQL's an(entity(...)) for Handles."
     }
 ]
 

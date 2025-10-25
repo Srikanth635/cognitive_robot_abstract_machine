@@ -33,7 +33,6 @@ questions = [
         {"answer": "Plan robot trajectories", "correct": False},
         {"answer": "Load URDF files", "correct": False}
       ],
-      "explanation": "The ORM stores full worlds and semantic annotations in an SQL database."
     },
     {
       "question": "Which function converts a world to a data access object (DAO)?",
@@ -44,7 +43,6 @@ questions = [
         {"answer": "serialize(world)", "correct": False},
         {"answer": "dump_world(world)", "correct": False}
       ],
-      "explanation": "ormatic.dao.to_dao converts objects to DAOs."
     },
     {
       "question": "Which library is used to interact with the SQL database?",
@@ -55,7 +53,6 @@ questions = [
         {"answer": "sqlite3 module only", "correct": False},
         {"answer": "NetworkX", "correct": False}
       ],
-      "explanation": "The example uses SQLAlchemy's Engine, Session, and select()."
     },
     {
       "question": "What happens to semantic annotations (views) when persisting and reconstructing?",
@@ -66,7 +63,6 @@ questions = [
         {"answer": "Only body geometry persists", "correct": False},
         {"answer": "Only connection DoFs persist", "correct": False}
       ],
-      "explanation": "The tutorial demonstrates that the Table view is present after reconstruction."
     },
     {
       "question": "Where do you maintain which classes are mapped by the ORM?",
@@ -77,7 +73,6 @@ questions = [
         {"answer": "requirements.txt", "correct": False},
         {"answer": "World.__init__", "correct": False}
       ],
-      "explanation": "The guide points to scripts/generate_orm.py for ORM maintenance."
     }
 ]
 

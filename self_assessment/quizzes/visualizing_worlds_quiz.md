@@ -33,7 +33,6 @@ questions = [
         {"answer": "URDFParser", "correct": False},
         {"answer": "WorldState", "correct": False}
       ],
-      "explanation": "RayTracer is used in notebooks to render scenes (e.g., rt.scene.show('jupyter'))."
     },
     {
       "question": "What is required to use VizMarkerPublisher for visualization?",
@@ -44,7 +43,6 @@ questions = [
         {"answer": "A YAML calibration file", "correct": False},
         {"answer": "A launched Gazebo world", "correct": False}
       ],
-      "explanation": "The example creates a ROS2 node and spins it on a thread when using VizMarkerPublisher."
     },
     {
       "question": "Which statement about RayTracer is true?",
@@ -55,7 +53,6 @@ questions = [
         {"answer": "It parses URDF files.", "correct": False},
         {"answer": "It manages world validation.", "correct": False}
       ],
-      "explanation": "The tutorial notes that notebook visualization via RayTracer is convenient but not the recommended standard approach."
     },
     {
       "question": "How do you properly shut down ROS2 in the RViz2-based approach?",
@@ -66,7 +63,6 @@ questions = [
         {"answer": "Only destroy the node", "correct": False},
         {"answer": "Close the RViz2 window; it shuts down automatically", "correct": False}
       ],
-      "explanation": "The example explicitly destroys the node and then shuts down rclpy."
     }
 ]
 

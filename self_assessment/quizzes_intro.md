@@ -8,6 +8,7 @@ and for each question try to figure out the correct answer. You will know immedi
 
 You may also find links to the quizzes below.
 
+- [](using-transformations-quiz)
 - [](creating-custom-bodies-quiz)
 - [](loading-worlds-quiz)
 - [](visualizing-worlds-quiz)

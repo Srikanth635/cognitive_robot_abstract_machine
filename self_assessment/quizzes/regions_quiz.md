@@ -33,7 +33,6 @@ questions = [
         {"answer": "A semantic concept in our world, for example a Room", "correct": False},
         {"answer": "A ShapeCollection not added to a body yet", "correct": False}
       ],
-      "explanation": "Regions are semantic areas that live in the same kinematic tree."
     },
     {
       "question": "How is a Region connected in the world?",
@@ -44,7 +43,6 @@ questions = [
         {"answer": "It is attached via textures", "correct": False},
         {"answer": "It uses special region-only connectors", "correct": False}
       ],
-      "explanation": "Regions are connected just like bodies are."
     },
     {
       "question": "Which attribute specifies the geometric area of a Region?",
@@ -55,7 +53,6 @@ questions = [
         {"answer": "visual", "correct": False},
         {"answer": "volume", "correct": False}
       ],
-      "explanation": "The tutorial sets table_surface.area = [surface]."
     },
     {
       "question": "What code block is used when adding the Region to the world?",
@@ -66,7 +63,6 @@ questions = [
         {"answer": "with world.write_lock():", "correct": False},
         {"answer": "No block is required", "correct": False}
       ],
-      "explanation": "Structural updates are grouped in world.modify_world()."
     },
     {
       "question": "If the supporting table moves, what happens to the attached Region?",
@@ -77,7 +73,6 @@ questions = [
         {"answer": "It randomly jitters", "correct": False},
         {"answer": "It scales with the table's bounding box", "correct": False}
       ],
-      "explanation": "The Region follows its connection to the table top."
     }
 ]
 

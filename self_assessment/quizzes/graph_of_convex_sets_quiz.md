@@ -33,7 +33,6 @@ questions = [
         {"answer": "A database of URDF files", "correct": False},
         {"answer": "A ROS2 node graph", "correct": False}
       ],
-      "explanation": "Nodes are convex sets (boxes); edges indicate adjacency for navigation."
     },
     {
       "question": "Which class constructs free space from a world?",
@@ -44,7 +43,6 @@ questions = [
         {"answer": "WorldState.make_free_space(...)\n", "correct": False},
         {"answer": "RayTracer.update_scene(...)\n", "correct": False}
       ],
-      "explanation": "GraphOfConvexSets has a helper to build free-space from the world geometry."
     },
     {
       "question": "What limits the area in which the free-space is computed in the example?",
@@ -55,7 +53,6 @@ questions = [
         {"answer": "The world bounds auto-detected from visuals", "correct": False},
         {"answer": "The URDF joint limits", "correct": False}
       ],
-      "explanation": "The example defines a BoundingBoxCollection for search_space."
     },
     {
       "question": "Which library is used to display 3D plots of occupied/free space?",
@@ -66,7 +63,6 @@ questions = [
         {"answer": "RViz2", "correct": False},
         {"answer": "Gazebo", "correct": False}
       ],
-      "explanation": "The example uses plotly to visualize surfaces of spaces."
     },
     {
       "question": "How is a path through free space computed between start and goal?",
@@ -77,7 +73,6 @@ questions = [
         {"answer": "RayTracer.trace_path(start, goal)", "correct": False},
         {"answer": "Use EQL to get the path", "correct": False}
       ],
-      "explanation": "The GCS object provides path_from_to to find a route across adjacent convex sets."
     }
 ]
 
