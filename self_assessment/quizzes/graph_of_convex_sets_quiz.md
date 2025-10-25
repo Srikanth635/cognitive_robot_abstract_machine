@@ -11,7 +11,7 @@ kernelspec:
 ---
 
 (graph-of-convex-sets-quiz)=
-# Graph of Convex Sets — Self Assessment
+# Graph of Convex Sets Quiz
 
 This page provides a self-check quiz for the tutorial: Graph of Convex Sets.  
 Source: Jupyter quiz. $ $
@@ -80,6 +80,10 @@ questions = [
       "explanation": "The GCS object provides path_from_to to find a route across adjacent convex sets."
     }
 ]
+
+import json
+json_str = json.dumps(questions)
+json.loads(json_str) 
 
 display_quiz(questions)
 ```

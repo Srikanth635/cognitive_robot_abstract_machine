@@ -11,7 +11,7 @@ kernelspec:
 ---
 
 (loading-worlds-quiz)=
-# Loading Worlds — Self Assessment
+# Loading Worlds Quiz
 
 This page provides a self-check quiz for the tutorial: [](loading-worlds).  
 Source: Jupyter quiz. $ $
@@ -80,6 +80,10 @@ questions = [
       "explanation": "from_file(...).parse() is used."
     }
 ]
+
+import json
+json_str = json.dumps(questions)
+json.loads(json_str) 
 
 display_quiz(questions)
 ```

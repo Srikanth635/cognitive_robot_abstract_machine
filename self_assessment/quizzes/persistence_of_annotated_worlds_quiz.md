@@ -11,7 +11,7 @@ kernelspec:
 ---
 
 (persistence-of-annotated-worlds-quiz)=
-# Persistence of Annotated Worlds — Self Assessment
+# Persistence of Annotated Worlds Quiz
 
 This page provides a self-check quiz for the tutorial: [](persistence-of-annotated-worlds).  
 Source: Jupyter quiz. $ $
@@ -80,6 +80,10 @@ questions = [
       "explanation": "The guide points to scripts/generate_orm.py for ORM maintenance."
     }
 ]
+
+import json
+json_str = json.dumps(questions)
+json.loads(json_str) 
 
 display_quiz(questions)
 ```

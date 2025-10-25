@@ -11,7 +11,7 @@ kernelspec:
 ---
 
 (regions-quiz)=
-# Regions — Self Assessment
+# Regions Quiz
 
 This page provides a self-check quiz for the tutorial: [](regions).  
 Source: Jupyter quiz. $ $
@@ -25,13 +25,13 @@ from jupyterquiz import display_quiz
 
 questions = [
     {
-      "question": "What does a Region represent in the semantic world?",
+      "question": "What does a Region represent in the semantic digital twin?",
       "type": "multiple_choice",
       "answers": [
-        {"answer": "A semantic area in the kinematic tree (e.g., table surface)", "correct": True},
+        {"answer": "An area in the world specified by a ShapeCollection", "correct": True},
         {"answer": "A physical body used for collision only", "correct": False},
-        {"answer": "A database table", "correct": False},
-        {"answer": "A ROS2 node", "correct": False}
+        {"answer": "A semantic concept in our world, for example a Room", "correct": False},
+        {"answer": "A ShapeCollection not added to a body yet", "correct": False}
       ],
       "explanation": "Regions are semantic areas that live in the same kinematic tree."
     },
@@ -80,6 +80,10 @@ questions = [
       "explanation": "The Region follows its connection to the table top."
     }
 ]
+
+import json
+json_str = json.dumps(questions)
+json.loads(json_str) 
 
 display_quiz(questions)
 ```

@@ -31,27 +31,7 @@ parts:
 - caption: Self-Assessment
   chapters:
     - file: self_assessment/quizzes_intro
-      sections:
-        - file: self_assessment/quizzes/creating_custom_bodies_quiz
-        - file: self_assessment/quizzes/loading_worlds_quiz
-        - file: self_assessment/quizzes/visualizing_worlds_quiz
-        - file: self_assessment/quizzes/world_structure_manipulation_quiz
-        - file: self_assessment/quizzes/semantic_annotations_quiz
-        - file: self_assessment/quizzes/world_state_manipulation_quiz
-        - file: self_assessment/quizzes/regions_quiz
-        - file: self_assessment/quizzes/factories_quiz
-        - file: self_assessment/quizzes/persistence_of_annotated_worlds_quiz
-        - file: self_assessment/quizzes/graph_of_convex_sets_quiz
     - file: self_assessment/exercises_intro
-      sections:
-        - file: self_assessment/exercises/0_using_transformations
-        - file: self_assessment/exercises/1_creating_custom_bodies
-        - file: self_assessment/exercises/2_loading_worlds
-        - file: self_assessment/exercises/3_visualizing_worlds
-        - file: self_assessment/exercises/4_world_structure_manipulation
-        - file: self_assessment/exercises/5_semantic_annotations
-        - file: self_assessment/exercises/6_world_state_manipulation
-        - file: self_assessment/exercises/7_regions
 - caption: References
   chapters:
     - file: autoapi/index

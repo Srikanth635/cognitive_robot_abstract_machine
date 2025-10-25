@@ -11,7 +11,7 @@ kernelspec:
 ---
 
 (visualizing-worlds-quiz)=
-# Visualizing Worlds — Self Assessment
+# Visualizing Worlds Quiz
 
 This page provides a self-check quiz for the tutorial: [](visualizing-worlds).  
 Source: Jupyter quiz. $ $
@@ -50,23 +50,12 @@ questions = [
       "question": "Which statement about RayTracer is true?",
       "type": "multiple_choice",
       "answers": [
-        {"answer": "It is convenient for notebooks but not recommended for normal usage.", "correct": True},
+        {"answer": "It is convenient for snapshot visualizations in notebooks but not recommended continuous visualization during runtime.", "correct": True},
         {"answer": "It publishes ROS topics for RViz2 by default.", "correct": False},
         {"answer": "It parses URDF files.", "correct": False},
         {"answer": "It manages world validation.", "correct": False}
       ],
       "explanation": "The tutorial notes that notebook visualization via RayTracer is convenient but not the recommended standard approach."
-    },
-    {
-      "question": "Which parser is used in the example to obtain a world for visualization?",
-      "type": "multiple_choice",
-      "answers": [
-        {"answer": "URDFParser", "correct": True},
-        {"answer": "MJCFParser", "correct": False},
-        {"answer": "FBXParser", "correct": False},
-        {"answer": "SceneGraphParser", "correct": False}
-      ],
-      "explanation": "The example uses URDFParser.from_file(...).parse()."
     },
     {
       "question": "How do you properly shut down ROS2 in the RViz2-based approach?",
@@ -80,6 +69,10 @@ questions = [
       "explanation": "The example explicitly destroys the node and then shuts down rclpy."
     }
 ]
+
+import json
+json_str = json.dumps(questions)
+json.loads(json_str) 
 
 display_quiz(questions)
 ```

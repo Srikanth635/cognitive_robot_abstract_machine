@@ -11,7 +11,8 @@ kernelspec:
   name: python3
 ---
 
-# World State Manipulation (Exercise)
+(world-state-manipulation)=
+# World State Manipulation
 
 This exercise shows how to manipulate the state of an active connection.
 

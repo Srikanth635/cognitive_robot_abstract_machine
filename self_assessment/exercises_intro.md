@@ -1,4 +1,4 @@
-# Example Solutions for our Hands-On Exercises
+# Hands-On Exercises
 
 This section contains short, focused exercises that help you practice the concepts introduced in the User Guide. Each exercise is designed to be run as a notebook and to guide you from problem statement to a working solution.
 
@@ -25,3 +25,15 @@ Running exercises locally
 - Execute as notebooks: Each exercise is written in MyST Markdown and can be executed as a notebook locally.
   - Convert to notebooks: scripts/convert_exercises_for_self_assessment.sh
   - Optionally run quick checks: scripts/test_exercises.sh
+
+## Exercise Solutions
+
+Below you may find solutions to the exercises.
+- [](using-transformations-exercise)
+- [](creating-custom-bodies-exercise)
+- [](loading-worlds-exercise)
+- [](visualizing-worlds-exercise)
+- [](world-structure-manipulation-exercise)
+- [](semantic-annotations-exercise)
+- [](world-state-manipulation-exercise)
+- [](regions-exercise)

@@ -29,7 +29,7 @@ questions = [
       "type": "multiple_choice",
       "answers": [
         { "answer": "To give world entities unique names.", "correct": True, "feedback": "Correct! PrefixedNames are assumed to be unique." },
-        { "answer": "To act as unique variable names.", "correct": False, "feedback": "Incorrect! Try again." },
+        { "answer": "To act as unique variable type.", "correct": False, "feedback": "Incorrect! Try again." },
         { "answer": "To identify the world a world entity belongs to.", "correct": False, "feedback": "Incorrect! Try again." },
         { "answer": "To manage ray-tracing parameters.", "correct": False, "feedback": "Incorrect! Try again."   }
       ],
@@ -52,7 +52,7 @@ questions = [
         { "answer": "Box", "correct": True },
         { "answer": "Sphere", "correct": True },
         { "answer": "Cylinder", "correct": True },
-        { "answer": "FileMesh/TriangleMesh", "correct": True },
+        { "answer": "Mesh", "correct": True },
         { "answer": "Cone", "correct": False }
       ],
     },
@@ -77,18 +77,6 @@ questions = [
       ],
     },
     {
-      "question": "Which ways of constructing a TransformationMatrix did you learn?",
-      "type": "multiple_choice",
-      "type": "many_choice",
-      "answer_cols": 3,
-      "answers": [
-        { "answer": "TransformationMatrix.from_xyz_quaternion()", "correct": True },
-        { "answer": "TransformationMatrix.from_point_rotation_matrix()", "correct": True },
-        { "answer": "TransformationMatrix.from_xyz_rpy()", "correct": True },
-        { "answer": "TransformationMatrix.from_xyz_euler()", "correct": False }
-      ],
-    },
-    {
       "question": "What does `get_semantic_world_directory_root()` help with?",
       "type": "multiple_choice",
       "answers": [
@@ -105,10 +93,14 @@ questions = [
         { "answer": "Scale(x=x, y=y, z=z)", "correct": True, "feedback": "Correct!" },
         { "answer": "Tuple[x, y, z]", "correct": False, "feedback": "Incorrect! Please refer to https://testing.googleblog.com/2017/11/obsessed-with-primitives.html" },
         { "answer": "List[x, y, z].", "correct": False, "feedback": "Incorrect! Please refer to https://testing.googleblog.com/2017/11/obsessed-with-primitives.html" },
-        { "answer": "None of the above, its individual x_scale, y_scale and z_scale parameters", "correct": False, "feedback": "Incorrect! Please refer to https://testing.googleblog.com/2017/11/obsessed-with-primitives.html" }
+        { "answer": "None of the answers listed, its individual x_scale, y_scale and z_scale parameters", "correct": False, "feedback": "Incorrect! Please refer to https://testing.googleblog.com/2017/11/obsessed-with-primitives.html" }
       ],
     }
   ]
+
+import json
+json_str = json.dumps(questions)
+json.loads(json_str) 
 
 display_quiz(questions)
 ```

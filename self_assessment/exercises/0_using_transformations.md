@@ -11,7 +11,7 @@ kernelspec:
   name: python3
 ---
 
-
+(using-transformations-exercise)=
 # Using Transformations
 
 This exercise gives you a hands-on introduction to rigid-body transformations in Semantic World:
