@@ -10,10 +10,10 @@ kernelspec:
     name: python3
 ---
 
-(view-factories-quiz)=
-# Factories Quiz
+(semantic-annotation-factories-quiz)=
+# Semantic Annotation Factories Quiz
 
-This page provides a self-check quiz for the tutorial: [](view_factories).  
+This page provides a self-check quiz for the tutorial: [](semantic-annotation-factories).  
 Source: Jupyter quiz. $ $
 
 % NOTE: The lone `$ $` above ensures some math is rendered before the quiz,
