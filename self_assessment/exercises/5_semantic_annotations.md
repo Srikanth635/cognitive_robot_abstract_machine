@@ -45,7 +45,7 @@ with world.modify_world():
     world.add_body(virtual_root)
 ```
 
-## 1. First — Define semantic annotations and create/annotate bodies
+## 1. Define semantic annotations and create/annotate bodies
 Your goals:
 - Define two custom dataclasses Bottle(SemanticAnnotation) and Cap(SemanticAnnotation).
 - A Cap is the semantic_annotation of a single body.
@@ -127,7 +127,7 @@ assert bottle_large_cylinder.width == 0.08 and bottle_large_cylinder.height == 0
 assert bottle_medium_cylinder.width == 0.04 and bottle_medium_cylinder.height == 0.15
 ```
 
-## 2. Second — Connect cap and large bottle under the root and place the cap on top
+## 2. Connect cap and large bottle under the root and place the cap on top
 Your goals:
 - Connect the cap body and the large bottle body with Connection6DoF connections under the world root.
 - Use the exact cylinder parameters to place the cap perfectly on top of the bottle.
@@ -195,7 +195,7 @@ assert len(caps) == 1
 rt = RayTracer(world); rt.update_scene(); rt.scene.show("jupyter")
 ```
 
-## 3. Third — Query with EQL for Bottles that have a Cap
+## 3. Query with EQL for Bottles that have a Cap
 Your goals:
 - Build an EQL query that returns all Bottle semantic_annotations in the world that have a Cap assigned.
 - Store the query in a variable named `bottles_with_cap_query` and the evaluated list in `query_result`.
