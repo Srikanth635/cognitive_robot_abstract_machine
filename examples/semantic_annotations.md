@@ -43,7 +43,7 @@ from semantic_digital_twin.world_description.world_entity import SemanticAnnotat
 from semantic_digital_twin.spatial_computations.raytracer import RayTracer
 
 
-@dataclass
+@dataclass(eq=False)
 class Apple(SemanticAnnotation):
     """A simple custom semantic_annotation declaring that a Body is an Apple."""
 
@@ -88,7 +88,7 @@ rt.scene.show("jupyter")
 
 Thanks to the semantic annotations, an agent can query for apples directly using EQL:
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 with symbolic_mode():
     apples = an(entity(let(Apple, world.semantic_annotations)))
 print(*apples.evaluate(), sep="\n")
@@ -96,14 +96,20 @@ print(*apples.evaluate(), sep="\n")
 
 SemanticAnnotations can become arbitrarily expressive. For instance, we can define a FruitBox that groups a container and a list of apples.
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 from semantic_digital_twin.semantic_annotations.factories import ContainerFactory, Direction
 
-@dataclass
+@dataclass(eq=False)
 class FruitBox(SemanticAnnotation):
     box: Container
     fruits: List[Apple]
+```
+ 
+This is our first semantic annotation! They need to be dataclasses, because it makes it trivial to create datastructures which can be used 
+by [KRROOD's ORMatic](https://github.com/code-iai/krrood/tree/main/src/krrood/ormatic) to automatically create ORM tables from python classes. 
+Furthermore they need to have the `eq=False` flag, because otherwise the hash function defined in the `SemanticAnnotation` base class would be overridden.
 
+```{code-cell} ipython3
 with world.modify_world():
     # To create a hollowed out box in this case we use a "ContainerFactory". 
     # To learn more about how cool SemanticAnnotationFactories are, please visit the appropriate guide!
@@ -132,7 +138,7 @@ you mean. Interoperability comes for free without hidden formats or conversion i
 We can incorporate the attributes of our SemanticAnnotations into our reasoning.
 To demonstrate this, let's first create another FruitBox, but which is empty this time.
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 with world.modify_world():
     empty_fruit_box_container_world = ContainerFactory(
         name=PrefixedName("empty_fruit_box_container"), direction=Direction.Z, scale=Scale(1.0, 1.0, 0.3)
@@ -154,7 +160,7 @@ rt.scene.show("jupyter")
 
 We can now use EQL to get us only the FruitBoxes that actually contain apples!
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 from semantic_digital_twin.reasoning.predicates import ContainsType
 from entity_query_language import a
 
