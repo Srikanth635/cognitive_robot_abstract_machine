@@ -282,7 +282,7 @@ class ModelReloadSynchronizer(Synchronizer):
         dao: WorldMappingDAO = to_dao(self.world)
         self.session.add(dao)
         self.session.commit()
-        message = LoadModel(primary_key=dao.id, meta_data=self.meta_data)
+        message = LoadModel(primary_key=dao.database_id, meta_data=self.meta_data)
         self.publish(message)
 
     def _subscription_callback(self, msg: LoadModel):
@@ -291,7 +291,9 @@ class ModelReloadSynchronizer(Synchronizer):
 
         :param msg: The message containing the primary key of the model to be fetched.
         """
-        query = select(WorldMappingDAO).where(WorldMappingDAO.id == msg.primary_key)
+        query = select(WorldMappingDAO).where(
+            WorldMappingDAO.database_id == msg.primary_key
+        )
         new_world = self.session.scalars(query).one().from_dao()
         self._replace_world(new_world)
         self.world._notify_model_change()
