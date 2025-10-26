@@ -3,7 +3,7 @@ import logging
 import math
 from dataclasses import dataclass, field
 from functools import cached_property
-from typing import Dict, Tuple, Union, Set
+from typing import Dict, Tuple, Union, Set, Optional, List
 
 import numpy as np
 from krrood.entity_query_language.entity import the, entity, let

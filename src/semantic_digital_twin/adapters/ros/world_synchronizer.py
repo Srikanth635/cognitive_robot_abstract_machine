@@ -3,7 +3,7 @@ import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from functools import cached_property
-from typing import ClassVar
+from typing import ClassVar, Optional, Type, List
 
 import numpy as np
 import rclpy  # type: ignore
