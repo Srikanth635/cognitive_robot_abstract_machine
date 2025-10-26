@@ -8,7 +8,7 @@ from typing import ClassVar
 import numpy as np
 import rclpy  # type: ignore
 import std_msgs.msg
-from ormatic.dao import to_dao
+from krrood.ormatic.dao import to_dao
 from random_events.utils import SubclassJSONSerializer
 from rclpy.node import Node as RosNode
 from rclpy.publisher import Publisher

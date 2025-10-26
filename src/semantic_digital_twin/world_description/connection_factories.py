@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
-from ormatic.dao import HasGeneric
+from krrood.ormatic.dao import HasGeneric
 from random_events.utils import SubclassJSONSerializer, recursive_subclasses
 from typing_extensions import Self, Dict, Any, TypeVar, TYPE_CHECKING
 

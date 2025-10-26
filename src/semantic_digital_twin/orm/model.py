@@ -5,7 +5,7 @@ from typing_extensions import Optional
 
 import trimesh
 import trimesh.exchange.stl
-from ormatic.dao import AlternativeMapping
+from krrood.ormatic.dao import AlternativeMapping
 from sqlalchemy import TypeDecorator, types
 
 from ..world_description.degree_of_freedom import DegreeOfFreedom

@@ -5,10 +5,15 @@
 # Classes that are self_mapped and explicitly_mapped are already mapped in the model.py file. Look there for more
 # information on how to map them.
 # ----------------------------------------------------------------------------------------------------------------------
+from __future__ import annotations
 
 import os
 from dataclasses import is_dataclass
 
+import trimesh
+import semantic_digital_twin.world  # ensure the module attribute exists on the package
+import semantic_digital_twin.world_description.geometry
+import semantic_digital_twin.world_description.shape_collection
 import krrood.entity_query_language.orm.model
 import krrood.entity_query_language.symbol_graph
 from krrood.class_diagrams import ClassDiagram
@@ -50,6 +55,9 @@ all_classes -= {HasType, HasTypes}
 
 
 # collect all semantic digital twin classes that should be mapped
+all_classes |= set(
+    classes_of_module(semantic_digital_twin.world_description.world_entity)
+)
 all_classes |= set(classes_of_module(semantic_digital_twin.world_description.geometry))
 all_classes |= set(
     classes_of_module(semantic_digital_twin.world_description.shape_collection)
@@ -58,9 +66,7 @@ all_classes |= set(classes_of_module(semantic_digital_twin.world))
 all_classes |= set(
     classes_of_module(semantic_digital_twin.datastructures.prefixed_name)
 )
-all_classes |= set(
-    classes_of_module(semantic_digital_twin.world_description.world_entity)
-)
+
 all_classes |= set(
     classes_of_module(semantic_digital_twin.world_description.connections)
 )
@@ -78,13 +84,13 @@ all_classes -= {
     ResetStateContextManager,
     WorldModelUpdateContextManager,
     HasUpdateState,
-    World,
     ForwardKinematicsVisitor,
-    DegreeOfFreedom,
 }
 
 # remove classes that are not dataclasses
 all_classes = {c for c in all_classes if is_dataclass(c)}
+print(all_classes)
+exit()
 
 
 def generate_orm():

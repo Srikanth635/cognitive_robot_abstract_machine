@@ -12,11 +12,11 @@ from semantic_digital_twin.spatial_types.spatial_types import TransformationMatr
 from semantic_digital_twin.world_description.shape_collection import ShapeCollection
 from semantic_digital_twin.world_description.world_entity import Body
 from semantic_digital_twin.orm.ormatic_interface import *
-from ormatic.dao import to_dao
+from krrood.ormatic.dao import to_dao
 
 
 class ORMTest(unittest.TestCase):
-    engine: sqlalchemy.engine
+    engine: sqlalchemy.Engine
     session: Session
 
     urdf_dir = os.path.join(
