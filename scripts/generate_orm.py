@@ -89,8 +89,6 @@ all_classes -= {
 
 # remove classes that are not dataclasses
 all_classes = {c for c in all_classes if is_dataclass(c)}
-print(all_classes)
-exit()
 
 
 def generate_orm():
@@ -109,8 +107,9 @@ def generate_orm():
 
     instance.make_all_tables()
 
+    script_dir = os.path.dirname(os.path.abspath(__file__))
     path = os.path.abspath(
-        os.path.join(os.getcwd(), "..", "src", "semantic_digital_twin", "orm")
+        os.path.join(script_dir, "..", "src", "semantic_digital_twin", "orm")
     )
     with open(os.path.join(path, "ormatic_interface.py"), "w") as f:
         instance.to_sqlalchemy_file(f)
