@@ -6,8 +6,8 @@ from functools import cached_property
 from typing import Dict, Tuple, Union, Set
 
 import numpy as np
-from entity_query_language import the, entity, let
-from ormatic.eql_interface import eql_to_sql
+from krrood.entity_query_language.entity import the, entity, let
+from krrood.ormatic.eql_interface import eql_to_sql
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 

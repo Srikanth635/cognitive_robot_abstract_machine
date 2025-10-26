@@ -1,28 +1,3 @@
-import builtins
-import os
-from enum import Enum
-
-from ormatic.ormatic import ORMatic
-from ormatic.utils import classes_of_module, recursive_subclasses
-
-import semantic_digital_twin.world_description.degree_of_freedom
-import semantic_digital_twin.robots.abstract_robot
-import semantic_digital_twin.semantic_annotations.semantic_annotations
-import semantic_digital_twin.world_description.world_entity
-from semantic_digital_twin.world import (
-    ResetStateContextManager,
-    WorldModelUpdateContextManager,
-)
-from semantic_digital_twin.spatial_computations.forward_kinematics import (
-    ForwardKinematicsVisitor,
-)
-from semantic_digital_twin.world_description.connections import (
-    FixedConnection,
-    HasUpdateState,
-)
-from semantic_digital_twin.orm.model import *
-from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
-
 # ----------------------------------------------------------------------------------------------------------------------
 # This script generates the ORM classes for the semantic_digital_twin package.
 # Dataclasses can be mapped automatically to the ORM model
@@ -31,27 +6,75 @@ from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 # information on how to map them.
 # ----------------------------------------------------------------------------------------------------------------------
 
-# create of classes that should be mapped
-classes = set(recursive_subclasses(AlternativeMapping))
-classes |= set(classes_of_module(semantic_digital_twin.world_description.geometry))
-classes |= set(
+import os
+from dataclasses import is_dataclass
+
+import krrood.entity_query_language.orm.model
+import krrood.entity_query_language.symbol_graph
+from krrood.class_diagrams import ClassDiagram
+from krrood.entity_query_language.predicate import Predicate, HasTypes, HasType, Symbol
+from krrood.ormatic.dao import AlternativeMapping
+from krrood.ormatic.ormatic import ORMatic
+from krrood.ormatic.utils import classes_of_module, recursive_subclasses
+
+import semantic_digital_twin.robots.abstract_robot
+import semantic_digital_twin.semantic_annotations.semantic_annotations
+import semantic_digital_twin.world_description.degree_of_freedom
+import semantic_digital_twin.world_description.world_entity
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.orm.model import *
+from semantic_digital_twin.spatial_computations.forward_kinematics import (
+    ForwardKinematicsVisitor,
+)
+from semantic_digital_twin.world import (
+    ResetStateContextManager,
+    WorldModelUpdateContextManager,
+)
+from semantic_digital_twin.world_description.connections import (
+    FixedConnection,
+    HasUpdateState,
+)
+
+# build the symbol graph
+Predicate.build_symbol_graph()
+symbol_graph = Predicate.symbol_graph
+
+# collect all KRROOD classes
+all_classes = {c.clazz for c in symbol_graph._type_graph.wrapped_classes}
+all_classes |= {am.original_class() for am in recursive_subclasses(AlternativeMapping)}
+all_classes |= set(classes_of_module(krrood.entity_query_language.symbol_graph))
+all_classes |= {Symbol}
+
+# remove classes that don't need persistence
+all_classes -= {HasType, HasTypes}
+
+
+# collect all semantic digital twin classes that should be mapped
+all_classes |= set(classes_of_module(semantic_digital_twin.world_description.geometry))
+all_classes |= set(
     classes_of_module(semantic_digital_twin.world_description.shape_collection)
 )
-classes |= set(classes_of_module(semantic_digital_twin.world))
-classes |= set(classes_of_module(semantic_digital_twin.datastructures.prefixed_name))
-classes |= set(classes_of_module(semantic_digital_twin.world_description.world_entity))
-classes |= set(classes_of_module(semantic_digital_twin.world_description.connections))
-classes |= set(
+all_classes |= set(classes_of_module(semantic_digital_twin.world))
+all_classes |= set(
+    classes_of_module(semantic_digital_twin.datastructures.prefixed_name)
+)
+all_classes |= set(
+    classes_of_module(semantic_digital_twin.world_description.world_entity)
+)
+all_classes |= set(
+    classes_of_module(semantic_digital_twin.world_description.connections)
+)
+all_classes |= set(
     classes_of_module(semantic_digital_twin.semantic_annotations.semantic_annotations)
 )
-classes |= set(
+all_classes |= set(
     classes_of_module(semantic_digital_twin.world_description.degree_of_freedom)
 )
-classes |= set(classes_of_module(semantic_digital_twin.robots.abstract_robot))
-# classes |= set(recursive_subclasses(ViewFactory))
+all_classes |= set(classes_of_module(semantic_digital_twin.robots.abstract_robot))
+
 
 # remove classes that should not be mapped
-classes -= {
+all_classes -= {
     ResetStateContextManager,
     WorldModelUpdateContextManager,
     HasUpdateState,
@@ -59,25 +82,32 @@ classes -= {
     ForwardKinematicsVisitor,
     DegreeOfFreedom,
 }
-classes -= set(recursive_subclasses(Enum))
-classes -= set(recursive_subclasses(Exception))
+
+# remove classes that are not dataclasses
+all_classes = {c for c in all_classes if is_dataclass(c)}
 
 
 def generate_orm():
     """
     Generate the ORM classes for the pycram package.
     """
-    # Create an ORMatic object with the classes to be mapped
-    ormatic = ORMatic(list(classes), type_mappings={trimesh.Trimesh: TrimeshType})
+    class_diagram = ClassDiagram(
+        list(sorted(all_classes, key=lambda c: c.__name__, reverse=True))
+    )
 
-    # Generate the ORM classes
-    ormatic.make_all_tables()
+    instance = ORMatic(
+        class_dependency_graph=class_diagram,
+        type_mappings={trimesh.Trimesh: TrimeshType},
+        alternative_mappings=recursive_subclasses(AlternativeMapping),
+    )
+
+    instance.make_all_tables()
 
     path = os.path.abspath(
         os.path.join(os.getcwd(), "..", "src", "semantic_digital_twin", "orm")
     )
-    with builtins.open(os.path.join(path, "ormatic_interface.py"), "w") as f:
-        ormatic.to_sqlalchemy_file(f)
+    with open(os.path.join(path, "ormatic_interface.py"), "w") as f:
+        instance.to_sqlalchemy_file(f)
 
 
 if __name__ == "__main__":

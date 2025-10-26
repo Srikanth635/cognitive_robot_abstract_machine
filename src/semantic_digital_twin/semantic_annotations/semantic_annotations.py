@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 import numpy as np
-from entity_query_language import symbol
+from krrood.entity_query_language.entity import Symbol
 from probabilistic_model.probabilistic_circuit.rx.helper import uniform_measure_of_event
 from typing_extensions import List
 
@@ -32,13 +32,11 @@ class HasDoors:
     doors: List[Door] = field(default_factory=list, hash=False)
 
 
-@symbol
 @dataclass(eq=False)
 class Handle(SemanticAnnotation):
     body: Body
 
 
-@symbol
 @dataclass(eq=False)
 class Container(SemanticAnnotation):
     body: Body
@@ -132,7 +130,6 @@ class DoubleDoor(EntryWay):
     right_door: Door
 
 
-@symbol
 @dataclass(eq=False)
 class Drawer(Components):
     container: Container
