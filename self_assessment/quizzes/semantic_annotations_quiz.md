@@ -35,7 +35,7 @@ questions = [
       ],
     },
     {
-      "question": "How does a semantic_annotaiton set a default name?",
+      "question": "How does a SemanticAnnotation set a default name?",
       "type": "multiple_choice",
       "answers": [
         {"answer": "In __post_init__, if name is None it generates a unique name", "correct": True},
@@ -45,7 +45,7 @@ questions = [
       ],
     },
     {
-      "question": "Which library is used to query for semantic_annotaitons like apples?",
+      "question": "Which library is used to query for SemanticAnnotations like apples?",
       "type": "multiple_choice",
       "answers": [
         {"answer": "Entity Query Language (EQL)", "correct": True},
@@ -55,10 +55,10 @@ questions = [
       ],
     },
     {
-      "question": "What does the FruitBox semantic_annotaiton group together in the example?",
+      "question": "What does the FruitBox SemanticAnnotation group together in the example?",
       "type": "multiple_choice",
       "answers": [
-        {"answer": "A Container and a list of Apple semantic_annotaitons", "correct": True},
+        {"answer": "A Container and a list of Apple SemanticAnnotations", "correct": True},
         {"answer": "Two Body instances into a single mesh", "correct": False},
         {"answer": "A URDF file and a parser", "correct": False},
         {"answer": "A World and a RayTracer", "correct": False}

@@ -63,17 +63,6 @@ questions = [
         {"answer": "Modify the child's visual color", "correct": False},
         {"answer": "Use WorldState.set_pose(connection)", "correct": False}
       ],
-    },
-    {
-      "question": "How to query all Drawer views in a world?",
-      "type": "many_choice",
-      "answer_cols": 2,
-      "answers": [
-        {"answer": "an(entity(let(Drawer, domain=world.views)))", "correct": True},
-        {"answer": "world.get_views_by_type(Drawer)", "correct": True},
-        {"answer": "select Drawer from views", "correct": False},
-        {"answer": "find_view('Drawer')", "correct": False}
-      ],
     }
 ]
 

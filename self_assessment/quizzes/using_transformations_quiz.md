@@ -25,11 +25,11 @@ from jupyterquiz import display_quiz
 
 questions = [
     {
-      "question": "What does the notation `A_T_B` mean?",
+      "question": "What does the notation `drawer_T_handle` mean?",
       "type": "multiple_choice",
       "answers": [
-        { "answer": "Transforms frame A to frame B.", "correct": False, "feedback": "Incorrect!" },
-        { "answer": "Transforms frame B to frame A.", "correct": True, "feedback": "Correct. `A_T_B` is pose of B in the frame of A." },
+        { "answer": "Transform of the drawer frame to handle frame.", "correct": False, "feedback": "Incorrect!" },
+        { "answer": "Transform of the handle frame to the drawer frame.", "correct": True, "feedback": "Correct. `a_T_b` is pose of B in the frame of A." },
         { "answer": "A translation-only offset.", "correct": False, "feedback": "Incorrect. It can include rotation and translation." },
         { "answer": "A pure rotation matrix.", "correct": False, "feedback": "Incorrect. It is a rigid transform (4x4 homogeneous)." }
       ],
@@ -70,7 +70,7 @@ questions = [
       "question": "You want to move a camera 0.1 m forward along its OWN x-axis and yaw it by 45°. Which is the most direct approach?",
       "type": "multiple_choice",
       "answers": [
-        { "answer": "Create `camera_T_offset = TransformationMatrix.from_xyz_rpy(x=0.1, yaw=radians(45), reference_frame=camera_body)` and compose `base_T_camera @ camera_T_offset`.", "correct": True, "feedback": "Correct! Express motion in the local camera frame and compose on the right." },
+        { "answer": "Create `camera_T_offse` with x=0.1, yaw=radians(45), reference_frame=camera_body and compose `base_T_camera @ camera_T_offset`.", "correct": True, "feedback": "Correct! Express motion in the local camera frame and compose on the right." },
         { "answer": "Create the offset with `reference_frame=world.root` and multiply on the left.", "correct": False, "feedback": "Incorrect. That would express the move in world axes, not camera axes." },
         { "answer": "Scaling the mesh by 0.1 along x.", "correct": False, "feedback": "Incorrect. Scaling is not a rigid transform of the pose." },
         { "answer": "Change only yaw on the base connection.", "correct": False, "feedback": "Incorrect. That rotates around the base, not the camera's own axis." }

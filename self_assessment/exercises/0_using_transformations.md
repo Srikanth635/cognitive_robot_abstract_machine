@@ -19,7 +19,7 @@ This exercise gives you a hands-on introduction to rigid-body transformations in
 - How to create transformations with our TransformationMatrix and RotationMatrix
 - How to place and move objects in a world by setting a connection pose
 
-Provided to you is a world with a table and a 20 cm cube, as well as a way to visualize the world. You can click inside the visualized scene and drag to rotate the view, scroll to zoom, and right-click + drag to pan. Use it to have a loot at the table and the cube before you start.
+Provided to you is a world with a table and a 20 cm cube, as well as a way to visualize the world. You can click inside the visualized scene and drag to rotate the view, scroll to zoom, and right-click + drag to pan. Use it to have a look at the table and the cube before you start.
 
 You will:
 - Craft a transform to put the cube on top of the table
