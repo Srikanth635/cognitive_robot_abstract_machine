@@ -4,7 +4,7 @@ import itertools
 from typing import Optional, List
 
 import trimesh.sample
-from entity_query_language import (
+from krrood.entity_query_language.entity import (
     symbolic_mode,
     let,
     an,

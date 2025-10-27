@@ -2,7 +2,7 @@ import os
 import threading
 import time
 
-from entity_query_language.symbolic import Variable
+from krrood.entity_query_language.symbolic import Variable
 from typing_extensions import Tuple
 
 import pytest

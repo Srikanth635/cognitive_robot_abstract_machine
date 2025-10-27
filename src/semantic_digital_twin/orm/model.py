@@ -4,7 +4,7 @@ from io import BytesIO
 import numpy as np
 import trimesh
 import trimesh.exchange.stl
-from ormatic.dao import AlternativeMapping
+from krrood.ormatic.dao import AlternativeMapping
 from sqlalchemy import TypeDecorator, types
 from typing_extensions import List
 from typing_extensions import Optional
