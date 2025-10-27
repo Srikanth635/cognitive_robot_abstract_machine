@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import Enum
 from functools import cached_property
 
-from ormatic.utils import classproperty
+from krrood.ormatic.utils import classproperty
 from random_events.variable import Continuous
 from sortedcontainers import SortedSet
 
