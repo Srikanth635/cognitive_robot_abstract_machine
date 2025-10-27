@@ -8,20 +8,15 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import wraps, lru_cache, cached_property
+from itertools import combinations_with_replacement
 
 import matplotlib.pyplot as plt
 import numpy as np
 import rustworkx as rx
 import rustworkx.visit
 import rustworkx.visualization
-from itertools import combinations_with_replacement
-
-from krrood.entity_query_language.predicate import Symbol
 from lxml import etree
 from rustworkx import NoEdgeBetweenNodes
-from semantic_digital_twin.world_description.world_modification import (
-    RemoveSemanticAnnotationModification,
-)
 from typing_extensions import (
     Dict,
     Tuple,
@@ -74,6 +69,9 @@ from .world_description.world_entity import (
     GenericConnection,
     CollisionCheckingConfig,
     Body,
+)
+from .world_description.world_modification import (
+    RemoveSemanticAnnotationModification,
 )
 from .world_description.world_modification import (
     WorldModelModification,
