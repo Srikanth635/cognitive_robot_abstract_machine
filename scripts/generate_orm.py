@@ -89,8 +89,13 @@ all_classes |= {Symbol}
 all_classes -= {HasType, HasTypes}
 
 
-# remove classes that are not dataclasses
-all_classes = {c for c in all_classes if is_dataclass(c)}
+# keep only dataclasses that are NOT AlternativeMapping subclasses
+all_classes = {
+    c for c in all_classes if is_dataclass(c) and not issubclass(c, AlternativeMapping)
+}
+
+# ensure we have the original classes of the mappings (ORMatic uses these)
+all_classes |= {am.original_class() for am in recursive_subclasses(AlternativeMapping)}
 
 
 def generate_orm():

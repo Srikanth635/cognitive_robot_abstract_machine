@@ -119,12 +119,6 @@ class Door(EntryWay):
 
 
 @dataclass(eq=False)
-class Fridge(SemanticAnnotation):
-    body: Body
-    door: Door
-
-
-@dataclass(eq=False)
 class DoubleDoor(EntryWay):
     left_door: Door
     right_door: Door
