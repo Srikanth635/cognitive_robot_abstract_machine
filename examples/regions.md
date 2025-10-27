@@ -62,7 +62,7 @@ table_top.collision = table_top_shapes
 table_top.visual = table_top_shapes
 
 with world.modify_world():
-    root_to_leg = Connection6DoF.with_auto_generated_dofs(parent=root, child=table_leg, world=world)
+    root_to_leg = Connection6DoF.create_with_dofs(parent=root, child=table_leg, world=world)
     world.add_connection(root_to_leg)
 
     leg_to_top = FixedConnection(

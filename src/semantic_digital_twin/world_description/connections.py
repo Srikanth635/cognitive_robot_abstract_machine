@@ -412,7 +412,7 @@ class Connection6DoF(PassiveConnection):
         )
 
     @classmethod
-    def with_auto_generated_dofs(
+    def create_with_dofs(
         cls,
         world: World,
         parent: KinematicStructureEntity,
@@ -606,7 +606,7 @@ class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
         self.connection_T_child_expression.child_frame = self.child
 
     @classmethod
-    def with_auto_generated_dofs(
+    def create_with_dofs(
         cls,
         world: World,
         parent: KinematicStructureEntity,

@@ -36,9 +36,7 @@ def create_dummy_world(w: Optional[World] = None) -> World:
     b1 = Body(name=PrefixedName("b1"))
     b2 = Body(name=PrefixedName("b2"))
     with w.modify_world():
-        w.add_connection(
-            Connection6DoF.with_auto_generated_dofs(parent=b1, child=b2, world=w)
-        )
+        w.add_connection(Connection6DoF.create_with_dofs(parent=b1, child=b2, world=w))
     return w
 
 
@@ -185,7 +183,7 @@ def test_model_synchronization_creation_only(rclpy_node):
         new_body = Body(name=PrefixedName("b3"))
         w1.add_kinematic_structure_entity(new_body)
 
-        c = Connection6DoF.with_auto_generated_dofs(parent=b2, child=new_body, world=w1)
+        c = Connection6DoF.create_with_dofs(parent=b2, child=new_body, world=w1)
         w1.add_connection(c)
     time.sleep(0.1)
     assert len(w1.kinematic_structure_entities) == 2
@@ -277,7 +275,7 @@ def test_callback_pausing(rclpy_node):
         new_body = Body(name=PrefixedName("b3"))
         w1.add_kinematic_structure_entity(new_body)
 
-        c = Connection6DoF.with_auto_generated_dofs(parent=b2, child=new_body, world=w1)
+        c = Connection6DoF.create_with_dofs(parent=b2, child=new_body, world=w1)
         w1.add_connection(c)
 
     time.sleep(0.1)

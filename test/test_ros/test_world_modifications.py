@@ -69,7 +69,7 @@ class ConnectionModificationTestCase(unittest.TestCase):
             w.add_kinematic_structure_entity(b2)
             w.add_kinematic_structure_entity(b3)
             w.add_connection(
-                Connection6DoF.with_auto_generated_dofs(parent=b1, child=b2, world=w)
+                Connection6DoF.create_with_dofs(parent=b1, child=b2, world=w)
             )
             dof = DegreeOfFreedom(name=PrefixedName("dofyboi"))
             w.add_degree_of_freedom(dof)

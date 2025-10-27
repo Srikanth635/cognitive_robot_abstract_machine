@@ -815,6 +815,31 @@ class Connection(WorldEntity, SubclassJSONSerializer):
 
         return dofs
 
+    @classmethod
+    def create_with_dofs(
+        cls,
+        world: World,
+        parent: KinematicStructureEntity,
+        child: KinematicStructureEntity,
+        name: Optional[PrefixedName] = None,
+        *args,
+        **kwargs,
+    ) -> Self:
+        """
+        This method will automatically generate the degrees of freedom for this connection into the given world
+        and initialize the connection with the generated dofs.
+        :param world: Reference to the world where the dofs should be added.
+        :param parent: parent of the connection.
+        :param child: child of the connection.
+        :param name: name of the connection.
+        :param args: additional arguments the subclass might need
+        :param kwargs: additional keyword arguments the subclass might need
+        :return:
+        """
+        raise NotImplementedError(
+            "ConnectionWithDofs.create_with_dofs is not implemented."
+        )
+
 
 GenericConnection = TypeVar("GenericConnection", bound=Connection)
 

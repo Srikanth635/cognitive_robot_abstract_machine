@@ -69,9 +69,7 @@ def world_setup() -> Tuple[
         world.add_connection(c_r1_r2)
         world.add_connection(bf_root_l1)
         world.add_connection(bf_root_r1)
-        c_root_bf = Connection6DoF.with_auto_generated_dofs(
-            parent=root, child=bf, world=world
-        )
+        c_root_bf = Connection6DoF.create_with_dofs(parent=root, child=bf, world=world)
         world.add_connection(c_root_bf)
 
     return world, l1, l2, bf, r1, r2
@@ -123,16 +121,16 @@ def world_setup_simple():
         world.add_kinematic_structure_entity(body3)
         world.add_kinematic_structure_entity(body4)
 
-        c_root_body1 = Connection6DoF.with_auto_generated_dofs(
+        c_root_body1 = Connection6DoF.create_with_dofs(
             parent=root, child=body1, world=world
         )
-        c_root_body2 = Connection6DoF.with_auto_generated_dofs(
+        c_root_body2 = Connection6DoF.create_with_dofs(
             parent=root, child=body2, world=world
         )
-        c_root_body3 = Connection6DoF.with_auto_generated_dofs(
+        c_root_body3 = Connection6DoF.create_with_dofs(
             parent=root, child=body3, world=world
         )
-        c_root_body4 = Connection6DoF.with_auto_generated_dofs(
+        c_root_body4 = Connection6DoF.create_with_dofs(
             parent=root, child=body4, world=world
         )
 
@@ -158,7 +156,7 @@ def two_arm_robot_world():
         world_with_robot = robot_parser.parse()
         # world_with_pr2.plot_kinematic_structure()
         root = world_with_robot.root
-        c_root_bf = OmniDrive.with_auto_generated_dofs(
+        c_root_bf = OmniDrive.create_with_dofs(
             parent=localization_body, child=root, world=world
         )
         world.merge_world(world_with_robot, root_connection=c_root_bf)
@@ -177,7 +175,7 @@ def pr2_world():
         pr2_root = world_with_pr2.root
         localization_body = Body(name=PrefixedName("odom_combined"))
         world_with_pr2.add_kinematic_structure_entity(localization_body)
-        c_root_bf = OmniDrive.with_auto_generated_dofs(
+        c_root_bf = OmniDrive.create_with_dofs(
             parent=localization_body, child=pr2_root, world=world_with_pr2
         )
         world_with_pr2.add_connection(c_root_bf)
@@ -202,7 +200,7 @@ def tracy_world():
         world_with_tracy = tracy_parser.parse()
         # world_with_tracy.plot_kinematic_structure()
         tracy_root = world_with_tracy.root
-        c_root_bf = Connection6DoF.with_auto_generated_dofs(
+        c_root_bf = Connection6DoF.create_with_dofs(
             parent=localization_body, child=tracy_root, world=world
         )
         world.merge_world(world_with_tracy, c_root_bf)
@@ -226,7 +224,7 @@ def hsrb_world():
         hsrb_parser = URDFParser.from_file(file_path=hsrb)
         world_with_hsrb = hsrb_parser.parse()
         hsrb_root = world_with_hsrb.root
-        c_root_bf = Connection6DoF.with_auto_generated_dofs(
+        c_root_bf = Connection6DoF.create_with_dofs(
             parent=localization_body, child=hsrb_root, world=world
         )
         world.merge_world(world_with_hsrb, c_root_bf)

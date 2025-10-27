@@ -104,12 +104,8 @@ def test_in_contact():
         w.add_kinematic_structure_entity(b1)
         w.add_kinematic_structure_entity(b2)
         w.add_kinematic_structure_entity(b3)
-        w.add_connection(
-            Connection6DoF.with_auto_generated_dofs(parent=b1, child=b2, world=w)
-        )
-        w.add_connection(
-            Connection6DoF.with_auto_generated_dofs(parent=b2, child=b3, world=w)
-        )
+        w.add_connection(Connection6DoF.create_with_dofs(parent=b1, child=b2, world=w))
+        w.add_connection(Connection6DoF.create_with_dofs(parent=b2, child=b3, world=w))
     assert contact(b1, b2)
     assert not contact(b1, b3)
     assert contact(b2, b3)
@@ -131,7 +127,7 @@ def test_robot_in_contact(pr2_world: World):
 
     with pr2_world.modify_world():
         pr2_world.add_connection(
-            Connection6DoF.with_auto_generated_dofs(
+            Connection6DoF.create_with_dofs(
                 parent=pr2_world.root, child=body, world=pr2_world
             )
         )
@@ -163,7 +159,7 @@ def test_get_visible_objects(pr2_world: World):
 
     with pr2_world.modify_world():
         pr2_world.add_connection(
-            Connection6DoF.with_auto_generated_dofs(
+            Connection6DoF.create_with_dofs(
                 parent=pr2_world.root, child=body, world=pr2_world
             )
         )
@@ -322,7 +318,7 @@ def test_is_body_in_gripper(
     # Add box to world
     with pr2_world.modify_world():
         root = pr2_world.root
-        connection = Connection6DoF.with_auto_generated_dofs(
+        connection = Connection6DoF.create_with_dofs(
             parent=root,
             child=test_box,
             world=pr2_world,
@@ -408,12 +404,12 @@ def test_blocking(pr2_world):
     with pr2_world.modify_world():
         new_root = Body(name=PrefixedName("new_root"))
         pr2_world.add_connection(
-            Connection6DoF.with_auto_generated_dofs(
+            Connection6DoF.create_with_dofs(
                 parent=new_root, child=pr2_world.root, world=pr2_world
             )
         )
         pr2_world.add_connection(
-            Connection6DoF.with_auto_generated_dofs(
+            Connection6DoF.create_with_dofs(
                 parent=new_root,
                 child=obstacle,
                 world=pr2_world,

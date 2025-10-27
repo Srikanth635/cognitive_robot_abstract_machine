@@ -28,9 +28,7 @@ def create_dummy_world():
         world.add_kinematic_structure_entity(body_1)
         world.add_kinematic_structure_entity(body_2)
         world.add_connection(
-            Connection6DoF.with_auto_generated_dofs(
-                parent=body_1, child=body_2, world=world
-            )
+            Connection6DoF.create_with_dofs(parent=body_1, child=body_2, world=world)
         )
     return world
 
@@ -94,14 +92,10 @@ def test_service_callback_with_multiple_modifications(rclpy_node):
         world.add_kinematic_structure_entity(body_2)
         world.add_kinematic_structure_entity(body_3)
         world.add_connection(
-            Connection6DoF.with_auto_generated_dofs(
-                parent=body_1, child=body_2, world=world
-            )
+            Connection6DoF.create_with_dofs(parent=body_1, child=body_2, world=world)
         )
         world.add_connection(
-            Connection6DoF.with_auto_generated_dofs(
-                parent=body_2, child=body_3, world=world
-            )
+            Connection6DoF.create_with_dofs(parent=body_2, child=body_3, world=world)
         )
 
     request = Trigger.Request()
