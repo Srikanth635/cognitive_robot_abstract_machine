@@ -13,7 +13,7 @@ from functools import lru_cache
 import numpy as np
 import trimesh
 import trimesh.boolean
-from entity_query_language import symbol
+from krrood.entity_query_language.entity import Symbol
 from random_events.utils import SubclassJSONSerializer
 from scipy.stats import geom
 from semantic_digital_twin.world_description.geometry import (
@@ -48,9 +48,8 @@ if TYPE_CHECKING:
 id_generator = IDGenerator()
 
 
-@symbol
 @dataclass(unsafe_hash=True)
-class WorldEntity:
+class WorldEntity(Symbol):
     """
     A class representing an entity in the world.
     """
@@ -677,7 +676,7 @@ class RootedSemanticAnnotation(SemanticAnnotation):
 
 
 @dataclass(eq=False)
-class semantic_environment_annotation(RootedSemanticAnnotation):
+class SemanticEnvironmentAnnotation(RootedSemanticAnnotation):
     """
     Represents a semantic annotation of the environment.
     """

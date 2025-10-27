@@ -1780,7 +1780,7 @@ class ReferenceFrameMixin:
 
     """
 
-    reference_frame: Optional[KinematicStructureEntity | Connection] = field(
+    reference_frame: Optional[KinematicStructureEntity] = field(
         kw_only=True, default=None
     )
     """

@@ -5,8 +5,8 @@ import re
 import time
 
 import tqdm
-from ormatic.dao import to_dao
-from ormatic.utils import drop_database
+from krrood.ormatic.dao import to_dao
+from krrood.ormatic.utils import drop_database
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from typing_extensions import TYPE_CHECKING

@@ -6,7 +6,7 @@ from enum import IntEnum, Enum
 from functools import reduce
 from operator import or_
 
-from entity_query_language import (
+from krrood.entity_query_language.entity import (
     symbolic_mode,
     let,
     an,
