@@ -33,43 +33,18 @@ parts:
   chapters:
     - file: self_assessment/quizzes_intro
       sections:
-        - file: self_assessment/quizzes/using-transformations-quiz
-        - file: self_assessment/quizzes/creating-custom-bodies-quiz
-        - file: self_assessment/quizzes/loading-worlds-quiz
-        - file: self_assessment/quizzes/visualizing-worlds-quiz
-        - file: self_assessment/quizzes/world-structure-manipulation-quiz
-        - file: self_assessment/quizzes/semantic-annotations-quiz
-        - file: self_assessment/quizzes/world-state-manipulation-quiz
-        - file: self_assessment/quizzes/regions-quiz
-        - file: self_assessment/quizzes/semantic-annotation-factories-quiz
-        - file: self_assessment/quizzes/persistence-of-annotated-worlds-quiz
-        - file: self_assessment/quizzes/graph-of-convex-sets-quiz
+        - file: using-transformations-quiz
+        - file: creating-custom-bodies-quiz
+        - file: loading-worlds-quiz
+        - file: visualizing-worlds-quiz
+        - file: world-structure-manipulation-quiz
+        - file: semantic-annotations-quiz
+        - file: world-state-manipulation-quiz
+        - file: regions-quiz
+        - file: semantic-annotation-factories-quiz
+        - file: persistence-of-annotated-worlds-quiz
+        - file: graph-of-convex-sets-quiz
     - file: self_assessment/exercises_intro
-      sections:
-        - file: self_assessment/exercises/0_using-transformations
-          options:
-            hidden: true
-        - file: self_assessment/exercises/1_creating-custom-bodies
-          options:
-            hidden: true
-        - file: self_assessment/exercises/2_loading-worlds
-          options:
-            hidden: true
-        - file: self_assessment/exercises/3_visualizing-worlds
-          options:
-            hidden: true
-        - file: self_assessment/exercises/4_world-structure-manipulation
-          options:
-            hidden: true
-        - file: self_assessment/exercises/5_semantic-annotations
-          options:
-            hidden: true
-        - file: self_assessment/exercises/6_world-state-manipulation
-          options:
-            hidden: true
-        - file: self_assessment/exercises/7_regions
-          options:
-            hidden: true
 - caption: References
   chapters:
     - file: autoapi/index
