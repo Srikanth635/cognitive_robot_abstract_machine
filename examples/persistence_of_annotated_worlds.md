@@ -34,7 +34,7 @@ import os
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
-from ormatic.dao import to_dao
+from krrood.ormatic.dao import to_dao
 from semantic_digital_twin.adapters.urdf import URDFParser
 from semantic_digital_twin.orm.ormatic_interface import *
 from semantic_digital_twin.semantic_annotations.semantic_annotations import Table

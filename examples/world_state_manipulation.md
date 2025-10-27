@@ -29,7 +29,7 @@ import threading
 import time
 
 import numpy as np
-from entity_query_language import the, entity, let, symbolic_mode, in_
+from krrood.entity_query_language.entity import the, entity, let, symbolic_mode, in_
 
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.spatial_types import TransformationMatrix

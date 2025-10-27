@@ -26,7 +26,7 @@ Used Concepts:
 ## Create a drawer with a handle
 
 ```{code-cell} ipython2
-from entity_query_language import entity, an, let, symbolic_mode
+from krrood.entity_query_language.entity import entity, an, let, symbolic_mode
 
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.spatial_types import TransformationMatrix
