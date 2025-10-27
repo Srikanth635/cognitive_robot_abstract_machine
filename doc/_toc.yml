@@ -31,17 +31,19 @@ parts:
     - file: style_guide
 - caption: Self-Assessment
   chapters:
-    - file: self_assessment/quizzes/using-transformations-quiz
-    - file: self_assessment/quizzes/creating-custom-bodies-quiz
-    - file: self_assessment/quizzes/loading-worlds-quiz
-    - file: self_assessment/quizzes/visualizing-worlds-quiz
-    - file: self_assessment/quizzes/world-structure-manipulation-quiz
-    - file: self_assessment/quizzes/semantic-annotations-quiz
-    - file: self_assessment/quizzes/world-state-manipulation-quiz
-    - file: self_assessment/quizzes/regions-quiz
-    - file: self_assessment/quizzes/semantic-annotation-factories-quiz
-    - file: self_assessment/quizzes/persistence-of-annotated-worlds-quiz
-    - file: self_assessment/quizzes/graph-of-convex-sets-quiz
+    - file: self_assessment/quizzes_intro
+      sections:
+        - file: self_assessment/quizzes/using_transformations_quiz
+        - file: self_assessment/quizzes/creating_custom_bodies_quiz
+        - file: self_assessment/quizzes/loading_worlds_quiz
+        - file: self_assessment/quizzes/visualizing_worlds_quiz
+        - file: self_assessment/quizzes/world_structure_manipulation_quiz
+        - file: self_assessment/quizzes/semantic_annotations_quiz
+        - file: self_assessment/quizzes/world_state_manipulation_quiz
+        - file: self_assessment/quizzes/regions_quiz
+        - file: self_assessment/quizzes/semantic_annotation_factories_quiz
+        - file: self_assessment/quizzes/persistence_of_annotated_worlds_quiz
+        - file: self_assessment/quizzes/graph_of_convex_sets_quiz
     - file: self_assessment/exercises_intro
 - caption: References
   chapters:
