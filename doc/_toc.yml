@@ -47,21 +47,29 @@ parts:
     - file: self_assessment/exercises_intro
       sections:
         - file: self_assessment/exercises/0_using-transformations
-          hidden: true
+          options:
+            hidden: true
         - file: self_assessment/exercises/1_creating-custom-bodies
-          hidden: true
+          options:
+            hidden: true
         - file: self_assessment/exercises/2_loading-worlds
-          hidden: true
+          options:
+            hidden: true
         - file: self_assessment/exercises/3_visualizing-worlds
-          hidden: true
+          options:
+            hidden: true
         - file: self_assessment/exercises/4_world-structure-manipulation
-          hidden: true
+          options:
+            hidden: true
         - file: self_assessment/exercises/5_semantic-annotations
-          hidden: true
+          options:
+            hidden: true
         - file: self_assessment/exercises/6_world-state-manipulation
-          hidden: true
+          options:
+            hidden: true
         - file: self_assessment/exercises/7_regions
-          hidden: true
+          options:
+            hidden: true
 - caption: References
   chapters:
     - file: autoapi/index
