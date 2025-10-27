@@ -7,7 +7,7 @@ from .geometry import BoundingBox
 from .shape_collection import BoundingBoxCollection
 from ..datastructures.variables import SpatialVariables
 from ..world import World
-from .world_entity import SemanticAnnotation, semantic_environment_annotation
+from .world_entity import SemanticAnnotation
 
 logger = logging.getLogger(__name__)
 
