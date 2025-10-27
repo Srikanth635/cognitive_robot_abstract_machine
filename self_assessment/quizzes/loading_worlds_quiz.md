@@ -48,7 +48,7 @@ questions = [
       "question": "Loaded worlds from files typically contain which information?",
       "type": "multiple_choice",
       "answers": [
-        {"answer": "Kinematic structure only without no semantic annotations", "correct": True},
+        {"answer": "Kinematic structure only without semantic annotations", "correct": True},
         {"answer": "Full semantic annotations", "correct": False},
         {"answer": "Robot motion plans", "correct": False},
         {"answer": "Texturing information only", "correct": False}
