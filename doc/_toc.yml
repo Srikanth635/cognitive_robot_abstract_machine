@@ -25,7 +25,7 @@ parts:
 - caption: Concepts
   chapters:
     - file: kinematic_world
-    - file: semantic_annotaitons
+    - file: semantic_annotations
     - file: world_reasoner
     - file: world_synchronization
     - file: style_guide
@@ -45,6 +45,23 @@ parts:
         - file: self_assessment/quizzes/persistence-of-annotated-worlds-quiz
         - file: self_assessment/quizzes/graph-of-convex-sets-quiz
     - file: self_assessment/exercises_intro
+      sections:
+        - file: self_assessment/exercises/0_using-transformations
+          hidden: true
+        - file: self_assessment/exercises/1_creating-custom-bodies
+          hidden: true
+        - file: self_assessment/exercises/2_loading-worlds
+          hidden: true
+        - file: self_assessment/exercises/3_visualizing-worlds
+          hidden: true
+        - file: self_assessment/exercises/4_world-structure-manipulation
+          hidden: true
+        - file: self_assessment/exercises/5_semantic-annotations
+          hidden: true
+        - file: self_assessment/exercises/6_world-state-manipulation
+          hidden: true
+        - file: self_assessment/exercises/7_regions
+          hidden: true
 - caption: References
   chapters:
     - file: autoapi/index
