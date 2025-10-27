@@ -10,24 +10,24 @@ from __future__ import annotations
 import os
 from dataclasses import is_dataclass
 
-import trimesh
-import semantic_digital_twin.world  # ensure the module attribute exists on the package
-import semantic_digital_twin.world_description.geometry
-import semantic_digital_twin.world_description.shape_collection
 import krrood.entity_query_language.orm.model
 import krrood.entity_query_language.symbol_graph
+import trimesh
 from krrood.class_diagrams import ClassDiagram
 from krrood.entity_query_language.predicate import Predicate, HasTypes, HasType, Symbol
 from krrood.ormatic.dao import AlternativeMapping
 from krrood.ormatic.ormatic import ORMatic
 from krrood.ormatic.utils import classes_of_module, recursive_subclasses
 
+import semantic_digital_twin.orm.model
 import semantic_digital_twin.robots.abstract_robot
 import semantic_digital_twin.semantic_annotations.semantic_annotations
+import semantic_digital_twin.world  # ensure the module attribute exists on the package
 import semantic_digital_twin.world_description.degree_of_freedom
+import semantic_digital_twin.world_description.geometry
+import semantic_digital_twin.world_description.shape_collection
 import semantic_digital_twin.world_description.world_entity
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
-from semantic_digital_twin.orm.model import *
 from semantic_digital_twin.spatial_computations.forward_kinematics import (
     ForwardKinematicsVisitor,
 )
@@ -40,21 +40,9 @@ from semantic_digital_twin.world_description.connections import (
     HasUpdateState,
 )
 
-# build the symbol graph
-Predicate.build_symbol_graph()
-symbol_graph = Predicate.symbol_graph
-
-# collect all KRROOD classes
-all_classes = {c.clazz for c in symbol_graph._type_graph.wrapped_classes}
-all_classes |= {am.original_class() for am in recursive_subclasses(AlternativeMapping)}
-all_classes |= set(classes_of_module(krrood.entity_query_language.symbol_graph))
-all_classes |= {Symbol}
-
-# remove classes that don't need persistence
-all_classes -= {HasType, HasTypes}
-
 
 # collect all semantic digital twin classes that should be mapped
+all_classes = set(classes_of_module(semantic_digital_twin.orm.model))
 all_classes |= set(
     classes_of_module(semantic_digital_twin.world_description.world_entity)
 )
@@ -87,6 +75,20 @@ all_classes -= {
     ForwardKinematicsVisitor,
 }
 
+# build the symbol graph
+Predicate.build_symbol_graph()
+symbol_graph = Predicate.symbol_graph
+
+# collect all KRROOD classes
+all_classes |= {c.clazz for c in symbol_graph._type_graph.wrapped_classes}
+all_classes |= {am.original_class() for am in recursive_subclasses(AlternativeMapping)}
+all_classes |= set(classes_of_module(krrood.entity_query_language.symbol_graph))
+all_classes |= {Symbol}
+
+# remove classes that don't need persistence
+all_classes -= {HasType, HasTypes}
+
+
 # remove classes that are not dataclasses
 all_classes = {c for c in all_classes if is_dataclass(c)}
 
@@ -101,7 +103,7 @@ def generate_orm():
 
     instance = ORMatic(
         class_dependency_graph=class_diagram,
-        type_mappings={trimesh.Trimesh: TrimeshType},
+        type_mappings={trimesh.Trimesh: semantic_digital_twin.orm.model.TrimeshType},
         alternative_mappings=recursive_subclasses(AlternativeMapping),
     )
 

@@ -670,7 +670,7 @@ class RootedSemanticAnnotation(SemanticAnnotation):
 
 
 @dataclass(eq=False)
-class semantic_environment_annotation(RootedSemanticAnnotation):
+class SemanticEnvironmentAnnotation(RootedSemanticAnnotation):
     """
     Represents a semantic annotation of the environment.
     """
