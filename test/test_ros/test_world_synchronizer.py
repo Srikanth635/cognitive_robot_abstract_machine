@@ -4,7 +4,7 @@ import unittest
 from typing import Optional
 
 import sqlalchemy
-from ormatic.utils import drop_database
+from krrood.ormatic.utils import drop_database
 from semantic_digital_twin.semantic_annotations.semantic_annotations import Handle, Door
 from sqlalchemy import select
 from sqlalchemy.orm import Session

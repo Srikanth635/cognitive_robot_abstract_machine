@@ -27,14 +27,14 @@ Let's go into an example where we create a world, store it, retrieve and reconst
 
 First, let's load a world from a URDF file.
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 import logging
 import os
 
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
-from ormatic.dao import to_dao
+from krrood.ormatic.dao import to_dao
 from semantic_digital_twin.adapters.urdf import URDFParser
 from semantic_digital_twin.orm.ormatic_interface import *
 from semantic_digital_twin.semantic_annotations.semantic_annotations import Table
@@ -53,7 +53,7 @@ world = URDFParser.from_file(table).parse()
 
 Next, we create a semantic annotation that describes the table.
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 table_semantic_annotation = Table([b for b in world.bodies if "top" in str(b.name)][0])
 with world.modify_world():
     world.add_semantic_annotation(table_semantic_annotation)
@@ -62,7 +62,7 @@ print(table_semantic_annotation)
 
 Now, let's store the world to a database. For that, we need to convert it to its data access object which than can be stored in the database.
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 dao = to_dao(world)
 session.add(dao)
 session.commit()
@@ -70,7 +70,7 @@ session.commit()
 
 We can now query the database about the world and reconstruct it to the original instance. As you can see the semantic annotations are also available and fully working.
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 queried_world = session.scalars(select(WorldMappingDAO)).one()
 reconstructed_world = queried_world.from_dao()
 table = [semantic_annotation for semantic_annotation in reconstructed_world.semantic_annotations if isinstance(semantic_annotation, Table)][0]

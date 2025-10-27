@@ -7,7 +7,7 @@ from .geometry import BoundingBox
 from .shape_collection import BoundingBoxCollection
 from ..datastructures.variables import SpatialVariables
 from ..world import World
-from .world_entity import SemanticAnnotation, semantic_environment_annotation
+from .world_entity import SemanticAnnotation, SemanticEnvironmentAnnotation
 
 logger = logging.getLogger(__name__)
 
@@ -442,7 +442,7 @@ class GraphOfConvexSets:
         :return: The connectivity graph.
         """
 
-        semantic_annotation = semantic_environment_annotation(
+        semantic_annotation = SemanticEnvironmentAnnotation(
             root=world.root, _world=world
         )
 
@@ -545,7 +545,7 @@ class GraphOfConvexSets:
         :return: The connectivity graph.
         """
 
-        semantic_annotation = semantic_environment_annotation(
+        semantic_annotation = SemanticEnvironmentAnnotation(
             root=world.root, _world=world
         )
 
