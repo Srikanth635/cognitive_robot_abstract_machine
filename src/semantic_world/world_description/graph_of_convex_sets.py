@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 import time
 from functools import reduce
 from operator import or_
-from typing_extensions import List, Optional, Dict
+from typing_extensions import List, Optional, Dict, Sequence
 
 # typing.Self is available starting with Python 3.11
 from typing_extensions import Self
@@ -79,6 +79,20 @@ class GraphOfConvexSets:
         self.graph = rx.PyGraph(multigraph=False)
         self.box_to_index_map = {}
         self.world = world
+
+    def create_subgraph(self, nodes: Sequence[int]) -> Self:
+        """
+        Create a subgraph of the current graph containing only the given nodes.
+
+        :param nodes: The nodes to include in the subgraph.
+        :return: The subgraph.
+        """
+        subgraph = GraphOfConvexSets(self.world, self.search_space)
+        subgraph.graph = self.graph.subgraph(nodes)
+        subgraph.box_to_index_map = {
+            box: index for box, index in self.box_to_index_map.items() if index in nodes
+        }
+        return subgraph
 
     def add_node(self, box: BoundingBox):
         self.box_to_index_map[box] = self.graph.add_node(box)

@@ -214,6 +214,8 @@ class RayTracer:
         :param target_points: The end point of the ray.
         :return: A tuple containing the points where the ray intersects and the indices of rays that hit the scene as well as the bodies that were.
         """
+        origin_points = np.array(origin_points)
+        target_points = np.array(target_points)
         self.update_scene()
         origin_points = origin_points.reshape((-1, 3))
         target_points = target_points.reshape((-1, 3))
