@@ -123,7 +123,8 @@ with world.modify_world():
 
 fruit_box_container_semantic_annotation = world.get_semantic_annotations_by_type(Container)[0]
 fruit_box_with_apples = FruitBox(box=fruit_box_container_semantic_annotation, fruits=world.get_semantic_annotations_by_type(Apple))
-world.add_semantic_annotation(fruit_box_with_apples)
+with world.modifies_world():
+    world.add_semantic_annotation(fruit_box_with_apples)
 print(f"Fruit box with {len(fruit_box_with_apples.fruits)} fruits")
 rt = RayTracer(world)
 rt.update_scene()
@@ -151,7 +152,7 @@ with world.modify_world():
 empty_fruit_box_container_semantic_annotation = world.get_semantic_annotation_by_name("empty_fruit_box_container")
 assert isinstance(empty_fruit_box_container_semantic_annotation, Container)
 empty_fruit_box = FruitBox(box=empty_fruit_box_container_semantic_annotation, fruits=[])
-world.modifies_world():
+with world.modifies_world():
     world.add_semantic_annotation(empty_fruit_box)
 
 rt = RayTracer(world)
