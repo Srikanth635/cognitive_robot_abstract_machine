@@ -31,7 +31,7 @@ First, let's create a simple world that contains a couple of apples.
 from dataclasses import dataclass
 from typing import List
 
-from entity_query_language import entity, an, let, symbolic_mode
+from krrood.entity_query_language.entity import entity, an, let, symbolic_mode
 
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.spatial_types import TransformationMatrix
@@ -162,7 +162,7 @@ We can now use EQL to get us only the FruitBoxes that actually contain apples!
 
 ```{code-cell} ipython3
 from semantic_digital_twin.reasoning.predicates import ContainsType
-from entity_query_language import a
+from krrood.entity_query_language.entity import a
 
 with symbolic_mode():
     fruit_box_query = a(fb := FruitBox(), ContainsType(fb.fruits, Apple))

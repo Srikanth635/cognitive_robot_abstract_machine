@@ -1,14 +1,13 @@
 from dataclasses import dataclass
 
-from entity_query_language import symbol
+from krrood.entity_query_language.predicate import Symbol
 from typing_extensions import Optional, Dict, Any, Self
 
 from random_events.utils import SubclassJSONSerializer
 
 
-@symbol
 @dataclass
-class PrefixedName(SubclassJSONSerializer):
+class PrefixedName(Symbol, SubclassJSONSerializer):
     name: str
     prefix: Optional[str] = None
 

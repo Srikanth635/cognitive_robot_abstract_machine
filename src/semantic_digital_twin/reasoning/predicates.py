@@ -4,8 +4,9 @@ from dataclasses import dataclass
 
 import numpy as np
 import trimesh.boolean
-from entity_query_language import (
+from krrood.entity_query_language.predicate import (
     Predicate,
+    Symbol,
 )
 from random_events.interval import Interval
 from typing_extensions import List, TYPE_CHECKING, Iterable, Type
@@ -245,8 +246,8 @@ def is_body_in_region(body: Body, region: Region) -> float:
     return intersection.volume / body_volume
 
 
-@dataclass(frozen=True)
-class SpatialRelation(Predicate, ABC):
+@dataclass
+class SpatialRelation(Symbol, ABC):
     """
     Check if the body is spatially related to the other body if you are looking from the point of semantic annotation.
     The comparison is done using the centers of mass computed from the bodies' collision geometry.
@@ -299,6 +300,7 @@ class SpatialRelation(Predicate, ABC):
         return (s_body - s_other).compile()()
 
 
+@dataclass
 class LeftOf(SpatialRelation):
     """
     The "left" direction is taken as the -Y axis of the given point of semantic_annotation.
@@ -308,6 +310,7 @@ class LeftOf(SpatialRelation):
         return self._signed_distance_along_direction(1) > 0.0
 
 
+@dataclass
 class RightOf(SpatialRelation):
     """
     The "right" direction is taken as the +Y axis of the given point of semantic_annotation.
@@ -317,6 +320,7 @@ class RightOf(SpatialRelation):
         return self._signed_distance_along_direction(1) < 0.0
 
 
+@dataclass
 class Above(SpatialRelation):
     """
     The "above" direction is taken as the +Z axis of the given point of semantic_annotation.
@@ -326,6 +330,7 @@ class Above(SpatialRelation):
         return self._signed_distance_along_direction(2) > 0.0
 
 
+@dataclass
 class Below(SpatialRelation):
     """
     The "below" direction is taken as the -Z axis of the given point of semantic_annotation.
@@ -335,6 +340,7 @@ class Below(SpatialRelation):
         return self._signed_distance_along_direction(2) < 0.0
 
 
+@dataclass
 class Behind(SpatialRelation):
     """
     The "behind" direction is defined as the -X axis of the given point of semantic annotation.
@@ -344,6 +350,7 @@ class Behind(SpatialRelation):
         return self._signed_distance_along_direction(0) < 0.0
 
 
+@dataclass
 class InFrontOf(SpatialRelation):
     """
     The "in front of" direction is defined as the +X axis of the given point of semantic annotation.
@@ -353,7 +360,7 @@ class InFrontOf(SpatialRelation):
         return self._signed_distance_along_direction(0) > 0.0
 
 
-@dataclass(frozen=True)
+@dataclass
 class ContainsType(Predicate):
     """
     Predicate that checks if any object in the iterable is of the given type.

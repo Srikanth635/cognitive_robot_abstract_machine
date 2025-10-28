@@ -15,6 +15,8 @@ import rustworkx as rx
 import rustworkx.visit
 import rustworkx.visualization
 from itertools import combinations_with_replacement
+
+from krrood.entity_query_language.predicate import Symbol
 from lxml import etree
 from rustworkx import NoEdgeBetweenNodes
 from typing_extensions import (

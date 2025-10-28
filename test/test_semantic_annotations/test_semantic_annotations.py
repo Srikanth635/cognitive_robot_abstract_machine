@@ -1,6 +1,7 @@
 import logging
 
-from entity_query_language import entity, let, in_, infer, rule_mode
+from krrood.entity_query_language.entity import entity, let, in_, infer
+from krrood.entity_query_language.symbolic import rule_mode
 from numpy.ma.testutils import (
     assert_equal,
 )  # You could replace this with numpy's regular assert for better compatibility
