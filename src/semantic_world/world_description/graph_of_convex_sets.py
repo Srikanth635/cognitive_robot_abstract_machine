@@ -462,6 +462,31 @@ class GraphOfConvexSets:
         )
 
     @classmethod
+    def obstacles_from_world(
+        cls,
+        world: World,
+        search_space: BoundingBoxCollection,
+        bloat_obstacles: float = 0.0,
+    ) -> Optional[Event]:
+        """
+        Create an event representing the obstacles in the belief state of the robot.
+
+        :param world: The belief state.
+        :param search_space: The search space for the connectivity graph.
+        :param bloat_obstacles: The amount to bloat the obstacles.
+
+        :return: An event representing the obstacles in the search space.
+        """
+
+        view = EnvironmentView(root=world.root, _world=world)
+
+        return cls.obstacles_from_views(
+            search_space=search_space,
+            obstacle_view=view,
+            bloat_obstacles=bloat_obstacles,
+        )
+
+    @classmethod
     def navigation_map_from_view(
         cls,
         search_space: BoundingBoxCollection,
