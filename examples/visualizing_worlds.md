@@ -19,7 +19,7 @@ There are two recommended ways of doing it.
 One light weight way through RVIZ2 and a more heavy weight way through simulation with multiverse.
 Let's load a world first to get started.
 
-```python
+```{code-cell} ipython2
 import logging
 import os
 
@@ -35,7 +35,7 @@ world = URDFParser.from_file(apartment).parse()
 For the RVIZ2 way, ROS2 is needed. A caveat of this approach is that you have to manage the lifecycle of a ROS2 node yourself.
 We recommend to put the spinning into sperate threads and just shutdown the thread when exiting the system.
 
-```python
+```{code-cell} ipython2
 from semantic_digital_twin.adapters.viz_marker import VizMarkerPublisher
 import threading
 import rclpy
@@ -50,7 +50,7 @@ viz = VizMarkerPublisher(world=world, node=node)
 
 When you want to stop visualizing, you have to stop the visualizer and afterwards clean up ROS2.
 
-```python
+```{code-cell} ipython2
 node.destroy_node()
 rclpy.shutdown()
 ```
