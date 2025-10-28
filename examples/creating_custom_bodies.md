@@ -82,7 +82,7 @@ If you think you have understood everything in this tutorial, you may try out
 [our self-assessment quiz for this user guide](creating-custom-bodies-quiz)
 
 ```{warning}
-Using the raytracer to visualize your world only really makes sense in a notebook setting like this.
+Using the above method to visualize your world only really makes sense in a notebook setting like this.
 If you want learn how to properly visualize your worlds, check out the [](visualizing-worlds) tutorial.
 ```
 

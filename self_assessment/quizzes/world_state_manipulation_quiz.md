@@ -45,16 +45,6 @@ questions = [
       ],
     },
     {
-      "question": "What context is required when changing the world (e.g., adding bodies or connections)?",
-      "type": "multiple_choice",
-      "answers": [
-        {"answer": "with world.modify_world():", "correct": True},
-        {"answer": "with world.lock():", "correct": False},
-        {"answer": "world.begin(); ...; world.end();", "correct": False},
-        {"answer": "No special context is required", "correct": False}
-      ],
-    },
-    {
       "question": "How can you set the pose of a free connection in the example?",
       "type": "multiple_choice",
       "answers": [

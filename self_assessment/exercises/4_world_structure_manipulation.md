@@ -38,7 +38,8 @@ Your goal:
 - Create a `World` and three bodies named `root`, `base`, and `body`
 - Add a passive `Connection6DoF` between `root` (parent) and `base` (child)
 - Add a `RevoluteConnection` between `base` (parent) and `body` (child) using a Z axis on `base`
-- Store the world in a variable named `world` and the revolute connection in `revolute_connection`
+- Store the world in a variable named `world` and the revolute connection in `base_C_body`
+- Add the Connections to the world.
 
 ```{code-cell} ipython3
 :tags: [exercise]
@@ -48,7 +49,7 @@ root: Body = ...
 base: Body = ...
 body: Body = ...
 root_C_base: Connection6DoF = ...
-revolute_connection_dof: DegreeOfFreedom = ...
+base_C_body_dof: DegreeOfFreedom = ...
 base_C_body: RevoluteConnection = ...
 
 
@@ -61,11 +62,11 @@ root = Body(name=PrefixedName(name="root", prefix="world"))
 base = Body(name=PrefixedName("base"))
 body = Body(name=PrefixedName("body"))
 root_C_base = Connection6DoF(parent=root, child=base)
-revolute_connection_dof = DegreeOfFreedom(name=PrefixedName("joint_z"))
+base_C_body_dof = DegreeOfFreedom(name=PrefixedName("joint_z"))
 base_C_body = RevoluteConnection(
         parent=base,
         child=body,
-        dof_name=revolute_connection_dof.name,
+        dof_name=base_C_body_dof.name,
         axis=Vector3.Z(reference_frame=base),
     )
 
@@ -74,14 +75,19 @@ with world.modify_world():
     world.add_connection(base_C_body)
 ```
 
+```{code-cell} ipython3
+:tags: [verify-solution, remove-input]
+
+# Check that the world contains the expected entities
+assert len(world.bodies) == 3, "The world should contain exactly three bodies."
+assert len(world.connections) == 2, "The world should contain exactly two connections."
+```
 ## 2. Remove a connection and its child
 Your goal:
 - In a single `with world.modify_world():` block, remove the revolute connection and the now disconnected child body `body`.
 
 ```{code-cell} ipython3
 :tags: [exercise]
-body = ...
-base_C_body = ...
 # TODO: remove the revolute connection and its child body in one modification block, without using the objects you defined above, but instead querying the world directly
 
 ```

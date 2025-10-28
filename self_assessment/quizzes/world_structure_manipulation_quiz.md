@@ -25,13 +25,13 @@ from jupyterquiz import display_quiz
 
 questions = [
     {
-      "question": "Why must structural changes be grouped inside with world.modify_world():?",
+      "question": "What context is required when changing the world (e.g., adding bodies or connections)?",
       "type": "multiple_choice",
       "answers": [
-        {"answer": "To ensure world validity is checked after the block", "correct": True},
-        {"answer": "To enable GPU acceleration", "correct": False},
-        {"answer": "To auto-serialize the world", "correct": False},
-        {"answer": "To compile C extensions", "correct": False}
+        {"answer": "with world.modify_world():", "correct": True},
+        {"answer": "with world.lock():", "correct": False},
+        {"answer": "world.begin(); ...; world.end();", "correct": False},
+        {"answer": "No special context is required", "correct": False}
       ],
     },
     {
@@ -73,6 +73,17 @@ questions = [
         {"answer": "A cyclic graph", "correct": False},
         {"answer": "A lattice", "correct": False},
         {"answer": "A complete graph", "correct": False}
+      ],
+    },
+        {
+      "question": "Why must structural changes be grouped inside with world.modify_world():?",
+      "type": "many_choice",
+      "answer_cols": 2,
+      "answers": [
+        {"answer": "To ensure world validity is checked after the block", "correct": True},
+        {"answer": "To enable GPU acceleration", "correct": False},
+        {"answer": "To auto-serialize the world", "correct": False},
+        {"answer": "To group together world updates, to prevent invalid model states", "correct": True}
       ],
     }
 ]

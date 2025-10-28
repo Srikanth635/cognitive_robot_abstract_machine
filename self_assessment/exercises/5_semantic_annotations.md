@@ -57,11 +57,25 @@ Your goals:
 ```{code-cell} ipython3
 :tags: [exercise]
 
-# Hint: You will likely need:
-#   ShapeCollection([...])
-#   Body(name=PrefixedName("..."), collision=..., visual=...)
+cap_cylinder: Cylinder = ...
+bottle_large_cylinder: Cylinder = ...
+bottle_medium_cylinder: Cylinder = ...
 
-...
+# ShapeCollections
+cap_shapes: ShapeCollection = ...
+bottle_large_shapes: ShapeCollection = ...
+bottle_medium_shapes: ShapeCollection = ...
+
+# Bodies
+cap_body: Body = ...
+bottle_large_body: Body = ...
+bottle_medium_body: Body = ...
+
+cap = ...
+bottle_large = ...
+bottle_medium = ...
+
+
 ```
 
 ```{code-cell} ipython3
@@ -102,24 +116,24 @@ bottle_medium_body = Body(
 )
 
 # Semantic annotations (not added to the world yet)
-cap_sa = Cap(body=cap_body)
-bottle_large_sa = Bottle(body=bottle_large_body, cap=cap_sa)
-bottle_medium_sa = Bottle(body=bottle_medium_body)
+cap = Cap(body=cap_body)
+bottle_large = Bottle(body=bottle_large_body, cap=cap)
+bottle_medium = Bottle(body=bottle_medium_body)
 ```
 
 ```{code-cell} ipython3
 :tags: [verify-solution, remove-input]
 # Verify local objects exist and have correct relationships
-assert isinstance(cap_sa, Cap)
-assert isinstance(bottle_large_sa, Bottle)
-assert isinstance(bottle_medium_sa, Bottle)
-assert bottle_large_sa.cap is cap_sa
-assert bottle_medium_sa.cap is None
+assert isinstance(cap, Cap)
+assert isinstance(bottle_large, Bottle)
+assert isinstance(bottle_medium, Bottle)
+assert bottle_large.cap is cap
+assert bottle_medium.cap is None
 
 # Verify bodies are attached to annotations
-assert cap_sa.body is cap_body
-assert bottle_large_sa.body is bottle_large_body
-assert bottle_medium_sa.body is bottle_medium_body
+assert cap.body is cap_body
+assert bottle_large.body is bottle_large_body
+assert bottle_medium.body is bottle_medium_body
 
 # Verify dimensions were set as requested
 assert cap_cylinder.width == 0.03 and cap_cylinder.height == 0.02
@@ -130,38 +144,35 @@ assert bottle_medium_cylinder.width == 0.04 and bottle_medium_cylinder.height ==
 ## 2. Connect cap and large bottle under the root and place the cap on top
 Your goals:
 - Connect the cap body and the large bottle body with Connection6DoF connections under the world root.
+- Add the SemanticAnnotations and Connections to the world.
 - Use the exact cylinder parameters to place the cap perfectly on top of the bottle.
 
 ```{code-cell} ipython3
 :tags: [exercise]
 
-...
 ```
 
 ```{code-cell} ipython3
 :tags: [example-solution]
 # Register bodies and annotations then create free connections under a dedicated root body
 with world.modify_world():
-    world.add_semantic_annotation(cap_sa)
-    world.add_semantic_annotation(bottle_large_sa)
-    world.add_semantic_annotation(bottle_medium_sa)
+    world.add_semantic_annotation(cap)
+    world.add_semantic_annotation(bottle_large)
+    world.add_semantic_annotation(bottle_medium)
 
-    c_root_bottle_large = Connection6DoF(parent=virtual_root, child=bottle_large_body)
+    root_C_bottle_large = Connection6DoF(parent=virtual_root, child=bottle_large_body)
     bottle_large_C_cap = Connection6DoF(parent=bottle_large_body, child=cap_body)
-    c_root_bottle_medium = Connection6DoF(parent=virtual_root, child=bottle_medium_body)
+    root_C_bottle_medium = Connection6DoF(parent=virtual_root, child=bottle_medium_body)
 
-    world.add_connection(c_root_bottle_large)
+    world.add_connection(root_C_bottle_large)
     world.add_connection(bottle_large_C_cap)
-    world.add_connection(c_root_bottle_medium)
+    world.add_connection(root_C_bottle_medium)
     
 z_offset = bottle_large_cylinder.height / 2.0 + cap_cylinder.height / 2.0
 cap_pose = TransformationMatrix.from_xyz_rpy(
     z=z_offset
 )
 bottle_large_C_cap.origin = cap_pose
-
-
-
 ```
 
 ```{code-cell} ipython3
@@ -227,5 +238,5 @@ print(query_result)
 assert query_result is not ..., "The query result should be stored in a variable."
 assert len(query_result) == 1, "There should be exactly one Bottle with a Cap returned by the query."
 # And it should be the large bottle we annotated with the cap
-assert query_result[0] is bottle_large_sa
+assert query_result[0] is bottle_large
 ```
