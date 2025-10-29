@@ -1045,7 +1045,6 @@ class World:
                 new_connection = FixedConnection(
                     parent=new_parent,
                     child=branch_root,
-                    _world=self,
                     parent_T_connection_expression=new_parent_T_root,
                 )
                 self.add_connection(new_connection)
@@ -1054,8 +1053,8 @@ class World:
                 new_parent_T_root = self.compute_forward_kinematics(
                     new_parent, branch_root
                 )
-                new_connection = Connection6DoF(
-                    parent=new_parent, child=branch_root, _world=self
+                new_connection = Connection6DoF.create_with_dofs(
+                    parent=new_parent, child=branch_root, world=self
                 )
                 self.add_connection(new_connection)
                 self.remove_connection(old_connection)
