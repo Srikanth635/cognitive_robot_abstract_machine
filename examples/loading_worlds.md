@@ -19,7 +19,7 @@ This tutorial shows how to load a world description from a file into a `World` o
 
 First, we need to compose the path to your world file.
 
-```python
+```{code-cell} ipython3
 import logging
 import os
 
@@ -34,7 +34,7 @@ Next we need to initialize a parser that reads this file. There are many parsers
 To read this specific urdf file, the `https://github.com/code-iai/iai_maps/tree/ros-jazzy/` repository needs to be installed
 inside your ROS2 workspace.
 
-```python
+```{code-cell} ipython3
 from semantic_digital_twin.adapters.urdf import URDFParser  
   
 parser = URDFParser.from_file(apartment)  

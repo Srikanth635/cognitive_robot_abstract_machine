@@ -97,7 +97,7 @@ class VizMarkerPublisher(StateChangeCallback):
                     b=float(collision.color.B),
                     a=float(collision.color.A),
                 )
-                msg.lifetime = Duration(sec=100)
+                msg.lifetime = Duration(sec=0)
 
                 if isinstance(collision, FileMesh):
                     msg.type = Marker.MESH_RESOURCE
