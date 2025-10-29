@@ -599,6 +599,14 @@ class PrefixedNameDAO(
         use_existing_column=True
     )
 
+    worldstatemappingdao_names_id: Mapped[typing.Optional[builtins.int]] = (
+        mapped_column(
+            ForeignKey("WorldStateMappingDAO.database_id", use_alter=True),
+            nullable=True,
+            use_existing_column=True,
+        )
+    )
+
     __mapper_args__ = {
         "polymorphic_identity": "PrefixedNameDAO",
         "inherit_condition": database_id == SymbolDAO.database_id,
@@ -748,6 +756,12 @@ class WorldMappingDAO(
         use_existing_column=True
     )
 
+    state_id: Mapped[int] = mapped_column(
+        ForeignKey("WorldStateMappingDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+
     kinematic_structure_entities: Mapped[typing.List[KinematicStructureEntityDAO]] = (
         relationship(
             "KinematicStructureEntityDAO",
@@ -769,6 +783,9 @@ class WorldMappingDAO(
         "DegreeOfFreedomMappingDAO",
         foreign_keys="[DegreeOfFreedomMappingDAO.worldmappingdao_degrees_of_freedom_id]",
         post_update=True,
+    )
+    state: Mapped[WorldStateMappingDAO] = relationship(
+        "WorldStateMappingDAO", uselist=False, foreign_keys=[state_id], post_update=True
     )
 
 
@@ -2495,6 +2512,27 @@ class WallDAO(
         "polymorphic_identity": "WallDAO",
         "inherit_condition": database_id == SemanticAnnotationDAO.database_id,
     }
+
+
+class WorldStateMappingDAO(
+    Base, DataAccessObject[semantic_digital_twin.orm.model.WorldStateMapping]
+):
+
+    __tablename__ = "WorldStateMappingDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        Integer, primary_key=True, use_existing_column=True
+    )
+
+    data: Mapped[typing.List[builtins.float]] = mapped_column(
+        JSON, nullable=False, use_existing_column=True
+    )
+
+    names: Mapped[typing.List[PrefixedNameDAO]] = relationship(
+        "PrefixedNameDAO",
+        foreign_keys="[PrefixedNameDAO.worldstatemappingdao_names_id]",
+        post_update=True,
+    )
 
 
 class WrappedInstanceDAO(
