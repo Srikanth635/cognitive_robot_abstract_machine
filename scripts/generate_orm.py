@@ -80,7 +80,7 @@ all_classes -= {
 symbol_graph = SymbolGraph.build()
 
 # collect all KRROOD classes
-all_classes |= {c.clazz for c in symbol_graph._type_graph.wrapped_classes}
+all_classes |= {c.clazz for c in symbol_graph.class_diagram.wrapped_classes}
 all_classes |= {am.original_class() for am in recursive_subclasses(AlternativeMapping)}
 all_classes |= set(classes_of_module(krrood.entity_query_language.symbol_graph))
 all_classes |= {Symbol}
