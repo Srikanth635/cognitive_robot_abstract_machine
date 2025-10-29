@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from krrood.entity_query_language.entity import Symbol
+from krrood.entity_query_language.predicate import Symbol
 from typing_extensions import Optional, Dict, Any, Self
 
 from random_events.utils import SubclassJSONSerializer

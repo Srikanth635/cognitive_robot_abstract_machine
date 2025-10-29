@@ -15,6 +15,7 @@ import krrood.entity_query_language.symbol_graph
 import trimesh
 from krrood.class_diagrams import ClassDiagram
 from krrood.entity_query_language.predicate import Predicate, HasTypes, HasType, Symbol
+from krrood.entity_query_language.symbol_graph import SymbolGraph
 from krrood.ormatic.dao import AlternativeMapping
 from krrood.ormatic.ormatic import ORMatic
 from krrood.ormatic.utils import classes_of_module, recursive_subclasses
@@ -76,11 +77,10 @@ all_classes -= {
 }
 
 # build the symbol graph
-Predicate.build_symbol_graph()
-symbol_graph = Predicate.symbol_graph
+symbol_graph = SymbolGraph.build()
 
 # collect all KRROOD classes
-all_classes |= {c.clazz for c in symbol_graph._type_graph.wrapped_classes}
+all_classes |= {c.clazz for c in symbol_graph.class_diagram.wrapped_classes}
 all_classes |= {am.original_class() for am in recursive_subclasses(AlternativeMapping)}
 all_classes |= set(classes_of_module(krrood.entity_query_language.symbol_graph))
 all_classes |= {Symbol}
