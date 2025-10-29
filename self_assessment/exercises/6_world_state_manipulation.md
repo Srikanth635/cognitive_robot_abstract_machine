@@ -67,10 +67,11 @@ green_box = ShapeCollection([Box(
 )])
 root = Body(name=PrefixedName("root"), visual=red_box, collision=red_box)
 slider = Body(name=PrefixedName("slider"), visual=green_box, collision=green_box)
-root_C_slider: PrismaticConnection = PrismaticConnection(
+root_C_slider: PrismaticConnection = PrismaticConnection.create_with_dofs(
     parent=root,
     child=slider,
     axis=Vector3.X(reference_frame=root),
+    world=world,
 )
 with world.modify_world():
     world.add_connection(root_C_slider)

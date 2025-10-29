@@ -760,11 +760,9 @@ class Connection(WorldEntity, SubclassJSONSerializer):
         self._world = world
 
     def __post_init__(self):
-        if self.name is None:
-            self.name = PrefixedName(
-                f"{self.parent.name.name}_T_{self.child.name.name}",
-                prefix=self.child.name.prefix,
-            )
+        self.name = self.name or self._generate_default_name(
+            parent=self.parent, child=self.child
+        )
 
         # If I use default factories, I'd have to complicate the from_json, because I couldn't blindly pass these args
         if self.parent_T_connection_expression is None:
@@ -782,6 +780,14 @@ class Connection(WorldEntity, SubclassJSONSerializer):
 
         self.parent_T_connection_expression.reference_frame = self.parent
         self.connection_T_child_expression.child_frame = self.child
+
+    @classmethod
+    def _generate_default_name(
+        cls, parent: KinematicStructureEntity, child: KinematicStructureEntity
+    ) -> PrefixedName:
+        return PrefixedName(
+            f"{parent.name.name}_T_{child.name.name}", prefix=child.name.prefix
+        )
 
     def __hash__(self):
         return hash((self.parent, self.child))

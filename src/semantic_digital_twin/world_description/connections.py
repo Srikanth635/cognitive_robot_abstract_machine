@@ -170,6 +170,46 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
             dof_name=PrefixedName.from_json(data["dof_name"]),
         )
 
+    @classmethod
+    def create_with_dofs(
+        cls,
+        world: World,
+        parent: KinematicStructureEntity,
+        child: KinematicStructureEntity,
+        axis: cas.Vector3,
+        name: Optional[PrefixedName] = None,
+        multiplier: float = 1.0,
+        offset: float = 0.0,
+    ) -> Self:
+        """
+        Creates and returns an instance of the class with associated degrees of freedom
+        (DOFs) based on the specified parameters. This method facilitates initializing
+        a kinematic relationship between a parent and a child entity, augmented by
+        an axis representation and configurable properties such as multiplier and offset.
+
+        :param world: The motion world in which to add the degree of freedom.
+        :param parent: The parent kinematic structure entity.
+        :param child: The child kinematic structure entity.
+        :param axis: The axis vector defining the joint relation.
+        :param name: Optional specific name for the DOF entity. If not provided, a
+                     default name is generated based on the parent and child.
+        :param multiplier: A scaling factor applied to the DOF's motion. Defaults to 1.0.
+        :param offset: A constant offset value applied to the DOF's motion. Defaults to 0.0.
+        :return: An instance of the class representing the defined relationship with
+                 its DOF added to the world.
+        """
+        name = name or cls._generate_default_name(parent=parent, child=child)
+        dof = DegreeOfFreedom(name=PrefixedName("dof", str(name)))
+        world.add_degree_of_freedom(dof)
+        return cls(
+            parent=parent,
+            child=child,
+            axis=axis,
+            multiplier=multiplier,
+            offset=offset,
+            dof_name=dof.name,
+        )
+
     def add_to_world(self, world: World):
         super().add_to_world(world)
         if self.multiplier is None:
@@ -439,23 +479,23 @@ class Connection6DoF(PassiveConnection):
         :return: A new instance of the class representing the parent-child connection with
                  automatically defined degrees of freedom.
         """
-        if name is None:
-            name = PrefixedName(f"{parent.name.name}_T_{child.name.name}")
+        name = name or cls._generate_default_name(parent=parent, child=child)
 
         with world.modify_world():
-            x = DegreeOfFreedom(name=PrefixedName("x", str(name)))
+            stringified_name = str(name)
+            x = DegreeOfFreedom(name=PrefixedName("x", stringified_name))
             world.add_degree_of_freedom(x)
-            y = DegreeOfFreedom(name=PrefixedName("y", str(name)))
+            y = DegreeOfFreedom(name=PrefixedName("y", stringified_name))
             world.add_degree_of_freedom(y)
-            z = DegreeOfFreedom(name=PrefixedName("z", str(name)))
+            z = DegreeOfFreedom(name=PrefixedName("z", stringified_name))
             world.add_degree_of_freedom(z)
-            qx = DegreeOfFreedom(name=PrefixedName("qx", str(name)))
+            qx = DegreeOfFreedom(name=PrefixedName("qx", stringified_name))
             world.add_degree_of_freedom(qx)
-            qy = DegreeOfFreedom(name=PrefixedName("qy", str(name)))
+            qy = DegreeOfFreedom(name=PrefixedName("qy", stringified_name))
             world.add_degree_of_freedom(qy)
-            qz = DegreeOfFreedom(name=PrefixedName("qz", str(name)))
+            qz = DegreeOfFreedom(name=PrefixedName("qz", stringified_name))
             world.add_degree_of_freedom(qz)
-            qw = DegreeOfFreedom(name=PrefixedName("qw", str(name)))
+            qw = DegreeOfFreedom(name=PrefixedName("qw", stringified_name))
             world.add_degree_of_freedom(qw)
             world.state[qw.name].position = 1.0
 
@@ -638,6 +678,7 @@ class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
             degrees of freedom (default is 0.5).
         :return: An instance of the class with the auto-generated DOFs incorporated.
         """
+        name = name or cls._generate_default_name(parent=parent, child=child)
         with world.modify_world():
             stringified_name = str(name)
             lower_translation_limits = DerivativeMap()
