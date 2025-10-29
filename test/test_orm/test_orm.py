@@ -1,11 +1,14 @@
 import os
 import unittest
 
+import numpy as np
 import sqlalchemy
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
 from semantic_digital_twin.adapters.urdf import URDFParser
+from semantic_digital_twin.world import World
+from semantic_digital_twin.world_description.connections import RevoluteConnection
 from semantic_digital_twin.world_description.geometry import Box, Scale, Color
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.spatial_types import TransformationMatrix
@@ -43,6 +46,14 @@ def session(engine):
 
 
 def test_table_world(session, table_world):
+    revolute_connection = table_world.get_connections_by_type(RevoluteConnection)[0]
+    revolute_connection.position = 1
+    revolute_connection.velocity = 23
+    revolute_connection.acceleration = 42
+    revolute_connection.jerk = 69
+    fk = table_world.compute_forward_kinematics_np(
+        root=revolute_connection.parent, tip=revolute_connection.child
+    )
     world_dao: WorldMappingDAO = to_dao(table_world)
 
     session.add(world_dao)
@@ -51,11 +62,20 @@ def test_table_world(session, table_world):
     bodies_from_db = session.scalars(select(BodyDAO)).all()
     assert len(bodies_from_db) == len(table_world.kinematic_structure_entities)
 
-    connections_from_db = session.scalars(select(ConnectionDAO)).all()
-    assert len(connections_from_db) == len(table_world.connections)
-
     queried_world = session.scalar(select(WorldMappingDAO))
-    reconstructed = queried_world.from_dao()
+    reconstructed: World = queried_world.from_dao()
+
+    fk2 = reconstructed.compute_forward_kinematics_np(
+        root=revolute_connection.parent, tip=revolute_connection.child
+    )
+    assert np.allclose(fk, fk2)
+    reconstructed_connection = reconstructed.get_connections_by_type(
+        RevoluteConnection
+    )[0]
+    assert reconstructed_connection.position == revolute_connection.position
+    assert reconstructed_connection.velocity == revolute_connection.velocity
+    assert reconstructed_connection.acceleration == revolute_connection.acceleration
+    assert reconstructed_connection.jerk == revolute_connection.jerk
 
 
 def test_insert(session):
