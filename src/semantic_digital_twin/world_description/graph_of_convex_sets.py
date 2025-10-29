@@ -484,9 +484,9 @@ class GraphOfConvexSets:
         :return: An event representing the obstacles in the search space.
         """
 
-        view = EnvironmentView(root=world.root, _world=world)
+        view = SemanticEnvironmentAnnotation(root=world.root, _world=world)
 
-        return cls.obstacles_from_views(
+        return cls.obstacles_from_semantic_annotations(
             search_space=search_space,
             obstacle_view=view,
             bloat_obstacles=bloat_obstacles,
