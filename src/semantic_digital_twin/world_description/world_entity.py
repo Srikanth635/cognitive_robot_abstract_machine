@@ -13,7 +13,7 @@ from functools import lru_cache
 import numpy as np
 import trimesh
 import trimesh.boolean
-from krrood.entity_query_language.entity import Symbol
+from krrood.entity_query_language.predicate import Symbol
 from random_events.utils import SubclassJSONSerializer
 from scipy.stats import geom
 from trimesh.proximity import closest_point, nearby_faces

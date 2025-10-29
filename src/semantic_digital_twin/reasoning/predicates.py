@@ -358,3 +358,23 @@ class InFrontOf(SpatialRelation):
 
     def __call__(self) -> bool:
         return self._signed_distance_along_direction(0) > 0.0
+
+
+@dataclass
+class ContainsType(Predicate):
+    """
+    Predicate that checks if any object in the iterable is of the given type.
+    """
+
+    iterable: Iterable
+    """
+    Iterable to check for objects of the given type.
+    """
+
+    obj_type: Type
+    """
+    Object type to check for.
+    """
+
+    def __call__(self) -> bool:
+        return any(isinstance(obj, self.obj_type) for obj in self.iterable)
