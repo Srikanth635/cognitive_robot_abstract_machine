@@ -1,27 +1,32 @@
 import os
+from collections import defaultdict
+
 from typing_extensions import List
 
 import numpy as np
 import pytest
 from rustworkx import NoPathFound
 
-from semantic_world.adapters.urdf import URDFParser
-from semantic_world.spatial_types.spatial_types import TransformationMatrix
-from semantic_world.world_description.connections import (
+from semantic_digital_twin.reasoning.predicates import LeftOf
+from semantic_digital_twin.robots.hsrb import HSRB
+from semantic_digital_twin.spatial_types.spatial_types import TransformationMatrix
+from semantic_digital_twin.world_description.connections import (
     OmniDrive,
     PrismaticConnection,
     RevoluteConnection,
 )
-from semantic_world.spatial_computations.ik_solver import (
+from semantic_digital_twin.spatial_computations.ik_solver import (
     MaxIterationsException,
     UnreachableException,
 )
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.robots import PR2, KinematicChain
-from semantic_world.spatial_types.derivatives import Derivatives
-from semantic_world.spatial_types.symbol_manager import symbol_manager
-from semantic_world.world import World
-from semantic_world.testing import pr2_world
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.robots.abstract_robot import KinematicChain
+from semantic_digital_twin.robots.tracy import Tracy
+from semantic_digital_twin.robots.pr2 import PR2
+from semantic_digital_twin.spatial_types.derivatives import Derivatives
+from semantic_digital_twin.spatial_types.symbol_manager import symbol_manager
+from semantic_digital_twin.world import World
+from semantic_digital_twin.testing import pr2_world, tracy_world, hsrb_world
 
 
 def test_compute_chain_of_bodies_pr2(pr2_world):
@@ -254,12 +259,12 @@ def test_apply_control_commands_omni_drive_pr2(pr2_world):
 
     assert pr2_world.state[omni_drive.x.name].jerk == 0.0
     assert pr2_world.state[omni_drive.x.name].acceleration == 0.0
-    assert pr2_world.state[omni_drive.x.name].velocity == 0.8951707486311977
+    assert pr2_world.state[omni_drive.x.name].velocity == 0.0
     assert pr2_world.state[omni_drive.x.name].position == 0.08951707486311977
 
     assert pr2_world.state[omni_drive.y.name].jerk == 0.0
     assert pr2_world.state[omni_drive.y.name].acceleration == 0.0
-    assert pr2_world.state[omni_drive.y.name].velocity == 1.094837581924854
+    assert pr2_world.state[omni_drive.y.name].velocity == 0.0
     assert pr2_world.state[omni_drive.y.name].position == 0.1094837581924854
 
 
@@ -306,7 +311,7 @@ def test_search_for_connections_of_type(pr2_world: World):
     assert len(connections) == 40
 
 
-def test_pr2_view(pr2_world):
+def test_pr2_semantic_annotation(pr2_world):
     pr2 = PR2.from_world(pr2_world)
 
     # Ensure there are no loose bodies
@@ -320,14 +325,27 @@ def test_pr2_view(pr2_world):
     assert pr2.torso.name.name == "torso"
     assert len(pr2.torso.sensors) == 0
     assert list(pr2.sensor_chains)[0].sensors == pr2.sensors
+    assert pr2.left_arm and pr2.right_arm
+    assert pr2.left_arm != pr2.right_arm
+
+
+def test_specifies_left_right_arm_mixin(pr2_world):
+    pr2 = PR2.from_world(pr2_world)
+    left_arm_chain = list(pr2.left_arm.bodies)
+    right_arm_chain = list(pr2.right_arm.bodies)
+    assert LeftOf(
+        left_arm_chain[1],
+        right_arm_chain[1],
+        pr2.root.global_pose,
+    )()
 
 
 def test_kinematic_chains(pr2_world):
     pr2 = PR2.from_world(pr2_world)
-    kinematic_chain_views: List[KinematicChain] = pr2_world.get_views_by_type(
-        KinematicChain
+    semantic_kinematic_chain_annotation: List[KinematicChain] = (
+        pr2_world.get_semantic_annotations_by_type(KinematicChain)
     )
-    for chain in kinematic_chain_views:
+    for chain in semantic_kinematic_chain_annotation:
         assert chain.root
         assert chain.tip
 
@@ -344,3 +362,59 @@ def test_load_collision_config_srdf(pr2_world):
     pr2_world.load_collision_srdf(path)
     assert len([b for b in pr2_world.bodies if b.get_collision_config().disabled]) == 20
     assert len(pr2_world.disabled_collision_pairs) == 1128
+
+
+def test_tracy_semantic_annotation(tracy_world):
+    tracy = Tracy.from_world(tracy_world)
+
+    tracy_world._notify_model_change()
+
+    assert len(tracy.manipulators) == 2
+    assert len(tracy.manipulator_chains) == 2
+    assert len(tracy.sensors) == 1
+    assert len(tracy.sensor_chains) == 1
+    assert tracy.torso is None
+    assert list(tracy.sensor_chains)[0].sensors == tracy.sensors
+
+
+def test_hsrb_semantic_annotation(hsrb_world):
+    hsrb = HSRB.from_world(hsrb_world)
+
+    hsrb_world._notify_model_change()
+
+    assert len(hsrb.manipulators) == 1
+    assert len(hsrb.manipulator_chains) == 1
+    assert hsrb.neck is not None
+    assert len(hsrb.arms) == 1
+
+    assert len(hsrb.sensors) == 5
+    assert len(hsrb.sensor_chains) == 2
+    assert hsrb.torso is not None
+
+
+def test_pr2_tighten_dof_velocity_limits_of_1dof_connections(pr2_world):
+    pr2 = PR2.from_world(pr2_world)
+
+    # set all joints to vel limit 1
+    pr2.tighten_dof_velocity_limits_of_1dof_connections(defaultdict(lambda: 1))
+
+    # try spacial case for specific joint
+    new_limits = defaultdict(
+        lambda: 0.5, {pr2._world.get_connection_by_name("head_pan_joint"): 23}
+    )
+    pr2.tighten_dof_velocity_limits_of_1dof_connections(new_limits)
+    # if spacial case triggers, but the new limit is above the old one, nothing happens
+    assert (
+        pr2._world.get_connection_by_name("head_pan_joint").dof.upper_limits.velocity
+        == 1
+    )
+    # new limit is applied to joint without spacial case
+    assert (
+        pr2._world.get_connection_by_name("head_tilt_joint").dof.upper_limits.velocity
+        == 0.5
+    )
+    # non-spacial case where the old limit is below 1
+    assert (
+        pr2._world.get_connection_by_name("torso_lift_joint").dof.upper_limits.velocity
+        == 0.013
+    )

@@ -30,17 +30,17 @@ Since the addition of a body to the world would, in most cases, violate the tree
 
 Let's create a simple world.
 
-```{code-cell} ipython2
-from semantic_world.world import World
-from semantic_world.world_description.world_entity import Body
-from semantic_world.world_description.degree_of_freedom import DegreeOfFreedom
-from semantic_world.world_description.connections import (
+```{code-cell} ipython3
+from semantic_digital_twin.world import World
+from semantic_digital_twin.world_description.world_entity import Body
+from semantic_digital_twin.world_description.degree_of_freedom import DegreeOfFreedom
+from semantic_digital_twin.world_description.connections import (
     Connection6DoF,
     RevoluteConnection,
 )
-from semantic_world.datastructures.prefixed_name import PrefixedName
-from semantic_world.spatial_types.spatial_types import Vector3
-from semantic_world.spatial_computations.raytracer import RayTracer
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.spatial_types.spatial_types import Vector3
+from semantic_digital_twin.spatial_computations.raytracer import RayTracer
 
 world = World()
 
@@ -66,7 +66,7 @@ with world.modify_world():
     c_base_link = RevoluteConnection(
         parent=base,
         child=link,
-        dof=joint,
+        dof_name=joint.name,
         axis=Vector3.Z(reference_frame=base),
         _world=world,
     )
@@ -80,7 +80,7 @@ print(f"Number of DoFs after additions: {len(world.degrees_of_freedom)}")
 Now we want to remove the RevoluteConnection. This will also remove its DoF if no other connection uses it.
 To keep the world a connected tree, we also have to remove the now-disconnected child body in the same block.
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 with world.modify_world():
     world.remove_connection(c_base_link)
     world.remove_kinematic_structure_entity(link)
@@ -95,7 +95,7 @@ Another world structure manipulation is the addition/removal of a DoF.
 However, most DoFs are managed by connections and hence should not be mangled with directly.
 If you ever feel the need to manage a degree of freedom manually you can do it like this:
 
-```{code-cell} ipython2
+```{code-cell} ipython3
 with world.modify_world():
     dof = DegreeOfFreedom(name=PrefixedName("my_dof"))
     world.add_degree_of_freedom(dof)

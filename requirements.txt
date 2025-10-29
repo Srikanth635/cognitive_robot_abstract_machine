@@ -8,7 +8,6 @@ casadi~=3.7.0
 hypothesis
 pytest
 scipy
-ormatic>=1.1.16
 sqlacodegen
 ripple_down_rules>=0.6.51
 pytest-order
@@ -23,7 +22,8 @@ pathlib
 probabilistic_model
 python-fcl
 manifold3d
-entity_query_language>=2.0.5
+krrood==1.0.7
+rustworkx_utils
 polytope
 ortools
 fbxloader

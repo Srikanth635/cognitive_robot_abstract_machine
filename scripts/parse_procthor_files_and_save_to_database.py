@@ -5,18 +5,18 @@ import re
 import time
 
 import tqdm
-from ormatic.dao import to_dao
-from ormatic.utils import drop_database
+from krrood.ormatic.dao import to_dao
+from krrood.ormatic.utils import drop_database
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from typing_extensions import TYPE_CHECKING
 
-from semantic_world.adapters.fbx import FBXParser
-from semantic_world.adapters.procthor.procthor_pipelines import (
+from semantic_digital_twin.adapters.fbx import FBXParser
+from semantic_digital_twin.adapters.procthor.procthor_pipelines import (
     dresser_factory_from_body,
 )
-from semantic_world.orm.ormatic_interface import *
-from semantic_world.pipeline.pipeline import (
+from semantic_digital_twin.orm.ormatic_interface import *
+from semantic_digital_twin.pipeline.pipeline import (
     Pipeline,
     BodyFilter,
     BodyFactoryReplace,
@@ -24,7 +24,7 @@ from semantic_world.pipeline.pipeline import (
 )
 
 if TYPE_CHECKING:
-    from semantic_world.world import World
+    from semantic_digital_twin.world import World
 
 
 def remove_root_and_move_children_into_new_worlds(world: World) -> List[World]:
@@ -107,20 +107,22 @@ def parse_fbx_file_to_world_mapping_daos(fbx_file_path: str) -> List[WorldMappin
 
 def parse_procthor_files_and_save_to_database(
     fbx_file_pattern: re.Pattern[str] = re.compile(r".*_grp\.fbx$", re.IGNORECASE),
-    drop_existing_database: bool = False,
+    drop_existing_database: bool = True,
 ):
     """
     Parse all Procthor FBX files and store the resulting WorldMappingDAO objects in a database.
     Currently, only grp files are parsed, and some files and names are excluded.
     TODO: Ensure all relevant files, even those not inside a grp, are parsed.
     """
-    semantic_world_database_uri = os.environ.get("SEMANTIC_WORLD_DATABASE_URI")
+    semantic_digital_twin_database_uri = os.environ.get(
+        "semantic_digital_twin_DATABASE_URI"
+    )
     assert (
-        semantic_world_database_uri is not None
-    ), "Please set the SEMANTIC_WORLD_DATABASE_URI environment variable."
+        semantic_digital_twin_database_uri is not None
+    ), "Please set the semantic_digital_twin_DATABASE_URI environment variable."
 
     procthor_root = os.path.join(os.path.expanduser("~"), "ai2thor")
-    procthor_root = os.path.join(os.path.expanduser("~"), "work", "ai2thor")
+    # procthor_root = os.path.join(os.path.expanduser("~"), "work", "ai2thor")
 
     files = []
     for root, dirs, filenames in os.walk(procthor_root):
@@ -144,7 +146,7 @@ def parse_procthor_files_and_save_to_database(
         if not any([e in f for e in excluded_words]) and fbx_file_pattern.fullmatch(f)
     ]
     # Create database engine and session
-    engine = create_engine(f"mysql+pymysql://{semantic_world_database_uri}")
+    engine = create_engine(f"mysql+pymysql://{semantic_digital_twin_database_uri}")
     session = Session(engine)
 
     if drop_existing_database:
