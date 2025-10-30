@@ -1,4 +1,4 @@
-from dataclasses import field
+from dataclasses import field, dataclass
 from functools import cached_property
 from typing import Optional, List, Union, Dict, DefaultDict, TypeVar
 
@@ -39,7 +39,7 @@ T = TypeVar(
 )
 
 
-@validated_dataclass
+@dataclass(eq=False, repr=False)
 class Task(MotionStatechartNode):
     """
     Tasks are a set of constraints with the same predicates.
@@ -61,33 +61,6 @@ class Task(MotionStatechartNode):
     linear_weight_gains: List[LinearWeightGain] = field(
         default_factory=list, init=False
     )
-
-    @cached_property
-    def observation_state_symbol(self) -> cas.Symbol:
-        symbols_name = f"{self.name}.observation_state"
-        return symbol_manager.register_symbol_provider(
-            symbols_name,
-            lambda n=self.name: god_map.motion_statechart_manager.task_state.get_observation_state(
-                n
-            ),
-        )
-
-    @cached_property
-    def life_cycle_state_symbol(self):
-        symbols_name = f"{self.name}.life_cycle_state"
-        return symbol_manager.register_symbol_provider(
-            symbols_name,
-            lambda n=self.name: god_map.motion_statechart_manager.task_state.get_life_cycle_state(
-                n
-            ),
-        )
-
-    @property
-    def ref_str(self) -> str:
-        """
-        A string referring to self on the god_map. Used with symbol manager.
-        """
-        return f"god_map.motion_statechart_manager.task_state.get_node('{str(self)}')"
 
     def get_eq_constraints(self) -> List[EqualityConstraint]:
         return self._apply_monitors_to_constraints(self.eq_constraints)

@@ -9,8 +9,13 @@ from giskardpy.motion_statechart.graph_node import (
 from giskardpy.motion_statechart.monitors.monitors import TrueMonitor
 from giskardpy.motion_statechart.monitors.payload_monitors import Print
 from giskardpy.motion_statechart.motion_statechart_graph import MotionStatechart
+from giskardpy.motion_statechart.tasks.joint_tasks import JointPositionList
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.spatial_types.derivatives import DerivativeMap
 from semantic_digital_twin.world import World
+from semantic_digital_twin.world_description.connections import RevoluteConnection
+from semantic_digital_twin.world_description.degree_of_freedom import DegreeOfFreedom
+from semantic_digital_twin.world_description.world_entity import Body
 
 
 def test_motion_statechart():
@@ -186,3 +191,50 @@ def test_cancel_motion():
     msg.tick()  # second tick, cancel goes into running
     with pytest.raises(Exception):
         msg.tick()  # third tick, cancel goes true and triggers
+
+
+def test_joint_goal():
+    world = World()
+    with world.modify_world():
+        root = Body(name=PrefixedName("root"))
+        tip = Body(name=PrefixedName("tip"))
+        ul = DerivativeMap()
+        ul.velocity = 1
+        ll = DerivativeMap()
+        ll.velocity = -1
+        dof = DegreeOfFreedom(
+            name=PrefixedName("dof"), lower_limits=ll, upper_limits=ul
+        )
+        world.add_degree_of_freedom(dof)
+        root_C_tip = RevoluteConnection(
+            parent=root, child=tip, axis=cas.Vector3.Z(), dof_name=dof.name
+        )
+        world.add_connection(root_C_tip)
+
+    msg = MotionStatechart(world)
+
+    task1 = JointPositionList(
+        name=PrefixedName("task1"), goal_state={root_C_tip: 1}, motion_statechart=msg
+    )
+    end = EndMotion(name=PrefixedName("done"), motion_statechart=msg)
+    end.start_condition = task1
+
+    msg.compile()
+    msg.tick()
+    assert msg.observation_state[task1] == msg.observation_state.TrinaryUnknown
+    assert msg.observation_state[end] == msg.observation_state.TrinaryUnknown
+    assert msg.life_cycle_state[task1] == msg.life_cycle_state.RUNNING
+    assert msg.life_cycle_state[end] == msg.life_cycle_state.NOT_STARTED
+
+    root_C_tip.position = 1
+
+    msg.tick()
+    assert msg.observation_state[task1] == msg.observation_state.TrinaryTrue
+    assert msg.observation_state[end] == msg.observation_state.TrinaryUnknown
+    assert msg.life_cycle_state[task1] == msg.life_cycle_state.RUNNING
+    assert msg.life_cycle_state[end] == msg.life_cycle_state.RUNNING
+    msg.tick()
+    assert msg.observation_state[task1] == msg.observation_state.TrinaryTrue
+    assert msg.observation_state[end] == msg.observation_state.TrinaryTrue
+    assert msg.life_cycle_state[task1] == msg.life_cycle_state.RUNNING
+    assert msg.life_cycle_state[end] == msg.life_cycle_state.RUNNING

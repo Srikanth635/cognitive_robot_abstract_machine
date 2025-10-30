@@ -6,8 +6,8 @@ from typing import Dict, Optional, Union, Type, Tuple
 import semantic_digital_twin.spatial_types.spatial_types as cas
 from giskardpy.data_types.exceptions import GoalInitalizationException
 from giskardpy.god_map import god_map
-from giskardpy.motion_statechart.data_types import ObservationState
-from giskardpy.motion_statechart.monitors.monitors import PayloadMonitor
+from giskardpy.motion_statechart.graph_node import PayloadMonitor
+from giskardpy.motion_statechart.motion_statechart_graph import ObservationState
 from giskardpy.utils.decorators import validated_dataclass
 from giskardpy.utils.math import axis_angle_from_quaternion
 from semantic_digital_twin.world_description.connections import (
@@ -43,7 +43,7 @@ class SetSeedConfiguration(PayloadMonitor):
         for dof_name, initial_joint_value in self.seed_configuration.items():
             god_map.world.state[dof_name].position = initial_joint_value
         god_map.world.notify_state_change()
-        self.state = ObservationState.true
+        self.state = ObservationState.TrinaryTrue
 
 
 @validated_dataclass

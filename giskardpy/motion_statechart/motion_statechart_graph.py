@@ -187,8 +187,8 @@ class ObservationState(State):
             sparse=False,
         )
 
-    def update_state(self, life_cycle_state: np.ndarray):
-        self.data = self._compiled_updater(self.data, life_cycle_state)
+    def update_state(self, life_cycle_state: np.ndarray, world_state: np.ndarray):
+        self.data = self._compiled_updater(self.data, life_cycle_state, world_state)
 
 
 @dataclass
@@ -253,7 +253,9 @@ class MotionStatechart:
         self.life_cycle_state.compile()
 
     def update_observation_state(self):
-        self.observation_state.update_state(self.life_cycle_state.data)
+        self.observation_state.update_state(
+            self.life_cycle_state.data, self.world.state.data
+        )
         for payload_monitor in self.get_nodes_by_type(PayloadMonitor):
             if self.life_cycle_state[payload_monitor] == LifeCycleState.RUNNING:
                 self.observation_state[payload_monitor] = (

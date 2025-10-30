@@ -1,4 +1,4 @@
-from dataclasses import field
+from dataclasses import field, dataclass
 from typing import Optional, Dict, List, Tuple, Union
 
 import semantic_digital_twin.spatial_types.spatial_types as cas
@@ -17,14 +17,15 @@ from semantic_digital_twin.world_description.connections import (
 )
 
 
-@validated_dataclass
+@dataclass(eq=False, repr=False)
 class JointPositionList(Task):
     goal_state: Dict[ActiveConnection1DOF, Union[int, float]] = field(kw_only=True)
-    threshold: float = 0.01
-    weight: float = WEIGHT_BELOW_CA
-    max_velocity: float = 1.0
+    threshold: float = field(default=0.01, kw_only=True)
+    weight: float = field(default=WEIGHT_BELOW_CA, kw_only=True)
+    max_velocity: float = field(default=1.0, kw_only=True)
 
     def __post_init__(self):
+        super().__post_init__()
         self.current_positions = []
         self.goal_positions = []
         self.velocity_limits = []
@@ -32,53 +33,45 @@ class JointPositionList(Task):
         if len(self.goal_state) == 0:
             raise GoalInitalizationException(f"Can't initialize {self} with no joints.")
 
-        for connection, goal_position in self.goal_state.items():
-            self.connections.append(connection)
-            if not isinstance(connection, ActiveConnection1DOF):
-                raise GoalInitalizationException(
-                    f"Connection {connection.name} must be of type ActiveConnection1DOF"
-                )
+        errors = []
 
-            ul_pos = connection.dof.upper_limits.position
-            ll_pos = connection.dof.lower_limits.position
-            if ll_pos is not None:
-                goal_position = cas.limit(goal_position, ll_pos, ul_pos)
-
-            ul_vel = connection.dof.upper_limits.velocity
-            ll_vel = connection.dof.lower_limits.velocity
-            velocity_limit = cas.limit(self.max_velocity, ll_vel, ul_vel)
-
-            self.current_positions.append(connection.dof.symbols.position)
-            self.goal_positions.append(goal_position)
-            self.velocity_limits.append(velocity_limit)
-
-        for connection, current, goal, velocity_limit in zip(
-            self.connections,
-            self.current_positions,
-            self.goal_positions,
-            self.velocity_limits,
-        ):
+        for connection, target in self.goal_state.items():
+            current = connection.dof.symbols.position
+            target = self.apply_limits_to_target(target, connection)
+            velocity = self.apply_limits_to_velocity(self.max_velocity, connection)
             if (
                 isinstance(connection, RevoluteConnection)
                 and not connection.dof.has_position_limits()
             ):
-                error = cas.shortest_angular_distance(current, goal)
+                error = cas.shortest_angular_distance(current, target)
             else:
-                error = goal - current
+                error = target - current
 
             self.add_equality_constraint(
                 name=f"{self.name}/{connection.name}",
-                reference_velocity=velocity_limit,
+                reference_velocity=velocity,
                 equality_bound=error,
                 weight=self.weight,
                 task_expression=current,
             )
-        joint_monitor = JointGoalReached(
-            goal_state=self.goal_state,
-            threshold=self.threshold,
-            name=f"{self.name}_monitor",
-        )
-        self.observation_expression = joint_monitor.observation_expression
+            errors.append(cas.abs(error) < self.threshold)
+        self.observation_expression = cas.logic_all(cas.Expression(errors))
+
+    def apply_limits_to_target(
+        self, target: float, connection: ActiveConnection1DOF
+    ) -> cas.Expression:
+        ul_pos = connection.dof.upper_limits.position
+        ll_pos = connection.dof.lower_limits.position
+        if ll_pos is not None:
+            target = cas.limit(target, ll_pos, ul_pos)
+        return target
+
+    def apply_limits_to_velocity(
+        self, velocity: float, connection: ActiveConnection1DOF
+    ) -> cas.Expression:
+        ul_vel = connection.dof.upper_limits.velocity
+        ll_vel = connection.dof.lower_limits.velocity
+        return cas.limit(velocity, ll_vel, ul_vel)
 
 
 @validated_dataclass

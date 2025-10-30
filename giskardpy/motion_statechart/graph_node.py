@@ -108,6 +108,9 @@ class MotionStatechartNode(cas.Symbol, SubclassJSONSerializer):
         )
         self.motion_statechart.add_node(self)
 
+    def resolve(self) -> float:
+        return self.motion_statechart.observation_state[self]
+
     @property
     def world(self) -> World:
         return self.motion_statechart.world
