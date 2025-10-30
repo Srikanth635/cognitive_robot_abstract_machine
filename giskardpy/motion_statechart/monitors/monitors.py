@@ -3,30 +3,14 @@ from __future__ import annotations
 import abc
 from abc import ABC
 from dataclasses import field
-from functools import cached_property
 
 import semantic_digital_twin.spatial_types.spatial_types as cas
-from giskardpy.data_types.exceptions import GiskardException
 from giskardpy.god_map import god_map
 from giskardpy.motion_statechart.data_types import ObservationState
-from giskardpy.motion_statechart.graph_node import MotionStatechartNode, Monitor
+from giskardpy.motion_statechart.graph_node import (
+    Monitor,
+)
 from giskardpy.utils.decorators import dataclass
-from semantic_digital_twin.spatial_types.symbol_manager import symbol_manager
-
-
-@dataclass
-class PayloadMonitor(Monitor, ABC):
-    """
-    A monitor which executes its __call__ function when start_condition becomes True.
-    Subclass this and implement __init__.py and __call__. The __call__ method should change self.state to True when
-    it's done.
-    """
-
-    state: ObservationState = field(init=False, default=ObservationState.unknown)
-
-    @abc.abstractmethod
-    def __call__(self):
-        pass
 
 
 @dataclass
@@ -43,22 +27,6 @@ class ThreadedPayloadMonitor(Monitor, ABC):
     @abc.abstractmethod
     def __call__(self):
         pass
-
-
-@dataclass
-class EndMotion(PayloadMonitor):
-
-    def __call__(self):
-        self.state = ObservationState.true
-
-
-@dataclass
-class CancelMotion(PayloadMonitor):
-    exception: Exception = field(default_factory=GiskardException)
-
-    def __call__(self):
-        self.state = ObservationState.true
-        raise self.exception
 
 
 @dataclass
@@ -108,13 +76,15 @@ class Alternator(Monitor):
         self.observation_expression = expr
 
 
-@dataclass
+@dataclass(eq=False, repr=False)
 class TrueMonitor(Monitor):
     observation_expression: cas.Expression = field(
         default_factory=lambda: cas.TrinaryTrue, init=False
     )
 
 
-observation_expression: cas.Expression = field(
-    default_factory=lambda: cas.TrinaryFalse, init=False
-)
+@dataclass(eq=False, repr=False)
+class FalseMonitor(Monitor):
+    observation_expression: cas.Expression = field(
+        default_factory=lambda: cas.TrinaryFalse, init=False
+    )

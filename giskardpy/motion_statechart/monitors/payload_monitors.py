@@ -1,13 +1,12 @@
-from dataclasses import field
-from typing import Dict, Tuple
+from dataclasses import field, dataclass
+from typing import Dict, Tuple, Union
 
 import numpy as np
 from line_profiler import profile
 
 from giskardpy.god_map import god_map
-from giskardpy.middleware import get_middleware
-from giskardpy.motion_statechart.data_types import ObservationState
-from giskardpy.motion_statechart.monitors.monitors import PayloadMonitor, Monitor
+from giskardpy.motion_statechart.graph_node import PayloadMonitor, Monitor
+from giskardpy.motion_statechart.motion_statechart_graph import ObservationState
 from giskardpy.utils.decorators import validated_dataclass
 
 
@@ -19,13 +18,17 @@ class CheckMaxTrajectoryLength(Monitor):
         self.observation_expression = god_map.time_symbol > self.length
 
 
-@validated_dataclass
+@dataclass(eq=False, repr=False)
 class Print(PayloadMonitor):
     message: str = ""
 
-    def __call__(self):
-        get_middleware().loginfo(self.message)
-        self.state = ObservationState.true
+    def compute_observation(self) -> Union[
+        ObservationState.TrinaryFalse,
+        ObservationState.TrinaryTrue,
+        ObservationState.TrinaryUnknown,
+    ]:
+        print(self.message)
+        return ObservationState.TrinaryTrue
 
 
 @validated_dataclass

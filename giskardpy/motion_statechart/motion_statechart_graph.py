@@ -13,12 +13,15 @@ from giskardpy.motion_statechart.graph_node import (
     EndMotion,
     CancelMotion,
     GenericMotionStatechartNode,
+    PayloadMonitor,
 )
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.world import World
 
 
 @dataclass
 class State(MutableMapping[MotionStatechartNode, float]):
-    motion_statechart_graph: MotionStatechartGraph
+    motion_statechart: MotionStatechart
     default_value: float
     data: np.ndarray = field(default_factory=lambda: np.array([], dtype=np.float64))
 
@@ -26,10 +29,10 @@ class State(MutableMapping[MotionStatechartNode, float]):
         self.data = np.append(self.data, self.default_value)
 
     def life_cycle_symbols(self) -> List[cas.Symbol]:
-        return [node.life_cycle_symbol for node in self.motion_statechart_graph.nodes]
+        return [node.life_cycle_symbol for node in self.motion_statechart.nodes]
 
     def observation_symbols(self) -> List[MotionStatechartNode]:
-        return self.motion_statechart_graph.nodes
+        return self.motion_statechart.nodes
 
     def __getitem__(self, node: MotionStatechartNode) -> float:
         return float(self.data[node.index])
@@ -47,23 +50,23 @@ class State(MutableMapping[MotionStatechartNode, float]):
         return self.data.shape[0]
 
     def keys(self) -> List[MotionStatechartNode]:
-        return self.motion_statechart_graph.nodes
+        return self.motion_statechart.nodes
 
     def items(self) -> List[tuple[MotionStatechartNode, float]]:
-        return [(node, self[node]) for node in self.motion_statechart_graph.nodes]
+        return [(node, self[node]) for node in self.motion_statechart.nodes]
 
     def values(self) -> List[float]:
         return [self[node] for node in self.keys()]
 
     def __contains__(self, node: MotionStatechartNode) -> bool:
-        return node in self.motion_statechart_graph.nodes
+        return node in self.motion_statechart.nodes
 
     def __deepcopy__(self, memo) -> Self:
         """
         Create a deep copy of the WorldState.
         """
         return State(
-            motion_statechart_graph=self.motion_statechart_graph,
+            motion_statechart=self.motion_statechart,
             default_value=self.default_value,
             data=self.data.copy(),
         )
@@ -81,7 +84,7 @@ class LifeCycleState(State):
 
     def compile(self):
         state_updater = []
-        for node in self.motion_statechart_graph.nodes:
+        for node in self.motion_statechart.nodes:
             state_symbol = node.life_cycle_symbol
 
             not_started_transitions = cas.if_else(
@@ -162,7 +165,7 @@ class ObservationState(State):
 
     def compile(self):
         observation_state_updater = []
-        for node in self.motion_statechart_graph.nodes:
+        for node in self.motion_statechart.nodes:
             state_f = cas.if_eq_cases(
                 a=node.life_cycle_symbol,
                 b_result_cases=[
@@ -176,7 +179,11 @@ class ObservationState(State):
             )
             observation_state_updater.append(state_f)
         self._compiled_updater = cas.Expression(observation_state_updater).compile(
-            parameters=[self.observation_symbols(), self.life_cycle_symbols()],
+            parameters=[
+                self.observation_symbols(),
+                self.life_cycle_symbols(),
+                self.motion_statechart.world.get_world_state_symbols(),
+            ],
             sparse=False,
         )
 
@@ -185,7 +192,8 @@ class ObservationState(State):
 
 
 @dataclass
-class MotionStatechartGraph:
+class MotionStatechart:
+    world: World
     rx_graph: rx.PyDiGraph[MotionStatechartNode] = field(
         default_factory=lambda: rx.PyDAG(multigraph=True), init=False, repr=False
     )
@@ -213,10 +221,15 @@ class MotionStatechartGraph:
         return self.rx_graph.edges()
 
     def add_node(self, node: MotionStatechartNode):
+        if self.get_node_by_name(node.name):
+            raise ValueError(f"Node {node.name} already exists.")
         node._motion_statechart = self
         node.index = self.rx_graph.add_node(node)
         self.life_cycle_state.grow()
         self.observation_state.grow()
+
+    def get_node_by_name(self, name: PrefixedName) -> List[MotionStatechartNode]:
+        return [node for node in self.nodes if node.name == name]
 
     def add_transition(
         self,
@@ -241,6 +254,11 @@ class MotionStatechartGraph:
 
     def update_observation_state(self):
         self.observation_state.update_state(self.life_cycle_state.data)
+        for payload_monitor in self.get_nodes_by_type(PayloadMonitor):
+            if self.life_cycle_state[payload_monitor] == LifeCycleState.RUNNING:
+                self.observation_state[payload_monitor] = (
+                    payload_monitor.compute_observation()
+                )
 
     def update_life_cycle_state(self):
         self.life_cycle_state.update_state(self.observation_state.data)

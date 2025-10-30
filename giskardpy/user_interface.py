@@ -14,6 +14,7 @@ from giskardpy.middleware import get_middleware
 from giskardpy.model.world_config import WorldConfig
 from giskardpy.motion_statechart.goals.collision_avoidance import CollisionAvoidance
 from giskardpy.motion_statechart.goals.goal import Goal
+from giskardpy.motion_statechart.graph_node import EndMotion
 from giskardpy.motion_statechart.monitors.monitors import Monitor, LocalMinimumReached
 from giskardpy.motion_statechart.monitors.overwrite_state_monitors import (
     SetSeedConfiguration,
@@ -35,7 +36,6 @@ from giskardpy.qp.constraint import (
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.robots.abstract_robot import AbstractRobot
 from semantic_digital_twin.spatial_types.symbol_manager import symbol_manager
-from giskardpy.motion_statechart.monitors.monitors import EndMotion
 
 
 def quote_node_names(condition: str) -> str:

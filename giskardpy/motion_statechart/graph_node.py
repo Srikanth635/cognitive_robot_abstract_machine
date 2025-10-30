@@ -19,10 +19,11 @@ import semantic_digital_twin.spatial_types.spatial_types as cas
 from giskardpy.god_map import god_map
 from giskardpy.utils.utils import string_shortener
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.world import World
 
 if TYPE_CHECKING:
     from giskardpy.motion_statechart.motion_statechart_graph import (
-        MotionStatechartGraph,
+        MotionStatechart,
         ObservationState,
     )
 
@@ -31,21 +32,21 @@ if TYPE_CHECKING:
 class StateTransitionCondition:
     """Encapsulates both string and expression representations of a condition."""
 
-    motion_statechart: MotionStatechartGraph
+    motion_statechart: MotionStatechart
     expression: cas.Expression = cas.TrinaryUnknown
     _parents: List[MotionStatechartNode] = field(default_factory=list, init=False)
     _child: MotionStatechartNode = field(default=None, init=False)
 
     @classmethod
-    def create_true(cls, motion_statechart: MotionStatechartGraph) -> Self:
+    def create_true(cls, motion_statechart: MotionStatechart) -> Self:
         return cls(expression=cas.TrinaryTrue, motion_statechart=motion_statechart)
 
     @classmethod
-    def create_false(cls, motion_statechart: MotionStatechartGraph) -> Self:
+    def create_false(cls, motion_statechart: MotionStatechart) -> Self:
         return cls(expression=cas.TrinaryFalse, motion_statechart=motion_statechart)
 
     @classmethod
-    def create_unknown(cls, motion_statechart: MotionStatechartGraph) -> Self:
+    def create_unknown(cls, motion_statechart: MotionStatechart) -> Self:
         return cls(expression=cas.TrinaryUnknown, motion_statechart=motion_statechart)
 
     def update_expression(
@@ -66,7 +67,9 @@ class StateTransitionCondition:
 
 @dataclass(repr=False, eq=False)
 class MotionStatechartNode(cas.Symbol, SubclassJSONSerializer):
-    motion_statechart: MotionStatechartGraph = field(kw_only=True)
+    name: PrefixedName = field(kw_only=True)
+
+    motion_statechart: MotionStatechart = field(kw_only=True)
     """
     Back reference to the motion statechart that owns this node.
     """
@@ -104,6 +107,10 @@ class MotionStatechartNode(cas.Symbol, SubclassJSONSerializer):
             motion_statechart=self.motion_statechart
         )
         self.motion_statechart.add_node(self)
+
+    @property
+    def world(self) -> World:
+        return self.motion_statechart.world
 
     def __hash__(self):
         return hash(self.name)
@@ -181,11 +188,11 @@ GenericMotionStatechartNode = TypeVar(
 )
 
 
-@dataclass(eq=False)
+@dataclass(eq=False, repr=False)
 class Monitor(MotionStatechartNode): ...
 
 
-@dataclass(eq=False)
+@dataclass(eq=False, repr=False)
 class PayloadMonitor(Monitor, ABC):
     observation_expression: cas.Expression = field(init=False)
 
