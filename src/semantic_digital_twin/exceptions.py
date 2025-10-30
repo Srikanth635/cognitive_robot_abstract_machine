@@ -138,6 +138,19 @@ class HasFreeSymbolsError(SpatialTypesError):
         super().__init__(msg)
 
 
+class FunctionEvaluationError(SpatialTypesError): ...
+
+
+@dataclass
+class WrongNumberOfArgsError(FunctionEvaluationError):
+    expected_number_of_args: int
+    actual_number_of_args: int
+
+    def __post_init__(self):
+        msg = f"Expected {self.expected_number_of_args} arguments, but got {self.actual_number_of_args}."
+        super().__init__(msg)
+
+
 @dataclass
 class ParsingError(Exception):
     """

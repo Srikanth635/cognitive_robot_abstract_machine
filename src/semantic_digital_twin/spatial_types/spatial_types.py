@@ -38,6 +38,7 @@ from ..exceptions import (
     NotSquareMatrixError,
     WrongDimensionsError,
     SpatialTypesError,
+    WrongNumberOfArgsError,
 )
 
 if TYPE_CHECKING:
@@ -226,6 +227,13 @@ class CompiledFunction:
         """
         if self._is_constant:
             return self._out
+        expected_number_of_args = len(self.symbol_parameters)
+        actual_number_of_args = len(args)
+        if expected_number_of_args != actual_number_of_args:
+            raise WrongNumberOfArgsError(
+                expected_number_of_args,
+                actual_number_of_args,
+            )
         for arg_idx, arg in enumerate(args):
             self._function_buffer.set_arg(arg_idx, memoryview(arg))
         self._function_evaluator()
@@ -416,6 +424,10 @@ class SymbolicType:
         :return: The compiled function as an instance of CompiledFunction.
         """
         return CompiledFunction(self, parameters, sparse)
+
+    def evaluate(self) -> np.ndarray:
+        f = self.compile([self.free_symbols()], sparse=False)
+        return f(np.array([s.resolve() for s in self.free_symbols()], dtype=np.float64))
 
     def substitute(
         self,
@@ -718,6 +730,11 @@ class Symbol(SymbolicType, BasicOperatorMixin):
 
     def __hash__(self):
         return hash(self.name)
+
+    def resolve(self) -> float:
+        raise NotImplementedError(
+            "You should implement the method 'resolve' in the class 'Symbol'"
+        )
 
 
 @dataclass(eq=False)

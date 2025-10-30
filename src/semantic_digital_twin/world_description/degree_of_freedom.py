@@ -2,16 +2,51 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing_extensions import Dict, Any
 
 from random_events.utils import SubclassJSONSerializer
+from typing_extensions import Dict, Any
 
+from .world_entity import WorldEntity
 from ..datastructures.prefixed_name import PrefixedName
 from ..exceptions import UsageError
 from ..spatial_types import spatial_types as cas
 from ..spatial_types.derivatives import Derivatives, DerivativeMap
-from ..spatial_types.symbol_manager import symbol_manager
-from .world_entity import WorldEntity
+
+
+@dataclass(eq=False)
+class PositionSymbol(cas.Symbol):
+    name: PrefixedName = field(kw_only=True)
+    dof: DegreeOfFreedom = field(kw_only=True)
+
+    def resolve(self) -> float:
+        return self.dof._world.state[self.dof.name].position
+
+
+@dataclass(eq=False)
+class VelocitySymbol(cas.Symbol):
+    name: PrefixedName = field(kw_only=True)
+    dof: DegreeOfFreedom = field(kw_only=True)
+
+    def resolve(self) -> float:
+        return self.dof._world.state[self.dof.name].velocity
+
+
+@dataclass(eq=False)
+class AccelerationSymbol(cas.Symbol):
+    name: PrefixedName = field(kw_only=True)
+    dof: DegreeOfFreedom = field(kw_only=True)
+
+    def resolve(self) -> float:
+        return self.dof._world.state[self.dof.name].acceleration
+
+
+@dataclass(eq=False)
+class JerkSymbol(cas.Symbol):
+    name: PrefixedName = field(kw_only=True)
+    dof: DegreeOfFreedom = field(kw_only=True)
+
+    def resolve(self) -> float:
+        return self.dof._world.state[self.dof.name].jerk
 
 
 @dataclass
@@ -54,12 +89,18 @@ class DegreeOfFreedom(WorldEntity, SubclassJSONSerializer):
 
     def create_and_register_symbols(self):
         assert self._world is not None
-        for derivative in Derivatives.range(Derivatives.position, Derivatives.jerk):
-            s = symbol_manager.register_symbol_provider(
-                f"{self.name}_{derivative}",
-                lambda d=derivative: self._world.state[self.name][d],
-            )
-            self.symbols.data[derivative] = s
+        self.symbols.data[Derivatives.position] = PositionSymbol(
+            name=PrefixedName("position", prefix=str(self.name)), dof=self
+        )
+        self.symbols.data[Derivatives.velocity] = VelocitySymbol(
+            name=PrefixedName("velocity", prefix=str(self.name)), dof=self
+        )
+        self.symbols.data[Derivatives.acceleration] = AccelerationSymbol(
+            name=PrefixedName("acceleration", prefix=str(self.name)), dof=self
+        )
+        self.symbols.data[Derivatives.jerk] = JerkSymbol(
+            name=PrefixedName("jerk", prefix=str(self.name)), dof=self
+        )
 
     def has_position_limits(self) -> bool:
         try:
