@@ -693,7 +693,7 @@ class Symbol(SymbolicType, BasicOperatorMixin):
 
     casadi_sx: ca.SX = field(kw_only=True, init=False, default=None)
 
-    _registry: ClassVar[Dict[PrefixedName, Symbol]] = {}
+    _registry: ClassVar[Dict[str, Symbol]] = {}
     """
     To avoid two symbols with the same name, references to existing symbols are stored on a class level.
     """
@@ -703,11 +703,11 @@ class Symbol(SymbolicType, BasicOperatorMixin):
         Multiton design pattern prevents two symbol instances with the same name.
         """
         if name in cls._registry:
-            return cls._registry[name]
+            return cls._registry[str(name)]
         instance = super().__new__(cls)
         instance.casadi_sx = ca.SX.sym(str(name))
         instance.name = name
-        cls._registry[name] = instance
+        cls._registry[str(name)] = instance
         return instance
 
     def __str__(self):
