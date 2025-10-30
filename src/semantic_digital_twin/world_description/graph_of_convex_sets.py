@@ -488,7 +488,7 @@ class GraphOfConvexSets:
 
         return cls.obstacles_from_semantic_annotations(
             search_space=search_space,
-            obstacle_view=view,
+            semantic_obstacle_annotation=view,
             bloat_obstacles=bloat_obstacles,
         )
 

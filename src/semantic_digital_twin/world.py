@@ -351,13 +351,17 @@ class World:
                 body.reset_temporary_collision_config()
 
     @property
-    def root(self) -> Optional[KinematicStructureEntity]:
+    def root(self):
+        return self._root(self._model_version)
+
+    @lru_cache()
+    def _root(self, model_version) -> Optional[KinematicStructureEntity]:
         """
         The root of the world is the unique node with in-degree 0.
 
+        :param model_version: Version of the model used to manage the cache of return values.
         :return: The root of the world.
         """
-
         if not self.kinematic_structure_entities:
             return None
         possible_roots = [
@@ -490,7 +494,7 @@ class World:
     def clear_all_lru_caches(self):
         for method_name in dir(self):
             try:
-                method = getattr(self, method_name)
+                method = getattr(type(self), method_name)
                 if hasattr(method, "cache_clear") and callable(method.cache_clear):
                     method.cache_clear()
             except AttributeError:
@@ -517,8 +521,8 @@ class World:
         for model changes.
         """
         # if not self.world_is_being_modified:
-        self.compile_forward_kinematics_expressions()
         self.clear_all_lru_caches()
+        self.compile_forward_kinematics_expressions()
         self.notify_state_change()
         self._model_version += 1
 
@@ -1159,6 +1163,7 @@ class World:
             return matches[0]
         raise KeyError(f"Body with name {name} not found")
 
+    @lru_cache(maxsize=None)
     def get_degree_of_freedom_by_name(
         self, name: Union[str, PrefixedName]
     ) -> DegreeOfFreedom:
