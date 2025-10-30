@@ -12,6 +12,8 @@ import math
 import sys
 from copy import copy, deepcopy
 from dataclasses import dataclass, field, InitVar
+
+from random_events.utils import SubclassJSONSerializer
 from typing_extensions import (
     Optional,
     List,
@@ -1807,7 +1809,9 @@ class ReferenceFrameMixin:
 
 
 @dataclass(eq=False)
-class TransformationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMixin):
+class TransformationMatrix(
+    SymbolicType, ReferenceFrameMixin, MatrixOperationsMixin, SubclassJSONSerializer
+):
     """
     Represents a 4x4 transformation matrix used in kinematics and transformations.
 
@@ -1851,6 +1855,23 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMi
         self[3, 1] = 0.0
         self[3, 2] = 0.0
         self[3, 3] = 1.0
+
+    def to_json(self) -> Dict[str, Any]:
+        result = super().to_json()
+        result["reference_frame"] = (
+            self.reference_frame.to_json() if self.reference_frame else None
+        )
+        result["child_frame"] = self.child_frame.to_json() if self.child_frame else None
+        result["data"] = self.to_np().tolist()
+        return result
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any]) -> Self:
+        return cls(
+            reference_frame=KinematicStructureEntity.from_json(data["reference_frame"]),
+            child_frame=KinematicStructureEntity.from_json(data["child_frame"]),
+            data=data["data"],
+        )
 
     @classmethod
     def from_point_rotation_matrix(

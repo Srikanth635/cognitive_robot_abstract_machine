@@ -1993,6 +1993,13 @@ class TestVector3:
 
 
 class TestTransformationMatrix:
+    def test_json(self):
+        """Test that the JSON serialization works correctly"""
+        t = cas.TransformationMatrix()
+        t_json = t.to_json()
+        t_copy = cas.TransformationMatrix.from_json(t_json)
+        assert_allclose(t.to_np(), t_copy.to_np())
+
     def test_reference_frames(self):
         reference_frame = "muh"
         child_frame = "kikariki"
