@@ -22,7 +22,7 @@ from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.world import World
 
 if TYPE_CHECKING:
-    from giskardpy.motion_statechart.motion_statechart_graph import (
+    from giskardpy.motion_statechart.motion_statechart import (
         MotionStatechart,
         ObservationState,
     )

@@ -7,7 +7,7 @@ import semantic_digital_twin.spatial_types.spatial_types as cas
 from giskardpy.data_types.exceptions import GoalInitalizationException
 from giskardpy.god_map import god_map
 from giskardpy.motion_statechart.graph_node import PayloadMonitor
-from giskardpy.motion_statechart.motion_statechart_graph import ObservationState
+from giskardpy.motion_statechart.motion_statechart import ObservationState
 from giskardpy.utils.decorators import validated_dataclass
 from giskardpy.utils.math import axis_angle_from_quaternion
 from semantic_digital_twin.world_description.connections import (

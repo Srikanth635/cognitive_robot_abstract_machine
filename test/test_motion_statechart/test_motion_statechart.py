@@ -8,7 +8,7 @@ from giskardpy.motion_statechart.graph_node import (
 )
 from giskardpy.motion_statechart.monitors.monitors import TrueMonitor
 from giskardpy.motion_statechart.monitors.payload_monitors import Print
-from giskardpy.motion_statechart.motion_statechart_graph import MotionStatechart
+from giskardpy.motion_statechart.motion_statechart import MotionStatechart
 from giskardpy.motion_statechart.tasks.joint_tasks import JointPositionList
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.derivatives import DerivativeMap

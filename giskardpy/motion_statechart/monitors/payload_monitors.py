@@ -6,7 +6,7 @@ from line_profiler import profile
 
 from giskardpy.god_map import god_map
 from giskardpy.motion_statechart.graph_node import PayloadMonitor, Monitor
-from giskardpy.motion_statechart.motion_statechart_graph import ObservationState
+from giskardpy.motion_statechart.motion_statechart import ObservationState
 from giskardpy.utils.decorators import validated_dataclass
 
 

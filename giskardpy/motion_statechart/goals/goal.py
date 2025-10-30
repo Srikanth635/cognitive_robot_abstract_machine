@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import field
-from functools import cached_property
+from dataclasses import field, dataclass
 from typing import List, Union
 
 import semantic_digital_twin.spatial_types.spatial_types as cas
@@ -10,14 +9,13 @@ from giskardpy.god_map import god_map
 from giskardpy.motion_statechart.graph_node import MotionStatechartNode
 from giskardpy.motion_statechart.monitors.monitors import Monitor
 from giskardpy.motion_statechart.tasks.task import Task
-from giskardpy.utils.decorators import validated_dataclass
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.world_description.connections import (
     ActiveConnection1DOF,
 )
 
 
-@validated_dataclass
+@dataclass
 class Goal(MotionStatechartNode):
     tasks: List[Task] = field(default_factory=list, init=False)
     monitors: List[Monitor] = field(default_factory=list, init=False)
@@ -33,21 +31,6 @@ class Goal(MotionStatechartNode):
             node.start_condition = first_node
             node.end_condition = node
             first_node = node
-
-    def get_joint_position_symbol(
-        self, joint_name: PrefixedName
-    ) -> Union[cas.Symbol, float]:
-        """
-        returns a symbol that refers to the given joint
-        """
-        if not god_map.world.has_joint(joint_name):
-            raise KeyError(f"World doesn't have joint named: {joint_name}.")
-        joint = god_map.world.joints[joint_name]
-        if isinstance(joint, ActiveConnection1DOF):
-            return joint.dof.symbols.position
-        raise TypeError(
-            f"get_joint_position_symbol is only supported for OneDofJoint, not {type(joint)}"
-        )
 
     def connect_start_condition_to_all_tasks(self, condition: str) -> None:
         for task in self.tasks:
@@ -88,35 +71,6 @@ class Goal(MotionStatechartNode):
         if isinstance(other, str):
             return self.ref_str + other
         raise NotImplementedError("Goal can only be added with a string.")
-
-    # def get_expr_velocity(self, expr: cas.Expression) -> cas.Expression:
-    #     """
-    #     Creates an expressions that computes the total derivative of expr
-    #     """
-    #     return cas.total_derivative(expr,
-    #                                 self.joint_position_symbols,
-    #                                 self.joint_velocity_symbols)
-    #
-    # @property
-    # def joint_position_symbols(self) -> List[Union[cas.Symbol, float]]:
-    #     position_symbols = []
-    #     for joint in god_map.world.controlled_joints:
-    #         position_symbols.extend(god_map.world.joints[joint].free_variables)
-    #     return [x.get_symbol(Derivatives.position) for x in position_symbols]
-    #
-    # @property
-    # def joint_velocity_symbols(self) -> List[Union[cas.Symbol, float]]:
-    #     velocity_symbols = []
-    #     for joint in god_map.world.controlled_joints:
-    #         velocity_symbols.extend(god_map.world.joints[joint].free_variable_list)
-    #     return [x.get_symbol(Derivatives.velocity) for x in velocity_symbols]
-    #
-    # @property
-    # def joint_acceleration_symbols(self) -> List[Union[cas.Symbol, float]]:
-    #     acceleration_symbols = []
-    #     for joint in god_map.world.controlled_joints:
-    #         acceleration_symbols.extend(god_map.world.joints[joint].free_variables)
-    #     return [x.get_symbol(Derivatives.acceleration) for x in acceleration_symbols]
 
     def _task_sanity_check(self):
         if not self.has_tasks():
