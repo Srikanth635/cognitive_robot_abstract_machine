@@ -32,6 +32,7 @@ from typing_extensions import (
 import casadi as ca
 from scipy import sparse as sp
 
+from ..datastructures.prefixed_name import PrefixedName
 from ..exceptions import (
     HasFreeSymbolsError,
     NotSquareMatrixError,
@@ -688,29 +689,29 @@ class Symbol(SymbolicType, BasicOperatorMixin):
     No matrix and no numbers.
     """
 
-    name: str = field(kw_only=True)
+    name: PrefixedName = field(kw_only=True)
 
     casadi_sx: ca.SX = field(kw_only=True, init=False, default=None)
 
-    _registry: ClassVar[Dict[str, Symbol]] = {}
+    _registry: ClassVar[Dict[PrefixedName, Symbol]] = {}
     """
     To avoid two symbols with the same name, references to existing symbols are stored on a class level.
     """
 
-    def __new__(cls, name: str):
+    def __new__(cls, name: PrefixedName, *args, **kwargs):
         """
         Multiton design pattern prevents two symbol instances with the same name.
         """
         if name in cls._registry:
             return cls._registry[name]
         instance = super().__new__(cls)
-        instance.casadi_sx = ca.SX.sym(name)
+        instance.casadi_sx = ca.SX.sym(str(name))
         instance.name = name
         cls._registry[name] = instance
         return instance
 
     def __str__(self):
-        return self.name
+        return str(self.name)
 
     def __repr__(self):
         return f"Symbol({self})"
