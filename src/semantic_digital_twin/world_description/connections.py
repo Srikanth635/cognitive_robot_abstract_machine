@@ -310,7 +310,7 @@ class PrismaticConnection(ActiveConnection1DOF):
         super().add_to_world(world)
 
         translation_axis = self.axis * self.dof.symbols.position
-        self.connection_T_child_expression = cas.TransformationMatrix.from_xyz_rpy(
+        self._connection_T_child_expression = cas.TransformationMatrix.from_xyz_rpy(
             x=translation_axis[0],
             y=translation_axis[1],
             z=translation_axis[2],
@@ -330,7 +330,7 @@ class RevoluteConnection(ActiveConnection1DOF):
     def add_to_world(self, world: World):
         super().add_to_world(world)
 
-        self.connection_T_child_expression = (
+        self._connection_T_child_expression = (
             cas.TransformationMatrix.from_xyz_axis_angle(
                 axis=self.axis,
                 angle=self.dof.symbols.position,
@@ -443,7 +443,7 @@ class Connection6DoF(PassiveConnection):
             z_init=self.qz.symbols.position,
             w_init=self.qw.symbols.position,
         ).to_rotation_matrix()
-        self.connection_T_child_expression = (
+        self._connection_T_child_expression = (
             cas.TransformationMatrix.from_point_rotation_matrix(
                 point=parent_P_child,
                 rotation_matrix=parent_R_child,
@@ -642,8 +642,8 @@ class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
             pitch=self.pitch.symbols.position,
             yaw=0,
         )
-        self.connection_T_child_expression = odom_T_bf @ bf_T_bf_vel @ bf_vel_T_bf
-        self.connection_T_child_expression.child_frame = self.child
+        self._connection_T_child_expression = odom_T_bf @ bf_T_bf_vel @ bf_vel_T_bf
+        self._connection_T_child_expression.child_frame = self.child
 
     @classmethod
     def create_with_dofs(

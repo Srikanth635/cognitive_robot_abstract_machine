@@ -27,7 +27,6 @@ from semantic_digital_twin.spatial_types.spatial_types import (
     TransformationMatrix,
     RotationMatrix,
 )
-from semantic_digital_twin.spatial_types.symbol_manager import symbol_manager
 from semantic_digital_twin.testing import world_setup, pr2_world
 from semantic_digital_twin.world_description.world_entity import (
     SemanticAnnotation,
@@ -257,10 +256,7 @@ def test_compute_fk_expression(world_setup):
     world.notify_state_change()
     fk = world.compute_forward_kinematics_np(r2, l2)
     fk_expr = world.compose_forward_kinematics_expression(r2, l2)
-    fk_expr_compiled = fk_expr.compile()
-    fk2 = fk_expr_compiled(
-        *symbol_manager.resolve_symbols(fk_expr_compiled.symbol_parameters)
-    )
+    fk2 = fk_expr.evaluate()
     np.testing.assert_array_almost_equal(fk, fk2)
 
 

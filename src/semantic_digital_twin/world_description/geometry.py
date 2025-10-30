@@ -17,7 +17,6 @@ from typing_extensions import Optional, List, TYPE_CHECKING, Dict, Any, Self, Tu
 from ..datastructures.variables import SpatialVariables
 from ..spatial_types import TransformationMatrix, Point3
 from ..spatial_types.spatial_types import Expression
-from ..spatial_types.symbol_manager import symbol_manager
 from ..utils import IDGenerator
 
 id_generator = IDGenerator()
@@ -46,8 +45,8 @@ def transformation_to_json(transformation: TransformationMatrix) -> Dict[str, An
     This is needed since SpatialTypes cannot inherit from SubClassJSONSerializer.
     They can't inherit since the conversion to JSON needs the symbol_manager, which would cause a cyclic dependency.
     """
-    position = symbol_manager.evaluate_expr(transformation.to_position()).tolist()
-    quaternion = symbol_manager.evaluate_expr(transformation.to_quaternion()).tolist()
+    position = transformation.to_position().to_np().tolist()
+    quaternion = transformation.to_quaternion().to_np().tolist()
     return {"position": position, "quaternion": quaternion}
 
 
@@ -417,7 +416,6 @@ class Box(Shape):
         mesh = trimesh.creation.box(extents=(self.scale.x, self.scale.y, self.scale.z))
         mesh.visual.vertex_colors = trimesh.visual.color.to_rgba(self.color.to_rgba())
         return mesh
-
 
     @property
     def local_frame_bounding_box(self) -> BoundingBox:
