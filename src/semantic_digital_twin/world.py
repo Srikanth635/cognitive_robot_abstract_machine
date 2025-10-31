@@ -164,16 +164,16 @@ class WorldModelUpdateContextManager:
         self.world.world_is_being_modified = True
 
         if self.first:
-            self.world._current_model_modification_block = WorldModelModificationBlock()
+            self.world.get_world_model_manager().current_model_modification_block = WorldModelModificationBlock()
 
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.first:
-            self.world._model_modification_blocks.append(
-                self.world._current_model_modification_block
+            self.world.get_world_model_manager().model_modification_blocks.append(
+                self.world.get_world_model_manager().current_model_modification_block
             )
-            self.world._current_model_modification_block = None
+            self.world.get_world_model_manager().current_model_modification_block = None
             if exc_type is None:
                 self.world._notify_model_change()
             self.world.world_is_being_modified = False
@@ -221,9 +221,9 @@ def atomic_world_modification(
             # Build a dict with all arguments (including positional), excluding 'self'
             bound_args = dict(bound.arguments)
             bound_args.pop("self", None)
-            if self._current_model_modification_block is None:
+            if self.get_world_model_manager().current_model_modification_block is None:
                 raise MissingWorldModificationContextError(func)
-            self._current_model_modification_block.append(
+            self.get_world_model_manager().current_model_modification_block.append(
                 modification.from_kwargs(bound_args)
             )
 
@@ -396,6 +396,48 @@ class CollisionPairManager:
         pair = tuple(sorted([body_a, body_b], key=lambda body: body.name))
         self._disabled_collision_pairs.add(pair)
 
+@dataclass
+class WorldModelManager:
+
+    model_version: int = 0
+    """
+    The version of the model. This increases whenever a change to the kinematic model is made. Mostly triggered
+    by adding/removing bodies and connections.
+    """
+
+    model_modification_blocks: List[WorldModelModificationBlock] = field(
+        default_factory=list, repr=False, init=False
+    )
+    """
+    All atomic modifications applied to the world. Tracked by @atomic_world_modification.
+    The field itself is a list of lists. The outer lists indicates when to trigger the model/state change callbacks.
+    The inner list is a block of modifications where change callbacks must not be called in between.
+    """
+
+    current_model_modification_block: Optional[WorldModelModificationBlock] = field(
+        default=None, repr=False, init=False
+    )
+    """
+    The current modification block called within one context of @atomic_world_modification.
+    """
+
+    model_change_callbacks: List[ModelChangeCallback] = field(
+        default_factory=list, repr=False
+    )
+    """
+    Callbacks to be called when the model of the world changes.
+    """
+
+    def update_model_version_and_notify_callbacks(self) -> None:
+        """
+        Notifies the system of a model change and updates necessary states, caches,
+        and forward kinematics expressions while also triggering registered callbacks
+        for model changes.
+        """
+        self.model_version += 1
+        for callback in self.model_change_callbacks:
+            callback.notify()
+
 
 @dataclass
 class World:
@@ -431,12 +473,6 @@ class World:
     2d array where rows are derivatives and columns are dof values for that derivative.
     """
 
-    _model_version: int = 0
-    """
-    The version of the model. This increases whenever a change to the kinematic model is made. Mostly triggered
-    by adding/removing bodies and connections.
-    """
-
     world_is_being_modified: bool = False
     """
     Is set to True, when a world.modify_world context is used.
@@ -447,28 +483,7 @@ class World:
     Name of the world. May act as default namespace for all bodies and semantic annotations in the world which do not have a prefix.
     """
 
-    model_change_callbacks: List[ModelChangeCallback] = field(
-        default_factory=list, repr=False
-    )
-    """
-    Callbacks to be called when the model of the world changes.
-    """
-
-    _model_modification_blocks: List[WorldModelModificationBlock] = field(
-        default_factory=list, repr=False, init=False
-    )
-    """
-    All atomic modifications applied to the world. Tracked by @atomic_world_modification.
-    The field itself is a list of lists. The outer lists indicates when to trigger the model/state change callbacks.
-    The inner list is a block of modifications where change callbacks must not be called in between.
-    """
-
-    _current_model_modification_block: Optional[WorldModelModificationBlock] = field(
-        default=None, repr=False, init=False
-    )
-    """
-    The current modification block called within one context of @atomic_world_modification.
-    """
+    _world_model_manager: WorldModelManager = field(default_factory=WorldModelManager, repr=False)
 
     _atomic_modification_is_being_executed: bool = field(init=False, default=False)
     """
@@ -483,6 +498,9 @@ class World:
 
     def __post_init__(self):
         self._collision_pair_manager = CollisionPairManager(self)
+
+    def get_world_model_manager(self) -> WorldModelManager:
+        return self._world_model_manager
 
     @property
     def root(self) -> Optional[KinematicStructureEntity]:
@@ -508,7 +526,7 @@ class World:
         )
 
     def __hash__(self):
-        return hash((id(self), self._model_version))
+        return hash((id(self), self._world_model_manager.model_version))
 
     def __str__(self):
         return f"{self.__class__.__name__} with {len(self.kinematic_structure_entities)} bodies."
@@ -862,10 +880,8 @@ class World:
         # if not self.world_is_being_modified:
         self.compile_forward_kinematics_expressions()
         self.notify_state_change()
-        self._model_version += 1
 
-        for callback in self.model_change_callbacks:
-            callback.notify()
+        self._world_model_manager.update_model_version_and_notify_callbacks()
 
         for callback in self.state.state_change_callbacks:
             callback.update_previous_world_state()

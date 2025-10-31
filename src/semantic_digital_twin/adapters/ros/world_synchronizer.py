@@ -259,7 +259,7 @@ class ModelSynchronizer(
     def world_callback(self):
         msg = ModificationBlock(
             meta_data=self.meta_data,
-            modifications=self.world._model_modification_blocks[-1],
+            modifications=self.world.get_world_model_manager().model_modification_blocks[-1],
         )
         self.publish(msg)
 

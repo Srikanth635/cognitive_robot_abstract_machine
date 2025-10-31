@@ -109,10 +109,10 @@ class ModelChangeCallback(Callback, ABC):
     """
 
     def __post_init__(self):
-        self.world.model_change_callbacks.append(self)
+        self.world.get_world_model_manager().model_change_callbacks.append(self)
 
     def stop(self):
         try:
-            self.world.model_change_callbacks.remove(self)
+            self.world.get_world_model_manager().model_change_callbacks.remove(self)
         except ValueError:
             pass
