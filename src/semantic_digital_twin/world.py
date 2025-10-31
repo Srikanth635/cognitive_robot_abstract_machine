@@ -363,7 +363,7 @@ class World:
         )
 
     def __hash__(self):
-        return hash(id(self))
+        return hash((id(self), self._model_version))
 
     def __str__(self):
         return f"{self.__class__.__name__} with {len(self.kinematic_structure_entities)} bodies."
@@ -485,13 +485,6 @@ class World:
     def reset_state_context(self) -> ResetStateContextManager:
         return ResetStateContextManager(self)
 
-    def clear_all_lru_caches(self):
-        for method_name in dir(self):
-            method = getattr(self, method_name, None)
-            cache_clear = getattr(method, "cache_clear", None)
-            if callable(cache_clear):
-                cache_clear()
-
     def notify_state_change(self) -> None:
         """
         If you have changed the state of the world, call this function to trigger necessary events and increase
@@ -509,7 +502,6 @@ class World:
         """
         # if not self.world_is_being_modified:
         self.compile_forward_kinematics_expressions()
-        self.clear_all_lru_caches()
         self.notify_state_change()
         self._model_version += 1
 
@@ -1176,7 +1168,7 @@ class World:
 
         return matches[0]
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=512)
     def compute_child_kinematic_structure_entities(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> List[KinematicStructureEntity]:
@@ -1189,7 +1181,7 @@ class World:
             self.kinematic_structure.successors(kinematic_structure_entity.index)
         )
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=512)
     def compute_descendent_child_kinematic_structure_entities(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> List[KinematicStructureEntity]:
@@ -1207,7 +1199,7 @@ class World:
             )
         return children
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=512)
     def compute_parent_kinematic_structure_entity(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> Optional[KinematicStructureEntity]:
@@ -1222,7 +1214,7 @@ class World:
             return None
         return parent[0]
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=512)
     def compute_parent_connection(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> Optional[Connection]:
@@ -1242,7 +1234,7 @@ class World:
             kinematic_structure_entity.index,
         )
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=512)
     def compute_chain_of_kinematic_structure_entities(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> List[KinematicStructureEntity]:
@@ -1260,7 +1252,7 @@ class World:
 
         return [self.kinematic_structure[index] for index in shortest_paths[0]]
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=512)
     def compute_chain_of_connections(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> List[Connection]:
@@ -1273,7 +1265,7 @@ class World:
             for i in range(len(entity_chain) - 1)
         ]
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=512)
     def compute_split_chain_of_kinematic_structure_entities(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> Tuple[
@@ -1322,7 +1314,7 @@ class World:
 
         return up_from_root, [common_ancestor], down_to_tip
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=512)
     def compute_split_chain_of_connections(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> Tuple[List[Connection], List[Connection]]:
