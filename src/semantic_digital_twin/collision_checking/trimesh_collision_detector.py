@@ -58,7 +58,7 @@ class TrimeshCollisionDetector(CollisionDetector):
         """
         Synchronize the collision checker with the current world state
         """
-        if self._last_synced_state == self._world._state_version:
+        if self._last_synced_state == self._world.state._state_version:
             return
         for body, coll_obj in self._collision_objects.items():
             coll_obj.setTransform(

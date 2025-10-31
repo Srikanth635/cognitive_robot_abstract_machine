@@ -4,6 +4,7 @@ from typing_extensions import MutableMapping, List, Dict, Self
 
 import numpy as np
 
+from ..callbacks.callback import StateChangeCallback
 from ..datastructures.prefixed_name import PrefixedName
 from ..spatial_types.derivatives import Derivatives
 
@@ -73,6 +74,28 @@ class WorldState(MutableMapping):
 
     # maps joint_name -> column index
     _index: Dict[PrefixedName, int] = field(default_factory=dict)
+
+    _state_version: int = 0
+    """
+    The version of the state. This increases whenever a change to the state of the kinematic model is made. 
+    Mostly triggered by updating connection values.
+    """
+
+    state_change_callbacks: List[StateChangeCallback] = field(
+        default_factory=list, repr=False
+    )
+    """
+    Callbacks to be called when the state of the world changes.
+    """
+
+    def _notify_state_change(self) -> None:
+        """
+        If you have changed the state of the world, call this function to trigger necessary events and increase
+        the state version.
+        """
+        self._state_version += 1
+        for callback in self.state_change_callbacks:
+            callback.notify()
 
     def _add_dof(self, name: PrefixedName) -> None:
         idx = len(self._names)

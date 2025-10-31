@@ -86,12 +86,12 @@ class StateChangeCallback(Callback, ABC):
     """
 
     def __post_init__(self):
-        self.world.state_change_callbacks.append(self)
+        self.world.state.state_change_callbacks.append(self)
         self.update_previous_world_state()
 
     def stop(self):
         try:
-            self.world.state_change_callbacks.remove(self)
+            self.world.state.state_change_callbacks.remove(self)
         except ValueError:
             pass
 
@@ -100,18 +100,6 @@ class StateChangeCallback(Callback, ABC):
         Update the previous world state to reflect the current world positions.
         """
         self.previous_world_state_data = np.copy(self.world.state.positions)
-
-    def compute_state_changes(self) -> Dict[PrefixedName, float]:
-        changes = {
-            name: current_state
-            for name, previous_state, current_state in zip(
-                self.world.state.keys(),
-                self.previous_world_state_data,
-                self.world.state.positions,
-            )
-            if not np.allclose(previous_state, current_state)
-        }
-        return changes
 
 
 @dataclass

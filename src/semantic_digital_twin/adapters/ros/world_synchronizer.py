@@ -3,7 +3,7 @@ import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from functools import cached_property
-from typing import ClassVar, Optional, Type, List
+from typing import ClassVar, Optional, Type, List, Dict
 
 import numpy as np
 import rclpy  # type: ignore
@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 
 from .messages import MetaData, WorldStateUpdate, Message, ModificationBlock, LoadModel
 from ...callbacks.callback import Callback, StateChangeCallback, ModelChangeCallback
+from ...datastructures.prefixed_name import PrefixedName
 from ...orm.ormatic_interface import *
 from ...world import World
 
@@ -222,6 +223,18 @@ class StateSynchronizer(StateChangeCallback, SynchronizerOnCallback):
         )
         self.update_previous_world_state()
         self.publish(msg)
+
+    def compute_state_changes(self) -> Dict[PrefixedName, float]:
+        changes = {
+            name: current_state
+            for name, previous_state, current_state in zip(
+                self.world.state.keys(),
+                self.previous_world_state_data,
+                self.world.state.positions,
+            )
+            if not np.allclose(previous_state, current_state)
+        }
+        return changes
 
 
 @dataclass

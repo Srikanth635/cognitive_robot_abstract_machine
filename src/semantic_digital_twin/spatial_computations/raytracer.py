@@ -64,9 +64,9 @@ class RayTracer:
         if self._last_world_model != self.world._model_version:
             self.add_missing_bodies()
             self._last_world_model = self.world._model_version
-        if self._last_world_state != self.world._state_version:
+        if self._last_world_state != self.world.state._state_version:
             self.update_transforms()
-            self._last_world_state = self.world._state_version
+            self._last_world_state = self.world.state._state_version
 
     def add_missing_bodies(self):
         """

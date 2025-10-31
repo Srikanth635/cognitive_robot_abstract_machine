@@ -4,6 +4,7 @@ from __future__ import annotations
 import inspect
 import logging
 import os
+from abc import ABC
 from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import IntEnum
@@ -280,12 +281,6 @@ class World:
     by adding/removing bodies and connections.
     """
 
-    _state_version: int = 0
-    """
-    The version of the state. This increases whenever a change to the state of the kinematic model is made. 
-    Mostly triggered by updating connection values.
-    """
-
     world_is_being_modified: bool = False
     """
     Is set to True, when a world.modify_world context is used.
@@ -294,13 +289,6 @@ class World:
     name: Optional[str] = None
     """
     Name of the world. May act as default namespace for all bodies and semantic annotations in the world which do not have a prefix.
-    """
-
-    state_change_callbacks: List[StateChangeCallback] = field(
-        default_factory=list, repr=False
-    )
-    """
-    Callbacks to be called when the state of the world changes.
     """
 
     model_change_callbacks: List[ModelChangeCallback] = field(
@@ -511,9 +499,7 @@ class World:
         """
         if not self.empty:
             self._recompute_forward_kinematics()
-        self._state_version += 1
-        for callback in self.state_change_callbacks:
-            callback.notify()
+        self.state._notify_state_change()
 
     def _notify_model_change(self) -> None:
         """
@@ -530,7 +516,7 @@ class World:
         for callback in self.model_change_callbacks:
             callback.notify()
 
-        for callback in self.state_change_callbacks:
+        for callback in self.state.state_change_callbacks:
             callback.update_previous_world_state()
 
         self.validate()
