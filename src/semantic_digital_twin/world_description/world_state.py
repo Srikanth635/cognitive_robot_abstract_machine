@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from typing_extensions import MutableMapping, List, Dict
+from typing_extensions import MutableMapping, List, Dict, Self
 
 import numpy as np
 
@@ -122,6 +122,20 @@ class WorldState(MutableMapping):
 
     def __len__(self) -> int:
         return len(self._names)
+
+    def __eq__(self, other: Self) -> bool:
+        if self is other:
+            return True
+
+        if set(self._names) != set(other._names):
+            return False
+
+        return all(
+            np.array_equal(
+                self.data[:, self._index[name]], other.data[:, other._index[name]]
+            )
+            for name in self._names
+        )
 
     def keys(self) -> List[PrefixedName]:
         return self._names
