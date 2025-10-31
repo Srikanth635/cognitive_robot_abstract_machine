@@ -396,6 +396,9 @@ class CollisionPairManager:
 
 @dataclass
 class WorldModelManager:
+    """
+    Manages the world model version and modification blocks.
+    """
 
     model_version: int = 0
     """
@@ -481,8 +484,6 @@ class World:
     Name of the world. May act as default namespace for all bodies and semantic annotations in the world which do not have a prefix.
     """
 
-    _world_model_manager: WorldModelManager = field(default_factory=WorldModelManager, repr=False)
-
     _atomic_modification_is_being_executed: bool = field(init=False, default=False)
     """
     Flag that indicates if an atomic world operation is currently being executed.
@@ -492,6 +493,11 @@ class World:
     _collision_pair_manager: CollisionPairManager = field(init=False, repr=False)
     """
     Manages disabled collision pairs in the world.
+    """
+
+    _world_model_manager: WorldModelManager = field(default_factory=WorldModelManager, repr=False)
+    """
+    Manages the world model version and modification blocks.
     """
 
     def __post_init__(self):
@@ -531,23 +537,22 @@ class World:
 
     @property
     def active_degrees_of_freedom(self) -> Set[DegreeOfFreedom]:
+        active_connections = self.get_connections_by_type(ActiveConnection)
         dofs = {
             dof
-            for connection in self.connections
-            if isinstance(connection, ActiveConnection)
+            for connection in active_connections
             for dof in connection.active_dofs
         }
         return dofs
 
     @property
     def passive_degrees_of_freedom(self) -> Set[DegreeOfFreedom]:
+        passive_connections = self.get_connections_by_type(PassiveConnection)
         dofs = {
             dof
-            for connection in self.connections
-            if isinstance(connection, PassiveConnection)
+            for connection in passive_connections
             for dof in connection.passive_dofs
         }
-
         return dofs
 
     def validate(self) -> bool:
@@ -582,9 +587,17 @@ class World:
         dofs_without_world = [dof for dof in connection.dofs if dof._world is None]
         for dof in dofs_without_world:
             self.add_degree_of_freedom(dof)
-        self.add_kinematic_structure_entity(connection.parent, handle_duplicates)
-        self.add_kinematic_structure_entity(connection.child, handle_duplicates)
+
+        self._add_kinematic_structure_entity_if_not_in_world(connection.parent)
+        self._add_kinematic_structure_entity_if_not_in_world(connection.child)
+
         self._add_connection(connection)
+
+    def _add_kinematic_structure_entity_if_not_in_world(self, entity: KinematicStructureEntity):
+        try:
+            self.get_kinematic_structure_entity_by_name(entity.name)
+        except WorldEntityNotFoundError:
+            self.add_kinematic_structure_entity(entity)
 
     @atomic_world_modification(modification=AddConnectionModification)
     def _add_connection(self, connection: Connection):
@@ -611,7 +624,7 @@ class World:
         self,
         kinematic_structure_entity: KinematicStructureEntity,
         handle_duplicates: bool = False,
-    ) -> Optional[int]:
+    ) -> int:
         """
         Add a kinematic_structure_entity to the world if it does not exist already.
 
@@ -623,14 +636,6 @@ class World:
         logger.info(
             f"Trying to add kinematic_structure_entity with name {kinematic_structure_entity.name}"
         )
-        if (
-            kinematic_structure_entity._world is self
-            and kinematic_structure_entity.index is not None
-        ):
-            logger.info(
-                f"Skipping since add kinematic_structure_entity already exists."
-            )
-            return None
 
         if (
             kinematic_structure_entity._world is not None
@@ -1065,7 +1070,7 @@ class World:
             self.add_connection(connection, handle_duplicates=handle_duplicates)
         else:
             other.remove_kinematic_structure_entity(other_root)
-            self.add_kinematic_structure_entity(other_root)
+            self._add_kinematic_structure_entity_if_not_in_world(other_root)
 
     @staticmethod
     def _remove_kinematic_structure_entities_of_world(other: World):

@@ -171,7 +171,6 @@ class URDFParser:
                 joints.append(parsed_joint)
 
             [world.add_connection(joint) for joint in joints]
-            [world.add_kinematic_structure_entity(link) for link in links]
 
         return world
 
