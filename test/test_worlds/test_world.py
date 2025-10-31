@@ -14,8 +14,7 @@ from semantic_digital_twin.world_description.connections import (
 )
 from semantic_digital_twin.exceptions import (
     AddingAnExistingSemanticAnnotationError,
-    DuplicateSemanticAnnotationError,
-    SemanticAnnotationNotFoundError,
+    DuplicateWorldEntityError,
     DuplicateKinematicStructureEntityError,
     UsageError,
     MissingWorldModificationContextError,
@@ -378,7 +377,7 @@ def test_duplicate_semantic_annotation(world_setup):
     with world.modify_world():
         world.add_semantic_annotation(v)
         world.semantic_annotations.append(v)
-    with pytest.raises(DuplicateSemanticAnnotationError):
+    with pytest.raises(DuplicateWorldEntityError):
         world.get_semantic_annotation_by_name(v.name)
 
 

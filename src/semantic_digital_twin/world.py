@@ -36,9 +36,9 @@ from .collision_checking.trimesh_collision_detector import TrimeshCollisionDetec
 from .datastructures.prefixed_name import PrefixedName
 from .datastructures.types import NpMatrix4x4
 from .exceptions import (
-    DuplicateSemanticAnnotationError,
+    DuplicateWorldEntityError,
     AddingAnExistingSemanticAnnotationError,
-    SemanticAnnotationNotFoundError,
+    WorldEntityNotFoundError,
     AlreadyBelongsToAWorldError,
     DuplicateKinematicStructureEntityError,
     MissingWorldModificationContextError,
@@ -69,6 +69,8 @@ from .world_description.world_entity import (
     GenericConnection,
     CollisionCheckingConfig,
     Body,
+    WorldEntity,
+    GenericWorldEntity,
 )
 from .world_description.world_modification import (
     RemoveSemanticAnnotationModification,
@@ -330,25 +332,24 @@ class World:
     See `atomic_world_modification` for more information.
     """
 
-    _disabled_collision_pairs: Set[
-        Tuple[KinematicStructureEntity, KinematicStructureEntity]
-    ] = field(default_factory=set, repr=False)
+    _disabled_collision_pairs: Set[Tuple[Body, Body]] = field(
+        default_factory=set, repr=False
+    )
     """
     Collisions for these Body pairs is disabled.f
     """
 
-    _temp_disabled_collision_pairs: Set[
-        Tuple[KinematicStructureEntity, KinematicStructureEntity]
-    ] = field(default_factory=set, repr=False)
+    _temp_disabled_collision_pairs: Set[Tuple[Body, Body]] = field(
+        default_factory=set, repr=False
+    )
     """
     A set of Body pairs for which collisions are temporarily disabled.
     """
 
     def reset_temporary_collision_config(self):
         self._temp_disabled_collision_pairs = set()
-        for body in self.bodies:
-            if body.has_collision():
-                body.reset_temporary_collision_config()
+        for body in self.bodies_with_enabled_collision:
+            body.reset_temporary_collision_config()
 
     @property
     def root(self) -> Optional[KinematicStructureEntity]:
@@ -358,8 +359,9 @@ class World:
         :return: The root of the world.
         """
 
-        if not self.kinematic_structure_entities:
+        if self.empty:
             return None
+
         possible_roots = [
             node
             for node in self.kinematic_structure_entities
@@ -367,30 +369,36 @@ class World:
         ]
         if len(possible_roots) == 1:
             return possible_roots[0]
-        elif len(possible_roots) > 1:
-            raise ValueError(
-                f"More than one root found. Possible roots are {possible_roots}"
-            )
-        else:
-            raise ValueError(f"No root found.")
+
+        raise ValueError(
+            f"A World must have exactly one root. Found {len(possible_roots)} possible roots: {possible_roots}."
+        )
 
     def __hash__(self):
         return hash(id(self))
 
+    def __str__(self):
+        return f"{self.__class__.__name__} with {len(self.kinematic_structure_entities)} bodies."
+
     @property
     def active_degrees_of_freedom(self) -> Set[DegreeOfFreedom]:
-        dofs = set()
-        for connection in self.connections:
-            if isinstance(connection, ActiveConnection):
-                dofs.update(set(connection.active_dofs))
+        dofs = {
+            dof
+            for connection in self.connections
+            if isinstance(connection, ActiveConnection)
+            for dof in connection.active_dofs
+        }
         return dofs
 
     @property
     def passive_degrees_of_freedom(self) -> Set[DegreeOfFreedom]:
-        dofs = set()
-        for connection in self.connections:
-            if isinstance(connection, PassiveConnection):
-                dofs.update(set(connection.passive_dofs))
+        dofs = {
+            dof
+            for connection in self.connections
+            if isinstance(connection, PassiveConnection)
+            for dof in connection.passive_dofs
+        }
+
         return dofs
 
     @cached_property
@@ -420,9 +428,9 @@ class World:
             return True
         assert len(self.kinematic_structure_entities) == (len(self.connections) + 1)
         assert rx.is_weakly_connected(self.kinematic_structure)
-        actual_dofs = set()
-        for connection in self.connections:
-            actual_dofs.update(connection.dofs)
+        actual_dofs = {
+            dof for connection in self.connections for dof in connection.dofs
+        }
         assert actual_dofs == set(
             self.degrees_of_freedom
         ), "self.degrees_of_freedom does not match the actual dofs used in connections. Did you forget to call deleted_orphaned_dof()?"
@@ -445,13 +453,15 @@ class World:
         dof._world = self
         dof.create_and_register_symbols()
 
+        lower = dof.lower_limits.position
+        upper = dof.upper_limits.position
         initial_position = 0
-        lower_limit = dof.lower_limits.position
-        if lower_limit is not None:
-            initial_position = max(lower_limit, initial_position)
-        upper_limit = dof.upper_limits.position
-        if upper_limit is not None:
-            initial_position = min(upper_limit, initial_position)
+
+        if lower is not None:
+            initial_position = max(lower, initial_position)
+        if upper is not None:
+            initial_position = min(upper, initial_position)
+
         self.state[dof.name].position = initial_position
         self.degrees_of_freedom.append(dof)
 
@@ -476,10 +486,10 @@ class World:
         del self.state[dof.name]
 
     def remove_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
-        if dof._world is self:
-            self._remove_degree_of_freedom(dof)
-        else:
+        if dof._world is not self:
             logger.debug("Trying to remove an dof that is not part of this world.")
+            return
+        self._remove_degree_of_freedom(dof)
 
     def modify_world(self) -> WorldModelUpdateContextManager:
         return WorldModelUpdateContextManager(self)
@@ -489,21 +499,16 @@ class World:
 
     def clear_all_lru_caches(self):
         for method_name in dir(self):
-            try:
-                method = getattr(self, method_name)
-                if hasattr(method, "cache_clear") and callable(method.cache_clear):
-                    method.cache_clear()
-            except AttributeError:
-                # Skip attributes that can't be accessed
-                pass
+            method = getattr(self, method_name, None)
+            cache_clear = getattr(method, "cache_clear", None)
+            if callable(cache_clear):
+                cache_clear()
 
     def notify_state_change(self) -> None:
         """
         If you have changed the state of the world, call this function to trigger necessary events and increase
         the state version.
         """
-        # self.compute_fk.cache_clear()
-        # self.compute_fk_with_collision_offset_np.cache_clear()
         if not self.empty:
             self._recompute_forward_kinematics()
         self._state_version += 1
@@ -537,21 +542,6 @@ class World:
         for connection in self.connections:
             actual_dofs.update(connection.dofs)
         self.degrees_of_freedom = list(actual_dofs)
-
-    def get_kinematic_structure_entity_by_type(
-        self, entity_type: Type[GenericKinematicStructureEntity]
-    ) -> List[GenericKinematicStructureEntity]:
-        """
-        Retrieves all kinematic structure entities of a specific type from the world.
-
-        :param entity_type: The class (type) of the kinematic structure entities to search for.
-        :return: A list of `KinematicStructureEntity` objects that match the given type.
-        """
-        return [
-            entity
-            for entity in self.kinematic_structure_entities
-            if isinstance(entity, entity_type)
-        ]
 
     @property
     def kinematic_structure_entities(self) -> List[KinematicStructureEntity]:
@@ -622,7 +612,8 @@ class World:
                 f"Skipping since add kinematic_structure_entity already exists."
             )
             return None
-        elif (
+
+        if (
             kinematic_structure_entity._world is not None
             and kinematic_structure_entity._world is not self
         ):
@@ -630,9 +621,9 @@ class World:
                 world=kinematic_structure_entity._world,
                 type_trying_to_add=KinematicStructureEntity,
             )
-        elif kinematic_structure_entity.name in [
-            ke.name for ke in self.kinematic_structure_entities
-        ]:
+
+        try:
+            self.get_kinematic_structure_entity_by_name(kinematic_structure_entity.name)
             if not handle_duplicates:
                 raise DuplicateKinematicStructureEntityError(
                     [kinematic_structure_entity.name]
@@ -641,7 +632,8 @@ class World:
                 kinematic_structure_entity.name.name
                 + f"_{id_generator(kinematic_structure_entity)}"
             )
-
+        except WorldEntityNotFoundError:
+            pass
         return self._add_kinematic_structure_entity(kinematic_structure_entity)
 
     def add_body(
@@ -695,9 +687,9 @@ class World:
         :param connection: The connection to add.
         """
         connection.add_to_world(self)
-        for dof in connection.dofs:
-            if dof._world is None:
-                self.add_degree_of_freedom(dof)
+        dofs_without_world = [dof for dof in connection.dofs if dof._world is None]
+        for dof in dofs_without_world:
+            self.add_degree_of_freedom(dof)
         self.add_kinematic_structure_entity(connection.parent, handle_duplicates)
         self.add_kinematic_structure_entity(connection.child, handle_duplicates)
 
@@ -721,7 +713,7 @@ class World:
             self.get_semantic_annotation_by_name(semantic_annotation.name)
             if not exists_ok:
                 raise AddingAnExistingSemanticAnnotationError(semantic_annotation)
-        except SemanticAnnotationNotFoundError:
+        except WorldEntityNotFoundError:
             self._add_semantic_annotation(semantic_annotation)
 
     @atomic_world_modification(modification=AddSemanticAnnotationModification)
@@ -750,7 +742,7 @@ class World:
                 raise ValueError(
                     "The provided semantic annotation instance does not match the existing semantic annotation with the same name."
                 )
-        except SemanticAnnotationNotFoundError:
+        except WorldEntityNotFoundError:
             logger.debug(
                 f"semantic annotation {semantic_annotation.name} not found in the world. No action taken."
             )
@@ -814,46 +806,6 @@ class World:
 
         return visitor.bodies
 
-    def get_semantic_annotation_by_name(
-        self, name: Union[str, PrefixedName]
-    ) -> Optional[SemanticAnnotation]:
-        """
-        Retrieves a semantic annotation from the list of semantic annotation based on its name.
-        If the input is of type `PrefixedName`, it checks whether the prefix is specified and looks for an
-        exact match. Otherwise, it matches based on the name's string representation.
-        If more than one body with the same name is found, an assertion error is raised.
-        If no matching body is found, a `ValueError` is raised.
-
-        :param name: The name of the semantic annotation to search for. Can be a string or a `PrefixedName` object.
-        :return: The `SemanticAnnotation` object that matches the given name.
-        :raises ValueError: If multiple or no semantic annotations with the specified name are found.
-        :raises KeyError: If no semantic annotation is found.
-        """
-        if isinstance(name, PrefixedName):
-            if name.prefix is not None:
-                matches = [
-                    semantic_annotation
-                    for semantic_annotation in self.semantic_annotations
-                    if semantic_annotation.name == name
-                ]
-            else:
-                matches = [
-                    semantic_annotation
-                    for semantic_annotation in self.semantic_annotations
-                    if semantic_annotation.name.name == name.name
-                ]
-        else:
-            matches = [
-                semantic_annotation
-                for semantic_annotation in self.semantic_annotations
-                if semantic_annotation.name.name == name
-            ]
-        if len(matches) > 1:
-            raise DuplicateSemanticAnnotationError(matches)
-        if matches:
-            return matches[0]
-        raise SemanticAnnotationNotFoundError(name)
-
     def get_world_state_symbols(self) -> List[cas.Symbol]:
         """
         Constructs and returns a list of symbols representing the state of the system. The state
@@ -883,21 +835,6 @@ class World:
         ]
         return positions + velocities + accelerations + jerks
 
-    def get_semantic_annotations_by_type(
-        self, semantic_annotation_type: Type[GenericSemanticAnnotation]
-    ) -> List[GenericSemanticAnnotation]:
-        """
-        Retrieves all semantic annotations of a specific type from the world.
-
-        :param semantic_annotation_type: The class (type) of the semantic annotations to search for.
-        :return: A list of `SemanticAnnotation` objects that match the given type.
-        """
-        return [
-            semantic_annotation
-            for semantic_annotation in self.semantic_annotations
-            if isinstance(semantic_annotation, semantic_annotation_type)
-        ]
-
     @atomic_world_modification(modification=RemoveBodyModification)
     def _remove_kinematic_structure_entity(
         self, kinematic_structure_entity: KinematicStructureEntity
@@ -922,14 +859,15 @@ class World:
         :param kinematic_structure_entity: The kinematic_structure_entity to remove.
         """
         if (
-            kinematic_structure_entity._world is self
-            and kinematic_structure_entity.index is not None
+            kinematic_structure_entity._world is not self
+            or kinematic_structure_entity.index is None
         ):
-            self._remove_kinematic_structure_entity(kinematic_structure_entity)
-        else:
             logger.debug(
                 "Trying to remove an kinematic_structure_entity that is not part of this world."
             )
+            return
+
+        self._remove_kinematic_structure_entity(kinematic_structure_entity)
 
     @atomic_world_modification(modification=RemoveConnectionModification)
     def _remove_connection(self, connection: Connection) -> None:
@@ -949,16 +887,18 @@ class World:
 
         :param connection: The connection to be removed
         """
-        remaining_dofs = set()
-        for remaining_connection in self.connections:
-            if remaining_connection == connection:
-                continue
-            remaining_dofs.update(remaining_connection.dofs)
+        remaining_dofs = {
+            dof
+            for remaining_connection in self.connections
+            if remaining_connection != connection
+            for dof in remaining_connection.dofs
+        }
+
+        removed_dofs = set(connection.dofs) - remaining_dofs
 
         with self.modify_world():
-            for dof in connection.dofs:
-                if dof not in remaining_dofs:
-                    self.remove_degree_of_freedom(dof)
+            for dof in removed_dofs:
+                self.remove_degree_of_freedom(dof)
             self._remove_connection(connection)
 
     def merge_world(
@@ -983,43 +923,58 @@ class World:
             self_root = self.root
             other_root = other.root
             with other.modify_world():
-                for dof in other.degrees_of_freedom.copy():
-                    other.remove_degree_of_freedom(dof)
-                    self.add_degree_of_freedom(dof)
-                for connection in other.connections:
-                    other.remove_kinematic_structure_entity(connection.parent)
-                    other.remove_kinematic_structure_entity(connection.child)
-                    self.add_connection(connection, handle_duplicates=handle_duplicates)
-                else:
-                    other.remove_kinematic_structure_entity(other_root)
-                    self.add_kinematic_structure_entity(other_root)
-                for kinematic_structure_entity in other.kinematic_structure_entities:
-                    if kinematic_structure_entity._world is not None:
-                        other.remove_kinematic_structure_entity(
-                            kinematic_structure_entity
-                        )
+                self._merge_dofs_of_world(other)
+                self._merge_connections_of_world(other, handle_duplicates)
+                self._remove_kinematic_structure_entities_of_world(other)
+                self._merge_semantic_annotations_of_world(other, handle_duplicates)
 
-                other_semantic_annotations = [
-                    semantic_annotation
-                    for semantic_annotation in other.semantic_annotations
-                ]
-                for semantic_annotation in other_semantic_annotations:
-                    other.remove_semantic_annotation(semantic_annotation)
-                    self.add_semantic_annotation(
-                        semantic_annotation, exists_ok=handle_duplicates
-                    )
-
-            connection = root_connection
-            if not connection and self_root:
-                connection = Connection6DoF(
+            if not root_connection and self_root:
+                root_connection = Connection6DoF(
                     parent=self_root, child=other_root, _world=self
                 )
 
-            if connection:
-                self.add_connection(connection, handle_duplicates=handle_duplicates)
+            if root_connection:
+                self.add_connection(
+                    root_connection, handle_duplicates=handle_duplicates
+                )
 
             for dof_name in old_state.keys():
                 self.state[dof_name] = old_state[dof_name]
+
+    def _merge_dofs_of_world(self, other: World):
+        for dof in other.degrees_of_freedom.copy():
+            other.remove_degree_of_freedom(dof)
+            self.add_degree_of_freedom(dof)
+
+    def _merge_connections_of_world(self, other: World, handle_duplicates: bool):
+        other_root = other.root
+        for connection in other.connections:
+            other.remove_kinematic_structure_entity(connection.parent)
+            other.remove_kinematic_structure_entity(connection.child)
+            self.add_connection(connection, handle_duplicates=handle_duplicates)
+        else:
+            other.remove_kinematic_structure_entity(other_root)
+            self.add_kinematic_structure_entity(other_root)
+
+    @staticmethod
+    def _remove_kinematic_structure_entities_of_world(other: World):
+        other_kse_with_world = [
+            kse for kse in other.kinematic_structure_entities if kse._world is not None
+        ]
+        for kinematic_structure_entity in other_kse_with_world:
+            other.remove_kinematic_structure_entity(kinematic_structure_entity)
+
+    def _merge_semantic_annotations_of_world(
+        self, other: World, handle_duplicates: bool
+    ):
+        other_semantic_annotations = [
+            semantic_annotation for semantic_annotation in other.semantic_annotations
+        ]
+        for semantic_annotation in other_semantic_annotations:
+            other.remove_semantic_annotation(semantic_annotation)
+            self.add_semantic_annotation(
+                semantic_annotation, exists_ok=handle_duplicates
+            )
 
     def move_branch(
         self,
@@ -1033,35 +988,37 @@ class World:
         :param branch_root: The root of the branch to be moved.
         :param new_parent: The new parent of the branch.
         """
+        new_connection = None
+        new_parent_T_root = self.compute_forward_kinematics(new_parent, branch_root)
+        old_connection = branch_root.parent_connection
 
-        with self.modify_world():
-            old_connection = branch_root.parent_connection
-            if isinstance(old_connection, FixedConnection):
-                new_parent_T_root = self.compute_forward_kinematics(
-                    new_parent, branch_root
-                )
+        match old_connection:
+            case FixedConnection():
                 new_connection = FixedConnection(
                     parent=new_parent,
                     child=branch_root,
                     _world=self,
                     parent_T_connection_expression=new_parent_T_root,
                 )
-                self.add_connection(new_connection)
-                self.remove_connection(old_connection)
-            elif isinstance(old_connection, Connection6DoF):
-                new_parent_T_root = self.compute_forward_kinematics(
-                    new_parent, branch_root
-                )
+
+            case Connection6DoF():
                 new_connection = Connection6DoF(
-                    parent=new_parent, child=branch_root, _world=self
+                    parent=new_parent,
+                    child=branch_root,
+                    _world=self,
                 )
-                self.add_connection(new_connection)
-                self.remove_connection(old_connection)
-                new_connection.origin = new_parent_T_root
-            else:
+
+            case _:
                 raise ValueError(
-                    f'Cannot move branch: "{branch_root.name}" is not connected with a FixedConnection'
+                    "The branch root must be connected to a Connection6DoF or FixedConnection."
                 )
+
+        with self.modify_world():
+            self.add_connection(new_connection)
+            self.remove_connection(old_connection)
+
+        if isinstance(new_connection, Connection6DoF):
+            new_connection.origin = new_parent_T_root
 
     def merge_world_at_pose(self, other: World, pose: cas.TransformationMatrix) -> None:
         """
@@ -1077,9 +1034,6 @@ class World:
             self.merge_world(other, root_connection)
             root_connection.origin = pose
 
-    def __str__(self):
-        return f"{self.__class__.__name__} with {len(self.kinematic_structure_entities)} bodies."
-
     def get_connection(
         self, parent: KinematicStructureEntity, child: KinematicStructureEntity
     ) -> Connection:
@@ -1091,147 +1045,150 @@ class World:
     def get_connections_by_type(
         self, connection_type: Type[GenericConnection]
     ) -> List[GenericConnection]:
-        return [c for c in self.connections if isinstance(c, connection_type)]
+        """
+        Retrieves the connections of a given type.
+
+        :param connection_type: The type of connection to retrieve.
+        :return: A list of connections of the given type.
+        """
+        return self._get_world_entity_by_type_from_iterable(
+            connection_type, self.connections
+        )
+
+    def get_semantic_annotations_by_type(
+        self, semantic_annotation_type: Type[GenericSemanticAnnotation]
+    ) -> List[GenericSemanticAnnotation]:
+        """
+        Retrieves all semantic annotations of a specific type from the world.
+
+        :param semantic_annotation_type: The class (type) of the semantic annotations to search for.
+        :return: A list of `SemanticAnnotation` objects that match the given type.
+        """
+        return self._get_world_entity_by_type_from_iterable(
+            semantic_annotation_type, self.semantic_annotations
+        )
+
+    def get_kinematic_structure_entity_by_type(
+        self, entity_type: Type[GenericKinematicStructureEntity]
+    ) -> List[GenericKinematicStructureEntity]:
+        """
+        Retrieves all kinematic structure entities of a specific type from the world.
+
+        :param entity_type: The class (type) of the kinematic structure entities to search for.
+        :return: A list of `KinematicStructureEntity` objects that match the given type.
+        """
+        return self._get_world_entity_by_type_from_iterable(
+            entity_type, self.kinematic_structure_entities
+        )
+
+    @staticmethod
+    def _get_world_entity_by_type_from_iterable(
+        world_entity_type: Type[GenericWorldEntity], iterable: Iterable[WorldEntity]
+    ) -> List[GenericWorldEntity]:
+        """
+        Helper function to retrieve all world entities of a specific type from an iterable.
+        :param world_entity_type: The type of the world entity.
+        :param iterable: The iterable to search for the world entity, for example self.connections or self.kinematic_structure_entities.
+        :return: A list of `WorldEntity` objects that match the given type.
+        """
+        return [entity for entity in iterable if isinstance(entity, world_entity_type)]
 
     def clear(self):
         """
         Clears all stored data and resets the state of the instance.
         """
         with self.modify_world():
-            for body in list(self.bodies):
+            kse = self.kinematic_structure_entities
+            for body in kse:
                 self.remove_kinematic_structure_entity(body)
 
             self.semantic_annotations.clear()
             self.degrees_of_freedom.clear()
             self.state = WorldState()
 
+    def get_semantic_annotation_by_name(
+        self, name: Union[str, PrefixedName]
+    ) -> SemanticAnnotation:
+        semantic_annotation: SemanticAnnotation = (
+            self._get_world_entity_by_name_from_iterable(
+                name, self.semantic_annotations
+            )
+        )
+        return semantic_annotation
+
     def get_kinematic_structure_entity_by_name(
         self, name: Union[str, PrefixedName]
     ) -> KinematicStructureEntity:
-        """
-        Retrieves a kinematic_structure_entity from the list of KinematicStructureEntites based on its name.
-        If the input is of type `PrefixedName`, it checks whether the prefix is specified and looks for an
-        exact match. Otherwise, it matches based on the name's string representation.
-        If more than one kinematic_structure_entity with the same name is found, an assertion error is raised.
-        If no matching kinematic_structure_entity is found, a `ValueError` is raised.
-
-        :param name: The name of the kinematic_structure_entity to search for. Can be a string or a `PrefixedName` object.
-        :return: The `KinematicStructureEntity` object that matches the given name.
-        :raises ValueError: If multiple or no KinematicStructureEntities with the specified name are found.
-        """
-        if isinstance(name, PrefixedName):
-            if name.prefix is not None:
-                matches = [
-                    entity
-                    for entity in self.kinematic_structure_entities
-                    if entity.name == name
-                ]
-            else:
-                matches = [
-                    entity
-                    for entity in self.kinematic_structure_entities
-                    if entity.name.name == name.name
-                ]
-        else:
-            matches = [
-                entity
-                for entity in self.kinematic_structure_entities
-                if entity.name.name == name
-            ]
-        if len(matches) > 1:
-            raise ValueError(
-                f"Multiple KinematicStructureEntities with name {name} found"
-            )
-        if matches:
-            return matches[0]
-        raise KeyError(f"KinematicStructureEntity with name {name} not found")
+        kse: KinematicStructureEntity = self._get_world_entity_by_name_from_iterable(
+            name, self.kinematic_structure_entities
+        )
+        return kse
 
     def get_body_by_name(self, name: Union[str, PrefixedName]) -> Body:
-        """
-        Retrieves a Body from the list of bodies based on its name.
-        If the input is of type `PrefixedName`, it checks whether the prefix is specified and looks for an
-        exact match. Otherwise, it matches based on the name's string representation.
-        If more than one body with the same name is found, an assertion error is raised.
-        If no matching body is found, a `ValueError` is raised.
-
-        :param name: The name of the body to search for. Can be a string or a `PrefixedName` object.
-        :return: The `Body` object that matches the given name.
-        :raises ValueError: If multiple or no bodies with the specified name are found.
-        """
-        if isinstance(name, PrefixedName):
-            if name.prefix is not None:
-                matches = [body for body in self.bodies if body.name == name]
-            else:
-                matches = [body for body in self.bodies if body.name.name == name.name]
-        else:
-            matches = [body for body in self.bodies if body.name.name == name]
-        if len(matches) > 1:
-            raise ValueError(f"Multiple bodies with name {name} found")
-        if matches:
-            return matches[0]
-        raise KeyError(f"Body with name {name} not found")
+        body: Body = self._get_world_entity_by_name_from_iterable(name, self.bodies)
+        return body
 
     def get_degree_of_freedom_by_name(
         self, name: Union[str, PrefixedName]
     ) -> DegreeOfFreedom:
-        """
-        Retrieves a DegreeOfFreedom from the list of DegreeOfFreedom based on its name.
-        If the input is of type `PrefixedName`, it checks whether the prefix is specified and looks for an
-        exact match. Otherwise, it matches based on the name's string representation.
-        If more than one body with the same name is found, an assertion error is raised.
-        If no matching body is found, a `ValueError` is raised.
-
-        :param name: The name of the DegreeOfFreedom to search for. Can be a string or a `PrefixedName` object.
-        :return: The `DegreeOfFreedom` object that matches the given name.
-        :raises ValueError: If multiple or no DegreeOfFreedom with the specified name are found.
-        """
-        if isinstance(name, PrefixedName):
-            if name.prefix is not None:
-                matches = [dof for dof in self.degrees_of_freedom if dof.name == name]
-            else:
-                matches = [
-                    dof for dof in self.degrees_of_freedom if dof.name.name == name.name
-                ]
-        else:
-            matches = [dof for dof in self.degrees_of_freedom if dof.name.name == name]
-        if len(matches) > 1:
-            raise ValueError(f"Multiple DegreeOfFreedom with name {name} found")
-        if matches:
-            return matches[0]
-        raise KeyError(f"DegreeOfFreedom with name {name} not found")
+        dof: DegreeOfFreedom = self._get_world_entity_by_name_from_iterable(
+            name, self.degrees_of_freedom
+        )
+        return dof
 
     def get_connection_by_name(self, name: Union[str, PrefixedName]) -> Connection:
+        connection: Connection = self._get_world_entity_by_name_from_iterable(
+            name, self.connections
+        )
+        return connection
+
+    @staticmethod
+    def _get_world_entity_by_name_from_iterable(
+        name: Union[str, PrefixedName], world_entity_iterable: Iterable[WorldEntity]
+    ) -> WorldEntity:
         """
-        Retrieve a connection by its name.
+        Retrieve a world entity by its name from an iterable of world entities.
+        This iterable would, for example, be self.connections or self.kinematic_structure_entities.
         This method accepts either a string or a `PrefixedName` instance.
-        It searches through the list of connections and returns the one
+        It searches through the provided iterable and returns the one
         that matches the given name. If the `PrefixedName` contains a prefix,
         the method ensures the name, including the prefix, matches an existing
-        connection. Otherwise, it only considers the unprefixed name. If more than
+        world entity. Otherwise, it only considers the unprefixed name. If more than
         one connection matches the specified name, or if no connection is found,
         an exception is raised.
-
         :param name: The name of the connection to retrieve. Can be a string or
             a `PrefixedName` instance. If a prefix is included in `PrefixedName`,
             it will be used for matching.
-        :return: The connection that matches the specified name.
-        :raises ValueError: If multiple connections with the given name are found
-            or if no connection with the given name exists.
+        :param world_entity_iterable:
+        :return: The `WorldEntity` object that matches the given name.
+        :raises WorldEntityNotFoundError: If no world entity with the given name exists.
+        :raises DuplicateWorldEntityError: If multiple world entities with the given name exist.
         """
+        original_name = name
+        prefix = None
         if isinstance(name, PrefixedName):
-            if name.prefix is not None:
-                matches = [conn for conn in self.connections if conn.name == name]
-            else:
-                matches = [
-                    conn for conn in self.connections if conn.name.name == name.name
-                ]
-        else:
-            matches = [conn for conn in self.connections if conn.name.name == name]
+            prefix = name.prefix if name.prefix is not None else None
+            name = name.name
+
+        matches = [
+            world_entity
+            for world_entity in world_entity_iterable
+            if world_entity.name.name == name
+        ]
+
+        if prefix is not None:
+            matches = [
+                world_entity
+                for world_entity in matches
+                if world_entity.name.prefix == prefix
+            ]
+
+        if len(matches) == 0:
+            raise WorldEntityNotFoundError(original_name)
         if len(matches) > 1:
-            raise ValueError(f"Multiple connections with name {name} found")
-        if matches:
-            return matches[0]
-        raise KeyError(f"Connection with name {name} not found")
+            raise DuplicateWorldEntityError(matches)
+
+        return matches[0]
 
     @lru_cache(maxsize=None)
     def compute_child_kinematic_structure_entities(
@@ -1349,25 +1306,35 @@ class World:
         """
         if root == tip:
             return [], [root], []
-        root_chain = self.compute_chain_of_kinematic_structure_entities(self.root, root)
-        tip_chain = self.compute_chain_of_kinematic_structure_entities(self.root, tip)
-        i = 0
-        for i in range(min(len(root_chain), len(tip_chain))):
-            if root_chain[i] != tip_chain[i]:
-                break
-        else:
-            i += 1
-        common_ancestor = tip_chain[i - 1]
-        root_chain = self.compute_chain_of_kinematic_structure_entities(
-            common_ancestor, root
+
+        # Paths from the tree's true root to each endpoint (inclusive).
+        root_path = self.compute_chain_of_kinematic_structure_entities(self.root, root)
+        tip_path = self.compute_chain_of_kinematic_structure_entities(self.root, tip)
+
+        # Find the first index where the paths diverge.
+        max_common_index = min(len(root_path), len(tip_path))
+        i = next(
+            (
+                index
+                for index, (root_path_entity, tip_path_entity) in enumerate(
+                    zip(root_path, tip_path)
+                )
+                if root_path_entity != tip_path_entity
+            ),
+            max_common_index,
         )
-        root_chain = root_chain[1:]
-        root_chain = root_chain[::-1]
-        tip_chain = self.compute_chain_of_kinematic_structure_entities(
-            common_ancestor, tip
-        )
-        tip_chain = tip_chain[1:]
-        return root_chain, [common_ancestor], tip_chain
+
+        # The last common ancestor is the last common node.
+        common_ancestor = root_path[i - 1]
+
+        # 1) From `root` up to (but not including) last common ancestor, in order starting at `root`.
+        #    `root_path[i:]` is the common_ancestor->root tail; reverse it to start at `root`.
+        up_from_root = list(reversed(root_path[i:]))
+
+        # 3) From just below last common ancestor down to `tip` (already in CA->tip order, excluding CA).
+        down_to_tip = tip_path[i:]
+
+        return up_from_root, [common_ancestor], down_to_tip
 
     @lru_cache(maxsize=None)
     def compute_split_chain_of_connections(
@@ -1388,16 +1355,18 @@ class World:
         root_chain, common_ancestor, tip_chain = (
             self.compute_split_chain_of_kinematic_structure_entities(root, tip)
         )
-        root_chain = root_chain + [common_ancestor[0]]
-        tip_chain = [common_ancestor[0]] + tip_chain
-        root_connections = []
-        for i in range(len(root_chain) - 1):
-            root_connections.append(
-                self.get_connection(root_chain[i + 1], root_chain[i])
-            )
-        tip_connections = []
-        for i in range(len(tip_chain) - 1):
-            tip_connections.append(self.get_connection(tip_chain[i], tip_chain[i + 1]))
+        root_chain.append(common_ancestor[0])
+        tip_chain.insert(0, common_ancestor[0])
+
+        root_connections = [
+            self.get_connection(root_chain[i + 1], root_chain[i])
+            for i in range(len(root_chain) - 1)
+        ]
+
+        tip_connections = [
+            self.get_connection(tip_chain[i], tip_chain[i + 1])
+            for i in range(len(tip_chain) - 1)
+        ]
         return root_connections, tip_connections
 
     @property
@@ -1408,15 +1377,14 @@ class World:
         Return a list of all kinematic_structure_entities in the world, sorted topologically.
         """
         indices = rx.topological_sort(self.kinematic_structure)
-
         return [self.kinematic_structure[index] for index in indices]
 
     @property
-    def bodies_topologically_sorted(self) -> List[KinematicStructureEntity]:
+    def bodies_topologically_sorted(self) -> List[Body]:
         return [
-            entity
-            for entity in self.kinematic_structure_entities_topologically_sorted
-            if isinstance(entity, KinematicStructureEntity)
+            body
+            for body in self.kinematic_structure_entities_topologically_sorted
+            if isinstance(body, Body)
         ]
 
     def copy_subgraph_to_new_world(self, new_root: KinematicStructureEntity) -> World:
@@ -1648,8 +1616,8 @@ class World:
             reference_frame_R = spatial_object.to_rotation_matrix()
             target_frame_R = target_frame_T_reference_frame @ reference_frame_R
             return target_frame_R.to_quaternion()
-        else:
-            return target_frame_T_reference_frame @ spatial_object
+
+        return target_frame_T_reference_frame @ spatial_object
 
     def compute_inverse_kinematics(
         self,
@@ -1726,6 +1694,7 @@ class World:
         self.notify_state_change()
 
     def __deepcopy__(self, memo):
+        # TODO surely this can be optimized, but I need to fully understand this first because fucking it up will make jonas big mad
         new_world = World(name=self.name)
         body_mapping = {}
         dof_mapping = {}
@@ -1772,33 +1741,32 @@ class World:
             raise ValueError(f"file {file_path} does not exist")
         srdf = etree.parse(file_path)
         srdf_root = srdf.getroot()
-        for child in srdf_root:
-            if hasattr(child, "tag"):
-                if child.tag in {
-                    SRDF_MOVEIT_DISABLE_COLLISIONS,
-                    SRDF_DISABLE_SELF_COLLISION,
-                }:
-                    body_a_srdf_name: str = child.attrib["link1"]
-                    body_b_srdf_name: str = child.attrib["link2"]
-                    body_a: KinematicStructureEntity = (
-                        self.get_kinematic_structure_entity_by_name(body_a_srdf_name)
-                    )
-                    body_b: KinematicStructureEntity = (
-                        self.get_kinematic_structure_entity_by_name(body_b_srdf_name)
-                    )
-                    if not body_a.has_collision():
-                        continue
-                    if not body_b.has_collision():
-                        continue
-                    self.add_disabled_collision_pair(body_a, body_b)
-                elif child.tag == SRDF_DISABLE_ALL_COLLISIONS:
-                    body: KinematicStructureEntity = (
-                        self.get_kinematic_structure_entity_by_name(
-                            child.attrib["link"]
-                        )
-                    )
-                    collision_config = CollisionCheckingConfig(disabled=True)
-                    body.set_static_collision_config(collision_config)
+
+        children_with_tag = [child for child in srdf_root if hasattr(child, "tag")]
+
+        child_disable_collisions = [
+            c for c in children_with_tag if c.tag == SRDF_DISABLE_ALL_COLLISIONS
+        ]
+
+        for c in child_disable_collisions:
+            body = self.get_body_by_name(c.attrib["link"])
+            body.set_static_collision_config(CollisionCheckingConfig(disabled=True))
+
+        child_disable_moveit_and_self_collision = [
+            c
+            for c in children_with_tag
+            if c.tag in {SRDF_MOVEIT_DISABLE_COLLISIONS, SRDF_DISABLE_SELF_COLLISION}
+        ]
+
+        disabled_collision_pairs = [
+            (body_a, body_b)
+            for child in child_disable_moveit_and_self_collision
+            if (body_a := self.get_body_by_name(child.attrib["link1"])).has_collision()
+            and (body_b := self.get_body_by_name(child.attrib["link2"])).has_collision()
+        ]
+
+        for body_a, body_b in disabled_collision_pairs:
+            self.add_disabled_collision_pair(body_a, body_b)
 
     @property
     def controlled_connections(self) -> Set[ActiveConnection]:
@@ -1806,9 +1774,10 @@ class World:
         A subset of the robot's connections that are controlled by a controller.
         """
         return set(
-            c
-            for c in self.connections
-            if isinstance(c, ActiveConnection) and c.has_hardware_interface
+            connection
+            for connection in self.connections
+            if isinstance(connection, ActiveConnection)
+            and connection.has_hardware_interface
         )
 
     def is_controlled_connection_in_chain(
@@ -1816,14 +1785,12 @@ class World:
     ) -> bool:
         root_part, tip_part = self.compute_split_chain_of_connections(root, tip)
         connections = root_part + tip_part
-        for c in connections:
-            if (
-                isinstance(c, ActiveConnection)
-                and c.has_hardware_interface
-                and not c.frozen_for_collision_avoidance
-            ):
-                return True
-        return False
+        return any(
+            isinstance(connection, ActiveConnection)
+            and connection.has_hardware_interface
+            and not connection.frozen_for_collision_avoidance
+            for connection in connections
+        )
 
     def disable_collisions_for_adjacent_bodies(self):
         """
@@ -1835,31 +1802,32 @@ class World:
 
         :return: Set of body pairs that should have collisions disabled
         """
-        body_combinations = set(
-            combinations_with_replacement(self.bodies_with_enabled_collision, 2)
+
+        body_combinations = combinations_with_replacement(
+            self.bodies_with_enabled_collision, 2
         )
-        for body_a, body_b in list(body_combinations):
-            if body_a == body_b:
-                self.add_disabled_collision_pair(body_a, body_b)
-                continue
-            if self.is_controlled_connection_in_chain(body_a, body_b):
-                continue
+
+        for body_a, body_b in (
+            (a, b)
+            for a, b in body_combinations
+            if not self.is_controlled_connection_in_chain(a, b)
+        ):
             self.add_disabled_collision_pair(body_a, body_b)
 
     @property
     def bodies_with_enabled_collision(self) -> List[Body]:
-        return list(
+        return [
             b
             for b in self.bodies
             if b.has_collision()
             and b.get_collision_config
             and not b.get_collision_config().disabled
-        )
+        ]
 
     @property
     def disabled_collision_pairs(
         self,
-    ) -> Set[Tuple[KinematicStructureEntity, KinematicStructureEntity]]:
+    ) -> Set[Tuple[Body, Body]]:
         return self._disabled_collision_pairs | self._temp_disabled_collision_pairs
 
     @property
@@ -1872,13 +1840,11 @@ class World:
         )
         return all_combinations - self.disabled_collision_pairs
 
-    def add_disabled_collision_pair(
-        self, body_a: KinematicStructureEntity, body_b: KinematicStructureEntity
-    ):
+    def add_disabled_collision_pair(self, body_a: Body, body_b: Body):
         """
         Disable collision checking between two bodies
         """
-        pair = tuple(sorted([body_a, body_b], key=lambda b: b.name))
+        pair = tuple(sorted([body_a, body_b], key=lambda body: body.name))
         self._disabled_collision_pairs.add(pair)
 
     def add_temp_disabled_collision_pair(
@@ -1892,7 +1858,7 @@ class World:
 
     def get_direct_child_bodies_with_collision(
         self, connection: Connection
-    ) -> Set[KinematicStructureEntity]:
+    ) -> Set[Body]:
         """
         Collect all child Bodies until a movable connection is found.
 
@@ -1907,7 +1873,7 @@ class World:
 
             def discover_vertex(self, node_index: int, time: int) -> None:
                 body = self.world.kinematic_structure[node_index]
-                if body.has_collision():
+                if isinstance(body, Body) and body.has_collision():
                     self.bodies.add(body)
 
             def tree_edge(self, args: Tuple[int, int, Connection]) -> None:
@@ -1943,63 +1909,60 @@ class World:
             root=root, tip=tip
         )
         chain = downward_chain + upward_chain
-        for i, connection in enumerate(chain):
-            if (
-                isinstance(connection, ActiveConnection)
-                and connection.has_hardware_interface
-                and not connection.frozen_for_collision_avoidance
-            ):
-                new_root = connection
-                break
-        else:
-            raise KeyError(
-                f"no controlled connection in chain between {root} and {tip}"
-            )
-        for i, connection in enumerate(reversed(chain)):
-            if (
-                isinstance(connection, ActiveConnection)
-                and connection.has_hardware_interface
-                and not connection.frozen_for_collision_avoidance
-            ):
-                new_tip = connection
-                break
-        else:
+
+        condition_for_controlled_connection = (
+            lambda conn: isinstance(conn, ActiveConnection)
+            and conn.has_hardware_interface
+            and not conn.frozen_for_collision_avoidance
+        )
+
+        new_root = next((conn for conn in chain if condition_for_controlled_connection(conn)), None)
+        if new_root is None:
             raise KeyError(
                 f"no controlled connection in chain between {root} and {tip}"
             )
 
-        if new_root in upward_chain:
-            new_root_body = new_root.parent
-        else:  # if new_root is in the downward chain, we need to "flip" it by returning its child
-            new_root_body = new_root.child
-        if new_tip in upward_chain:
-            new_tip_body = new_tip.child
-        else:  # if new_root is in the downward chain, we need to "flip" it by returning its parent
-            new_tip_body = new_tip.parent
+        new_tip = next((conn for conn in reversed(chain) if condition_for_controlled_connection(conn)), None)
+        if new_tip is None:
+            raise KeyError(
+                f"no controlled connection in chain between {root} and {tip}"
+            )
+
+        # if new_root is in the downward chain, we need to "flip" it by returning its child
+        new_root_body = new_root.parent if new_root in upward_chain else new_root.child
+
+        # if new_tip is in the downward chain, we need to "flip" it by returning its parent
+        new_tip_body = new_tip.parent if new_tip in downward_chain else new_tip.child
         return new_root_body, new_tip_body
 
     def disable_non_robot_collisions(self) -> None:
         """
-        Disables collision checks between bodies that do not belong to a robot.
+        Disable collision checks between bodies that do not belong to any robot.
         """
-        robot_bodies = set()
-        robot: AbstractRobot
-        for robot in self.get_semantic_annotations_by_type(AbstractRobot):
-            robot_bodies.update(robot.bodies_with_collisions)
+        # Bodies that are part of any robot and participate in collisions
+        robot_bodies: Set[Body] = {
+            body
+            for robot in self.get_semantic_annotations_by_type(AbstractRobot)
+            for body in robot.bodies_with_collisions
+        }
 
-        non_robot_bodies = set(self.bodies_with_enabled_collision) - robot_bodies
-        for body_a in non_robot_bodies:
-            for body_b in non_robot_bodies:
-                self.add_disabled_collision_pair(body_a, body_b)
+        # Bodies with collisions that are NOT part of a robot
+        non_robot_bodies: Set[Body] = (
+            set(self.bodies_with_enabled_collision) - robot_bodies
+        )
+        if not non_robot_bodies:
+            return
+
+        # Disable every unordered pair (including self-collisions) exactly once
+        for a, b in combinations_with_replacement(non_robot_bodies, 2):
+            self.add_disabled_collision_pair(a, b)
 
     def is_body_controlled(self, body: KinematicStructureEntity) -> bool:
         root_part, tip_part = self.compute_split_chain_of_connections(self.root, body)
         connections = root_part + tip_part
-        for c in connections:
-            if (
-                isinstance(c, ActiveConnection)
-                and c.has_hardware_interface
-                and not c.frozen_for_collision_avoidance
-            ):
-                return True
-        return False
+        return any(
+            isinstance(c, ActiveConnection)
+            and c.has_hardware_interface
+            and not c.frozen_for_collision_avoidance
+            for c in connections
+        )
