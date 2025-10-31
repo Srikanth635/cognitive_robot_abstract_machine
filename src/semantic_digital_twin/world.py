@@ -4,7 +4,6 @@ from __future__ import annotations
 import inspect
 import logging
 import os
-from abc import ABC
 from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import IntEnum
@@ -31,7 +30,7 @@ from typing_extensions import (
 from typing_extensions import List
 from typing_extensions import Type, Set
 
-from .callbacks.callback import StateChangeCallback, ModelChangeCallback
+from .callbacks.callback import ModelChangeCallback
 from .collision_checking.collision_detector import CollisionDetector
 from .collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
 from .datastructures.prefixed_name import PrefixedName
@@ -242,6 +241,163 @@ def atomic_world_modification(
 
 
 @dataclass
+class CollisionPairManager:
+    """
+    Manages disabled collision pairs in the world.
+    """
+
+    world: World
+    """
+    The world to manage collision pairs for.
+    """
+
+    _disabled_collision_pairs: Set[Tuple[Body, Body]] = field(
+        default_factory=set, repr=False
+    )
+    """
+    Collisions for these Body pairs is disabled.f
+    """
+
+    _temp_disabled_collision_pairs: Set[Tuple[Body, Body]] = field(
+        default_factory=set, repr=False
+    )
+    """
+    A set of Body pairs for which collisions are temporarily disabled.
+    """
+
+    def reset_temporary_collision_config(self):
+        self._temp_disabled_collision_pairs = set()
+        for body in self.world.bodies_with_enabled_collision:
+            body.reset_temporary_collision_config()
+
+    @property
+    def disabled_collision_pairs(
+        self,
+    ) -> Set[Tuple[Body, Body]]:
+        return self._disabled_collision_pairs | self._temp_disabled_collision_pairs
+
+    @property
+    def enabled_collision_pairs(self) -> Set[Tuple[Body, Body]]:
+        """
+        The complement of disabled_collision_pairs with respect to all possible body combinations with enabled collision.
+        """
+        all_combinations = set(
+            combinations_with_replacement(self.world.bodies_with_enabled_collision, 2)
+        )
+        return all_combinations - self.disabled_collision_pairs
+
+    def add_temp_disabled_collision_pair(
+        self, body_a: KinematicStructureEntity, body_b: KinematicStructureEntity
+    ):
+        """
+        Disable collision checking between two bodies
+        """
+        pair = tuple(sorted([body_a, body_b], key=lambda b: b.name))
+        self._temp_disabled_collision_pairs.add(pair)
+
+    def load_collision_srdf(self, file_path: str):
+        """
+        Creates a CollisionConfig instance from an SRDF file.
+
+        Parse an SRDF file to configure disabled collision pairs or bodies for a given world.
+        Process SRDF elements like `disable_collisions`, `disable_self_collision`,
+        or `disable_all_collisions` to update collision configuration
+        by referencing bodies in the provided `world`.
+
+        :param file_path: The path to the SRDF file used for collision configuration.
+        """
+        SRDF_DISABLE_ALL_COLLISIONS: str = "disable_all_collisions"
+        SRDF_DISABLE_SELF_COLLISION: str = "disable_self_collision"
+        SRDF_MOVEIT_DISABLE_COLLISIONS: str = "disable_collisions"
+
+        if not os.path.exists(file_path):
+            raise ValueError(f"file {file_path} does not exist")
+        srdf = etree.parse(file_path)
+        srdf_root = srdf.getroot()
+
+        children_with_tag = [child for child in srdf_root if hasattr(child, "tag")]
+
+        child_disable_collisions = [
+            c for c in children_with_tag if c.tag == SRDF_DISABLE_ALL_COLLISIONS
+        ]
+
+        for c in child_disable_collisions:
+            body = self.world.get_body_by_name(c.attrib["link"])
+            body.set_static_collision_config(CollisionCheckingConfig(disabled=True))
+
+        child_disable_moveit_and_self_collision = [
+            c
+            for c in children_with_tag
+            if c.tag in {SRDF_MOVEIT_DISABLE_COLLISIONS, SRDF_DISABLE_SELF_COLLISION}
+        ]
+
+        disabled_collision_pairs = [
+            (body_a, body_b)
+            for child in child_disable_moveit_and_self_collision
+            if (
+                body_a := self.world.get_body_by_name(child.attrib["link1"])
+            ).has_collision()
+            and (
+                body_b := self.world.get_body_by_name(child.attrib["link2"])
+            ).has_collision()
+        ]
+
+        for body_a, body_b in disabled_collision_pairs:
+            self.add_disabled_collision_pair(body_a, body_b)
+
+    def disable_collisions_for_adjacent_bodies(self):
+        """
+        Computes pairs of bodies that should not be collision checked because they have no controlled connections
+        between them.
+
+        When all connections between two bodies are not controlled, these bodies cannot move relative to each
+        other, so collision checking between them is unnecessary.
+
+        :return: Set of body pairs that should have collisions disabled
+        """
+
+        body_combinations = combinations_with_replacement(
+            self.world.bodies_with_enabled_collision, 2
+        )
+
+        for body_a, body_b in (
+            (a, b)
+            for a, b in body_combinations
+            if not self.world.is_controlled_connection_in_chain(a, b)
+        ):
+            self.add_disabled_collision_pair(body_a, body_b)
+
+    def disable_non_robot_collisions(self) -> None:
+        """
+        Disable collision checks between bodies that do not belong to any robot.
+        """
+        # Bodies that are part of any robot and participate in collisions
+        robot_bodies: Set[Body] = {
+            body
+            for robot in self.world.get_semantic_annotations_by_type(AbstractRobot)
+            for body in robot.bodies_with_collisions
+        }
+
+        # Bodies with collisions that are NOT part of a robot
+        non_robot_bodies: Set[Body] = (
+            set(self.world.bodies_with_enabled_collision) - robot_bodies
+        )
+        if not non_robot_bodies:
+            return
+
+        # Disable every unordered pair (including self-collisions) exactly once
+        for a, b in combinations_with_replacement(non_robot_bodies, 2):
+            self.add_disabled_collision_pair(a, b)
+
+    def add_disabled_collision_pair(self, body_a: Body, body_b: Body):
+        """
+        Disable collision checking between two bodies
+        """
+        pair = tuple(sorted([body_a, body_b], key=lambda body: body.name))
+        self._disabled_collision_pairs.add(pair)
+
+
+@dataclass
 class World:
     """
     A class representing the world.
@@ -320,24 +476,13 @@ class World:
     See `atomic_world_modification` for more information.
     """
 
-    _disabled_collision_pairs: Set[Tuple[Body, Body]] = field(
-        default_factory=set, repr=False
-    )
+    _collision_pair_manager: CollisionPairManager = field(init=False, repr=False)
     """
-    Collisions for these Body pairs is disabled.f
+    Manages disabled collision pairs in the world.
     """
 
-    _temp_disabled_collision_pairs: Set[Tuple[Body, Body]] = field(
-        default_factory=set, repr=False
-    )
-    """
-    A set of Body pairs for which collisions are temporarily disabled.
-    """
-
-    def reset_temporary_collision_config(self):
-        self._temp_disabled_collision_pairs = set()
-        for body in self.bodies_with_enabled_collision:
-            body.reset_temporary_collision_config()
+    def __post_init__(self):
+        self._collision_pair_manager = CollisionPairManager(self)
 
     @property
     def root(self) -> Optional[KinematicStructureEntity]:
@@ -726,8 +871,8 @@ class World:
             callback.update_previous_world_state()
 
         self.validate()
-        self.disable_non_robot_collisions()
-        self.disable_collisions_for_adjacent_bodies()
+        self._collision_pair_manager.disable_non_robot_collisions()
+        self._collision_pair_manager.disable_collisions_for_adjacent_bodies()
 
     def delete_orphaned_dofs(self):
         actual_dofs = {
@@ -762,8 +907,6 @@ class World:
         :return: A list of all connections in the world.
         """
         return list(self.kinematic_structure.edges())
-
-
 
     @atomic_world_modification(modification=SetDofHasHardwareInterface)
     def set_dofs_has_hardware_interface(
@@ -865,10 +1008,6 @@ class World:
             for v_name in self.state
         ]
         return positions + velocities + accelerations + jerks
-
-
-
-
 
     def merge_world(
         self,
@@ -1691,52 +1830,6 @@ class World:
                 new_world.state[dof.name] = self.state[dof.name].data
         return new_world
 
-    def load_collision_srdf(self, file_path: str):
-        """
-        Creates a CollisionConfig instance from an SRDF file.
-
-        Parse an SRDF file to configure disabled collision pairs or bodies for a given world.
-        Process SRDF elements like `disable_collisions`, `disable_self_collision`,
-        or `disable_all_collisions` to update collision configuration
-        by referencing bodies in the provided `world`.
-
-        :param file_path: The path to the SRDF file used for collision configuration.
-        """
-        SRDF_DISABLE_ALL_COLLISIONS: str = "disable_all_collisions"
-        SRDF_DISABLE_SELF_COLLISION: str = "disable_self_collision"
-        SRDF_MOVEIT_DISABLE_COLLISIONS: str = "disable_collisions"
-
-        if not os.path.exists(file_path):
-            raise ValueError(f"file {file_path} does not exist")
-        srdf = etree.parse(file_path)
-        srdf_root = srdf.getroot()
-
-        children_with_tag = [child for child in srdf_root if hasattr(child, "tag")]
-
-        child_disable_collisions = [
-            c for c in children_with_tag if c.tag == SRDF_DISABLE_ALL_COLLISIONS
-        ]
-
-        for c in child_disable_collisions:
-            body = self.get_body_by_name(c.attrib["link"])
-            body.set_static_collision_config(CollisionCheckingConfig(disabled=True))
-
-        child_disable_moveit_and_self_collision = [
-            c
-            for c in children_with_tag
-            if c.tag in {SRDF_MOVEIT_DISABLE_COLLISIONS, SRDF_DISABLE_SELF_COLLISION}
-        ]
-
-        disabled_collision_pairs = [
-            (body_a, body_b)
-            for child in child_disable_moveit_and_self_collision
-            if (body_a := self.get_body_by_name(child.attrib["link1"])).has_collision()
-            and (body_b := self.get_body_by_name(child.attrib["link2"])).has_collision()
-        ]
-
-        for body_a, body_b in disabled_collision_pairs:
-            self.add_disabled_collision_pair(body_a, body_b)
-
     @property
     def controlled_connections(self) -> Set[ActiveConnection]:
         """
@@ -1761,28 +1854,6 @@ class World:
             for connection in connections
         )
 
-    def disable_collisions_for_adjacent_bodies(self):
-        """
-        Computes pairs of bodies that should not be collision checked because they have no controlled connections
-        between them.
-
-        When all connections between two bodies are not controlled, these bodies cannot move relative to each
-        other, so collision checking between them is unnecessary.
-
-        :return: Set of body pairs that should have collisions disabled
-        """
-
-        body_combinations = combinations_with_replacement(
-            self.bodies_with_enabled_collision, 2
-        )
-
-        for body_a, body_b in (
-            (a, b)
-            for a, b in body_combinations
-            if not self.is_controlled_connection_in_chain(a, b)
-        ):
-            self.add_disabled_collision_pair(body_a, body_b)
-
     @property
     def bodies_with_enabled_collision(self) -> List[Body]:
         return [
@@ -1792,38 +1863,6 @@ class World:
             and b.get_collision_config
             and not b.get_collision_config().disabled
         ]
-
-    @property
-    def disabled_collision_pairs(
-        self,
-    ) -> Set[Tuple[Body, Body]]:
-        return self._disabled_collision_pairs | self._temp_disabled_collision_pairs
-
-    @property
-    def enabled_collision_pairs(self) -> Set[Tuple[Body, Body]]:
-        """
-        The complement of disabled_collision_pairs with respect to all possible body combinations with enabled collision.
-        """
-        all_combinations = set(
-            combinations_with_replacement(self.bodies_with_enabled_collision, 2)
-        )
-        return all_combinations - self.disabled_collision_pairs
-
-    def add_disabled_collision_pair(self, body_a: Body, body_b: Body):
-        """
-        Disable collision checking between two bodies
-        """
-        pair = tuple(sorted([body_a, body_b], key=lambda body: body.name))
-        self._disabled_collision_pairs.add(pair)
-
-    def add_temp_disabled_collision_pair(
-        self, body_a: KinematicStructureEntity, body_b: KinematicStructureEntity
-    ):
-        """
-        Disable collision checking between two bodies
-        """
-        pair = tuple(sorted([body_a, body_b], key=lambda b: b.name))
-        self._temp_disabled_collision_pairs.add(pair)
 
     def get_direct_child_bodies_with_collision(
         self, connection: Connection
@@ -1885,13 +1924,22 @@ class World:
             and not conn.frozen_for_collision_avoidance
         )
 
-        new_root = next((conn for conn in chain if condition_for_controlled_connection(conn)), None)
+        new_root = next(
+            (conn for conn in chain if condition_for_controlled_connection(conn)), None
+        )
         if new_root is None:
             raise KeyError(
                 f"no controlled connection in chain between {root} and {tip}"
             )
 
-        new_tip = next((conn for conn in reversed(chain) if condition_for_controlled_connection(conn)), None)
+        new_tip = next(
+            (
+                conn
+                for conn in reversed(chain)
+                if condition_for_controlled_connection(conn)
+            ),
+            None,
+        )
         if new_tip is None:
             raise KeyError(
                 f"no controlled connection in chain between {root} and {tip}"
@@ -1904,28 +1952,6 @@ class World:
         new_tip_body = new_tip.parent if new_tip in downward_chain else new_tip.child
         return new_root_body, new_tip_body
 
-    def disable_non_robot_collisions(self) -> None:
-        """
-        Disable collision checks between bodies that do not belong to any robot.
-        """
-        # Bodies that are part of any robot and participate in collisions
-        robot_bodies: Set[Body] = {
-            body
-            for robot in self.get_semantic_annotations_by_type(AbstractRobot)
-            for body in robot.bodies_with_collisions
-        }
-
-        # Bodies with collisions that are NOT part of a robot
-        non_robot_bodies: Set[Body] = (
-            set(self.bodies_with_enabled_collision) - robot_bodies
-        )
-        if not non_robot_bodies:
-            return
-
-        # Disable every unordered pair (including self-collisions) exactly once
-        for a, b in combinations_with_replacement(non_robot_bodies, 2):
-            self.add_disabled_collision_pair(a, b)
-
     def is_body_controlled(self, body: KinematicStructureEntity) -> bool:
         root_part, tip_part = self.compute_split_chain_of_connections(self.root, body)
         connections = root_part + tip_part
@@ -1935,6 +1961,9 @@ class World:
             and not c.frozen_for_collision_avoidance
             for c in connections
         )
+
+    def load_collision_srdf(self, file_path: str):
+        self._collision_pair_manager.load_collision_srdf(file_path)
 
     @cached_property
     def collision_detector(self) -> CollisionDetector:
