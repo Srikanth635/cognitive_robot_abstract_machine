@@ -389,22 +389,6 @@ class World:
 
         return dofs
 
-    @cached_property
-    def collision_detector(self) -> CollisionDetector:
-        """
-        A collision detector for the world.
-        :return: A collision detector for the world.
-        """
-        return TrimeshCollisionDetector(self)
-
-    @cached_property
-    def ray_tracer(self) -> RayTracer:
-        """
-        A ray tracer for the world.
-        :return: A ray tracer for the world.
-        """
-        return RayTracer(self)
-
     def validate(self) -> bool:
         """
         Validate the world.
@@ -424,147 +408,43 @@ class World:
         ), "self.degrees_of_freedom does not match the actual dofs used in connections. Did you forget to call deleted_orphaned_dof()?"
         return True
 
-    @atomic_world_modification(modification=AddDegreeOfFreedomModification)
-    def _add_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
+    ### Add Stuff to World
+    def add_connection(
+        self, connection: Connection, handle_duplicates: bool = False
+    ) -> None:
         """
-        Adds a degree of freedom to the current system and initializes its state.
+        Add a connection and the entities it connects to the world.
 
-        This method modifies the internal state of the system by adding a new
-        degree of freedom (DOF). It sets the initial position of the DOF based
-        on its configured lower and upper position limits, ensuring it respects
-        both constraints. The DOF is then added to the list of degrees of freedom
-        in the system.
-
-        :param dof: The degree of freedom to be added to the system.
-        :return: None
+        :param connection: The connection to add.
         """
-        dof._world = self
-        dof.create_and_register_symbols()
+        connection.add_to_world(self)
+        dofs_without_world = [dof for dof in connection.dofs if dof._world is None]
+        for dof in dofs_without_world:
+            self.add_degree_of_freedom(dof)
+        self.add_kinematic_structure_entity(connection.parent, handle_duplicates)
+        self.add_kinematic_structure_entity(connection.child, handle_duplicates)
+        self._add_connection(connection)
 
-        lower = dof.lower_limits.position
-        upper = dof.upper_limits.position
-        initial_position = 0
-
-        if lower is not None:
-            initial_position = max(lower, initial_position)
-        if upper is not None:
-            initial_position = min(upper, initial_position)
-
-        self.state[dof.name].position = initial_position
-        self.degrees_of_freedom.append(dof)
-
-    def add_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
+    @atomic_world_modification(modification=AddConnectionModification)
+    def _add_connection(self, connection: Connection):
         """
-        Adds degree of freedom in the world.
-        This is used to register DoFs that are not created by the world, but are part of the world model.
-        :param dof: The degree of freedom to register.
+        Adds a connection to the kinematic structure.
+
+        The method updates the connection instance to associate it with the current
+        world instance and reflects the connection in the kinematic structure.
+        Do not call this function directly, use add_connection instead.
+
+        :param connection: The connection to be added to the kinematic structure.
         """
-        if dof._world is self and dof in self.degrees_of_freedom:
-            return
-        if dof._world is not None:
-            raise AlreadyBelongsToAWorldError(
-                world=dof._world, type_trying_to_add=DegreeOfFreedom
-            )
-        self._add_degree_of_freedom(dof)
-
-    @atomic_world_modification(modification=RemoveDegreeOfFreedomModification)
-    def _remove_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
-        dof._world = None
-        self.degrees_of_freedom.remove(dof)
-        del self.state[dof.name]
-
-    def remove_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
-        if dof._world is not self:
-            logger.debug("Trying to remove an dof that is not part of this world.")
-            return
-        self._remove_degree_of_freedom(dof)
-
-    def modify_world(self) -> WorldModelUpdateContextManager:
-        return WorldModelUpdateContextManager(self)
-
-    def reset_state_context(self) -> ResetStateContextManager:
-        return ResetStateContextManager(self)
-
-    def notify_state_change(self) -> None:
-        """
-        If you have changed the state of the world, call this function to trigger necessary events and increase
-        the state version.
-        """
-        if not self.empty:
-            self._recompute_forward_kinematics()
-        self.state._notify_state_change()
-
-    def _notify_model_change(self) -> None:
-        """
-        Notifies the system of a model change and updates necessary states, caches,
-        and forward kinematics expressions while also triggering registered callbacks
-        for model changes.
-        """
-        # if not self.world_is_being_modified:
-        self.compile_forward_kinematics_expressions()
-        self.notify_state_change()
-        self._model_version += 1
-
-        for callback in self.model_change_callbacks:
-            callback.notify()
-
-        for callback in self.state.state_change_callbacks:
-            callback.update_previous_world_state()
-
-        self.validate()
-        self.disable_non_robot_collisions()
-        self.disable_collisions_for_adjacent_bodies()
-
-    def delete_orphaned_dofs(self):
-        actual_dofs = set()
-        for connection in self.connections:
-            actual_dofs.update(connection.dofs)
-        self.degrees_of_freedom = list(actual_dofs)
-
-    @property
-    def kinematic_structure_entities(self) -> List[KinematicStructureEntity]:
-        """
-        :return: A list of all bodies in the world.
-        """
-        return list(self.kinematic_structure.nodes())
-
-    @property
-    def regions(self) -> List[Region]:
-        """
-        :return: A list of all regions in the world.
-        """
-        return self.get_kinematic_structure_entity_by_type(Region)
-
-    @property
-    def bodies(self) -> List[Body]:
-        """
-        :return: A list of all bodies in the world.
-        """
-        return self.get_kinematic_structure_entity_by_type(Body)
-
-    @property
-    def connections(self) -> List[Connection]:
-        """
-        :return: A list of all connections in the world.
-        """
-        return list(self.kinematic_structure.edges())
-
-    @atomic_world_modification(modification=AddKinematicStructureEntityModification)
-    def _add_kinematic_structure_entity(
-        self, kinematic_structure_entity: KinematicStructureEntity
-    ) -> int:
-        """
-        Add a kinematic_structure_entity to the world.
-        Do not call this function directly, use add_kinematic_structure_entity instead.
-
-        :param kinematic_structure_entity: The kinematic_structure_entity to add.
-        :return: The index of the added kinematic_structure_entity.
-        """
-        index = kinematic_structure_entity.index = self.kinematic_structure.add_node(
-            kinematic_structure_entity
+        connection._world = self
+        self.kinematic_structure.add_edge(
+            connection.parent.index, connection.child.index, connection
         )
-        kinematic_structure_entity._world = self
-        return index
+
+    def add_body(
+        self, body: KinematicStructureEntity, handle_duplicates: bool = False
+    ) -> Optional[int]:
+        return self.add_kinematic_structure_entity(body, handle_duplicates)
 
     def add_kinematic_structure_entity(
         self,
@@ -614,64 +494,65 @@ class World:
             pass
         return self._add_kinematic_structure_entity(kinematic_structure_entity)
 
-    def add_body(
-        self, body: KinematicStructureEntity, handle_duplicates: bool = False
-    ) -> Optional[int]:
-        return self.add_kinematic_structure_entity(body, handle_duplicates)
-
-    @atomic_world_modification(modification=AddConnectionModification)
-    def _add_connection(self, connection: Connection):
+    @atomic_world_modification(modification=AddKinematicStructureEntityModification)
+    def _add_kinematic_structure_entity(
+        self, kinematic_structure_entity: KinematicStructureEntity
+    ) -> int:
         """
-        Adds a connection to the kinematic structure.
+        Add a kinematic_structure_entity to the world.
+        Do not call this function directly, use add_kinematic_structure_entity instead.
 
-        The method updates the connection instance to associate it with the current
-        world instance and reflects the connection in the kinematic structure.
-        Do not call this function directly, use add_connection instead.
-
-        :param connection: The connection to be added to the kinematic structure.
+        :param kinematic_structure_entity: The kinematic_structure_entity to add.
+        :return: The index of the added kinematic_structure_entity.
         """
-        connection._world = self
-        self.kinematic_structure.add_edge(
-            connection.parent.index, connection.child.index, connection
+        index = kinematic_structure_entity.index = self.kinematic_structure.add_node(
+            kinematic_structure_entity
         )
+        kinematic_structure_entity._world = self
+        return index
 
-    @atomic_world_modification(modification=SetDofHasHardwareInterface)
-    def set_dofs_has_hardware_interface(
-        self, dofs: Iterable[DegreeOfFreedom], value: bool
-    ):
+    def add_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
         """
-        Sets whether the specified degrees of freedom (DOFs) have a hardware interface or not.
-
-        This method allows controlling the presence of a hardware interface for multiple
-        DOFs at once. The modification is atomic, ensuring that all DOFs are updated as
-        a single operation and the state remains consistent. The method iterates through
-        the given DOFs and updates their `has_hardware_interface` attribute to the provided
-        value.
-
-        :param dofs: An iterable collection of DegreeOfFreedom instances whose
-                     `has_hardware_interface` attribute is to be updated.
-        :param value: A boolean value indicating whether the DOFs should have a hardware
-                      interface (True) or not (False).
+        Adds degree of freedom in the world.
+        This is used to register DoFs that are not created by the world, but are part of the world model.
+        :param dof: The degree of freedom to register.
         """
-        for dof in dofs:
-            dof.has_hardware_interface = value
+        if dof._world is self and dof in self.degrees_of_freedom:
+            return
+        if dof._world is not None:
+            raise AlreadyBelongsToAWorldError(
+                world=dof._world, type_trying_to_add=DegreeOfFreedom
+            )
+        self._add_degree_of_freedom(dof)
 
-    def add_connection(
-        self, connection: Connection, handle_duplicates: bool = False
-    ) -> None:
+    @atomic_world_modification(modification=AddDegreeOfFreedomModification)
+    def _add_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
         """
-        Add a connection and the entities it connects to the world.
+        Adds a degree of freedom to the current system and initializes its state.
 
-        :param connection: The connection to add.
+        This method modifies the internal state of the system by adding a new
+        degree of freedom (DOF). It sets the initial position of the DOF based
+        on its configured lower and upper position limits, ensuring it respects
+        both constraints. The DOF is then added to the list of degrees of freedom
+        in the system.
+
+        :param dof: The degree of freedom to be added to the system.
+        :return: None
         """
-        connection.add_to_world(self)
-        dofs_without_world = [dof for dof in connection.dofs if dof._world is None]
-        for dof in dofs_without_world:
-            self.add_degree_of_freedom(dof)
-        self.add_kinematic_structure_entity(connection.parent, handle_duplicates)
-        self.add_kinematic_structure_entity(connection.child, handle_duplicates)
+        dof._world = self
+        dof.create_and_register_symbols()
 
-        self._add_connection(connection)
+        lower = dof.lower_limits.position
+        upper = dof.upper_limits.position
+        initial_position = 0
+
+        if lower is not None:
+            initial_position = max(lower, initial_position)
+        if upper is not None:
+            initial_position = min(upper, initial_position)
+
+        self.state[dof.name].position = initial_position
+        self.degrees_of_freedom.append(dof)
 
     def add_semantic_annotation(
         self, semantic_annotation: SemanticAnnotation, exists_ok: bool = False
@@ -701,6 +582,85 @@ class World:
         """
         semantic_annotation._world = self
         self.semantic_annotations.append(semantic_annotation)
+
+    ### Remove Stuff from World
+    def remove_connection(self, connection: Connection) -> None:
+        """
+        Removes a connection and deletes the corresponding degree of freedom, if it was only used by this connection.
+        Might create disconnected entities, so make sure to add a new connection or delete the child kinematic_structure_entity.
+
+        :param connection: The connection to be removed
+        """
+        remaining_dofs = {
+            dof
+            for remaining_connection in self.connections
+            if remaining_connection != connection
+            for dof in remaining_connection.dofs
+        }
+
+        removed_dofs = set(connection.dofs) - remaining_dofs
+
+        with self.modify_world():
+            for dof in removed_dofs:
+                self.remove_degree_of_freedom(dof)
+            self._remove_connection(connection)
+
+    @atomic_world_modification(modification=RemoveConnectionModification)
+    def _remove_connection(self, connection: Connection) -> None:
+        try:
+            self.kinematic_structure.remove_edge(
+                connection.parent.index, connection.child.index
+            )
+        except NoEdgeBetweenNodes:
+            pass
+        connection._world = None
+        connection.index = None
+
+    def remove_kinematic_structure_entity(
+        self, kinematic_structure_entity: KinematicStructureEntity
+    ) -> None:
+        """
+        Removes a kinematic_structure_entity from the world.
+
+        :param kinematic_structure_entity: The kinematic_structure_entity to remove.
+        """
+        if (
+            kinematic_structure_entity._world is not self
+            or kinematic_structure_entity.index is None
+        ):
+            logger.debug(
+                "Trying to remove an kinematic_structure_entity that is not part of this world."
+            )
+            return
+
+        self._remove_kinematic_structure_entity(kinematic_structure_entity)
+
+    @atomic_world_modification(modification=RemoveBodyModification)
+    def _remove_kinematic_structure_entity(
+        self, kinematic_structure_entity: KinematicStructureEntity
+    ) -> None:
+        """
+        Removes a kinematic_structure_entity from the world.
+
+        Do not call this function directly, use `remove_kinematic_structure_entity` instead.
+
+        :param kinematic_structure_entity: The kinematic_structure_entity to remove.
+        """
+        self.kinematic_structure.remove_node(kinematic_structure_entity.index)
+        kinematic_structure_entity._world = None
+        kinematic_structure_entity.index = None
+
+    def remove_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
+        if dof._world is not self:
+            logger.debug("Trying to remove an dof that is not part of this world.")
+            return
+        self._remove_degree_of_freedom(dof)
+
+    @atomic_world_modification(modification=RemoveDegreeOfFreedomModification)
+    def _remove_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
+        dof._world = None
+        self.degrees_of_freedom.remove(dof)
+        del self.state[dof.name]
 
     def remove_semantic_annotation(
         self, semantic_annotation: SemanticAnnotation
@@ -732,6 +692,99 @@ class World:
         """
         self.semantic_annotations.remove(semantic_annotation)
         semantic_annotation._world = None
+
+    def modify_world(self) -> WorldModelUpdateContextManager:
+        return WorldModelUpdateContextManager(self)
+
+    def reset_state_context(self) -> ResetStateContextManager:
+        return ResetStateContextManager(self)
+
+    def notify_state_change(self) -> None:
+        """
+        If you have changed the state of the world, call this function to trigger necessary events and increase
+        the state version.
+        """
+        if not self.empty:
+            self._recompute_forward_kinematics()
+        self.state._notify_state_change()
+
+    def _notify_model_change(self) -> None:
+        """
+        Notifies the system of a model change and updates necessary states, caches,
+        and forward kinematics expressions while also triggering registered callbacks
+        for model changes.
+        """
+        # if not self.world_is_being_modified:
+        self.compile_forward_kinematics_expressions()
+        self.notify_state_change()
+        self._model_version += 1
+
+        for callback in self.model_change_callbacks:
+            callback.notify()
+
+        for callback in self.state.state_change_callbacks:
+            callback.update_previous_world_state()
+
+        self.validate()
+        self.disable_non_robot_collisions()
+        self.disable_collisions_for_adjacent_bodies()
+
+    def delete_orphaned_dofs(self):
+        actual_dofs = {
+            dof for connection in self.connections for dof in connection.dofs
+        }
+        self.degrees_of_freedom = list(actual_dofs)
+
+    @property
+    def kinematic_structure_entities(self) -> List[KinematicStructureEntity]:
+        """
+        :return: A list of all bodies in the world.
+        """
+        return list(self.kinematic_structure.nodes())
+
+    @property
+    def regions(self) -> List[Region]:
+        """
+        :return: A list of all regions in the world.
+        """
+        return self.get_kinematic_structure_entity_by_type(Region)
+
+    @property
+    def bodies(self) -> List[Body]:
+        """
+        :return: A list of all bodies in the world.
+        """
+        return self.get_kinematic_structure_entity_by_type(Body)
+
+    @property
+    def connections(self) -> List[Connection]:
+        """
+        :return: A list of all connections in the world.
+        """
+        return list(self.kinematic_structure.edges())
+
+
+
+    @atomic_world_modification(modification=SetDofHasHardwareInterface)
+    def set_dofs_has_hardware_interface(
+        self, dofs: Iterable[DegreeOfFreedom], value: bool
+    ):
+        """
+        Sets whether the specified degrees of freedom (DOFs) have a hardware interface or not.
+
+        This method allows controlling the presence of a hardware interface for multiple
+        DOFs at once. The modification is atomic, ensuring that all DOFs are updated as
+        a single operation and the state remains consistent. The method iterates through
+        the given DOFs and updates their `has_hardware_interface` attribute to the provided
+        value.
+
+        :param dofs: An iterable collection of DegreeOfFreedom instances whose
+                     `has_hardware_interface` attribute is to be updated.
+        :param value: A boolean value indicating whether the DOFs should have a hardware
+                      interface (True) or not (False).
+        """
+        for dof in dofs:
+            dof.has_hardware_interface = value
 
     def get_connections_of_branch(
         self, root: KinematicStructureEntity
@@ -813,71 +866,9 @@ class World:
         ]
         return positions + velocities + accelerations + jerks
 
-    @atomic_world_modification(modification=RemoveBodyModification)
-    def _remove_kinematic_structure_entity(
-        self, kinematic_structure_entity: KinematicStructureEntity
-    ) -> None:
-        """
-        Removes a kinematic_structure_entity from the world.
 
-        Do not call this function directly, use `remove_kinematic_structure_entity` instead.
 
-        :param kinematic_structure_entity: The kinematic_structure_entity to remove.
-        """
-        self.kinematic_structure.remove_node(kinematic_structure_entity.index)
-        kinematic_structure_entity._world = None
-        kinematic_structure_entity.index = None
 
-    def remove_kinematic_structure_entity(
-        self, kinematic_structure_entity: KinematicStructureEntity
-    ) -> None:
-        """
-        Removes a kinematic_structure_entity from the world.
-
-        :param kinematic_structure_entity: The kinematic_structure_entity to remove.
-        """
-        if (
-            kinematic_structure_entity._world is not self
-            or kinematic_structure_entity.index is None
-        ):
-            logger.debug(
-                "Trying to remove an kinematic_structure_entity that is not part of this world."
-            )
-            return
-
-        self._remove_kinematic_structure_entity(kinematic_structure_entity)
-
-    @atomic_world_modification(modification=RemoveConnectionModification)
-    def _remove_connection(self, connection: Connection) -> None:
-        try:
-            self.kinematic_structure.remove_edge(
-                connection.parent.index, connection.child.index
-            )
-        except NoEdgeBetweenNodes:
-            pass
-        connection._world = None
-        connection.index = None
-
-    def remove_connection(self, connection: Connection) -> None:
-        """
-        Removes a connection and deletes the corresponding degree of freedom, if it was only used by this connection.
-        Might create disconnected entities, so make sure to add a new connection or delete the child kinematic_structure_entity.
-
-        :param connection: The connection to be removed
-        """
-        remaining_dofs = {
-            dof
-            for remaining_connection in self.connections
-            if remaining_connection != connection
-            for dof in remaining_connection.dofs
-        }
-
-        removed_dofs = set(connection.dofs) - remaining_dofs
-
-        with self.modify_world():
-            for dof in removed_dofs:
-                self.remove_degree_of_freedom(dof)
-            self._remove_connection(connection)
 
     def merge_world(
         self,
@@ -1944,3 +1935,19 @@ class World:
             and not c.frozen_for_collision_avoidance
             for c in connections
         )
+
+    @cached_property
+    def collision_detector(self) -> CollisionDetector:
+        """
+        A collision detector for the world.
+        :return: A collision detector for the world.
+        """
+        return TrimeshCollisionDetector(self)
+
+    @cached_property
+    def ray_tracer(self) -> RayTracer:
+        """
+        A ray tracer for the world.
+        :return: A ray tracer for the world.
+        """
+        return RayTracer(self)
