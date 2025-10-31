@@ -4,6 +4,7 @@ from typing_extensions import MutableMapping, List, Dict, Self
 
 import numpy as np
 
+from .degree_of_freedom import DegreeOfFreedom
 from ..callbacks.callback import StateChangeCallback
 from ..datastructures.prefixed_name import PrefixedName
 from ..spatial_types.derivatives import Derivatives
@@ -222,3 +223,20 @@ class WorldState(MutableMapping):
         new_state._names = self._names.copy()
         new_state._index = self._index.copy()
         return new_state
+
+    def add_degree_of_freedom_position(self, dof: DegreeOfFreedom):
+        """
+        Adds a degree of freedom to the world state, initializing its position to 0 or the nearest limit.
+        """
+        dof.create_and_register_symbols()
+
+        lower = dof.lower_limits.position
+        upper = dof.upper_limits.position
+        initial_position = 0
+
+        if lower is not None:
+            initial_position = max(lower, initial_position)
+        if upper is not None:
+            initial_position = min(upper, initial_position)
+
+        self[dof.name].position = initial_position

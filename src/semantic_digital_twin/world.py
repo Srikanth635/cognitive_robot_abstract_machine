@@ -310,8 +310,6 @@ class CollisionPairManager:
         SRDF_DISABLE_SELF_COLLISION: str = "disable_self_collision"
         SRDF_MOVEIT_DISABLE_COLLISIONS: str = "disable_collisions"
 
-        if not os.path.exists(file_path):
-            raise ValueError(f"file {file_path} does not exist")
         srdf = etree.parse(file_path)
         srdf_root = srdf.getroot()
 
@@ -571,7 +569,7 @@ class World:
         ), "self.degrees_of_freedom does not match the actual dofs used in connections. Did you forget to call deleted_orphaned_dof()?"
         return True
 
-    ### Add Stuff to World
+    # %% Add Stuff to World
     def add_connection(
         self, connection: Connection, handle_duplicates: bool = False
     ) -> None:
@@ -703,18 +701,7 @@ class World:
         :return: None
         """
         dof._world = self
-        dof.create_and_register_symbols()
-
-        lower = dof.lower_limits.position
-        upper = dof.upper_limits.position
-        initial_position = 0
-
-        if lower is not None:
-            initial_position = max(lower, initial_position)
-        if upper is not None:
-            initial_position = min(upper, initial_position)
-
-        self.state[dof.name].position = initial_position
+        self.state.add_degree_of_freedom_position(dof)
         self.degrees_of_freedom.append(dof)
 
     def add_semantic_annotation(
@@ -746,7 +733,7 @@ class World:
         semantic_annotation._world = self
         self.semantic_annotations.append(semantic_annotation)
 
-    ### Remove Stuff from World
+    # %% Remove Stuff from World
     def remove_connection(self, connection: Connection) -> None:
         """
         Removes a connection and deletes the corresponding degree of freedom, if it was only used by this connection.
