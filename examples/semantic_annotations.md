@@ -167,7 +167,8 @@ from semantic_digital_twin.reasoning.predicates import ContainsType
 from krrood.entity_query_language.entity import a
 
 with symbolic_mode():
-    fruit_box_query = a(fb := FruitBox(), ContainsType(fb.fruits, Apple))
+    fb = let(FruitBox, domain=world.semantic_annotations)
+    fruit_box_query = a(fb, ContainsType(fb.fruits, Apple))
 
 query_result = fruit_box_query.evaluate()
 print(list(query_result)[0] == fruit_box_with_apples)
