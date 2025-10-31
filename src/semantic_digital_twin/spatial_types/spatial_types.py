@@ -1511,6 +1511,43 @@ def replace_with_trinary_logic(expression: Expression) -> Expression:
     return expression
 
 
+def trinary_logic_to_str(expression: Expression) -> str:
+    """
+    Converts a trinary logic expression into its string representation.
+
+    This function processes an expression with trinary logic values (True, False,
+    Unknown) and translates it into a comprehensible string format. It takes into
+    account the logical operations involved and recursively evaluates the components
+    if necessary. The function handles symbols representing trinary logic values,
+    as well as logical constructs such as "and", "or", and "not". If the expression
+    cannot be evaluated, an exception is raised.
+
+    :param expression: The trinary logic expression to be converted into a string
+        representation.
+    :return: A string representation of the trinary logic expression, displaying
+        the appropriate logical symbols and structure.
+    :raises SpatialTypesError: If the provided expression cannot be converted
+        into a string representation.
+    """
+    cas_expr = to_sx(expression)
+    if cas_expr.n_dep() == 0:
+        if is_trinary_true_symbol(cas_expr):
+            return "True"
+        if is_trinary_false_symbol(cas_expr):
+            return "False"
+        if is_trinary_unknown_symbol(cas_expr):
+            return "Unknown"
+        return f'"{expression}"'
+    op = cas_expr.op()
+    if op == ca.OP_SUB:
+        return f"not {trinary_logic_to_str(cas_expr.dep(1))}"
+    if op == ca.OP_FMIN:
+        return f"({trinary_logic_to_str(cas_expr.dep(0))} and {trinary_logic_to_str(cas_expr.dep(1))})"
+    if op == ca.OP_FMAX:
+        return f"({trinary_logic_to_str(cas_expr.dep(0))} or {trinary_logic_to_str(cas_expr.dep(1))})"
+    raise SpatialTypesError(f"cannot convert {expression} to a string")
+
+
 # %% ifs
 def _get_return_type(thing: Any):
     """
