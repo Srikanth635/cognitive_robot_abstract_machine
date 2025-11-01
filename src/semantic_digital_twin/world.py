@@ -503,9 +503,32 @@ class World:
     def __post_init__(self):
         self._collision_pair_manager = CollisionPairManager(self)
 
-    def get_world_model_manager(self) -> WorldModelManager:
-        return self._world_model_manager
+    def __hash__(self):
+        return hash((id(self), self._world_model_manager.model_version))
 
+    def __str__(self):
+        return f"{self.__class__.__name__} with {len(self.kinematic_structure_entities)} bodies."
+
+    def validate(self) -> bool:
+        """
+        Validate the world.
+
+        The world must be a tree.
+        :return: True if the world is valid, raises an AssertionError otherwise.
+        """
+        if self.empty:
+            return True
+        assert len(self.kinematic_structure_entities) == (len(self.connections) + 1)
+        assert rx.is_weakly_connected(self.kinematic_structure)
+        actual_dofs = {
+            dof for connection in self.connections for dof in connection.dofs
+        }
+        assert actual_dofs == set(
+            self.degrees_of_freedom
+        ), "self.degrees_of_freedom does not match the actual dofs used in connections. Did you forget to call deleted_orphaned_dof()?"
+        return True
+
+    # %% Properties
     @property
     def root(self) -> Optional[KinematicStructureEntity]:
         """
@@ -529,12 +552,6 @@ class World:
             f"A World must have exactly one root. Found {len(possible_roots)} possible roots: {possible_roots}."
         )
 
-    def __hash__(self):
-        return hash((id(self), self._world_model_manager.model_version))
-
-    def __str__(self):
-        return f"{self.__class__.__name__} with {len(self.kinematic_structure_entities)} bodies."
-
     @property
     def active_degrees_of_freedom(self) -> Set[DegreeOfFreedom]:
         active_connections = self.get_connections_by_type(ActiveConnection)
@@ -555,24 +572,73 @@ class World:
         }
         return dofs
 
-    def validate(self) -> bool:
+    @property
+    def kinematic_structure_entities(self) -> List[KinematicStructureEntity]:
         """
-        Validate the world.
+        :return: A list of all bodies in the world.
+        """
+        return list(self.kinematic_structure.nodes())
 
-        The world must be a tree.
-        :return: True if the world is valid, raises an AssertionError otherwise.
+    @property
+    def kinematic_structure_entities_topologically_sorted(
+        self,
+    ) -> List[KinematicStructureEntity]:
         """
-        if self.empty:
-            return True
-        assert len(self.kinematic_structure_entities) == (len(self.connections) + 1)
-        assert rx.is_weakly_connected(self.kinematic_structure)
-        actual_dofs = {
-            dof for connection in self.connections for dof in connection.dofs
-        }
-        assert actual_dofs == set(
-            self.degrees_of_freedom
-        ), "self.degrees_of_freedom does not match the actual dofs used in connections. Did you forget to call deleted_orphaned_dof()?"
-        return True
+        Return a list of all kinematic_structure_entities in the world, sorted topologically.
+        """
+        indices = rx.topological_sort(self.kinematic_structure)
+        return [self.kinematic_structure[index] for index in indices]
+
+    @property
+    def regions(self) -> List[Region]:
+        """
+        :return: A list of all regions in the world.
+        """
+        return self.get_kinematic_structure_entity_by_type(Region)
+
+    @property
+    def bodies(self) -> List[Body]:
+        """
+        :return: A list of all bodies in the world.
+        """
+        return self.get_kinematic_structure_entity_by_type(Body)
+
+    @property
+    def bodies_with_enabled_collision(self) -> List[Body]:
+        return [
+            b
+            for b in self.bodies
+            if b.has_collision()
+            and b.get_collision_config
+            and not b.get_collision_config().disabled
+        ]
+
+    @property
+    def bodies_topologically_sorted(self) -> List[Body]:
+        return [
+            body
+            for body in self.kinematic_structure_entities_topologically_sorted
+            if isinstance(body, Body)
+        ]
+
+    @property
+    def connections(self) -> List[Connection]:
+        """
+        :return: A list of all connections in the world.
+        """
+        return list(self.kinematic_structure.edges())
+
+    @property
+    def controlled_connections(self) -> Set[ActiveConnection]:
+        """
+        A subset of the robot's connections that are controlled by a controller.
+        """
+        return set(
+            connection
+            for connection in self.connections
+            if isinstance(connection, ActiveConnection)
+            and connection.has_hardware_interface
+        )
 
     # %% Add Stuff to World
     def add_connection(
@@ -848,74 +914,7 @@ class World:
         self.semantic_annotations.remove(semantic_annotation)
         semantic_annotation._world = None
 
-    def modify_world(self) -> WorldModelUpdateContextManager:
-        return WorldModelUpdateContextManager(self)
-
-    def reset_state_context(self) -> ResetStateContextManager:
-        return ResetStateContextManager(self)
-
-    def notify_state_change(self) -> None:
-        """
-        If you have changed the state of the world, call this function to trigger necessary events and increase
-        the state version.
-        """
-        if not self.empty:
-            self._recompute_forward_kinematics()
-        self.state._notify_state_change()
-
-    def _notify_model_change(self) -> None:
-        """
-        Notifies the system of a model change and updates necessary states, caches,
-        and forward kinematics expressions while also triggering registered callbacks
-        for model changes.
-        """
-        # if not self.world_is_being_modified:
-        self.compile_forward_kinematics_expressions()
-        self.notify_state_change()
-
-        self._world_model_manager.update_model_version_and_notify_callbacks()
-
-        for callback in self.state.state_change_callbacks:
-            callback.update_previous_world_state()
-
-        self.validate()
-        self._collision_pair_manager.disable_non_robot_collisions()
-        self._collision_pair_manager.disable_collisions_for_adjacent_bodies()
-
-    def delete_orphaned_dofs(self):
-        actual_dofs = {
-            dof for connection in self.connections for dof in connection.dofs
-        }
-        self.degrees_of_freedom = list(actual_dofs)
-
-    @property
-    def kinematic_structure_entities(self) -> List[KinematicStructureEntity]:
-        """
-        :return: A list of all bodies in the world.
-        """
-        return list(self.kinematic_structure.nodes())
-
-    @property
-    def regions(self) -> List[Region]:
-        """
-        :return: A list of all regions in the world.
-        """
-        return self.get_kinematic_structure_entity_by_type(Region)
-
-    @property
-    def bodies(self) -> List[Body]:
-        """
-        :return: A list of all bodies in the world.
-        """
-        return self.get_kinematic_structure_entity_by_type(Body)
-
-    @property
-    def connections(self) -> List[Connection]:
-        """
-        :return: A list of all connections in the world.
-        """
-        return list(self.kinematic_structure.edges())
-
+    # %% Other Atomic World Modifications
     @atomic_world_modification(modification=SetDofHasHardwareInterface)
     def set_dofs_has_hardware_interface(
         self, dofs: Iterable[DegreeOfFreedom], value: bool
@@ -937,219 +936,7 @@ class World:
         for dof in dofs:
             dof.has_hardware_interface = value
 
-    def get_connections_of_branch(
-        self, root: KinematicStructureEntity
-    ) -> List[Connection]:
-        """
-        Collect all connections that are below root in the tree.
-
-        :param root: The root body of the branch
-        :return: List of all connections in the subtree rooted at the given body
-        """
-
-        # Create a custom visitor to collect connections
-        class ConnectionCollector(rustworkx.visit.DFSVisitor):
-            def __init__(self, world: "World"):
-                self.world = world
-                self.connections = []
-
-            def tree_edge(self, edge: Tuple[int, int, Connection]):
-                """Called for each tree edge during DFS traversal"""
-                self.connections.append(edge[2])  # edge[2] is the connection
-
-        visitor = ConnectionCollector(self)
-        rx.dfs_search(self.kinematic_structure, [root.index], visitor)
-
-        return visitor.connections
-
-    def get_bodies_of_branch(
-        self, root: KinematicStructureEntity
-    ) -> List[KinematicStructureEntity]:
-        """
-        Collect all bodies that are below root in the tree.
-
-        :param root: The root body of the branch
-        :return: List of all bodies in the subtree rooted at the given body (including the root)
-        """
-
-        # Create a custom visitor to collect bodies
-        class BodyCollector(rustworkx.visit.DFSVisitor):
-            def __init__(self, world: World):
-                self.world = world
-                self.bodies = []
-
-            def discover_vertex(self, node_index: int, time: int) -> None:
-                """Called when a vertex is first discovered during DFS traversal"""
-                body = self.world.kinematic_structure[node_index]
-                self.bodies.append(body)
-
-        visitor = BodyCollector(self)
-        rx.dfs_search(self.kinematic_structure, [root.index], visitor)
-
-        return visitor.bodies
-
-    def get_world_state_symbols(self) -> List[cas.Symbol]:
-        """
-        Constructs and returns a list of symbols representing the state of the system. The state
-        is defined in terms of positions, velocities, accelerations, and jerks for each degree
-        of freedom specified in the current state.
-
-        :raises KeyError: If a degree of freedom defined in the state does not exist in
-            the `degrees_of_freedom`.
-        :returns: A combined list of symbols corresponding to the positions, velocities,
-            accelerations, and jerks for each degree of freedom in the state.
-        """
-        positions = [
-            self.get_degree_of_freedom_by_name(v_name).symbols.position
-            for v_name in self.state
-        ]
-        velocities = [
-            self.get_degree_of_freedom_by_name(v_name).symbols.velocity
-            for v_name in self.state
-        ]
-        accelerations = [
-            self.get_degree_of_freedom_by_name(v_name).symbols.acceleration
-            for v_name in self.state
-        ]
-        jerks = [
-            self.get_degree_of_freedom_by_name(v_name).symbols.jerk
-            for v_name in self.state
-        ]
-        return positions + velocities + accelerations + jerks
-
-    def merge_world(
-        self,
-        other: World,
-        root_connection: Connection = None,
-        handle_duplicates: bool = False,
-    ) -> None:
-        """
-        Merge a world into the existing one by merging degrees of freedom, states, connections, and bodies.
-        This removes all bodies and connections from `other`.
-
-        :param other: The world to be added.
-        :param root_connection: If provided, this connection will be used to connect the two worlds. Otherwise, a new Connection6DoF will be created
-        :param handle_duplicates: If True, bodies and semantic annotations with duplicate names will be renamed. If False, an error will be raised if duplicates are found.
-        :return: None
-        """
-        assert other is not self, "Cannot merge a world with itself."
-
-        with self.modify_world():
-            old_state = deepcopy(other.state)
-            self_root = self.root
-            other_root = other.root
-            with other.modify_world():
-                self._merge_dofs_of_world(other)
-                self._merge_connections_of_world(other, handle_duplicates)
-                self._remove_kinematic_structure_entities_of_world(other)
-                self._merge_semantic_annotations_of_world(other, handle_duplicates)
-
-            if not root_connection and self_root:
-                root_connection = Connection6DoF(
-                    parent=self_root, child=other_root, _world=self
-                )
-
-            if root_connection:
-                self.add_connection(
-                    root_connection, handle_duplicates=handle_duplicates
-                )
-
-            for dof_name in old_state.keys():
-                self.state[dof_name] = old_state[dof_name]
-
-    def _merge_dofs_of_world(self, other: World):
-        for dof in other.degrees_of_freedom.copy():
-            other.remove_degree_of_freedom(dof)
-            self.add_degree_of_freedom(dof)
-
-    def _merge_connections_of_world(self, other: World, handle_duplicates: bool):
-        other_root = other.root
-        for connection in other.connections:
-            other.remove_kinematic_structure_entity(connection.parent)
-            other.remove_kinematic_structure_entity(connection.child)
-            self.add_connection(connection, handle_duplicates=handle_duplicates)
-        else:
-            other.remove_kinematic_structure_entity(other_root)
-            self._add_kinematic_structure_entity_if_not_in_world(other_root)
-
-    @staticmethod
-    def _remove_kinematic_structure_entities_of_world(other: World):
-        other_kse_with_world = [
-            kse for kse in other.kinematic_structure_entities if kse._world is not None
-        ]
-        for kinematic_structure_entity in other_kse_with_world:
-            other.remove_kinematic_structure_entity(kinematic_structure_entity)
-
-    def _merge_semantic_annotations_of_world(
-        self, other: World, handle_duplicates: bool
-    ):
-        other_semantic_annotations = [
-            semantic_annotation for semantic_annotation in other.semantic_annotations
-        ]
-        for semantic_annotation in other_semantic_annotations:
-            other.remove_semantic_annotation(semantic_annotation)
-            self.add_semantic_annotation(
-                semantic_annotation, exists_ok=handle_duplicates
-            )
-
-    def move_branch(
-        self,
-        branch_root: KinematicStructureEntity,
-        new_parent: KinematicStructureEntity,
-    ) -> None:
-        """
-        Destroys the connection between branch_root and its parent, and moves it to a new parent using a new connection
-        of the same type. The pose of body with respect to root stays the same.
-
-        :param branch_root: The root of the branch to be moved.
-        :param new_parent: The new parent of the branch.
-        """
-        new_connection = None
-        new_parent_T_root = self.compute_forward_kinematics(new_parent, branch_root)
-        old_connection = branch_root.parent_connection
-
-        match old_connection:
-            case FixedConnection():
-                new_connection = FixedConnection(
-                    parent=new_parent,
-                    child=branch_root,
-                    _world=self,
-                    parent_T_connection_expression=new_parent_T_root,
-                )
-
-            case Connection6DoF():
-                new_connection = Connection6DoF(
-                    parent=new_parent,
-                    child=branch_root,
-                    _world=self,
-                )
-
-            case _:
-                raise ValueError(
-                    "The branch root must be connected to a Connection6DoF or FixedConnection."
-                )
-
-        with self.modify_world():
-            self.add_connection(new_connection)
-            self.remove_connection(old_connection)
-
-        if isinstance(new_connection, Connection6DoF):
-            new_connection.origin = new_parent_T_root
-
-    def merge_world_at_pose(self, other: World, pose: cas.TransformationMatrix) -> None:
-        """
-        Merge another world into the existing one, creates a 6DoF connection between the root of this world and the root
-        of the other world.
-        :param other: The world to be added.
-        :param pose: world_root_T_other_root, the pose of the other world's root with respect to the current world's root
-        """
-        with self.modify_world():
-            root_connection = Connection6DoF(
-                parent=self.root, child=other.root, _world=self
-            )
-            self.merge_world(other, root_connection)
-            root_connection.origin = pose
-
+    # %% Getter
     def get_connection(
         self, parent: KinematicStructureEntity, child: KinematicStructureEntity
     ) -> Connection:
@@ -1208,19 +995,6 @@ class World:
         :return: A list of `WorldEntity` objects that match the given type.
         """
         return [entity for entity in iterable if isinstance(entity, world_entity_type)]
-
-    def clear(self):
-        """
-        Clears all stored data and resets the state of the instance.
-        """
-        with self.modify_world():
-            kse = self.kinematic_structure_entities
-            for body in kse:
-                self.remove_kinematic_structure_entity(body)
-
-            self.semantic_annotations.clear()
-            self.degrees_of_freedom.clear()
-            self.state = WorldState()
 
     def get_semantic_annotation_by_name(
         self, name: Union[str, PrefixedName]
@@ -1306,19 +1080,307 @@ class World:
 
         return matches[0]
 
-    @lru_cache(maxsize=512)
-    def compute_child_kinematic_structure_entities(
-        self, kinematic_structure_entity: KinematicStructureEntity
+    # %% World Merging
+    def merge_world_at_pose(self, other: World, pose: cas.TransformationMatrix) -> None:
+        """
+        Merge another world into the existing one, creates a 6DoF connection between the root of this world and the root
+        of the other world.
+        :param other: The world to be added.
+        :param pose: world_root_T_other_root, the pose of the other world's root with respect to the current world's root
+        """
+        with self.modify_world():
+            root_connection = Connection6DoF(
+                parent=self.root, child=other.root, _world=self
+            )
+            self.merge_world(other, root_connection)
+            root_connection.origin = pose
+
+    def merge_world(
+        self,
+        other: World,
+        root_connection: Connection = None,
+        handle_duplicates: bool = False,
+    ) -> None:
+        """
+        Merge a world into the existing one by merging degrees of freedom, states, connections, and bodies.
+        This removes all bodies and connections from `other`.
+
+        :param other: The world to be added.
+        :param root_connection: If provided, this connection will be used to connect the two worlds. Otherwise, a new Connection6DoF will be created
+        :param handle_duplicates: If True, bodies and semantic annotations with duplicate names will be renamed. If False, an error will be raised if duplicates are found.
+        :return: None
+        """
+        assert other is not self, "Cannot merge a world with itself."
+
+        with self.modify_world():
+            old_state = deepcopy(other.state)
+            self_root = self.root
+            other_root = other.root
+            with other.modify_world():
+                self._merge_dofs_of_world(other)
+                self._merge_connections_of_world(other, handle_duplicates)
+                self._remove_kinematic_structure_entities_of_world(other)
+                self._merge_semantic_annotations_of_world(other, handle_duplicates)
+
+            if not root_connection and self_root:
+                root_connection = Connection6DoF(
+                    parent=self_root, child=other_root, _world=self
+                )
+
+            if root_connection:
+                self.add_connection(
+                    root_connection, handle_duplicates=handle_duplicates
+                )
+
+            for dof_name in old_state.keys():
+                self.state[dof_name] = old_state[dof_name]
+
+    def _merge_dofs_of_world(self, other: World):
+        for dof in other.degrees_of_freedom.copy():
+            other.remove_degree_of_freedom(dof)
+            self.add_degree_of_freedom(dof)
+
+    def _merge_connections_of_world(self, other: World, handle_duplicates: bool):
+        other_root = other.root
+        for connection in other.connections:
+            other.remove_kinematic_structure_entity(connection.parent)
+            other.remove_kinematic_structure_entity(connection.child)
+            self.add_connection(connection, handle_duplicates=handle_duplicates)
+        else:
+            other.remove_kinematic_structure_entity(other_root)
+            self._add_kinematic_structure_entity_if_not_in_world(other_root)
+
+    @staticmethod
+    def _remove_kinematic_structure_entities_of_world(other: World):
+        other_kse_with_world = [
+            kse for kse in other.kinematic_structure_entities if kse._world is not None
+        ]
+        for kinematic_structure_entity in other_kse_with_world:
+            other.remove_kinematic_structure_entity(kinematic_structure_entity)
+
+    def _merge_semantic_annotations_of_world(
+        self, other: World, handle_duplicates: bool
+    ):
+        other_semantic_annotations = [
+            semantic_annotation for semantic_annotation in other.semantic_annotations
+        ]
+        for semantic_annotation in other_semantic_annotations:
+            other.remove_semantic_annotation(semantic_annotation)
+            self.add_semantic_annotation(
+                semantic_annotation, exists_ok=handle_duplicates
+            )
+
+    # %% Subgraph Targeting
+    def get_connections_of_branch(
+        self, root: KinematicStructureEntity
+    ) -> List[Connection]:
+        """
+        Collect all connections that are below root in the tree.
+
+        :param root: The root body of the branch
+        :return: List of all connections in the subtree rooted at the given body
+        """
+
+        # Create a custom visitor to collect connections
+        class ConnectionCollector(rustworkx.visit.DFSVisitor):
+            def __init__(self, world: "World"):
+                self.world = world
+                self.connections = []
+
+            def tree_edge(self, edge: Tuple[int, int, Connection]):
+                """Called for each tree edge during DFS traversal"""
+                self.connections.append(edge[2])  # edge[2] is the connection
+
+        visitor = ConnectionCollector(self)
+        rx.dfs_search(self.kinematic_structure, [root.index], visitor)
+
+        return visitor.connections
+
+    def get_bodies_of_branch(
+        self, root: KinematicStructureEntity
     ) -> List[KinematicStructureEntity]:
         """
-        Computes the child entities of a given KinematicStructureEntity in the world.
-        :param kinematic_structure_entity: The KinematicStructureEntity for which to compute children.
-        :return: A list of child KinematicStructureEntities.
+        Collect all bodies that are below root in the tree.
+
+        :param root: The root body of the branch
+        :return: List of all bodies in the subtree rooted at the given body (including the root)
         """
-        return list(
-            self.kinematic_structure.successors(kinematic_structure_entity.index)
+
+        # Create a custom visitor to collect bodies
+        class BodyCollector(rustworkx.visit.DFSVisitor):
+            def __init__(self, world: World):
+                self.world = world
+                self.bodies = []
+
+            def discover_vertex(self, node_index: int, time: int) -> None:
+                """Called when a vertex is first discovered during DFS traversal"""
+                body = self.world.kinematic_structure[node_index]
+                self.bodies.append(body)
+
+        visitor = BodyCollector(self)
+        rx.dfs_search(self.kinematic_structure, [root.index], visitor)
+
+        return visitor.bodies
+
+    def get_direct_child_bodies_with_collision(
+        self, connection: Connection
+    ) -> Set[Body]:
+        """
+        Collect all child Bodies until a movable connection is found.
+
+        :param connection: The connection from the kinematic structure whose child bodies will be traversed.
+        :return: A set of Bodies that are moved directly by only this connection.
+        """
+
+        class BodyCollector(rx.visit.DFSVisitor):
+            def __init__(self, world: World):
+                self.world = world
+                self.bodies = set()
+
+            def discover_vertex(self, node_index: int, time: int) -> None:
+                body = self.world.kinematic_structure[node_index]
+                if isinstance(body, Body) and body.has_collision():
+                    self.bodies.add(body)
+
+            def tree_edge(self, args: Tuple[int, int, Connection]) -> None:
+                parent_index, child_index, e = args
+                if (
+                    isinstance(e, ActiveConnection)
+                    and e.has_hardware_interface
+                    and not e.frozen_for_collision_avoidance
+                ):
+                    raise rx.visit.PruneSearch()
+
+        visitor = BodyCollector(self)
+        rx.dfs_search(self.kinematic_structure, [connection.child.index], visitor)
+
+        return visitor.bodies
+
+    def move_branch(
+        self,
+        branch_root: KinematicStructureEntity,
+        new_parent: KinematicStructureEntity,
+    ) -> None:
+        """
+        Destroys the connection between branch_root and its parent, and moves it to a new parent using a new connection
+        of the same type. The pose of body with respect to root stays the same.
+
+        :param branch_root: The root of the branch to be moved.
+        :param new_parent: The new parent of the branch.
+        """
+        new_connection = None
+        new_parent_T_root = self.compute_forward_kinematics(new_parent, branch_root)
+        old_connection = branch_root.parent_connection
+
+        match old_connection:
+            case FixedConnection():
+                new_connection = FixedConnection(
+                    parent=new_parent,
+                    child=branch_root,
+                    _world=self,
+                    parent_T_connection_expression=new_parent_T_root,
+                )
+
+            case Connection6DoF():
+                new_connection = Connection6DoF(
+                    parent=new_parent,
+                    child=branch_root,
+                    _world=self,
+                )
+
+            case _:
+                raise ValueError(
+                    "The branch root must be connected to a Connection6DoF or FixedConnection."
+                )
+
+        with self.modify_world():
+            self.add_connection(new_connection)
+            self.remove_connection(old_connection)
+
+        if isinstance(new_connection, Connection6DoF):
+            new_connection.origin = new_parent_T_root
+
+    def copy_subgraph_to_new_world(self, new_root: KinematicStructureEntity) -> World:
+        """
+        Copies the subgraph of the kinematic structure from the root body to a new world and removes it from the old world.
+
+        :param new_root: The root body of the subgraph to be copied.
+        :return: A new `World` instance containing the copied subgraph.
+        """
+        with self.modify_world():
+            new_world = World(name=self.name)
+            child_bodies = self.compute_descendent_child_kinematic_structure_entities(
+                new_root
+            )
+            child_body_parent_connections = [
+                body.parent_connection for body in child_bodies
+            ]
+
+            with new_world.modify_world():
+                self.remove_kinematic_structure_entity(new_root)
+                new_world.add_kinematic_structure_entity(new_root)
+
+                for body in child_bodies:
+                    self.remove_kinematic_structure_entity(body)
+                    new_world.add_kinematic_structure_entity(body)
+
+                for connection in child_body_parent_connections:
+                    self.remove_connection(connection)
+                    new_world.add_connection(connection)
+
+        return new_world
+
+    def _travel_branch(
+        self,
+        root_kinematic_structure_entity: KinematicStructureEntity,
+        visitor: rustworkx.visit.DFSVisitor,
+    ) -> None:
+        """
+        Apply a DFS Visitor to a subtree of the kinematic structure.
+
+        :param root_kinematic_structure_entity: Starting point of the search
+        :param visitor: This visitor to apply.
+        """
+        rx.dfs_search(
+            self.kinematic_structure, [root_kinematic_structure_entity.index], visitor
         )
 
+    # %% Change Notifications
+    def notify_state_change(self) -> None:
+        """
+        If you have changed the state of the world, call this function to trigger necessary events and increase
+        the state version.
+        """
+        if not self.empty:
+            self._recompute_forward_kinematics()
+        self.state._notify_state_change()
+
+    def _notify_model_change(self) -> None:
+        """
+        Notifies the system of a model change and updates necessary states, caches,
+        and forward kinematics expressions while also triggering registered callbacks
+        for model changes.
+        """
+        # if not self.world_is_being_modified:
+        self.compile_forward_kinematics_expressions()
+        self.notify_state_change()
+
+        self._world_model_manager.update_model_version_and_notify_callbacks()
+
+        for callback in self.state.state_change_callbacks:
+            callback.update_previous_world_state()
+
+        self.validate()
+        self._collision_pair_manager.disable_non_robot_collisions()
+        self._collision_pair_manager.disable_collisions_for_adjacent_bodies()
+
+    def delete_orphaned_dofs(self):
+        actual_dofs = {
+            dof for connection in self.connections for dof in connection.dofs
+        }
+        self.degrees_of_freedom = list(actual_dofs)
+
+    # %% Kinematic Structure Computations
     @lru_cache(maxsize=512)
     def compute_descendent_child_kinematic_structure_entities(
         self, kinematic_structure_entity: KinematicStructureEntity
@@ -1338,19 +1400,17 @@ class World:
         return children
 
     @lru_cache(maxsize=512)
-    def compute_parent_kinematic_structure_entity(
+    def compute_child_kinematic_structure_entities(
         self, kinematic_structure_entity: KinematicStructureEntity
-    ) -> Optional[KinematicStructureEntity]:
+    ) -> List[KinematicStructureEntity]:
         """
-        Computes the parent KinematicStructureEntity of a given KinematicStructureEntity in the world.
-        :param kinematic_structure_entity: The KinematicStructureEntity for which to compute the parent KinematicStructureEntity.
-        :return: The parent KinematicStructureEntity of the given KinematicStructureEntity.
-         If the given KinematicStructureEntity is the root, None is returned.
+        Computes the child entities of a given KinematicStructureEntity in the world.
+        :param kinematic_structure_entity: The KinematicStructureEntity for which to compute children.
+        :return: A list of child KinematicStructureEntities.
         """
-        parent = self.kinematic_structure.predecessors(kinematic_structure_entity.index)
-        if len(parent) == 0:
-            return None
-        return parent[0]
+        return list(
+            self.kinematic_structure.successors(kinematic_structure_entity.index)
+        )
 
     @lru_cache(maxsize=512)
     def compute_parent_connection(
@@ -1373,6 +1433,34 @@ class World:
         )
 
     @lru_cache(maxsize=512)
+    def compute_parent_kinematic_structure_entity(
+        self, kinematic_structure_entity: KinematicStructureEntity
+    ) -> Optional[KinematicStructureEntity]:
+        """
+        Computes the parent KinematicStructureEntity of a given KinematicStructureEntity in the world.
+        :param kinematic_structure_entity: The KinematicStructureEntity for which to compute the parent KinematicStructureEntity.
+        :return: The parent KinematicStructureEntity of the given KinematicStructureEntity.
+         If the given KinematicStructureEntity is the root, None is returned.
+        """
+        parent = self.kinematic_structure.predecessors(kinematic_structure_entity.index)
+        if len(parent) == 0:
+            return None
+        return parent[0]
+
+    @lru_cache(maxsize=512)
+    def compute_chain_of_connections(
+        self, root: KinematicStructureEntity, tip: KinematicStructureEntity
+    ) -> List[Connection]:
+        """
+        Computes the chain of connections between root and tip. Can handle chains that start and end anywhere in the tree.
+        """
+        entity_chain = self.compute_chain_of_kinematic_structure_entities(root, tip)
+        return [
+            self.get_connection(entity_chain[i], entity_chain[i + 1])
+            for i in range(len(entity_chain) - 1)
+        ]
+
+    @lru_cache(maxsize=512)
     def compute_chain_of_kinematic_structure_entities(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> List[KinematicStructureEntity]:
@@ -1390,18 +1478,114 @@ class World:
 
         return [self.kinematic_structure[index] for index in shortest_paths[0]]
 
-    @lru_cache(maxsize=512)
-    def compute_chain_of_connections(
+    def is_controlled_connection_in_chain(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
-    ) -> List[Connection]:
+    ) -> bool:
+        root_part, tip_part = self.compute_split_chain_of_connections(root, tip)
+        connections = root_part + tip_part
+        return any(
+            isinstance(connection, ActiveConnection)
+            and connection.has_hardware_interface
+            and not connection.frozen_for_collision_avoidance
+            for connection in connections
+        )
+
+    def is_body_controlled(self, body: KinematicStructureEntity) -> bool:
+        root_part, tip_part = self.compute_split_chain_of_connections(self.root, body)
+        connections = root_part + tip_part
+        return any(
+            isinstance(c, ActiveConnection)
+            and c.has_hardware_interface
+            and not c.frozen_for_collision_avoidance
+            for c in connections
+        )
+
+    def compute_chain_reduced_to_controlled_joints(
+        self, root: KinematicStructureEntity, tip: KinematicStructureEntity
+    ) -> Tuple[KinematicStructureEntity, KinematicStructureEntity]:
         """
-        Computes the chain of connections between root and tip. Can handle chains that start and end anywhere in the tree.
+        Removes root and tip links until they are both connected with a controlled connection.
+        Useful for implementing collision avoidance.
+
+        1. Compute the kinematic chain of bodies between root and tip.
+        2. Remove all entries from link_a downward until one is connected with a connection from this semantic annotation.
+        2. Remove all entries from link_b upward until one is connected with a connection from this semantic annotation.
+
+        :param root: start of the chain
+        :param tip: end of the chain
+        :return: start and end link of the reduced chain
         """
-        entity_chain = self.compute_chain_of_kinematic_structure_entities(root, tip)
-        return [
-            self.get_connection(entity_chain[i], entity_chain[i + 1])
-            for i in range(len(entity_chain) - 1)
+        downward_chain, upward_chain = self.compute_split_chain_of_connections(
+            root=root, tip=tip
+        )
+        chain = downward_chain + upward_chain
+
+        condition_for_controlled_connection = (
+            lambda conn: isinstance(conn, ActiveConnection)
+            and conn.has_hardware_interface
+            and not conn.frozen_for_collision_avoidance
+        )
+
+        new_root = next(
+            (conn for conn in chain if condition_for_controlled_connection(conn)), None
+        )
+        if new_root is None:
+            raise KeyError(
+                f"no controlled connection in chain between {root} and {tip}"
+            )
+
+        new_tip = next(
+            (
+                conn
+                for conn in reversed(chain)
+                if condition_for_controlled_connection(conn)
+            ),
+            None,
+        )
+        if new_tip is None:
+            raise KeyError(
+                f"no controlled connection in chain between {root} and {tip}"
+            )
+
+        # if new_root is in the downward chain, we need to "flip" it by returning its child
+        new_root_body = new_root.parent if new_root in upward_chain else new_root.child
+
+        # if new_tip is in the downward chain, we need to "flip" it by returning its parent
+        new_tip_body = new_tip.parent if new_tip in downward_chain else new_tip.child
+        return new_root_body, new_tip_body
+
+    @lru_cache(maxsize=512)
+    def compute_split_chain_of_connections(
+        self, root: KinematicStructureEntity, tip: KinematicStructureEntity
+    ) -> Tuple[List[Connection], List[Connection]]:
+        """
+        Computes split chains of connections between 'root' and 'tip' bodies. Returns tuple of two Connection lists:
+        (root->common ancestor, tip->common ancestor). Returns empty lists if root==tip.
+
+        :param root: The starting `KinematicStructureEntity` object for the chain of connections.
+        :param tip: The ending `KinematicStructureEntity` object for the chain of connections.
+        :return: A tuple of two lists: the first list contains `Connection` objects from the `root` to
+            the common ancestor, and the second list contains `Connection` objects from the `tip` to the
+            common ancestor.
+        """
+        if root == tip:
+            return [], []
+        root_chain, common_ancestor, tip_chain = (
+            self.compute_split_chain_of_kinematic_structure_entities(root, tip)
+        )
+        root_chain.append(common_ancestor[0])
+        tip_chain.insert(0, common_ancestor[0])
+
+        root_connections = [
+            self.get_connection(root_chain[i + 1], root_chain[i])
+            for i in range(len(root_chain) - 1)
         ]
+
+        tip_connections = [
+            self.get_connection(tip_chain[i], tip_chain[i + 1])
+            for i in range(len(tip_chain) - 1)
+        ]
+        return root_connections, tip_connections
 
     @lru_cache(maxsize=512)
     def compute_split_chain_of_kinematic_structure_entities(
@@ -1452,177 +1636,7 @@ class World:
 
         return up_from_root, [common_ancestor], down_to_tip
 
-    @lru_cache(maxsize=512)
-    def compute_split_chain_of_connections(
-        self, root: KinematicStructureEntity, tip: KinematicStructureEntity
-    ) -> Tuple[List[Connection], List[Connection]]:
-        """
-        Computes split chains of connections between 'root' and 'tip' bodies. Returns tuple of two Connection lists:
-        (root->common ancestor, tip->common ancestor). Returns empty lists if root==tip.
-
-        :param root: The starting `KinematicStructureEntity` object for the chain of connections.
-        :param tip: The ending `KinematicStructureEntity` object for the chain of connections.
-        :return: A tuple of two lists: the first list contains `Connection` objects from the `root` to
-            the common ancestor, and the second list contains `Connection` objects from the `tip` to the
-            common ancestor.
-        """
-        if root == tip:
-            return [], []
-        root_chain, common_ancestor, tip_chain = (
-            self.compute_split_chain_of_kinematic_structure_entities(root, tip)
-        )
-        root_chain.append(common_ancestor[0])
-        tip_chain.insert(0, common_ancestor[0])
-
-        root_connections = [
-            self.get_connection(root_chain[i + 1], root_chain[i])
-            for i in range(len(root_chain) - 1)
-        ]
-
-        tip_connections = [
-            self.get_connection(tip_chain[i], tip_chain[i + 1])
-            for i in range(len(tip_chain) - 1)
-        ]
-        return root_connections, tip_connections
-
-    @property
-    def kinematic_structure_entities_topologically_sorted(
-        self,
-    ) -> List[KinematicStructureEntity]:
-        """
-        Return a list of all kinematic_structure_entities in the world, sorted topologically.
-        """
-        indices = rx.topological_sort(self.kinematic_structure)
-        return [self.kinematic_structure[index] for index in indices]
-
-    @property
-    def bodies_topologically_sorted(self) -> List[Body]:
-        return [
-            body
-            for body in self.kinematic_structure_entities_topologically_sorted
-            if isinstance(body, Body)
-        ]
-
-    def copy_subgraph_to_new_world(self, new_root: KinematicStructureEntity) -> World:
-        """
-        Copies the subgraph of the kinematic structure from the root body to a new world and removes it from the old world.
-
-        :param new_root: The root body of the subgraph to be copied.
-        :return: A new `World` instance containing the copied subgraph.
-        """
-        with self.modify_world():
-            new_world = World(name=self.name)
-            child_bodies = self.compute_descendent_child_kinematic_structure_entities(
-                new_root
-            )
-            child_body_parent_connections = [
-                body.parent_connection for body in child_bodies
-            ]
-
-            with new_world.modify_world():
-                self.remove_kinematic_structure_entity(new_root)
-                new_world.add_kinematic_structure_entity(new_root)
-
-                for body in child_bodies:
-                    self.remove_kinematic_structure_entity(body)
-                    new_world.add_kinematic_structure_entity(body)
-
-                for connection in child_body_parent_connections:
-                    self.remove_connection(connection)
-                    new_world.add_connection(connection)
-
-        return new_world
-
-    @property
-    def empty(self):
-        """
-        :return: Returns True if the world contains no kinematic_structure_entities, else False.
-        """
-        return len(self.kinematic_structure_entities) == 0
-
-    @property
-    def layers(self) -> List[List[KinematicStructureEntity]]:
-        return rx.layers(
-            self.kinematic_structure, [self.root.index], index_output=False
-        )
-
-    def bfs_layout(
-        self, scale: float = 1.0, align: PlotAlignment = PlotAlignment.VERTICAL
-    ) -> Dict[int, np.array]:
-        """
-        Generate a bfs layout for this circuit.
-
-        :return: A dict mapping the node indices to 2d coordinates.
-        """
-        layers = self.layers
-
-        pos = None
-        nodes = []
-        width = len(layers)
-        for i, layer in enumerate(layers):
-            height = len(layer)
-            xs = np.repeat(i, height)
-            ys = np.arange(0, height, dtype=float)
-            offset = ((width - 1) / 2, (height - 1) / 2)
-            layer_pos = np.column_stack([xs, ys]) - offset
-            if pos is None:
-                pos = layer_pos
-            else:
-                pos = np.concatenate([pos, layer_pos])
-            nodes.extend(layer)
-
-        # Find max length over all dimensions
-        pos -= pos.mean(axis=0)
-        lim = np.abs(pos).max()  # max coordinate for all axes
-        # rescale to (-scale, scale) in all directions, preserves aspect
-        if lim > 0:
-            pos *= scale / lim
-
-        if align == PlotAlignment.HORIZONTAL:
-            pos = pos[:, ::-1]  # swap x and y coords
-
-        pos = dict(zip([node.index for node in nodes], pos))
-        return pos
-
-    def plot_kinematic_structure(
-        self, scale: float = 1.0, align: PlotAlignment = PlotAlignment.VERTICAL
-    ) -> None:
-        """
-        Plots the kinematic structure of the world.
-        The plot shows entities as nodes and connections as edges in a directed graph.
-        """
-        # Create a new figure
-        plt.figure(figsize=(12, 8))
-
-        pos = self.bfs_layout(scale=scale, align=align)
-
-        rustworkx.visualization.mpl_draw(
-            self.kinematic_structure,
-            pos=pos,
-            labels=lambda body: str(body.name),
-            with_labels=True,
-            edge_labels=lambda edge: edge.__class__.__name__,
-        )
-
-        plt.title("World Kinematic Structure")
-        plt.axis("off")  # Hide axes
-        plt.show()
-
-    def _travel_branch(
-        self,
-        kinematic_structure_entity: KinematicStructureEntity,
-        visitor: rustworkx.visit.DFSVisitor,
-    ) -> None:
-        """
-        Apply a DFS Visitor to a subtree of the kinematic structure.
-
-        :param kinematic_structure_entity: Starting point of the search
-        :param visitor: This visitor to apply.
-        """
-        rx.dfs_search(
-            self.kinematic_structure, [kinematic_structure_entity.index], visitor
-        )
-
+    # %% Forward Kinematics
     def compile_forward_kinematics_expressions(self) -> None:
         """
         Traverse the kinematic structure and compile forward kinematics expressions for fast evaluation.
@@ -1702,6 +1716,61 @@ class World:
         """
         return self._fk_computer.collision_fks
 
+    # %% Inverse Kinematics
+    def compute_inverse_kinematics(
+        self,
+        root: KinematicStructureEntity,
+        tip: KinematicStructureEntity,
+        target: cas.TransformationMatrix,
+        dt: float = 0.05,
+        max_iterations: int = 200,
+        translation_velocity: float = 0.2,
+        rotation_velocity: float = 0.2,
+    ) -> Dict[DegreeOfFreedom, float]:
+        """
+        Compute inverse kinematics using quadratic programming.
+
+        :param root: Root KinematicStructureEntity of the kinematic chain
+        :param tip: Tip KinematicStructureEntity of the kinematic chain
+        :param target: Desired tip pose relative to the root KinematicStructureEntity
+        :param dt: Time step for integration
+        :param max_iterations: Maximum number of iterations
+        :param translation_velocity: Maximum translation velocity
+        :param rotation_velocity: Maximum rotation velocity
+        :return: Dictionary mapping DOF names to their computed positions
+        """
+        ik_solver = InverseKinematicsSolver(self)
+        return ik_solver.solve(
+            root,
+            tip,
+            target,
+            dt,
+            max_iterations,
+            translation_velocity,
+            rotation_velocity,
+        )
+
+    # %% World Utils
+    def clear(self):
+        """
+        Clears all stored data and resets the state of the instance.
+        """
+        with self.modify_world():
+            kse = self.kinematic_structure_entities
+            for body in kse:
+                self.remove_kinematic_structure_entity(body)
+
+            self.semantic_annotations.clear()
+            self.degrees_of_freedom.clear()
+            self.state = WorldState()
+
+    @property
+    def empty(self):
+        """
+        :return: Returns True if the world contains no kinematic_structure_entities, else False.
+        """
+        return len(self.kinematic_structure_entities) == 0
+
     def transform(
         self,
         spatial_object: cas.GenericSpatialType,
@@ -1735,38 +1804,63 @@ class World:
 
         return target_frame_T_reference_frame @ spatial_object
 
-    def compute_inverse_kinematics(
-        self,
-        root: KinematicStructureEntity,
-        tip: KinematicStructureEntity,
-        target: cas.TransformationMatrix,
-        dt: float = 0.05,
-        max_iterations: int = 200,
-        translation_velocity: float = 0.2,
-        rotation_velocity: float = 0.2,
-    ) -> Dict[DegreeOfFreedom, float]:
-        """
-        Compute inverse kinematics using quadratic programming.
+    def __deepcopy__(self, memo):
+        # TODO surely this can be optimized, but I need to fully understand this first because fucking it up will make jonas big mad
+        new_world = World(name=self.name)
+        body_mapping = {}
+        dof_mapping = {}
+        with new_world.modify_world():
+            for body in self.bodies:
+                new_body = Body(
+                    visual=body.visual,
+                    collision=body.collision,
+                    name=body.name,
+                )
+                new_world.add_kinematic_structure_entity(new_body)
+                body_mapping[body] = new_body
+            for dof in self.degrees_of_freedom:
+                new_dof = DegreeOfFreedom(
+                    name=dof.name,
+                    lower_limits=dof.lower_limits,
+                    upper_limits=dof.upper_limits,
+                )
+                new_world.add_degree_of_freedom(new_dof)
+                dof_mapping[dof] = new_dof
+            for connection in self.connections:
+                con_factory = ConnectionFactory.from_connection(connection)
+                con_factory.create(new_world)
+            for dof in self.degrees_of_freedom:
+                new_world.state[dof.name] = self.state[dof.name].data
+        return new_world
 
-        :param root: Root KinematicStructureEntity of the kinematic chain
-        :param tip: Tip KinematicStructureEntity of the kinematic chain
-        :param target: Desired tip pose relative to the root KinematicStructureEntity
-        :param dt: Time step for integration
-        :param max_iterations: Maximum number of iterations
-        :param translation_velocity: Maximum translation velocity
-        :param rotation_velocity: Maximum rotation velocity
-        :return: Dictionary mapping DOF names to their computed positions
+    # %% Associations
+    def load_collision_srdf(self, file_path: str):
+        self._collision_pair_manager.load_collision_srdf(file_path)
+
+    def modify_world(self) -> WorldModelUpdateContextManager:
+        return WorldModelUpdateContextManager(self)
+
+    def reset_state_context(self) -> ResetStateContextManager:
+        return ResetStateContextManager(self)
+
+    def get_world_model_manager(self) -> WorldModelManager:
+        return self._world_model_manager
+
+    @cached_property
+    def collision_detector(self) -> CollisionDetector:
         """
-        ik_solver = InverseKinematicsSolver(self)
-        return ik_solver.solve(
-            root,
-            tip,
-            target,
-            dt,
-            max_iterations,
-            translation_velocity,
-            rotation_velocity,
-        )
+        A collision detector for the world.
+        :return: A collision detector for the world.
+        """
+        return TrimeshCollisionDetector(self)
+
+    @cached_property
+    def ray_tracer(self) -> RayTracer:
+        """
+        A ray tracer for the world.
+        :return: A ray tracer for the world.
+        """
+        return RayTracer(self)
 
     def apply_control_commands(
         self, commands: np.ndarray, dt: float, derivative: Derivatives
@@ -1809,182 +1903,31 @@ class World:
             connection.position = value
         self.notify_state_change()
 
-    def __deepcopy__(self, memo):
-        # TODO surely this can be optimized, but I need to fully understand this first because fucking it up will make jonas big mad
-        new_world = World(name=self.name)
-        body_mapping = {}
-        dof_mapping = {}
-        with new_world.modify_world():
-            for body in self.bodies:
-                new_body = Body(
-                    visual=body.visual,
-                    collision=body.collision,
-                    name=body.name,
-                )
-                new_world.add_kinematic_structure_entity(new_body)
-                body_mapping[body] = new_body
-            for dof in self.degrees_of_freedom:
-                new_dof = DegreeOfFreedom(
-                    name=dof.name,
-                    lower_limits=dof.lower_limits,
-                    upper_limits=dof.upper_limits,
-                )
-                new_world.add_degree_of_freedom(new_dof)
-                dof_mapping[dof] = new_dof
-            for connection in self.connections:
-                con_factory = ConnectionFactory.from_connection(connection)
-                con_factory.create(new_world)
-            for dof in self.degrees_of_freedom:
-                new_world.state[dof.name] = self.state[dof.name].data
-        return new_world
-
-    @property
-    def controlled_connections(self) -> Set[ActiveConnection]:
+    def get_world_state_symbols(self) -> List[cas.Symbol]:
         """
-        A subset of the robot's connections that are controlled by a controller.
+        Constructs and returns a list of symbols representing the state of the system. The state
+        is defined in terms of positions, velocities, accelerations, and jerks for each degree
+        of freedom specified in the current state.
+
+        :raises KeyError: If a degree of freedom defined in the state does not exist in
+            the `degrees_of_freedom`.
+        :returns: A combined list of symbols corresponding to the positions, velocities,
+            accelerations, and jerks for each degree of freedom in the state.
         """
-        return set(
-            connection
-            for connection in self.connections
-            if isinstance(connection, ActiveConnection)
-            and connection.has_hardware_interface
-        )
-
-    def is_controlled_connection_in_chain(
-        self, root: KinematicStructureEntity, tip: KinematicStructureEntity
-    ) -> bool:
-        root_part, tip_part = self.compute_split_chain_of_connections(root, tip)
-        connections = root_part + tip_part
-        return any(
-            isinstance(connection, ActiveConnection)
-            and connection.has_hardware_interface
-            and not connection.frozen_for_collision_avoidance
-            for connection in connections
-        )
-
-    @property
-    def bodies_with_enabled_collision(self) -> List[Body]:
-        return [
-            b
-            for b in self.bodies
-            if b.has_collision()
-            and b.get_collision_config
-            and not b.get_collision_config().disabled
+        positions = [
+            self.get_degree_of_freedom_by_name(v_name).symbols.position
+            for v_name in self.state
         ]
-
-    def get_direct_child_bodies_with_collision(
-        self, connection: Connection
-    ) -> Set[Body]:
-        """
-        Collect all child Bodies until a movable connection is found.
-
-        :param connection: The connection from the kinematic structure whose child bodies will be traversed.
-        :return: A set of Bodies that are moved directly by only this connection.
-        """
-
-        class BodyCollector(rx.visit.DFSVisitor):
-            def __init__(self, world: World):
-                self.world = world
-                self.bodies = set()
-
-            def discover_vertex(self, node_index: int, time: int) -> None:
-                body = self.world.kinematic_structure[node_index]
-                if isinstance(body, Body) and body.has_collision():
-                    self.bodies.add(body)
-
-            def tree_edge(self, args: Tuple[int, int, Connection]) -> None:
-                parent_index, child_index, e = args
-                if (
-                    isinstance(e, ActiveConnection)
-                    and e.has_hardware_interface
-                    and not e.frozen_for_collision_avoidance
-                ):
-                    raise rx.visit.PruneSearch()
-
-        visitor = BodyCollector(self)
-        rx.dfs_search(self.kinematic_structure, [connection.child.index], visitor)
-
-        return visitor.bodies
-
-    def compute_chain_reduced_to_controlled_joints(
-        self, root: KinematicStructureEntity, tip: KinematicStructureEntity
-    ) -> Tuple[KinematicStructureEntity, KinematicStructureEntity]:
-        """
-        Removes root and tip links until they are both connected with a controlled connection.
-        Useful for implementing collision avoidance.
-
-        1. Compute the kinematic chain of bodies between root and tip.
-        2. Remove all entries from link_a downward until one is connected with a connection from this semantic annotation.
-        2. Remove all entries from link_b upward until one is connected with a connection from this semantic annotation.
-
-        :param root: start of the chain
-        :param tip: end of the chain
-        :return: start and end link of the reduced chain
-        """
-        downward_chain, upward_chain = self.compute_split_chain_of_connections(
-            root=root, tip=tip
-        )
-        chain = downward_chain + upward_chain
-
-        condition_for_controlled_connection = (
-            lambda conn: isinstance(conn, ActiveConnection)
-            and conn.has_hardware_interface
-            and not conn.frozen_for_collision_avoidance
-        )
-
-        new_root = next(
-            (conn for conn in chain if condition_for_controlled_connection(conn)), None
-        )
-        if new_root is None:
-            raise KeyError(
-                f"no controlled connection in chain between {root} and {tip}"
-            )
-
-        new_tip = next(
-            (
-                conn
-                for conn in reversed(chain)
-                if condition_for_controlled_connection(conn)
-            ),
-            None,
-        )
-        if new_tip is None:
-            raise KeyError(
-                f"no controlled connection in chain between {root} and {tip}"
-            )
-
-        # if new_root is in the downward chain, we need to "flip" it by returning its child
-        new_root_body = new_root.parent if new_root in upward_chain else new_root.child
-
-        # if new_tip is in the downward chain, we need to "flip" it by returning its parent
-        new_tip_body = new_tip.parent if new_tip in downward_chain else new_tip.child
-        return new_root_body, new_tip_body
-
-    def is_body_controlled(self, body: KinematicStructureEntity) -> bool:
-        root_part, tip_part = self.compute_split_chain_of_connections(self.root, body)
-        connections = root_part + tip_part
-        return any(
-            isinstance(c, ActiveConnection)
-            and c.has_hardware_interface
-            and not c.frozen_for_collision_avoidance
-            for c in connections
-        )
-
-    def load_collision_srdf(self, file_path: str):
-        self._collision_pair_manager.load_collision_srdf(file_path)
-
-    @cached_property
-    def collision_detector(self) -> CollisionDetector:
-        """
-        A collision detector for the world.
-        :return: A collision detector for the world.
-        """
-        return TrimeshCollisionDetector(self)
-
-    @cached_property
-    def ray_tracer(self) -> RayTracer:
-        """
-        A ray tracer for the world.
-        :return: A ray tracer for the world.
-        """
-        return RayTracer(self)
+        velocities = [
+            self.get_degree_of_freedom_by_name(v_name).symbols.velocity
+            for v_name in self.state
+        ]
+        accelerations = [
+            self.get_degree_of_freedom_by_name(v_name).symbols.acceleration
+            for v_name in self.state
+        ]
+        jerks = [
+            self.get_degree_of_freedom_by_name(v_name).symbols.jerk
+            for v_name in self.state
+        ]
+        return positions + velocities + accelerations + jerks
