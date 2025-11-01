@@ -254,7 +254,7 @@ def test_compute_fk_expression(world_setup):
     world.state[connection.dof.name].position = 1.0
     world.notify_state_change()
     fk = world.compute_forward_kinematics_np(r2, l2)
-    fk_expr = world.compose_forward_kinematics_expression(r2, l2)
+    fk_expr = world.forward_kinematic_manager.compose_forward_kinematics_expression(r2, l2)
     fk_expr_compiled = fk_expr.compile()
     fk2 = fk_expr_compiled(
         *symbol_manager.resolve_symbols(fk_expr_compiled.symbol_parameters)

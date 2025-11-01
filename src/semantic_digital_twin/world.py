@@ -504,7 +504,7 @@ class World:
         self._collision_pair_manager = CollisionPairManager(self)
 
     def __hash__(self):
-        return hash((id(self), self._world_model_manager.model_version))
+        return hash(id(self))
 
     def __str__(self):
         return f"{self.__class__.__name__} with {len(self.kinematic_structure_entities)} bodies."
@@ -1192,8 +1192,7 @@ class World:
                 self.connections.append(edge[2])  # edge[2] is the connection
 
         visitor = ConnectionCollector(self)
-        rx.dfs_search(self.kinematic_structure, [root.index], visitor)
-
+        self._travel_branch(root, visitor)
         return visitor.connections
 
     def get_bodies_of_branch(
@@ -1218,7 +1217,7 @@ class World:
                 self.bodies.append(body)
 
         visitor = BodyCollector(self)
-        rx.dfs_search(self.kinematic_structure, [root.index], visitor)
+        self._travel_branch(root, visitor)
 
         return visitor.bodies
 
@@ -1252,9 +1251,24 @@ class World:
                     raise rx.visit.PruneSearch()
 
         visitor = BodyCollector(self)
-        rx.dfs_search(self.kinematic_structure, [connection.child.index], visitor)
+        self._travel_branch(connection.child, visitor)
 
         return visitor.bodies
+
+    def _travel_branch(
+        self,
+        root_kinematic_structure_entity: KinematicStructureEntity,
+        visitor: rustworkx.visit.DFSVisitor,
+    ) -> None:
+        """
+        Apply a DFS Visitor to a subtree of the kinematic structure.
+
+        :param root_kinematic_structure_entity: Starting point of the search
+        :param visitor: This visitor to apply.
+        """
+        rx.dfs_search(
+            self.kinematic_structure, [root_kinematic_structure_entity.index], visitor
+        )
 
     def move_branch(
         self,
@@ -1330,21 +1344,6 @@ class World:
 
         return new_world
 
-    def _travel_branch(
-        self,
-        root_kinematic_structure_entity: KinematicStructureEntity,
-        visitor: rustworkx.visit.DFSVisitor,
-    ) -> None:
-        """
-        Apply a DFS Visitor to a subtree of the kinematic structure.
-
-        :param root_kinematic_structure_entity: Starting point of the search
-        :param visitor: This visitor to apply.
-        """
-        rx.dfs_search(
-            self.kinematic_structure, [root_kinematic_structure_entity.index], visitor
-        )
-
     # %% Change Notifications
     def notify_state_change(self) -> None:
         """
@@ -1352,7 +1351,7 @@ class World:
         the state version.
         """
         if not self.empty:
-            self._recompute_forward_kinematics()
+            self._fk_computer.recompute()
         self.state._notify_state_change()
 
     def _notify_model_change(self) -> None:
@@ -1362,7 +1361,8 @@ class World:
         for model changes.
         """
         # if not self.world_is_being_modified:
-        self.compile_forward_kinematics_expressions()
+        self._compile_forward_kinematics_expressions()
+        self.clear_all_lru_caches()
         self.notify_state_change()
 
         self._world_model_manager.update_model_version_and_notify_callbacks()
@@ -1381,7 +1381,7 @@ class World:
         self.degrees_of_freedom = list(actual_dofs)
 
     # %% Kinematic Structure Computations
-    @lru_cache(maxsize=512)
+    @lru_cache(maxsize=None)
     def compute_descendent_child_kinematic_structure_entities(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> List[KinematicStructureEntity]:
@@ -1399,7 +1399,7 @@ class World:
             )
         return children
 
-    @lru_cache(maxsize=512)
+    @lru_cache(maxsize=None)
     def compute_child_kinematic_structure_entities(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> List[KinematicStructureEntity]:
@@ -1412,7 +1412,7 @@ class World:
             self.kinematic_structure.successors(kinematic_structure_entity.index)
         )
 
-    @lru_cache(maxsize=512)
+    @lru_cache(maxsize=None)
     def compute_parent_connection(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> Optional[Connection]:
@@ -1432,7 +1432,7 @@ class World:
             kinematic_structure_entity.index,
         )
 
-    @lru_cache(maxsize=512)
+    @lru_cache(maxsize=None)
     def compute_parent_kinematic_structure_entity(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> Optional[KinematicStructureEntity]:
@@ -1447,7 +1447,7 @@ class World:
             return None
         return parent[0]
 
-    @lru_cache(maxsize=512)
+    @lru_cache(maxsize=None)
     def compute_chain_of_connections(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> List[Connection]:
@@ -1460,7 +1460,7 @@ class World:
             for i in range(len(entity_chain) - 1)
         ]
 
-    @lru_cache(maxsize=512)
+    @lru_cache(maxsize=None)
     def compute_chain_of_kinematic_structure_entities(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> List[KinematicStructureEntity]:
@@ -1554,7 +1554,7 @@ class World:
         new_tip_body = new_tip.parent if new_tip in downward_chain else new_tip.child
         return new_root_body, new_tip_body
 
-    @lru_cache(maxsize=512)
+    @lru_cache(maxsize=None)
     def compute_split_chain_of_connections(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> Tuple[List[Connection], List[Connection]]:
@@ -1587,7 +1587,7 @@ class World:
         ]
         return root_connections, tip_connections
 
-    @lru_cache(maxsize=512)
+    @lru_cache(maxsize=None)
     def compute_split_chain_of_kinematic_structure_entities(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> Tuple[
@@ -1637,7 +1637,7 @@ class World:
         return up_from_root, [common_ancestor], down_to_tip
 
     # %% Forward Kinematics
-    def compile_forward_kinematics_expressions(self) -> None:
+    def _compile_forward_kinematics_expressions(self) -> None:
         """
         Traverse the kinematic structure and compile forward kinematics expressions for fast evaluation.
         """
@@ -1650,33 +1650,6 @@ class World:
         new_fks.compile_forward_kinematics()
         self._fk_computer = new_fks
 
-    def _recompute_forward_kinematics(self) -> None:
-        self._fk_computer.recompute()
-
-    @copy_lru_cache()
-    def compose_forward_kinematics_expression(
-        self, root: KinematicStructureEntity, tip: KinematicStructureEntity
-    ) -> cas.TransformationMatrix:
-        """
-        :param root: The root KinematicStructureEntity in the kinematic chain.
-            It determines the starting point of the forward kinematics calculation.
-        :param tip: The tip KinematicStructureEntity in the kinematic chain.
-            It determines the endpoint of the forward kinematics calculation.
-        :return: An expression representing the computed forward kinematics of the tip KinematicStructureEntity relative to the root KinematicStructureEntity.
-        """
-
-        fk = cas.TransformationMatrix()
-        root_chain, tip_chain = self.compute_split_chain_of_connections(root, tip)
-        connection: Connection
-        for connection in root_chain:
-            tip_T_root = connection.origin_expression.inverse()
-            fk = fk.dot(tip_T_root)
-        for connection in tip_chain:
-            fk = fk.dot(connection.origin_expression)
-        fk.reference_frame = root
-        fk.child_frame = tip
-        return fk
-
     def compute_forward_kinematics(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> cas.TransformationMatrix:
@@ -1686,13 +1659,11 @@ class World:
         Calculate the transformation matrix representing the pose of the
         tip KinematicStructureEntity relative to the root KinematicStructureEntity.
 
-        :param root: Root KinematicStructureEntity for which the kinematics are computed.
-        :param tip: Tip KinematicStructureEntity to which the kinematics are computed.
+        :param root: Root KinematicStructureEntity, for which the kinematics are computed.
+        :param tip: Tip KinematicStructureEntity, to which the kinematics are computed.
         :return: Transformation matrix representing the relative pose of the tip KinematicStructureEntity with respect to the root KinematicStructureEntity.
         """
-        return cas.TransformationMatrix(
-            data=self.compute_forward_kinematics_np(root, tip), reference_frame=root
-        )
+        return self._fk_computer.compute_forward_kinematics(root, tip)
 
     def compute_forward_kinematics_np(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
@@ -1703,18 +1674,19 @@ class World:
         Calculate the transformation matrix representing the pose of the
         tip KinematicStructureEntity relative to the root KinematicStructureEntity, expressed as a numpy ndarray.
 
-        :param root: Root KinematicStructureEntity for which the kinematics are computed.
-        :param tip: Tip KinematicStructureEntity to which the kinematics are computed.
+        :param root: Root KinematicStructureEntity, for which the kinematics are computed.
+        :param tip: Tip KinematicStructureEntity, to which the kinematics are computed.
         :return: Transformation matrix representing the relative pose of the tip KinematicStructureEntity with respect to the root KinematicStructureEntity.
         """
         return self._fk_computer.compute_forward_kinematics_np(root, tip).copy()
 
-    def compute_forward_kinematics_of_all_collision_bodies(self) -> np.ndarray:
-        """
-        Computes a 4 by X matrix, with the forward kinematics of all collision bodies stacked on top each other.
-        The entries are sorted by name of body.
-        """
-        return self._fk_computer.collision_fks
+    # May I delete this? its not used anywhere @simon
+    # def compute_forward_kinematics_of_all_collision_bodies(self) -> np.ndarray:
+    #     """
+    #     Computes a 4 by X matrix, with the forward kinematics of all collision bodies stacked on top each other.
+    #     The entries are sorted by name of body.
+    #     """
+    #     return self._fk_computer.collision_fks
 
     # %% Inverse Kinematics
     def compute_inverse_kinematics(
@@ -1770,6 +1742,13 @@ class World:
         :return: Returns True if the world contains no kinematic_structure_entities, else False.
         """
         return len(self.kinematic_structure_entities) == 0
+
+    def clear_all_lru_caches(self):
+        for method_name in dir(self):
+            method = getattr(self, method_name, None)
+            cache_clear = getattr(method, "cache_clear", None)
+            if callable(cache_clear):
+                cache_clear()
 
     def transform(
         self,
@@ -1861,6 +1840,14 @@ class World:
         :return: A ray tracer for the world.
         """
         return RayTracer(self)
+
+    @property
+    def forward_kinematic_manager(self):
+        return self._get_forward_kinematics_manager()
+
+    @lru_cache(maxsize=None)
+    def _get_forward_kinematics_manager(self):
+        return ForwardKinematicsVisitor(self)
 
     def apply_control_commands(
         self, commands: np.ndarray, dt: float, derivative: Derivatives
