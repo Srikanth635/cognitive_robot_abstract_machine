@@ -18,7 +18,7 @@ class PrefixedName(Symbol, SubclassJSONSerializer):
         return f"{self.prefix}/{self.name}"
 
     def __eq__(self, other):
-        if not isinstance(other, PrefixedName):
+        if not isinstance(other, type(self)):
             return False
         return self.prefix == other.prefix and self.name == other.name
 
