@@ -162,7 +162,7 @@ class WorldModelUpdateContextManager:
         self.world.world_is_being_modified = True
 
         if self.first:
-            self.world.get_world_model_manager().current_model_modification_block = (
+            self.world.get_world_model_manager()._current_model_modification_block = (
                 WorldModelModificationBlock()
             )
 
@@ -170,10 +170,10 @@ class WorldModelUpdateContextManager:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.first:
-            self.world.get_world_model_manager().model_modification_blocks.append(
-                self.world.get_world_model_manager().current_model_modification_block
+            self.world.get_world_model_manager().get_model_modification_blocks().append(
+                self.world.get_world_model_manager().get_current_model_modification_block()
             )
-            self.world.get_world_model_manager().current_model_modification_block = None
+            self.world.get_world_model_manager().reset_current_model_modification_block()
             if exc_type is None:
                 self.world._notify_model_change()
             self.world.world_is_being_modified = False
@@ -221,9 +221,9 @@ def atomic_world_modification(
             # Build a dict with all arguments (including positional), excluding 'self'
             bound_args = dict(bound.arguments)
             bound_args.pop("self", None)
-            if self.get_world_model_manager().current_model_modification_block is None:
+            if self.get_world_model_manager().get_current_model_modification_block() is None:
                 raise MissingWorldModificationContextError(func)
-            self.get_world_model_manager().current_model_modification_block.append(
+            self.get_world_model_manager()._current_model_modification_block.append(
                 modification.from_kwargs(bound_args)
             )
 
@@ -407,7 +407,7 @@ class WorldModelManager:
     by adding/removing bodies and connections.
     """
 
-    model_modification_blocks: List[WorldModelModificationBlock] = field(
+    _model_modification_blocks: List[WorldModelModificationBlock] = field(
         default_factory=list, repr=False, init=False
     )
     """
@@ -416,14 +416,14 @@ class WorldModelManager:
     The inner list is a block of modifications where change callbacks must not be called in between.
     """
 
-    current_model_modification_block: Optional[WorldModelModificationBlock] = field(
+    _current_model_modification_block: Optional[WorldModelModificationBlock] = field(
         default=None, repr=False, init=False
     )
     """
     The current modification block called within one context of @atomic_world_modification.
     """
 
-    model_change_callbacks: List[ModelChangeCallback] = field(
+    _model_change_callbacks: List[ModelChangeCallback] = field(
         default_factory=list, repr=False
     )
     """
@@ -437,8 +437,20 @@ class WorldModelManager:
         for model changes.
         """
         self.model_version += 1
-        for callback in self.model_change_callbacks:
+        for callback in self._model_change_callbacks:
             callback.notify()
+
+    def get_model_modification_blocks(self):
+        return self._model_modification_blocks
+
+    def get_current_model_modification_block(self):
+        return self._current_model_modification_block
+
+    def reset_current_model_modification_block(self):
+        self._current_model_modification_block = None
+
+    def get_model_change_callbacks(self):
+        return self._model_change_callbacks
 
 _LRU_CACHE_SIZE: int = 2048
 
