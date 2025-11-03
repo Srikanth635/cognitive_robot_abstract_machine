@@ -14,7 +14,7 @@ from ..spatial_types.derivatives import Derivatives, DerivativeMap
 
 
 @dataclass(eq=False)
-class PositionVariable(cas.MathVariable):
+class PositionVariable(cas.FloatVariable):
     name: PrefixedName = field(kw_only=True)
     dof: DegreeOfFreedom = field(kw_only=True)
 
@@ -23,7 +23,7 @@ class PositionVariable(cas.MathVariable):
 
 
 @dataclass(eq=False)
-class VelocityVariable(cas.MathVariable):
+class VelocityVariable(cas.FloatVariable):
     name: PrefixedName = field(kw_only=True)
     dof: DegreeOfFreedom = field(kw_only=True)
 
@@ -32,7 +32,7 @@ class VelocityVariable(cas.MathVariable):
 
 
 @dataclass(eq=False)
-class AccelerationVariable(cas.MathVariable):
+class AccelerationVariable(cas.FloatVariable):
     name: PrefixedName = field(kw_only=True)
     dof: DegreeOfFreedom = field(kw_only=True)
 
@@ -41,7 +41,7 @@ class AccelerationVariable(cas.MathVariable):
 
 
 @dataclass(eq=False)
-class JerkVariable(cas.MathVariable):
+class JerkVariable(cas.FloatVariable):
     name: PrefixedName = field(kw_only=True)
     dof: DegreeOfFreedom = field(kw_only=True)
 
@@ -65,7 +65,7 @@ class DegreeOfFreedom(WorldEntity, SubclassJSONSerializer):
     Lower and upper bounds for each derivative
     """
 
-    symbols: DerivativeMap[cas.MathVariable] = field(
+    symbols: DerivativeMap[cas.FloatVariable] = field(
         default_factory=DerivativeMap, init=False
     )
     """
@@ -159,7 +159,7 @@ class DegreeOfFreedom(WorldEntity, SubclassJSONSerializer):
         :param new_upper_limits: A mapping of new upper limits for the specified derivatives.
             If a new upper limit is None, no change is applied for that derivative.
         """
-        if not isinstance(self.symbols.position, cas.MathVariable):
+        if not isinstance(self.symbols.position, cas.FloatVariable):
             raise UsageError(
                 "Cannot overwrite limits of mimic DOFs, use .raw_dof._overwrite_dof_limits instead."
             )

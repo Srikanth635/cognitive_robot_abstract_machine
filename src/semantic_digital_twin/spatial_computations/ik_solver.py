@@ -322,8 +322,8 @@ class QPProblem:
     ) -> Tuple[
         list[DegreeOfFreedom],
         list[DegreeOfFreedom],
-        list[cas.MathVariable],
-        list[cas.MathVariable],
+        list[cas.FloatVariable],
+        list[cas.FloatVariable],
     ]:
         """
         Extract active and passive DOFs from the kinematic chain.
@@ -483,7 +483,7 @@ class ConstraintBuilder:
         return cas.Expression(lower_constraints), cas.Expression(upper_constraints)
 
     def build_goal_constraints(
-        self, active_symbols: List[cas.MathVariable]
+        self, active_symbols: List[cas.FloatVariable]
     ) -> Tuple[cas.Expression, cas.Expression]:
         """Build position and rotation goal constraints."""
         root_T_tip = self.world.compose_forward_kinematics_expression(
