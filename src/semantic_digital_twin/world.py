@@ -1227,7 +1227,7 @@ class World:
         :param connection: The connection from the kinematic structure whose child bodies will be traversed.
         :return: A set of Bodies that are moved directly by only this connection.
         """
-        visitor = CollisionBodyCollector(self, collision_bodies_only=True)
+        visitor = CollisionBodyCollector(self)
         self._travel_branch(connection.child, visitor)
         return visitor.bodies
 
