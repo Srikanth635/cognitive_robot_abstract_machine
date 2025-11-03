@@ -133,6 +133,7 @@ def test_handle_semantic_annotation_eql(apartment_world):
     with rule_mode():
         body = let(
             type_=Body,
+            domain=apartment_world.bodies
         )
         query = infer(entity(Handle(body=body), in_("handle", body.name.name.lower())))
 
