@@ -54,6 +54,7 @@ from .world_description.connections import (
     PassiveConnection,
     Connection6DoF,
     ActiveConnection1DOF,
+    FixedConnection,
 )
 from .world_description.connections import HasUpdateState
 from .world_description.degree_of_freedom import DegreeOfFreedom
@@ -1094,7 +1095,6 @@ class World:
             if world_entity.name.name == name
             and (prefix is None or world_entity.name.prefix == prefix)
         ]
-
         match matches:
             case []:
                 raise WorldEntityNotFoundError(original_name)
@@ -1246,47 +1246,46 @@ class World:
             self.kinematic_structure, [root_kinematic_structure_entity.index], visitor
         )
 
-    # ####### Can this be removed? its not used anywhere
-    # def move_branch(
-    #     self,
-    #     branch_root: KinematicStructureEntity,
-    #     new_parent: KinematicStructureEntity,
-    # ) -> None:
-    #     """
-    #     Destroys the connection between branch_root and its parent, and moves it to a new parent using a new connection
-    #     of the same type. The pose of body with respect to root stays the same.
-    #
-    #     :param branch_root: The root of the branch to be moved.
-    #     :param new_parent: The new parent of the branch.
-    #     """
-    #     new_connection = None
-    #     new_parent_T_root = self.compute_forward_kinematics(new_parent, branch_root)
-    #     old_connection = branch_root.parent_connection
-    #
-    #     assert isinstance(old_connection, (FixedConnection, Connection6DoF)), "The branch root must be connected to a Connection6DoF or FixedConnection."
-    #
-    #     match old_connection:
-    #         case FixedConnection():
-    #             new_connection = FixedConnection(
-    #                 parent=new_parent,
-    #                 child=branch_root,
-    #                 _world=self,
-    #                 parent_T_connection_expression=new_parent_T_root,
-    #             )
-    #
-    #         case Connection6DoF():
-    #             new_connection = Connection6DoF(
-    #                 parent=new_parent,
-    #                 child=branch_root,
-    #                 _world=self,
-    #             )
-    #
-    #     with self.modify_world():
-    #         self.add_connection(new_connection)
-    #         self.remove_connection(old_connection)
-    #
-    #     if isinstance(new_connection, Connection6DoF):
-    #         new_connection.origin = new_parent_T_root
+    def move_branch(
+        self,
+        branch_root: KinematicStructureEntity,
+        new_parent: KinematicStructureEntity,
+    ) -> None:
+        """
+        Destroys the connection between branch_root and its parent, and moves it to a new parent using a new connection
+        of the same type. The pose of body with respect to root stays the same.
+
+        :param branch_root: The root of the branch to be moved.
+        :param new_parent: The new parent of the branch.
+        """
+        new_connection = None
+        new_parent_T_root = self.compute_forward_kinematics(new_parent, branch_root)
+        old_connection = branch_root.parent_connection
+
+        assert isinstance(old_connection, (FixedConnection, Connection6DoF)), "The branch root must be connected to a Connection6DoF or FixedConnection."
+
+        match old_connection:
+            case FixedConnection():
+                new_connection = FixedConnection(
+                    parent=new_parent,
+                    child=branch_root,
+                    _world=self,
+                    parent_T_connection_expression=new_parent_T_root,
+                )
+
+            case Connection6DoF():
+                new_connection = Connection6DoF(
+                    parent=new_parent,
+                    child=branch_root,
+                    _world=self,
+                )
+
+        with self.modify_world():
+            self.add_connection(new_connection)
+            self.remove_connection(old_connection)
+
+        if isinstance(new_connection, Connection6DoF):
+            new_connection.origin = new_parent_T_root
 
     def copy_subgraph_to_new_world(self, new_root: KinematicStructureEntity) -> World:
         """
@@ -1487,21 +1486,20 @@ class World:
         )
         chain = downward_chain + upward_chain
 
-        condition_for_controlled_connection = (
-            lambda conn: isinstance(conn, ActiveConnection)
-            and conn.has_hardware_interface
-            and not conn.frozen_for_collision_avoidance
-        )
-
         new_root = next(
-            (conn for conn in chain if condition_for_controlled_connection(conn)), None
+            (
+                conn
+                for conn in chain
+                if isinstance(conn, ActiveConnection) and conn.is_controlled
+            ),
+            None,
         )
 
         new_tip = next(
             (
                 conn
                 for conn in reversed(chain)
-                if condition_for_controlled_connection(conn)
+                if isinstance(conn, ActiveConnection) and conn.is_controlled
             ),
             None,
         )

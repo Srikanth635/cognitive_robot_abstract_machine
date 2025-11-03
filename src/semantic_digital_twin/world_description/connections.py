@@ -82,6 +82,10 @@ class ActiveConnection(Connection):
     def active_dofs(self) -> List[DegreeOfFreedom]:
         return []
 
+    @property
+    def is_controlled(self):
+        return self.has_hardware_interface and not self.frozen_for_collision_avoidance
+
     def set_static_collision_config_for_direct_child_bodies(
         self, collision_config: CollisionCheckingConfig
     ):

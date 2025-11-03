@@ -158,14 +158,18 @@ class WorldState(MutableMapping):
         if self is other:
             return True
 
+        if len(self) != len(other):
+            return False
+
         if set(self._names) != set(other._names):
             return False
 
-        return all(
-            np.array_equal(
-                self.data[:, self._index[name]], other.data[:, other._index[name]]
-            )
-            for name in self._names
+        return np.allclose(
+            self.data,
+            other.data,
+            rtol=1e-8,
+            atol=1e-12,
+            equal_nan=True,
         )
 
     def keys(self) -> List[PrefixedName]:
