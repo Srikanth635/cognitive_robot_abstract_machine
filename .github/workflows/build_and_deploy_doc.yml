@@ -8,7 +8,6 @@ on:
   push:
     branches:
     - main
-    - student_exercises
 
     # If your git repository has the Jupyter Book within some-subfolder next to
     # unrelated files, you can make this run only if a file within that specific
@@ -77,6 +76,12 @@ jobs:
           jupytext --to md:myst "$ipynb" -o "$f"
           rm -f "$ipynb"
         done
+
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
 
     # Build the book
     - name: Build the book

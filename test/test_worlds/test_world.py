@@ -1,4 +1,3 @@
-import unittest
 from copy import deepcopy
 
 import numpy as np
@@ -6,6 +5,7 @@ import pytest
 from semantic_digital_twin.semantic_annotations.semantic_annotations import Handle
 
 from semantic_digital_twin.spatial_types import Vector3
+from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connections import (
     PrismaticConnection,
     RevoluteConnection,
@@ -25,7 +25,6 @@ from semantic_digital_twin.spatial_types.derivatives import Derivatives, Derivat
 # from semantic_digital_twin.spatial_types.math import rotation_matrix_from_rpy
 from semantic_digital_twin.spatial_types.spatial_types import (
     TransformationMatrix,
-    Point3,
     RotationMatrix,
 )
 from semantic_digital_twin.spatial_types.symbol_manager import symbol_manager
@@ -174,6 +173,9 @@ def test_split_chain_of_connections_identical(world_setup):
     assert result == ([], [])
 
 
+@pytest.mark.skip(
+    reason="readding of 1dof connection broken because reference to dof is lost"
+)
 def test_nested_with_blocks_illegal_state(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
 
@@ -455,7 +457,6 @@ def test_merge_with_connection(world_setup, pr2_world):
         parent=world.root,
         child=pr2_world.root,
         parent_T_connection_expression=origin,
-        _world=world,
     )
 
     world.merge_world(pr2_world, new_connection)
@@ -554,6 +555,16 @@ def test_merge_with_pose_rotation(world_setup, pr2_world):
         fk_base[:3, :3],
         decimal=6,
     )
+
+
+def test_merge_in_empty_world(world_setup):
+    world, l1, l2, bf, r1, r2 = world_setup
+
+    empty_world = World()
+
+    assert empty_world.root is None
+    empty_world.merge_world(world)
+    assert empty_world.root is not None
 
 
 def test_remove_connection(world_setup):

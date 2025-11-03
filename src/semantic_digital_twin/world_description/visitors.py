@@ -11,19 +11,14 @@ if TYPE_CHECKING:
     from .world_entity import Body, Connection
 
 
-class BodyCollector(rx.visit.DFSVisitor):
-    def __init__(self, world: World, collision_bodies_only: bool = False):
+class CollisionBodyCollector(rx.visit.DFSVisitor):
+    def __init__(self, world: World):
         self.world = world
         self.bodies = []
-        self.collision_bodies_only = collision_bodies_only
 
     def discover_vertex(self, node_index: int, time: int) -> None:
         body = self.world.kinematic_structure[node_index]
-        if not self.collision_bodies_only or (
-            self.collision_bodies_only
-            and isinstance(body, Body)
-            and body.has_collision()
-        ):
+        if isinstance(body, Body) and body.has_collision():
             self.bodies.append(body)
 
     def tree_edge(self, args: Tuple[int, int, Connection]) -> None:

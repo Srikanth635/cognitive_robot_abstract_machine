@@ -14,6 +14,7 @@ import rustworkx as rx
 import rustworkx.visit
 import rustworkx.visualization
 from lxml import etree
+from random_events.utils import SubclassJSONSerializer
 from rustworkx import NoEdgeBetweenNodes
 from typing_extensions import (
     Dict,
@@ -47,8 +48,7 @@ from .spatial_computations.ik_solver import InverseKinematicsSolver
 from .spatial_computations.raytracer import RayTracer
 from .spatial_types import spatial_types as cas
 from .spatial_types.derivatives import Derivatives
-from .utils import IDGenerator
-from .world_description.connection_factories import ConnectionFactory
+from .utils import IDGenerator, copy_lru_cache
 from .world_description.connections import (
     ActiveConnection,
     PassiveConnection,
@@ -58,7 +58,7 @@ from .world_description.connections import (
 )
 from .world_description.connections import HasUpdateState
 from .world_description.degree_of_freedom import DegreeOfFreedom
-from .world_description.visitors import BodyCollector, ConnectionCollector
+from .world_description.visitors import CollisionBodyCollector, ConnectionCollector
 from .world_description.world_entity import (
     Connection,
     SemanticAnnotation,
@@ -552,7 +552,6 @@ class World:
 
         :return: The root of the world.
         """
-
         if self.empty:
             return None
 
@@ -1112,8 +1111,8 @@ class World:
         :param pose: world_root_T_other_root, the pose of the other world's root with respect to the current world's root
         """
         with self.modify_world():
-            root_connection = Connection6DoF(
-                parent=self.root, child=other.root, _world=self
+            root_connection = Connection6DoF.create_with_dofs(
+                parent=self.root, child=other.root, world=self
             )
             self.merge_world(other, root_connection)
             root_connection.origin = pose
@@ -1144,8 +1143,8 @@ class World:
             self._merge_semantic_annotations_of_world(other, handle_duplicates)
 
             if not root_connection and self_root:
-                root_connection = Connection6DoF(
-                    parent=self_root, child=other_root, _world=self
+                root_connection = Connection6DoF.create_with_dofs(
+                    parent=self_root, child=other_root, world=self
                 )
 
             if root_connection:
@@ -1205,7 +1204,7 @@ class World:
         return visitor.connections
 
     @lru_cache(maxsize=512)
-    def get_bodies_of_branch(
+    def get_kinematic_structure_entities_of_branch(
         self, root: KinematicStructureEntity
     ) -> List[KinematicStructureEntity]:
         """
@@ -1214,9 +1213,10 @@ class World:
         :param root: The root body of the branch
         :return: List of all bodies in the subtree rooted at the given body (including the root)
         """
-        visitor = BodyCollector(self)
-        self._travel_branch(root, visitor)
-        return visitor.bodies
+        descendants_indices = rx.descendants(self.kinematic_structure, root.index)
+        return [root] + [
+            self.kinematic_structure[index] for index in descendants_indices
+        ]
 
     def get_direct_child_bodies_with_collision(
         self, connection: Connection
@@ -1227,7 +1227,7 @@ class World:
         :param connection: The connection from the kinematic structure whose child bodies will be traversed.
         :return: A set of Bodies that are moved directly by only this connection.
         """
-        visitor = BodyCollector(self, collision_bodies_only=True)
+        visitor = CollisionBodyCollector(self, collision_bodies_only=True)
         self._travel_branch(connection.child, visitor)
         return visitor.bodies
 
@@ -1274,10 +1274,10 @@ class World:
                 )
 
             case Connection6DoF():
-                new_connection = Connection6DoF(
+                new_connection = Connection6DoF.create_with_dofs(
                     parent=new_parent,
                     child=branch_root,
-                    _world=self,
+                    world=self,
                 )
 
         with self.modify_world():
@@ -1766,8 +1766,16 @@ class World:
                 new_world.add_degree_of_freedom(new_dof)
                 new_world.state[dof.name] = self.state[dof.name].data
             for connection in self.connections:
-                con_factory = ConnectionFactory.from_connection(connection)
-                con_factory.create(new_world)
+                new_connection = SubclassJSONSerializer.from_json(connection.to_json())
+                new_connection.parent = (
+                    new_world.get_kinematic_structure_entity_by_name(
+                        new_connection.parent.name
+                    )
+                )
+                new_connection.child = new_world.get_kinematic_structure_entity_by_name(
+                    new_connection.child.name
+                )
+                new_world.add_connection(new_connection)
         return new_world
 
     # %% Associations
