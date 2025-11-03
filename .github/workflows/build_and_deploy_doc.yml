@@ -78,6 +78,12 @@ jobs:
           rm -f "$ipynb"
         done
 
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+
     # Build the book
     - name: Build the book
       run: |
