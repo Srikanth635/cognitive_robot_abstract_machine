@@ -469,7 +469,7 @@ class World:
     All degrees of freedom in the world.
     """
 
-    state: WorldState = field(default_factory=WorldState)
+    state: WorldState = field(init=False)
     """
     2d array where rows are derivatives and columns are dof values for that derivative.
     """
@@ -500,11 +500,17 @@ class World:
     Manages the world model version and modification blocks.
     """
 
+    _kse_num: int = field(default=0, init=False, repr=False)
+    """
+    Counter for kinematic structure entities added to the world. Used for faster hash computation
+    """
+
     def __post_init__(self):
         self._collision_pair_manager = CollisionPairManager(self)
+        self.state = WorldState(_world=self)
 
     def __hash__(self):
-        return hash(id(self))
+        return hash((id(self), self._world_model_manager.model_version, self._kse_num))
 
     def __str__(self):
         return f"{self.__class__.__name__} with {len(self.kinematic_structure_entities)} bodies."
@@ -530,6 +536,7 @@ class World:
 
     # %% Properties
     @property
+    @lru_cache(maxsize=512)
     def root(self) -> Optional[KinematicStructureEntity]:
         """
         The root of the world is the unique node with in-degree 0.
@@ -737,6 +744,7 @@ class World:
         :param kinematic_structure_entity: The kinematic_structure_entity to add.
         :return: The index of the added kinematic_structure_entity.
         """
+        self._kse_num += 1
         index = kinematic_structure_entity.index = self.kinematic_structure.add_node(
             kinematic_structure_entity
         )
@@ -867,6 +875,7 @@ class World:
 
         :param kinematic_structure_entity: The kinematic_structure_entity to remove.
         """
+        self._kse_num -= 1
         self.kinematic_structure.remove_node(kinematic_structure_entity.index)
         kinematic_structure_entity._world = None
         kinematic_structure_entity.index = None
@@ -937,6 +946,7 @@ class World:
             dof.has_hardware_interface = value
 
     # %% Getter
+    @lru_cache(maxsize=512)
     def get_connection(
         self, parent: KinematicStructureEntity, child: KinematicStructureEntity
     ) -> Connection:
@@ -945,6 +955,7 @@ class World:
         """
         return self.kinematic_structure.get_edge_data(parent.index, child.index)
 
+    @lru_cache(maxsize=512)
     def get_connections_by_type(
         self, connection_type: Type[GenericConnection]
     ) -> List[GenericConnection]:
@@ -958,6 +969,7 @@ class World:
             connection_type, self.connections
         )
 
+    @lru_cache(maxsize=512)
     def get_semantic_annotations_by_type(
         self, semantic_annotation_type: Type[GenericSemanticAnnotation]
     ) -> List[GenericSemanticAnnotation]:
@@ -971,6 +983,7 @@ class World:
             semantic_annotation_type, self.semantic_annotations
         )
 
+    @lru_cache(maxsize=512)
     def get_kinematic_structure_entity_by_type(
         self, entity_type: Type[GenericKinematicStructureEntity]
     ) -> List[GenericKinematicStructureEntity]:
@@ -996,6 +1009,7 @@ class World:
         """
         return [entity for entity in iterable if isinstance(entity, world_entity_type)]
 
+    @lru_cache(maxsize=512)
     def get_semantic_annotation_by_name(
         self, name: Union[str, PrefixedName]
     ) -> SemanticAnnotation:
@@ -1006,6 +1020,7 @@ class World:
         )
         return semantic_annotation
 
+    @lru_cache(maxsize=512)
     def get_kinematic_structure_entity_by_name(
         self, name: Union[str, PrefixedName]
     ) -> KinematicStructureEntity:
@@ -1014,10 +1029,12 @@ class World:
         )
         return kse
 
+    @lru_cache(maxsize=512)
     def get_body_by_name(self, name: Union[str, PrefixedName]) -> Body:
         body: Body = self._get_world_entity_by_name_from_iterable(name, self.bodies)
         return body
 
+    @lru_cache(maxsize=512)
     def get_degree_of_freedom_by_name(
         self, name: Union[str, PrefixedName]
     ) -> DegreeOfFreedom:
@@ -1026,6 +1043,7 @@ class World:
         )
         return dof
 
+    @lru_cache(maxsize=512)
     def get_connection_by_name(self, name: Union[str, PrefixedName]) -> Connection:
         connection: Connection = self._get_world_entity_by_name_from_iterable(
             name, self.connections
@@ -1361,11 +1379,9 @@ class World:
         for model changes.
         """
         # if not self.world_is_being_modified:
-        self._compile_forward_kinematics_expressions()
-        self.clear_all_lru_caches()
-        self.notify_state_change()
-
         self._world_model_manager.update_model_version_and_notify_callbacks()
+        self._compile_forward_kinematics_expressions()
+        self.notify_state_change()
 
         for callback in self.state.state_change_callbacks:
             callback.update_previous_world_state()
@@ -1381,7 +1397,7 @@ class World:
         self.degrees_of_freedom = list(actual_dofs)
 
     # %% Kinematic Structure Computations
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=512)
     def compute_descendent_child_kinematic_structure_entities(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> List[KinematicStructureEntity]:
@@ -1399,7 +1415,7 @@ class World:
             )
         return children
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=512)
     def compute_child_kinematic_structure_entities(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> List[KinematicStructureEntity]:
@@ -1412,7 +1428,7 @@ class World:
             self.kinematic_structure.successors(kinematic_structure_entity.index)
         )
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=512)
     def compute_parent_connection(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> Optional[Connection]:
@@ -1432,7 +1448,7 @@ class World:
             kinematic_structure_entity.index,
         )
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=512)
     def compute_parent_kinematic_structure_entity(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> Optional[KinematicStructureEntity]:
@@ -1447,7 +1463,7 @@ class World:
             return None
         return parent[0]
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=512)
     def compute_chain_of_connections(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> List[Connection]:
@@ -1460,7 +1476,7 @@ class World:
             for i in range(len(entity_chain) - 1)
         ]
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=512)
     def compute_chain_of_kinematic_structure_entities(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> List[KinematicStructureEntity]:
@@ -1554,7 +1570,7 @@ class World:
         new_tip_body = new_tip.parent if new_tip in downward_chain else new_tip.child
         return new_root_body, new_tip_body
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=512)
     def compute_split_chain_of_connections(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> Tuple[List[Connection], List[Connection]]:
@@ -1587,7 +1603,7 @@ class World:
         ]
         return root_connections, tip_connections
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=512)
     def compute_split_chain_of_kinematic_structure_entities(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> Tuple[
@@ -1702,14 +1718,14 @@ class World:
         """
         Compute inverse kinematics using quadratic programming.
 
-        :param root: Root KinematicStructureEntity of the kinematic chain
-        :param tip: Tip KinematicStructureEntity of the kinematic chain
-        :param target: Desired tip pose relative to the root KinematicStructureEntity
-        :param dt: Time step for integration
-        :param max_iterations: Maximum number of iterations
-        :param translation_velocity: Maximum translation velocity
-        :param rotation_velocity: Maximum rotation velocity
-        :return: Dictionary mapping DOF names to their computed positions
+        :param root: Root KinematicStructureEntity of the kinematic chain.
+        :param tip: Tip KinematicStructureEntity of the kinematic chain.
+        :param target: Desired tip pose relative to the root KinematicStructureEntity.
+        :param dt: Time step for integration.
+        :param max_iterations: Maximum number of iterations.
+        :param translation_velocity: Maximum translation velocity.
+        :param rotation_velocity: Maximum rotation velocity.
+        :return: Dictionary mapping DOF names to their computed positions.
         """
         ik_solver = InverseKinematicsSolver(self)
         return ik_solver.solve(
@@ -1734,7 +1750,7 @@ class World:
 
             self.semantic_annotations.clear()
             self.degrees_of_freedom.clear()
-            self.state = WorldState()
+            self.state = WorldState(_world=self)
 
     @property
     def empty(self):
@@ -1742,13 +1758,6 @@ class World:
         :return: Returns True if the world contains no kinematic_structure_entities, else False.
         """
         return len(self.kinematic_structure_entities) == 0
-
-    def clear_all_lru_caches(self):
-        for method_name in dir(self):
-            method = getattr(self, method_name, None)
-            cache_clear = getattr(method, "cache_clear", None)
-            if callable(cache_clear):
-                cache_clear()
 
     def transform(
         self,
@@ -1845,7 +1854,7 @@ class World:
     def forward_kinematic_manager(self):
         return self._get_forward_kinematics_manager()
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=512)
     def _get_forward_kinematics_manager(self):
         return ForwardKinematicsVisitor(self)
 
@@ -1862,19 +1871,9 @@ class World:
         :param dt: Time step used for the integration of lower derivatives.
         :param derivative: The derivative level to which the control commands are
             applied.
-        :return: None
         """
-        assert len(commands) == len(
-            self.degrees_of_freedom
-        ), f"Commands length {len(commands)} does not match number of free variables {len(self.degrees_of_freedom)}"
+        self.state._apply_control_commands(commands, dt, derivative)
 
-        self.state.set_derivative(derivative, commands)
-
-        for i in range(derivative - 1, -1, -1):
-            self.state.set_derivative(
-                i,
-                self.state.get_derivative(i) + self.state.get_derivative(i + 1) * dt,
-            )
         for connection in self.connections:
             if isinstance(connection, HasUpdateState):
                 connection.update_state(dt)
@@ -1889,32 +1888,3 @@ class World:
         for connection, value in new_state.items():
             connection.position = value
         self.notify_state_change()
-
-    def get_world_state_symbols(self) -> List[cas.Symbol]:
-        """
-        Constructs and returns a list of symbols representing the state of the system. The state
-        is defined in terms of positions, velocities, accelerations, and jerks for each degree
-        of freedom specified in the current state.
-
-        :raises KeyError: If a degree of freedom defined in the state does not exist in
-            the `degrees_of_freedom`.
-        :returns: A combined list of symbols corresponding to the positions, velocities,
-            accelerations, and jerks for each degree of freedom in the state.
-        """
-        positions = [
-            self.get_degree_of_freedom_by_name(v_name).symbols.position
-            for v_name in self.state
-        ]
-        velocities = [
-            self.get_degree_of_freedom_by_name(v_name).symbols.velocity
-            for v_name in self.state
-        ]
-        accelerations = [
-            self.get_degree_of_freedom_by_name(v_name).symbols.acceleration
-            for v_name in self.state
-        ]
-        jerks = [
-            self.get_degree_of_freedom_by_name(v_name).symbols.jerk
-            for v_name in self.state
-        ]
-        return positions + velocities + accelerations + jerks

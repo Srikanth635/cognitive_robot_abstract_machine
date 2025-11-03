@@ -1,6 +1,7 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
 
-from typing_extensions import MutableMapping, List, Dict, Self
+from typing_extensions import MutableMapping, List, Dict, Self, TYPE_CHECKING
 
 import numpy as np
 
@@ -8,6 +9,10 @@ from .degree_of_freedom import DegreeOfFreedom
 from ..callbacks.callback import StateChangeCallback
 from ..datastructures.prefixed_name import PrefixedName
 from ..spatial_types.derivatives import Derivatives
+from ..spatial_types import spatial_types as cas
+
+if TYPE_CHECKING:
+    from ..world import World
 
 
 class WorldStateView:
@@ -66,6 +71,8 @@ class WorldState(MutableMapping):
 
     This class adds a few convenience methods for manipulating this data.
     """
+
+    _world: World = field(default=None)
 
     # 4 rows (pos, vel, acc, jerk), columns are joints
     data: np.ndarray = field(default_factory=lambda: np.zeros((4, 0), dtype=float))
@@ -218,7 +225,7 @@ class WorldState(MutableMapping):
         """
         Create a deep copy of the WorldState.
         """
-        new_state = WorldState()
+        new_state = WorldState(_world=self._world)
         new_state.data = self.data.copy()
         new_state._names = self._names.copy()
         new_state._index = self._index.copy()
@@ -240,3 +247,56 @@ class WorldState(MutableMapping):
             initial_position = min(upper, initial_position)
 
         self[dof.name].position = initial_position
+
+    def get_symbols(self) -> List[cas.Symbol]:
+        """
+        Constructs and returns a list of symbols representing the state of the system. The state
+        is defined in terms of positions, velocities, accelerations, and jerks for each degree
+        of freedom specified in the current state.
+
+        :raises KeyError: If a degree of freedom defined in the state does not exist in
+            the `degrees_of_freedom`.
+        :returns: A combined list of symbols corresponding to the positions, velocities,
+            accelerations, and jerks for each degree of freedom in the state.
+        """
+        positions = [
+            self._world.get_degree_of_freedom_by_name(v_name).symbols.position
+            for v_name in self
+        ]
+        velocities = [
+            self._world.get_degree_of_freedom_by_name(v_name).symbols.velocity
+            for v_name in self
+        ]
+        accelerations = [
+            self._world.get_degree_of_freedom_by_name(v_name).symbols.acceleration
+            for v_name in self
+        ]
+        jerks = [
+            self._world.get_degree_of_freedom_by_name(v_name).symbols.jerk
+            for v_name in self
+        ]
+        return positions + velocities + accelerations + jerks
+
+    def _apply_control_commands(self, commands: np.ndarray, dt: float, derivative: Derivatives):
+        """
+        Apply control commands to the specified derivative level, and integrate down to lower derivatives.
+
+        :param commands: Control commands to be applied at the specified derivative
+            level. The array length must match the number of free variables
+            in the system.
+        :param dt: Time step used for the integration of lower derivatives.
+        :param derivative: The derivative level to which the control commands are
+            applied.
+        :return:
+        """
+        assert len(commands) == len(
+            self._names
+        ), f"Commands length {len(commands)} does not match number of free variables {len(self._names)}."
+
+        self.set_derivative(derivative, commands)
+
+        for i in range(derivative - 1, -1, -1):
+            self.set_derivative(
+                i,
+                self.get_derivative(i) + self.get_derivative(i + 1) * dt,
+            )
