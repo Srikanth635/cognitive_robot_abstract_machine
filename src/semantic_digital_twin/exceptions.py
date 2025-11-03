@@ -14,7 +14,7 @@ if TYPE_CHECKING:
         WorldEntity,
         KinematicStructureEntity,
     )
-    from .spatial_types.spatial_types import Symbol
+    from .spatial_types.spatial_types import MathVariable
 
 
 class LogicalError(Exception):
@@ -82,7 +82,7 @@ class SymbolResolutionError(SymbolManagerException):
     for the failure.
     """
 
-    symbol: Symbol
+    symbol: MathVariable
     original_exception: Exception
 
     def __post_init__(self):
@@ -131,7 +131,7 @@ class HasFreeSymbolsError(SpatialTypesError):
     Raised when an operation can't be performed on an expression with free symbols.
     """
 
-    symbols: Iterable[Symbol]
+    symbols: Iterable[MathVariable]
 
     def __post_init__(self):
         msg = f"Operation can't be performed on expression with free symbols: {list(self.symbols)}."
@@ -157,7 +157,7 @@ class DuplicateSymbolsError(SpatialTypesError):
     Raised when duplicate symbols are found in an operation that requires unique symbols.
     """
 
-    symbols: Iterable[Symbol]
+    symbols: Iterable[MathVariable]
 
     def __post_init__(self):
         msg = f"Operation failed due to duplicate symbols: {list(self.symbols)}. All symbols must be unique."

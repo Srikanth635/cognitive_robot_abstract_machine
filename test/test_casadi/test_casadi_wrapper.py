@@ -86,8 +86,8 @@ class TestLogic3:
     ]
 
     def test_and3(self):
-        s = cas.Symbol(name="a")
-        s2 = cas.Symbol(name="b")
+        s = cas.MathVariable(name="a")
+        s2 = cas.MathVariable(name="b")
         expr = cas.trinary_logic_and(s, s2)
         f = expr.compile()
         for i in self.values:
@@ -99,8 +99,8 @@ class TestLogic3:
                 ), f"a={i}, b={j}, expected {expected}, actual {actual}"
 
     def test_or3(self):
-        s = cas.Symbol(name="a")
-        s2 = cas.Symbol(name="b")
+        s = cas.MathVariable(name="a")
+        s2 = cas.MathVariable(name="b")
         expr = cas.trinary_logic_or(s, s2)
         f = expr.compile()
         for i in self.values:
@@ -112,7 +112,7 @@ class TestLogic3:
                 ), f"a={i}, b={j}, expected {expected}, actual {actual}"
 
     def test_not3(self):
-        s = cas.Symbol(name="muh")
+        s = cas.MathVariable(name="muh")
         expr = cas.trinary_logic_not(s)
         f = expr.compile()
         for i in self.values:
@@ -143,17 +143,17 @@ class TestLogic3:
 
 class TestSymbol:
     def test_from_name(self):
-        s = cas.Symbol(name="muh")
-        assert isinstance(s, cas.Symbol)
+        s = cas.MathVariable(name="muh")
+        assert isinstance(s, cas.MathVariable)
         assert str(s) == "muh"
 
     def test_to_np(self):
-        s1 = cas.Symbol(name="s1")
+        s1 = cas.MathVariable(name="s1")
         with pytest.raises(HasFreeSymbolsError):
             s1.to_np()
 
     def test_add(self):
-        s = cas.Symbol(name="muh")
+        s = cas.MathVariable(name="muh")
         # int float addition is fine
         assert isinstance(s + 1, cas.Expression)
         assert isinstance(1 + s, cas.Expression)
@@ -197,7 +197,7 @@ class TestSymbol:
             q + s
 
     def test_sub(self):
-        s = cas.Symbol(name="muh")
+        s = cas.MathVariable(name="muh")
         # int float addition is fine
         assert isinstance(s - 1, cas.Expression)
         assert isinstance(1 - s, cas.Expression)
@@ -241,7 +241,7 @@ class TestSymbol:
             q - s
 
     def test_mul(self):
-        s = cas.Symbol(name="muh")
+        s = cas.MathVariable(name="muh")
         # int float addition is fine
         assert isinstance(s * 1, cas.Expression)
         assert isinstance(1 * s, cas.Expression)
@@ -284,7 +284,7 @@ class TestSymbol:
             q * s
 
     def test_truediv(self):
-        s = cas.Symbol(name="muh")
+        s = cas.MathVariable(name="muh")
         # int float addition is fine
         assert isinstance(s / 1, cas.Expression)
         assert isinstance(1 / s, cas.Expression)
@@ -327,7 +327,7 @@ class TestSymbol:
             q / s
 
     def test_lt(self):
-        s = cas.Symbol(name="muh")
+        s = cas.MathVariable(name="muh")
         # int float addition is fine
         assert isinstance(s < 1, cas.Expression)
         assert isinstance(1 < s, cas.Expression)
@@ -371,7 +371,7 @@ class TestSymbol:
             q < s
 
     def test_pow(self):
-        s = cas.Symbol(name="muh")
+        s = cas.MathVariable(name="muh")
         # int float addition is fine
         assert isinstance(s**1, cas.Expression)
         assert isinstance(1**s, cas.Expression)
@@ -415,7 +415,7 @@ class TestSymbol:
             q**s
 
     def test_simple_math(self):
-        s = cas.Symbol(name="muh")
+        s = cas.MathVariable(name="muh")
         e = s + s
         assert isinstance(e, cas.Expression)
         e = s - s
@@ -428,7 +428,7 @@ class TestSymbol:
         assert isinstance(e, cas.Expression)
 
     def test_comparisons(self):
-        s = cas.Symbol(name="muh")
+        s = cas.MathVariable(name="muh")
         e = s > s
         assert isinstance(e, cas.Expression)
         e = s >= s
@@ -441,9 +441,9 @@ class TestSymbol:
         assert isinstance(e, cas.Expression)
 
     def test_logic(self):
-        s1 = cas.Symbol(name="s1")
-        s2 = cas.Symbol(name="s2")
-        s3 = cas.Symbol(name="s3")
+        s1 = cas.MathVariable(name="s1")
+        s2 = cas.MathVariable(name="s2")
+        s3 = cas.MathVariable(name="s3")
         e = s1 | s2
         assert isinstance(e, cas.Expression)
         e = s1 & s2
@@ -454,7 +454,7 @@ class TestSymbol:
         assert isinstance(e, cas.Expression)
 
     def test_hash(self):
-        s = cas.Symbol(name="muh")
+        s = cas.MathVariable(name="muh")
         d = {s: 1}
         assert d[s] == 1
 
@@ -467,8 +467,8 @@ class TestExpression:
         assert_allclose(r1, r2)
 
     def test_jacobian(self):
-        a = cas.Symbol(name="a")
-        b = cas.Symbol(name="b")
+        a = cas.MathVariable(name="a")
+        b = cas.MathVariable(name="b")
         m = cas.Expression(data=[a + b, a**2, b**2])
         jac = m.jacobian([a, b])
         expected = cas.Expression(data=[[1, 1], [2 * a, 0], [0, 2 * b]])
@@ -489,10 +489,10 @@ class TestExpression:
             "b": b,
             "bd": bd,
         }
-        a_s = cas.Symbol(name="a")
-        ad_s = cas.Symbol(name="ad")
-        b_s = cas.Symbol(name="b")
-        bd_s = cas.Symbol(name="bd")
+        a_s = cas.MathVariable(name="a")
+        ad_s = cas.MathVariable(name="ad")
+        b_s = cas.MathVariable(name="b")
+        bd_s = cas.MathVariable(name="bd")
         m = cas.Expression(
             data=[
                 a_s**3 * b_s**3,
@@ -534,12 +534,12 @@ class TestExpression:
             "bd": bd,
             "bdd": bdd,
         }
-        a_s = cas.Symbol(name="a")
-        ad_s = cas.Symbol(name="ad")
-        add_s = cas.Symbol(name="add")
-        b_s = cas.Symbol(name="b")
-        bd_s = cas.Symbol(name="bd")
-        bdd_s = cas.Symbol(name="bdd")
+        a_s = cas.MathVariable(name="a")
+        ad_s = cas.MathVariable(name="ad")
+        add_s = cas.MathVariable(name="add")
+        b_s = cas.MathVariable(name="b")
+        bd_s = cas.MathVariable(name="bd")
+        bdd_s = cas.MathVariable(name="bdd")
         m = cas.Expression(
             data=[
                 a_s**3 * b_s**3,
@@ -578,12 +578,12 @@ class TestExpression:
             "bd": bd,
             "bdd": bdd,
         }
-        a_s = cas.Symbol(name="a")
-        ad_s = cas.Symbol(name="ad")
-        add_s = cas.Symbol(name="add")
-        b_s = cas.Symbol(name="b")
-        bd_s = cas.Symbol(name="bd")
-        bdd_s = cas.Symbol(name="bdd")
+        a_s = cas.MathVariable(name="a")
+        ad_s = cas.MathVariable(name="ad")
+        add_s = cas.MathVariable(name="add")
+        b_s = cas.MathVariable(name="b")
+        bd_s = cas.MathVariable(name="bd")
+        bdd_s = cas.MathVariable(name="bdd")
         m = cas.Expression(data=a_s * b_s**2)
         jac = m.second_order_total_derivative([a_s, b_s], [ad_s, bd_s], [add_s, bdd_s])
         actual = jac.compile().call_with_kwargs(**kwargs)
@@ -613,15 +613,15 @@ class TestExpression:
             "cd": cd,
             "cdd": cdd,
         }
-        a_s = cas.Symbol(name="a")
-        ad_s = cas.Symbol(name="ad")
-        add_s = cas.Symbol(name="add")
-        b_s = cas.Symbol(name="b")
-        bd_s = cas.Symbol(name="bd")
-        bdd_s = cas.Symbol(name="bdd")
-        c_s = cas.Symbol(name="c")
-        cd_s = cas.Symbol(name="cd")
-        cdd_s = cas.Symbol(name="cdd")
+        a_s = cas.MathVariable(name="a")
+        ad_s = cas.MathVariable(name="ad")
+        add_s = cas.MathVariable(name="add")
+        b_s = cas.MathVariable(name="b")
+        bd_s = cas.MathVariable(name="bd")
+        bdd_s = cas.MathVariable(name="bdd")
+        c_s = cas.MathVariable(name="c")
+        cd_s = cas.MathVariable(name="cd")
+        cdd_s = cas.MathVariable(name="cdd")
         m = cas.Expression(data=a_s * b_s**2 * c_s**3)
         jac = m.second_order_total_derivative(
             [a_s, b_s, c_s], [ad_s, bd_s, cd_s], [add_s, bdd_s, cdd_s]
@@ -641,7 +641,7 @@ class TestExpression:
     def test_free_symbols(self):
         m = cas.Expression(data=cas.create_symbols(["a", "b", "c", "d"]))
         assert len(m.free_symbols()) == 4
-        a = cas.Symbol(name="a")
+        a = cas.MathVariable(name="a")
         assert a.equivalent(a.free_symbols()[0])
 
     def test_diag(self):
@@ -701,7 +701,7 @@ class TestExpression:
         assert_allclose(actual, expected, equal_nan=True)
 
     def test_create(self):
-        cas.Expression(data=cas.Symbol(name="muh"))
+        cas.Expression(data=cas.MathVariable(name="muh"))
         cas.Expression(data=[cas.ca.SX(1), cas.ca.SX.sym("muh")])
         m = cas.Expression(data=np.eye(4))
         m = cas.Expression(data=m)
@@ -768,7 +768,7 @@ class TestExpression:
 
     def test_simple_math(self):
         m = cas.Expression(data=[1, 1])
-        s = cas.Symbol(name="muh")
+        s = cas.MathVariable(name="muh")
         e = m + s
         e = m + 1
         e = 1 + m
@@ -799,7 +799,7 @@ class TestExpression:
         assert_allclose(e.to_np(), np.array([[1, 2], [3, 4]]))
 
     def test_to_np_fail(self):
-        s1, s2 = cas.Symbol(name="s1"), cas.Symbol(name="s2")
+        s1, s2 = cas.MathVariable(name="s1"), cas.MathVariable(name="s2")
         e = s1 + s2
         with pytest.raises(HasFreeSymbolsError):
             e.to_np()
@@ -841,8 +841,8 @@ class TestExpression:
             np.all(r_np == r_cas)
 
     def test_logic_and(self):
-        s1 = cas.Symbol(name="s1")
-        s2 = cas.Symbol(name="s2")
+        s1 = cas.MathVariable(name="s1")
+        s2 = cas.MathVariable(name="s2")
         expr = cas.logic_and(cas.BinaryTrue, s1)
         assert not cas.is_true_symbol(expr) and not cas.is_false_symbol(expr)
         expr = cas.logic_and(cas.BinaryFalse, s1)
@@ -857,9 +857,9 @@ class TestExpression:
         assert not cas.is_true_symbol(expr) and not cas.is_false_symbol(expr)
 
     def test_logic_or(self):
-        s1 = cas.Symbol(name="s1")
-        s2 = cas.Symbol(name="s2")
-        s3 = cas.Symbol(name="s3")
+        s1 = cas.MathVariable(name="s1")
+        s2 = cas.MathVariable(name="s2")
+        s3 = cas.MathVariable(name="s3")
         expr = cas.logic_or(cas.BinaryFalse, s1)
         assert not cas.is_true_symbol(expr) and not cas.is_false_symbol(expr)
         expr = cas.logic_or(cas.BinaryTrue, s1)
@@ -934,7 +934,7 @@ class TestRotationMatrix:
         assert m1.inverse().reference_frame == reference_frame
 
     def test_matmul_type_preservation(self):
-        s = cas.Symbol(name="s")
+        s = cas.MathVariable(name="s")
         e = cas.Expression(data=1)
         v = cas.Vector3(x_init=1, y_init=1, z_init=1)
         p = cas.Point3(x_init=1, y_init=1, z_init=1)
@@ -965,7 +965,7 @@ class TestRotationMatrix:
         assert_allclose(R.z_vector(), R_ref[:, 2])
 
     def test_create_RotationMatrix(self):
-        s = cas.Symbol(name="s")
+        s = cas.MathVariable(name="s")
         r = cas.RotationMatrix.from_rpy(1, 2, s)
         r = cas.RotationMatrix.from_rpy(1, 2, 3)
         assert isinstance(r, cas.RotationMatrix)
@@ -1224,7 +1224,7 @@ class TestRotationMatrix:
     def test_invalid_matmul_operations(self):
         """Test invalid matrix multiplication operations"""
         r = cas.RotationMatrix()
-        s = cas.Symbol(name="s")
+        s = cas.MathVariable(name="s")
         e = cas.Expression(data=1)
         p = cas.Point3(x_init=1, y_init=2, z_init=3)
         q = cas.Quaternion()
@@ -1284,7 +1284,7 @@ class TestRotationMatrix:
 
     def test_symbolic_operations(self):
         """Test operations with symbolic expressions"""
-        angle_sym = cas.Symbol(name="theta")
+        angle_sym = cas.MathVariable(name="theta")
 
         # Create symbolic rotation
         r_sym = cas.RotationMatrix.from_axis_angle(cas.Vector3.Z(), angle_sym)
@@ -1398,7 +1398,7 @@ class TestPoint3:
 
     def test_init(self):
         l = [1, 2, 3]
-        s = cas.Symbol(name="s")
+        s = cas.MathVariable(name="s")
         e = cas.Expression(data=1)
         v = cas.Vector3(x_init=1, y_init=1, z_init=1)
         p = cas.Point3(x_init=l[0], y_init=l[1], z_init=l[2])
@@ -1435,7 +1435,7 @@ class TestPoint3:
         p1 = cas.Point3(x_init=1, y_init=2, z_init=3)
         p2 = cas.Point3(x_init=4, y_init=5, z_init=6)
         v = cas.Vector3(x_init=1, y_init=1, z_init=1)
-        s = cas.Symbol(name="s")
+        s = cas.MathVariable(name="s")
 
         # Test Point + Vector = Point (translate point by vector)
         result = p1 + v
@@ -1499,7 +1499,7 @@ class TestPoint3:
             p1 @ v  # Point @ Vector not allowed
 
         # Test operations with symbolic expressions
-        x = cas.Symbol(name="x")
+        x = cas.MathVariable(name="x")
         p_symbolic = cas.Point3(x, y_init=2, z_init=3)
         result = p_symbolic + v
         assert isinstance(result, cas.Point3)
@@ -1737,7 +1737,7 @@ class TestVector3:
 
     def test_init(self):
         l = [1, 2, 3]
-        s = cas.Symbol(name="s")
+        s = cas.MathVariable(name="s")
         e = cas.Expression(data=1)
         v = cas.Vector3(x_init=1, y_init=1, z_init=1)
         p = cas.Point3(x_init=1, y_init=1, z_init=1)
@@ -1956,9 +1956,9 @@ class TestVector3:
     def test_compilation_and_execution(self):
         """Test that Vector3 operations compile and execute correctly"""
         v1 = cas.Vector3(
-            x_init=cas.Symbol(name="x"),
-            y_init=cas.Symbol(name="y"),
-            z_init=cas.Symbol(name="z"),
+            x_init=cas.MathVariable(name="x"),
+            y_init=cas.MathVariable(name="y"),
+            z_init=cas.MathVariable(name="z"),
         )
         v2 = cas.Vector3(x_init=1, y_init=2, z_init=3)
 
@@ -2069,7 +2069,7 @@ class TestTransformationMatrix:
 
     def test_matmul_type_preservation(self):
         """Test that @ operator preserves correct types for TransformationMatrix"""
-        s = cas.Symbol(name="s")
+        s = cas.MathVariable(name="s")
         e = cas.Expression()
         v = cas.Vector3(x_init=1, y_init=1, z_init=1)
         p = cas.Point3(x_init=1, y_init=1, z_init=1)
@@ -2133,7 +2133,7 @@ class TestTransformationMatrix:
         assert_allclose(r1, r2)
 
     def test_dot(self):
-        s = cas.Symbol(name="x")
+        s = cas.MathVariable(name="x")
         m1 = cas.TransformationMatrix()
         m2 = cas.TransformationMatrix.from_xyz_rpy(x=s)
         m1.dot(m2)
@@ -2538,7 +2538,7 @@ class TestTransformationMatrix:
     def test_invalid_operations(self):
         """Test invalid operations that should raise TypeError"""
         t = cas.TransformationMatrix()
-        s = cas.Symbol(name="s")
+        s = cas.MathVariable(name="s")
         e = cas.Expression(data=1)
         q = cas.Quaternion()
 
@@ -2572,9 +2572,9 @@ class TestTransformationMatrix:
 
     def test_symbolic_operations(self):
         """Test operations with symbolic expressions"""
-        x_sym = cas.Symbol(name="x")
-        y_sym = cas.Symbol(name="y")
-        angle_sym = cas.Symbol(name="theta")
+        x_sym = cas.MathVariable(name="x")
+        y_sym = cas.MathVariable(name="y")
+        angle_sym = cas.MathVariable(name="theta")
 
         # Create symbolic transformation
         t_sym = cas.TransformationMatrix.from_xyz_rpy(x_sym, y_sym, 0, 0, 0, angle_sym)
@@ -2941,7 +2941,7 @@ class TestCASWrapper:
             cas.if_greater_eq_zero,
             cas.if_greater_zero,
         ]
-        c = cas.Symbol(name="c")
+        c = cas.MathVariable(name="c")
         for type_ in types:
             for if_function in if_functions:
                 if_result = type_()
@@ -2967,8 +2967,8 @@ class TestCASWrapper:
             cas.if_less,
             cas.if_less_eq,
         ]
-        a = cas.Symbol(name="a")
-        b = cas.Symbol(name="b")
+        a = cas.MathVariable(name="a")
+        b = cas.MathVariable(name="b")
         for type_ in types:
             for if_function in if_functions:
                 if_result = type_()
@@ -3180,7 +3180,7 @@ class TestCASWrapper:
 
     def test_to_str(self):
         axis = cas.Vector3(*cas.create_symbols(["v1", "v2", "v3"]))
-        angle = cas.Symbol(name="alpha")
+        angle = cas.MathVariable(name="alpha")
         q = cas.Quaternion.from_axis_angle(axis, angle)
         expr = q.norm()
         assert expr.pretty_str() == [

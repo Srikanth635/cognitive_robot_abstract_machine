@@ -65,7 +65,7 @@ class CompiledFunction:
     """
     The symbolic expression to compile.
     """
-    symbol_parameters: Optional[List[List[Symbol]]] = None
+    symbol_parameters: Optional[List[List[MathVariable]]] = None
     """
     The input parameters for the compiled symbolic expression.
     """
@@ -177,7 +177,7 @@ class CompiledFunction:
         )
         self.zeroes = np.zeros(self.expression.casadi_sx.nnz())
 
-    def _compile_dense_function(self, casadi_parameters: List[Symbol]) -> None:
+    def _compile_dense_function(self, casadi_parameters: List[MathVariable]) -> None:
         """
         Compile function for dense matrices.
 
@@ -295,7 +295,7 @@ class CompiledFunctionWithViews:
     The list of expressions to be compiled, the first len(expressions) many results of __call__ correspond to those
     """
 
-    symbol_parameters: List[List[Symbol]]
+    symbol_parameters: List[List[MathVariable]]
     """
     The input parameters for the compiled symbolic expression.
     """
@@ -412,8 +412,8 @@ class SymbolicType:
     def __len__(self) -> int:
         return self.shape[0]
 
-    def free_symbols(self) -> List[Symbol]:
-        return [Symbol._registry[str(s)] for s in ca.symvar(self.casadi_sx)]
+    def free_symbols(self) -> List[MathVariable]:
+        return [MathVariable._registry[str(s)] for s in ca.symvar(self.casadi_sx)]
 
     def is_constant(self) -> bool:
         return len(self.free_symbols()) == 0
@@ -433,7 +433,9 @@ class SymbolicType:
             return np.array(ca.evalf(self.casadi_sx))
 
     def compile(
-        self, parameters: Optional[List[List[Symbol]]] = None, sparse: bool = False
+        self,
+        parameters: Optional[List[List[MathVariable]]] = None,
+        sparse: bool = False,
     ) -> CompiledFunction:
         """
         Compiles the function into a representation that can be executed efficiently. This method
@@ -454,8 +456,8 @@ class SymbolicType:
 
     def substitute(
         self,
-        old_symbols: List[Symbol],
-        new_symbols: List[Union[Symbol, Expression]],
+        old_symbols: List[MathVariable],
+        new_symbols: List[Union[MathVariable, Expression]],
     ) -> Self:
         """
         Replace symbols in an expression with new symbols or expressions.
@@ -718,7 +720,7 @@ class MatrixOperationsMixin:
 
 
 @dataclass(eq=False)
-class Symbol(SymbolicType, BasicOperatorMixin):
+class MathVariable(SymbolicType, BasicOperatorMixin):
     """
     A symbolic expression, which should be only a single symbols.
     No matrix and no numbers.
@@ -728,7 +730,7 @@ class Symbol(SymbolicType, BasicOperatorMixin):
 
     casadi_sx: ca.SX = field(kw_only=True, init=False, default=None)
 
-    _registry: ClassVar[Dict[str, Symbol]] = {}
+    _registry: ClassVar[Dict[str, MathVariable]] = {}
     """
     To avoid two symbols with the same name, references to existing symbols are stored on a class level.
     """
@@ -785,7 +787,7 @@ class Expression(
                 NumericalScalar,
                 NumericalArray,
                 Numerical2dMatrix,
-                Iterable[Symbol],
+                Iterable[MathVariable],
                 Iterable[Expression],
             ]
         ]
@@ -800,7 +802,7 @@ class Expression(
                 NumericalScalar,
                 NumericalArray,
                 Numerical2dMatrix,
-                Iterable[Symbol],
+                Iterable[MathVariable],
             ]
         ],
     ):
@@ -816,7 +818,7 @@ class Expression(
             self.casadi_sx = ca.SX(data)
 
     def _from_iterable(
-        self, data: Union[NumericalArray, Numerical2dMatrix, Iterable[Symbol]]
+        self, data: Union[NumericalArray, Numerical2dMatrix, Iterable[MathVariable]]
     ):
         x = len(data)
         if x == 0:
@@ -923,7 +925,7 @@ class Expression(
     def reshape(self, new_shape: Tuple[int, int]) -> Expression:
         return Expression(self.casadi_sx.reshape(new_shape))
 
-    def jacobian(self, symbols: Iterable[Symbol]) -> Expression:
+    def jacobian(self, symbols: Iterable[MathVariable]) -> Expression:
         """
         Compute the Jacobian matrix of a vector of expressions with respect to a vector of symbols.
 
@@ -938,7 +940,7 @@ class Expression(
         )
 
     def jacobian_dot(
-        self, symbols: Iterable[Symbol], symbols_dot: Iterable[Symbol]
+        self, symbols: Iterable[MathVariable], symbols_dot: Iterable[MathVariable]
     ) -> Expression:
         """
         Compute the total derivative of the Jacobian matrix.
@@ -963,9 +965,9 @@ class Expression(
 
     def jacobian_ddot(
         self,
-        symbols: Iterable[Symbol],
-        symbols_dot: Iterable[Symbol],
-        symbols_ddot: Iterable[Symbol],
+        symbols: Iterable[MathVariable],
+        symbols_dot: Iterable[MathVariable],
+        symbols_ddot: Iterable[MathVariable],
     ) -> Expression:
         """
         Compute the second-order total derivative of the Jacobian matrix.
@@ -996,8 +998,8 @@ class Expression(
 
     def total_derivative(
         self,
-        symbols: Iterable[Symbol],
-        symbols_dot: Iterable[Symbol],
+        symbols: Iterable[MathVariable],
+        symbols_dot: Iterable[MathVariable],
     ) -> Expression:
         """
         Compute the total derivative of an expression with respect to given symbols and their derivatives
@@ -1018,9 +1020,9 @@ class Expression(
 
     def second_order_total_derivative(
         self,
-        symbols: Iterable[Symbol],
-        symbols_dot: Iterable[Symbol],
-        symbols_ddot: Iterable[Symbol],
+        symbols: Iterable[MathVariable],
+        symbols_dot: Iterable[MathVariable],
+        symbols_ddot: Iterable[MathVariable],
     ) -> Expression:
         """
         Computes the second-order total derivative of an expression with respect to a set of symbols.
@@ -1051,7 +1053,7 @@ class Expression(
         H = H.reshape((1, len(H) ** 2))
         return H.dot(v)
 
-    def hessian(self, symbols: Iterable[Symbol]) -> Expression:
+    def hessian(self, symbols: Iterable[MathVariable]) -> Expression:
         """
         Calculate the Hessian matrix of a given expression with respect to specified symbols.
 
@@ -1098,7 +1100,7 @@ class Expression(
         return Expression(ca.kron(m1, m2))
 
 
-def create_symbols(names: Union[List[str], int]) -> List[Symbol]:
+def create_symbols(names: Union[List[str], int]) -> List[MathVariable]:
     """
     Generates a list of symbolic objects based on the input names or an integer value.
 
@@ -1113,7 +1115,7 @@ def create_symbols(names: Union[List[str], int]) -> List[Symbol]:
     """
     if isinstance(names, int):
         names = [f"s_{i}" for i in range(names)]
-    return [Symbol(name=x) for x in names]
+    return [MathVariable(name=x) for x in names]
 
 
 def diag(args: Union[List[ScalarData], Expression]) -> Expression:
@@ -1443,33 +1445,21 @@ def trinary_logic_or(a: ScalarData, b: ScalarData) -> ScalarData:
     return max(cas_a, cas_b)
 
 
-def is_trinary_true(expression: Union[Symbol, Expression]) -> Expression:
-    return expression == TrinaryTrue
-
-
-def is_trinary_true_symbol(expression: Expression) -> bool:
+def is_const_trinary_true(expression: Expression) -> bool:
     try:
         return bool((expression == TrinaryTrue).to_np())
     except Exception as e:
         return False
 
 
-def is_trinary_false(expression: Union[Symbol, Expression]) -> Expression:
-    return expression == TrinaryFalse
-
-
-def is_trinary_false_symbol(expression: Expression) -> bool:
+def is_const_trinary_false(expression: Expression) -> bool:
     try:
         return bool((expression == TrinaryFalse).to_np())
     except Exception as e:
         return False
 
 
-def is_trinary_unknown(expression: Union[Symbol, Expression]) -> Expression:
-    return expression == TrinaryUnknown
-
-
-def is_trinary_unknown_symbol(expression: Expression) -> bool:
+def is_const_trinary_unknown(expression: Expression) -> bool:
     try:
         return bool((expression == TrinaryUnknown).to_np())
     except Exception as e:
@@ -1531,11 +1521,11 @@ def trinary_logic_to_str(expression: Expression) -> str:
     """
     cas_expr = to_sx(expression)
     if cas_expr.n_dep() == 0:
-        if is_trinary_true_symbol(cas_expr):
+        if is_const_trinary_true(cas_expr):
             return "True"
-        if is_trinary_false_symbol(cas_expr):
+        if is_const_trinary_false(cas_expr):
             return "False"
-        if is_trinary_unknown_symbol(cas_expr):
+        if is_const_trinary_unknown(cas_expr):
             return "Unknown"
         return f'"{expression}"'
     op = cas_expr.op()
@@ -1559,7 +1549,7 @@ def _get_return_type(thing: Any):
         the return type is `Expression`. Otherwise, the return type is the input's type.
     """
     return_type = type(thing)
-    if return_type in (int, float, Symbol):
+    if return_type in (int, float, MathVariable):
         return Expression
     return return_type
 
@@ -2931,7 +2921,9 @@ class Vector3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
             self.casadi_sx = (self.safe_division(self.norm()) * a).casadi_sx
 
     def project_to_cone(
-        self, frame_V_cone_axis: Vector3, cone_theta: Union[Symbol, float, Expression]
+        self,
+        frame_V_cone_axis: Vector3,
+        cone_theta: Union[MathVariable, float, Expression],
     ) -> Vector3:
         """
         Projects a given vector onto the boundary of a cone defined by its axis and angle.
@@ -3381,7 +3373,7 @@ NumericalArray = Union[np.ndarray, Iterable[NumericalScalar]]
 Numerical2dMatrix = Union[np.ndarray, Iterable[NumericalArray]]
 NumericalData = Union[NumericalScalar, NumericalArray, Numerical2dMatrix]
 
-SymbolicScalar = Union[Symbol, Expression]
+SymbolicScalar = Union[MathVariable, Expression]
 SymbolicArray = Union[Expression, Point3, Vector3, Quaternion]
 Symbolic2dMatrix = Union[Expression, RotationMatrix, TransformationMatrix]
 SymbolicData = Union[SymbolicScalar, SymbolicArray, Symbolic2dMatrix]
@@ -3414,7 +3406,7 @@ GenericRotatableSpatialType = TypeVar(
 
 GenericSymbolicType = TypeVar(
     "GenericSymbolicType",
-    Symbol,
+    MathVariable,
     Expression,
     Point3,
     Vector3,

@@ -42,7 +42,7 @@ class Base(DeclarativeBase):
 class AccelerationSymbolDAO(
     Base,
     DataAccessObject[
-        semantic_digital_twin.world_description.degree_of_freedom.AccelerationSymbol
+        semantic_digital_twin.world_description.degree_of_freedom.AccelerationVariable
     ],
 ):
 
@@ -199,7 +199,7 @@ class HasDrawersDAO(
 class JerkSymbolDAO(
     Base,
     DataAccessObject[
-        semantic_digital_twin.world_description.degree_of_freedom.JerkSymbol
+        semantic_digital_twin.world_description.degree_of_freedom.JerkVariable
     ],
 ):
 
@@ -262,7 +262,7 @@ class Point3MappingDAO(
 class PositionSymbolDAO(
     Base,
     DataAccessObject[
-        semantic_digital_twin.world_description.degree_of_freedom.PositionSymbol
+        semantic_digital_twin.world_description.degree_of_freedom.PositionVariable
     ],
 ):
 
@@ -851,7 +851,7 @@ class Vector3MappingDAO(
 class VelocitySymbolDAO(
     Base,
     DataAccessObject[
-        semantic_digital_twin.world_description.degree_of_freedom.VelocitySymbol
+        semantic_digital_twin.world_description.degree_of_freedom.VelocityVariable
     ],
 ):
 

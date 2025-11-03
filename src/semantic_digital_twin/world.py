@@ -856,7 +856,7 @@ class World:
             return matches[0]
         raise SemanticAnnotationNotFoundError(name)
 
-    def get_world_state_symbols(self) -> List[cas.Symbol]:
+    def get_world_state_symbols(self) -> List[cas.MathVariable]:
         """
         Constructs and returns a list of symbols representing the state of the system. The state
         is defined in terms of positions, velocities, accelerations, and jerks for each degree

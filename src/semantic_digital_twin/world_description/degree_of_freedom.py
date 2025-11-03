@@ -14,7 +14,7 @@ from ..spatial_types.derivatives import Derivatives, DerivativeMap
 
 
 @dataclass(eq=False)
-class PositionSymbol(cas.Symbol):
+class PositionVariable(cas.MathVariable):
     name: PrefixedName = field(kw_only=True)
     dof: DegreeOfFreedom = field(kw_only=True)
 
@@ -23,7 +23,7 @@ class PositionSymbol(cas.Symbol):
 
 
 @dataclass(eq=False)
-class VelocitySymbol(cas.Symbol):
+class VelocityVariable(cas.MathVariable):
     name: PrefixedName = field(kw_only=True)
     dof: DegreeOfFreedom = field(kw_only=True)
 
@@ -32,7 +32,7 @@ class VelocitySymbol(cas.Symbol):
 
 
 @dataclass(eq=False)
-class AccelerationSymbol(cas.Symbol):
+class AccelerationVariable(cas.MathVariable):
     name: PrefixedName = field(kw_only=True)
     dof: DegreeOfFreedom = field(kw_only=True)
 
@@ -41,7 +41,7 @@ class AccelerationSymbol(cas.Symbol):
 
 
 @dataclass(eq=False)
-class JerkSymbol(cas.Symbol):
+class JerkVariable(cas.MathVariable):
     name: PrefixedName = field(kw_only=True)
     dof: DegreeOfFreedom = field(kw_only=True)
 
@@ -65,7 +65,7 @@ class DegreeOfFreedom(WorldEntity, SubclassJSONSerializer):
     Lower and upper bounds for each derivative
     """
 
-    symbols: DerivativeMap[cas.Symbol] = field(
+    symbols: DerivativeMap[cas.MathVariable] = field(
         default_factory=DerivativeMap, init=False
     )
     """
@@ -89,16 +89,16 @@ class DegreeOfFreedom(WorldEntity, SubclassJSONSerializer):
 
     def create_and_register_symbols(self):
         assert self._world is not None
-        self.symbols.data[Derivatives.position] = PositionSymbol(
+        self.symbols.data[Derivatives.position] = PositionVariable(
             name=PrefixedName("position", prefix=str(self.name)), dof=self
         )
-        self.symbols.data[Derivatives.velocity] = VelocitySymbol(
+        self.symbols.data[Derivatives.velocity] = VelocityVariable(
             name=PrefixedName("velocity", prefix=str(self.name)), dof=self
         )
-        self.symbols.data[Derivatives.acceleration] = AccelerationSymbol(
+        self.symbols.data[Derivatives.acceleration] = AccelerationVariable(
             name=PrefixedName("acceleration", prefix=str(self.name)), dof=self
         )
-        self.symbols.data[Derivatives.jerk] = JerkSymbol(
+        self.symbols.data[Derivatives.jerk] = JerkVariable(
             name=PrefixedName("jerk", prefix=str(self.name)), dof=self
         )
 
@@ -159,7 +159,7 @@ class DegreeOfFreedom(WorldEntity, SubclassJSONSerializer):
         :param new_upper_limits: A mapping of new upper limits for the specified derivatives.
             If a new upper limit is None, no change is applied for that derivative.
         """
-        if not isinstance(self.symbols.position, cas.Symbol):
+        if not isinstance(self.symbols.position, cas.MathVariable):
             raise UsageError(
                 "Cannot overwrite limits of mimic DOFs, use .raw_dof._overwrite_dof_limits instead."
             )
