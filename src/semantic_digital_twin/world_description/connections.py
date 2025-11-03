@@ -5,6 +5,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 
 import numpy as np
+from pygments.lexer import default
 from typing_extensions import List, TYPE_CHECKING, Union, Optional, Dict, Any, Self
 
 from semantic_digital_twin.world_description.geometry import transformation_from_json
@@ -54,7 +55,7 @@ class ActiveConnection(Connection):
     Has one or more degrees of freedom that can be actively controlled, e.g., robot joints.
     """
 
-    frozen_for_collision_avoidance: bool = False
+    frozen_for_collision_avoidance: bool = field(default=False)
     """
     Should be treated as fixed for collision avoidance.
     Common example are gripper joints, you generally don't want to avoid collisions by closing the fingers, 
@@ -97,10 +98,6 @@ class ActiveConnection(Connection):
             dof.has_hardware_interface = value
 
     @property
-    def active_dofs(self) -> List[DegreeOfFreedom]:
-        return []
-
-    @property
     def is_controlled(self):
         return self.has_hardware_interface and not self.frozen_for_collision_avoidance
 
@@ -110,19 +107,6 @@ class ActiveConnection(Connection):
         for child_body in self._world.get_direct_child_bodies_with_collision(self):
             if not child_body.get_collision_config().disabled:
                 child_body.set_static_collision_config(collision_config)
-
-
-@dataclass
-class PassiveConnection(Connection):
-    """
-    Has one or more degrees of freedom that cannot be actively controlled.
-    Useful if a transformation is only tracked, e.g., the robot's localization.
-    """
-
-    @property
-    def passive_dofs(self) -> List[DegreeOfFreedom]:
-        return []
-
 
 @dataclass
 class ActiveConnection1DOF(ActiveConnection, ABC):
@@ -348,7 +332,7 @@ class RevoluteConnection(ActiveConnection1DOF):
 
 
 @dataclass
-class Connection6DoF(PassiveConnection):
+class Connection6DoF(Connection):
     """
     Has full 6 degrees of freedom, that cannot be actively controlled.
     Useful for synchronizing with transformations from external providers.
@@ -545,7 +529,7 @@ class Connection6DoF(PassiveConnection):
 
 
 @dataclass
-class OmniDrive(ActiveConnection, PassiveConnection, HasUpdateState):
+class OmniDrive(ActiveConnection, HasUpdateState):
     """
     A connection describing an omnidirectional drive.
     It can rotate about its z-axis and drive on the x-y plane simultaneously.

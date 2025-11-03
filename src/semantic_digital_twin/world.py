@@ -51,7 +51,6 @@ from .spatial_types.derivatives import Derivatives
 from .utils import IDGenerator, copy_lru_cache
 from .world_description.connections import (
     ActiveConnection,
-    PassiveConnection,
     Connection6DoF,
     ActiveConnection1DOF,
     FixedConnection,
@@ -441,6 +440,7 @@ class WorldModelManager:
         for callback in self.model_change_callbacks:
             callback.notify()
 
+_LRU_CACHE_SIZE: int = 2048
 
 @dataclass
 class World:
@@ -514,8 +514,6 @@ class World:
     Counter for kinematic structure entities added to the world. Used for faster hash computation
     """
 
-    _lru_cache_size: int = field(default=2048, init=False)
-
     def __post_init__(self):
         self._collision_pair_manager = CollisionPairManager(self)
         self.state = WorldState(_world=self)
@@ -547,7 +545,7 @@ class World:
 
     # %% Properties
     @property
-    @lru_cache(maxsize=_lru_cache_size)
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
     def root(self) -> Optional[KinematicStructureEntity]:
         """
         The root of the world is the unique node with in-degree 0.
@@ -578,9 +576,8 @@ class World:
 
     @property
     def passive_degrees_of_freedom(self) -> Set[DegreeOfFreedom]:
-        passive_connections = self.get_connections_by_type(PassiveConnection)
         dofs = {
-            dof for connection in passive_connections for dof in connection.passive_dofs
+            dof for connection in self.connections for dof in connection.passive_dofs
         }
         return dofs
 
@@ -641,15 +638,14 @@ class World:
         return list(self.kinematic_structure.edges())
 
     @property
-    def controlled_connections(self) -> Set[ActiveConnection]:
+    def controlled_connections(self) -> Set[Connection]:
         """
         A subset of the robot's connections that are controlled by a controller.
         """
         return set(
             connection
             for connection in self.connections
-            if isinstance(connection, ActiveConnection)
-            and connection.has_hardware_interface
+            if connection.is_controlled
         )
 
     # %% Add Stuff to World
@@ -954,7 +950,7 @@ class World:
             dof.has_hardware_interface = value
 
     # %% Getter
-    @lru_cache(maxsize=_lru_cache_size)
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
     def get_connection(
         self, parent: KinematicStructureEntity, child: KinematicStructureEntity
     ) -> Connection:
@@ -963,7 +959,7 @@ class World:
         """
         return self.kinematic_structure.get_edge_data(parent.index, child.index)
 
-    @lru_cache(maxsize=_lru_cache_size)
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
     def get_connections_by_type(
         self, connection_type: Type[GenericConnection]
     ) -> List[GenericConnection]:
@@ -977,7 +973,7 @@ class World:
             connection_type, self.connections
         )
 
-    @lru_cache(maxsize=_lru_cache_size)
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
     def get_semantic_annotations_by_type(
         self, semantic_annotation_type: Type[GenericSemanticAnnotation]
     ) -> List[GenericSemanticAnnotation]:
@@ -991,7 +987,7 @@ class World:
             semantic_annotation_type, self.semantic_annotations
         )
 
-    @lru_cache(maxsize=_lru_cache_size)
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
     def get_kinematic_structure_entity_by_type(
         self, entity_type: Type[GenericKinematicStructureEntity]
     ) -> List[GenericKinematicStructureEntity]:
@@ -1017,7 +1013,7 @@ class World:
         """
         return [entity for entity in iterable if isinstance(entity, world_entity_type)]
 
-    @lru_cache(maxsize=_lru_cache_size)
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
     def get_semantic_annotation_by_name(
         self, name: Union[str, PrefixedName]
     ) -> SemanticAnnotation:
@@ -1028,7 +1024,7 @@ class World:
         )
         return semantic_annotation
 
-    @lru_cache(maxsize=_lru_cache_size)
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
     def get_kinematic_structure_entity_by_name(
         self, name: Union[str, PrefixedName]
     ) -> KinematicStructureEntity:
@@ -1037,12 +1033,12 @@ class World:
         )
         return kse
 
-    @lru_cache(maxsize=_lru_cache_size)
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
     def get_body_by_name(self, name: Union[str, PrefixedName]) -> Body:
         body: Body = self._get_world_entity_by_name_from_iterable(name, self.bodies)
         return body
 
-    @lru_cache(maxsize=_lru_cache_size)
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
     def get_degree_of_freedom_by_name(
         self, name: Union[str, PrefixedName]
     ) -> DegreeOfFreedom:
@@ -1051,7 +1047,7 @@ class World:
         )
         return dof
 
-    @lru_cache(maxsize=_lru_cache_size)
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
     def get_connection_by_name(self, name: Union[str, PrefixedName]) -> Connection:
         connection: Connection = self._get_world_entity_by_name_from_iterable(
             name, self.connections
@@ -1205,7 +1201,7 @@ class World:
         self._travel_branch(root, visitor)
         return visitor.connections
 
-    @lru_cache(maxsize=_lru_cache_size)
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
     def get_kinematic_structure_entities_of_branch(
         self, root: KinematicStructureEntity
     ) -> List[KinematicStructureEntity]:
@@ -1352,7 +1348,7 @@ class World:
         self.degrees_of_freedom = list(actual_dofs)
 
     # %% Kinematic Structure Computations
-    @lru_cache(maxsize=_lru_cache_size)
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
     def compute_descendent_child_kinematic_structure_entities(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> List[KinematicStructureEntity]:
@@ -1370,7 +1366,7 @@ class World:
             )
         return children
 
-    @lru_cache(maxsize=_lru_cache_size)
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
     def compute_child_kinematic_structure_entities(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> List[KinematicStructureEntity]:
@@ -1383,7 +1379,7 @@ class World:
             self.kinematic_structure.successors(kinematic_structure_entity.index)
         )
 
-    @lru_cache(maxsize=_lru_cache_size)
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
     def compute_parent_connection(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> Optional[Connection]:
@@ -1403,7 +1399,7 @@ class World:
             )
         )
 
-    @lru_cache(maxsize=_lru_cache_size)
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
     def compute_parent_kinematic_structure_entity(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> Optional[KinematicStructureEntity]:
@@ -1416,7 +1412,7 @@ class World:
         parent = self.kinematic_structure.predecessors(kinematic_structure_entity.index)
         return parent[0] if parent else None
 
-    @lru_cache(maxsize=_lru_cache_size)
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
     def compute_chain_of_connections(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> List[Connection]:
@@ -1429,7 +1425,7 @@ class World:
             for i in range(len(entity_chain) - 1)
         ]
 
-    @lru_cache(maxsize=_lru_cache_size)
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
     def compute_chain_of_kinematic_structure_entities(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> List[KinematicStructureEntity]:
@@ -1516,7 +1512,7 @@ class World:
         new_tip_body = new_tip.parent if new_tip in downward_chain else new_tip.child
         return new_root_body, new_tip_body
 
-    @lru_cache(maxsize=_lru_cache_size)
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
     def compute_split_chain_of_connections(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> Tuple[List[Connection], List[Connection]]:
@@ -1549,7 +1545,7 @@ class World:
         ]
         return root_connections, tip_connections
 
-    @lru_cache(maxsize=_lru_cache_size)
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
     def compute_split_chain_of_kinematic_structure_entities(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> Tuple[

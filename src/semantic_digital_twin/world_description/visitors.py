@@ -23,11 +23,7 @@ class CollisionBodyCollector(rx.visit.DFSVisitor):
 
     def tree_edge(self, args: Tuple[int, int, Connection]) -> None:
         parent_index, child_index, e = args
-        if (
-            isinstance(e, ActiveConnection)
-            and e.has_hardware_interface
-            and not e.frozen_for_collision_avoidance
-        ):
+        if e.is_controlled:
             raise rx.visit.PruneSearch()
 
 class ConnectionCollector(rx.visit.DFSVisitor):

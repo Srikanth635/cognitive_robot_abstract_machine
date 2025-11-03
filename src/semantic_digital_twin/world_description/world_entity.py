@@ -754,6 +754,18 @@ class Connection(WorldEntity, SubclassJSONSerializer):
         return self.parent_T_connection_expression @ self.connection_T_child_expression
 
     @property
+    def active_dofs(self) -> List[DegreeOfFreedom]:
+        return []
+
+    @property
+    def passive_dofs(self) -> List[DegreeOfFreedom]:
+        return []
+
+    @property
+    def is_controlled(self):
+        return False
+
+    @property
     def has_hardware_interface(self) -> bool:
         return False
 
