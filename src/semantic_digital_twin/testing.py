@@ -2,6 +2,7 @@ import os
 import threading
 import time
 
+from krrood.entity_query_language.symbol_graph import SymbolGraph
 from krrood.entity_query_language.symbolic import Variable
 from typing_extensions import Tuple
 
@@ -283,10 +284,7 @@ def cleanup_after_test():
     # Setup: runs before each test
     yield
     # Teardown: runs after each test
-    for c in Variable._cache_.values():
-        c.clear()
-    Variable._cache_.clear()
-
+    SymbolGraph().clear()
 
 @pytest.fixture()
 def kitchen_world():

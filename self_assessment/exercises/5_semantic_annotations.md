@@ -223,12 +223,12 @@ Your goals:
 ```{code-cell} ipython3
 :tags: [example-solution]
 with symbolic_mode():
+    bottle = let(Bottle, domain=world.semantic_annotations)
     bottles_with_cap_query = an(
         entity(
-            Bottle(cap=an(Cap())
+            bottle, bottle.cap != None
         )
     )
-)
 query_result = list(bottles_with_cap_query.evaluate())
 print(query_result)
 ```
