@@ -3,9 +3,9 @@ jupyter:
   jupytext:
     text_representation:
       extension: .md
-      format_name: markdown
-      format_version: '1.3'
-      jupytext_version: 1.17.3
+      format_name: myst
+      format_version: 0.13
+      jupytext_version: 1.16.4
   kernelspec:
     display_name: Python 3
     language: python
