@@ -660,7 +660,7 @@ class World:
             if connection.is_controlled
         )
 
-    # %% Add Stuff to World
+    # %% Adding WorldEntities to the World
     def add_connection(
         self, connection: Connection, handle_duplicates: bool = False
     ) -> None:
@@ -827,7 +827,7 @@ class World:
         semantic_annotation._world = self
         self.semantic_annotations.append(semantic_annotation)
 
-    # %% Remove Stuff from World
+    # %% Remove WorldEntities from the World
     def remove_connection(self, connection: Connection) -> None:
         """
         Removes a connection and deletes the corresponding degree of freedom, if it was only used by this connection.

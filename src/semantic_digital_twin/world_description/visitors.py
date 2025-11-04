@@ -3,7 +3,6 @@ import rustworkx as rx
 from typing import Tuple
 
 from typing_extensions import TYPE_CHECKING
-from .connections import ActiveConnection
 
 
 if TYPE_CHECKING:
@@ -12,21 +11,29 @@ if TYPE_CHECKING:
 
 
 class CollisionBodyCollector(rx.visit.DFSVisitor):
+    """
+    Collects all bodies with collision geometries in the kinematic structure of the world.
+    """
     def __init__(self, world: World):
         self.world = world
         self.bodies = []
 
     def discover_vertex(self, node_index: int, time: int) -> None:
+        """Called for each vertex during DFS traversal"""
         body = self.world.kinematic_structure[node_index]
         if isinstance(body, Body) and body.has_collision():
             self.bodies.append(body)
 
     def tree_edge(self, args: Tuple[int, int, Connection]) -> None:
+        """Called for each tree edge during DFS traversal"""
         parent_index, child_index, e = args
         if e.is_controlled:
             raise rx.visit.PruneSearch()
 
 class ConnectionCollector(rx.visit.DFSVisitor):
+    """
+    Collects all connections in the kinematic structure of the world.
+    """
     def __init__(self, world: World):
         self.world = world
         self.connections = []
