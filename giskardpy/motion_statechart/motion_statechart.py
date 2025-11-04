@@ -4,9 +4,10 @@ from dataclasses import dataclass, field
 
 import numpy as np
 import rustworkx as rx
-from typing_extensions import List, MutableMapping, ClassVar, Self, Type
+from typing_extensions import List, MutableMapping, ClassVar, Self, Type, Optional
 
 import semantic_digital_twin.spatial_types.spatial_types as cas
+from giskardpy.data_types.exceptions import EmptyProblemException
 from giskardpy.motion_statechart.data_types import LifeCycleValues
 from giskardpy.motion_statechart.graph_node import (
     MotionStatechartNode,
@@ -19,6 +20,9 @@ from giskardpy.motion_statechart.graph_node import (
     LifeCycleVariable,
 )
 from giskardpy.motion_statechart.plotters.graphviz import MotionStatechartGraphviz
+from giskardpy.qp.constraint_collection import ConstraintCollection
+from giskardpy.qp.qp_controller import QPController
+from giskardpy.qp.qp_controller_config import QPControllerConfig
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.world import World
 
@@ -185,7 +189,7 @@ class ObservationState(State):
                 b_result_cases=[
                     (
                         int(LifeCycleValues.RUNNING),
-                        node.create_observation_expression(),
+                        node._create_observation_expression(),
                     ),
                     (
                         int(LifeCycleValues.NOT_STARTED),
@@ -269,6 +273,8 @@ class MotionStatechart:
     Combined representation of the life cycle state of the motion statechart, to enable an efficient tick().
     """
 
+    qp_controller: Optional[QPController] = field(default=None, init=False)
+
     def __post_init__(self):
         self.life_cycle_state = LifeCycleState(self)
         self.observation_state = ObservationState(self)
@@ -314,12 +320,45 @@ class MotionStatechart:
         for goal in self.get_nodes_by_type(Goal):
             goal.apply_goal_conditions_to_children()
 
-    def compile(self):
+    def compile(self, controller_config: Optional[QPControllerConfig] = None):
+        """
+
+        :param controller_config: If not None, the QP controller will be compiled.
+        :return:
+        """
         self._apply_goal_conditions_to_their_children()
         self._build_commons_of_nodes()
         self._add_transitions()
         self.observation_state.compile()
         self.life_cycle_state.compile()
+        if controller_config is not None:
+            self._compile_qp_controller(controller_config)
+
+    def _combine_constraint_collections_of_nodes(self) -> ConstraintCollection:
+        combined_constraint_collection = ConstraintCollection()
+        for node in self.nodes:
+            combined_constraint_collection.merge(node.create_constraints())
+        return combined_constraint_collection
+
+    def _compile_qp_controller(self, controller_config: QPControllerConfig):
+        ordered_dofs = sorted(
+            self.world.active_degrees_of_freedom,
+            key=lambda dof: self.world.state._index[dof.name],
+        )
+        constraint_collection = self._combine_constraint_collections_of_nodes()
+        if len(constraint_collection.constraints) == 0:
+            self.qp_controller = None
+        self.qp_controller = QPController(
+            config=controller_config,
+            degrees_of_freedom=ordered_dofs,
+            constraint_collection=constraint_collection,
+            world_state_symbols=self.world.get_world_state_symbols(),
+            life_cycle_variables=self.life_cycle_state.life_cycle_symbols(),
+        )
+        if self.qp_controller.has_not_free_variables():
+            raise EmptyProblemException(
+                "Tried to compile a QPController without free variables."
+            )
 
     def _update_observation_state(self):
         self.observation_state.update_state(
@@ -338,6 +377,19 @@ class MotionStatechart:
         self._update_observation_state()
         self._update_life_cycle_state()
         self._raise_if_cancel_motion()
+        if self.qp_controller is None:
+            return
+        next_cmd = self.qp_controller.get_cmd(
+            world_state=self.world.state.data,
+            life_cycle_state=self.life_cycle_state.data,
+            external_collisions=np.array([], dtype=np.float64),
+            self_collisions=np.array([], dtype=np.float64),
+        )
+        self.world.apply_control_commands(
+            next_cmd,
+            self.qp_controller.config.control_dt,
+            self.qp_controller.config.max_derivative,
+        )
 
     def get_nodes_by_type(
         self, node_type: Type[GenericMotionStatechartNode]

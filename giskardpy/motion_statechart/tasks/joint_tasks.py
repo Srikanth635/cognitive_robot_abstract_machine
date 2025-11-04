@@ -7,7 +7,6 @@ from giskardpy.god_map import god_map
 from giskardpy.motion_statechart.data_types import DefaultWeights
 from giskardpy.motion_statechart.monitors.joint_monitors import JointGoalReached
 from giskardpy.motion_statechart.tasks.task import Task
-from giskardpy.qp.constraint import BaseConstraint
 from giskardpy.qp.constraint_collection import ConstraintCollection
 from giskardpy.utils.decorators import validated_dataclass
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
@@ -27,15 +26,14 @@ class JointPositionList(Task):
     weight: float = field(default=DefaultWeights.WEIGHT_BELOW_CA, kw_only=True)
     max_velocity: float = field(default=1.0, kw_only=True)
 
+    errors: List[cas.Expression] = field(init=False, default_factory=list)
+    _constraints: Optional[ConstraintCollection] = field(
+        init=False, default_factory=ConstraintCollection
+    )
+
     def build_common(self):
-        self.current_positions = []
-        self.goal_positions = []
-        self.velocity_limits = []
-        self.connections = []
         if len(self.goal_state) == 0:
             raise GoalInitalizationException(f"Can't initialize {self} with no joints.")
-
-        self.errors = []
 
         for connection, target in self.goal_state.items():
             current = connection.dof.symbols.position
@@ -48,8 +46,6 @@ class JointPositionList(Task):
                 error = cas.shortest_angular_distance(current, target)
             else:
                 error = target - current
-            self._constraints = ConstraintCollection()
-
             self._constraints.add_equality_constraint(
                 name=PrefixedName(str(connection.name), str(self.name)),
                 reference_velocity=velocity,
@@ -59,10 +55,10 @@ class JointPositionList(Task):
             )
             self.errors.append(cas.abs(error) < self.threshold)
 
-    def create_constraints(self) -> ConstraintCollection:
+    def _create_constraints(self) -> ConstraintCollection:
         return self._constraints
 
-    def create_observation_expression(self) -> cas.Expression:
+    def _create_observation_expression(self) -> cas.Expression:
         return cas.logic_all(cas.Expression(self.errors))
 
     def apply_limits_to_target(

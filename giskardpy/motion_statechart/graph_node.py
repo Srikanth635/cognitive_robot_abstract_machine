@@ -18,7 +18,6 @@ from typing_extensions import (
 
 import semantic_digital_twin.spatial_types.spatial_types as cas
 from giskardpy.motion_statechart.data_types import LifeCycleValues
-from giskardpy.qp.constraint import BaseConstraint
 from giskardpy.qp.constraint_collection import ConstraintCollection
 from giskardpy.utils.utils import string_shortener
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
@@ -201,12 +200,17 @@ class MotionStatechartNode(SubclassJSONSerializer):
         """
 
     def create_constraints(self) -> ConstraintCollection:
+        constraint_collection = self._create_constraints()
+        constraint_collection.link_to_motion_statechart_node(self)
+        return constraint_collection
+
+    def _create_constraints(self) -> ConstraintCollection:
         """
         Create and return a list of motion constraints that will be active, while this node is active.
         """
         return ConstraintCollection()
 
-    def create_observation_expression(self) -> cas.Expression:
+    def _create_observation_expression(self) -> cas.Expression:
         """
         Create and return a symbolic expression that will be evaluated to compute the observation state, while this node is active.
         It serves a similar purpose as `on_running`, but you can reuse the same expressions you used on `create_constraints`.
@@ -478,7 +482,7 @@ class EndMotion(MotionStatechartNode):
         default_factory=lambda: ["rounded"], kw_only=True
     )
 
-    def create_observation_expression(self) -> cas.Expression:
+    def _create_observation_expression(self) -> cas.Expression:
         return cas.TrinaryTrue
 
 

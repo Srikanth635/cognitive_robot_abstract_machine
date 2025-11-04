@@ -74,22 +74,20 @@ class GiskardToExplicitQPAdapter(GiskardToQPAdapter):
         free_symbols.update(neq_upper_bounds.free_symbols())
         for s in itertools.chain(
             self.world_state_symbols,
-            self.task_life_cycle_symbols,
-            self.goal_life_cycle_symbols,
+            self.life_cycle_symbols,
             self.external_collision_symbols,
             self.self_collision_symbols,
         ):
             if s in free_symbols:
                 free_symbols.remove(s)
-        self.aux_symbols = list(free_symbols)
+        # self.aux_symbols = list(free_symbols)
 
         self.free_symbols = [
             self.world_state_symbols,
-            self.task_life_cycle_symbols,
-            self.goal_life_cycle_symbols,
+            self.life_cycle_symbols,
             self.external_collision_symbols,
             self.self_collision_symbols,
-            self.aux_symbols,
+            # self.aux_symbols,
         ]
 
         self.eq_matrix_compiled = eq_matrix.compile(
@@ -145,29 +143,22 @@ class GiskardToExplicitQPAdapter(GiskardToQPAdapter):
     def evaluate(
         self,
         world_state: np.ndarray,
-        task_life_cycle_state: np.ndarray,
-        goal_life_cycle_state: np.ndarray,
+        life_cycle_state: np.ndarray,
         external_collision_data: np.ndarray,
         self_collision_data: np.ndarray,
-        symbol_manager,
     ) -> QPData:
-        aux_substitutions = symbol_manager.resolve_symbols([self.aux_symbols])
 
         eq_matrix_np_raw = self.eq_matrix_compiled(
             world_state,
-            task_life_cycle_state,
-            goal_life_cycle_state,
+            life_cycle_state,
             external_collision_data,
             self_collision_data,
-            *aux_substitutions,
         )
         neq_matrix_np_raw = self.neq_matrix_compiled(
             world_state,
-            task_life_cycle_state,
-            goal_life_cycle_state,
+            life_cycle_state,
             external_collision_data,
             self_collision_data,
-            *aux_substitutions,
         )
         (
             quadratic_weights_np_raw,
@@ -179,11 +170,9 @@ class GiskardToExplicitQPAdapter(GiskardToQPAdapter):
             neq_upper_bounds_np_raw,
         ) = self.combined_vector_f(
             world_state,
-            task_life_cycle_state,
-            goal_life_cycle_state,
+            life_cycle_state,
             external_collision_data,
             self_collision_data,
-            *aux_substitutions,
         )
 
         self.qp_data_raw = QPData(

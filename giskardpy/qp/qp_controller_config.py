@@ -54,7 +54,6 @@ class QPControllerConfig:
     )
     max_derivative: Derivatives = field(default=Derivatives.jerk)
     qp_solver_id: Optional[SupportedQPSolver] = field(default=None)
-    qp_solver_class: Type[QPSolver] = field(init=False)
     prediction_horizon: int = field(default=7)
     mpc_dt: float = field(default=0.0125)
     max_trajectory_length: Optional[float] = field(default=30)
@@ -65,6 +64,9 @@ class QPControllerConfig:
     weight_factor: float = field(default=100)
     verbose: bool = field(default=True)
 
+    # %% init false
+    qp_solver_class: Type[QPSolver] = field(init=False)
+
     def __post_init__(self):
         if not self.qp_formulation.is_mpc:
             self.prediction_horizon = 1
@@ -73,18 +75,26 @@ class QPControllerConfig:
         if self.prediction_horizon < 4:
             raise ValueError("prediction horizon must be >= 4.")
         self.__endless_mode = self.max_trajectory_length is None
-        self.set_qp_solver(self.qp_solver_id)
+        self.set_qp_solver()
+
+    @classmethod
+    def create_default_with_50hz(cls):
+        return cls(
+            control_dt=0.02,
+            mpc_dt=0.02,
+            prediction_horizon=7,
+        )
 
     def setup(self):
         self.init_qp_controller()
 
-    def set_qp_solver(self, solver_id: SupportedQPSolver) -> None:
-        if solver_id is not None:
-            self.qp_solver_class = available_solvers[solver_id]
+    def set_qp_solver(self) -> None:
+        if self.qp_solver_id is not None:
+            self.qp_solver_class = available_solvers[self.qp_solver_id]
         else:
-            for solver_id in SupportedQPSolver:
-                if solver_id in available_solvers:
-                    self.qp_solver_class = available_solvers[solver_id]
+            for qp_solver_id in SupportedQPSolver:
+                if qp_solver_id in available_solvers:
+                    self.qp_solver_class = available_solvers[qp_solver_id]
                     break
             else:
                 raise QPSolverException(f"No qp solver found")

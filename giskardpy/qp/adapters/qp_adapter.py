@@ -16,19 +16,18 @@ from giskardpy.data_types.exceptions import (
 )
 from giskardpy.middleware import get_middleware
 from giskardpy.qp.constraint import (
-    EqualityConstraint,
-    InequalityConstraint,
     DerivativeInequalityConstraint,
     DerivativeEqualityConstraint,
 )
+from giskardpy.qp.constraint_collection import ConstraintCollection
 from giskardpy.qp.pos_in_vel_limits import b_profile
 from giskardpy.qp.qp_data import QPData
 from giskardpy.qp.solvers.qp_solver import QPSolver
 from giskardpy.qp.weight_gain import QuadraticWeightGain, LinearWeightGain
 from giskardpy.utils.decorators import memoize
 from giskardpy.utils.math import mpc
-from semantic_digital_twin.world_description.degree_of_freedom import DegreeOfFreedom
 from semantic_digital_twin.spatial_types.derivatives import Derivatives, DerivativeMap
+from semantic_digital_twin.world_description.degree_of_freedom import DegreeOfFreedom
 
 if TYPE_CHECKING:
     import scipy.sparse as sp
@@ -119,10 +118,7 @@ class ProblemDataPart(ABC):
     """
 
     free_variables: List[DegreeOfFreedom]
-    equality_constraints: List[EqualityConstraint]
-    inequality_constraints: List[InequalityConstraint]
-    derivative_constraints: List[DerivativeInequalityConstraint]
-    eq_derivative_constraints: List[DerivativeEqualityConstraint]
+    constraint_collection: ConstraintCollection
     config: QPControllerConfig
 
     def __post_init__(self):
@@ -141,12 +137,20 @@ class ProblemDataPart(ABC):
     def get_derivative_constraints(
         self, derivative: Derivatives
     ) -> List[DerivativeInequalityConstraint]:
-        return [c for c in self.derivative_constraints if c.derivative == derivative]
+        return [
+            c
+            for c in self.constraint_collection.derivative_constraints
+            if c.derivative == derivative
+        ]
 
     def get_eq_derivative_constraints(
         self, derivative: Derivatives
     ) -> List[DerivativeEqualityConstraint]:
-        return [c for c in self.eq_derivative_constraints if c.derivative == derivative]
+        return [
+            c
+            for c in self.constraint_collection.eq_derivative_constraints
+            if c.derivative == derivative
+        ]
 
     @abc.abstractmethod
     def construct_expression(
@@ -381,7 +385,7 @@ class Weights(ProblemDataPart):
                         alpha=self.config.horizon_weight_gain_scalar,
                     )
                     weights[derivative][
-                        f"t{t:03}/{v.symbols.position}/{derivative}"
+                        f"t{t:03}/{v.symbols.position.dof.name}/{derivative}"
                     ] = normalized_weight
                     for q_gain in quadratic_weight_gains:
                         if (
@@ -389,7 +393,7 @@ class Weights(ProblemDataPart):
                             and v in q_gain.gains[t][derivative].keys()
                         ):
                             weights[derivative][
-                                f"t{t:03}/{v.symbols.position}/{derivative}"
+                                f"t{t:03}/{v.symbols.position.dof.name}/{derivative}"
                             ] *= q_gain.gains[t][derivative][v]
         for _, weight in sorted(weights.items()):
             params.append(weight)
@@ -416,7 +420,7 @@ class Weights(ProblemDataPart):
                 for c in self.get_derivative_constraints(d):
                     if t < self.control_horizon:
                         derivative_constr_weights[f"t{t:03}/{c.name}"] = (
-                            c.normalized_weight(t)
+                            c.normalized_weight()
                         )
             params.append(derivative_constr_weights)
         return params
@@ -430,7 +434,7 @@ class Weights(ProblemDataPart):
                 for c in self.get_eq_derivative_constraints(d):
                     if t < self.control_horizon:
                         derivative_constr_weights[f"t{t:03}/{c.name}"] = (
-                            c.normalized_weight(t)
+                            c.normalized_weight()
                         )
             params.append(derivative_constr_weights)
         return params
@@ -438,14 +442,14 @@ class Weights(ProblemDataPart):
     def equality_weight_expressions(self) -> dict:
         error_slack_weights = {
             f"{c.name}/error": c.normalized_weight(self.control_horizon)
-            for c in self.equality_constraints
+            for c in self.constraint_collection.eq_constraints
         }
         return error_slack_weights
 
     def inequality_weight_expressions(self) -> dict:
         error_slack_weights = {
             f"{c.name}/error": c.normalized_weight(self.control_horizon)
-            for c in self.inequality_constraints
+            for c in self.constraint_collection.neq_constraints
         }
         return error_slack_weights
 
@@ -610,22 +614,26 @@ class FreeVariableBounds(ProblemDataPart):
 
     def equality_constraint_slack_lower_bound(self):
         return {
-            f"{c.name}/error": c.lower_slack_limit for c in self.equality_constraints
+            f"{c.name}/error": c.lower_slack_limit
+            for c in self.constraint_collection.eq_constraints
         }
 
     def equality_constraint_slack_upper_bound(self):
         return {
-            f"{c.name}/error": c.upper_slack_limit for c in self.equality_constraints
+            f"{c.name}/error": c.upper_slack_limit
+            for c in self.constraint_collection.eq_constraints
         }
 
     def inequality_constraint_slack_lower_bound(self):
         return {
-            f"{c.name}/error": c.lower_slack_limit for c in self.inequality_constraints
+            f"{c.name}/error": c.lower_slack_limit
+            for c in self.constraint_collection.neq_constraints
         }
 
     def inequality_constraint_slack_upper_bound(self):
         return {
-            f"{c.name}/error": c.upper_slack_limit for c in self.inequality_constraints
+            f"{c.name}/error": c.upper_slack_limit
+            for c in self.constraint_collection.neq_constraints
         }
 
     @profile
@@ -708,7 +716,7 @@ class EqualityBounds(ProblemDataPart):
     def equality_constraint_bounds(self) -> Dict[str, cas.Expression]:
         return {
             f"{c.name}": c.capped_bound(self.config.mpc_dt, self.control_horizon)
-            for c in self.equality_constraints
+            for c in self.constraint_collection.eq_constraints
         }
 
     def last_derivative_values(
@@ -836,7 +844,7 @@ class InequalityBounds(ProblemDataPart):
 
     def lower_inequality_constraint_bound(self):
         bounds = {}
-        for constraint in self.inequality_constraints:
+        for constraint in self.constraint_collection.neq_constraints:
             if isinstance(constraint.lower_error, float) and np.isinf(
                 constraint.lower_error
             ):
@@ -849,7 +857,7 @@ class InequalityBounds(ProblemDataPart):
 
     def upper_inequality_constraint_bound(self):
         bounds = {}
-        for constraint in self.inequality_constraints:
+        for constraint in self.constraint_collection.neq_constraints:
             if isinstance(constraint.upper_error, float) and np.isinf(
                 constraint.upper_error
             ):
@@ -987,9 +995,9 @@ class EqualityModel(ProblemDataPart):
     """
 
     def equality_constraint_expressions(self) -> List[cas.Expression]:
-        return self._sorter({c.name: c.expression for c in self.equality_constraints})[
-            0
-        ]
+        return self._sorter(
+            {c.name: c.expression for c in self.constraint_collection.eq_constraints}
+        )[0]
 
     def get_free_variable_symbols(
         self, derivative: Derivatives
@@ -1005,7 +1013,7 @@ class EqualityModel(ProblemDataPart):
         return self._sorter(
             {
                 c.name: c.expression
-                for c in self.eq_derivative_constraints
+                for c in self.constraint_collection.eq_derivative_constraints
                 if c.derivative == derivative
             }
         )[0]
@@ -1239,9 +1247,10 @@ class EqualityModel(ProblemDataPart):
             not self.config.qp_formulation.has_explicit_acc_variables
             and self.config.qp_formulation.has_explicit_jerk_variables
         ):
-            if len(self.equality_constraints) > 0:
+            if len(self.constraint_collection.eq_constraints) > 0:
                 model = cas.Expression.zeros(
-                    len(self.equality_constraints), self.number_of_non_slack_columns
+                    len(self.constraint_collection.eq_constraints),
+                    self.number_of_non_slack_columns,
                 )
                 J_eq = (
                     cas.Expression(self.equality_constraint_expressions()).jacobian(
@@ -1259,7 +1268,10 @@ class EqualityModel(ProblemDataPart):
                 # slack variable for total error
                 slack_model = cas.diag(
                     cas.Expression(
-                        [self.config.mpc_dt for c in self.equality_constraints]
+                        [
+                            self.config.mpc_dt
+                            for c in self.constraint_collection.eq_constraints
+                        ]
                     )
                 )
                 return model, slack_model
@@ -1268,9 +1280,10 @@ class EqualityModel(ProblemDataPart):
                 max_derivative = Derivatives.velocity
             else:
                 max_derivative = self.config.max_derivative
-            if len(self.equality_constraints) > 0:
+            if len(self.constraint_collection.eq_constraints) > 0:
                 model = cas.Expression.zeros(
-                    len(self.equality_constraints), self.number_of_non_slack_columns
+                    len(self.constraint_collection.eq_constraints),
+                    self.number_of_non_slack_columns,
                 )
                 for derivative in Derivatives.range(
                     Derivatives.position, max_derivative - 1
@@ -1308,7 +1321,10 @@ class EqualityModel(ProblemDataPart):
                 # slack variable for total error
                 slack_model = cas.diag(
                     cas.Expression(
-                        [self.config.mpc_dt for c in self.equality_constraints]
+                        [
+                            self.config.mpc_dt
+                            for c in self.constraint_collection.eq_constraints
+                        ]
                     )
                 )
                 return model, slack_model
@@ -1425,14 +1441,14 @@ class InequalityModel(ProblemDataPart):
 
     def inequality_constraint_expressions(self) -> List[cas.Expression]:
         return self._sorter(
-            {c.name: c.expression for c in self.inequality_constraints}
+            {c.name: c.expression for c in self.constraint_collection.neq_constraints}
         )[0]
 
     def get_derivative_constraint_expressions(self, derivative: Derivatives):
         return self._sorter(
             {
                 c.name: c.expression
-                for c in self.derivative_constraints
+                for c in self.constraint_collection.derivative_constraints
                 if c.derivative == derivative
             }
         )[0]
@@ -1601,9 +1617,10 @@ class InequalityModel(ProblemDataPart):
             not self.config.qp_formulation.has_explicit_acc_variables
             and self.config.qp_formulation.has_explicit_jerk_variables
         ):
-            if len(self.inequality_constraints) > 0:
+            if len(self.constraint_collection.neq_constraints) > 0:
                 model = cas.Expression.zeros(
-                    len(self.inequality_constraints), self.number_of_non_slack_columns
+                    len(self.constraint_collection.neq_constraints),
+                    self.number_of_non_slack_columns,
                 )
                 J_neq = (
                     cas.Expression(self.inequality_constraint_expressions()).jacobian(
@@ -1621,7 +1638,10 @@ class InequalityModel(ProblemDataPart):
                 # slack variable for total error
                 slack_model = cas.diag(
                     cas.Expression(
-                        [self.config.mpc_dt for c in self.inequality_constraints]
+                        [
+                            self.config.mpc_dt
+                            for c in self.constraint_collection.neq_constraints
+                        ]
                     )
                 )
                 return model, slack_model
@@ -1630,9 +1650,10 @@ class InequalityModel(ProblemDataPart):
                 max_derivative = Derivatives.velocity
             else:
                 max_derivative = self.config.max_derivative
-        if len(self.inequality_constraints) > 0:
+        if len(self.constraint_collection.neq_constraints) > 0:
             model = cas.Expression.zeros(
-                len(self.inequality_constraints), self.number_of_non_slack_columns
+                len(self.constraint_collection.neq_constraints),
+                self.number_of_non_slack_columns,
             )
             for derivative in Derivatives.range(
                 Derivatives.position, max_derivative - 1
@@ -1667,7 +1688,10 @@ class InequalityModel(ProblemDataPart):
             # slack variable for total error
             slack_model = cas.diag(
                 cas.Expression(
-                    [self.config.mpc_dt for c in self.inequality_constraints]
+                    [
+                        self.config.mpc_dt
+                        for c in self.constraint_collection.neq_constraints
+                    ]
                 )
             )
             return model, slack_model
@@ -1816,18 +1840,16 @@ class InequalityModel(ProblemDataPart):
 @dataclass
 class GiskardToQPAdapter:
     world_state_symbols: List[cas.FloatVariable]
-    task_life_cycle_symbols: List[cas.FloatVariable]
-    goal_life_cycle_symbols: List[cas.FloatVariable]
+    life_cycle_symbols: List[cas.FloatVariable]
     external_collision_symbols: List[cas.FloatVariable]
     self_collision_symbols: List[cas.FloatVariable]
 
     free_variables: List[DegreeOfFreedom]
-    equality_constraints: List[EqualityConstraint]
-    inequality_constraints: List[InequalityConstraint]
-    derivative_constraints: List[DerivativeInequalityConstraint]
-    eq_derivative_constraints: List[DerivativeEqualityConstraint]
+    constraint_collection: ConstraintCollection
     config: QPControllerConfig
     sparse: bool = field(default=True)
+
+    qp_data_raw: QPData = None
 
     compute_nI_I: bool = True
     _nAi_Ai_cache: dict = field(default_factory=dict)
@@ -1846,10 +1868,7 @@ class GiskardToQPAdapter:
     def __post_init__(self):
         kwargs = {
             "free_variables": self.free_variables,
-            "equality_constraints": self.equality_constraints,
-            "inequality_constraints": self.inequality_constraints,
-            "derivative_constraints": self.derivative_constraints,
-            "eq_derivative_constraints": self.eq_derivative_constraints,
+            "constraint_collection": self.constraint_collection,
             "config": self.config,
         }
         self.weights = Weights(**kwargs)
@@ -1892,11 +1911,11 @@ class GiskardToQPAdapter:
 
     @property
     def num_eq_constraints(self) -> int:
-        return len(self.equality_constraints)
+        return len(self.constraint_collection.eq_constraints)
 
     @property
     def num_neq_constraints(self) -> int:
-        return len(self.inequality_constraints)
+        return len(self.constraint_collection.neq_constraints)
 
     @property
     def num_free_variable_constraints(self) -> int:
@@ -1937,11 +1956,9 @@ class GiskardToQPAdapter:
     def evaluate(
         self,
         world_state: np.ndarray,
-        task_life_cycle_state: np.ndarray,
-        goal_life_cycle_state: np.ndarray,
+        life_cycle_state: np.ndarray,
         external_collision_data: np.ndarray,
         self_collision_data: np.ndarray,
-        symbol_manager,
     ) -> QPData:
         raise NotImplementedError()
 

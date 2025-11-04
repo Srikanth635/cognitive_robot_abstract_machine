@@ -76,11 +76,11 @@ class Alternator(MotionStatechartNode):
 
 @dataclass(eq=False, repr=False)
 class TrueMonitor(MotionStatechartNode):
-    def create_observation_expression(self) -> cas.Expression:
+    def _create_observation_expression(self) -> cas.Expression:
         return cas.TrinaryTrue
 
 
 @dataclass(eq=False, repr=False)
 class FalseMonitor(MotionStatechartNode):
-    def create_observation_expression(self) -> cas.Expression:
+    def _create_observation_expression(self) -> cas.Expression:
         return cas.TrinaryFalse

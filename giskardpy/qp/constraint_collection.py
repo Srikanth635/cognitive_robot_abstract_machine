@@ -1,9 +1,11 @@
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 
 import numpy as np
-from typing_extensions import List, Optional, Union, TYPE_CHECKING
+from typing_extensions import List, Optional, Union, TYPE_CHECKING, Set
 
+import semantic_digital_twin.spatial_types.spatial_types as cas
 from giskardpy.data_types.exceptions import (
     GoalInitalizationException,
     DuplicateNameException,
@@ -16,7 +18,6 @@ from giskardpy.qp.constraint import (
     DerivativeEqualityConstraint,
     BaseConstraint,
 )
-import semantic_digital_twin.spatial_types.spatial_types as cas
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.derivatives import Derivatives
 
@@ -49,6 +50,12 @@ class ConstraintCollection:
         return [
             c for c in self.constraints if isinstance(c, DerivativeEqualityConstraint)
         ]
+
+    def merge(self, other: ConstraintCollection):
+        self.constraints.extend(other.constraints)
+
+    def get_all_float_variable_names(self) -> Set[PrefixedName]:
+        return {v.name for c in self.constraints for v in c.expression.free_symbols()}
 
     def link_to_motion_statechart_node(self, node: MotionStatechartNode):
         for constraint in self.constraints:
@@ -87,7 +94,7 @@ class ConstraintCollection:
             raise GoalInitalizationException(
                 f"expression must have shape (1, 1), has {task_expression.shape}"
             )
-        name = name or f"{len(self.eq_constraints)}"
+        name = name or f"{len(self.constraints)}"
         lower_slack_limit = (
             lower_slack_limit if lower_slack_limit is not None else -float("inf")
         )
@@ -104,11 +111,11 @@ class ConstraintCollection:
             upper_slack_limit=upper_slack_limit,
             linear_weight=0,
         )
-        if constraint.name in self.eq_constraints:
+        if constraint.name in self.constraints:
             raise DuplicateNameException(
                 f"Constraint named {constraint.name} already exists."
             )
-        self.eq_constraints.append(constraint)
+        self.constraints.append(constraint)
 
     def add_inequality_constraint(
         self,
@@ -157,12 +164,12 @@ class ConstraintCollection:
             upper_slack_limit=upper_slack_limit,
             linear_weight=0,
         )
-        if name in self.neq_constraints:
+        if name in self.constraints:
             raise DuplicateNameException(
                 f"A constraint with name '{name}' already exists. "
                 f"You need to set a name, if you add multiple constraints."
             )
-        self.neq_constraints.append(constraint)
+        self.constraints.append(constraint)
 
     def add_point_goal_constraints(
         self,
@@ -342,9 +349,9 @@ class ConstraintCollection:
             upper_slack_limit=upper_slack_limit,
             linear_weight=0,
         )
-        if constraint.name in self.derivative_constraints:
+        if constraint.name in self.constraints:
             raise KeyError(f"a constraint with name '{name}' already exists")
-        self.derivative_constraints.append(constraint)
+        self.constraints.append(constraint)
 
     def add_velocity_eq_constraint(
         self,
@@ -379,9 +386,9 @@ class ConstraintCollection:
             upper_slack_limit=upper_slack_limit,
             linear_weight=0,
         )
-        if constraint.name in self.eq_derivative_constraints:
+        if constraint.name in self.constraints:
             raise KeyError(f"a constraint with name '{name}' already exists")
-        self.eq_derivative_constraints.append(constraint)
+        self.constraints.append(constraint)
 
     def add_velocity_eq_constraint_vector(
         self,

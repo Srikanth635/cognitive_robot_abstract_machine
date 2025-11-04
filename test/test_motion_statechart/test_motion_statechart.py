@@ -18,6 +18,7 @@ from giskardpy.motion_statechart.motion_statechart import (
     ObservationState,
 )
 from giskardpy.motion_statechart.tasks.joint_tasks import JointPositionList
+from giskardpy.qp.qp_controller_config import QPControllerConfig
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.derivatives import DerivativeMap
 from semantic_digital_twin.world import World
@@ -283,20 +284,20 @@ def test_joint_goal():
     end.start_condition = task1.observation_variable
 
     msc.compile()
-    msc.tick()
+    msc._compile_qp_controller(QPControllerConfig.create_default_with_50hz())
+
     assert task1.observation_state == msc.observation_state.TrinaryUnknown
     assert end.observation_state == msc.observation_state.TrinaryUnknown
-    assert task1.life_cycle_state == LifeCycleValues.RUNNING
+    assert task1.life_cycle_state == LifeCycleValues.NOT_STARTED
     assert end.life_cycle_state == LifeCycleValues.NOT_STARTED
 
-    root_C_tip.position = 1
+    for i in range(100):
+        msc.tick()
+        if msc.is_end_motion():
+            break
+    else:
+        raise Exception("Did not finish motion")
 
-    msc.tick()
-    assert task1.observation_state == msc.observation_state.TrinaryTrue
-    assert end.observation_state == msc.observation_state.TrinaryUnknown
-    assert task1.life_cycle_state == LifeCycleValues.RUNNING
-    assert end.life_cycle_state == LifeCycleValues.RUNNING
-    msc.tick()
     assert task1.observation_state == msc.observation_state.TrinaryTrue
     assert end.observation_state == msc.observation_state.TrinaryTrue
     assert task1.life_cycle_state == LifeCycleValues.RUNNING
@@ -403,13 +404,13 @@ def test_nested_goals():
     inner.add_node(sub_node2)
     sub_node1.end_condition = sub_node1.observation_variable
     sub_node2.start_condition = sub_node1.observation_variable
-    inner.create_observation_expression = lambda: sub_node2.observation_variable
+    inner._create_observation_expression = lambda: sub_node2.observation_variable
 
     # outer goal that contains the inner goal as a node
     outer = Goal(name=PrefixedName("outer"))
     msc.add_node(outer)
     outer.add_node(inner)
-    outer.create_observation_expression = lambda: inner.observation_variable
+    outer._create_observation_expression = lambda: inner.observation_variable
     outer.start_condition = node1.observation_variable
 
     end = EndMotion(name=PrefixedName("done nested"))
@@ -632,7 +633,7 @@ def test_goal():
     goal.add_node(sub_node2)
     sub_node1.end_condition = sub_node1.observation_variable
     sub_node2.start_condition = sub_node1.observation_variable
-    goal.create_observation_expression = lambda: sub_node2.observation_variable
+    goal._create_observation_expression = lambda: sub_node2.observation_variable
     goal.start_condition = node1.observation_variable
 
     end = EndMotion(name=PrefixedName("done"))
