@@ -735,6 +735,10 @@ class MultiSimBuilder(ABC):
         :param world: The world to build.
         :param file_path: The file path to save the world to.
         """
+        if len(world.bodies) == 0:
+            with world.modify_world():
+                root = Body(name=PrefixedName("world"))
+                world.add_body(root)
 
         self._start_build(file_path=file_path)
 

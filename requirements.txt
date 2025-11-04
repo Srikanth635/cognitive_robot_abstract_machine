@@ -31,3 +31,5 @@ coacd
 pymysql
 pyglet == 1.5.31
 pycollada
+mujoco
+multiverse-simulators>=0.0.7

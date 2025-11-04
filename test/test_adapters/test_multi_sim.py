@@ -234,7 +234,6 @@ class MujocoSimTestCase(unittest.TestCase):
         self.assertIs(multi_sim.simulator.headless, headless)
         self.assertEqual(multi_sim.simulator.step_size, self.step_size)
         multi_sim.start_simulation()
-        start_time = time.time()
         time.sleep(1.0)
 
         current_time = time.time()
