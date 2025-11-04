@@ -48,9 +48,8 @@ from .spatial_computations.ik_solver import InverseKinematicsSolver
 from .spatial_computations.raytracer import RayTracer
 from .spatial_types import spatial_types as cas
 from .spatial_types.derivatives import Derivatives
-from .utils import IDGenerator, copy_lru_cache
+from .utils import IDGenerator
 from .world_description.connections import (
-    ActiveConnection,
     Connection6DoF,
     ActiveConnection1DOF,
     FixedConnection,
@@ -131,6 +130,7 @@ class ResetStateContextManager:
             self.world.notify_state_change()
 
 
+@dataclass
 class WorldModelUpdateContextManager:
     """
     Context manager for updating the state of a given `World` instance.
@@ -138,23 +138,15 @@ class WorldModelUpdateContextManager:
     desired updates have been performed.
     """
 
+    world: World = field(kw_only=True, repr=False)
+    """
+    The world to manage updates for.
+    """
+
     first: bool = True
     """
     First time flag.
     """
-
-    modification: Callable = None
-    """
-    Modification function.
-    """
-
-    arguments: Dict[str, Any] = None
-    """
-    Arguments of the modification function.
-    """
-
-    def __init__(self, world: World):
-        self.world = world
 
     def __enter__(self):
         if self.world.world_is_being_modified:
@@ -221,7 +213,10 @@ def atomic_world_modification(
             # Build a dict with all arguments (including positional), excluding 'self'
             bound_args = dict(bound.arguments)
             bound_args.pop("self", None)
-            if self.get_world_model_manager().get_current_model_modification_block() is None:
+            if (
+                self.get_world_model_manager().get_current_model_modification_block()
+                is None
+            ):
                 raise MissingWorldModificationContextError(func)
             self.get_world_model_manager()._current_model_modification_block.append(
                 modification.from_kwargs(bound_args)
@@ -452,7 +447,9 @@ class WorldModelManager:
     def get_model_change_callbacks(self):
         return self._model_change_callbacks
 
+
 _LRU_CACHE_SIZE: int = 2048
+
 
 @dataclass
 class World:
@@ -580,18 +577,15 @@ class World:
 
     @property
     def active_degrees_of_freedom(self) -> Set[DegreeOfFreedom]:
-        active_connections = self.get_connections_by_type(ActiveConnection)
-        dofs = {
-            dof for connection in active_connections for dof in connection.active_dofs
+        return {
+            dof for connection in self.connections for dof in connection.active_dofs
         }
-        return dofs
 
     @property
     def passive_degrees_of_freedom(self) -> Set[DegreeOfFreedom]:
-        dofs = {
+        return {
             dof for connection in self.connections for dof in connection.passive_dofs
         }
-        return dofs
 
     @property
     def regions(self) -> List[Region]:
@@ -655,9 +649,7 @@ class World:
         A subset of the robot's connections that are controlled by a controller.
         """
         return set(
-            connection
-            for connection in self.connections
-            if connection.is_controlled
+            connection for connection in self.connections if connection.is_controlled
         )
 
     # %% Adding WorldEntities to the World
@@ -1270,7 +1262,9 @@ class World:
         new_parent_T_root = self.compute_forward_kinematics(new_parent, branch_root)
         old_connection = branch_root.parent_connection
 
-        assert isinstance(old_connection, (FixedConnection, Connection6DoF)), "The branch root must be connected to a Connection6DoF or FixedConnection."
+        assert isinstance(
+            old_connection, (FixedConnection, Connection6DoF)
+        ), "The branch root must be connected to a Connection6DoF or FixedConnection."
 
         match old_connection:
             case FixedConnection():
@@ -1435,44 +1429,15 @@ class World:
             for i in range(len(entity_chain) - 1)
         ]
 
-    @lru_cache(maxsize=_LRU_CACHE_SIZE)
-    def compute_chain_of_kinematic_structure_entities(
-        self, root: KinematicStructureEntity, tip: KinematicStructureEntity
-    ) -> List[KinematicStructureEntity]:
-        """
-        Computes the chain between root and tip. Can handle chains that start and end anywhere in the tree.
-        """
-        if root == tip:
-            return [root]
-        shortest_paths = rx.all_shortest_paths(
-            self.kinematic_structure, root.index, tip.index, as_undirected=False
-        )
-
-        assert len(shortest_paths), f"No path found from {root} to {tip}"
-
-        return [self.kinematic_structure[index] for index in shortest_paths[0]]
+    def is_body_controlled(self, body: KinematicStructureEntity) -> bool:
+        return self.is_controlled_connection_in_chain(self.root, body)
 
     def is_controlled_connection_in_chain(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> bool:
         root_part, tip_part = self.compute_split_chain_of_connections(root, tip)
         connections = root_part + tip_part
-        return any(
-            isinstance(connection, ActiveConnection)
-            and connection.has_hardware_interface
-            and not connection.frozen_for_collision_avoidance
-            for connection in connections
-        )
-
-    def is_body_controlled(self, body: KinematicStructureEntity) -> bool:
-        root_part, tip_part = self.compute_split_chain_of_connections(self.root, body)
-        connections = root_part + tip_part
-        return any(
-            isinstance(c, ActiveConnection)
-            and c.has_hardware_interface
-            and not c.frozen_for_collision_avoidance
-            for c in connections
-        )
+        return any(connection.is_controlled for connection in connections)
 
     def compute_chain_reduced_to_controlled_joints(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
@@ -1495,20 +1460,12 @@ class World:
         chain = downward_chain + upward_chain
 
         new_root = next(
-            (
-                conn
-                for conn in chain
-                if isinstance(conn, ActiveConnection) and conn.is_controlled
-            ),
+            (conn for conn in chain if conn.is_controlled),
             None,
         )
 
         new_tip = next(
-            (
-                conn
-                for conn in reversed(chain)
-                if isinstance(conn, ActiveConnection) and conn.is_controlled
-            ),
+            (conn for conn in reversed(chain) if conn.is_controlled),
             None,
         )
         assert (
@@ -1576,33 +1533,78 @@ class World:
             return [], [root], []
 
         # Paths from the tree's true root to each endpoint (inclusive).
-        root_path = self.compute_chain_of_kinematic_structure_entities(self.root, root)
-        tip_path = self.compute_chain_of_kinematic_structure_entities(self.root, tip)
-
-        # Find the first index where the paths diverge.
-        max_common_index = min(len(root_path), len(tip_path))
-        i = next(
-            (
-                index
-                for index, (root_path_entity, tip_path_entity) in enumerate(
-                    zip(root_path, tip_path)
-                )
-                if root_path_entity != tip_path_entity
-            ),
-            max_common_index,
+        root_path = self._compute_chain_of_kinematic_structure_entities_indexes(
+            self.root, root
+        )
+        tip_path = self._compute_chain_of_kinematic_structure_entities_indexes(
+            self.root, tip
         )
 
+        # Find the lowest common ancestor (LCA) index in the paths.
+        LCA_index = self._find_lowest_common_ancestor(root_path, tip_path)
+
         # The last common ancestor is the last common node.
-        common_ancestor = root_path[i - 1]
+        common_ancestor_node_index = root_path[LCA_index]
+        common_ancestor = self.kinematic_structure[common_ancestor_node_index]
 
-        # 1) From `root` up to (but not including) last common ancestor, in order starting at `root`.
-        #    `root_path[i:]` is the common_ancestor->root tail; reverse it to start at `root`.
-        up_from_root = list(reversed(root_path[i:]))
+        # 1) From `root` up to just below lowest common ancestor.
+        up_from_root_index = list(reversed(root_path[LCA_index + 1 :]))
+        up_from_root = [self.kinematic_structure[index] for index in up_from_root_index]
 
-        # 3) From just below last common ancestor down to `tip` (already in CA->tip order, excluding CA).
-        down_to_tip = tip_path[i:]
+        # 3) From just below lowest common ancestor down to `tip` (in CA->tip order, excluding CA).
+        down_to_tip_index = tip_path[LCA_index + 1 :]
+        down_to_tip = [self.kinematic_structure[index] for index in down_to_tip_index]
 
         return up_from_root, [common_ancestor], down_to_tip
+
+    def _find_lowest_common_ancestor(
+        self, root_path: List[int], tip_path: List[int]
+    ) -> int:
+        """
+        Find the index of the lowest common ancestor, which is the index where the two paths diverge, minus 1.
+
+        :param root_path: The path from the root to the first entity.
+        :param tip_path: The path from the root to the second entity.
+        :return: The index where the paths diverge.
+        """
+        max_index = min(len(root_path), len(tip_path))
+        root_path = np.array(root_path[:max_index])
+        tip_path = np.array(tip_path[:max_index])
+        differing_indices = np.where(root_path != tip_path)[0]
+        divergence_index = (
+            differing_indices[0] if len(differing_indices) > 0 else max_index
+        )
+
+        return divergence_index - 1
+
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
+    def compute_chain_of_kinematic_structure_entities(
+        self, root: KinematicStructureEntity, tip: KinematicStructureEntity
+    ) -> List[KinematicStructureEntity]:
+        """
+        Computes the chain between root and tip. Can handle chains that start and end anywhere in the tree.
+        """
+        path_indeces = self._compute_chain_of_kinematic_structure_entities_indexes(
+            root, tip
+        )
+        return [self.kinematic_structure[index] for index in path_indeces]
+
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
+    def _compute_chain_of_kinematic_structure_entities_indexes(
+        self, root: KinematicStructureEntity, tip: KinematicStructureEntity
+    ) -> List[int]:
+        """
+        Computes the chain between root and tip. Can handle chains that start and end anywhere in the tree.
+        """
+        if root == tip:
+            return [root.index]
+        shortest_paths = rx.all_shortest_paths(
+            self.kinematic_structure, root.index, tip.index, as_undirected=False
+        )
+
+        assert len(shortest_paths), f"No path found from {root} to {tip}"
+
+        return shortest_paths[0]
 
     # %% Forward Kinematics
     def _compile_forward_kinematics_expressions(self) -> None:
@@ -1791,7 +1793,7 @@ class World:
         self._collision_pair_manager.load_collision_srdf(file_path)
 
     def modify_world(self) -> WorldModelUpdateContextManager:
-        return WorldModelUpdateContextManager(self)
+        return WorldModelUpdateContextManager(world=self)
 
     def reset_state_context(self) -> ResetStateContextManager:
         return ResetStateContextManager(self)
