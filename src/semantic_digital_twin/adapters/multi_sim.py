@@ -23,7 +23,7 @@ from multiverse_simulator import (
     MultiverseAttribute,
     MultiverseCallbackResult,
 )
-from random_events.utils import recursive_subclasses
+from krrood.utils import recursive_subclasses
 from scipy.spatial.transform import Rotation
 
 from ..callbacks.callback import ModelChangeCallback
