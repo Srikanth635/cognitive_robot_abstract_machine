@@ -534,7 +534,7 @@ class World:
         return hash((id(self), self._world_model_manager.model_version, self._kse_num))
 
     def __str__(self):
-        return f"{self.__class__.__name__} with {len(self.kinematic_structure_entities)} bodies."
+        return f"{self.__class__.__name__} with {self._kse_num} kinematic structure entities."
 
     def validate(self) -> bool:
         """
@@ -922,14 +922,12 @@ class World:
             )
             return
 
-        match (existing == semantic_annotation):
-            case True:
-                self._remove_semantic_annotation(semantic_annotation)
-            case False:
-                raise ValueError(
-                    "The provided semantic annotation instance does not match the existing "
-                    "semantic annotation with the same name."
-                )
+        if existing != semantic_annotation:
+            raise ValueError(
+                "The provided semantic annotation instance does not match the existing "
+                "semantic annotation with the same name."
+            )
+        self._remove_semantic_annotation(semantic_annotation)
 
     @atomic_world_modification(modification=RemoveSemanticAnnotationModification)
     def _remove_semantic_annotation(self, semantic_annotation: SemanticAnnotation):

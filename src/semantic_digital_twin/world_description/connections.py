@@ -5,7 +5,6 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 
 import numpy as np
-from pygments.lexer import default
 from typing_extensions import List, TYPE_CHECKING, Union, Optional, Dict, Any, Self
 
 from semantic_digital_twin.world_description.geometry import transformation_from_json
@@ -14,7 +13,6 @@ from .world_entity import CollisionCheckingConfig, Connection, KinematicStructur
 from .. import spatial_types as cas
 from ..datastructures.prefixed_name import PrefixedName
 from ..datastructures.types import NpMatrix4x4
-from ..exceptions import WorldEntityNotFoundError
 from ..spatial_types.derivatives import DerivativeMap
 
 if TYPE_CHECKING:

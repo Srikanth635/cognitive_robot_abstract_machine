@@ -57,7 +57,7 @@ def test_set_state(world_setup):
 
 def test_kse_num(world_setup):
     world, _, _, _, _, _= world_setup
-    assert len(world.kinematic_structure_entities) == world._kse_num
+    assert len(world.kinematic_structure_entities) == len(world.kinematic_structure) == world._kse_num
 
 
 def test_construction(world_setup):
