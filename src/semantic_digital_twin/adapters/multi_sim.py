@@ -12,6 +12,7 @@ from typing import (
     Optional,
     Union,
 )
+from typing_extensions import Self
 
 import numpy
 from mujoco_connector import MultiverseMujocoConnector
@@ -104,7 +105,7 @@ class InertialConverter:
         inertia_pos: Point3,
         inertia_quat: Quaternion,
         inertia: List[float],
-    ) -> "InertialConverter":
+    ) -> Self:
         """
         Converts inertia given as [Ixx, Iyy, Izz, Ixy, Ixz, Iyz] to diagonal form and updates the inertia quaternion.
 
@@ -140,7 +141,7 @@ class InertialConverter:
         inertia_pos: Point3,
         inertia_quat: Quaternion,
         inertia_matrix: List[float],
-    ) -> "InertialConverter":
+    ) -> Self:
         """
         Converts inertia given as a 3x3 matrix in row-major order to diagonal form and updates the inertia quaternion.
 
@@ -159,9 +160,7 @@ class InertialConverter:
         )
 
     @classmethod
-    def _convert_inertia(
-        cls, mass, inertia_pos, inertia_quat, inertia_matrix
-    ) -> "InertialConverter":
+    def _convert_inertia(cls, mass, inertia_pos, inertia_quat, inertia_matrix) -> Self:
         """
         Diagonalizes the inertia matrix and updates the inertia quaternion.
 
@@ -215,7 +214,10 @@ class InertialConverter:
         R_diag = Rotation.from_matrix(eigenvectors)  # type: ignore
         updated_quat = (R_orig * R_diag).as_quat(scalar_first=True)
         return Quaternion(
-            x_init=updated_quat[1], y_init=updated_quat[2], z_init=updated_quat[3], w_init=updated_quat[0]
+            x_init=updated_quat[1],
+            y_init=updated_quat[2],
+            z_init=updated_quat[3],
+            w_init=updated_quat[0],
         )
 
 
@@ -739,6 +741,16 @@ class MultiSimBuilder(ABC):
             with world.modify_world():
                 root = Body(name=PrefixedName("world"))
                 world.add_body(root)
+        elif world.bodies[0].name.name != "world":
+            with world.modify_world():
+                root_bodies = [
+                    body for body in world.bodies if body.parent_connection is None
+                ]
+                root = Body(name=PrefixedName("world"))
+                world.add_body(root)
+                for root_body in root_bodies:
+                    connection = FixedConnection(parent=root, child=root_body)
+                    world.add_connection(connection)
 
         self._start_build(file_path=file_path)
 
@@ -760,7 +772,9 @@ class MultiSimBuilder(ABC):
         :param body: The body to build.
         """
         self._build_body(body=body)
-        for shape in {id(s): s for s in body.visual.shapes + body.collision.shapes}.values():
+        for shape in {
+            id(s): s for s in body.visual.shapes + body.collision.shapes
+        }.values():
             self._build_shape(
                 parent=body,
                 shape=shape,
@@ -1097,7 +1111,9 @@ class BodySpawner(KinematicStructureEntitySpawner, ABC):
                 visible=shape in parent.visual or not parent.visual,
                 collidable=shape in parent.collision,
             )
-            for shape in {id(s): s for s in parent.visual.shapes + parent.collision.shapes}.values()
+            for shape in {
+                id(s): s for s in parent.visual.shapes + parent.collision.shapes
+            }.values()
         )
 
 

@@ -6,12 +6,16 @@ import numpy
 from mujoco_connector import MultiverseMujocoConnector
 from multiverse_simulator import MultiverseSimulatorState, MultiverseViewer
 
-from semantic_digital_twin.adapters.multi_parser import MultiParser
+from semantic_digital_twin.adapters.urdf import URDFParser
+from semantic_digital_twin.adapters.multi_parser import MJCFParser
 from semantic_digital_twin.adapters.multi_sim import MujocoSim
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.spatial_types import TransformationMatrix
 from semantic_digital_twin.world import World
-from semantic_digital_twin.world_description.connections import Connection6DoF, FixedConnection
+from semantic_digital_twin.world_description.connections import (
+    Connection6DoF,
+    FixedConnection,
+)
 from semantic_digital_twin.world_description.geometry import Box, Scale, Color
 from semantic_digital_twin.world_description.shape_collection import ShapeCollection
 from semantic_digital_twin.world_description.world_entity import Body, Region
@@ -192,8 +196,8 @@ class MujocoSimTestCase(unittest.TestCase):
     step_size = 1e-3
 
     def setUp(self):
-        self.test_urdf_world = MultiParser(self.test_urdf).parse()
-        self.test_mjcf_world = MultiParser(self.test_mjcf).parse()
+        self.test_urdf_world = URDFParser.from_file(file_path=self.test_urdf).parse()
+        self.test_mjcf_world = MJCFParser(self.test_mjcf).parse()
 
     def test_empty_multi_sim_in_5s(self):
         world = World()
@@ -287,7 +291,9 @@ class MujocoSimTestCase(unittest.TestCase):
                 FixedConnection(
                     parent=self.test_urdf_world.root,
                     child=region,
-                    parent_T_connection_expression=TransformationMatrix.from_xyz_rpy(z=0.5),
+                    parent_T_connection_expression=TransformationMatrix.from_xyz_rpy(
+                        z=0.5
+                    ),
                 )
             )
         print(f"Time to add new region: {time.time() - current_time}s")
