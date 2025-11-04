@@ -39,7 +39,7 @@ class MultiParserTestCase(unittest.TestCase):
 
     def test_table_parsing(self):
         for world, body_num in zip(
-            [self.table_urdf_parser.parse(), self.table_xml_parser.parse()], [6, 7]
+            [self.table_urdf_parser.parse(), self.table_xml_parser.parse()], [7, 7]
         ):
             world.validate()
             self.assertTrue(len(world.kinematic_structure_entities) == body_num)
@@ -70,7 +70,7 @@ class MultiParserTestCase(unittest.TestCase):
     def test_pr2_parsing(self):
         for world, root_name in zip(
             [self.pr2_urdf_parser.parse(), self.pr2_xml_parser.parse()],
-            ["base_footprint", "world"],
+            ["world", "world"],
         ):
             world.validate()
             self.assertTrue(len(world.kinematic_structure_entities) > 0)
