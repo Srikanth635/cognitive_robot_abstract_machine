@@ -28,7 +28,7 @@ Communication between the simulator and other components running in separate pro
 
 Below is an example of how to set up an empty simulation using the Mujoco backend and run it for 5 seconds.
 
-```python
+```{code-cell} ipython3
 from semantic_digital_twin.world import World
 from multiverse_simulator import MultiverseSimulatorState, MultiverseViewer
 from semantic_digital_twin.adapters.multi_sim import MujocoSim
@@ -52,7 +52,7 @@ a `MultiverseViewer` for reading and write data in run-time, and other configura
 You can spawn objects in the simulation in run-time just by changing the `World` object.
 The world changes will be automatically synchronized with the simulation engine.
 
-```python
+```{code-cell} ipython3
 from semantic_digital_twin.world import World
 from multiverse_simulator import MultiverseSimulatorState, MultiverseViewer
 from semantic_digital_twin.adapters.multi_sim import MujocoSim
