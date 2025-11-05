@@ -999,7 +999,6 @@ class DrawerFactory(SemanticAnnotationFactory[Drawer], HasHandleFactory):
         """
 
         container_world = self.container_factory.create()
-        world.merge_world(container_world)
         parent_T_handle = (
             self.parent_T_handle
             or self.create_parent_T_handle_from_parent_scale(
@@ -1007,22 +1006,23 @@ class DrawerFactory(SemanticAnnotationFactory[Drawer], HasHandleFactory):
             )
         )
 
-        self.add_handle_to_world(parent_T_handle, world)
+        self.add_handle_to_world(parent_T_handle, container_world)
 
         semantic_container_annotation: Container = (
-            world.get_semantic_annotations_by_type(Container)[0]
+            container_world.get_semantic_annotations_by_type(Container)[0]
         )
-        semantic_handle_annotation: Handle = world.get_semantic_annotations_by_type(
-            Handle
-        )[0]
+        semantic_handle_annotation: Handle = (
+            container_world.get_semantic_annotations_by_type(Handle)[0]
+        )
         semantic_drawer_annotation = Drawer(
             name=self.name,
             container=semantic_container_annotation,
             handle=semantic_handle_annotation,
         )
-        world.add_semantic_annotation(semantic_drawer_annotation)
-
-        return world
+        with container_world.modify_world():
+            container_world.add_semantic_annotation(semantic_drawer_annotation)
+        container_world.name = world.name
+        return container_world
 
 
 @dataclass

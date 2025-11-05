@@ -511,17 +511,12 @@ class World:
     Manages forward kinematics computations for the world.
     """
 
-    _kse_num: int = field(default=0, init=False, repr=False)
-    """
-    Counter for kinematic structure entities added to the world. Used for faster hash computation
-    """
-
     def __post_init__(self):
         self._collision_pair_manager = CollisionPairManager(self)
         self.state = WorldState(_world=self)
 
     def __hash__(self):
-        return hash((id(self), self._model_manager.version, self._kse_num))
+        return hash((id(self), self._model_manager.version))
 
     def __str__(self):
         return f"{self.__class__.name} v{self._model_manager.version}.{self.state.version}."
@@ -745,7 +740,6 @@ class World:
         :param kinematic_structure_entity: The kinematic_structure_entity to add.
         :return: The index of the added kinematic_structure_entity.
         """
-        self._kse_num += 1
         index = kinematic_structure_entity.index = self.kinematic_structure.add_node(
             kinematic_structure_entity
         )
@@ -875,7 +869,6 @@ class World:
 
         :param kinematic_structure_entity: The kinematic_structure_entity to remove.
         """
-        self._kse_num -= 1
         self.kinematic_structure.remove_node(kinematic_structure_entity.index)
         kinematic_structure_entity._world = None
         kinematic_structure_entity.index = None
@@ -1688,7 +1681,7 @@ class World:
         """
         :return: Returns True if the world contains no kinematic_structure_entities, else False.
         """
-        return not bool(self._kse_num)
+        return not bool(len(self.kinematic_structure))
 
     def transform(
         self,

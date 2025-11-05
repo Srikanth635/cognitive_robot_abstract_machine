@@ -56,15 +56,6 @@ def test_set_state(world_setup):
     assert np.allclose(l2.global_pose.to_np(), transform)
 
 
-def test_kse_num(world_setup):
-    world, _, _, _, _, _ = world_setup
-    assert (
-        len(world.kinematic_structure_entities)
-        == len(world.kinematic_structure)
-        == world._kse_num
-    )
-
-
 def test_construction(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
     world.validate()
