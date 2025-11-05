@@ -3,12 +3,8 @@ import time
 import unittest
 
 import numpy
-from mujoco_connector import MultiverseMujocoConnector
-from multiverse_simulator import MultiverseSimulatorState, MultiverseViewer
 
 from semantic_digital_twin.adapters.urdf import URDFParser
-from semantic_digital_twin.adapters.multi_parser import MJCFParser
-from semantic_digital_twin.adapters.multi_sim import MujocoSim
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.spatial_types import TransformationMatrix
 from semantic_digital_twin.world import World
@@ -20,6 +16,16 @@ from semantic_digital_twin.world_description.geometry import Box, Scale, Color
 from semantic_digital_twin.world_description.shape_collection import ShapeCollection
 from semantic_digital_twin.world_description.world_entity import Body, Region
 
+try:
+    multi_sim_found = True
+    from mujoco_connector import MultiverseMujocoConnector
+    from multiverse_simulator import MultiverseSimulatorState, MultiverseViewer
+    from semantic_digital_twin.adapters.multi_parser import MJCFParser
+    from semantic_digital_twin.adapters.multi_sim import MujocoSim
+except ImportError:
+    MultiverseMujocoConnector = None
+    multi_sim_found = False
+
 urdf_dir = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "..", "..", "resources", "urdf"
 )
@@ -29,6 +35,7 @@ mjcf_dir = os.path.join(
 headless = os.environ.get("CI", "false").lower() == "true"
 
 
+@unittest.skipIf(not multi_sim_found, "multisim could not be imported.")
 class MultiverseMujocoConnectorTestCase(unittest.TestCase):
     file_path = os.path.normpath(os.path.join(mjcf_dir, "mjx_single_cube_no_mesh.xml"))
     Simulator = MultiverseMujocoConnector
@@ -190,6 +197,7 @@ class MultiverseMujocoConnectorTestCase(unittest.TestCase):
         self.assertIs(simulator.state, MultiverseSimulatorState.STOPPED)
 
 
+@unittest.skipIf(not multi_sim_found, "multisim could not be imported.")
 class MujocoSimTestCase(unittest.TestCase):
     test_urdf = os.path.normpath(os.path.join(urdf_dir, "simple_two_arm_robot.urdf"))
     test_mjcf = os.path.normpath(os.path.join(mjcf_dir, "mjx_single_cube_no_mesh.xml"))

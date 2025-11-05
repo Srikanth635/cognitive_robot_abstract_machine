@@ -18,36 +18,19 @@ from ..world_description.geometry import (
 from ..world_description.shape_collection import ShapeCollection
 from ..world_description.world_entity import KinematicStructureEntity
 
-try:
-    from multiverse_parser import (
-        InertiaSource,
-        UsdImporter,
-        MjcfImporter,
-        UrdfImporter,
-        BodyBuilder,
-        JointBuilder,
-        JointType,
-        Factory,
-        GeomType,
-    )
-    from multiverse_parser.utils import get_relative_transform
-    from pxr import UsdUrdf, UsdGeom, UsdPhysics, Gf  # type: ignore
-except ImportError as e:
-    logging.info(e)
-    InertiaSource = None
-    UsdImporter = None
-    MjcfImporter = None
-    UrdfImporter = None
-    BodyBuilder = None
-    JointBuilder = None
-    JointType = None
-    Factory = None
-    GeomType = None
-    UsdUrdf = None
-    UsdGeom = None
-    UsdPhysics = None
-    Gf = None
-    get_relative_transform = None
+from multiverse_parser import (
+    InertiaSource,
+    UsdImporter,
+    MjcfImporter,
+    UrdfImporter,
+    BodyBuilder,
+    JointBuilder,
+    JointType,
+    Factory,
+    GeomType,
+)
+from multiverse_parser.utils import get_relative_transform
+from pxr import UsdUrdf, UsdGeom, UsdPhysics, Gf  # type: ignore
 
 from ..world_description.connections import (
     RevoluteConnection,
