@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from ..world import World
 
 
-class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
+class ForwardKinematicsManager(rustworkx.visit.DFSVisitor):
     """
     Visitor class for collection various forward kinematics expressions in a world model.
 
@@ -51,6 +51,14 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
         }
         self.tf: Dict[Tuple[PrefixedName, PrefixedName], cas.Expression] = OrderedDict()
 
+    def recompile(self):
+        self.child_body_to_fk_expr: Dict[PrefixedName, cas.TransformationMatrix] = {
+            self.world.root.name: cas.TransformationMatrix()
+        }
+        self.tf: Dict[Tuple[PrefixedName, PrefixedName], cas.Expression] = OrderedDict()
+        self.world._travel_branch(self.world.root, self)
+        self.compile()
+
     def connection_call(self, edge: Tuple[int, int, Connection]):
         """
         Gathers forward kinematics expressions for a connection.
@@ -66,7 +74,7 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
 
     tree_edge = connection_call
 
-    def compile_forward_kinematics(self) -> None:
+    def compile(self) -> None:
         """
         Compiles forward kinematics expressions for fast evaluation.
         """
@@ -98,7 +106,7 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
         """
         Clears cache and recomputes all forward kinematics. Should be called after a state update.
         """
-        self.compute_forward_kinematics_np.cache_clear()
+        self.compute_np.cache_clear()
         self.subs = self.world.state.positions
         self.forward_kinematics_for_all_bodies = self.compiled_all_fks(self.subs)
         self.collision_fks = self.compiled_collision_fks(self.subs)
@@ -115,7 +123,7 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
         return self.compiled_tf(self.subs)
 
     @copy_lru_cache()
-    def compose_forward_kinematics_expression(
+    def compose_expression(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> cas.TransformationMatrix:
         """
@@ -138,7 +146,7 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
         fk.child_frame = tip
         return fk
 
-    def compute_forward_kinematics(
+    def compute(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> cas.TransformationMatrix:
         """
@@ -152,11 +160,11 @@ class ForwardKinematicsVisitor(rustworkx.visit.DFSVisitor):
         :return: Transformation matrix representing the relative pose of the tip KinematicStructureEntity with respect to the root KinematicStructureEntity.
         """
         return cas.TransformationMatrix(
-            data=self.compute_forward_kinematics_np(root, tip), reference_frame=root
+            data=self.compute_np(root, tip), reference_frame=root
         )
 
     @lru_cache(maxsize=None)
-    def compute_forward_kinematics_np(
+    def compute_np(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> NpMatrix4x4:
         """

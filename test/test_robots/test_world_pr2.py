@@ -170,7 +170,7 @@ def test_compute_fk_np_l_elbow_flex_joint_pr2(pr2_world):
         PrefixedName("l_upper_arm_link")
     )
 
-    fk_expr = pr2_world._forward_kinematic_manager.compose_forward_kinematics_expression(root, tip)
+    fk_expr = pr2_world._forward_kinematic_manager.compose_expression(root, tip)
     fk_expr_compiled = fk_expr.compile()
     fk2 = fk_expr_compiled(
         symbol_manager.resolve_symbols(*fk_expr_compiled.symbol_parameters)

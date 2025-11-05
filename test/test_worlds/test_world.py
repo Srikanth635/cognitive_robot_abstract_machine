@@ -55,9 +55,14 @@ def test_set_state(world_setup):
     transform[0, 3] += c1.position
     assert np.allclose(l2.global_pose.to_np(), transform)
 
+
 def test_kse_num(world_setup):
-    world, _, _, _, _, _= world_setup
-    assert len(world.kinematic_structure_entities) == len(world.kinematic_structure) == world._kse_num
+    world, _, _, _, _, _ = world_setup
+    assert (
+        len(world.kinematic_structure_entities)
+        == len(world.kinematic_structure)
+        == world._kse_num
+    )
 
 
 def test_construction(world_setup):
@@ -260,7 +265,7 @@ def test_compute_fk_expression(world_setup):
     world.state[connection.dof.name].position = 1.0
     world.notify_state_change()
     fk = world.compute_forward_kinematics_np(r2, l2)
-    fk_expr = world._forward_kinematic_manager.compose_forward_kinematics_expression(r2, l2)
+    fk_expr = world._forward_kinematic_manager.compose_expression(r2, l2)
     fk_expr_compiled = fk_expr.compile()
     fk2 = fk_expr_compiled(
         *symbol_manager.resolve_symbols(fk_expr_compiled.symbol_parameters)

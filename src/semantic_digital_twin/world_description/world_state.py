@@ -83,7 +83,7 @@ class WorldState(MutableMapping):
     # maps joint_name -> column index
     _index: Dict[PrefixedName, int] = field(default_factory=dict)
 
-    _state_version: int = 0
+    version: int = 0
     """
     The version of the state. This increases whenever a change to the state of the kinematic model is made. 
     Mostly triggered by updating connection values.
@@ -101,7 +101,7 @@ class WorldState(MutableMapping):
         If you have changed the state of the world, call this function to trigger necessary events and increase
         the state version.
         """
-        self._state_version += 1
+        self.version += 1
         for callback in self.state_change_callbacks:
             callback.notify()
 
@@ -235,7 +235,7 @@ class WorldState(MutableMapping):
         new_state._index = self._index.copy()
         return new_state
 
-    def add_degree_of_freedom_position(self, dof: DegreeOfFreedom):
+    def add_degree_of_freedom(self, dof: DegreeOfFreedom):
         """
         Adds a degree of freedom to the world state, initializing its position to 0 or the nearest limit.
         """
@@ -281,7 +281,9 @@ class WorldState(MutableMapping):
         ]
         return positions + velocities + accelerations + jerks
 
-    def _apply_control_commands(self, commands: np.ndarray, dt: float, derivative: Derivatives):
+    def _apply_control_commands(
+        self, commands: np.ndarray, dt: float, derivative: Derivatives
+    ):
         """
         Apply control commands to the specified derivative level, and integrate down to lower derivatives.
 

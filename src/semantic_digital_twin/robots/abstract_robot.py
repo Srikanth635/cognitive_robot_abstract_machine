@@ -411,7 +411,7 @@ class AbstractRobot(RootedSemanticAnnotation, ABC):
         """
         A subset of the robot's connections that are controlled by a controller.
         """
-        return self._world.controlled_connections & set(self.connections)
+        return set(self._world.controlled_connections) & set(self.connections)
 
     @classmethod
     @abstractmethod
