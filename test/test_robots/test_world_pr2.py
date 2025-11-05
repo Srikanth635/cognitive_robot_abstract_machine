@@ -91,7 +91,7 @@ def test_compute_chain_of_bodies_error_pr2(pr2_world):
     tip = pr2_world.get_kinematic_structure_entity_by_name(
         PrefixedName("base_footprint")
     )
-    with pytest.raises(NoPathFound):
+    with pytest.raises(AssertionError):
         pr2_world.compute_chain_of_kinematic_structure_entities(root, tip)
 
 
@@ -102,7 +102,7 @@ def test_compute_chain_of_connections_error_pr2(pr2_world):
     tip = pr2_world.get_kinematic_structure_entity_by_name(
         PrefixedName("base_footprint")
     )
-    with pytest.raises(NoPathFound):
+    with pytest.raises(AssertionError):
         pr2_world.compute_chain_of_connections(root, tip)
 
 
@@ -170,7 +170,7 @@ def test_compute_fk_np_l_elbow_flex_joint_pr2(pr2_world):
         PrefixedName("l_upper_arm_link")
     )
 
-    fk_expr = pr2_world.compose_forward_kinematics_expression(root, tip)
+    fk_expr = pr2_world._forward_kinematic_manager.compose_expression(root, tip)
     fk_expr_compiled = fk_expr.compile()
     fk2 = fk_expr_compiled(
         symbol_manager.resolve_symbols(*fk_expr_compiled.symbol_parameters)
@@ -361,7 +361,7 @@ def test_load_collision_config_srdf(pr2_world):
     )
     pr2_world.load_collision_srdf(path)
     assert len([b for b in pr2_world.bodies if b.get_collision_config().disabled]) == 20
-    assert len(pr2_world.disabled_collision_pairs) == 1128
+    assert len(pr2_world._collision_pair_manager.disabled_collision_pairs) == 1128
 
 
 def test_tracy_semantic_annotation(tracy_world):

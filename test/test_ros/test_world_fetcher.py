@@ -69,7 +69,9 @@ def test_service_callback_success(rclpy_node):
         for d in json.loads(result.message)
     ]
 
-    assert modifications_list == world._model_modification_blocks
+    assert (
+        modifications_list == world.get_world_model_manager().model_modification_blocks
+    )
 
     fetcher.close()
 
@@ -110,7 +112,9 @@ def test_service_callback_with_multiple_modifications(rclpy_node):
         WorldModelModificationBlock.from_json(d, world=world)
         for d in json.loads(result.message)
     ]
-    assert modifications_list == world._model_modification_blocks
+    assert (
+        modifications_list == world.get_world_model_manager().model_modification_blocks
+    )
     fetcher.close()
 
 
@@ -121,7 +125,10 @@ def test_world_fetching(rclpy_node):
     world2 = fetch_world_from_service(
         rclpy_node,
     )
-    assert world2._model_modification_blocks == world._model_modification_blocks
+    assert (
+        world2.get_world_model_manager().model_modification_blocks
+        == world.get_world_model_manager().model_modification_blocks
+    )
 
 
 def test_semantic_annotation_modifications(rclpy_node):
