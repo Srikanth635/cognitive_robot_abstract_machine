@@ -701,9 +701,6 @@ class World:
         :param connection: The connection to add.
         """
         connection.add_to_world(self)
-        for dof in connection.dofs:
-            if dof._world is None:
-                self.add_degree_of_freedom(dof)
         self.add_kinematic_structure_entity(connection.parent, handle_duplicates)
         self.add_kinematic_structure_entity(connection.child, handle_duplicates)
 

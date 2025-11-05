@@ -11,6 +11,7 @@ from semantic_digital_twin.world_description.connections import (
     RevoluteConnection,
     Connection6DoF,
     FixedConnection,
+    OmniDrive,
 )
 from semantic_digital_twin.exceptions import (
     AddingAnExistingSemanticAnnotationError,
@@ -828,3 +829,22 @@ def test_missing_world_modification_context(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
     with pytest.raises(MissingWorldModificationContextError):
         world.add_semantic_annotation(Handle(l1))
+
+
+def test_symbol_removal():
+    world1 = World()
+    body1 = Body(name=PrefixedName("body1"))
+    with world1.modify_world():
+        world1.add_body(body1)
+
+    world2 = World()
+    body2 = Body(name=PrefixedName("body2"))
+    with world2.modify_world():
+        world2.add_body(body2)
+
+    world1.merge_world(world2)
+
+    with world1.modify_world():
+        world1.remove_connection(body2.parent_connection)
+        c_root_bf = OmniDrive.create_with_dofs(parent=body1, child=body2, world=world1)
+        world1.add_connection(c_root_bf)
