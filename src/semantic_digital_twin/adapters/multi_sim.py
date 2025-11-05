@@ -1224,13 +1224,13 @@ class MultiSimSynchronizer(ModelChangeCallback, ABC):
     """
 
     def _notify(self):
-        for modification in self.world._model_modification_blocks[-1]:
+        for modification in self.world._model_manager.model_modification_blocks[-1]:
             if isinstance(modification, AddKinematicStructureEntityModification):
                 entity = modification.kinematic_structure_entity
                 self.entity_spawner.spawn(simulator=self.simulator, entity=entity)
 
     def stop(self):
-        self.world.model_change_callbacks.remove(self)
+        self.world._model_manager.model_change_callbacks.remove(self)
 
 
 @dataclass
