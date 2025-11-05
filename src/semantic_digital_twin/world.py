@@ -1723,7 +1723,9 @@ class World:
                 new_world.add_degree_of_freedom(new_dof)
                 dof_mapping[dof] = new_dof
             for connection in self.connections:
-                new_connection = SubclassJSONSerializer.from_json(connection.to_json())
+                new_connection = SubclassJSONSerializer.from_json(
+                    connection.to_json(), world=new_world
+                )
                 new_connection.parent = (
                     new_world.get_kinematic_structure_entity_by_name(
                         new_connection.parent.name

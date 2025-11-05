@@ -5,10 +5,9 @@ import os
 import weakref
 from copy import deepcopy
 from functools import lru_cache, wraps
-from ament_index_python import PackageNotFoundError
-from typing_extensions import Any, Tuple, Iterable
 from xml.etree import ElementTree as ET
 
+from ament_index_python import PackageNotFoundError
 from typing_extensions import Any, Tuple
 
 

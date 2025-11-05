@@ -65,7 +65,8 @@ def test_service_callback_success(rclpy_node):
 
     # Verify the message is valid JSON
     modifications_list = [
-        WorldModelModificationBlock.from_json(d) for d in json.loads(result.message)
+        WorldModelModificationBlock.from_json(d, world=world)
+        for d in json.loads(result.message)
     ]
 
     assert modifications_list == world._model_modification_blocks
@@ -106,7 +107,8 @@ def test_service_callback_with_multiple_modifications(rclpy_node):
     assert result.success is True
     # Verify the message is valid JSON
     modifications_list = [
-        WorldModelModificationBlock.from_json(d) for d in json.loads(result.message)
+        WorldModelModificationBlock.from_json(d, world=world)
+        for d in json.loads(result.message)
     ]
     assert modifications_list == world._model_modification_blocks
     fetcher.close()

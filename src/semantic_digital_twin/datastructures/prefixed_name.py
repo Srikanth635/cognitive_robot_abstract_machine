@@ -26,7 +26,7 @@ class PrefixedName(Symbol, SubclassJSONSerializer):
         return {**super().to_json(), "name": self.name, "prefix": self.prefix}
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         return cls(name=data["name"], prefix=data["prefix"])
 
     def __lt__(self, other):

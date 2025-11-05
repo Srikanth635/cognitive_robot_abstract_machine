@@ -7,7 +7,10 @@ from rclpy.service import Service
 from std_srvs.srv import Trigger
 
 from ...world import World
-from ...world_description.world_modification import WorldModelModificationBlock
+from ...world_description.world_modification import (
+    WorldModelModification,
+    WorldModelModificationBlock,
+)
 
 
 @dataclass

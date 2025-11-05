@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import importlib
 import inspect
 import itertools
 from abc import ABC
@@ -13,13 +12,11 @@ from functools import lru_cache
 import numpy as np
 import trimesh
 import trimesh.boolean
-from krrood.entity_query_language.predicate import Symbol
-from krrood.adapters.json_serializer import SubclassJSONSerializer
-from scipy.stats import geom
-from semantic_digital_twin.world_description.geometry import (
-    transformation_to_json,
-    transformation_from_json,
+from krrood.adapters.json_serializer import (
+    SubclassJSONSerializer,
 )
+from krrood.entity_query_language.predicate import Symbol
+from scipy.stats import geom
 from trimesh.proximity import closest_point, nearby_faces
 from trimesh.sample import sample_surface
 from typing_extensions import (
@@ -33,8 +30,13 @@ from typing_extensions import (
 from typing_extensions import List, Optional, TYPE_CHECKING, Tuple
 from typing_extensions import Set
 
+from semantic_digital_twin.world_description.geometry import (
+    transformation_to_json,
+    transformation_from_json,
+)
 from .geometry import TriangleMesh
 from .shape_collection import ShapeCollection, BoundingBoxCollection
+from ..adapters.ros.json_parsing_helper import ParsedWorldEntities
 from ..datastructures.prefixed_name import PrefixedName
 from ..exceptions import ReferenceFrameMismatchError
 from ..spatial_types import spatial_types as cas
@@ -74,6 +76,21 @@ class WorldEntity(Symbol):
     def __post_init__(self):
         if self.name is None:
             self.name = PrefixedName(f"{self.__class__.__name__}_{hash(self)}")
+
+    @staticmethod
+    def _get_world_entity_from_kwargs(
+        name: PrefixedName,
+        parsed_entities: Optional[ParsedWorldEntities] = None,
+        world: Optional[World] = None,
+        **kwargs,
+    ) -> WorldEntity:
+        if parsed_entities is not None:
+            kse = parsed_entities.get_world_entity(name)
+            if kse is not None:
+                return kse
+        if world is not None:
+            return world.get_kinematic_structure_entity_by_name(name)
+        raise ValueError(f"Cannot find WorldEntity named '{name}' in kwargs")
 
 
 @dataclass
@@ -353,7 +370,7 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
         return result
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
 
         result = cls(name=PrefixedName.from_json(data["name"]))
 
@@ -468,7 +485,7 @@ class Region(KinematicStructureEntity):
         return result
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         result = cls(name=PrefixedName.from_json(data["name"]))
         area = ShapeCollection.from_json(data["area"])
         for shape in area:
@@ -528,7 +545,7 @@ class SemanticAnnotation(WorldEntity, SubclassJSONSerializer):
         return result
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         semantic_annotation_fields = {f.name: f for f in fields(cls)}
 
         init_args = {}
@@ -730,19 +747,25 @@ class Connection(WorldEntity, SubclassJSONSerializer):
     def to_json(self) -> Dict[str, Any]:
         result = super().to_json()
         result["name"] = self.name.to_json()
-        result["parent"] = self.parent.to_json()
-        result["child"] = self.child.to_json()
+        result["parent_name"] = self.parent.name.to_json()
+        result["child_name"] = self.child.name.to_json()
         result["parent_T_connection_expression"] = transformation_to_json(
             self.parent_T_connection_expression
         )
         return result
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        parent = cls._get_world_entity_from_kwargs(
+            name=PrefixedName.from_json(data["parent_name"]), **kwargs
+        )
+        child = cls._get_world_entity_from_kwargs(
+            name=PrefixedName.from_json(data["child_name"]), **kwargs
+        )
         return cls(
             name=PrefixedName.from_json(data["name"]),
-            parent=KinematicStructureEntity.from_json(data["parent"]),
-            child=KinematicStructureEntity.from_json(data["child"]),
+            parent=parent,
+            child=child,
             parent_T_connection_expression=transformation_from_json(
                 data["parent_T_connection_expression"]
             ),

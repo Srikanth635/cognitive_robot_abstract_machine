@@ -84,7 +84,7 @@ class Synchronizer(ABC):
         """
         Wrap the origin subscription callback by self-skipping and disabling the next world callback.
         """
-        msg = self.message_type.from_json(json.loads(msg.data))
+        msg = self.message_type.from_json(json.loads(msg.data), world=self.world)
         if msg.meta_data == self.meta_data:
             return
         self._skip_next_world_callback = True

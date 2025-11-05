@@ -154,8 +154,8 @@ class ShapeCollection(SubclassJSONSerializer):
         }
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(shapes=[Shape.from_json(d) for d in data["shapes"]])
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        return cls(shapes=[Shape.from_json(d, **kwargs) for d in data["shapes"]])
 
     def center_of_mass_in_world(self) -> Point3:
         """

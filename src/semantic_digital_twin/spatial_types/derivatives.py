@@ -91,7 +91,7 @@ class DerivativeMap(Generic[T], SubclassJSONSerializer):
         return {**super().to_json(), "data": self.data}
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> DerivativeMap[T]:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> DerivativeMap[T]:
         return cls(data=data["data"])
 
     def __mul__(self, other: float) -> DerivativeMap[T]:

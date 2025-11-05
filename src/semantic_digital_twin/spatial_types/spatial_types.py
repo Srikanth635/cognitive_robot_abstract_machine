@@ -12,6 +12,8 @@ import math
 import sys
 from copy import copy, deepcopy
 from dataclasses import dataclass, field, InitVar
+
+from krrood.adapters.json_serializer import SubclassJSONSerializer
 from typing_extensions import (
     Optional,
     List,
@@ -1789,7 +1791,9 @@ class ReferenceFrameMixin:
 
 
 @dataclass(eq=False)
-class TransformationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMixin):
+class TransformationMatrix(
+    SymbolicType, ReferenceFrameMixin, MatrixOperationsMixin, SubclassJSONSerializer
+):
     """
     Represents a 4x4 transformation matrix used in kinematics and transformations.
 
@@ -1833,6 +1837,13 @@ class TransformationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMi
         self[3, 1] = 0.0
         self[3, 2] = 0.0
         self[3, 3] = 1.0
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        pass
+
+    def to_json(self) -> Dict[str, Any]:
+        return super().to_json()
 
     @classmethod
     def from_point_rotation_matrix(

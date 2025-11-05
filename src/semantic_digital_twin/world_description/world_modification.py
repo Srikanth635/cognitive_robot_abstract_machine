@@ -14,7 +14,13 @@ from typing_extensions import (
 )
 
 from .degree_of_freedom import DegreeOfFreedom
-from .world_entity import KinematicStructureEntity, SemanticAnnotation, Connection
+from .world_entity import (
+    KinematicStructureEntity,
+    SemanticAnnotation,
+    Connection,
+    WorldEntity,
+)
+from ..adapters.ros.json_parsing_helper import ParsedWorldEntities
 from ..datastructures.prefixed_name import PrefixedName
 
 if TYPE_CHECKING:
@@ -51,6 +57,15 @@ class WorldModelModification(SubclassJSONSerializer, ABC):
     """
 
     @abstractmethod
+    def get_parsed_world_entities(self) -> List[WorldEntity]:
+        """
+        Return all attributes that are of type `WorldEntity` that are referenced by this modification.
+        These are used as a lookup for other WorldModelModifications during _from_json.
+
+        :return: A list of WorldEntity objects representing parsed entities in the world context.
+        """
+
+    @abstractmethod
     def apply(self, world: World):
         """
         Apply this change to the given world.
@@ -82,6 +97,9 @@ class AddKinematicStructureEntityModification(WorldModelModification):
     The body that was added.
     """
 
+    def get_parsed_world_entities(self) -> List[WorldEntity]:
+        return [self.kinematic_structure_entity]
+
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]):
         return cls(kwargs["kinematic_structure_entity"])
@@ -93,9 +111,11 @@ class AddKinematicStructureEntityModification(WorldModelModification):
         return {**super().to_json(), "body": self.kinematic_structure_entity.to_json()}
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         return cls(
-            kinematic_structure_entity=KinematicStructureEntity.from_json(data["body"])
+            kinematic_structure_entity=KinematicStructureEntity.from_json(
+                data["body"], **kwargs
+            )
         )
 
     def __eq__(self, other: Any) -> bool:
@@ -116,6 +136,9 @@ class RemoveBodyModification(WorldModelModification):
     The name of the body that was removed.
     """
 
+    def get_parsed_world_entities(self) -> List[WorldEntity]:
+        return []
+
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]):
         return cls(kwargs["kinematic_structure_entity"].name)
@@ -129,8 +152,8 @@ class RemoveBodyModification(WorldModelModification):
         return {**super().to_json(), "body_name": self.body_name.to_json()}
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(body_name=PrefixedName.from_json(data["body_name"]))
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        return cls(body_name=PrefixedName.from_json(data["body_name"], **kwargs))
 
 
 @dataclass
@@ -143,6 +166,9 @@ class AddConnectionModification(WorldModelModification):
     """
     The connection that was added.
     """
+
+    def get_parsed_world_entities(self) -> List[WorldEntity]:
+        return [self.connection]
 
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]):
@@ -164,8 +190,8 @@ class AddConnectionModification(WorldModelModification):
         }
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(connection=Connection.from_json(data["connection"]))
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        return cls(connection=Connection.from_json(data["connection"], **kwargs))
 
     def __eq__(self, other):
         return (
@@ -185,6 +211,9 @@ class RemoveConnectionModification(WorldModelModification):
     The name of the connection that was removed.
     """
 
+    def get_parsed_world_entities(self) -> List[WorldEntity]:
+        return []
+
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]):
         return cls(kwargs["connection"].name)
@@ -199,8 +228,10 @@ class RemoveConnectionModification(WorldModelModification):
         }
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(connection_name=PrefixedName.from_json(data["connection_name"]))
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        return cls(
+            connection_name=PrefixedName.from_json(data["connection_name"], **kwargs)
+        )
 
 
 @dataclass
@@ -213,6 +244,9 @@ class AddDegreeOfFreedomModification(WorldModelModification):
     """
     The degree of freedom that was added.
     """
+
+    def get_parsed_world_entities(self) -> List[WorldEntity]:
+        return [self.dof]
 
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]):
@@ -228,8 +262,8 @@ class AddDegreeOfFreedomModification(WorldModelModification):
         }
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(dof=DegreeOfFreedom.from_json(data["dof"]))
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        return cls(dof=DegreeOfFreedom.from_json(data["dof"], **kwargs))
 
     def __eq__(self, other):
         return self.dof.name == other.dof.name
@@ -238,6 +272,9 @@ class AddDegreeOfFreedomModification(WorldModelModification):
 @dataclass
 class RemoveDegreeOfFreedomModification(WorldModelModification):
     dof_name: PrefixedName
+
+    def get_parsed_world_entities(self) -> List[WorldEntity]:
+        return []
 
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]):
@@ -255,13 +292,16 @@ class RemoveDegreeOfFreedomModification(WorldModelModification):
         }
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(dof_name=PrefixedName.from_json(data["dof"]))
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        return cls(dof_name=PrefixedName.from_json(data["dof"], **kwargs))
 
 
 @dataclass
 class AddSemanticAnnotationModification(WorldModelModification):
     semantic_annotation: SemanticAnnotation
+
+    def get_parsed_world_entities(self) -> List[WorldEntity]:
+        return [self.semantic_annotation]
 
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]):
@@ -277,10 +317,10 @@ class AddSemanticAnnotationModification(WorldModelModification):
         }
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         return cls(
             semantic_annotation=SemanticAnnotation.from_json(
-                data["semantic_annotation"]
+                data["semantic_annotation"], **kwargs
             )
         )
 
@@ -288,6 +328,9 @@ class AddSemanticAnnotationModification(WorldModelModification):
 @dataclass
 class RemoveSemanticAnnotationModification(WorldModelModification):
     semantic_annotation: SemanticAnnotation
+
+    def get_parsed_world_entities(self) -> List[WorldEntity]:
+        return []
 
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]):
@@ -303,10 +346,10 @@ class RemoveSemanticAnnotationModification(WorldModelModification):
         }
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         return cls(
             semantic_annotation=SemanticAnnotation.from_json(
-                data["semantic_annotation"]
+                data["semantic_annotation"], **kwargs
             )
         )
 
@@ -334,8 +377,18 @@ class WorldModelModificationBlock(SubclassJSONSerializer):
         }
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls([WorldModelModification.from_json(d) for d in data["modifications"]])
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        parsed_entities = ParsedWorldEntities()
+        world_modifications = []
+        for json_data in data["modifications"]:
+            modification = WorldModelModification.from_json(
+                json_data, parsed_entities=parsed_entities, **kwargs
+            )
+            parsed_entities.add_parsed_world_entities(
+                modification.get_parsed_world_entities()
+            )
+            world_modifications.append(modification)
+        return cls(world_modifications)
 
     def __iter__(self):
         return iter(self.modifications)
@@ -354,6 +407,9 @@ class WorldModelModificationBlock(SubclassJSONSerializer):
 class SetDofHasHardwareInterface(WorldModelModification):
     degree_of_freedom_names: List[PrefixedName]
     value: bool
+
+    def get_parsed_world_entities(self) -> List[WorldEntity]:
+        return []
 
     def apply(self, world: World):
         for dof_name in self.degree_of_freedom_names:
@@ -379,10 +435,11 @@ class SetDofHasHardwareInterface(WorldModelModification):
         }
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         return cls(
             degree_of_freedom_names=[
-                PrefixedName.from_json(dof) for dof in data["degree_of_freedom_names"]
+                PrefixedName.from_json(dof, **kwargs)
+                for dof in data["degree_of_freedom_names"]
             ],
             value=data["value"],
         )
