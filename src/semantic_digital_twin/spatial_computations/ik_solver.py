@@ -8,7 +8,7 @@ from typing_extensions import Dict, TYPE_CHECKING, List, Tuple
 import daqp
 import numpy as np
 
-from ..world_description.connections import ActiveConnection, PassiveConnection
+from ..world_description.connections import ActiveConnection
 from ..world_description.degree_of_freedom import DegreeOfFreedom
 from ..spatial_types import spatial_types as cas
 
@@ -332,10 +332,8 @@ class QPProblem:
             self.world.compute_split_chain_of_connections(self.root, self.tip)
         )
         for connection in root_to_common_link + common_link_to_tip:
-            if isinstance(connection, ActiveConnection):
-                active_dofs_set.update(connection.active_dofs)
-            if isinstance(connection, PassiveConnection):
-                passive_dofs_set.update(connection.passive_dofs)
+            active_dofs_set.update(connection.active_dofs)
+            passive_dofs_set.update(connection.passive_dofs)
 
         active_dofs: List[DegreeOfFreedom] = list(
             sorted(active_dofs_set, key=lambda d: str(d.name))
@@ -483,7 +481,7 @@ class ConstraintBuilder:
         self, active_symbols: List[cas.Symbol]
     ) -> Tuple[cas.Expression, cas.Expression]:
         """Build position and rotation goal constraints."""
-        root_T_tip = self.world.compose_forward_kinematics_expression(
+        root_T_tip = self.world._forward_kinematic_manager.compose_expression(
             self.root, self.tip
         )
 

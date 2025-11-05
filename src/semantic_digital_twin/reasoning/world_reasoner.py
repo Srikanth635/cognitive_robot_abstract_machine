@@ -51,10 +51,15 @@ class WorldReasoner:
 
         :return: The inferred concepts as a dictionary mapping concept name to all inferred values of that concept.
         """
-        if self.world._model_version != self._last_world_model_version:
+        if (
+            self.world.get_world_model_manager().version
+            != self._last_world_model_version
+        ):
             self.reasoner.result = self.reasoner.rdr.classify(self.world)
             self._update_world_attributes()
-            self._last_world_model_version = self.world._model_version
+            self._last_world_model_version = (
+                self.world.get_world_model_manager().version
+            )
         return self.reasoner.result
 
     def _update_world_attributes(self):
@@ -67,7 +72,7 @@ class WorldReasoner:
             if attr_name == "semantic_annotations":
                 for semantic_annotation in attr_value:
                     self.world.add_semantic_annotation(
-                        semantic_annotation, exists_ok=True
+                        semantic_annotation, skip_duplicates=True
                     )
             else:
                 setattr(self.world, attr_name, attr_value)

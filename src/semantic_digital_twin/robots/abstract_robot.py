@@ -52,7 +52,7 @@ class SemanticRobotAnnotation(RootedSemanticAnnotation, ABC):
 
     def __post_init__(self):
         if self._world is not None:
-            self._world.add_semantic_annotation(self, exists_ok=True)
+            self._world.add_semantic_annotation(self, skip_duplicates=True)
 
     @abstractmethod
     def assign_to_robot(self, robot: AbstractRobot):
@@ -411,7 +411,7 @@ class AbstractRobot(RootedSemanticAnnotation, ABC):
         """
         A subset of the robot's connections that are controlled by a controller.
         """
-        return self._world.controlled_connections & set(self.connections)
+        return set(self._world.controlled_connections) & set(self.connections)
 
     @classmethod
     @abstractmethod

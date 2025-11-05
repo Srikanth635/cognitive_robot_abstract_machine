@@ -15,8 +15,7 @@ from semantic_digital_twin.world_description.connections import (
 )
 from semantic_digital_twin.exceptions import (
     AddingAnExistingSemanticAnnotationError,
-    DuplicateSemanticAnnotationError,
-    SemanticAnnotationNotFoundError,
+    DuplicateWorldEntityError,
     DuplicateKinematicStructureEntityError,
     UsageError,
     MissingWorldModificationContextError,
@@ -258,7 +257,7 @@ def test_compute_fk_expression(world_setup):
     world.state[connection.dof.name].position = 1.0
     world.notify_state_change()
     fk = world.compute_forward_kinematics_np(r2, l2)
-    fk_expr = world.compose_forward_kinematics_expression(r2, l2)
+    fk_expr = world._forward_kinematic_manager.compose_expression(r2, l2)
     fk_expr_compiled = fk_expr.compile()
     fk2 = fk_expr_compiled(
         *symbol_manager.resolve_symbols(fk_expr_compiled.symbol_parameters)
@@ -371,7 +370,7 @@ def test_add_semantic_annotation(world_setup):
     with world.modify_world():
         world.add_semantic_annotation(v)
     with pytest.raises(AddingAnExistingSemanticAnnotationError):
-        world.add_semantic_annotation(v, exists_ok=False)
+        world.add_semantic_annotation(v, skip_duplicates=False)
     assert world.get_semantic_annotation_by_name(v.name) == v
 
 
@@ -381,7 +380,7 @@ def test_duplicate_semantic_annotation(world_setup):
     with world.modify_world():
         world.add_semantic_annotation(v)
         world.semantic_annotations.append(v)
-    with pytest.raises(DuplicateSemanticAnnotationError):
+    with pytest.raises(DuplicateWorldEntityError):
         world.get_semantic_annotation_by_name(v.name)
 
 
@@ -581,7 +580,7 @@ def test_remove_connection(world_setup):
         new_connection = FixedConnection(r1, r2)
         world.add_connection(new_connection)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(AssertionError):
         # if you remove a connection, the child must be connected some other way or deleted
         world.remove_connection(world.get_connection(r1, r2))
 

@@ -30,7 +30,7 @@ import semantic_digital_twin.world_description.shape_collection
 import semantic_digital_twin.world_description.world_entity
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_computations.forward_kinematics import (
-    ForwardKinematicsVisitor,
+    ForwardKinematicsManager,
 )
 from semantic_digital_twin.world import (
     ResetStateContextManager,
@@ -73,7 +73,7 @@ all_classes -= {
     ResetStateContextManager,
     WorldModelUpdateContextManager,
     HasUpdateState,
-    ForwardKinematicsVisitor,
+    ForwardKinematicsManager,
 }
 
 # build the symbol graph

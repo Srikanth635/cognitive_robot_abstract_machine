@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import numpy
 from typing_extensions import Optional, Set, List
 
+from ..exceptions import WorldEntityNotFoundError
 from ..spatial_types.spatial_types import TransformationMatrix
 from ..world_description.geometry import (
     Box,
@@ -18,36 +19,19 @@ from ..world_description.geometry import (
 from ..world_description.shape_collection import ShapeCollection
 from ..world_description.world_entity import KinematicStructureEntity
 
-try:
-    from multiverse_parser import (
-        InertiaSource,
-        UsdImporter,
-        MjcfImporter,
-        UrdfImporter,
-        BodyBuilder,
-        JointBuilder,
-        JointType,
-        Factory,
-        GeomType,
-    )
-    from multiverse_parser.utils import get_relative_transform
-    from pxr import UsdUrdf, UsdGeom, UsdPhysics, Gf  # type: ignore
-except ImportError as e:
-    logging.info(e)
-    InertiaSource = None
-    UsdImporter = None
-    MjcfImporter = None
-    UrdfImporter = None
-    BodyBuilder = None
-    JointBuilder = None
-    JointType = None
-    Factory = None
-    GeomType = None
-    UsdUrdf = None
-    UsdGeom = None
-    UsdPhysics = None
-    Gf = None
-    get_relative_transform = None
+from multiverse_parser import (
+    InertiaSource,
+    UsdImporter,
+    MjcfImporter,
+    UrdfImporter,
+    BodyBuilder,
+    JointBuilder,
+    JointType,
+    Factory,
+    GeomType,
+)
+from multiverse_parser.utils import get_relative_transform
+from pxr import UsdUrdf, UsdGeom, UsdPhysics, Gf  # type: ignore
 
 from ..world_description.connections import (
     RevoluteConnection,
@@ -319,7 +303,7 @@ def parse_dof(
     """
     try:
         return world.get_degree_of_freedom_by_name(free_variable_name)
-    except KeyError:
+    except WorldEntityNotFoundError:
         if joint_builder.type == JointType.CONTINUOUS:
             dof = DegreeOfFreedom(
                 name=PrefixedName(joint_name),
