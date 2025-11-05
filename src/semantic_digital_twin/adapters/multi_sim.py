@@ -1,5 +1,4 @@
 import inspect
-import logging
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -632,7 +631,7 @@ class MujocoGeomConverter(MujocoConverter, ShapeConverter, ABC):
     pos_str: str = "pos"
     quat_str: str = "quat"
     rgba_str: str = "rgba"
-    type: mjtGeom
+    type: mujoco.mjtGeom
 
     def _post_convert(
         self, entity: Shape, shape_props: Dict[str, Any], **kwargs
@@ -651,7 +650,7 @@ class MujocoGeomConverter(MujocoConverter, ShapeConverter, ABC):
 
 
 class MujocoBoxConverter(MujocoGeomConverter, BoxConverter):
-    type: mjtGeom = mjGEOM_BOX
+    type: mujoco.mjtGeom = mujoco.mjtGeom.mjGEOM_BOX
 
     def _post_convert(
         self, entity: Box, shape_props: Dict[str, Any], **kwargs
@@ -664,7 +663,7 @@ class MujocoBoxConverter(MujocoGeomConverter, BoxConverter):
 
 
 class MujocoSphereConverter(MujocoGeomConverter, SphereConverter):
-    type: mjtGeom = mjGEOM_SPHERE
+    type: mujoco.mjtGeom = mujoco.mjtGeom.mjGEOM_SPHERE
 
     def _post_convert(
         self, entity: Sphere, shape_props: Dict[str, Any], **kwargs
@@ -675,7 +674,7 @@ class MujocoSphereConverter(MujocoGeomConverter, SphereConverter):
 
 
 class MujocoCylinderConverter(MujocoGeomConverter, CylinderConverter):
-    type: mjtGeom = mjGEOM_CYLINDER
+    type: mujoco.mjtGeom = mujoco.mjtGeom.mjGEOM_CYLINDER
 
     def _post_convert(
         self, entity: Cylinder, shape_props: Dict[str, Any], **kwargs
@@ -688,7 +687,7 @@ class MujocoCylinderConverter(MujocoGeomConverter, CylinderConverter):
 class MujocoJointConverter(ConnectionConverter, ABC):
     pos_str: str = "pos"
     quat_str: str = "quat"
-    type: mjtJoint
+    type: mujoco.mjtJoint
 
     def _post_convert(
         self, entity: Connection, joint_props: Dict[str, Any], **kwargs
@@ -716,7 +715,7 @@ class Mujoco1DOFJointConverter(MujocoJointConverter, Connection1DOFConverter):
 class MujocoRevoluteJointConverter(
     Mujoco1DOFJointConverter, ConnectionRevoluteConverter
 ):
-    type: mjtJoint = mjJNT_HINGE
+    type: mujoco.mjtJoint = mujoco.mjtJoint.mjJNT_HINGE
 
 
 class MujocoPrismaticJointConverter(
