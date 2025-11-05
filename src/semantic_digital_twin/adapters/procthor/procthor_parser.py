@@ -507,7 +507,7 @@ class ProcthorObject:
                     parent_T_connection_expression=obj_T_child,
                 )
                 body_world.merge_world(
-                    child_world, child_connection, handle_duplicates=True
+                    child_world, child_connection, assign_unique_name_to_duplicates=True
                 )
 
             return body_world
@@ -578,7 +578,9 @@ class ProcTHORParser:
         world = World(name=house_name)
         with world.modify_world():
             world_root = Body(name=PrefixedName(house_name))
-            world.add_kinematic_structure_entity(world_root, handle_duplicates=True)
+            world.add_kinematic_structure_entity(
+                world_root, assign_unique_name_to_duplicates=True
+            )
 
             self.import_rooms(world, house["rooms"])
 
@@ -607,7 +609,9 @@ class ProcTHORParser:
                 child=room_world.root,
                 parent_T_connection_expression=procthor_room.world_T_room,
             )
-            world.merge_world(room_world, room_connection, handle_duplicates=True)
+            world.merge_world(
+                room_world, room_connection, assign_unique_name_to_duplicates=True
+            )
 
     def import_objects(self, world: World, objects: List[Dict]):
         """
@@ -626,7 +630,9 @@ class ProcTHORParser:
                 child=obj_world.root,
                 parent_T_connection_expression=procthor_object.world_T_obj,
             )
-            world.merge_world(obj_world, obj_connection, handle_duplicates=True)
+            world.merge_world(
+                obj_world, obj_connection, assign_unique_name_to_duplicates=True
+            )
 
     def import_walls_and_doors(
         self, world: World, walls: List[Dict], doors: List[Dict]
@@ -647,7 +653,9 @@ class ProcTHORParser:
                 child=wall_world.root,
                 parent_T_connection_expression=procthor_wall.world_T_wall,
             )
-            world.merge_world(wall_world, wall_connection, handle_duplicates=True)
+            world.merge_world(
+                wall_world, wall_connection, assign_unique_name_to_duplicates=True
+            )
 
     @staticmethod
     def _build_procthor_wall_from_polygon(

@@ -369,7 +369,7 @@ def test_add_semantic_annotation(world_setup):
     with world.modify_world():
         world.add_semantic_annotation(v)
     with pytest.raises(AddingAnExistingSemanticAnnotationError):
-        world.add_semantic_annotation(v, exists_ok=False)
+        world.add_semantic_annotation(v, skip_duplicates=False)
     assert world.get_semantic_annotation_by_name(v.name) == v
 
 
