@@ -651,13 +651,8 @@ class World:
         :param connection: The connection to add.
         """
         connection.add_to_world(self)
-        dofs_without_world = [dof for dof in connection.dofs if dof._world is None]
-        for dof in dofs_without_world:
-            self.add_degree_of_freedom(dof)
-
         self._add_kinematic_structure_entity_if_not_in_world(connection.parent)
         self._add_kinematic_structure_entity_if_not_in_world(connection.child)
-
         self._add_connection(connection)
 
     @atomic_world_modification(modification=AddConnectionModification)

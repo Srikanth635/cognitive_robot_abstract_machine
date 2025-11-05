@@ -483,6 +483,7 @@ GenericKinematicStructureEntity = TypeVar(
 
 GenericWorldEntity = TypeVar("GenericWorldEntity", bound=WorldEntity)
 
+
 @dataclass
 class SemanticAnnotation(WorldEntity, SubclassJSONSerializer):
     """
@@ -814,6 +815,12 @@ class Connection(WorldEntity, SubclassJSONSerializer):
         :return: The relative transform between the parent and child frame.
         """
         return self._world.compute_forward_kinematics(self.parent, self.child)
+
+    @origin.setter
+    def origin(self, value):
+        raise NotImplementedError(
+            f"Origin can not be set for Connection: {self.__class__.__name__}"
+        )
 
     def origin_as_position_quaternion(self) -> Expression:
         position = self.origin_expression.to_position()[:3]
