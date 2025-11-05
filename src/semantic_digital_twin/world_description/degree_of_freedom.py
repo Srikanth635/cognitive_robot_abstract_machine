@@ -4,7 +4,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from typing_extensions import Dict, Any
 
-from random_events.utils import SubclassJSONSerializer
+from krrood.adapters.json_serializer import SubclassJSONSerializer
 
 from ..datastructures.prefixed_name import PrefixedName
 from ..exceptions import UsageError

@@ -16,7 +16,7 @@ import rustworkx as rx
 import rustworkx.visit
 import rustworkx.visualization
 from lxml import etree
-from random_events.utils import SubclassJSONSerializer
+from krrood.adapters.json_serializer import SubclassJSONSerializer
 from rustworkx import NoEdgeBetweenNodes
 from typing_extensions import (
     Dict,

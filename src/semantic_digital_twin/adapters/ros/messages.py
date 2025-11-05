@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing_extensions import Dict, Any, Self, List
 
-from random_events.utils import SubclassJSONSerializer
+from krrood.adapters.json_serializer import SubclassJSONSerializer
 
 from ...datastructures.prefixed_name import PrefixedName
 from ...world_description.world_modification import (

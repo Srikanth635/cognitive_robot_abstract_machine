@@ -11,7 +11,7 @@ import trimesh
 import trimesh.exchange.stl
 from random_events.interval import SimpleInterval, Bound, closed
 from random_events.product_algebra import SimpleEvent
-from random_events.utils import SubclassJSONSerializer
+from krrood.adapters.json_serializer import SubclassJSONSerializer
 from typing_extensions import Optional, List, TYPE_CHECKING, Dict, Any, Self, Tuple
 
 from ..datastructures.variables import SpatialVariables
@@ -417,7 +417,6 @@ class Box(Shape):
         mesh = trimesh.creation.box(extents=(self.scale.x, self.scale.y, self.scale.z))
         mesh.visual.vertex_colors = trimesh.visual.color.to_rgba(self.color.to_rgba())
         return mesh
-
 
     @property
     def local_frame_bounding_box(self) -> BoundingBox:
