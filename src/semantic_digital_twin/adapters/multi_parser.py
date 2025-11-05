@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import numpy
 from typing_extensions import Optional, Set, List
 
+from ..exceptions import WorldEntityNotFoundError
 from ..spatial_types.spatial_types import TransformationMatrix
 from ..world_description.geometry import (
     Box,
@@ -302,7 +303,7 @@ def parse_dof(
     """
     try:
         return world.get_degree_of_freedom_by_name(free_variable_name)
-    except KeyError:
+    except WorldEntityNotFoundError:
         if joint_builder.type == JointType.CONTINUOUS:
             dof = DegreeOfFreedom(
                 name=PrefixedName(joint_name),
