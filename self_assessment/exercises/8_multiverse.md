@@ -51,11 +51,11 @@ Your goal:
 # viewer = MultiverseViewer()
 # headless = True
 # multi_sim = ...
-multi_sim.start_simulation()
+# multi_sim.start_simulation()
 
-start_time = time.time()
-time.sleep(5.0)
-multi_sim.stop_simulation()
+# start_time = time.time()
+# time.sleep(5.0)
+# multi_sim.stop_simulation()
 ```
 
 ```{code-cell} ipython3
