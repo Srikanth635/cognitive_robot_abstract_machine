@@ -1869,7 +1869,7 @@ class TransformationMatrix(
         if self.reference_frame is not None:
             result["reference_frame"] = self.reference_frame.name.to_json()
         if self.child_frame is not None:
-            result["child_name"] = self.child_frame.name.to_json()
+            result["child_frame"] = self.child_frame.name.to_json()
         result["position"] = self.to_position().to_np().tolist()
         result["rotation"] = self.to_quaternion().to_np().tolist()
         return result

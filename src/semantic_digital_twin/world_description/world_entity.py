@@ -696,7 +696,7 @@ class SemanticEnvironmentAnnotation(RootedSemanticAnnotation):
         ) | {self.root}
 
 
-@dataclass
+@dataclass(eq=False)
 class Connection(WorldEntity, SubclassJSONSerializer):
     """
     Represents a connection between two entities in the world.

@@ -39,7 +39,7 @@ class HasUpdateState(ABC):
         pass
 
 
-@dataclass
+@dataclass(eq=False)
 class FixedConnection(Connection):
     """
     Has 0 degrees of freedom.
@@ -49,7 +49,7 @@ class FixedConnection(Connection):
         return hash((self.parent, self.child))
 
 
-@dataclass
+@dataclass(eq=False)
 class ActiveConnection(Connection):
     """
     Has one or more degrees of freedom that can be actively controlled, e.g., robot joints.
@@ -117,7 +117,7 @@ class ActiveConnection(Connection):
                 child_body.set_static_collision_config(collision_config)
 
 
-@dataclass
+@dataclass(eq=False)
 class ActiveConnection1DOF(ActiveConnection, ABC):
     """
     Superclass for active connections with 1 degree of freedom.
@@ -307,7 +307,7 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
         self._world.notify_state_change()
 
 
-@dataclass
+@dataclass(eq=False)
 class PrismaticConnection(ActiveConnection1DOF):
     """
     Allows translation along an axis.
@@ -328,7 +328,7 @@ class PrismaticConnection(ActiveConnection1DOF):
         return hash((self.parent, self.child))
 
 
-@dataclass
+@dataclass(eq=False)
 class RevoluteConnection(ActiveConnection1DOF):
     """
     Allows rotation about an axis.
@@ -349,7 +349,7 @@ class RevoluteConnection(ActiveConnection1DOF):
         return hash((self.parent, self.child))
 
 
-@dataclass
+@dataclass(eq=False)
 class Connection6DoF(Connection):
     """
     Has full 6 degrees of freedom, that cannot be actively controlled.
@@ -555,7 +555,7 @@ class Connection6DoF(Connection):
         self._world.notify_state_change()
 
 
-@dataclass
+@dataclass(eq=False)
 class OmniDrive(ActiveConnection, HasUpdateState):
     """
     A connection describing an omnidirectional drive.
