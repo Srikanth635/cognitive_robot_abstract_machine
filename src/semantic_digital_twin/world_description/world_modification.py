@@ -20,7 +20,9 @@ from .world_entity import (
     Connection,
     WorldEntity,
 )
-from ..adapters.ros.json_parsing_helper import ParsedWorldEntities
+from ..adapters.world_entity_kwargs_tracker import (
+    WorldEntityKwargsTracker,
+)
 from ..datastructures.prefixed_name import PrefixedName
 
 if TYPE_CHECKING:
@@ -57,15 +59,6 @@ class WorldModelModification(SubclassJSONSerializer, ABC):
     """
 
     @abstractmethod
-    def get_parsed_world_entities(self) -> List[WorldEntity]:
-        """
-        Return all attributes that are of type `WorldEntity` that are referenced by this modification.
-        These are used as a lookup for other WorldModelModifications during _from_json.
-
-        :return: A list of WorldEntity objects representing parsed entities in the world context.
-        """
-
-    @abstractmethod
     def apply(self, world: World):
         """
         Apply this change to the given world.
@@ -96,9 +89,6 @@ class AddKinematicStructureEntityModification(WorldModelModification):
     """
     The body that was added.
     """
-
-    def get_parsed_world_entities(self) -> List[WorldEntity]:
-        return [self.kinematic_structure_entity]
 
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]):
@@ -136,9 +126,6 @@ class RemoveBodyModification(WorldModelModification):
     The name of the body that was removed.
     """
 
-    def get_parsed_world_entities(self) -> List[WorldEntity]:
-        return []
-
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]):
         return cls(kwargs["kinematic_structure_entity"].name)
@@ -166,9 +153,6 @@ class AddConnectionModification(WorldModelModification):
     """
     The connection that was added.
     """
-
-    def get_parsed_world_entities(self) -> List[WorldEntity]:
-        return [self.connection]
 
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]):
@@ -211,9 +195,6 @@ class RemoveConnectionModification(WorldModelModification):
     The name of the connection that was removed.
     """
 
-    def get_parsed_world_entities(self) -> List[WorldEntity]:
-        return []
-
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]):
         return cls(kwargs["connection"].name)
@@ -245,9 +226,6 @@ class AddDegreeOfFreedomModification(WorldModelModification):
     The degree of freedom that was added.
     """
 
-    def get_parsed_world_entities(self) -> List[WorldEntity]:
-        return [self.dof]
-
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]):
         return cls(dof=kwargs["dof"])
@@ -273,9 +251,6 @@ class AddDegreeOfFreedomModification(WorldModelModification):
 class RemoveDegreeOfFreedomModification(WorldModelModification):
     dof_name: PrefixedName
 
-    def get_parsed_world_entities(self) -> List[WorldEntity]:
-        return []
-
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]):
         return cls(dof_name=kwargs["dof"].name)
@@ -299,9 +274,6 @@ class RemoveDegreeOfFreedomModification(WorldModelModification):
 @dataclass
 class AddSemanticAnnotationModification(WorldModelModification):
     semantic_annotation: SemanticAnnotation
-
-    def get_parsed_world_entities(self) -> List[WorldEntity]:
-        return [self.semantic_annotation]
 
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]):
@@ -328,9 +300,6 @@ class AddSemanticAnnotationModification(WorldModelModification):
 @dataclass
 class RemoveSemanticAnnotationModification(WorldModelModification):
     semantic_annotation: SemanticAnnotation
-
-    def get_parsed_world_entities(self) -> List[WorldEntity]:
-        return []
 
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]):
@@ -378,15 +347,10 @@ class WorldModelModificationBlock(SubclassJSONSerializer):
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        parsed_entities = ParsedWorldEntities()
+        WorldEntityKwargsTracker.from_kwargs(kwargs)
         world_modifications = []
         for json_data in data["modifications"]:
-            modification = WorldModelModification.from_json(
-                json_data, parsed_entities=parsed_entities, **kwargs
-            )
-            parsed_entities.add_parsed_world_entities(
-                modification.get_parsed_world_entities()
-            )
+            modification = WorldModelModification.from_json(json_data, **kwargs)
             world_modifications.append(modification)
         return cls(world_modifications)
 

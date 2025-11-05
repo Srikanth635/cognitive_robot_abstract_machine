@@ -30,13 +30,11 @@ from typing_extensions import (
 from typing_extensions import List, Optional, TYPE_CHECKING, Tuple
 from typing_extensions import Set
 
-from semantic_digital_twin.world_description.geometry import (
-    transformation_to_json,
-    transformation_from_json,
-)
 from .geometry import TriangleMesh
 from .shape_collection import ShapeCollection, BoundingBoxCollection
-from ..adapters.ros.json_parsing_helper import ParsedWorldEntities
+from ..adapters.world_entity_kwargs_tracker import (
+    WorldEntityKwargsTracker,
+)
 from ..datastructures.prefixed_name import PrefixedName
 from ..exceptions import ReferenceFrameMismatchError
 from ..spatial_types import spatial_types as cas
@@ -76,21 +74,6 @@ class WorldEntity(Symbol):
     def __post_init__(self):
         if self.name is None:
             self.name = PrefixedName(f"{self.__class__.__name__}_{hash(self)}")
-
-    @staticmethod
-    def _get_world_entity_from_kwargs(
-        name: PrefixedName,
-        parsed_entities: Optional[ParsedWorldEntities] = None,
-        world: Optional[World] = None,
-        **kwargs,
-    ) -> WorldEntity:
-        if parsed_entities is not None:
-            kse = parsed_entities.get_world_entity(name)
-            if kse is not None:
-                return kse
-        if world is not None:
-            return world.get_kinematic_structure_entity_by_name(name)
-        raise ValueError(f"Cannot find WorldEntity named '{name}' in kwargs")
 
 
 @dataclass
@@ -371,11 +354,14 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        result = cls(name=PrefixedName.from_json(data["name"], **kwargs))
 
-        result = cls(name=PrefixedName.from_json(data["name"]))
+        # add the new body so that the transformation matrices in the shapes can use it as reference frame.
+        tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
+        tracker.add_parsed_world_entity(result)
 
-        collision = ShapeCollection.from_json(data["collision"])
-        visual = ShapeCollection.from_json(data["visual"])
+        collision = ShapeCollection.from_json(data["collision"], **kwargs)
+        visual = ShapeCollection.from_json(data["visual"], **kwargs)
 
         for shape in itertools.chain(collision, visual):
             shape.origin.reference_frame = result
@@ -751,25 +737,26 @@ class Connection(WorldEntity, SubclassJSONSerializer):
         result["name"] = self.name.to_json()
         result["parent_name"] = self.parent.name.to_json()
         result["child_name"] = self.child.name.to_json()
-        result["parent_T_connection_expression"] = transformation_to_json(
-            self.parent_T_connection_expression
+        result["parent_T_connection_expression"] = (
+            self.parent_T_connection_expression.to_json()
         )
         return result
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        parent = cls._get_world_entity_from_kwargs(
-            name=PrefixedName.from_json(data["parent_name"]), **kwargs
+        tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
+        parent = tracker.get_world_entity(
+            name=PrefixedName.from_json(data["parent_name"])
         )
-        child = cls._get_world_entity_from_kwargs(
-            name=PrefixedName.from_json(data["child_name"]), **kwargs
+        child = tracker.get_world_entity(
+            name=PrefixedName.from_json(data["child_name"])
         )
         return cls(
             name=PrefixedName.from_json(data["name"]),
             parent=parent,
             child=child,
-            parent_T_connection_expression=transformation_from_json(
-                data["parent_T_connection_expression"]
+            parent_T_connection_expression=TransformationMatrix.from_json(
+                data["parent_T_connection_expression"], **kwargs
             ),
         )
 

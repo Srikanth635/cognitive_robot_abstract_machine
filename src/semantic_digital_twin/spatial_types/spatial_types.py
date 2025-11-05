@@ -1,19 +1,20 @@
 from __future__ import annotations
 
-import operator
-from collections import Counter
-from enum import IntEnum
-
-import numpy as np
 import builtins
 import copy
 import functools
 import math
+import operator
 import sys
+from collections import Counter
 from copy import copy, deepcopy
 from dataclasses import dataclass, field, InitVar
+from enum import IntEnum
 
+import casadi as ca
+import numpy as np
 from krrood.adapters.json_serializer import SubclassJSONSerializer
+from scipy import sparse as sp
 from typing_extensions import (
     Optional,
     List,
@@ -32,9 +33,10 @@ from typing_extensions import (
     overload,
 )
 
-import casadi as ca
-from scipy import sparse as sp
-
+from ..adapters.world_entity_kwargs_tracker import (
+    WorldEntityKwargsTracker,
+)
+from ..datastructures.prefixed_name import PrefixedName
 from ..exceptions import (
     HasFreeSymbolsError,
     NotSquareMatrixError,
@@ -44,7 +46,7 @@ from ..exceptions import (
 )
 
 if TYPE_CHECKING:
-    from ..world_description.world_entity import KinematicStructureEntity, Connection
+    from ..world_description.world_entity import KinematicStructureEntity
 
 EPS: float = sys.float_info.epsilon * 4.0
 
@@ -1840,10 +1842,37 @@ class TransformationMatrix(
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        pass
+        tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
+        reference_frame_data = data.get("reference_frame", None)
+        if reference_frame_data is not None:
+            reference_frame = tracker.get_world_entity(
+                name=PrefixedName.from_json(reference_frame_data)
+            )
+        else:
+            reference_frame = None
+        child_frame_data = data.get("child_frame", None)
+        if child_frame_data is not None:
+            child_frame = tracker.get_world_entity(
+                name=PrefixedName.from_json(child_frame_data)
+            )
+        else:
+            child_frame = None
+        return cls.from_xyz_quaternion(
+            *data["position"][:3],
+            *data["rotation"],
+            reference_frame=reference_frame,
+            child_frame=child_frame,
+        )
 
     def to_json(self) -> Dict[str, Any]:
-        return super().to_json()
+        result = super().to_json()
+        if self.reference_frame is not None:
+            result["reference_frame"] = self.reference_frame.name.to_json()
+        if self.child_frame is not None:
+            result["child_name"] = self.child_frame.name.to_json()
+        result["position"] = self.to_position().to_np().tolist()
+        result["rotation"] = self.to_quaternion().to_np().tolist()
+        return result
 
     @classmethod
     def from_point_rotation_matrix(

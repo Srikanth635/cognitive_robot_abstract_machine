@@ -9,46 +9,17 @@ from functools import cached_property
 import numpy as np
 import trimesh
 import trimesh.exchange.stl
+from krrood.adapters.json_serializer import SubclassJSONSerializer
 from random_events.interval import SimpleInterval, Bound, closed
 from random_events.product_algebra import SimpleEvent
-from krrood.adapters.json_serializer import SubclassJSONSerializer
-from typing_extensions import Optional, List, TYPE_CHECKING, Dict, Any, Self, Tuple
+from typing_extensions import Optional, List, Dict, Any, Self, Tuple
 
 from ..datastructures.variables import SpatialVariables
 from ..spatial_types import TransformationMatrix, Point3
 from ..spatial_types.spatial_types import Expression
-from ..spatial_types.symbol_manager import symbol_manager
 from ..utils import IDGenerator
 
 id_generator = IDGenerator()
-
-
-def transformation_from_json(data: Dict[str, Any]) -> TransformationMatrix:
-    """
-    Creates a transformation matrix from a JSON-compatible dictionary.
-
-    Use this together with `transformation_to_json`.
-
-    This is needed since SpatialTypes cannot inherit from SubClassJSONSerializer.
-    They can't inherit since the conversion to JSON needs the symbol_manager, which would cause a cyclic dependency.
-    """
-    return TransformationMatrix.from_xyz_quaternion(
-        *data["position"][:3], *data["quaternion"]
-    )
-
-
-def transformation_to_json(transformation: TransformationMatrix) -> Dict[str, Any]:
-    """
-    Converts a transformation matrix to a JSON-compatible dictionary.
-
-    Use this together with `transformation_from_json`.
-
-    This is needed since SpatialTypes cannot inherit from SubClassJSONSerializer.
-    They can't inherit since the conversion to JSON needs the symbol_manager, which would cause a cyclic dependency.
-    """
-    position = symbol_manager.evaluate_expr(transformation.to_position()).tolist()
-    quaternion = symbol_manager.evaluate_expr(transformation.to_quaternion()).tolist()
-    return {"position": position, "quaternion": quaternion}
 
 
 @dataclass
@@ -174,7 +145,7 @@ class Shape(ABC, SubclassJSONSerializer):
     def to_json(self) -> Dict[str, Any]:
         return {
             **super().to_json(),
-            "origin": transformation_to_json(self.origin),
+            "origin": self.origin.to_json(),
             "color": self.color.to_json(),
         }
 
@@ -297,7 +268,7 @@ class TriangleMesh(Mesh):
         mesh = trimesh.Trimesh(
             vertices=data["mesh"]["vertices"], faces=data["mesh"]["faces"]
         )
-        origin = transformation_from_json(data["origin"])
+        origin = TransformationMatrix.from_json(data["origin"], **kwargs)
         scale = Scale.from_json(data["scale"], **kwargs)
         return cls(mesh=mesh, origin=origin, scale=scale)
 
@@ -344,7 +315,7 @@ class Sphere(Shape):
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         return cls(
             radius=data["radius"],
-            origin=transformation_from_json(data["origin"]),
+            origin=TransformationMatrix.from_json(data["origin"], **kwargs),
             color=Color.from_json(data["color"], **kwargs),
         )
 
@@ -395,7 +366,7 @@ class Cylinder(Shape):
         return cls(
             width=data["width"],
             height=data["height"],
-            origin=transformation_from_json(data["origin"]),
+            origin=TransformationMatrix.from_json(data["origin"], **kwargs),
             color=Color.from_json(data["color"], **kwargs),
         )
 
@@ -444,7 +415,7 @@ class Box(Shape):
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         return cls(
             scale=Scale.from_json(data["scale"], **kwargs),
-            origin=transformation_from_json(data["origin"]),
+            origin=TransformationMatrix.from_json(data["origin"], **kwargs),
             color=Color.from_json(data["color"], **kwargs),
         )
 

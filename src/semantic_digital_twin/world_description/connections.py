@@ -7,10 +7,12 @@ from dataclasses import dataclass, field
 import numpy as np
 from typing_extensions import List, TYPE_CHECKING, Union, Optional, Dict, Any, Self
 
-from semantic_digital_twin.world_description.geometry import transformation_from_json
 from .degree_of_freedom import DegreeOfFreedom
 from .world_entity import CollisionCheckingConfig, Connection, KinematicStructureEntity
 from .. import spatial_types as cas
+from ..adapters.world_entity_kwargs_tracker import (
+    WorldEntityKwargsTracker,
+)
 from ..datastructures.prefixed_name import PrefixedName
 from ..datastructures.types import NpMatrix4x4
 from ..spatial_types.derivatives import DerivativeMap
@@ -67,18 +69,19 @@ class ActiveConnection(Connection):
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        parent = cls._get_world_entity_from_kwargs(
-            name=PrefixedName.from_json(data["parent_name"]), **kwargs
+        tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
+        parent = tracker.get_world_entity(
+            name=PrefixedName.from_json(data["parent_name"])
         )
-        child = cls._get_world_entity_from_kwargs(
-            name=PrefixedName.from_json(data["child_name"]), **kwargs
+        child = tracker.get_world_entity(
+            name=PrefixedName.from_json(data["child_name"])
         )
         return cls(
             name=PrefixedName.from_json(data["name"]),
             parent=parent,
             child=child,
-            parent_T_connection_expression=transformation_from_json(
-                data["parent_T_connection_expression"]
+            parent_T_connection_expression=cas.TransformationMatrix.from_json(
+                data["parent_T_connection_expression"], **kwargs
             ),
             frozen_for_collision_avoidance=data["frozen_for_collision_avoidance"],
             **kwargs,
@@ -112,6 +115,7 @@ class ActiveConnection(Connection):
         for child_body in self._world.get_direct_child_bodies_with_collision(self):
             if not child_body.get_collision_config().disabled:
                 child_body.set_static_collision_config(collision_config)
+
 
 @dataclass
 class ActiveConnection1DOF(ActiveConnection, ABC):
@@ -150,18 +154,19 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        parent = cls._get_world_entity_from_kwargs(
-            name=PrefixedName.from_json(data["parent_name"]), **kwargs
+        tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
+        parent = tracker.get_world_entity(
+            name=PrefixedName.from_json(data["parent_name"])
         )
-        child = cls._get_world_entity_from_kwargs(
-            name=PrefixedName.from_json(data["child_name"]), **kwargs
+        child = tracker.get_world_entity(
+            name=PrefixedName.from_json(data["child_name"])
         )
         return cls(
             name=PrefixedName.from_json(data["name"]),
             parent=parent,
             child=child,
-            parent_T_connection_expression=transformation_from_json(
-                data["parent_T_connection_expression"]
+            parent_T_connection_expression=cas.TransformationMatrix.from_json(
+                data["parent_T_connection_expression"], **kwargs
             ),
             frozen_for_collision_avoidance=data["frozen_for_collision_avoidance"],
             axis=cas.Vector3.from_iterable(data["axis"]),
@@ -385,18 +390,19 @@ class Connection6DoF(Connection):
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        parent = cls._get_world_entity_from_kwargs(
-            name=PrefixedName.from_json(data["parent_name"]), **kwargs
+        tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
+        parent = tracker.get_world_entity(
+            name=PrefixedName.from_json(data["parent_name"])
         )
-        child = cls._get_world_entity_from_kwargs(
-            name=PrefixedName.from_json(data["child_name"]), **kwargs
+        child = tracker.get_world_entity(
+            name=PrefixedName.from_json(data["child_name"])
         )
         return cls(
             name=PrefixedName.from_json(data["name"]),
             parent=parent,
             child=child,
-            parent_T_connection_expression=transformation_from_json(
-                data["parent_T_connection_expression"]
+            parent_T_connection_expression=cas.TransformationMatrix.from_json(
+                data["parent_T_connection_expression"], **kwargs
             ),
             x_name=PrefixedName.from_json(data["x_name"]),
             y_name=PrefixedName.from_json(data["y_name"]),
@@ -590,18 +596,19 @@ class OmniDrive(ActiveConnection, HasUpdateState):
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        parent = cls._get_world_entity_from_kwargs(
-            name=PrefixedName.from_json(data["parent_name"]), **kwargs
+        tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
+        parent = tracker.get_world_entity(
+            name=PrefixedName.from_json(data["parent_name"])
         )
-        child = cls._get_world_entity_from_kwargs(
-            name=PrefixedName.from_json(data["child_name"]), **kwargs
+        child = tracker.get_world_entity(
+            name=PrefixedName.from_json(data["child_name"])
         )
         return cls(
             name=PrefixedName.from_json(data["name"], **kwargs),
             parent=parent,
             child=child,
-            parent_T_connection_expression=transformation_from_json(
-                data["parent_T_connection_expression"]
+            parent_T_connection_expression=cas.TransformationMatrix.from_json(
+                data["parent_T_connection_expression"], **kwargs
             ),
             x_name=PrefixedName.from_json(data["x_name"], **kwargs),
             y_name=PrefixedName.from_json(data["y_name"], **kwargs),
