@@ -1748,7 +1748,7 @@ class World:
                 new_world.state[dof.name] = self.state[dof.name].data
             for connection in self.connections:
                 new_connection = SubclassJSONSerializer.from_json(
-                    connection.to_json(), **tracker.create_from_json_kwargs()
+                    connection.to_json(), **tracker.create_kwargs()
                 )
                 new_connection.parent = (
                     new_world.get_kinematic_structure_entity_by_name(

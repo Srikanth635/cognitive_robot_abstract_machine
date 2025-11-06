@@ -108,7 +108,7 @@ def test_KinematicStructureEntityNotInKwargs2():
     json_data = point.to_json()
     tracker = KinematicStructureEntityKwargsTracker.from_world(World())
     with pytest.raises(KinematicStructureEntityNotInKwargs):
-        Point3.from_json(json_data, **tracker.create_from_json_kwargs())
+        Point3.from_json(json_data, **tracker.create_kwargs())
 
 
 def test_vector3_json_serialization_with_expression():
@@ -194,7 +194,7 @@ def test_connection_json_serialization_with_world():
         world.add_connection(c)
     json_data = c.to_json()
     tracker = KinematicStructureEntityKwargsTracker.from_world(world)
-    c2 = FixedConnection.from_json(json_data, **tracker.create_from_json_kwargs())
+    c2 = FixedConnection.from_json(json_data, **tracker.create_kwargs())
     assert c != c2
     assert c.parent.name == c2.parent.name
     assert c.child.name == c2.child.name
@@ -229,7 +229,7 @@ def test_transformation_matrix_json_serialization_with_world_in_kwargs():
         world.add_connection(c)
     json_data = c.to_json()
     tracker = KinematicStructureEntityKwargsTracker.from_world(world)
-    c2 = FixedConnection.from_json(json_data, **tracker.create_from_json_kwargs())
+    c2 = FixedConnection.from_json(json_data, **tracker.create_kwargs())
     assert c != c2
     assert c.parent.name == c2.parent.name
     assert c.child.name == c2.child.name

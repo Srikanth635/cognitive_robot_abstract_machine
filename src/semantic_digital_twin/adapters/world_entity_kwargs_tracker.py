@@ -54,7 +54,7 @@ class KinematicStructureEntityKwargsTracker:
         :param from_json_kwargs: the **kwargs of a from_json call.
         """
         tracker = from_json_kwargs.get(cls.__world_entity_tracker) or cls()
-        tracker.add_to_from_json_kwargs(from_json_kwargs)
+        tracker.add_to_kwargs(from_json_kwargs)
         return tracker
 
     @classmethod
@@ -67,7 +67,7 @@ class KinematicStructureEntityKwargsTracker:
         tracker._world = world
         return tracker
 
-    def create_from_json_kwargs(self) -> Dict[str, Self]:
+    def create_kwargs(self) -> Dict[str, Self]:
         """
         Creates a new kwargs that contains the tracker.
         The top-level object that calls from_json should add this to its kwargs.
@@ -75,7 +75,7 @@ class KinematicStructureEntityKwargsTracker:
         """
         return {self.__world_entity_tracker: self}
 
-    def add_to_from_json_kwargs(self, kwargs: Dict[str, Any]):
+    def add_to_kwargs(self, kwargs: Dict[str, Any]):
         """
         Adds the current instance to the provided keyword arguments dictionary,
         using a specific key internally defined within the instance.

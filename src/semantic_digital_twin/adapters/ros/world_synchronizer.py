@@ -88,7 +88,7 @@ class Synchronizer(ABC):
         """
         tracker = KinematicStructureEntityKwargsTracker.from_world(self.world)
         msg = self.message_type.from_json(
-            json.loads(msg.data), **tracker.create_from_json_kwargs()
+            json.loads(msg.data), **tracker.create_kwargs()
         )
         if msg.meta_data == self.meta_data:
             return

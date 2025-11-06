@@ -347,12 +347,12 @@ class WorldModelModificationBlock(SubclassJSONSerializer):
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
-        world_modifications = []
-        for json_data in data["modifications"]:
-            modification = WorldModelModification.from_json(json_data, **kwargs)
-            world_modifications.append(modification)
-        return cls(world_modifications)
+        return cls(
+            [
+                WorldModelModification.from_json(d, **kwargs)
+                for d in data["modifications"]
+            ]
+        )
 
     def __iter__(self):
         return iter(self.modifications)
@@ -371,9 +371,6 @@ class WorldModelModificationBlock(SubclassJSONSerializer):
 class SetDofHasHardwareInterface(WorldModelModification):
     degree_of_freedom_names: List[PrefixedName]
     value: bool
-
-    def get_parsed_world_entities(self) -> List[WorldEntity]:
-        return []
 
     def apply(self, world: World):
         for dof_name in self.degree_of_freedom_names:
