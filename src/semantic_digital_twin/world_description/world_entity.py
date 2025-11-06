@@ -76,7 +76,7 @@ class WorldEntity(Symbol):
             self.name = PrefixedName(f"{self.__class__.__name__}_{hash(self)}")
 
     def __eq__(self, other):
-        if other is None:
+        if not isinstance(other, type(self)):
             return False
         return self.name == other.name and self._world is other._world
 
