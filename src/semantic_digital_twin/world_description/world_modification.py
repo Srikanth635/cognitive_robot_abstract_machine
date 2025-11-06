@@ -159,12 +159,6 @@ class AddConnectionModification(WorldModelModification):
         return cls(kwargs["connection"])
 
     def apply(self, world: World):
-        self.connection.parent = world.get_kinematic_structure_entity_by_name(
-            self.connection.parent.name
-        )
-        self.connection.child = world.get_kinematic_structure_entity_by_name(
-            self.connection.child.name
-        )
         world.add_connection(self.connection)
 
     def to_json(self):
