@@ -6,6 +6,9 @@ from semantic_digital_twin.adapters.ros.world_fetcher import (
     FetchWorldServer,
     fetch_world_from_service,
 )
+from semantic_digital_twin.adapters.world_entity_kwargs_tracker import (
+    KinematicStructureEntityKwargsTracker,
+)
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.semantic_annotations.semantic_annotations import Handle, Door
 from semantic_digital_twin.testing import rclpy_node
@@ -63,12 +66,18 @@ def test_service_callback_success(rclpy_node):
 
     assert result.success is True
 
+    tracker = KinematicStructureEntityKwargsTracker()
+    kwargs = tracker.create_kwargs()
+
     # Verify the message is valid JSON
     modifications_list = [
-        WorldModelModificationBlock.from_json(d) for d in json.loads(result.message)
+        WorldModelModificationBlock.from_json(d, **kwargs)
+        for d in json.loads(result.message)
     ]
 
-    assert modifications_list == world._model_modification_blocks
+    assert (
+        modifications_list == world.get_world_model_manager().model_modification_blocks
+    )
 
     fetcher.close()
 
@@ -105,10 +114,16 @@ def test_service_callback_with_multiple_modifications(rclpy_node):
 
     assert result.success is True
     # Verify the message is valid JSON
+
+    tracker = KinematicStructureEntityKwargsTracker.from_world(world)
+    kwargs = tracker.create_kwargs()
     modifications_list = [
-        WorldModelModificationBlock.from_json(d) for d in json.loads(result.message)
+        WorldModelModificationBlock.from_json(d, **kwargs)
+        for d in json.loads(result.message)
     ]
-    assert modifications_list == world._model_modification_blocks
+    assert (
+        modifications_list == world.get_world_model_manager().model_modification_blocks
+    )
     fetcher.close()
 
 
@@ -119,7 +134,10 @@ def test_world_fetching(rclpy_node):
     world2 = fetch_world_from_service(
         rclpy_node,
     )
-    assert world2._model_modification_blocks == world._model_modification_blocks
+    assert (
+        world2.get_world_model_manager().model_modification_blocks
+        == world.get_world_model_manager().model_modification_blocks
+    )
 
 
 def test_semantic_annotation_modifications(rclpy_node):

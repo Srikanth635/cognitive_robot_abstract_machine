@@ -22,6 +22,7 @@ import semantic_digital_twin.datastructures.prefixed_name
 import semantic_digital_twin.orm.model
 import semantic_digital_twin.robots.abstract_robot
 import semantic_digital_twin.semantic_annotations.semantic_annotations
+import semantic_digital_twin.world
 import semantic_digital_twin.world_description.connections
 import semantic_digital_twin.world_description.degree_of_freedom
 import semantic_digital_twin.world_description.geometry
@@ -126,6 +127,27 @@ class CollisionCheckingConfigDAO(
         use_existing_column=True
     )
     max_avoided_bodies: Mapped[builtins.int] = mapped_column(use_existing_column=True)
+
+
+class CollisionPairManagerDAO(
+    Base, DataAccessObject[semantic_digital_twin.world.CollisionPairManager]
+):
+
+    __tablename__ = "CollisionPairManagerDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        Integer, primary_key=True, use_existing_column=True
+    )
+
+    world_id: Mapped[int] = mapped_column(
+        ForeignKey("WorldMappingDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+
+    world: Mapped[WorldMappingDAO] = relationship(
+        "WorldMappingDAO", uselist=False, foreign_keys=[world_id], post_update=True
+    )
 
 
 class ColorDAO(
@@ -1136,142 +1158,17 @@ class RevoluteConnectionDAO(
     }
 
 
-class FixedConnectionDAO(
-    ConnectionDAO,
-    DataAccessObject[
-        semantic_digital_twin.world_description.connections.FixedConnection
-    ],
-):
-
-    __tablename__ = "FixedConnectionDAO"
-
-    database_id: Mapped[builtins.int] = mapped_column(
-        ForeignKey(ConnectionDAO.database_id),
-        primary_key=True,
-        use_existing_column=True,
-    )
-
-    __mapper_args__ = {
-        "polymorphic_identity": "FixedConnectionDAO",
-        "inherit_condition": database_id == ConnectionDAO.database_id,
-    }
-
-
-class PassiveConnectionDAO(
-    ConnectionDAO,
-    DataAccessObject[
-        semantic_digital_twin.world_description.connections.PassiveConnection
-    ],
-):
-
-    __tablename__ = "PassiveConnectionDAO"
-
-    database_id: Mapped[builtins.int] = mapped_column(
-        ForeignKey(ConnectionDAO.database_id),
-        primary_key=True,
-        use_existing_column=True,
-    )
-
-    __mapper_args__ = {
-        "polymorphic_identity": "PassiveConnectionDAO",
-        "inherit_condition": database_id == ConnectionDAO.database_id,
-    }
-
-
-class Connection6DoFDAO(
-    PassiveConnectionDAO,
-    DataAccessObject[
-        semantic_digital_twin.world_description.connections.Connection6DoF
-    ],
-):
-
-    __tablename__ = "Connection6DoFDAO"
-
-    database_id: Mapped[builtins.int] = mapped_column(
-        ForeignKey(PassiveConnectionDAO.database_id),
-        primary_key=True,
-        use_existing_column=True,
-    )
-
-    x_name_id: Mapped[int] = mapped_column(
-        ForeignKey("PrefixedNameDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-    y_name_id: Mapped[int] = mapped_column(
-        ForeignKey("PrefixedNameDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-    z_name_id: Mapped[int] = mapped_column(
-        ForeignKey("PrefixedNameDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-    qx_name_id: Mapped[int] = mapped_column(
-        ForeignKey("PrefixedNameDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-    qy_name_id: Mapped[int] = mapped_column(
-        ForeignKey("PrefixedNameDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-    qz_name_id: Mapped[int] = mapped_column(
-        ForeignKey("PrefixedNameDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-    qw_name_id: Mapped[int] = mapped_column(
-        ForeignKey("PrefixedNameDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-
-    x_name: Mapped[PrefixedNameDAO] = relationship(
-        "PrefixedNameDAO", uselist=False, foreign_keys=[x_name_id], post_update=True
-    )
-    y_name: Mapped[PrefixedNameDAO] = relationship(
-        "PrefixedNameDAO", uselist=False, foreign_keys=[y_name_id], post_update=True
-    )
-    z_name: Mapped[PrefixedNameDAO] = relationship(
-        "PrefixedNameDAO", uselist=False, foreign_keys=[z_name_id], post_update=True
-    )
-    qx_name: Mapped[PrefixedNameDAO] = relationship(
-        "PrefixedNameDAO", uselist=False, foreign_keys=[qx_name_id], post_update=True
-    )
-    qy_name: Mapped[PrefixedNameDAO] = relationship(
-        "PrefixedNameDAO", uselist=False, foreign_keys=[qy_name_id], post_update=True
-    )
-    qz_name: Mapped[PrefixedNameDAO] = relationship(
-        "PrefixedNameDAO", uselist=False, foreign_keys=[qz_name_id], post_update=True
-    )
-    qw_name: Mapped[PrefixedNameDAO] = relationship(
-        "PrefixedNameDAO", uselist=False, foreign_keys=[qw_name_id], post_update=True
-    )
-
-    __mapper_args__ = {
-        "polymorphic_identity": "Connection6DoFDAO",
-        "inherit_condition": database_id == PassiveConnectionDAO.database_id,
-    }
-
-
 class OmniDriveDAO(
-    PassiveConnectionDAO,
+    ActiveConnectionDAO,
     DataAccessObject[semantic_digital_twin.world_description.connections.OmniDrive],
 ):
 
     __tablename__ = "OmniDriveDAO"
 
     database_id: Mapped[builtins.int] = mapped_column(
-        ForeignKey(PassiveConnectionDAO.database_id),
+        ForeignKey(ActiveConnectionDAO.database_id),
         primary_key=True,
         use_existing_column=True,
-    )
-
-    frozen_for_collision_avoidance: Mapped[builtins.bool] = mapped_column(
-        use_existing_column=True
     )
 
     x_name_id: Mapped[int] = mapped_column(
@@ -1340,7 +1237,107 @@ class OmniDriveDAO(
 
     __mapper_args__ = {
         "polymorphic_identity": "OmniDriveDAO",
-        "inherit_condition": database_id == PassiveConnectionDAO.database_id,
+        "inherit_condition": database_id == ActiveConnectionDAO.database_id,
+    }
+
+
+class Connection6DoFDAO(
+    ConnectionDAO,
+    DataAccessObject[
+        semantic_digital_twin.world_description.connections.Connection6DoF
+    ],
+):
+
+    __tablename__ = "Connection6DoFDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(ConnectionDAO.database_id),
+        primary_key=True,
+        use_existing_column=True,
+    )
+
+    x_name_id: Mapped[int] = mapped_column(
+        ForeignKey("PrefixedNameDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+    y_name_id: Mapped[int] = mapped_column(
+        ForeignKey("PrefixedNameDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+    z_name_id: Mapped[int] = mapped_column(
+        ForeignKey("PrefixedNameDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+    qx_name_id: Mapped[int] = mapped_column(
+        ForeignKey("PrefixedNameDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+    qy_name_id: Mapped[int] = mapped_column(
+        ForeignKey("PrefixedNameDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+    qz_name_id: Mapped[int] = mapped_column(
+        ForeignKey("PrefixedNameDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+    qw_name_id: Mapped[int] = mapped_column(
+        ForeignKey("PrefixedNameDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+
+    x_name: Mapped[PrefixedNameDAO] = relationship(
+        "PrefixedNameDAO", uselist=False, foreign_keys=[x_name_id], post_update=True
+    )
+    y_name: Mapped[PrefixedNameDAO] = relationship(
+        "PrefixedNameDAO", uselist=False, foreign_keys=[y_name_id], post_update=True
+    )
+    z_name: Mapped[PrefixedNameDAO] = relationship(
+        "PrefixedNameDAO", uselist=False, foreign_keys=[z_name_id], post_update=True
+    )
+    qx_name: Mapped[PrefixedNameDAO] = relationship(
+        "PrefixedNameDAO", uselist=False, foreign_keys=[qx_name_id], post_update=True
+    )
+    qy_name: Mapped[PrefixedNameDAO] = relationship(
+        "PrefixedNameDAO", uselist=False, foreign_keys=[qy_name_id], post_update=True
+    )
+    qz_name: Mapped[PrefixedNameDAO] = relationship(
+        "PrefixedNameDAO", uselist=False, foreign_keys=[qz_name_id], post_update=True
+    )
+    qw_name: Mapped[PrefixedNameDAO] = relationship(
+        "PrefixedNameDAO", uselist=False, foreign_keys=[qw_name_id], post_update=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "Connection6DoFDAO",
+        "inherit_condition": database_id == ConnectionDAO.database_id,
+    }
+
+
+class FixedConnectionDAO(
+    ConnectionDAO,
+    DataAccessObject[
+        semantic_digital_twin.world_description.connections.FixedConnection
+    ],
+):
+
+    __tablename__ = "FixedConnectionDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(ConnectionDAO.database_id),
+        primary_key=True,
+        use_existing_column=True,
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "FixedConnectionDAO",
+        "inherit_condition": database_id == ConnectionDAO.database_id,
     }
 
 
@@ -2594,6 +2591,19 @@ class WallDAO(
         "polymorphic_identity": "WallDAO",
         "inherit_condition": database_id == SemanticAnnotationDAO.database_id,
     }
+
+
+class WorldModelManagerDAO(
+    Base, DataAccessObject[semantic_digital_twin.world.WorldModelManager]
+):
+
+    __tablename__ = "WorldModelManagerDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        Integer, primary_key=True, use_existing_column=True
+    )
+
+    model_version: Mapped[builtins.int] = mapped_column(use_existing_column=True)
 
 
 class WorldStateMappingDAO(

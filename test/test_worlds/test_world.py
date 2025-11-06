@@ -11,11 +11,11 @@ from semantic_digital_twin.world_description.connections import (
     RevoluteConnection,
     Connection6DoF,
     FixedConnection,
+    OmniDrive,
 )
 from semantic_digital_twin.exceptions import (
     AddingAnExistingSemanticAnnotationError,
-    DuplicateSemanticAnnotationError,
-    SemanticAnnotationNotFoundError,
+    DuplicateWorldEntityError,
     DuplicateKinematicStructureEntityError,
     UsageError,
     MissingWorldModificationContextError,
@@ -256,7 +256,7 @@ def test_compute_fk_expression(world_setup):
     world.state[connection.dof.name].position = 1.0
     world.notify_state_change()
     fk = world.compute_forward_kinematics_np(r2, l2)
-    fk_expr = world.compose_forward_kinematics_expression(r2, l2)
+    fk_expr = world._forward_kinematic_manager.compose_expression(r2, l2)
     fk2 = fk_expr.evaluate()
     np.testing.assert_array_almost_equal(fk, fk2)
 
@@ -366,7 +366,7 @@ def test_add_semantic_annotation(world_setup):
     with world.modify_world():
         world.add_semantic_annotation(v)
     with pytest.raises(AddingAnExistingSemanticAnnotationError):
-        world.add_semantic_annotation(v, exists_ok=False)
+        world.add_semantic_annotation(v, skip_duplicates=False)
     assert world.get_semantic_annotation_by_name(v.name) == v
 
 
@@ -376,7 +376,7 @@ def test_duplicate_semantic_annotation(world_setup):
     with world.modify_world():
         world.add_semantic_annotation(v)
         world.semantic_annotations.append(v)
-    with pytest.raises(DuplicateSemanticAnnotationError):
+    with pytest.raises(DuplicateWorldEntityError):
         world.get_semantic_annotation_by_name(v.name)
 
 
@@ -576,7 +576,7 @@ def test_remove_connection(world_setup):
         new_connection = FixedConnection(r1, r2)
         world.add_connection(new_connection)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(AssertionError):
         # if you remove a connection, the child must be connected some other way or deleted
         world.remove_connection(world.get_connection(r1, r2))
 
@@ -824,3 +824,22 @@ def test_missing_world_modification_context(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
     with pytest.raises(MissingWorldModificationContextError):
         world.add_semantic_annotation(Handle(l1))
+
+
+def test_symbol_removal():
+    world1 = World()
+    body1 = Body(name=PrefixedName("body1"))
+    with world1.modify_world():
+        world1.add_body(body1)
+
+    world2 = World()
+    body2 = Body(name=PrefixedName("body2"))
+    with world2.modify_world():
+        world2.add_body(body2)
+
+    world1.merge_world(world2)
+
+    with world1.modify_world():
+        world1.remove_connection(body2.parent_connection)
+        c_root_bf = OmniDrive.create_with_dofs(parent=body1, child=body2, world=world1)
+        world1.add_connection(c_root_bf)

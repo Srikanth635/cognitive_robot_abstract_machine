@@ -1,19 +1,20 @@
 from __future__ import annotations
 
-import operator
-from collections import Counter
-from enum import IntEnum
-
-import numpy as np
 import builtins
 import copy
 import functools
 import math
+import operator
 import sys
+from collections import Counter
 from copy import copy, deepcopy
 from dataclasses import dataclass, field, InitVar
+from enum import IntEnum
 
-from random_events.utils import SubclassJSONSerializer
+import casadi as ca
+import numpy as np
+from krrood.adapters.json_serializer import SubclassJSONSerializer
+from scipy import sparse as sp
 from typing_extensions import (
     Optional,
     List,
@@ -32,9 +33,9 @@ from typing_extensions import (
     overload,
 )
 
-import casadi as ca
-from scipy import sparse as sp
-
+from ..adapters.world_entity_kwargs_tracker import (
+    KinematicStructureEntityKwargsTracker,
+)
 from ..datastructures.prefixed_name import PrefixedName
 from ..exceptions import (
     HasFreeSymbolsError,
@@ -43,10 +44,11 @@ from ..exceptions import (
     SpatialTypesError,
     WrongNumberOfArgsError,
     DuplicateSymbolsError,
+    SpatialTypeNotJsonSerializable,
 )
 
 if TYPE_CHECKING:
-    from ..world_description.world_entity import KinematicStructureEntity, Connection
+    from ..world_description.world_entity import KinematicStructureEntity
 
 EPS: float = sys.float_info.epsilon * 4.0
 
@@ -1883,22 +1885,41 @@ class TransformationMatrix(
         self[3, 2] = 0.0
         self[3, 3] = 1.0
 
-    def to_json(self) -> Dict[str, Any]:
-        result = super().to_json()
-        result["reference_frame"] = (
-            self.reference_frame.to_json() if self.reference_frame else None
-        )
-        result["child_frame"] = self.child_frame.to_json() if self.child_frame else None
-        result["data"] = self.to_np().tolist()
-        return result
-
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(
-            reference_frame=KinematicStructureEntity.from_json(data["reference_frame"]),
-            child_frame=KinematicStructureEntity.from_json(data["child_frame"]),
-            data=data["data"],
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
+        reference_frame_data = data.get("reference_frame", None)
+        if reference_frame_data is not None:
+            reference_frame = tracker.get_kinematic_structure_entity(
+                name=PrefixedName.from_json(reference_frame_data)
+            )
+        else:
+            reference_frame = None
+        child_frame_data = data.get("child_frame", None)
+        if child_frame_data is not None:
+            child_frame = tracker.get_kinematic_structure_entity(
+                name=PrefixedName.from_json(child_frame_data)
+            )
+        else:
+            child_frame = None
+        return cls.from_xyz_quaternion(
+            *data["position"][:3],
+            *data["rotation"],
+            reference_frame=reference_frame,
+            child_frame=child_frame,
         )
+
+    def to_json(self) -> Dict[str, Any]:
+        if not self.is_constant():
+            raise SpatialTypeNotJsonSerializable(self)
+        result = super().to_json()
+        if self.reference_frame is not None:
+            result["reference_frame"] = self.reference_frame.name.to_json()
+        if self.child_frame is not None:
+            result["child_frame"] = self.child_frame.name.to_json()
+        result["position"] = self.to_position().to_np().tolist()
+        result["rotation"] = self.to_quaternion().to_np().tolist()
+        return result
 
     @classmethod
     def from_point_rotation_matrix(
@@ -2191,7 +2212,9 @@ class TransformationMatrix(
 
 
 @dataclass(eq=False)
-class RotationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMixin):
+class RotationMatrix(
+    SymbolicType, ReferenceFrameMixin, MatrixOperationsMixin, SubclassJSONSerializer
+):
     """
     Class to represent a 4x4 symbolic rotation matrix tied to kinematic references.
 
@@ -2236,6 +2259,30 @@ class RotationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMixin):
         self[3, 1] = 0
         self[3, 2] = 0
         self[3, 3] = 1
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
+        reference_frame_data = data.get("reference_frame", None)
+        if reference_frame_data is not None:
+            reference_frame = tracker.get_kinematic_structure_entity(
+                name=PrefixedName.from_json(reference_frame_data)
+            )
+        else:
+            reference_frame = None
+        return Quaternion.from_iterable(
+            data["quaternion"],
+            reference_frame=reference_frame,
+        ).to_rotation_matrix()
+
+    def to_json(self) -> Dict[str, Any]:
+        if not self.is_constant():
+            raise SpatialTypeNotJsonSerializable(self)
+        result = super().to_json()
+        if self.reference_frame is not None:
+            result["reference_frame"] = self.reference_frame.name.to_json()
+        result["quaternion"] = self.to_quaternion().to_np().tolist()
+        return result
 
     @classmethod
     def from_axis_angle(
@@ -2502,7 +2549,9 @@ class RotationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMixin):
 
 
 @dataclass(eq=False)
-class Point3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
+class Point3(
+    SymbolicType, ReferenceFrameMixin, VectorOperationsMixin, SubclassJSONSerializer
+):
     """
     Represents a 3D point with reference frame handling.
 
@@ -2577,6 +2626,30 @@ class Point3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
             z_init=data[2],
             reference_frame=reference_frame,
         )
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
+        reference_frame_data = data.get("reference_frame", None)
+        if reference_frame_data is not None:
+            reference_frame = tracker.get_kinematic_structure_entity(
+                name=PrefixedName.from_json(reference_frame_data)
+            )
+        else:
+            reference_frame = None
+        return cls.from_iterable(
+            data["data"][:3],
+            reference_frame=reference_frame,
+        )
+
+    def to_json(self) -> Dict[str, Any]:
+        if not self.is_constant():
+            raise SpatialTypeNotJsonSerializable(self)
+        result = super().to_json()
+        if self.reference_frame is not None:
+            result["reference_frame"] = self.reference_frame.name.to_json()
+        result["data"] = self.to_np().tolist()
+        return result
 
     def norm(self) -> Expression:
         return Expression(ca.norm_2(self[:3].casadi_sx))
@@ -2701,7 +2774,9 @@ class Point3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
 
 
 @dataclass(eq=False)
-class Vector3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
+class Vector3(
+    SymbolicType, ReferenceFrameMixin, VectorOperationsMixin, SubclassJSONSerializer
+):
     """
     Representation of a 3D vector with reference frame support for homogenous transformations.
 
@@ -2745,6 +2820,30 @@ class Vector3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
             self[1] = y_init
         if z_init is not None:
             self[2] = z_init
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
+        reference_frame_data = data.get("reference_frame", None)
+        if reference_frame_data is not None:
+            reference_frame = tracker.get_kinematic_structure_entity(
+                name=PrefixedName.from_json(reference_frame_data)
+            )
+        else:
+            reference_frame = None
+        return cls.from_iterable(
+            data["data"][:3],
+            reference_frame=reference_frame,
+        )
+
+    def to_json(self) -> Dict[str, Any]:
+        if not self.is_constant():
+            raise SpatialTypeNotJsonSerializable(self)
+        result = super().to_json()
+        if self.reference_frame is not None:
+            result["reference_frame"] = self.reference_frame.name.to_json()
+        result["data"] = self.to_np().tolist()
+        return result
 
     @classmethod
     def from_iterable(
@@ -2999,7 +3098,7 @@ class Vector3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
 
 
 @dataclass(eq=False)
-class Quaternion(SymbolicType, ReferenceFrameMixin):
+class Quaternion(SymbolicType, ReferenceFrameMixin, SubclassJSONSerializer):
     """
     Represents a quaternion, which is a mathematical entity used to encode
     rotations in three-dimensional space.
@@ -3051,6 +3150,30 @@ class Quaternion(SymbolicType, ReferenceFrameMixin):
 
     def __neg__(self) -> Quaternion:
         return Quaternion.from_iterable(self.casadi_sx.__neg__())
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
+        reference_frame_data = data.get("reference_frame", None)
+        if reference_frame_data is not None:
+            reference_frame = tracker.get_kinematic_structure_entity(
+                name=PrefixedName.from_json(reference_frame_data)
+            )
+        else:
+            reference_frame = None
+        return cls.from_iterable(
+            data["data"],
+            reference_frame=reference_frame,
+        )
+
+    def to_json(self) -> Dict[str, Any]:
+        if not self.is_constant():
+            raise SpatialTypeNotJsonSerializable(self)
+        result = super().to_json()
+        if self.reference_frame is not None:
+            result["reference_frame"] = self.reference_frame.name.to_json()
+        result["data"] = self.to_np().tolist()
+        return result
 
     @classmethod
     def from_iterable(

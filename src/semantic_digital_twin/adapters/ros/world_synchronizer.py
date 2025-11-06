@@ -3,13 +3,13 @@ import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from functools import cached_property
-from typing import ClassVar, Optional, Type, List
+from typing import ClassVar, Optional, Type, List, Dict
 
 import numpy as np
 import rclpy  # type: ignore
 import std_msgs.msg
 from krrood.ormatic.dao import to_dao
-from random_events.utils import SubclassJSONSerializer
+from krrood.adapters.json_serializer import SubclassJSONSerializer
 from rclpy.node import Node as RosNode
 from rclpy.publisher import Publisher
 from rclpy.subscription import Subscription
@@ -17,7 +17,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .messages import MetaData, WorldStateUpdate, Message, ModificationBlock, LoadModel
+from ..world_entity_kwargs_tracker import KinematicStructureEntityKwargsTracker
 from ...callbacks.callback import Callback, StateChangeCallback, ModelChangeCallback
+from ...datastructures.prefixed_name import PrefixedName
 from ...orm.ormatic_interface import *
 from ...world import World
 
@@ -84,7 +86,10 @@ class Synchronizer(ABC):
         """
         Wrap the origin subscription callback by self-skipping and disabling the next world callback.
         """
-        msg = self.message_type.from_json(json.loads(msg.data))
+        tracker = KinematicStructureEntityKwargsTracker.from_world(self.world)
+        msg = self.message_type.from_json(
+            json.loads(msg.data), **tracker.create_kwargs()
+        )
         if msg.meta_data == self.meta_data:
             return
         self._skip_next_world_callback = True
@@ -223,6 +228,18 @@ class StateSynchronizer(StateChangeCallback, SynchronizerOnCallback):
         self.update_previous_world_state()
         self.publish(msg)
 
+    def compute_state_changes(self) -> Dict[PrefixedName, float]:
+        changes = {
+            name: current_state
+            for name, previous_state, current_state in zip(
+                self.world.state.keys(),
+                self.previous_world_state_data,
+                self.world.state.positions,
+            )
+            if not np.allclose(previous_state, current_state)
+        }
+        return changes
+
 
 @dataclass
 class ModelSynchronizer(
@@ -246,7 +263,9 @@ class ModelSynchronizer(
     def world_callback(self):
         msg = ModificationBlock(
             meta_data=self.meta_data,
-            modifications=self.world._model_modification_blocks[-1],
+            modifications=self.world.get_world_model_manager().model_modification_blocks[
+                -1
+            ],
         )
         self.publish(msg)
 

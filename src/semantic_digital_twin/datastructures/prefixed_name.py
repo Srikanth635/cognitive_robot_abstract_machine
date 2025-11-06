@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from krrood.entity_query_language.predicate import Symbol
 from typing_extensions import Optional, Dict, Any, Self
 
-from random_events.utils import SubclassJSONSerializer
+from krrood.adapters.json_serializer import SubclassJSONSerializer
 
 
 @dataclass
@@ -28,7 +28,7 @@ class PrefixedName(Symbol, SubclassJSONSerializer):
         return {**super().to_json(), "name": self.name, "prefix": self.prefix}
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         return cls(name=data["name"], prefix=data["prefix"])
 
     def __lt__(self, other):
