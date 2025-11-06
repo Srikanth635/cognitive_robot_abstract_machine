@@ -1750,14 +1750,6 @@ class World:
                 new_connection = SubclassJSONSerializer.from_json(
                     connection.to_json(), **tracker.create_kwargs()
                 )
-                new_connection.parent = (
-                    new_world.get_kinematic_structure_entity_by_name(
-                        new_connection.parent.name
-                    )
-                )
-                new_connection.child = new_world.get_kinematic_structure_entity_by_name(
-                    new_connection.child.name
-                )
                 new_world.add_connection(new_connection)
         return new_world
 
