@@ -415,7 +415,7 @@ class SymbolicType:
         return self.shape[0]
 
     def free_symbols(self) -> List[FloatVariable]:
-        return [FloatVariable._registry[str(s)] for s in ca.symvar(self.casadi_sx)]
+        return [FloatVariable._registry[s] for s in ca.symvar(self.casadi_sx)]
 
     def is_constant(self) -> bool:
         return len(self.free_symbols()) == 0
@@ -732,22 +732,14 @@ class FloatVariable(SymbolicType, BasicOperatorMixin):
 
     casadi_sx: ca.SX = field(kw_only=True, init=False, default=None)
 
-    _registry: ClassVar[Dict[str, FloatVariable]] = {}
+    _registry: ClassVar[Dict[ca.SX, FloatVariable]] = {}
     """
     To avoid two symbols with the same name, references to existing symbols are stored on a class level.
     """
 
-    def __new__(cls, name: PrefixedName, *args, **kwargs):
-        """
-        Multiton design pattern prevents two symbol instances with the same name.
-        """
-        if name in cls._registry:
-            return cls._registry[str(name)]
-        instance = super().__new__(cls)
-        instance.casadi_sx = ca.SX.sym(str(name))
-        instance.name = name
-        cls._registry[str(name)] = instance
-        return instance
+    def __post_init__(self):
+        self.casadi_sx = ca.SX.sym(str(self.name))
+        self._registry[self.casadi_sx] = self
 
     def __str__(self):
         return str(self.name)

@@ -5,11 +5,14 @@ import scipy
 from hypothesis import given, assume
 
 import semantic_digital_twin.spatial_types.spatial_types as cas
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.exceptions import (
     HasFreeSymbolsError,
     WrongDimensionsError,
     SpatialTypesError,
 )
+from semantic_digital_twin.world import World
+from semantic_digital_twin.world_description.world_entity import Body
 from .reference_implementations import (
     rotation_matrix_from_quaternion,
     axis_angle_from_rotation_matrix,
@@ -141,7 +144,16 @@ class TestLogic3:
                     ), f"Mismatch for inputs i={i}, j={j}, k={k}. Expected {expected_result}, got {computed_result}"
 
 
-class TestSymbol:
+class TestFloatVariable:
+    def test_back_reference(self):
+        v = cas.FloatVariable(name=PrefixedName("asdf"))
+        v2 = v.free_symbols()[0]
+        assert id(v2) == id(v)
+        assert id(v2.casadi_sx) == id(v.casadi_sx)
+
+        v3 = cas.Point3(v).free_symbols()[0]
+        assert id(v3) == id(v)
+
     def test_from_name(self):
         s = cas.FloatVariable(name="muh")
         assert isinstance(s, cas.FloatVariable)

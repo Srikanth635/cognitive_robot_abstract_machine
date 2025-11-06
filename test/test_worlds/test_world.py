@@ -826,6 +826,23 @@ def test_missing_world_modification_context(world_setup):
         world.add_semantic_annotation(Handle(l1))
 
 
+def test_symbol_removel_simple():
+    world = World()
+    body1 = Body(name=PrefixedName("body1"))
+    body2 = Body(name=PrefixedName("body2"))
+    with world.modify_world():
+        c = RevoluteConnection.create_with_dofs(
+            world=world, parent=body1, child=body2, axis=Vector3.Z()
+        )
+        world.add_connection(c)
+    with world.modify_world():
+        world.remove_connection(c)
+        c2 = RevoluteConnection.create_with_dofs(
+            world=world, parent=body1, child=body2, axis=Vector3.Z()
+        )
+        world.add_connection(c2)
+
+
 def test_symbol_removal():
     world1 = World()
     body1 = Body(name=PrefixedName("body1"))
