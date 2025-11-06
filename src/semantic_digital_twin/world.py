@@ -13,9 +13,7 @@ import numpy as np
 import rustworkx as rx
 import rustworkx.visit
 import rustworkx.visualization
-from line_profiler import profile
 from lxml import etree
-from random_events.utils import SubclassJSONSerializer
 from rustworkx import NoEdgeBetweenNodes
 from typing_extensions import (
     Dict,
@@ -1720,7 +1718,6 @@ class World:
             case _:
                 return target_frame_T_reference_frame @ spatial_object
 
-    @profile
     def __deepcopy__(self, memo):
         memo = {} if memo is None else memo
         me_id = id(self)
