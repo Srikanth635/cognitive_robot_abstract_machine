@@ -29,6 +29,7 @@ from typing_extensions import (
 from typing_extensions import List
 from typing_extensions import Type, Set
 
+from .adapters.world_entity_kwargs_tracker import WorldEntityKwargsTracker
 from .callbacks.callback import ModelChangeCallback
 from .collision_checking.collision_detector import CollisionDetector
 from .collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
@@ -1728,6 +1729,7 @@ class World:
         new_world = World(name=self.name)
         memo[me_id] = new_world
 
+        tracker = WorldEntityKwargsTracker.from_world(new_world)
         with new_world.modify_world():
             for body in self.bodies:
                 new_body = Body(
@@ -1746,7 +1748,7 @@ class World:
                 new_world.state[dof.name] = self.state[dof.name].data
             for connection in self.connections:
                 new_connection = SubclassJSONSerializer.from_json(
-                    connection.to_json(), world=new_world
+                    connection.to_json(), **tracker.create_kwargs()
                 )
                 new_connection.parent = (
                     new_world.get_kinematic_structure_entity_by_name(

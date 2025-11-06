@@ -43,6 +43,7 @@ from ..exceptions import (
     WrongDimensionsError,
     SpatialTypesError,
     DuplicateSymbolsError,
+    SpatialTypeNotJsonSerializable,
 )
 
 if TYPE_CHECKING:
@@ -1865,6 +1866,8 @@ class TransformationMatrix(
         )
 
     def to_json(self) -> Dict[str, Any]:
+        if not self.is_constant():
+            raise SpatialTypeNotJsonSerializable(self)
         result = super().to_json()
         if self.reference_frame is not None:
             result["reference_frame"] = self.reference_frame.name.to_json()
@@ -2165,7 +2168,9 @@ class TransformationMatrix(
 
 
 @dataclass(eq=False)
-class RotationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMixin):
+class RotationMatrix(
+    SymbolicType, ReferenceFrameMixin, MatrixOperationsMixin, SubclassJSONSerializer
+):
     """
     Class to represent a 4x4 symbolic rotation matrix tied to kinematic references.
 
@@ -2210,6 +2215,30 @@ class RotationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMixin):
         self[3, 1] = 0
         self[3, 2] = 0
         self[3, 3] = 1
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
+        reference_frame_data = data.get("reference_frame", None)
+        if reference_frame_data is not None:
+            reference_frame = tracker.get_world_entity(
+                name=PrefixedName.from_json(reference_frame_data)
+            )
+        else:
+            reference_frame = None
+        return Quaternion.from_iterable(
+            data["quaternion"],
+            reference_frame=reference_frame,
+        ).to_rotation_matrix()
+
+    def to_json(self) -> Dict[str, Any]:
+        if not self.is_constant():
+            raise SpatialTypeNotJsonSerializable(self)
+        result = super().to_json()
+        if self.reference_frame is not None:
+            result["reference_frame"] = self.reference_frame.name.to_json()
+        result["quaternion"] = self.to_quaternion().to_np().tolist()
+        return result
 
     @classmethod
     def from_axis_angle(
@@ -2476,7 +2505,9 @@ class RotationMatrix(SymbolicType, ReferenceFrameMixin, MatrixOperationsMixin):
 
 
 @dataclass(eq=False)
-class Point3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
+class Point3(
+    SymbolicType, ReferenceFrameMixin, VectorOperationsMixin, SubclassJSONSerializer
+):
     """
     Represents a 3D point with reference frame handling.
 
@@ -2551,6 +2582,30 @@ class Point3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
             z_init=data[2],
             reference_frame=reference_frame,
         )
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
+        reference_frame_data = data.get("reference_frame", None)
+        if reference_frame_data is not None:
+            reference_frame = tracker.get_world_entity(
+                name=PrefixedName.from_json(reference_frame_data)
+            )
+        else:
+            reference_frame = None
+        return cls.from_iterable(
+            data["data"][:3],
+            reference_frame=reference_frame,
+        )
+
+    def to_json(self) -> Dict[str, Any]:
+        if not self.is_constant():
+            raise SpatialTypeNotJsonSerializable(self)
+        result = super().to_json()
+        if self.reference_frame is not None:
+            result["reference_frame"] = self.reference_frame.name.to_json()
+        result["data"] = self.to_np().tolist()
+        return result
 
     def norm(self) -> Expression:
         return Expression(ca.norm_2(self[:3].casadi_sx))
@@ -2675,7 +2730,9 @@ class Point3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
 
 
 @dataclass(eq=False)
-class Vector3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
+class Vector3(
+    SymbolicType, ReferenceFrameMixin, VectorOperationsMixin, SubclassJSONSerializer
+):
     """
     Representation of a 3D vector with reference frame support for homogenous transformations.
 
@@ -2719,6 +2776,30 @@ class Vector3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
             self[1] = y_init
         if z_init is not None:
             self[2] = z_init
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
+        reference_frame_data = data.get("reference_frame", None)
+        if reference_frame_data is not None:
+            reference_frame = tracker.get_world_entity(
+                name=PrefixedName.from_json(reference_frame_data)
+            )
+        else:
+            reference_frame = None
+        return cls.from_iterable(
+            data["data"][:3],
+            reference_frame=reference_frame,
+        )
+
+    def to_json(self) -> Dict[str, Any]:
+        if not self.is_constant():
+            raise SpatialTypeNotJsonSerializable(self)
+        result = super().to_json()
+        if self.reference_frame is not None:
+            result["reference_frame"] = self.reference_frame.name.to_json()
+        result["data"] = self.to_np().tolist()
+        return result
 
     @classmethod
     def from_iterable(
@@ -2971,7 +3052,7 @@ class Vector3(SymbolicType, ReferenceFrameMixin, VectorOperationsMixin):
 
 
 @dataclass(eq=False)
-class Quaternion(SymbolicType, ReferenceFrameMixin):
+class Quaternion(SymbolicType, ReferenceFrameMixin, SubclassJSONSerializer):
     """
     Represents a quaternion, which is a mathematical entity used to encode
     rotations in three-dimensional space.
@@ -3023,6 +3104,30 @@ class Quaternion(SymbolicType, ReferenceFrameMixin):
 
     def __neg__(self) -> Quaternion:
         return Quaternion.from_iterable(self.casadi_sx.__neg__())
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
+        reference_frame_data = data.get("reference_frame", None)
+        if reference_frame_data is not None:
+            reference_frame = tracker.get_world_entity(
+                name=PrefixedName.from_json(reference_frame_data)
+            )
+        else:
+            reference_frame = None
+        return cls.from_iterable(
+            data["data"],
+            reference_frame=reference_frame,
+        )
+
+    def to_json(self) -> Dict[str, Any]:
+        if not self.is_constant():
+            raise SpatialTypeNotJsonSerializable(self)
+        result = super().to_json()
+        if self.reference_frame is not None:
+            result["reference_frame"] = self.reference_frame.name.to_json()
+        result["data"] = self.to_np().tolist()
+        return result
 
     @classmethod
     def from_iterable(

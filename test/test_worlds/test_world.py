@@ -589,7 +589,9 @@ def test_copy_world(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
     world_copy = deepcopy(world)
     assert l2 not in world_copy.bodies
-    assert bf.parent_connection not in world_copy.connections
+    assert id(bf.parent_connection) != id(
+        world_copy.get_connections_by_type(Connection6DoF)
+    )
     bf.parent_connection.origin = np.array(
         [[1, 0, 0, 1.5], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
     )
@@ -657,11 +659,14 @@ def test_world_different_entities(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
     world_copy = deepcopy(world)
     for body in world_copy.bodies:
-        assert body not in world.bodies
+        original_body = world.get_kinematic_structure_entity_by_name(body.name)
+        assert body != original_body
     for connection in world_copy.connections:
-        assert connection not in world.connections
+        original_connection = world.get_connection_by_name(connection.name)
+        assert connection != original_connection
     for dof in world_copy.state:
-        assert dof not in world.degrees_of_freedom
+        original_dof = world.get_degree_of_freedom_by_name(dof.name)
+        assert dof != original_dof
 
 
 def test_copy_pr2(pr2_world):

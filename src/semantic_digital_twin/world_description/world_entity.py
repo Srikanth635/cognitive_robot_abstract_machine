@@ -48,7 +48,7 @@ if TYPE_CHECKING:
 id_generator = IDGenerator()
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, eq=False)
 class WorldEntity(Symbol):
     """
     A class representing an entity in the world.
@@ -74,6 +74,11 @@ class WorldEntity(Symbol):
     def __post_init__(self):
         if self.name is None:
             self.name = PrefixedName(f"{self.__class__.__name__}_{hash(self)}")
+
+    def __eq__(self, other):
+        if other is None:
+            return False
+        return self.name == other.name and self._world is other._world
 
 
 @dataclass
@@ -102,7 +107,7 @@ class CollisionCheckingConfig:
     """
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, eq=False)
 class KinematicStructureEntity(WorldEntity, SubclassJSONSerializer, ABC):
     """
     An entity that is part of the kinematic structure of the world.
@@ -164,7 +169,7 @@ class KinematicStructureEntity(WorldEntity, SubclassJSONSerializer, ABC):
         )
 
 
-@dataclass
+@dataclass(eq=False)
 class Body(KinematicStructureEntity, SubclassJSONSerializer):
     """
     Represents a body in the world.
@@ -245,11 +250,6 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
 
     def __hash__(self):
         return hash(self.name)
-
-    def __eq__(self, other):
-        if other is None:
-            return False
-        return self.name == other.name and self._world is other._world
 
     def has_collision(
         self, volume_threshold: float = 1.001e-6, surface_threshold: float = 0.00061
@@ -372,7 +372,7 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
         return result
 
 
-@dataclass
+@dataclass(eq=False)
 class Region(KinematicStructureEntity):
     """
     Virtual KinematicStructureEntity representing a semantic region in the world.
@@ -815,9 +815,6 @@ class Connection(WorldEntity, SubclassJSONSerializer):
 
     def __hash__(self):
         return hash((self.parent, self.child))
-
-    def __eq__(self, other):
-        return self.name == other.name
 
     @property
     def origin(self) -> cas.TransformationMatrix:

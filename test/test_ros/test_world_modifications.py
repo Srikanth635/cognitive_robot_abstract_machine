@@ -111,7 +111,7 @@ class ConnectionModificationTestCase(unittest.TestCase):
 
         # copy modifications
         modifications_copy = WorldModelModificationBlock.from_json(
-            modifications.to_json(), world=w2
+            modifications.to_json()
         )
         modifications_copy.apply(w2)
         self.assertEqual(len(w2.bodies), 3)

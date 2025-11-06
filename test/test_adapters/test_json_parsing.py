@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import pytest
 import trimesh.boolean
 
 from semantic_digital_twin.adapters.mesh import STLParser
@@ -8,6 +9,14 @@ from semantic_digital_twin.adapters.world_entity_kwargs_tracker import (
     WorldEntityKwargsTracker,
 )
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.exceptions import SpatialTypeNotJsonSerializable
+from semantic_digital_twin.spatial_types import (
+    Point3,
+    Vector3,
+    Quaternion,
+    RotationMatrix,
+    Symbol,
+)
 from semantic_digital_twin.spatial_types.spatial_types import TransformationMatrix
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connections import FixedConnection
@@ -48,15 +57,102 @@ def test_body_json_serialization():
 def test_transformation_matrix_json_serialization():
     body = Body(name=PrefixedName("body"))
     body2 = Body(name=PrefixedName("body2"))
-    t = TransformationMatrix(reference_frame=body, child_frame=body2)
-    json_data = t.to_json()
+    transform = TransformationMatrix.from_xyz_rpy(
+        x=1, y=2, z=3, roll=1, pitch=2, yaw=3, reference_frame=body, child_frame=body2
+    )
+    json_data = transform.to_json()
     kwargs = {}
     tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
     tracker.add_parsed_world_entity(body)
     tracker.add_parsed_world_entity(body2)
-    t2 = TransformationMatrix.from_json(json_data, **kwargs)
-    assert t.reference_frame == t2.reference_frame
-    assert id(t.reference_frame) == id(t2.reference_frame)
+    transform_copy = TransformationMatrix.from_json(json_data, **kwargs)
+    assert transform.reference_frame == transform_copy.reference_frame
+    assert id(transform.reference_frame) == id(transform_copy.reference_frame)
+
+
+def test_point3_json_serialization():
+    body = Body(name=PrefixedName("body"))
+    point = Point3(1, 2, 3, reference_frame=body)
+    json_data = point.to_json()
+    kwargs = {}
+    tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
+    tracker.add_parsed_world_entity(body)
+    point_copy = TransformationMatrix.from_json(json_data, **kwargs)
+    assert point.reference_frame == point_copy.reference_frame
+    assert id(point.reference_frame) == id(point_copy.reference_frame)
+
+
+def test_point3_json_serialization_with_expression():
+    body = Body(name=PrefixedName("body"))
+    point = Point3(Symbol(name="muh"), reference_frame=body)
+    with pytest.raises(SpatialTypeNotJsonSerializable):
+        point.to_json()
+
+
+def test_vector3_json_serialization_with_expression():
+    body = Body(name=PrefixedName("body"))
+    vector = Vector3(Symbol(name="muh"), reference_frame=body)
+    with pytest.raises(SpatialTypeNotJsonSerializable):
+        vector.to_json()
+
+
+def test_quaternion_json_serialization_with_expression():
+    body = Body(name=PrefixedName("body"))
+    quaternion = Quaternion(Symbol(name="muh"), reference_frame=body)
+    with pytest.raises(SpatialTypeNotJsonSerializable):
+        quaternion.to_json()
+
+
+def test_rotation_matrix_json_serialization_with_expression():
+    body = Body(name=PrefixedName("body"))
+    rotation = RotationMatrix.from_rpy(roll=Symbol(name="muh"), reference_frame=body)
+    with pytest.raises(SpatialTypeNotJsonSerializable):
+        rotation.to_json()
+
+
+def test_transformation_matrix_json_serialization_with_expression():
+    body = Body(name=PrefixedName("body"))
+    transform = TransformationMatrix.from_xyz_rpy(
+        Symbol(name="muh"), reference_frame=body
+    )
+    with pytest.raises(SpatialTypeNotJsonSerializable):
+        transform.to_json()
+
+
+def test_vector3_json_serialization():
+    body = Body(name=PrefixedName("body"))
+    vector = Vector3(1, 2, 3, reference_frame=body)
+    json_data = vector.to_json()
+    kwargs = {}
+    tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
+    tracker.add_parsed_world_entity(body)
+    vector_copy = TransformationMatrix.from_json(json_data, **kwargs)
+    assert vector.reference_frame == vector_copy.reference_frame
+    assert id(vector.reference_frame) == id(vector_copy.reference_frame)
+
+
+def test_quaternion_json_serialization():
+    body = Body(name=PrefixedName("body"))
+    quaternion = Quaternion(1, 0, 0, 0, reference_frame=body)
+    json_data = quaternion.to_json()
+    kwargs = {}
+    tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
+    tracker.add_parsed_world_entity(body)
+    quaternion_copy = TransformationMatrix.from_json(json_data, **kwargs)
+    assert quaternion.reference_frame == quaternion_copy.reference_frame
+    assert id(quaternion.reference_frame) == id(quaternion_copy.reference_frame)
+
+
+def test_rotation_matrix_json_serialization():
+    body = Body(name=PrefixedName("body"))
+    rotation = RotationMatrix.from_rpy(roll=1, pitch=2, yaw=3, reference_frame=body)
+    json_data = rotation.to_json()
+    kwargs = {}
+    tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
+    tracker.add_parsed_world_entity(body)
+    rotation_copy = TransformationMatrix.from_json(json_data, **kwargs)
+    assert rotation.reference_frame == rotation_copy.reference_frame
+    assert id(rotation.reference_frame) == id(rotation_copy.reference_frame)
 
 
 def test_connection_json_serialization_with_world():
@@ -75,8 +171,11 @@ def test_connection_json_serialization_with_world():
         )
         world.add_connection(c)
     json_data = c.to_json()
-    c2 = FixedConnection.from_json(json_data, world=world)
-    assert c == c2
+    tracker = WorldEntityKwargsTracker.from_world(world)
+    c2 = FixedConnection.from_json(json_data, **tracker.create_kwargs())
+    assert c != c2
+    assert c.parent.name == c2.parent.name
+    assert c.child.name == c2.child.name
     assert np.allclose(
         c.parent_T_connection_expression.to_np(),
         c2.parent_T_connection_expression.to_np(),
@@ -107,10 +206,11 @@ def test_transformation_matrix_json_serialization_with_world_in_kwargs():
         )
         world.add_connection(c)
     json_data = c.to_json()
-    kwargs = {"world": world}
-    WorldEntityKwargsTracker.from_kwargs(kwargs)
-    c2 = FixedConnection.from_json(json_data, **kwargs)
-    assert c == c2
+    tracker = WorldEntityKwargsTracker.from_world(world)
+    c2 = FixedConnection.from_json(json_data, **tracker.create_kwargs())
+    assert c != c2
+    assert c.parent.name == c2.parent.name
+    assert c.child.name == c2.child.name
     assert np.allclose(
         c.parent_T_connection_expression.to_np(),
         c2.parent_T_connection_expression.to_np(),
