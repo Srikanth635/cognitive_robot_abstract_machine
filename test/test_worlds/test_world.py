@@ -685,6 +685,14 @@ def test_copy_connections(pr2_world):
         assert connection.name == pr2_copy_connection.name
 
 
+def test_copy_two_times(pr2_world):
+    pr2_copy = deepcopy(pr2_world)
+    pr2_copy_2 = deepcopy(pr2_copy)
+    for connection in pr2_world.connections:
+        pr2_copy_connection = pr2_copy_2.get_connection_by_name(connection.name)
+        assert connection.name == pr2_copy_connection.name
+
+
 def test_add_entity_with_duplicate_name(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
     body_duplicate = Body(name=PrefixedName("l1"))

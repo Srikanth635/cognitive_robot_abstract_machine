@@ -788,7 +788,8 @@ class Connection(WorldEntity, SubclassJSONSerializer):
 
         if (
             self.parent_T_connection_expression.reference_frame is not None
-            and self.parent_T_connection_expression.reference_frame != self.parent
+            and self.parent_T_connection_expression.reference_frame.name
+            != self.parent.name
         ):
             raise ReferenceFrameMismatchError(
                 self.parent, self.parent_T_connection_expression.reference_frame
