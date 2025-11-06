@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import importlib
 import inspect
+from copy import copy
+
 import itertools
 from abc import ABC
 from collections import deque
@@ -872,6 +874,7 @@ class Connection(WorldEntity, SubclassJSONSerializer):
             self.child,
             self.parent_T_connection_expression,
             self.connection_T_child_expression,
+            name=copy(self.name),
         )
 
 

@@ -289,6 +289,7 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
 
     def __copy__(self) -> Self:
         return self.__class__(
+            name=copy(self.name),
             parent=self.parent,
             child=self.child,
             parent_T_connection_expression=self.parent_T_connection_expression,
@@ -540,6 +541,7 @@ class Connection6DoF(Connection):
 
     def __copy__(self):
         return Connection6DoF(
+            name=copy(self.name),
             parent=self.parent,
             child=self.child,
             parent_T_connection_expression=self.parent_T_connection_expression,
@@ -817,6 +819,7 @@ class OmniDrive(ActiveConnection, HasUpdateState):
 
     def __copy__(self):
         return OmniDrive(
+            name=copy(self.name),
             parent=self.parent,
             child=self.child,
             parent_T_connection_expression=self.parent_T_connection_expression,
