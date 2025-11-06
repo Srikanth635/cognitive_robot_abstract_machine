@@ -4,17 +4,12 @@ from dataclasses import dataclass, field
 
 from typing_extensions import Dict, Optional, TYPE_CHECKING, Self, ClassVar, Any
 
-from semantic_digital_twin.exceptions import (
-    KinematicStructureEntityNotInKwargs,
-    WorldEntityNotFoundError,
-)
+from ..exceptions import KinematicStructureEntityNotInKwargs, WorldEntityNotFoundError
 
 if TYPE_CHECKING:
-    from semantic_digital_twin.world import World
-    from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
-    from semantic_digital_twin.world_description.world_entity import (
-        KinematicStructureEntity,
-    )
+    from ..world import World
+    from ..datastructures.prefixed_name import PrefixedName
+    from ..world_description.world_entity import KinematicStructureEntity
 
 
 @dataclass
