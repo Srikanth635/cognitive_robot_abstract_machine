@@ -1792,6 +1792,28 @@ class ReferenceFrameMixin:
     The reference frame associated with the object. Can be None if no reference frame is required or applicable.
     """
 
+    @classmethod
+    def _parse_optional_frame_from_json(
+        cls, data: Dict[str, Any], key: str, **kwargs
+    ) -> Optional[KinematicStructureEntity]:
+        """
+        Resolve an optional kinematic structure entity from JSON by key.
+        Raises KinematicStructureEntityNotInKwargs if the name cannot be resolved via the tracker/world.
+
+        :param data: parsed JSON data
+        :param key: name of the attribute in data that is a KinematicStructureEntity
+        :param kwargs: addition kwargs of _from_json
+        :return: None if the key is not present or its value is None.
+        """
+
+        frame_data = data.get(key, None)
+        if frame_data is None:
+            return None
+        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
+        return tracker.get_kinematic_structure_entity(
+            name=PrefixedName.from_json(frame_data)
+        )
+
 
 @dataclass(eq=False)
 class TransformationMatrix(
@@ -1843,21 +1865,12 @@ class TransformationMatrix(
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
-        reference_frame_data = data.get("reference_frame", None)
-        if reference_frame_data is not None:
-            reference_frame = tracker.get_kinematic_structure_entity(
-                name=PrefixedName.from_json(reference_frame_data)
-            )
-        else:
-            reference_frame = None
-        child_frame_data = data.get("child_frame", None)
-        if child_frame_data is not None:
-            child_frame = tracker.get_kinematic_structure_entity(
-                name=PrefixedName.from_json(child_frame_data)
-            )
-        else:
-            child_frame = None
+        reference_frame = cls._parse_optional_frame_from_json(
+            data, key="reference_frame", **kwargs
+        )
+        child_frame = cls._parse_optional_frame_from_json(
+            data, key="child_frame", **kwargs
+        )
         return cls.from_xyz_quaternion(
             *data["position"][:3],
             *data["rotation"],
@@ -2218,14 +2231,9 @@ class RotationMatrix(
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
-        reference_frame_data = data.get("reference_frame", None)
-        if reference_frame_data is not None:
-            reference_frame = tracker.get_kinematic_structure_entity(
-                name=PrefixedName.from_json(reference_frame_data)
-            )
-        else:
-            reference_frame = None
+        reference_frame = cls._parse_optional_frame_from_json(
+            data, key="reference_frame", **kwargs
+        )
         return Quaternion.from_iterable(
             data["quaternion"],
             reference_frame=reference_frame,
@@ -2585,14 +2593,9 @@ class Point3(
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
-        reference_frame_data = data.get("reference_frame", None)
-        if reference_frame_data is not None:
-            reference_frame = tracker.get_kinematic_structure_entity(
-                name=PrefixedName.from_json(reference_frame_data)
-            )
-        else:
-            reference_frame = None
+        reference_frame = cls._parse_optional_frame_from_json(
+            data, key="reference_frame", **kwargs
+        )
         return cls.from_iterable(
             data["data"][:3],
             reference_frame=reference_frame,
@@ -2779,14 +2782,9 @@ class Vector3(
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
-        reference_frame_data = data.get("reference_frame", None)
-        if reference_frame_data is not None:
-            reference_frame = tracker.get_kinematic_structure_entity(
-                name=PrefixedName.from_json(reference_frame_data)
-            )
-        else:
-            reference_frame = None
+        reference_frame = cls._parse_optional_frame_from_json(
+            data, key="reference_frame", **kwargs
+        )
         return cls.from_iterable(
             data["data"][:3],
             reference_frame=reference_frame,
@@ -3107,14 +3105,9 @@ class Quaternion(SymbolicType, ReferenceFrameMixin, SubclassJSONSerializer):
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
-        reference_frame_data = data.get("reference_frame", None)
-        if reference_frame_data is not None:
-            reference_frame = tracker.get_kinematic_structure_entity(
-                name=PrefixedName.from_json(reference_frame_data)
-            )
-        else:
-            reference_frame = None
+        reference_frame = cls._parse_optional_frame_from_json(
+            data, key="reference_frame", **kwargs
+        )
         return cls.from_iterable(
             data["data"],
             reference_frame=reference_frame,
