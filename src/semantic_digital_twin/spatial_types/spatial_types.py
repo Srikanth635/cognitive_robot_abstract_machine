@@ -1441,10 +1441,23 @@ def trinary_logic_and(*args: ScalarData) -> ScalarData:
         return trinary_logic_and(args[0], trinary_logic_and(*args[1:]))
 
 
-def trinary_logic_or(a: ScalarData, b: ScalarData) -> ScalarData:
-    cas_a = to_sx(a)
-    cas_b = to_sx(b)
-    return max(cas_a, cas_b)
+def trinary_logic_or(*args: ScalarData) -> ScalarData:
+    assert len(args) >= 2, "and must be called with at least 2 arguments"
+    # if there is any False, return False
+    if [x for x in args if is_true_symbol(x)]:
+        return TrinaryTrue
+    # filter all True
+    args = [x for x in args if not is_true_symbol(x)]
+    if len(args) == 0:
+        return TrinaryFalse
+    if len(args) == 1:
+        return args[0]
+    if len(args) == 2:
+        cas_a = to_sx(args[0])
+        cas_b = to_sx(args[1])
+        return max(cas_a, cas_b)
+    else:
+        return trinary_logic_or(args[0], trinary_logic_or(*args[1:]))
 
 
 def is_const_trinary_true(expression: Expression) -> bool:
