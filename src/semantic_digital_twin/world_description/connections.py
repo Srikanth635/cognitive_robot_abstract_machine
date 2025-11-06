@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from copy import deepcopy
+from copy import deepcopy, copy
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -105,6 +105,7 @@ class ActiveConnection(Connection):
         for child_body in self._world.get_direct_child_bodies_with_collision(self):
             if not child_body.get_collision_config().disabled:
                 child_body.set_static_collision_config(collision_config)
+
 
 @dataclass
 class ActiveConnection1DOF(ActiveConnection, ABC):
@@ -285,6 +286,18 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
     def jerk(self, value: float) -> None:
         self._world.state[self.dof.name].jerk = value / self.multiplier
         self._world.notify_state_change()
+
+    def __copy__(self) -> Self:
+        return self.__class__(
+            parent=self.parent,
+            child=self.child,
+            parent_T_connection_expression=self.parent_T_connection_expression,
+            connection_T_child_expression=self.connection_T_child_expression,
+            dof_name=self.dof_name,
+            axis=self.axis,
+            multiplier=self.multiplier,
+            offset=self.offset,
+        )
 
 
 @dataclass
@@ -524,6 +537,21 @@ class Connection6DoF(Connection):
         self._world.state[self.qz.name].position = orientation[2]
         self._world.state[self.qw.name].position = orientation[3]
         self._world.notify_state_change()
+
+    def __copy__(self):
+        return Connection6DoF(
+            parent=self.parent,
+            child=self.child,
+            parent_T_connection_expression=self.parent_T_connection_expression,
+            connection_T_child_expression=self.connection_T_child_expression,
+            x_name=copy(self.x_name),
+            y_name=copy(self.y_name),
+            z_name=copy(self.z_name),
+            qx_name=copy(self.qx_name),
+            qy_name=copy(self.qy_name),
+            qz_name=copy(self.qz_name),
+            qw_name=copy(self.qw_name),
+        )
 
 
 @dataclass
@@ -786,3 +814,18 @@ class OmniDrive(ActiveConnection, HasUpdateState):
         self.x_velocity.has_hardware_interface = value
         self.y_velocity.has_hardware_interface = value
         self.yaw.has_hardware_interface = value
+
+    def __copy__(self):
+        return OmniDrive(
+            parent=self.parent,
+            child=self.child,
+            parent_T_connection_expression=self.parent_T_connection_expression,
+            connection_T_child_expression=self.connection_T_child_expression,
+            x_name=copy(self.x_name),
+            y_name=copy(self.y_name),
+            roll_name=copy(self.roll_name),
+            pitch_name=copy(self.pitch_name),
+            yaw_name=copy(self.yaw_name),
+            x_velocity_name=copy(self.x_velocity_name),
+            y_velocity_name=copy(self.y_velocity_name),
+        )

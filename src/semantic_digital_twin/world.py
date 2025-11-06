@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import inspect
 import logging
-from copy import deepcopy
+from copy import deepcopy, copy
 from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import wraps, lru_cache, cached_property
@@ -13,6 +13,7 @@ import numpy as np
 import rustworkx as rx
 import rustworkx.visit
 import rustworkx.visualization
+from line_profiler import profile
 from lxml import etree
 from random_events.utils import SubclassJSONSerializer
 from rustworkx import NoEdgeBetweenNodes
@@ -1719,6 +1720,7 @@ class World:
             case _:
                 return target_frame_T_reference_frame @ spatial_object
 
+    @profile
     def __deepcopy__(self, memo):
         memo = {} if memo is None else memo
         me_id = id(self)
@@ -1745,7 +1747,8 @@ class World:
                 new_world.add_degree_of_freedom(new_dof)
                 new_world.state[dof.name] = self.state[dof.name].data
             for connection in self.connections:
-                new_connection = SubclassJSONSerializer.from_json(connection.to_json())
+                # new_connection = SubclassJSONSerializer.from_json(connection.to_json())
+                new_connection = copy(connection)
                 new_connection.parent = (
                     new_world.get_kinematic_structure_entity_by_name(
                         new_connection.parent.name

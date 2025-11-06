@@ -866,6 +866,14 @@ class Connection(WorldEntity, SubclassJSONSerializer):
             "ConnectionWithDofs.create_with_dofs is not implemented."
         )
 
+    def __copy__(self):
+        return self.__class__(
+            self.parent,
+            self.child,
+            self.parent_T_connection_expression,
+            self.connection_T_child_expression,
+        )
+
 
 GenericConnection = TypeVar("GenericConnection", bound=Connection)
 
