@@ -17,7 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .messages import MetaData, WorldStateUpdate, Message, ModificationBlock, LoadModel
-from ..world_entity_kwargs_tracker import WorldEntityKwargsTracker
+from ..world_entity_kwargs_tracker import KinematicStructureEntityKwargsTracker
 from ...callbacks.callback import Callback, StateChangeCallback, ModelChangeCallback
 from ...datastructures.prefixed_name import PrefixedName
 from ...orm.ormatic_interface import *
@@ -86,9 +86,9 @@ class Synchronizer(ABC):
         """
         Wrap the origin subscription callback by self-skipping and disabling the next world callback.
         """
-        tracker = WorldEntityKwargsTracker.from_world(self.world)
+        tracker = KinematicStructureEntityKwargsTracker.from_world(self.world)
         msg = self.message_type.from_json(
-            json.loads(msg.data), **tracker.create_kwargs()
+            json.loads(msg.data), **tracker.create_from_json_kwargs()
         )
         if msg.meta_data == self.meta_data:
             return

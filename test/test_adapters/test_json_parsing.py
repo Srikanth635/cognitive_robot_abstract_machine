@@ -3,13 +3,17 @@ import os
 import numpy as np
 import pytest
 import trimesh.boolean
+from krrood.adapters.json_serializer import SubclassJSONSerializer
 
 from semantic_digital_twin.adapters.mesh import STLParser
 from semantic_digital_twin.adapters.world_entity_kwargs_tracker import (
-    WorldEntityKwargsTracker,
+    KinematicStructureEntityKwargsTracker,
 )
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
-from semantic_digital_twin.exceptions import SpatialTypeNotJsonSerializable
+from semantic_digital_twin.exceptions import (
+    SpatialTypeNotJsonSerializable,
+    KinematicStructureEntityNotInKwargs,
+)
 from semantic_digital_twin.spatial_types import (
     Point3,
     Vector3,
@@ -62,9 +66,9 @@ def test_transformation_matrix_json_serialization():
     )
     json_data = transform.to_json()
     kwargs = {}
-    tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
-    tracker.add_parsed_world_entity(body)
-    tracker.add_parsed_world_entity(body2)
+    tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
+    tracker.add_kinematic_structure_entity(body)
+    tracker.add_kinematic_structure_entity(body2)
     transform_copy = TransformationMatrix.from_json(json_data, **kwargs)
     assert transform.reference_frame == transform_copy.reference_frame
     assert id(transform.reference_frame) == id(transform_copy.reference_frame)
@@ -75,9 +79,9 @@ def test_point3_json_serialization():
     point = Point3(1, 2, 3, reference_frame=body)
     json_data = point.to_json()
     kwargs = {}
-    tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
-    tracker.add_parsed_world_entity(body)
-    point_copy = TransformationMatrix.from_json(json_data, **kwargs)
+    tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
+    tracker.add_kinematic_structure_entity(body)
+    point_copy = Point3.from_json(json_data, **kwargs)
     assert point.reference_frame == point_copy.reference_frame
     assert id(point.reference_frame) == id(point_copy.reference_frame)
 
@@ -87,6 +91,24 @@ def test_point3_json_serialization_with_expression():
     point = Point3(Symbol(name="muh"), reference_frame=body)
     with pytest.raises(SpatialTypeNotJsonSerializable):
         point.to_json()
+
+
+def test_KinematicStructureEntityNotInKwargs():
+    body = Body(name=PrefixedName("body"))
+    point = Point3(1, 2, 3, reference_frame=body)
+    json_data = point.to_json()
+    kwargs = {}
+    with pytest.raises(KinematicStructureEntityNotInKwargs):
+        Point3.from_json(json_data, **kwargs)
+
+
+def test_KinematicStructureEntityNotInKwargs2():
+    body = Body(name=PrefixedName("body"))
+    point = Point3(1, 2, 3, reference_frame=body)
+    json_data = point.to_json()
+    tracker = KinematicStructureEntityKwargsTracker.from_world(World())
+    with pytest.raises(KinematicStructureEntityNotInKwargs):
+        Point3.from_json(json_data, **tracker.create_from_json_kwargs())
 
 
 def test_vector3_json_serialization_with_expression():
@@ -124,9 +146,9 @@ def test_vector3_json_serialization():
     vector = Vector3(1, 2, 3, reference_frame=body)
     json_data = vector.to_json()
     kwargs = {}
-    tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
-    tracker.add_parsed_world_entity(body)
-    vector_copy = TransformationMatrix.from_json(json_data, **kwargs)
+    tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
+    tracker.add_kinematic_structure_entity(body)
+    vector_copy = Vector3.from_json(json_data, **kwargs)
     assert vector.reference_frame == vector_copy.reference_frame
     assert id(vector.reference_frame) == id(vector_copy.reference_frame)
 
@@ -136,9 +158,9 @@ def test_quaternion_json_serialization():
     quaternion = Quaternion(1, 0, 0, 0, reference_frame=body)
     json_data = quaternion.to_json()
     kwargs = {}
-    tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
-    tracker.add_parsed_world_entity(body)
-    quaternion_copy = TransformationMatrix.from_json(json_data, **kwargs)
+    tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
+    tracker.add_kinematic_structure_entity(body)
+    quaternion_copy = Quaternion.from_json(json_data, **kwargs)
     assert quaternion.reference_frame == quaternion_copy.reference_frame
     assert id(quaternion.reference_frame) == id(quaternion_copy.reference_frame)
 
@@ -148,9 +170,9 @@ def test_rotation_matrix_json_serialization():
     rotation = RotationMatrix.from_rpy(roll=1, pitch=2, yaw=3, reference_frame=body)
     json_data = rotation.to_json()
     kwargs = {}
-    tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
-    tracker.add_parsed_world_entity(body)
-    rotation_copy = TransformationMatrix.from_json(json_data, **kwargs)
+    tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
+    tracker.add_kinematic_structure_entity(body)
+    rotation_copy = RotationMatrix.from_json(json_data, **kwargs)
     assert rotation.reference_frame == rotation_copy.reference_frame
     assert id(rotation.reference_frame) == id(rotation_copy.reference_frame)
 
@@ -171,8 +193,8 @@ def test_connection_json_serialization_with_world():
         )
         world.add_connection(c)
     json_data = c.to_json()
-    tracker = WorldEntityKwargsTracker.from_world(world)
-    c2 = FixedConnection.from_json(json_data, **tracker.create_kwargs())
+    tracker = KinematicStructureEntityKwargsTracker.from_world(world)
+    c2 = FixedConnection.from_json(json_data, **tracker.create_from_json_kwargs())
     assert c != c2
     assert c.parent.name == c2.parent.name
     assert c.child.name == c2.child.name
@@ -206,8 +228,8 @@ def test_transformation_matrix_json_serialization_with_world_in_kwargs():
         )
         world.add_connection(c)
     json_data = c.to_json()
-    tracker = WorldEntityKwargsTracker.from_world(world)
-    c2 = FixedConnection.from_json(json_data, **tracker.create_kwargs())
+    tracker = KinematicStructureEntityKwargsTracker.from_world(world)
+    c2 = FixedConnection.from_json(json_data, **tracker.create_from_json_kwargs())
     assert c != c2
     assert c.parent.name == c2.parent.name
     assert c.child.name == c2.child.name

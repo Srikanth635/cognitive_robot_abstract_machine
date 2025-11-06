@@ -33,7 +33,7 @@ from typing_extensions import Set
 from .geometry import TriangleMesh
 from .shape_collection import ShapeCollection, BoundingBoxCollection
 from ..adapters.world_entity_kwargs_tracker import (
-    WorldEntityKwargsTracker,
+    KinematicStructureEntityKwargsTracker,
 )
 from ..datastructures.prefixed_name import PrefixedName
 from ..exceptions import ReferenceFrameMismatchError
@@ -357,8 +357,8 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
         result = cls(name=PrefixedName.from_json(data["name"], **kwargs))
 
         # add the new body so that the transformation matrices in the shapes can use it as reference frame.
-        tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
-        tracker.add_parsed_world_entity(result)
+        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
+        tracker.add_kinematic_structure_entity(result)
 
         collision = ShapeCollection.from_json(data["collision"], **kwargs)
         visual = ShapeCollection.from_json(data["visual"], **kwargs)
@@ -744,11 +744,11 @@ class Connection(WorldEntity, SubclassJSONSerializer):
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
-        parent = tracker.get_world_entity(
+        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
+        parent = tracker.get_kinematic_structure_entity(
             name=PrefixedName.from_json(data["parent_name"])
         )
-        child = tracker.get_world_entity(
+        child = tracker.get_kinematic_structure_entity(
             name=PrefixedName.from_json(data["child_name"])
         )
         return cls(

@@ -34,7 +34,7 @@ from typing_extensions import (
 )
 
 from ..adapters.world_entity_kwargs_tracker import (
-    WorldEntityKwargsTracker,
+    KinematicStructureEntityKwargsTracker,
 )
 from ..datastructures.prefixed_name import PrefixedName
 from ..exceptions import (
@@ -1843,17 +1843,17 @@ class TransformationMatrix(
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
+        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
         reference_frame_data = data.get("reference_frame", None)
         if reference_frame_data is not None:
-            reference_frame = tracker.get_world_entity(
+            reference_frame = tracker.get_kinematic_structure_entity(
                 name=PrefixedName.from_json(reference_frame_data)
             )
         else:
             reference_frame = None
         child_frame_data = data.get("child_frame", None)
         if child_frame_data is not None:
-            child_frame = tracker.get_world_entity(
+            child_frame = tracker.get_kinematic_structure_entity(
                 name=PrefixedName.from_json(child_frame_data)
             )
         else:
@@ -2218,10 +2218,10 @@ class RotationMatrix(
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
+        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
         reference_frame_data = data.get("reference_frame", None)
         if reference_frame_data is not None:
-            reference_frame = tracker.get_world_entity(
+            reference_frame = tracker.get_kinematic_structure_entity(
                 name=PrefixedName.from_json(reference_frame_data)
             )
         else:
@@ -2585,10 +2585,10 @@ class Point3(
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
+        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
         reference_frame_data = data.get("reference_frame", None)
         if reference_frame_data is not None:
-            reference_frame = tracker.get_world_entity(
+            reference_frame = tracker.get_kinematic_structure_entity(
                 name=PrefixedName.from_json(reference_frame_data)
             )
         else:
@@ -2779,10 +2779,10 @@ class Vector3(
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
+        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
         reference_frame_data = data.get("reference_frame", None)
         if reference_frame_data is not None:
-            reference_frame = tracker.get_world_entity(
+            reference_frame = tracker.get_kinematic_structure_entity(
                 name=PrefixedName.from_json(reference_frame_data)
             )
         else:
@@ -3107,10 +3107,10 @@ class Quaternion(SymbolicType, ReferenceFrameMixin, SubclassJSONSerializer):
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        tracker = WorldEntityKwargsTracker.from_kwargs(kwargs)
+        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
         reference_frame_data = data.get("reference_frame", None)
         if reference_frame_data is not None:
-            reference_frame = tracker.get_world_entity(
+            reference_frame = tracker.get_kinematic_structure_entity(
                 name=PrefixedName.from_json(reference_frame_data)
             )
         else:

@@ -6,6 +6,9 @@ from semantic_digital_twin.adapters.ros.world_fetcher import (
     FetchWorldServer,
     fetch_world_from_service,
 )
+from semantic_digital_twin.adapters.world_entity_kwargs_tracker import (
+    KinematicStructureEntityKwargsTracker,
+)
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.semantic_annotations.semantic_annotations import Handle, Door
 from semantic_digital_twin.testing import rclpy_node
@@ -107,8 +110,12 @@ def test_service_callback_with_multiple_modifications(rclpy_node):
 
     assert result.success is True
     # Verify the message is valid JSON
+
+    tracker = KinematicStructureEntityKwargsTracker.from_world(world)
+    kwargs = tracker.create_from_json_kwargs()
     modifications_list = [
-        WorldModelModificationBlock.from_json(d) for d in json.loads(result.message)
+        WorldModelModificationBlock.from_json(d, **kwargs)
+        for d in json.loads(result.message)
     ]
     assert (
         modifications_list == world.get_world_model_manager().model_modification_blocks

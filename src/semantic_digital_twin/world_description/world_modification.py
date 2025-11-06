@@ -21,7 +21,7 @@ from .world_entity import (
     WorldEntity,
 )
 from ..adapters.world_entity_kwargs_tracker import (
-    WorldEntityKwargsTracker,
+    KinematicStructureEntityKwargsTracker,
 )
 from ..datastructures.prefixed_name import PrefixedName
 
@@ -347,7 +347,7 @@ class WorldModelModificationBlock(SubclassJSONSerializer):
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        WorldEntityKwargsTracker.from_kwargs(kwargs)
+        KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
         world_modifications = []
         for json_data in data["modifications"]:
             modification = WorldModelModification.from_json(json_data, **kwargs)

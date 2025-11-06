@@ -208,3 +208,14 @@ class SpatialTypeNotJsonSerializable(NotJsonSerializable):
             f"Object of type '{self.spatial_object.__class__.__name__}' is not JSON serializable, because it has "
             f"free variables: {self.spatial_object.free_symbols()}"
         )
+
+
+@dataclass
+class KinematicStructureEntityNotInKwargs(JSONSerializationError):
+    kinematic_structure_entity_name: PrefixedName
+
+    def __post_init__(self):
+        super().__init__(
+            f"Kinematic structure entity '{self.kinematic_structure_entity_name}' is not in the kwargs of the "
+            f"method that created it."
+        )
