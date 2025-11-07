@@ -11,8 +11,6 @@ from semantic_digital_twin.exceptions import (
     WrongDimensionsError,
     SpatialTypesError,
 )
-from semantic_digital_twin.world import World
-from semantic_digital_twin.world_description.world_entity import Body
 from .reference_implementations import (
     rotation_matrix_from_quaternion,
     axis_angle_from_rotation_matrix,
