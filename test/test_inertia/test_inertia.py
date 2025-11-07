@@ -11,6 +11,7 @@ from semantic_digital_twin.world_description.inertia_types import (
     NPVector3,
 )
 
+
 class TestComponentsAndAssembly:
     def test_moments_as_matrix_properties(self):
         m = MomentsOfInertia.from_values(2.0, 3.0, 5.0)
@@ -104,3 +105,12 @@ class TestComponentsAndAssembly:
         R = PrincipalAxes.from_quaternion(x=q[0], y=q[1], z=q[2], w=q[3])
         q2 = R.to_quaternion()
         assert_allclose(q, q2, atol=1e-12)
+
+    def test_quaternion_rotation_matrix_equivalent(self):
+        q = 0.70710678, 0. , 0.70710678, 0.
+        rotation = np.array([[0., 0., 1.],
+                             [0., -1., 0.],
+                             [1., 0., 0.]])
+        R = PrincipalAxes.from_quaternion(x=q[0], y=q[1], z=q[2], w=q[3])
+        R_matrix = R.data
+        assert_allclose(rotation, R_matrix, atol=1e-12)
