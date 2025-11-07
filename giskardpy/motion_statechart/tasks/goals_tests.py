@@ -49,7 +49,7 @@ class CannotResolveSymbol(Task):
         joint: ActiveConnection1DOF = god_map.world.get_connection_by_name(
             self.joint_name
         )
-        joint_position = joint.dof.symbols.position
+        joint_position = joint.dof.variables.position
         self.add_equality_constraint(
             reference_velocity=1,
             equality_bound=1,

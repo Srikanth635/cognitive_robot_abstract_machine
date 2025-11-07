@@ -53,7 +53,7 @@ class DebugExpressionManager:
         self.compiled_debug_expressions = {}
         free_symbols = set()
         for name, expr in self.debug_expressions.items():
-            free_symbols.update(expr.free_symbols())
+            free_symbols.update(expr.free_variables())
         free_symbols = list(free_symbols)
         for name, expr in self.debug_expressions.items():
             self.compiled_debug_expressions[name] = expr.compile([free_symbols])
@@ -67,7 +67,7 @@ class DebugExpressionManager:
     def eval_debug_expressions(self, log_traj: bool = True):  # renamed
         self.evaluated_debug_expressions = {}
         for name, f in self.compiled_debug_expressions.items():
-            params = symbol_manager.resolve_symbols(f.symbol_parameters)
+            params = symbol_manager.resolve_symbols(f.variable_parameters)
             self.evaluated_debug_expressions[name] = f(*params).copy()
         if log_traj:
             self.log_debug_expressions()

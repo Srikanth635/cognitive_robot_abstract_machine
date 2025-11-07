@@ -55,7 +55,7 @@ class ConstraintCollection:
         self.constraints.extend(other.constraints)
 
     def get_all_float_variable_names(self) -> Set[PrefixedName]:
-        return {v.name for c in self.constraints for v in c.expression.free_symbols()}
+        return {v.name for c in self.constraints for v in c.expression.free_variables()}
 
     def link_to_motion_statechart_node(self, node: MotionStatechartNode):
         for constraint in self.constraints:

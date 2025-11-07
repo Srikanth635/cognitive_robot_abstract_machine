@@ -257,7 +257,7 @@ class ProblemDataPart(ABC):
 
         try:
             lb, ub = b_profile(
-                dof_symbols=v.symbols,
+                dof_symbols=v.variables,
                 lower_limits=lower_limits,
                 upper_limits=upper_limits,
                 solver_class=self.config.qp_solver_class,
@@ -385,7 +385,7 @@ class Weights(ProblemDataPart):
                         alpha=self.config.horizon_weight_gain_scalar,
                     )
                     weights[derivative][
-                        f"t{t:03}/{v.symbols.position.dof.name}/{derivative}"
+                        f"t{t:03}/{v.variables.position.dof.name}/{derivative}"
                     ] = normalized_weight
                     for q_gain in quadratic_weight_gains:
                         if (
@@ -393,7 +393,7 @@ class Weights(ProblemDataPart):
                             and v in q_gain.gains[t][derivative].keys()
                         ):
                             weights[derivative][
-                                f"t{t:03}/{v.symbols.position.dof.name}/{derivative}"
+                                f"t{t:03}/{v.variables.position.dof.name}/{derivative}"
                             ] *= q_gain.gains[t][derivative][v]
         for _, weight in sorted(weights.items()):
             params.append(weight)
@@ -480,7 +480,7 @@ class Weights(ProblemDataPart):
                         ):
                             continue
                         weights[derivative][
-                            f"t{t:03}/{v.symbols.position}/{derivative}"
+                            f"t{t:03}/{v.variables.position}/{derivative}"
                         ] = 0
                         for l_gain in linear_weight_gains:
                             if (
@@ -488,7 +488,7 @@ class Weights(ProblemDataPart):
                                 and v in l_gain.gains[t][derivative].keys()
                             ):
                                 weights[derivative][
-                                    f"t{t:03}/{v.symbols.position}/{derivative}"
+                                    f"t{t:03}/{v.variables.position}/{derivative}"
                                 ] += l_gain.gains[t][derivative][v]
             for _, weight in sorted(weights.items()):
                 params.append(weight)
@@ -497,7 +497,7 @@ class Weights(ProblemDataPart):
 
     def get_free_variable_symbols(self, order: Derivatives) -> List[cas.FloatVariable]:
         return self._sorter(
-            {v.symbols.position: v.symbols.data[order] for v in self.free_variables}
+            {v.variables.position: v.variables.data[order] for v in self.free_variables}
         )[0]
 
 
@@ -724,7 +724,7 @@ class EqualityBounds(ProblemDataPart):
     ) -> Dict[str, cas.ScalarData]:
         last_values = {}
         for v in self.free_variables:
-            last_values[f"{v.name}/last_{derivative}"] = v.symbols.data[derivative]
+            last_values[f"{v.name}/last_{derivative}"] = v.variables.data[derivative]
         return last_values
 
     def derivative_links(self, derivative: Derivatives) -> Dict[str, cas.ScalarData]:
@@ -773,11 +773,11 @@ class EqualityBounds(ProblemDataPart):
                     name = f"t{t:03}/{Derivatives.jerk}/{v.name}/link"
                     if t == 0:
                         derivative_link[name] = (
-                            -v.symbols.velocity
-                            - v.symbols.acceleration * self.config.mpc_dt
+                            -v.variables.velocity
+                            - v.variables.acceleration * self.config.mpc_dt
                         )
                     elif t == 1:
-                        derivative_link[name] = v.symbols.velocity
+                        derivative_link[name] = v.variables.velocity
                     else:
                         derivative_link[name] = 0
             bounds.append(derivative_link)
@@ -876,7 +876,7 @@ class InequalityBounds(ProblemDataPart):
         for v in self.free_variables:
             lb_, ub_ = v.lower_limits.position, v.upper_limits.position
             for t in range(self.config.prediction_horizon - 2):
-                ptc = v.symbols.position
+                ptc = v.variables.position
                 lb_jerk[f"t{t:03}/{v.name}/{Derivatives.position}"] = lb_ - ptc
                 ub_jerk[f"t{t:03}/{v.name}/{Derivatives.position}"] = ub_ - ptc
         return [lb_acc, lb_jerk], [ub_acc, ub_jerk]
@@ -911,8 +911,8 @@ class InequalityBounds(ProblemDataPart):
                     else:
                         j_min = lb_[self.config.prediction_horizon * 2 + t]
                         j_max = ub_[self.config.prediction_horizon * 2 + t]
-                    vtc = v.symbols.velocity
-                    atc = v.symbols.acceleration
+                    vtc = v.variables.velocity
+                    atc = v.variables.acceleration
                     if t == 0:
                         # vtc/dt**2 + atc/dt + j_min <=    vt0/dt**2     <= vtc/dt**2 + atc/dt + j_max
                         lb_jerk[f"t{t:03}/{v.name}/{Derivatives.jerk}"] = (
@@ -1004,7 +1004,7 @@ class EqualityModel(ProblemDataPart):
     ) -> List[cas.FloatVariable]:
         return self._sorter(
             {
-                v.symbols.position.name: v.symbols.data[derivative]
+                v.variables.position.name: v.variables.data[derivative]
                 for v in self.free_variables
             }
         )[0]
@@ -1065,7 +1065,7 @@ class EqualityModel(ProblemDataPart):
                     continue
                 J_vel = (
                     expressions.jacobian(
-                        symbols=self.get_free_variable_symbols(derivative)
+                        variables=self.get_free_variable_symbols(derivative)
                     )
                     * self.config.mpc_dt
                 )
@@ -1254,7 +1254,7 @@ class EqualityModel(ProblemDataPart):
                 )
                 J_eq = (
                     cas.Expression(self.equality_constraint_expressions()).jacobian(
-                        symbols=self.get_free_variable_symbols(Derivatives.position)
+                        variables=self.get_free_variable_symbols(Derivatives.position)
                     )
                     * self.config.mpc_dt
                 )
@@ -1290,7 +1290,7 @@ class EqualityModel(ProblemDataPart):
                 ):
                     J_eq = (
                         cas.Expression(self.equality_constraint_expressions()).jacobian(
-                            symbols=self.get_free_variable_symbols(derivative)
+                            variables=self.get_free_variable_symbols(derivative)
                         )
                         * self.config.mpc_dt
                     )
@@ -1456,7 +1456,7 @@ class InequalityModel(ProblemDataPart):
     def get_free_variable_symbols(self, order: Derivatives):
         return self._sorter(
             {
-                v.symbols.position.name: v.symbols.data[order]
+                v.variables.position.name: v.variables.data[order]
                 for v in self.free_variables
             }
         )[0]
@@ -1508,7 +1508,7 @@ class InequalityModel(ProblemDataPart):
                     continue
                 J_vel = (
                     expressions.jacobian(
-                        symbols=self.get_free_variable_symbols(derivative),
+                        variables=self.get_free_variable_symbols(derivative),
                     )
                     * self.config.mpc_dt
                 )
@@ -1547,27 +1547,27 @@ class InequalityModel(ProblemDataPart):
             )
             J_q = (
                 expressions.jacobian(
-                    symbols=self.get_free_variable_symbols(Derivatives.position),
+                    variables=self.get_free_variable_symbols(Derivatives.position),
                 )
                 * self.config.mpc_dt
             )
             Jd_q = (
                 expressions.jacobian_dot(
-                    symbols=self.get_free_variable_symbols(Derivatives.position),
-                    symbols_dot=self.get_free_variable_symbols(Derivatives.velocity),
+                    variables=self.get_free_variable_symbols(Derivatives.position),
+                    variables_dot=self.get_free_variable_symbols(Derivatives.velocity),
                 )
                 * self.config.mpc_dt
             )
             J_qd = (
                 expressions.jacobian(
-                    symbols=self.get_free_variable_symbols(Derivatives.velocity),
+                    variables=self.get_free_variable_symbols(Derivatives.velocity),
                 )
                 * self.config.mpc_dt
             )
             Jd_qd = (
                 expressions.jacobian_dot(
-                    symbols=self.get_free_variable_symbols(Derivatives.velocity),
-                    symbols_dot=self.get_free_variable_symbols(
+                    variables=self.get_free_variable_symbols(Derivatives.velocity),
+                    variables_dot=self.get_free_variable_symbols(
                         Derivatives.acceleration
                     ),
                 )
@@ -1624,7 +1624,7 @@ class InequalityModel(ProblemDataPart):
                 )
                 J_neq = (
                     cas.Expression(self.inequality_constraint_expressions()).jacobian(
-                        symbols=self.get_free_variable_symbols(Derivatives.position),
+                        variables=self.get_free_variable_symbols(Derivatives.position),
                     )
                     * self.config.mpc_dt
                 )
@@ -1660,7 +1660,7 @@ class InequalityModel(ProblemDataPart):
             ):
                 J_neq = (
                     cas.Expression(self.inequality_constraint_expressions()).jacobian(
-                        symbols=self.get_free_variable_symbols(derivative),
+                        variables=self.get_free_variable_symbols(derivative),
                     )
                     * self.config.mpc_dt
                 )

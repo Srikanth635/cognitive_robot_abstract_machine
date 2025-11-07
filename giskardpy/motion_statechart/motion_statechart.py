@@ -205,7 +205,7 @@ class ObservationState(State):
             parameters=[
                 self.observation_symbols(),
                 self.life_cycle_symbols(),
-                self.motion_statechart.world.state.get_symbols(),
+                self.motion_statechart.world.state.get_variables(),
             ],
             sparse=False,
         )
@@ -365,7 +365,7 @@ class MotionStatechart(SubclassJSONSerializer):
             config=controller_config,
             degrees_of_freedom=ordered_dofs,
             constraint_collection=constraint_collection,
-            world_state_symbols=self.world.state.get_symbols(),
+            world_state_symbols=self.world.state.get_variables(),
             life_cycle_variables=self.life_cycle_state.life_cycle_symbols(),
         )
         if self.qp_controller.has_not_free_variables():

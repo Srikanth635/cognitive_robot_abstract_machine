@@ -20,7 +20,7 @@ class JointGoalReached(MotionStatechartNode):
     def __post_init__(self):
         comparison_list = []
         for connection, goal in self.goal_state.items():
-            current = connection.dof.symbols.position
+            current = connection.dof.variables.position
             if (
                 isinstance(connection, RevoluteConnection)
                 and not connection.dof.has_position_limits()
@@ -51,6 +51,6 @@ class JointPositionAbove(MotionStatechartNode):
                 f"{self.__class__.__name__} does not support joints of type continuous."
             )
 
-        current = self.connection.dof.symbols.position
+        current = self.connection.dof.variables.position
         expression = current > self.threshold
         self.observation_expression = expression

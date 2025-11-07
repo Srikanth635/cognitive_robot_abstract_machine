@@ -44,7 +44,7 @@ class LocalMinimumReached(MotionStatechartNode):
                 max(self.min_cut_off, velocity_limit), self.max_cut_off
             )
             ref.append(velocity_limit)
-            symbols.append(dof.symbols.velocity)
+            symbols.append(dof.variables.velocity)
         ref = cas.Expression(ref)
         vel_symbols = cas.Expression(symbols)
 

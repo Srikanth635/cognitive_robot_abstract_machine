@@ -62,13 +62,13 @@ class GiskardToTwoSidedNeqQPAdapter(GiskardToQPAdapter):
             )
             constraint_matrix = cas.vstack([eq_matrix, neq_matrix])
 
-        free_symbols = set(quadratic_weights.free_symbols())
-        free_symbols.update(constraint_matrix.free_symbols())
-        free_symbols.update(box_lower_constraints.free_symbols())
-        free_symbols.update(box_upper_constraints.free_symbols())
-        free_symbols.update(eq_bounds.free_symbols())
-        free_symbols.update(neq_lower_bounds.free_symbols())
-        free_symbols.update(neq_upper_bounds.free_symbols())
+        free_symbols = set(quadratic_weights.free_variables())
+        free_symbols.update(constraint_matrix.free_variables())
+        free_symbols.update(box_lower_constraints.free_variables())
+        free_symbols.update(box_upper_constraints.free_variables())
+        free_symbols.update(eq_bounds.free_variables())
+        free_symbols.update(neq_lower_bounds.free_variables())
+        free_symbols.update(neq_upper_bounds.free_variables())
         for s in itertools.chain(
             self.world_state_symbols,
             self.task_life_cycle_symbols,

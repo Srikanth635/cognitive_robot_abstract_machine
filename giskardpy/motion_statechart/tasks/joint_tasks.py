@@ -82,7 +82,7 @@ class JointPositionList(Task):
             raise GoalInitalizationException(f"Can't initialize {self} with no joints.")
 
         for connection, target in self.goal_state.items():
-            current = connection.dof.symbols.position
+            current = connection.dof.variables.position
             target = self.apply_limits_to_target(target, connection)
             velocity = self.apply_limits_to_velocity(self.max_velocity, connection)
             if (
@@ -365,7 +365,7 @@ class JointVelocity(Task):
         :param hard: turn this into a hard constraint.
         """
         for connection in self.connections:
-            current_joint = connection.dof.symbols.position
+            current_joint = connection.dof.variables.position
             try:
                 limit_expr = connection.dof.upper_limits.velocity
                 max_velocity = cas.min(self.max_velocity, limit_expr)
@@ -386,7 +386,7 @@ class UnlimitedJointGoal(Task):
     goal_position: float = field(kw_only=True)
 
     def __post_init__(self):
-        connection_symbol = self.connection.dof.symbols.position
+        connection_symbol = self.connection.dof.variables.position
         self.add_position_constraint(
             expr_current=connection_symbol,
             expr_goal=self.goal_position,
@@ -416,7 +416,7 @@ class AvoidJointLimits(Task):
                 if not connection.dof.has_position_limits():
                     continue
                 weight = self.weight
-                connection_symbol = connection.dof.symbols.position
+                connection_symbol = connection.dof.variables.position
                 percentage = self.percentage / 100.0
                 lower_limit = connection.dof.lower_limits.position
                 upper_limit = connection.dof.upper_limits.position

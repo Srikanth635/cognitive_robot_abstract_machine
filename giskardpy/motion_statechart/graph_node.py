@@ -101,7 +101,7 @@ class TrinaryCondition(SubclassJSONSerializer):
         """
         return [
             x.motion_statechart_node
-            for x in self.expression.free_symbols()
+            for x in self.expression.free_variables()
             if isinstance(x, ObservationVariable)
         ]
 
@@ -109,9 +109,9 @@ class TrinaryCondition(SubclassJSONSerializer):
         """
         Replaces the state symbols with motion statechart node names and formats it nicely.
         """
-        free_symbols = self.expression.free_symbols()
+        free_symbols = self.expression.free_variables()
         if not free_symbols:
-            str_representation = str(cas.is_true_symbol(self.expression))
+            str_representation = str(cas.is_const_binary_true(self.expression))
         else:
             str_representation = cas.trinary_logic_to_str(self.expression)
         str_representation = re.sub(

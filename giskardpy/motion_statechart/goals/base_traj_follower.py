@@ -170,7 +170,7 @@ class BaseTrajFollower(Goal):
     @profile
     def rot_error_at(self, t_in_s: int):
         rotation_goal = self.current_traj_point(self.joint.yaw.name, t_in_s)
-        rotation_current = self.joint.yaw.symbols.position
+        rotation_current = self.joint.yaw.variables.position
         error = (
             cas.shortest_angular_distance(rotation_current, rotation_goal)
             / god_map.qp_controller.mpc_dt
@@ -194,7 +194,7 @@ class BaseTrajFollower(Goal):
             lower_velocity_limit=errors,
             upper_velocity_limit=errors,
             weight=WEIGHT_BELOW_CA,
-            task_expression=self.joint.yaw.symbols.position,
+            task_expression=self.joint.yaw.variables.position,
             velocity_limit=0.5,
             name="/rot",
         )

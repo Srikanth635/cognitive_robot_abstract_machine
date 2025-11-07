@@ -41,9 +41,7 @@ class BaseArmWeightScaling(Task):
             for name in self.arm_joints:
                 vs = god_map.world.get_connection_by_name(name).active_dofs
                 for v in vs:
-                    v_gain = self.gain * (
-                        scaling_exp / v.upper_limits.velocity
-                    ).norm()
+                    v_gain = self.gain * (scaling_exp / v.upper_limits.velocity).norm()
                     arm_v = v
                     gains[Derivatives.velocity][v] = v_gain
                     gains[Derivatives.acceleration][v] = v_gain
@@ -55,7 +53,9 @@ class BaseArmWeightScaling(Task):
                     v_gain = (
                         self.gain
                         / 100
-                        * cas.Expression(1).safe_division((scaling_exp / v.upper_limits.velocity).norm())
+                        * cas.Expression(1).safe_division(
+                            (scaling_exp / v.upper_limits.velocity).norm()
+                        )
                     )
                     base_v = v
                     gains[Derivatives.velocity][v] = v_gain
@@ -66,12 +66,13 @@ class BaseArmWeightScaling(Task):
         god_map.debug_expression_manager.add_debug_expression(
             "base_scaling",
             self.gain
-            * cas.Expression(1).safe_division((scaling_exp / base_v.upper_limits.velocity).norm())
-            )
+            * cas.Expression(1).safe_division(
+                (scaling_exp / base_v.upper_limits.velocity).norm()
+            ),
+        )
         god_map.debug_expression_manager.add_debug_expression(
             "arm_scaling",
-            self.gain
-            * (scaling_exp / arm_v.upper_limits.velocity).norm(),
+            self.gain * (scaling_exp / arm_v.upper_limits.velocity).norm(),
         )
         god_map.debug_expression_manager.add_debug_expression(
             "norm", scaling_exp.norm()
@@ -99,7 +100,7 @@ class MaxManipulability(Task):
             self.root_link, self.tip_link
         ).to_position()[:3]
 
-        symbols = root_P_tip.free_symbols()
+        symbols = root_P_tip.free_variables()
         e = cas.vstack([root_P_tip])
         J = e.jacobian(symbols)
         JJT = J.dot(J.T)

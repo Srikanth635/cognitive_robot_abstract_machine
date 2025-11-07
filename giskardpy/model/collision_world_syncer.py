@@ -99,9 +99,9 @@ class CollisionWorldSynchronizer:
                 v = self.external_map_V_n_symbol(body, idx)
                 symbols.extend(
                     [
-                        v.x.free_symbols()[0],
-                        v.y.free_symbols()[0],
-                        v.z.free_symbols()[0],
+                        v.x.free_variables()[0],
+                        v.y.free_variables()[0],
+                        v.z.free_variables()[0],
                     ]
                 )
 
@@ -110,9 +110,9 @@ class CollisionWorldSynchronizer:
                 p = self.external_new_a_P_pa_symbol(body, idx)
                 symbols.extend(
                     [
-                        p.x.free_symbols()[0],
-                        p.y.free_symbols()[0],
-                        p.z.free_symbols()[0],
+                        p.x.free_variables()[0],
+                        p.y.free_variables()[0],
+                        p.z.free_variables()[0],
                     ]
                 )
 
@@ -207,27 +207,27 @@ class CollisionWorldSynchronizer:
                 p = self.self_new_a_P_pa_symbol(link_a, link_b, idx)
                 symbols.extend(
                     [
-                        p.x.free_symbols()[0],
-                        p.y.free_symbols()[0],
-                        p.z.free_symbols()[0],
+                        p.x.free_variables()[0],
+                        p.y.free_variables()[0],
+                        p.z.free_variables()[0],
                     ]
                 )
 
                 v = self.self_new_b_V_n_symbol(link_a, link_b, idx)
                 symbols.extend(
                     [
-                        v.x.free_symbols()[0],
-                        v.y.free_symbols()[0],
-                        v.z.free_symbols()[0],
+                        v.x.free_variables()[0],
+                        v.y.free_variables()[0],
+                        v.z.free_variables()[0],
                     ]
                 )
 
                 p = self.self_new_b_P_pb_symbol(link_a, link_b, idx)
                 symbols.extend(
                     [
-                        p.x.free_symbols()[0],
-                        p.y.free_symbols()[0],
-                        p.z.free_symbols()[0],
+                        p.x.free_variables()[0],
+                        p.y.free_variables()[0],
+                        p.z.free_variables()[0],
                     ]
                 )
 

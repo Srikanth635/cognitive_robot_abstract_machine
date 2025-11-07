@@ -410,7 +410,7 @@ class QPController:
             [
                 i
                 for i, v in enumerate(degrees_of_freedom)
-                if v.symbols.position.name in float_variable_names
+                if v.variables.position.name in float_variable_names
             ]
         )
         self.active_dofs = [degrees_of_freedom[i] for i in self.dof_filter]
