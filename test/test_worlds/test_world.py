@@ -826,7 +826,7 @@ def test_missing_world_modification_context(world_setup):
         world.add_semantic_annotation(Handle(l1))
 
 
-def test_symbol_removel_simple():
+def test_dof_removal_simple():
     world = World()
     body1 = Body(name=PrefixedName("body1"))
     body2 = Body(name=PrefixedName("body2"))
@@ -843,7 +843,7 @@ def test_symbol_removel_simple():
         world.add_connection(c2)
 
 
-def test_symbol_removal():
+def test_dof_removal():
     world1 = World()
     body1 = Body(name=PrefixedName("body1"))
     with world1.modify_world():

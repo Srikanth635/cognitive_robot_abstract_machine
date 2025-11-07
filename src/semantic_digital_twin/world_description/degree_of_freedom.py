@@ -65,7 +65,7 @@ class DegreeOfFreedom(WorldEntity, SubclassJSONSerializer):
     Lower and upper bounds for each derivative
     """
 
-    symbols: DerivativeMap[cas.FloatVariable] = field(
+    variables: DerivativeMap[cas.FloatVariable] = field(
         default_factory=DerivativeMap, init=False
     )
     """
@@ -87,18 +87,21 @@ class DegreeOfFreedom(WorldEntity, SubclassJSONSerializer):
         self.lower_limits = self.lower_limits or DerivativeMap()
         self.upper_limits = self.upper_limits or DerivativeMap()
 
-    def create_and_register_symbols(self):
+    def create_variables(self):
+        """
+        Creates a variable for each derivative, that refer to the corresponding values of this dof.
+        """
         assert self._world is not None
-        self.symbols.data[Derivatives.position] = PositionVariable(
+        self.variables.data[Derivatives.position] = PositionVariable(
             name=PrefixedName("position", prefix=str(self.name)), dof=self
         )
-        self.symbols.data[Derivatives.velocity] = VelocityVariable(
+        self.variables.data[Derivatives.velocity] = VelocityVariable(
             name=PrefixedName("velocity", prefix=str(self.name)), dof=self
         )
-        self.symbols.data[Derivatives.acceleration] = AccelerationVariable(
+        self.variables.data[Derivatives.acceleration] = AccelerationVariable(
             name=PrefixedName("acceleration", prefix=str(self.name)), dof=self
         )
-        self.symbols.data[Derivatives.jerk] = JerkVariable(
+        self.variables.data[Derivatives.jerk] = JerkVariable(
             name=PrefixedName("jerk", prefix=str(self.name)), dof=self
         )
 
@@ -135,12 +138,12 @@ class DegreeOfFreedom(WorldEntity, SubclassJSONSerializer):
         result = DegreeOfFreedom(
             lower_limits=deepcopy(self.lower_limits),
             upper_limits=deepcopy(self.upper_limits),
-            name=self.name,
+            name=deepcopy(self.name),
             has_hardware_interface=self.has_hardware_interface,
         )
         result._world = self._world
         # there can't be two symbols with the same name anyway
-        result.symbols = self.symbols
+        result.variables = self.variables
         return result
 
     def _overwrite_dof_limits(
@@ -159,7 +162,7 @@ class DegreeOfFreedom(WorldEntity, SubclassJSONSerializer):
         :param new_upper_limits: A mapping of new upper limits for the specified derivatives.
             If a new upper limit is None, no change is applied for that derivative.
         """
-        if not isinstance(self.symbols.position, cas.FloatVariable):
+        if not isinstance(self.variables.position, cas.FloatVariable):
             raise UsageError(
                 "Cannot overwrite limits of mimic DOFs, use .raw_dof._overwrite_dof_limits instead."
             )

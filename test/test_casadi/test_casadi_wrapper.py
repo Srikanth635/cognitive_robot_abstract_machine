@@ -7,7 +7,7 @@ from hypothesis import given, assume
 import semantic_digital_twin.spatial_types.spatial_types as cas
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.exceptions import (
-    HasFreeSymbolsError,
+    HasFreeVariablesError,
     WrongDimensionsError,
     SpatialTypesError,
 )
@@ -128,7 +128,7 @@ class TestLogic3:
             result = logic_and(a, or_result)
             return result
 
-        a, b, c = cas.create_symbols(["a", "b", "c"])
+        a, b, c = cas.create_float_variables(["a", "b", "c"])
         expr = cas.logic_and(a, cas.logic_or(b, cas.logic_not(c)))
         new_expr = cas.replace_with_trinary_logic(expr)
         f = new_expr.compile()
@@ -145,11 +145,11 @@ class TestLogic3:
 class TestFloatVariable:
     def test_back_reference(self):
         v = cas.FloatVariable(name=PrefixedName("asdf"))
-        v2 = v.free_symbols()[0]
+        v2 = v.free_variables()[0]
         assert id(v2) == id(v)
         assert id(v2.casadi_sx) == id(v.casadi_sx)
 
-        v3 = cas.Point3(v).free_symbols()[0]
+        v3 = cas.Point3(v).free_variables()[0]
         assert id(v3) == id(v)
 
     def test_from_name(self):
@@ -159,7 +159,7 @@ class TestFloatVariable:
 
     def test_to_np(self):
         s1 = cas.FloatVariable(name="s1")
-        with pytest.raises(HasFreeSymbolsError):
+        with pytest.raises(HasFreeVariablesError):
             s1.to_np()
 
     def test_add(self):
@@ -648,11 +648,11 @@ class TestExpression:
         )
         assert_allclose(actual, expected)
 
-    def test_free_symbols(self):
-        m = cas.Expression(data=cas.create_symbols(["a", "b", "c", "d"]))
-        assert len(m.free_symbols()) == 4
+    def test_free_variables(self):
+        m = cas.Expression(data=cas.create_float_variables(["a", "b", "c", "d"]))
+        assert len(m.free_variables()) == 4
         a = cas.FloatVariable(name="a")
-        assert a.equivalent(a.free_symbols()[0])
+        assert a.equivalent(a.free_variables()[0])
 
     def test_diag(self):
         result = cas.Expression.diag([1, 2, 3])
@@ -811,7 +811,7 @@ class TestExpression:
     def test_to_np_fail(self):
         s1, s2 = cas.FloatVariable(name="s1"), cas.FloatVariable(name="s2")
         e = s1 + s2
-        with pytest.raises(HasFreeSymbolsError):
+        with pytest.raises(HasFreeVariablesError):
             e.to_np()
 
     @given(vector(3), float_no_nan_no_inf())
@@ -854,37 +854,47 @@ class TestExpression:
         s1 = cas.FloatVariable(name="s1")
         s2 = cas.FloatVariable(name="s2")
         expr = cas.logic_and(cas.BinaryTrue, s1)
-        assert not cas.is_true_symbol(expr) and not cas.is_false_symbol(expr)
+        assert not cas.is_const_binary_true(expr) and not cas.is_const_binary_false(
+            expr
+        )
         expr = cas.logic_and(cas.BinaryFalse, s1)
-        assert cas.is_false_symbol(expr)
+        assert cas.is_const_binary_false(expr)
         expr = cas.logic_and(cas.BinaryTrue, cas.BinaryTrue)
-        assert cas.is_true_symbol(expr)
+        assert cas.is_const_binary_true(expr)
         expr = cas.logic_and(cas.BinaryFalse, cas.BinaryTrue)
-        assert cas.is_false_symbol(expr)
+        assert cas.is_const_binary_false(expr)
         expr = cas.logic_and(cas.BinaryFalse, cas.BinaryFalse)
-        assert cas.is_false_symbol(expr)
+        assert cas.is_const_binary_false(expr)
         expr = cas.logic_and(s1, s2)
-        assert not cas.is_true_symbol(expr) and not cas.is_false_symbol(expr)
+        assert not cas.is_const_binary_true(expr) and not cas.is_const_binary_false(
+            expr
+        )
 
     def test_logic_or(self):
         s1 = cas.FloatVariable(name="s1")
         s2 = cas.FloatVariable(name="s2")
         s3 = cas.FloatVariable(name="s3")
         expr = cas.logic_or(cas.BinaryFalse, s1)
-        assert not cas.is_true_symbol(expr) and not cas.is_false_symbol(expr)
+        assert not cas.is_const_binary_true(expr) and not cas.is_const_binary_false(
+            expr
+        )
         expr = cas.logic_or(cas.BinaryTrue, s1)
-        assert cas.is_true_symbol(expr)
+        assert cas.is_const_binary_true(expr)
         expr = cas.logic_or(cas.BinaryTrue, cas.BinaryTrue)
-        assert cas.is_true_symbol(expr)
+        assert cas.is_const_binary_true(expr)
         expr = cas.logic_or(cas.BinaryFalse, cas.BinaryTrue)
-        assert cas.is_true_symbol(expr)
+        assert cas.is_const_binary_true(expr)
         expr = cas.logic_or(cas.BinaryFalse, cas.BinaryFalse)
-        assert cas.is_false_symbol(expr)
+        assert cas.is_const_binary_false(expr)
         expr = cas.logic_or(s1, s2)
-        assert not cas.is_true_symbol(expr) and not cas.is_false_symbol(expr)
+        assert not cas.is_const_binary_true(expr) and not cas.is_const_binary_false(
+            expr
+        )
 
         expr = cas.logic_or(s1, s2, s3)
-        assert not cas.is_true_symbol(expr) and not cas.is_false_symbol(expr)
+        assert not cas.is_const_binary_true(expr) and not cas.is_const_binary_false(
+            expr
+        )
 
     def test_lt(self):
         e1 = cas.Expression(data=[1, 2, 3, -1])
@@ -1241,7 +1251,7 @@ class TestRotationMatrix:
 
         # These should raise TypeError
         with pytest.raises(TypeError):
-            r @ s  # Matrix @ Symbol
+            r @ s  # Matrix @ FloatVariable
         with pytest.raises(TypeError):
             r @ e  # Matrix @ Expression (scalar)
         with pytest.raises(TypeError):
@@ -1305,10 +1315,10 @@ class TestRotationMatrix:
 
         assert isinstance(result, cas.RotationMatrix)
 
-        # Should contain the symbol
-        symbols = result.free_symbols()
-        symbol_names = [s.name for s in symbols if hasattr(s, "name")]
-        assert "theta" in symbol_names
+        # Should contain the variable
+        variables = result.free_variables()
+        variable_names = [s.name for s in variables if hasattr(s, "name")]
+        assert "theta" in variable_names
 
     def test_compilation(self):
         """Test compilation and execution of rotation matrices"""
@@ -1717,7 +1727,7 @@ class TestPoint3:
 
     def test_symbolic_operations(self):
         """Test operations with symbolic expressions"""
-        x, y, z = cas.create_symbols(["x", "y", "z"])
+        x, y, z = cas.create_float_variables(["x", "y", "z"])
         p_symbolic = cas.Point3(x_init=x, y_init=y, z_init=z)
         p_numeric = cas.Point3(x_init=1, y_init=2, z_init=3)
 
@@ -1732,9 +1742,9 @@ class TestPoint3:
         assert result[3] == 0
 
         # Verify symbolic expressions are preserved
-        symbols = result.free_symbols()
-        symbol_names = [s.name for s in symbols if hasattr(s, "name")]
-        assert "x" in symbol_names and "y" in symbol_names and "z" in symbol_names
+        variables = result.free_variables()
+        variable_names = [s.name for s in variables if hasattr(s, "name")]
+        assert "x" in variable_names and "y" in variable_names and "z" in variable_names
 
 
 class TestVector3:
@@ -2089,7 +2099,7 @@ class TestTransformationMatrix:
 
         # TransformationMatrix @ invalid types should raise TypeError
         with pytest.raises(TypeError):
-            t @ s  # TransformationMatrix @ Symbol
+            t @ s  # TransformationMatrix @ FloatVariable
         with pytest.raises(TypeError):
             t @ e  # TransformationMatrix @ Expression (scalar)
         with pytest.raises(TypeError):
@@ -2554,7 +2564,7 @@ class TestTransformationMatrix:
 
         # These should raise TypeError
         with pytest.raises(TypeError):
-            t @ s  # Matrix @ Symbol
+            t @ s  # Matrix @ FloatVariable
         with pytest.raises(TypeError):
             t @ e  # Matrix @ Expression (scalar)
         with pytest.raises(TypeError):
@@ -2595,12 +2605,12 @@ class TestTransformationMatrix:
 
         assert isinstance(result, cas.TransformationMatrix)
 
-        # Should contain the symbols
-        symbols = result.free_symbols()
-        symbol_names = [s.name for s in symbols if hasattr(s, "name")]
-        assert "x" in symbol_names
-        assert "y" in symbol_names
-        assert "theta" in symbol_names
+        # Should contain the variables
+        variables = result.free_variables()
+        variable_names = [s.name for s in variables if hasattr(s, "name")]
+        assert "x" in variable_names
+        assert "y" in variable_names
+        assert "theta" in variable_names
 
     def test_compilation(self):
         """Test compilation and execution of transformation matrices"""
@@ -2842,14 +2852,14 @@ class TestCASWrapper:
             assert_allclose(f(), expected)
             assert_allclose(f(np.array([], dtype=float)), expected)
 
-    def test_create_symbols(self):
-        result = cas.create_symbols(["a", "b", "c"])
+    def test_create_variables(self):
+        result = cas.create_float_variables(["a", "b", "c"])
         assert str(result[0]) == "a"
         assert str(result[1]) == "b"
         assert str(result[2]) == "c"
 
-    def test_create_symbols2(self):
-        result = cas.create_symbols(3)
+    def test_create_variables2(self):
+        result = cas.create_float_variables(3)
         assert str(result[0]) == "s_0"
         assert str(result[1]) == "s_1"
         assert str(result[2]) == "s_2"
@@ -3189,7 +3199,7 @@ class TestCASWrapper:
         assert_allclose(actual_sum, expected_sum)
 
     def test_to_str(self):
-        axis = cas.Vector3(*cas.create_symbols(["v1", "v2", "v3"]))
+        axis = cas.Vector3(*cas.create_float_variables(["v1", "v2", "v3"]))
         angle = cas.FloatVariable(name="alpha")
         q = cas.Quaternion.from_axis_angle(axis, angle)
         expr = q.norm()
@@ -3203,7 +3213,7 @@ class TestCASWrapper:
         ]
 
     def test_to_str2(self):
-        a, b = cas.create_symbols(["a", "b"])
+        a, b = cas.create_float_variables(["a", "b"])
         e = cas.if_eq(a, 0, a, b)
         assert e.pretty_str() == [["(((a==0)?a:0)+((!(a==0))?b:0))"]]
 
@@ -3217,7 +3227,7 @@ class TestCompiledFunction:
     def test_dense(self):
         s1_value = 420.0
         s2_value = 69.0
-        s1, s2 = cas.create_symbols(["s1", "s2"])
+        s1, s2 = cas.create_float_variables(["s1", "s2"])
         e = cas.sqrt(cas.cos(s1) + cas.sin(s2))
         e_f = e.compile()
         actual = e_f(np.array([s1_value, s2_value]))
@@ -3227,7 +3237,7 @@ class TestCompiledFunction:
     def test_dense_two_params(self):
         s1_value = 420.0
         s2_value = 69.0
-        s1, s2 = cas.create_symbols(["s1", "s2"])
+        s1, s2 = cas.create_float_variables(["s1", "s2"])
         e = cas.sqrt(cas.cos(s1) + cas.sin(s2))
         e_f = e.compile(parameters=[[s1], [s2]])
         actual = e_f(np.array([s1_value]), np.array([s2_value]))
@@ -3237,7 +3247,7 @@ class TestCompiledFunction:
     def test_sparse(self):
         s1_value = 420.0
         s2_value = 69.0
-        s1, s2 = cas.create_symbols(["s1", "s2"])
+        s1, s2 = cas.create_float_variables(["s1", "s2"])
         e = cas.sqrt(cas.cos(s1) + cas.sin(s2))
         e_f = e.compile(sparse=True)
         actual = e_f(np.array([s1_value, s2_value]))
@@ -3248,11 +3258,11 @@ class TestCompiledFunction:
     def test_stacked_compiled_function_dense(self):
         s1_value = 420.0
         s2_value = 69.0
-        s1, s2 = cas.create_symbols(["s1", "s2"])
+        s1, s2 = cas.create_float_variables(["s1", "s2"])
         e1 = cas.sqrt(cas.cos(s1) + cas.sin(s2))
         e2 = s1 + s2
         e_f = cas.CompiledFunctionWithViews(
-            expressions=[e1, e2], symbol_parameters=[[s1, s2]]
+            expressions=[e1, e2], variable_parameters=[[s1, s2]]
         )
         actual_e1, actual_e2 = e_f(np.array([s1_value, s2_value]))
         expected_e1 = np.sqrt(np.cos(s1_value) + np.sin(s2_value))
@@ -3260,8 +3270,8 @@ class TestCompiledFunction:
         assert_allclose(actual_e1, expected_e1)
         assert_allclose(actual_e2, expected_e2)
 
-    def test_missing_free_symbols(self):
-        s1, s2 = cas.create_symbols(["s1", "s2"])
+    def test_missing_free_variables(self):
+        s1, s2 = cas.create_float_variables(["s1", "s2"])
         e = cas.sqrt(cas.cos(s1) + cas.sin(s2))
-        with pytest.raises(HasFreeSymbolsError):
+        with pytest.raises(HasFreeVariablesError):
             e.compile(parameters=[[s1]])
