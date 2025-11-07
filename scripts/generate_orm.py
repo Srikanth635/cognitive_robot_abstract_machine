@@ -6,7 +6,6 @@
 # information on how to map them.
 # ----------------------------------------------------------------------------------------------------------------------
 from __future__ import annotations
-
 import os
 from dataclasses import is_dataclass
 
@@ -28,6 +27,11 @@ import semantic_digital_twin.world_description.degree_of_freedom
 import semantic_digital_twin.world_description.geometry
 import semantic_digital_twin.world_description.shape_collection
 import semantic_digital_twin.world_description.world_entity
+import semantic_digital_twin.reasoning.predicates
+from semantic_digital_twin.world import WorldModelManager
+from semantic_digital_twin.adapters.procthor.procthor_semantic_annotations import (
+    HouseholdObject,
+)
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_computations.forward_kinematics import (
     ForwardKinematicsManager,
@@ -66,6 +70,9 @@ all_classes |= set(
     classes_of_module(semantic_digital_twin.world_description.degree_of_freedom)
 )
 all_classes |= set(classes_of_module(semantic_digital_twin.robots.abstract_robot))
+# classes |= set(recursive_subclasses(ViewFactory))
+all_classes |= set([HouseholdObject] + recursive_subclasses(HouseholdObject))
+all_classes |= set(classes_of_module(semantic_digital_twin.reasoning.predicates))
 
 
 # remove classes that should not be mapped
@@ -74,6 +81,7 @@ all_classes -= {
     WorldModelUpdateContextManager,
     HasUpdateState,
     ForwardKinematicsManager,
+    WorldModelManager,
 }
 
 # build the symbol graph

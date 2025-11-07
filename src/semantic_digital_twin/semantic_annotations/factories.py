@@ -1178,7 +1178,7 @@ class RoomFactory(SemanticAnnotationFactory[Room]):
 
         region = Region.from_3d_points(
             points_3d=self.floor_polytope,
-            name=PrefixedName(self.name.name + "_region", self.name.prefix),
+            name=PrefixedName(self.name.name + "_surface_region", self.name.prefix),
             reference_frame=room_body,
         )
         connection = FixedConnection(
@@ -1190,7 +1190,7 @@ class RoomFactory(SemanticAnnotationFactory[Room]):
 
         floor = Floor(
             name=PrefixedName(self.name.name + "_floor", self.name.prefix),
-            region=region,
+            supporting_surface=region,
         )
         world.add_semantic_annotation(floor)
         semantic_room_annotation = Room(name=self.name, floor=floor)

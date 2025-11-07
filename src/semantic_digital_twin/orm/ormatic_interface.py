@@ -2351,7 +2351,7 @@ class CameraDAO(
 class SupportingSurfaceDAO(
     SemanticAnnotationDAO,
     DataAccessObject[
-        semantic_digital_twin.semantic_annotations.semantic_annotations.SupportingSurface
+        semantic_digital_twin.semantic_annotations.semantic_annotations.HasSupportingSurface
     ],
 ):
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import importlib
 import inspect
 import itertools
-from abc import ABC
+from abc import ABC, abstractmethod
 from collections import deque
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
@@ -119,6 +119,30 @@ class KinematicStructureEntity(WorldEntity, SubclassJSONSerializer, ABC):
     """
 
     @property
+    @abstractmethod
+    def combined_mesh(self) -> Optional[trimesh.Trimesh]:
+        """
+        Computes the combined mesh of this KinematicStructureEntity.
+        """
+
+    @property
+    def center_of_mass(self) -> Point3:
+        """
+        Computes the center of mass of this KinematicStructureEntity.
+        """
+        # Center of mass in the body's local frame (collision geometry)
+        com_local: np.ndarray[np.float64] = self.combined_mesh.center_mass  # (3,)
+        # Transform to world frame using the body's global pose
+        com = Point3(
+            x_init=com_local[0],
+            y_init=com_local[1],
+            z_init=com_local[2],
+            reference_frame=self,
+        )
+        world = self._world
+        return world.transform(com, world.root)
+
+    @property
     def global_pose(self) -> TransformationMatrix:
         """
         Computes the pose of the KinematicStructureEntity in the world frame.
@@ -208,6 +232,15 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
         self.collision.reference_frame = self
         self.collision.transform_all_shapes_to_own_frame()
         self.visual.transform_all_shapes_to_own_frame()
+
+    @property
+    def combined_mesh(self) -> Optional[trimesh.Trimesh]:
+        """
+        Computes the combined mesh of this KinematicStructureEntity.
+        """
+        if not self.collision:
+            return None
+        return self.collision.combined_mesh
 
     def get_collision_config(self) -> CollisionCheckingConfig:
         if self.temp_collision_config is not None:
@@ -386,12 +419,18 @@ class Region(KinematicStructureEntity):
     def __hash__(self):
         return id(self)
 
+    @property
+    def combined_mesh(self) -> Optional[trimesh.Trimesh]:
+        if not self.area:
+            return None
+        return self.area.combined_mesh
+
     @classmethod
     def from_3d_points(
         cls,
         name: PrefixedName,
         points_3d: List[Point3],
-        reference_frame: Optional[Body] = None,
+        reference_frame: Optional[KinematicStructureEntity] = None,
         minimum_thickness: float = 0.005,
         sv_ratio_tol: float = 1e-7,
     ) -> Self:
