@@ -25,41 +25,43 @@ class TestComponentsAndAssembly:
         # symmetric, zero diagonal, correct off-diagonals
         assert np.allclose(P, P.T)
         assert_allclose(np.diag(P), [0.0, 0.0, 0.0], atol=1e-12)
-        assert_allclose([P[0,1], P[0,2], P[1,2]], [0.1, -0.2, 0.3], atol=1e-12)
+        assert_allclose([P[0, 1], P[0, 2], P[1, 2]], [0.1, -0.2, 0.3], atol=1e-12)
 
     def test_from_moments_products_roundtrip(self):
         m = MomentsOfInertia.from_values(2.0, 3.0, 5.0)
         p = ProductsOfInertia.from_values(ixy=0.1, ixz=-0.2, iyz=0.3)
         I = InertiaTensor.from_moments_products(m, p)
         # should equal diagonal + off-diagonal
-        expected = np.array([
-            [2.0,  0.1, -0.2],
-            [0.1,  3.0,  0.3],
-            [-0.2, 0.3,  5.0],
-        ])
+        expected = np.array(
+            [
+                [2.0, 0.1, -0.2],
+                [0.1, 3.0, 0.3],
+                [-0.2, 0.3, 5.0],
+            ]
+        )
         assert_allclose(I.data, expected, atol=1e-12)
 
         # decompose to scalar values and rebuild moments/products to reconstruct exactly
-        m11, m22, m33, m12, m13, m23 = I.to_inertia_values()
-        m2 = MomentsOfInertia.from_values(m11, m22, m33)
-        p2 = ProductsOfInertia.from_values(m12, m13, m23)
+        moments, products = I.to_moments_products()
+        m2 = MomentsOfInertia.from_values(*moments.to_values())
+        p2 = ProductsOfInertia.from_values(*products.to_values())
         I2 = InertiaTensor.from_moments_products(m2, p2)
         assert_allclose(I2.data, I.data, atol=1e-12)
 
     def test_from_inertia_values_and_to_inertia_values(self):
-        # simple sanity: set the 6 unique values and get them back intact
+        original_moments = (4.0, 6.0, 7.0)
+        original_products = (0.4, -0.7, 0.9)
         I = InertiaTensor.from_moments_products(
-            MomentsOfInertia.from_values(4.0, 6.0, 7.0),
-            ProductsOfInertia.from_values(0.4, -0.7, 0.9),
+            MomentsOfInertia.from_values(*original_moments),
+            ProductsOfInertia.from_values(*original_products),
         )
-        vals = I.to_inertia_values()
-        assert_allclose(vals, (4.0, 6.0, 7.0, 0.4, -0.7, 0.9), atol=1e-12)
+        moments, products = I.to_moments_products()
+        np.testing.assert_allclose(moments.to_values(), original_moments)
+        np.testing.assert_allclose(products.to_values(), original_products)
 
     def test_from_principal_reconstructs_specific_rotation(self):
         # rotation that permutes axes (det=+1), fully deterministic
-        R = np.array([[0.0, 0.0, 1.0],
-                      [1.0, 0.0, 0.0],
-                      [0.0, 1.0, 0.0]])
+        R = np.array([[0.0, 0.0, 1.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])
         m = PrincipalMoments.from_values(2.5, 3.0, 6.0)
         axes = PrincipalAxes(data=R)
         I = InertiaTensor.from_principals(axes, m)
@@ -82,9 +84,9 @@ class TestComponentsAndAssembly:
 
     def test_principal_axes_validation_non_orthonormal(self):
         with pytest.raises(AssertionError):
-            _ = PrincipalAxes(data=np.array([[1.0, 0.0, 0.0],
-                                             [0.0, 0.9, 0.0],
-                                             [0.0, 0.0, 1.0]]))
+            _ = PrincipalAxes(
+                data=np.array([[1.0, 0.0, 0.0], [0.0, 0.9, 0.0], [0.0, 0.0, 1.0]])
+            )
 
     def test_principal_axes_validation_left_handed(self):
         with pytest.raises(AssertionError):
@@ -100,17 +102,18 @@ class TestComponentsAndAssembly:
         M = v.as_matrix().data
         assert_allclose(M, np.diag([1.0, 2.0, 3.0]), atol=1e-12)
 
-    def test_quaternion_roundtrip(self):
-        q = 0.70710678, 0. , 0.70710678, 0.
-        R = PrincipalAxes.from_quaternion(x=q[0], y=q[1], z=q[2], w=q[3])
-        q2 = R.to_quaternion()
-        assert_allclose(q, q2, atol=1e-12)
+    def test_principal_moment_quaternion_roundtrip(self):
+        orig_q = (0.70710678, 0.0, 0.70710678, 0.0)
+        orig_moment = PrincipalMoments.from_values(2.0, 3.0, 5.0)
+        tensor = InertiaTensor.from_principal_moment_quaternion(orig_moment, orig_q)
+        moment, q = tensor.to_principal_moment_quaternion()
+
+        assert_allclose(moment.to_values(), orig_moment.to_values(), atol=1e-12)
+        assert_allclose(q, orig_q, atol=1e-12)
 
     def test_quaternion_rotation_matrix_equivalent(self):
-        q = 0.70710678, 0. , 0.70710678, 0.
-        rotation = np.array([[0., 0., 1.],
-                             [0., -1., 0.],
-                             [1., 0., 0.]])
+        q = 0.70710678, 0.0, 0.70710678, 0.0
+        rotation = np.array([[0.0, 0.0, 1.0], [0.0, -1.0, 0.0], [1.0, 0.0, 0.0]])
         R = PrincipalAxes.from_quaternion(x=q[0], y=q[1], z=q[2], w=q[3])
         R_matrix = R.data
         assert_allclose(rotation, R_matrix, atol=1e-12)
