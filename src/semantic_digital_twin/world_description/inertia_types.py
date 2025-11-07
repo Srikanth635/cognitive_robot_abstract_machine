@@ -32,6 +32,7 @@ def _best_xyz_permutation(axes: np.ndarray) -> np.ndarray:
             best_perm = np.array(perm, dtype=int)
     return best_perm
 
+
 @dataclass
 class NPMatrix3x3:
     data: NDArray
@@ -44,6 +45,7 @@ class NPMatrix3x3:
 
 
 GenericMatrix3x3Type = TypeVar("GenericMatrix3x3Type", bound=NPMatrix3x3)
+
 
 @dataclass
 class NPVector3:
@@ -62,6 +64,7 @@ class NPVector3:
 
     def as_matrix(self) -> NPMatrix3x3:
         return NPMatrix3x3(data=np.diag(self.data))
+
 
 @dataclass(eq=False)
 class ProductsOfInertia(NPVector3):
@@ -86,20 +89,19 @@ class ProductsOfInertia(NPVector3):
              [Ixz, Iyz, 0]]
         """
         ixy, ixz, iyz = self.data
-        mat = np.array(
-            [[0.0, ixy, ixz],
-             [ixy, 0.0, iyz],
-             [ixz, iyz, 0.0]], dtype=float
-        )
+        mat = np.array([[0.0, ixy, ixz], [ixy, 0.0, iyz], [ixz, iyz, 0.0]], dtype=float)
         return NPMatrix3x3(data=mat)
+
 
 @dataclass(eq=False)
 class MomentsVector3(NPVector3, ABC):
     """
     Base class for moment vectors.
     """
+
     def __post_init__(self):
         assert np.all(self.data >= 0), "Moments must be non-negative"
+
 
 @dataclass(eq=False)
 class MomentsOfInertia(MomentsVector3):
@@ -151,6 +153,7 @@ class PrincipalAxes(NPMatrix3x3):
     The principal axes of the inertia tensor is a 3x3 matrix where each column is a principal axis.
     A principal axis is an eigenvector of the inertia tensor corresponding to a principal moment of inertia.
     """
+
     def __post_init__(self):
         super().__post_init__()
         assert np.allclose(self.data.T @ self.data, np.eye(3), atol=1e-10)
@@ -290,7 +293,9 @@ class InertiaTensor(NPMatrix3x3):
         return PrincipalMoments(data=moments), PrincipalAxes(data=axes)
 
     @classmethod
-    def from_moments_products(cls, moments: MomentsOfInertia, products: ProductsOfInertia):
+    def from_moments_products(
+        cls, moments: MomentsOfInertia, products: ProductsOfInertia
+    ):
         """
         Construct from moments and products of inertia.
         """
@@ -312,7 +317,7 @@ class InertiaTensor(NPMatrix3x3):
 
 
 @dataclass
-class Inertial:
+class BodyInertial:
     """
     Represents the inertial properties of a body. https://mujoco.readthedocs.io/en/stable/XMLreference.html#body-inertial
     """
@@ -336,3 +341,17 @@ class Inertial:
     """
     The body to which this inertial property belongs.
     """
+
+
+@dataclass
+class ConnectionInertial:
+    stiffness: float = field(default=0.0)
+    damping: float = field(default=0.0)
+    armature: float = field(default=0.0)
+    frictionloss: float = field(default=0.0)
+
+    def __post_init__(self):
+        assert self.stiffness >= 0, "Stiffness must be non-negative"
+        assert self.damping >= 0, "Damping must be non-negative"
+        assert self.armature >= 0, "Armature must be non-negative"
+        assert self.frictionloss >= 0, "Friction loss must be non-negative"
