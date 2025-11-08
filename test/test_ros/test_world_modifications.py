@@ -10,9 +10,9 @@ from semantic_digital_twin.world_description.connections import (
     FixedConnection,
     Connection6DoF,
     PrismaticConnection,
-    RevoluteConnection,
+    RevoluteConnection, ActiveConnection,
 )
-from semantic_digital_twin.world_description.world_entity import Body
+from semantic_digital_twin.world_description.world_entity import Body, CollisionCheckingConfig
 from semantic_digital_twin.world_description.world_modification import (
     WorldModelModificationBlock,
     AddKinematicStructureEntityModification,
@@ -160,6 +160,29 @@ class ConnectionModificationTestCase(unittest.TestCase):
 
         self.assertNotIn(v1, w.semantic_annotations)
         self.assertNotIn(v2, w.semantic_annotations)
+
+    def test_set_static_collision_config(self):
+        w = World()
+
+        with w.modify_world():
+            b1 = Body(name=PrefixedName("b1"))
+            b2 = Body(name=PrefixedName("b2"))
+            w.add_kinematic_structure_entity(b1)
+            w.add_kinematic_structure_entity(b2)
+
+            dof = DegreeOfFreedom(name=PrefixedName("dofyboi"))
+            w.add_degree_of_freedom(dof)
+            connection = RevoluteConnection(
+                b1, b2, axis=Vector3.from_iterable([0, 0, 1]), dof_name=dof.name
+            )
+            w.add_connection(connection)
+
+            collision_config = CollisionCheckingConfig(
+                buffer_zone_distance=0.05, violated_distance=0.0, max_avoided_bodies=4
+            )
+            connection.set_static_collision_config_for_direct_child_bodies(
+                collision_config
+            )
 
 
 if __name__ == "__main__":
