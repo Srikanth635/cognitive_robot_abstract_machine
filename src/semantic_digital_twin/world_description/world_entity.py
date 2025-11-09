@@ -358,7 +358,10 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
 
         # add the new body so that the transformation matrices in the shapes can use it as reference frame.
         tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
-        tracker.add_kinematic_structure_entity(result)
+        if not tracker.has_kinematic_structure_entity(result.name):
+            tracker.add_kinematic_structure_entity(result)
+        else:
+            result = tracker.get_kinematic_structure_entity(result.name)
 
         collision = ShapeCollection.from_json(data["collision"], **kwargs)
         visual = ShapeCollection.from_json(data["visual"], **kwargs)
@@ -528,8 +531,13 @@ class SemanticAnnotation(WorldEntity, SubclassJSONSerializer):
 
         for semantic_annotation_field in fields(self):
             value = getattr(self, semantic_annotation_field.name)
-            if issubclass(type(value), SubclassJSONSerializer):
-                result[semantic_annotation_field.name] = value.to_json()
+            if semantic_annotation_field.name.startswith(
+                "_"
+            ) or semantic_annotation_field.name.startswith("__"):
+                continue
+            if not issubclass(type(value), SubclassJSONSerializer):
+                continue
+            result[semantic_annotation_field.name] = value.to_json()
         return result
 
     @classmethod
@@ -543,7 +551,7 @@ class SemanticAnnotation(WorldEntity, SubclassJSONSerializer):
                 continue
             field_type = type_string_to_type(data[k]["type"])
             if issubclass(field_type, SubclassJSONSerializer):
-                init_args[k] = field_type.from_json(data[k])
+                init_args[k] = field_type.from_json(data[k], **kwargs)
 
         return cls(**init_args)
 

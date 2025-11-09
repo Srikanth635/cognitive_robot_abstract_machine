@@ -92,6 +92,9 @@ class KinematicStructureEntityKwargsTracker:
             kinematic_structure_entity
         )
 
+    def has_kinematic_structure_entity(self, name: PrefixedName) -> bool:
+        return name in self._kinematic_structure_entities
+
     def get_kinematic_structure_entity(
         self, name: PrefixedName
     ) -> KinematicStructureEntity:
