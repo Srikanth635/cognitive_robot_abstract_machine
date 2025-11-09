@@ -34,7 +34,7 @@ from typing_extensions import List, Optional, TYPE_CHECKING, Tuple
 from typing_extensions import Set
 
 from .geometry import TriangleMesh
-from .inertia_types import BodyInertial, ConnectionInertial
+from .inertia_types import Inertial
 from .shape_collection import ShapeCollection, BoundingBoxCollection
 from ..datastructures.prefixed_name import PrefixedName
 from ..exceptions import ReferenceFrameMismatchError
@@ -201,7 +201,7 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
     The index of the entity in `_world.kinematic_structure`.
     """
 
-    inertial: Optional[BodyInertial] = field(default_factory=BodyInertial)
+    inertial: Optional[Inertial] = field(default_factory=Inertial)
     """
     Inertia properties of the body.
     """
@@ -718,11 +718,6 @@ class Connection(WorldEntity, SubclassJSONSerializer):
     child: KinematicStructureEntity
     """
     The child KinematicStructureEntity of the connection.
-    """
-
-    inertial: Optional[ConnectionInertial] = field(default_factory=ConnectionInertial)
-    """
-    Inertia properties of the connection.
     """
 
     parent_T_connection_expression: TransformationMatrix = field(default=None)
