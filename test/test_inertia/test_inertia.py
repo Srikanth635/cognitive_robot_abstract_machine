@@ -8,7 +8,6 @@ from semantic_digital_twin.world_description.inertia_types import (
     PrincipalMoments,
     PrincipalAxes,
 )
-from test_casadi.reference_implementations import rotation_matrix_from_quaternion
 
 moments_and_axes_values = [
     (

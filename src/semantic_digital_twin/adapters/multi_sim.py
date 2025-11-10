@@ -12,7 +12,6 @@ from typing import (
     Optional,
     Union,
 )
-from typing_extensions import Self
 
 import numpy
 from mujoco_connector import MultiverseMujocoConnector
@@ -97,106 +96,6 @@ class InertialConverter:
         assert all(
             i >= 0 for i in self.diagonal_inertia
         ), "Inertia values must be non-negative."
-
-    @classmethod
-    def from_inertia(
-        cls,
-        mass: float,
-        inertia_pos: Point3,
-        inertia_quat: Quaternion,
-        inertia: List[float],
-    ) -> Self:
-        """
-        Converts inertia given as [Ixx, Iyy, Izz, Ixy, Ixz, Iyz] to diagonal form and updates the inertia quaternion.
-
-        :param mass: The mass of the body.
-        :param inertia_pos: The position of the inertia frame relative to the body frame [x, y, z].
-        :param inertia_quat: The orientation of the inertia frame relative to the body frame as a quaternion [qw, qx, qy, qz].
-        :param inertia: The inertia tensor in the form [Ixx, Iyy, Izz, Ixy, Ixz, Iyz].
-
-        :return: An InertialConverter instance with diagonal inertia and updated quaternion.
-        """
-        inertia_matrix = [
-            inertia[0],
-            inertia[3],
-            inertia[4],
-            inertia[3],
-            inertia[1],
-            inertia[5],
-            inertia[4],
-            inertia[5],
-            inertia[2],
-        ]
-        return cls.from_inertia_matrix(
-            mass=mass,
-            inertia_pos=inertia_pos,
-            inertia_quat=inertia_quat,
-            inertia_matrix=inertia_matrix,
-        )
-
-    @classmethod
-    def from_inertia_matrix(
-        cls,
-        mass: float,
-        inertia_pos: Point3,
-        inertia_quat: Quaternion,
-        inertia_matrix: List[float],
-    ) -> Self:
-        """
-        Converts inertia given as a 3x3 matrix in row-major order to diagonal form and updates the inertia quaternion.
-
-        :param mass: The mass of the body.
-        :param inertia_pos: The position of the inertia frame relative to the body frame [x, y, z].
-        :param inertia_quat: The orientation of the inertia frame relative to the body frame as a quaternion [qw, qx, qy, qz].
-        :param inertia_matrix: The inertia tensor as a 3x3 matrix in row-major order [Ixx, Ixy, Ixz, Iyx, Iyy, Iyz, Izx, Izy, Izz].
-
-        :return: An InertialConverter instance with diagonal inertia and updated quaternion.
-        """
-        return cls._convert_inertia(
-            mass=mass,
-            inertia_pos=inertia_pos,
-            inertia_quat=inertia_quat,
-            inertia_matrix=numpy.array(inertia_matrix).reshape(3, 3),
-        )
-
-    @classmethod
-    def _convert_inertia(cls, mass, inertia_pos, inertia_quat, inertia_matrix) -> Self:
-        """
-        Diagonalizes the inertia matrix and updates the inertia quaternion.
-
-        :param mass: The mass of the body.
-        :param inertia_pos: The position of the inertia frame relative to the body frame [x, y, z].
-        :param inertia_quat: The orientation of the inertia frame relative to the body frame as a quaternion [qw, qx, qy, qz].
-        :param inertia_matrix: The inertia tensor as a 3x3 numpy array in row-major order [Ixx, Ixy, Ixz; Iyx, Iyy, Iyz; Izx, Izy, Izz].
-
-        :return: An InertialConverter instance with diagonal inertia and updated quaternion.
-        """
-        eigenvalues, eigenvectors = numpy.linalg.eigh(inertia_matrix)
-        eigenvalues, eigenvectors = cls._sort_and_adjust(eigenvalues, eigenvectors)
-        inertia_quat = cls._update_quaternion(inertia_quat, eigenvectors)
-        diagonal_inertia = eigenvalues.tolist()
-        return cls(
-            mass=mass,
-            inertia_pos=inertia_pos,
-            inertia_quat=inertia_quat,
-            diagonal_inertia=diagonal_inertia,
-        )
-
-    @staticmethod
-    def _sort_and_adjust(eigenvalues: numpy.ndarray, eigenvectors: numpy.ndarray):
-        """
-        Sorts eigenvalues and eigenvectors, and ensures a right-handed coordinate system.
-
-        :param eigenvalues: The eigenvalues of the inertia matrix.
-        :param eigenvectors: The eigenvectors of the inertia matrix.
-
-        :return: Sorted eigenvalues and adjusted eigenvectors.
-        """
-        idx = numpy.argsort(eigenvalues)
-        eigenvalues, eigenvectors = eigenvalues[idx], eigenvectors[:, idx]
-        if numpy.linalg.det(eigenvectors) < 0:
-            eigenvectors[:, 0] *= -1
-        return eigenvalues, eigenvectors
 
     @staticmethod
     def _update_quaternion(
@@ -358,54 +257,28 @@ class BodyConverter(KinematicStructureEntityConverter, ABC):
         :return: A dictionary of body properties, including additional mass and inertia properties.
         """
         body_props = KinematicStructureEntityConverter._convert(self, entity)
-        mass = 1e-3  # TODO: Take from entity
-        inertia_pos = Point3(
-            x_init=0.0, y_init=0.0, z_init=0.0
-        )  # TODO: Take from entity
-        inertia_quat = Quaternion(
-            w_init=1.0, x_init=0.0, y_init=0.0, z_init=0.0
-        )  # TODO: Take from entity
-        diagonal_inertia = [1.5e-8, 1.5e-8, 1.5e-8]  # TODO: Take from entity
-        if diagonal_inertia is None:
-            inertia = body_props.get("inertia", None)
-            inertia_matrix = body_props.get("inertia_matrix", None)
-            if isinstance(inertia, list) and len(inertia) == 6:
-                inertial_converter = InertialConverter.from_inertia(
-                    mass=mass,
-                    inertia_pos=inertia_pos,
-                    inertia_quat=inertia_quat,
-                    inertia=inertia,
-                )
-            elif isinstance(inertia_matrix, list) and len(inertia_matrix) == 9:
-                inertial_converter = InertialConverter.from_inertia_matrix(
-                    mass=mass,
-                    inertia_pos=inertia_pos,
-                    inertia_quat=inertia_quat,
-                    inertia_matrix=inertia_matrix,
-                )
-            else:
-                raise ValueError(
-                    f"Body {entity.name.name} must have either 'diagonal_inertia' (3 elements), 'inertia' (6 elements) or 'inertia_matrix' (9 elements)."
-                )
-        else:
-            inertial_converter = InertialConverter(
-                mass=mass,
-                inertia_pos=inertia_pos,
-                inertia_quat=inertia_quat,
-                diagonal_inertia=diagonal_inertia,
+        inertial = entity.inertial
+        if inertial is not None:
+            mass = inertial.mass
+            inertia_pos = inertial.center_of_mass.to_np()[:3]
+            inertia = inertial.inertia
+            principal_moments, principal_axes = inertia.to_principal_moments_and_axes()
+            diagonal_inertia = principal_moments.data
+            inertia_quat = principal_axes.to_rotation_matrix().to_quaternion().to_np()
+            inertia_quat[:] = (
+                inertia_quat[3],
+                inertia_quat[0],
+                inertia_quat[1],
+                inertia_quat[2],
+            )  # Convert from (x, y, z, w) to (w, x, y, z)
+            body_props.update(
+                {
+                    self.mass_str: mass,
+                    self.inertia_pos_str: inertia_pos,
+                    self.inertia_quat_str: inertia_quat,
+                    self.diagonal_inertia_str: diagonal_inertia,
+                }
             )
-        mass = inertial_converter.mass
-        inertia_pos = inertial_converter.inertia_pos.to_np().tolist()[:3]
-        inertia_quat = inertial_converter.inertia_quat.to_np().tolist()[:4]
-        diagonal_inertia = inertial_converter.diagonal_inertia
-        body_props.update(
-            {
-                self.mass_str: mass,
-                self.inertia_pos_str: inertia_pos,
-                self.inertia_quat_str: inertia_quat,
-                self.diagonal_inertia_str: diagonal_inertia,
-            }
-        )
         return body_props
 
 

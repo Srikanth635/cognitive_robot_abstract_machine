@@ -312,7 +312,6 @@ class MujocoSimTestCase(unittest.TestCase):
         multi_sim.stop_simulation()
         # self.assertAlmostEqual(time.time() - start_time, 1.0, delta=0.5)
 
-    @unittest.skip("Dynamics not there yet")
     def test_multi_sim_in_5s(self):
         viewer = MultiverseViewer()
         multi_sim = MujocoSim(

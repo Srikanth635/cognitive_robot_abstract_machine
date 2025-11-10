@@ -6,7 +6,12 @@ import numpy
 from typing_extensions import Optional, Set, List
 
 from ..exceptions import WorldEntityNotFoundError
-from ..spatial_types.spatial_types import TransformationMatrix
+from ..spatial_types.spatial_types import (
+    TransformationMatrix,
+    Quaternion,
+    RotationMatrix,
+    Point3,
+)
 from ..world_description.geometry import (
     Box,
     Sphere,
@@ -16,6 +21,12 @@ from ..world_description.geometry import (
     Color,
     TriangleMesh,
 )
+from ..world_description.inertia_types import (
+    Inertial,
+    InertiaTensor,
+    PrincipalMoments,
+    PrincipalAxes,
+)
 from ..world_description.shape_collection import ShapeCollection
 from ..world_description.world_entity import KinematicStructureEntity
 
@@ -23,7 +34,6 @@ from multiverse_parser import (
     InertiaSource,
     UsdImporter,
     MjcfImporter,
-    UrdfImporter,
     BodyBuilder,
     JointBuilder,
     JointType,
@@ -322,6 +332,37 @@ def parse_dof(
         return dof
 
 
+def parse_inertial(body_builder: BodyBuilder) -> Optional[Inertial]:
+    """
+    Parses the inertial properties from a BodyBuilder instance.
+
+    :param body_builder: The BodyBuilder instance to parse.
+    :return: An Inertial instance representing the parsed inertial properties, or None if no inertial properties are found.
+    """
+    xform_prim = body_builder.xform.GetPrim()
+    if not xform_prim.HasAPI(UsdPhysics.MassAPI):  # type: ignore
+        return None
+    physics_mass_api = UsdPhysics.MassAPI(xform_prim)  # type: ignore
+    mass = physics_mass_api.GetMassAttr().Get()
+    center_of_mass = physics_mass_api.GetCenterOfMassAttr().Get()
+    center_of_mass = Point3.from_iterable(center_of_mass)
+    principle_axes_quat = physics_mass_api.GetPrincipalAxesAttr().Get()
+    principle_axes_quat = Quaternion.from_iterable(
+        [principle_axes_quat.GetReal(), *principle_axes_quat.GetImaginary()]
+    )
+    principle_moments = physics_mass_api.GetDiagonalInertiaAttr().Get()
+    inertia_tensor = InertiaTensor.from_principal_moments_and_axes(
+        moments=PrincipalMoments.from_values(*principle_moments),
+        axes=PrincipalAxes.from_rotation_matrix(
+            RotationMatrix.from_quaternion(principle_axes_quat)
+        ),
+    )
+    inertial = Inertial(
+        mass=mass, center_of_mass=center_of_mass, inertia=inertia_tensor
+    )
+    return inertial
+
+
 @dataclass
 class MultiParser:
     """
@@ -522,6 +563,9 @@ class MultiParser:
         )
         visuals, collisions = parse_geometry(body_builder)
         result = Body(name=name)
+        inertial = parse_inertial(body_builder)
+        if inertial is not None:
+            result.inertial = inertial
         visuals = ShapeCollection(visuals, reference_frame=result)
         collisions = ShapeCollection(collisions, reference_frame=result)
         result.visual = visuals
