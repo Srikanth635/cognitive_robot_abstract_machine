@@ -3,7 +3,7 @@ import rustworkx as rx
 from typing import Tuple
 
 from typing_extensions import TYPE_CHECKING
-
+from .world_entity import Body, Connection
 
 from .world_entity import Body, Connection
 
