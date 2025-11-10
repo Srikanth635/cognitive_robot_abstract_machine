@@ -6,8 +6,13 @@ from semantic_digital_twin.adapters.ros.world_fetcher import (
     FetchWorldServer,
     fetch_world_from_service,
 )
+from semantic_digital_twin.adapters.world_entity_kwargs_tracker import (
+    KinematicStructureEntityKwargsTracker,
+)
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.robots.pr2 import PR2
 from semantic_digital_twin.semantic_annotations.semantic_annotations import Handle, Door
+from semantic_digital_twin.testing import pr2_world
 from semantic_digital_twin.testing import rclpy_node
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connections import Connection6DoF
@@ -63,9 +68,13 @@ def test_service_callback_success(rclpy_node):
 
     assert result.success is True
 
+    tracker = KinematicStructureEntityKwargsTracker()
+    kwargs = tracker.create_kwargs()
+
     # Verify the message is valid JSON
     modifications_list = [
-        WorldModelModificationBlock.from_json(d) for d in json.loads(result.message)
+        WorldModelModificationBlock.from_json(d, **kwargs)
+        for d in json.loads(result.message)
     ]
 
     assert (
@@ -107,8 +116,12 @@ def test_service_callback_with_multiple_modifications(rclpy_node):
 
     assert result.success is True
     # Verify the message is valid JSON
+
+    tracker = KinematicStructureEntityKwargsTracker.from_world(world)
+    kwargs = tracker.create_kwargs()
     modifications_list = [
-        WorldModelModificationBlock.from_json(d) for d in json.loads(result.message)
+        WorldModelModificationBlock.from_json(d, **kwargs)
+        for d in json.loads(result.message)
     ]
     assert (
         modifications_list == world.get_world_model_manager().model_modification_blocks
@@ -148,4 +161,17 @@ def test_semantic_annotation_modifications(rclpy_node):
 
     assert [sa.name for sa in w1.semantic_annotations] == [
         sa.name for sa in w2.semantic_annotations
+    ]
+
+
+def test_pr2_semantic_annotation(rclpy_node, pr2_world):
+    PR2.from_world(pr2_world)
+    fetcher = FetchWorldServer(node=rclpy_node, world=pr2_world)
+
+    pr2_world_copy = fetch_world_from_service(
+        rclpy_node,
+    )
+
+    assert [sa.name for sa in pr2_world.semantic_annotations] == [
+        sa.name for sa in pr2_world_copy.semantic_annotations
     ]

@@ -6,8 +6,12 @@ from rclpy.node import Node
 from rclpy.service import Service
 from std_srvs.srv import Trigger
 
+from ..world_entity_kwargs_tracker import KinematicStructureEntityKwargsTracker
 from ...world import World
-from ...world_description.world_modification import WorldModelModificationBlock
+from ...world_description.world_modification import (
+    WorldModelModification,
+    WorldModelModificationBlock,
+)
 
 
 @dataclass
@@ -124,8 +128,10 @@ def fetch_world_from_service(
     # fetch world
     response = client.call(Trigger.Request())
 
+    tracker = KinematicStructureEntityKwargsTracker()
+    kwargs = tracker.create_kwargs()
     modifications = [
-        WorldModelModificationBlock.from_json(block_json)
+        WorldModelModificationBlock.from_json(block_json, **kwargs)
         for block_json in json.loads(response.message)
     ]
 
