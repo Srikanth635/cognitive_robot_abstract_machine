@@ -1358,7 +1358,7 @@ def is_const_binary_false(expression: Expression) -> bool:
 def logic_and(*args: ScalarData) -> ScalarData:
     assert len(args) >= 2, "and must be called with at least 2 arguments"
     # if there is any False, return False
-    if [x for x in args if is_const_binary_false(x)]:
+    if any(x for x in args if is_const_binary_false(x)):
         return BinaryFalse
     # filter all True
     args = [x for x in args if not is_const_binary_true(x)]
@@ -1392,7 +1392,7 @@ def logic_all(args: Expression) -> ScalarData:
 def logic_or(*args: ScalarData, simplify: bool = True) -> ScalarData:
     assert len(args) >= 2, "and must be called with at least 2 arguments"
     # if there is any True, return True
-    if simplify and [x for x in args if is_const_binary_true(x)]:
+    if simplify and any(x for x in args if is_const_binary_true(x)):
         return BinaryTrue
     # filter all False
     if simplify:
@@ -1444,7 +1444,7 @@ def trinary_logic_and(*args: ScalarData) -> ScalarData:
     """
     assert len(args) >= 2, "and must be called with at least 2 arguments"
     # if there is any False, return False
-    if [x for x in args if is_const_binary_false(x)]:
+    if any(x for x in args if is_const_binary_false(x)):
         return TrinaryFalse
     # filter all True
     args = [x for x in args if not is_const_binary_true(x)]
@@ -1470,7 +1470,7 @@ def trinary_logic_or(*args: ScalarData) -> ScalarData:
     """
     assert len(args) >= 2, "and must be called with at least 2 arguments"
     # if there is any False, return False
-    if [x for x in args if is_const_binary_true(x)]:
+    if any(x for x in args if is_const_binary_true(x)):
         return TrinaryTrue
     # filter all True
     args = [x for x in args if not is_const_binary_true(x)]
