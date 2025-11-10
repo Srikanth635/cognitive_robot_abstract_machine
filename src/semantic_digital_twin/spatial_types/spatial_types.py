@@ -455,6 +455,10 @@ class SymbolicType:
         return CompiledFunction(self, parameters, sparse)
 
     def evaluate(self) -> np.ndarray:
+        """
+        Substitutes the free variables in this expression using their `resolve` method and compute the result.
+        :return: The evaluate value of this expression.
+        """
         f = self.compile([self.free_variables()], sparse=False)
         return f(
             np.array([s.resolve() for s in self.free_variables()], dtype=np.float64)
