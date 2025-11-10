@@ -169,7 +169,7 @@ def test_compute_fk_np_l_elbow_flex_joint_pr2(pr2_world):
         PrefixedName("l_upper_arm_link")
     )
 
-    fk_expr = pr2_world._forward_kinematic_manager.compose_expression(root, tip)
+    fk_expr = pr2_world.compose_forward_kinematics_expression(root, tip)
     fk2 = fk_expr.evaluate()
 
     np.testing.assert_array_almost_equal(

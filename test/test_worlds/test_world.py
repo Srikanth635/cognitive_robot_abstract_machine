@@ -258,7 +258,7 @@ def test_compute_fk_expression(world_setup):
     world.state[connection.dof.name].position = 1.0
     world.notify_state_change()
     fk = world.compute_forward_kinematics_np(r2, l2)
-    fk_expr = world._forward_kinematic_manager.compose_expression(r2, l2)
+    fk_expr = world.compose_forward_kinematics_expression(r2, l2)
     fk2 = fk_expr.evaluate()
     np.testing.assert_array_almost_equal(fk, fk2)
 
@@ -863,6 +863,7 @@ def test_dof_removal():
         c_root_bf = OmniDrive.create_with_dofs(parent=body1, child=body2, world=world1)
         world1.add_connection(c_root_bf)
 
+
 def test_set_static_collision_config():
     w = World()
 
@@ -882,6 +883,4 @@ def test_set_static_collision_config():
         collision_config = CollisionCheckingConfig(
             buffer_zone_distance=0.05, violated_distance=0.0, max_avoided_bodies=4
         )
-        connection.set_static_collision_config_for_direct_child_bodies(
-            collision_config
-        )
+        connection.set_static_collision_config_for_direct_child_bodies(collision_config)
