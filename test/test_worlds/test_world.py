@@ -30,9 +30,11 @@ from semantic_digital_twin.spatial_types.spatial_types import (
 )
 from semantic_digital_twin.spatial_types.symbol_manager import symbol_manager
 from semantic_digital_twin.testing import world_setup, pr2_world
+from semantic_digital_twin.world_description.degree_of_freedom import DegreeOfFreedom
 from semantic_digital_twin.world_description.world_entity import (
     SemanticAnnotation,
     Body,
+    CollisionCheckingConfig,
 )
 
 
@@ -847,3 +849,26 @@ def test_symbol_removal():
         world1.remove_connection(body2.parent_connection)
         c_root_bf = OmniDrive.create_with_dofs(parent=body1, child=body2, world=world1)
         world1.add_connection(c_root_bf)
+
+def test_set_static_collision_config():
+    w = World()
+
+    with w.modify_world():
+        b1 = Body(name=PrefixedName("b1"))
+        b2 = Body(name=PrefixedName("b2"))
+        w.add_kinematic_structure_entity(b1)
+        w.add_kinematic_structure_entity(b2)
+
+        dof = DegreeOfFreedom(name=PrefixedName("dofyboi"))
+        w.add_degree_of_freedom(dof)
+        connection = RevoluteConnection(
+            b1, b2, axis=Vector3.from_iterable([0, 0, 1]), dof_name=dof.name
+        )
+        w.add_connection(connection)
+
+        collision_config = CollisionCheckingConfig(
+            buffer_zone_distance=0.05, violated_distance=0.0, max_avoided_bodies=4
+        )
+        connection.set_static_collision_config_for_direct_child_bodies(
+            collision_config
+        )
