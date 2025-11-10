@@ -190,12 +190,14 @@ class Inertial:
     The mass of the body in kilograms.
     """
 
-    center_of_mass: Point3 = field(default_factory=Point3)
+    center_of_mass: Point3 = field(default_factory=lambda: Point3(0.0, 0.0, 0.0))
     """
     The center of mass of the body. If a force acts through the COM, the body experiences pure translation, no torque
     """
 
-    inertia: InertiaTensor = field(default_factory=InertiaTensor)
+    inertia: InertiaTensor = field(
+        default_factory=lambda: InertiaTensor.from_values(1.0, 1.0, 1.0, 0.0, 0.0, 0.0)
+    )
     """
     The inertia tensor of the body about its center of mass, expressed in the body's local coordinate frame.
     """
