@@ -1,11 +1,14 @@
 import numpy as np
 from numpy.testing import assert_allclose
 from scipy.spatial.transform import Rotation as R
+
+from semantic_digital_twin.spatial_types import RotationMatrix, Vector3
 from semantic_digital_twin.world_description.inertia_types import (
     InertiaTensor,
     PrincipalMoments,
     PrincipalAxes,
 )
+from test_casadi.reference_implementations import rotation_matrix_from_quaternion
 
 moments_and_axes_values = [
     (
@@ -59,8 +62,12 @@ class TestComponentsAndAssembly:
 
     def test_principal_axes_properties(self):
         for _, axes_values in moments_and_axes_values:
-            rotation = R.from_matrix(axes_values)
-            axes_1 = PrincipalAxes.from_rotation(rotation=rotation)
+            rotation_matrix = RotationMatrix.from_vectors(
+                x=Vector3.from_iterable(axes_values[:, 0]),
+                y=Vector3.from_iterable(axes_values[:, 1]),
+                z=Vector3.from_iterable(axes_values[:, 2]),
+            )
+            axes_1 = PrincipalAxes.from_rotation_matrix(rotation_matrix)
             axes_2 = PrincipalAxes(data=axes_values)
             assert_allclose(axes_1.data, axes_values, atol=1e-12)
             assert_allclose(axes_2.data, axes_values, atol=1e-12)

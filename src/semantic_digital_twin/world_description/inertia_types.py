@@ -4,11 +4,10 @@ from dataclasses import dataclass, field
 from typing import Tuple, Optional
 
 import numpy as np
-from scipy.spatial.transform import Rotation
 from numpy._typing import NDArray
 from typing_extensions import Self, TypeVar
 
-from semantic_digital_twin.spatial_types import Point3
+from semantic_digital_twin.spatial_types import Point3, RotationMatrix
 
 
 @dataclass
@@ -82,13 +81,23 @@ class PrincipalAxes(NPMatrix3x3):
         return PrincipalAxes(data=self.data.T)
 
     @classmethod
-    def from_rotation(cls, rotation: Rotation) -> Self:
-        """Construct PrincipalAxes from a scipy Rotation object."""
-        return cls(data=rotation.as_matrix())
+    def from_rotation_matrix(cls, rotation_matrix: RotationMatrix):
+        """Construct PrincipalAxes from a RotationMatrix."""
+        data = rotation_matrix.to_np()[:3, :3]
+        return cls(data=data)
 
-    def as_rotation(self) -> Rotation:
-        """Return a scipy Rotation object corresponding to the principal axes."""
-        return Rotation.from_matrix(matrix=self.data)
+    def to_rotation_matrix(self) -> RotationMatrix:
+        """Convert PrincipalAxes to a RotationMatrix."""
+        return RotationMatrix(
+            data=np.array(
+                [
+                    [self.data[0, 0], self.data[0, 1], self.data[0, 2], 0.0],
+                    [self.data[1, 0], self.data[1, 1], self.data[1, 2], 0.0],
+                    [self.data[2, 0], self.data[2, 1], self.data[2, 2], 0.0],
+                    [0.0, 0.0, 0.0, 1.0],
+                ]
+            )
+        )
 
 
 @dataclass(eq=False)
