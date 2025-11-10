@@ -539,6 +539,7 @@ class MultiParser:
                 else:
                     JointConnection = PrismaticConnection
                 return JointConnection(
+                    name=PrefixedName(joint_name),
                     parent=parent_body,
                     child=child_body,
                     parent_T_connection_expression=origin,

@@ -35,6 +35,7 @@ from ..world_description.connections import (
     PrismaticConnection,
     ActiveConnection1DOF,
     FixedConnection,
+    Connection6DoF,
 )
 from ..world_description.geometry import Box, Cylinder, Sphere, Shape
 from ..world_description.world_entity import (
@@ -380,16 +381,6 @@ class ConnectionConverter(EntityConverter, ABC):
     The type of the entity to convert.
     """
 
-    pos_str: str
-    """
-    The key for the joint position property in the output dictionary.
-    """
-
-    quat_str: str
-    """
-    The key for the joint quaternion property in the output dictionary.
-    """
-
     def _convert(self, entity: Connection, **kwargs) -> Dict[str, Any]:
         """
         Converts a Connection object to a dictionary of joint properties for Multiverse simulator.
@@ -397,17 +388,7 @@ class ConnectionConverter(EntityConverter, ABC):
         :param entity: The Connection object to convert.
         :return: A dictionary of joint properties, by default containing position and quaternion.
         """
-        joint_props = EntityConverter._convert(self, entity)
-        px, py, pz, qw, qx, qy, qz = cas_pose_to_list(entity.origin)
-        joint_pos = [px, py, pz]
-        joint_quat = [qw, qx, qy, qz]
-        joint_props.update(
-            {
-                self.pos_str: joint_pos,
-                self.quat_str: joint_quat,
-            }
-        )
-        return joint_props
+        return EntityConverter._convert(self, entity)
 
 
 class Connection1DOFConverter(ConnectionConverter, ABC):
@@ -430,6 +411,16 @@ class Connection1DOFConverter(ConnectionConverter, ABC):
     The key for the joint range property in the output dictionary.
     """
 
+    pos_str: str
+    """
+    The key for the joint position property in the output dictionary.
+    """
+
+    quat_str: str
+    """
+    The key for the joint quaternion property in the output dictionary.
+    """
+
     def _convert(self, entity: ActiveConnection1DOF, **kwargs) -> Dict[str, Any]:
         """
         Converts an ActiveConnection1DOF object to a dictionary of joint properties for Multiverse simulator.
@@ -440,8 +431,13 @@ class Connection1DOFConverter(ConnectionConverter, ABC):
         joint_props = ConnectionConverter._convert(self, entity)
         assert len(entity.dofs) == 1, "ActiveConnection1DOF must have exactly one DOF."
         dof = list(entity.dofs)[0]
+        px, py, pz, qw, qx, qy, qz = cas_pose_to_list(entity.origin)
+        joint_pos = [px, py, pz]
+        joint_quat = [qw, qx, qy, qz]
         joint_props.update(
             {
+                self.pos_str: joint_pos,
+                self.quat_str: joint_quat,
                 self.axis_str: entity.axis.to_np().tolist()[:3],
                 self.range_str: [dof.lower_limits.position, dof.upper_limits.position],
             }
@@ -469,6 +465,28 @@ class ConnectionPrismaticConverter(Connection1DOFConverter, ABC):
     """
     The type of the entity to convert.
     """
+
+
+class Connection6DOFConverter(ConnectionConverter):
+    """
+    Converts a Connection6DoF object to a dictionary of 6DoF joint properties for Multiverse simulator.
+    """
+
+    entity_type: ClassVar[Type[Connection6DoF]] = Connection6DoF
+    """
+    The type of the entity to convert.
+    """
+
+    def _convert(self, entity: Connection6DoF, **kwargs) -> Dict[str, Any]:
+        """
+        Converts a Connection6DoF object to a dictionary of joint properties for Multiverse simulator.
+
+        :param entity: The Connection6DoF object to convert.
+        :return: A dictionary of joint properties.
+        """
+        joint_props = ConnectionConverter._convert(self, entity)
+        assert len(entity.dofs) == 7, "Connection6DoF must have exactly six DOFs."
+        return joint_props
 
 
 class MujocoConverter(EntityConverter, ABC): ...
@@ -595,6 +613,10 @@ class MujocoPrismaticJointConverter(
     Mujoco1DOFJointConverter, ConnectionPrismaticConverter
 ):
     type: mujoco.mjtJoint = mujoco.mjtJoint.mjJNT_SLIDE
+
+
+class Mujoco6DOFJointConverter(MujocoJointConverter, Connection6DOFConverter):
+    type: mujoco.mjtJoint = mujoco.mjtJoint.mjJNT_FREE
 
 
 @dataclass

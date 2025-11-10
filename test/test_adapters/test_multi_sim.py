@@ -205,7 +205,7 @@ class MujocoSimTestCase(unittest.TestCase):
 
     def setUp(self):
         self.test_urdf_world = URDFParser.from_file(file_path=self.test_urdf).parse()
-        self.test_mjcf_world = MJCFParser(self.test_mjcf).parse()
+        self.test_mjcf_world = MJCFParser(self.test_mjcf).parse(fixed_base=False)
 
     def test_empty_multi_sim_in_5s(self):
         world = World()
@@ -329,7 +329,7 @@ class MujocoSimTestCase(unittest.TestCase):
         multi_sim.stop_simulation()
         self.assertAlmostEqual(time.time() - start_time, 5.0, delta=0.1)
 
-    @unittest.skip("Dynamics not there yet")
+    # @unittest.skip("Dynamics not there yet")
     def test_read_objects_from_multi_sim_in_5s(self):
         read_objects = {
             "joint1": {
@@ -340,8 +340,8 @@ class MujocoSimTestCase(unittest.TestCase):
                 "joint_angular_position": [0.0],
                 "joint_angular_velocity": [0.0],
             },
-            "actuator1": {"cmd_joint_angular_position": [0.0]},
-            "actuator2": {"cmd_joint_angular_position": [0.0]},
+            # "actuator1": {"cmd_joint_angular_position": [0.0]},
+            # "actuator2": {"cmd_joint_angular_position": [0.0]},
             "world": {"energy": [0.0, 0.0]},
             "box": {"position": [0.0, 0.0, 0.0], "quaternion": [1.0, 0.0, 0.0, 0.0]},
         }
@@ -365,7 +365,7 @@ class MujocoSimTestCase(unittest.TestCase):
         multi_sim.stop_simulation()
         self.assertAlmostEqual(time.time() - start_time, 5.0, delta=0.1)
 
-    @unittest.skip("Dynamics not there yet")
+    # @unittest.skip("Dynamics not there yet")
     def test_write_objects_to_multi_sim_in_5s(self):
         write_objects = {"box": {"position": [0.0, 0.0, 0.0]}}
         viewer = MultiverseViewer(write_objects=write_objects)
@@ -395,7 +395,7 @@ class MujocoSimTestCase(unittest.TestCase):
         multi_sim.stop_simulation()
         self.assertAlmostEqual(time.time() - start_time, 5.0, delta=0.1)
 
-    @unittest.skip("Dynamics not there yet")
+    # @unittest.skip("Dynamics not there yet")
     def test_write_objects_to_multi_sim_in_10s_with_pause_and_unpause(self):
         write_objects = {
             "box": {"position": [0.0, 0.0, 0.0], "quaternion": [1.0, 0.0, 0.0, 0.0]}
