@@ -791,7 +791,7 @@ class OmniDrive(ActiveConnection, HasUpdateState):
     ) -> None:
         """
         Overwrites the origin of the connection.
-        Ignores z position, pitch, and yaw values.
+        .. warning:: Ignores z position, pitch, and yaw values.
         :param parent_T_child:
         """
         if isinstance(transformation, np.ndarray):

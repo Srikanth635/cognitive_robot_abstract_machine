@@ -15,8 +15,12 @@ from ..spatial_types.derivatives import Derivatives, DerivativeMap
 
 @dataclass(eq=False)
 class PositionVariable(cas.FloatVariable):
+    """
+    Describes the position of a degree of freedom.
+    """
     name: PrefixedName = field(kw_only=True)
     dof: DegreeOfFreedom = field(kw_only=True)
+    """ Backreference """
 
     def resolve(self) -> float:
         return self.dof._world.state[self.dof.name].position
@@ -24,8 +28,12 @@ class PositionVariable(cas.FloatVariable):
 
 @dataclass(eq=False)
 class VelocityVariable(cas.FloatVariable):
+    """
+    Describes the velocity of a degree of freedom.
+    """
     name: PrefixedName = field(kw_only=True)
     dof: DegreeOfFreedom = field(kw_only=True)
+    """ Backreference """
 
     def resolve(self) -> float:
         return self.dof._world.state[self.dof.name].velocity
@@ -33,8 +41,12 @@ class VelocityVariable(cas.FloatVariable):
 
 @dataclass(eq=False)
 class AccelerationVariable(cas.FloatVariable):
+    """
+    Describes the acceleration of a degree of freedom.
+    """
     name: PrefixedName = field(kw_only=True)
     dof: DegreeOfFreedom = field(kw_only=True)
+    """ Backreference """
 
     def resolve(self) -> float:
         return self.dof._world.state[self.dof.name].acceleration
@@ -42,8 +54,12 @@ class AccelerationVariable(cas.FloatVariable):
 
 @dataclass(eq=False)
 class JerkVariable(cas.FloatVariable):
+    """
+    Describes the jerk of a degree of freedom.
+    """
     name: PrefixedName = field(kw_only=True)
     dof: DegreeOfFreedom = field(kw_only=True)
+    """ Backreference """
 
     def resolve(self) -> float:
         return self.dof._world.state[self.dof.name].jerk
