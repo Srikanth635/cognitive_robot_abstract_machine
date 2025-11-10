@@ -121,25 +121,15 @@ class TestLogic3:
             actual = f(np.array([i]))
             assert expected == actual, f"a={i}, expected {expected}, actual {actual}"
 
-    def test_sub_logic_operators(self):
-        def reference_function(a, b, c):
-            not_c = logic_not(c)
-            or_result = logic_or(b, not_c)
-            result = logic_and(a, or_result)
-            return result
-
-        a, b, c = cas.create_float_variables(["a", "b", "c"])
-        expr = cas.logic_and(a, cas.logic_or(b, cas.logic_not(c)))
-        new_expr = cas.replace_with_trinary_logic(expr)
-        f = new_expr.compile()
-        for i in self.values:
-            for j in self.values:
-                for k in self.values:
-                    computed_result = f(np.array([i, j, k]))
-                    expected_result = reference_function(i, j, k)
-                    assert (
-                        computed_result == expected_result
-                    ), f"Mismatch for inputs i={i}, j={j}, k={k}. Expected {expected_result}, got {computed_result}"
+    def test_trinary_logic_to_str(self):
+        a = cas.FloatVariable(name=PrefixedName("a"))
+        b = cas.FloatVariable(name=PrefixedName("b"))
+        c = cas.FloatVariable(name=PrefixedName("c"))
+        expression = cas.trinary_logic_and(
+            a, cas.trinary_logic_or(b, cas.trinary_logic_not(c))
+        )
+        expression_str = cas.trinary_logic_to_str(expression)
+        assert expression_str == '("a" and ("b" or not "c"))'
 
 
 class TestFloatVariable:

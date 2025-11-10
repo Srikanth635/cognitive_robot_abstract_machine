@@ -119,11 +119,11 @@ class HasFreeVariablesError(SpatialTypesError):
         super().__init__(msg)
 
 
-class FunctionEvaluationError(SpatialTypesError): ...
+class ExpressionEvaluationError(SpatialTypesError): ...
 
 
 @dataclass
-class WrongNumberOfArgsError(FunctionEvaluationError):
+class WrongNumberOfArgsError(ExpressionEvaluationError):
     expected_number_of_args: int
     actual_number_of_args: int
 

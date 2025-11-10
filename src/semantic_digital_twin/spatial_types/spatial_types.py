@@ -1424,10 +1424,24 @@ TrinaryTrue: Expression = Expression(data=1.0)
 
 
 def trinary_logic_not(expression: ScalarData) -> Expression:
+    """
+            |   Not
+    ------------------
+    True    |  False
+    Unknown | Unknown
+    False   |  True
+    """
     return Expression(data=1 - expression)
 
 
 def trinary_logic_and(*args: ScalarData) -> ScalarData:
+    """
+      AND   |  True   | Unknown | False
+    ------------------+---------+-------
+    True    |  True   | Unknown | False
+    Unknown | Unknown | Unknown | False
+    False   |  False  |  False  | False
+    """
     assert len(args) >= 2, "and must be called with at least 2 arguments"
     # if there is any False, return False
     if [x for x in args if is_const_binary_false(x)]:
@@ -1447,6 +1461,13 @@ def trinary_logic_and(*args: ScalarData) -> ScalarData:
 
 
 def trinary_logic_or(*args: ScalarData) -> ScalarData:
+    """
+       OR   |  True   | Unknown | False
+    ------------------+---------+-------
+    True    |  True   |  True   | True
+    Unknown |  True   | Unknown | Unknown
+    False   |  True   | Unknown | False
+    """
     assert len(args) >= 2, "and must be called with at least 2 arguments"
     # if there is any False, return False
     if [x for x in args if is_const_binary_true(x)]:
@@ -1466,6 +1487,10 @@ def trinary_logic_or(*args: ScalarData) -> ScalarData:
 
 
 def is_const_trinary_true(expression: Expression) -> bool:
+    """
+    Checks if the expression has not free variables and is equal to TrinaryTrue.
+    If you need this check as an expression use expression == TrinaryTrue.
+    """
     try:
         return bool((expression == TrinaryTrue).to_np())
     except Exception as e:
@@ -1473,6 +1498,10 @@ def is_const_trinary_true(expression: Expression) -> bool:
 
 
 def is_const_trinary_false(expression: Expression) -> bool:
+    """
+    Checks if the expression has not free variables and is equal to TrinaryFalse.
+    If you need this check as an expression use expression == TrinaryFalse.
+    """
     try:
         return bool((expression == TrinaryFalse).to_np())
     except Exception as e:
@@ -1480,45 +1509,14 @@ def is_const_trinary_false(expression: Expression) -> bool:
 
 
 def is_const_trinary_unknown(expression: Expression) -> bool:
+    """
+    Checks if the expression has not free variables and is equal to TrinaryUnknown.
+    If you need this check as an expression use expression == TrinaryUnknown.
+    """
     try:
         return bool((expression == TrinaryUnknown).to_np())
     except Exception as e:
         return False
-
-
-def replace_with_trinary_logic(expression: Expression) -> Expression:
-    """
-    Converts a given logical expression into a three-valued logic expression.
-
-    This function recursively processes a logical expression and replaces it
-    with its three-valued logic equivalent. The three-valued logic can represent
-    true, false, or an indeterminate state. The method identifies specific
-    operations like NOT, AND, and OR and applies three-valued logic rules to them.
-
-    :param expression: The logical expression to be converted.
-    :return: The converted logical expression in three-valued logic.
-    """
-    cas_expr = to_sx(expression)
-    if cas_expr.n_dep() == 0:
-        if is_const_binary_true(cas_expr):
-            return TrinaryTrue
-        if is_const_binary_false(cas_expr):
-            return TrinaryFalse
-        return expression
-    op = cas_expr.op()
-    if op == ca.OP_NOT:
-        return trinary_logic_not(replace_with_trinary_logic(cas_expr.dep(0)))
-    if op == ca.OP_AND:
-        return trinary_logic_and(
-            replace_with_trinary_logic(cas_expr.dep(0)),
-            replace_with_trinary_logic(cas_expr.dep(1)),
-        )
-    if op == ca.OP_OR:
-        return trinary_logic_or(
-            replace_with_trinary_logic(cas_expr.dep(0)),
-            replace_with_trinary_logic(cas_expr.dep(1)),
-        )
-    return expression
 
 
 def trinary_logic_to_str(expression: Expression) -> str:
@@ -1540,6 +1538,8 @@ def trinary_logic_to_str(expression: Expression) -> str:
         into a string representation.
     """
     cas_expr = to_sx(expression)
+
+    # Constant case
     if cas_expr.n_dep() == 0:
         if is_const_trinary_true(cas_expr):
             return "True"
@@ -1548,14 +1548,20 @@ def trinary_logic_to_str(expression: Expression) -> str:
         if is_const_trinary_unknown(cas_expr):
             return "Unknown"
         return f'"{expression}"'
-    op = cas_expr.op()
-    if op == ca.OP_SUB:
-        return f"not {trinary_logic_to_str(cas_expr.dep(1))}"
-    if op == ca.OP_FMIN:
-        return f"({trinary_logic_to_str(cas_expr.dep(0))} and {trinary_logic_to_str(cas_expr.dep(1))})"
-    if op == ca.OP_FMAX:
-        return f"({trinary_logic_to_str(cas_expr.dep(0))} or {trinary_logic_to_str(cas_expr.dep(1))})"
-    raise SpatialTypesError(f"cannot convert {expression} to a string")
+
+    match cas_expr.op():
+        case ca.OP_SUB:  # trinary "not" is 1-x
+            return f"not {trinary_logic_to_str(cas_expr.dep(1))}"
+        case ca.OP_FMIN:  # trinary "and" is min(left, right)
+            left = trinary_logic_to_str(cas_expr.dep(0))
+            right = trinary_logic_to_str(cas_expr.dep(1))
+            return f"({left} and {right})"
+        case ca.OP_FMAX:  # trinary "or" is max(left, right)
+            left = trinary_logic_to_str(cas_expr.dep(0))
+            right = trinary_logic_to_str(cas_expr.dep(1))
+            return f"({left} or {right})"
+        case _:
+            raise SpatialTypesError(f"cannot convert {expression} to a string")
 
 
 # %% ifs
