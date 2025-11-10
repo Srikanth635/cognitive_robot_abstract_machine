@@ -69,8 +69,10 @@ class TestComponentsAndAssembly:
             )
             axes_1 = PrincipalAxes.from_rotation_matrix(rotation_matrix)
             axes_2 = PrincipalAxes(data=axes_values)
+            axes_3 = axes_2.to_rotation_matrix().to_np()[:3, :3]
             assert_allclose(axes_1.data, axes_values, atol=1e-12)
             assert_allclose(axes_2.data, axes_values, atol=1e-12)
+            assert_allclose(axes_3, axes_values, atol=1e-12)
 
     def test_inertia_tensor_properties(self):
         for moments_values, axes_values in moments_and_axes_values:
