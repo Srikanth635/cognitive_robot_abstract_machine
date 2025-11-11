@@ -13,8 +13,8 @@ import numpy as np
 import rustworkx as rx
 import rustworkx.visit
 import rustworkx.visualization
-from lxml import etree
 from krrood.adapters.json_serializer import SubclassJSONSerializer
+from lxml import etree
 from rustworkx import NoEdgeBetweenNodes
 from typing_extensions import (
     Dict,
@@ -1265,7 +1265,7 @@ class World:
         if isinstance(new_connection, Connection6DoF):
             new_connection.origin = new_parent_T_root
 
-    def copy_subgraph_to_new_world(self, new_root: KinematicStructureEntity) -> World:
+    def move_branch_to_new_world(self, new_root: KinematicStructureEntity) -> World:
         """
         Copies the subgraph of the kinematic structure from the root body to a new world and removes it from the old world.
 
@@ -1276,21 +1276,25 @@ class World:
         child_bodies = self.compute_descendent_child_kinematic_structure_entities(
             new_root
         )
+        root_connection = new_root.parent_connection
         child_body_parent_connections = [
             body.parent_connection for body in child_bodies
         ]
+        child_body_dofs = [
+            dof
+            for connection in child_body_parent_connections
+            for dof in connection.dofs
+        ]
 
         with self.modify_world(), new_world.modify_world():
-            self.remove_kinematic_structure_entity(new_root)
-            new_world.add_kinematic_structure_entity(new_root)
-
-            for body in child_bodies:
-                self.remove_kinematic_structure_entity(body)
-                new_world.add_kinematic_structure_entity(body)
-
+            for dof in child_body_dofs:
+                self.remove_degree_of_freedom(dof)
+                new_world.add_degree_of_freedom(dof)
             for connection in child_body_parent_connections:
-                self.remove_connection(connection)
+                self.remove_kinematic_structure_entity(connection.parent)
+                self.remove_kinematic_structure_entity(connection.child)
                 new_world.add_connection(connection)
+            self.remove_connection(root_connection)
 
         return new_world
 

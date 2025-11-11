@@ -84,10 +84,6 @@ class Door(HasBody):
     A door is a physical entity that has covers an opening, has a movable body and a handle.
     """
 
-    opening: Aperture
-    """
-    The opening covered by the door.
-    """
 
     handle: Handle
     """
