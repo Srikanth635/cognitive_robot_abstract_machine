@@ -1,4 +1,5 @@
 import inspect
+import os
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -37,7 +38,7 @@ from ..world_description.connections import (
     FixedConnection,
     Connection6DoF,
 )
-from ..world_description.geometry import Box, Cylinder, Sphere, Shape
+from ..world_description.geometry import Box, Cylinder, Sphere, Shape, FileMesh
 from ..world_description.world_entity import (
     Region,
     Body,
@@ -371,6 +372,14 @@ class CylinderConverter(ShapeConverter, ABC):
     entity_type: ClassVar[Type[Cylinder]] = Cylinder
 
 
+class MeshConverter(ShapeConverter, ABC):
+    """
+    Converts a Mesh object to a dictionary of mesh properties for Multiverse simulator.
+    """
+
+    entity_type: ClassVar[Type[FileMesh]] = FileMesh
+
+
 class ConnectionConverter(EntityConverter, ABC):
     """
     Converts a Connection object to a dictionary of joint properties for Multiverse simulator.
@@ -431,9 +440,11 @@ class Connection1DOFConverter(ConnectionConverter, ABC):
         joint_props = ConnectionConverter._convert(self, entity)
         assert len(entity.dofs) == 1, "ActiveConnection1DOF must have exactly one DOF."
         dof = list(entity.dofs)[0]
-        px, py, pz, qw, qx, qy, qz = cas_pose_to_list(entity.origin)
-        joint_pos = [px, py, pz]
-        joint_quat = [qw, qx, qy, qz]
+        # px, py, pz, qw, qx, qy, qz = cas_pose_to_list(entity.origin) # TODO: Use actual origin
+        # joint_pos = [px, py, pz]
+        # joint_quat = [qw, qx, qy, qz]
+        joint_pos = [0.0, 0.0, 0.0]
+        joint_quat = [1.0, 0.0, 0.0, 0.0]
         joint_props.update(
             {
                 self.pos_str: joint_pos,
@@ -575,6 +586,17 @@ class MujocoCylinderConverter(MujocoGeomConverter, CylinderConverter):
         return shape_props
 
 
+class MujocoMeshConverter(MujocoGeomConverter, MeshConverter):
+    type: mujoco.mjtGeom = mujoco.mjtGeom.mjGEOM_MESH
+
+    def _post_convert(
+        self, entity: FileMesh, shape_props: Dict[str, Any], **kwargs
+    ) -> Dict[str, Any]:
+        shape_props.update(MujocoGeomConverter._post_convert(self, entity, shape_props))
+        shape_props.update({"mesh": entity})
+        return shape_props
+
+
 class MujocoJointConverter(ConnectionConverter, ABC):
     pos_str: str = "pos"
     quat_str: str = "quat"
@@ -607,6 +629,16 @@ class MujocoRevoluteJointConverter(
     Mujoco1DOFJointConverter, ConnectionRevoluteConverter
 ):
     type: mujoco.mjtJoint = mujoco.mjtJoint.mjJNT_HINGE
+
+    def _post_convert(
+        self, entity: ActiveConnection1DOF, joint_props: Dict[str, Any], **kwargs
+    ) -> Dict[str, Any]:
+        joint_props = super()._post_convert(entity, joint_props, **kwargs)
+        joint_range = joint_props.pop("range")
+        if not any(limit is None for limit in joint_range):
+            joint_range = [numpy.rad2deg(limit) for limit in joint_range]
+            joint_props["range"] = joint_range
+        return joint_props
 
 
 class MujocoPrismaticJointConverter(
@@ -812,6 +844,25 @@ class MujocoBuilder(MultiSimBuilder):
         assert (
             parent_body_spec is not None
         ), f"Parent body {parent_body_name} not found."
+        if geom_props["type"] == mujoco.mjtGeom.mjGEOM_MESH:
+            mesh_entity = geom_props.pop("mesh")
+            mesh_file_path = mesh_entity.filename
+            mesh_ext = os.path.splitext(mesh_file_path)[1].lower()
+            if mesh_ext == ".dae":
+                print(
+                    f"Cannot use .dae files in Mujoco. Skipping mesh {mesh_file_path}."
+                )
+                return
+            mesh_name = os.path.splitext(os.path.basename(mesh_file_path))[0]
+            if mesh_name not in [mesh.name for mesh in self.spec.meshes]:
+                mesh = self.spec.add_mesh(name=mesh_name)
+                mesh.file = mesh_file_path
+                mesh.scale[:] = (
+                    mesh_entity.scale.x,
+                    mesh_entity.scale.y,
+                    mesh_entity.scale.z,
+                )
+            geom_props["meshname"] = mesh_name
         geom_spec = parent_body_spec.add_geom(**geom_props)
         if geom_spec.type == mujoco.mjtGeom.mjGEOM_BOX and any(
             size == 0 for size in geom_spec.size
