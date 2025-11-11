@@ -2,7 +2,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from typing_extensions import Optional, List, Type, TYPE_CHECKING, Callable, Tuple, Union
+from krrood.adapters.json_serializer import JSONSerializationError
+from typing_extensions import (
+    Optional,
+    List,
+    Type,
+    TYPE_CHECKING,
+    Callable,
+    Tuple,
+    Union,
+)
 
 from .datastructures.prefixed_name import PrefixedName
 
@@ -13,7 +22,7 @@ if TYPE_CHECKING:
         WorldEntity,
         KinematicStructureEntity,
     )
-    from .spatial_types.spatial_types import Symbol
+    from .spatial_types.spatial_types import Symbol, SymbolicType
 
 
 class LogicalError(Exception):
@@ -185,3 +194,28 @@ class AlreadyBelongsToAWorldError(UsageError):
     def __post_init__(self):
         msg = f"Cannot add a {self.type_trying_to_add} that already belongs to another world {self.world.name}."
         super().__init__(msg)
+
+
+class NotJsonSerializable(JSONSerializationError): ...
+
+
+@dataclass
+class SpatialTypeNotJsonSerializable(NotJsonSerializable):
+    spatial_object: SymbolicType
+
+    def __post_init__(self):
+        super().__init__(
+            f"Object of type '{self.spatial_object.__class__.__name__}' is not JSON serializable, because it has "
+            f"free variables: {self.spatial_object.free_symbols()}"
+        )
+
+
+@dataclass
+class KinematicStructureEntityNotInKwargs(JSONSerializationError):
+    kinematic_structure_entity_name: PrefixedName
+
+    def __post_init__(self):
+        super().__init__(
+            f"Kinematic structure entity '{self.kinematic_structure_entity_name}' is not in the kwargs of the "
+            f"method that created it."
+        )

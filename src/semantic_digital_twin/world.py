@@ -14,7 +14,7 @@ import rustworkx as rx
 import rustworkx.visit
 import rustworkx.visualization
 from lxml import etree
-from random_events.utils import SubclassJSONSerializer
+from krrood.adapters.json_serializer import SubclassJSONSerializer
 from rustworkx import NoEdgeBetweenNodes
 from typing_extensions import (
     Dict,
@@ -29,6 +29,7 @@ from typing_extensions import (
 from typing_extensions import List
 from typing_extensions import Type, Set
 
+from .adapters.world_entity_kwargs_tracker import KinematicStructureEntityKwargsTracker
 from .callbacks.callback import ModelChangeCallback
 from .collision_checking.collision_detector import CollisionDetector
 from .collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
@@ -1608,6 +1609,18 @@ class World:
         """
         return self._forward_kinematic_manager.compute(root, tip)
 
+    def compose_forward_kinematics_expression(
+        self, root: KinematicStructureEntity, tip: KinematicStructureEntity
+    ) -> cas.TransformationMatrix:
+        """
+        :param root: The root KinematicStructureEntity in the kinematic chain.
+            It determines the starting point of the forward kinematics calculation.
+        :param tip: The tip KinematicStructureEntity in the kinematic chain.
+            It determines the endpoint of the forward kinematics calculation.
+        :return: An expression representing the computed forward kinematics of the tip KinematicStructureEntity relative to the root KinematicStructureEntity.
+        """
+        return self._forward_kinematic_manager.compose_expression(root, tip)
+
     def compute_forward_kinematics_np(
         self, root: KinematicStructureEntity, tip: KinematicStructureEntity
     ) -> NpMatrix4x4:
@@ -1728,6 +1741,7 @@ class World:
         new_world = World(name=self.name)
         memo[me_id] = new_world
 
+        tracker = KinematicStructureEntityKwargsTracker.from_world(new_world)
         with new_world.modify_world():
             for body in self.bodies:
                 new_body = Body(
@@ -1745,14 +1759,8 @@ class World:
                 new_world.add_degree_of_freedom(new_dof)
                 new_world.state[dof.name] = self.state[dof.name].data
             for connection in self.connections:
-                new_connection = SubclassJSONSerializer.from_json(connection.to_json())
-                new_connection.parent = (
-                    new_world.get_kinematic_structure_entity_by_name(
-                        new_connection.parent.name
-                    )
-                )
-                new_connection.child = new_world.get_kinematic_structure_entity_by_name(
-                    new_connection.child.name
+                new_connection = SubclassJSONSerializer.from_json(
+                    connection.to_json(), **tracker.create_kwargs()
                 )
                 new_world.add_connection(new_connection)
         return new_world
