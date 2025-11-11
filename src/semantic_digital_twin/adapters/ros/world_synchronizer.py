@@ -9,7 +9,7 @@ import numpy as np
 import rclpy  # type: ignore
 import std_msgs.msg
 from krrood.ormatic.dao import to_dao
-from random_events.utils import SubclassJSONSerializer
+from krrood.adapters.json_serializer import SubclassJSONSerializer
 from rclpy.node import Node as RosNode
 from rclpy.publisher import Publisher
 from rclpy.subscription import Subscription
@@ -17,6 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .messages import MetaData, WorldStateUpdate, Message, ModificationBlock, LoadModel
+from ..world_entity_kwargs_tracker import KinematicStructureEntityKwargsTracker
 from ...callbacks.callback import Callback, StateChangeCallback, ModelChangeCallback
 from ...datastructures.prefixed_name import PrefixedName
 from ...orm.ormatic_interface import *
@@ -85,7 +86,10 @@ class Synchronizer(ABC):
         """
         Wrap the origin subscription callback by self-skipping and disabling the next world callback.
         """
-        msg = self.message_type.from_json(json.loads(msg.data))
+        tracker = KinematicStructureEntityKwargsTracker.from_world(self.world)
+        msg = self.message_type.from_json(
+            json.loads(msg.data), **tracker.create_kwargs()
+        )
         if msg.meta_data == self.meta_data:
             return
         self._skip_next_world_callback = True

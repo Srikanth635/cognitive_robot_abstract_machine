@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import importlib
 import inspect
 import itertools
 from abc import ABC
@@ -13,13 +12,11 @@ from functools import lru_cache
 import numpy as np
 import trimesh
 import trimesh.boolean
-from krrood.entity_query_language.predicate import Symbol
-from random_events.utils import SubclassJSONSerializer
-from scipy.stats import geom
-from semantic_digital_twin.world_description.geometry import (
-    transformation_to_json,
-    transformation_from_json,
+from krrood.adapters.json_serializer import (
+    SubclassJSONSerializer,
 )
+from krrood.entity_query_language.predicate import Symbol
+from scipy.stats import geom
 from trimesh.proximity import closest_point, nearby_faces
 from trimesh.sample import sample_surface
 from typing_extensions import (
@@ -36,6 +33,9 @@ from typing_extensions import Set
 from .geometry import TriangleMesh
 from .inertial_properties import Inertial
 from .shape_collection import ShapeCollection, BoundingBoxCollection
+from ..adapters.world_entity_kwargs_tracker import (
+    KinematicStructureEntityKwargsTracker,
+)
 from ..datastructures.prefixed_name import PrefixedName
 from ..exceptions import ReferenceFrameMismatchError
 from ..spatial_types import spatial_types as cas
@@ -49,7 +49,7 @@ if TYPE_CHECKING:
 id_generator = IDGenerator()
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, eq=False)
 class WorldEntity(Symbol):
     """
     A class representing an entity in the world.
@@ -75,6 +75,11 @@ class WorldEntity(Symbol):
     def __post_init__(self):
         if self.name is None:
             self.name = PrefixedName(f"{self.__class__.__name__}_{hash(self)}")
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        return self.name == other.name and self._world is other._world
 
 
 @dataclass
@@ -103,7 +108,7 @@ class CollisionCheckingConfig:
     """
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, eq=False)
 class KinematicStructureEntity(WorldEntity, SubclassJSONSerializer, ABC):
     """
     An entity that is part of the kinematic structure of the world.
@@ -165,7 +170,7 @@ class KinematicStructureEntity(WorldEntity, SubclassJSONSerializer, ABC):
         )
 
 
-@dataclass
+@dataclass(eq=False)
 class Body(KinematicStructureEntity, SubclassJSONSerializer):
     """
     Represents a body in the world.
@@ -251,11 +256,6 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
 
     def __hash__(self):
         return hash(self.name)
-
-    def __eq__(self, other):
-        if other is None:
-            return False
-        return self.name == other.name and self._world is other._world
 
     def has_collision(
         self, volume_threshold: float = 1.001e-6, surface_threshold: float = 0.00061
@@ -359,12 +359,18 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
         return result
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        result = cls(name=PrefixedName.from_json(data["name"], **kwargs))
 
-        result = cls(name=PrefixedName.from_json(data["name"]))
+        # add the new body so that the transformation matrices in the shapes can use it as reference frame.
+        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
+        if not tracker.has_kinematic_structure_entity(result.name):
+            tracker.add_kinematic_structure_entity(result)
+        else:
+            result = tracker.get_kinematic_structure_entity(result.name)
 
-        collision = ShapeCollection.from_json(data["collision"])
-        visual = ShapeCollection.from_json(data["visual"])
+        collision = ShapeCollection.from_json(data["collision"], **kwargs)
+        visual = ShapeCollection.from_json(data["visual"], **kwargs)
 
         for shape in itertools.chain(collision, visual):
             shape.origin.reference_frame = result
@@ -375,7 +381,7 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
         return result
 
 
-@dataclass
+@dataclass(eq=False)
 class Region(KinematicStructureEntity):
     """
     Virtual KinematicStructureEntity representing a semantic region in the world.
@@ -474,7 +480,7 @@ class Region(KinematicStructureEntity):
         return result
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         result = cls(name=PrefixedName.from_json(data["name"]))
         area = ShapeCollection.from_json(data["area"])
         for shape in area:
@@ -531,12 +537,17 @@ class SemanticAnnotation(WorldEntity, SubclassJSONSerializer):
 
         for semantic_annotation_field in fields(self):
             value = getattr(self, semantic_annotation_field.name)
-            if issubclass(type(value), SubclassJSONSerializer):
-                result[semantic_annotation_field.name] = value.to_json()
+            if semantic_annotation_field.name.startswith(
+                "_"
+            ) or semantic_annotation_field.name.startswith("__"):
+                continue
+            if not issubclass(type(value), SubclassJSONSerializer):
+                continue
+            result[semantic_annotation_field.name] = value.to_json()
         return result
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         semantic_annotation_fields = {f.name: f for f in fields(cls)}
 
         init_args = {}
@@ -546,7 +557,7 @@ class SemanticAnnotation(WorldEntity, SubclassJSONSerializer):
                 continue
             field_type = type_string_to_type(data[k]["type"])
             if issubclass(field_type, SubclassJSONSerializer):
-                init_args[k] = field_type.from_json(data[k])
+                init_args[k] = field_type.from_json(data[k], **kwargs)
 
         return cls(**init_args)
 
@@ -699,7 +710,7 @@ class SemanticEnvironmentAnnotation(RootedSemanticAnnotation):
         ) | {self.root}
 
 
-@dataclass
+@dataclass(eq=False)
 class Connection(WorldEntity, SubclassJSONSerializer):
     """
     Represents a connection between two entities in the world.
@@ -738,21 +749,28 @@ class Connection(WorldEntity, SubclassJSONSerializer):
     def to_json(self) -> Dict[str, Any]:
         result = super().to_json()
         result["name"] = self.name.to_json()
-        result["parent"] = self.parent.to_json()
-        result["child"] = self.child.to_json()
-        result["parent_T_connection_expression"] = transformation_to_json(
-            self.parent_T_connection_expression
+        result["parent_name"] = self.parent.name.to_json()
+        result["child_name"] = self.child.name.to_json()
+        result["parent_T_connection_expression"] = (
+            self.parent_T_connection_expression.to_json()
         )
         return result
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
+        parent = tracker.get_kinematic_structure_entity(
+            name=PrefixedName.from_json(data["parent_name"])
+        )
+        child = tracker.get_kinematic_structure_entity(
+            name=PrefixedName.from_json(data["child_name"])
+        )
         return cls(
             name=PrefixedName.from_json(data["name"]),
-            parent=KinematicStructureEntity.from_json(data["parent"]),
-            child=KinematicStructureEntity.from_json(data["child"]),
-            parent_T_connection_expression=transformation_from_json(
-                data["parent_T_connection_expression"]
+            parent=parent,
+            child=child,
+            parent_T_connection_expression=TransformationMatrix.from_json(
+                data["parent_T_connection_expression"], **kwargs
             ),
         )
 
@@ -811,9 +829,6 @@ class Connection(WorldEntity, SubclassJSONSerializer):
 
     def __hash__(self):
         return hash((self.parent, self.child))
-
-    def __eq__(self, other):
-        return self.name == other.name
 
     @property
     def origin(self) -> cas.TransformationMatrix:

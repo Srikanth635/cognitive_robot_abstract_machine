@@ -7,10 +7,12 @@ from dataclasses import dataclass, field
 import numpy as np
 from typing_extensions import List, TYPE_CHECKING, Union, Optional, Dict, Any, Self
 
-from semantic_digital_twin.world_description.geometry import transformation_from_json
 from .degree_of_freedom import DegreeOfFreedom
 from .world_entity import CollisionCheckingConfig, Connection, KinematicStructureEntity
 from .. import spatial_types as cas
+from ..adapters.world_entity_kwargs_tracker import (
+    KinematicStructureEntityKwargsTracker,
+)
 from ..datastructures.prefixed_name import PrefixedName
 from ..datastructures.types import NpMatrix4x4
 from ..spatial_types.derivatives import DerivativeMap
@@ -38,7 +40,7 @@ class HasUpdateState(ABC):
         pass
 
 
-@dataclass
+@dataclass(eq=False)
 class FixedConnection(Connection):
     """
     Has 0 degrees of freedom.
@@ -48,7 +50,7 @@ class FixedConnection(Connection):
         return hash((self.parent, self.child))
 
 
-@dataclass
+@dataclass(eq=False)
 class ActiveConnection(Connection):
     """
     Has one or more degrees of freedom that can be actively controlled, e.g., robot joints.
@@ -67,15 +69,23 @@ class ActiveConnection(Connection):
         return result
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
+        parent = tracker.get_kinematic_structure_entity(
+            name=PrefixedName.from_json(data["parent_name"])
+        )
+        child = tracker.get_kinematic_structure_entity(
+            name=PrefixedName.from_json(data["child_name"])
+        )
         return cls(
             name=PrefixedName.from_json(data["name"]),
-            parent=KinematicStructureEntity.from_json(data["parent"]),
-            child=KinematicStructureEntity.from_json(data["child"]),
-            parent_T_connection_expression=transformation_from_json(
-                data["parent_T_connection_expression"]
+            parent=parent,
+            child=child,
+            parent_T_connection_expression=cas.TransformationMatrix.from_json(
+                data["parent_T_connection_expression"], **kwargs
             ),
             frozen_for_collision_avoidance=data["frozen_for_collision_avoidance"],
+            **kwargs,
         )
 
     @property
@@ -108,7 +118,7 @@ class ActiveConnection(Connection):
                 child_body.set_static_collision_config(collision_config)
 
 
-@dataclass
+@dataclass(eq=False)
 class ActiveConnection1DOF(ActiveConnection, ABC):
     """
     Superclass for active connections with 1 degree of freedom.
@@ -149,13 +159,20 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
         return result
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
+        parent = tracker.get_kinematic_structure_entity(
+            name=PrefixedName.from_json(data["parent_name"])
+        )
+        child = tracker.get_kinematic_structure_entity(
+            name=PrefixedName.from_json(data["child_name"])
+        )
         return cls(
             name=PrefixedName.from_json(data["name"]),
-            parent=KinematicStructureEntity.from_json(data["parent"]),
-            child=KinematicStructureEntity.from_json(data["child"]),
-            parent_T_connection_expression=transformation_from_json(
-                data["parent_T_connection_expression"]
+            parent=parent,
+            child=child,
+            parent_T_connection_expression=cas.TransformationMatrix.from_json(
+                data["parent_T_connection_expression"], **kwargs
             ),
             frozen_for_collision_avoidance=data["frozen_for_collision_avoidance"],
             axis=cas.Vector3.from_iterable(data["axis"]),
@@ -174,6 +191,8 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
         name: Optional[PrefixedName] = None,
         multiplier: float = 1.0,
         offset: float = 0.0,
+        *args,
+        **kwargs,
     ) -> Self:
         """
         Creates and returns an instance of the class with associated degrees of freedom
@@ -294,7 +313,7 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
         self._world.notify_state_change()
 
 
-@dataclass
+@dataclass(eq=False)
 class PrismaticConnection(ActiveConnection1DOF):
     """
     Allows translation along an axis.
@@ -315,7 +334,7 @@ class PrismaticConnection(ActiveConnection1DOF):
         return hash((self.parent, self.child))
 
 
-@dataclass
+@dataclass(eq=False)
 class RevoluteConnection(ActiveConnection1DOF):
     """
     Allows rotation about an axis.
@@ -336,7 +355,7 @@ class RevoluteConnection(ActiveConnection1DOF):
         return hash((self.parent, self.child))
 
 
-@dataclass
+@dataclass(eq=False)
 class Connection6DoF(Connection):
     """
     Has full 6 degrees of freedom, that cannot be actively controlled.
@@ -376,13 +395,20 @@ class Connection6DoF(Connection):
         return result
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
+        parent = tracker.get_kinematic_structure_entity(
+            name=PrefixedName.from_json(data["parent_name"])
+        )
+        child = tracker.get_kinematic_structure_entity(
+            name=PrefixedName.from_json(data["child_name"])
+        )
         return cls(
             name=PrefixedName.from_json(data["name"]),
-            parent=KinematicStructureEntity.from_json(data["parent"]),
-            child=KinematicStructureEntity.from_json(data["child"]),
-            parent_T_connection_expression=transformation_from_json(
-                data["parent_T_connection_expression"]
+            parent=parent,
+            child=child,
+            parent_T_connection_expression=cas.TransformationMatrix.from_json(
+                data["parent_T_connection_expression"], **kwargs
             ),
             x_name=PrefixedName.from_json(data["x_name"]),
             y_name=PrefixedName.from_json(data["y_name"]),
@@ -453,6 +479,8 @@ class Connection6DoF(Connection):
         child: KinematicStructureEntity,
         name: Optional[PrefixedName] = None,
         parent_T_connection_expression: Optional[cas.TransformationMatrix] = None,
+        *args,
+        **kwargs,
     ) -> Self:
         """
         Creates an instance of the class with automatically generated degrees of freedom (DoFs)
@@ -533,7 +561,7 @@ class Connection6DoF(Connection):
         self._world.notify_state_change()
 
 
-@dataclass
+@dataclass(eq=False)
 class OmniDrive(ActiveConnection, HasUpdateState):
     """
     A connection describing an omnidirectional drive.
@@ -573,21 +601,28 @@ class OmniDrive(ActiveConnection, HasUpdateState):
         return result
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
+        parent = tracker.get_kinematic_structure_entity(
+            name=PrefixedName.from_json(data["parent_name"])
+        )
+        child = tracker.get_kinematic_structure_entity(
+            name=PrefixedName.from_json(data["child_name"])
+        )
         return cls(
-            name=PrefixedName.from_json(data["name"]),
-            parent=KinematicStructureEntity.from_json(data["parent"]),
-            child=KinematicStructureEntity.from_json(data["child"]),
-            parent_T_connection_expression=transformation_from_json(
-                data["parent_T_connection_expression"]
+            name=PrefixedName.from_json(data["name"], **kwargs),
+            parent=parent,
+            child=child,
+            parent_T_connection_expression=cas.TransformationMatrix.from_json(
+                data["parent_T_connection_expression"], **kwargs
             ),
-            x_name=PrefixedName.from_json(data["x_name"]),
-            y_name=PrefixedName.from_json(data["y_name"]),
-            roll_name=PrefixedName.from_json(data["roll_name"]),
-            pitch_name=PrefixedName.from_json(data["pitch_name"]),
-            yaw_name=PrefixedName.from_json(data["yaw_name"]),
-            x_velocity_name=PrefixedName.from_json(data["x_velocity_name"]),
-            y_velocity_name=PrefixedName.from_json(data["y_velocity_name"]),
+            x_name=PrefixedName.from_json(data["x_name"], **kwargs),
+            y_name=PrefixedName.from_json(data["y_name"], **kwargs),
+            roll_name=PrefixedName.from_json(data["roll_name"], **kwargs),
+            pitch_name=PrefixedName.from_json(data["pitch_name"], **kwargs),
+            yaw_name=PrefixedName.from_json(data["yaw_name"], **kwargs),
+            x_velocity_name=PrefixedName.from_json(data["x_velocity_name"], **kwargs),
+            y_velocity_name=PrefixedName.from_json(data["y_velocity_name"], **kwargs),
         )
 
     @property

@@ -4,7 +4,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from typing_extensions import Dict, Any
 
-from random_events.utils import SubclassJSONSerializer
+from krrood.adapters.json_serializer import SubclassJSONSerializer
 
 from ..datastructures.prefixed_name import PrefixedName
 from ..exceptions import UsageError
@@ -81,9 +81,9 @@ class DegreeOfFreedom(WorldEntity, SubclassJSONSerializer):
         }
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> DegreeOfFreedom:
-        lower_limits = DerivativeMap.from_json(data["lower_limits"])
-        upper_limits = DerivativeMap.from_json(data["upper_limits"])
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> DegreeOfFreedom:
+        lower_limits = DerivativeMap.from_json(data["lower_limits"], **kwargs)
+        upper_limits = DerivativeMap.from_json(data["upper_limits"], **kwargs)
         return cls(
             name=PrefixedName.from_json(data["name"]),
             lower_limits=lower_limits,
