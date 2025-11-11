@@ -158,7 +158,7 @@ def parse_procthor_files_and_save_to_database(
         if not any([e in f for e in excluded_words]) and fbx_file_pattern.fullmatch(f)
     ]
     # Create database engine and session
-    engine = create_engine(f"{semantic_digital_twin_database_uri}")
+    engine = create_engine(semantic_digital_twin_database_uri)
     session = Session(engine)
 
     if drop_existing_database:
