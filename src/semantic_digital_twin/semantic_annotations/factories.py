@@ -24,6 +24,7 @@ from random_events.interval import Bound
 from random_events.product_algebra import *
 from typing_extensions import Generic, TypeVar
 
+from .semantic_annotations import Aperture
 from ..datastructures.prefixed_name import PrefixedName
 from ..datastructures.variables import SpatialVariables
 from ..spatial_types.derivatives import DerivativeMap

@@ -1,36 +1,21 @@
 from __future__ import annotations
 
 import re
-from abc import ABC
 from dataclasses import dataclass
 from dataclasses import field
-from functools import lru_cache
-from typing import ClassVar, Optional, Type, Set
+from typing import Optional, Type
 
 from typing_extensions import List
 
 from semantic_digital_twin.semantic_annotations.semantic_annotations import (
-    Furniture,
     Table,
     Container,
-    HasSupportingSurface,
 )
-from ...world_description.world_entity import SemanticAnnotation, Body
-
-
-def camel_case_split(word: str) -> List[str]:
-    """
-    :param word: The word to split
-    :return: A set of strings where each string is a camel case split of the original word
-    """
-    result = []
-    start = 0
-    for i, c in enumerate(word[1:], 1):
-        if c.isupper():
-            result.append(word[start:i])
-            start = i
-    result.append(word[start:])
-    return result
+from semantic_digital_twin.semantic_annotations.mixins import (
+    HasBody,
+    HasSupportingSurface,
+    Furniture,
+)
 
 
 class AmbiguousNameError(ValueError):
@@ -45,16 +30,16 @@ class UnresolvedNameError(ValueError):
 class ProcthorResolver:
     """Central resolver that deterministically maps a ProcTHOR name to exactly one class."""
 
-    classes: List[Type[HouseholdObject]] = field(default_factory=list)
+    classes: List[Type[HasBody]] = field(default_factory=list)
 
-    def resolve(self, name: str) -> Optional[Type[HouseholdObject]]:
+    def resolve(self, name: str) -> Optional[Type[HasBody]]:
         # remove all numbers from the name
         name_tokens = set(n.lower() for n in re.sub(r"\d+", "", name).split("_"))
         possible_results = []
         for cls in self.classes:
             matches = cls.class_name_tokens().intersection(
                 name_tokens
-            ) or cls._additional_names.intersection(name_tokens)
+            ) or cls._synonyms.intersection(name_tokens)
             possible_results.append((cls, matches))
 
         if len(possible_results) == 0:
@@ -72,36 +57,14 @@ class ProcthorResolver:
 
 
 @dataclass(eq=False)
-class HouseholdObject(SemanticAnnotation, ABC):
-    """
-    Abstract base class for all household objects. Each semantic annotation refers to a single Body.
-    Each subclass automatically derives a MatchRule from its own class name and
-    the names of its HouseholdObject ancestors. This makes specialized subclasses
-    naturally more specific than their bases.
-    """
-
-    body: Body = field(kw_only=True)
-
-    _additional_names: ClassVar[Set[str]] = set()
-    """
-    Additional names that can be used to match this object.
-    """
-
-    @classmethod
-    @lru_cache(maxsize=None)
-    def class_name_tokens(cls) -> Set[str]:
-        return set(n.lower() for n in camel_case_split(cls.__name__))
-
-
-@dataclass(eq=False)
-class Bottle(Container, HouseholdObject):
+class Bottle(Container):
     """
     Abstract class for bottles.
     """
 
 
 @dataclass(eq=False)
-class Statue(HouseholdObject): ...
+class Statue(HasBody): ...
 
 
 @dataclass(eq=False)
@@ -126,7 +89,7 @@ class MustardBottle(Bottle):
 
 
 @dataclass(eq=False)
-class DrinkingContainer(Container, HouseholdObject): ...
+class DrinkingContainer(Container, HasBody): ...
 
 
 @dataclass(eq=False)
@@ -144,11 +107,11 @@ class Mug(DrinkingContainer):
 
 
 @dataclass(eq=False)
-class CookingContainer(Container, HouseholdObject): ...
+class CookingContainer(Container, HasBody): ...
 
 
 @dataclass(eq=False)
-class Lid(HouseholdObject): ...
+class Lid(HasBody): ...
 
 
 @dataclass(eq=False)
@@ -180,14 +143,14 @@ class PotLid(Lid):
 
 
 @dataclass(eq=False)
-class Plate(HouseholdObject, HasSupportingSurface):
+class Plate(HasBody, HasSupportingSurface):
     """
     A plate.
     """
 
 
 @dataclass(eq=False)
-class Bowl(HouseholdObject, HasSupportingSurface):
+class Bowl(HasBody, HasSupportingSurface):
     """
     A bowl.
     """
@@ -195,7 +158,7 @@ class Bowl(HouseholdObject, HasSupportingSurface):
 
 # Food Items
 @dataclass(eq=False)
-class Food(HouseholdObject): ...
+class Food(HasBody): ...
 
 
 @dataclass(eq=False)
@@ -211,7 +174,7 @@ class Bread(Food):
     Bread.
     """
 
-    _additional_names = {
+    _synonyms = {
         "bumpybread",
         "whitebread",
         "loafbread",
@@ -293,35 +256,35 @@ class Orange(Produce):
 
 
 @dataclass(eq=False)
-class CoffeeTable(Table, Furniture, HouseholdObject):
+class CoffeeTable(Table):
     """
     A coffee table.
     """
 
 
 @dataclass(eq=False)
-class DiningTable(Table, Furniture, HouseholdObject):
+class DiningTable(Table):
     """
     A dining table.
     """
 
 
 @dataclass(eq=False)
-class SideTable(Table, Furniture, HouseholdObject):
+class SideTable(Table):
     """
     A side table.
     """
 
 
 @dataclass(eq=False)
-class Desk(Table, Furniture, HouseholdObject):
+class Desk(Table):
     """
     A desk.
     """
 
 
 @dataclass(eq=False)
-class Chair(Furniture, HouseholdObject):
+class Chair(Furniture):
     """
     Abstract class for chairs.
     """
@@ -342,28 +305,28 @@ class Armchair(Chair):
 
 
 @dataclass(eq=False)
-class ShelvingUnit(Furniture, HouseholdObject, HasSupportingSurface):
+class ShelvingUnit(Furniture):
     """
     A shelving unit.
     """
 
 
 @dataclass(eq=False)
-class Bed(Furniture, HouseholdObject, HasSupportingSurface):
+class Bed(Furniture):
     """
     A bed.
     """
 
 
 @dataclass(eq=False)
-class Sofa(Furniture, HouseholdObject, HasSupportingSurface):
+class Sofa(Furniture):
     """
     A sofa.
     """
 
 
 @dataclass(eq=False)
-class Sink(HouseholdObject):
+class Sink(HasBody):
     """
     A sink.
     """
@@ -374,7 +337,7 @@ class Kettle(CookingContainer): ...
 
 
 @dataclass(eq=False)
-class Decor(HouseholdObject): ...
+class Decor(HasBody): ...
 
 
 @dataclass(eq=False)
@@ -385,7 +348,7 @@ class WallDecor(Decor):
 
 
 @dataclass(eq=False)
-class Cloth(HouseholdObject): ...
+class Cloth(HasBody): ...
 
 
 @dataclass(eq=False)
@@ -396,7 +359,7 @@ class Poster(WallDecor):
 
 
 @dataclass(eq=False)
-class WallPanel(HouseholdObject):
+class WallPanel(HasBody):
     """
     A wall panel.
     """
@@ -407,43 +370,43 @@ class Potato(Produce): ...
 
 
 @dataclass(eq=False)
-class GarbageBin(Container, HouseholdObject):
+class GarbageBin(Container):
     """
     A garbage bin.
     """
 
 
 @dataclass(eq=False)
-class Drone(HouseholdObject): ...
+class Drone(HasBody): ...
 
 
 @dataclass(eq=False)
-class ProcthorBox(Container, HouseholdObject): ...
+class ProcthorBox(Container): ...
 
 
 @dataclass(eq=False)
-class Houseplant(HouseholdObject):
+class Houseplant(HasBody):
     """
     A houseplant.
     """
 
 
 @dataclass(eq=False)
-class SprayBottle(HouseholdObject):
+class SprayBottle(HasBody):
     """
     A spray bottle.
     """
 
 
 @dataclass(eq=False)
-class Vase(HouseholdObject):
+class Vase(HasBody):
     """
     A vase.
     """
 
 
 @dataclass(eq=False)
-class Book(HouseholdObject):
+class Book(HasBody):
     """
     A book.
     """
@@ -452,18 +415,18 @@ class Book(HouseholdObject):
 
 
 @dataclass(eq=False)
-class BookFront(HouseholdObject): ...
+class BookFront(HasBody): ...
 
 
 @dataclass(eq=False)
-class SaltPepperShaker(HouseholdObject):
+class SaltPepperShaker(HasBody):
     """
     A salt and pepper shaker.
     """
 
 
 @dataclass(eq=False)
-class Cuttlery(HouseholdObject): ...
+class Cuttlery(HasBody): ...
 
 
 @dataclass(eq=False)
@@ -485,28 +448,28 @@ class Spoon(Cuttlery): ...
 
 
 @dataclass(eq=False)
-class Pencil(HouseholdObject):
+class Pencil(HasBody):
     """
     A pencil.
     """
 
 
 @dataclass(eq=False)
-class Pen(HouseholdObject):
+class Pen(HasBody):
     """
     A pen.
     """
 
 
 @dataclass(eq=False)
-class Baseball(HouseholdObject):
+class Baseball(HasBody):
     """
     A baseball.
     """
 
 
 @dataclass(eq=False)
-class LiquidCap(HouseholdObject):
+class LiquidCap(HasBody):
     """
     A liquid cap.
     """

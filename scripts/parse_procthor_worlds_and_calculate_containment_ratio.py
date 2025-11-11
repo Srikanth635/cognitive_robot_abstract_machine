@@ -13,8 +13,8 @@ from sqlalchemy.orm import Session
 from semantic_digital_twin.adapters.procthor.procthor_parser import ProcTHORParser
 from semantic_digital_twin.adapters.procthor.procthor_semantic_annotations import (
     ProcthorResolver,
-    HouseholdObject,
 )
+from semantic_digital_twin.semantic_annotations.mixins import HasBody
 from semantic_digital_twin.reasoning.predicates import InsideOf
 from semantic_digital_twin.orm.ormatic_interface import *
 
@@ -31,7 +31,7 @@ def parse_procthor_worlds_and_calculate_containment_ratio():
         procthor_experiments_database_uri, echo=False
     )
     # drop_database(procthor_experiments_engine)
-    # Base.metadata.create_all(procthor_experiments_engine)
+    Base.metadata.create_all(procthor_experiments_engine)
     procthor_experiments_session = Session(procthor_experiments_engine)
 
     dataset = prior.load_dataset("procthor-10k")
@@ -40,8 +40,8 @@ def parse_procthor_worlds_and_calculate_containment_ratio():
     for index, house in enumerate(
         tqdm.tqdm(dataset["train"], desc="Parsing Procthor worlds")
     ):
-        if index < 8718:
-            continue
+        # if index < 8718:
+        #     continue
         try:
             parser = ProcTHORParser(f"house_{index}", house, semantic_world_session)
             world = parser.parse()
@@ -49,7 +49,7 @@ def parse_procthor_worlds_and_calculate_containment_ratio():
             logging.error(f"Error parsing house {index}: {e}")
             continue
         # resolve views
-        resolver = ProcthorResolver(*[recursive_subclasses(HouseholdObject)])
+        resolver = ProcthorResolver(*[recursive_subclasses(HasBody)])
         for body in world.bodies:
             resolved = resolver.resolve(body.name.name)
             if resolved:
