@@ -41,8 +41,8 @@ jobs:
         pip install -U pip && pip install -r requirements.txt && pip install -e . && pip install pytest
         pip install -e ./src/ripple_down_rules_meta
         if [[ $(python3 --version) == "Python 3.10"* ]]; then
-          PACKAGE_URL="https://nc.uni-bremen.de/public.php/dav/files/fxWQigKXPBtnXsy/?accept=zip"
-          PACKAGE_HASH="5249b21f6a6dbbb86eee9e64659cf19b9b09585ffbc888d13af9bd9c2bcce99c"
+          PACKAGE_URL="https://nc.uni-bremen.de/public.php/dav/files/7woXWwYzijLptSm/?accept=zip"
+          PACKAGE_HASH="c06e808348268eabffedadd5c7ba294b17fa27f359270c69d7f4fbcad89b3b13"
         elif [[ $(python3 --version) == "Python 3.12"* ]]; then
           PACKAGE_URL="https://nc.uni-bremen.de/public.php/dav/files/nxxi4QSBcYmmxba/?accept=zip"
           PACKAGE_HASH="a111ac524d6eb9161ed90972cd60670de887066b553a91a397da985f3a60f9aa"

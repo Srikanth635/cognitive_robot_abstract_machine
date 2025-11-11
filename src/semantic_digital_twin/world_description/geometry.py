@@ -418,7 +418,6 @@ class Box(Shape):
         mesh.visual.vertex_colors = trimesh.visual.color.to_rgba(self.color.to_rgba())
         return mesh
 
-
     @property
     def local_frame_bounding_box(self) -> BoundingBox:
         """
@@ -448,6 +447,15 @@ class Box(Shape):
             origin=transformation_from_json(data["origin"]),
             color=Color.from_json(data["color"]),
         )
+
+
+@dataclass(eq=False)
+class Plane(Box):
+    """
+    A plane shape. Pivot point is at the center of the plane.
+    """
+
+    ...
 
 
 @dataclass(eq=False)

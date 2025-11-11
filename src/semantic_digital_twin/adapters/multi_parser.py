@@ -16,6 +16,7 @@ from ..world_description.geometry import (
     Box,
     Sphere,
     Cylinder,
+    Plane,
     Scale,
     Shape,
     Color,
@@ -168,6 +169,32 @@ def parse_cylinder(cylinder: UsdGeom.Cylinder, origin_transform: TransformationM
     )
 
 
+def parse_plane(
+    plane: UsdGeom.Mesh, origin_transform: TransformationMatrix, color: Color
+) -> Shape:
+    """
+    Parses a plane geometry from a UsdGeom.Mesh instance.
+
+    :param plane: The UsdGeom.Mesh instance representing the plane geometry.
+    :param origin_transform: The origin transformation matrix for the plane.
+    :param color: The color of the plane.
+    :return: A Plane shape representing the parsed plane geometry.
+    """
+    # Assuming the plane is defined by its size in the X and Y directions
+    size_x = plane.GetExtentAttr().Get()[1][0] - plane.GetExtentAttr().Get()[0][0]
+    size_y = plane.GetExtentAttr().Get()[1][1] - plane.GetExtentAttr().Get()[0][1]
+    size_z = plane.GetExtentAttr().Get()[1][2] - plane.GetExtentAttr().Get()[0][2]
+    if numpy.isclose(size_z, 0.0):
+        size_x = 0.0
+        size_y = 0.0
+        size_z = 0.05
+    return Plane(
+        origin=origin_transform,
+        scale=Scale(size_x, size_y, size_z),
+        color=color,
+    )
+
+
 def parse_mesh(
     gprim: UsdGeom.Gprim,
     local_transformation: Gf.Matrix4d,
@@ -241,6 +268,8 @@ def parse_geometry(body_builder: BodyBuilder) -> tuple[List[Shape], List[Shape]]
                 shape = parse_sphere(UsdGeom.Sphere(gprim_prim), origin_transform, color)  # type: ignore
             case GeomType.CYLINDER:
                 shape = parse_cylinder(UsdGeom.Cylinder(gprim_prim), origin_transform, color)  # type: ignore
+            case GeomType.PLANE:
+                shape = parse_plane(UsdGeom.Mesh(gprim_prim), origin_transform, color)  # type: ignore
             case GeomType.MESH:
                 shape = parse_mesh(gprim, local_transformation, translation, quat)
         if shape is None:

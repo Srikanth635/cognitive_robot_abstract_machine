@@ -37,7 +37,7 @@ from ..world_description.connections import (
     FixedConnection,
     Connection6DoF,
 )
-from ..world_description.geometry import Box, Cylinder, Sphere, Shape
+from ..world_description.geometry import Box, Cylinder, Sphere, Shape, Plane
 from ..world_description.world_entity import (
     Region,
     Body,
@@ -371,6 +371,14 @@ class CylinderConverter(ShapeConverter, ABC):
     entity_type: ClassVar[Type[Cylinder]] = Cylinder
 
 
+class PlaneConverter(ShapeConverter, ABC):
+    """
+    Converts a Plane object to a dictionary of cylinder properties for Multiverse simulator.
+    """
+
+    entity_type: ClassVar[Type[Plane]] = Plane
+
+
 class ConnectionConverter(EntityConverter, ABC):
     """
     Converts a Connection object to a dictionary of joint properties for Multiverse simulator.
@@ -572,6 +580,19 @@ class MujocoCylinderConverter(MujocoGeomConverter, CylinderConverter):
     ) -> Dict[str, Any]:
         shape_props.update(MujocoGeomConverter._post_convert(self, entity, shape_props))
         shape_props.update({"size": [entity.width / 2, entity.height, 0.0]})
+        return shape_props
+
+
+class MujocoPlaneConverter(MujocoGeomConverter, PlaneConverter):
+    type: mujoco.mjtGeom = mujoco.mjtGeom.mjGEOM_PLANE
+
+    def _post_convert(
+        self, entity: Plane, shape_props: Dict[str, Any], **kwargs
+    ) -> Dict[str, Any]:
+        shape_props.update(MujocoGeomConverter._post_convert(self, entity, shape_props))
+        shape_props.update(
+            {"size": [entity.scale.x / 2, entity.scale.y / 2, entity.scale.z / 2]}
+        )
         return shape_props
 
 
