@@ -501,15 +501,20 @@ class CollisionAvoidance(Goal):
             for body_a_original in robot.bodies_with_enabled_collision:
                 for body_b_original in robot.bodies_with_enabled_collision:
                     if (
-                        body_a_original,
-                        body_b_original,
-                    ) in god_map.world.disabled_collision_pairs or (
-                        body_b_original,
-                        body_a_original,
-                    ) in god_map.world.disabled_collision_pairs:
+                        (
+                            body_a_original,
+                            body_b_original,
+                        )
+                        in god_map.world._collision_pair_manager.disabled_collision_pairs
+                        or (
+                            body_b_original,
+                            body_a_original,
+                        )
+                        in god_map.world._collision_pair_manager.disabled_collision_pairs
+                    ):
                         continue
                     body_a, body_b = (
-                        god_map.world.compute_chain_reduced_to_controlled_joints(
+                        god_map.world.compute_chain_reduced_to_controlled_connections(
                             body_a_original, body_b_original
                         )
                     )
