@@ -758,7 +758,7 @@ class FloatVariable(SymbolicType, BasicOperatorMixin):
         return f"Variable({self})"
 
     def __hash__(self):
-        return hash(self.name)
+        return hash(self.casadi_sx)
 
     def resolve(self) -> float:
         """

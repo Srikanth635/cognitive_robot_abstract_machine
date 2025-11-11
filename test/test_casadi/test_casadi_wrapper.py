@@ -142,6 +142,14 @@ class TestFloatVariable:
         v3 = cas.Point3(v).free_variables()[0]
         assert id(v3) == id(v)
 
+    def test_float_variable_unique(self):
+        from semantic_digital_twin.world import World
+
+        v1 = cas.FloatVariable(name=PrefixedName("asdf"))
+        v2 = cas.FloatVariable(name=PrefixedName("asdf"))
+        e = v1 + v2
+        e.compile([[v1, v2]])
+
     def test_from_name(self):
         s = cas.FloatVariable(name="muh")
         assert isinstance(s, cas.FloatVariable)
