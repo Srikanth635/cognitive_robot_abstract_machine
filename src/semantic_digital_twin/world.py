@@ -1475,8 +1475,8 @@ class World:
         root_chain, common_ancestor, tip_chain = (
             self.compute_split_chain_of_kinematic_structure_entities(root, tip)
         )
-        root_chain.append(common_ancestor[0])
-        tip_chain.insert(0, common_ancestor[0])
+        root_chain = root_chain + [common_ancestor[0]]
+        tip_chain = [common_ancestor[0]] + tip_chain
 
         root_connections = [
             self.get_connection(root_chain[i + 1], root_chain[i])
