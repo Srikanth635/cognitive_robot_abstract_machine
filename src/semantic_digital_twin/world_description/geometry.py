@@ -450,15 +450,6 @@ class Box(Shape):
 
 
 @dataclass(eq=False)
-class Plane(Box):
-    """
-    A plane shape. Pivot point is at the center of the plane.
-    """
-
-    ...
-
-
-@dataclass(eq=False)
 class BoundingBox:
     min_x: float
     """

@@ -16,7 +16,6 @@ from ..world_description.geometry import (
     Box,
     Sphere,
     Cylinder,
-    Plane,
     Scale,
     Shape,
     Color,
@@ -180,7 +179,6 @@ def parse_plane(
     :param color: The color of the plane.
     :return: A Plane shape representing the parsed plane geometry.
     """
-    # Assuming the plane is defined by its size in the X and Y directions
     size_x = plane.GetExtentAttr().Get()[1][0] - plane.GetExtentAttr().Get()[0][0]
     size_y = plane.GetExtentAttr().Get()[1][1] - plane.GetExtentAttr().Get()[0][1]
     size_z = plane.GetExtentAttr().Get()[1][2] - plane.GetExtentAttr().Get()[0][2]
@@ -188,7 +186,7 @@ def parse_plane(
         size_x = 0.0
         size_y = 0.0
         size_z = 0.05
-    return Plane(
+    return Box(
         origin=origin_transform,
         scale=Scale(size_x, size_y, size_z),
         color=color,
