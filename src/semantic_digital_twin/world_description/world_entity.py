@@ -34,7 +34,7 @@ from typing_extensions import List, Optional, TYPE_CHECKING, Tuple
 from typing_extensions import Set
 
 from .geometry import TriangleMesh
-from .inertia_types import Inertial
+from .inertial_properties import Inertial
 from .shape_collection import ShapeCollection, BoundingBoxCollection
 from ..datastructures.prefixed_name import PrefixedName
 from ..exceptions import ReferenceFrameMismatchError

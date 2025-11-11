@@ -21,7 +21,7 @@ from ..world_description.geometry import (
     Color,
     TriangleMesh,
 )
-from ..world_description.inertia_types import (
+from ..world_description.inertial_properties import (
     Inertial,
     InertiaTensor,
     PrincipalMoments,
