@@ -27,6 +27,7 @@ from ..world_description.inertial_properties import (
     PrincipalMoments,
     PrincipalAxes,
 )
+from ..world_description.connection_properties import JointProperty
 from ..world_description.shape_collection import ShapeCollection
 from ..world_description.world_entity import KinematicStructureEntity
 
@@ -565,6 +566,11 @@ class MultiParser:
                     JointConnection = RevoluteConnection
                 else:
                     JointConnection = PrismaticConnection
+                joint_prop = JointProperty(
+                    armature=0.001,
+                    dry_friction=0.0,
+                    damping=0.01,
+                )
                 return JointConnection(
                     name=PrefixedName(joint_name),
                     parent=parent_body,
@@ -574,6 +580,7 @@ class MultiParser:
                     offset=offset,
                     axis=axis,
                     dof_name=dof.name,
+                    prop=joint_prop,
                 )
         raise NotImplementedError(
             f"Joint type {joint_builder.type} is not supported yet."

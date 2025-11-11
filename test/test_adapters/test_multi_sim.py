@@ -208,9 +208,9 @@ class MujocoSimTestCase(unittest.TestCase):
         self.test_urdf_1_world = URDFParser.from_file(
             file_path=self.test_urdf_1
         ).parse()
-        # self.test_urdf_2_world = URDFParser.from_file(
-        #     file_path=self.test_urdf_2
-        # ).parse()
+        self.test_urdf_2_world = URDFParser.from_file(
+            file_path=self.test_urdf_2
+        ).parse()
         self.test_mjcf_world = MJCFParser(self.test_mjcf).parse(fixed_base=False)
 
     def test_empty_multi_sim_in_5s(self):
@@ -242,20 +242,20 @@ class MujocoSimTestCase(unittest.TestCase):
         multi_sim.stop_simulation()
         self.assertAlmostEqual(time.time() - start_time, 5.0, delta=0.5)
 
-    # def test_apartment_multi_sim_in_5s(self):
-    #     viewer = MultiverseViewer()
-    #     multi_sim = MujocoSim(
-    #         viewer=viewer, world=self.test_urdf_2_world, headless=headless
-    #     )
-    #     self.assertIsInstance(multi_sim.simulator, MultiverseMujocoConnector)
-    #     self.assertEqual(multi_sim.simulator.file_path, "/tmp/scene.xml")
-    #     self.assertIs(multi_sim.simulator.headless, headless)
-    #     self.assertEqual(multi_sim.simulator.step_size, self.step_size)
-    #     multi_sim.start_simulation()
-    #     start_time = time.time()
-    #     time.sleep(5.0)
-    #     multi_sim.stop_simulation()
-    #     self.assertAlmostEqual(time.time() - start_time, 5.0, delta=0.5)
+    def test_apartment_multi_sim_in_5s(self):
+        viewer = MultiverseViewer()
+        multi_sim = MujocoSim(
+            viewer=viewer, world=self.test_urdf_2_world, headless=headless
+        )
+        self.assertIsInstance(multi_sim.simulator, MultiverseMujocoConnector)
+        self.assertEqual(multi_sim.simulator.file_path, "/tmp/scene.xml")
+        self.assertIs(multi_sim.simulator.headless, headless)
+        self.assertEqual(multi_sim.simulator.step_size, self.step_size)
+        multi_sim.start_simulation()
+        start_time = time.time()
+        time.sleep(5.0)
+        multi_sim.stop_simulation()
+        self.assertAlmostEqual(time.time() - start_time, 5.0, delta=0.5)
 
     def test_world_multi_sim_with_change(self):
         viewer = MultiverseViewer()

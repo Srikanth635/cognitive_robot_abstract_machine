@@ -430,6 +430,21 @@ class Connection1DOFConverter(ConnectionConverter, ABC):
     The key for the joint quaternion property in the output dictionary.
     """
 
+    armature_str: str
+    """
+    The key for the joint armature property in the output dictionary.
+    """
+
+    dry_friction_str: str
+    """
+    The key for the joint dry friction property in the output dictionary.
+    """
+
+    damping_str: str
+    """
+    The key for the joint damping property in the output dictionary.
+    """
+
     def _convert(self, entity: ActiveConnection1DOF, **kwargs) -> Dict[str, Any]:
         """
         Converts an ActiveConnection1DOF object to a dictionary of joint properties for Multiverse simulator.
@@ -451,6 +466,9 @@ class Connection1DOFConverter(ConnectionConverter, ABC):
                 self.quat_str: joint_quat,
                 self.axis_str: entity.axis.to_np().tolist()[:3],
                 self.range_str: [dof.lower_limits.position, dof.upper_limits.position],
+                self.armature_str: entity.prop.armature,
+                self.dry_friction_str: entity.prop.dry_friction,
+                self.damping_str: entity.prop.damping,
             }
         )
         return joint_props
@@ -601,6 +619,9 @@ class MujocoJointConverter(ConnectionConverter, ABC):
     pos_str: str = "pos"
     quat_str: str = "quat"
     type: mujoco.mjtJoint
+    armature_str: str = "armature"
+    dry_friction_str: str = "frictionloss"
+    damping_str: str = "damping"
 
     def _post_convert(
         self, entity: Connection, joint_props: Dict[str, Any], **kwargs

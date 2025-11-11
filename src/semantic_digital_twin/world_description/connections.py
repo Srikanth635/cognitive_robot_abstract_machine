@@ -14,6 +14,7 @@ from .. import spatial_types as cas
 from ..datastructures.prefixed_name import PrefixedName
 from ..datastructures.types import NpMatrix4x4
 from ..spatial_types.derivatives import DerivativeMap
+from .connection_properties import JointProperty
 
 if TYPE_CHECKING:
     from ..world import World
@@ -106,6 +107,7 @@ class ActiveConnection(Connection):
             if not child_body.get_collision_config().disabled:
                 child_body.set_static_collision_config(collision_config)
 
+
 @dataclass
 class ActiveConnection1DOF(ActiveConnection, ABC):
     """
@@ -131,6 +133,11 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
     dof_name: PrefixedName = field(kw_only=True)
     """
     Name of a Degree of freedom to control movement along the axis.
+    """
+
+    prop: JointProperty = field(default_factory=JointProperty)
+    """
+    Dynamic properties of the joint.
     """
 
     def to_json(self) -> Dict[str, Any]:
