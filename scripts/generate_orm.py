@@ -6,20 +6,19 @@
 # information on how to map them.
 # ----------------------------------------------------------------------------------------------------------------------
 from __future__ import annotations
+
 import os
 from dataclasses import is_dataclass
 
-import krrood.entity_query_language.orm.model
 import trimesh
 from krrood.class_diagrams import ClassDiagram
-from krrood.entity_query_language.predicate import HasTypes, HasType, Symbol
-from krrood.entity_query_language.symbol_graph import SymbolGraph
 from krrood.ormatic.dao import AlternativeMapping
 from krrood.ormatic.ormatic import ORMatic
 from krrood.ormatic.utils import classes_of_module
 from krrood.utils import recursive_subclasses
 
 import semantic_digital_twin.orm.model
+import semantic_digital_twin.reasoning.predicates
 import semantic_digital_twin.robots.abstract_robot
 import semantic_digital_twin.semantic_annotations.semantic_annotations
 import semantic_digital_twin.world  # ensure the module attribute exists on the package
@@ -27,10 +26,8 @@ import semantic_digital_twin.world_description.degree_of_freedom
 import semantic_digital_twin.world_description.geometry
 import semantic_digital_twin.world_description.shape_collection
 import semantic_digital_twin.world_description.world_entity
-import semantic_digital_twin.reasoning.predicates
-from semantic_digital_twin.world import WorldModelManager, World
-from semantic_digital_twin.semantic_annotations.mixins import HasBody
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.semantic_annotations.mixins import HasBody
 from semantic_digital_twin.spatial_computations.forward_kinematics import (
     ForwardKinematicsManager,
 )
@@ -38,10 +35,12 @@ from semantic_digital_twin.world import (
     ResetStateContextManager,
     WorldModelUpdateContextManager,
 )
+from semantic_digital_twin.world import WorldModelManager
 from semantic_digital_twin.world_description.connections import (
     FixedConnection,
     HasUpdateState,
 )
+from semantic_digital_twin.orm.model import *  # type: ignore
 
 all_classes = set(
     classes_of_module(semantic_digital_twin.world_description.world_entity)
@@ -82,16 +81,12 @@ all_classes -= {
 all_classes = {
     c for c in all_classes if is_dataclass(c) and not issubclass(c, AlternativeMapping)
 }
+all_classes |= {am.original_class() for am in recursive_subclasses(AlternativeMapping)}
 
 alternative_mappings = [
     am
     for am in recursive_subclasses(AlternativeMapping)
     if am.original_class() in all_classes
-    or (
-        isinstance(am.original_class(), AlternativeMapping)
-        and am.original_class().original_class().original_class()
-    )
-    in all_classes
 ]
 
 
