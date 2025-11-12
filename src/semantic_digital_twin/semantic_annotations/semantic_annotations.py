@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Set, Iterable, Optional
 
 import numpy as np
 
@@ -11,6 +12,27 @@ from ..world_description.shape_collection import BoundingBoxCollection
 from ..spatial_types import Point3
 from ..datastructures.variables import SpatialVariables
 from ..world_description.world_entity import SemanticAnnotation, Body, Region
+
+
+@dataclass(eq=False)
+class PerceivableAnnotation:
+    """
+    A mixin class for semantic annotations that can be perceived.
+    """
+
+    body: Body
+    """
+    The body that represents the perceived object.
+    """
+
+    class_label: Optional[str] = field(default=None)
+    """
+    The exact class label of the perceived object.
+    """
+
+    @property
+    def bodies(self) -> Iterable[Body]:
+        return [self.body]
 
 
 @dataclass(eq=False)
@@ -176,3 +198,23 @@ class Room(SemanticAnnotation):
 class Wall(SemanticAnnotation):
     body: Body
     doors: List[Door] = field(default_factory=list)
+
+
+@dataclass(eq=False)
+class Milk(SemanticAnnotation, PerceivableAnnotation):
+    pass
+
+
+@dataclass(eq=False)
+class Bowl(SemanticAnnotation, PerceivableAnnotation):
+    pass
+
+
+@dataclass(eq=False)
+class Spoon(SemanticAnnotation, PerceivableAnnotation):
+    pass
+
+
+@dataclass(eq=False)
+class Cup(SemanticAnnotation, PerceivableAnnotation):
+    pass
