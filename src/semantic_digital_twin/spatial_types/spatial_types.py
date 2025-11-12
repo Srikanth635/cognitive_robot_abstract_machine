@@ -2212,6 +2212,10 @@ class RotationMatrix(
         if isinstance(data, (RotationMatrix, TransformationMatrix)):
             self.casadi_sx[:3, :3] = copy(data.casadi_sx)[:3, :3]
             return
+        if data.shape[0] == 3 and data.shape[1] == 3:
+            s = ca.SX.eye(4)
+            s[:3, :3] = to_sx(data)
+            data = s
         self.casadi_sx = Expression(data=data).casadi_sx
         if sanity_check:
             self._validate()

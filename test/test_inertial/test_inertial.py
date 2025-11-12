@@ -61,11 +61,7 @@ class TestComponentsAndAssembly:
 
     def test_principal_axes_properties(self):
         for _, axes_values in moments_and_axes_values:
-            rotation_matrix = RotationMatrix.from_vectors(
-                x=Vector3.from_iterable(axes_values[:, 0]),
-                y=Vector3.from_iterable(axes_values[:, 1]),
-                z=Vector3.from_iterable(axes_values[:, 2]),
-            )
+            rotation_matrix = RotationMatrix(axes_values)
             axes_1 = PrincipalAxes.from_rotation_matrix(rotation_matrix)
             axes_2 = PrincipalAxes(data=axes_values)
             axes_3 = axes_2.to_rotation_matrix().to_np()[:3, :3]

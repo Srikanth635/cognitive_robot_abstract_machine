@@ -3,16 +3,26 @@ from dataclasses import dataclass
 
 @dataclass
 class JointDynamics:
-    """
+    r"""
     Represents the dynamic properties of a joint.
-    tau = I*ddq + b*dq + f*sign(dq)
-    where:
-    - tau is the torque applied to the joint
-    - I is the armature (inertia)
-    - ddq is the joint acceleration
-    - b is the damping coefficient
-    - f is the dry friction coefficient
-    - dq is the joint velocity
+
+    .. math::
+
+       \tau = J \ddot{q} + R_\mathrm{c}\mathrm{sign}(\dot{q}) + R_\mathrm{v}\dot{q}
+
+    where
+
+    :math:`\tau` : torque applied to the joint
+
+    :math:`J` : joint armature (inertia)
+
+    :math:`\ddot{q}` : joint acceleration
+
+    :math:`R_\mathrm{c}` : dry friction coefficient
+
+    :math:`R_\mathrm{v}` : damping coefficient
+
+    :math:`\dot{q}` : joint velocity
     """
 
     armature: float = 0.0

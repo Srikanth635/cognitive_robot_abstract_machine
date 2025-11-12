@@ -7,7 +7,7 @@ import numpy as np
 from numpy._typing import NDArray
 from typing_extensions import Self, TypeVar
 
-from semantic_digital_twin.spatial_types import Point3, RotationMatrix
+from ..spatial_types import Point3, RotationMatrix
 
 
 @dataclass
@@ -88,16 +88,7 @@ class PrincipalAxes(NPMatrix3x3):
 
     def to_rotation_matrix(self) -> RotationMatrix:
         """Convert PrincipalAxes to a RotationMatrix."""
-        return RotationMatrix(
-            data=np.array(
-                [
-                    [self.data[0, 0], self.data[0, 1], self.data[0, 2], 0.0],
-                    [self.data[1, 0], self.data[1, 1], self.data[1, 2], 0.0],
-                    [self.data[2, 0], self.data[2, 1], self.data[2, 2], 0.0],
-                    [0.0, 0.0, 0.0, 1.0],
-                ]
-            )
-        )
+        return RotationMatrix(self.data)
 
 
 @dataclass(eq=False)
