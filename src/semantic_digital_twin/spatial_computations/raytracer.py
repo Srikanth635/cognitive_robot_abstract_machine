@@ -134,12 +134,15 @@ class RayTracer:
         points, index_ray, bodies = self.ray_test(
             ray_origins,
             target_points,
-            multiple_hits=False,
+            multiple_hits=True,
             min_dist=min_dist,
             max_dist=max_dist,
         )
+        unique_index = np.unique(index_ray, return_index=True)[1]
 
-        bodies = [body.index for body in bodies]
+        index_ray = index_ray[unique_index]
+
+        bodies = np.array([body.index for body in bodies])[unique_index]
 
         pixel_ray = pixels[index_ray]
 
@@ -166,7 +169,7 @@ class RayTracer:
 
         :param camera_pose: The position of the camera.
         :param resolution: The resolution of the depth map.
-        :parm min_dist: The minimum distance of a body to be considered a hit.
+        :param min_dist: The minimum distance of a body to be considered a hit.
         :param max_dist: The maximum distance of a body to be considered a hit.
         :return: A depth map as a numpy array.
         """
@@ -180,10 +183,14 @@ class RayTracer:
         points, index_ray, bodies = self.ray_test(
             ray_origins,
             target_points,
-            multiple_hits=False,
+            multiple_hits=True,
             min_dist=min_dist,
             max_dist=max_dist,
         )
+        unique_index = np.unique(index_ray, return_index=True)[1]
+        index_ray = index_ray[unique_index]
+        points = points[unique_index]
+        ray_origins = ray_origins[unique_index]
 
         depth = trimesh.util.diagonal_dot(
             points - ray_origins[0], ray_directions[index_ray]
