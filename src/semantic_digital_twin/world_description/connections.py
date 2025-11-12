@@ -306,7 +306,7 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
         self._world.state[self.dof.name].jerk = value / self.multiplier
         self._world.notify_state_change()
 
-    def copy_to_world(self, world: World):
+    def copy_for_world(self, world: World):
         (
             other_parent,
             other_child,
@@ -574,7 +574,7 @@ class Connection6DoF(Connection):
         self._world.state[self.qw.name].position = orientation[3]
         self._world.notify_state_change()
 
-    def copy_to_world(self, world: World):
+    def copy_for_world(self, world: World):
         (
             other_parent,
             other_child,
@@ -866,7 +866,7 @@ class OmniDrive(ActiveConnection, HasUpdateState):
         self.y_velocity.has_hardware_interface = value
         self.yaw.has_hardware_interface = value
 
-    def copy_to_world(self, world: World):
+    def copy_for_world(self, world: World):
         (
             other_parent,
             other_child,

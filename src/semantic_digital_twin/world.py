@@ -13,9 +13,7 @@ import numpy as np
 import rustworkx as rx
 import rustworkx.visit
 import rustworkx.visualization
-from line_profiler import profile
 from lxml import etree
-from krrood.adapters.json_serializer import SubclassJSONSerializer
 from rustworkx import NoEdgeBetweenNodes
 from typing_extensions import (
     Dict,
@@ -1733,7 +1731,6 @@ class World:
             case _:
                 return target_frame_T_reference_frame @ spatial_object
 
-    @profile
     def __deepcopy__(self, memo):
         memo = {} if memo is None else memo
         me_id = id(self)
@@ -1743,7 +1740,6 @@ class World:
         new_world = World(name=self.name)
         memo[me_id] = new_world
 
-        tracker = KinematicStructureEntityKwargsTracker.from_world(new_world)
         with new_world.modify_world():
             for body in self.bodies:
                 new_body = Body(
@@ -1761,7 +1757,7 @@ class World:
                 new_world.add_degree_of_freedom(new_dof)
                 new_world.state[dof.name] = self.state[dof.name].data
             for connection in self.connections:
-                new_connection = connection.copy_to_world(new_world)
+                new_connection = connection.copy_for_world(new_world)
                 new_world.add_connection(new_connection)
         return new_world
 

@@ -685,6 +685,9 @@ def test_copy_connections(pr2_world):
     for connection in pr2_world.connections:
         pr2_copy_connection = pr2_copy.get_connection_by_name(connection.name)
         assert connection.name == pr2_copy_connection.name
+        np.testing.assert_array_almost_equal(
+            connection.origin.to_np(), pr2_copy_connection.origin.to_np()
+        )
 
 
 def test_copy_two_times(pr2_world):

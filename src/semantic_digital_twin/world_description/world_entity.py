@@ -912,7 +912,7 @@ class Connection(WorldEntity, SubclassJSONSerializer):
             connection_T_child_expression,
         )
 
-    def copy_to_world(self, world: World) -> Self:
+    def copy_for_world(self, world: World) -> Self:
         """
         Copies this connection to the given world the parent and child references are updated to the new world as well
         as the references from the expression.
