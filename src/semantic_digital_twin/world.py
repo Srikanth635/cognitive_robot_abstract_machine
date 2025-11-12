@@ -1277,6 +1277,15 @@ class World:
             new_root
         )
         root_connection = new_root.parent_connection
+
+        if not child_bodies:
+            with self.modify_world(), new_world.modify_world():
+                self.remove_connection(root_connection)
+                self.remove_kinematic_structure_entity(new_root)
+
+                new_world.add_kinematic_structure_entity(new_root)
+                return new_world
+
         child_body_parent_connections = [
             body.parent_connection for body in child_bodies
         ]

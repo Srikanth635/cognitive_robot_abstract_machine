@@ -22,6 +22,7 @@ import semantic_digital_twin.reasoning.predicates
 import semantic_digital_twin.robots.abstract_robot
 import semantic_digital_twin.semantic_annotations.semantic_annotations
 import semantic_digital_twin.world  # ensure the module attribute exists on the package
+import semantic_digital_twin.adapters.procthor.procthor_semantic_annotations
 import semantic_digital_twin.world_description.degree_of_freedom
 import semantic_digital_twin.world_description.geometry
 import semantic_digital_twin.world_description.shape_collection
@@ -67,6 +68,12 @@ all_classes |= set(classes_of_module(semantic_digital_twin.robots.abstract_robot
 # classes |= set(recursive_subclasses(ViewFactory))
 all_classes |= set([HasBody] + recursive_subclasses(HasBody))
 all_classes |= set(classes_of_module(semantic_digital_twin.reasoning.predicates))
+all_classes |= set(classes_of_module(semantic_digital_twin.semantic_annotations.mixins))
+all_classes |= set(
+    classes_of_module(
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations
+    )
+)
 
 
 # remove classes that should not be mapped
@@ -76,6 +83,7 @@ all_classes -= {
     HasUpdateState,
     ForwardKinematicsManager,
     WorldModelManager,
+    semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.ProcthorResolver,
 }
 # keep only dataclasses that are NOT AlternativeMapping subclasses
 all_classes = {

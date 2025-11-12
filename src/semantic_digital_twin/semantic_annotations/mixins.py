@@ -64,7 +64,7 @@ class HasRegion(SemanticAnnotation, ABC):
 
 
 @dataclass(eq=False)
-class HasDrawers:
+class HasDrawers(SemanticAnnotation):
     """
     A mixin class for semantic annotations that have drawers.
     """
@@ -73,16 +73,12 @@ class HasDrawers:
 
 
 @dataclass(eq=False)
-class HasDoors:
+class HasDoors(SemanticAnnotation):
     """
     A mixin class for semantic annotations that have doors.
     """
 
     doors: List[Door] = field(default_factory=list, hash=False, kw_only=True)
-
-
-@dataclass(eq=False)
-class Components(SemanticAnnotation): ...
 
 
 @dataclass(eq=False)

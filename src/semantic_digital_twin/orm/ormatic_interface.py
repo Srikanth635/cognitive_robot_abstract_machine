@@ -16,6 +16,7 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
 
 import builtins
 import krrood.ormatic.custom_types
+import semantic_digital_twin.adapters.procthor.procthor_semantic_annotations
 import semantic_digital_twin.datastructures.prefixed_name
 import semantic_digital_twin.orm.model
 import semantic_digital_twin.reasoning.predicates
@@ -41,38 +42,6 @@ class Base(DeclarativeBase):
         trimesh.base.Trimesh: semantic_digital_twin.orm.model.TrimeshType,
         typing.Type: krrood.ormatic.custom_types.TypeType,
     }
-
-
-class ApertureDAO(
-    Base,
-    DataAccessObject[
-        semantic_digital_twin.semantic_annotations.semantic_annotations.Aperture
-    ],
-):
-
-    __tablename__ = "ApertureDAO"
-
-    database_id: Mapped[builtins.int] = mapped_column(
-        Integer, primary_key=True, use_existing_column=True
-    )
-
-    name_id: Mapped[int] = mapped_column(
-        ForeignKey("PrefixedNameDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-    region_id: Mapped[int] = mapped_column(
-        ForeignKey("RegionDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-
-    name: Mapped[PrefixedNameDAO] = relationship(
-        "PrefixedNameDAO", uselist=False, foreign_keys=[name_id], post_update=True
-    )
-    region: Mapped[RegionDAO] = relationship(
-        "RegionDAO", uselist=False, foreign_keys=[region_id], post_update=True
-    )
 
 
 class BoundingBoxDAO(
@@ -103,44 +72,6 @@ class BoundingBoxDAO(
         uselist=False,
         foreign_keys=[origin_id],
         post_update=True,
-    )
-
-
-class CabinetDAO(
-    Base,
-    DataAccessObject[
-        semantic_digital_twin.semantic_annotations.semantic_annotations.Cabinet
-    ],
-):
-
-    __tablename__ = "CabinetDAO"
-
-    database_id: Mapped[builtins.int] = mapped_column(
-        Integer, primary_key=True, use_existing_column=True
-    )
-
-    name_id: Mapped[int] = mapped_column(
-        ForeignKey("PrefixedNameDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-    container_id: Mapped[int] = mapped_column(
-        ForeignKey("ContainerDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-
-    doors: Mapped[typing.List[DoorDAO]] = relationship(
-        "DoorDAO", foreign_keys="[DoorDAO.cabinetdao_doors_id]", post_update=True
-    )
-    drawers: Mapped[typing.List[DrawerDAO]] = relationship(
-        "DrawerDAO", foreign_keys="[DrawerDAO.cabinetdao_drawers_id]", post_update=True
-    )
-    name: Mapped[PrefixedNameDAO] = relationship(
-        "PrefixedNameDAO", uselist=False, foreign_keys=[name_id], post_update=True
-    )
-    container: Mapped[ContainerDAO] = relationship(
-        "ContainerDAO", uselist=False, foreign_keys=[container_id], post_update=True
     )
 
 
@@ -215,134 +146,6 @@ class ContainsTypeDAO(
     )
 
 
-class CupboardDAO(
-    Base,
-    DataAccessObject[
-        semantic_digital_twin.semantic_annotations.semantic_annotations.Cupboard
-    ],
-):
-
-    __tablename__ = "CupboardDAO"
-
-    database_id: Mapped[builtins.int] = mapped_column(
-        Integer, primary_key=True, use_existing_column=True
-    )
-
-    name_id: Mapped[int] = mapped_column(
-        ForeignKey("PrefixedNameDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-    container_id: Mapped[int] = mapped_column(
-        ForeignKey("ContainerDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-
-    doors: Mapped[typing.List[DoorDAO]] = relationship(
-        "DoorDAO", foreign_keys="[DoorDAO.cupboarddao_doors_id]", post_update=True
-    )
-    name: Mapped[PrefixedNameDAO] = relationship(
-        "PrefixedNameDAO", uselist=False, foreign_keys=[name_id], post_update=True
-    )
-    container: Mapped[ContainerDAO] = relationship(
-        "ContainerDAO", uselist=False, foreign_keys=[container_id], post_update=True
-    )
-
-
-class DrawerDAO(
-    Base,
-    DataAccessObject[
-        semantic_digital_twin.semantic_annotations.semantic_annotations.Drawer
-    ],
-):
-
-    __tablename__ = "DrawerDAO"
-
-    database_id: Mapped[builtins.int] = mapped_column(
-        Integer, primary_key=True, use_existing_column=True
-    )
-
-    cabinetdao_drawers_id: Mapped[typing.Optional[builtins.int]] = mapped_column(
-        ForeignKey("CabinetDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-    name_id: Mapped[int] = mapped_column(
-        ForeignKey("PrefixedNameDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-    container_id: Mapped[int] = mapped_column(
-        ForeignKey("ContainerDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-    handle_id: Mapped[int] = mapped_column(
-        ForeignKey("HandleDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-    dresserdao_drawers_id: Mapped[typing.Optional[builtins.int]] = mapped_column(
-        ForeignKey("DresserDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-    wardrobedao_drawers_id: Mapped[typing.Optional[builtins.int]] = mapped_column(
-        ForeignKey("WardrobeDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-
-    name: Mapped[PrefixedNameDAO] = relationship(
-        "PrefixedNameDAO", uselist=False, foreign_keys=[name_id], post_update=True
-    )
-    container: Mapped[ContainerDAO] = relationship(
-        "ContainerDAO", uselist=False, foreign_keys=[container_id], post_update=True
-    )
-    handle: Mapped[HandleDAO] = relationship(
-        "HandleDAO", uselist=False, foreign_keys=[handle_id], post_update=True
-    )
-
-
-class DresserDAO(
-    Base,
-    DataAccessObject[
-        semantic_digital_twin.semantic_annotations.semantic_annotations.Dresser
-    ],
-):
-
-    __tablename__ = "DresserDAO"
-
-    database_id: Mapped[builtins.int] = mapped_column(
-        Integer, primary_key=True, use_existing_column=True
-    )
-
-    name_id: Mapped[int] = mapped_column(
-        ForeignKey("PrefixedNameDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-    container_id: Mapped[int] = mapped_column(
-        ForeignKey("ContainerDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-
-    doors: Mapped[typing.List[DoorDAO]] = relationship(
-        "DoorDAO", foreign_keys="[DoorDAO.dresserdao_doors_id]", post_update=True
-    )
-    drawers: Mapped[typing.List[DrawerDAO]] = relationship(
-        "DrawerDAO", foreign_keys="[DrawerDAO.dresserdao_drawers_id]", post_update=True
-    )
-    name: Mapped[PrefixedNameDAO] = relationship(
-        "PrefixedNameDAO", uselist=False, foreign_keys=[name_id], post_update=True
-    )
-    container: Mapped[ContainerDAO] = relationship(
-        "ContainerDAO", uselist=False, foreign_keys=[container_id], post_update=True
-    )
-
-
 class FieldOfViewDAO(
     Base, DataAccessObject[semantic_digital_twin.robots.abstract_robot.FieldOfView]
 ):
@@ -355,41 +158,6 @@ class FieldOfViewDAO(
 
     vertical_angle: Mapped[builtins.float] = mapped_column(use_existing_column=True)
     horizontal_angle: Mapped[builtins.float] = mapped_column(use_existing_column=True)
-
-
-class FloorDAO(
-    Base,
-    DataAccessObject[
-        semantic_digital_twin.semantic_annotations.semantic_annotations.Floor
-    ],
-):
-
-    __tablename__ = "FloorDAO"
-
-    database_id: Mapped[builtins.int] = mapped_column(
-        Integer, primary_key=True, use_existing_column=True
-    )
-
-    name_id: Mapped[int] = mapped_column(
-        ForeignKey("PrefixedNameDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-    supporting_surface_id: Mapped[typing.Optional[builtins.int]] = mapped_column(
-        ForeignKey("RegionDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-
-    name: Mapped[PrefixedNameDAO] = relationship(
-        "PrefixedNameDAO", uselist=False, foreign_keys=[name_id], post_update=True
-    )
-    supporting_surface: Mapped[RegionDAO] = relationship(
-        "RegionDAO",
-        uselist=False,
-        foreign_keys=[supporting_surface_id],
-        post_update=True,
-    )
 
 
 class Point3MappingDAO(
@@ -1067,44 +835,6 @@ class RightOfDAO(
     }
 
 
-class WardrobeDAO(
-    Base,
-    DataAccessObject[
-        semantic_digital_twin.semantic_annotations.semantic_annotations.Wardrobe
-    ],
-):
-
-    __tablename__ = "WardrobeDAO"
-
-    database_id: Mapped[builtins.int] = mapped_column(
-        Integer, primary_key=True, use_existing_column=True
-    )
-
-    name_id: Mapped[int] = mapped_column(
-        ForeignKey("PrefixedNameDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-    container_id: Mapped[int] = mapped_column(
-        ForeignKey("ContainerDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-
-    doors: Mapped[typing.List[DoorDAO]] = relationship(
-        "DoorDAO", foreign_keys="[DoorDAO.wardrobedao_doors_id]", post_update=True
-    )
-    drawers: Mapped[typing.List[DrawerDAO]] = relationship(
-        "DrawerDAO", foreign_keys="[DrawerDAO.wardrobedao_drawers_id]", post_update=True
-    )
-    name: Mapped[PrefixedNameDAO] = relationship(
-        "PrefixedNameDAO", uselist=False, foreign_keys=[name_id], post_update=True
-    )
-    container: Mapped[ContainerDAO] = relationship(
-        "ContainerDAO", uselist=False, foreign_keys=[container_id], post_update=True
-    )
-
-
 class WorldMappingDAO(
     Base, DataAccessObject[semantic_digital_twin.orm.model.WorldMapping]
 ):
@@ -1778,6 +1508,65 @@ class DoubleDoorDAO(
     }
 
 
+class DrawerDAO(
+    SemanticAnnotationDAO,
+    DataAccessObject[
+        semantic_digital_twin.semantic_annotations.semantic_annotations.Drawer
+    ],
+):
+
+    __tablename__ = "DrawerDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(SemanticAnnotationDAO.database_id),
+        primary_key=True,
+        use_existing_column=True,
+    )
+
+    container_id: Mapped[int] = mapped_column(
+        ForeignKey("ContainerDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+    handle_id: Mapped[int] = mapped_column(
+        ForeignKey("HandleDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+    hasdrawersdao_drawers_id: Mapped[typing.Optional[builtins.int]] = mapped_column(
+        ForeignKey("HasDrawersDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+    cabinetdao_drawers_id: Mapped[typing.Optional[builtins.int]] = mapped_column(
+        ForeignKey("CabinetDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+    dresserdao_drawers_id: Mapped[typing.Optional[builtins.int]] = mapped_column(
+        ForeignKey("DresserDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+    wardrobedao_drawers_id: Mapped[typing.Optional[builtins.int]] = mapped_column(
+        ForeignKey("WardrobeDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+
+    container: Mapped[ContainerDAO] = relationship(
+        "ContainerDAO", uselist=False, foreign_keys=[container_id], post_update=True
+    )
+    handle: Mapped[HandleDAO] = relationship(
+        "HandleDAO", uselist=False, foreign_keys=[handle_id], post_update=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "DrawerDAO",
+        "inherit_condition": database_id == SemanticAnnotationDAO.database_id,
+    }
+
+
 class FridgeDAO(
     SemanticAnnotationDAO,
     DataAccessObject[
@@ -1817,6 +1606,139 @@ class FridgeDAO(
     }
 
 
+class FurnitureDAO(
+    SemanticAnnotationDAO,
+    DataAccessObject[semantic_digital_twin.semantic_annotations.mixins.Furniture],
+):
+
+    __tablename__ = "FurnitureDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(SemanticAnnotationDAO.database_id),
+        primary_key=True,
+        use_existing_column=True,
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "FurnitureDAO",
+        "inherit_condition": database_id == SemanticAnnotationDAO.database_id,
+    }
+
+
+class BedDAO(
+    FurnitureDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Bed
+    ],
+):
+
+    __tablename__ = "BedDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(FurnitureDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "BedDAO",
+        "inherit_condition": database_id == FurnitureDAO.database_id,
+    }
+
+
+class ChairDAO(
+    FurnitureDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Chair
+    ],
+):
+
+    __tablename__ = "ChairDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(FurnitureDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "ChairDAO",
+        "inherit_condition": database_id == FurnitureDAO.database_id,
+    }
+
+
+class ArmchairDAO(
+    ChairDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Armchair
+    ],
+):
+
+    __tablename__ = "ArmchairDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(ChairDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "ArmchairDAO",
+        "inherit_condition": database_id == ChairDAO.database_id,
+    }
+
+
+class OfficeChairDAO(
+    ChairDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.OfficeChair
+    ],
+):
+
+    __tablename__ = "OfficeChairDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(ChairDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "OfficeChairDAO",
+        "inherit_condition": database_id == ChairDAO.database_id,
+    }
+
+
+class ShelvingUnitDAO(
+    FurnitureDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.ShelvingUnit
+    ],
+):
+
+    __tablename__ = "ShelvingUnitDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(FurnitureDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "ShelvingUnitDAO",
+        "inherit_condition": database_id == FurnitureDAO.database_id,
+    }
+
+
+class SofaDAO(
+    FurnitureDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Sofa
+    ],
+):
+
+    __tablename__ = "SofaDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(FurnitureDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "SofaDAO",
+        "inherit_condition": database_id == FurnitureDAO.database_id,
+    }
+
+
 class HasBodyDAO(
     SemanticAnnotationDAO,
     DataAccessObject[semantic_digital_twin.semantic_annotations.mixins.HasBody],
@@ -1846,6 +1768,92 @@ class HasBodyDAO(
     }
 
 
+class BaseballDAO(
+    HasBodyDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Baseball
+    ],
+):
+
+    __tablename__ = "BaseballDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "BaseballDAO",
+        "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
+class BookDAO(
+    HasBodyDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Book
+    ],
+):
+
+    __tablename__ = "BookDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    book_front_id: Mapped[typing.Optional[builtins.int]] = mapped_column(
+        ForeignKey("BookFrontDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+
+    book_front: Mapped[BookFrontDAO] = relationship(
+        "BookFrontDAO", uselist=False, foreign_keys=[book_front_id], post_update=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "BookDAO",
+        "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
+class BookFrontDAO(
+    HasBodyDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.BookFront
+    ],
+):
+
+    __tablename__ = "BookFrontDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "BookFrontDAO",
+        "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
+class ClothDAO(
+    HasBodyDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Cloth
+    ],
+):
+
+    __tablename__ = "ClothDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "ClothDAO",
+        "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
 class ContainerDAO(
     HasBodyDAO,
     DataAccessObject[
@@ -1865,6 +1873,335 @@ class ContainerDAO(
     }
 
 
+class BottleDAO(
+    ContainerDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Bottle
+    ],
+):
+
+    __tablename__ = "BottleDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(ContainerDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "BottleDAO",
+        "inherit_condition": database_id == ContainerDAO.database_id,
+    }
+
+
+class MustardBottleDAO(
+    BottleDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.MustardBottle
+    ],
+):
+
+    __tablename__ = "MustardBottleDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(BottleDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "MustardBottleDAO",
+        "inherit_condition": database_id == BottleDAO.database_id,
+    }
+
+
+class SoapBottleDAO(
+    BottleDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.SoapBottle
+    ],
+):
+
+    __tablename__ = "SoapBottleDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(BottleDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "SoapBottleDAO",
+        "inherit_condition": database_id == BottleDAO.database_id,
+    }
+
+
+class WineBottleDAO(
+    BottleDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.WineBottle
+    ],
+):
+
+    __tablename__ = "WineBottleDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(BottleDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "WineBottleDAO",
+        "inherit_condition": database_id == BottleDAO.database_id,
+    }
+
+
+class GarbageBinDAO(
+    ContainerDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.GarbageBin
+    ],
+):
+
+    __tablename__ = "GarbageBinDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(ContainerDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "GarbageBinDAO",
+        "inherit_condition": database_id == ContainerDAO.database_id,
+    }
+
+
+class ProcthorBoxDAO(
+    ContainerDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.ProcthorBox
+    ],
+):
+
+    __tablename__ = "ProcthorBoxDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(ContainerDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "ProcthorBoxDAO",
+        "inherit_condition": database_id == ContainerDAO.database_id,
+    }
+
+
+class CookingContainerDAO(
+    HasBodyDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.CookingContainer
+    ],
+):
+
+    __tablename__ = "CookingContainerDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "CookingContainerDAO",
+        "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
+class KettleDAO(
+    CookingContainerDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Kettle
+    ],
+):
+
+    __tablename__ = "KettleDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(CookingContainerDAO.database_id),
+        primary_key=True,
+        use_existing_column=True,
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "KettleDAO",
+        "inherit_condition": database_id == CookingContainerDAO.database_id,
+    }
+
+
+class PanDAO(
+    CookingContainerDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Pan
+    ],
+):
+
+    __tablename__ = "PanDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(CookingContainerDAO.database_id),
+        primary_key=True,
+        use_existing_column=True,
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "PanDAO",
+        "inherit_condition": database_id == CookingContainerDAO.database_id,
+    }
+
+
+class PotDAO(
+    CookingContainerDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Pot
+    ],
+):
+
+    __tablename__ = "PotDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(CookingContainerDAO.database_id),
+        primary_key=True,
+        use_existing_column=True,
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "PotDAO",
+        "inherit_condition": database_id == CookingContainerDAO.database_id,
+    }
+
+
+class CuttleryDAO(
+    HasBodyDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Cuttlery
+    ],
+):
+
+    __tablename__ = "CuttleryDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "CuttleryDAO",
+        "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
+class ForkDAO(
+    CuttleryDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Fork
+    ],
+):
+
+    __tablename__ = "ForkDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(CuttleryDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "ForkDAO",
+        "inherit_condition": database_id == CuttleryDAO.database_id,
+    }
+
+
+class KnifeDAO(
+    CuttleryDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Knife
+    ],
+):
+
+    __tablename__ = "KnifeDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(CuttleryDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "KnifeDAO",
+        "inherit_condition": database_id == CuttleryDAO.database_id,
+    }
+
+
+class SpoonDAO(
+    CuttleryDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Spoon
+    ],
+):
+
+    __tablename__ = "SpoonDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(CuttleryDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "SpoonDAO",
+        "inherit_condition": database_id == CuttleryDAO.database_id,
+    }
+
+
+class DecorDAO(
+    HasBodyDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Decor
+    ],
+):
+
+    __tablename__ = "DecorDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "DecorDAO",
+        "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
+class WallDecorDAO(
+    DecorDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.WallDecor
+    ],
+):
+
+    __tablename__ = "WallDecorDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(DecorDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "WallDecorDAO",
+        "inherit_condition": database_id == DecorDAO.database_id,
+    }
+
+
+class PosterDAO(
+    WallDecorDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Poster
+    ],
+):
+
+    __tablename__ = "PosterDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(WallDecorDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "PosterDAO",
+        "inherit_condition": database_id == WallDecorDAO.database_id,
+    }
+
+
 class DoorDAO(
     HasBodyDAO,
     DataAccessObject[
@@ -1878,28 +2215,13 @@ class DoorDAO(
         ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
     )
 
-    cabinetdao_doors_id: Mapped[typing.Optional[builtins.int]] = mapped_column(
-        ForeignKey("CabinetDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-    cupboarddao_doors_id: Mapped[typing.Optional[builtins.int]] = mapped_column(
-        ForeignKey("CupboardDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-    dresserdao_doors_id: Mapped[typing.Optional[builtins.int]] = mapped_column(
-        ForeignKey("DresserDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
-    wardrobedao_doors_id: Mapped[typing.Optional[builtins.int]] = mapped_column(
-        ForeignKey("WardrobeDAO.database_id", use_alter=True),
-        nullable=True,
-        use_existing_column=True,
-    )
     handle_id: Mapped[int] = mapped_column(
         ForeignKey("HandleDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+    hasdoorsdao_doors_id: Mapped[typing.Optional[builtins.int]] = mapped_column(
+        ForeignKey("HasDoorsDAO.database_id", use_alter=True),
         nullable=True,
         use_existing_column=True,
     )
@@ -1911,6 +2233,352 @@ class DoorDAO(
     __mapper_args__ = {
         "polymorphic_identity": "DoorDAO",
         "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
+class DrinkingContainerDAO(
+    HasBodyDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.DrinkingContainer
+    ],
+):
+
+    __tablename__ = "DrinkingContainerDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "DrinkingContainerDAO",
+        "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
+class CupDAO(
+    DrinkingContainerDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Cup
+    ],
+):
+
+    __tablename__ = "CupDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(DrinkingContainerDAO.database_id),
+        primary_key=True,
+        use_existing_column=True,
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "CupDAO",
+        "inherit_condition": database_id == DrinkingContainerDAO.database_id,
+    }
+
+
+class MugDAO(
+    DrinkingContainerDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Mug
+    ],
+):
+
+    __tablename__ = "MugDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(DrinkingContainerDAO.database_id),
+        primary_key=True,
+        use_existing_column=True,
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "MugDAO",
+        "inherit_condition": database_id == DrinkingContainerDAO.database_id,
+    }
+
+
+class DroneDAO(
+    HasBodyDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Drone
+    ],
+):
+
+    __tablename__ = "DroneDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "DroneDAO",
+        "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
+class FoodDAO(
+    HasBodyDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Food
+    ],
+):
+
+    __tablename__ = "FoodDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "FoodDAO",
+        "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
+class BreadDAO(
+    FoodDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Bread
+    ],
+):
+
+    __tablename__ = "BreadDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(FoodDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "BreadDAO",
+        "inherit_condition": database_id == FoodDAO.database_id,
+    }
+
+
+class CheezeItDAO(
+    FoodDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.CheezeIt
+    ],
+):
+
+    __tablename__ = "CheezeItDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(FoodDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "CheezeItDAO",
+        "inherit_condition": database_id == FoodDAO.database_id,
+    }
+
+
+class GelatinBoxDAO(
+    FoodDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.GelatinBox
+    ],
+):
+
+    __tablename__ = "GelatinBoxDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(FoodDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "GelatinBoxDAO",
+        "inherit_condition": database_id == FoodDAO.database_id,
+    }
+
+
+class PringlesDAO(
+    FoodDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Pringles
+    ],
+):
+
+    __tablename__ = "PringlesDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(FoodDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "PringlesDAO",
+        "inherit_condition": database_id == FoodDAO.database_id,
+    }
+
+
+class ProduceDAO(
+    FoodDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Produce
+    ],
+):
+
+    __tablename__ = "ProduceDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(FoodDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "ProduceDAO",
+        "inherit_condition": database_id == FoodDAO.database_id,
+    }
+
+
+class AppleDAO(
+    ProduceDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Apple
+    ],
+):
+
+    __tablename__ = "AppleDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(ProduceDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "AppleDAO",
+        "inherit_condition": database_id == ProduceDAO.database_id,
+    }
+
+
+class BananaDAO(
+    ProduceDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Banana
+    ],
+):
+
+    __tablename__ = "BananaDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(ProduceDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "BananaDAO",
+        "inherit_condition": database_id == ProduceDAO.database_id,
+    }
+
+
+class LettuceDAO(
+    ProduceDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Lettuce
+    ],
+):
+
+    __tablename__ = "LettuceDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(ProduceDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "LettuceDAO",
+        "inherit_condition": database_id == ProduceDAO.database_id,
+    }
+
+
+class OrangeDAO(
+    ProduceDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Orange
+    ],
+):
+
+    __tablename__ = "OrangeDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(ProduceDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "OrangeDAO",
+        "inherit_condition": database_id == ProduceDAO.database_id,
+    }
+
+
+class PotatoDAO(
+    ProduceDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Potato
+    ],
+):
+
+    __tablename__ = "PotatoDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(ProduceDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "PotatoDAO",
+        "inherit_condition": database_id == ProduceDAO.database_id,
+    }
+
+
+class TomatoDAO(
+    ProduceDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Tomato
+    ],
+):
+
+    __tablename__ = "TomatoDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(ProduceDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "TomatoDAO",
+        "inherit_condition": database_id == ProduceDAO.database_id,
+    }
+
+
+class TomatoSoupDAO(
+    FoodDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.TomatoSoup
+    ],
+):
+
+    __tablename__ = "TomatoSoupDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(FoodDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "TomatoSoupDAO",
+        "inherit_condition": database_id == FoodDAO.database_id,
+    }
+
+
+class TunaCanDAO(
+    FoodDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.TunaCan
+    ],
+):
+
+    __tablename__ = "TunaCanDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(FoodDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "TunaCanDAO",
+        "inherit_condition": database_id == FoodDAO.database_id,
     }
 
 
@@ -1933,6 +2601,215 @@ class HandleDAO(
     }
 
 
+class HouseplantDAO(
+    HasBodyDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Houseplant
+    ],
+):
+
+    __tablename__ = "HouseplantDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "HouseplantDAO",
+        "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
+class LidDAO(
+    HasBodyDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Lid
+    ],
+):
+
+    __tablename__ = "LidDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "LidDAO",
+        "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
+class PanLidDAO(
+    LidDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.PanLid
+    ],
+):
+
+    __tablename__ = "PanLidDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(LidDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "PanLidDAO",
+        "inherit_condition": database_id == LidDAO.database_id,
+    }
+
+
+class PotLidDAO(
+    LidDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.PotLid
+    ],
+):
+
+    __tablename__ = "PotLidDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(LidDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "PotLidDAO",
+        "inherit_condition": database_id == LidDAO.database_id,
+    }
+
+
+class LiquidCapDAO(
+    HasBodyDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.LiquidCap
+    ],
+):
+
+    __tablename__ = "LiquidCapDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "LiquidCapDAO",
+        "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
+class PenDAO(
+    HasBodyDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Pen
+    ],
+):
+
+    __tablename__ = "PenDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "PenDAO",
+        "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
+class PencilDAO(
+    HasBodyDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Pencil
+    ],
+):
+
+    __tablename__ = "PencilDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "PencilDAO",
+        "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
+class SaltPepperShakerDAO(
+    HasBodyDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.SaltPepperShaker
+    ],
+):
+
+    __tablename__ = "SaltPepperShakerDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "SaltPepperShakerDAO",
+        "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
+class SinkDAO(
+    HasBodyDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Sink
+    ],
+):
+
+    __tablename__ = "SinkDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "SinkDAO",
+        "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
+class SprayBottleDAO(
+    HasBodyDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.SprayBottle
+    ],
+):
+
+    __tablename__ = "SprayBottleDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "SprayBottleDAO",
+        "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
+class StatueDAO(
+    HasBodyDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Statue
+    ],
+):
+
+    __tablename__ = "StatueDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "StatueDAO",
+        "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
 class TableDAO(
     HasBodyDAO,
     DataAccessObject[
@@ -1949,6 +2826,458 @@ class TableDAO(
     __mapper_args__ = {
         "polymorphic_identity": "TableDAO",
         "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
+class CoffeeTableDAO(
+    TableDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.CoffeeTable
+    ],
+):
+
+    __tablename__ = "CoffeeTableDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(TableDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "CoffeeTableDAO",
+        "inherit_condition": database_id == TableDAO.database_id,
+    }
+
+
+class DeskDAO(
+    TableDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Desk
+    ],
+):
+
+    __tablename__ = "DeskDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(TableDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "DeskDAO",
+        "inherit_condition": database_id == TableDAO.database_id,
+    }
+
+
+class DiningTableDAO(
+    TableDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.DiningTable
+    ],
+):
+
+    __tablename__ = "DiningTableDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(TableDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "DiningTableDAO",
+        "inherit_condition": database_id == TableDAO.database_id,
+    }
+
+
+class SideTableDAO(
+    TableDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.SideTable
+    ],
+):
+
+    __tablename__ = "SideTableDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(TableDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "SideTableDAO",
+        "inherit_condition": database_id == TableDAO.database_id,
+    }
+
+
+class VaseDAO(
+    HasBodyDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Vase
+    ],
+):
+
+    __tablename__ = "VaseDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "VaseDAO",
+        "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
+class WallPanelDAO(
+    HasBodyDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.WallPanel
+    ],
+):
+
+    __tablename__ = "WallPanelDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasBodyDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "WallPanelDAO",
+        "inherit_condition": database_id == HasBodyDAO.database_id,
+    }
+
+
+class HasDoorsDAO(
+    SemanticAnnotationDAO,
+    DataAccessObject[semantic_digital_twin.semantic_annotations.mixins.HasDoors],
+):
+
+    __tablename__ = "HasDoorsDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(SemanticAnnotationDAO.database_id),
+        primary_key=True,
+        use_existing_column=True,
+    )
+
+    doors: Mapped[typing.List[DoorDAO]] = relationship(
+        "DoorDAO", foreign_keys="[DoorDAO.hasdoorsdao_doors_id]", post_update=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "HasDoorsDAO",
+        "inherit_condition": database_id == SemanticAnnotationDAO.database_id,
+    }
+
+
+class CupboardDAO(
+    HasDoorsDAO,
+    DataAccessObject[
+        semantic_digital_twin.semantic_annotations.semantic_annotations.Cupboard
+    ],
+):
+
+    __tablename__ = "CupboardDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasDoorsDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    container_id: Mapped[int] = mapped_column(
+        ForeignKey("ContainerDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+
+    container: Mapped[ContainerDAO] = relationship(
+        "ContainerDAO", uselist=False, foreign_keys=[container_id], post_update=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "CupboardDAO",
+        "inherit_condition": database_id == HasDoorsDAO.database_id,
+    }
+
+
+class HasDrawersDAO(
+    SemanticAnnotationDAO,
+    DataAccessObject[semantic_digital_twin.semantic_annotations.mixins.HasDrawers],
+):
+
+    __tablename__ = "HasDrawersDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(SemanticAnnotationDAO.database_id),
+        primary_key=True,
+        use_existing_column=True,
+    )
+
+    drawers: Mapped[typing.List[DrawerDAO]] = relationship(
+        "DrawerDAO",
+        foreign_keys="[DrawerDAO.hasdrawersdao_drawers_id]",
+        post_update=True,
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "HasDrawersDAO",
+        "inherit_condition": database_id == SemanticAnnotationDAO.database_id,
+    }
+
+
+class CabinetDAO(
+    HasDoorsDAO,
+    DataAccessObject[
+        semantic_digital_twin.semantic_annotations.semantic_annotations.Cabinet
+    ],
+):
+
+    __tablename__ = "CabinetDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasDoorsDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    container_id: Mapped[int] = mapped_column(
+        ForeignKey("ContainerDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+
+    drawers: Mapped[typing.List[DrawerDAO]] = relationship(
+        "DrawerDAO", foreign_keys="[DrawerDAO.cabinetdao_drawers_id]", post_update=True
+    )
+    container: Mapped[ContainerDAO] = relationship(
+        "ContainerDAO", uselist=False, foreign_keys=[container_id], post_update=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "CabinetDAO",
+        "inherit_condition": database_id == HasDoorsDAO.database_id,
+    }
+
+
+class DresserDAO(
+    HasDoorsDAO,
+    DataAccessObject[
+        semantic_digital_twin.semantic_annotations.semantic_annotations.Dresser
+    ],
+):
+
+    __tablename__ = "DresserDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasDoorsDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    container_id: Mapped[int] = mapped_column(
+        ForeignKey("ContainerDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+
+    drawers: Mapped[typing.List[DrawerDAO]] = relationship(
+        "DrawerDAO", foreign_keys="[DrawerDAO.dresserdao_drawers_id]", post_update=True
+    )
+    container: Mapped[ContainerDAO] = relationship(
+        "ContainerDAO", uselist=False, foreign_keys=[container_id], post_update=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "DresserDAO",
+        "inherit_condition": database_id == HasDoorsDAO.database_id,
+    }
+
+
+class WardrobeDAO(
+    HasDoorsDAO,
+    DataAccessObject[
+        semantic_digital_twin.semantic_annotations.semantic_annotations.Wardrobe
+    ],
+):
+
+    __tablename__ = "WardrobeDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasDoorsDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    container_id: Mapped[int] = mapped_column(
+        ForeignKey("ContainerDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+
+    drawers: Mapped[typing.List[DrawerDAO]] = relationship(
+        "DrawerDAO", foreign_keys="[DrawerDAO.wardrobedao_drawers_id]", post_update=True
+    )
+    container: Mapped[ContainerDAO] = relationship(
+        "ContainerDAO", uselist=False, foreign_keys=[container_id], post_update=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "WardrobeDAO",
+        "inherit_condition": database_id == HasDoorsDAO.database_id,
+    }
+
+
+class HasRegionDAO(
+    SemanticAnnotationDAO,
+    DataAccessObject[semantic_digital_twin.semantic_annotations.mixins.HasRegion],
+):
+
+    __tablename__ = "HasRegionDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(SemanticAnnotationDAO.database_id),
+        primary_key=True,
+        use_existing_column=True,
+    )
+
+    region_id: Mapped[int] = mapped_column(
+        ForeignKey("RegionDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+
+    region: Mapped[RegionDAO] = relationship(
+        "RegionDAO", uselist=False, foreign_keys=[region_id], post_update=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "HasRegionDAO",
+        "inherit_condition": database_id == SemanticAnnotationDAO.database_id,
+    }
+
+
+class ApertureDAO(
+    HasRegionDAO,
+    DataAccessObject[
+        semantic_digital_twin.semantic_annotations.semantic_annotations.Aperture
+    ],
+):
+
+    __tablename__ = "ApertureDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasRegionDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "ApertureDAO",
+        "inherit_condition": database_id == HasRegionDAO.database_id,
+    }
+
+
+class HasSupportingSurfaceDAO(
+    SemanticAnnotationDAO,
+    DataAccessObject[
+        semantic_digital_twin.semantic_annotations.mixins.HasSupportingSurface
+    ],
+):
+
+    __tablename__ = "HasSupportingSurfaceDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(SemanticAnnotationDAO.database_id),
+        primary_key=True,
+        use_existing_column=True,
+    )
+
+    supporting_surface_id: Mapped[typing.Optional[builtins.int]] = mapped_column(
+        ForeignKey("RegionDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+
+    supporting_surface: Mapped[RegionDAO] = relationship(
+        "RegionDAO",
+        uselist=False,
+        foreign_keys=[supporting_surface_id],
+        post_update=True,
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "HasSupportingSurfaceDAO",
+        "inherit_condition": database_id == SemanticAnnotationDAO.database_id,
+    }
+
+
+class BowlDAO(
+    HasSupportingSurfaceDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Bowl
+    ],
+):
+
+    __tablename__ = "BowlDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasSupportingSurfaceDAO.database_id),
+        primary_key=True,
+        use_existing_column=True,
+    )
+
+    body_id: Mapped[int] = mapped_column(
+        ForeignKey("BodyDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+
+    body: Mapped[BodyDAO] = relationship(
+        "BodyDAO", uselist=False, foreign_keys=[body_id], post_update=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "BowlDAO",
+        "inherit_condition": database_id == HasSupportingSurfaceDAO.database_id,
+    }
+
+
+class FloorDAO(
+    HasSupportingSurfaceDAO,
+    DataAccessObject[
+        semantic_digital_twin.semantic_annotations.semantic_annotations.Floor
+    ],
+):
+
+    __tablename__ = "FloorDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasSupportingSurfaceDAO.database_id),
+        primary_key=True,
+        use_existing_column=True,
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "FloorDAO",
+        "inherit_condition": database_id == HasSupportingSurfaceDAO.database_id,
+    }
+
+
+class PlateDAO(
+    HasSupportingSurfaceDAO,
+    DataAccessObject[
+        semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.Plate
+    ],
+):
+
+    __tablename__ = "PlateDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasSupportingSurfaceDAO.database_id),
+        primary_key=True,
+        use_existing_column=True,
+    )
+
+    body_id: Mapped[int] = mapped_column(
+        ForeignKey("BodyDAO.database_id", use_alter=True),
+        nullable=True,
+        use_existing_column=True,
+    )
+
+    body: Mapped[BodyDAO] = relationship(
+        "BodyDAO", uselist=False, foreign_keys=[body_id], post_update=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "PlateDAO",
+        "inherit_condition": database_id == HasSupportingSurfaceDAO.database_id,
     }
 
 

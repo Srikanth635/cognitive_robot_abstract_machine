@@ -6,12 +6,19 @@ import time
 from typing import List
 
 import tqdm
+from krrood.entity_query_language.symbol_graph import SymbolGraph
 from krrood.ormatic.dao import to_dao
 from krrood.ormatic.utils import drop_database
 from krrood.utils import recursive_subclasses
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from typing_extensions import TYPE_CHECKING
+
+
+from semantic_digital_twin.world import World
+
+sg = SymbolGraph()
+
 
 from semantic_digital_twin.adapters.fbx import FBXParser
 from semantic_digital_twin.adapters.procthor.procthor_pipelines import (
@@ -28,9 +35,6 @@ from semantic_digital_twin.pipeline.pipeline import (
     BodyFactoryReplace,
     CenterLocalGeometryAndPreserveWorldPose,
 )
-
-if TYPE_CHECKING:
-    from semantic_digital_twin.world import World
 
 
 def remove_root_and_move_children_into_new_worlds(world: World) -> List[World]:
@@ -55,6 +59,8 @@ def remove_root_and_move_children_into_new_worlds(world: World) -> List[World]:
 
         worlds = [world.move_branch_to_new_world(child) for child in root_children]
         for world in worlds:
+            if world.root is None:
+                ...
             world.name = world.root.name.name
 
     return worlds

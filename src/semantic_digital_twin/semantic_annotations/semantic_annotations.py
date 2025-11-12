@@ -10,7 +10,6 @@ from typing_extensions import List
 
 from .mixins import (
     HasBody,
-    Components,
     HasSupportingSurface,
     Furniture,
     HasRegion,
@@ -84,7 +83,6 @@ class Door(HasBody):
     A door is a physical entity that has covers an opening, has a movable body and a handle.
     """
 
-
     handle: Handle
     """
     The handle of the door.
@@ -98,7 +96,7 @@ class DoubleDoor(SemanticAnnotation):
 
 
 @dataclass(eq=False)
-class Drawer(Components):
+class Drawer(SemanticAnnotation):
     container: Container
     handle: Handle
 
