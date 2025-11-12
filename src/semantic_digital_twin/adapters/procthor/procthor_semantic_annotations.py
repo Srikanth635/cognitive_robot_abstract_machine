@@ -16,6 +16,7 @@ from semantic_digital_twin.semantic_annotations.mixins import (
     HasSupportingSurface,
     Furniture,
 )
+from ...world_description.world_entity import SemanticAnnotation
 
 
 class AmbiguousNameError(ValueError):
@@ -32,7 +33,17 @@ class ProcthorResolver:
 
     classes: List[Type[HasBody]] = field(default_factory=list)
 
-    def resolve(self, name: str) -> Optional[Type[HasBody]]:
+    def resolve(self, name: str) -> Optional[Type[SemanticAnnotation]]:
+        """
+        Resolve a given name to a class based on the number of matching tokens
+        with the class name tokens or synonyms. The method preprocesses the
+        name by removing numbers and splitting it into tokens, and then compares
+        these tokens with the corresponding data in the available classes to
+        find the best match.
+
+        :param name: The name to resolve, represented as a string.
+        :return: The class with the best match to the given name, or None if no matches are found.
+        """
         # remove all numbers from the name
         name_tokens = set(n.lower() for n in re.sub(r"\d+", "", name).split("_"))
         possible_results = []
@@ -284,7 +295,7 @@ class Desk(Table):
 
 
 @dataclass(eq=False)
-class Chair(Furniture):
+class Chair(HasBody, Furniture):
     """
     Abstract class for chairs.
     """
@@ -305,21 +316,21 @@ class Armchair(Chair):
 
 
 @dataclass(eq=False)
-class ShelvingUnit(Furniture):
+class ShelvingUnit(HasBody, Furniture):
     """
     A shelving unit.
     """
 
 
 @dataclass(eq=False)
-class Bed(Furniture):
+class Bed(HasBody, Furniture):
     """
     A bed.
     """
 
 
 @dataclass(eq=False)
-class Sofa(Furniture):
+class Sofa(HasBody, Furniture):
     """
     A sofa.
     """

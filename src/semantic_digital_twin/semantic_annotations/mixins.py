@@ -37,19 +37,6 @@ class HasBody(SemanticAnnotation, ABC):
 
     body: Body = field(kw_only=True)
 
-    _synonyms: ClassVar[Set[str]] = set()
-    """
-    Additional names that can be used to match this object.
-    """
-
-    @classmethod
-    @lru_cache(maxsize=None)
-    def class_name_tokens(cls) -> Set[str]:
-        """
-        :return: Set of tokens from the class name.
-        """
-        return set(n.lower() for n in camel_case_split(cls.__name__))
-
 
 @dataclass(eq=False)
 class HasRegion(SemanticAnnotation, ABC):

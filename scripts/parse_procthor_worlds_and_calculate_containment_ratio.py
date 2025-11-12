@@ -6,10 +6,12 @@ import prior
 import tqdm
 from krrood.entity_query_language.symbol_graph import SymbolGraph
 from krrood.ormatic.dao import to_dao, ToDAOState
+from krrood.ormatic.utils import classes_of_module, drop_database
 from krrood.utils import recursive_subclasses
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
+import semantic_digital_twin.adapters.procthor.procthor_semantic_annotations
 from semantic_digital_twin.adapters.procthor.procthor_parser import ProcTHORParser
 from semantic_digital_twin.adapters.procthor.procthor_semantic_annotations import (
     ProcthorResolver,
@@ -17,6 +19,7 @@ from semantic_digital_twin.adapters.procthor.procthor_semantic_annotations impor
 from semantic_digital_twin.semantic_annotations.mixins import HasBody
 from semantic_digital_twin.reasoning.predicates import InsideOf
 from semantic_digital_twin.orm.ormatic_interface import *
+from semantic_digital_twin.world_description.world_entity import SemanticAnnotation
 
 
 def parse_procthor_worlds_and_calculate_containment_ratio():
@@ -49,7 +52,15 @@ def parse_procthor_worlds_and_calculate_containment_ratio():
             logging.error(f"Error parsing house {index}: {e}")
             continue
         # resolve views
-        resolver = ProcthorResolver(*[recursive_subclasses(HasBody)])
+        resolver = ProcthorResolver(
+            [
+                cls
+                for cls in classes_of_module(
+                    semantic_digital_twin.adapters.procthor.procthor_semantic_annotations
+                )
+                if issubclass(cls, SemanticAnnotation)
+            ]
+        )
         for body in world.bodies:
             resolved = resolver.resolve(body.name.name)
             if resolved:

@@ -1,6 +1,6 @@
--- setup_db.sql (PostgreSQL, idempotent, psql-compatible)
+-- create_postgres_database_and_user_if_not_exists.sql (PostgreSQL, idempotent, psql-compatible)
 -- Usage (as postgres superuser):
---   sudo -u postgres psql -f setup_db.sql \
+--   sudo -u postgres psql -f create_postgres_database_and_user_if_not_exists.sql \
 --        -v db_name="semantic_digital_twin" \
 --        -v user_name="semantic_digital_twin" \
 --        -v user_password="a_strong_password_here"

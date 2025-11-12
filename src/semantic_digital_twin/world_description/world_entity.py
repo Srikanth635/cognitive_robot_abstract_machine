@@ -8,6 +8,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from dataclasses import fields
 from functools import lru_cache
+from typing import ClassVar
 
 import numpy as np
 import trimesh
@@ -39,7 +40,7 @@ from ..datastructures.prefixed_name import PrefixedName
 from ..exceptions import ReferenceFrameMismatchError
 from ..spatial_types import spatial_types as cas
 from ..spatial_types.spatial_types import TransformationMatrix, Expression, Point3
-from ..utils import IDGenerator, type_string_to_type
+from ..utils import IDGenerator, type_string_to_type, camel_case_split
 
 if TYPE_CHECKING:
     from ..world_description.degree_of_freedom import DegreeOfFreedom
@@ -544,6 +545,19 @@ class SemanticAnnotation(WorldEntity, SubclassJSONSerializer):
         new memory pointers always. The same holds for the equality operator.
         If you do not want to change the behavior, make sure to use @dataclass(eq=False) to decorate your class.
     """
+
+    _synonyms: ClassVar[Set[str]] = set()
+    """
+    Additional names that can be used to match this object.
+    """
+
+    @classmethod
+    @lru_cache(maxsize=None)
+    def class_name_tokens(cls) -> Set[str]:
+        """
+        :return: Set of tokens from the class name.
+        """
+        return set(n.lower() for n in camel_case_split(cls.__name__))
 
     def __post_init__(self):
         if self.name is None:
