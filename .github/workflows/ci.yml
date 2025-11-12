@@ -40,8 +40,8 @@ jobs:
         git submodule update
         pip install -U pip && pip install -r requirements.txt && pip install -e . && pip install pytest
         pip install -e ./src/ripple_down_rules_meta
-        PACKAGE_URL="https://nc.uni-bremen.de/public.php/dav/files/7woXWwYzijLptSm/?accept=zip"
-        PACKAGE_HASH="c06e808348268eabffedadd5c7ba294b17fa27f359270c69d7f4fbcad89b3b13"
+        PACKAGE_URL="https://nc.uni-bremen.de/public.php/dav/files/5eWxp8NXt9C7BLB/?accept=zip"
+        PACKAGE_HASH="ae5f3948ed33cab4d511893194fc93cbad7095f72c7e1775e14ce67c31626121"
         TMP_PKG="/tmp/multiverse_parser-0.0.3.tar.gz"
         curl -fsSL "$PACKAGE_URL" -o "$TMP_PKG"
         echo "$PACKAGE_HASH  $TMP_PKG" | sha256sum -c -
