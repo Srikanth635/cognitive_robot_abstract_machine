@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import importlib
 import inspect
-from copy import copy
+from copy import copy, deepcopy
 
 import itertools
 from abc import ABC
@@ -788,8 +788,7 @@ class Connection(WorldEntity, SubclassJSONSerializer):
 
         if (
             self.parent_T_connection_expression.reference_frame is not None
-            and self.parent_T_connection_expression.reference_frame.name
-            != self.parent.name
+            and self.parent_T_connection_expression.reference_frame != self.parent
         ):
             raise ReferenceFrameMismatchError(
                 self.parent, self.parent_T_connection_expression.reference_frame
@@ -869,13 +868,55 @@ class Connection(WorldEntity, SubclassJSONSerializer):
             "ConnectionWithDofs.create_with_dofs is not implemented."
         )
 
-    def __copy__(self):
+    def _find_references_in_world(self, world: World):
+        """
+        Finds the reference frames to this connection in the given world and returns them as usable objects.
+        :param world: Reference to the world where the reference frames are searched.
+        :return: The other parent and child and new connection expressions with correct reference frames.
+        """
+        other_parent = world.get_kinematic_structure_entity_by_name(self.parent.name)
+        other_child = world.get_kinematic_structure_entity_by_name(self.child.name)
+
+        parent_T_connection_expression = deepcopy(self.parent_T_connection_expression)
+        parent_T_connection_expression.reference_frame = (
+            world.get_kinematic_structure_entity_by_name(
+                parent_T_connection_expression.reference_frame.name
+            )
+        )
+
+        connection_T_child_expression = deepcopy(self.connection_T_child_expression)
+        connection_T_child_expression.child_frame = (
+            world.get_kinematic_structure_entity_by_name(
+                connection_T_child_expression.child_frame.name
+            )
+        )
+        return (
+            other_parent,
+            other_child,
+            parent_T_connection_expression,
+            connection_T_child_expression,
+        )
+
+    def copy_to_world(self, world: World) -> Self:
+        """
+        Copies this connection to the given world the parent and child references are updated to the new world as well
+        as the references from the expression.
+        :param world: World in which the connection should be copied.
+        :return: The copied connection.
+        """
+        (
+            other_parent,
+            other_child,
+            parent_T_connection_expression,
+            connection_T_child_expression,
+        ) = self._find_references_in_world(world)
+
         return self.__class__(
-            self.parent,
-            self.child,
-            self.parent_T_connection_expression,
-            self.connection_T_child_expression,
-            name=copy(self.name),
+            other_parent,
+            other_child,
+            parent_T_connection_expression,
+            connection_T_child_expression,
+            name=PrefixedName(self.name.name, prefix=self.name.prefix),
         )
 
 

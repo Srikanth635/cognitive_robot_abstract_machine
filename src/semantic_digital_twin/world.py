@@ -13,6 +13,7 @@ import numpy as np
 import rustworkx as rx
 import rustworkx.visit
 import rustworkx.visualization
+from line_profiler import profile
 from lxml import etree
 from rustworkx import NoEdgeBetweenNodes
 from typing_extensions import (
@@ -1718,6 +1719,7 @@ class World:
             case _:
                 return target_frame_T_reference_frame @ spatial_object
 
+    @profile
     def __deepcopy__(self, memo):
         memo = {} if memo is None else memo
         me_id = id(self)
@@ -1744,15 +1746,7 @@ class World:
                 new_world.add_degree_of_freedom(new_dof)
                 new_world.state[dof.name] = self.state[dof.name].data
             for connection in self.connections:
-                new_connection = copy(connection)
-                new_connection.parent = (
-                    new_world.get_kinematic_structure_entity_by_name(
-                        new_connection.parent.name
-                    )
-                )
-                new_connection.child = new_world.get_kinematic_structure_entity_by_name(
-                    new_connection.child.name
-                )
+                new_connection = connection.copy_to_world(new_world)
                 new_world.add_connection(new_connection)
         return new_world
 
