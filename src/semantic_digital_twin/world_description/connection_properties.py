@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class JointProperty:
+class JointDynamics:
     """
     Represents the dynamic properties of a joint.
     tau = I*ddq + b*dq + f*sign(dq)

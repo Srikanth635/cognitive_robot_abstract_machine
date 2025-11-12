@@ -466,9 +466,9 @@ class Connection1DOFConverter(ConnectionConverter, ABC):
                 self.quat_str: joint_quat,
                 self.axis_str: entity.axis.to_np().tolist()[:3],
                 self.range_str: [dof.lower_limits.position, dof.upper_limits.position],
-                self.armature_str: entity.prop.armature,
-                self.dry_friction_str: entity.prop.dry_friction,
-                self.damping_str: entity.prop.damping,
+                self.armature_str: entity.dynamics.armature,
+                self.dry_friction_str: entity.dynamics.dry_friction,
+                self.damping_str: entity.dynamics.damping,
             }
         )
         return joint_props

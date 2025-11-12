@@ -16,7 +16,7 @@ from ..adapters.world_entity_kwargs_tracker import (
 from ..datastructures.prefixed_name import PrefixedName
 from ..datastructures.types import NpMatrix4x4
 from ..spatial_types.derivatives import DerivativeMap
-from .connection_properties import JointProperty
+from .connection_properties import JointDynamics
 
 if TYPE_CHECKING:
     from ..world import World
@@ -145,7 +145,7 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
     Name of a Degree of freedom to control movement along the axis.
     """
 
-    prop: JointProperty = field(default_factory=JointProperty)
+    dynamics: JointDynamics = field(default_factory=JointDynamics)
     """
     Dynamic properties of the joint.
     """

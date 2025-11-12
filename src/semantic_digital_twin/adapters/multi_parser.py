@@ -27,7 +27,7 @@ from ..world_description.inertial_properties import (
     PrincipalMoments,
     PrincipalAxes,
 )
-from ..world_description.connection_properties import JointProperty
+from ..world_description.connection_properties import JointDynamics
 from ..world_description.shape_collection import ShapeCollection
 from ..world_description.world_entity import KinematicStructureEntity
 
@@ -42,7 +42,7 @@ from multiverse_parser import (
     GeomType,
 )
 from multiverse_parser.utils import get_relative_transform
-from pxr import UsdUrdf, UsdGeom, UsdPhysics, Gf  # type: ignore
+from pxr import UsdUrdf, UsdMujoco, UsdGeom, UsdPhysics, Gf  # type: ignore
 
 from ..world_description.connections import (
     RevoluteConnection,
@@ -540,6 +540,15 @@ class MultiParser:
                 free_variable_name = urdf_joint_api.GetJointRel().GetTargets()[0].name
                 offset = urdf_joint_api.GetOffsetAttr().Get()
                 multiplier = urdf_joint_api.GetMultiplierAttr().Get()
+
+        armature = 0.0
+        dry_friction = 0.0
+        damping = 0.0
+        if joint_prim.HasAPI(UsdMujoco.MujocoJointAPI):  # type: ignore
+            mujoco_joint_api = UsdMujoco.MujocoJointAPI(joint_prim)  # type: ignore
+            armature = mujoco_joint_api.GetArmatureAttr().Get()
+            dry_friction = mujoco_joint_api.GetFrictionlossAttr().Get()
+            damping = mujoco_joint_api.GetDampingAttr().Get()
         match joint_builder.type:
             case JointType.FREE:
                 raise NotImplementedError("Free joints are not supported yet.")
@@ -566,10 +575,10 @@ class MultiParser:
                     JointConnection = RevoluteConnection
                 else:
                     JointConnection = PrismaticConnection
-                joint_prop = JointProperty(
-                    armature=0.001,
-                    dry_friction=0.0,
-                    damping=0.01,
+                joint_prop = JointDynamics(
+                    armature=armature,
+                    dry_friction=dry_friction,
+                    damping=damping,
                 )
                 return JointConnection(
                     name=PrefixedName(joint_name),
@@ -580,7 +589,7 @@ class MultiParser:
                     offset=offset,
                     axis=axis,
                     dof_name=dof.name,
-                    prop=joint_prop,
+                    dynamics=joint_prop,
                 )
         raise NotImplementedError(
             f"Joint type {joint_builder.type} is not supported yet."
