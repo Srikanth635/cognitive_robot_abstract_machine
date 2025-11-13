@@ -40,13 +40,20 @@ jobs:
         git submodule update
         pip install -U pip && pip install -r requirements.txt && pip install -e . && pip install pytest
         pip install -e ./src/ripple_down_rules_meta
-        PACKAGE_URL="https://nc.uni-bremen.de/public.php/dav/files/5eWxp8NXt9C7BLB/?accept=zip"
-        PACKAGE_HASH="ae5f3948ed33cab4d511893194fc93cbad7095f72c7e1775e14ce67c31626121"
-        TMP_PKG="/tmp/multiverse_parser-0.0.3.tar.gz"
-        curl -fsSL "$PACKAGE_URL" -o "$TMP_PKG"
-        echo "$PACKAGE_HASH  $TMP_PKG" | sha256sum -c -
-        pip install "$TMP_PKG"
-        rm -f "$TMP_PKG"
+        if [[ $(python3 --version) == "Python 3.10"* ]]; then
+          PACKAGE_URL="https://nc.uni-bremen.de/public.php/dav/files/5eWxp8NXt9C7BLB/?accept=zip"
+          PACKAGE_HASH="ae5f3948ed33cab4d511893194fc93cbad7095f72c7e1775e14ce67c31626121"
+        elif [[ $(python3 --version) == "Python 3.12"* ]]; then
+          PACKAGE_URL="https://nc.uni-bremen.de/public.php/dav/files/8AyL8dibNQBod4t/?accept=zip"
+          PACKAGE_HASH="aa0be15e5ca41e12c82116f9feb92793dff1615606eb654729085ed44bfed096"
+        fi
+        if [[ -n "$PACKAGE_URL" ]]; then
+          TMP_PKG="/tmp/multiverse_parser-0.0.3.tar.gz"
+          curl -fsSL "$PACKAGE_URL" -o "$TMP_PKG"
+          echo "$PACKAGE_HASH  $TMP_PKG" | sha256sum -c -
+          pip install "$TMP_PKG"
+          rm -f "$TMP_PKG"
+        fi
 #        echo "PATH=/opt/ros/overlay_ws/src/Multiverse-Parser/ext/blender:/opt/ros/overlay_ws/src/Multiverse-Parser/USD/linux/lib/python:/opt/ros/overlay_ws/src/Multiverse-Parser/USD/linux/plugin/usd:$PATH" >> $GITHUB_ENV
 #        echo "PYTHONPATH=/opt/ros/overlay_ws/src/Multiverse-Parser/USD/linux/lib/python:/opt/ros/overlay_ws/src/src" >> $GITHUB_ENV
 
