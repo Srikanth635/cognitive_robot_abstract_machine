@@ -394,7 +394,7 @@ def parse_inertial(body_builder: BodyBuilder) -> Optional[Inertial]:
 @dataclass
 class MultiParser:
     """
-    Class to parse any scene description files to worlds.
+    Class to parse any scene description file to World.
     """
 
     file_path: str
