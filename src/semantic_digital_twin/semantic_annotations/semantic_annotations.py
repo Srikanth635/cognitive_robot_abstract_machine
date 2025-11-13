@@ -30,11 +30,13 @@ class SingleBodyAnnotation(SemanticAnnotation):
         return [self.body]
 
 
+@dataclass(eq=False)
 class IsPerceivable:
     """
     A mixin class for semantic annotations that can be perceived.
     """
-    class_label: Optional[str] = None
+
+    class_label: Optional[str] = field(default=None, kw_only=True)
     """
     The exact class label of the perceived object.
     """
