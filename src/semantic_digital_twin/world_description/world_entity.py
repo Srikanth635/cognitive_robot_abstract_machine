@@ -44,7 +44,7 @@ from ..utils import IDGenerator, type_string_to_type, camel_case_split
 
 if TYPE_CHECKING:
     from ..world_description.degree_of_freedom import DegreeOfFreedom
-    from ..world import World
+    from ..world import World, GenericSemanticAnnotation
 
 id_generator = IDGenerator()
 
@@ -408,6 +408,18 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
 
         return result
 
+    def get_semantic_annotations_by_type(
+        self, type_: Type[GenericSemanticAnnotation]
+    ) -> List[GenericSemanticAnnotation]:
+        """
+        Returns all semantic annotations of a given type which belong to this body.
+        :param type_: The type of semantic annotations to return.
+        :returns: A list of semantic annotations of the given type.
+        """
+        return list(
+            filter(lambda sem: isinstance(sem, type_), self._semantic_annotations)
+        )
+
 
 @dataclass(eq=False)
 class Region(KinematicStructureEntity):
@@ -565,6 +577,8 @@ class SemanticAnnotation(WorldEntity, SubclassJSONSerializer):
                 name=f"{self.__class__.__name__}_{id_generator(self)}",
                 prefix=self._world.name if self._world is not None else None,
             )
+        for entity in self.kinematic_structure_entities:
+            entity._semantic_annotations.add(self)
 
     def __hash__(self):
         return hash(
