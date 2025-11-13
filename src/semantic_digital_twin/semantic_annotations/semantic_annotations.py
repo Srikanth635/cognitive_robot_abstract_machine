@@ -15,24 +15,29 @@ from ..world_description.world_entity import SemanticAnnotation, Body, Region
 
 
 @dataclass(eq=False)
-class PerceivableAnnotation:
+class SingleBodyAnnotation(SemanticAnnotation):
     """
-    A mixin class for semantic annotations that can be perceived.
+    A mixin class for semantic annotations that have a single body.
     """
 
     body: Body
     """
-    The body that represents the perceived object.
-    """
-
-    class_label: Optional[str] = field(default=None)
-    """
-    The exact class label of the perceived object.
+    The body that represents the annotation.
     """
 
     @property
     def bodies(self) -> Iterable[Body]:
         return [self.body]
+
+
+class IsPerceivable:
+    """
+    A mixin class for semantic annotations that can be perceived.
+    """
+    class_label: Optional[str] = None
+    """
+    The exact class label of the perceived object.
+    """
 
 
 @dataclass(eq=False)
@@ -201,20 +206,20 @@ class Wall(SemanticAnnotation):
 
 
 @dataclass(eq=False)
-class Milk(SemanticAnnotation, PerceivableAnnotation):
+class Milk(SingleBodyAnnotation, IsPerceivable):
     pass
 
 
 @dataclass(eq=False)
-class Bowl(SemanticAnnotation, PerceivableAnnotation):
+class Bowl(SingleBodyAnnotation, IsPerceivable):
     pass
 
 
 @dataclass(eq=False)
-class Spoon(SemanticAnnotation, PerceivableAnnotation):
+class Spoon(SingleBodyAnnotation, IsPerceivable):
     pass
 
 
 @dataclass(eq=False)
-class Cup(SemanticAnnotation, PerceivableAnnotation):
+class Cup(SingleBodyAnnotation, IsPerceivable):
     pass
