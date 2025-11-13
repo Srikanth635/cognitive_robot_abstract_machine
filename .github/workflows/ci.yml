@@ -45,7 +45,7 @@ jobs:
           PACKAGE_HASH="42FA2B519C7D1FDA39F215FDA6420DF423ED5F878C1B69ABC0E1A19D1367EAD4"
         elif [[ $(python3 --version) == "Python 3.12"* ]]; then
           PACKAGE_URL="https://nc.uni-bremen.de/public.php/dav/files/8AyL8dibNQBod4t/?accept=zip"
-          PACKAGE_HASH="aa0be15e5ca41e12c82116f9feb92793dff1615606eb654729085ed44bfed096"
+          PACKAGE_HASH="345cf57296660609073957cf95963ab588a30d43f3cf3b93cff7eba778813a33"
         fi
         if [[ -n "$PACKAGE_URL" ]]; then
           TMP_PKG="/tmp/multiverse_parser-0.0.3.tar.gz"
