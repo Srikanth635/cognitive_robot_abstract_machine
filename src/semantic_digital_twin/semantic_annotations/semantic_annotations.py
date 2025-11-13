@@ -4,30 +4,26 @@ from dataclasses import dataclass, field
 from typing import Set, Iterable, Optional
 
 import numpy as np
-
+from krrood.entity_query_language.entity import an, entity, symbolic_mode, let
 from probabilistic_model.probabilistic_circuit.rx.helper import uniform_measure_of_event
 from typing_extensions import List
 
-from ..world_description.shape_collection import BoundingBoxCollection
-from ..spatial_types import Point3
+from .mixins import (
+    HasBody,
+    HasSupportingSurface,
+    Furniture,
+    HasRegion,
+    HasDrawers,
+    HasDoors,
+)
 from ..datastructures.variables import SpatialVariables
-from ..world_description.world_entity import SemanticAnnotation, Body, Region
-
-
-@dataclass(eq=False)
-class SingleBodyAnnotation(SemanticAnnotation):
-    """
-    A mixin class for semantic annotations that have a single body.
-    """
-
-    body: Body
-    """
-    The body that represents the annotation.
-    """
-
-    @property
-    def bodies(self) -> Iterable[Body]:
-        return [self.body]
+from ..reasoning.predicates import InsideOf
+from ..spatial_types import Point3
+from ..world_description.shape_collection import BoundingBoxCollection
+from ..world_description.world_entity import (
+    SemanticAnnotation,
+    Body,
+)
 
 
 @dataclass(eq=False)
@@ -43,31 +39,11 @@ class IsPerceivable:
 
 
 @dataclass(eq=False)
-class HasDrawers:
-    """
-    A mixin class for semantic annotations that have drawers.
-    """
-
-    drawers: List[Drawer] = field(default_factory=list, hash=False)
+class Handle(HasBody): ...
 
 
 @dataclass(eq=False)
-class HasDoors:
-    """
-    A mixin class for semantic annotations that have doors.
-    """
-
-    doors: List[Door] = field(default_factory=list, hash=False)
-
-
-@dataclass(eq=False)
-class Handle(SemanticAnnotation):
-    body: Body
-
-
-@dataclass(eq=False)
-class Container(SemanticAnnotation):
-    body: Body
+class Container(HasBody): ...
 
 
 @dataclass(eq=False)
@@ -76,19 +52,14 @@ class Fridge(SemanticAnnotation):
     A semantic annotation representing a fridge that has a door and a body.
     """
 
-    body: Body
+    container: Container
     door: Door
 
 
 @dataclass(eq=False)
-class Table(SemanticAnnotation):
+class Table(Furniture, HasBody):
     """
     A semantic annotation that represents a table.
-    """
-
-    top: Body
-    """
-    The body that represents the table's top surface.
     """
 
     def points_on_table(self, amount: int = 100) -> List[Point3]:
@@ -98,7 +69,7 @@ class Table(SemanticAnnotation):
         :amount: The number of points to return.
         :returns: A list of points that are on the table.
         """
-        area_of_table = BoundingBoxCollection.from_shapes(self.top.collision)
+        area_of_table = BoundingBoxCollection.from_shapes(self.body.collision)
         event = area_of_table.event
         p = uniform_measure_of_event(event)
         p = p.marginal(SpatialVariables.xy)
@@ -107,86 +78,63 @@ class Table(SemanticAnnotation):
             (amount, 1), max([b.max_z for b in area_of_table]) + 0.01
         )
         samples = np.concatenate((samples, z_coordinate), axis=1)
-        return [Point3(*s, reference_frame=self.top) for s in samples]
-
-
-################################
+        return [Point3(*s, reference_frame=self.body) for s in samples]
 
 
 @dataclass(eq=False)
-class Components(SemanticAnnotation): ...
-
-
-@dataclass(eq=False)
-class Furniture(SemanticAnnotation): ...
-
-
-@dataclass(eq=False)
-class SupportingSurface(SemanticAnnotation):
+class Aperture(HasRegion):
     """
-    A semantic annotation that represents a supporting surface.
-    """
-
-    region: Region
-    """
-    The region that represents the supporting surface.
+    A semantic annotation that represents an opening in a physical entity.
+    An example is like a hole in a wall that can be used to enter a room.
     """
 
 
-#################### subclasses von Components
-
-
 @dataclass(eq=False)
-class EntryWay(Components):
-    body: Body
+class Door(HasBody):
+    """
+    A door is a physical entity that has covers an opening, has a movable body and a handle.
+    """
 
-
-@dataclass(eq=False)
-class Door(EntryWay):
     handle: Handle
+    """
+    The handle of the door.
+    """
 
 
 @dataclass(eq=False)
-class DoubleDoor(EntryWay):
+class DoubleDoor(SemanticAnnotation):
     left_door: Door
     right_door: Door
 
 
 @dataclass(eq=False)
-class Drawer(Components):
+class Drawer(SemanticAnnotation):
     container: Container
     handle: Handle
 
 
 ############################### subclasses to Furniture
 @dataclass(eq=False)
-class Cabinet(Furniture):
+class Cabinet(Furniture, HasDrawers, HasDoors):
     container: Container
-    drawers: List[Drawer] = field(default_factory=list, hash=False)
-    doors: List[Door] = field(default_factory=list)
 
 
 @dataclass(eq=False)
-class Dresser(Furniture):
-    container: Container
-    drawers: List[Drawer] = field(default_factory=list, hash=False)
-    doors: List[Door] = field(default_factory=list)
+class Dresser(Furniture, HasDrawers, HasDoors):
+    container: Container = field(kw_only=True)
 
 
 @dataclass(eq=False)
-class Cupboard(Furniture):
-    container: Container
-    doors: List[Door] = field(default_factory=list)
+class Cupboard(Furniture, HasDoors):
+    container: Container = field(kw_only=True)
 
 
 @dataclass(eq=False)
-class Wardrobe(Furniture):
-    container: Container
-    drawers: List[Drawer] = field(default_factory=list, hash=False)
-    doors: List[Door] = field(default_factory=list)
+class Wardrobe(Furniture, HasDrawers, HasDoors):
+    container: Container = field(kw_only=True)
 
 
-class Floor(SupportingSurface): ...
+class Floor(HasSupportingSurface): ...
 
 
 @dataclass(eq=False)
@@ -204,24 +152,10 @@ class Room(SemanticAnnotation):
 @dataclass(eq=False)
 class Wall(SemanticAnnotation):
     body: Body
-    doors: List[Door] = field(default_factory=list)
 
-
-@dataclass(eq=False)
-class Milk(SingleBodyAnnotation, IsPerceivable):
-    pass
-
-
-@dataclass(eq=False)
-class Bowl(SingleBodyAnnotation, IsPerceivable):
-    pass
-
-
-@dataclass(eq=False)
-class Spoon(SingleBodyAnnotation, IsPerceivable):
-    pass
-
-
-@dataclass(eq=False)
-class Cup(SingleBodyAnnotation, IsPerceivable):
-    pass
+    @property
+    def doors(self) -> Iterable[Door]:
+        with symbolic_mode():
+            door = let(Door, self._world.semantic_annotations)
+            query = an(entity(door), InsideOf(self.body, door.entry_way.region)() > 0.1)
+        return query.evaluate()
