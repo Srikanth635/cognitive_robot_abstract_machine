@@ -34,7 +34,7 @@ def parse_procthor_worlds_and_calculate_containment_ratio():
         procthor_experiments_database_uri, echo=False
     )
     # drop_database(procthor_experiments_engine)
-    Base.metadata.create_all(procthor_experiments_engine)
+    # Base.metadata.create_all(procthor_experiments_engine)
     procthor_experiments_session = Session(procthor_experiments_engine)
 
     dataset = prior.load_dataset("procthor-10k")
@@ -43,8 +43,8 @@ def parse_procthor_worlds_and_calculate_containment_ratio():
     for index, house in enumerate(
         tqdm.tqdm(dataset["train"], desc="Parsing Procthor worlds")
     ):
-        # if index < 8718:
-        #     continue
+        if index < 5058:
+            continue
         try:
             parser = ProcTHORParser(f"house_{index}", house, semantic_world_session)
             world = parser.parse()
