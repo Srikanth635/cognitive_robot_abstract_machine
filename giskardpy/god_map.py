@@ -28,9 +28,6 @@ if TYPE_CHECKING:
 
 class GodMap:
 
-    # %% controller datatypes
-    trajectory: Trajectory
-
     # %% other
     tmp_folder: str
 

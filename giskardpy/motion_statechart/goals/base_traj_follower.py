@@ -27,7 +27,7 @@ class BaseTrajFollower(Goal):
         self.base_footprint_link = self.joint.child
         self.task = Task(name="base")
         self.add_task(self.task)
-        trajectory = god_map.trajectory
+        trajectory = trajectory  # fixme god_map?
         self.trajectory_length = len(trajectory)
         self.add_trans_constraints()
         self.add_rot_constraints()
