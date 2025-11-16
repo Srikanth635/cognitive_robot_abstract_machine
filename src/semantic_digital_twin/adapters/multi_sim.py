@@ -865,25 +865,10 @@ class MujocoBuilder(MultiSimBuilder):
         assert (
             parent_body_spec is not None
         ), f"Parent body {parent_body_name} not found."
-        if geom_props["type"] == mujoco.mjtGeom.mjGEOM_MESH:
-            mesh_entity = geom_props.pop("mesh")
-            mesh_file_path = mesh_entity.filename
-            mesh_ext = os.path.splitext(mesh_file_path)[1].lower()
-            if mesh_ext == ".dae":
-                print(
-                    f"Cannot use .dae files in Mujoco. Skipping mesh {mesh_file_path}."
-                )
-                return
-            mesh_name = os.path.splitext(os.path.basename(mesh_file_path))[0]
-            if mesh_name not in [mesh.name for mesh in self.spec.meshes]:
-                mesh = self.spec.add_mesh(name=mesh_name)
-                mesh.file = mesh_file_path
-                mesh.scale[:] = (
-                    mesh_entity.scale.x,
-                    mesh_entity.scale.y,
-                    mesh_entity.scale.z,
-                )
-            geom_props["meshname"] = mesh_name
+        if geom_props["type"] == mujoco.mjtGeom.mjGEOM_MESH and not self._parse_geom(
+            geom_props=geom_props
+        ):
+            return
         geom_spec = parent_body_spec.add_geom(**geom_props)
         if geom_spec.type == mujoco.mjtGeom.mjGEOM_BOX and any(
             size == 0 for size in geom_spec.size
@@ -893,6 +878,31 @@ class MujocoBuilder(MultiSimBuilder):
         assert (
             geom_spec is not None
         ), f"Failed to add geom {id(shape)} to body {parent_body_name}."
+
+    def _parse_geom(self, geom_props: Dict[str, Any]) -> bool:
+        """
+        Parses the geometry properties for a mesh geom. Adds the mesh to the spec if it doesn't exist.
+
+        :param geom_props: The geometry properties to parse.
+        :return: True if the mesh was parsed successfully, False otherwise.
+        """
+        mesh_entity = geom_props.pop("mesh")
+        mesh_file_path = mesh_entity.filename
+        mesh_ext = os.path.splitext(mesh_file_path)[1].lower()
+        if mesh_ext == ".dae":
+            print(f"Cannot use .dae files in Mujoco. Skipping mesh {mesh_file_path}.")
+            return False
+        mesh_name = os.path.splitext(os.path.basename(mesh_file_path))[0]
+        if mesh_name not in [mesh.name for mesh in self.spec.meshes]:
+            mesh = self.spec.add_mesh(name=mesh_name)
+            mesh.file = mesh_file_path
+            mesh.scale[:] = (
+                mesh_entity.scale.x,
+                mesh_entity.scale.y,
+                mesh_entity.scale.z,
+            )
+        geom_props["meshname"] = mesh_name
+        return True
 
     def _build_connection(self, connection: Connection):
         if isinstance(connection, FixedConnection):

@@ -190,7 +190,7 @@ class Inertial:
     The mass of the body in kilograms.
     """
 
-    center_of_mass: Point3 = field(default_factory=lambda: Point3(0.0, 0.0, 0.0))
+    center_of_mass: Point3 = field(default_factory=Point3)
     """
     The center of mass of the body. If a force acts through the COM, the body experiences pure translation, no torque
     """
