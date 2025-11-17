@@ -9,8 +9,11 @@ from numpy.ma.testutils import (
 from semantic_digital_twin.reasoning.world_reasoner import WorldReasoner
 from semantic_digital_twin.robots.minimal_robot import MinimalRobot
 from semantic_digital_twin.robots.pr2 import PR2
-from semantic_digital_twin.testing import *
 from semantic_digital_twin.semantic_annotations.semantic_annotations import *
+from semantic_digital_twin.testing import *
+from semantic_digital_twin.world_description.world_entity import (
+    KinematicStructureEntity,
+)
 
 try:
     from ripple_down_rules.user_interface.gui import RDRCaseViewer
@@ -260,6 +263,7 @@ def test_minimal_robot_annotation(pr2_world):
     pr2_parser = URDFParser.from_file(file_path=pr2)
     world_with_pr2 = pr2_parser.parse()
     with world_with_pr2.modify_world():
+        MinimalRobot.from_world(world_with_pr2)
         pr2_root = world_with_pr2.root
         localization_body = Body(name=PrefixedName("odom_combined"))
         world_with_pr2.add_kinematic_structure_entity(localization_body)
@@ -268,9 +272,7 @@ def test_minimal_robot_annotation(pr2_world):
         )
         world_with_pr2.add_connection(c_root_bf)
 
-    robot = MinimalRobot.from_world(
-        world_with_pr2, world_with_pr2.get_body_by_name("base_footprint")
-    )
+    robot = world_with_pr2.get_semantic_annotations_by_type(MinimalRobot)[0]
     pr2 = PR2.from_world(pr2_world)
     assert len(robot.bodies) == len(pr2.bodies)
     assert len(robot.connections) == len(pr2.connections)

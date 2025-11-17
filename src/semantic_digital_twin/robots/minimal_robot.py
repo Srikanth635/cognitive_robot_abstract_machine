@@ -31,7 +31,7 @@ class MinimalRobot(AbstractRobot):
         pass
 
     @classmethod
-    def from_world(cls, world: World, root_body: Body) -> Self:
+    def from_world(cls, world: World) -> Self:
         """
         Creates a minimal semantic robot annotation from the given world, starting at root_body
         """
@@ -39,7 +39,7 @@ class MinimalRobot(AbstractRobot):
         with world.modify_world():
             robot = cls(
                 name=PrefixedName(name="generic_robot", prefix=world.name),
-                root=root_body,
+                root=world.root,
                 _world=world,
             )
 
