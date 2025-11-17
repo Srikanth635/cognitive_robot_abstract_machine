@@ -270,40 +270,43 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
 
     @property
     def position(self) -> float:
-        return self._world.state[self.dof.name].position * self.multiplier + self.offset
+        return (
+            self._world.state[self.raw_dof.name].position * self.multiplier
+            + self.offset
+        )
 
     @position.setter
     def position(self, value: float) -> None:
-        self._world.state[self.dof.name].position = (
+        self._world.state[self.raw_dof.name].position = (
             value - self.offset
         ) / self.multiplier
         self._world.notify_state_change()
 
     @property
     def velocity(self) -> float:
-        return self._world.state[self.dof.name].velocity * self.multiplier
+        return self._world.state[self.raw_dof.name].velocity * self.multiplier
 
     @velocity.setter
     def velocity(self, value: float) -> None:
-        self._world.state[self.dof.name].velocity = value / self.multiplier
+        self._world.state[self.raw_dof.name].velocity = value / self.multiplier
         self._world.notify_state_change()
 
     @property
     def acceleration(self) -> float:
-        return self._world.state[self.dof.name].acceleration * self.multiplier
+        return self._world.state[self.raw_dof.name].acceleration * self.multiplier
 
     @acceleration.setter
     def acceleration(self, value: float) -> None:
-        self._world.state[self.dof.name].acceleration = value / self.multiplier
+        self._world.state[self.raw_dof.name].acceleration = value / self.multiplier
         self._world.notify_state_change()
 
     @property
     def jerk(self) -> float:
-        return self._world.state[self.dof.name].jerk * self.multiplier
+        return self._world.state[self.raw_dof.name].jerk * self.multiplier
 
     @jerk.setter
     def jerk(self, value: float) -> None:
-        self._world.state[self.dof.name].jerk = value / self.multiplier
+        self._world.state[self.raw_dof.name].jerk = value / self.multiplier
         self._world.notify_state_change()
 
 
