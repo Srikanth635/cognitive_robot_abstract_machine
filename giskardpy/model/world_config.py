@@ -8,6 +8,8 @@ import numpy as np
 
 from semantic_digital_twin.adapters.urdf import URDFParser
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.robots.abstract_robot import AbstractRobot
+from semantic_digital_twin.robots.minimal_robot import MinimalRobot
 from semantic_digital_twin.spatial_types.derivatives import Derivatives
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connections import (
@@ -56,12 +58,14 @@ class WorldWithFixedRobot(WorldConfig):
     root_name: PrefixedName = field(default=PrefixedName("map"))
     robot_name: PrefixedName = field(default=PrefixedName("robot"))
     robot_root: KinematicStructureEntity = field(init=False)
+    urdf_view: AbstractRobot = field(kw_only=True, default=MinimalRobot)
 
     def setup_world(self):
         map = Body(name=self.root_name)
 
         urdf_parser = URDFParser(urdf=self.urdf)
         world_with_robot = urdf_parser.parse()
+        self.urdf_view.from_world(world_with_robot)
         self.robot_root = world_with_robot.root
         map_C_robot = FixedConnection(parent=map, child=self.robot_root)
 
