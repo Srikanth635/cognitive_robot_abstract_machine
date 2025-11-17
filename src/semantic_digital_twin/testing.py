@@ -9,6 +9,7 @@ from typing_extensions import Tuple
 import pytest
 
 from .adapters.urdf import URDFParser
+from .robots.pr2 import PR2
 from .utils import rclpy_installed, tracy_installed, hsrb_installed
 from .world_description.connections import (
     Connection6DoF,
@@ -285,6 +286,7 @@ def cleanup_after_test():
     yield
     # Teardown: runs after each test
     SymbolGraph().clear()
+
 
 @pytest.fixture()
 def kitchen_world():
