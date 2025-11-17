@@ -182,6 +182,8 @@ def pr2_world():
         )
         world_with_pr2.add_connection(c_root_bf)
 
+    PR2.from_world(world_with_pr2)
+
     return world_with_pr2
 
 
