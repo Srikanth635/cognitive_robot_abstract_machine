@@ -9,6 +9,7 @@ from typing_extensions import Tuple
 import pytest
 
 from .adapters.urdf import URDFParser
+from .robots.pr2 import PR2
 from .utils import rclpy_installed, tracy_installed, hsrb_installed
 from .world_description.connections import (
     Connection6DoF,
@@ -181,6 +182,8 @@ def pr2_world():
         )
         world_with_pr2.add_connection(c_root_bf)
 
+    PR2.from_world(world_with_pr2)
+
     return world_with_pr2
 
 
@@ -285,6 +288,7 @@ def cleanup_after_test():
     yield
     # Teardown: runs after each test
     SymbolGraph().clear()
+
 
 @pytest.fixture()
 def kitchen_world():
