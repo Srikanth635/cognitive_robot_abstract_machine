@@ -2,15 +2,17 @@ import os
 import threading
 import time
 
+import pytest
 from krrood.entity_query_language.symbol_graph import SymbolGraph
-from krrood.entity_query_language.symbolic import Variable
 from typing_extensions import Tuple
 
-import pytest
-
 from .adapters.urdf import URDFParser
-from .robots.pr2 import PR2
+from .datastructures.prefixed_name import PrefixedName
+from .spatial_types import TransformationMatrix
+from .spatial_types.derivatives import DerivativeMap
+from .spatial_types.spatial_types import Vector3
 from .utils import rclpy_installed, tracy_installed, hsrb_installed
+from .world import World
 from .world_description.connections import (
     Connection6DoF,
     PrismaticConnection,
@@ -20,13 +22,8 @@ from .world_description.connections import (
 )
 from .world_description.degree_of_freedom import DegreeOfFreedom
 from .world_description.geometry import Box, Scale, Sphere
-from .datastructures.prefixed_name import PrefixedName
-from .spatial_types import TransformationMatrix
-from .spatial_types.derivatives import DerivativeMap
-from .spatial_types.spatial_types import Vector3
-from .world import World
 from .world_description.shape_collection import ShapeCollection
-from .world_description.world_entity import KinematicStructureEntity, Body
+from .world_description.world_entity import Body
 
 
 @pytest.fixture
@@ -181,8 +178,6 @@ def pr2_world():
             parent=localization_body, child=pr2_root, world=world_with_pr2
         )
         world_with_pr2.add_connection(c_root_bf)
-
-    PR2.from_world(world_with_pr2)
 
     return world_with_pr2
 
