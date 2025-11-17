@@ -24,7 +24,9 @@ from giskardpy.motion_statechart.data_types import (
     LifeCycleValues,
     ObservationStateValues,
 )
-from giskardpy.motion_statechart.exceptions import NodeNotFoundError
+from giskardpy.motion_statechart.exceptions import (
+    NotInMotionStatechartError,
+)
 from giskardpy.qp.constraint_collection import ConstraintCollection
 from giskardpy.utils.utils import string_shortener
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
@@ -131,7 +133,7 @@ class TrinaryCondition(SubclassJSONSerializer):
         json_data = super().to_json()
         json_data["kind"] = self.kind.name
         json_data["expression"] = str(self)
-        json_data["owner"] = self.owner.name.to_json() if self.owner else None
+        json_data["owner"] = self.owner.index if self.owner else None
         return json_data
 
     @classmethod
@@ -208,9 +210,7 @@ class TrinaryCondition(SubclassJSONSerializer):
             kind=TransitionKind[data["kind"]],
             trinary_logic_str=data["expression"],
             observation_variables=motion_statechart.observation_state.observation_symbols(),
-            owner=motion_statechart.get_node_by_name(
-                PrefixedName.from_json(data["owner"])
-            ),
+            owner=motion_statechart.get_node_by_index(data["owner"]),
         )
 
 
@@ -262,12 +262,12 @@ class NodeArtifacts:
 
 @dataclass(repr=False, eq=False)
 class MotionStatechartNode(SubclassJSONSerializer):
-    name: PrefixedName = field(kw_only=True)
+    name: str = field(default=None, kw_only=True)
     """
-    A unique name for the node within a motion statechart.
+    A name for the node within a motion statechart.
     """
 
-    _motion_statechart: MotionStatechart = field(init=False)
+    _motion_statechart: MotionStatechart = field(init=False, default=None)
     """
     Back reference to the motion statechart that owns this node.
     """
@@ -276,16 +276,16 @@ class MotionStatechartNode(SubclassJSONSerializer):
     The index of the entity in `_world.kinematic_structure`.
     """
 
-    parent_node_name: Optional[PrefixedName] = field(default=None, init=False)
+    parent_node_index: Optional[int] = field(default=None, init=False)
     """
-    The name of the parent node of this node, if None, it is on the top layer of a motion statechart.
+    The index of the parent node in the motion statechart, if None, it is on the top layer of a motion statechart.
     """
 
-    _life_cycle_variable: LifeCycleVariable = field(init=False)
+    _life_cycle_variable: LifeCycleVariable = field(init=False, default=None)
     """
     A symbol referring to the life cycle state of this node.
     """
-    _observation_variable: ObservationVariable = field(init=False)
+    _observation_variable: ObservationVariable = field(init=False, default=None)
 
     _constraint_collection: ConstraintCollection = field(init=False)
     """The parameter is set after build() using its NodeArtifacts."""
@@ -294,10 +294,10 @@ class MotionStatechartNode(SubclassJSONSerializer):
     _debug_expressions: List[DebugExpression] = field(default_factory=list, init=False)
     """The parameter is set after build() using its NodeArtifacts."""
 
-    _start_condition: TrinaryCondition = field(init=False)
-    _pause_condition: TrinaryCondition = field(init=False)
-    _end_condition: TrinaryCondition = field(init=False)
-    _reset_condition: TrinaryCondition = field(init=False)
+    _start_condition: TrinaryCondition = field(init=False, default=None)
+    _pause_condition: TrinaryCondition = field(init=False, default=None)
+    _end_condition: TrinaryCondition = field(init=False, default=None)
+    _reset_condition: TrinaryCondition = field(init=False, default=None)
 
     _plot: bool = field(default=True, kw_only=True)
     _plot_style: str = field(default="filled, rounded", init=False)
@@ -305,12 +305,16 @@ class MotionStatechartNode(SubclassJSONSerializer):
     _plot_extra_boarder_styles: List[str] = field(default_factory=list, kw_only=True)
 
     def __post_init__(self):
+        if self.name is None:
+            self.name = self.__class__.__name__
+
+    def _post_add_to_motion_statechart(self):
         self._observation_variable = ObservationVariable(
-            name=PrefixedName("observation", str(self.name)),
+            name=PrefixedName("observation", self.unique_name),
             motion_statechart_node=self,
         )
         self._life_cycle_variable = LifeCycleVariable(
-            name=PrefixedName("life_cycle", str(self.name)),
+            name=PrefixedName("life_cycle", self.unique_name),
             motion_statechart_node=self,
         )
         self._start_condition = TrinaryCondition.create_true(
@@ -328,17 +332,16 @@ class MotionStatechartNode(SubclassJSONSerializer):
 
     @property
     def parent_node(self) -> Optional[MotionStatechartNode]:
-        try:
-            return self._motion_statechart.get_node_by_name(self.parent_node_name)
-        except NodeNotFoundError:
+        if self.parent_node_index is None:
             return None
+        return self._motion_statechart.get_node_by_index(self.parent_node_index)
 
     @parent_node.setter
     def parent_node(self, parent_node: Optional[MotionStatechartNode]) -> None:
         if parent_node is None:
-            self.parent_node_name = None
+            self.parent_node_index = None
         else:
-            self.parent_node_name = parent_node.name
+            self.parent_node_index = parent_node.index
 
     def set_transition(self, transition: TrinaryCondition) -> None:
         match transition.kind:
@@ -361,18 +364,20 @@ class MotionStatechartNode(SubclassJSONSerializer):
 
     @property
     def life_cycle_variable(self) -> LifeCycleVariable:
+        if self._life_cycle_variable is None:
+            raise NotInMotionStatechartError(self.name)
         return self._life_cycle_variable
 
     @property
     def observation_variable(self) -> ObservationVariable:
+        if self._observation_variable is None:
+            raise NotInMotionStatechartError(self.name)
         return self._observation_variable
 
     @property
     def motion_statechart(self) -> MotionStatechart:
-        if not hasattr(self, "_motion_statechart"):
-            raise AttributeError(
-                f"Motion statechart not set for {self.__class__.__name__} {self.name}"
-            )
+        if self._motion_statechart is None:
+            raise NotInMotionStatechartError(self.name)
         return self._motion_statechart
 
     @motion_statechart.setter
@@ -439,6 +444,8 @@ class MotionStatechartNode(SubclassJSONSerializer):
 
     @start_condition.setter
     def start_condition(self, expression: cas.Expression) -> None:
+        if self._start_condition is None:
+            raise NotInMotionStatechartError(self.name)
         self._start_condition.update_expression(expression, self)
 
     @property
@@ -447,6 +454,8 @@ class MotionStatechartNode(SubclassJSONSerializer):
 
     @pause_condition.setter
     def pause_condition(self, expression: cas.Expression) -> None:
+        if self._pause_condition is None:
+            raise NotInMotionStatechartError(self.name)
         self._pause_condition.update_expression(expression, self)
 
     @property
@@ -455,6 +464,8 @@ class MotionStatechartNode(SubclassJSONSerializer):
 
     @end_condition.setter
     def end_condition(self, expression: cas.Expression) -> None:
+        if self._end_condition is None:
+            raise NotInMotionStatechartError(self.name)
         self._end_condition.update_expression(expression, self)
 
     @property
@@ -463,6 +474,8 @@ class MotionStatechartNode(SubclassJSONSerializer):
 
     @reset_condition.setter
     def reset_condition(self, expression: cas.Expression) -> None:
+        if self._reset_condition is None:
+            raise NotInMotionStatechartError(self.name)
         self._reset_condition.update_expression(expression, self)
 
     def to_json(self) -> Dict[str, Any]:
@@ -471,8 +484,8 @@ class MotionStatechartNode(SubclassJSONSerializer):
             if not field_.name.startswith("_") and field_.init:
                 value = getattr(self, field_.name)
                 json_data[field_.name] = self._attribute_to_json(value)
-        if self.parent_node_name is not None:
-            json_data["parent_node_name"] = self.parent_node.name.to_json()
+        if self.parent_node_index is not None:
+            json_data["parent_node_index"] = self.parent_node.index
         return json_data
 
     def _attribute_to_json(self, value: Any) -> Any:
@@ -512,7 +525,7 @@ class MotionStatechartNode(SubclassJSONSerializer):
                     "dict parameters of MotionStatechartNode are not supported yet. Use a list instead."
                 )
             node_kwargs[field_name] = field_data
-        parent_node_name = node_kwargs.pop("parent_node_name", None)
+        parent_node_name = node_kwargs.pop("parent_node_index", None)
         result = cls(**node_kwargs)
         result.parent_node_name = parent_node_name
         return result
@@ -536,8 +549,12 @@ class MotionStatechartNode(SubclassJSONSerializer):
             return '"' + result + '"'
         return result
 
+    @property
+    def unique_name(self) -> str:
+        return f"{self.name}#{self.index}"
+
     def __repr__(self) -> str:
-        return str(self.name)
+        return self.unique_name
 
 
 GenericMotionStatechartNode = TypeVar(
@@ -561,36 +578,6 @@ class Goal(MotionStatechartNode):
     _plot_style: str = field(default="filled", init=False)
     _plot_shape: str = field(default="none", init=False)
 
-    @property
-    def motion_statechart(self) -> MotionStatechart:
-        if not hasattr(self, "_motion_statechart"):
-            raise AttributeError(
-                f"Motion statechart not set for {self.__class__.__name__} {self.name}"
-            )
-        return self._motion_statechart
-
-    @motion_statechart.setter
-    def motion_statechart(self, motion_statechart: MotionStatechart) -> None:
-        self._motion_statechart = motion_statechart
-        self._link_child_nodes_with_motion_statechart()
-
-    def create_compressed_copy(self) -> Goal:
-        goal_copy = Goal(name=self.name)
-        for node in self.nodes:
-            match node:
-                case Goal():
-                    node_copy = node.create_compressed_copy()
-                case Task():
-                    node_copy = Task(name=node.name)
-                case _:
-                    node_copy = MotionStatechartNode(name=node.name)
-            goal_copy.add_node(node_copy)
-            node_copy.start_condition = node.start_condition
-            node_copy.pause_condition = node.pause_condition
-            node_copy.end_condition = node.end_condition
-            node_copy.reset_condition = node.reset_condition
-        return goal_copy
-
     def expand(self, context: BuildContext) -> None:
         """
         Instantiate child nodes and wire their life cycle transition conditions.
@@ -601,14 +588,7 @@ class Goal(MotionStatechartNode):
     def add_node(self, node: MotionStatechartNode) -> None:
         self.nodes.append(node)
         node.parent_node = self
-        self._link_child_nodes_with_motion_statechart()
-
-    def _link_child_nodes_with_motion_statechart(self) -> None:
-        if hasattr(self, "_motion_statechart"):
-            for node in self.nodes:
-                node.motion_statechart = self.motion_statechart
-                if not self.motion_statechart.has_node(node):
-                    self.motion_statechart.add_node(node)
+        self.motion_statechart.add_node(node)
 
     def arrange_in_sequence(self, nodes: List[MotionStatechartNode]) -> None:
         first_node = nodes[0]

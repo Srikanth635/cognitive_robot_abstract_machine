@@ -22,7 +22,7 @@ from giskardpy.motion_statechart.motion_statechart import (
 from giskardpy.motion_statechart.tasks.cartesian_tasks import CartesianPose
 from giskardpy.motion_statechart.tasks.joint_tasks import JointPositionList, JointState
 from giskardpy.motion_statechart.test_nodes.test_nodes import (
-    TrueMonitor,
+    ConstTrueNode,
     TestNestedGoal,
 )
 from giskardpy.qp.qp_controller_config import QPControllerConfig
@@ -46,11 +46,11 @@ from semantic_digital_twin.world_description.world_entity import Body
 
 
 def test_TrueMonitor():
-    node = TrueMonitor(name=PrefixedName("muh"))
+    node = ConstTrueNode()
     json_data = node.to_json()
     json_str = json.dumps(json_data)
     new_json_data = json.loads(json_str)
-    node_copy = TrueMonitor.from_json(new_json_data)
+    node_copy = ConstTrueNode.from_json(new_json_data)
     assert node_copy.name == node.name
 
 
@@ -76,10 +76,10 @@ def test_CollisionRequest(pr2_world: World):
 
 def test_trinary_transition():
     msc = MotionStatechart()
-    node1 = TrueMonitor(name=PrefixedName("muh1"))
-    node2 = TrueMonitor(name=PrefixedName("muh2"))
-    node3 = TrueMonitor(name=PrefixedName("muh3"))
-    node4 = TrueMonitor(name=PrefixedName("muh4"))
+    node1 = ConstTrueNode()
+    node2 = ConstTrueNode()
+    node3 = ConstTrueNode()
+    node4 = ConstTrueNode()
     msc.add_node(node1)
     msc.add_node(node2)
     msc.add_node(node3)
@@ -102,7 +102,6 @@ def test_trinary_transition():
 def test_to_json_joint_position_list(mini_world):
     connection = mini_world.connections[0]
     node = JointPositionList(
-        name=PrefixedName("muh"),
         goal_state=JointState({connection: 0.5}),
         threshold=0.5,
     )
@@ -117,13 +116,13 @@ def test_to_json_joint_position_list(mini_world):
 
 def test_start_condition(mini_world):
     msc = MotionStatechart()
-    node1 = TrueMonitor(name=PrefixedName("muh"))
+    node1 = ConstTrueNode()
     msc.add_node(node1)
-    node2 = TrueMonitor(name=PrefixedName("muh2"))
+    node2 = ConstTrueNode()
     msc.add_node(node2)
-    node3 = TrueMonitor(name=PrefixedName("muh3"))
+    node3 = ConstTrueNode()
     msc.add_node(node3)
-    end = TrueMonitor(name=PrefixedName("done"))
+    end = ConstTrueNode()
     msc.add_node(end)
 
     node1.end_condition = node1.observation_variable
@@ -177,13 +176,11 @@ def test_executing_json_parsed_statechart():
 
     msc = MotionStatechart()
 
-    task1 = JointPositionList(
-        name=PrefixedName("task1"), goal_state=JointState({root_C_tip: 0.5})
-    )
-    always_true = TrueMonitor(name=PrefixedName("muh"))
+    task1 = JointPositionList(goal_state=JointState({root_C_tip: 0.5}))
+    always_true = ConstTrueNode()
     msc.add_node(always_true)
     msc.add_node(task1)
-    end = EndMotion(name=PrefixedName("done"))
+    end = EndMotion()
     msc.add_node(end)
 
     task1.start_condition = always_true.observation_variable
@@ -202,8 +199,8 @@ def test_executing_json_parsed_statechart():
     )
     kin_sim.compile(motion_statechart=msc_copy)
 
-    task1_copy = msc_copy.get_node_by_name(task1.name)
-    end_copy = msc_copy.get_node_by_name(end.name)
+    task1_copy = msc_copy.get_node_by_index(task1.index)
+    end_copy = msc_copy.get_node_by_index(end.index)
     assert task1_copy.observation_state == ObservationStateValues.UNKNOWN
     assert end_copy.observation_state == ObservationStateValues.UNKNOWN
     assert task1_copy.life_cycle_state == LifeCycleValues.NOT_STARTED
@@ -240,13 +237,12 @@ def test_cart_goal_simple(pr2_world: World):
 
     msc = MotionStatechart()
     cart_goal = CartesianPose(
-        name=PrefixedName("cart_goal"),
         root_link=root,
         tip_link=tip,
         goal_pose=tip_goal,
     )
     msc.add_node(cart_goal)
-    end = EndMotion(name=PrefixedName("end"))
+    end = EndMotion()
     msc.add_node(end)
     end.start_condition = cart_goal.observation_variable
 
@@ -277,13 +273,12 @@ def test_compressed_copy_can_be_plotted(pr2_world: World):
 
     msc = MotionStatechart()
     cart_goal = CartesianPose(
-        name=PrefixedName("cart_goal"),
         root_link=root,
         tip_link=tip,
         goal_pose=tip_goal,
     )
     msc.add_node(cart_goal)
-    end = EndMotion(name=PrefixedName("end"))
+    end = EndMotion()
     msc.add_node(end)
     end.start_condition = cart_goal.observation_variable
 
@@ -299,14 +294,14 @@ def test_compressed_copy_can_be_plotted(pr2_world: World):
 def test_nested_goals():
     msc = MotionStatechart()
 
-    node1 = TrueMonitor(name=PrefixedName("node1"))
+    node1 = ConstTrueNode()
     msc.add_node(node1)
 
-    outer = TestNestedGoal(name=PrefixedName("outer"))
+    outer = TestNestedGoal()
     msc.add_node(outer)
     outer.start_condition = node1.observation_variable
 
-    end = EndMotion(name=PrefixedName("done nested"))
+    end = EndMotion()
     msc.add_node(end)
     end.start_condition = outer.observation_variable
 
@@ -319,5 +314,5 @@ def test_nested_goals():
     msc_copy._add_transitions()
 
     for node in msc.nodes:
-        assert node.index == msc_copy.get_node_by_name(node.name).index
+        assert node.index == msc_copy.get_node_by_index(node.index).index
     msc_copy.draw("muh.pdf")

@@ -51,7 +51,9 @@ class ConstraintCollection:
             c for c in self.constraints if isinstance(c, DerivativeEqualityConstraint)
         ]
 
-    def merge(self, other: ConstraintCollection):
+    def merge(self, name_prefix: str, other: ConstraintCollection):
+        for constraint in other.constraints:
+            constraint.name = f"{name_prefix}/{constraint.name}"
         self.constraints.extend(other.constraints)
         self._are_names_unique()
 
@@ -83,7 +85,7 @@ class ConstraintCollection:
         equality_bound: cas.ScalarData,
         weight: cas.ScalarData,
         reference_velocity: cas.ScalarData,
-        name: Optional[PrefixedName] = None,
+        name: Optional[str] = None,
         lower_slack_limit: cas.ScalarData = -Large_Number,
         upper_slack_limit: cas.ScalarData = Large_Number,
     ):
@@ -134,7 +136,7 @@ class ConstraintCollection:
         upper_error: cas.ScalarData,
         weight: cas.ScalarData,
         task_expression: cas.SymbolicScalar,
-        name: Optional[PrefixedName] = None,
+        name: Optional[str] = None,
         lower_slack_limit: cas.ScalarData = -Large_Number,
         upper_slack_limit: cas.ScalarData = Large_Number,
     ):
@@ -187,7 +189,7 @@ class ConstraintCollection:
         frame_P_goal: cas.Point3,
         reference_velocity: cas.ScalarData,
         weight: cas.ScalarData,
-        name: Optional[PrefixedName] = None,
+        name: Optional[str] = None,
     ):
         """
         Adds three constraints to move frame_P_current to frame_P_goal.
@@ -205,7 +207,7 @@ class ConstraintCollection:
                 equality_bound=frame_V_error[i],
                 weight=weight,
                 reference_velocity=reference_velocity,
-                name=PrefixedName(str(name), str(i)),
+                name=f"{name}/{i}",
             )
 
     def add_position_constraint(
@@ -214,7 +216,7 @@ class ConstraintCollection:
         expr_goal: cas.ScalarData,
         reference_velocity: cas.ScalarData,
         weight: cas.ScalarData = DefaultWeights.WEIGHT_BELOW_CA,
-        name: Optional[PrefixedName] = None,
+        name: Optional[str] = None,
     ):
         """
         A wrapper around add_constraint. Will add a constraint that tries to move expr_current to expr_goal.
@@ -235,7 +237,7 @@ class ConstraintCollection:
         expr_max: cas.ScalarData,
         reference_velocity: cas.ScalarData,
         weight: cas.ScalarData = DefaultWeights.WEIGHT_BELOW_CA,
-        name: Optional[PrefixedName] = None,
+        name: Optional[str] = None,
     ):
         """
         A wrapper around add_constraint. Will add a constraint that tries to move expr_current to expr_goal.
@@ -257,7 +259,7 @@ class ConstraintCollection:
         frame_V_goal: cas.Vector3,
         reference_velocity: cas.ScalarData,
         weight: cas.ScalarData = DefaultWeights.WEIGHT_BELOW_CA,
-        name: Optional[PrefixedName] = None,
+        name: Optional[str] = None,
     ):
         """
         Adds constraints to align frame_V_current with frame_V_goal. Make sure that both vectors are expressed
@@ -283,7 +285,7 @@ class ConstraintCollection:
                 equality_bound=error[i],
                 reference_velocity=reference_velocity,
                 weight=weight,
-                name=PrefixedName(str(name), str(i)),
+                name=f"{name}/{i}",
             )
 
     def add_rotation_goal_constraints(
@@ -292,7 +294,7 @@ class ConstraintCollection:
         frame_R_goal: cas.RotationMatrix,
         reference_velocity: cas.ScalarData,
         weight: cas.ScalarData,
-        name: Optional[PrefixedName] = None,
+        name: Optional[str] = None,
     ):
         """
         Adds constraints to move frame_R_current to frame_R_goal. Make sure that both are expressed relative to the same
@@ -320,7 +322,7 @@ class ConstraintCollection:
                 equality_bound=-q_error[i],
                 weight=weight,
                 reference_velocity=reference_velocity,
-                name=PrefixedName(str(i), str(name)),
+                name=f"{name}/{i}",
             )
 
     def add_velocity_constraint(
@@ -330,7 +332,7 @@ class ConstraintCollection:
         weight: cas.ScalarData,
         task_expression: cas.SymbolicScalar,
         velocity_limit: cas.ScalarData,
-        name: Optional[PrefixedName] = None,
+        name: Optional[str] = None,
         lower_slack_limit: Union[cas.ScalarData, List[cas.ScalarData]] = -Large_Number,
         upper_slack_limit: Union[cas.ScalarData, List[cas.ScalarData]] = Large_Number,
     ):
@@ -369,7 +371,7 @@ class ConstraintCollection:
         weight: cas.ScalarData,
         task_expression: cas.SymbolicScalar,
         velocity_limit: cas.ScalarData,
-        name: Optional[PrefixedName] = None,
+        name: Optional[str] = None,
         lower_slack_limit: Union[cas.ScalarData, List[cas.ScalarData]] = -Large_Number,
         upper_slack_limit: Union[cas.ScalarData, List[cas.ScalarData]] = Large_Number,
     ):
@@ -432,7 +434,7 @@ class ConstraintCollection:
         max_velocity: cas.ScalarData,
         weight: cas.ScalarData,
         max_violation: cas.ScalarData = np.inf,
-        name: Optional[PrefixedName] = None,
+        name: Optional[str] = None,
     ):
         """
         Adds constraints to limit the translational velocity of frame_P_current. Be aware that the velocity is relative
@@ -453,7 +455,7 @@ class ConstraintCollection:
             lower_slack_limit=-max_violation,
             upper_slack_limit=max_violation,
             velocity_limit=max_velocity,
-            name=PrefixedName("velocity", name),
+            name=name,
         )
 
     def add_rotational_velocity_limit(
@@ -462,7 +464,7 @@ class ConstraintCollection:
         max_velocity: cas.ScalarData,
         weight: cas.ScalarData,
         max_violation: cas.ScalarData = Large_Number,
-        name: Optional[PrefixedName] = None,
+        name: Optional[str] = None,
     ):
         """
         Add velocity constraints to limit the velocity of frame_R_current. Be aware that the velocity is relative to

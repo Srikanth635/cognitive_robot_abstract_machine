@@ -361,23 +361,28 @@ class MotionStatechart(SubclassJSONSerializer):
 
     def create_compressed_copy(self) -> MotionStatechart:
         motion_statechart_copy = MotionStatechart()
-        for node in self.top_level_nodes:
+        self._create_compressed_copy(self.top_level_nodes, motion_statechart_copy)
+        return motion_statechart_copy
+
+    def _create_compressed_copy(
+        self, nodes: List[MotionStatechartNode], destination: MotionStatechart | Goal
+    ):
+        for node in nodes:
             match node:
                 case Goal():
-                    node_copy = node.create_compressed_copy()
+                    node_copy = Goal(name=node.name)
                 case Task():
                     node_copy = Task(name=node.name)
                 case _:
                     node_copy = MotionStatechartNode(name=node.name)
-            motion_statechart_copy.add_node(node_copy)
+            destination.add_node(node_copy)
+            node_copy.index = node.index
             node_copy.start_condition = node.start_condition
             node_copy.pause_condition = node.pause_condition
             node_copy.end_condition = node.end_condition
             node_copy.reset_condition = node.reset_condition
-        for node in self.nodes:
-            node_copy = motion_statechart_copy.get_node_by_name(node.name)
-            node_copy.index = node.index
-        return motion_statechart_copy
+            if isinstance(node, Goal):
+                self._create_compressed_copy(node.nodes, node_copy)
 
     @property
     def nodes(self) -> List[MotionStatechartNode]:
@@ -396,19 +401,14 @@ class MotionStatechart(SubclassJSONSerializer):
         return list(set(self.edges))
 
     def add_node(self, node: MotionStatechartNode):
-        if self.has_node(node):
-            raise ValueError(f"Node {node.name} already exists.")
         node.motion_statechart = self
         node.index = self.rx_graph.add_node(node)
+        node._post_add_to_motion_statechart()
         self.life_cycle_state.grow()
         self.observation_state.grow()
 
-    def has_node(self, node: MotionStatechartNode) -> bool:
-        try:
-            self.get_node_by_name(node.name)
-            return True
-        except NodeNotFoundError:
-            return False
+    def get_node_by_index(self, index: int) -> MotionStatechartNode:
+        return self.rx_graph.get_node_data(index)
 
     def get_node_by_name(self, name: PrefixedName) -> MotionStatechartNode:
         try:
@@ -478,7 +478,9 @@ class MotionStatechart(SubclassJSONSerializer):
     def combine_constraint_collections_of_nodes(self) -> ConstraintCollection:
         combined_constraint_collection = ConstraintCollection()
         for node in self.nodes:
-            combined_constraint_collection.merge(node._constraint_collection)
+            combined_constraint_collection.merge(
+                name_prefix=node.unique_name, other=node._constraint_collection
+            )
         return combined_constraint_collection
 
     def _update_observation_state(self, context: BuildContext):

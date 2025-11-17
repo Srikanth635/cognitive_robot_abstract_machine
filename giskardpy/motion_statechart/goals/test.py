@@ -8,7 +8,7 @@ from giskardpy.motion_statechart.data_types import DefaultWeights
 from giskardpy.motion_statechart.graph_node import Goal, CancelMotion
 from giskardpy.motion_statechart.tasks.cartesian_tasks import CartesianPose
 from giskardpy.motion_statechart.tasks.joint_tasks import JointPositionList
-from giskardpy.motion_statechart.test_nodes.test_nodes import TrueMonitor
+from giskardpy.motion_statechart.test_nodes.test_nodes import ConstTrueNode
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.world_description.world_entity import Body
 
@@ -93,7 +93,7 @@ class Cutting(Goal):
         )
         self.add_task(cut_down)
 
-        made_contact = TrueMonitor(name=f"{self.name}/Made Contact?")
+        made_contact = ConstTrueNode(name=f"{self.name}/Made Contact?")
         self.add_monitor(made_contact)
         made_contact.start_condition = cut_down
         made_contact.end_condition = made_contact

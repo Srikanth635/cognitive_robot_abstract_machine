@@ -12,7 +12,7 @@ from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 
 
 @dataclass(eq=False, repr=False)
-class TrueMonitor(MotionStatechartNode):
+class ConstTrueNode(MotionStatechartNode):
     def build(self, context: BuildContext) -> NodeArtifacts:
         return NodeArtifacts(observation=cas.TrinaryTrue)
 
@@ -45,13 +45,13 @@ class ChangeStateOnEvents(MotionStatechartNode):
 
 @dataclass(repr=False, eq=False)
 class TestGoal(Goal):
-    sub_node1: TrueMonitor = field(init=False)
-    sub_node2: TrueMonitor = field(init=False)
+    sub_node1: ConstTrueNode = field(init=False)
+    sub_node2: ConstTrueNode = field(init=False)
 
     def expand(self, context: BuildContext) -> None:
-        self.sub_node1 = TrueMonitor(name=PrefixedName("sub muh1"))
+        self.sub_node1 = ConstTrueNode(name=PrefixedName("sub muh1"))
         self.add_node(self.sub_node1)
-        self.sub_node2 = TrueMonitor(name=PrefixedName("sub muh2"))
+        self.sub_node2 = ConstTrueNode(name=PrefixedName("sub muh2"))
         self.add_node(self.sub_node2)
         self.sub_node1.end_condition = self.sub_node1.observation_variable
         self.sub_node2.start_condition = self.sub_node1.observation_variable

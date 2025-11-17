@@ -15,8 +15,8 @@ from giskardpy.motion_statechart.data_types import (
     LifeCycleValues,
     ObservationStateValues,
 )
+from giskardpy.motion_statechart.exceptions import NotInMotionStatechartError
 from giskardpy.motion_statechart.goals.collision_avoidance import (
-    ExternalCollisionAvoidance,
     CollisionAvoidance,
 )
 from giskardpy.motion_statechart.graph_node import (
@@ -45,7 +45,7 @@ from giskardpy.motion_statechart.tasks.joint_tasks import JointPositionList, Joi
 from giskardpy.motion_statechart.tasks.pointing import Pointing
 from giskardpy.motion_statechart.test_nodes.test_nodes import (
     ChangeStateOnEvents,
-    TrueMonitor,
+    ConstTrueNode,
     TestGoal,
     TestNestedGoal,
 )
@@ -64,7 +64,6 @@ from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connections import (
     RevoluteConnection,
     ActiveConnection1DOF,
-    OmniDrive,
 )
 from semantic_digital_twin.world_description.degree_of_freedom import DegreeOfFreedom
 from semantic_digital_twin.world_description.world_entity import Body
@@ -72,13 +71,13 @@ from semantic_digital_twin.world_description.world_entity import Body
 
 def test_condition_to_str():
     msc = MotionStatechart()
-    node1 = TrueMonitor(name=PrefixedName("muh"))
+    node1 = ConstTrueNode()
     msc.add_node(node1)
-    node2 = TrueMonitor(name=PrefixedName("muh2"))
+    node2 = ConstTrueNode()
     msc.add_node(node2)
-    node3 = TrueMonitor(name=PrefixedName("muh3"))
+    node3 = ConstTrueNode()
     msc.add_node(node3)
-    end = EndMotion(name=PrefixedName("done"))
+    end = EndMotion()
     msc.add_node(end)
 
     end.start_condition = cas.trinary_logic_and(
@@ -89,16 +88,16 @@ def test_condition_to_str():
         ),
     )
     a = str(end._start_condition)
-    assert a == '("muh" and ("muh2" or not "muh3"))'
+    assert a == '("ConstTrueNode#0" and ("ConstTrueNode#1" or not "ConstTrueNode#2"))'
 
 
 def test_motion_statechart_to_dot():
     msc = MotionStatechart()
-    node1 = TrueMonitor(name=PrefixedName("muh"))
+    node1 = ConstTrueNode()
     msc.add_node(node1)
-    node2 = TrueMonitor(name=PrefixedName("muh2"))
+    node2 = ConstTrueNode()
     msc.add_node(node2)
-    end = EndMotion(name=PrefixedName("done"))
+    end = EndMotion()
     msc.add_node(end)
     node1.end_condition = node2.observation_variable
     end.start_condition = cas.trinary_logic_and(
@@ -145,13 +144,13 @@ def test_state_deletion():
 def test_motion_statechart():
     msc = MotionStatechart()
 
-    node1 = TrueMonitor(name=PrefixedName("muh"))
+    node1 = ConstTrueNode()
     msc.add_node(node1)
-    node2 = TrueMonitor(name=PrefixedName("muh2"))
+    node2 = ConstTrueNode()
     msc.add_node(node2)
-    node3 = TrueMonitor(name=PrefixedName("muh3"))
+    node3 = ConstTrueNode()
     msc.add_node(node3)
-    end = EndMotion(name=PrefixedName("done"))
+    end = EndMotion()
     msc.add_node(end)
 
     node1.start_condition = cas.trinary_logic_or(
@@ -229,25 +228,16 @@ def test_motion_statechart():
     ]
 
 
-def test_duplicate_name():
-    msc = MotionStatechart()
-
-    with pytest.raises(ValueError):
-        cas.FloatVariable(name=PrefixedName("muh"))
-        msc.add_node(TrueMonitor(name=PrefixedName("muh")))
-        msc.add_node(TrueMonitor(name=PrefixedName("muh")))
-
-
 def test_print():
     msc = MotionStatechart()
-    print_node1 = Print(name=PrefixedName("cow"), message="muh")
+    print_node1 = Print(name="cow", message="muh")
     msc.add_node(print_node1)
-    print_node2 = Print(name=PrefixedName("cow2"), message="muh")
+    print_node2 = Print(name="cow2", message="muh")
     msc.add_node(print_node2)
 
-    node1 = TrueMonitor(name=PrefixedName("muh"))
+    node1 = ConstTrueNode()
     msc.add_node(node1)
-    end = EndMotion(name=PrefixedName("done"))
+    end = EndMotion()
     msc.add_node(end)
 
     node1.start_condition = print_node1.observation_variable
@@ -334,9 +324,9 @@ def test_print():
 
 def test_cancel_motion():
     msc = MotionStatechart()
-    node1 = TrueMonitor(name=PrefixedName("muh"))
+    node1 = ConstTrueNode()
     msc.add_node(node1)
-    cancel = CancelMotion(name=PrefixedName("done"), exception=Exception("test"))
+    cancel = CancelMotion(exception=Exception("test"))
     msc.add_node(cancel)
     cancel.start_condition = node1.observation_variable
 
@@ -380,13 +370,11 @@ def test_joint_goal():
 
     msc = MotionStatechart()
 
-    task1 = JointPositionList(
-        name=PrefixedName("task1"), goal_state=JointState({root_C_tip: 1})
-    )
-    always_true = TrueMonitor(name=PrefixedName("muh"))
+    task1 = JointPositionList(goal_state=JointState({root_C_tip: 1}))
+    always_true = ConstTrueNode()
     msc.add_node(always_true)
     msc.add_node(task1)
-    end = EndMotion(name=PrefixedName("done"))
+    end = EndMotion()
     msc.add_node(end)
 
     task1.start_condition = always_true.observation_variable
@@ -426,13 +414,13 @@ def test_joint_goal():
 
 def test_reset():
     msc = MotionStatechart()
-    node1 = TrueMonitor(name=PrefixedName("muh"))
+    node1 = ConstTrueNode()
     msc.add_node(node1)
-    node2 = TrueMonitor(name=PrefixedName("muh2"))
+    node2 = ConstTrueNode()
     msc.add_node(node2)
-    node3 = TrueMonitor(name=PrefixedName("muh3"))
+    node3 = ConstTrueNode()
     msc.add_node(node3)
-    end = EndMotion(name=PrefixedName("done"))
+    end = EndMotion()
     msc.add_node(end)
     node1.reset_condition = node2.observation_variable
     node2.start_condition = node1.observation_variable
@@ -513,14 +501,14 @@ def test_reset():
 def test_nested_goals():
     msc = MotionStatechart()
 
-    node1 = TrueMonitor(name=PrefixedName("node1"))
+    node1 = ConstTrueNode()
     msc.add_node(node1)
 
-    outer = TestNestedGoal(name=PrefixedName("outer"))
+    outer = TestNestedGoal()
     msc.add_node(outer)
     outer.start_condition = node1.observation_variable
 
-    end = EndMotion(name=PrefixedName("done nested"))
+    end = EndMotion()
     msc.add_node(end)
     end.start_condition = outer.observation_variable
 
@@ -530,10 +518,10 @@ def test_nested_goals():
     msc_copy = MotionStatechart.from_json(new_json_data)
 
     for node in msc.nodes:
-        assert node.index == msc_copy.get_node_by_name(node.name).index
+        assert node.index == msc_copy.get_node_by_index(node.index).index
 
     kin_sim = Executor(world=World())
-    node1 = msc_copy.get_nodes_by_type(TrueMonitor)[0]
+    node1 = msc_copy.get_nodes_by_type(ConstTrueNode)[0]
     outer = msc_copy.get_nodes_by_type(TestNestedGoal)[0]
     end = msc_copy.get_nodes_by_type(EndMotion)[0]
     kin_sim.compile(motion_statechart=msc_copy)
@@ -686,7 +674,6 @@ class _TestThreadMonitor(ThreadPayloadMonitor):
 def test_thread_payload_monitor_non_blocking_and_caching():
     msc = MotionStatechart()
     mon = _TestThreadMonitor(
-        name=PrefixedName("thread_mon"),
         delay=0.05,
         return_value=ObservationStateValues.TRUE,
     )
@@ -707,12 +694,11 @@ def test_thread_payload_monitor_non_blocking_and_caching():
 def test_thread_payload_monitor_integration():
     msc = MotionStatechart()
     mon = _TestThreadMonitor(
-        name=PrefixedName("thread_mon2"),
         delay=0.03,
         return_value=ObservationStateValues.TRUE,
     )
     msc.add_node(mon)
-    end = EndMotion(name=PrefixedName("done thread"))
+    end = EndMotion()
     msc.add_node(end)
     end.start_condition = mon.observation_variable
 
@@ -746,15 +732,15 @@ def test_thread_payload_monitor_integration():
 def test_goal():
     msc = MotionStatechart()
 
-    node1 = TrueMonitor(name=PrefixedName("muh"))
+    node1 = ConstTrueNode()
     msc.add_node(node1)
 
-    goal = TestGoal(name=PrefixedName("goal"))
+    goal = TestGoal()
     msc.add_node(goal)
 
     goal.start_condition = node1.observation_variable
 
-    end = EndMotion(name=PrefixedName("done"))
+    end = EndMotion()
     msc.add_node(end)
     end.start_condition = goal.observation_variable
 
@@ -869,10 +855,8 @@ def test_set_seed_configuration(pr2_world):
         "torso_lift_joint"
     )
 
-    node1 = SetSeedConfiguration(
-        name=PrefixedName("muh"), seed_configuration=JointState({connection: goal})
-    )
-    end = EndMotion(name=PrefixedName("done"))
+    node1 = SetSeedConfiguration(seed_configuration=JointState({connection: goal}))
+    end = EndMotion()
     msc.add_node(node1)
     msc.add_node(end)
     node1.end_condition = node1.observation_variable
@@ -901,10 +885,9 @@ def test_set_seed_odometry(pr2_world):
     )
 
     node1 = SetOdometry(
-        name=PrefixedName("muh"),
         base_pose=goal,
     )
-    end = EndMotion(name=PrefixedName("done"))
+    end = EndMotion()
     msc.add_node(node1)
     msc.add_node(end)
     node1.end_condition = node1.observation_variable
@@ -930,7 +913,6 @@ def test_set_seed_odometry(pr2_world):
 def test_continuous_joint(pr2_world):
     msc = MotionStatechart()
     joint_goal = JointPositionList(
-        name=PrefixedName("joint_goal"),
         goal_state=JointState.from_str_dict(
             {
                 "r_wrist_roll_joint": -np.pi,
@@ -940,7 +922,7 @@ def test_continuous_joint(pr2_world):
         ),
     )
     msc.add_node(joint_goal)
-    end = EndMotion(name=PrefixedName("end"))
+    end = EndMotion()
     msc.add_node(end)
     end.start_condition = joint_goal.observation_variable
 
@@ -955,7 +937,6 @@ def test_continuous_joint(pr2_world):
 def test_revolute_joint(pr2_world):
     msc = MotionStatechart()
     joint_goal = JointPositionList(
-        name=PrefixedName("joint_goal"),
         goal_state=JointState.from_str_dict(
             {
                 "head_pan_joint": 0.041880780651479044,
@@ -965,7 +946,7 @@ def test_revolute_joint(pr2_world):
         ),
     )
     msc.add_node(joint_goal)
-    end = EndMotion(name=PrefixedName("end"))
+    end = EndMotion()
     msc.add_node(end)
     end.start_condition = joint_goal.observation_variable
 
@@ -984,13 +965,12 @@ def test_cart_goal_1eef(pr2_world: World):
 
     msc = MotionStatechart()
     cart_goal = CartesianPose(
-        name=PrefixedName("cart_goal"),
         root_link=root,
         tip_link=tip,
         goal_pose=tip_goal,
     )
     msc.add_node(cart_goal)
-    end = EndMotion(name=PrefixedName("end"))
+    end = EndMotion()
     msc.add_node(end)
     end.start_condition = cart_goal.observation_variable
 
@@ -1013,7 +993,6 @@ def test_cart_goal_sequence_at_build(pr2_world: World):
 
     msc = MotionStatechart()
     cart_goal1 = CartesianPose(
-        name=PrefixedName("cart_goal1"),
         root_link=root,
         tip_link=tip,
         goal_pose=tip_goal1,
@@ -1021,7 +1000,6 @@ def test_cart_goal_sequence_at_build(pr2_world: World):
     msc.add_node(cart_goal1)
 
     cart_goal2 = CartesianPose(
-        name=PrefixedName("cart_goal2"),
         root_link=root,
         tip_link=tip,
         goal_pose=tip_goal2,
@@ -1032,7 +1010,7 @@ def test_cart_goal_sequence_at_build(pr2_world: World):
     cart_goal1.end_condition = cart_goal1.observation_variable
     cart_goal2.start_condition = cart_goal1.observation_variable
 
-    end = EndMotion(name=PrefixedName("end"))
+    end = EndMotion()
     msc.add_node(end)
     end.start_condition = cas.trinary_logic_and(
         cart_goal1.observation_variable, cart_goal2.observation_variable
@@ -1061,7 +1039,6 @@ def test_cart_goal_sequence_on_start(pr2_world: World):
 
     msc = MotionStatechart()
     cart_goal1 = CartesianPose(
-        name=PrefixedName("cart_goal1"),
         root_link=root,
         tip_link=tip,
         goal_pose=tip_goal1,
@@ -1069,7 +1046,6 @@ def test_cart_goal_sequence_on_start(pr2_world: World):
     msc.add_node(cart_goal1)
 
     cart_goal2 = CartesianPose(
-        name=PrefixedName("cart_goal2"),
         root_link=root,
         tip_link=tip,
         goal_pose=tip_goal2,
@@ -1079,7 +1055,7 @@ def test_cart_goal_sequence_on_start(pr2_world: World):
     cart_goal1.end_condition = cart_goal1.observation_variable
     cart_goal2.start_condition = cart_goal1.observation_variable
 
-    end = EndMotion(name=PrefixedName("end"))
+    end = EndMotion()
     msc.add_node(end)
     end.start_condition = cas.trinary_logic_and(
         cart_goal1.observation_variable, cart_goal2.observation_variable
@@ -1107,13 +1083,12 @@ def test_CartesianOrientation(pr2_world: World):
 
     msc = MotionStatechart()
     cart_goal = CartesianOrientation(
-        name=PrefixedName("cart_goal"),
         root_link=root,
         tip_link=tip,
         goal_orientation=tip_goal,
     )
     msc.add_node(cart_goal)
-    end = EndMotion(name=PrefixedName("end"))
+    end = EndMotion()
     msc.add_node(end)
     end.start_condition = cart_goal.observation_variable
 
@@ -1138,14 +1113,13 @@ def test_pointing(pr2_world: World):
     pointing_axis = cas.Vector3.X(reference_frame=tip)
 
     pointing = Pointing(
-        name=PrefixedName("pointing"),
         root_link=root,
         tip_link=tip,
         goal_point=goal_point,
         pointing_axis=pointing_axis,
     )
     msc.add_node(pointing)
-    end = EndMotion(name=PrefixedName("end"))
+    end = EndMotion()
     msc.add_node(end)
     end.start_condition = pointing.observation_variable
 
@@ -1160,24 +1134,24 @@ def test_pointing(pr2_world: World):
 def test_transition_triggers():
     msc = MotionStatechart()
 
-    changer = ChangeStateOnEvents(name=PrefixedName("changer"))
+    changer = ChangeStateOnEvents()
     msc.add_node(changer)
 
-    node1 = Pulse(name=PrefixedName("node1"))
+    node1 = Pulse()
     msc.add_node(node1)
 
-    node2 = Pulse(name=PrefixedName("node2"))
+    node2 = Pulse()
     msc.add_node(node2)
     node2.start_condition = node1.observation_variable
 
-    node3 = Pulse(name=PrefixedName("node3"))
+    node3 = Pulse()
     msc.add_node(node3)
     node3.start_condition = cas.trinary_logic_and(
         cas.trinary_logic_not(node1.observation_variable),
         cas.trinary_logic_not(node2.observation_variable),
     )
 
-    node4 = Pulse(name=PrefixedName("node4"))
+    node4 = Pulse()
     msc.add_node(node4)
     node4.start_condition = node3.observation_variable
 
@@ -1229,7 +1203,6 @@ def test_collision_avoidance(box_bot_world):
         1, reference_frame=box_bot_world.root
     )
     cart_goal = CartesianPose(
-        name=PrefixedName("cart_goal"),
         root_link=root,
         tip_link=tip,
         goal_pose=target_pose,
@@ -1237,15 +1210,14 @@ def test_collision_avoidance(box_bot_world):
     msc.add_node(cart_goal)
 
     collision_avoidance = CollisionAvoidance(
-        name=PrefixedName("ca"),
         collision_entries=[CollisionRequest.avoid_all_collision()],
     )
     msc.add_node(collision_avoidance)
 
-    local_min = LocalMinimumReached(name=PrefixedName("local_min"))
+    local_min = LocalMinimumReached()
     msc.add_node(local_min)
 
-    end = EndMotion(name=PrefixedName("end"))
+    end = EndMotion()
     msc.add_node(end)
     end.start_condition = local_min.observation_variable
 
@@ -1275,17 +1247,33 @@ def test_collision_avoidance(box_bot_world):
     assert contact_distance > 0.049
 
 
+def test_not_not_in_motion_statechart():
+    node = ConstTrueNode()
+    with pytest.raises(NotInMotionStatechartError):
+        muh = node.observation_variable
+    with pytest.raises(NotInMotionStatechartError):
+        muh = node.life_cycle_variable
+    with pytest.raises(NotInMotionStatechartError):
+        node.start_condition = node.observation_variable
+    with pytest.raises(NotInMotionStatechartError):
+        node.pause_condition = node.observation_variable
+    with pytest.raises(NotInMotionStatechartError):
+        node.end_condition = node.observation_variable
+    with pytest.raises(NotInMotionStatechartError):
+        node.reset_condition = node.observation_variable
+
+
 def test_counting():
     msc = MotionStatechart()
     seconds = 3
-    counter = CountSeconds(name=PrefixedName("counter"), seconds=seconds)
+    counter = CountSeconds(seconds=seconds)
     msc.add_node(counter)
 
-    node1 = Pulse(name=PrefixedName("node1"))
-    node1.start_condition = counter.observation_variable
+    node1 = Pulse()
     msc.add_node(node1)
+    node1.start_condition = counter.observation_variable
 
-    end = EndMotion(name=PrefixedName("end"))
+    end = EndMotion()
     msc.add_node(end)
 
     counter.reset_condition = node1.observation_variable

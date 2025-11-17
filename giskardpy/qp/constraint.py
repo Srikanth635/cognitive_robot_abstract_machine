@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 
 import semantic_digital_twin.spatial_types.spatial_types as cas
-from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.derivatives import Derivatives
 
 
@@ -11,7 +10,7 @@ class BaseConstraint:
     Defines a (slack-relaxed) constraint on expression for a quadratic program.
     """
 
-    name: PrefixedName
+    name: str
 
     expression: cas.SymbolicScalar
 

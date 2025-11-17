@@ -9,7 +9,17 @@ class MotionStatechartError(Exception):
 
 @dataclass
 class NodeNotFoundError(MotionStatechartError):
-    name: PrefixedName
+    name: str
 
     def __post_init__(self):
         super().__init__(f"Node '{self.name}' not found in MotionStatechart.")
+
+
+@dataclass
+class NotInMotionStatechartError(MotionStatechartError):
+    name: str
+
+    def __post_init__(self):
+        super().__init__(
+            f"Operation can't be performed because node '{self.name}' does not belong to a MotionStatechart."
+        )

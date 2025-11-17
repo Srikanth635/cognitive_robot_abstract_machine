@@ -152,7 +152,7 @@ class MotionStatechartGraphviz:
             f'  <TD WIDTH="100%" HEIGHT="{LineWidth}"></TD>'
             f"</TR>"
             f"<TR>"
-            f"  <TD><B> {node.name} </B></TD>"
+            f"  <TD><B> {node.unique_name} </B></TD>"
             f"</TR>"
             f"<TR>"
             f'  <TD CELLPADDING="0">'
@@ -229,7 +229,7 @@ class MotionStatechartGraphviz:
         child = pydot_node
         for index, style in enumerate(node._plot_extra_boarder_styles):
             c = pydot.Cluster(
-                graph_name=f"{node.name}",
+                graph_name=f"{node.unique_name}",
                 penwidth=LineWidth,
                 style=node._plot_extra_boarder_styles[index],
                 color="black",
@@ -246,7 +246,7 @@ class MotionStatechartGraphviz:
     def _create_pydot_node(self, node: MotionStatechartNode) -> pydot.Node:
         label = self._format_motion_graph_node(node=node)
         pydot_node = pydot.Node(
-            str(node.name),
+            str(node.unique_name),
             label=label,
             shape=node._plot_shape,
             color="black",
@@ -300,7 +300,7 @@ class MotionStatechartGraphviz:
         parent_cluster: Union[pydot.Graph, pydot.Cluster],
     ):
         goal_cluster = pydot.Cluster(
-            graph_name=str(node.name),
+            graph_name=str(node.unique_name),
             fontname=FONT,
             fontsize=Fontsize,
             style=GoalClusterStyle,
@@ -343,7 +343,7 @@ class MotionStatechartGraphviz:
             parent_node.parent_node is not None and child_node.parent_node is None
         ):
             return False
-        return parent_node.parent_node.name == child_node.parent_node.name
+        return parent_node.parent_node.unique_name == child_node.parent_node.unique_name
 
     def _add_start_condition_edge(
         self,
@@ -353,8 +353,8 @@ class MotionStatechartGraphviz:
         graph = self._cluster_map[parent_node.parent_node]
         destination_node = child_node
         source_node = parent_node
-        source_node_name = str(destination_node.name)
-        destination_node_name = str(source_node.name)
+        source_node_name = str(destination_node.unique_name)
+        destination_node_name = str(source_node.unique_name)
         node_cluster = self._get_cluster_of_node(destination_node_name, graph)
         sub_node_cluster = self._get_cluster_of_node(source_node_name, graph)
         kwargs = {}
@@ -384,8 +384,8 @@ class MotionStatechartGraphviz:
         graph = self._cluster_map[parent_node.parent_node]
         destination_node = child_node
         source_node = parent_node
-        source_node_name = str(destination_node.name)
-        destination_node_name = str(source_node.name)
+        source_node_name = str(destination_node.unique_name)
+        destination_node_name = str(source_node.unique_name)
         node_cluster = self._get_cluster_of_node(destination_node_name, graph)
         sub_node_cluster = self._get_cluster_of_node(source_node_name, graph)
         kwargs = {}
@@ -416,8 +416,8 @@ class MotionStatechartGraphviz:
         graph = self._cluster_map[parent_node.parent_node]
         destination_node = child_node
         source_node = parent_node
-        source_node_name = str(destination_node.name)
-        destination_node_name = str(source_node.name)
+        source_node_name = str(destination_node.unique_name)
+        destination_node_name = str(source_node.unique_name)
         node_cluster = self._get_cluster_of_node(destination_node_name, graph)
         sub_node_cluster = self._get_cluster_of_node(source_node_name, graph)
         kwargs = {}
@@ -450,8 +450,8 @@ class MotionStatechartGraphviz:
         graph = self._cluster_map[parent_node.parent_node]
         destination_node = parent_node
         source_node = child_node
-        source_node_name = str(destination_node.name)
-        destination_node_name = str(source_node.name)
+        source_node_name = str(destination_node.unique_name)
+        destination_node_name = str(source_node.unique_name)
         node_cluster = self._get_cluster_of_node(destination_node_name, graph)
         sub_node_cluster = self._get_cluster_of_node(source_node_name, graph)
         kwargs = {}

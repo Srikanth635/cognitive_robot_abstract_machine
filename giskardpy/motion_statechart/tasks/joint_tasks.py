@@ -99,7 +99,7 @@ class JointPositionList(Task):
             else:
                 error = target - current
             artifacts.constraints.add_equality_constraint(
-                name=PrefixedName(str(connection.name), str(self.name)),
+                name=str(connection.name),
                 reference_velocity=velocity,
                 equality_bound=error,
                 weight=self.weight,

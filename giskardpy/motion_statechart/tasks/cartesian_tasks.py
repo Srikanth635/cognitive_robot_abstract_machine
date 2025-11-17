@@ -256,7 +256,7 @@ class CartesianPose(Task):
         )
         r_P_c = r_T_c.to_position()
         artifacts.constraints.add_point_goal_constraints(
-            name=PrefixedName("position", str(self.name)),
+            name="position",
             frame_P_goal=root_P_goal,
             frame_P_current=r_P_c,
             reference_velocity=self.reference_linear_velocity,
@@ -268,7 +268,7 @@ class CartesianPose(Task):
         r_R_c = r_T_c.to_rotation_matrix()
 
         artifacts.constraints.add_rotation_goal_constraints(
-            name=PrefixedName("rotation", str(self.name)),
+            name="rotation",
             frame_R_current=r_R_c,
             frame_R_goal=root_R_goal,
             reference_velocity=self.reference_angular_velocity,

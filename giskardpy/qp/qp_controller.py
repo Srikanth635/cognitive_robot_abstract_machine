@@ -78,23 +78,24 @@ class QPControllerDebugger:
                 print(array)
 
     def save_all_pandas(self, folder_name: Optional[str] = None):
-        self.save_pandas(
-            [
-                self.p_weights,
-                self.p_b,
-                self.p_E,
-                self.p_bE,
-                self.p_A,
-                self.p_lbA,
-                self.p_ubA,
-                None,
-                self.p_xdot,
-            ],
-            ["weights", "b", "E", "bE", "A", "lbA", "ubA", "debug"],
-            god_map.tmp_folder,
-            None,
-            folder_name,
-        )
+        raise NotImplementedError()
+        # self.save_pandas(
+        #     [
+        #         self.p_weights,
+        #         self.p_b,
+        #         self.p_E,
+        #         self.p_bE,
+        #         self.p_A,
+        #         self.p_lbA,
+        #         self.p_ubA,
+        #         None,
+        #         self.p_xdot,
+        #     ],
+        #     ["weights", "b", "E", "bE", "A", "lbA", "ubA", "debug"],
+        #     god_map.tmp_folder,
+        #     None,
+        #     folder_name,
+        # )
 
     def save_pandas(
         self, dfs, names, path, time: float, folder_name: Optional[str] = None
