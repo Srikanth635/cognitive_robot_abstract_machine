@@ -364,8 +364,8 @@ class MujocoSimTestCase(unittest.TestCase):
                 "joint_angular_position": [0.0],
                 "joint_angular_velocity": [0.0],
             },
-            # "actuator1": {"cmd_joint_angular_position": [0.0]},
-            # "actuator2": {"cmd_joint_angular_position": [0.0]},
+            "actuator1": {"cmd_joint_angular_position": [0.0]},
+            "actuator2": {"cmd_joint_angular_position": [0.0]},
             "world": {"energy": [0.0, 0.0]},
             "box": {"position": [0.0, 0.0, 0.0], "quaternion": [1.0, 0.0, 0.0, 0.0]},
         }

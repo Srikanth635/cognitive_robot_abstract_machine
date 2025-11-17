@@ -31,6 +31,7 @@ from ..callbacks.callback import ModelChangeCallback
 from ..datastructures.prefixed_name import PrefixedName
 from ..spatial_types.spatial_types import TransformationMatrix, Point3, Quaternion
 from ..world import World
+from ..world_description.actuators import Actuator, MujocoActuator
 from ..world_description.connections import (
     RevoluteConnection,
     PrismaticConnection,
@@ -395,7 +396,7 @@ class ConnectionConverter(EntityConverter, ABC):
         Converts a Connection object to a dictionary of joint properties for Multiverse simulator.
 
         :param entity: The Connection object to convert.
-        :return: A dictionary of joint properties, by default containing position and quaternion.
+        :return: A dictionary of joint properties.
         """
         return EntityConverter._convert(self, entity)
 
@@ -450,7 +451,7 @@ class Connection1DOFConverter(ConnectionConverter, ABC):
         Converts an ActiveConnection1DOF object to a dictionary of joint properties for Multiverse simulator.
 
         :param entity: The ActiveConnection1DOF object to convert.
-        :return: A dictionary of joint properties, including additional axis and range properties.
+        :return: A dictionary of joint properties, including additional axis, range, position, quaternion, armature, dry friction, and damping properties.
         """
         joint_props = ConnectionConverter._convert(self, entity)
         assert len(entity.dofs) == 1, "ActiveConnection1DOF must have exactly one DOF."
@@ -516,6 +517,28 @@ class Connection6DOFConverter(ConnectionConverter):
         joint_props = ConnectionConverter._convert(self, entity)
         assert len(entity.dofs) == 7, "Connection6DoF must have exactly six DOFs."
         return joint_props
+
+
+class ActuatorConverter(EntityConverter, ABC):
+    """
+    Converts an Actuator object to a dictionary of actuator properties for Multiverse simulator.
+    """
+
+    entity_type: ClassVar[Type[Actuator]] = Actuator
+    """
+    The type of the entity to convert.
+    """
+
+    def _convert(self, entity: Actuator, **kwargs) -> Dict[str, Any]:
+        """
+        Converts an Actuator object to a dictionary of joint properties for Multiverse simulator.
+
+        :param entity: The Actuator object to convert.
+        :return: A dictionary of actuator properties, by default containing list of DOF names.
+        """
+        actuator_props = EntityConverter._convert(self, entity)
+        actuator_props["dof_names"] = [dof.name.name for dof in entity.dofs]
+        return actuator_props
 
 
 class MujocoConverter(EntityConverter, ABC): ...
@@ -672,6 +695,36 @@ class Mujoco6DOFJointConverter(MujocoJointConverter, Connection6DOFConverter):
     type: mujoco.mjtJoint = mujoco.mjtJoint.mjJNT_FREE
 
 
+class MujocoActuatorConverter(ActuatorConverter, ABC):
+
+    entity_type: ClassVar[Type[MujocoActuator]] = MujocoActuator
+
+    def _post_convert(
+        self, entity: MujocoActuator, actuator_props: Dict[str, Any], **kwargs
+    ) -> Dict[str, Any]:
+        return actuator_props
+
+
+class MujocoGeneralActuatorConverter(MujocoActuatorConverter, ActuatorConverter):
+
+    def _post_convert(
+        self, entity: MujocoActuator, actuator_props: Dict[str, Any], **kwargs
+    ) -> Dict[str, Any]:
+        actuator_props["actlimited"] = entity.activation_limited
+        actuator_props["actrange"] = entity.activation_range
+        actuator_props["ctrllimited"] = entity.ctrl_limited
+        actuator_props["ctrlrange"] = entity.ctrl_range
+        actuator_props["forcelimited"] = entity.force_limited
+        actuator_props["forcerange"] = entity.force_range
+        actuator_props["biasprm"] = entity.bias_parameters
+        actuator_props["biastype"] = entity.bias_type
+        actuator_props["dynprm"] = entity.dynamics_parameters
+        actuator_props["dyntype"] = entity.dynamics_type
+        actuator_props["gainprm"] = entity.gain_parameters
+        actuator_props["gaintype"] = entity.gain_type
+        return actuator_props
+
+
 @dataclass
 class MultiSimBuilder(ABC):
     """
@@ -710,6 +763,9 @@ class MultiSimBuilder(ABC):
 
         for connection in world.connections:
             self._build_connection(connection=connection)
+
+        for actuator in world.actuators:
+            self._build_actuator(actuator=actuator)
 
         self._end_build(file_path=file_path)
 
@@ -798,6 +854,15 @@ class MultiSimBuilder(ABC):
         Builds a connection in the simulator.
 
         :param connection: The connection to build.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def _build_actuator(self, actuator):
+        """
+        Builds an actuator in the simulator.
+
+        :param actuator: The actuator to build.
         """
         raise NotImplementedError
 
@@ -921,6 +986,34 @@ class MujocoBuilder(MultiSimBuilder):
         assert (
             joint_spec is not None
         ), f"Failed to add joint {joint_name} to body {child_body_name}."
+
+    def _build_actuator(self, actuator: Actuator):
+        actuator_props = MujocoActuatorConverter.convert(actuator)
+        assert (
+            actuator_props is not None
+        ), f"Failed to convert actuator {actuator.name.name}."
+        dof_names = actuator_props.pop("dof_names")
+        assert len(dof_names) == 1, "Actuator must be associated with exactly one DOF."
+        dof_name = dof_names[0]
+        connection = next(
+            (
+                conn
+                for conn in actuator._world.connections
+                if dof_name in [dof.name.name for dof in conn.dofs]
+            ),
+            None,
+        )
+        assert connection is not None, f"Connection for DOF {dof_name} not found."
+        connection_name = connection.name.name
+        joint_spec = self._find_entity(
+            entity_type=mujoco.mjtObj.mjOBJ_JOINT, entity_name=connection_name
+        )
+        assert joint_spec is not None, f"Joint {connection_name} not found."
+        actuator_props["target"] = joint_spec.name
+        actuator_props["trntype"] = mujoco.mjtTrn.mjTRN_JOINT
+        actuator_name = actuator.name.name
+        actuator_spec = self.spec.add_actuator(**actuator_props)
+        assert actuator_spec is not None, f"Failed to add actuator {actuator_name}."
 
     def _build_mujoco_body(self, body: Union[Region, Body]):
         """

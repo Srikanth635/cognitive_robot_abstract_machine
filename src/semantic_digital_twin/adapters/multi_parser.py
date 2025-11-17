@@ -12,6 +12,7 @@ from ..spatial_types.spatial_types import (
     RotationMatrix,
     Point3,
 )
+from ..world_description.actuators import Actuator, MujocoActuator
 from ..world_description.geometry import (
     Box,
     Sphere,
@@ -464,6 +465,8 @@ class MultiParser:
                 joints += self.parse_joints(body_builder=body_builder, world=world)
             for joint in joints:
                 world.add_connection(joint)
+            for actuator in self.parse_actuators(factory=factory, world=world):
+                world.add_actuator(actuator)
 
             free_body_names = get_free_body_names(factory=factory)
 
@@ -616,6 +619,46 @@ class MultiParser:
         result.collision = collisions
         return result
 
+    def parse_actuators(self, factory: Factory, world: World) -> List[Actuator]:
+        """
+        Parses actuators from a Factory instance.
+
+        :param factory: The Factory instance to parse.
+        :param world: The World instance to add the actuators to.
+        :return: A list of Actuator instances representing the parsed actuators.
+        """
+        return []
+
+
+import mujoco
+
+
+limited_dict = {
+    "auto": mujoco.mjtLimited.mjLIMITED_AUTO,
+    "true": mujoco.mjtLimited.mjLIMITED_TRUE,
+    "false": mujoco.mjtLimited.mjLIMITED_FALSE,
+}
+bias_type_dict = {
+    "none": mujoco.mjtBias.mjBIAS_NONE,
+    "affine": mujoco.mjtBias.mjBIAS_AFFINE,
+    "muscle": mujoco.mjtBias.mjBIAS_MUSCLE,
+    "user": mujoco.mjtBias.mjBIAS_USER,
+}
+dyn_type_dict = {
+    "none": mujoco.mjtDyn.mjDYN_NONE,
+    "integrator": mujoco.mjtDyn.mjDYN_INTEGRATOR,
+    "filter": mujoco.mjtDyn.mjDYN_FILTER,
+    "filterexact": mujoco.mjtDyn.mjDYN_FILTEREXACT,
+    "muscle": mujoco.mjtDyn.mjDYN_MUSCLE,
+    "user": mujoco.mjtDyn.mjDYN_USER,
+}
+gain_type_dict = {
+    "fixed": mujoco.mjtGain.mjGAIN_FIXED,
+    "affine": mujoco.mjtGain.mjGAIN_AFFINE,
+    "muscle": mujoco.mjtGain.mjGAIN_MUSCLE,
+    "user": mujoco.mjtGain.mjGAIN_USER,
+}
+
 
 class MJCFParser(MultiParser):
     """
@@ -644,6 +687,49 @@ class MJCFParser(MultiParser):
             inertia_source=inertia_source,
             default_rgba=default_rgba,
         )
+
+    def parse_actuators(self, factory: Factory, world: World) -> List[MujocoActuator]:
+        actuators = []
+        actuator_prim = factory.world_builder.stage.GetPrimAtPath("/mujoco/actuator")
+        if not actuator_prim.IsValid():
+            return actuators
+        for mujoco_actuator in [
+            UsdMujoco.MujocoActuator(actuator_prim_child)  # type: ignore
+            for actuator_prim_child in actuator_prim.GetChildren()
+            if actuator_prim_child.IsA(UsdMujoco.MujocoActuator)  # type: ignore
+        ]:
+            joint_path = mujoco_actuator.GetJointRel().GetTargets()[0]
+            assert factory.world_builder.stage.GetPrimAtPath(joint_path).IsA(
+                UsdPhysics.Joint
+            )
+            actuator_name = mujoco_actuator.GetPrim().GetName()
+            actuator = MujocoActuator(
+                name=PrefixedName(actuator_name),
+                activation_limited=limited_dict[
+                    mujoco_actuator.GetActlimitedAttr().Get()
+                ],
+                activation_range=[*mujoco_actuator.GetActrangeAttr().Get()],
+                ctrl_limited=limited_dict[mujoco_actuator.GetCtrllimitedAttr().Get()],
+                ctrl_range=[*mujoco_actuator.GetCtrlrangeAttr().Get()],
+                force_limited=limited_dict[mujoco_actuator.GetForcelimitedAttr().Get()],
+                force_range=[*mujoco_actuator.GetForcerangeAttr().Get()],
+                bias_parameters=[*mujoco_actuator.GetBiasprmAttr().Get()],
+                bias_type=bias_type_dict[mujoco_actuator.GetBiastypeAttr().Get()],
+                dynamics_parameters=[*mujoco_actuator.GetDynprmAttr().Get()],
+                dynamics_type=dyn_type_dict[mujoco_actuator.GetDyntypeAttr().Get()],
+                gain_parameters=[*mujoco_actuator.GetGainprmAttr().Get()],
+                gain_type=gain_type_dict[mujoco_actuator.GetGaintypeAttr().Get()],
+            )
+            joint_name = joint_path.name
+            connection = world.get_connection_by_name(joint_name)
+            dofs = list(connection.dofs)
+            assert (
+                len(dofs) == 1
+            ), f"Actuator {actuator_name} is associated with joint {joint_name} which has {len(connection.dofs)} DOFs, but only single-DOF joints are supported for actuators."
+            dof = dofs[0]
+            actuator.add_dof(dof)
+            actuators.append(actuator)
+        return actuators
 
 
 class USDParser(MultiParser):
