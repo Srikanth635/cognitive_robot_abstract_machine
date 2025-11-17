@@ -41,14 +41,14 @@ jobs:
         pip install -U pip && pip install -r requirements.txt && pip install -e . && pip install pytest
         pip install -e ./src/ripple_down_rules_meta
         if [[ $(python3 --version) == "Python 3.10"* ]]; then
-          PACKAGE_URL="https://nc.uni-bremen.de/public.php/dav/files/QHYjw2WqC98mxre/?accept=zip"
-          PACKAGE_HASH="4398d35530790dc9597662116d2c6be4293d3b158a311ced2a6f671cd40b2431"
+          PACKAGE_URL="https://nc.uni-bremen.de/public.php/dav/files/m6o6sBXCoJ7K9HX/?accept=zip"
+          PACKAGE_HASH="3262a4f5a0c8b8f7c42e18f0a6594aae15a4d744e20a526bd86a43d481e6eb84"
         elif [[ $(python3 --version) == "Python 3.12"* ]]; then
-          PACKAGE_URL="https://nc.uni-bremen.de/public.php/dav/files/mnwAqFZLwQYJ7Rd/?accept=zip"
-          PACKAGE_HASH="a7ab2c5383ef815b7b67341120dc0a6f0bad03a0734b96f3090e31e143023e86"
+          PACKAGE_URL="https://nc.uni-bremen.de/public.php/dav/files/gkXpAXYGmjbXojJ/?accept=zip"
+          PACKAGE_HASH="c70eb2eba52cda1320ffc011f34c7eb88b6c2d07943edfb9330a6d85d8f18f7c"
         fi
         if [[ -n "$PACKAGE_URL" ]]; then
-          TMP_PKG="/tmp/multiverse_parser-0.0.6.tar.gz"
+          TMP_PKG="/tmp/multiverse_parser-0.0.7.tar.gz"
           curl -fsSL "$PACKAGE_URL" -o "$TMP_PKG"
           echo "$PACKAGE_HASH  $TMP_PKG" | sha256sum -c -
           pip install "$TMP_PKG"
