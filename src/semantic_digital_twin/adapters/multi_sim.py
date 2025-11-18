@@ -453,12 +453,10 @@ class Connection1DOFConverter(ConnectionConverter, ABC):
         :return: A dictionary of joint properties, including additional axis and range properties.
         """
         joint_props = ConnectionConverter._convert(self, entity)
-        assert len(entity.dofs) == 1, "ActiveConnection1DOF must have exactly one DOF."
-        dof = list(entity.dofs)[0]
-        # px, py, pz, qw, qx, qy, qz = cas_pose_to_list(entity.origin) # TODO: Use actual origin
-        # joint_pos = [px, py, pz]
-        # joint_quat = [qw, qx, qy, qz]
-        joint_pos = [0.0, 0.0, 0.0]
+        dofs = list(entity.dofs)
+        assert len(dofs) == 1, "ActiveConnection1DOF must have exactly one DOF."
+        dof = dofs[0]
+        joint_pos = [0.0, 0.0, 0.0]  # TODO: Use actual origin
         joint_quat = [1.0, 0.0, 0.0, 0.0]
         joint_props.update(
             {
@@ -870,9 +868,7 @@ class MujocoBuilder(MultiSimBuilder):
         ):
             return
         geom_spec = parent_body_spec.add_geom(**geom_props)
-        if geom_spec.type == mujoco.mjtGeom.mjGEOM_BOX and any(
-            size == 0 for size in geom_spec.size
-        ):
+        if geom_spec.type == mujoco.mjtGeom.mjGEOM_BOX and geom_spec.size[2] == 0:
             geom_spec.type = mujoco.mjtGeom.mjGEOM_PLANE
             geom_spec.size = [0, 0, 0.05]
         assert (
