@@ -45,9 +45,6 @@ class FixedConnection(Connection):
     Has 0 degrees of freedom.
     """
 
-    def __hash__(self):
-        return hash((self.parent, self.child))
-
 
 @dataclass(eq=False)
 class ActiveConnection(Connection):
@@ -265,9 +262,6 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
     def active_dofs(self) -> List[DegreeOfFreedom]:
         return [self.raw_dof]
 
-    def __hash__(self):
-        return hash((self.parent, self.child))
-
     @property
     def position(self) -> float:
         return self._world.state[self.dof.name].position * self.multiplier + self.offset
@@ -324,9 +318,6 @@ class PrismaticConnection(ActiveConnection1DOF):
             child_frame=self.child,
         )
 
-    def __hash__(self):
-        return hash((self.parent, self.child))
-
 
 @dataclass(eq=False)
 class RevoluteConnection(ActiveConnection1DOF):
@@ -344,9 +335,6 @@ class RevoluteConnection(ActiveConnection1DOF):
                 child_frame=self.child,
             )
         )
-
-    def __hash__(self):
-        return hash((self.parent, self.child))
 
 
 @dataclass(eq=False)
@@ -440,9 +428,6 @@ class Connection6DoF(Connection):
     @property
     def qw(self) -> DegreeOfFreedom:
         return self._world.get_degree_of_freedom_by_name(self.qw_name)
-
-    def __hash__(self):
-        return hash(self.name)
 
     def add_to_world(self, world: World):
         super().add_to_world(world)
@@ -809,9 +794,6 @@ class OmniDrive(ActiveConnection, HasUpdateState):
 
     def get_free_variable_names(self) -> List[PrefixedName]:
         return [self.x.name, self.y.name, self.yaw.name]
-
-    def __hash__(self):
-        return hash(self.name)
 
     @property
     def has_hardware_interface(self) -> bool:

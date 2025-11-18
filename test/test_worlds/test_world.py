@@ -601,6 +601,21 @@ def test_remove_connection(world_setup):
         # if you remove a connection, the child must be connected some other way or deleted
         world.remove_connection(world.get_connection(r1, r2))
 
+def test_kinematic_structure_entity_hash(world_setup):
+    _, l1, _, _, _, _ = world_setup
+    assert hash(l1) == hash(l1.id)
+
+def test_connection_hash(world_setup):
+    world, l1, l2, bf, r1, r2 = world_setup
+    for connection in world.connections:
+        print(type(connection))
+        assert hash(connection) == hash((connection.parent, connection.child))
+
+
+def test_degree_of_freedom_hash(world_setup):
+    world, _, _, _, _, _ = world_setup
+    dof = world.degrees_of_freedom[0]
+    assert hash(dof) == hash(dof.id)
 
 def test_copy_world(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup

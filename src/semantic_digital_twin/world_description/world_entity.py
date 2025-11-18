@@ -8,7 +8,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from dataclasses import fields
 from functools import lru_cache
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import numpy as np
 import trimesh
@@ -49,12 +49,8 @@ if TYPE_CHECKING:
 id_generator = IDGenerator()
 
 
-@dataclass
-class HasUUID:
-    id: UUID = field(default=None)
-
-@dataclass(unsafe_hash=True, eq=False)
-class WorldEntity(Symbol):
+@dataclass(eq=False)
+class WorldEntity(Symbol, ABC):
     """
     A class representing an entity in the world.
     """
@@ -71,7 +67,7 @@ class WorldEntity(Symbol):
     The semantic annotations this entity is part of.
     """
 
-    name: PrefixedName = field(default=None, kw_only=True)
+    name: PrefixedName = field(default=None, kw_only=True, hash=False)
     """
     The identifier for this world entity.
     """
@@ -83,7 +79,28 @@ class WorldEntity(Symbol):
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
-        return self.name == other.name and self._world is other._world
+        return hash(self) == hash(other)
+
+    def add_to_world(self, world: World):
+        self._world = world
+
+    def remove_from_world(self):
+        self._world = None
+
+@dataclass(eq=False)
+class WorldEntityWithID(WorldEntity, ABC):
+    id: UUID = field(default=None)
+
+    def __hash__(self):
+        return hash(self.id)
+
+    def add_to_world(self, world: World):
+        super().add_to_world(world)
+        self.generate_id_if_not_exists()
+
+    def generate_id_if_not_exists(self):
+        if self.id is None:
+            self.id = uuid4()
 
 
 @dataclass
@@ -112,8 +129,8 @@ class CollisionCheckingConfig:
     """
 
 
-@dataclass(unsafe_hash=True, eq=False)
-class KinematicStructureEntity(WorldEntity, HasUUID, SubclassJSONSerializer, ABC):
+@dataclass(eq=False)
+class KinematicStructureEntity(WorldEntityWithID, SubclassJSONSerializer, ABC):
     """
     An entity that is part of the kinematic structure of the world.
     """
@@ -127,6 +144,10 @@ class KinematicStructureEntity(WorldEntity, HasUUID, SubclassJSONSerializer, ABC
     """
     The index of the entity in `_world.kinematic_structure`.
     """
+
+    def remove_from_world(self):
+        super().remove_from_world()
+        self.index = None
 
     @property
     def global_pose(self) -> TransformationMatrix:
@@ -252,9 +273,6 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
 
     def reset_temporary_collision_config(self):
         self.temp_collision_config = None
-
-    def __hash__(self):
-        return hash(self.name)
 
     def has_collision(
         self, volume_threshold: float = 1.001e-6, surface_threshold: float = 0.00061
@@ -394,9 +412,6 @@ class Region(KinematicStructureEntity):
     def __post_init__(self):
         self.area.reference_frame = self
 
-    def __hash__(self):
-        return id(self)
-
     @classmethod
     def from_3d_points(
         cls,
@@ -522,7 +537,7 @@ class SemanticAnnotation(WorldEntity, SubclassJSONSerializer):
         return hash(
             tuple(
                 [self.__class__]
-                + sorted([kse.name for kse in self.kinematic_structure_entities])
+                + sorted([kse.id for kse in self.kinematic_structure_entities])
             )
         )
 
@@ -792,9 +807,6 @@ class Connection(WorldEntity, SubclassJSONSerializer):
     @property
     def has_hardware_interface(self) -> bool:
         return False
-
-    def add_to_world(self, world: World):
-        self._world = world
 
     def __post_init__(self):
         self.name = self.name or self._generate_default_name(

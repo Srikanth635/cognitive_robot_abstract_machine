@@ -197,10 +197,13 @@ class ParsingError(Exception):
 
 @dataclass
 class WorldEntityNotFoundError(UsageError):
-    name: PrefixedName
+    name_or_hash: Union[PrefixedName, int]
 
     def __post_init__(self):
-        msg = f"WorldEntity with name {self.name} not found"
+        if isinstance(self.name_or_hash, PrefixedName):
+            msg = f"WorldEntity with name {self.name_or_hash} not found"
+        else:
+            msg = f"WorldEntity with hash {self.name_or_hash} not found"
         super().__init__(msg)
 
 

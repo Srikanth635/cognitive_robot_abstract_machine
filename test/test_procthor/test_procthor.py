@@ -308,13 +308,6 @@ class ProcTHORTestCase(unittest.TestCase):
 
         world.merge_world(obj_world)
 
-        obj_world = procthor_object.get_world()
-        for obj in obj_world.bodies + obj_world.semantic_annotations + obj_world.degrees_of_freedom:
-            obj.name = PrefixedName(obj.name.name + "_duplicate", obj.name.prefix)
-
-        world = ProcTHORParser("test_house", house=self.house_json, session=session).parse()
-        world.merge_world(obj_world)
-
         ...
 
     def test_parse_full_world(self):

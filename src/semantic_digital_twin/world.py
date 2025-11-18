@@ -11,10 +11,9 @@ from itertools import combinations_with_replacement
 
 import numpy as np
 import rustworkx as rx
-import rustworkx.visit
 import rustworkx.visualization
-from lxml import etree
 from krrood.adapters.json_serializer import SubclassJSONSerializer
+from lxml import etree
 from rustworkx import NoEdgeBetweenNodes
 from typing_extensions import (
     Dict,
@@ -37,10 +36,8 @@ from .datastructures.prefixed_name import PrefixedName
 from .datastructures.types import NpMatrix4x4
 from .exceptions import (
     DuplicateWorldEntityError,
-    AddingAnExistingSemanticAnnotationError,
     WorldEntityNotFoundError,
     AlreadyBelongsToAWorldError,
-    DuplicateKinematicStructureEntityError,
     MissingWorldModificationContextError,
 )
 from .robots.abstract_robot import AbstractRobot
@@ -54,7 +51,7 @@ from .world_description.connections import (
     Connection6DoF,
     ActiveConnection1DOF,
     FixedConnection,
-    ActiveConnection,
+    ActiveConnection, PrismaticConnection,
 )
 from .world_description.connections import HasUpdateState
 from .world_description.degree_of_freedom import DegreeOfFreedom
@@ -651,10 +648,14 @@ class World:
 
         :param connection: The connection to add.
         """
-        connection.add_to_world(self)
-        self._add_kinematic_structure_entity_if_not_in_world(connection.parent)
-        self._add_kinematic_structure_entity_if_not_in_world(connection.child)
-        self._add_connection(connection)
+        logger.info(
+            f"Trying to add connection with name {connection.name} between parent {connection.parent.name} and child {connection.child.name}"
+        )
+        self._raise_error_if_belongs_to_other_world(connection)
+        if not self.is_connection_in_world(connection):
+            self.add_kinematic_structure_entity(connection.parent)
+            self.add_kinematic_structure_entity(connection.child)
+            self._add_connection(connection)
 
     @atomic_world_modification(modification=AddConnectionModification)
     def _add_connection(self, connection: Connection):
@@ -667,75 +668,47 @@ class World:
 
         :param connection: The connection to be added to the kinematic structure.
         """
-        connection._world = self
+        connection.add_to_world(self)
         self.kinematic_structure.add_edge(
             connection.parent.index, connection.child.index, connection
         )
 
-    def _add_kinematic_structure_entity_if_not_in_world(
-        self, entity: KinematicStructureEntity
-    ):
-        try:
-            self.get_kinematic_structure_entity_by_name(entity.name)
-        except WorldEntityNotFoundError:
-            self.add_kinematic_structure_entity(entity)
-
     def add_body(
         self,
         body: KinematicStructureEntity,
-    ) -> Optional[int]:
-        return self.add_kinematic_structure_entity(
-            body
-        )
+    ):
+        return self.add_kinematic_structure_entity(body)
 
     def add_kinematic_structure_entity(
         self,
         kinematic_structure_entity: KinematicStructureEntity,
-    ) -> int:
+    ):
         """
         Add a kinematic_structure_entity to the world if it does not exist already.
 
         :param kinematic_structure_entity: The kinematic_structure_entity to add.
-        :return: The index of the added kinematic_structure_entity.
         """
         logger.info(
             f"Trying to add kinematic_structure_entity with name {kinematic_structure_entity.name}"
         )
-
-        if (
-            kinematic_structure_entity._world is not None
-            and kinematic_structure_entity._world is not self
-        ):
-            raise AlreadyBelongsToAWorldError(
-                world=kinematic_structure_entity._world,
-                type_trying_to_add=KinematicStructureEntity,
-            )
-
-        try:
-            self.get_kinematic_structure_entity_by_name(kinematic_structure_entity.name)
-            raise DuplicateKinematicStructureEntityError(
-                [kinematic_structure_entity.name]
-            )
-        except WorldEntityNotFoundError:
-            pass
-        return self._add_kinematic_structure_entity(kinematic_structure_entity)
+        self._raise_error_if_belongs_to_other_world(kinematic_structure_entity)
+        if not self.is_kinematic_structure_entity_in_world(kinematic_structure_entity):
+            self._add_kinematic_structure_entity(kinematic_structure_entity)
 
     @atomic_world_modification(modification=AddKinematicStructureEntityModification)
     def _add_kinematic_structure_entity(
         self, kinematic_structure_entity: KinematicStructureEntity
-    ) -> int:
+    ):
         """
         Add a kinematic_structure_entity to the world.
         Do not call this function directly, use add_kinematic_structure_entity instead.
 
         :param kinematic_structure_entity: The kinematic_structure_entity to add.
-        :return: The index of the added kinematic_structure_entity.
         """
-        index = kinematic_structure_entity.index = self.kinematic_structure.add_node(
+        kinematic_structure_entity.add_to_world(self)
+        kinematic_structure_entity.index = self.kinematic_structure.add_node(
             kinematic_structure_entity
         )
-        kinematic_structure_entity._world = self
-        return index
 
     def add_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
         """
@@ -743,13 +716,9 @@ class World:
         This is used to register DoFs that are not created by the world, but are part of the world model.
         :param dof: The degree of freedom to register.
         """
-        if dof._world is self and dof in self.degrees_of_freedom:
-            return
-        if dof._world is not None:
-            raise AlreadyBelongsToAWorldError(
-                world=dof._world, type_trying_to_add=DegreeOfFreedom
-            )
-        self._add_degree_of_freedom(dof)
+        self._raise_error_if_belongs_to_other_world(dof)
+        if not self.is_degree_of_freedom_in_world(dof):
+            self._add_degree_of_freedom(dof)
 
     @atomic_world_modification(modification=AddDegreeOfFreedomModification)
     def _add_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
@@ -765,13 +734,11 @@ class World:
         :param dof: The degree of freedom to be added to the system.
         :return: None
         """
-        dof._world = self
+        dof.add_to_world(self)
         self.state.add_degree_of_freedom(dof)
         self.degrees_of_freedom.append(dof)
 
-    def add_semantic_annotation(
-        self, semantic_annotation: SemanticAnnotation
-    ) -> None:
+    def add_semantic_annotation(self, semantic_annotation: SemanticAnnotation) -> None:
         """
         Adds a semantic annotation to the current list of semantic annotations if it doesn't already exist. Ensures
         that the `semantic_annotation` is associated with the current instance and maintains the
@@ -782,10 +749,11 @@ class World:
 
         :raises AddingAnExistingSemanticAnnotationError: If the semantic annotation already exists
         """
-        try:
-            self.get_semantic_annotation_by_name(semantic_annotation.name)
-            raise AddingAnExistingSemanticAnnotationError(semantic_annotation)
-        except WorldEntityNotFoundError:
+        logger.info(
+            f"Trying to add semantic annotation with name {semantic_annotation.name}"
+        )
+        self._raise_error_if_belongs_to_other_world(semantic_annotation)
+        if not self.is_semantic_annotation_in_world(semantic_annotation):
             self._add_semantic_annotation(semantic_annotation)
 
     @atomic_world_modification(modification=AddSemanticAnnotationModification)
@@ -793,8 +761,18 @@ class World:
         """
         The atomic method that adds a semantic annotation to the current list of semantic annotations.
         """
-        semantic_annotation._world = self
+        semantic_annotation.add_to_world(self)
         self.semantic_annotations.append(semantic_annotation)
+
+    def _raise_error_if_belongs_to_other_world(self, world_entity: WorldEntity):
+        """
+        Raises an AlreadyBelongsToAWorldError if the world_entity already belongs to another world.
+        :param world_entity:
+        """
+        if world_entity._world is not None and world_entity._world is not self:
+            raise AlreadyBelongsToAWorldError(
+                world=world_entity._world, type_trying_to_add=type(world_entity)
+            )
 
     # %% Remove WorldEntities from the World
     def remove_connection(self, connection: Connection) -> None:
@@ -803,6 +781,15 @@ class World:
         Might create disconnected entities, so make sure to add a new connection or delete the child kinematic_structure_entity.
 
         :param connection: The connection to be removed
+
+        .. warning::
+
+            The reason self.is_connection_in_world is not checked before removing the connection, is because it is using
+            the self.connections internally, which accesses the live rustworkx kinematic_structure. The problem arises
+            if we want to remove the parent or child from the world, before removing the connection from the world.
+            In that case, rustworkx automatically removes the edge representing the connection, which results in
+            self.is_connection_in_world returning False, even though we have not cleaned up the connection properly on
+            our side.
         """
         remaining_dofs = {
             dof
@@ -813,10 +800,9 @@ class World:
 
         removed_dofs = set(connection.dofs) - remaining_dofs
 
-        with self.modify_world():
-            for dof in removed_dofs:
-                self.remove_degree_of_freedom(dof)
-            self._remove_connection(connection)
+        for dof in removed_dofs:
+            self.remove_degree_of_freedom(dof)
+        self._remove_connection(connection)
 
     @atomic_world_modification(modification=RemoveConnectionModification)
     def _remove_connection(self, connection: Connection) -> None:
@@ -826,8 +812,7 @@ class World:
             )
         except NoEdgeBetweenNodes:
             pass
-        connection._world = None
-        connection.index = None
+        connection.remove_from_world()
 
     def remove_kinematic_structure_entity(
         self, kinematic_structure_entity: KinematicStructureEntity
@@ -837,15 +822,8 @@ class World:
 
         :param kinematic_structure_entity: The kinematic_structure_entity to remove.
         """
-        if (
-            kinematic_structure_entity._world is not self
-            or kinematic_structure_entity.index is None
-        ):
-            logger.debug(
-                "Trying to remove an kinematic_structure_entity that is not part of this world."
-            )
-            return
-        self._remove_kinematic_structure_entity(kinematic_structure_entity)
+        if self.is_kinematic_structure_entity_in_world(kinematic_structure_entity):
+            self._remove_kinematic_structure_entity(kinematic_structure_entity)
 
     @atomic_world_modification(modification=RemoveBodyModification)
     def _remove_kinematic_structure_entity(
@@ -859,18 +837,15 @@ class World:
         :param kinematic_structure_entity: The kinematic_structure_entity to remove.
         """
         self.kinematic_structure.remove_node(kinematic_structure_entity.index)
-        kinematic_structure_entity._world = None
-        kinematic_structure_entity.index = None
+        kinematic_structure_entity.remove_from_world()
 
     def remove_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
-        if dof._world is not self:
-            logger.debug("Trying to remove a dof that is not part of this world.")
-            return
-        self._remove_degree_of_freedom(dof)
+        if self.is_degree_of_freedom_in_world(dof):
+            self._remove_degree_of_freedom(dof)
 
     @atomic_world_modification(modification=RemoveDegreeOfFreedomModification)
     def _remove_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
-        dof._world = None
+        dof.remove_from_world()
         self.degrees_of_freedom.remove(dof)
         del self.state[dof.name]
 
@@ -882,23 +857,16 @@ class World:
 
         :param semantic_annotation: The semantic annotation instance to be removed.
         """
-        try:
-            self.get_semantic_annotation_by_name(semantic_annotation.name)
-        except WorldEntityNotFoundError:
-            logger.debug(
-                f"semantic annotation {semantic_annotation.name} not found in the world. No action taken."
-            )
-            return
-
-        self._remove_semantic_annotation(semantic_annotation)
+        if self.is_semantic_annotation_in_world(semantic_annotation):
+            self._remove_semantic_annotation(semantic_annotation)
 
     @atomic_world_modification(modification=RemoveSemanticAnnotationModification)
     def _remove_semantic_annotation(self, semantic_annotation: SemanticAnnotation):
         """
         The atomic method that removes a semantic annotation from the current list of semantic annotations.
         """
+        semantic_annotation.remove_from_world()
         self.semantic_annotations.remove(semantic_annotation)
-        semantic_annotation._world = None
 
     # %% Other Atomic World Modifications
     @atomic_world_modification(modification=SetDofHasHardwareInterface)
@@ -1021,51 +989,148 @@ class World:
     def get_connection_by_name(self, name: Union[str, PrefixedName]) -> Connection:
         return self._get_world_entity_by_name_from_iterable(name, self.connections)
 
-    @staticmethod
     def _get_world_entity_by_name_from_iterable(
-        name: Union[str, PrefixedName], world_entity_iterable: Iterable[WorldEntity]
-    ) -> WorldEntity:
+        self,
+        name: Union[str, PrefixedName],
+        world_entity_iterable: Iterable[GenericWorldEntity],
+    ) -> GenericWorldEntity:
         """
-        Retrieve a world entity by its name from an iterable of world entities.
-        This iterable would, for example, be self.connections or self.kinematic_structure_entities.
-        This method accepts either a string or a `PrefixedName` instance.
-        It searches through the provided iterable and returns the one
-        that matches the given name. If the `PrefixedName` contains a prefix,
-        the method ensures the name, including the prefix, matches an existing
-        world entity. Otherwise, it only considers the unprefixed name. If more than
-        one connection matches the specified name, or if no connection is found,
+        If more than one world entity matches the specified name, or if no world entity is found,
         an exception is raised.
-        :param name: The name of the connection to retrieve. Can be a string or
-            a `PrefixedName` instance. If a prefix is included in `PrefixedName`,
-            it will be used for matching.
+        :param name: The name of the entity to retrieve. Can be a string or
+            a `PrefixedName` instance.
         :param world_entity_iterable:
         :return: The `WorldEntity` object that matches the given name.
         :raises WorldEntityNotFoundError: If no world entity with the given name exists.
         :raises DuplicateWorldEntityError: If multiple world entities with the given name exist.
         """
-        original_name = name
-        prefix = None
-
-        match name:
-            case PrefixedName():
-                prefix = name.prefix
-                name = name.name
-            case str():
-                pass
-
-        matches = [
-            world_entity
-            for world_entity in world_entity_iterable
-            if world_entity.name.name == name
-            and (prefix is None or world_entity.name.prefix == prefix)
-        ]
+        matches = self._get_world_entities_by_name_from_iterable(
+            name, world_entity_iterable
+        )
         match matches:
             case []:
-                raise WorldEntityNotFoundError(original_name)
+                if isinstance(name, PrefixedName):
+                    logger.warning(
+                        f"No world entity with PrefixedName {name} found. Did you want a general matching of {name.name}?"
+                        f"If so, please provide only the string name."
+                    )
+                raise WorldEntityNotFoundError(name)
             case [entity]:
                 return entity
             case _:
                 raise DuplicateWorldEntityError(matches)
+
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
+    def get_semantic_annotations_by_name(
+        self, name: Union[str, PrefixedName]
+    ) -> List[SemanticAnnotation]:
+        return self._get_world_entities_by_name_from_iterable(
+            name, self.semantic_annotations
+        )
+
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
+    def get_kinematic_structure_entities_by_name(
+        self, name: Union[str, PrefixedName]
+    ) -> List[KinematicStructureEntity]:
+        return self._get_world_entities_by_name_from_iterable(
+            name, self.kinematic_structure_entities
+        )
+
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
+    def get_bodies_by_name(self, name: Union[str, PrefixedName]) -> List[Body]:
+        return self._get_world_entities_by_name_from_iterable(name, self.bodies)
+
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
+    def get_degrees_of_freedom_by_name(
+        self, name: Union[str, PrefixedName]
+    ) -> List[DegreeOfFreedom]:
+        return self._get_world_entities_by_name_from_iterable(
+            name, self.degrees_of_freedom
+        )
+
+    @lru_cache(maxsize=_LRU_CACHE_SIZE)
+    def get_connections_by_name(
+        self, name: Union[str, PrefixedName]
+    ) -> List[Connection]:
+        return self._get_world_entities_by_name_from_iterable(name, self.connections)
+
+    @staticmethod
+    def _get_world_entities_by_name_from_iterable(
+        name: Union[str, PrefixedName],
+        world_entity_iterable: Iterable[GenericWorldEntity],
+    ) -> List[GenericWorldEntity]:
+        """
+        Retrieve a world entity by its name from an iterable of world entities.
+        This iterable would, for example, be self.connections or self.kinematic_structure_entities.
+        This method accepts either a string or a `PrefixedName` instance.
+        It searches through the provided iterable and returns the list of world entities
+        that matches the given name.
+        If only a string was provided, it matches against the name without prefix.
+        If a `PrefixedName` was provided, it matches against the full name including prefix.
+        :param name: The name of the world entity to search for.
+        :param world_entity_iterable: The iterable to search for the world entity, for example self.connections or self.kinematic_structure_entities.
+        :return: The list of `WorldEntity` that match the given name.
+        """
+
+        match name:
+            case PrefixedName():
+                return [
+                    world_entity
+                    for world_entity in world_entity_iterable
+                    if world_entity.name == name
+                ]
+            case str():
+                return [
+                    world_entity
+                    for world_entity in world_entity_iterable
+                    if world_entity.name.name == name
+                ]
+
+    # %% Existence Checks
+    def is_semantic_annotation_in_world(
+        self, semantic_annotation: SemanticAnnotation
+    ) -> bool:
+        return self._is_world_entity_with_hash_in_world_from_iterable(
+            hash(semantic_annotation), self.semantic_annotations
+        )
+
+    def is_body_in_world(self, body: Body) -> bool:
+        return self._is_world_entity_with_hash_in_world_from_iterable(
+            hash(body), self.bodies
+        )
+
+    def is_kinematic_structure_entity_in_world(
+        self, kinematic_structure_entity: KinematicStructureEntity
+    ) -> bool:
+        return self._is_world_entity_with_hash_in_world_from_iterable(
+            hash(kinematic_structure_entity), self.kinematic_structure_entities
+        )
+
+    def is_connection_in_world(self, connection: Connection) -> bool:
+        return self._is_world_entity_with_hash_in_world_from_iterable(
+            hash(connection), self.connections
+        )
+
+    def is_degree_of_freedom_in_world(self, degree_of_freedom: DegreeOfFreedom) -> bool:
+        return self._is_world_entity_with_hash_in_world_from_iterable(
+            hash(degree_of_freedom), self.degrees_of_freedom
+        )
+
+    @staticmethod
+    def _is_world_entity_with_hash_in_world_from_iterable(
+        entity_hash: int, world_entity_iterable: Iterable[WorldEntity]
+    ) -> bool:
+        """
+        Check if a world entity with a given hash exists in the world based on a given iterable.
+        :param entity_hash: The hash of the entity to retrieve.
+        :param world_entity_iterable: The iterable of world entities to search for the entity.
+        :return: True if the entity exists, False otherwise.
+        """
+        return any(
+            world_entity
+            for world_entity in world_entity_iterable
+            if hash(world_entity) == entity_hash
+        )
 
     # %% World Merging
     def merge_world_at_pose(self, other: World, pose: cas.TransformationMatrix) -> None:
@@ -1103,9 +1168,7 @@ class World:
             self._merge_dofs_with_state_of_world(other)
             self._merge_connections_of_world(other)
             self._remove_kinematic_structure_entities_of_world(other)
-            self._merge_semantic_annotations_of_world(
-                other
-            )
+            self._merge_semantic_annotations_of_world(other)
 
             if not root_connection and self_root:
                 root_connection = Connection6DoF.create_with_dofs(
@@ -1125,12 +1188,14 @@ class World:
 
     def _merge_connections_of_world(self, other: World):
         other_root = other.root
-        for connection in other.connections:
+        other_connections = other.connections
+        for connection in other_connections:
+            other.remove_connection(connection)
             other.remove_kinematic_structure_entity(connection.parent)
             other.remove_kinematic_structure_entity(connection.child)
             self.add_connection(connection)
         other.remove_kinematic_structure_entity(other_root)
-        self._add_kinematic_structure_entity_if_not_in_world(other_root)
+        self.add_kinematic_structure_entity(other_root)
 
     @staticmethod
     def _remove_kinematic_structure_entities_of_world(other: World):
@@ -1140,17 +1205,13 @@ class World:
         for kinematic_structure_entity in other_kse_with_world:
             other.remove_kinematic_structure_entity(kinematic_structure_entity)
 
-    def _merge_semantic_annotations_of_world(
-        self, other: World
-    ):
+    def _merge_semantic_annotations_of_world(self, other: World):
         other_semantic_annotations = [
             semantic_annotation for semantic_annotation in other.semantic_annotations
         ]
         for semantic_annotation in other_semantic_annotations:
             other.remove_semantic_annotation(semantic_annotation)
-            self.add_semantic_annotation(
-                semantic_annotation
-            )
+            self.add_semantic_annotation(semantic_annotation)
 
     # %% Subgraph Targeting
     def get_connections_of_branch(

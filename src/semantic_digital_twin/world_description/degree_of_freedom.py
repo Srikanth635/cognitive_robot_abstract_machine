@@ -11,11 +11,11 @@ from ..exceptions import UsageError
 from ..spatial_types import spatial_types as cas
 from ..spatial_types.derivatives import Derivatives, DerivativeMap
 from ..spatial_types.symbol_manager import symbol_manager
-from .world_entity import WorldEntity, HasUUID
+from .world_entity import WorldEntityWithID
 
 
-@dataclass
-class DegreeOfFreedom(WorldEntity, HasUUID, SubclassJSONSerializer):
+@dataclass(eq=False)
+class DegreeOfFreedom(WorldEntityWithID, SubclassJSONSerializer):
     """
     A class representing a degree of freedom in a world model with associated derivatives and limits.
 
@@ -68,9 +68,6 @@ class DegreeOfFreedom(WorldEntity, HasUUID, SubclassJSONSerializer):
             return lower_limit is not None or upper_limit is not None
         except KeyError:
             return False
-
-    def __hash__(self):
-        return hash(id(self))
 
     def to_json(self) -> Dict[str, Any]:
         return {
