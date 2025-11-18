@@ -185,9 +185,7 @@ def parse_plane(
     size_y = plane.GetExtentAttr().Get()[1][1] - plane.GetExtentAttr().Get()[0][1]
     size_z = plane.GetExtentAttr().Get()[1][2] - plane.GetExtentAttr().Get()[0][2]
     if numpy.isclose(size_z, 0.0):
-        size_x = 0.0
-        size_y = 0.0
-        size_z = 0.05
+        size_z = 0
     return Box(
         origin=origin_transform,
         scale=Scale(size_x, size_y, size_z),
