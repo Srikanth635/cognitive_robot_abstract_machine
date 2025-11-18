@@ -231,12 +231,13 @@ class StateSynchronizer(StateChangeCallback, SynchronizerOnCallback):
     def compute_state_changes(self) -> Dict[PrefixedName, float]:
         changes = {
             name: current_state
-            for name, previous_state, current_state in zip(
-                self.world.state.keys(),
-                self.previous_world_state_data,
-                self.world.state.positions,
+            for name, current_state in zip(
+                self.world.state.keys(), self.world.state.positions
             )
-            if not np.allclose(previous_state, current_state)
+            if name not in self.previous_world_state_data
+            or not np.allclose(
+                current_state, self.previous_world_state_data[name].position
+            )
         }
         return changes
 

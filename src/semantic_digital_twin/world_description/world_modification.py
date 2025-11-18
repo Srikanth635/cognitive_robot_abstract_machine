@@ -329,7 +329,8 @@ class WorldModelModificationBlock(SubclassJSONSerializer):
     """
 
     def apply(self, world: World):
-        with world.modify_world():
+        # skip state update to avoid publishing a new state, because the publisher of this model update did it already.
+        with world.modify_world(skip_state_update=True):
             for modification in self.modifications:
                 modification.apply(world)
 

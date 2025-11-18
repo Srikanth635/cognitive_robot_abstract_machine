@@ -386,6 +386,8 @@ def test_synchronize_6dof(rclpy_node):
         node=rclpy_node,
         world=w2,
     )
+    state_synch = StateSynchronizer(world=w1, node=rclpy_node)
+    state_synch2 = StateSynchronizer(world=w2, node=rclpy_node)
 
     b1 = Body(name=PrefixedName("b1"))
     b2 = Body(name=PrefixedName("b2"))
@@ -396,7 +398,7 @@ def test_synchronize_6dof(rclpy_node):
         c1 = Connection6DoF.create_with_dofs(parent=b1, child=b2, world=w1)
         w1.add_connection(c1)
 
-    time.sleep(0.2)
+    time.sleep(2)
     c2 = w2.get_connection_by_name(c1.name)
     assert isinstance(c2, Connection6DoF)
     assert w1.state[c1.qw_name].position == w2.state[c2.qw_name].position
