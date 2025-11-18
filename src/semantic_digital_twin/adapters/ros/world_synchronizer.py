@@ -266,6 +266,7 @@ class ModelSynchronizer(
             -1
         ]
         # skip state update to avoid publishing a new state, because the publisher of this model update did it already.
+        old_value = modifications.apply_state_update
         modifications.apply_state_update = False
 
         msg = ModificationBlock(
@@ -273,6 +274,9 @@ class ModelSynchronizer(
             modifications=modifications,
         )
         self.publish(msg)
+        # revert to old value to avoid unexpected side effects
+        modifications.apply_state_update = old_value
+
 
 
 @dataclass
