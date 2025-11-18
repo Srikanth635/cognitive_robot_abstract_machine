@@ -11,11 +11,11 @@ from ..exceptions import UsageError
 from ..spatial_types import spatial_types as cas
 from ..spatial_types.derivatives import Derivatives, DerivativeMap
 from ..spatial_types.symbol_manager import symbol_manager
-from .world_entity import WorldEntity
+from .world_entity import WorldEntity, HasUUID
 
 
 @dataclass
-class DegreeOfFreedom(WorldEntity, SubclassJSONSerializer):
+class DegreeOfFreedom(WorldEntity, HasUUID, SubclassJSONSerializer):
     """
     A class representing a degree of freedom in a world model with associated derivatives and limits.
 

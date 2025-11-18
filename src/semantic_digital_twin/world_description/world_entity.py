@@ -8,6 +8,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from dataclasses import fields
 from functools import lru_cache
+from uuid import UUID
 
 import numpy as np
 import trimesh
@@ -47,6 +48,10 @@ if TYPE_CHECKING:
 
 id_generator = IDGenerator()
 
+
+@dataclass
+class HasUUID:
+    id: UUID = field(default=None)
 
 @dataclass(unsafe_hash=True, eq=False)
 class WorldEntity(Symbol):
@@ -108,7 +113,7 @@ class CollisionCheckingConfig:
 
 
 @dataclass(unsafe_hash=True, eq=False)
-class KinematicStructureEntity(WorldEntity, SubclassJSONSerializer, ABC):
+class KinematicStructureEntity(WorldEntity, HasUUID, SubclassJSONSerializer, ABC):
     """
     An entity that is part of the kinematic structure of the world.
     """

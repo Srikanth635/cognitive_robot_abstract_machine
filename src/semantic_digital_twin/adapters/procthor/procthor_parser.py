@@ -509,7 +509,7 @@ class ProcthorObject:
                     parent_T_connection_expression=obj_T_child,
                 )
                 body_world.merge_world(
-                    child_world, child_connection, assign_unique_name_to_duplicates=True
+                    child_world, child_connection
                 )
 
             return body_world
@@ -589,7 +589,7 @@ class ProcTHORParser:
         with world.modify_world():
             world_root = Body(name=PrefixedName(house_name))
             world.add_kinematic_structure_entity(
-                world_root, assign_unique_name_to_duplicates=True
+                world_root
             )
 
             self.import_rooms(world, self.house["rooms"])
@@ -620,7 +620,7 @@ class ProcTHORParser:
                 parent_T_connection_expression=procthor_room.world_T_room,
             )
             world.merge_world(
-                room_world, room_connection, assign_unique_name_to_duplicates=True
+                room_world, room_connection
             )
 
     def import_objects(self, world: World, objects: List[Dict]):
@@ -641,7 +641,7 @@ class ProcTHORParser:
                 parent_T_connection_expression=procthor_object.world_T_obj,
             )
             world.merge_world(
-                obj_world, obj_connection, assign_unique_name_to_duplicates=True
+                obj_world, obj_connection
             )
 
     def import_walls_and_doors(
@@ -664,7 +664,7 @@ class ProcTHORParser:
                 parent_T_connection_expression=procthor_wall.world_T_wall,
             )
             world.merge_world(
-                wall_world, wall_connection, assign_unique_name_to_duplicates=True
+                wall_world, wall_connection
             )
 
     @staticmethod
