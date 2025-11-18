@@ -262,11 +262,15 @@ class ModelSynchronizer(
         msg.modifications.apply(self.world)
 
     def world_callback(self):
+        modifications = self.world.get_world_model_manager().model_modification_blocks[
+            -1
+        ]
+        # skip state update to avoid publishing a new state, because the publisher of this model update did it already.
+        modifications.apply_state_update = False
+
         msg = ModificationBlock(
             meta_data=self.meta_data,
-            modifications=self.world.get_world_model_manager().model_modification_blocks[
-                -1
-            ],
+            modifications=modifications,
         )
         self.publish(msg)
 

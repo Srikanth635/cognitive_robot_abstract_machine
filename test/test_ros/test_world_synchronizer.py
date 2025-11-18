@@ -286,10 +286,10 @@ def test_callback_pausing(rclpy_node):
     assert len(w1.connections) == 1
     assert len(w2.connections) == 0
 
-    state_synchronizer_2.resume()
     model_synchronizer_2.resume()
-    state_synchronizer_2.apply_missed_messages()
+    state_synchronizer_2.resume()
     model_synchronizer_2.apply_missed_messages()
+    state_synchronizer_2.apply_missed_messages()
 
     time.sleep(0.1)
     assert len(w1.kinematic_structure_entities) == 2
@@ -398,7 +398,7 @@ def test_synchronize_6dof(rclpy_node):
         c1 = Connection6DoF.create_with_dofs(parent=b1, child=b2, world=w1)
         w1.add_connection(c1)
 
-    time.sleep(2)
+    time.sleep(1)
     c2 = w2.get_connection_by_name(c1.name)
     assert isinstance(c2, Connection6DoF)
     assert w1.state[c1.qw_name].position == w2.state[c2.qw_name].position
