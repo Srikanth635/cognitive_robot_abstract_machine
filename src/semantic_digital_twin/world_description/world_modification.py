@@ -30,23 +30,6 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class UnknownWorldModification(Exception):
-    """
-    Raised when an unknown world modification is attempted.
-    """
-
-    call: Callable
-    kwargs: Dict[str, Any]
-
-    def __post_init__(self):
-        super().__init__(
-            " Make sure that world modifications are atomic and that every atomic modification is "
-            "represented by exactly one subclass of WorldModelModification."
-            "This module might be incomplete, you can help by expanding it."
-        )
-
-
-@dataclass
 class WorldModelModification(SubclassJSONSerializer, ABC):
     """
     A record of a modification to the model (structure) of the world.

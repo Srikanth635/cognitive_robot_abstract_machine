@@ -66,6 +66,8 @@ all_classes |= set(
     classes_of_module(semantic_digital_twin.world_description.degree_of_freedom)
 )
 all_classes |= set(classes_of_module(semantic_digital_twin.robots.abstract_robot))
+all_classes |= set(classes_of_module(semantic_digital_twin.world_description.world_modification))
+all_classes |= set(classes_of_module(semantic_digital_twin.callbacks.callback))
 
 
 # remove classes that should not be mapped

@@ -2,7 +2,6 @@ import json
 import os
 import unittest
 from dataclasses import asdict
-from time import sleep
 
 import numpy as np
 from sqlalchemy import create_engine
@@ -16,6 +15,7 @@ from semantic_digital_twin.adapters.procthor.procthor_parser import (
     ProcthorWall,
     ProcthorObject,
 )
+from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.spatial_types import TransformationMatrix
 from semantic_digital_twin.utils import get_semantic_digital_twin_directory_root
 from semantic_digital_twin.world_description.geometry import Scale
@@ -274,12 +274,11 @@ class ProcTHORTestCase(unittest.TestCase):
             decimal=6,
         )
 
-    @unittest.skip("Requires Database, TBD")
     def test_object_get_world(self):
         objects = self.house_json["objects"][0]
 
         semantic_digital_twin_database_uri = os.environ.get(
-            "semantic_digital_twin_DATABASE_URI"
+            "SEMANTIC_DIGITAL_TWIN_DATABASE_URI"
         )
 
         # Create database engine and session
@@ -288,11 +287,38 @@ class ProcTHORTestCase(unittest.TestCase):
 
         procthor_object = ProcthorObject(object_dict=objects, session=session)
         world = procthor_object.get_world()
+        ...
+
+    def test_duplicate_object(self):
+        semantic_digital_twin_database_uri = os.environ.get(
+            "SEMANTIC_DIGITAL_TWIN_DATABASE_URI"
+        )
+
+        # Create database engine and session
+        engine = create_engine(f"mysql+pymysql://{semantic_digital_twin_database_uri}")
+        session = Session(engine)
+
+        house = self.house_json
+        objects = house["objects"]
+
+        procthor_object = ProcthorObject(object_dict=objects[0], session=session)
+        obj_world = procthor_object.get_world()
+
+        world = ProcTHORParser("test_house", house=self.house_json, session=session).parse()
+
+        world.merge_world(obj_world)
+
+        obj_world = procthor_object.get_world()
+        for obj in obj_world.bodies + obj_world.semantic_annotations + obj_world.degrees_of_freedom:
+            obj.name = PrefixedName(obj.name.name + "_duplicate", obj.name.prefix)
+
+        world = ProcTHORParser("test_house", house=self.house_json, session=session).parse()
+        world.merge_world(obj_world)
 
         ...
 
     def test_parse_full_world(self):
-        world = ProcTHORParser(
+        world = ProcTHORParser.from_file(
             os.path.join(
                 get_semantic_digital_twin_directory_root(os.getcwd()),
                 "resources",
