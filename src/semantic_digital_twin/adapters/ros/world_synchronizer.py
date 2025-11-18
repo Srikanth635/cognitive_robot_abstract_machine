@@ -278,7 +278,6 @@ class ModelSynchronizer(
         modifications.apply_state_update = old_value
 
 
-
 @dataclass
 class ModelReloadSynchronizer(Synchronizer):
     """
