@@ -92,7 +92,7 @@ jobs:
       - name: test
         run: |
           cd giskardpy/test
-          source /usr/share/virtualenvwrapper/virtualenvwrapper.sh
+          source /root/venvs/giskardpy/bin/activate
           python3 -m pytest -s ${{ matrix.tests }}
 #      - name: Setup upterm session
 #  #      if: always()
