@@ -385,6 +385,21 @@ def test_duplicate_semantic_annotation(world_setup):
     with pytest.raises(DuplicateWorldEntityError):
         world.get_semantic_annotation_by_name(v.name)
 
+def test_all_kinematic_structure_entities_have_uuid(world_setup):
+    world, _, _, _, _, _ = world_setup
+    uuids = {
+        kse.id for kse in world.kinematic_structure_entities
+    }
+
+    assert len(uuids) == len(world.kinematic_structure)
+
+def test_all_degree_of_freedom_have_uuid(world_setup):
+    world, _, _, _, _, _ = world_setup
+    uuids = {
+        dof.id for dof in world.degrees_of_freedom
+    }
+
+    assert len(uuids) == len(world.degrees_of_freedom)
 
 def test_merge_world(world_setup, pr2_world):
     world, l1, l2, bf, r1, r2 = world_setup
