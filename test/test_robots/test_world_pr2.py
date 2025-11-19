@@ -24,17 +24,16 @@ from semantic_digital_twin.robots.abstract_robot import KinematicChain
 from semantic_digital_twin.robots.tracy import Tracy
 from semantic_digital_twin.robots.pr2 import PR2
 from semantic_digital_twin.spatial_types.derivatives import Derivatives
-from semantic_digital_twin.spatial_types.symbol_manager import symbol_manager
 from semantic_digital_twin.world import World
 from semantic_digital_twin.testing import pr2_world, tracy_world, hsrb_world
 
 
 def test_compute_chain_of_bodies_pr2(pr2_world):
     root_link = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("base_footprint")
+        "base_footprint"
     )
     tip_link = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("r_gripper_tool_frame")
+        "r_gripper_tool_frame"
     )
     real = pr2_world.compute_chain_of_kinematic_structure_entities(
         root=root_link, tip=tip_link
@@ -60,10 +59,10 @@ def test_compute_chain_of_bodies_pr2(pr2_world):
 
 def test_compute_chain_of_connections_pr2(pr2_world):
     root_link = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("base_footprint")
+        "base_footprint"
     )
     tip_link = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("r_gripper_tool_frame")
+        "r_gripper_tool_frame"
     )
     real = pr2_world.compute_chain_of_connections(root=root_link, tip=tip_link)
     real = [x.name for x in real]
@@ -86,10 +85,10 @@ def test_compute_chain_of_connections_pr2(pr2_world):
 
 def test_compute_chain_of_bodies_error_pr2(pr2_world):
     root = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("r_gripper_tool_frame")
+        "r_gripper_tool_frame"
     )
     tip = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("base_footprint")
+        "base_footprint"
     )
     with pytest.raises(AssertionError):
         pr2_world.compute_chain_of_kinematic_structure_entities(root, tip)
@@ -97,10 +96,10 @@ def test_compute_chain_of_bodies_error_pr2(pr2_world):
 
 def test_compute_chain_of_connections_error_pr2(pr2_world):
     root = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("r_gripper_tool_frame")
+        "r_gripper_tool_frame"
     )
     tip = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("base_footprint")
+        "base_footprint"
     )
     with pytest.raises(AssertionError):
         pr2_world.compute_chain_of_connections(root, tip)
@@ -108,10 +107,10 @@ def test_compute_chain_of_connections_error_pr2(pr2_world):
 
 def test_compute_split_chain_of_bodies_pr2(pr2_world):
     root = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("l_gripper_r_finger_tip_link")
+        "l_gripper_r_finger_tip_link"
     )
     tip = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("l_gripper_l_finger_tip_link")
+        "l_gripper_l_finger_tip_link"
     )
     chain1, connection, chain2 = (
         pr2_world.compute_split_chain_of_kinematic_structure_entities(root, tip)
@@ -129,10 +128,10 @@ def test_compute_split_chain_of_bodies_pr2(pr2_world):
 
 def test_get_split_chain_pr2(pr2_world):
     root = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("l_gripper_r_finger_tip_link")
+        "l_gripper_r_finger_tip_link"
     )
     tip = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("l_gripper_l_finger_tip_link")
+        "l_gripper_l_finger_tip_link"
     )
     chain1, chain2 = pr2_world.compute_split_chain_of_connections(root, tip)
     chain1 = [n.name.name for n in chain1]
@@ -143,10 +142,10 @@ def test_get_split_chain_pr2(pr2_world):
 
 def test_compute_fk_np_pr2(pr2_world):
     tip = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("r_gripper_tool_frame")
+        "r_gripper_tool_frame"
     )
     root = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("l_gripper_tool_frame")
+        "l_gripper_tool_frame"
     )
     fk = pr2_world.compute_forward_kinematics_np(root, tip)
     np.testing.assert_array_almost_equal(
@@ -164,17 +163,14 @@ def test_compute_fk_np_pr2(pr2_world):
 
 def test_compute_fk_np_l_elbow_flex_joint_pr2(pr2_world):
     tip = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("l_elbow_flex_link")
+        "l_elbow_flex_link"
     )
     root = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("l_upper_arm_link")
+        "l_upper_arm_link"
     )
 
     fk_expr = pr2_world.compose_forward_kinematics_expression(root, tip)
-    fk_expr_compiled = fk_expr.compile()
-    fk2 = fk_expr_compiled(
-        symbol_manager.resolve_symbols(*fk_expr_compiled.symbol_parameters)
-    )
+    fk2 = fk_expr.evaluate()
 
     np.testing.assert_array_almost_equal(
         fk2,
@@ -192,7 +188,7 @@ def test_compute_fk_np_l_elbow_flex_joint_pr2(pr2_world):
 def test_compute_ik(pr2_world):
     bf = pr2_world.root
     eef = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("r_gripper_tool_frame")
+        "r_gripper_tool_frame"
     )
     fk = pr2_world.compute_forward_kinematics_np(bf, eef)
     fk[0, 3] -= 0.2
@@ -209,7 +205,7 @@ def test_compute_ik(pr2_world):
 def test_compute_ik_max_iter(pr2_world):
     bf = pr2_world.root
     eef = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("r_gripper_tool_frame")
+        "r_gripper_tool_frame"
     )
     fk = pr2_world.compute_forward_kinematics_np(bf, eef)
     fk[2, 3] = 10
@@ -222,7 +218,7 @@ def test_compute_ik_max_iter(pr2_world):
 def test_compute_ik_unreachable(pr2_world):
     bf = pr2_world.root
     eef = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("base_footprint")
+        "base_footprint"
     )
     fk = pr2_world.compute_forward_kinematics_np(bf, eef)
     fk[2, 3] = -1
@@ -234,7 +230,7 @@ def test_compute_ik_unreachable(pr2_world):
 
 def test_apply_control_commands_omni_drive_pr2(pr2_world):
     omni_drive: OmniDrive = pr2_world.get_connection_by_name(
-        PrefixedName("odom_combined_T_base_footprint")
+        "odom_combined_T_base_footprint"
     )
     cmd = np.zeros((len(pr2_world.degrees_of_freedom)), dtype=float)
     cmd[pr2_world.state._index[omni_drive.x_velocity.name]] = 100

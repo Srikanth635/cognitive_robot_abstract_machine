@@ -28,7 +28,6 @@ from semantic_digital_twin.spatial_types.spatial_types import (
     TransformationMatrix,
     RotationMatrix,
 )
-from semantic_digital_twin.spatial_types.symbol_manager import symbol_manager
 from semantic_digital_twin.testing import world_setup, pr2_world
 from semantic_digital_twin.world_description.degree_of_freedom import DegreeOfFreedom
 from semantic_digital_twin.world_description.world_entity import (
@@ -260,10 +259,7 @@ def test_compute_fk_expression(world_setup):
     world.notify_state_change()
     fk = world.compute_forward_kinematics_np(r2, l2)
     fk_expr = world.compose_forward_kinematics_expression(r2, l2)
-    fk_expr_compiled = fk_expr.compile()
-    fk2 = fk_expr_compiled(
-        *symbol_manager.resolve_symbols(fk_expr_compiled.symbol_parameters)
-    )
+    fk2 = fk_expr.evaluate()
     np.testing.assert_array_almost_equal(fk, fk2)
 
 
@@ -405,25 +401,25 @@ def test_merge_world(world_setup, pr2_world):
     world, l1, l2, bf, r1, r2 = world_setup
 
     base_link = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("base_link")
+        "base_link"
     )
     r_gripper_tool_frame = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("r_gripper_tool_frame")
+        "r_gripper_tool_frame"
     )
     torso_lift_link = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("torso_lift_link")
+        "torso_lift_link"
     )
     r_shoulder_pan_joint = pr2_world.get_connection(
         torso_lift_link,
         pr2_world.get_kinematic_structure_entity_by_name(
-            PrefixedName("r_shoulder_pan_link")
+            "r_shoulder_pan_link"
         ),
     )
 
     l_shoulder_pan_joint = pr2_world.get_connection(
         torso_lift_link,
         pr2_world.get_kinematic_structure_entity_by_name(
-            PrefixedName("l_shoulder_pan_link")
+            "l_shoulder_pan_link"
         ),
     )
 
@@ -768,7 +764,7 @@ def test_overwrite_dof_limits_mimic(world_setup):
             offset=23,
             multiplier=-2,
             axis=Vector3(0, 0, 1),
-            dof_name=connection.dof_name,
+            dof_id=connection.dof_id,
         )
         world.add_body(body)
         world.add_connection(mimic_connection)
@@ -862,7 +858,24 @@ def test_missing_world_modification_context(world_setup):
         world.add_semantic_annotation(Handle(l1))
 
 
-def test_symbol_removal():
+def test_dof_removal_simple():
+    world = World()
+    body1 = Body(name=PrefixedName("body1"))
+    body2 = Body(name=PrefixedName("body2"))
+    with world.modify_world():
+        c = RevoluteConnection.create_with_dofs(
+            world=world, parent=body1, child=body2, axis=Vector3.Z()
+        )
+        world.add_connection(c)
+    with world.modify_world():
+        world.remove_connection(c)
+        c2 = RevoluteConnection.create_with_dofs(
+            world=world, parent=body1, child=body2, axis=Vector3.Z()
+        )
+        world.add_connection(c2)
+
+
+def test_dof_removal():
     world1 = World()
     body1 = Body(name=PrefixedName("body1"))
     with world1.modify_world():
@@ -893,7 +906,7 @@ def test_set_static_collision_config():
         dof = DegreeOfFreedom(name=PrefixedName("dofyboi"))
         w.add_degree_of_freedom(dof)
         connection = RevoluteConnection(
-            b1, b2, axis=Vector3.from_iterable([0, 0, 1]), dof_name=dof.name
+            b1, b2, axis=Vector3.from_iterable([0, 0, 1]), dof_id=dof.name
         )
         w.add_connection(connection)
 

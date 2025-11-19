@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass, field
+from uuid import UUID
 
 import numpy as np
 from typing_extensions import List, TYPE_CHECKING, Union, Optional, Dict, Any, Self
@@ -136,9 +137,9 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
     Movement along the axis is offset by this value. Useful if Connections share DoFs.
     """
 
-    dof_name: PrefixedName = field(kw_only=True)
+    dof_id: UUID = field(kw_only=True)
     """
-    Name of a Degree of freedom to control movement along the axis.
+    Hash of a Degree of freedom to control movement along the axis.
     """
 
     def to_json(self) -> Dict[str, Any]:
@@ -146,7 +147,7 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
         result["axis"] = self.axis.to_np().tolist()
         result["multiplier"] = self.multiplier
         result["offset"] = self.offset
-        result["dof_name"] = self.dof_name.to_json()
+        result["id"] = self.dof_id
         return result
 
     @classmethod
@@ -169,7 +170,7 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
             axis=cas.Vector3.from_iterable(data["axis"]),
             multiplier=data["multiplier"],
             offset=data["offset"],
-            dof_name=PrefixedName.from_json(data["dof_name"]),
+            dof_id=data["id"],
         )
 
     @classmethod
@@ -205,14 +206,15 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
         name = name or cls._generate_default_name(parent=parent, child=child)
         dof = DegreeOfFreedom(name=PrefixedName("dof", str(name)))
         world.add_degree_of_freedom(dof)
-        return cls(
+        connection = cls(
             parent=parent,
             child=child,
             axis=axis,
             multiplier=multiplier,
             offset=offset,
-            dof_name=dof.name,
+            dof_id=dof.id,
         )
+        return connection
 
     def add_to_world(self, world: World):
         super().add_to_world(world)
@@ -233,7 +235,7 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
         .. warning:: WITH multiplier and offset applied.
         """
         result = deepcopy(self.raw_dof)
-        result.symbols = result.symbols * self.multiplier
+        result.variables = self.raw_dof.variables * self.multiplier
         if self.multiplier < 0:
             # if multiplier is negative, we need to swap the limits
             result.lower_limits, result.upper_limits = (
@@ -243,7 +245,7 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
         result.lower_limits = result.lower_limits * self.multiplier
         result.upper_limits = result.upper_limits * self.multiplier
 
-        result.symbols.position += self.offset
+        result.variables.position += self.offset
         if result.lower_limits.position is not None:
             result.lower_limits.position = result.lower_limits.position + self.offset
         if result.upper_limits.position is not None:
@@ -256,7 +258,7 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
         A reference to the Degree of Freedom associated with this connection.
         .. warning:: WITHOUT multiplier and offset applied.
         """
-        return self._world.get_degree_of_freedom_by_name(self.dof_name)
+        return self._world.get_degree_of_freedom_by_id(self.dof_id)
 
     @property
     def active_dofs(self) -> List[DegreeOfFreedom]:
@@ -264,40 +266,43 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
 
     @property
     def position(self) -> float:
-        return self._world.state[self.dof.name].position * self.multiplier + self.offset
+        return (
+            self._world.state[self.raw_dof.name].position * self.multiplier
+            + self.offset
+        )
 
     @position.setter
     def position(self, value: float) -> None:
-        self._world.state[self.dof.name].position = (
+        self._world.state[self.raw_dof.name].position = (
             value - self.offset
         ) / self.multiplier
         self._world.notify_state_change()
 
     @property
     def velocity(self) -> float:
-        return self._world.state[self.dof.name].velocity * self.multiplier
+        return self._world.state[self.raw_dof.name].velocity * self.multiplier
 
     @velocity.setter
     def velocity(self, value: float) -> None:
-        self._world.state[self.dof.name].velocity = value / self.multiplier
+        self._world.state[self.raw_dof.name].velocity = value / self.multiplier
         self._world.notify_state_change()
 
     @property
     def acceleration(self) -> float:
-        return self._world.state[self.dof.name].acceleration * self.multiplier
+        return self._world.state[self.raw_dof.name].acceleration * self.multiplier
 
     @acceleration.setter
     def acceleration(self, value: float) -> None:
-        self._world.state[self.dof.name].acceleration = value / self.multiplier
+        self._world.state[self.raw_dof.name].acceleration = value / self.multiplier
         self._world.notify_state_change()
 
     @property
     def jerk(self) -> float:
-        return self._world.state[self.dof.name].jerk * self.multiplier
+        return self._world.state[self.raw_dof.name].jerk * self.multiplier
 
     @jerk.setter
     def jerk(self, value: float) -> None:
-        self._world.state[self.dof.name].jerk = value / self.multiplier
+        self._world.state[self.raw_dof.name].jerk = value / self.multiplier
         self._world.notify_state_change()
 
 
@@ -310,8 +315,8 @@ class PrismaticConnection(ActiveConnection1DOF):
     def add_to_world(self, world: World):
         super().add_to_world(world)
 
-        translation_axis = self.axis * self.dof.symbols.position
-        self.connection_T_child_expression = cas.TransformationMatrix.from_xyz_rpy(
+        translation_axis = self.axis * self.dof.variables.position
+        self._connection_T_child_expression = cas.TransformationMatrix.from_xyz_rpy(
             x=translation_axis[0],
             y=translation_axis[1],
             z=translation_axis[2],
@@ -328,10 +333,10 @@ class RevoluteConnection(ActiveConnection1DOF):
     def add_to_world(self, world: World):
         super().add_to_world(world)
 
-        self.connection_T_child_expression = (
+        self._connection_T_child_expression = (
             cas.TransformationMatrix.from_xyz_axis_angle(
                 axis=self.axis,
-                angle=self.dof.symbols.position,
+                angle=self.dof.variables.position,
                 child_frame=self.child,
             )
         )
@@ -432,17 +437,17 @@ class Connection6DoF(Connection):
     def add_to_world(self, world: World):
         super().add_to_world(world)
         parent_P_child = cas.Point3(
-            x_init=self.x.symbols.position,
-            y_init=self.y.symbols.position,
-            z_init=self.z.symbols.position,
+            x_init=self.x.variables.position,
+            y_init=self.y.variables.position,
+            z_init=self.z.variables.position,
         )
         parent_R_child = cas.Quaternion(
-            x_init=self.qx.symbols.position,
-            y_init=self.qy.symbols.position,
-            z_init=self.qz.symbols.position,
-            w_init=self.qw.symbols.position,
+            x_init=self.qx.variables.position,
+            y_init=self.qy.variables.position,
+            z_init=self.qz.variables.position,
+            w_init=self.qw.variables.position,
         ).to_rotation_matrix()
-        self.connection_T_child_expression = (
+        self._connection_T_child_expression = (
             cas.TransformationMatrix.from_point_rotation_matrix(
                 point=parent_P_child,
                 rotation_matrix=parent_R_child,
@@ -635,23 +640,23 @@ class OmniDrive(ActiveConnection, HasUpdateState):
     def add_to_world(self, world: World):
         super().add_to_world(world)
         odom_T_bf = cas.TransformationMatrix.from_xyz_rpy(
-            x=self.x.symbols.position,
-            y=self.y.symbols.position,
-            yaw=self.yaw.symbols.position,
+            x=self.x.variables.position,
+            y=self.y.variables.position,
+            yaw=self.yaw.variables.position,
         )
         bf_T_bf_vel = cas.TransformationMatrix.from_xyz_rpy(
-            x=self.x_velocity.symbols.position, y=self.y_velocity.symbols.position
+            x=self.x_velocity.variables.position, y=self.y_velocity.variables.position
         )
         bf_vel_T_bf = cas.TransformationMatrix.from_xyz_rpy(
             x=0,
             y=0,
             z=0,
-            roll=self.roll.symbols.position,
-            pitch=self.pitch.symbols.position,
+            roll=self.roll.variables.position,
+            pitch=self.pitch.variables.position,
             yaw=0,
         )
-        self.connection_T_child_expression = odom_T_bf @ bf_T_bf_vel @ bf_vel_T_bf
-        self.connection_T_child_expression.child_frame = self.child
+        self._connection_T_child_expression = odom_T_bf @ bf_T_bf_vel @ bf_vel_T_bf
+        self._connection_T_child_expression.child_frame = self.child
 
     @classmethod
     def create_with_dofs(
@@ -774,19 +779,15 @@ class OmniDrive(ActiveConnection, HasUpdateState):
     def origin(
         self, transformation: Union[NpMatrix4x4, cas.TransformationMatrix]
     ) -> None:
+        """
+        Overwrites the origin of the connection.
+        .. warning:: Ignores z position, pitch, and yaw values.
+        :param parent_T_child:
+        """
         if isinstance(transformation, np.ndarray):
             transformation = cas.TransformationMatrix(data=transformation)
         position = transformation.to_position()
         roll, pitch, yaw = transformation.to_rotation_matrix().to_rpy()
-        assert (
-            position.z.to_np() == 0.0
-        ), "OmniDrive only supports planar movement in the XY plane, z must be 0"
-        assert (
-            roll.to_np() == 0.0
-        ), "OmniDrive only supports planar movement in the XY plane, roll must be 0"
-        assert (
-            pitch.to_np() == 0.0
-        ), "OmniDrive only supports planar movement in the XY plane, pitch must be 0"
         self._world.state[self.x.name].position = position.x.to_np()
         self._world.state[self.y.name].position = position.y.to_np()
         self._world.state[self.yaw.name].position = yaw.to_np()

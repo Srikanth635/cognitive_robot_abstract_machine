@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import wraps, lru_cache, cached_property
 from itertools import combinations_with_replacement
+from uuid import UUID
 
 import numpy as np
 import rustworkx as rx
@@ -51,7 +52,7 @@ from .world_description.connections import (
     Connection6DoF,
     ActiveConnection1DOF,
     FixedConnection,
-    ActiveConnection, PrismaticConnection,
+    ActiveConnection,
 )
 from .world_description.connections import HasUpdateState
 from .world_description.degree_of_freedom import DegreeOfFreedom
@@ -161,6 +162,7 @@ class WorldModelUpdateContextManager:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.first:
+            self.world.clean_up_dofs()
             self.world.get_world_model_manager().model_modification_blocks.append(
                 self.world.get_world_model_manager().current_model_modification_block
             )
@@ -534,6 +536,7 @@ class World:
         return True
 
     def _validate_dofs(self):
+        self.delete_orphaned_dofs()
         actual_dofs = {
             dof for connection in self.connections for dof in connection.dofs
         }
@@ -791,17 +794,6 @@ class World:
             self.is_connection_in_world returning False, even though we have not cleaned up the connection properly on
             our side.
         """
-        remaining_dofs = {
-            dof
-            for remaining_connection in self.connections
-            if remaining_connection != connection
-            for dof in remaining_connection.dofs
-        }
-
-        removed_dofs = set(connection.dofs) - remaining_dofs
-
-        for dof in removed_dofs:
-            self.remove_degree_of_freedom(dof)
         self._remove_connection(connection)
 
     @atomic_world_modification(modification=RemoveConnectionModification)
@@ -810,7 +802,7 @@ class World:
             self.kinematic_structure.remove_edge(
                 connection.parent.index, connection.child.index
             )
-        except NoEdgeBetweenNodes:
+        except (NoEdgeBetweenNodes, TypeError):
             pass
         connection.remove_from_world()
 
@@ -842,6 +834,7 @@ class World:
     def remove_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
         if self.is_degree_of_freedom_in_world(dof):
             self._remove_degree_of_freedom(dof)
+            self.get_degree_of_freedom_by_name.cache_clear()
 
     @atomic_world_modification(modification=RemoveDegreeOfFreedomModification)
     def _remove_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
@@ -1086,6 +1079,24 @@ class World:
                     if world_entity.name.name == name
                 ]
 
+    def get_degree_of_freedom_by_id(self, id: UUID) -> DegreeOfFreedom:
+        return self._get_world_entity_by_hash_from_iterable(hash(id), self.degrees_of_freedom)
+
+    def _get_world_entity_by_hash_from_iterable(self, entity_hash: int, world_entity_iterable: Iterable[GenericWorldEntity]) -> GenericWorldEntity:
+        """
+        Retrieve a WorldEntity by its hash.
+
+        :param entity_hash: The hash of the entity to retrieve.
+        :param world_entity_iterable: The iterable of world entities to search for the entity.
+        :return:
+        """
+        entity = next(
+            (entity for entity in world_entity_iterable if hash(entity) == entity_hash), None
+        )
+        if entity is None:
+            raise WorldEntityNotFoundError(entity_hash)
+        return entity
+
     # %% Existence Checks
     def is_semantic_annotation_in_world(
         self, semantic_annotation: SemanticAnnotation
@@ -1190,7 +1201,10 @@ class World:
         other_root = other.root
         other_connections = other.connections
         for connection in other_connections:
-            other.remove_connection(connection)
+            try:
+                other.remove_connection(connection)
+            except WorldEntityNotFoundError:
+                ...
             other.remove_kinematic_structure_entity(connection.parent)
             other.remove_kinematic_structure_entity(connection.child)
             self.add_connection(connection)
@@ -1368,6 +1382,16 @@ class World:
         self.validate()
         self._collision_pair_manager.disable_non_robot_collisions()
         self._collision_pair_manager.disable_collisions_for_adjacent_bodies()
+
+    def clean_up_dofs(self):
+        actual_dofs = {
+            dof for connection in self.connections for dof in connection.dofs
+        }
+
+        removed_dofs = set(self.degrees_of_freedom) - actual_dofs
+
+        for dof in removed_dofs:
+            self.remove_degree_of_freedom(dof)
 
     def delete_orphaned_dofs(self):
         actual_dofs = {

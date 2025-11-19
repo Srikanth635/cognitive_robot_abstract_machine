@@ -174,7 +174,7 @@ class HasDoorLikeFactories(ABC):
                     multiplier=1.0,
                     offset=0.0,
                     axis=Vector3.Z(),
-                    dof_name=dof.name,
+                    dof_id=dof.id,
                 )
 
                 parent_world.merge_world(door_world, connection)
@@ -625,7 +625,7 @@ class HasDrawerFactories(ABC):
                 multiplier=1.0,
                 offset=0.0,
                 axis=Vector3.X(),
-                dof_name=dof.name,
+                dof_id=dof.id,
             )
 
             parent_world.merge_world(drawer_world, connection)

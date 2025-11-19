@@ -504,7 +504,7 @@ class MultiParser:
                     multiplier=multiplier,
                     offset=offset,
                     axis=axis,
-                    dof_name=dof.name,
+                    dof_id=dof.name,
                 )
         raise NotImplementedError(
             f"Joint type {joint_builder.type} is not supported yet."

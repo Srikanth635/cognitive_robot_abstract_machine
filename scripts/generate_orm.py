@@ -8,9 +8,11 @@
 from __future__ import annotations
 
 import os
+import uuid
 from dataclasses import is_dataclass
 
 import krrood.entity_query_language.orm.model
+import sqlalchemy
 import trimesh
 from krrood.class_diagrams import ClassDiagram
 from krrood.entity_query_language.predicate import HasTypes, HasType, Symbol
@@ -110,7 +112,8 @@ def generate_orm():
 
     instance = ORMatic(
         class_dependency_graph=class_diagram,
-        type_mappings={trimesh.Trimesh: semantic_digital_twin.orm.model.TrimeshType},
+        type_mappings={trimesh.Trimesh: semantic_digital_twin.orm.model.TrimeshType,
+                       uuid.UUID: sqlalchemy.UUID},
         alternative_mappings=recursive_subclasses(AlternativeMapping),
     )
 

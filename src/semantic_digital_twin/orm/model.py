@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from io import BytesIO
+from uuid import UUID
 
 import numpy as np
 import trimesh
@@ -13,7 +14,6 @@ from ..datastructures.prefixed_name import PrefixedName
 from ..spatial_types import RotationMatrix, Vector3, Point3, TransformationMatrix
 from ..spatial_types.derivatives import DerivativeMap
 from ..spatial_types.spatial_types import Quaternion
-from ..spatial_types.symbol_manager import symbol_manager
 from ..world import World
 from ..world_description.connections import Connection
 from ..world_description.degree_of_freedom import DegreeOfFreedom
@@ -55,6 +55,7 @@ class WorldMapping(AlternativeMapping[World]):
                     name=dof.name,
                     lower_limits=dof.lower_limits,
                     upper_limits=dof.upper_limits,
+                    id=dof.id,
                 )
                 result.add_degree_of_freedom(d)
             for connection in self.connections:
@@ -99,7 +100,7 @@ class Vector3Mapping(AlternativeMapping[Vector3]):
 
     @classmethod
     def create_instance(cls, obj: Vector3):
-        x, y, z, _ = symbol_manager.evaluate_expr(obj).tolist()
+        x, y, z, _ = obj.to_np().tolist()
         result = cls(x=x, y=y, z=z)
         result.reference_frame = obj.reference_frame
         return result
@@ -122,7 +123,7 @@ class Point3Mapping(AlternativeMapping[Point3]):
 
     @classmethod
     def create_instance(cls, obj: Point3):
-        x, y, z, _ = symbol_manager.evaluate_expr(obj).tolist()
+        x, y, z, _ = obj.to_np().tolist()
         result = cls(x=x, y=y, z=z)
         result.reference_frame = obj.reference_frame
         return result
@@ -144,7 +145,7 @@ class QuaternionMapping(AlternativeMapping[Quaternion]):
 
     @classmethod
     def create_instance(cls, obj: Quaternion):
-        x, y, z, w = symbol_manager.evaluate_expr(obj).tolist()
+        x, y, z, w = obj.to_np().tolist()
         result = cls(x=x, y=y, z=z, w=w)
         result.reference_frame = obj.reference_frame
         return result
@@ -211,6 +212,7 @@ class DegreeOfFreedomMapping(AlternativeMapping[DegreeOfFreedom]):
     name: PrefixedName
     lower_limits: List[float]
     upper_limits: List[float]
+    id: UUID
 
     @classmethod
     def create_instance(cls, obj: DegreeOfFreedom):
@@ -218,13 +220,14 @@ class DegreeOfFreedomMapping(AlternativeMapping[DegreeOfFreedom]):
             name=obj.name,
             lower_limits=obj.lower_limits.data,
             upper_limits=obj.upper_limits.data,
+            id=obj.id,
         )
 
     def create_from_dao(self) -> DegreeOfFreedom:
         lower_limits = DerivativeMap(data=self.lower_limits)
         upper_limits = DerivativeMap(data=self.upper_limits)
         return DegreeOfFreedom(
-            name=self.name, lower_limits=lower_limits, upper_limits=upper_limits
+            name=self.name, lower_limits=lower_limits, upper_limits=upper_limits, id=self.id
         )
 
 
