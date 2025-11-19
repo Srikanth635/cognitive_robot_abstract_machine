@@ -77,7 +77,7 @@ def test_semantic_annotation_hash(apartment_world):
     semantic_annotation1 = Handle(body=apartment_world.bodies[0])
     with apartment_world.modify_world():
         apartment_world.add_semantic_annotation(semantic_annotation1)
-    assert hash(semantic_annotation1) == hash((Handle, apartment_world.bodies[0].name))
+    assert hash(semantic_annotation1) == hash((Handle, apartment_world.bodies[0].id))
 
     semantic_annotation2 = Handle(body=apartment_world.bodies[0])
     assert semantic_annotation1 == semantic_annotation2

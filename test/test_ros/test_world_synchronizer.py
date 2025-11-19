@@ -319,7 +319,7 @@ def test_ChangeDifHasHardwareInterface(rclpy_node):
         dof = DegreeOfFreedom(name=PrefixedName("dof"))
         w1.add_degree_of_freedom(dof)
         connection = PrismaticConnection(
-            dof_id=dof.name, parent=body1, child=body2, axis=Vector3(1, 1, 1)
+            dof_id=dof.id, parent=body1, child=body2, axis=Vector3(1, 1, 1)
         )
         w1.add_connection(connection)
     assert len(w1.kinematic_structure_entities) == 2

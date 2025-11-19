@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass, field
+from uuid import UUID
 
 from krrood.adapters.json_serializer import SubclassJSONSerializer
 from typing_extensions import Dict, Any
@@ -139,12 +140,14 @@ class DegreeOfFreedom(WorldEntityWithID, SubclassJSONSerializer):
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> DegreeOfFreedom:
+        uuid=UUID(hex=data["id"]) if data["id"] is not None else None
         lower_limits = DerivativeMap.from_json(data["lower_limits"], **kwargs)
         upper_limits = DerivativeMap.from_json(data["upper_limits"], **kwargs)
         return cls(
             name=PrefixedName.from_json(data["name"]),
             lower_limits=lower_limits,
             upper_limits=upper_limits,
+            id=uuid,
         )
 
     def __deepcopy__(self, memo):

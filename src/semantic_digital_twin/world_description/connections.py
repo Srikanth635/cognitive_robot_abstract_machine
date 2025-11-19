@@ -147,7 +147,7 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
         result["axis"] = self.axis.to_np().tolist()
         result["multiplier"] = self.multiplier
         result["offset"] = self.offset
-        result["id"] = self.dof_id
+        result["id"] = self.dof_id.hex
         return result
 
     @classmethod
@@ -170,7 +170,7 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
             axis=cas.Vector3.from_iterable(data["axis"]),
             multiplier=data["multiplier"],
             offset=data["offset"],
-            dof_id=data["id"],
+            dof_id=UUID(hex=data["id"]),
         )
 
     @classmethod
@@ -349,36 +349,36 @@ class Connection6DoF(Connection):
     Useful for synchronizing with transformations from external providers.
     """
 
-    x_name: PrefixedName = field(kw_only=True)
+    x_id: UUID = field(kw_only=True)
     """
     Displacement of child KinematicStructureEntity with respect to parent KinematicStructureEntity along the x-axis.
     """
-    y_name: PrefixedName = field(kw_only=True)
+    y_id: UUID = field(kw_only=True)
     """
     Displacement of child KinematicStructureEntity with respect to parent KinematicStructureEntity along the y-axis.
     """
-    z_name: PrefixedName = field(kw_only=True)
+    z_id: UUID = field(kw_only=True)
     """
     Displacement of child KinematicStructureEntity with respect to parent KinematicStructureEntity along the z-axis.
     """
 
-    qx_name: PrefixedName = field(kw_only=True)
-    qy_name: PrefixedName = field(kw_only=True)
-    qz_name: PrefixedName = field(kw_only=True)
-    qw_name: PrefixedName = field(kw_only=True)
+    qx_id: UUID = field(kw_only=True)
+    qy_id: UUID = field(kw_only=True)
+    qz_id: UUID = field(kw_only=True)
+    qw_id: UUID = field(kw_only=True)
     """
     Rotation of child KinematicStructureEntity with respect to parent KinematicStructureEntity represented as a quaternion.
     """
 
     def to_json(self) -> Dict[str, Any]:
         result = super().to_json()
-        result["x_name"] = self.x_name.to_json()
-        result["y_name"] = self.y_name.to_json()
-        result["z_name"] = self.z_name.to_json()
-        result["qx_name"] = self.qx_name.to_json()
-        result["qy_name"] = self.qy_name.to_json()
-        result["qz_name"] = self.qz_name.to_json()
-        result["qw_name"] = self.qw_name.to_json()
+        result["x_id"] = self.x_id.hex
+        result["y_id"] = self.y_id.hex
+        result["z_id"] = self.z_id.hex
+        result["qx_id"] = self.qx_id.hex
+        result["qy_id"] = self.qy_id.hex
+        result["qz_id"] = self.qz_id.hex
+        result["qw_id"] = self.qw_id.hex
         return result
 
     @classmethod
@@ -397,42 +397,42 @@ class Connection6DoF(Connection):
             parent_T_connection_expression=cas.TransformationMatrix.from_json(
                 data["parent_T_connection_expression"], **kwargs
             ),
-            x_name=PrefixedName.from_json(data["x_name"]),
-            y_name=PrefixedName.from_json(data["y_name"]),
-            z_name=PrefixedName.from_json(data["z_name"]),
-            qx_name=PrefixedName.from_json(data["qx_name"]),
-            qy_name=PrefixedName.from_json(data["qy_name"]),
-            qz_name=PrefixedName.from_json(data["qz_name"]),
-            qw_name=PrefixedName.from_json(data["qw_name"]),
+            x_id=UUID(hex=data["x_id"]),
+            y_id=UUID(hex=data["y_id"]),
+            z_id=UUID(hex=data["z_id"]),
+            qx_id=UUID(hex=data["qx_id"]),
+            qy_id=UUID(hex=data["qy_id"]),
+            qz_id=UUID(hex=data["qz_id"]),
+            qw_id=UUID(hex=data["qw_id"]),
         )
 
     @property
     def x(self) -> DegreeOfFreedom:
-        return self._world.get_degree_of_freedom_by_name(self.x_name)
+        return self._world.get_degree_of_freedom_by_id(self.x_id)
 
     @property
     def y(self) -> DegreeOfFreedom:
-        return self._world.get_degree_of_freedom_by_name(self.y_name)
+        return self._world.get_degree_of_freedom_by_id(self.y_id)
 
     @property
     def z(self) -> DegreeOfFreedom:
-        return self._world.get_degree_of_freedom_by_name(self.z_name)
+        return self._world.get_degree_of_freedom_by_id(self.z_id)
 
     @property
     def qx(self) -> DegreeOfFreedom:
-        return self._world.get_degree_of_freedom_by_name(self.qx_name)
+        return self._world.get_degree_of_freedom_by_id(self.qx_id)
 
     @property
     def qy(self) -> DegreeOfFreedom:
-        return self._world.get_degree_of_freedom_by_name(self.qy_name)
+        return self._world.get_degree_of_freedom_by_id(self.qy_id)
 
     @property
     def qz(self) -> DegreeOfFreedom:
-        return self._world.get_degree_of_freedom_by_name(self.qz_name)
+        return self._world.get_degree_of_freedom_by_id(self.qz_id)
 
     @property
     def qw(self) -> DegreeOfFreedom:
-        return self._world.get_degree_of_freedom_by_name(self.qw_name)
+        return self._world.get_degree_of_freedom_by_id(self.qw_id)
 
     def add_to_world(self, world: World):
         super().add_to_world(world)
@@ -510,13 +510,13 @@ class Connection6DoF(Connection):
             child=child,
             parent_T_connection_expression=parent_T_connection_expression,
             name=name,
-            x_name=x.name,
-            y_name=y.name,
-            z_name=z.name,
-            qx_name=qx.name,
-            qy_name=qy.name,
-            qz_name=qz.name,
-            qw_name=qw.name,
+            x_id=x.id,
+            y_id=y.id,
+            z_id=z.id,
+            qx_id=qx.id,
+            qy_id=qy.id,
+            qz_id=qz.id,
+            qw_id=qw.id,
         )
 
     @property
@@ -563,25 +563,25 @@ class OmniDrive(ActiveConnection, HasUpdateState):
     """
 
     # passive dofs
-    x_name: PrefixedName = field(kw_only=True)
-    y_name: PrefixedName = field(kw_only=True)
-    roll_name: PrefixedName = field(kw_only=True)
-    pitch_name: PrefixedName = field(kw_only=True)
+    x_id: UUID = field(kw_only=True)
+    y_id: UUID = field(kw_only=True)
+    roll_id: UUID = field(kw_only=True)
+    pitch_id: UUID = field(kw_only=True)
 
     # active dofs
-    yaw_name: PrefixedName = field(kw_only=True)
-    x_velocity_name: PrefixedName = field(kw_only=True)
-    y_velocity_name: PrefixedName = field(kw_only=True)
+    yaw_id: UUID = field(kw_only=True)
+    x_velocity_id: UUID = field(kw_only=True)
+    y_velocity_id: UUID = field(kw_only=True)
 
     def to_json(self) -> Dict[str, Any]:
         result = super().to_json()
-        result["x_name"] = self.x_name.to_json()
-        result["y_name"] = self.y_name.to_json()
-        result["roll_name"] = self.roll_name.to_json()
-        result["pitch_name"] = self.pitch_name.to_json()
-        result["yaw_name"] = self.yaw_name.to_json()
-        result["x_velocity_name"] = self.x_velocity_name.to_json()
-        result["y_velocity_name"] = self.y_velocity_name.to_json()
+        result["x_id"] = self.x_id.hex
+        result["y_id"] = self.y_id.hex
+        result["roll_id"] = self.roll_id.hex
+        result["pitch_id"] = self.pitch_id.hex
+        result["yaw_id"] = self.yaw_id.hex
+        result["x_velocity_id"] = self.x_velocity_id.hex
+        result["y_velocity_id"] = self.y_velocity_id.hex
         return result
 
     @classmethod
@@ -600,42 +600,42 @@ class OmniDrive(ActiveConnection, HasUpdateState):
             parent_T_connection_expression=cas.TransformationMatrix.from_json(
                 data["parent_T_connection_expression"], **kwargs
             ),
-            x_name=PrefixedName.from_json(data["x_name"], **kwargs),
-            y_name=PrefixedName.from_json(data["y_name"], **kwargs),
-            roll_name=PrefixedName.from_json(data["roll_name"], **kwargs),
-            pitch_name=PrefixedName.from_json(data["pitch_name"], **kwargs),
-            yaw_name=PrefixedName.from_json(data["yaw_name"], **kwargs),
-            x_velocity_name=PrefixedName.from_json(data["x_velocity_name"], **kwargs),
-            y_velocity_name=PrefixedName.from_json(data["y_velocity_name"], **kwargs),
+            x_id=UUID(hex=data["x_id"]),
+            y_id=UUID(hex=data["y_id"]),
+            roll_id=UUID(hex=data["roll_id"]),
+            pitch_id=UUID(hex=data["pitch_id"]),
+            yaw_id=UUID(hex=data["yaw_id"]),
+            x_velocity_id=UUID(hex=data["x_velocity_id"]),
+            y_velocity_id=UUID(hex=data["y_velocity_id"]),
         )
 
     @property
     def x(self) -> DegreeOfFreedom:
-        return self._world.get_degree_of_freedom_by_name(self.x_name)
+        return self._world.get_degree_of_freedom_by_id(self.x_id)
 
     @property
     def y(self) -> DegreeOfFreedom:
-        return self._world.get_degree_of_freedom_by_name(self.y_name)
+        return self._world.get_degree_of_freedom_by_id(self.y_id)
 
     @property
     def roll(self) -> DegreeOfFreedom:
-        return self._world.get_degree_of_freedom_by_name(self.roll_name)
+        return self._world.get_degree_of_freedom_by_id(self.roll_id)
 
     @property
     def pitch(self) -> DegreeOfFreedom:
-        return self._world.get_degree_of_freedom_by_name(self.pitch_name)
+        return self._world.get_degree_of_freedom_by_id(self.pitch_id)
 
     @property
     def yaw(self) -> DegreeOfFreedom:
-        return self._world.get_degree_of_freedom_by_name(self.yaw_name)
+        return self._world.get_degree_of_freedom_by_id(self.yaw_id)
 
     @property
     def x_velocity(self) -> DegreeOfFreedom:
-        return self._world.get_degree_of_freedom_by_name(self.x_velocity_name)
+        return self._world.get_degree_of_freedom_by_id(self.x_velocity_id)
 
     @property
     def y_velocity(self) -> DegreeOfFreedom:
-        return self._world.get_degree_of_freedom_by_name(self.y_velocity_name)
+        return self._world.get_degree_of_freedom_by_id(self.y_velocity_id)
 
     def add_to_world(self, world: World):
         super().add_to_world(world)
@@ -737,13 +737,13 @@ class OmniDrive(ActiveConnection, HasUpdateState):
             child=child,
             parent_T_connection_expression=parent_T_connection_expression,
             name=name,
-            x_name=x.name,
-            y_name=y.name,
-            roll_name=roll.name,
-            pitch_name=pitch.name,
-            yaw_name=yaw.name,
-            x_velocity_name=x_vel.name,
-            y_velocity_name=y_vel.name,
+            x_id=x.id,
+            y_id=y.id,
+            roll_id=roll.id,
+            pitch_id=pitch.id,
+            yaw_id=yaw.id,
+            x_velocity_id=x_vel.id,
+            y_velocity_id=y_vel.id,
         )
 
     @property

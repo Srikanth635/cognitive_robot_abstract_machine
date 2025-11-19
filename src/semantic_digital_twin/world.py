@@ -1201,10 +1201,7 @@ class World:
         other_root = other.root
         other_connections = other.connections
         for connection in other_connections:
-            try:
-                other.remove_connection(connection)
-            except WorldEntityNotFoundError:
-                ...
+            other.remove_connection(connection)
             other.remove_kinematic_structure_entity(connection.parent)
             other.remove_kinematic_structure_entity(connection.child)
             self.add_connection(connection)
@@ -1827,6 +1824,7 @@ class World:
                     name=dof.name,
                     lower_limits=dof.lower_limits,
                     upper_limits=dof.upper_limits,
+                    id=dof.id,
                 )
                 new_world.add_degree_of_freedom(new_dof)
                 new_world.state[dof.name] = self.state[dof.name].data

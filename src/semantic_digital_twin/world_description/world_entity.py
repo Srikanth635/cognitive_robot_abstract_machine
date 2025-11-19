@@ -88,19 +88,19 @@ class WorldEntity(Symbol, ABC):
         self._world = None
 
 @dataclass(eq=False)
-class WorldEntityWithID(WorldEntity, ABC):
-    id: UUID = field(default=None)
+class WorldEntityWithID(WorldEntity, SubclassJSONSerializer, ABC):
+    id: UUID = field(default_factory=uuid4)
 
     def __hash__(self):
         return hash(self.id)
 
     def add_to_world(self, world: World):
         super().add_to_world(world)
-        self.generate_id_if_not_exists()
 
-    def generate_id_if_not_exists(self):
-        if self.id is None:
-            self.id = uuid4()
+    def to_json(self) -> Dict[str, Any]:
+        result = super().to_json()
+        result["id"] = self.id.hex
+        return result
 
 
 @dataclass
@@ -377,8 +377,9 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        result = cls(name=PrefixedName.from_json(data["name"], **kwargs))
-
+        result = cls(
+            name=PrefixedName.from_json(data["name"], **kwargs),
+            id=UUID(hex=data["id"]))
         # add the new body so that the transformation matrices in the shapes can use it as reference frame.
         tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
         if not tracker.has_kinematic_structure_entity(result.name):
@@ -495,7 +496,7 @@ class Region(KinematicStructureEntity):
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        result = cls(name=PrefixedName.from_json(data["name"]))
+        result = cls(name=PrefixedName.from_json(data["name"], id=UUID(hex=data["id"])))
         area = ShapeCollection.from_json(data["area"])
         for shape in area:
             shape.origin.reference_frame = result

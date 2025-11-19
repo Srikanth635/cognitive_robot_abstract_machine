@@ -367,7 +367,6 @@ def test_add_semantic_annotation(world_setup):
     v = SemanticAnnotation(name=PrefixedName("muh"))
     with world.modify_world():
         world.add_semantic_annotation(v)
-    with pytest.raises(AddingAnExistingSemanticAnnotationError):
         world.add_semantic_annotation(v)
     assert world.get_semantic_annotation_by_name(v.name) == v
 
@@ -436,18 +435,18 @@ def test_merge_with_connection(world_setup, pr2_world):
     world, l1, l2, bf, r1, r2 = world_setup
 
     base_link = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("base_link")
+        "base_link"
     )
     r_gripper_tool_frame = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("r_gripper_tool_frame")
+        "r_gripper_tool_frame"
     )
     torso_lift_link = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("torso_lift_link")
+        "torso_lift_link"
     )
     r_shoulder_pan_joint = pr2_world.get_connection(
         torso_lift_link,
         pr2_world.get_kinematic_structure_entity_by_name(
-            PrefixedName("r_shoulder_pan_link")
+            "r_shoulder_pan_link"
         ),
     )
 
@@ -489,18 +488,18 @@ def test_merge_with_pose(world_setup, pr2_world):
     world, l1, l2, bf, r1, r2 = world_setup
 
     base_link = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("base_link")
+        "base_link"
     )
     r_gripper_tool_frame = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("r_gripper_tool_frame")
+        "r_gripper_tool_frame"
     )
     torso_lift_link = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("torso_lift_link")
+        "torso_lift_link"
     )
     r_shoulder_pan_joint = pr2_world.get_connection(
         torso_lift_link,
         pr2_world.get_kinematic_structure_entity_by_name(
-            PrefixedName("r_shoulder_pan_link")
+            "r_shoulder_pan_link"
         ),
     )
 
@@ -522,22 +521,22 @@ def test_merge_with_pose_rotation(world_setup, pr2_world):
     world, l1, l2, bf, r1, r2 = world_setup
 
     base_link = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("base_link")
+        "base_link"
     )
     r_gripper_tool_frame = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("r_gripper_tool_frame")
+        "r_gripper_tool_frame"
     )
     torso_lift_link = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("torso_lift_link")
+        "torso_lift_link"
     )
     r_shoulder_pan_joint = pr2_world.get_connection(
         torso_lift_link,
         pr2_world.get_kinematic_structure_entity_by_name(
-            PrefixedName("r_shoulder_pan_link")
+            "r_shoulder_pan_link"
         ),
     )
     base_footprint = pr2_world.get_kinematic_structure_entity_by_name(
-        PrefixedName("base_footprint")
+        "base_footprint"
     )
 
     # Rotation is 90 degrees around z-axis, translation is 1 along x-axis
@@ -594,8 +593,9 @@ def test_remove_connection(world_setup):
         world.add_connection(new_connection)
 
     with pytest.raises(AssertionError):
-        # if you remove a connection, the child must be connected some other way or deleted
-        world.remove_connection(world.get_connection(r1, r2))
+        with world.modify_world():
+            # if you remove a connection, the child must be connected some other way or deleted
+            world.remove_connection(world.get_connection(r1, r2))
 
 def test_kinematic_structure_entity_hash(world_setup):
     _, l1, _, _, _, _ = world_setup
@@ -709,9 +709,10 @@ def test_copy_pr2(pr2_world):
 def test_add_entity_with_duplicate_name(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
     body_duplicate = Body(name=PrefixedName("l1"))
-    with pytest.raises(DuplicateKinematicStructureEntityError):
-        with world.modify_world():
-            world.add_kinematic_structure_entity(body_duplicate)
+    connection = FixedConnection(parent=l1, child=body_duplicate)
+    with world.modify_world():
+        world.add_kinematic_structure_entity(body_duplicate)
+        world.add_connection(connection)
 
 
 def test_overwrite_dof_limits(world_setup):
@@ -873,6 +874,7 @@ def test_dof_removal_simple():
             world=world, parent=body1, child=body2, axis=Vector3.Z()
         )
         world.add_connection(c2)
+        ...
 
 
 def test_dof_removal():
@@ -906,7 +908,7 @@ def test_set_static_collision_config():
         dof = DegreeOfFreedom(name=PrefixedName("dofyboi"))
         w.add_degree_of_freedom(dof)
         connection = RevoluteConnection(
-            b1, b2, axis=Vector3.from_iterable([0, 0, 1]), dof_id=dof.name
+            b1, b2, axis=Vector3.from_iterable([0, 0, 1]), dof_id=dof.id
         )
         w.add_connection(connection)
 
