@@ -1,5 +1,6 @@
 import inspect
 import os
+import shutil
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -39,7 +40,14 @@ from ..world_description.connections import (
     FixedConnection,
     Connection6DoF,
 )
-from ..world_description.geometry import Box, Cylinder, Sphere, Shape, FileMesh
+from ..world_description.geometry import (
+    Box,
+    Cylinder,
+    Sphere,
+    Shape,
+    FileMesh,
+    TriangleMesh,
+)
 from ..world_description.world_entity import (
     Region,
     Body,
@@ -381,6 +389,14 @@ class MeshConverter(ShapeConverter, ABC):
     entity_type: ClassVar[Type[FileMesh]] = FileMesh
 
 
+class TriangleMeshConverter(ShapeConverter, ABC):
+    """
+    Converts a Mesh object to a dictionary of mesh properties for Multiverse simulator.
+    """
+
+    entity_type: ClassVar[Type[TriangleMesh]] = TriangleMesh
+
+
 class ConnectionConverter(EntityConverter, ABC):
     """
     Converts a Connection object to a dictionary of joint properties for Multiverse simulator.
@@ -630,6 +646,17 @@ class MujocoMeshConverter(MujocoGeomConverter, MeshConverter):
 
     def _post_convert(
         self, entity: FileMesh, shape_props: Dict[str, Any], **kwargs
+    ) -> Dict[str, Any]:
+        shape_props.update(MujocoGeomConverter._post_convert(self, entity, shape_props))
+        shape_props.update({"mesh": entity})
+        return shape_props
+
+
+class MujocoTriangleMeshConverter(MujocoGeomConverter, TriangleMeshConverter):
+    type: mujoco.mjtGeom = mujoco.mjtGeom.mjGEOM_MESH
+
+    def _post_convert(
+        self, entity: TriangleMesh, shape_props: Dict[str, Any], **kwargs
     ) -> Dict[str, Any]:
         shape_props.update(MujocoGeomConverter._post_convert(self, entity, shape_props))
         shape_props.update({"mesh": entity})
@@ -948,7 +975,16 @@ class MujocoBuilder(MultiSimBuilder):
         :return: True if the mesh was parsed successfully, False otherwise.
         """
         mesh_entity = geom_props.pop("mesh")
-        mesh_file_path = mesh_entity.filename
+        if isinstance(mesh_entity, TriangleMesh):
+            mesh_name = os.path.basename(mesh_entity.file.name)
+            mesh_file_path = f"/tmp/meshes/{mesh_name}.obj"
+            shutil.move(mesh_entity.file.name, mesh_file_path)
+        elif isinstance(mesh_entity, FileMesh):
+            mesh_file_path = mesh_entity.filename
+        else:
+            raise NotImplementedError(
+                f"Mesh type {type(mesh_entity)} not supported in Mujoco."
+            )
         mesh_ext = os.path.splitext(mesh_file_path)[1].lower()
         if mesh_ext == ".dae":
             print(f"Cannot use .dae files in Mujoco. Skipping mesh {mesh_file_path}.")

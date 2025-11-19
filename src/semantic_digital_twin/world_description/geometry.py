@@ -259,9 +259,30 @@ class TriangleMesh(Mesh):
     @cached_property
     def file(self):
         f = tempfile.NamedTemporaryFile(delete=False)
-        with open(f.name, "w") as fd:
-            fd.write(trimesh.exchange.stl.export_stl_ascii(self.mesh))
+        self.mesh.export(f.name, file_type="obj")
         return f
+
+    @classmethod
+    def from_spec(
+        cls,
+        vertices: np.ndarray,
+        faces: np.ndarray,
+        origin: np.ndarray,
+        scale: np.ndarray,
+    ) -> TriangleMesh:
+        """
+        Create a triangle mesh from vertices, faces, origin, and scale.
+
+        :param vertices: Vertices of the mesh.
+        :param faces: Faces of the mesh.
+        :param origin: Origin of the mesh.
+        :param scale: Scale of the mesh.
+        :return: TriangleMesh object.
+        """
+        mesh = trimesh.Trimesh(vertices=vertices, faces=faces)
+        origin = TransformationMatrix(data=origin)
+        scale = Scale(x=scale[0], y=scale[1], z=scale[2])
+        return cls(mesh=mesh, origin=origin, scale=scale)
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> TriangleMesh:

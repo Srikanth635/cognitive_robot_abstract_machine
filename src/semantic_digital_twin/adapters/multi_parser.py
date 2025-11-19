@@ -3,6 +3,7 @@ import os
 from dataclasses import dataclass
 
 import numpy
+from scipy.spatial.transform import Rotation
 from typing_extensions import Optional, Set, List
 
 from ..exceptions import WorldEntityNotFoundError
@@ -208,25 +209,20 @@ def parse_mesh(
     :param quat: The quaternion representing the rotation of the mesh.
     :return: A TriangleMesh shape representing the parsed mesh geometry.
     """
-    scale = [local_transformation.GetRow(i).GetLength() for i in range(3)]
-    data = {"mesh": {}, "origin": {}, "scale": {}}
-    data["mesh"]["vertices"] = gprim.GetVertices()
-    data["mesh"]["faces"] = gprim.GetFaceVertexCounts()
-    data["origin"]["position"] = [
-        translation[0],
-        translation[1],
-        translation[2],
-    ]
-    data["origin"]["quaternion"] = [
-        quat.GetReal(),
-        quat.GetImaginary()[0],
-        quat.GetImaginary()[1],
-        quat.GetImaginary()[2],
-    ]
-    data["scale"]["x"] = scale[0]
-    data["scale"]["y"] = scale[1]
-    data["scale"]["z"] = scale[2]
-    return TriangleMesh.from_json(data=data)
+    vertices = numpy.array([*gprim.GetPointsAttr().Get()])
+    vertices = vertices.reshape((-1, 3))
+    faces = numpy.array([*gprim.CreateFaceVertexIndicesAttr().Get()])
+    faces = faces.reshape((-1, 3))
+    translation = numpy.array([*translation])
+    quat = numpy.array([quat.GetReal(), *quat.GetImaginary()])
+    origin_3x3 = Rotation.from_quat(quat, scalar_first=True).as_matrix()
+    origin_4x4 = numpy.eye(4)
+    origin_4x4[:3, :3] = origin_3x3
+    origin_4x4[:3, 3] = translation
+    scale = numpy.array([local_transformation.GetRow(i).GetLength() for i in range(3)])
+    return TriangleMesh.from_spec(
+        vertices=vertices, faces=faces, origin=origin_4x4, scale=scale
+    )
 
 
 def parse_geometry(body_builder: BodyBuilder) -> tuple[List[Shape], List[Shape]]:
