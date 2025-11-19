@@ -71,20 +71,20 @@ class WorldMapping(AlternativeMapping[World]):
 @dataclass
 class WorldStateMapping(AlternativeMapping[WorldState]):
     data: List[float]
-    names: List[PrefixedName]
+    ids: List[UUID]
 
     @classmethod
     def create_instance(cls, obj: WorldState):
         return cls(
             data=obj.data.ravel().tolist(),
-            names=obj._names,
+            ids=obj._ids,
         )
 
     def create_from_dao(self) -> WorldState:
         return WorldState(
-            data=np.array(self.data, dtype=np.float64).reshape((4, len(self.names))),
-            _names=self.names,
-            _index={name: idx for idx, name in enumerate(self.names)},
+            data=np.array(self.data, dtype=np.float64).reshape((4, len(self.ids))),
+            _ids=self.ids,
+            _index={name: idx for idx, name in enumerate(self.ids)},
         )
 
 

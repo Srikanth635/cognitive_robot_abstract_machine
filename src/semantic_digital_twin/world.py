@@ -840,7 +840,7 @@ class World:
     def _remove_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
         dof.remove_from_world()
         self.degrees_of_freedom.remove(dof)
-        del self.state[dof.name]
+        del self.state[dof.id]
 
     def remove_semantic_annotation(
         self, semantic_annotation: SemanticAnnotation
@@ -1194,8 +1194,8 @@ class World:
         for dof in other.degrees_of_freedom.copy():
             other.remove_degree_of_freedom(dof)
             self.add_degree_of_freedom(dof)
-        for dof_name in old_state.keys():
-            self.state[dof_name] = old_state[dof_name]
+        for dof_id in old_state.keys():
+            self.state[dof_id] = old_state[dof_id]
 
     def _merge_connections_of_world(self, other: World):
         other_root = other.root
@@ -1827,7 +1827,7 @@ class World:
                     id=dof.id,
                 )
                 new_world.add_degree_of_freedom(new_dof)
-                new_world.state[dof.name] = self.state[dof.name].data
+                new_world.state[dof.id] = self.state[dof.id].data
             for connection in self.connections:
                 new_connection = SubclassJSONSerializer.from_json(
                     connection.to_json(), **tracker.create_kwargs()
