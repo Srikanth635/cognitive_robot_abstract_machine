@@ -194,6 +194,30 @@ def parse_plane(
     )
 
 
+def get_texture_file_path_from_shader_input(stage, shader_input) -> str:
+    while shader_input.HasConnectedSource():
+        source = shader_input.GetConnectedSource()[0]
+        if len(source.GetOutputs()) != 1:
+            for output in source.GetOutputs():
+                if output.GetBaseName() == "rgb":
+                    break
+            else:
+                raise NotImplementedError("Multiple outputs are not supported yet.")
+        else:
+            output = source.GetOutputs()[0]
+        shader_input = output
+    output_prim = shader_input.GetPrim()
+    output_shader = UsdShade.Shader(output_prim)
+    file_input = output_shader.GetInput("file").Get()
+    file_path = file_input.resolvedPath
+    if os.path.relpath(file_path):
+        file_path = os.path.join(
+            os.path.dirname(stage.GetRootLayer().realPath),
+            file_path,
+        )
+    return os.path.normpath(file_path)
+
+
 def parse_mesh(
     gprim: UsdGeom.Gprim,
     local_transformation: Gf.Matrix4d,
@@ -259,41 +283,14 @@ def parse_mesh(
                     pbr_shader = UsdShade.Shader(material_prim)
                     shader_input = pbr_shader.GetInput("diffuseColor")
                     if shader_input.HasConnectedSource():
-                        while shader_input.HasConnectedSource():
-                            source = shader_input.GetConnectedSource()[0]
-                            if len(source.GetOutputs()) != 1:
-                                for output in source.GetOutputs():
-                                    if output.GetBaseName() == "rgb":
-                                        break
-                                else:
-                                    raise NotImplementedError(
-                                        "Multiple outputs are not supported yet."
-                                    )
-                            else:
-                                output = source.GetOutputs()[0]
-                            shader_input = output
-                        output_prim = shader_input.GetPrim()
-                        output_shader = UsdShade.Shader(output_prim)
-                        file_input = output_shader.GetInput("file").Get()
-                        file_path = file_input.resolvedPath
-                        if os.path.relpath(file_path):
-                            file_path = os.path.join(
-                                os.path.dirname(
-                                    pbr_shader.GetPrim()
-                                    .GetStage()
-                                    .GetRootLayer()
-                                    .realPath
-                                ),
-                                file_path,
-                            )
-                        file_path = os.path.normpath(file_path)
+                        texture_file_path = get_texture_file_path_from_shader_input(stage=pbr_shader.GetPrim().GetStage(), shader_input=shader_input)
                         return TriangleMesh.from_spec(
                             vertices=vertices,
                             faces=faces,
                             origin=origin_4x4,
                             scale=scale,
                             uv=uv,
-                            texture_file_path=file_path,
+                            texture_file_path=texture_file_path,
                         )
             return TriangleMesh.from_spec(
                 vertices=vertices,
