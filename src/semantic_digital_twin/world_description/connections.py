@@ -311,7 +311,6 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
             other_parent,
             other_child,
             parent_T_connection_expression,
-            connection_T_child_expression,
         ) = self._find_references_in_world(world)
 
         return self.__class__(
@@ -319,7 +318,6 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
             parent=other_parent,
             child=other_child,
             parent_T_connection_expression=parent_T_connection_expression,
-            connection_T_child_expression=connection_T_child_expression,
             dof_name=PrefixedName(self.dof_name.name, self.dof_name.prefix),
             axis=self.axis,
             multiplier=self.multiplier,
@@ -574,12 +572,16 @@ class Connection6DoF(Connection):
         self._world.state[self.qw.name].position = orientation[3]
         self._world.notify_state_change()
 
-    def copy_for_world(self, world: World):
+    def copy_for_world(self, world: World) -> Connection6DoF:
+        """
+        Copies this 6DoF connection for another world. Returns a new connection with references to the given world.
+        :param world: The world to copy this connection for.
+        :return: A copy of this connection for the given world.
+        """
         (
             other_parent,
             other_child,
             parent_T_connection_expression,
-            connection_T_child_expression,
         ) = self._find_references_in_world(world)
 
         return Connection6DoF(
@@ -587,7 +589,6 @@ class Connection6DoF(Connection):
             parent=other_parent,
             child=other_child,
             parent_T_connection_expression=parent_T_connection_expression,
-            connection_T_child_expression=connection_T_child_expression,
             x_name=deepcopy(self.x_name),
             y_name=deepcopy(self.y_name),
             z_name=deepcopy(self.z_name),
@@ -866,12 +867,17 @@ class OmniDrive(ActiveConnection, HasUpdateState):
         self.y_velocity.has_hardware_interface = value
         self.yaw.has_hardware_interface = value
 
-    def copy_for_world(self, world: World):
+    def copy_for_world(self, world: World) -> OmniDrive:
+        """
+        Copies this OmniDriveConnection for the provided world. This finds the references for the parent and child in
+        the new world and returns a new connection with references to the new parent and child.
+        :param world: The world where the connection is copied.
+        :return: The connection with references to the new parent and child.
+        """
         (
             other_parent,
             other_child,
             parent_T_connection_expression,
-            connection_T_child_expression,
         ) = self._find_references_in_world(world)
 
         return OmniDrive(
@@ -879,7 +885,6 @@ class OmniDrive(ActiveConnection, HasUpdateState):
             parent=other_parent,
             child=other_child,
             parent_T_connection_expression=parent_T_connection_expression,
-            connection_T_child_expression=connection_T_child_expression,
             x_name=deepcopy(self.x_name),
             y_name=deepcopy(self.y_name),
             roll_name=deepcopy(self.roll_name),

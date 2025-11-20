@@ -728,7 +728,9 @@ class Connection(WorldEntity, SubclassJSONSerializer):
     """
 
     parent_T_connection_expression: TransformationMatrix = field(default=None)
-    connection_T_child_expression: TransformationMatrix = field(default=None)
+    connection_T_child_expression: TransformationMatrix = field(
+        default=None, init=False
+    )
     """
     The origin expression of a connection is split into 2 transforms:
     1. parent_T_connection describes the pose of the connection and is always constant.
@@ -883,7 +885,11 @@ class Connection(WorldEntity, SubclassJSONSerializer):
             "ConnectionWithDofs.create_with_dofs is not implemented."
         )
 
-    def _find_references_in_world(self, world: World):
+    def _find_references_in_world(
+        self, world: World
+    ) -> Tuple[
+        KinematicStructureEntity, KinematicStructureEntity, TransformationMatrix
+    ]:
         """
         Finds the reference frames to this connection in the given world and returns them as usable objects.
         :param world: Reference to the world where the reference frames are searched.
@@ -898,18 +904,10 @@ class Connection(WorldEntity, SubclassJSONSerializer):
                 parent_T_connection_expression.reference_frame.name
             )
         )
-
-        connection_T_child_expression = deepcopy(self.connection_T_child_expression)
-        connection_T_child_expression.child_frame = (
-            world.get_kinematic_structure_entity_by_name(
-                connection_T_child_expression.child_frame.name
-            )
-        )
         return (
             other_parent,
             other_child,
             parent_T_connection_expression,
-            connection_T_child_expression,
         )
 
     def copy_for_world(self, world: World) -> Self:
@@ -923,14 +921,12 @@ class Connection(WorldEntity, SubclassJSONSerializer):
             other_parent,
             other_child,
             parent_T_connection_expression,
-            connection_T_child_expression,
         ) = self._find_references_in_world(world)
 
         return self.__class__(
             other_parent,
             other_child,
-            parent_T_connection_expression,
-            connection_T_child_expression,
+            parent_T_connection_expression=parent_T_connection_expression,
             name=PrefixedName(self.name.name, prefix=self.name.prefix),
         )
 
