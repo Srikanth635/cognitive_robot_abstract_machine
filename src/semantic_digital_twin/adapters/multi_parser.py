@@ -462,8 +462,8 @@ class MultiParser:
             for actuator in self.parse_actuators(factory=factory, world=world):
                 world.add_actuator(actuator)
 
+            root_prim = factory.world_builder.body_builders[0].xform.GetPrim()
             free_body_names = get_free_body_names(factory=factory)
-
             for free_body_name in free_body_names:
                 body = world.get_body_by_name(free_body_name)
                 if body.name.name == root.name.name:
@@ -471,8 +471,18 @@ class MultiParser:
                 if fixed_base:
                     joint = FixedConnection(parent=root, child=body)
                 else:
+                    body_prim = factory.world_builder.get_body_builder(
+                        body_name=free_body_name
+                    ).xform.GetPrim()
+                    body_transform = get_relative_transform(
+                        from_prim=root_prim, to_prim=body_prim
+                    )
+                    origin = usd_pose_to_cas_pose(body_transform)
                     joint = Connection6DoF.create_with_dofs(
-                        world=world, parent=root, child=body
+                        world=world,
+                        parent=root,
+                        child=body,
+                        parent_T_connection_expression=origin,
                     )
                 world.add_connection(joint)
 
@@ -487,22 +497,24 @@ class MultiParser:
         """
         connections = []
         for joint_builder in body_builder.joint_builders:
-            parent_body, child_body, origin = parse_non_fixed_joint(
+            parent_body, child_body, parent_to_child_transform = parse_non_fixed_joint(
                 world, joint_builder
             )
             connection = self.parse_joint(
-                joint_builder, parent_body, child_body, origin, world
+                joint_builder, parent_body, child_body, parent_to_child_transform, world
             )
             connections.append(connection)
         if (
             len(body_builder.joint_builders) == 0
             and not body_builder.xform.GetPrim().GetParent().IsPseudoRoot()
         ):
-            parent_body, child_body, origin = parse_fixed_joint(world, body_builder)
+            parent_body, child_body, parent_to_child_transform = parse_fixed_joint(
+                world, body_builder
+            )
             connection = FixedConnection(
                 parent=parent_body,
                 child=child_body,
-                parent_T_connection_expression=origin,
+                parent_T_connection_expression=parent_to_child_transform,
             )
             connections.append(connection)
 
@@ -513,7 +525,7 @@ class MultiParser:
         joint_builder: JointBuilder,
         parent_body: KinematicStructureEntity,
         child_body: KinematicStructureEntity,
-        origin: TransformationMatrix,
+        parent_to_child_transform: TransformationMatrix,
         world: World,
     ) -> Connection:
         """
@@ -522,7 +534,7 @@ class MultiParser:
         :param joint_builder: The JointBuilder instance to parse.
         :param parent_body: The parent KinematicStructureEntity instance of the joint.
         :param child_body: The child KinematicStructureEntity instance of the joint.
-        :param origin: The origin TransformationMatrix of the joint.
+        :param parent_to_child_transform: The TransformationMatrix from parent body to child body.
         :param world: The World instance to add the connections to.
         :return: A Connection instance representing the parsed joint.
         """
@@ -553,7 +565,7 @@ class MultiParser:
                 return FixedConnection(
                     parent=parent_body,
                     child=child_body,
-                    parent_T_connection_expression=origin,
+                    parent_T_connection_expression=parent_to_child_transform,
                 )
             case JointType.REVOLUTE | JointType.CONTINUOUS | JointType.PRISMATIC:
                 axis = cas.Vector3(
@@ -577,11 +589,27 @@ class MultiParser:
                     dry_friction=dry_friction,
                     damping=damping,
                 )
+                child_to_connection_expression = (
+                    TransformationMatrix.from_xyz_quaternion(
+                        pos_x=joint_builder.pos[0],
+                        pos_y=joint_builder.pos[1],
+                        pos_z=joint_builder.pos[2],
+                        quat_x=0,
+                        quat_y=0,
+                        quat_z=0,
+                        quat_w=1,
+                    )
+                )
+                parent_to_connection_transform = (
+                    parent_to_child_transform @ child_to_connection_expression
+                )
+                connection_to_child_transform = child_to_connection_expression.inverse()
                 return JointConnection(
                     name=PrefixedName(joint_name),
                     parent=parent_body,
                     child=child_body,
-                    parent_T_connection_expression=origin,
+                    parent_T_connection_expression=parent_to_connection_transform,
+                    connection_T_child_expression=connection_to_child_transform,
                     multiplier=multiplier,
                     offset=offset,
                     axis=axis,

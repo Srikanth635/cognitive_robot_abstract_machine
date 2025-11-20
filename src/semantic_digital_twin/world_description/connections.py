@@ -323,7 +323,7 @@ class PrismaticConnection(ActiveConnection1DOF):
         super().add_to_world(world)
 
         translation_axis = self.axis * self.dof.symbols.position
-        self.connection_T_child_expression = cas.TransformationMatrix.from_xyz_rpy(
+        self.connection_T_child_expression @= cas.TransformationMatrix.from_xyz_rpy(
             x=translation_axis[0],
             y=translation_axis[1],
             z=translation_axis[2],
@@ -343,7 +343,7 @@ class RevoluteConnection(ActiveConnection1DOF):
     def add_to_world(self, world: World):
         super().add_to_world(world)
 
-        self.connection_T_child_expression = (
+        self.connection_T_child_expression @= (
             cas.TransformationMatrix.from_xyz_axis_angle(
                 axis=self.axis,
                 angle=self.dof.symbols.position,

@@ -473,8 +473,10 @@ class Connection1DOFConverter(ConnectionConverter, ABC):
         dofs = list(entity.dofs)
         assert len(dofs) == 1, "ActiveConnection1DOF must have exactly one DOF."
         dof = dofs[0]
-        joint_pos = [0.0, 0.0, 0.0]  # TODO: Use actual origin
-        joint_quat = [1.0, 0.0, 0.0, 0.0]
+        child_to_connection_transform = entity.connection_T_child_expression.inverse()
+        px, py, pz, qw, qx, qy, qz = cas_pose_to_list(child_to_connection_transform)
+        joint_pos = [px, py, pz]
+        joint_quat = [qw, qx, qy, qz]
         joint_props.update(
             {
                 self.pos_str: joint_pos,
@@ -705,7 +707,6 @@ class MujocoRevoluteJointConverter(
         joint_props = super()._post_convert(entity, joint_props, **kwargs)
         joint_range = joint_props.pop("range")
         if not any(limit is None for limit in joint_range):
-            joint_range = [numpy.rad2deg(limit) for limit in joint_range]
             joint_props["range"] = joint_range
         return joint_props
 
