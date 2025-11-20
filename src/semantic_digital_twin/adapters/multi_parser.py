@@ -283,7 +283,10 @@ def parse_mesh(
                     pbr_shader = UsdShade.Shader(material_prim)
                     shader_input = pbr_shader.GetInput("diffuseColor")
                     if shader_input.HasConnectedSource():
-                        texture_file_path = get_texture_file_path_from_shader_input(stage=pbr_shader.GetPrim().GetStage(), shader_input=shader_input)
+                        texture_file_path = get_texture_file_path_from_shader_input(
+                            stage=pbr_shader.GetPrim().GetStage(),
+                            shader_input=shader_input,
+                        )
                         return TriangleMesh.from_spec(
                             vertices=vertices,
                             faces=faces,
