@@ -28,6 +28,7 @@ import semantic_digital_twin.world_description.geometry
 import semantic_digital_twin.world_description.shape_collection
 import semantic_digital_twin.world_description.world_entity
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.reasoning.predicates import ContainsType
 from semantic_digital_twin.semantic_annotations.mixins import HasBody
 from semantic_digital_twin.spatial_computations.forward_kinematics import (
     ForwardKinematicsManager,
@@ -84,6 +85,7 @@ all_classes -= {
     ForwardKinematicsManager,
     WorldModelManager,
     semantic_digital_twin.adapters.procthor.procthor_semantic_annotations.ProcthorResolver,
+    ContainsType,
 }
 # keep only dataclasses that are NOT AlternativeMapping subclasses
 all_classes = {
