@@ -895,6 +895,7 @@ class World:
             logger.debug("Trying to remove a dof that is not part of this world.")
             return
         self._remove_degree_of_freedom(dof)
+        self.get_degree_of_freedom_by_name.cache_clear()
 
     @atomic_world_modification(modification=RemoveDegreeOfFreedomModification)
     def _remove_degree_of_freedom(self, dof: DegreeOfFreedom) -> None:
@@ -1504,8 +1505,8 @@ class World:
         root_chain, common_ancestor, tip_chain = (
             self.compute_split_chain_of_kinematic_structure_entities(root, tip)
         )
-        root_chain.append(common_ancestor[0])
-        tip_chain.insert(0, common_ancestor[0])
+        root_chain = root_chain + [common_ancestor[0]]
+        tip_chain = [common_ancestor[0]] + tip_chain
 
         root_connections = [
             self.get_connection(root_chain[i + 1], root_chain[i])
