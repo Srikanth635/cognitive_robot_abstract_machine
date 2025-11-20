@@ -18,6 +18,7 @@ class PositionVariable(cas.FloatVariable):
     """
     Describes the position of a degree of freedom.
     """
+
     name: PrefixedName = field(kw_only=True)
     dof: DegreeOfFreedom = field(kw_only=True)
     """ Backreference """
@@ -31,6 +32,7 @@ class VelocityVariable(cas.FloatVariable):
     """
     Describes the velocity of a degree of freedom.
     """
+
     name: PrefixedName = field(kw_only=True)
     dof: DegreeOfFreedom = field(kw_only=True)
     """ Backreference """
@@ -44,6 +46,7 @@ class AccelerationVariable(cas.FloatVariable):
     """
     Describes the acceleration of a degree of freedom.
     """
+
     name: PrefixedName = field(kw_only=True)
     dof: DegreeOfFreedom = field(kw_only=True)
     """ Backreference """
@@ -57,6 +60,7 @@ class JerkVariable(cas.FloatVariable):
     """
     Describes the jerk of a degree of freedom.
     """
+
     name: PrefixedName = field(kw_only=True)
     dof: DegreeOfFreedom = field(kw_only=True)
     """ Backreference """

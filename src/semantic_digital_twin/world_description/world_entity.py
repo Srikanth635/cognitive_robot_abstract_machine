@@ -860,6 +860,7 @@ class Connection(WorldEntity, SubclassJSONSerializer):
         self._world = world
 
     def __post_init__(self):
+
         self.name = self.name or self._generate_default_name(
             parent=self.parent, child=self.child
         )
@@ -869,6 +870,11 @@ class Connection(WorldEntity, SubclassJSONSerializer):
             self.parent_T_connection_expression = TransformationMatrix()
         if self._connection_T_child_expression is None:
             self._connection_T_child_expression = TransformationMatrix()
+
+        if not self.parent_T_connection_expression.is_constant():
+            raise RuntimeError(
+                f"Parent T matrix must be constant for connection. This one contains free variables: {self.parent_T_connection_expression.free_variables()}"
+            )
 
         if (
             self.parent_T_connection_expression.reference_frame is not None

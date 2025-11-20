@@ -267,15 +267,19 @@ class HasDoorLikeFactories(ABC):
             new_connections.append(new_connection)
             new_dofs.append(new_dof)
 
-        with parent_world.modify_world(), double_door_world.modify_world():
-            for new_dof in new_dofs:
-                parent_world.add_degree_of_freedom(new_dof)
+        with parent_world.modify_world():
 
-            for new_door_world, new_parent_C_left in zip(new_worlds, new_connections):
-                parent_world.merge_world(new_door_world, new_parent_C_left)
+            with double_door_world.modify_world():
+                for new_dof in new_dofs:
+                    parent_world.add_degree_of_freedom(new_dof)
 
-            double_door_world.remove_semantic_annotation(double_door)
-            parent_world.add_semantic_annotation(double_door)
+                for new_door_world, new_parent_C_left in zip(
+                    new_worlds, new_connections
+                ):
+                    parent_world.merge_world(new_door_world, new_parent_C_left)
+
+                double_door_world.remove_semantic_annotation(double_door)
+                parent_world.add_semantic_annotation(double_door)
 
     def _move_door_into_new_world(
         self,
@@ -294,7 +298,7 @@ class HasDoorLikeFactories(ABC):
         double_door_world = door._world
         door_hinge_kse = door.body.parent_kinematic_structure_entity
         double_door_C_door: RevoluteConnection = door_hinge_kse.parent_connection
-        double_door_T_door = double_door_C_door.origin_expression
+        double_door_T_door = double_door_C_door.parent_T_connection_expression
         parent_T_door = parent_T_double_door @ double_door_T_door
         old_dof = double_door_C_door.dof
 
