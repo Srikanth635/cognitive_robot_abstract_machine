@@ -27,6 +27,7 @@ from multiverse_simulator import (
 )
 from krrood.utils import recursive_subclasses
 from scipy.spatial.transform import Rotation
+from trimesh.visual import TextureVisuals
 
 from ..callbacks.callback import ModelChangeCallback
 from ..datastructures.prefixed_name import PrefixedName
@@ -662,6 +663,10 @@ class MujocoTriangleMeshConverter(MujocoGeomConverter, TriangleMeshConverter):
     ) -> Dict[str, Any]:
         shape_props.update(MujocoGeomConverter._post_convert(self, entity, shape_props))
         shape_props.update({"mesh": entity})
+        if isinstance(entity.mesh.visual, TextureVisuals) and isinstance(
+            entity.mesh.visual.material.name, str
+        ):
+            shape_props["texture_name"] = entity.mesh.visual.material.name
         return shape_props
 
 
@@ -918,33 +923,25 @@ class MujocoBuilder(MultiSimBuilder):
     def _end_build(self, file_path: str):
         self.spec.compile()
         self.spec.to_file(file_path)
-        try:
-            mujoco.MjModel.from_xml_path(file_path)
-        except ValueError as e:
-            if (
-                "Error: mass and inertia of moving bodies must be larger than mjMINVAL"
-                in str(e)
-            ):  # Fix mujoco error
-                import xml.etree.ElementTree as ET
+        import xml.etree.ElementTree as ET
 
-                tree = ET.parse(file_path)
-                root = tree.getroot()
-                for body_id, body_element in enumerate(root.findall(".//body")):
-                    body_spec = self.spec.bodies[body_id + 1]
-                    inertial_element = ET.SubElement(body_element, "inertial")
-                    inertial_element.set("mass", f"{body_spec.mass}")
-                    inertial_element.set(
-                        "diaginertia", " ".join(map(str, body_spec.inertia.tolist()))
-                    )
-                    inertial_element.set(
-                        "pos", " ".join(map(str, body_spec.ipos.tolist()))
-                    )
-                    inertial_element.set(
-                        "quat", " ".join(map(str, body_spec.iquat.tolist()))
-                    )
-                tree.write(file_path)
-            else:
-                raise e
+        tree = ET.parse(file_path)
+        root = tree.getroot()
+        for body_id, body_element in enumerate(root.findall(".//body")):
+            body_spec = self.spec.bodies[body_id + 1]
+            inertial_element = ET.SubElement(body_element, "inertial")
+            inertial_element.set("mass", f"{body_spec.mass}")
+            inertial_element.set(
+                "diaginertia", " ".join(map(str, body_spec.inertia.tolist()))
+            )
+            inertial_element.set("pos", " ".join(map(str, body_spec.ipos.tolist())))
+            inertial_element.set("quat", " ".join(map(str, body_spec.iquat.tolist())))
+        for material_id, material_element in enumerate(root.findall(".//material")):
+            material_spec = self.spec.materials[material_id]
+            texture_name = material_spec.textures[0]
+            if texture_name != "":
+                material_element.set("texture", texture_name)
+        tree.write(file_path)
 
     def _build_body(self, body: Body):
         self._build_mujoco_body(body=body)
@@ -1010,6 +1007,33 @@ class MujocoBuilder(MultiSimBuilder):
                 mesh_entity.scale.z,
             )
         geom_props["meshname"] = mesh_name
+        texture_name = geom_props.pop("texture_name", None)
+        if isinstance(texture_name, str):
+            if texture_name in [
+                self.spec.textures[i].name for i in range(len(self.spec.textures))
+            ]:
+                return True
+            material_name = texture_name
+            if material_name.startswith("T_"):
+                material_name = material_name[2:]
+            material_name = f"M_{material_name}"
+            geom_props["material"] = material_name
+            if material_name in [
+                self.spec.materials[i].name for i in range(len(self.spec.materials))
+            ]:
+                return True
+            texture_file_path = os.path.join(
+                self.asset_folder_path, f"{texture_name}.png"
+            )
+            if not os.path.exists(texture_file_path):
+                return True
+            self.spec.add_texture(
+                name=texture_name,
+                type=mujoco.mjtTexture.mjTEXTURE_2D,
+                file=texture_file_path,
+            )
+            material = self.spec.add_material(name=material_name)
+            material.textures[0] = texture_name
         return True
 
     def _build_connection(self, connection: Connection):
