@@ -764,6 +764,9 @@ class MultiSimBuilder(ABC):
         :param world: The world to build.
         :param file_path: The file path to save the world to.
         """
+        self._asset_folder_path = os.path.join(os.path.dirname(file_path), "assets")
+        if not os.path.exists(self.asset_folder_path):
+            os.makedirs(self.asset_folder_path)
         if len(world.bodies) == 0:
             with world.modify_world():
                 root = Body(name=PrefixedName("world"))
@@ -892,6 +895,13 @@ class MultiSimBuilder(ABC):
         """
         raise NotImplementedError
 
+    @property
+    def asset_folder_path(self) -> str:
+        """
+        The default file path to save the world to.
+        """
+        return self._asset_folder_path
+
 
 @dataclass
 class MujocoBuilder(MultiSimBuilder):
@@ -978,7 +988,7 @@ class MujocoBuilder(MultiSimBuilder):
         mesh_entity = geom_props.pop("mesh")
         if isinstance(mesh_entity, TriangleMesh):
             mesh_name = os.path.basename(mesh_entity.file.name)
-            mesh_file_path = f"/tmp/meshes/{mesh_name}.obj"
+            mesh_file_path = os.path.join(self.asset_folder_path, f"{mesh_name}.obj")
             shutil.move(mesh_entity.file.name, mesh_file_path)
         elif isinstance(mesh_entity, FileMesh):
             mesh_file_path = mesh_entity.filename

@@ -44,7 +44,7 @@ from multiverse_parser import (
     GeomType,
 )
 from multiverse_parser.utils import get_relative_transform
-from pxr import UsdUrdf, UsdMujoco, UsdGeom, UsdPhysics, Gf  # type: ignore
+from pxr import Usd, UsdUrdf, UsdMujoco, UsdGeom, UsdPhysics, Gf, UsdShade  # type: ignore
 
 from ..world_description.connections import (
     RevoluteConnection,
@@ -220,6 +220,88 @@ def parse_mesh(
     origin_4x4[:3, :3] = origin_3x3
     origin_4x4[:3, 3] = translation
     scale = numpy.array([local_transformation.GetRow(i).GetLength() for i in range(3)])
+    gprim_prim = gprim.GetPrim()
+    for primvar in UsdGeom.PrimvarsAPI(gprim_prim).GetPrimvars():  # type: ignore
+        if (
+            primvar.GetBaseName() == "st"
+            and primvar.GetTypeName().cppTypeName == "VtArray<GfVec2f>"
+        ):
+            uv = numpy.array(primvar.Get(), dtype=numpy.float32)
+            if gprim_prim.HasAPI(UsdShade.MaterialBindingAPI):  # type: ignore
+                material_binding_api = UsdShade.MaterialBindingAPI(gprim_prim)  # type: ignore
+                material_paths = material_binding_api.GetDirectBindingRel().GetTargets()
+                stage = gprim_prim.GetStage()
+                material_prim = stage.GetPrimAtPath(material_paths[0])
+                material_prim_stack = material_prim.GetPrimStack()[1]
+                material_file_path = material_prim_stack.layer.realPath
+                material_path = material_prim_stack.path
+                material_stage = Usd.Stage.Open(material_file_path)  # type: ignore
+                material_prim = material_stage.GetPrimAtPath(material_path)
+                surface_output = UsdShade.Material(material_prim).GetOutput("surface")  # type: ignore
+                while surface_output.HasConnectedSource():
+                    source = surface_output.GetConnectedSource()[0]
+                    if len(source.GetOutputs()) != 1:
+                        for output in source.GetOutputs():
+                            if output.GetBaseName() in ["rgb", "surface"]:
+                                output_prim = output.GetPrim()
+                                surface_output = UsdShade.Material(output_prim).GetOutput("surface")  # type: ignore
+                                break
+                        else:
+                            raise NotImplementedError(
+                                "Multiple outputs are not supported yet."
+                            )
+                    else:
+                        output = source.GetOutputs()[0]
+                        output_prim = output.GetPrim()
+                        surface_output = UsdShade.Material(output_prim).GetOutput("surface")  # type: ignore
+                if surface_output.GetPrim().IsA(UsdShade.Shader):  # type: ignore
+                    material_prim = surface_output.GetPrim()
+                    pbr_shader = UsdShade.Shader(material_prim)
+                    shader_input = pbr_shader.GetInput("diffuseColor")
+                    if shader_input.HasConnectedSource():
+                        while shader_input.HasConnectedSource():
+                            source = shader_input.GetConnectedSource()[0]
+                            if len(source.GetOutputs()) != 1:
+                                for output in source.GetOutputs():
+                                    if output.GetBaseName() == "rgb":
+                                        break
+                                else:
+                                    raise NotImplementedError(
+                                        "Multiple outputs are not supported yet."
+                                    )
+                            else:
+                                output = source.GetOutputs()[0]
+                            shader_input = output
+                        output_prim = shader_input.GetPrim()
+                        output_shader = UsdShade.Shader(output_prim)
+                        file_input = output_shader.GetInput("file").Get()
+                        file_path = file_input.resolvedPath
+                        if os.path.relpath(file_path):
+                            file_path = os.path.join(
+                                os.path.dirname(
+                                    pbr_shader.GetPrim()
+                                    .GetStage()
+                                    .GetRootLayer()
+                                    .realPath
+                                ),
+                                file_path,
+                            )
+                        file_path = os.path.normpath(file_path)
+                        return TriangleMesh.from_spec(
+                            vertices=vertices,
+                            faces=faces,
+                            origin=origin_4x4,
+                            scale=scale,
+                            uv=uv,
+                            texture_file_path=file_path,
+                        )
+            return TriangleMesh.from_spec(
+                vertices=vertices,
+                faces=faces,
+                origin=origin_4x4,
+                scale=scale,
+                uv=uv,
+            )
     return TriangleMesh.from_spec(
         vertices=vertices, faces=faces, origin=origin_4x4, scale=scale
     )

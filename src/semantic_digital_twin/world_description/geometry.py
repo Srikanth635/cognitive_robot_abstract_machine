@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import itertools
+import os
 import tempfile
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, fields
@@ -9,6 +10,8 @@ from functools import cached_property
 import numpy as np
 import trimesh
 import trimesh.exchange.stl
+from trimesh.visual.texture import TextureVisuals, SimpleMaterial
+from PIL import Image
 from krrood.adapters.json_serializer import SubclassJSONSerializer
 from random_events.interval import SimpleInterval, Bound, closed
 from random_events.product_algebra import SimpleEvent
@@ -258,8 +261,19 @@ class TriangleMesh(Mesh):
 
     @cached_property
     def file(self):
-        f = tempfile.NamedTemporaryFile(delete=False)
+        f = tempfile.NamedTemporaryFile(dir="/tmp/assets", delete=False)
         self.mesh.export(f.name, file_type="obj")
+        old_mtl_file = "material.mtl"
+        new_mtl_file = f"{os.path.basename(f.name)}.mtl"
+        old_mtl = f"/tmp/assets/{old_mtl_file}"
+        new_mtl = f"/tmp/assets/{new_mtl_file}"
+        if os.path.exists(old_mtl):
+            os.rename(old_mtl, new_mtl)
+        with open(f.name) as f:
+            text = f.read()
+        text = text.replace(old_mtl_file, new_mtl_file)
+        with open(f.name, "w") as f:
+            f.write(text)
         return f
 
     @classmethod
@@ -269,6 +283,8 @@ class TriangleMesh(Mesh):
         faces: np.ndarray,
         origin: np.ndarray,
         scale: np.ndarray,
+        uv: Optional[np.ndarray] = None,
+        texture_file_path: Optional[str] = None,
     ) -> TriangleMesh:
         """
         Create a triangle mesh from vertices, faces, origin, and scale.
@@ -277,9 +293,31 @@ class TriangleMesh(Mesh):
         :param faces: Faces of the mesh.
         :param origin: Origin of the mesh.
         :param scale: Scale of the mesh.
+        :param uv: Optional UV coordinates.
         :return: TriangleMesh object.
         """
-        mesh = trimesh.Trimesh(vertices=vertices, faces=faces)
+        if uv is None:
+            mesh = trimesh.Trimesh(vertices=vertices, faces=faces)
+        else:
+            # 1. Expand vertices so each face corner gets its own vertex
+            vertex_indices_expanded = faces.reshape(-1)  # (F*3,)
+            vertices_expanded = vertices[vertex_indices_expanded]  # (F*3, 3)
+
+            # 2. New faces are just 0..F*3-1 reshaped into triples
+            faces_new = np.arange(len(vertices_expanded), dtype=np.int64).reshape(-1, 3)
+
+            # 3. Create mesh with expanded vertices
+            mesh = trimesh.Trimesh(
+                vertices=vertices_expanded, faces=faces_new, process=False
+            )
+            if texture_file_path is not None:
+                material_name = os.path.splitext(os.path.basename(texture_file_path))[0]
+                image = Image.open(texture_file_path)
+                material = SimpleMaterial(name=material_name, image=image)
+                mesh.visual = TextureVisuals(uv=uv, material=material)
+            else:
+                mesh.visual = TextureVisuals(uv=uv)
+
         origin = TransformationMatrix(data=origin)
         scale = Scale(x=scale[0], y=scale[1], z=scale[2])
         return cls(mesh=mesh, origin=origin, scale=scale)
