@@ -215,6 +215,8 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
             multiplier=multiplier,
             offset=offset,
             dof_name=dof.name,
+            *args,
+            **kwargs,
         )
 
     def add_to_world(self, world: World):
@@ -681,6 +683,8 @@ class OmniDrive(ActiveConnection, HasUpdateState):
         parent_T_connection_expression: Optional[cas.TransformationMatrix] = None,
         translation_velocity_limits: float = 0.6,
         rotation_velocity_limits: float = 0.5,
+        *args,
+        **kwargs,
     ) -> Self:
         """
         Creates an instance of the class with automatically generated degrees of freedom
@@ -757,6 +761,8 @@ class OmniDrive(ActiveConnection, HasUpdateState):
             yaw_name=yaw.name,
             x_velocity_name=x_vel.name,
             y_velocity_name=y_vel.name,
+            *args,
+            **kwargs,
         )
 
     @property
