@@ -1337,7 +1337,7 @@ class World:
 
     def _notify_model_change(self) -> None:
         """
-        Notifies the system of a model change and updates necessary states, caches,
+        Notifies the system of a model change and updates the necessary states, caches,
         and forward kinematics expressions while also triggering registered callbacks
         for model changes.
         """
