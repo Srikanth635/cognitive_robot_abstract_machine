@@ -328,10 +328,8 @@ class WorldModelModificationBlock(SubclassJSONSerializer):
     The list of modifications to apply to the world.
     """
 
-    apply_state_update: bool = field(default=True)
-
     def apply(self, world: World):
-        with world.modify_world(apply_state_update=self.apply_state_update):
+        with world.modify_world():
             for modification in self.modifications:
                 modification.apply(world)
 
@@ -339,7 +337,6 @@ class WorldModelModificationBlock(SubclassJSONSerializer):
         return {
             **super().to_json(),
             "modifications": [m.to_json() for m in self.modifications],
-            "apply_state_update": self.apply_state_update,
         }
 
     @classmethod
@@ -349,7 +346,6 @@ class WorldModelModificationBlock(SubclassJSONSerializer):
                 WorldModelModification.from_json(d, **kwargs)
                 for d in data["modifications"]
             ],
-            apply_state_update=data["apply_state_update"],
         )
 
     def __iter__(self):

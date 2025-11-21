@@ -259,23 +259,20 @@ class ModelSynchronizer(
         SynchronizerOnCallback.__post_init__(self)
 
     def apply_message(self, msg: ModificationBlock):
+        for callback in self.world.state.state_change_callbacks:
+            callback.pause()
         msg.modifications.apply(self.world)
+        for callback in self.world.state.state_change_callbacks:
+            callback.resume()
 
     def world_callback(self):
-        modifications = self.world.get_world_model_manager().model_modification_blocks[
-            -1
-        ]
-        # skip state update to avoid publishing a new state, because the publisher of this model update did it already.
-        old_value = modifications.apply_state_update
-        modifications.apply_state_update = False
-
         msg = ModificationBlock(
             meta_data=self.meta_data,
-            modifications=modifications,
+            modifications=self.world.get_world_model_manager().model_modification_blocks[
+                -1
+            ],
         )
         self.publish(msg)
-        # revert to old value to avoid unexpected side effects
-        modifications.apply_state_update = old_value
 
 
 @dataclass

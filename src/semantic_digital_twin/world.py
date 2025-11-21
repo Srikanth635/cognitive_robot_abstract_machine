@@ -150,11 +150,6 @@ class WorldModelUpdateContextManager:
     First time flag.
     """
 
-    apply_state_update: bool = True
-    """
-    If True, the state is updated at the end of the context.
-    """
-
     def __enter__(self):
         if self.world.world_is_being_modified:
             self.first = False
@@ -174,9 +169,7 @@ class WorldModelUpdateContextManager:
             )
             self.world.get_world_model_manager().current_model_modification_block = None
             if exc_type is None:
-                self.world._notify_model_change(
-                    apply_state_update=self.apply_state_update
-                )
+                self.world._notify_model_change()
             self.world.world_is_being_modified = False
 
 
@@ -1312,18 +1305,15 @@ class World:
             self._forward_kinematic_manager.recompute()
         self.state._notify_state_change()
 
-    def _notify_model_change(self, apply_state_update: bool = True) -> None:
+    def _notify_model_change(self) -> None:
         """
         Notifies the system of a model change and updates the necessary states, caches,
         and forward kinematics expressions while also triggering registered callbacks
         for model changes.
-
-        :param apply_state_update: If True, skip the state update.
         """
         self._model_manager.update_model_version_and_notify_callbacks()
         self._compile_forward_kinematics_expressions()
-        if apply_state_update:
-            self.notify_state_change()
+        self.notify_state_change()
 
         for callback in self.state.state_change_callbacks:
             callback.update_previous_world_state()
@@ -1780,12 +1770,8 @@ class World:
     def load_collision_srdf(self, file_path: str):
         self._collision_pair_manager.load_collision_srdf(file_path)
 
-    def modify_world(
-        self, apply_state_update: bool = True
-    ) -> WorldModelUpdateContextManager:
-        return WorldModelUpdateContextManager(
-            world=self, apply_state_update=apply_state_update
-        )
+    def modify_world(self) -> WorldModelUpdateContextManager:
+        return WorldModelUpdateContextManager(world=self)
 
     def reset_state_context(self) -> ResetStateContextManager:
         return ResetStateContextManager(self)
