@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import inspect
 import logging
-from copy import deepcopy
+from copy import deepcopy, copy
 from dataclasses import dataclass, field
 from enum import IntEnum
 from functools import wraps, lru_cache, cached_property
@@ -1772,7 +1772,6 @@ class World:
         new_world = World(name=self.name)
         memo[me_id] = new_world
 
-        tracker = KinematicStructureEntityKwargsTracker.from_world(new_world)
         with new_world.modify_world():
             for body in self.bodies:
                 new_body = Body(
@@ -1790,9 +1789,7 @@ class World:
                 new_world.add_degree_of_freedom(new_dof)
                 new_world.state[dof.name] = self.state[dof.name].data
             for connection in self.connections:
-                new_connection = SubclassJSONSerializer.from_json(
-                    connection.to_json(), **tracker.create_kwargs()
-                )
+                new_connection = connection.copy_for_world(new_world)
                 new_world.add_connection(new_connection)
         return new_world
 

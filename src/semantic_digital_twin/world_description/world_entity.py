@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import inspect
+from copy import copy, deepcopy
+
 import itertools
 from abc import ABC, abstractmethod
 from collections import deque
@@ -793,7 +795,9 @@ class Connection(WorldEntity, SubclassJSONSerializer):
     """
 
     parent_T_connection_expression: TransformationMatrix = field(default=None)
-    _connection_T_child_expression: TransformationMatrix = field(default=None)
+    _connection_T_child_expression: TransformationMatrix = field(
+        default=None, init=False
+    )
     """
     The origin expression of a connection is split into 2 transforms:
     1. parent_T_connection describes the pose of the connection and is always constant.
@@ -953,6 +957,51 @@ class Connection(WorldEntity, SubclassJSONSerializer):
         """
         raise NotImplementedError(
             "ConnectionWithDofs.create_with_dofs is not implemented."
+        )
+
+    def _find_references_in_world(
+        self, world: World
+    ) -> Tuple[
+        KinematicStructureEntity, KinematicStructureEntity, TransformationMatrix
+    ]:
+        """
+        Finds the reference frames to this connection in the given world and returns them as usable objects.
+        :param world: Reference to the world where the reference frames are searched.
+        :return: The other parent and child and new connection expressions with correct reference frames.
+        """
+        other_parent = world.get_kinematic_structure_entity_by_name(self.parent.name)
+        other_child = world.get_kinematic_structure_entity_by_name(self.child.name)
+
+        parent_T_connection_expression = deepcopy(self.parent_T_connection_expression)
+        parent_T_connection_expression.reference_frame = (
+            world.get_kinematic_structure_entity_by_name(
+                parent_T_connection_expression.reference_frame.name
+            )
+        )
+        return (
+            other_parent,
+            other_child,
+            parent_T_connection_expression,
+        )
+
+    def copy_for_world(self, world: World) -> Self:
+        """
+        Copies this connection to the given world the parent and child references are updated to the new world as well
+        as the references from the expression.
+        :param world: World in which the connection should be copied.
+        :return: The copied connection.
+        """
+        (
+            other_parent,
+            other_child,
+            parent_T_connection_expression,
+        ) = self._find_references_in_world(world)
+
+        return self.__class__(
+            other_parent,
+            other_child,
+            parent_T_connection_expression=parent_T_connection_expression,
+            name=PrefixedName(self.name.name, prefix=self.name.prefix),
         )
 
 
