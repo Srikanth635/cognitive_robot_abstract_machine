@@ -163,10 +163,10 @@ We can now use EQL to get us only the FruitBoxes that actually contain apples!
 
 ```{code-cell} ipython3
 from semantic_digital_twin.reasoning.predicates import ContainsType
-from krrood.entity_query_language.entity import an
+from krrood.entity_query_language.entity import an, let
 
 fb = let(FruitBox, domain=world.semantic_annotations)
-fruit_box_query = an(fb, ContainsType(fb.fruits, Apple))
+fruit_box_query = an(entity(fb, ContainsType(fb.fruits, Apple)))
 
 query_result = fruit_box_query.evaluate()
 print(list(query_result)[0] == fruit_box_with_apples)
