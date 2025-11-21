@@ -23,6 +23,7 @@ from giskardpy.motion_statechart.exceptions import (
 from giskardpy.motion_statechart.goals.collision_avoidance import (
     CollisionAvoidance,
 )
+from giskardpy.motion_statechart.goals.templates import Sequence
 from giskardpy.motion_statechart.graph_node import (
     EndMotion,
     CancelMotion,
@@ -53,6 +54,7 @@ from giskardpy.motion_statechart.test_nodes.test_nodes import (
     ConstTrueNode,
     TestGoal,
     TestNestedGoal,
+    ConstFalseNode,
 )
 from giskardpy.qp.qp_controller_config import QPControllerConfig
 from semantic_digital_twin.adapters.world_entity_kwargs_tracker import (
@@ -233,6 +235,32 @@ def test_motion_statechart():
         ObservationStateValues.UNKNOWN,
         ObservationStateValues.TRUE,
     ]
+
+
+def test_sequence_goal():
+    msc = MotionStatechart()
+    node = Sequence(
+        nodes=[
+            ConstTrueNode(),
+            ConstTrueNode(),
+            ConstTrueNode(),
+            ConstTrueNode(),
+        ]
+    )
+    msc.add_node(node)
+    msc.add_node(EndMotion.when_true(node))
+
+    kin_sim = Executor(world=World())
+    kin_sim.compile(motion_statechart=msc)
+    kin_sim.tick_until_end()
+    msc.draw("muh.pdf")
+    assert kin_sim._control_cycles == 6
+    assert msc.nodes[0].life_cycle_state == LifeCycleValues.RUNNING
+    assert msc.nodes[1].life_cycle_state == LifeCycleValues.RUNNING
+    assert msc.nodes[2].life_cycle_state == LifeCycleValues.DONE
+    assert msc.nodes[3].life_cycle_state == LifeCycleValues.DONE
+    assert msc.nodes[4].life_cycle_state == LifeCycleValues.DONE
+    assert msc.nodes[5].life_cycle_state == LifeCycleValues.DONE
 
 
 def test_print():
@@ -1137,6 +1165,7 @@ def test_pointing(pr2_world: World):
     kin_sim.compile(motion_statechart=msc)
     kin_sim.tick_until_end()
 
+
 def test_align_planes(pr2_world: World):
     tip = pr2_world.get_kinematic_structure_entity_by_name("r_gripper_tool_frame")
     root = pr2_world.get_kinematic_structure_entity_by_name("odom_combined")
@@ -1147,10 +1176,7 @@ def test_align_planes(pr2_world: World):
     tip_normal = cas.Vector3.Y(reference_frame=tip)
 
     align_planes = AlignPlanes(
-        root_link=root,
-        tip_link=tip,
-        goal_normal=goal_normal,
-        tip_normal=tip_normal
+        root_link=root, tip_link=tip, goal_normal=goal_normal, tip_normal=tip_normal
     )
     msc.add_node(align_planes)
 
@@ -1183,9 +1209,10 @@ def test_align_planes(pr2_world: World):
 
     angle = angle_between_vector(v_tip, v_goal)
 
-    assert angle <= align_planes.threshold, (
-        f"AlignPlanes failed: final angle {angle:.6f} rad > threshold {align_planes.threshold:.6f} rad"
-    )
+    assert (
+        angle <= align_planes.threshold
+    ), f"AlignPlanes failed: final angle {angle:.6f} rad > threshold {align_planes.threshold:.6f} rad"
+
 
 def test_transition_triggers():
     msc = MotionStatechart()
@@ -1358,3 +1385,83 @@ def test_InvalidConditionError():
     msc.add_node(node)
     with pytest.raises(InvalidConditionError):
         node.end_condition = node
+
+
+class TestEndMotion:
+    def test_end_motion_when_all_done1(self):
+        msc = MotionStatechart()
+        msc.add_nodes(
+            [
+                ConstTrueNode(),
+                ConstTrueNode(),
+            ]
+        )
+        end = EndMotion.when_all_true(msc.nodes)
+        msc.add_node(end)
+
+        kin_sim = Executor(
+            world=World(),
+        )
+        kin_sim.compile(motion_statechart=msc)
+        kin_sim.tick_until_end()
+        msc.draw("muh.pdf")
+        assert end.life_cycle_state == LifeCycleValues.RUNNING
+
+    def test_end_motion_when_all_done2(self):
+        msc = MotionStatechart()
+        msc.add_nodes(
+            [
+                ConstTrueNode(),
+                ConstFalseNode(),
+            ]
+        )
+        end = EndMotion.when_all_true(msc.nodes)
+        msc.add_node(end)
+
+        kin_sim = Executor(
+            world=World(),
+        )
+        kin_sim.compile(motion_statechart=msc)
+        with pytest.raises(TimeoutError):
+            kin_sim.tick_until_end()
+        msc.draw("muh.pdf")
+        assert end.life_cycle_state == LifeCycleValues.NOT_STARTED
+
+    def test_end_motion_when_any_done1(self):
+        msc = MotionStatechart()
+        msc.add_nodes(
+            [
+                ConstTrueNode(),
+                ConstFalseNode(),
+            ]
+        )
+        end = EndMotion.when_any_true(msc.nodes)
+        msc.add_node(end)
+
+        kin_sim = Executor(
+            world=World(),
+        )
+        kin_sim.compile(motion_statechart=msc)
+        kin_sim.tick_until_end()
+        msc.draw("muh.pdf")
+        assert end.life_cycle_state == LifeCycleValues.RUNNING
+
+    def test_end_motion_when_any_done2(self):
+        msc = MotionStatechart()
+        msc.add_nodes(
+            [
+                ConstFalseNode(),
+                ConstFalseNode(),
+            ]
+        )
+        end = EndMotion.when_any_true(msc.nodes)
+        msc.add_node(end)
+
+        kin_sim = Executor(
+            world=World(),
+        )
+        kin_sim.compile(motion_statechart=msc)
+        with pytest.raises(TimeoutError):
+            kin_sim.tick_until_end()
+        msc.draw("muh.pdf")
+        assert end.life_cycle_state == LifeCycleValues.NOT_STARTED
