@@ -48,6 +48,7 @@ from ..world_description.geometry import (
     Shape,
     FileMesh,
     TriangleMesh,
+    Mesh,
 )
 from ..world_description.world_entity import (
     Region,
@@ -648,25 +649,16 @@ class MujocoMeshConverter(MujocoGeomConverter, MeshConverter):
     type: mujoco.mjtGeom = mujoco.mjtGeom.mjGEOM_MESH
 
     def _post_convert(
-        self, entity: FileMesh, shape_props: Dict[str, Any], **kwargs
-    ) -> Dict[str, Any]:
-        shape_props.update(MujocoGeomConverter._post_convert(self, entity, shape_props))
-        shape_props.update({"mesh": entity})
-        return shape_props
-
-
-class MujocoTriangleMeshConverter(MujocoGeomConverter, TriangleMeshConverter):
-    type: mujoco.mjtGeom = mujoco.mjtGeom.mjGEOM_MESH
-
-    def _post_convert(
-        self, entity: TriangleMesh, shape_props: Dict[str, Any], **kwargs
+        self, entity: Mesh, shape_props: Dict[str, Any], **kwargs
     ) -> Dict[str, Any]:
         shape_props.update(MujocoGeomConverter._post_convert(self, entity, shape_props))
         shape_props.update({"mesh": entity})
         if isinstance(entity.mesh.visual, TextureVisuals) and isinstance(
             entity.mesh.visual.material.name, str
         ):
-            shape_props["texture_name"] = entity.mesh.visual.material.name
+            shape_props["texture_file_path"] = (
+                entity.mesh.visual.material.image.filename
+            )
         return shape_props
 
 
@@ -929,6 +921,8 @@ class MujocoBuilder(MultiSimBuilder):
         root = tree.getroot()
         for body_id, body_element in enumerate(root.findall(".//body")):
             body_spec = self.spec.bodies[body_id + 1]
+            if numpy.isclose(body_spec.mass, 0.0):
+                continue
             inertial_element = ET.SubElement(body_element, "inertial")
             inertial_element.set("mass", f"{body_spec.mass}")
             inertial_element.set(
@@ -941,7 +935,7 @@ class MujocoBuilder(MultiSimBuilder):
             texture_name = material_spec.textures[0]
             if texture_name != "":
                 material_element.set("texture", texture_name)
-        tree.write(file_path)
+        tree.write(file_path, encoding="utf-8", xml_declaration=True)
 
     def _build_body(self, body: Body):
         self._build_mujoco_body(body=body)
@@ -1007,8 +1001,9 @@ class MujocoBuilder(MultiSimBuilder):
                 mesh_entity.scale.z,
             )
         geom_props["meshname"] = mesh_name
-        texture_name = geom_props.pop("texture_name", None)
-        if isinstance(texture_name, str):
+        texture_file_path = geom_props.pop("texture_file_path", None)
+        if isinstance(texture_file_path, str):
+            texture_name = os.path.splitext(os.path.basename(texture_file_path))[0]
             if texture_name in [
                 self.spec.textures[i].name for i in range(len(self.spec.textures))
             ]:
@@ -1022,9 +1017,6 @@ class MujocoBuilder(MultiSimBuilder):
                 self.spec.materials[i].name for i in range(len(self.spec.materials))
             ]:
                 return True
-            texture_file_path = os.path.join(
-                self.asset_folder_path, f"{texture_name}.png"
-            )
             if not os.path.exists(texture_file_path):
                 return True
             self.spec.add_texture(

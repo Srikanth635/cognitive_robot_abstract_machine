@@ -21,7 +21,7 @@ try:
     multi_sim_found = True
     from mujoco_connector import MultiverseMujocoConnector
     from multiverse_simulator import MultiverseSimulatorState, MultiverseViewer
-    from semantic_digital_twin.adapters.multi_parser import MJCFParser
+    from semantic_digital_twin.adapters.mjcf import MJCFParser
     from semantic_digital_twin.adapters.multi_sim import MujocoSim
 except ImportError:
     MultiverseMujocoConnector = None
@@ -209,7 +209,7 @@ class MujocoSimTestCase(unittest.TestCase):
         self.test_urdf_1_world = URDFParser.from_file(
             file_path=self.test_urdf_1
         ).parse()
-        self.test_mjcf_world = MJCFParser(self.test_mjcf).parse(fixed_base=False)
+        self.test_mjcf_world = MJCFParser(self.test_mjcf).parse()
 
     def test_empty_multi_sim_in_5s(self):
         world = World()
