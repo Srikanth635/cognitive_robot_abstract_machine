@@ -129,6 +129,7 @@ class ConnectionModificationTestCase(unittest.TestCase):
             )
 
         modifications = w.get_world_model_manager().model_modification_blocks[-1]
+        print(modifications.modifications)
         self.assertEqual(len(modifications.modifications), 3)
 
         modifications_copy = WorldModelModificationBlock.from_json(

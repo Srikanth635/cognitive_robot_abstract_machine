@@ -148,15 +148,6 @@ kinematicchaindao_sensors_association = Table(
     Column("kinematicchaindao_id", ForeignKey("KinematicChainDAO.database_id")),
     Column("sensordao_id", ForeignKey("SensorDAO.database_id")),
 )
-setdofhashardwareinterfacedao_degree_of_freedom_names_association = Table(
-    "setdofhashardwareinterfacedao_degree_of_freedom_names_association",
-    Base.metadata,
-    Column(
-        "setdofhashardwareinterfacedao_id",
-        ForeignKey("SetDofHasHardwareInterfaceDAO.database_id"),
-    ),
-    Column("prefixednamedao_id", ForeignKey("PrefixedNameDAO.database_id")),
-)
 worldmodelmodificationblockdao_modifications_association = Table(
     "worldmodelmodificationblockdao_modifications_association",
     Base.metadata,
@@ -4415,10 +4406,8 @@ class SetDofHasHardwareInterfaceDAO(
 
     value: Mapped[builtins.bool] = mapped_column(use_existing_column=True)
 
-    degree_of_freedom_names: Mapped[typing.List[PrefixedNameDAO]] = relationship(
-        "PrefixedNameDAO",
-        secondary="setdofhashardwareinterfacedao_degree_of_freedom_names_association",
-        cascade="save-update, merge",
+    degree_of_freedom_ids: Mapped[typing.List[uuid.UUID]] = mapped_column(
+        JSON, nullable=False, use_existing_column=True
     )
 
     __mapper_args__ = {

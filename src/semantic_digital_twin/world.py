@@ -162,7 +162,7 @@ class WorldModelUpdateContextManager:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.first:
-            self.world.clean_up_dofs()
+            self.world.delete_orphaned_dofs()
             self.world.get_world_model_manager().model_modification_blocks.append(
                 self.world.get_world_model_manager().current_model_modification_block
             )
@@ -536,7 +536,6 @@ class World:
         return True
 
     def _validate_dofs(self):
-        self.delete_orphaned_dofs()
         actual_dofs = {
             dof for connection in self.connections for dof in connection.dofs
         }
@@ -797,7 +796,7 @@ class World:
     # %% Remove WorldEntities from the World
     def remove_connection(self, connection: Connection) -> None:
         """
-        Removes a connection and deletes the corresponding degree of freedom, if it was only used by this connection.
+        Removes a connection.
         Might create disconnected entities, so make sure to add a new connection or delete the child kinematic_structure_entity.
 
         :param connection: The connection to be removed
@@ -1099,6 +1098,9 @@ class World:
     def get_degree_of_freedom_by_id(self, id: UUID) -> DegreeOfFreedom:
         return self._get_world_entity_by_hash_from_iterable(hash(id), self.degrees_of_freedom)
 
+    def get_kinematic_structure_entity_by_id(self, id: UUID) -> KinematicStructureEntity:
+        return self._get_world_entity_by_hash_from_iterable(hash(id), self.kinematic_structure_entities)
+
     def _get_world_entity_by_hash_from_iterable(self, entity_hash: int, world_entity_iterable: Iterable[GenericWorldEntity]) -> GenericWorldEntity:
         """
         Retrieve a WorldEntity by its hash.
@@ -1378,6 +1380,7 @@ class World:
             for connection in child_body_parent_connections:
                 self.remove_kinematic_structure_entity(connection.parent)
                 self.remove_kinematic_structure_entity(connection.child)
+                new_world.remove_connection(connection)
                 new_world.add_connection(connection)
             self.remove_connection(root_connection)
 
@@ -1410,7 +1413,7 @@ class World:
         self._collision_pair_manager.disable_non_robot_collisions()
         self._collision_pair_manager.disable_collisions_for_adjacent_bodies()
 
-    def clean_up_dofs(self):
+    def delete_orphaned_dofs(self):
         actual_dofs = {
             dof for connection in self.connections for dof in connection.dofs
         }
@@ -1419,12 +1422,6 @@ class World:
 
         for dof in removed_dofs:
             self.remove_degree_of_freedom(dof)
-
-    def delete_orphaned_dofs(self):
-        actual_dofs = {
-            dof for connection in self.connections for dof in connection.dofs
-        }
-        self.degrees_of_freedom = list(actual_dofs)
 
     # %% Kinematic Structure Computations
     @lru_cache(maxsize=_LRU_CACHE_SIZE)

@@ -314,7 +314,7 @@ class HasDoorLikeFactories(ABC):
             multiplier=double_door_C_door.multiplier,
             offset=double_door_C_door.offset,
             axis=double_door_C_door.axis,
-            dof_name=new_dof.name,
+            dof_id=new_dof.id,
         )
 
         door_world = double_door_world.move_branch_to_new_world(door_hinge_kse)

@@ -19,6 +19,8 @@ import trimesh.boolean
 from krrood.adapters.json_serializer import (
     SubclassJSONSerializer,
     JSON_TYPE_NAME,
+    to_json,
+    from_json,
 )
 from krrood.entity_query_language.predicate import Symbol
 from scipy.stats import geom
@@ -425,10 +427,10 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
             id=UUID(hex=data["id"]))
         # add the new body so that the transformation matrices in the shapes can use it as reference frame.
         tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
-        if not tracker.has_kinematic_structure_entity(result.name):
+        if not tracker.has_kinematic_structure_entity(result.id):
             tracker.add_kinematic_structure_entity(result)
         else:
-            result = tracker.get_kinematic_structure_entity(result.name)
+            result = tracker.get_kinematic_structure_entity(result.id)
 
         collision = ShapeCollection.from_json(data["collision"], **kwargs)
         visual = ShapeCollection.from_json(data["visual"], **kwargs)
@@ -544,7 +546,7 @@ class Region(KinematicStructureEntity):
 
         hull = trimesh.points.PointCloud(P_aug).convex_hull
         hull.remove_unreferenced_vertices()
-        hull.remove_degenerate_faces()
+        hull.update_faces(hull.nondegenerate_faces())
         hull.process()
 
         area_mesh = TriangleMesh(
@@ -846,8 +848,8 @@ class Connection(WorldEntity, SubclassJSONSerializer):
     def to_json(self) -> Dict[str, Any]:
         result = super().to_json()
         result["name"] = self.name.to_json()
-        result["parent_name"] = self.parent.name.to_json()
-        result["child_name"] = self.child.name.to_json()
+        result["parent_id"] = to_json(self.parent.id)
+        result["child_id"] = to_json(self.child.id)
         result["parent_T_connection_expression"] = (
             self.parent_T_connection_expression.to_json()
         )
@@ -857,10 +859,10 @@ class Connection(WorldEntity, SubclassJSONSerializer):
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
         parent = tracker.get_kinematic_structure_entity(
-            name=PrefixedName.from_json(data["parent_name"])
+            id=from_json(data["parent_id"])
         )
         child = tracker.get_kinematic_structure_entity(
-            name=PrefixedName.from_json(data["child_name"])
+            id=from_json(data["child_id"])
         )
         return cls(
             name=PrefixedName.from_json(data["name"]),

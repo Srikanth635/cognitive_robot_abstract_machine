@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Dict
+from uuid import UUID
 
 from krrood.adapters.json_serializer import JSONSerializationError
 from typing_extensions import (
@@ -219,10 +220,10 @@ class SpatialTypeNotJsonSerializable(NotJsonSerializable):
 
 @dataclass
 class KinematicStructureEntityNotInKwargs(JSONSerializationError):
-    kinematic_structure_entity_name: PrefixedName
+    kinematic_structure_entity_id: UUID
 
     def __post_init__(self):
         super().__init__(
-            f"Kinematic structure entity '{self.kinematic_structure_entity_name}' is not in the kwargs of the "
+            f"Kinematic structure entity '{self.kinematic_structure_entity_id}' is not in the kwargs of the "
             f"method that created it."
         )

@@ -1,12 +1,13 @@
+import hashlib
 import os
 import time
 import unittest
-import numpy as np
+import uuid
 from typing import Optional
 
+import numpy as np
 import sqlalchemy
 from krrood.ormatic.utils import drop_database
-from semantic_digital_twin.semantic_annotations.semantic_annotations import Handle, Door
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -18,6 +19,7 @@ from semantic_digital_twin.adapters.ros.world_synchronizer import (
 from semantic_digital_twin.adapters.urdf import URDFParser
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.orm.ormatic_interface import Base, WorldMappingDAO
+from semantic_digital_twin.semantic_annotations.semantic_annotations import Handle, Door
 from semantic_digital_twin.spatial_types import Vector3
 from semantic_digital_twin.testing import rclpy_node
 from semantic_digital_twin.utils import get_semantic_digital_twin_directory_root
@@ -32,17 +34,38 @@ from semantic_digital_twin.world_description.world_entity import Body
 
 
 def create_dummy_world(w: Optional[World] = None) -> World:
+    def deterministic_uuid(seed: str) -> uuid.UUID:
+        h = hashlib.sha1(seed.encode()).hexdigest()[:32]
+        return uuid.UUID(h)
+
+    id1 = deterministic_uuid("id1")
+    id2 = deterministic_uuid("id2")
     if w is None:
         w = World()
-    b1 = Body(name=PrefixedName("b1"))
-    b2 = Body(name=PrefixedName("b2"))
+    b1 = Body(name=PrefixedName("b1"), id=id1)
+    b2 = Body(name=PrefixedName("b2"), id=id2)
     with w.modify_world():
-        w.add_connection(Connection6DoF.create_with_dofs(parent=b1, child=b2, world=w))
+        x_dof = DegreeOfFreedom(name=PrefixedName("x"), id=deterministic_uuid("x_dof"))
+        w.add_degree_of_freedom(x_dof)
+        y_dof = DegreeOfFreedom(name=PrefixedName("y"), id=deterministic_uuid("y_dof"))
+        w.add_degree_of_freedom(y_dof)
+        z_dof = DegreeOfFreedom(name=PrefixedName("z"), id=deterministic_uuid("z_dof"))
+        w.add_degree_of_freedom(z_dof)
+        qx_dof = DegreeOfFreedom(name=PrefixedName("qx"), id=deterministic_uuid("qx_dof"))
+        w.add_degree_of_freedom(qx_dof)
+        qy_dof = DegreeOfFreedom(name=PrefixedName("qy"), id=deterministic_uuid("qy_dof"))
+        w.add_degree_of_freedom(qy_dof)
+        qz_dof = DegreeOfFreedom(name=PrefixedName("qz"), id=deterministic_uuid("qz_dof"))
+        w.add_degree_of_freedom(qz_dof)
+        qw_dof = DegreeOfFreedom(name=PrefixedName("qw"), id=deterministic_uuid("qw_dof"))
+        w.add_degree_of_freedom(qw_dof)
+        w.state[qw_dof.id].position = 1.0
+
+        w.add_connection(Connection6DoF(parent=b1, child=b2, x_id=x_dof.id, y_id=y_dof.id, z_id=z_dof.id, qx_id=qx_dof.id, qy_id=qy_dof.id, qz_id=qz_dof.id, qw_id=qw_dof.id))
     return w
 
 
 def test_state_synchronization(rclpy_node):
-
     w1 = create_dummy_world()
     w2 = create_dummy_world()
 
@@ -401,7 +424,7 @@ def test_synchronize_6dof(rclpy_node):
     time.sleep(1)
     c2 = w2.get_connection_by_name(c1.name)
     assert isinstance(c2, Connection6DoF)
-    assert w1.state[c1.qw_name].position == w2.state[c2.qw_name].position
+    assert w1.state[c1.qw_id].position == w2.state[c2.qw_id].position
     np.testing.assert_array_almost_equal(w1.state.data, w2.state.data)
 
 

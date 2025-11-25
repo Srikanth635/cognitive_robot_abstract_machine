@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from abc import abstractmethod, ABC
 from dataclasses import dataclass, field
+from uuid import UUID
 
-from krrood.adapters.json_serializer import SubclassJSONSerializer
+from krrood.adapters.json_serializer import SubclassJSONSerializer, to_json, from_json
 from typing_extensions import (
     List,
     Dict,
@@ -346,28 +347,28 @@ class WorldModelModificationBlock(SubclassJSONSerializer):
 
 @dataclass
 class SetDofHasHardwareInterface(WorldModelModification):
-    degree_of_freedom_names: List[PrefixedName]
+    degree_of_freedom_ids: List[UUID]
     value: bool
 
     def apply(self, world: World):
-        for dof_name in self.degree_of_freedom_names:
-            world.get_degree_of_freedom_by_name(dof_name).has_hardware_interface = (
+        for dof_id in self.degree_of_freedom_ids:
+            world.get_degree_of_freedom_by_id(dof_id).has_hardware_interface = (
                 self.value
             )
 
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]) -> Self:
         dofs = kwargs["dofs"]
-        degree_of_freedom_names = [dof.name for dof in dofs]
+        degree_of_freedom_ids = [dof.id for dof in dofs]
         return cls(
-            degree_of_freedom_names=degree_of_freedom_names, value=kwargs["value"]
+            degree_of_freedom_ids=degree_of_freedom_ids, value=kwargs["value"]
         )
 
     def to_json(self) -> Dict[str, Any]:
         return {
             **super().to_json(),
-            "degree_of_freedom_names": [
-                dof.to_json() for dof in self.degree_of_freedom_names
+            "degree_of_freedom_ids": [
+                to_json(dof_id) for dof_id in self.degree_of_freedom_ids
             ],
             "value": self.value,
         }
@@ -375,9 +376,9 @@ class SetDofHasHardwareInterface(WorldModelModification):
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         return cls(
-            degree_of_freedom_names=[
-                PrefixedName.from_json(dof, **kwargs)
-                for dof in data["degree_of_freedom_names"]
+            degree_of_freedom_ids=[
+                from_json(_id)
+                for _id in data["degree_of_freedom_ids"]
             ],
             value=data["value"],
         )

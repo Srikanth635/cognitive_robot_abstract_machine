@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from uuid import UUID
 
 import numpy as np
+from krrood.adapters.json_serializer import from_json
 from typing_extensions import List, TYPE_CHECKING, Union, Optional, Dict, Any, Self
 
 from .degree_of_freedom import DegreeOfFreedom
@@ -70,10 +71,10 @@ class ActiveConnection(Connection):
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
         parent = tracker.get_kinematic_structure_entity(
-            name=PrefixedName.from_json(data["parent_name"])
+            id=from_json(data["parent_id"])
         )
         child = tracker.get_kinematic_structure_entity(
-            name=PrefixedName.from_json(data["child_name"])
+            id=from_json(data["child_id"])
         )
         return cls(
             name=PrefixedName.from_json(data["name"]),
@@ -160,10 +161,10 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
         parent = tracker.get_kinematic_structure_entity(
-            name=PrefixedName.from_json(data["parent_name"])
+            id=from_json(data["parent_id"])
         )
         child = tracker.get_kinematic_structure_entity(
-            name=PrefixedName.from_json(data["child_name"])
+            id=from_json(data["child_id"])
         )
         return cls(
             name=PrefixedName.from_json(data["name"]),
@@ -275,42 +276,42 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
     @property
     def position(self) -> float:
         return (
-            self._world.state[self.raw_dof.name].position * self.multiplier
+            self._world.state[self.raw_dof.id].position * self.multiplier
             + self.offset
         )
 
     @position.setter
     def position(self, value: float) -> None:
-        self._world.state[self.raw_dof.name].position = (
+        self._world.state[self.raw_dof.id].position = (
             value - self.offset
         ) / self.multiplier
         self._world.notify_state_change()
 
     @property
     def velocity(self) -> float:
-        return self._world.state[self.raw_dof.name].velocity * self.multiplier
+        return self._world.state[self.raw_dof.id].velocity * self.multiplier
 
     @velocity.setter
     def velocity(self, value: float) -> None:
-        self._world.state[self.raw_dof.name].velocity = value / self.multiplier
+        self._world.state[self.raw_dof.id].velocity = value / self.multiplier
         self._world.notify_state_change()
 
     @property
     def acceleration(self) -> float:
-        return self._world.state[self.raw_dof.name].acceleration * self.multiplier
+        return self._world.state[self.raw_dof.id].acceleration * self.multiplier
 
     @acceleration.setter
     def acceleration(self, value: float) -> None:
-        self._world.state[self.raw_dof.name].acceleration = value / self.multiplier
+        self._world.state[self.raw_dof.id].acceleration = value / self.multiplier
         self._world.notify_state_change()
 
     @property
     def jerk(self) -> float:
-        return self._world.state[self.raw_dof.name].jerk * self.multiplier
+        return self._world.state[self.raw_dof.id].jerk * self.multiplier
 
     @jerk.setter
     def jerk(self, value: float) -> None:
-        self._world.state[self.raw_dof.name].jerk = value / self.multiplier
+        self._world.state[self.raw_dof.id].jerk = value / self.multiplier
         self._world.notify_state_change()
 
     def copy_for_world(self, world: World):
@@ -325,10 +326,10 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
             parent=other_parent,
             child=other_child,
             parent_T_connection_expression=parent_T_connection_expression,
-            dof_name=PrefixedName(self.dof_name.name, self.dof_name.prefix),
             axis=self.axis,
             multiplier=self.multiplier,
             offset=self.offset,
+            dof_id=self.dof_id,
         )
 
 
@@ -411,10 +412,10 @@ class Connection6DoF(Connection):
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
         parent = tracker.get_kinematic_structure_entity(
-            name=PrefixedName.from_json(data["parent_name"])
+            id=from_json(data["parent_id"])
         )
         child = tracker.get_kinematic_structure_entity(
-            name=PrefixedName.from_json(data["child_name"])
+            id=from_json(data["child_id"])
         )
         return cls(
             name=PrefixedName.from_json(data["name"]),
@@ -529,7 +530,7 @@ class Connection6DoF(Connection):
             world.add_degree_of_freedom(qz)
             qw = DegreeOfFreedom(name=PrefixedName("qw", stringified_name))
             world.add_degree_of_freedom(qw)
-            world.state[qw.name].position = 1.0
+            world.state[qw.id].position = 1.0
 
         return cls(
             parent=parent,
@@ -561,13 +562,13 @@ class Connection6DoF(Connection):
             transformation = cas.TransformationMatrix(data=transformation)
         position = transformation.to_position().to_np()
         orientation = transformation.to_rotation_matrix().to_quaternion().to_np()
-        self._world.state[self.x.name].position = position[0]
-        self._world.state[self.y.name].position = position[1]
-        self._world.state[self.z.name].position = position[2]
-        self._world.state[self.qx.name].position = orientation[0]
-        self._world.state[self.qy.name].position = orientation[1]
-        self._world.state[self.qz.name].position = orientation[2]
-        self._world.state[self.qw.name].position = orientation[3]
+        self._world.state[self.x.id].position = position[0]
+        self._world.state[self.y.id].position = position[1]
+        self._world.state[self.z.id].position = position[2]
+        self._world.state[self.qx.id].position = orientation[0]
+        self._world.state[self.qy.id].position = orientation[1]
+        self._world.state[self.qz.id].position = orientation[2]
+        self._world.state[self.qw.id].position = orientation[3]
         self._world.notify_state_change()
 
     def copy_for_world(self, world: World) -> Connection6DoF:
@@ -587,13 +588,13 @@ class Connection6DoF(Connection):
             parent=other_parent,
             child=other_child,
             parent_T_connection_expression=parent_T_connection_expression,
-            x_name=deepcopy(self.x_name),
-            y_name=deepcopy(self.y_name),
-            z_name=deepcopy(self.z_name),
-            qx_name=deepcopy(self.qx_name),
-            qy_name=deepcopy(self.qy_name),
-            qz_name=deepcopy(self.qz_name),
-            qw_name=deepcopy(self.qw_name),
+            x_id=deepcopy(self.x_id),
+            y_id=deepcopy(self.y_id),
+            z_id=deepcopy(self.z_id),
+            qx_id=deepcopy(self.qx_id),
+            qy_id=deepcopy(self.qy_id),
+            qz_id=deepcopy(self.qz_id),
+            qw_id=deepcopy(self.qw_id),
         )
 
 
@@ -640,10 +641,10 @@ class OmniDrive(ActiveConnection, HasUpdateState):
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         tracker = KinematicStructureEntityKwargsTracker.from_kwargs(kwargs)
         parent = tracker.get_kinematic_structure_entity(
-            name=PrefixedName.from_json(data["parent_name"])
+            id=from_json(data["parent_id"])
         )
         child = tracker.get_kinematic_structure_entity(
-            name=PrefixedName.from_json(data["child_name"])
+            id=from_json(data["child_id"])
         )
         return cls(
             name=PrefixedName.from_json(data["name"], **kwargs),
@@ -816,16 +817,16 @@ class OmniDrive(ActiveConnection, HasUpdateState):
 
     def update_state(self, dt: float) -> None:
         state = self._world.state
-        state[self.x_velocity.name].position = 0
-        state[self.y_velocity.name].position = 0
+        state[self.x_velocity.id].position = 0
+        state[self.y_velocity.id].position = 0
 
-        x_vel = state[self.x_velocity.name].velocity
-        y_vel = state[self.y_velocity.name].velocity
-        delta = state[self.yaw.name].position
+        x_vel = state[self.x_velocity.id].velocity
+        y_vel = state[self.y_velocity.id].velocity
+        delta = state[self.yaw.id].position
         x_velocity = np.cos(delta) * x_vel - np.sin(delta) * y_vel
-        state[self.x.name].position += x_velocity * dt
+        state[self.x.id].position += x_velocity * dt
         y_velocity = np.sin(delta) * x_vel + np.cos(delta) * y_vel
-        state[self.y.name].position += y_velocity * dt
+        state[self.y.id].position += y_velocity * dt
 
     @property
     def origin(self) -> cas.TransformationMatrix:
@@ -844,13 +845,13 @@ class OmniDrive(ActiveConnection, HasUpdateState):
             transformation = cas.TransformationMatrix(data=transformation)
         position = transformation.to_position()
         roll, pitch, yaw = transformation.to_rotation_matrix().to_rpy()
-        self._world.state[self.x.name].position = position.x.to_np()
-        self._world.state[self.y.name].position = position.y.to_np()
-        self._world.state[self.yaw.name].position = yaw.to_np()
+        self._world.state[self.x.id].position = position.x.to_np()
+        self._world.state[self.y.id].position = position.y.to_np()
+        self._world.state[self.yaw.id].position = yaw.to_np()
         self._world.notify_state_change()
 
-    def get_free_variable_names(self) -> List[PrefixedName]:
-        return [self.x.name, self.y.name, self.yaw.name]
+    def get_free_variable_names(self) -> List[UUID]:
+        return [self.x.id, self.y.id, self.yaw.id]
 
     @property
     def has_hardware_interface(self) -> bool:
@@ -880,11 +881,11 @@ class OmniDrive(ActiveConnection, HasUpdateState):
             parent=other_parent,
             child=other_child,
             parent_T_connection_expression=parent_T_connection_expression,
-            x_name=deepcopy(self.x_name),
-            y_name=deepcopy(self.y_name),
-            roll_name=deepcopy(self.roll_name),
-            pitch_name=deepcopy(self.pitch_name),
-            yaw_name=deepcopy(self.yaw_name),
-            x_velocity_name=deepcopy(self.x_velocity_name),
-            y_velocity_name=deepcopy(self.y_velocity_name),
+            x_id=deepcopy(self.x_id),
+            y_id=deepcopy(self.y_id),
+            roll_id=deepcopy(self.roll_id),
+            pitch_id=deepcopy(self.pitch_id),
+            yaw_id=deepcopy(self.yaw_id),
+            x_velocity_id=deepcopy(self.x_velocity_id),
+            y_velocity_id=deepcopy(self.y_velocity_id),
         )

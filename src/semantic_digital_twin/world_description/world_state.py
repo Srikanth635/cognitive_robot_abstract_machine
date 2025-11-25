@@ -199,8 +199,8 @@ class WorldState(MutableMapping):
             + " })"
         )
 
-    def to_position_dict(self) -> Dict[UUID, float]:
-        return {dof_id: self[dof_id].position for dof_id in self._ids}
+    def to_position_dict(self) -> Dict[PrefixedName, float]:
+        return {self._world.get_degree_of_freedom_by_id(dof_id).name: self[dof_id].position for dof_id in self._ids}
 
     @property
     def positions(self) -> np.ndarray:

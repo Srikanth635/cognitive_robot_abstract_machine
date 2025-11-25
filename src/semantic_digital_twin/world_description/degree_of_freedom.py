@@ -25,7 +25,7 @@ class PositionVariable(cas.FloatVariable):
     """ Backreference """
 
     def resolve(self) -> float:
-        return self.dof._world.state[self.dof.name].position
+        return self.dof._world.state[self.dof.id].position
 
 
 @dataclass(eq=False)
@@ -39,7 +39,7 @@ class VelocityVariable(cas.FloatVariable):
     """ Backreference """
 
     def resolve(self) -> float:
-        return self.dof._world.state[self.dof.name].velocity
+        return self.dof._world.state[self.dof.id].velocity
 
 
 @dataclass(eq=False)
@@ -53,7 +53,7 @@ class AccelerationVariable(cas.FloatVariable):
     """ Backreference """
 
     def resolve(self) -> float:
-        return self.dof._world.state[self.dof.name].acceleration
+        return self.dof._world.state[self.dof.id].acceleration
 
 
 @dataclass(eq=False)
@@ -67,7 +67,7 @@ class JerkVariable(cas.FloatVariable):
     """ Backreference """
 
     def resolve(self) -> float:
-        return self.dof._world.state[self.dof.name].jerk
+        return self.dof._world.state[self.dof.id].jerk
 
 
 @dataclass(eq=False)
@@ -160,6 +160,7 @@ class DegreeOfFreedom(WorldEntityWithID, SubclassJSONSerializer):
             upper_limits=deepcopy(self.upper_limits),
             name=deepcopy(self.name),
             has_hardware_interface=self.has_hardware_interface,
+            id=self.id,
         )
         result._world = self._world
         # there can't be two symbols with the same name anyway
