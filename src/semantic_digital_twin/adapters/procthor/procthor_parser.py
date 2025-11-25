@@ -630,11 +630,13 @@ class ProcTHORParser:
         :param world: The World instance to which the objects will be added.
         :param objects: List of object dictionaries from the Procthor JSON file.
         """
-        for obj in objects:
+        for index, obj in enumerate(objects):
             procthor_object = ProcthorObject(object_dict=obj, session=self.session)
             obj_world = procthor_object.get_world()
             if obj_world is None:
                 continue
+            # for kse in obj_world.kinematic_structure_entities:
+            #     kse.name.name += f"_{id(obj)}"
             obj_connection = FixedConnection(
                 parent=world.root,
                 child=obj_world.root,
@@ -765,9 +767,7 @@ def get_world_by_asset_id(session: Session, asset_id: str) -> Optional[World]:
     other_possible_name = "_".join(asset_id.split("_")[:-1])
 
     expr = select(WorldMappingDAO).where(WorldMappingDAO.name == asset_id)
-    expr2 = select(WorldMappingDAO).where(
-        WorldMappingDAO.name == other_possible_name
-    )
+    expr2 = select(WorldMappingDAO).where(WorldMappingDAO.name == other_possible_name)
     logging.info(f"Querying name: {asset_id}")
     try:
         world_mapping = session.scalars(expr).one()
