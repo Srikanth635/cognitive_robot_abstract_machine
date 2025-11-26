@@ -279,6 +279,7 @@ class ProcTHORTestCase(unittest.TestCase):
             decimal=6,
         )
 
+    @unittest.skip("Requires Database, TBD")
     def test_object_get_world(self):
         objects = self.house_json["objects"][0]
 
