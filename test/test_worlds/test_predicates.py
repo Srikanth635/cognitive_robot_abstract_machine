@@ -340,18 +340,6 @@ def test_is_body_in_gripper(
 def test_reachable(pr2_world):
     pr2: PR2 = PR2.from_world(pr2_world)
 
-    from semantic_digital_twin.adapters.viz_marker import VizMarkerPublisher
-    import threading
-    import rclpy
-
-    rclpy.init()
-
-    node = rclpy.create_node("semantic_digital_twin")
-    thread = threading.Thread(target=rclpy.spin, args=(node,), daemon=True)
-    thread.start()
-
-    viz = VizMarkerPublisher(world=pr2_world, node=node)
-
     tool_frame_T_reachable_goal = TransformationMatrix.from_xyz_rpy(
         x=-0.2,
         y=0.3,

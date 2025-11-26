@@ -294,6 +294,7 @@ class ProcTHORTestCase(unittest.TestCase):
         world = procthor_object.get_world()
         ...
 
+    @unittest.skip("Requires Database, TBD")
     def test_duplicate_object(self):
         semantic_digital_twin_database_uri = os.environ.get(
             "SEMANTIC_DIGITAL_TWIN_DATABASE_URI"
