@@ -48,6 +48,7 @@ from .spatial_computations.raytracer import RayTracer
 from .spatial_types import spatial_types as cas
 from .spatial_types.derivatives import Derivatives
 from .utils import IDGenerator
+from .world_description.actuators import Actuator
 from .world_description.connections import (
     Connection6DoF,
     ActiveConnection1DOF,
@@ -57,6 +58,20 @@ from .world_description.connections import (
 from .world_description.connections import HasUpdateState
 from .world_description.degree_of_freedom import DegreeOfFreedom
 from .world_description.visitors import CollisionBodyCollector, ConnectionCollector
+from .world_description.world_modification import (
+    WorldModelModification,
+    WorldModelModificationBlock,
+    SetDofHasHardwareInterface,
+    AddDegreeOfFreedomModification,
+    RemoveDegreeOfFreedomModification,
+    AddKinematicStructureEntityModification,
+    AddConnectionModification,
+    RemoveConnectionModification,
+    RemoveBodyModification,
+    AddSemanticAnnotationModification,
+    RemoveSemanticAnnotationModification,
+    AddActuatorModification,
+)
 from .world_description.world_entity import (
     Connection,
     SemanticAnnotation,
@@ -68,21 +83,6 @@ from .world_description.world_entity import (
     Body,
     WorldEntity,
     GenericWorldEntity,
-)
-from .world_description.world_modification import (
-    RemoveSemanticAnnotationModification,
-)
-from .world_description.world_modification import (
-    WorldModelModification,
-    AddDegreeOfFreedomModification,
-    RemoveDegreeOfFreedomModification,
-    AddKinematicStructureEntityModification,
-    AddConnectionModification,
-    RemoveBodyModification,
-    RemoveConnectionModification,
-    WorldModelModificationBlock,
-    SetDofHasHardwareInterface,
-    AddSemanticAnnotationModification,
 )
 from .world_description.world_state import WorldState
 
@@ -470,6 +470,11 @@ class World:
     All degrees of freedom in the world.
     """
 
+    actuators: List[Actuator] = field(default_factory=list)
+    """
+    All actuators in the world.
+    """
+
     state: WorldState = field(init=False)
     """
     2d array where rows are derivatives and columns are dof values for that derivative.
@@ -781,6 +786,36 @@ class World:
         """
         semantic_annotation.add_to_world(self)
         self.semantic_annotations.append(semantic_annotation)
+
+    def add_actuator(self, actuator: Actuator) -> None:
+        """
+        Adds an actuator in the world.
+        This is used to register Actuators that are not created by the world, but are part of the world model.
+
+        :param actuator: The actuator to register.
+        """
+        if actuator._world is self and actuator in self.actuators:
+            return
+        if actuator._world is not None:
+            raise AlreadyBelongsToAWorldError(
+                world=actuator._world, type_trying_to_add=Actuator
+            )
+        self._add_actuator(actuator)
+
+    @atomic_world_modification(modification=AddActuatorModification)
+    def _add_actuator(self, actuator: Actuator) -> None:
+        """
+        Adds an actuator to the current system.
+
+        This method modifies the internal state of the system by adding a new
+        actuator. The actuator is then added to the list of actuators
+        in the system.
+
+        :param actuator: The actuator to be added to the system.
+        :return: None
+        """
+        actuator._world = self
+        self.actuators.append(actuator)
 
     def _raise_error_if_belongs_to_other_world(self, world_entity: WorldEntity):
         """

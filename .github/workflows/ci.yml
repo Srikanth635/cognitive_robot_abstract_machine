@@ -54,8 +54,6 @@ jobs:
           pip install "$TMP_PKG"
           rm -f "$TMP_PKG"
         fi
-#        echo "PATH=/opt/ros/overlay_ws/src/Multiverse-Parser/ext/blender:/opt/ros/overlay_ws/src/Multiverse-Parser/USD/linux/lib/python:/opt/ros/overlay_ws/src/Multiverse-Parser/USD/linux/plugin/usd:$PATH" >> $GITHUB_ENV
-#        echo "PYTHONPATH=/opt/ros/overlay_ws/src/Multiverse-Parser/USD/linux/lib/python:/opt/ros/overlay_ws/src/src" >> $GITHUB_ENV
 
 
     - name: Run tests
