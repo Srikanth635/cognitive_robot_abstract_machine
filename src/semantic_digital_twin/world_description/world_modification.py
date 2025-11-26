@@ -365,10 +365,10 @@ class WorldModelModificationBlock(SubclassJSONSerializer):
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         return cls(
-            [
+            modifications=[
                 WorldModelModification.from_json(d, **kwargs)
                 for d in data["modifications"]
-            ]
+            ],
         )
 
     def __iter__(self):

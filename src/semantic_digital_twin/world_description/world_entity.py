@@ -1,19 +1,23 @@
 from __future__ import annotations
 
 import inspect
+from copy import copy, deepcopy
+
 import itertools
-from abc import ABC
+from abc import ABC, abstractmethod
 from collections import deque
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from dataclasses import fields
 from functools import lru_cache
+from typing import ClassVar
 
 import numpy as np
 import trimesh
 import trimesh.boolean
 from krrood.adapters.json_serializer import (
     SubclassJSONSerializer,
+    JSON_TYPE_NAME,
 )
 from krrood.entity_query_language.predicate import Symbol
 from scipy.stats import geom
@@ -40,11 +44,11 @@ from ..datastructures.prefixed_name import PrefixedName
 from ..exceptions import ReferenceFrameMismatchError
 from ..spatial_types import spatial_types as cas
 from ..spatial_types.spatial_types import TransformationMatrix, Expression, Point3
-from ..utils import IDGenerator, type_string_to_type
+from ..utils import IDGenerator, type_string_to_type, camel_case_split
 
 if TYPE_CHECKING:
     from ..world_description.degree_of_freedom import DegreeOfFreedom
-    from ..world import World
+    from ..world import World, GenericSemanticAnnotation
 
 id_generator = IDGenerator()
 
@@ -123,6 +127,30 @@ class KinematicStructureEntity(WorldEntity, SubclassJSONSerializer, ABC):
     """
     The index of the entity in `_world.kinematic_structure`.
     """
+
+    @property
+    @abstractmethod
+    def combined_mesh(self) -> Optional[trimesh.Trimesh]:
+        """
+        Computes the combined mesh of this KinematicStructureEntity.
+        """
+
+    @property
+    def center_of_mass(self) -> Point3:
+        """
+        Computes the center of mass of this KinematicStructureEntity.
+        """
+        # Center of mass in the body's local frame (collision geometry)
+        com_local: np.ndarray[np.float64] = self.combined_mesh.center_mass  # (3,)
+        # Transform to world frame using the body's global pose
+        com = Point3(
+            x_init=com_local[0],
+            y_init=com_local[1],
+            z_init=com_local[2],
+            reference_frame=self,
+        )
+        world = self._world
+        return world.transform(com, world.root)
 
     @property
     def global_pose(self) -> TransformationMatrix:
@@ -219,6 +247,15 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
         self.collision.reference_frame = self
         self.collision.transform_all_shapes_to_own_frame()
         self.visual.transform_all_shapes_to_own_frame()
+
+    @property
+    def combined_mesh(self) -> Optional[trimesh.Trimesh]:
+        """
+        Computes the combined mesh of this KinematicStructureEntity.
+        """
+        if not self.collision:
+            return None
+        return self.collision.combined_mesh
 
     def get_collision_config(self) -> CollisionCheckingConfig:
         if self.temp_collision_config is not None:
@@ -380,6 +417,18 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
 
         return result
 
+    def get_semantic_annotations_by_type(
+        self, type_: Type[GenericSemanticAnnotation]
+    ) -> List[GenericSemanticAnnotation]:
+        """
+        Returns all semantic annotations of a given type which belong to this body.
+        :param type_: The type of semantic annotations to return.
+        :returns: A list of semantic annotations of the given type.
+        """
+        return list(
+            filter(lambda sem: isinstance(sem, type_), self._semantic_annotations)
+        )
+
 
 @dataclass(eq=False)
 class Region(KinematicStructureEntity):
@@ -398,12 +447,18 @@ class Region(KinematicStructureEntity):
     def __hash__(self):
         return id(self)
 
+    @property
+    def combined_mesh(self) -> Optional[trimesh.Trimesh]:
+        if not self.area:
+            return None
+        return self.area.combined_mesh
+
     @classmethod
     def from_3d_points(
         cls,
         name: PrefixedName,
         points_3d: List[Point3],
-        reference_frame: Optional[Body] = None,
+        reference_frame: Optional[KinematicStructureEntity] = None,
         minimum_thickness: float = 0.005,
         sv_ratio_tol: float = 1e-7,
     ) -> Self:
@@ -512,12 +567,27 @@ class SemanticAnnotation(WorldEntity, SubclassJSONSerializer):
         If you do not want to change the behavior, make sure to use @dataclass(eq=False) to decorate your class.
     """
 
+    _synonyms: ClassVar[Set[str]] = set()
+    """
+    Additional names that can be used to match this object.
+    """
+
+    @classmethod
+    @lru_cache(maxsize=None)
+    def class_name_tokens(cls) -> Set[str]:
+        """
+        :return: Set of tokens from the class name.
+        """
+        return set(n.lower() for n in camel_case_split(cls.__name__))
+
     def __post_init__(self):
         if self.name is None:
             self.name = PrefixedName(
                 name=f"{self.__class__.__name__}_{id_generator(self)}",
                 prefix=self._world.name if self._world is not None else None,
             )
+        for entity in self.kinematic_structure_entities:
+            entity._semantic_annotations.add(self)
 
     def __hash__(self):
         return hash(
@@ -555,7 +625,7 @@ class SemanticAnnotation(WorldEntity, SubclassJSONSerializer):
         for k, v in semantic_annotation_fields.items():
             if k not in data.keys():
                 continue
-            field_type = type_string_to_type(data[k]["type"])
+            field_type = type_string_to_type(data[k][JSON_TYPE_NAME])
             if issubclass(field_type, SubclassJSONSerializer):
                 init_args[k] = field_type.from_json(data[k], **kwargs)
 
@@ -732,15 +802,18 @@ class Connection(WorldEntity, SubclassJSONSerializer):
     """
 
     parent_T_connection_expression: TransformationMatrix = field(default=None)
-    connection_T_child_expression: TransformationMatrix = field(default=None)
+    _connection_T_child_expression: TransformationMatrix = field(
+        default=None, init=False
+    )
     """
     The origin expression of a connection is split into 2 transforms:
     1. parent_T_connection describes the pose of the connection and is always constant.
        It typically describes the fixed part of the origin expression, equivalent to the origin tag in urdf. 
        For example, it is the point about which a revolute joint rotates.
-    2. connection_T_child describes the pose of the child relative to the connection.
+    2. _connection_T_child describes the pose of the child relative to the connection.
        This typically contains only the expressions that describe how the degrees of freedom move the child.
        For example, it describes how the angle of a revolute joint affects the child pose.
+       It is private mostly to avoid ORM logging.
 
     This split is necessary for copying Connections, because they need parent_T_connection as an input parameter and 
     connection_T_child is generated in the __post_init__ method.
@@ -776,7 +849,7 @@ class Connection(WorldEntity, SubclassJSONSerializer):
 
     @property
     def origin_expression(self) -> TransformationMatrix:
-        return self.parent_T_connection_expression @ self.connection_T_child_expression
+        return self.parent_T_connection_expression @ self._connection_T_child_expression
 
     @property
     def active_dofs(self) -> List[DegreeOfFreedom]:
@@ -798,6 +871,7 @@ class Connection(WorldEntity, SubclassJSONSerializer):
         self._world = world
 
     def __post_init__(self):
+
         self.name = self.name or self._generate_default_name(
             parent=self.parent, child=self.child
         )
@@ -805,8 +879,13 @@ class Connection(WorldEntity, SubclassJSONSerializer):
         # If I use default factories, I'd have to complicate the from_json, because I couldn't blindly pass these args
         if self.parent_T_connection_expression is None:
             self.parent_T_connection_expression = TransformationMatrix()
-        if self.connection_T_child_expression is None:
-            self.connection_T_child_expression = TransformationMatrix()
+        if self._connection_T_child_expression is None:
+            self._connection_T_child_expression = TransformationMatrix()
+
+        if not self.parent_T_connection_expression.is_constant():
+            raise RuntimeError(
+                f"Parent T matrix must be constant for connection. This one contains free variables: {self.parent_T_connection_expression.free_variables()}"
+            )
 
         if (
             self.parent_T_connection_expression.reference_frame is not None
@@ -817,7 +896,7 @@ class Connection(WorldEntity, SubclassJSONSerializer):
             )
 
         self.parent_T_connection_expression.reference_frame = self.parent
-        self.connection_T_child_expression.child_frame = self.child
+        self._connection_T_child_expression.child_frame = self.child
 
     @classmethod
     def _generate_default_name(
@@ -885,6 +964,51 @@ class Connection(WorldEntity, SubclassJSONSerializer):
         """
         raise NotImplementedError(
             "ConnectionWithDofs.create_with_dofs is not implemented."
+        )
+
+    def _find_references_in_world(
+        self, world: World
+    ) -> Tuple[
+        KinematicStructureEntity, KinematicStructureEntity, TransformationMatrix
+    ]:
+        """
+        Finds the reference frames to this connection in the given world and returns them as usable objects.
+        :param world: Reference to the world where the reference frames are searched.
+        :return: The other parent and child and new connection expressions with correct reference frames.
+        """
+        other_parent = world.get_kinematic_structure_entity_by_name(self.parent.name)
+        other_child = world.get_kinematic_structure_entity_by_name(self.child.name)
+
+        parent_T_connection_expression = deepcopy(self.parent_T_connection_expression)
+        parent_T_connection_expression.reference_frame = (
+            world.get_kinematic_structure_entity_by_name(
+                parent_T_connection_expression.reference_frame.name
+            )
+        )
+        return (
+            other_parent,
+            other_child,
+            parent_T_connection_expression,
+        )
+
+    def copy_for_world(self, world: World) -> Self:
+        """
+        Copies this connection to the given world the parent and child references are updated to the new world as well
+        as the references from the expression.
+        :param world: World in which the connection should be copied.
+        :return: The copied connection.
+        """
+        (
+            other_parent,
+            other_child,
+            parent_T_connection_expression,
+        ) = self._find_references_in_world(world)
+
+        return self.__class__(
+            other_parent,
+            other_child,
+            parent_T_connection_expression=parent_T_connection_expression,
+            name=PrefixedName(self.name.name, prefix=self.name.prefix),
         )
 
 

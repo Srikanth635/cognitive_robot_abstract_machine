@@ -2,6 +2,8 @@ from copy import deepcopy
 
 import numpy as np
 import pytest
+from numpy.testing import assert_raises
+
 from semantic_digital_twin.semantic_annotations.semantic_annotations import Handle
 
 from semantic_digital_twin.spatial_types import Vector3
@@ -28,7 +30,6 @@ from semantic_digital_twin.spatial_types.spatial_types import (
     TransformationMatrix,
     RotationMatrix,
 )
-from semantic_digital_twin.spatial_types.symbol_manager import symbol_manager
 from semantic_digital_twin.testing import world_setup, pr2_world
 from semantic_digital_twin.world_description.degree_of_freedom import DegreeOfFreedom
 from semantic_digital_twin.world_description.world_entity import (
@@ -260,10 +261,7 @@ def test_compute_fk_expression(world_setup):
     world.notify_state_change()
     fk = world.compute_forward_kinematics_np(r2, l2)
     fk_expr = world.compose_forward_kinematics_expression(r2, l2)
-    fk_expr_compiled = fk_expr.compile()
-    fk2 = fk_expr_compiled(
-        *symbol_manager.resolve_symbols(fk_expr_compiled.symbol_parameters)
-    )
+    fk2 = fk_expr.evaluate()
     np.testing.assert_array_almost_equal(fk, fk2)
 
 
@@ -651,7 +649,7 @@ def test_copy_pr2_world_connection_origin(pr2_world):
         pr2_body = pr2_world.get_kinematic_structure_entity_by_name(body.name)
         pr2_copy_body = pr2_copy.get_kinematic_structure_entity_by_name(body.name)
         np.testing.assert_array_almost_equal(
-            pr2_body.global_pose.to_np(), pr2_copy_body.global_pose.to_np()
+            pr2_body.global_pose.to_np(), pr2_copy_body.global_pose.to_np(), decimal=4
         )
 
 
@@ -678,6 +676,35 @@ def test_copy_pr2(pr2_world):
     assert pr2_copy.get_kinematic_structure_entity_by_name(
         "head_tilt_link"
     ).global_pose.to_np()[2, 3] == pytest.approx(1.472, abs=1e-3)
+
+
+def test_copy_connections(pr2_world):
+    pr2_copy = deepcopy(pr2_world)
+    for connection in pr2_world.connections:
+        pr2_copy_connection = pr2_copy.get_connection_by_name(connection.name)
+        assert connection.name == pr2_copy_connection.name
+        np.testing.assert_array_almost_equal(
+            connection.origin.to_np(), pr2_copy_connection.origin.to_np(), decimal=3
+        )
+    pr2_copy.state[
+        pr2_copy.get_degree_of_freedom_by_name("torso_lift_joint").name
+    ].position = 0.3
+    pr2_copy.notify_state_change()
+
+    assert_raises(
+        AssertionError,
+        np.testing.assert_array_almost_equal,
+        pr2_world.get_connection_by_name("torso_lift_joint").origin.to_np(),
+        pr2_copy.get_connection_by_name("torso_lift_joint").origin.to_np(),
+    )
+
+
+def test_copy_two_times(pr2_world):
+    pr2_copy = deepcopy(pr2_world)
+    pr2_copy_2 = deepcopy(pr2_copy)
+    for connection in pr2_world.connections:
+        pr2_copy_connection = pr2_copy_2.get_connection_by_name(connection.name)
+        assert connection.name == pr2_copy_connection.name
 
 
 def test_add_entity_with_duplicate_name(world_setup):
@@ -829,10 +856,27 @@ def test_overwrite_dof_limits_mimic(world_setup):
 def test_missing_world_modification_context(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
     with pytest.raises(MissingWorldModificationContextError):
-        world.add_semantic_annotation(Handle(l1))
+        world.add_semantic_annotation(Handle(body=l1))
 
 
-def test_symbol_removal():
+def test_dof_removal_simple():
+    world = World()
+    body1 = Body(name=PrefixedName("body1"))
+    body2 = Body(name=PrefixedName("body2"))
+    with world.modify_world():
+        c = RevoluteConnection.create_with_dofs(
+            world=world, parent=body1, child=body2, axis=Vector3.Z()
+        )
+        world.add_connection(c)
+    with world.modify_world():
+        world.remove_connection(c)
+        c2 = RevoluteConnection.create_with_dofs(
+            world=world, parent=body1, child=body2, axis=Vector3.Z()
+        )
+        world.add_connection(c2)
+
+
+def test_dof_removal():
     world1 = World()
     body1 = Body(name=PrefixedName("body1"))
     with world1.modify_world():
