@@ -4,15 +4,7 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from types import NoneType
-from typing import (
-    Dict,
-    List,
-    Any,
-    ClassVar,
-    Type,
-    Optional,
-    Union,
-)
+from typing_extensions import Dict, List, Any, ClassVar, Type, Optional, Union, Self
 
 import numpy
 from mujoco_connector import MultiverseMujocoConnector
@@ -31,6 +23,7 @@ from ..callbacks.callback import ModelChangeCallback
 from ..datastructures.prefixed_name import PrefixedName
 from ..spatial_types.spatial_types import TransformationMatrix, Point3, Quaternion
 from ..world import World
+from ..world_description.actuators import Actuator
 from ..world_description.connections import (
     RevoluteConnection,
     PrismaticConnection,
@@ -394,7 +387,7 @@ class ConnectionConverter(EntityConverter, ABC):
         Converts a Connection object to a dictionary of joint properties for Multiverse simulator.
 
         :param entity: The Connection object to convert.
-        :return: A dictionary of joint properties, by default containing position and quaternion.
+        :return: A dictionary of joint properties.
         """
         return EntityConverter._convert(self, entity)
 
@@ -449,7 +442,7 @@ class Connection1DOFConverter(ConnectionConverter, ABC):
         Converts an ActiveConnection1DOF object to a dictionary of joint properties for Multiverse simulator.
 
         :param entity: The ActiveConnection1DOF object to convert.
-        :return: A dictionary of joint properties, including additional axis and range properties.
+        :return: A dictionary of joint properties, including additional axis, range, position, quaternion, armature, dry friction, and damping properties.
         """
         joint_props = ConnectionConverter._convert(self, entity)
         dofs = list(entity.dofs)
@@ -513,6 +506,151 @@ class Connection6DOFConverter(ConnectionConverter):
         joint_props = ConnectionConverter._convert(self, entity)
         assert len(entity.dofs) == 7, "Connection6DoF must have exactly six DOFs."
         return joint_props
+
+
+class ActuatorConverter(EntityConverter, ABC):
+    """
+    Converts an Actuator object to a dictionary of actuator properties for Multiverse simulator.
+    """
+
+    entity_type: ClassVar[Type[Actuator]] = Actuator
+    """
+    The type of the entity to convert.
+    """
+
+    def _convert(self, entity: Actuator, **kwargs) -> Dict[str, Any]:
+        """
+        Converts an Actuator object to a dictionary of joint properties for Multiverse simulator.
+
+        :param entity: The Actuator object to convert.
+        :return: A dictionary of actuator properties, by default containing list of DOF names.
+        """
+        actuator_props = EntityConverter._convert(self, entity)
+        actuator_props["dof_names"] = [dof.name.name for dof in entity.dofs]
+        return actuator_props
+
+
+@dataclass(eq=False)
+class MujocoActuator(Actuator):
+    """
+    Represents a MuJoCo-specific actuator in the world model.
+    For more information, see: https://mujoco.readthedocs.io/en/stable/XMLreference.html#actuator-general
+    """
+
+    activation_limited: mujoco.mjtLimited = mujoco.mjtLimited.mjLIMITED_AUTO
+    """
+    If mujoco.mjtLimited.mjLIMITED_TRUE, the internal state (activation) associated with this actuator is automatically clamped to actrange at runtime. 
+    If mujoco.mjtLimited.mjLIMITED_FALSE, activation clamping is disabled. 
+    If mujoco.mjtLimited.mjLIMITED_AUTO and autolimits is set in compiler, activation clamping will automatically be set to mujoco.mjtLimited.mjLIMITED_TRUE if activation_range is defined without explicitly setting this attribute to mujoco.mjtLimited.mjLIMITED_TRUE. 
+    """
+
+    activation_range: List[float] = field(default_factory=lambda: [0.0, 0.0])
+    """
+    Range for clamping the activation state. The first value must be no greater than the second value.
+    """
+
+    ctrl_limited: mujoco.mjtLimited = mujoco.mjtLimited.mjLIMITED_AUTO
+    """
+    If mujoco.mjtLimited.mjLIMITED_TRUE, the control input to this actuator is automatically clamped to ctrl_range at runtime. 
+    If mujoco.mjtLimited.mjLIMITED_FALSE, control input clamping is disabled. 
+    If mujoco.mjtLimited.mjLIMITED_AUTO and autolimits is set in compiler, control clamping will automatically be set to mujoco.mjtLimited.mjLIMITED_TRUE if ctrl_range is defined without explicitly setting this attribute to mujoco.mjtLimited.mjLIMITED_TRUE.
+    """
+
+    ctrl_range: List[float] = field(default_factory=lambda: [0.0, 0.0])
+    """
+    The range of the control input.
+    """
+
+    force_limited: mujoco.mjtLimited = mujoco.mjtLimited.mjLIMITED_AUTO
+    """
+    If mujoco.mjtLimited.mjLIMITED_TRUE, the force output of this actuator is automatically clamped to force_range at runtime. 
+    If mujoco.mjtLimited.mjLIMITED_FALSE, force clamping is disabled. 
+    If mujoco.mjtLimited.mjLIMITED_AUTO and autolimits is set in compiler, force clamping will automatically be set to mujoco.mjtLimited.mjLIMITED_TRUE if force_range is defined without explicitly setting this attribute to mujoco.mjtLimited.mjLIMITED_TRUE.
+    """
+
+    force_range: List[float] = field(default_factory=lambda: [0.0, 0.0])
+    """
+    Range for clamping the force output. The first value must be no greater than the second value.
+    """
+
+    bias_parameters: List[float] = field(default_factory=lambda: [0.0] * 10)
+    """
+    Bias parameters. The affine bias type uses three parameters.
+    """
+
+    bias_type: mujoco.mjtBias = mujoco.mjtBias.mjBIAS_NONE
+    """
+    The keywords have the following meaning:
+    mujoco.mjtBias.mjBIAS_NONE:     bias_term = 0
+    mujoco.mjtBias.mjBIAS_AFFINE:   bias_term = biasprm[0] + biasprm[1]*length + biasprm[2]*velocity
+    mujoco.mjtBias.mjBIAS_MUSCLE:   bias_term = mju_muscleBias(…)
+    mujoco.mjtBias.mjBIAS_USER:     bias_term = mjcb_act_bias(…)
+    """
+
+    dynamics_parameters: List[float] = field(default_factory=lambda: [1.0] + [0.0] * 9)
+    """
+    Activation dynamics parameters.
+    """
+
+    dynamics_type: mujoco.mjtDyn = mujoco.mjtDyn.mjDYN_NONE
+    """
+    Activation dynamics type for the actuator.
+    The keywords have the following meaning:
+    mujoco.mjtDyn.mjDYN_NONE:           No internal state
+    mujoco.mjtDyn.mjDYN_INTEGRATOR:     act_dot = ctrl
+    mujoco.mjtDyn.mjDYN_FILTER:         act_dot = (ctrl - act) / dynprm[0]
+    mujoco.mjtDyn.mjDYN_FILTEREXACT:    Like filter but with exact integration
+    mujoco.mjtDyn.mjDYN_MUSCLE:         act_dot = mju_muscleDynamics(…)
+    mujoco.mjtDyn.mjDYN_USER:           act_dot = mjcb_act_dyn(…)
+    """
+
+    gain_parameters: List[float] = field(default_factory=lambda: [0.0] * 10)
+    """
+    Gain parameters.
+    """
+
+    gain_type: mujoco.mjtGain = mujoco.mjtGain.mjGAIN_FIXED
+    """
+    The gain and bias together determine the output of the force generation mechanism, which is currently assumed to be affine.
+    The keywords have the following meaning:
+    mujoco.mjtGain.mjGAIN_FIXED:    gain_term = gainprm[0]
+    mujoco.mjtGain.mjGAIN_AFFINE:   gain_term = gain_prm[0] + gain_prm[1]*length + gain_prm[2]*velocity
+    mujoco.mjtGain.mjGAIN_MUSCLE:   gain_term = mju_muscleGain(…)
+    mujoco.mjtGain.mjGAIN_USER:     gain_term = mjcb_act_gain(…)
+    """
+
+    def to_json(self) -> Dict[str, Any]:
+        result = super().to_json()
+        result["activation_limited"] = self.activation_limited.value
+        result["activation_range"] = self.activation_range
+        result["ctrl_limited"] = self.ctrl_limited.value
+        result["ctrl_range"] = self.ctrl_range
+        result["force_limited"] = self.force_limited.value
+        result["force_range"] = self.force_range
+        result["bias_parameters"] = self.bias_parameters
+        result["bias_type"] = self.bias_type.value
+        result["dynamics_parameters"] = self.dynamics_parameters
+        result["dynamics_type"] = self.dynamics_type.value
+        result["gain_parameters"] = self.gain_parameters
+        result["gain_type"] = self.gain_type.value
+        return result
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        actuator = super()._from_json(data, **kwargs)
+        actuator.activation_limited = mujoco.mjtLimited(data["activation_limited"])
+        actuator.activation_range = data["activation_range"]
+        actuator.ctrl_limited = mujoco.mjtLimited(data["ctrl_limited"])
+        actuator.ctrl_range = data["ctrl_range"]
+        actuator.force_limited = mujoco.mjtLimited(data["force_limited"])
+        actuator.force_range = data["force_range"]
+        actuator.bias_parameters = data["bias_parameters"]
+        actuator.bias_type = mujoco.mjtBias(data["bias_type"])
+        actuator.dynamics_parameters = data["dynamics_parameters"]
+        actuator.dynamics_type = mujoco.mjtDyn(data["dynamics_type"])
+        actuator.gain_parameters = data["gain_parameters"]
+        actuator.gain_type = mujoco.mjtGain(data["gain_type"])
+        return actuator
 
 
 class MujocoConverter(EntityConverter, ABC): ...
@@ -669,6 +807,36 @@ class Mujoco6DOFJointConverter(MujocoJointConverter, Connection6DOFConverter):
     type: mujoco.mjtJoint = mujoco.mjtJoint.mjJNT_FREE
 
 
+class MujocoActuatorConverter(ActuatorConverter, ABC):
+
+    entity_type: ClassVar[Type[MujocoActuator]] = MujocoActuator
+
+    def _post_convert(
+        self, entity: MujocoActuator, actuator_props: Dict[str, Any], **kwargs
+    ) -> Dict[str, Any]:
+        return actuator_props
+
+
+class MujocoGeneralActuatorConverter(MujocoActuatorConverter, ActuatorConverter):
+
+    def _post_convert(
+        self, entity: MujocoActuator, actuator_props: Dict[str, Any], **kwargs
+    ) -> Dict[str, Any]:
+        actuator_props["actlimited"] = entity.activation_limited
+        actuator_props["actrange"] = entity.activation_range
+        actuator_props["ctrllimited"] = entity.ctrl_limited
+        actuator_props["ctrlrange"] = entity.ctrl_range
+        actuator_props["forcelimited"] = entity.force_limited
+        actuator_props["forcerange"] = entity.force_range
+        actuator_props["biasprm"] = entity.bias_parameters
+        actuator_props["biastype"] = entity.bias_type
+        actuator_props["dynprm"] = entity.dynamics_parameters
+        actuator_props["dyntype"] = entity.dynamics_type
+        actuator_props["gainprm"] = entity.gain_parameters
+        actuator_props["gaintype"] = entity.gain_type
+        return actuator_props
+
+
 @dataclass
 class MultiSimBuilder(ABC):
     """
@@ -707,6 +875,9 @@ class MultiSimBuilder(ABC):
 
         for connection in world.connections:
             self._build_connection(connection=connection)
+
+        for actuator in world.actuators:
+            self._build_actuator(actuator=actuator)
 
         self._end_build(file_path=file_path)
 
@@ -795,6 +966,15 @@ class MultiSimBuilder(ABC):
         Builds a connection in the simulator.
 
         :param connection: The connection to build.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def _build_actuator(self, actuator):
+        """
+        Builds an actuator in the simulator.
+
+        :param actuator: The actuator to build.
         """
         raise NotImplementedError
 
@@ -916,6 +1096,34 @@ class MujocoBuilder(MultiSimBuilder):
         assert (
             joint_spec is not None
         ), f"Failed to add joint {joint_name} to body {child_body_name}."
+
+    def _build_actuator(self, actuator: Actuator):
+        actuator_props = MujocoActuatorConverter.convert(actuator)
+        assert (
+            actuator_props is not None
+        ), f"Failed to convert actuator {actuator.name.name}."
+        dof_names = actuator_props.pop("dof_names")
+        assert len(dof_names) == 1, "Actuator must be associated with exactly one DOF."
+        dof_name = dof_names[0]
+        connection = next(
+            (
+                conn
+                for conn in actuator._world.connections
+                if dof_name in [dof.name.name for dof in conn.dofs]
+            ),
+            None,
+        )
+        assert connection is not None, f"Connection for DOF {dof_name} not found."
+        connection_name = connection.name.name
+        joint_spec = self._find_entity(
+            entity_type=mujoco.mjtObj.mjOBJ_JOINT, entity_name=connection_name
+        )
+        assert joint_spec is not None, f"Joint {connection_name} not found."
+        actuator_props["target"] = joint_spec.name
+        actuator_props["trntype"] = mujoco.mjtTrn.mjTRN_JOINT
+        actuator_name = actuator.name.name
+        actuator_spec = self.spec.add_actuator(**actuator_props)
+        assert actuator_spec is not None, f"Failed to add actuator {actuator_name}."
 
     def _build_mujoco_body(self, body: Union[Region, Body]):
         """
