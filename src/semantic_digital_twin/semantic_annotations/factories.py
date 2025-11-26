@@ -269,12 +269,11 @@ class HasDoorLikeFactories(ABC):
         with parent_world.modify_world():
 
             with double_door_world.modify_world():
-                for new_dof in new_dofs:
-                    parent_world.add_degree_of_freedom(new_dof)
 
-                for new_door_world, new_parent_C_left in zip(
-                    new_worlds, new_connections
+                for new_door_world, new_parent_C_left, new_dof in zip(
+                    new_worlds, new_connections, new_dofs
                 ):
+                    parent_world.add_degree_of_freedom(new_dof)
                     parent_world.merge_world(new_door_world, new_parent_C_left)
 
                 double_door_world.remove_semantic_annotation(double_door)
@@ -300,6 +299,7 @@ class HasDoorLikeFactories(ABC):
         double_door_T_door = double_door_C_door.parent_T_connection_expression
         parent_T_door = parent_T_double_door @ double_door_T_door
         old_dof = double_door_C_door.dof
+        door_world = double_door_world.move_branch_to_new_world(door_hinge_kse)
 
         new_dof = DegreeOfFreedom(
             name=old_dof.name,
@@ -317,7 +317,6 @@ class HasDoorLikeFactories(ABC):
             dof_id=new_dof.id,
         )
 
-        door_world = double_door_world.move_branch_to_new_world(door_hinge_kse)
         with double_door_world.modify_world(), door_world.modify_world():
             double_door_world.remove_semantic_annotation(door)
             door_world.add_semantic_annotation(door)

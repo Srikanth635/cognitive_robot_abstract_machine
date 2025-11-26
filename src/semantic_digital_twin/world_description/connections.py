@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from uuid import UUID
 
 import numpy as np
-from krrood.adapters.json_serializer import from_json
+from krrood.adapters.json_serializer import from_json, to_json
 from typing_extensions import List, TYPE_CHECKING, Union, Optional, Dict, Any, Self
 
 from .degree_of_freedom import DegreeOfFreedom
@@ -154,7 +154,7 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
         result["axis"] = self.axis.to_np().tolist()
         result["multiplier"] = self.multiplier
         result["offset"] = self.offset
-        result["id"] = self.dof_id.hex
+        result["id"] = to_json(self.dof_id)
         return result
 
     @classmethod
@@ -177,7 +177,7 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
             axis=cas.Vector3.from_iterable(data["axis"]),
             multiplier=data["multiplier"],
             offset=data["offset"],
-            dof_id=UUID(hex=data["id"]),
+            dof_id=from_json(data["id"]),
         )
 
     @classmethod
@@ -399,13 +399,13 @@ class Connection6DoF(Connection):
 
     def to_json(self) -> Dict[str, Any]:
         result = super().to_json()
-        result["x_id"] = self.x_id.hex
-        result["y_id"] = self.y_id.hex
-        result["z_id"] = self.z_id.hex
-        result["qx_id"] = self.qx_id.hex
-        result["qy_id"] = self.qy_id.hex
-        result["qz_id"] = self.qz_id.hex
-        result["qw_id"] = self.qw_id.hex
+        result["x_id"] = to_json(self.x_id)
+        result["y_id"] = to_json(self.y_id)
+        result["z_id"] = to_json(self.z_id)
+        result["qx_id"] = to_json(self.qx_id)
+        result["qy_id"] = to_json(self.qy_id)
+        result["qz_id"] = to_json(self.qz_id)
+        result["qw_id"] = to_json(self.qw_id)
         return result
 
     @classmethod
@@ -424,13 +424,13 @@ class Connection6DoF(Connection):
             parent_T_connection_expression=cas.TransformationMatrix.from_json(
                 data["parent_T_connection_expression"], **kwargs
             ),
-            x_id=UUID(hex=data["x_id"]),
-            y_id=UUID(hex=data["y_id"]),
-            z_id=UUID(hex=data["z_id"]),
-            qx_id=UUID(hex=data["qx_id"]),
-            qy_id=UUID(hex=data["qy_id"]),
-            qz_id=UUID(hex=data["qz_id"]),
-            qw_id=UUID(hex=data["qw_id"]),
+            x_id=from_json(data["x_id"]),
+            y_id=from_json(data["y_id"]),
+            z_id=from_json(data["z_id"]),
+            qx_id=from_json(data["qx_id"]),
+            qy_id=from_json(data["qy_id"]),
+            qz_id=from_json(data["qz_id"]),
+            qw_id=from_json(data["qw_id"]),
         )
 
     @property
@@ -628,13 +628,13 @@ class OmniDrive(ActiveConnection, HasUpdateState):
 
     def to_json(self) -> Dict[str, Any]:
         result = super().to_json()
-        result["x_id"] = self.x_id.hex
-        result["y_id"] = self.y_id.hex
-        result["roll_id"] = self.roll_id.hex
-        result["pitch_id"] = self.pitch_id.hex
-        result["yaw_id"] = self.yaw_id.hex
-        result["x_velocity_id"] = self.x_velocity_id.hex
-        result["y_velocity_id"] = self.y_velocity_id.hex
+        result["x_id"] = to_json(self.x_id)
+        result["y_id"] = to_json(self.y_id)
+        result["roll_id"] = to_json(self.roll_id)
+        result["pitch_id"] = to_json(self.pitch_id)
+        result["yaw_id"] = to_json(self.yaw_id)
+        result["x_velocity_id"] = to_json(self.x_velocity_id)
+        result["y_velocity_id"] = to_json(self.y_velocity_id)
         return result
 
     @classmethod
@@ -653,13 +653,13 @@ class OmniDrive(ActiveConnection, HasUpdateState):
             parent_T_connection_expression=cas.TransformationMatrix.from_json(
                 data["parent_T_connection_expression"], **kwargs
             ),
-            x_id=UUID(hex=data["x_id"]),
-            y_id=UUID(hex=data["y_id"]),
-            roll_id=UUID(hex=data["roll_id"]),
-            pitch_id=UUID(hex=data["pitch_id"]),
-            yaw_id=UUID(hex=data["yaw_id"]),
-            x_velocity_id=UUID(hex=data["x_velocity_id"]),
-            y_velocity_id=UUID(hex=data["y_velocity_id"]),
+            x_id=from_json(data["x_id"]),
+            y_id=from_json(data["y_id"]),
+            roll_id=from_json(data["roll_id"]),
+            pitch_id=from_json(data["pitch_id"]),
+            yaw_id=from_json(data["yaw_id"]),
+            x_velocity_id=from_json(data["x_velocity_id"]),
+            y_velocity_id=from_json(data["y_velocity_id"]),
         )
 
     @property

@@ -593,6 +593,7 @@ def test_remove_connection(world_setup):
         world.remove_connection(world.get_connection(r1, r2))
         new_connection = FixedConnection(r1, r2)
         world.add_connection(new_connection)
+        world.delete_orphaned_dofs()
 
     with pytest.raises(AssertionError):
         with world.modify_world():
@@ -913,6 +914,7 @@ def test_dof_removal_simple():
         world.add_connection(c)
     with world.modify_world():
         world.remove_connection(c)
+        world.delete_orphaned_dofs()
         c2 = RevoluteConnection.create_with_dofs(
             world=world, parent=body1, child=body2, axis=Vector3.Z()
         )
@@ -921,22 +923,23 @@ def test_dof_removal_simple():
 
 
 def test_dof_removal():
-    world1 = World()
+    world = World()
     body1 = Body(name=PrefixedName("body1"))
-    with world1.modify_world():
-        world1.add_body(body1)
+    with world.modify_world():
+        world.add_body(body1)
 
     world2 = World()
     body2 = Body(name=PrefixedName("body2"))
     with world2.modify_world():
         world2.add_body(body2)
 
-    world1.merge_world(world2)
+    world.merge_world(world2)
 
-    with world1.modify_world():
-        world1.remove_connection(body2.parent_connection)
-        c_root_bf = OmniDrive.create_with_dofs(parent=body1, child=body2, world=world1)
-        world1.add_connection(c_root_bf)
+    with world.modify_world():
+        world.remove_connection(body2.parent_connection)
+        world.delete_orphaned_dofs()
+        c_root_bf = OmniDrive.create_with_dofs(parent=body1, child=body2, world=world)
+        world.add_connection(c_root_bf)
 
 
 def test_set_static_collision_config():

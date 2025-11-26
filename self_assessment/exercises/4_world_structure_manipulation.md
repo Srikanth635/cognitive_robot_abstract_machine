@@ -84,6 +84,7 @@ assert len(world.connections) == 2, "The world should contain exactly two connec
 ## 2. Remove a connection and its child
 Your goal:
 - In a single `with world.modify_world():` block, remove the revolute connection and the now disconnected child body `body`.
+- Don't forget to have the world clean up the orphaned degrees of freedom afterwards.
 
 ```{code-cell} ipython3
 :tags: [exercise]
@@ -102,6 +103,7 @@ body = base_C_body.child
 with world.modify_world():
     world.remove_connection(base_C_body)
     world.remove_kinematic_structure_entity(body)
+    world.delete_orphaned_dofs()
 ```
 
 ```{code-cell} ipython3

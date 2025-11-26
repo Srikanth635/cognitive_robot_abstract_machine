@@ -62,21 +62,21 @@ class ConnectionModificationTestCase(unittest.TestCase):
         assert connection.dof.has_hardware_interface is True
 
     def test_many_modifications(self):
-        w = World()
+        world = World()
 
-        with w.modify_world():
+        with world.modify_world():
             b1 = Body(name=PrefixedName("b1"))
             b2 = Body(name=PrefixedName("b2"))
             b3 = Body(name=PrefixedName("b3"))
-            w.add_kinematic_structure_entity(b1)
-            w.add_kinematic_structure_entity(b2)
-            w.add_kinematic_structure_entity(b3)
-            w.add_connection(
-                Connection6DoF.create_with_dofs(parent=b1, child=b2, world=w)
+            world.add_kinematic_structure_entity(b1)
+            world.add_kinematic_structure_entity(b2)
+            world.add_kinematic_structure_entity(b3)
+            world.add_connection(
+                Connection6DoF.create_with_dofs(parent=b1, child=b2, world=world)
             )
             dof = DegreeOfFreedom(name=PrefixedName("dofyboi"))
-            w.add_degree_of_freedom(dof)
-            w.add_connection(
+            world.add_degree_of_freedom(dof)
+            world.add_connection(
                 PrismaticConnection(
                     parent=b2,
                     child=b3,
@@ -85,7 +85,7 @@ class ConnectionModificationTestCase(unittest.TestCase):
                 )
             )
 
-        modifications = w.get_world_model_manager().model_modification_blocks[-1]
+        modifications = world.get_world_model_manager().model_modification_blocks[-1]
         self.assertEqual(len(modifications.modifications), 13)
 
         add_body_modifications = [
@@ -122,14 +122,14 @@ class ConnectionModificationTestCase(unittest.TestCase):
         self.assertEqual(len(w2.bodies), 3)
         self.assertEqual(len(w2.connections), 2)
 
-        with w.modify_world():
-            w.remove_connection(w.connections[-1])
-            w.remove_kinematic_structure_entity(
-                w.get_kinematic_structure_entity_by_name("b3")
+        with world.modify_world():
+            world.remove_connection(world.connections[-1])
+            world.remove_kinematic_structure_entity(
+                world.get_kinematic_structure_entity_by_name("b3")
             )
+            world.delete_orphaned_dofs()
 
-        modifications = w.get_world_model_manager().model_modification_blocks[-1]
-        print(modifications.modifications)
+        modifications = world.get_world_model_manager().model_modification_blocks[-1]
         self.assertEqual(len(modifications.modifications), 3)
 
         modifications_copy = WorldModelModificationBlock.from_json(

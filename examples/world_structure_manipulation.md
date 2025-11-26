@@ -61,12 +61,12 @@ with world.modify_world():
     #    from base -> link around the Z axis of the base frame.
     #    We add the DoF first, then reference it from the connection so the
     #    world's DoF set and the connection's DoFs match.
-    joint = DegreeOfFreedom(name=PrefixedName("joint_z"))
-    world.add_degree_of_freedom(joint)
+    dof = DegreeOfFreedom(name=PrefixedName("joint_z"))
+    world.add_degree_of_freedom(dof)
     c_base_link = RevoluteConnection(
         parent=base,
         child=link,
-        dof_name=joint.name,
+        dof_id=dof.id,
         axis=Vector3.Z(reference_frame=base),
     )
     world.add_connection(c_base_link)
@@ -83,6 +83,7 @@ To keep the world a connected tree, we also have to remove the now-disconnected 
 with world.modify_world():
     world.remove_connection(c_base_link)
     world.remove_kinematic_structure_entity(link)
+    world.delete_orphaned_dofs()
 
 # After the modification block, the world is validated automatically.
 print(f"Final bodies: {[str(b.name) for b in world.bodies]}")
