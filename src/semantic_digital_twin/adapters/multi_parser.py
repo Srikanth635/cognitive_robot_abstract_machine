@@ -481,6 +481,8 @@ class MultiParser:
                     )
                 world.add_connection(joint)
 
+            world.delete_orphaned_dofs()
+
         return world
 
     def parse_joints(self, body_builder: BodyBuilder, world: World) -> list[Connection]:
