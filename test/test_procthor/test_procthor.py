@@ -4,7 +4,7 @@ import unittest
 from dataclasses import asdict
 
 import numpy as np
-from sqlalchemy import create_engine
+from krrood.ormatic.utils import create_engine
 from sqlalchemy.orm import Session
 
 from semantic_digital_twin.adapters.procthor.procthor_parser import (

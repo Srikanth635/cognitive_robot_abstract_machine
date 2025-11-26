@@ -7,7 +7,7 @@ from typing import Optional
 
 import numpy as np
 import sqlalchemy
-from krrood.ormatic.utils import drop_database
+from krrood.ormatic.utils import drop_database, create_engine
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -121,7 +121,7 @@ def test_state_synchronization_world_model_change_after_init(rclpy_node):
 
 def test_model_reload(rclpy_node):
 
-    engine = sqlalchemy.create_engine(
+    engine = create_engine(
         "sqlite+pysqlite:///file::memory:?cache=shared",
         connect_args={"check_same_thread": False, "uri": True},
     )
