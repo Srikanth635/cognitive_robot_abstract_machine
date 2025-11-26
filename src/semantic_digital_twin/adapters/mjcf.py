@@ -12,7 +12,6 @@ from ..spatial_types import TransformationMatrix, RotationMatrix, Point3
 from ..spatial_types import spatial_types as cas
 from ..spatial_types.derivatives import DerivativeMap
 from ..world import World, Body
-from ..world_description.actuators import MujocoActuator
 from ..world_description.connection_properties import JointDynamics
 from ..world_description.connections import (
     RevoluteConnection,
@@ -37,6 +36,7 @@ from ..world_description.inertial_properties import (
     PrincipalAxes,
 )
 from ..world_description.shape_collection import ShapeCollection
+from .multi_sim import MujocoActuator
 
 
 @dataclass
