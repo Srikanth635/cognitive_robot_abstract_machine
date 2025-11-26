@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import numpy
 from typing_extensions import Optional, Set, List
 
+from .multi_sim import MujocoActuator
 from ..exceptions import WorldEntityNotFoundError
 from ..spatial_types.spatial_types import (
     TransformationMatrix,
@@ -12,7 +13,7 @@ from ..spatial_types.spatial_types import (
     RotationMatrix,
     Point3,
 )
-from ..world_description.actuators import Actuator, MujocoActuator
+from ..world_description.actuators import Actuator
 from ..world_description.geometry import (
     Box,
     Sphere,
