@@ -41,9 +41,9 @@ class Actuator(WorldEntity, SubclassJSONSerializer):
     @property
     def dofs(self) -> List[DegreeOfFreedom]:
         """
-        Returns a copy of the list of degrees of freedom associated with this actuator.
+        Returns the degrees of freedom associated with this actuator.
         """
-        return self._dofs[:]
+        return self._dofs
 
     def add_dof(self, dof: DegreeOfFreedom) -> None:
         """
