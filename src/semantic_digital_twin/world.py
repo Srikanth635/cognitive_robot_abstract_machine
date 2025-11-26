@@ -1843,8 +1843,16 @@ class World:
                     visual=body.visual,
                     collision=body.collision,
                     name=body.name,
+                    id=body.id,
                 )
                 new_world.add_kinematic_structure_entity(new_body)
+            for region in self.regions:
+                new_region = Region(
+                    name=region.name,
+                    area=region.area,
+                    id=region.id,
+                )
+                new_world.add_kinematic_structure_entity(new_region)
             for dof in self.degrees_of_freedom:
                 new_dof = DegreeOfFreedom(
                     name=dof.name,
@@ -1857,6 +1865,9 @@ class World:
             for connection in self.connections:
                 new_connection = connection.copy_for_world(new_world)
                 new_world.add_connection(new_connection)
+            for semantic_annotation in self.semantic_annotations:
+                new_semantic_annotation = copy(semantic_annotation)
+                new_world.add_semantic_annotation(new_semantic_annotation)
         return new_world
 
     # %% Associations
