@@ -12,7 +12,7 @@ class MjcfParserTestCase(unittest.TestCase):
     )
     table_xml = os.path.join(mjcf_dir, "table.xml")
     kitchen_xml = os.path.join(mjcf_dir, "kitchen-small.xml")
-    apartment_xml = os.path.join(mjcf_dir, "apartment.xml")
+    apartment_xml = os.path.join(mjcf_dir, "iai_apartment.xml")
     pr2_xml = os.path.join(mjcf_dir, "pr2_kinematic_tree.xml")
 
     def setUp(self):
