@@ -466,8 +466,8 @@ class Connection1DOFConverter(ConnectionConverter, ABC):
         dofs = list(entity.dofs)
         assert len(dofs) == 1, "ActiveConnection1DOF must have exactly one DOF."
         dof = dofs[0]
-        child_to_connection_transform = entity.connection_T_child_expression.inverse()
-        px, py, pz, qw, qx, qy, qz = cas_pose_to_list(child_to_connection_transform)
+        child_T_connection_transform = entity.connection_T_child_expression.inverse()
+        px, py, pz, qw, qx, qy, qz = cas_pose_to_list(child_T_connection_transform)
         joint_pos = [px, py, pz]
         joint_quat = [qw, qx, qy, qz]
         joint_props.update(
