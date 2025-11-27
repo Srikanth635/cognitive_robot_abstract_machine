@@ -166,6 +166,39 @@ class ConnectionModificationTestCase(unittest.TestCase):
         self.assertNotIn(v1, w.semantic_annotations)
         self.assertNotIn(v2, w.semantic_annotations)
 
+    def test_duplicate_name_modification_serialization(self):
+        w = World()
+        with w.modify_world():
+            b1 = Body(name=PrefixedName("b1"))
+            w.add_kinematic_structure_entity(b1)
+
+            b2 = Body(name=PrefixedName("b1"))  # Duplicate name
+            w.add_kinematic_structure_entity(b2)
+
+            b3 = Body(name=PrefixedName("b3"))
+            w.add_kinematic_structure_entity(b3)
+
+            c1 = Connection6DoF.create_with_dofs(name=PrefixedName("name1"),parent=b1, child=b2, world=w)
+            w.add_connection(c1)
+            c2 = Connection6DoF.create_with_dofs(name=PrefixedName("name1"),parent=b1, child=b3, world=w)
+            w.add_connection(c2)
+
+
+        modifications = w.get_world_model_manager().model_modification_blocks[-1]
+        tracker = KinematicStructureEntityKwargsTracker()
+        kwargs = tracker.create_kwargs()
+
+        modifications_copy = WorldModelModificationBlock.from_json(
+            modifications.to_json(), **kwargs
+        )
+
+        w2 = World()
+        with w2.modify_world():
+            modifications_copy.apply(w2)
+        self.assertEqual(len(w2.bodies), 3)
+        self.assertEqual(len(w2.connections), 2)
+
+
 
 if __name__ == "__main__":
     unittest.main()
