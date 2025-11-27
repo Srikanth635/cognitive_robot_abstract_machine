@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Union
+from typing import Union, Iterator
 from uuid import UUID
 
 from typing_extensions import MutableMapping, List, Dict, Self, TYPE_CHECKING
@@ -10,6 +10,11 @@ import numpy as np
 from .degree_of_freedom import DegreeOfFreedom
 from ..callbacks.callback import StateChangeCallback
 from ..datastructures.prefixed_name import PrefixedName
+from ..exceptions import (
+    DofNotInWorldStateError,
+    IncorrectWorldStateValueShapeError,
+    MismatchingCommandLengthError,
+)
 from ..spatial_types.derivatives import Derivatives
 from ..spatial_types import spatial_types as cas
 
@@ -118,33 +123,28 @@ class WorldState(MutableMapping):
         else:
             self.data = np.hstack((self.data, new_col))
 
-    def __getitem__(self, dof_or_uuid: Union[DegreeOfFreedom, UUID]) -> WorldStateView:
-        dof_id = dof_or_uuid.id if isinstance(dof_or_uuid, DegreeOfFreedom) else dof_or_uuid
+    def __getitem__(self, dof_id: UUID) -> WorldStateView:
         if dof_id not in self._index:
-            self._add_dof(dof_id)
+            raise DofNotInWorldStateError(dof_id)
         idx = self._index[dof_id]
         return WorldStateView(self.data[:, idx])
 
     def __setitem__(
-        self,dof_or_uuid: Union[DegreeOfFreedom, UUID], value: np.ndarray | WorldStateView
+        self, dof_id: UUID, value: np.ndarray | WorldStateView
     ) -> None:
         if isinstance(value, WorldStateView):
             value = value.data
         arr = np.asarray(value, dtype=float)
         if arr.shape != (4,):
-            raise ValueError(
-                f"Value for '{dof_or_uuid}' must be length-4 array (pos, vel, acc, jerk)."
-            )
-        dof_id = dof_or_uuid.id if isinstance(dof_or_uuid, DegreeOfFreedom) else dof_or_uuid
+            raise IncorrectWorldStateValueShapeError(dof_id)
         if dof_id not in self._index:
             self._add_dof(dof_id)
         idx = self._index[dof_id]
         self.data[:, idx] = arr
 
-    def __delitem__(self, dof_or_uuid: Union[DegreeOfFreedom, UUID]) -> None:
-        dof_id = dof_or_uuid.id if isinstance(dof_or_uuid, DegreeOfFreedom) else dof_or_uuid
+    def __delitem__(self, dof_id: UUID) -> None:
         if dof_id not in self._index:
-            raise KeyError(dof_id)
+            raise DofNotInWorldStateError(dof_id)
         idx = self._index.pop(dof_id)
         self._ids.pop(idx)
         # remove column from data
@@ -153,7 +153,7 @@ class WorldState(MutableMapping):
         for i, nm in enumerate(self._ids):
             self._index[nm] = i
 
-    def __iter__(self) -> iter:
+    def __iter__(self) -> Iterator[UUID]:
         return iter(self._ids)
 
     def __len__(self) -> int:
@@ -256,6 +256,7 @@ class WorldState(MutableMapping):
         if upper is not None:
             initial_position = min(upper, initial_position)
 
+        self._add_dof(dof.id)
         self[dof.id].position = initial_position
 
     def get_variables(self) -> List[cas.FloatVariable]:
@@ -301,9 +302,11 @@ class WorldState(MutableMapping):
             applied.
         :return:
         """
-        assert len(commands) == len(
-            self._ids
-        ), f"Commands length {len(commands)} does not match number of free variables {len(self._ids)}."
+        if len(commands) != len(self._ids):
+            raise MismatchingCommandLengthError(
+                expected_length=len(self._ids),
+                actual_length=len(commands),
+            )
 
         self.set_derivative(derivative, commands)
 

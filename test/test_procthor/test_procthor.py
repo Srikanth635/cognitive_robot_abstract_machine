@@ -259,7 +259,7 @@ class ProcTHORTestCase(unittest.TestCase):
         )
 
         # Create database engine and session
-        engine = create_engine(f"mysql+pymysql://{semantic_digital_twin_database_uri}")
+        engine = create_engine(f"{semantic_digital_twin_database_uri}")
         session = Session(engine)
 
         procthor_object = ProcthorObject(object_dict=objects, session=session)
@@ -288,7 +288,7 @@ class ProcTHORTestCase(unittest.TestCase):
         )
 
         # Create database engine and session
-        engine = create_engine(f"mysql+pymysql://{semantic_digital_twin_database_uri}")
+        engine = create_engine(f"{semantic_digital_twin_database_uri}")
         session = Session(engine)
 
         procthor_object = ProcthorObject(object_dict=objects, session=session)
@@ -302,7 +302,7 @@ class ProcTHORTestCase(unittest.TestCase):
         )
 
         # Create database engine and session
-        engine = create_engine(f"mysql+pymysql://{semantic_digital_twin_database_uri}")
+        engine = create_engine(f"{semantic_digital_twin_database_uri}")
         session = Session(engine)
 
         house = self.house_json

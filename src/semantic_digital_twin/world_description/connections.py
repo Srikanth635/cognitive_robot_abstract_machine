@@ -141,7 +141,7 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
 
     dof_id: UUID = field(kw_only=True)
     """
-    Hash of a Degree of freedom to control movement along the axis.
+    UUID of a Degree of freedom to control movement along the axis.
     """
 
     dynamics: JointDynamics = field(default_factory=JointDynamics)
@@ -514,23 +514,22 @@ class Connection6DoF(Connection):
         """
         name = name or cls._generate_default_name(parent=parent, child=child)
 
-        with world.modify_world():
-            stringified_name = str(name)
-            x = DegreeOfFreedom(name=PrefixedName("x", stringified_name))
-            world.add_degree_of_freedom(x)
-            y = DegreeOfFreedom(name=PrefixedName("y", stringified_name))
-            world.add_degree_of_freedom(y)
-            z = DegreeOfFreedom(name=PrefixedName("z", stringified_name))
-            world.add_degree_of_freedom(z)
-            qx = DegreeOfFreedom(name=PrefixedName("qx", stringified_name))
-            world.add_degree_of_freedom(qx)
-            qy = DegreeOfFreedom(name=PrefixedName("qy", stringified_name))
-            world.add_degree_of_freedom(qy)
-            qz = DegreeOfFreedom(name=PrefixedName("qz", stringified_name))
-            world.add_degree_of_freedom(qz)
-            qw = DegreeOfFreedom(name=PrefixedName("qw", stringified_name))
-            world.add_degree_of_freedom(qw)
-            world.state[qw.id].position = 1.0
+        stringified_name = str(name)
+        x = DegreeOfFreedom(name=PrefixedName("x", stringified_name))
+        world.add_degree_of_freedom(x)
+        y = DegreeOfFreedom(name=PrefixedName("y", stringified_name))
+        world.add_degree_of_freedom(y)
+        z = DegreeOfFreedom(name=PrefixedName("z", stringified_name))
+        world.add_degree_of_freedom(z)
+        qx = DegreeOfFreedom(name=PrefixedName("qx", stringified_name))
+        world.add_degree_of_freedom(qx)
+        qy = DegreeOfFreedom(name=PrefixedName("qy", stringified_name))
+        world.add_degree_of_freedom(qy)
+        qz = DegreeOfFreedom(name=PrefixedName("qz", stringified_name))
+        world.add_degree_of_freedom(qz)
+        qw = DegreeOfFreedom(name=PrefixedName("qw", stringified_name))
+        world.add_degree_of_freedom(qw)
+        world.state[qw.id].position = 1.0
 
         return cls(
             parent=parent,
@@ -747,45 +746,43 @@ class OmniDrive(ActiveConnection, HasUpdateState):
         :return: An instance of the class with the auto-generated DOFs incorporated.
         """
         name = name or cls._generate_default_name(parent=parent, child=child)
-        with world.modify_world():
-            stringified_name = str(name)
-            lower_translation_limits = DerivativeMap()
-            lower_translation_limits.velocity = -translation_velocity_limits
-            upper_translation_limits = DerivativeMap()
-            upper_translation_limits.velocity = translation_velocity_limits
-            lower_rotation_limits = DerivativeMap()
-            lower_rotation_limits.velocity = -rotation_velocity_limits
-            upper_rotation_limits = DerivativeMap()
-            upper_rotation_limits.velocity = rotation_velocity_limits
+        stringified_name = str(name)
+        lower_translation_limits = DerivativeMap()
+        lower_translation_limits.velocity = -translation_velocity_limits
+        upper_translation_limits = DerivativeMap()
+        upper_translation_limits.velocity = translation_velocity_limits
+        lower_rotation_limits = DerivativeMap()
+        lower_rotation_limits.velocity = -rotation_velocity_limits
+        upper_rotation_limits = DerivativeMap()
+        upper_rotation_limits.velocity = rotation_velocity_limits
 
-            with world.modify_world():
-                x = DegreeOfFreedom(name=PrefixedName("x", stringified_name))
-                world.add_degree_of_freedom(x)
-                y = DegreeOfFreedom(name=PrefixedName("y", stringified_name))
-                world.add_degree_of_freedom(y)
-                roll = DegreeOfFreedom(name=PrefixedName("roll", stringified_name))
-                world.add_degree_of_freedom(roll)
-                pitch = DegreeOfFreedom(name=PrefixedName("pitch", stringified_name))
-                world.add_degree_of_freedom(pitch)
-                yaw = DegreeOfFreedom(
-                    name=PrefixedName("yaw", stringified_name),
-                    lower_limits=lower_rotation_limits,
-                    upper_limits=upper_rotation_limits,
-                )
-                world.add_degree_of_freedom(yaw)
+        x = DegreeOfFreedom(name=PrefixedName("x", stringified_name))
+        world.add_degree_of_freedom(x)
+        y = DegreeOfFreedom(name=PrefixedName("y", stringified_name))
+        world.add_degree_of_freedom(y)
+        roll = DegreeOfFreedom(name=PrefixedName("roll", stringified_name))
+        world.add_degree_of_freedom(roll)
+        pitch = DegreeOfFreedom(name=PrefixedName("pitch", stringified_name))
+        world.add_degree_of_freedom(pitch)
+        yaw = DegreeOfFreedom(
+            name=PrefixedName("yaw", stringified_name),
+            lower_limits=lower_rotation_limits,
+            upper_limits=upper_rotation_limits,
+        )
+        world.add_degree_of_freedom(yaw)
 
-                x_vel = DegreeOfFreedom(
-                    name=PrefixedName("x_vel", stringified_name),
-                    lower_limits=lower_translation_limits,
-                    upper_limits=upper_translation_limits,
-                )
-                world.add_degree_of_freedom(x_vel)
-                y_vel = DegreeOfFreedom(
-                    name=PrefixedName("y_vel", stringified_name),
-                    lower_limits=lower_translation_limits,
-                    upper_limits=upper_translation_limits,
-                )
-                world.add_degree_of_freedom(y_vel)
+        x_vel = DegreeOfFreedom(
+            name=PrefixedName("x_vel", stringified_name),
+            lower_limits=lower_translation_limits,
+            upper_limits=upper_translation_limits,
+        )
+        world.add_degree_of_freedom(x_vel)
+        y_vel = DegreeOfFreedom(
+            name=PrefixedName("y_vel", stringified_name),
+            lower_limits=lower_translation_limits,
+            upper_limits=upper_translation_limits,
+        )
+        world.add_degree_of_freedom(y_vel)
 
         return cls(
             parent=parent,

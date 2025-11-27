@@ -83,7 +83,6 @@ To keep the world a connected tree, we also have to remove the now-disconnected 
 with world.modify_world():
     world.remove_connection(c_base_link)
     world.remove_kinematic_structure_entity(link)
-    world.delete_orphaned_dofs()
 
 # After the modification block, the world is validated automatically.
 print(f"Final bodies: {[str(b.name) for b in world.bodies]}")

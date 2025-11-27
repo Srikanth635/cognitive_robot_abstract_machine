@@ -88,7 +88,7 @@ class WorldStateUpdate(Message):
     def to_json(self) -> Dict[str, Any]:
         return {
             **super().to_json(),
-            "ids": [to_json(_id) for _id in self.ids],
+            "ids": to_json(self.ids),
             "states": list(self.states),
         }
 
@@ -96,9 +96,7 @@ class WorldStateUpdate(Message):
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         return cls(
             meta_data=MetaData.from_json(data["meta_data"], **kwargs),
-            ids=[
-                from_json(_id) for _id in data["ids"]
-            ],
+            ids=from_json(data["ids"]),
             states=data["states"],
         )
 
@@ -179,9 +177,9 @@ class WorldModelSnapshot(SubclassJSONSerializer):
     def to_json(self) -> Dict[str, Any]:
         return {
             **super().to_json(),
-            "modifications": [m.to_json() for m in self.modifications],
+            "modifications": to_json(self.modifications),
             "state": {
-                "ids": [to_json(_id) for _id in self.ids],
+                "ids": to_json(self.ids),
                 "states": list(self.states),
             },
         }
@@ -194,8 +192,6 @@ class WorldModelSnapshot(SubclassJSONSerializer):
                 WorldModelModificationBlock.from_json(m, **kwargs)
                 for m in data.get("modifications", [])
             ],
-            ids=[
-                from_json(_id) for _id in state.get("ids", [])
-            ],
+            ids=from_json(state["ids"]),
             states=state.get("states", []),
         )

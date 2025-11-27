@@ -593,7 +593,6 @@ def test_remove_connection(world_setup):
         world.remove_connection(world.get_connection(r1, r2))
         new_connection = FixedConnection(r1, r2)
         world.add_connection(new_connection)
-        world.delete_orphaned_dofs()
 
     with pytest.raises(AssertionError):
         with world.modify_world():
@@ -914,7 +913,7 @@ def test_dof_removal_simple():
         world.add_connection(c)
     with world.modify_world():
         world.remove_connection(c)
-        world.delete_orphaned_dofs()
+
         c2 = RevoluteConnection.create_with_dofs(
             world=world, parent=body1, child=body2, axis=Vector3.Z()
         )
@@ -937,7 +936,7 @@ def test_dof_removal():
 
     with world.modify_world():
         world.remove_connection(body2.parent_connection)
-        world.delete_orphaned_dofs()
+
         c_root_bf = OmniDrive.create_with_dofs(parent=body1, child=body2, world=world)
         world.add_connection(c_root_bf)
 

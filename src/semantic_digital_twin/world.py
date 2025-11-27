@@ -162,6 +162,7 @@ class WorldModelUpdateContextManager:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.first:
+            self.world.delete_orphaned_dofs()
             self.world.get_world_model_manager().model_modification_blocks.append(
                 self.world.get_world_model_manager().current_model_modification_block
             )
@@ -654,8 +655,8 @@ class World:
 
         :param connection: The connection to add.
         """
-        logger.info(
-            f"Trying to add connection with name {connection.name} between parent {connection.parent.name} and child {connection.child.name}"
+        logger.debug(
+            f"Adding connection with name {connection.name} between parent {connection.parent.name} and child {connection.child.name}"
         )
         self._raise_error_if_belongs_to_other_world(connection)
         if not self.is_connection_in_world(connection):
@@ -746,17 +747,15 @@ class World:
 
     def add_semantic_annotation(self, semantic_annotation: SemanticAnnotation) -> None:
         """
-        Adds a semantic annotation to the current list of semantic annotations if it doesn't already exist. Ensures
-        that the `semantic_annotation` is associated with the current instance and maintains the
-        integrity of unique semantic annotation names.
+        Adds a semantic annotation to the current list of semantic annotations if it doesn't already exist
 
         :param semantic_annotation: The semantic annotation instance to be added. Its name must be unique within
             the current context.
 
         :raises AddingAnExistingSemanticAnnotationError: If the semantic annotation already exists
         """
-        logger.info(
-            f"Trying to add semantic annotation with name {semantic_annotation.name}"
+        logger.debug(
+            f"Adding semantic annotation with name {semantic_annotation.name}"
         )
         self._raise_error_if_belongs_to_other_world(semantic_annotation)
         if not self.is_semantic_annotation_in_world(semantic_annotation):
@@ -765,18 +764,15 @@ class World:
     def add_semantic_annotations(
         self,
         semantic_annotations: List[SemanticAnnotation],
-        skip_duplicates: bool = False,
     ) -> None:
         """
-        Adds a list of semantic annotations to the current list of semantic annotations if they don't already exist. Ensures
-        that each `semantic_annotation` is associated with the current instance and maintains the
-        integrity of unique semantic annotation names.
+        Adds a list of semantic annotations to the current list of semantic annotations if they don't already exist.
         :param semantic_annotations: The list of semantic annotations to be added.
         :param skip_duplicates: Whether to raise an error or not when a semantic annotation already exists.
         """
         for semantic_annotation in semantic_annotations:
             self.add_semantic_annotation(
-                semantic_annotation, skip_duplicates=skip_duplicates
+                semantic_annotation,
             )
 
     @atomic_world_modification(modification=AddSemanticAnnotationModification)
@@ -848,12 +844,15 @@ class World:
 
     @atomic_world_modification(modification=RemoveConnectionModification)
     def _remove_connection(self, connection: Connection) -> None:
-        try:
-            self.kinematic_structure.remove_edge(
-                connection.parent.index, connection.child.index
-            )
-        except (NoEdgeBetweenNodes, TypeError):
-            pass
+        parent_index = connection.parent.index
+        child_index = connection.child.index
+        if parent_index is not None and child_index is not None:
+            try:
+                self.kinematic_structure.remove_edge(
+                    parent_index, child_index
+                )
+            except NoEdgeBetweenNodes:
+                pass
         connection.remove_from_world()
 
     def remove_kinematic_structure_entity(
@@ -1241,7 +1240,6 @@ class World:
 
             if root_connection:
                 self.add_connection(root_connection)
-            self.delete_orphaned_dofs()
 
     def _merge_dofs_with_state_of_world(self, other: World):
         old_state = deepcopy(other.state)
@@ -1418,7 +1416,6 @@ class World:
                 new_world.remove_connection(connection)
                 new_world.add_connection(connection)
             self.remove_connection(root_connection)
-            self.delete_orphaned_dofs()
 
         return new_world
 

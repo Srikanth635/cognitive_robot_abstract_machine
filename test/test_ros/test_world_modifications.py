@@ -127,7 +127,6 @@ class ConnectionModificationTestCase(unittest.TestCase):
             world.remove_kinematic_structure_entity(
                 world.get_kinematic_structure_entity_by_name("b3")
             )
-            world.delete_orphaned_dofs()
 
         modifications = world.get_world_model_manager().model_modification_blocks[-1]
         self.assertEqual(len(modifications.modifications), 3)
