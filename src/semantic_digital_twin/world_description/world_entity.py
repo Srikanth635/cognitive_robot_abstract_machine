@@ -57,9 +57,12 @@ id_generator = IDGenerator()
 
 
 @dataclass(eq=False)
-class WorldEntity(Symbol, ABC):
+class WorldEntity(Symbol):
     """
     A class representing an entity in the world.
+
+    .. warning::
+        The WorldEntity class is not meant to be instantiated directly.
     """
 
     _world: Optional[World] = field(default=None, repr=False, kw_only=True, hash=False)
@@ -95,8 +98,18 @@ class WorldEntity(Symbol, ABC):
         self._world = None
 
 @dataclass(eq=False)
-class WorldEntityWithID(WorldEntity, SubclassJSONSerializer, ABC):
+class WorldEntityWithID(WorldEntity, SubclassJSONSerializer):
+    """
+    A WorldEntity that has a unique identifier.
+
+    .. warning::
+        The WorldEntity class is not meant to be instantiated directly.
+    """
+
     id: UUID = field(default_factory=uuid4)
+    """
+    A unique identifier for this world entity.
+    """
 
     def __hash__(self):
         return hash(self.id)

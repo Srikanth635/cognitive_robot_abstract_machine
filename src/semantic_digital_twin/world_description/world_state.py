@@ -132,13 +132,13 @@ class WorldState(MutableMapping):
     def __setitem__(
         self, dof_id: UUID, value: np.ndarray | WorldStateView
     ) -> None:
+        if dof_id not in self._index:
+            raise DofNotInWorldStateError(dof_id)
         if isinstance(value, WorldStateView):
             value = value.data
         arr = np.asarray(value, dtype=float)
         if arr.shape != (4,):
             raise IncorrectWorldStateValueShapeError(dof_id)
-        if dof_id not in self._index:
-            self._add_dof(dof_id)
         idx = self._index[dof_id]
         self.data[:, idx] = arr
 

@@ -21,6 +21,7 @@ from semantic_digital_twin.exceptions import (
     DuplicateKinematicStructureEntityError,
     UsageError,
     MissingWorldModificationContextError,
+    DofNotInWorldStateError,
 )
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.derivatives import Derivatives, DerivativeMap
@@ -648,6 +649,18 @@ def test_copy_world_state(world_setup):
 
     assert world.get_connection(r1, r2).position == 1.0
     assert world_copy.get_connection(r1, r2).position == 1.0
+
+def test_world_state_item_not_set_yet(world_setup):
+    world, l1, l2, bf, r1, r2 = world_setup
+    new_dof = DegreeOfFreedom(name=PrefixedName("new_dof"))
+
+    with pytest.raises(DofNotInWorldStateError):
+        world.state[new_dof.id] = np.asarray([0, 0, 0, 0])
+
+    with world.modify_world():
+        world.add_degree_of_freedom(new_dof)
+        world.state[new_dof.id] = np.asarray([1, 0, 0, 0])
+        assert world.state[new_dof.id].position == 1.0
 
 
 def test_match_index(world_setup):
