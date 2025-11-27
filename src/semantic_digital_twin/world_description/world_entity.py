@@ -18,6 +18,8 @@ import trimesh.boolean
 from krrood.adapters.json_serializer import (
     SubclassJSONSerializer,
     JSON_TYPE_NAME,
+    to_json,
+    from_json,
 )
 from krrood.entity_query_language.predicate import Symbol
 from scipy.stats import geom
@@ -87,7 +89,7 @@ class WorldEntity(Symbol):
 
 
 @dataclass
-class CollisionCheckingConfig:
+class CollisionCheckingConfig(SubclassJSONSerializer):
     buffer_zone_distance: Optional[float] = None
     """
     Distance defining a buffer zone around the entity. The buffer zone represents a soft boundary where
@@ -110,6 +112,22 @@ class CollisionCheckingConfig:
     Maximum number of other bodies this body should avoid simultaneously.
     If more bodies than this are in the buffer zone, only the closest ones are avoided.
     """
+
+    def to_json(self) -> Dict[str, Any]:
+        json_data = super().to_json()
+        for field_ in fields(self):
+            value = getattr(self, field_.name)
+            json_data[field_.name] = to_json(value)
+        return json_data
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        cls_kwargs = {}
+        for field_name, json_field_data in data.items():
+            if field_name == JSON_TYPE_NAME:
+                continue
+            cls_kwargs[field_name] = from_json(json_field_data)
+        return cls(**cls_kwargs)
 
 
 @dataclass(unsafe_hash=True, eq=False)
@@ -393,6 +411,7 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
         result["name"] = self.name.to_json()
         result["collision"] = self.collision.to_json()
         result["visual"] = self.visual.to_json()
+        result["collision_config"] = to_json(self.collision_config)
         return result
 
     @classmethod
@@ -414,6 +433,7 @@ class Body(KinematicStructureEntity, SubclassJSONSerializer):
 
         result.collision = collision
         result.visual = visual
+        result.collision_config = from_json(data["collision_config"])
 
         return result
 
