@@ -173,14 +173,14 @@ def test_model_synchronization_body_only(rclpy_node):
 
     with w1.modify_world():
         new_body = Body(name=PrefixedName("b3"))
+        b3_id = new_body.id
         w1.add_kinematic_structure_entity(new_body)
-        assert len(w1.kinematic_structure_entities) == 1
 
     time.sleep(0.2)
     assert len(w1.kinematic_structure_entities) == 1
     assert len(w2.kinematic_structure_entities) == 1
 
-    assert w2.get_kinematic_structure_entity_by_name("b3")
+    assert w2.get_kinematic_structure_entity_by_id(b3_id)
 
     synchronizer_1.close()
     synchronizer_2.close()
@@ -245,15 +245,15 @@ def test_model_synchronization_merge_full_world(rclpy_node):
     def wait_for_sync(timeout=3.0, interval=0.05):
         start = time.time()
         while time.time() - start < timeout:
-            body_names_1 = [body.name for body in w1.kinematic_structure_entities]
-            body_names_2 = [body.name for body in w2.kinematic_structure_entities]
-            if body_names_1 == body_names_2:
-                return body_names_1, body_names_2
+            body_ids_1 = [body.id for body in w1.kinematic_structure_entities]
+            body_ids_2 = [body.id for body in w2.kinematic_structure_entities]
+            if body_ids_1 == body_ids_2:
+                return body_ids_1, body_ids_2
             time.sleep(interval)
 
-        body_names_1 = [body.name for body in w1.kinematic_structure_entities]
-        body_names_2 = [body.name for body in w2.kinematic_structure_entities]
-        return body_names_1, body_names_2
+        body_ids_1 = [body.id for body in w1.kinematic_structure_entities]
+        body_ids_2 = [body.id for body in w2.kinematic_structure_entities]
+        return body_ids_1, body_ids_2
 
     with w1.modify_world():
         new_body = Body(name=PrefixedName("b3"))
@@ -262,14 +262,14 @@ def test_model_synchronization_merge_full_world(rclpy_node):
     fixed_connection = FixedConnection(child=new_body, parent=pr2_world.root)
     w1.merge_world(pr2_world, fixed_connection)
 
-    body_names_1, body_names_2 = wait_for_sync()
+    body_ids_1, body_ids_2 = wait_for_sync()
 
-    assert body_names_1 == body_names_2
+    assert body_ids_1 == body_ids_2
     assert len(w1.kinematic_structure_entities) == len(w2.kinematic_structure_entities)
 
-    w1_connection_names = [c.name for c in w1.connections]
-    w2_connection_names = [c.name for c in w2.connections]
-    assert w1_connection_names == w2_connection_names
+    w1_connection_hashes = [hash(c) for c in w1.connections]
+    w2_connection_hashes = [hash(c) for c in w2.connections]
+    assert w1_connection_hashes == w2_connection_hashes
     assert len(w1.connections) == len(w2.connections)
     assert len(w2.degrees_of_freedom) == len(w1.degrees_of_freedom)
 
@@ -392,8 +392,8 @@ def test_semantic_annotation_modifications(rclpy_node):
         w1.add_semantic_annotation(v2)
 
     time.sleep(0.2)
-    assert [sa.name for sa in w1.semantic_annotations] == [
-        sa.name for sa in w2.semantic_annotations
+    assert [hash(sa) for sa in w1.semantic_annotations] == [
+        hash(sa) for sa in w2.semantic_annotations
     ]
 
 

@@ -14,13 +14,12 @@ from typing_extensions import (
     TYPE_CHECKING,
 )
 
-from .actuators import Actuator
 from .degree_of_freedom import DegreeOfFreedom
 from .world_entity import (
     KinematicStructureEntity,
     SemanticAnnotation,
     Connection,
-    WorldEntity,
+    WorldEntity, Actuator,
 )
 from ..adapters.world_entity_kwargs_tracker import (
     KinematicStructureEntityKwargsTracker,
@@ -332,6 +331,29 @@ class AddActuatorModification(WorldModelModification):
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         return cls(actuator=Actuator.from_json(data["actuator"], **kwargs))
 
+
+@dataclass
+class RemoveActuatorModification(WorldModelModification):
+    actuator_id: UUID
+
+    @classmethod
+    def from_kwargs(cls, kwargs: Dict[str, Any]):
+        return cls(actuator_id=kwargs["actuator"].id)
+
+    def apply(self, world: World):
+        world.remove_actuator(
+            world.get_actuator_by_id(self.actuator_id)
+        )
+
+    def to_json(self):
+        return {
+            **super().to_json(),
+            "dof": to_json(self.actuator_id),
+        }
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        return cls(actuator_id=from_json(data["actuator"]))
 
 @dataclass
 class WorldModelModificationBlock(SubclassJSONSerializer):

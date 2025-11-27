@@ -37,6 +37,7 @@ from semantic_digital_twin.world_description.world_entity import (
     SemanticAnnotation,
     Body,
     CollisionCheckingConfig,
+    Actuator,
 )
 
 
@@ -667,7 +668,7 @@ def test_match_index(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
     world_copy = deepcopy(world)
     for body in world.bodies:
-        new_body = world_copy.get_kinematic_structure_entity_by_name(body.name)
+        new_body = world_copy.get_kinematic_structure_entity_by_id(body.id)
         assert body.index == new_body.index
 
 
@@ -675,7 +676,7 @@ def test_copy_dof(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
     world_copy = deepcopy(world)
     for dof in world.degrees_of_freedom:
-        new_dof = world_copy.get_degree_of_freedom_by_name(dof.name)
+        new_dof = world_copy.get_degree_of_freedom_by_id(dof.id)
         assert dof.id == new_dof.id
         assert dof.lower_limits == new_dof.lower_limits
         assert dof.upper_limits == new_dof.upper_limits
@@ -694,8 +695,8 @@ def test_copy_pr2_world_connection_origin(pr2_world):
     pr2_copy = deepcopy(pr2_world)
 
     for body in pr2_world.bodies:
-        pr2_body = pr2_world.get_kinematic_structure_entity_by_name(body.name)
-        pr2_copy_body = pr2_copy.get_kinematic_structure_entity_by_name(body.name)
+        pr2_body = pr2_world.get_kinematic_structure_entity_by_id(body.id)
+        pr2_copy_body = pr2_copy.get_kinematic_structure_entity_by_name(body.id)
         np.testing.assert_array_almost_equal(
             pr2_body.global_pose.to_np(), pr2_copy_body.global_pose.to_np(), decimal=4
         )
@@ -974,3 +975,19 @@ def test_set_static_collision_config():
             buffer_zone_distance=0.05, violated_distance=0.0, max_avoided_bodies=4
         )
         connection.set_static_collision_config_for_direct_child_bodies(collision_config)
+
+def test_actuators(world_setup):
+    world, l1, l2, bf, r1, r2 = world_setup
+
+    connection: PrismaticConnection = world.get_connection(r1, r2)
+    dof = connection.dof
+    actuator = Actuator(
+        name=PrefixedName("actuator"),
+    )
+    actuator.add_dof(dof)
+    with world.modify_world():
+        world.add_actuator(actuator)
+
+    assert actuator in world.actuators
+    assert world.get_actuator_by_id(actuator.id) == actuator
+

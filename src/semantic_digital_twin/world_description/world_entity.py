@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from dataclasses import fields
 from functools import lru_cache
 from uuid import UUID, uuid4
-from typing import ClassVar
+from typing import ClassVar, List, Dict, Any
 
 import numpy as np
 import trimesh
@@ -1133,3 +1133,51 @@ def _attr_values(
             continue
         if _is_entity_semantic_annotation_or_iterable(v, aggregation_type):
             yield v
+
+
+@dataclass(eq=False)
+class Actuator(WorldEntityWithID, SubclassJSONSerializer):
+    """
+    Represents an actuator in the world model.
+    """
+
+    _dofs: List[DegreeOfFreedom] = field(default_factory=list, init=False, repr=False)
+
+    def to_json(self) -> Dict[str, Any]:
+        result = super().to_json()
+        result["name"] = self.name.to_json()
+        result["dofs"] = to_json(self._dofs)
+        return result
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Actuator:
+        actuator = cls(
+            name=from_json(data["name"]),
+            id=from_json(data["id"]),
+        )
+        dofs_data = data.get("dofs", [])
+        assert (
+            len(dofs_data) > 0
+        ), "An actuator must have at least one degree of freedom."
+        for dof_data in dofs_data:
+            dof = from_json(dof_data)
+            actuator.add_dof(dof)
+        return actuator
+
+    @property
+    def dofs(self) -> List[DegreeOfFreedom]:
+        """
+        Returns the degrees of freedom associated with this actuator.
+        """
+        return self._dofs
+
+    def add_dof(self, dof: DegreeOfFreedom) -> None:
+        """
+        Adds a degree of freedom to this actuator.
+
+        :param dof: The degree of freedom to add.
+        """
+        self._dofs.append(dof)
+
+    def __hash__(self):
+        return hash(self.id)

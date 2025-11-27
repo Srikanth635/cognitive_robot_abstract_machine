@@ -48,7 +48,6 @@ from .spatial_computations.raytracer import RayTracer
 from .spatial_types import spatial_types as cas
 from .spatial_types.derivatives import Derivatives
 from .utils import IDGenerator
-from .world_description.actuators import Actuator
 from .world_description.connections import (
     Connection6DoF,
     ActiveConnection1DOF,
@@ -71,6 +70,7 @@ from .world_description.world_modification import (
     AddSemanticAnnotationModification,
     RemoveSemanticAnnotationModification,
     AddActuatorModification,
+    RemoveActuatorModification,
 )
 from .world_description.world_entity import (
     Connection,
@@ -82,7 +82,7 @@ from .world_description.world_entity import (
     CollisionCheckingConfig,
     Body,
     WorldEntity,
-    GenericWorldEntity,
+    GenericWorldEntity, Actuator,
 )
 from .world_description.world_state import WorldState
 
@@ -290,7 +290,7 @@ class CollisionPairManager:
         """
         Disable collision checking between two bodies
         """
-        pair = tuple(sorted([body_a, body_b], key=lambda b: b.name))
+        pair = tuple(sorted([body_a, body_b], key=lambda b: b.id))
         self._temp_disabled_collision_pairs.add(pair)
 
     def load_collision_srdf(self, file_path: str):
@@ -389,7 +389,7 @@ class CollisionPairManager:
         """
         Disable collision checking between two bodies
         """
-        pair = tuple(sorted([body_a, body_b], key=lambda body: body.name))
+        pair = tuple(sorted([body_a, body_b], key=lambda body: body.id))
         self._disabled_collision_pairs.add(pair)
 
 
@@ -910,6 +910,23 @@ class World:
         semantic_annotation.remove_from_world()
         self.semantic_annotations.remove(semantic_annotation)
 
+    def remove_actuator(self, actuator: Actuator) -> None:
+        """
+        Removes an actuator from the current list of actuators if it exists.
+
+        :param actuator: The actuator instance to be removed.
+        """
+        if self.is_actuator_in_world(actuator):
+            self._remove_actuator(actuator)
+
+    @atomic_world_modification(modification=RemoveActuatorModification)
+    def _remove_actuator(self, actuator: Actuator) -> None:
+        """
+        The atomic method that removes an actuator from the current list of actuators.
+        """
+        actuator.remove_from_world()
+        self.actuators.remove(actuator)
+
     # %% Other Atomic World Modifications
     @atomic_world_modification(modification=SetDofHasHardwareInterface)
     def set_dofs_has_hardware_interface(
@@ -1134,6 +1151,9 @@ class World:
     def get_kinematic_structure_entity_by_id(self, id: UUID) -> KinematicStructureEntity:
         return self._get_world_entity_by_hash_from_iterable(hash(id), self.kinematic_structure_entities)
 
+    def get_actuator_by_id(self, id: UUID) -> Actuator:
+        return self._get_world_entity_by_hash_from_iterable(hash(id), self.actuators)
+
     def _get_world_entity_by_hash_from_iterable(self, entity_hash: int, world_entity_iterable: Iterable[GenericWorldEntity]) -> GenericWorldEntity:
         """
         Retrieve a WorldEntity by its hash.
@@ -1178,6 +1198,9 @@ class World:
         return self._is_world_entity_with_hash_in_world_from_iterable(
             hash(degree_of_freedom), self.degrees_of_freedom
         )
+
+    def is_actuator_in_world(self, actuator: Actuator) -> bool:
+        return self._is_world_entity_with_hash_in_world_from_iterable(hash(actuator), self.actuators)
 
     @staticmethod
     def _is_world_entity_with_hash_in_world_from_iterable(

@@ -15,7 +15,7 @@ from semantic_digital_twin.world_description.connections import (
     PrismaticConnection,
     RevoluteConnection,
 )
-from semantic_digital_twin.world_description.world_entity import Body
+from semantic_digital_twin.world_description.world_entity import Body, Actuator
 from semantic_digital_twin.world_description.world_modification import (
     WorldModelModificationBlock,
     AddKinematicStructureEntityModification,
@@ -198,7 +198,33 @@ class ConnectionModificationTestCase(unittest.TestCase):
         self.assertEqual(len(w2.bodies), 3)
         self.assertEqual(len(w2.connections), 2)
 
+    def test_actuator_serialization(self):
+        w = World()
+        with w.modify_world():
+            b1 = Body(name=PrefixedName("b1"))
+            w.add_kinematic_structure_entity(b1)
+            b2 = Body(name=PrefixedName("b2"))
+            w.add_kinematic_structure_entity(b2)
+            c = Connection6DoF.create_with_dofs(parent=b1, child=b2, world=w)
+            w.add_connection(c)
+            dof = w.degrees_of_freedom[0]
+            actuator = Actuator(name=PrefixedName("actuator"))
+            actuator.add_dof(dof)
+            w.add_actuator(actuator)
 
+        modifications = w.get_world_model_manager().model_modification_blocks[-1]
+        tracker = KinematicStructureEntityKwargsTracker()
+        kwargs = tracker.create_kwargs()
+
+        modifications_copy = WorldModelModificationBlock.from_json(
+            modifications.to_json(), **kwargs
+        )
+        w2 = World()
+        with w2.modify_world():
+            modifications_copy.apply(w2)
+
+        self.assertEqual(len(w2.actuators), 1)
+        self.assertEqual(w2.actuators[0].id, actuator.id)
 
 if __name__ == "__main__":
     unittest.main()
