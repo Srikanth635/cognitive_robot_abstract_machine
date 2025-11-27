@@ -720,7 +720,7 @@ class OmniDrive(ActiveConnection, HasUpdateState):
             pitch=self.pitch.variables.position,
             yaw=0,
         )
-        self.kinematicskinematics = odom_T_bf @ bf_T_bf_vel @ bf_vel_T_bf
+        self.kinematics = odom_T_bf @ bf_T_bf_vel @ bf_vel_T_bf
         self.kinematics.child_frame = self.child
 
     @classmethod
