@@ -520,7 +520,7 @@ class Region(KinematicStructureEntity):
 
         hull = trimesh.points.PointCloud(P_aug).convex_hull
         hull.remove_unreferenced_vertices()
-        hull.remove_degenerate_faces()
+        hull.update_faces(hull.nondegenerate_faces())
         hull.process()
 
         area_mesh = TriangleMesh(
