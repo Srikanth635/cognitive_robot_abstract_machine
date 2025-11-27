@@ -369,7 +369,7 @@ class RevoluteConnection(ActiveConnection1DOF):
         self.connection_T_child_expression = (
             cas.TransformationMatrix.from_xyz_axis_angle(
                 axis=self.axis,
-                angle=self.dof.symbols.position,
+                angle=self.dof.variables.position,
                 child_frame=self.child,
             )
         )
