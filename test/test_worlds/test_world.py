@@ -696,7 +696,7 @@ def test_copy_pr2_world_connection_origin(pr2_world):
 
     for body in pr2_world.bodies:
         pr2_body = pr2_world.get_kinematic_structure_entity_by_id(body.id)
-        pr2_copy_body = pr2_copy.get_kinematic_structure_entity_by_name(body.id)
+        pr2_copy_body = pr2_copy.get_kinematic_structure_entity_by_id(body.id)
         np.testing.assert_array_almost_equal(
             pr2_body.global_pose.to_np(), pr2_copy_body.global_pose.to_np(), decimal=4
         )
