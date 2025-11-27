@@ -1,9 +1,10 @@
 import json
-import time
 from dataclasses import dataclass
 
 import numpy as np
 import pytest
+import time
+
 import semantic_digital_twin.spatial_types.spatial_types as cas
 from giskardpy.executor import Executor
 from giskardpy.model.collision_matrix_manager import CollisionRequest
@@ -59,7 +60,6 @@ from giskardpy.motion_statechart.test_nodes.test_nodes import (
 from giskardpy.qp.exceptions import HardConstraintsViolatedException
 from giskardpy.qp.qp_controller_config import QPControllerConfig
 from giskardpy.utils.math import angle_between_vector
-from semantic_digital_twin.adapters.viz_marker import VizMarkerPublisher
 from semantic_digital_twin.adapters.world_entity_kwargs_tracker import (
     KinematicStructureEntityKwargsTracker,
 )
