@@ -1,5 +1,6 @@
 import inspect
 import os
+import shutil
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -18,6 +19,7 @@ from multiverse_simulator import (
 )
 from krrood.utils import recursive_subclasses
 from scipy.spatial.transform import Rotation
+from trimesh.visual import TextureVisuals
 
 from ..callbacks.callback import ModelChangeCallback
 from ..datastructures.prefixed_name import PrefixedName
@@ -31,7 +33,15 @@ from ..world_description.connections import (
     FixedConnection,
     Connection6DoF,
 )
-from ..world_description.geometry import Box, Cylinder, Sphere, Shape, FileMesh
+from ..world_description.geometry import (
+    Box,
+    Cylinder,
+    Sphere,
+    Shape,
+    FileMesh,
+    TriangleMesh,
+    Mesh,
+)
 from ..world_description.world_entity import (
     Region,
     Body,
@@ -372,6 +382,14 @@ class MeshConverter(ShapeConverter, ABC):
     entity_type: ClassVar[Type[FileMesh]] = FileMesh
 
 
+class TriangleMeshConverter(ShapeConverter, ABC):
+    """
+    Converts a Mesh object to a dictionary of mesh properties for Multiverse simulator.
+    """
+
+    entity_type: ClassVar[Type[TriangleMesh]] = TriangleMesh
+
+
 class ConnectionConverter(EntityConverter, ABC):
     """
     Converts a Connection object to a dictionary of joint properties for Multiverse simulator.
@@ -448,8 +466,10 @@ class Connection1DOFConverter(ConnectionConverter, ABC):
         dofs = list(entity.dofs)
         assert len(dofs) == 1, "ActiveConnection1DOF must have exactly one DOF."
         dof = dofs[0]
-        joint_pos = [0.0, 0.0, 0.0]  # TODO: Use actual origin
-        joint_quat = [1.0, 0.0, 0.0, 0.0]
+        child_T_connection_transform = entity.connection_T_child_expression.inverse()
+        px, py, pz, qw, qx, qy, qz = cas_pose_to_list(child_T_connection_transform)
+        joint_pos = [px, py, pz]
+        joint_quat = [qw, qx, qy, qz]
         joint_props.update(
             {
                 self.pos_str: joint_pos,
@@ -743,10 +763,16 @@ class MujocoMeshConverter(MujocoGeomConverter, MeshConverter):
     type: mujoco.mjtGeom = mujoco.mjtGeom.mjGEOM_MESH
 
     def _post_convert(
-        self, entity: FileMesh, shape_props: Dict[str, Any], **kwargs
+        self, entity: Mesh, shape_props: Dict[str, Any], **kwargs
     ) -> Dict[str, Any]:
         shape_props.update(MujocoGeomConverter._post_convert(self, entity, shape_props))
         shape_props.update({"mesh": entity})
+        if isinstance(entity.mesh.visual, TextureVisuals) and isinstance(
+            entity.mesh.visual.material.name, str
+        ):
+            shape_props["texture_file_path"] = (
+                entity.mesh.visual.material.image.filename
+            )
         return shape_props
 
 
@@ -792,7 +818,6 @@ class MujocoRevoluteJointConverter(
         joint_props = super()._post_convert(entity, joint_props, **kwargs)
         joint_range = joint_props.pop("range")
         if not any(limit is None for limit in joint_range):
-            joint_range = [numpy.rad2deg(limit) for limit in joint_range]
             joint_props["range"] = joint_range
         return joint_props
 
@@ -850,6 +875,9 @@ class MultiSimBuilder(ABC):
         :param world: The world to build.
         :param file_path: The file path to save the world to.
         """
+        self._asset_folder_path = os.path.join(os.path.dirname(file_path), "assets")
+        if not os.path.exists(self.asset_folder_path):
+            os.makedirs(self.asset_folder_path)
         if len(world.bodies) == 0:
             with world.modify_world():
                 root = Body(name=PrefixedName("world"))
@@ -978,6 +1006,13 @@ class MultiSimBuilder(ABC):
         """
         raise NotImplementedError
 
+    @property
+    def asset_folder_path(self) -> str:
+        """
+        The default file path to save the world to.
+        """
+        return self._asset_folder_path
+
 
 @dataclass
 class MujocoBuilder(MultiSimBuilder):
@@ -994,33 +1029,27 @@ class MujocoBuilder(MultiSimBuilder):
     def _end_build(self, file_path: str):
         self.spec.compile()
         self.spec.to_file(file_path)
-        try:
-            mujoco.MjModel.from_xml_path(file_path)
-        except ValueError as e:
-            if (
-                "Error: mass and inertia of moving bodies must be larger than mjMINVAL"
-                in str(e)
-            ):  # Fix mujoco error
-                import xml.etree.ElementTree as ET
+        import xml.etree.ElementTree as ET
 
-                tree = ET.parse(file_path)
-                root = tree.getroot()
-                for body_id, body_element in enumerate(root.findall(".//body")):
-                    body_spec = self.spec.bodies[body_id + 1]
-                    inertial_element = ET.SubElement(body_element, "inertial")
-                    inertial_element.set("mass", f"{body_spec.mass}")
-                    inertial_element.set(
-                        "diaginertia", " ".join(map(str, body_spec.inertia.tolist()))
-                    )
-                    inertial_element.set(
-                        "pos", " ".join(map(str, body_spec.ipos.tolist()))
-                    )
-                    inertial_element.set(
-                        "quat", " ".join(map(str, body_spec.iquat.tolist()))
-                    )
-                tree.write(file_path)
-            else:
-                raise e
+        tree = ET.parse(file_path)
+        root = tree.getroot()
+        for body_id, body_element in enumerate(root.findall(".//body")):
+            body_spec = self.spec.bodies[body_id + 1]
+            if numpy.isclose(body_spec.mass, 0.0):
+                continue
+            inertial_element = ET.SubElement(body_element, "inertial")
+            inertial_element.set("mass", f"{body_spec.mass}")
+            inertial_element.set(
+                "diaginertia", " ".join(map(str, body_spec.inertia.tolist()))
+            )
+            inertial_element.set("pos", " ".join(map(str, body_spec.ipos.tolist())))
+            inertial_element.set("quat", " ".join(map(str, body_spec.iquat.tolist())))
+        for material_id, material_element in enumerate(root.findall(".//material")):
+            material_spec = self.spec.materials[material_id]
+            texture_name = material_spec.textures[0]
+            if texture_name != "":
+                material_element.set("texture", texture_name)
+        tree.write(file_path, encoding="utf-8", xml_declaration=True)
 
     def _build_body(self, body: Body):
         self._build_mujoco_body(body=body)
@@ -1062,7 +1091,16 @@ class MujocoBuilder(MultiSimBuilder):
         :return: True if the mesh was parsed successfully, False otherwise.
         """
         mesh_entity = geom_props.pop("mesh")
-        mesh_file_path = mesh_entity.filename
+        if isinstance(mesh_entity, TriangleMesh):
+            mesh_name = os.path.basename(mesh_entity.file.name)
+            mesh_file_path = os.path.join(self.asset_folder_path, f"{mesh_name}.obj")
+            shutil.move(mesh_entity.file.name, mesh_file_path)
+        elif isinstance(mesh_entity, FileMesh):
+            mesh_file_path = mesh_entity.filename
+        else:
+            raise NotImplementedError(
+                f"Mesh type {type(mesh_entity)} not supported in Mujoco."
+            )
         mesh_ext = os.path.splitext(mesh_file_path)[1].lower()
         if mesh_ext == ".dae":
             print(f"Cannot use .dae files in Mujoco. Skipping mesh {mesh_file_path}.")
@@ -1077,6 +1115,31 @@ class MujocoBuilder(MultiSimBuilder):
                 mesh_entity.scale.z,
             )
         geom_props["meshname"] = mesh_name
+        texture_file_path = geom_props.pop("texture_file_path", None)
+        if isinstance(texture_file_path, str):
+            texture_name = os.path.splitext(os.path.basename(texture_file_path))[0]
+            if texture_name in [
+                self.spec.textures[i].name for i in range(len(self.spec.textures))
+            ]:
+                return True
+            material_name = texture_name
+            if material_name.startswith("T_"):
+                material_name = material_name[2:]
+            material_name = f"M_{material_name}"
+            geom_props["material"] = material_name
+            if material_name in [
+                self.spec.materials[i].name for i in range(len(self.spec.materials))
+            ]:
+                return True
+            if not os.path.exists(texture_file_path):
+                return True
+            self.spec.add_texture(
+                name=texture_name,
+                type=mujoco.mjtTexture.mjTEXTURE_2D,
+                file=texture_file_path,
+            )
+            material = self.spec.add_material(name=material_name)
+            material.textures[0] = texture_name
         return True
 
     def _build_connection(self, connection: Connection):
