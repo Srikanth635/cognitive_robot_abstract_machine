@@ -322,6 +322,7 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
             other_parent,
             other_child,
             parent_T_connection_expression,
+            connection_T_child_expression,
         ) = self._find_references_in_world(world)
 
         return self.__class__(
@@ -329,6 +330,7 @@ class ActiveConnection1DOF(ActiveConnection, ABC):
             parent=other_parent,
             child=other_child,
             parent_T_connection_expression=parent_T_connection_expression,
+            connection_T_child_expression=connection_T_child_expression,
             dof_name=PrefixedName(self.dof_name.name, self.dof_name.prefix),
             axis=self.axis,
             multiplier=self.multiplier,
@@ -346,7 +348,7 @@ class PrismaticConnection(ActiveConnection1DOF):
         super().add_to_world(world)
 
         translation_axis = self.axis * self.dof.variables.position
-        self._connection_T_child_expression = cas.TransformationMatrix.from_xyz_rpy(
+        self.kinematics = cas.TransformationMatrix.from_xyz_rpy(
             x=translation_axis[0],
             y=translation_axis[1],
             z=translation_axis[2],
@@ -366,12 +368,10 @@ class RevoluteConnection(ActiveConnection1DOF):
     def add_to_world(self, world: World):
         super().add_to_world(world)
 
-        self._connection_T_child_expression = (
-            cas.TransformationMatrix.from_xyz_axis_angle(
-                axis=self.axis,
-                angle=self.dof.variables.position,
-                child_frame=self.child,
-            )
+        self.kinematics = cas.TransformationMatrix.from_xyz_axis_angle(
+            axis=self.axis,
+            angle=self.dof.variables.position,
+            child_frame=self.child,
         )
 
     def __hash__(self):
@@ -486,12 +486,10 @@ class Connection6DoF(Connection):
             z_init=self.qz.variables.position,
             w_init=self.qw.variables.position,
         ).to_rotation_matrix()
-        self._connection_T_child_expression = (
-            cas.TransformationMatrix.from_point_rotation_matrix(
-                point=parent_P_child,
-                rotation_matrix=parent_R_child,
-                child_frame=self.child,
-            )
+        self.kinematics = cas.TransformationMatrix.from_point_rotation_matrix(
+            point=parent_P_child,
+            rotation_matrix=parent_R_child,
+            child_frame=self.child,
         )
 
     @classmethod
@@ -593,6 +591,7 @@ class Connection6DoF(Connection):
             other_parent,
             other_child,
             parent_T_connection_expression,
+            connection_T_child_expression,
         ) = self._find_references_in_world(world)
 
         return Connection6DoF(
@@ -600,6 +599,7 @@ class Connection6DoF(Connection):
             parent=other_parent,
             child=other_child,
             parent_T_connection_expression=parent_T_connection_expression,
+            connection_T_child_expression=connection_T_child_expression,
             x_name=deepcopy(self.x_name),
             y_name=deepcopy(self.y_name),
             z_name=deepcopy(self.z_name),
@@ -720,8 +720,8 @@ class OmniDrive(ActiveConnection, HasUpdateState):
             pitch=self.pitch.variables.position,
             yaw=0,
         )
-        self._connection_T_child_expression = odom_T_bf @ bf_T_bf_vel @ bf_vel_T_bf
-        self._connection_T_child_expression.child_frame = self.child
+        self.kinematicskinematics = odom_T_bf @ bf_T_bf_vel @ bf_vel_T_bf
+        self.kinematics.child_frame = self.child
 
     @classmethod
     def create_with_dofs(
@@ -889,6 +889,7 @@ class OmniDrive(ActiveConnection, HasUpdateState):
             other_parent,
             other_child,
             parent_T_connection_expression,
+            connection_T_child_expression,
         ) = self._find_references_in_world(world)
 
         return OmniDrive(
@@ -896,6 +897,7 @@ class OmniDrive(ActiveConnection, HasUpdateState):
             parent=other_parent,
             child=other_child,
             parent_T_connection_expression=parent_T_connection_expression,
+            connection_T_child_expression=connection_T_child_expression,
             x_name=deepcopy(self.x_name),
             y_name=deepcopy(self.y_name),
             roll_name=deepcopy(self.roll_name),
