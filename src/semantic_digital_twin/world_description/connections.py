@@ -366,7 +366,7 @@ class RevoluteConnection(ActiveConnection1DOF):
     def add_to_world(self, world: World):
         super().add_to_world(world)
 
-        self.connection_T_child_expression = (
+        self._connection_T_child_expression = (
             cas.TransformationMatrix.from_xyz_axis_angle(
                 axis=self.axis,
                 angle=self.dof.variables.position,
