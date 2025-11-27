@@ -106,26 +106,26 @@ class RemoveBodyModification(WorldModelModification):
     Removal of a body from the world.
     """
 
-    body_name: PrefixedName
+    body_id: UUID
     """
-    The name of the body that was removed.
+    The UUID of the body that was removed.
     """
 
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]):
-        return cls(kwargs["kinematic_structure_entity"].name)
+        return cls(kwargs["kinematic_structure_entity"].id)
 
     def apply(self, world: World):
         world.remove_kinematic_structure_entity(
-            world.get_kinematic_structure_entity_by_name(self.body_name)
+            world.get_kinematic_structure_entity_by_id(self.body_id)
         )
 
     def to_json(self) -> Dict[str, Any]:
-        return {**super().to_json(), "body_name": self.body_name.to_json()}
+        return {**super().to_json(), "body_id": to_json(self.body_id)}
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        return cls(body_name=PrefixedName.from_json(data["body_name"], **kwargs))
+        return cls(body_id=from_json(data["body_id"]))
 
 
 @dataclass
@@ -169,28 +169,37 @@ class RemoveConnectionModification(WorldModelModification):
     Removal of a connection from the world.
     """
 
-    connection_name: PrefixedName
+    parent_id: UUID
     """
-    The name of the connection that was removed.
+    The UUID of the parent body of the removed connection.
+    """
+
+    child_id: UUID
+    """
+    The UUIDs of the entities connected by the removed connection.
     """
 
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]):
-        return cls(kwargs["connection"].name)
+        return cls(kwargs["connection"].parent.id, kwargs["connection"].child.id)
 
     def apply(self, world: World):
-        world._remove_connection(world.get_connection_by_name(self.connection_name))
+        parent = world.get_kinematic_structure_entity_by_id(self.parent_id)
+        child = world.get_kinematic_structure_entity_by_id(self.child_id)
+        world._remove_connection(world.get_connection(parent, child))
 
     def to_json(self):
         return {
             **super().to_json(),
-            "connection_name": self.connection_name.to_json(),
+            "parent_id": to_json(self.parent_id),
+            "child_id": to_json(self.child_id),
         }
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         return cls(
-            connection_name=PrefixedName.from_json(data["connection_name"], **kwargs)
+            parent_id=from_json(data["parent_id"]),
+            child_id=from_json(data["child_id"]),
         )
 
 
@@ -223,31 +232,31 @@ class AddDegreeOfFreedomModification(WorldModelModification):
         return cls(dof=DegreeOfFreedom.from_json(data["dof"], **kwargs))
 
     def __eq__(self, other):
-        return self.dof.name == other.dof.name
+        return self.dof.id == other.dof.id
 
 
 @dataclass
 class RemoveDegreeOfFreedomModification(WorldModelModification):
-    dof_name: PrefixedName
+    dof_id: UUID
 
     @classmethod
     def from_kwargs(cls, kwargs: Dict[str, Any]):
-        return cls(dof_name=kwargs["dof"].name)
+        return cls(dof_id=kwargs["dof"].id)
 
     def apply(self, world: World):
         world.remove_degree_of_freedom(
-            world.get_degree_of_freedom_by_name(self.dof_name)
+            world.get_degree_of_freedom_by_id(self.dof_id)
         )
 
     def to_json(self):
         return {
             **super().to_json(),
-            "dof": self.dof_name.to_json(),
+            "dof": to_json(self.dof_id),
         }
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        return cls(dof_name=PrefixedName.from_json(data["dof"], **kwargs))
+        return cls(dof_id=from_json(data["dof"]))
 
 
 @dataclass
@@ -343,7 +352,7 @@ class WorldModelModificationBlock(SubclassJSONSerializer):
     def to_json(self):
         return {
             **super().to_json(),
-            "modifications": [m.to_json() for m in self.modifications],
+            "modifications": to_json(self.modifications),
         }
 
     @classmethod
