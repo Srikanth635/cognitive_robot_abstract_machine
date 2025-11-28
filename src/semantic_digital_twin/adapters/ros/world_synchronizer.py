@@ -229,17 +229,28 @@ class StateSynchronizer(StateChangeCallback, SynchronizerOnCallback):
         self.publish(msg)
 
     def compute_state_changes(self) -> Dict[PrefixedName, float]:
-        changes = {
-            name: current_state
-            for name, current_state in zip(
-                self.world.state.keys(), self.world.state.positions
-            )
-            if name not in self.previous_world_state_data
-            or not np.allclose(
-                current_state, self.previous_world_state_data[name].position
-            )
-        }
-        return changes
+        """
+        Compute and return only the position changes since the last published snapshot.
+
+        Returns a mapping of DOF name to current position for entries whose position
+        differs from the previous snapshot, using a vectorized tolerance-based diff.
+        """
+        names = self.world.state.keys()  # List[PrefixedName] in column order
+        curr = self.world.state.positions  # np.ndarray shape (N,)
+        prev = self.previous_world_state_data  # np.ndarray shape (N,)
+
+        # If the number of DOFs changed (model update), send everything once
+        # so the other side can resync, then the snapshot will be updated afterward.
+        if prev.shape != curr.shape:
+            return {n: float(v) for n, v in zip(names, curr)}
+
+        # Vectorized comparison: O(N) with minimal Python overhead
+        changed_mask = ~np.isclose(curr, prev, rtol=1e-8, atol=1e-12, equal_nan=True)
+        if not np.any(changed_mask):
+            return {}
+
+        idx = np.nonzero(changed_mask)[0]
+        return {names[i]: float(curr[i]) for i in idx}
 
 
 @dataclass
