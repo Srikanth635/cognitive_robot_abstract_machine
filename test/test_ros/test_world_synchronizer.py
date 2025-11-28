@@ -405,5 +405,48 @@ def test_synchronize_6dof(rclpy_node):
     np.testing.assert_array_almost_equal(w1.state.data, w2.state.data)
 
 
+def test_compute_state_changes_no_changes(rclpy_node):
+    w = create_dummy_world()
+    s = StateSynchronizer(node=rclpy_node, world=w)
+    # Immediately compare without changing state
+    changes = s.compute_state_changes()
+    assert changes == {}
+    s.close()
+
+
+def test_compute_state_changes_single_change(rclpy_node):
+    w = create_dummy_world()
+    s = StateSynchronizer(node=rclpy_node, world=w)
+    # change first position
+    w.state.data[0, 0] += 1e-3
+    changes = s.compute_state_changes()
+    names = w.state.keys()
+    assert list(changes.keys()) == [names[0]]
+    assert np.isclose(changes[names[0]], w.state.positions[0])
+    s.close()
+
+
+def test_compute_state_changes_shape_change_full_snapshot(rclpy_node):
+    w = create_dummy_world()
+    s = StateSynchronizer(node=rclpy_node, world=w)
+    # append a new DOF by writing a new name into state
+    new_name = PrefixedName("new_joint")
+    w.state[new_name] = np.zeros(4)
+    changes = s.compute_state_changes()
+    # full snapshot expected
+    assert len(changes) == len(w.state)
+    s.close()
+
+
+def test_compute_state_changes_nan_handling(rclpy_node):
+    w = create_dummy_world()
+    s = StateSynchronizer(node=rclpy_node, world=w)
+    # set both previous and current to NaN for entry 0
+    w.state.data[0, 0] = np.nan
+    s.previous_world_state_data[0] = np.nan
+    assert s.compute_state_changes() == {}
+    s.close()
+
+
 if __name__ == "__main__":
     unittest.main()
