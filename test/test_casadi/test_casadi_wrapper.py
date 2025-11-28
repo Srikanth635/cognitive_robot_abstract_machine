@@ -3261,6 +3261,56 @@ class TestCompiledFunction:
         assert_allclose(actual_e1, expected_e1)
         assert_allclose(actual_e2, expected_e2)
 
+    def test_single_args(self):
+        size = 10_000
+        variables = cas.create_float_variables([str(i) for i in range(size)])
+        expr = cas.sum(*variables)
+        f = expr.compile()
+        for i in range(10):
+            data = np.random.rand(size)
+            assert np.isclose(f(data), np.sum(data))
+
+    def test_single_args_with_bind(self):
+        size = 10_000
+        data = np.random.rand(size)
+        variables = cas.create_float_variables([str(i) for i in range(size)])
+        expr = cas.sum(*variables)
+        f = expr.compile()
+        f.bind_args_to_memory_view(0, data)
+        for i in range(10):
+            np.copyto(data, np.random.rand(size))
+            assert np.isclose(f.evaluate(), np.sum(data))
+
+    def test_multiple_args(self):
+        size = 10_000
+        n = 10
+        element_size = size // n
+        variables = cas.create_float_variables([str(i) for i in range(size)])
+        expr = cas.sum(*variables)
+        args = [variables[i * element_size : (i + 1) * element_size] for i in range(n)]
+        f = expr.compile(parameters=args)
+        for i in range(100):
+            args_values = [np.ones(element_size)] * n
+            assert f(*args_values) == size
+
+    def test_multiple_args_with_bind(self):
+        size = 10_000
+        n = 10
+        element_size = size // n
+        variables = cas.create_float_variables([str(i) for i in range(size)])
+        expr = cas.sum(*variables)
+        args = [variables[i * element_size : (i + 1) * element_size] for i in range(n)]
+        f = expr.compile(parameters=args)
+
+        datas = []
+        for i in range(n):
+            datas.append(np.random.rand(element_size))
+            f.bind_args_to_memory_view(i, datas[i])
+        for i in range(100):
+            for i in range(n):
+                datas[i][:] = np.random.rand(element_size)
+            assert np.isclose(f.evaluate(), np.sum(datas))
+
     def test_missing_free_variables(self):
         s1, s2 = cas.create_float_variables(["s1", "s2"])
         e = cas.sqrt(cas.cos(s1) + cas.sin(s2))
