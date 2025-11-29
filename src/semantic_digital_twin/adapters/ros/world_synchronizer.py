@@ -270,10 +270,15 @@ class ModelSynchronizer(
         SynchronizerOnCallback.__post_init__(self)
 
     def apply_message(self, msg: ModificationBlock):
-        for callback in self.world.state.state_change_callbacks:
+        running_callbacks = [
+            callback
+            for callback in self.world.state.state_change_callbacks
+            if not callback._is_paused
+        ]
+        for callback in running_callbacks:
             callback.pause()
         msg.modifications.apply(self.world)
-        for callback in self.world.state.state_change_callbacks:
+        for callback in running_callbacks:
             callback.resume()
 
     def world_callback(self):
