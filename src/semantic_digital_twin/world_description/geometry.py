@@ -327,7 +327,7 @@ class TriangleMesh(Mesh):
         return f
 
     @classmethod
-    def from_file(
+    def from_vertices_and_faces(
         cls,
         vertices: np.ndarray,
         faces: np.ndarray,
