@@ -512,6 +512,9 @@ def test_two_goals(pr2_world: World):
 
     kin_sim.tick_until_end()
     assert np.isclose(torso_joint.position, 0.1, atol=1e-4)
+    assert np.allclose(pr2_world.state.velocities, 0)
+    assert np.allclose(pr2_world.state.accelerations, 0)
+    assert np.allclose(pr2_world.state.jerks, 0)
 
 
 def test_reset():
