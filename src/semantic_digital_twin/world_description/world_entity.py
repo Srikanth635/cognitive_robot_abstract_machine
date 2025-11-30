@@ -1178,6 +1178,3 @@ class Actuator(WorldEntityWithID, SubclassJSONSerializer):
         :param dof: The degree of freedom to add.
         """
         self._dofs.append(dof)
-
-    def __hash__(self):
-        return hash(self.id)

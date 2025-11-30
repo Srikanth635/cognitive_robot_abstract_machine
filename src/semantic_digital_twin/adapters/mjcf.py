@@ -256,7 +256,7 @@ class MJCFParser:
                     )
                     texture_file_path = os.path.join(texturedir, mujoco_texture.file)
                     if os.path.isfile(texture_file_path):
-                        return FileMesh.from_spec(
+                        return FileMesh.from_file(
                             file_path=filename,
                             origin=origin_transform,
                             color=color,

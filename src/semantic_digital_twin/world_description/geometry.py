@@ -273,7 +273,7 @@ class FileMesh(Mesh):
         )
 
     @classmethod
-    def from_spec(
+    def from_file(
         cls, file_path: str, texture_file_path: Optional[str] = None, **kwargs
     ) -> FileMesh:
         """

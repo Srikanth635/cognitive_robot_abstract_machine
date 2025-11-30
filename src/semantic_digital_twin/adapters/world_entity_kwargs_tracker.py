@@ -104,14 +104,14 @@ class KinematicStructureEntityKwargsTracker:
         self, id: UUID
     ) -> KinematicStructureEntity:
         """
-        Retrieve a kinematic structure entity by its name.
+        Retrieve a kinematic structure entity by its UUID.
 
         This method attempts to find a kinematic structure entity from the internal
         collection. If the entity is not found and a world object is available,
-        it will try to retrieve the entity by its name from the world object.
+        it will try to retrieve the entity by its UUID from the world object.
 
         :param id: The UUID of the kinematic structure entity to retrieve.
-        :return: The kinematic structure entity corresponding to the specified name,
+        :return: The kinematic structure entity corresponding to the specified UUID,
                  or None if not found.
         """
         kinematic_structure_entity = self._kinematic_structure_entities.get(id)
