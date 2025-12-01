@@ -256,7 +256,7 @@ class MJCFParser:
                     )
                     texture_file_path = os.path.join(texturedir, mujoco_texture.file)
                     if os.path.isfile(texture_file_path):
-                        return FileMesh.from_spec(
+                        return FileMesh.from_file(
                             file_path=filename,
                             origin=origin_transform,
                             color=color,
@@ -336,7 +336,7 @@ class MJCFParser:
                         parent_T_connection_expression=parent_body_to_joint_transform,
                         connection_T_child_expression=joint_to_child_body_transform,
                         axis=joint_axis,
-                        dof_name=dof.name,
+                        dof_id=dof.id,
                         dynamics=joint_dynamics,
                     )
                 elif mujoco_joint.type == mujoco.mjtJoint.mjJNT_SLIDE:
@@ -347,7 +347,7 @@ class MJCFParser:
                         parent_T_connection_expression=parent_body_to_joint_transform,
                         connection_T_child_expression=joint_to_child_body_transform,
                         axis=joint_axis,
-                        dof_name=dof.name,
+                        dof_id=dof.id,
                         dynamics=joint_dynamics,
                     )
                 else:
