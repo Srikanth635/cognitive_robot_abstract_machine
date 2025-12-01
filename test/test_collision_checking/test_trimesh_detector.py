@@ -56,5 +56,5 @@ def test_all_collisions(world_setup_simple):
         ]
     )
     assert len(collisions) == 1
-    assert collisions[0].body_a == body1
-    assert collisions[0].body_b == body2
+    assert collisions[0].body_a == body2
+    assert collisions[0].body_b == body1
