@@ -271,7 +271,7 @@ def reachability_validator(
             root, tip, target_pose.to_spatial_type(), max_iterations=600
         )
         for dof, value in joint_states.items():
-            world.state[dof.name].position = value
+            world.state[dof.id].position = value
         world.notify_state_change()
 
         logger.debug(f"Robot is not in contact at target pose")

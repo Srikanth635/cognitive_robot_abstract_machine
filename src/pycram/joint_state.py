@@ -43,7 +43,7 @@ class JointState:
         """
         for joint_name, joint_position in zip(self.joint_names, self.joint_positions):
             dof = list(world.get_connection_by_name(joint_name).dofs)[0]
-            world.state[dof.name].position = joint_position
+            world.state[dof.id].position = joint_position
         world.notify_state_change()
 
 

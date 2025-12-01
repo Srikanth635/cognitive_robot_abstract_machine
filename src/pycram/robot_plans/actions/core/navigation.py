@@ -35,7 +35,7 @@ class NavigateAction(ActionDescription):
     Keep the joint states of the robot the same during the navigation.
     """
 
-    def plan(self) -> None:
+    def execute(self) -> None:
         return SequentialPlan(
             self.context, MoveMotion(self.target_location, self.keep_joint_states)
         ).perform()
@@ -76,7 +76,7 @@ class LookAtAction(ActionDescription):
     Position at which the robot should look, given as 6D pose
     """
 
-    def plan(self) -> None:
+    def execute(self) -> None:
         SequentialPlan(self.context, LookingMotion(target=self.target)).perform()
 
     def validate(

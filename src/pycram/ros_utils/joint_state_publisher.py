@@ -55,7 +55,7 @@ class JointStatePublisher:
         }
 
         while not self.kill_event.is_set():
-            current_joint_states = [self.world.state[dof.name].position for dof in dofs]
+            current_joint_states = [self.world.state[dof.id].position for dof in dofs]
             h = Header()
             h.stamp = Time().now(self.node)
             h.frame_id = ""

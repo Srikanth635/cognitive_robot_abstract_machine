@@ -1,49 +1,46 @@
-import unittest
 from copy import deepcopy
 
 import numpy as np
 import sqlalchemy.sql.elements
-from krrood.ormatic.dao import to_dao
 
+from krrood.entity_query_language.symbol_graph import SymbolGraph
+from krrood.ormatic.dao import to_dao
+from krrood.ormatic.utils import create_engine
+from semantic_digital_twin.robots.pr2 import PR2
+from sqlalchemy import select, text
+from sqlalchemy.orm import Session
+
+from pycram.datastructures.dataclasses import Context
 from pycram.datastructures.enums import (
     TorsoState,
     ApproachDirection,
     Arms,
     VerticalAlignment,
-    DetectionTechnique,
-    DetectionState,
     GripperState,
 )
-from semantic_digital_twin.robots.pr2 import PR2
-from sqlalchemy import create_engine, select, text
-from sqlalchemy.orm import Session
-
-from pycram.datastructures.dataclasses import Context
 from pycram.datastructures.grasp import GraspDescription
 from pycram.datastructures.pose import Pose, PoseStamped
-from pycram.designator import ObjectDesignatorDescription, NamedObject
+from pycram.designator import NamedObject
 from pycram.language import SequentialPlan
 from pycram.orm.ormatic_interface import *
-from pycram.plan import ResolvedActionNode
 from pycram.process_module import simulated_robot
 from pycram.robot_plans import (
     MoveTorsoActionDescription,
     ParkArmsAction,
-    DetectActionDescription,
     PlaceActionDescription,
     TransportAction,
     ParkArmsActionDescription,
     TransportActionDescription,
-    LookAtActionDescription,
     NavigateActionDescription,
     PickUpActionDescription,
     SetGripperActionDescription,
     OpenActionDescription,
     CloseActionDescription,
-    NavigateAction, PickUpAction, PlaceAction,
+    NavigateAction,
+    PickUpAction,
+    PlaceAction,
 )
 from pycram.testing import ApartmentWorldTestCase
-from semantic_digital_twin.world import World
 
 
 class ORMaticBaseTestCaseMixin(ApartmentWorldTestCase):
@@ -63,6 +60,7 @@ class ORMaticBaseTestCaseMixin(ApartmentWorldTestCase):
     def tearDown(self):
         super().tearDown()
         Base.metadata.drop_all(self.session.bind)
+        self.session.expunge_all()
         self.session.close()
 
 
@@ -115,7 +113,12 @@ class PoseTestCases(ORMaticBaseTestCaseMixin):
         dao = to_dao(plan)
         self.session.add(dao)
         self.session.commit()
-        result = self.session.scalars(select(ActionDescriptionDAO)).all()
+        # result = self.session.scalars(select(ActionDescriptionDAO)).all()
+        result = self.session.scalars(
+            select(ResolvedActionNodeMappingDAO).where(
+                ResolvedActionNodeMappingDAO.designator_type == NavigateAction
+            )
+        ).all()
         self.assertTrue(
             all(
                 [
@@ -175,6 +178,7 @@ class PoseTestCases(ORMaticBaseTestCaseMixin):
         self.assertEqual(pose_result.position.y, 2.0)
         self.assertEqual(pose_result.position.z, 3.0)
         self.assertEqual(pose_result.database_id, raw_pose[0][0])
+
 
 class ORMActionDesignatorTestCase(ORMaticBaseTestCaseMixin):
     def test_code_designator_type(self):
@@ -356,68 +360,41 @@ class ORMActionDesignatorTestCase(ORMaticBaseTestCaseMixin):
         # can not do that yet with new mapping
         # self.assertEqual(close_result[0].object.name, "handle_cab10_t")
 
-    @unittest.skip("no detect")
-    def test_node(self):
-        """Test if the objects in the database is equal with the objects that got serialized."""
-        with simulated_robot:
-            # self.kitchen.set_pose(PoseStamped.from_list([10, 10, 0]))
-            # self.milk.set_pose(PoseStamped.from_list([1.5, 0, 1.2]))
-            # object_description = ObjectDesignatorDescription(types=[Milk])
-            # pr2 = Object("pr2", Robot, "pr2.urdf", pose=PoseStamped.from_list([1, 2, 0]))
-            description = DetectActionDescription(
-                technique=DetectionTechnique.TYPES, object_designator=self.milk
-            )
-            description.perform()
-
-        insert(description, self.session)
-        # node_results = self.session.scalars(select(TaskTreeNodeORM)).all()
-        # self.assertEqual(len(node_results), len(description.root))
-
-        action_results = self.session.scalars(select(ActionDescriptionDAO)).all()
-        self.assertEqual(1, len(action_results))
-
-        detect_actions = self.session.scalars(select(DetectActionDAO)).all()
-        self.assertEqual(1, len(detect_actions))
 
 class ExecDataTest(ORMaticBaseTestCaseMixin):
 
     def plan(self, test_world):
         test_robot = PR2.from_world(test_world)
         with simulated_robot:
-            with simulated_robot:
-                sp = SequentialPlan(
-                    Context.from_world(test_world),
-                    NavigateActionDescription(
-                        PoseStamped.from_list(
-                            [0.6, 0.4, 0], [0, 0, 0, 1], test_world.root
-                        ),
-                        True,
+            sp = SequentialPlan(
+                Context.from_world(test_world),
+                NavigateActionDescription(
+                    PoseStamped.from_list([0.6, 0.4, 0], [0, 0, 0, 1], test_world.root),
+                    True,
+                ),
+                ParkArmsActionDescription(Arms.BOTH),
+                PickUpActionDescription(
+                    test_world.get_body_by_name("milk.stl"),
+                    Arms.LEFT,
+                    GraspDescription(
+                        ApproachDirection.FRONT,
+                        VerticalAlignment.NoAlignment,
+                        False,
                     ),
-                    ParkArmsActionDescription(Arms.BOTH),
-                    PickUpActionDescription(
-                        test_world.get_body_by_name("milk.stl"),
-                        Arms.LEFT,
-                        GraspDescription(
-                            ApproachDirection.FRONT,
-                            VerticalAlignment.NoAlignment,
-                            False,
-                        ),
+                ),
+                NavigateActionDescription(
+                    PoseStamped.from_list([1.3, 1, 0], [0, 0, 0, 1], test_world.root),
+                    True,
+                ),
+                MoveTorsoActionDescription(TorsoState.HIGH),
+                PlaceActionDescription(
+                    test_world.get_body_by_name("milk.stl"),
+                    PoseStamped.from_list(
+                        [2.0, 1.6, 1.0], [0, 0, 0, 1], test_world.root
                     ),
-                    NavigateActionDescription(
-                        PoseStamped.from_list(
-                            [1.3, 1, 0], [0, 0, 0, 1], test_world.root
-                        ),
-                        True,
-                    ),
-                    MoveTorsoActionDescription(TorsoState.HIGH),
-                    PlaceActionDescription(
-                        test_world.get_body_by_name("milk.stl"),
-                        PoseStamped.from_list(
-                            [2.0, 1.6, 1.0], [0, 0, 0, 1], test_world.root
-                        ),
-                        Arms.LEFT,
-                    ),
-                )
+                    Arms.LEFT,
+                ),
+            )
 
             sp.perform()
         dao = to_dao(sp)
@@ -452,6 +429,7 @@ class ExecDataTest(ORMaticBaseTestCaseMixin):
 
         with simulated_robot:
             plan.perform()
+
         dao = to_dao(plan)
         self.session.add(dao)
         self.session.commit()
@@ -459,15 +437,19 @@ class ExecDataTest(ORMaticBaseTestCaseMixin):
         self.assertIsNotNone(exec_data)
         self.assertListEqual(
             [1.5, 2.5, 0],
-            PoseStampedDAO.from_dao(
-                exec_data.execution_start_pose
-            ).pose.position.to_list(),
+            [
+                exec_data.execution_start_pose.pose.position.x,
+                exec_data.execution_start_pose.pose.position.y,
+                exec_data.execution_start_pose.pose.position.z,
+            ],
         )
         self.assertListEqual(
             [0.6, 0.4, 0],
-            PoseStampedDAO.from_dao(
-                exec_data.execution_end_pose
-            ).pose.position.to_list(),
+            [
+                exec_data.execution_end_pose.pose.position.x,
+                exec_data.execution_end_pose.pose.position.y,
+                exec_data.execution_end_pose.pose.position.z,
+            ],
         )
 
     def test_manipulated_body_pose(self):
@@ -476,8 +458,16 @@ class ExecDataTest(ORMaticBaseTestCaseMixin):
         self.plan(test_world)
 
         # pick_up = self.session.scalars(select(PickUpActionDAO)).all()[0]
-        pick_up_node = self.session.scalars(select(ResolvedActionNodeMappingDAO).where(ResolvedActionNodeMappingDAO.designator_type == PickUpAction)).all()[0]
-        place_node = self.session.scalars(select(ResolvedActionNodeMappingDAO).where(ResolvedActionNodeMappingDAO.designator_type == PlaceAction)).all()[0]
+        pick_up_node = self.session.scalars(
+            select(ResolvedActionNodeMappingDAO).where(
+                ResolvedActionNodeMappingDAO.designator_type == PickUpAction
+            )
+        ).all()[0]
+        place_node = self.session.scalars(
+            select(ResolvedActionNodeMappingDAO).where(
+                ResolvedActionNodeMappingDAO.designator_type == PlaceAction
+            )
+        ).all()[0]
         # place = self.session.scalars(select(PlaceActionDAO)).all()[0]
         self.assertIsNotNone(pick_up_node.execution_data.manipulated_body_pose_start)
         self.assertIsNotNone(pick_up_node.execution_data.manipulated_body_pose_end)
@@ -507,7 +497,11 @@ class ExecDataTest(ORMaticBaseTestCaseMixin):
 
         self.plan(test_world)
 
-        pick_up_node = self.session.scalars(select(ResolvedActionNodeMappingDAO).where(ResolvedActionNodeMappingDAO.designator_type == PickUpAction)).all()[0]
+        pick_up_node = self.session.scalars(
+            select(ResolvedActionNodeMappingDAO).where(
+                ResolvedActionNodeMappingDAO.designator_type == PickUpAction
+            )
+        ).all()[0]
         self.assertIsNotNone(pick_up_node.execution_data.manipulated_body)
         milk = BodyDAO.from_dao(pick_up_node.execution_data.manipulated_body)
         self.assertEqual(milk.name.name, "milk.stl")
@@ -525,8 +519,13 @@ class ExecDataTest(ORMaticBaseTestCaseMixin):
         dao = to_dao(plan)
         self.session.add(dao)
         self.session.commit()
-        navigate_node = self.session.scalars(select(ResolvedActionNodeMappingDAO).where(ResolvedActionNodeMappingDAO.designator_type == NavigateAction)).all()[0]
+        navigate_node = self.session.scalars(
+            select(ResolvedActionNodeMappingDAO).where(
+                ResolvedActionNodeMappingDAO.designator_type == NavigateAction
+            )
+        ).all()[0]
         self.assertIsNotNone(navigate_node.execution_data.execution_start_world_state)
+
 
 class RelationalAlgebraTestCase(ORMaticBaseTestCaseMixin):
     def test_filtering(self):

@@ -10,6 +10,7 @@ from typing_extensions import Optional
 from ..datastructures.dataclasses import ExecutionData
 from ..datastructures.enums import TaskStatus
 from ..datastructures.pose import Quaternion
+from ..designator import DesignatorDescription
 from ..failures import PlanFailure
 from ..language import TryInOrderNode, ParallelNode, TryAllNode, CodeNode, MonitorNode
 from ..plan import (
@@ -72,7 +73,8 @@ class PlanNodeMapping(AlternativeMapping[PlanNode]):
 
 @dataclass
 class DesignatorNodeMapping(PlanNodeMapping, AlternativeMapping[DesignatorNode]):
-    designator_type: Type[ActionDescription] = None
+    designator_ref: DesignatorDescription = None
+    designator_type: Type[DesignatorDescription] = None
 
     @classmethod
     def create_instance(cls, obj: DesignatorNode):
@@ -83,6 +85,7 @@ class DesignatorNodeMapping(PlanNodeMapping, AlternativeMapping[DesignatorNode])
             status=obj.status,
             start_time=obj.start_time,
             designator_type=obj.designator_type,
+            designator_ref=obj.designator_ref,
             end_time=obj.end_time,
             reason=obj.reason,
         )
@@ -236,14 +239,14 @@ class PlanEdge:
 @dataclass
 class PlanMapping(AlternativeMapping[Plan]):
     nodes: List[PlanNode]
-    # edges: List[PlanEdge]
+    edges: List[PlanEdge]
 
     @classmethod
     def create_instance(cls, obj: Plan):
-        # return cls(nodes=[to_dao(node) for node in obj.nodes], edges=[PlanEdge(to_dao(edge[0]), to_dao(edge[1])) for edge in obj.edges])
         return cls(
-            nodes=[to_dao(node) for node in obj.nodes]
-        )  # , edges=[PlanEdge(parent=parent, child=child) for parent, child in obj.edges])
+            nodes=obj.nodes,
+            edges=[PlanEdge(edge[0], edge[1]) for edge in obj.edges],
+        )
 
     def create_from_dao(self) -> T:
         raise NotImplementedError()
