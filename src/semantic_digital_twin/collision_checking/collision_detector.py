@@ -99,7 +99,7 @@ class CollisionCheck:
         """
         Sort both bodies in a consistent manner, needed to avoid checking B with A, when A with B is already checked.
         """
-        if body_a.name > body_b.name:
+        if body_a.id > body_b.id:
             body_a, body_b = body_b, body_a
         is_body_a_controlled = self._world.is_body_controlled(body_a)
         is_body_b_controlled = self._world.is_body_controlled(body_b)

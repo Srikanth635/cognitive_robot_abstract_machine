@@ -82,7 +82,8 @@ from .world_description.world_entity import (
     CollisionCheckingConfig,
     Body,
     WorldEntity,
-    GenericWorldEntity, Actuator,
+    GenericWorldEntity,
+    Actuator,
 )
 from .world_description.world_state import WorldState
 
@@ -754,9 +755,7 @@ class World:
 
         :raises AddingAnExistingSemanticAnnotationError: If the semantic annotation already exists
         """
-        logger.debug(
-            f"Adding semantic annotation with name {semantic_annotation.name}"
-        )
+        logger.debug(f"Adding semantic annotation with name {semantic_annotation.name}")
         self._raise_error_if_belongs_to_other_world(semantic_annotation)
         if not self.is_semantic_annotation_in_world(semantic_annotation):
             self._add_semantic_annotation(semantic_annotation)
@@ -848,9 +847,7 @@ class World:
         child_index = connection.child.index
         if parent_index is not None and child_index is not None:
             try:
-                self.kinematic_structure.remove_edge(
-                    parent_index, child_index
-                )
+                self.kinematic_structure.remove_edge(parent_index, child_index)
             except NoEdgeBetweenNodes:
                 pass
         connection.remove_from_world()
@@ -1146,15 +1143,23 @@ class World:
                 ]
 
     def get_degree_of_freedom_by_id(self, id: UUID) -> DegreeOfFreedom:
-        return self._get_world_entity_by_hash_from_iterable(hash(id), self.degrees_of_freedom)
+        return self._get_world_entity_by_hash_from_iterable(
+            hash(id), self.degrees_of_freedom
+        )
 
-    def get_kinematic_structure_entity_by_id(self, id: UUID) -> KinematicStructureEntity:
-        return self._get_world_entity_by_hash_from_iterable(hash(id), self.kinematic_structure_entities)
+    def get_kinematic_structure_entity_by_id(
+        self, id: UUID
+    ) -> KinematicStructureEntity:
+        return self._get_world_entity_by_hash_from_iterable(
+            hash(id), self.kinematic_structure_entities
+        )
 
     def get_actuator_by_id(self, id: UUID) -> Actuator:
         return self._get_world_entity_by_hash_from_iterable(hash(id), self.actuators)
 
-    def _get_world_entity_by_hash_from_iterable(self, entity_hash: int, world_entity_iterable: Iterable[GenericWorldEntity]) -> GenericWorldEntity:
+    def _get_world_entity_by_hash_from_iterable(
+        self, entity_hash: int, world_entity_iterable: Iterable[GenericWorldEntity]
+    ) -> GenericWorldEntity:
         """
         Retrieve a WorldEntity by its hash.
 
@@ -1163,7 +1168,8 @@ class World:
         :return:
         """
         entity = next(
-            (entity for entity in world_entity_iterable if hash(entity) == entity_hash), None
+            (entity for entity in world_entity_iterable if hash(entity) == entity_hash),
+            None,
         )
         if entity is None:
             raise WorldEntityNotFoundError(entity_hash)
@@ -1200,7 +1206,9 @@ class World:
         )
 
     def is_actuator_in_world(self, actuator: Actuator) -> bool:
-        return self._is_world_entity_with_hash_in_world_from_iterable(hash(actuator), self.actuators)
+        return self._is_world_entity_with_hash_in_world_from_iterable(
+            hash(actuator), self.actuators
+        )
 
     @staticmethod
     def _is_world_entity_with_hash_in_world_from_iterable(
@@ -1511,7 +1519,6 @@ class World:
             self.kinematic_structure.successors(kinematic_structure_entity.index)
         )
 
-    @lru_cache(maxsize=_LRU_CACHE_SIZE)
     def compute_parent_connection(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> Optional[Connection]:
@@ -1531,7 +1538,6 @@ class World:
             )
         )
 
-    @lru_cache(maxsize=_LRU_CACHE_SIZE)
     def compute_parent_kinematic_structure_entity(
         self, kinematic_structure_entity: KinematicStructureEntity
     ) -> Optional[KinematicStructureEntity]:
