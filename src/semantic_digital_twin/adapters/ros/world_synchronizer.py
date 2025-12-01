@@ -229,17 +229,28 @@ class StateSynchronizer(StateChangeCallback, SynchronizerOnCallback):
         self.publish(msg)
 
     def compute_state_changes(self) -> Dict[UUID, float]:
-        changes = {
-            _id: current_state
-            for _id, current_state in zip(
-                self.world.state.keys(), self.world.state.positions
-            )
-            if _id not in self.previous_world_state_data
-            or not np.allclose(
-                current_state, self.previous_world_state_data[_id].position
-            )
-        }
-        return changes
+        """
+        Compute and return only the position changes since the last published snapshot.
+
+        Returns a mapping of DOF name to current position for entries whose position
+        differs from the previous snapshot, using a vectorized tolerance-based diff.
+        """
+        ids = self.world.state.keys()  # List[PrefixedName] in column order
+        curr = self.world.state.positions  # np.ndarray shape (N,)
+        prev = self.previous_world_state_data  # np.ndarray shape (N,)
+
+        # If the number of DOFs changed (model update), send everything once
+        # so the other side can resync, then the snapshot will be updated afterward.
+        if prev.shape != curr.shape:
+            return {n: float(v) for n, v in zip(ids, curr)}
+
+        # Vectorized comparison: O(N) with minimal Python overhead
+        changed_mask = ~np.isclose(curr, prev, rtol=1e-8, atol=1e-12, equal_nan=True)
+        if not np.any(changed_mask):
+            return {}
+
+        idx = np.nonzero(changed_mask)[0]
+        return {ids[i]: float(curr[i]) for i in idx}
 
 
 @dataclass
@@ -259,10 +270,15 @@ class ModelSynchronizer(
         SynchronizerOnCallback.__post_init__(self)
 
     def apply_message(self, msg: ModificationBlock):
-        for callback in self.world.state.state_change_callbacks:
+        running_callbacks = [
+            callback
+            for callback in self.world.state.state_change_callbacks
+            if not callback._is_paused
+        ]
+        for callback in running_callbacks:
             callback.pause()
         msg.modifications.apply(self.world)
-        for callback in self.world.state.state_change_callbacks:
+        for callback in running_callbacks:
             callback.resume()
 
     def world_callback(self):

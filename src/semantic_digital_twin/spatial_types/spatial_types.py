@@ -240,9 +240,23 @@ class CompiledFunction:
         self._function_evaluator()
         self._is_constant = True
 
+    def bind_args_to_memory_view(self, arg_idx: int, numpy_array: np.ndarray) -> None:
+        """
+        Binds the arg at index arg_idx to the memoryview of a numpy_array.
+        If your args keep the same memory across calls, you only need to bind them once.
+        """
+        self._function_buffer.set_arg(arg_idx, memoryview(numpy_array))
+
+    def evaluate(self) -> Union[np.ndarray, sp.csc_matrix]:
+        """
+        Evaluate the compiled function with the current args.
+        """
+        self._function_evaluator()
+        return self._out
+
     def __call__(self, *args: np.ndarray) -> Union[np.ndarray, sp.csc_matrix]:
         """
-        Efficiently evaluate the compiled function with positional arguments, by directly writing the memory of the
+        Efficiently evaluate the compiled function with positional arguments by directly writing the memory of the
         numpy arrays to the memoryview of the compiled function.
         Similarly, the result will be written to the output buffer and doesn't allocate new memory on each eval.
 
@@ -262,9 +276,8 @@ class CompiledFunction:
                 actual_number_of_args,
             )
         for arg_idx, arg in enumerate(args):
-            self._function_buffer.set_arg(arg_idx, memoryview(arg))
-        self._function_evaluator()
-        return self._out
+            self.bind_args_to_memory_view(arg_idx, arg)
+        return self.evaluate()
 
     def call_with_kwargs(self, **kwargs: float) -> np.ndarray:
         """
@@ -1181,6 +1194,10 @@ def fmod(a: ScalarData, b: ScalarData) -> Expression:
     a = to_sx(a)
     b = to_sx(b)
     return Expression(ca.fmod(a, b))
+
+
+def sum(*expressions: ScalarData) -> Expression:
+    return Expression(ca.sum(to_sx(Expression(expressions))))
 
 
 def normalize_angle_positive(angle: ScalarData) -> Expression:

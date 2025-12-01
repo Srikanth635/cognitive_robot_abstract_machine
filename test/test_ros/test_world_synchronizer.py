@@ -4,6 +4,7 @@ import time
 import unittest
 import uuid
 from typing import Optional
+from uuid import UUID, uuid4
 
 import numpy as np
 import sqlalchemy
@@ -51,17 +52,37 @@ def create_dummy_world(w: Optional[World] = None) -> World:
         w.add_degree_of_freedom(y_dof)
         z_dof = DegreeOfFreedom(name=PrefixedName("z"), id=deterministic_uuid("z_dof"))
         w.add_degree_of_freedom(z_dof)
-        qx_dof = DegreeOfFreedom(name=PrefixedName("qx"), id=deterministic_uuid("qx_dof"))
+        qx_dof = DegreeOfFreedom(
+            name=PrefixedName("qx"), id=deterministic_uuid("qx_dof")
+        )
         w.add_degree_of_freedom(qx_dof)
-        qy_dof = DegreeOfFreedom(name=PrefixedName("qy"), id=deterministic_uuid("qy_dof"))
+        qy_dof = DegreeOfFreedom(
+            name=PrefixedName("qy"), id=deterministic_uuid("qy_dof")
+        )
         w.add_degree_of_freedom(qy_dof)
-        qz_dof = DegreeOfFreedom(name=PrefixedName("qz"), id=deterministic_uuid("qz_dof"))
+        qz_dof = DegreeOfFreedom(
+            name=PrefixedName("qz"), id=deterministic_uuid("qz_dof")
+        )
         w.add_degree_of_freedom(qz_dof)
-        qw_dof = DegreeOfFreedom(name=PrefixedName("qw"), id=deterministic_uuid("qw_dof"))
+        qw_dof = DegreeOfFreedom(
+            name=PrefixedName("qw"), id=deterministic_uuid("qw_dof")
+        )
         w.add_degree_of_freedom(qw_dof)
         w.state[qw_dof.id].position = 1.0
 
-        w.add_connection(Connection6DoF(parent=b1, child=b2, x_id=x_dof.id, y_id=y_dof.id, z_id=z_dof.id, qx_id=qx_dof.id, qy_id=qy_dof.id, qz_id=qz_dof.id, qw_id=qw_dof.id))
+        w.add_connection(
+            Connection6DoF(
+                parent=b1,
+                child=b2,
+                x_id=x_dof.id,
+                y_id=y_dof.id,
+                z_id=z_dof.id,
+                qx_id=qx_dof.id,
+                qy_id=qy_dof.id,
+                qz_id=qz_dof.id,
+                qw_id=qw_dof.id,
+            )
+        )
     return w
 
 
@@ -426,6 +447,50 @@ def test_synchronize_6dof(rclpy_node):
     assert isinstance(c2, Connection6DoF)
     assert w1.state[c1.qw_id].position == w2.state[c2.qw_id].position
     np.testing.assert_array_almost_equal(w1.state.data, w2.state.data)
+
+
+def test_compute_state_changes_no_changes(rclpy_node):
+    w = create_dummy_world()
+    s = StateSynchronizer(node=rclpy_node, world=w)
+    # Immediately compare without changing state
+    changes = s.compute_state_changes()
+    assert changes == {}
+    s.close()
+
+
+def test_compute_state_changes_single_change(rclpy_node):
+    w = create_dummy_world()
+    s = StateSynchronizer(node=rclpy_node, world=w)
+    # change first position
+    w.state.data[0, 0] += 1e-3
+    changes = s.compute_state_changes()
+    names = w.state.keys()
+    assert list(changes.keys()) == [names[0]]
+    assert np.isclose(changes[names[0]], w.state.positions[0])
+    s.close()
+
+
+def test_compute_state_changes_shape_change_full_snapshot(rclpy_node):
+    w = create_dummy_world()
+    s = StateSynchronizer(node=rclpy_node, world=w)
+    # append a new DOF by writing a new name into state
+    new_uuid = uuid4()
+    w.state._add_dof(new_uuid)
+    w.state[new_uuid] = np.zeros(4)
+    changes = s.compute_state_changes()
+    # full snapshot expected
+    assert len(changes) == len(w.state)
+    s.close()
+
+
+def test_compute_state_changes_nan_handling(rclpy_node):
+    w = create_dummy_world()
+    s = StateSynchronizer(node=rclpy_node, world=w)
+    # set both previous and current to NaN for entry 0
+    w.state.data[0, 0] = np.nan
+    s.previous_world_state_data[0] = np.nan
+    assert s.compute_state_changes() == {}
+    s.close()
 
 
 if __name__ == "__main__":
