@@ -1,12 +1,20 @@
 from dataclasses import dataclass
 from typing import Optional, Dict, List
 
-from giskardpy.motion_statechart.tasks.cartesian_tasks import CartesianPosition, CartesianPose
+from giskardpy.motion_statechart.tasks.cartesian_tasks import (
+    CartesianPosition,
+    CartesianPose,
+)
 from giskardpy.motion_statechart.tasks.joint_tasks import JointPositionList
 from semantic_digital_twin.world_description.world_entity import Body
 
 from .base import BaseMotion
-from ...datastructures.enums import Arms, GripperState, MovementType, WaypointsMovementType
+from ...datastructures.enums import (
+    Arms,
+    GripperState,
+    MovementType,
+    WaypointsMovementType,
+)
 from ...datastructures.grasp import GraspDescription
 from ...datastructures.pose import PoseStamped
 from ...failure_handling import try_motion
@@ -19,8 +27,8 @@ from ...utils import translate_pose_along_local_axis
 
 @dataclass
 class ReachMotion(BaseMotion):
-    """
-    """
+    """ """
+
     object_designator: Body
     """
     Object designator_description describing the object that should be picked up
@@ -41,17 +49,31 @@ class ReachMotion(BaseMotion):
     def perform(self):
         end_effector = ViewManager.get_end_effector_view(self.arm, self.robot_view)
 
-        target_pose = GraspDescription.get_grasp_pose(self.grasp_description, end_effector, self.object_designator)
-        target_pose.rotate_by_quaternion(GraspDescription.calculate_grasp_orientation(self.grasp_description,
-                                                                                      end_effector.front_facing_orientation.to_np()[
-                                                                                          :3]))
-        target_pre_pose = translate_pose_along_local_axis(target_pose,
-                                                          end_effector.front_facing_axis.to_np(),
-                                                          -self.object_designator.get_approach_offset())
+        target_pose = GraspDescription.get_grasp_pose(
+            self.grasp_description, end_effector, self.object_designator
+        )
+        target_pose.rotate_by_quaternion(
+            GraspDescription.calculate_grasp_orientation(
+                self.grasp_description,
+                end_effector.front_facing_orientation.to_np()[:3],
+            )
+        )
+        target_pre_pose = translate_pose_along_local_axis(
+            target_pose,
+            end_effector.front_facing_axis.to_np(),
+            -self.object_designator.get_approach_offset(),
+        )
 
-        pose = PoseStamped.from_spatial_type(self.world.transform(target_pre_pose.to_spatial_type(),self.world.root))
+        pose = PoseStamped.from_spatial_type(
+            self.world.transform(target_pre_pose.to_spatial_type(), self.world.root)
+        )
 
-        MoveTCPMotion(pose, self.arm, allow_gripper_collision=False, movement_type=self.movement_type).perform()
+        MoveTCPMotion(
+            pose,
+            self.arm,
+            allow_gripper_collision=False,
+            movement_type=self.movement_type,
+        ).perform()
 
 
 @dataclass
@@ -74,8 +96,14 @@ class MoveArmJointsMotion(BaseMotion):
         return pm_manager.move_arm_joints().execute(self)
 
     def _motion_chart(self):
-        left_connections = [self.world.get_connection_by_name(name) for name in self.left_arm_poses.keys()]
-        right_connections = [self.world.get_connection_by_name(name) for name in self.right_arm_poses.keys()]
+        left_connections = [
+            self.world.get_connection_by_name(name)
+            for name in self.left_arm_poses.keys()
+        ]
+        right_connections = [
+            self.world.get_connection_by_name(name)
+            for name in self.right_arm_poses.keys()
+        ]
         return JointPositionList()
 
 
@@ -135,7 +163,11 @@ class MoveTCPMotion(BaseMotion):
 
     def _motion_chart(self):
         tip = ViewManager().get_end_effector_view(self.arm, self.robot_view).tool_frame
-        return CartesianPose(root_link=self.world.root, tip_link=tip, goal_pose=self.target.to_spatial_type())
+        return CartesianPose(
+            root_link=self.world.root,
+            tip_link=tip,
+            goal_pose=self.target.to_spatial_type(),
+        )
 
 
 @dataclass
@@ -156,7 +188,9 @@ class MoveTCPWaypointsMotion(BaseMotion):
     """
     If the gripper can collide with something
     """
-    movement_type: WaypointsMovementType = WaypointsMovementType.ENFORCE_ORIENTATION_FINAL_POINT
+    movement_type: WaypointsMovementType = (
+        WaypointsMovementType.ENFORCE_ORIENTATION_FINAL_POINT
+    )
     """
     The type of movement that should be performed.
     """

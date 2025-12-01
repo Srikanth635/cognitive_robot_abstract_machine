@@ -56,6 +56,7 @@ def plot_rustworkx_interactive(
     try:
         import networkx as nx
         import importlib
+
         bokeh_layouts = importlib.import_module("bokeh.layouts")
         bokeh_models = importlib.import_module("bokeh.models")
         bokeh_plotting = importlib.import_module("bokeh.plotting")
@@ -126,7 +127,7 @@ def plot_rustworkx_interactive(
         )
 
     # Add edges
-    for (u, v) in getattr(graph, "edge_list")():
+    for u, v in getattr(graph, "edge_list")():
         nx_g.add_edge(u, v)
 
     # Choose layout
@@ -164,7 +165,9 @@ def plot_rustworkx_interactive(
     g_renderer.inspection_policy = NodesAndLinkedEdges()
 
     # Prepare a side panel for parameters
-    info = Div(text="<b>Click a node to see its parameters</b>", width=400, height=height)
+    info = Div(
+        text="<b>Click a node to see its parameters</b>", width=400, height=height
+    )
 
     # Ensure param_text exists on data source
     # from_networkx created a CDS with 'index' only; merge our attrs
@@ -222,7 +225,9 @@ def _object_params_with_properties(payload: Any) -> Optional[Dict[str, Any]]:
 
     # Collect from __dict__ if available
     try:
-        if hasattr(payload, "__dict__") and isinstance(getattr(payload, "__dict__", None), dict):
+        if hasattr(payload, "__dict__") and isinstance(
+            getattr(payload, "__dict__", None), dict
+        ):
             for k, v in vars(payload).items():
                 if k.startswith("_") or k == "label":
                     continue
@@ -274,7 +279,9 @@ def _format_params(params: Optional[Dict[str, Any]]) -> str:
     try:
         items = []
         for k, v in params.items():
-            items.append(f"<tr><td style='padding-right:8px; white-space:nowrap;'><b>{k}</b></td><td>{_escape_html(v)}</td></tr>")
+            items.append(
+                f"<tr><td style='padding-right:8px; white-space:nowrap;'><b>{k}</b></td><td>{_escape_html(v)}</td></tr>"
+            )
         return "<table>" + "".join(items) + "</table>"
     except Exception:
         return f"<pre>{_escape_html(params)}</pre>"

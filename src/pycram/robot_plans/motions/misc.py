@@ -25,4 +25,3 @@ class DetectingMotion(BaseMotion):
 
     def _motion_chart(self):
         pass
-

@@ -26,11 +26,14 @@ class AlternativeMotionMapping(ABC):
         pass
 
     @staticmethod
-    def check_for_alternative(robot_view: AbstractRobot, motion: BaseMotion) -> Optional[Task]:
+    def check_for_alternative(
+        robot_view: AbstractRobot, motion: BaseMotion
+    ) -> Optional[Task]:
         for alternative in AlternativeMotionMapping.__subclasses__():
             if alternative.robot_view == robot_view and alternative.motion == motion:
                 return alternative.motion_chart
         return None
+
 
 @dataclass
 class BaseMotion(ABC):
@@ -52,7 +55,9 @@ class BaseMotion(ABC):
 
     @property
     def motion_chart(self):
-        alternative = AlternativeMotionMapping.check_for_alternative(self.robot_view, self)
+        alternative = AlternativeMotionMapping.check_for_alternative(
+            self.robot_view, self
+        )
         if alternative is not None:
             return alternative
         else:
@@ -84,7 +89,7 @@ class BaseMotion(ABC):
         #
         # right_types = get_type_hints(self)
         # attributes = self.__dict__.copy()
-        #`
+        # `
         # missing = []
         # wrong_type = {}
         # current_type = {}

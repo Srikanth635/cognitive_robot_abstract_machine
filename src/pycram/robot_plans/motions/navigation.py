@@ -29,7 +29,11 @@ class MoveMotion(BaseMotion):
         return pm_manager.navigate().execute(self)
 
     def _motion_chart(self):
-        return CartesianPose(root_link=self.world.root, tip_link=self.robot_view.root, goal_pose=self.target.to_spatial_type())
+        return CartesianPose(
+            root_link=self.world.root,
+            tip_link=self.robot_view.root,
+            goal_pose=self.target.to_spatial_type(),
+        )
 
 
 @dataclass
@@ -37,6 +41,7 @@ class LookingMotion(BaseMotion):
     """
     Lets the robot look at a point
     """
+
     target: PoseStamped
 
     def perform(self):
