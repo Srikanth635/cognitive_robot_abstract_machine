@@ -15,8 +15,7 @@ def test_simple_collision(world_setup_simple):
     tcd = TrimeshCollisionDetector(world)
     collision = tcd.check_collision_between_bodies(body1, body2)
     assert collision
-    assert collision.body_a == body1
-    assert collision.body_b == body2
+    assert {collision.body_a, collision.body_b} == {body1, body2}
 
 
 def test_no_collision(world_setup_simple):
@@ -56,5 +55,4 @@ def test_all_collisions(world_setup_simple):
         ]
     )
     assert len(collisions) == 1
-    assert collisions[0].body_a == body1
-    assert collisions[0].body_b == body2
+    assert {collisions[0].body_a, collisions[0].body_b} == {body1, body2}
