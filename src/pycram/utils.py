@@ -57,7 +57,7 @@ def link_pose_for_joint_config(
     reasoning_world = deepcopy(obj._world)
     for joint_name, joint_pose in joint_config.items():
         reasoning_world.state[
-            reasoning_world.get_degree_of_freedom_by_name(joint_name).name
+            reasoning_world.get_degree_of_freedom_by_name(joint_name).id
         ].position = joint_pose
     reasoning_world.notify_state_change()
     pose = reasoning_world.get_body_by_name(obj.name).global_pose

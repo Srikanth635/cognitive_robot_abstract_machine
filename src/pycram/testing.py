@@ -78,6 +78,8 @@ def rclpy_node():
 
 
 def setup_world() -> World:
+    logger.setLevel(logging.DEBUG)
+
     pr2_sem_world = URDFParser.from_file(
         os.path.join(
             os.path.dirname(__file__),

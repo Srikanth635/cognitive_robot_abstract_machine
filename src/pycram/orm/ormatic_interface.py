@@ -994,7 +994,7 @@ class LookAtActionDAO(
 
 
 class LookingMotionDAO(
-    BaseMotionDAO, DataAccessObject[pycram.robot_plans.motions.navigation.LookingMotion]
+    BaseMotionDAO, DataAccessObject[pycram.robot_plans.motions.robot_body.LookingMotion]
 ):
 
     __tablename__ = "LookingMotionDAO"

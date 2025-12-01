@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+import logging
 from functools import lru_cache
 
 import typing_extensions
@@ -13,8 +14,6 @@ from typing_extensions import (
     get_origin,
     get_args,
 )
-
-import logging
 
 logger = logging.getLogger(__name__)
 

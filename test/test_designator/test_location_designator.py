@@ -30,10 +30,10 @@ class TestActionDesignatorGrounding(ApartmentWorldTestCase):
         }
         for name, state in arm_park.items():
             self.world.state[
-                self.world.get_degree_of_freedom_by_name(name).name
+                self.world.get_degree_of_freedom_by_name(name).id
             ].position = state
         self.world.state[
-            self.world.get_degree_of_freedom_by_name("torso_lift_joint").name
+            self.world.get_degree_of_freedom_by_name("torso_lift_joint").id
         ].position = 0.3
         self.world.notify_state_change()
 
@@ -65,7 +65,7 @@ class TestActionDesignatorGrounding(ApartmentWorldTestCase):
         }
         for name, state in arm_park.items():
             self.world.state[
-                self.world.get_degree_of_freedom_by_name(name).name
+                self.world.get_degree_of_freedom_by_name(name).id
             ].position = state
         self.world.notify_state_change()
         location_desig = CostmapLocation(
@@ -97,7 +97,7 @@ class TestActionDesignatorGrounding(ApartmentWorldTestCase):
         }
         for name, state in arm_park.items():
             self.world.state[
-                self.world.get_degree_of_freedom_by_name(name).name
+                self.world.get_degree_of_freedom_by_name(name).id
             ].position = state
         self.world.notify_state_change()
         location_desig = CostmapLocation(
@@ -127,7 +127,7 @@ class TestActionDesignatorGrounding(ApartmentWorldTestCase):
         }
         for name, state in arm_park.items():
             self.world.state[
-                self.world.get_degree_of_freedom_by_name(name).name
+                self.world.get_degree_of_freedom_by_name(name).id
             ].position = state
         self.world.notify_state_change()
         location_desig = CostmapLocation(
@@ -158,10 +158,10 @@ class TestActionDesignatorGrounding(ApartmentWorldTestCase):
         }
         for name, state in arm_park.items():
             self.world.state[
-                self.world.get_degree_of_freedom_by_name(name).name
+                self.world.get_degree_of_freedom_by_name(name).id
             ].position = state
         self.world.state[
-            self.world.get_degree_of_freedom_by_name("torso_lift_joint").name
+            self.world.get_degree_of_freedom_by_name("torso_lift_joint").id
         ].position = 0.3
         self.world.notify_state_change()
         location_desig = CostmapLocation(
@@ -194,10 +194,10 @@ class TestActionDesignatorGrounding(ApartmentWorldTestCase):
         }
         for name, state in arm_park.items():
             self.world.state[
-                self.world.get_degree_of_freedom_by_name(name).name
+                self.world.get_degree_of_freedom_by_name(name).id
             ].position = state
         self.world.state[
-            self.world.get_degree_of_freedom_by_name("torso_lift_joint").name
+            self.world.get_degree_of_freedom_by_name("torso_lift_joint").id
         ].position = 0.3
         self.world.notify_state_change()
         location_desig = ProbabilisticCostmapLocation(
@@ -228,7 +228,7 @@ class TestActionDesignatorGrounding(ApartmentWorldTestCase):
         }
         for name, state in arm_park.items():
             self.world.state[
-                self.world.get_degree_of_freedom_by_name(name).name
+                self.world.get_degree_of_freedom_by_name(name).id
             ].position = state
         location_desig = ProbabilisticCostmapLocation(
             PoseStamped.from_list([0.4, 0.6, 0.9], [0, 0, 0, 1], frame=self.world.root),
@@ -259,7 +259,7 @@ class TestActionDesignatorGrounding(ApartmentWorldTestCase):
         }
         for name, state in arm_park.items():
             self.world.state[
-                self.world.get_degree_of_freedom_by_name(name).name
+                self.world.get_degree_of_freedom_by_name(name).id
             ].position = state
         location_desig = ProbabilisticCostmapLocation(
             self.world.get_body_by_name("milk.stl"), visible_for=self.robot_view
@@ -288,7 +288,7 @@ class TestActionDesignatorGrounding(ApartmentWorldTestCase):
         }
         for name, state in arm_park.items():
             self.world.state[
-                self.world.get_degree_of_freedom_by_name(name).name
+                self.world.get_degree_of_freedom_by_name(name).id
             ].position = state
         location_desig = ProbabilisticCostmapLocation(
             PoseStamped.from_list([2, 2, 1], frame=self.world.root),
@@ -319,10 +319,10 @@ class TestActionDesignatorGrounding(ApartmentWorldTestCase):
         }
         for name, state in arm_park.items():
             self.world.state[
-                self.world.get_degree_of_freedom_by_name(name).name
+                self.world.get_degree_of_freedom_by_name(name).id
             ].position = state
         self.world.state[
-            self.world.get_degree_of_freedom_by_name("torso_lift_joint").name
+            self.world.get_degree_of_freedom_by_name("torso_lift_joint").id
         ].position = 0.3
         self.world.notify_state_change()
         location_desig = ProbabilisticCostmapLocation(

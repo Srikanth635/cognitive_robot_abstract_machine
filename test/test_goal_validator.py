@@ -173,7 +173,7 @@ class TestGoalValidator(GoalTestCase):
         goal_validator = GoalValidator(
             RevoluteJointPositionErrorChecker(),
             lambda name: self.world.state[
-                self.world.get_degree_of_freedom_by_name(name).name
+                self.world.get_degree_of_freedom_by_name(name).id
             ].position,
         )
         self.validate_revolute_joint_position_goal(goal_validator)
@@ -181,7 +181,7 @@ class TestGoalValidator(GoalTestCase):
     def test_single_revolute_joint_position_goal(self):
         goal_validator = JointPositionGoalValidator(
             lambda name: self.world.state[
-                self.world.get_degree_of_freedom_by_name(name).name
+                self.world.get_degree_of_freedom_by_name(name).id
             ].position
         )
         self.validate_revolute_joint_position_goal(goal_validator, JointType.REVOLUTE)
@@ -201,13 +201,11 @@ class TestGoalValidator(GoalTestCase):
 
         for percent in [0.5, 1]:
             self.world.state[
-                self.world.get_degree_of_freedom_by_name("l_shoulder_lift_joint").name
+                self.world.get_degree_of_freedom_by_name("l_shoulder_lift_joint").id
             ].position = (goal_joint_position * percent)
             self.assertEqual(
                 self.world.state[
-                    self.world.get_degree_of_freedom_by_name(
-                        "l_shoulder_lift_joint"
-                    ).name
+                    self.world.get_degree_of_freedom_by_name("l_shoulder_lift_joint").id
                 ].position,
                 goal_joint_position * percent,
             )
@@ -228,7 +226,7 @@ class TestGoalValidator(GoalTestCase):
         goal_validator = GoalValidator(
             PrismaticJointPositionErrorChecker(),
             lambda name: self.world.state[
-                self.world.get_degree_of_freedom_by_name(name).name
+                self.world.get_degree_of_freedom_by_name(name).id
             ].position,
         )
         self.validate_prismatic_joint_position_goal(goal_validator)
@@ -236,7 +234,7 @@ class TestGoalValidator(GoalTestCase):
     def test_single_prismatic_joint_position_goal(self):
         goal_validator = JointPositionGoalValidator(
             lambda name: self.world.state[
-                self.world.get_degree_of_freedom_by_name(name).name
+                self.world.get_degree_of_freedom_by_name(name).id
             ].position
         )
         self.validate_prismatic_joint_position_goal(goal_validator, JointType.PRISMATIC)
@@ -257,11 +255,11 @@ class TestGoalValidator(GoalTestCase):
 
         for percent, achieved_percentage in zip([0.5, 1], achieved_percentage):
             self.world.state[
-                self.world.get_degree_of_freedom_by_name("torso_lift_joint").name
+                self.world.get_degree_of_freedom_by_name("torso_lift_joint").id
             ].position = (goal_joint_position * percent)
             self.assertEqual(
                 self.world.state[
-                    self.world.get_degree_of_freedom_by_name("torso_lift_joint").name
+                    self.world.get_degree_of_freedom_by_name("torso_lift_joint").id
                 ].position,
                 goal_joint_position * percent,
             )
@@ -284,7 +282,7 @@ class TestGoalValidator(GoalTestCase):
             MultiJointPositionErrorChecker(joint_types),
             lambda x: [
                 self.world.state[
-                    self.world.get_degree_of_freedom_by_name(name).name
+                    self.world.get_degree_of_freedom_by_name(name).id
                 ].position
                 for name in x
             ],
@@ -296,7 +294,7 @@ class TestGoalValidator(GoalTestCase):
         goal_validator = MultiJointPositionGoalValidator(
             lambda x: [
                 self.world.state[
-                    self.world.get_degree_of_freedom_by_name(name).name
+                    self.world.get_degree_of_freedom_by_name(name).id
                 ].position
                 for name in x
             ]
@@ -327,14 +325,12 @@ class TestGoalValidator(GoalTestCase):
             current_joint_positions = goal_joint_positions * percent
             for joint_name, joint_position in zip(joint_names, current_joint_positions):
                 self.world.state[
-                    self.world.get_degree_of_freedom_by_name(joint_name).name
+                    self.world.get_degree_of_freedom_by_name(joint_name).id
                 ].position = joint_position
             self.assertTrue(
                 np.allclose(
                     self.world.state[
-                        self.world.get_degree_of_freedom_by_name(
-                            "torso_lift_joint"
-                        ).name
+                        self.world.get_degree_of_freedom_by_name("torso_lift_joint").id
                     ].position,
                     current_joint_positions[0],
                     atol=0.001,
@@ -345,7 +341,7 @@ class TestGoalValidator(GoalTestCase):
                     self.world.state[
                         self.world.get_degree_of_freedom_by_name(
                             "l_shoulder_lift_joint"
-                        ).name
+                        ).id
                     ].position,
                     current_joint_positions[1],
                     atol=0.001,
@@ -626,7 +622,7 @@ class TestGoalValidator(GoalTestCase):
             RevoluteJointPositionErrorChecker(is_iterable=True),
             lambda x: [
                 self.world.state[
-                    self.world.get_degree_of_freedom_by_name(name).name
+                    self.world.get_degree_of_freedom_by_name(name).id
                 ].position
                 for name in x
             ],
@@ -637,7 +633,7 @@ class TestGoalValidator(GoalTestCase):
         goal_validator = MultiJointPositionGoalValidator(
             lambda x: [
                 self.world.state[
-                    self.world.get_degree_of_freedom_by_name(name).name
+                    self.world.get_degree_of_freedom_by_name(name).id
                 ].position
                 for name in x
             ]
@@ -670,14 +666,14 @@ class TestGoalValidator(GoalTestCase):
             current_joint_position = goal_joint_positions * percent
             for joint_name, joint_position in zip(joint_names, current_joint_position):
                 self.world.state[
-                    self.world.get_degree_of_freedom_by_name(joint_name).name
+                    self.world.get_degree_of_freedom_by_name(joint_name).id
                 ].position = joint_position
             self.world.notify_state_change()
             for joint_name, joint_position in zip(joint_names, current_joint_position):
                 self.assertTrue(
                     np.allclose(
                         self.world.state[
-                            self.world.get_degree_of_freedom_by_name(joint_name).name
+                            self.world.get_degree_of_freedom_by_name(joint_name).id
                         ].position,
                         joint_position,
                         atol=0.001,

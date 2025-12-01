@@ -130,7 +130,7 @@ class DefaultMoveTCP(ProcessModule):
         )
 
         for joint, state in inv.items():
-            desig.world.state[joint.name].position = state
+            desig.world.state[joint.id].position = state
         desig.world.notify_state_change()
 
 
@@ -145,12 +145,12 @@ class DefaultMoveArmJoints(ProcessModule):
         if desig.right_arm_poses:
             for joint, position in desig.right_arm_poses.items():
                 dof = desig.world.get_degree_of_freedom_by_name(joint)
-                desig.world.state[dof.name].position = position
+                desig.world.state[dof.id].position = position
 
         if desig.left_arm_poses:
             for joint, position in desig.right_arm_poses.items():
                 dof = desig.world.get_degree_of_freedom_by_name(joint)
-                desig.world.state[dof.name].position = position
+                desig.world.state[dof.id].position = position
         desig.world.notify_state_change()
 
 
@@ -158,7 +158,7 @@ class DefaultMoveJoints(ProcessModule):
     def _execute(self, desig: MoveJointsMotion):
         for joint, position in zip(desig.names, desig.positions):
             dof = desig.world.get_degree_of_freedom_by_name(joint)
-            desig.world.state[dof.name].position = position
+            desig.world.state[dof.id].position = position
         desig.world.notify_state_change()
         logger.debug(f"Moved joints {desig.names} to positions {desig.positions}")
 
@@ -257,7 +257,7 @@ def _move_arm_tcp(
     inv = world.compute_inverse_kinematics(world.root, tip, target.to_spatial_type())
 
     for joint, state in inv.items():
-        world.state[joint.name].position = state
+        world.state[joint.id].position = state
     world.notify_state_change()
 
 
@@ -439,10 +439,10 @@ class DefaultMoveHeadReal(ProcessModule):
             new_tilt = -new_tilt
 
         current_pan = desig.world.state[
-            desig.world.get_degree_of_freedom_by_name(pan_joint).name
+            desig.world.get_degree_of_freedom_by_name(pan_joint).id
         ].position
         current_tilt = desig.world.state[
-            desig.world.get_degree_of_freedom_by_name(tilt_joint).name
+            desig.world.get_degree_of_freedom_by_name(tilt_joint).id
         ].position
 
         # giskard.avoid_all_collisions()
