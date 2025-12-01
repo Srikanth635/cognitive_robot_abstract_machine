@@ -1,12 +1,14 @@
+import hashlib
 import os
 import time
 import unittest
-import numpy as np
+import uuid
 from typing import Optional
+from uuid import UUID, uuid4
 
+import numpy as np
 import sqlalchemy
-from krrood.ormatic.utils import drop_database
-from semantic_digital_twin.semantic_annotations.semantic_annotations import Handle, Door
+from krrood.ormatic.utils import drop_database, create_engine
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -18,6 +20,7 @@ from semantic_digital_twin.adapters.ros.world_synchronizer import (
 from semantic_digital_twin.adapters.urdf import URDFParser
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.orm.ormatic_interface import Base, WorldMappingDAO
+from semantic_digital_twin.semantic_annotations.semantic_annotations import Handle, Door
 from semantic_digital_twin.spatial_types import Vector3
 from semantic_digital_twin.testing import rclpy_node
 from semantic_digital_twin.utils import get_semantic_digital_twin_directory_root
@@ -32,17 +35,58 @@ from semantic_digital_twin.world_description.world_entity import Body
 
 
 def create_dummy_world(w: Optional[World] = None) -> World:
+    def deterministic_uuid(seed: str) -> uuid.UUID:
+        h = hashlib.sha1(seed.encode()).hexdigest()[:32]
+        return uuid.UUID(h)
+
+    id1 = deterministic_uuid("id1")
+    id2 = deterministic_uuid("id2")
     if w is None:
         w = World()
-    b1 = Body(name=PrefixedName("b1"))
-    b2 = Body(name=PrefixedName("b2"))
+    b1 = Body(name=PrefixedName("b1"), id=id1)
+    b2 = Body(name=PrefixedName("b2"), id=id2)
     with w.modify_world():
-        w.add_connection(Connection6DoF.create_with_dofs(parent=b1, child=b2, world=w))
+        x_dof = DegreeOfFreedom(name=PrefixedName("x"), id=deterministic_uuid("x_dof"))
+        w.add_degree_of_freedom(x_dof)
+        y_dof = DegreeOfFreedom(name=PrefixedName("y"), id=deterministic_uuid("y_dof"))
+        w.add_degree_of_freedom(y_dof)
+        z_dof = DegreeOfFreedom(name=PrefixedName("z"), id=deterministic_uuid("z_dof"))
+        w.add_degree_of_freedom(z_dof)
+        qx_dof = DegreeOfFreedom(
+            name=PrefixedName("qx"), id=deterministic_uuid("qx_dof")
+        )
+        w.add_degree_of_freedom(qx_dof)
+        qy_dof = DegreeOfFreedom(
+            name=PrefixedName("qy"), id=deterministic_uuid("qy_dof")
+        )
+        w.add_degree_of_freedom(qy_dof)
+        qz_dof = DegreeOfFreedom(
+            name=PrefixedName("qz"), id=deterministic_uuid("qz_dof")
+        )
+        w.add_degree_of_freedom(qz_dof)
+        qw_dof = DegreeOfFreedom(
+            name=PrefixedName("qw"), id=deterministic_uuid("qw_dof")
+        )
+        w.add_degree_of_freedom(qw_dof)
+        w.state[qw_dof.id].position = 1.0
+
+        w.add_connection(
+            Connection6DoF(
+                parent=b1,
+                child=b2,
+                x_id=x_dof.id,
+                y_id=y_dof.id,
+                z_id=z_dof.id,
+                qx_id=qx_dof.id,
+                qy_id=qy_dof.id,
+                qz_id=qz_dof.id,
+                qw_id=qw_dof.id,
+            )
+        )
     return w
 
 
 def test_state_synchronization(rclpy_node):
-
     w1 = create_dummy_world()
     w2 = create_dummy_world()
 
@@ -98,7 +142,7 @@ def test_state_synchronization_world_model_change_after_init(rclpy_node):
 
 def test_model_reload(rclpy_node):
 
-    engine = sqlalchemy.create_engine(
+    engine = create_engine(
         "sqlite+pysqlite:///file::memory:?cache=shared",
         connect_args={"check_same_thread": False, "uri": True},
     )
@@ -150,14 +194,14 @@ def test_model_synchronization_body_only(rclpy_node):
 
     with w1.modify_world():
         new_body = Body(name=PrefixedName("b3"))
+        b3_id = new_body.id
         w1.add_kinematic_structure_entity(new_body)
-        assert len(w1.kinematic_structure_entities) == 1
 
     time.sleep(0.2)
     assert len(w1.kinematic_structure_entities) == 1
     assert len(w2.kinematic_structure_entities) == 1
 
-    assert w2.get_kinematic_structure_entity_by_name("b3")
+    assert w2.get_kinematic_structure_entity_by_id(b3_id)
 
     synchronizer_1.close()
     synchronizer_2.close()
@@ -222,15 +266,15 @@ def test_model_synchronization_merge_full_world(rclpy_node):
     def wait_for_sync(timeout=3.0, interval=0.05):
         start = time.time()
         while time.time() - start < timeout:
-            body_names_1 = [body.name for body in w1.kinematic_structure_entities]
-            body_names_2 = [body.name for body in w2.kinematic_structure_entities]
-            if body_names_1 == body_names_2:
-                return body_names_1, body_names_2
+            body_ids_1 = [body.id for body in w1.kinematic_structure_entities]
+            body_ids_2 = [body.id for body in w2.kinematic_structure_entities]
+            if body_ids_1 == body_ids_2:
+                return body_ids_1, body_ids_2
             time.sleep(interval)
 
-        body_names_1 = [body.name for body in w1.kinematic_structure_entities]
-        body_names_2 = [body.name for body in w2.kinematic_structure_entities]
-        return body_names_1, body_names_2
+        body_ids_1 = [body.id for body in w1.kinematic_structure_entities]
+        body_ids_2 = [body.id for body in w2.kinematic_structure_entities]
+        return body_ids_1, body_ids_2
 
     with w1.modify_world():
         new_body = Body(name=PrefixedName("b3"))
@@ -239,14 +283,14 @@ def test_model_synchronization_merge_full_world(rclpy_node):
     fixed_connection = FixedConnection(child=new_body, parent=pr2_world.root)
     w1.merge_world(pr2_world, fixed_connection)
 
-    body_names_1, body_names_2 = wait_for_sync()
+    body_ids_1, body_ids_2 = wait_for_sync()
 
-    assert body_names_1 == body_names_2
+    assert body_ids_1 == body_ids_2
     assert len(w1.kinematic_structure_entities) == len(w2.kinematic_structure_entities)
 
-    w1_connection_names = [c.name for c in w1.connections]
-    w2_connection_names = [c.name for c in w2.connections]
-    assert w1_connection_names == w2_connection_names
+    w1_connection_hashes = [hash(c) for c in w1.connections]
+    w2_connection_hashes = [hash(c) for c in w2.connections]
+    assert w1_connection_hashes == w2_connection_hashes
     assert len(w1.connections) == len(w2.connections)
     assert len(w2.degrees_of_freedom) == len(w1.degrees_of_freedom)
 
@@ -320,7 +364,7 @@ def test_ChangeDifHasHardwareInterface(rclpy_node):
         dof = DegreeOfFreedom(name=PrefixedName("dof"))
         w1.add_degree_of_freedom(dof)
         connection = PrismaticConnection(
-            dof_name=dof.name, parent=body1, child=body2, axis=Vector3(1, 1, 1)
+            dof_id=dof.id, parent=body1, child=body2, axis=Vector3(1, 1, 1)
         )
         w1.add_connection(connection)
     assert len(w1.kinematic_structure_entities) == 2
@@ -369,8 +413,8 @@ def test_semantic_annotation_modifications(rclpy_node):
         w1.add_semantic_annotation(v2)
 
     time.sleep(0.2)
-    assert [sa.name for sa in w1.semantic_annotations] == [
-        sa.name for sa in w2.semantic_annotations
+    assert [hash(sa) for sa in w1.semantic_annotations] == [
+        hash(sa) for sa in w2.semantic_annotations
     ]
 
 
@@ -401,7 +445,7 @@ def test_synchronize_6dof(rclpy_node):
     time.sleep(1)
     c2 = w2.get_connection_by_name(c1.name)
     assert isinstance(c2, Connection6DoF)
-    assert w1.state[c1.qw_name].position == w2.state[c2.qw_name].position
+    assert w1.state[c1.qw_id].position == w2.state[c2.qw_id].position
     np.testing.assert_array_almost_equal(w1.state.data, w2.state.data)
 
 
@@ -430,8 +474,9 @@ def test_compute_state_changes_shape_change_full_snapshot(rclpy_node):
     w = create_dummy_world()
     s = StateSynchronizer(node=rclpy_node, world=w)
     # append a new DOF by writing a new name into state
-    new_name = PrefixedName("new_joint")
-    w.state[new_name] = np.zeros(4)
+    new_uuid = uuid4()
+    w.state._add_dof(new_uuid)
+    w.state[new_uuid] = np.zeros(4)
     changes = s.compute_state_changes()
     # full snapshot expected
     assert len(changes) == len(w.state)

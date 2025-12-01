@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from functools import cached_property
 from typing import ClassVar, Optional, Type, List, Dict
+from uuid import UUID
 
 import numpy as np
 import rclpy  # type: ignore
@@ -19,7 +20,6 @@ from sqlalchemy.orm import Session
 from .messages import MetaData, WorldStateUpdate, Message, ModificationBlock, LoadModel
 from ..world_entity_kwargs_tracker import KinematicStructureEntityKwargsTracker
 from ...callbacks.callback import Callback, StateChangeCallback, ModelChangeCallback
-from ...datastructures.prefixed_name import PrefixedName
 from ...orm.ormatic_interface import *
 from ...world import World
 
@@ -204,7 +204,7 @@ class StateSynchronizer(StateChangeCallback, SynchronizerOnCallback):
         :param msg: The message containing the new state information.
         """
         # Parse incoming states: WorldState has 'states' only
-        indices = [self.world.state._index[n] for n in msg.prefixed_names]
+        indices = [self.world.state._index[_id] for _id in msg.ids]
 
         if indices:
             self.world.state.data[0, indices] = np.asarray(msg.states, dtype=float)
@@ -221,28 +221,28 @@ class StateSynchronizer(StateChangeCallback, SynchronizerOnCallback):
             return
 
         msg = WorldStateUpdate(
-            prefixed_names=list(changes.keys()),
+            ids=list(changes.keys()),
             states=list(changes.values()),
             meta_data=self.meta_data,
         )
         self.update_previous_world_state()
         self.publish(msg)
 
-    def compute_state_changes(self) -> Dict[PrefixedName, float]:
+    def compute_state_changes(self) -> Dict[UUID, float]:
         """
         Compute and return only the position changes since the last published snapshot.
 
         Returns a mapping of DOF name to current position for entries whose position
         differs from the previous snapshot, using a vectorized tolerance-based diff.
         """
-        names = self.world.state.keys()  # List[PrefixedName] in column order
+        ids = self.world.state.keys()  # List[PrefixedName] in column order
         curr = self.world.state.positions  # np.ndarray shape (N,)
         prev = self.previous_world_state_data  # np.ndarray shape (N,)
 
         # If the number of DOFs changed (model update), send everything once
         # so the other side can resync, then the snapshot will be updated afterward.
         if prev.shape != curr.shape:
-            return {n: float(v) for n, v in zip(names, curr)}
+            return {n: float(v) for n, v in zip(ids, curr)}
 
         # Vectorized comparison: O(N) with minimal Python overhead
         changed_mask = ~np.isclose(curr, prev, rtol=1e-8, atol=1e-12, equal_nan=True)
@@ -250,7 +250,7 @@ class StateSynchronizer(StateChangeCallback, SynchronizerOnCallback):
             return {}
 
         idx = np.nonzero(changed_mask)[0]
-        return {names[i]: float(curr[i]) for i in idx}
+        return {ids[i]: float(curr[i]) for i in idx}
 
 
 @dataclass
