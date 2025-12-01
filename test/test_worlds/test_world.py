@@ -219,8 +219,10 @@ def test_compute_fk(world_setup):
 
     connection: PrismaticConnection = world.get_connection(r1, r2)
 
+    state_memory_id = id(world.state.data)
     world.state[connection.dof.name].position = 1.0
     world.notify_state_change()
+    assert state_memory_id == id(world.state.data)
     fk = world.compute_forward_kinematics_np(l2, r2)
     assert np.allclose(
         fk,
@@ -267,6 +269,7 @@ def test_compute_fk_expression(world_setup):
 
 def test_apply_control_commands(world_setup):
     world, l1, l2, bf, r1, r2 = world_setup
+    state_memory_id = id(world.state.data)
     connection: PrismaticConnection = world.get_connection(r1, r2)
     cmd = np.array([100.0, 0, 0, 0, 0, 0, 0, 0])
     dt = 0.1
@@ -275,6 +278,8 @@ def test_apply_control_commands(world_setup):
     assert world.state[connection.dof.name].acceleration == 100.0 * dt
     assert world.state[connection.dof.name].velocity == 100.0 * dt * dt
     assert world.state[connection.dof.name].position == 100.0 * dt * dt * dt
+    # the state should reuse the same memory
+    assert state_memory_id == id(world.state.data)
 
 
 def test_compute_relative_pose(world_setup):
