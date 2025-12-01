@@ -46,6 +46,19 @@ class BaseMotion(DesignatorDescription):
         """
         pass
 
+    @property
+    def motion_chart(self) -> Task:
+        alternative = AlternativeMotionMapping.check_for_alternative(self.robot_view, self)
+        if alternative is not None:
+            return alternative
+        else:
+            return self._motion_chart
+
+    @property
+    @abstractmethod
+    def _motion_chart(self) -> Task:
+        pass
+
     def __post_init__(self):
         """
         Checks if types are missing or wrong

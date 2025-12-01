@@ -25,9 +25,11 @@ class MoveMotion(BaseMotion):
     """
 
     def perform(self):
+        return
         pm_manager = ProcessModuleManager().get_manager(self.robot_view)
         return pm_manager.navigate().execute(self)
 
+    @property
     def _motion_chart(self):
         return CartesianPose(
             root_link=self.world.root,
@@ -36,17 +38,4 @@ class MoveMotion(BaseMotion):
         )
 
 
-@dataclass
-class LookingMotion(BaseMotion):
-    """
-    Lets the robot look at a point
-    """
 
-    target: PoseStamped
-
-    def perform(self):
-        pm_manager = ProcessModuleManager().get_manager(self.robot_view)
-        return pm_manager.looking().execute(self)
-
-    def _motion_chart(self):
-        return Pointing()

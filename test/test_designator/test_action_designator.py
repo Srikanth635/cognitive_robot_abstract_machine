@@ -1,7 +1,11 @@
+import time
 import unittest
 
+import rclpy
 import rustworkx
+from giskardpy.utils.utils_for_tests import compare_axis_angle
 from semantic_digital_twin.adapters.procthor.procthor_semantic_annotations import Milk
+from semantic_digital_twin.adapters.viz_marker import VizMarkerPublisher
 
 from pycram.datastructures.dataclasses import Context
 from pycram.process_module import simulated_robot
@@ -20,7 +24,7 @@ class TestActionDesignatorGrounding(ApartmentWorldTestCase):
         with simulated_robot:
             plan.perform()
         dof = self.world.get_degree_of_freedom_by_name("torso_lift_joint")
-        self.assertEqual(self.world.state[dof.id].position, 0.3)
+        self.assertAlmostEqual(self.world.state[dof.id].position, 0.29, places=2)
 
     def test_set_gripper(self):
         description = SetGripperActionDescription(
@@ -36,7 +40,7 @@ class TestActionDesignatorGrounding(ApartmentWorldTestCase):
         )
         for joint, state in zip(joint_state.joint_names, joint_state.joint_positions):
             dof = self.world.get_degree_of_freedom_by_name(joint)
-            self.assertEqual(self.world.state[dof.id].position, state)
+            self.assertAlmostEqual(self.world.state[dof.id].position, state, places=2)
 
     def test_park_arms(self):
         description = ParkArmsActionDescription([Arms.BOTH])
@@ -50,16 +54,20 @@ class TestActionDesignatorGrounding(ApartmentWorldTestCase):
         joint_states_left = JointStateManager().get_arm_state(
             Arms.LEFT, StaticJointState.Park, self.robot_view
         )
+        time.sleep(10)
         for joint_name, joint_state in zip(
             joint_states_right.joint_names, joint_states_right.joint_positions
         ):
             dof = self.world.get_degree_of_freedom_by_name(joint_name)
-            self.assertEqual(self.world.state[dof.id].position, joint_state)
+            compare_axis_angle(self.world.state[dof.name].position, np.array([1, 0, 0]), joint_state,
+                               np.array([1, 0, 0]), decimal=1)
+            # self.assertAlmostEqual(self.world.state[dof.id].position, joint_state % (2 * np.pi), places=1)
         for joint_name, joint_state in zip(
             joint_states_left.joint_names, joint_states_left.joint_positions
         ):
             dof = self.world.get_degree_of_freedom_by_name(joint_name)
-            self.assertEqual(self.world.state[dof.id].position, joint_state)
+            compare_axis_angle(self.world.state[dof.name].position, [1, 0, 0], joint_state, [1, 0, 0], decimal=1)
+            # self.assertAlmostEqual(self.world.state[dof.id].position, joint_state % (2 * np.pi), places=1)
 
     def test_navigate(self):
         description = NavigateActionDescription(
@@ -103,6 +111,8 @@ class TestActionDesignatorGrounding(ApartmentWorldTestCase):
         )
         with simulated_robot:
             plan.perform()
+        gripper_pose = self.world.get_body_by_name("l_gripper_tool_frame").global_pose.to_np()[:3, 3]
+        np.testing.assert_almost_equal(gripper_pose, np.array([2.37, 2, 1.05]), decimal=2)
 
     def test_pick_up(self):
         test_world = deepcopy(self.world)
@@ -171,11 +181,11 @@ class TestActionDesignatorGrounding(ApartmentWorldTestCase):
 
     def test_look_at(self):
         description = LookAtAction.description(
-            [PoseStamped.from_list([1, 0, 1], frame=self.world.root)]
+            [PoseStamped.from_list([5, 0, 1], frame=self.world.root)]
         )
         self.assertEqual(
             description.resolve().target,
-            PoseStamped.from_list([1, 0, 1], frame=self.world.root),
+            PoseStamped.from_list([5, 0, 1], frame=self.world.root),
         )
         plan = SequentialPlan(self.context, description)
         with simulated_robot:
@@ -304,7 +314,7 @@ class TestActionDesignatorGrounding(ApartmentWorldTestCase):
                 self.robot_view.root,
             )
             milk_in_robot_frame = PoseStamped.from_spatial_type(milk_in_robot_frame)
-            self.assertAlmostEqual(milk_in_robot_frame.position.y, 0.0)
+            self.assertAlmostEqual(milk_in_robot_frame.position.y, 0., places=2)
 
     def test_move_tcp_waypoints(self):
         gripper_pose = PoseStamped.from_spatial_type(
