@@ -43,7 +43,7 @@ from .failures import (
     GreaterThanExpectedNumberOfSolutions,
     LessThanExpectedNumberOfSolutions,
     InvalidEntityType,
-    UnSupportedOperand,
+    UnSupportedOperand, NonPositiveLimitValue,
 )
 from .hashed_data import HashedValue, HashedIterable, T
 from .result_quantification_constraint import (
@@ -538,7 +538,7 @@ class ResultQuantifier(CanBehaveLikeAVariable[T], ABC):
             else HashedIterable()
         )
         child = self._child_
-        for var in child.selected_variables:
+        for var in child._selected_variables:
             projection.add(var)
             projection.update(var._unique_variables_)
         if when_true or (when_true is None):
@@ -563,7 +563,7 @@ class ResultQuantifier(CanBehaveLikeAVariable[T], ABC):
         if isinstance(self._child_, Entity):
             return result[self._child_.selected_variable._id_].value
         elif isinstance(self._child_, SetOf):
-            selected_variables_ids = [v._id_ for v in self._child_.selected_variables]
+            selected_variables_ids = [v._id_ for v in self._child_._selected_variables]
             return UnificationDict(
                 {
                     self._id_expression_map_[var_id]: value
@@ -647,7 +647,24 @@ class UnificationDict(UserDict):
 class An(ResultQuantifier[T]):
     """Quantifier that yields all matching results one by one."""
 
-    ...
+    def evaluate(
+            self,
+            limit: Optional[int] = None,
+    ) -> Iterable[TypingUnion[T, Dict[TypingUnion[T, SymbolicExpression[T]], T]]]:
+        """
+        Evaluate the query and map the results to the correct output data structure.
+        This is the exposed evaluation method for users.
+        """
+        results = super().evaluate()
+        if limit is None:
+            yield from results
+        elif not isinstance(limit, int) or limit <= 0:
+            raise NonPositiveLimitValue(limit)
+        else:
+            for res_num, result in enumerate(results, 1):
+                yield result
+                if res_num == limit:
+                    return
 
 
 @dataclass(eq=False, repr=False)
@@ -679,6 +696,24 @@ class The(ResultQuantifier[T]):
 
 
 @dataclass(eq=False, repr=False)
+class Count(ResultQuantifier[T]):
+    """Quantifier that returns the number of matching results."""
+
+    def evaluate(
+            self,
+    ) -> TypingUnion[T, Dict[TypingUnion[T, SymbolicExpression[T]], T]]:
+        return len(list(super().evaluate()))
+
+
+ResultMapping = Callable[
+    [Iterable[Dict[int, HashedValue]]], Iterable[Dict[int, HashedValue]]
+]
+"""
+A function that maps the results of a query object descriptor to a new set of results.
+"""
+
+
+@dataclass(eq=False, repr=False)
 class QueryObjectDescriptor(SymbolicExpression[T], ABC):
     """
     Describes the queried object(s), could be a query over a single variable or a set of variables,
@@ -686,13 +721,91 @@ class QueryObjectDescriptor(SymbolicExpression[T], ABC):
     """
 
     _child_: Optional[SymbolicExpression[T]] = field(default=None)
-    selected_variables: List[CanBehaveLikeAVariable[T]] = field(default_factory=list)
-    warned_vars: typing.Set = field(default_factory=set, init=False)
+    _selected_variables: List[CanBehaveLikeAVariable[T]] = field(default_factory=list)
+    _results_mapping: List[ResultMapping] = field(init=False, default_factory=list)
+    _order_by: Optional[Tuple[Selectable, bool]] = field(default=None, init=False)
+    _seen_results: SeenSet[Dict[int, HashedValue]] = field(
+        init=False, default_factory=SeenSet
+    )
 
     def __post_init__(self):
         super().__post_init__()
-        for variable in self.selected_variables:
+        for variable in self._selected_variables:
             variable._var_._node_.enclosed = True
+
+    def order_by(self, variable, descending: bool = False) -> Self:
+        self._order_by = (variable, descending)
+        return self
+
+    def distinct(
+        self,
+        *on: Selectable[T],
+    ) -> Self:
+        """
+        Apply distinctness constraint to the query object descriptor results.
+
+        :param on: The variables to be used for distinctness.
+        :return: This query object descriptor.
+        """
+
+        def get_distinct_results(
+            results_gen: Iterable[Dict[int, HashedValue]],
+        ) -> Iterable[Dict[int, HashedValue]]:
+            on_ids = [v._var_._id_ for v in on] if on else []
+            for res in results_gen:
+                bindings = (
+                    res if not on else {k: v for k, v in res.items() if k in on_ids}
+                )
+                bindings = {k: v.value for k, v in bindings.items()}
+                if not self._seen_results.check(bindings):
+                    yield res
+                    self._seen_results.add(bindings)
+
+        self._results_mapping.append(get_distinct_results)
+        return self
+
+    def max(self, variable: Optional[CanBehaveLikeAVariable[T]] = None) -> Self:
+        """
+        Add a result mapping that maps the results to the result that has the maximum
+        value for the given variable.
+
+        :param variable: The variable for which the maximum value is to be found, if None, the first selected variable
+         is used.
+        :return: This query object descriptor.
+        """
+        variable = variable or self._selected_variables[0]
+        key = lambda res: res[variable._id_].value
+        mapping = lambda results_gen: [max(results_gen, key=key)]
+        self._results_mapping.append(mapping)
+        return self
+
+    def min(self, variable: Optional[CanBehaveLikeAVariable[T]] = None) -> Self:
+        """
+        Add a result mapping that maps the results to the result that has the minimum
+        value for the given variable.
+
+        :param variable: The variable for which the minimum value is to be found, if None, the first selected variable
+         is used.
+        :return: This query object descriptor.
+        """
+        variable = variable or self._selected_variables[0]
+        key = lambda res: res[variable._id_].value
+        mapping = lambda results_gen: [min(results_gen, key=key)]
+        self._results_mapping.append(mapping)
+        return self
+
+    def sum(self, variable: Optional[CanBehaveLikeAVariable[T]] = None):
+        """
+        Computes the sum of values produced by the given variable.
+        If variable is None, tries to sum the rows directly (rare case).
+        """
+        variable = variable or self._selected_variables[0]
+        map_to_var_val = lambda res: res[variable._id_].value
+        mapping = lambda results_gen: [
+            {variable._id_: HashedValue(sum(map(map_to_var_val, results_gen)))}
+        ]
+        self._results_mapping.append(mapping)
+        return self
 
     @lru_cache(maxsize=None)
     def _projection_(self, when_true: Optional[bool] = True) -> HashedIterable[int]:
@@ -706,13 +819,30 @@ class QueryObjectDescriptor(SymbolicExpression[T], ABC):
             if self._parent_
             else HashedIterable()
         )
-        projection.update(self.selected_variables)
-        for var in self.selected_variables:
+        projection.update(self._selected_variables)
+        for var in self._selected_variables:
             projection.update(var._unique_variables_)
         if self._child_ and (when_true or (when_true is None)):
             for conclusion in self._child_._conclusion_:
                 projection.update(conclusion._unique_variables_)
         return projection
+
+    def _order(
+        self, results: Iterable[Dict[int, HashedValue]] = None
+    ) -> Iterable[Dict[int, HashedValue]]:
+        """
+        Order the results by the given order variable.
+
+        :param results: The results to be ordered.
+        :return: The ordered results.
+        """
+        order_var, descending = self._order_by
+        results = sorted(
+            results,
+            key=lambda r: r[order_var._id_].value,
+            reverse=descending,
+        )
+        return results
 
     def _evaluate__(
         self,
@@ -725,7 +855,9 @@ class QueryObjectDescriptor(SymbolicExpression[T], ABC):
             self.evaluate_conclusions_and_update_bindings(values)
             if self.any_selected_variable_is_inferred_and_unbound(values):
                 continue
-            yield from self.evaluate_selected_variables(values.bindings)
+            selected_vars_bindings = self._evaluate_selected_variables(values.bindings)
+            for result in self._apply_results_mapping(selected_vars_bindings):
+                yield OperationResult({**sources, **result}, False, self)
 
     @staticmethod
     def variable_is_inferred(var: CanBehaveLikeAVariable[T]) -> bool:
@@ -748,7 +880,7 @@ class QueryObjectDescriptor(SymbolicExpression[T], ABC):
         """
         return any(
             not self.variable_is_bound_or_its_children_are_bound(var, values)
-            for var in self.selected_variables
+            for var in self._selected_variables
             if self.variable_is_inferred(var)
         )
 
@@ -804,9 +936,9 @@ class QueryObjectDescriptor(SymbolicExpression[T], ABC):
         else:
             yield from [OperationResult(sources, False, self)]
 
-    def evaluate_selected_variables(
-        self, sources: Dict[int, HashedValue]
-    ) -> Iterable[OperationResult]:
+    def _evaluate_selected_variables(
+            self, sources: Dict[int, HashedValue]
+    ) -> Iterable[Dict[int, HashedValue]]:
         """
         Evaluate the selected variables by generating combinations of values from their evaluation generators.
 
@@ -815,20 +947,25 @@ class QueryObjectDescriptor(SymbolicExpression[T], ABC):
         """
         var_val_gen = {
             var: var._evaluate__(copy(sources), parent=self)
-            for var in self.selected_variables
+            for var in self._selected_variables
         }
         for sol in generate_combinations(var_val_gen):
-            var_val = {var._id_: sol[var][var._id_] for var in self.selected_variables}
-            self._is_false_ = self._is_false_ or any(
-                sol[var].is_false for var in self.selected_variables
-            )
-            yield OperationResult({**sources, **var_val}, self._is_false_, self)
+            yield {var._id_: sol[var][var._id_] for var in self._selected_variables}
+
+    def _apply_results_mapping(
+        self, results: Iterable[Dict[int, HashedValue]]
+    ) -> Iterable[Dict[int, HashedValue]]:
+        for result_mapping in self._results_mapping:
+            results = result_mapping(results)
+        if self._order_by:
+            results = self._order(results)
+        return results
 
     @cached_property
     def _all_variable_instances_(self) -> List[Variable]:
         vars = []
-        if self.selected_variables:
-            vars.extend(self.selected_variables)
+        if self._selected_variables:
+            vars.extend(self._selected_variables)
         if self._child_:
             vars.extend(self._child_._all_variable_instances_)
         return vars
@@ -842,7 +979,7 @@ class QueryObjectDescriptor(SymbolicExpression[T], ABC):
 
     @property
     def _name_(self) -> str:
-        return f"({', '.join(var._name_ for var in self.selected_variables)})"
+        return f"({', '.join(var._name_ for var in self._selected_variables)})"
 
 
 @dataclass(eq=False, repr=False)
@@ -866,7 +1003,7 @@ class Entity(QueryObjectDescriptor[T], CanBehaveLikeAVariable[T]):
 
     @property
     def selected_variable(self):
-        return self.selected_variables[0] if self.selected_variables else None
+        return self._selected_variables[0] if self._selected_variables else None
 
 
 @dataclass
