@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from krrood_test.dataset.university_ontology_like_classes import Company, Person, CEO
+from ..dataset.university_ontology_like_classes import Company, Person, CEO
 from krrood.entity_query_language.symbol_graph import SymbolGraph
 
 SymbolGraph().clear()
@@ -29,7 +29,7 @@ def test_set_container_property():
     person1 = Person(name="Bass1")
     person2 = Person(name="Bass2")
 
-    # krrood_test direct setting of a set
+    # test direct setting of a set
     company.members = {person1, person2}
     assert person1 in company.members
     assert person2 in company.members
