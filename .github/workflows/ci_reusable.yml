@@ -30,7 +30,7 @@ jobs:
           source /opt/ros/cram-venv/bin/activate
           git submodule init
           git submodule update
-          poetry update
+          poetry install
 
       - name: Run tests
         run: |

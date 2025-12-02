@@ -12,7 +12,10 @@ on:
     paths-ignore:
       - '.github/docker/**'
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
+    paths-ignore:
+      - '.github/docker/**'
 
 jobs:
   ci:
