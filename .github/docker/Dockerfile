@@ -20,8 +20,8 @@ RUN echo "source $OVERLAY_WS/install/setup.bash" >> ~/.bashrc
 RUN python3 -m venv cram-env --system-site-packages  \
     && source cram-env/bin/activate  \
     && pip install poetry \
-    && cd cognitive_robot_abstract_machine \
-    && poetry install
+#    && cd cognitive_robot_abstract_machine \
+#    && poetry install
 #    && pip install -r krrood/requirements.txt  \
 #    && pip install -r semantic_digital_twin/requirements.txt  \
 #    && pip install -r giskardpy/requirements.txt  \
