@@ -43,7 +43,7 @@ from .failures import (
     GreaterThanExpectedNumberOfSolutions,
     LessThanExpectedNumberOfSolutions,
     InvalidEntityType,
-    UnSupportedOperand, NonPositiveLimitValue, InvalidChildType,
+    UnSupportedOperand, NonPositiveLimitValue, InvalidChildType, CannotProcessResultOfGivenChildType,
 )
 from .hashed_data import HashedValue, HashedIterable, T
 from .result_quantification_constraint import (
@@ -169,6 +169,18 @@ class SymbolicExpression(Generic[T], ABC):
 
     def _create_node_(self):
         self._node_ = RWXNode(self._name_, data=self, color=self._plot_color_)
+
+    def _process_result_(
+            self, result: OperationResult
+    ) -> TypingUnion[T, UnificationDict]:
+        """
+        Map the result to the correct output data structure for user usage. This returns the selected variables only.
+        This method should be implemented by subclasses that can be children of a ResultProcessor.
+
+        :param result: The result to be mapped.
+        :return: The mapped result.
+        """
+        raise CannotProcessResultOfGivenChildType(type(self))
 
     @abstractmethod
     def _evaluate__(
@@ -377,6 +389,17 @@ class Selectable(SymbolicExpression[T], ABC):
     The type of the variable.
     """
 
+    def _process_result_(
+            self, result: OperationResult
+    ) -> T:
+        """
+        Map the result to the correct output data structure for user usage.
+
+        :param result: The result to be mapped.
+        :return: The mapped result.
+        """
+        return result[result.operand._id_].value
+
     @property
     def _is_iterable_(self):
         """
@@ -480,35 +503,11 @@ class ResultProcessor(CanBehaveLikeAVariable[T], ABC):
         This is the exposed evaluation method for users.
         """
         SymbolGraph().remove_dead_instances()
-        yield from map(self._process_result_, self._evaluate__())
+        yield from map(self._child_._process_result_, self._evaluate__())
 
     @cached_property
     def _all_variable_instances_(self) -> List[Variable]:
         return self._child_._all_variable_instances_
-
-    def _process_result_(
-            self, result: OperationResult
-    ) -> TypingUnion[T, UnificationDict]:
-        """
-        Map the result to the correct output data structure for user usage. This returns the selected variables only.
-        In case of Entity, it returns the value of the selected variable, and in case of SetOf, it returns a dictionary with the selected variables as keys and the values as values.
-
-        :param result: The result to be mapped.
-        :return: The mapped result.
-        """
-        if isinstance(self._child_, Selectable):
-            return result[self._id_].value
-        elif isinstance(self._child_, SetOf):
-            selected_variables_ids = [v._id_ for v in self._child_._selected_variables]
-            return UnificationDict(
-                {
-                    self._id_expression_map_[var_id]: value
-                    for var_id, value in result.bindings.items()
-                    if var_id in selected_variables_ids
-                }
-            )
-        else:
-            raise NotImplementedError(f"Unknown child type {type(self._child_)}")
 
     def _invert_(self):
         raise UnsupportedNegation(self.__class__)
@@ -1127,7 +1126,24 @@ class SetOf(QueryObjectDescriptor[T]):
     A query over a set of variables.
     """
 
-    ...
+    def _process_result_(
+            self, result: OperationResult
+    ) -> UnificationDict:
+        """
+        Map the result to the correct output data structure for user usage. This returns the selected variables only.
+        Return a dictionary with the selected variables as keys and the values as values.
+
+        :param result: The result to be mapped.
+        :return: The mapped result.
+        """
+        selected_variables_ids = [v._id_ for v in self._selected_variables]
+        return UnificationDict(
+            {
+                self._id_expression_map_[var_id]: value
+                for var_id, value in result.bindings.items()
+                if var_id in selected_variables_ids
+            }
+        )
 
 
 @dataclass(eq=False, repr=False)
