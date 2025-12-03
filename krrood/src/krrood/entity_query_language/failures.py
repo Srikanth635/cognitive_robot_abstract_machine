@@ -96,6 +96,21 @@ class UsageError(DataclassException):
 
 
 @dataclass
+class CannotProcessResultOfGivenChildType(UsageError):
+    """
+    Raised when the entity query language API cannot process the results of a given child type during evaluation.
+    """
+    unsupported_child_type: Type
+    """
+    The unsupported child type.
+    """
+    def __post_init__(self):
+        self.message = (f"The child type {self.unsupported_child_type} cannot have its results processed"
+                        f" during evaluation because it doesn't implement the `_process_result_` method.")
+        super().__post_init__()
+
+
+@dataclass
 class NonPositiveLimitValue(UsageError):
     """
     Raised when a limit value for the query results is not positive.
