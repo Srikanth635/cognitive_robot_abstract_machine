@@ -759,6 +759,12 @@ def test_count(handles_and_containers_world):
     assert query.evaluate() == len([b for b in world.bodies if "Handle" in b.name])
 
 
+def test_count_without_entity(handles_and_containers_world):
+    world = handles_and_containers_world
+    query = count(let(type_=Body, domain=world.bodies))
+    assert query.evaluate() == len(world.bodies)
+
+
 def test_order_by(handles_and_containers_world):
     names = ["Handle1", "Handle1", "Handle2", "Container1", "Container1", "Container3"]
     body_name = let(str, domain=names)
