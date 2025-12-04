@@ -1,7 +1,8 @@
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, InitVar
 
 import time
-from typing_extensions import Optional, Protocol
+from typing_extensions import Optional, Protocol, Self
 
 from giskardpy.data_types.exceptions import (
     NoQPControllerConfigException,
@@ -28,18 +29,29 @@ from semantic_digital_twin.robots.abstract_robot import (
 from semantic_digital_twin.world import World
 
 
-class Pacer(Protocol):
-    control_dt: float
+@dataclass
+class Pacer(ABC):
+    """
+    Tries to achieve a specific frequency by adjusting the sleep time between calls.
+    """
+
+    hz: float
+    """
+    Frequency of the loop.
+    """
+
+    @abstractmethod
     def sleep(self):
         """
-        Sleeps according to the pacer's logic to make a loop run at 'control_dt' frequency.
+        Sleeps according to the pacer's logic to make a loop run at hz frequency.
         """
 
+
 @dataclass
-class SimulationPacer:
-    control_dt: float = field(init=False)
+class SimulationPacer(Pacer):
+    hz: float = field(init=False)
     """
-    How long a cycle should take with real_time_factor=1.0.
+    How long a cycle should take in seconds with real_time_factor=1.0.
     """
 
     real_time_factor: Optional[float] = None
@@ -61,7 +73,7 @@ class SimulationPacer:
             return
         if self.real_time_factor <= 0:
             return
-        dt = self.control_dt / self.real_time_factor
+        dt = self.real_time_factor / self.hz
         now = time.monotonic()
         if self._next_target_time is None:
             self._next_target_time = now + dt
@@ -76,6 +88,7 @@ class SimulationPacer:
         while self._next_target_time is not None and self._next_target_time <= now:
             self._next_target_time += dt
 
+
 @dataclass
 class Executor:
     """
@@ -85,7 +98,9 @@ class Executor:
 
     world: World
     """The world object containing the state and entities of the robot's environment."""
-    controller_config: QPControllerConfig = field(default_factory=QPControllerConfig.create_default_with_20hz)
+    controller_config: QPControllerConfig = field(
+        default_factory=QPControllerConfig.create_with_simulation_defaults
+    )
     """Optional configuration for the QP Controller. Is only needed when constraints are present in the motion statechart."""
     collision_checker: InitVar[CollisionCheckerLib] = field(
         default=CollisionCheckerLib.none
@@ -133,7 +148,7 @@ class Executor:
             robots=self.world.get_semantic_annotations_by_type(AbstractRobot),
             collision_detector=collision_detector,
         )
-        self.pacer.control_dt = self.controller_config.control_dt
+        self.pacer.hz = self.controller_config.hz
 
     def _create_control_cycles_variable(self):
         self._control_cycles_variable = (

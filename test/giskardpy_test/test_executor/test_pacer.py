@@ -12,44 +12,50 @@ from semantic_digital_twin.world import World
 
 def test_simulation_pacer_timing_real_time(monkeypatch):
     pacer = SimulationPacer(real_time_factor=1.0)
-    pacer.control_dt = 0.02
+    pacer.hz = 50
     start_time = perf_counter()
     for i in range(50):
         pacer.sleep()
     assert np.isclose(perf_counter() - start_time, 1.0, rtol=0.01)
 
+
 def test_simulation_pacer_timing_2x(monkeypatch):
     pacer = SimulationPacer(real_time_factor=2.0)
-    pacer.control_dt = 0.02
+    pacer.hz = 50
     start_time = perf_counter()
     for i in range(50):
         pacer.sleep()
     assert np.isclose(perf_counter() - start_time, 0.5, rtol=0.01)
 
+
 def test_simulation_pacer_timing_halfx(monkeypatch):
     pacer = SimulationPacer(real_time_factor=0.5)
-    pacer.control_dt = 0.02
+    pacer.hz = 50
     start_time = perf_counter()
     for i in range(50):
         pacer.sleep()
     assert np.isclose(perf_counter() - start_time, 2.0, rtol=0.01)
 
+
 def test_simulation_pacer_timing_inf(monkeypatch):
     pacer = SimulationPacer(real_time_factor=None)
-    pacer.control_dt = 0.02
+    pacer.hz = 50
     start_time = perf_counter()
     for i in range(50):
         pacer.sleep()
     assert perf_counter() - start_time < 0.01
+
 
 def test_with_executor():
     msc = MotionStatechart()
     msc.add_node(counter := CountSeconds(seconds=1.0))
     msc.add_node(EndMotion.when_true(counter))
 
-    kin_sim = Executor(world=World(),
-                       pacer=SimulationPacer(real_time_factor=2.0),
-                       controller_config=QPControllerConfig.create_default_with_20hz())
+    kin_sim = Executor(
+        world=World(),
+        pacer=SimulationPacer(real_time_factor=2.0),
+        controller_config=QPControllerConfig.create_with_simulation_defaults(),
+    )
     kin_sim.compile(msc)
     kin_sim.tick_until_end(timeout=1000)
     # we tick 20 (hz) * 2 (real_time_factor) per second and sleep for 1s.

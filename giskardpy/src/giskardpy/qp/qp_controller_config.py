@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
+from functools import cached_property
 from typing import Optional, Dict, Type
-
-import numpy as np
 
 from giskardpy.middleware import get_middleware
 from giskardpy.qp.exceptions import QPSolverException
@@ -15,7 +15,6 @@ from giskardpy.utils.utils import get_all_classes_in_module
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.derivatives import DerivativeMap
 from semantic_digital_twin.spatial_types.derivatives import Derivatives
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -43,11 +42,24 @@ detect_solvers()
 
 @dataclass
 class QPControllerConfig:
-    control_dt: Optional[float]
     """
-    The time step of the control loop.
-    A lower value will result in a smoother control signal, but the QP will have to be solved more often.
-    If the value is too large, the QP might start running into infeasiblity issues.
+    Configuration for the QPController.
+    .. warning:: Giskard relies on the robot tracking velocity commands well. Make sure it does!
+    .. note::
+    Tuning works the following way:
+        1. Look at the frequency you get feedback from the robot and choose a frequency slightly below it.
+            e.g. joint_states publishes at 100hz -> start with 90hz for the controller.
+        2. Set prediction horizon to 7. This is often the fastest reasonable config.
+        3. If the robot is NOT moving smoothly, increase prediction horizon until it does or giskard becomes unable to keep up with the frequency.
+        4. If Giskard cannot keep up with the frequency, reduce hz and go back to step 2.
+    """
+
+    hz: float
+    """
+    Target frequency of the control loop in Hz.
+    A higher value will result in a more responsive and thus smoother control signal, 
+    but the QP will have to be solved more often per second.
+    If the value is too low, the QP might start running into infeasiblity issues.
 
     .. note::
     On a real robot:
@@ -57,7 +69,19 @@ class QPControllerConfig:
 
     .. note::
     In simulation:
-        Pick 0.05. It is low enough to be stable and high enough for quick simulations.
+        Pick 20. It is high enough to be stable and low enough for quick simulations.
+    """
+
+    prediction_horizon: int = field(default=7)
+    """
+    The prediction horizon in time steps used for the QP formulation.
+    Each step will have a length of 1/hz, meaning the prediction horizon in seconds is prediction_horizon / hz. 
+    Increasing this value will:
+        - make the commands produced by Giskard smoother
+        - increase the computational cost of the controller.
+    You'll want a value that is as high as necessary and as low as possible.
+    .. note:: Typically values between 7 and 30 are good. Larger values often increase the computational cost too much.
+    .. warning:: Minimum value is 4, otherwise it becomes impossible to integrate jerk into the QP formulation.
     """
 
     dof_weights: Dict[PrefixedName, DerivativeMap[float]] = field(
@@ -90,16 +114,6 @@ class QPControllerConfig:
     .. warning:: only qpSWIFT is well tested.
     """
 
-    prediction_horizon: int = field(default=7)
-    """
-    The prediction horizon used for the QP formulation.
-    Increasing this value will:
-        - make the commands produced by Giskard smoother
-        - increase the computational cost of the controller.
-    You'll want a value that is as high as necessary and as low as possible.
-    .. warning:: Minimum value is 4, otherwise it becomes impossible to integrate jerk into the QP formulation.
-    """
-
     qp_formulation: Optional[QPFormulation] = field(default_factory=QPFormulation)
     """
     Changes the formulation of the QP problem.
@@ -118,9 +132,9 @@ class QPControllerConfig:
     """
 
     # %% init false
-    mpc_dt: Optional[float] = field(init=False)
+    mpc_dt: float = field(init=False)
     """
-    The time step of the MPC.
+    The time step of the MPC in seconds.
     control_dt == mpc_dt:
         default
     control_dt > mpc_dt:
@@ -139,6 +153,10 @@ class QPControllerConfig:
     """
 
     def __post_init__(self):
+        if self.hz < 20:
+            logging.warning(
+                f"Hertz ({self.hz}) is below 20Hz. This might cause instability."
+            )
         self.mpc_dt = self.control_dt
         if not self.qp_formulation.is_mpc:
             self.prediction_horizon = 1
@@ -148,10 +166,17 @@ class QPControllerConfig:
             raise ValueError("prediction horizon must be >= 4.")
         self.set_qp_solver()
 
+    @cached_property
+    def control_dt(self) -> float:
+        """
+        Time step of the control loop in seconds.
+        """
+        return 1 / self.hz
+
     @classmethod
-    def create_default_with_20hz(cls):
+    def create_with_simulation_defaults(cls):
         return cls(
-            control_dt=0.05,
+            hz=20,
             prediction_horizon=7,
         )
 
