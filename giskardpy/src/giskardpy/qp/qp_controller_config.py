@@ -49,11 +49,13 @@ class QPControllerConfig:
     A lower value will result in a smoother control signal, but the QP will have to be solved more often.
     If the value is too large, the QP might start running into infeasiblity issues.
 
+    .. note::
     On a real robot:
         Pick a value equal to or below the frequency at which we get feedback.
         Computing control commands at a higher frequency than the robot can provide feedback can result in instability.
         If you cannot match the frequency due to hardware limitations, pick one that is as close to it as possible.
 
+    .. note::
     In simulation:
         Pick 0.05. It is low enough to be stable and high enough for quick simulations.
     """
@@ -169,7 +171,7 @@ class QPControllerConfig:
         )
 
     def set_dof_weight(
-            self, dof_name: PrefixedName, derivative: Derivatives, weight: float
+        self, dof_name: PrefixedName, derivative: Derivatives, weight: float
     ):
         """Set weight for a specific DOF derivative."""
         self.dof_weights[dof_name].data[derivative] = weight
