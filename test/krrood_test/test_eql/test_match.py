@@ -2,9 +2,9 @@ import pytest
 
 from krrood.entity_query_language.entity import (
     entity,
-    let,
+    let, set_of,
 )
-from krrood.entity_query_language.quantify_entity import an, the
+from krrood.entity_query_language.quantify_entity import an, the, a
 from krrood.entity_query_language.match import (
     match,
     match_any,
@@ -54,17 +54,17 @@ def test_match(handles_and_containers_world):
 
 def test_select(handles_and_containers_world):
     world = handles_and_containers_world
-    container, handle = select(Container), select(Handle)
-    fixed_connection_query = the(
-        entity_matching(FixedConnection, world.connections)(
-            parent=container(name="Container1"),
-            child=handle(name="Handle1"),
-        )
-    )
 
-    assert isinstance(fixed_connection_query._child_, SetOf)
+    fixed_connection = the(entity_matching(FixedConnection, world.connections)(
+            parent=match(Container)(name="Container1"),
+            child=match(Handle)(name="Handle1"),
+        ))
+    container_and_handle = select(container:=fixed_connection.parent,
+                                  handle:=fixed_connection.child)
 
-    answers = fixed_connection_query.evaluate()
+    assert isinstance(container_and_handle._child_, SetOf)
+
+    answers = container_and_handle.evaluate()
     assert isinstance(answers, UnificationDict)
     assert answers[container].name == "Container1"
     assert answers[handle].name == "Handle1"
@@ -117,3 +117,4 @@ def test_match_any_on_collection_returns_unique_parent_entities():
     # Expect exactly the two cabinets, no duplicates
     assert len(results) == 2
     assert {id(x) for x in results} == {id(cabinet1), id(cabinet2)}
+

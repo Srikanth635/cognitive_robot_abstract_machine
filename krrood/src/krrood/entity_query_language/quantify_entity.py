@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import Optional, Union, Type
+from typing import Optional, Union, Type, Iterable
 
 from .hashed_data import T
 from .match import EntityType, Match
 from .result_quantification_constraint import (
     ResultQuantificationConstraint,
 )
-from .symbolic import An, The, ResultQuantifier
+from .symbolic import An, The, ResultQuantifier, SetOf, Entity
 
 
 def an(
@@ -32,7 +32,7 @@ This is an alias to accommodate for words not starting with vowels.
 
 
 def the(
-    entity_: EntityType,
+    entity_: Union[SetOf[T], Entity[T], T, Iterable[T], Type[T], Match[T]],
 ) -> Union[The[T], T]:
     """
     Select the unique element satisfying the given entity description.

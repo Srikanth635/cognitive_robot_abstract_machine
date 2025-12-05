@@ -92,6 +92,10 @@ class Match(Generic[T]):
     """
     Whether the match is a universal match (i.e., must match for all values of the variable/attribute) check or not.
     """
+    attributes: Dict[str, AttributeAssignment] = field(init=False, default_factory=dict)
+    """
+    A dictionary mapping attribute names to their corresponding attribute assignments.
+    """
 
     def __call__(self, **kwargs) -> Union[Self, T, CanBehaveLikeAVariable[T]]:
         """
@@ -121,6 +125,7 @@ class Match(Generic[T]):
             attr_assignment = AttributeAssignment(
                 attr_name, self.variable, attr_assigned_value
             )
+            self.attributes[attr_name] = attr_assignment
             if isinstance(attr_assigned_value, Select):
                 self._update_selected_variables(attr_assignment.attr)
                 attr_assigned_value._var_ = attr_assignment.attr
@@ -180,6 +185,9 @@ class Match(Generic[T]):
             if not self.selected_variables:
                 self.selected_variables.append(self.variable)
             return entity(self.selected_variables[0], *self.conditions)
+
+    def __getattr__(self, item):
+        return self.attributes[item].attr
 
 
 @dataclass
