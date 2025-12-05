@@ -44,9 +44,9 @@ def test_match(handles_and_containers_world):
         )
     )
 
-    assert fixed_connection_query == fixed_connection_query_manual
-
     fixed_connection = fixed_connection_query.evaluate()
+    fixed_connection_manual = fixed_connection_query_manual.evaluate()
+    assert fixed_connection == fixed_connection_manual
     assert isinstance(fixed_connection, FixedConnection)
     assert fixed_connection.parent.name == "Container1"
     assert isinstance(fixed_connection.child, Handle)
@@ -58,10 +58,10 @@ def test_select(handles_and_containers_world):
 
     container = matching(Container)(name="Container1")
     handle = matching(Handle)(name="Handle1")
-    fixed_connection = matching(FixedConnection)(
+    fixed_connection = the(matching(FixedConnection)(
             parent=container,
             child=handle,
-        ).domain_from(world.connections)
+        ).domain_from(world.connections))
     container_and_handle = select(container:=fixed_connection.parent,
                                   handle:=fixed_connection.child)
 

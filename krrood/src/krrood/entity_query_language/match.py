@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from functools import cached_property
 from typing import Generic, Optional, Type, Dict, Any, List, Union, Self, Iterable
 
-from krrood.entity_query_language.symbolic import Exists
+from krrood.entity_query_language.symbolic import Exists, ResultQuantifier, An
 
 from .entity import (
     ConditionType,
@@ -34,6 +34,24 @@ from .symbolic import (
     Entity,
 )
 from .utils import is_iterable
+
+
+@dataclass
+class Quantifier:
+    """
+    A class representing a quantifier in a Match statement. This is used to quantify the result of the match.
+    """
+    type_: Type[ResultQuantifier]
+    """
+    The type of the quantifier.
+    """
+    kwargs: Dict[str, Any] = field(default_factory=dict)
+    """
+    The keyword arguments to pass to the quantifier.
+    """
+
+    def apply(self, expr: QueryObjectDescriptor) -> Union[ResultQuantifier[T], T]:
+        return self.type_(_child_=expr, **self.kwargs)
 
 
 @dataclass
@@ -95,6 +113,10 @@ class Match(Generic[T]):
     attributes: Dict[str, AttributeAssignment] = field(init=False, default_factory=dict)
     """
     A dictionary mapping attribute names to their corresponding attribute assignments.
+    """
+    _quantifier_data: Optional[Quantifier] = field(init=False, default_factory=lambda: Quantifier(An))
+    """
+    The quantifier data for the match.
     """
 
     def __call__(self, **kwargs) -> Union[Self, T, CanBehaveLikeAVariable[T]]:
@@ -174,21 +196,31 @@ class Match(Generic[T]):
             self.selected_variables.append(variable)
 
     @cached_property
-    def expression(self) -> QueryObjectDescriptor[T]:
+    def expression(self) -> Union[ResultQuantifier[T], T]:
         """
         Return the entity expression corresponding to the match query.
         """
         self._resolve()
         if len(self.selected_variables) > 1:
-            return set_of(self.selected_variables, *self.conditions)
+            query_descriptor = set_of(self.selected_variables, *self.conditions)
         else:
             if not self.selected_variables:
                 self.selected_variables.append(self.variable)
-            return entity(self.selected_variables[0], *self.conditions)
+            query_descriptor = entity(self.selected_variables[0], *self.conditions)
+        return self._quantifier_data.apply(query_descriptor)
 
     def domain_from(self, domain: DomainType):
         self.domain = domain
         return self
+
+    def _quantify(
+            self, quantifier: Type[ResultQuantifier], **quantifier_kwargs
+    ) -> Union[ResultQuantifier[T], T]:
+        self._quantifier_data = Quantifier(quantifier, quantifier_kwargs)
+        return self
+
+    def evaluate(self):
+        return self.expression.evaluate()
 
     def __getattr__(self, item):
         return self.attributes[item].attr
