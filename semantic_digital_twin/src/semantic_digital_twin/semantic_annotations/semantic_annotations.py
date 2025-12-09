@@ -263,6 +263,7 @@ class Bowl(HasBody, IsPerceivable, HasSupportingSurface):
 
 # Food Items
 
+
 @dataclass(eq=False)
 class Food(HasBody): ...
 
@@ -322,6 +323,7 @@ class Candy(Food, IsPerceivable):
     """
     A candy.
     """
+
     ...
 
 
@@ -330,6 +332,7 @@ class Noodles(Food, IsPerceivable):
     """
     A container of noodles.
     """
+
     ...
 
 
@@ -338,22 +341,25 @@ class Cereal(Food, IsPerceivable):
     """
     A container of cereal.
     """
+
     ...
 
 
 @dataclass(eq=False)
-class Milk(Container, IsPerceivable):
+class MilkContainer(Container, IsPerceivable):
     """
     A container of milk.
     """
+
     ...
 
 
 @dataclass(eq=False)
-class Salt(Container, IsPerceivable):
+class SaltContainer(Container, IsPerceivable):
     """
     A container of salt.
     """
+
     ...
 
 
@@ -591,10 +597,6 @@ class Knife(Cuttlery):
 
 @dataclass(eq=False)
 class Spoon(Cuttlery, IsPerceivable): ...
-
-
-# @dataclass(eq=False)
-# class Milk(Cuttlery, IsPerceivable): ...
 
 
 @dataclass(eq=False)

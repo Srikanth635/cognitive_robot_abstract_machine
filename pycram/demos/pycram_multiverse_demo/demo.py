@@ -4,10 +4,9 @@ from pycram.worlds.multiverse import Multiverse
 
 import semantic_digital_twin.semantic_annotations.semantic_annotations
 from pycram.datastructures.dataclasses import Color
-from pycram.designators.location_designator import CostmapLocation, AccessingLocation
-from pycram.designators.object_designator import BelieveObject, ObjectPart
+from pycram.designators.location_designator import AccessingLocation
+from pycram.designators.object_designator import ObjectPart
 from pycram.process_module import simulated_robot
-from pycram.robot_description import RobotDescription
 from pycram.robot_plans import *
 
 world = Multiverse()
@@ -19,7 +18,7 @@ apartment = Object("apartment", pycrap.Apartment, f"apartment{extension}")
 
 milk = Object(
     "milk",
-    semantic_digital_twin.semantic_annotations.semantic_annotations.Milk,
+    semantic_digital_twin.semantic_annotations.semantic_annotations.MilkContainer,
     f"milk.xml",
     pose=PoseStamped.from_list([2.4, 2, 1.02]),
     color=Color(1, 0, 0, 1),
@@ -52,8 +51,11 @@ with simulated_robot:
     milk_desig = (
         DetectAction(
             DetectionTechnique.TYPES,
-            object_designator_description=BelieveObject(types=[
-                semantic_digital_twin.semantic_annotations.semantic_annotations.Milk]),
+            object_designator_description=BelieveObject(
+                types=[
+                    semantic_digital_twin.semantic_annotations.semantic_annotations.MilkContainer
+                ]
+            ),
         )
         .resolve()
         .perform()[0]
@@ -91,8 +93,11 @@ with simulated_robot:
     spoon_desig = (
         DetectAction(
             DetectionTechnique.TYPES,
-            object_designator_description=BelieveObject(types=[
-                semantic_digital_twin.semantic_annotations.semantic_annotations.Spoon]),
+            object_designator_description=BelieveObject(
+                types=[
+                    semantic_digital_twin.semantic_annotations.semantic_annotations.Spoon
+                ]
+            ),
         )
         .resolve()
         .perform()[0]
