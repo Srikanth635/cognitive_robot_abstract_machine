@@ -1,6 +1,5 @@
-import rospy
-
 import pycrap
+import rospy
 import rospy
 from pycram.datastructures.world import UseProspectionWorld, World
 from pycram.ros_utils.robot_state_updater import WorldStateUpdater
@@ -12,7 +11,6 @@ from pycrap.ontologies import PhysicalObject
 
 import semantic_digital_twin.semantic_annotations.semantic_annotations
 from pycram.datastructures.dataclasses import Color
-from pycram.designators.object_designator import BelieveObject
 from pycram.process_module import with_simulated_robot, real_robot
 from pycram.robot_plans import *
 from ..tf_transformations import quaternion_from_euler
@@ -54,7 +52,7 @@ WorldStateUpdater(
 apartment = Object("apartment", pycrap.Apartment, f"apartment.urdf")
 milk = Object(
     "milk",
-    semantic_digital_twin.semantic_annotations.semantic_annotations.Milk,
+    semantic_digital_twin.semantic_annotations.semantic_annotations.MilkContainer,
     milk_path,
     pose=PoseStamped.from_list([0.4, 2.6, 1.34], [1, 0, 0, 0]),
     color=Color(1, 0, 0, 1),
