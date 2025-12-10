@@ -217,3 +217,24 @@ def test_distinct_on():
     assert set(tuple(r.values()) for r in results) == {
         (handle_names[0], container_names[0]),
         (handle_names[2], container_names[0]),}
+
+
+def test_order_by_key():
+    names = ["Handle1", "handle2", "Handle3", "container1", "Container2", "container3"]
+    key = lambda x: int(x[-1])
+    body_name = a(matching(str).from_(names))
+    query = select(body_name).order_by(
+            variable=body_name,
+            key=key,
+            descending=True,
+        )
+    results = list(query.evaluate())
+    assert results == sorted(names, key=key, reverse=True)
+
+
+def test_distinct_with_order_by():
+    values = [5, 1, 1, 2, 1, 4, 3, 3, 5]
+    values_var = a(matching(int).from_(values))
+    query = select(values_var).distinct().order_by(variable=values_var, descending=False)
+    results = list(query.evaluate())
+    assert results == [1, 2, 3, 4, 5]
