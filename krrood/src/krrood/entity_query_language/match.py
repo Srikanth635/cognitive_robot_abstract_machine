@@ -234,6 +234,10 @@ class Match(AbstractMatchExpression[T]):
     """
     A list of selected attributes.
     """
+    resolved: bool = field(init=False, default=False)
+    """
+    Whether the match is resolved or not.
+    """
 
     def __call__(self, **kwargs) -> Union[Self, T, CanBehaveLikeAVariable[T]]:
         """
@@ -275,6 +279,8 @@ class Match(AbstractMatchExpression[T]):
         :param parent: The parent match if this is a nested match.
         :return:
         """
+        if self.resolved:
+            return
         self.update_fields(variable, parent)
         for attr_name, attr_assigned_value in self.kwargs.items():
             if isinstance(attr_assigned_value, SelectableMatchExpression):
@@ -291,6 +297,7 @@ class Match(AbstractMatchExpression[T]):
                     attr_match.infer_condition_between_attribute_and_assigned_value()
                 )
                 self.conditions.append(condition)
+        self.resolved = True
         return self
 
     def update_fields(

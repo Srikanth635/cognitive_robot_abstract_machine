@@ -1,5 +1,6 @@
 import pytest
 
+import krrood.entity_query_language.entity_result_processors as eql
 from krrood.entity_query_language.entity import (
     entity,
     let, set_of, )
@@ -160,5 +161,13 @@ def test_match_any_on_collection_returns_unique_parent_entities():
 
 def test_count_wih_match(handles_and_containers_world):
     world = handles_and_containers_world
-    number_of_fixed_connections = count(matching(FixedConnection).domain_from(world.connections)).evaluate()
+    number_of_fixed_connections = eql.count(matching(FixedConnection).domain_from(world.connections)).evaluate()
     assert number_of_fixed_connections == len([con for con in world.connections if isinstance(con, FixedConnection)])
+
+
+def test_max_with_match(handles_and_containers_world):
+    world = handles_and_containers_world
+    assert eql.max(entity(let(Container, world.bodies).size)).evaluate() == 2
+    container = a(matching(Container).domain_from(world.bodies))
+    max_size_container = select(eql.max(container.size)).evaluate()
+    assert max_size_container == 2
