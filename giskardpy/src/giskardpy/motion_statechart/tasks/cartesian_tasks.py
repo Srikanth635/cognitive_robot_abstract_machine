@@ -309,17 +309,32 @@ class CartesianPose(Task):
 @dataclass(eq=False, repr=False)
 class CartesianPositionVelocityLimit(Task):
     """
-    This goal will use put a strict limit on the Cartesian velocity. This will require a lot of constraints, thus
-    slowing down the system noticeably.
+    Limit the Cartesian (translational) velocity of a tip link relative to a root link.
+
+    This goal enforces a strict cap on the linear speed of the frame defined by
+    the kinematic transform from `root_link` to `tip_link`. Enforcement is performed
+    by adding constraints to the optimizer and by providing an observation expression
+    that evaluates whether the current translational speed is within the limit.
+
+    .. warning::
+       Strict Cartesian velocity limits typically require many constraints to be
+       added to the optimization problem and can substantially slow down the
+       system. If runtime or responsiveness is important,
+       prefer a larger limit or a softer (lower-weight) constraint
     """
 
     root_link: KinematicStructureEntity = field(kw_only=True)
-    """root link of the kinematic chain"""
+    """Root link of the kinematic chain. Defines the reference frame from which the tip's motion is measured."""
     tip_link: KinematicStructureEntity = field(kw_only=True)
-    """tip link of the kinematic chain"""
+    """Tip link of the kinematic chain. The translational velocity of this link (expressed in the root link frame) is constrained."""
     max_linear_velocity: float = field(default=0.1, kw_only=True)
-    """in m/s"""
+    """Maximum allowed linear speed of the tip in meters per second (m/s).
+    Default: 0.1 m/s. The enforcement ensures the Euclidean norm of the
+    tip-frame translational velocity does not exceed this value."""
     weight: float = field(default=DefaultWeights.WEIGHT_ABOVE_CA, kw_only=True)
+    """Optimization weight determining how strongly the linear velocity
+    limit is enforced. Larger values increase enforcement priority at the
+    cost of potentially making the optimization problem harder to solve."""
 
     def build(self, context: BuildContext) -> NodeArtifacts:
         artifacts = NodeArtifacts()
@@ -343,20 +358,37 @@ class CartesianPositionVelocityLimit(Task):
         return artifacts
 
 
-@dataclass
+@dataclass(eq=False, repr=False)
 class CartesianRotationVelocityLimit(Task):
     """
-    This goal will use put a strict limit on the Cartesian velocity. This will require a lot of constraints, thus
-    slowing down the system noticeably.
+    Represents a Cartesian rotational velocity limit task within a kinematic chain.
+
+    This task constrains the angular velocity of a specified tip link relative
+    to a root link to not exceed a maximum allowed angular velocity. It uses
+    optimization weights to prioritize its enforcement in solving problems
+    involving kinematic motion. The task calculates and enforces constraints
+    based on the rotation matrix between the root and tip links, ensuring
+    compliance with the defined angular velocity limits.
+
+    .. warning::
+       Strict Cartesian velocity limits typically require many constraints to be
+       added to the optimization problem and can substantially slow down the
+       system. If runtime or responsiveness is important,
+       prefer a larger limit or a softer (lower-weight) constraint
     """
 
     root_link: KinematicStructureEntity = field(kw_only=True)
-    """root link of the kinematic chain"""
+    """Root link of the kinematic chain. Defines the reference frame from which the tip's motion is measured."""
     tip_link: KinematicStructureEntity = field(kw_only=True)
-    """tip link of the kinematic chain"""
+    """Tip link of the kinematic chain. The translational velocity of this link (expressed in the root link frame) is constrained."""
     max_angular_velocity: float = field(default=0.5, kw_only=True)
-    """in m/s"""
+    """Maximum allowed angular speed. Interpreted in radians per second (rad/s).
+    The enforcement ensures the magnitude of the instantaneous
+    rotation rate does not exceed this threshold."""
     weight: float = field(default=DefaultWeights.WEIGHT_ABOVE_CA, kw_only=True)
+    """Optimization weight determining how strongly the rotational velocity
+    limit is enforced. Larger values increase enforcement priority at the
+    cost of potentially making the optimization problem harder to solve."""
 
     def build(self, context: BuildContext) -> NodeArtifacts:
         artifacts = NodeArtifacts()
