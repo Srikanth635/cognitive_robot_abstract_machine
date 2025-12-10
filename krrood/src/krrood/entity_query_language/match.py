@@ -66,10 +66,10 @@ class SelectableMatchExpression(Selectable[T], ABC):
     Match expressions are structured in a graph that is a higher level representation for the entity query graph.
     """
     _match_expression_: AbstractMatchExpression[T]
+    _attribute_match_expressions_: Dict[str, SelectableMatchExpression] = field(init=False, default_factory=dict)
 
     def __post_init__(self):
-        self._child_ = None
-        super().__post_init__()
+        ...
 
     def evaluate(self):
         """
@@ -82,7 +82,14 @@ class SelectableMatchExpression(Selectable[T], ABC):
             attr = Attribute(_child_=self._var_, _attr_name_=item, _owner_class_=self._match_expression_.type)
             self._match_expression_.attribute_matches[item] = AttributeMatch(parent=self._match_expression_, attr_name=item,
                                                                              variable=attr)
-        return self._match_expression_.attribute_matches[item]
+
+        attribute_expression = self._match_expression_.attribute_matches[item]
+
+        if item not in self._attribute_match_expressions_:
+            selectable_attribute_expression = SelectableMatchExpression(_match_expression_=attribute_expression)
+            self._attribute_match_expressions_[item] = selectable_attribute_expression
+
+        return self._attribute_match_expressions_[item]
 
     def __call__(self, *args, **kwargs) -> Union[Self, T, CanBehaveLikeAVariable[T]]:
         """
@@ -526,8 +533,8 @@ def select(
     Equivalent to matching(type_) and selecting the variable to be included in the result.
     """
     for variable in variables:
-        variable.set_as_selected()
-    return variables[0]._root_match_
+        variable._match_expression_.set_as_selected()
+    return variables[0]._match_expression_.root
 
 
 def entity_matching(
