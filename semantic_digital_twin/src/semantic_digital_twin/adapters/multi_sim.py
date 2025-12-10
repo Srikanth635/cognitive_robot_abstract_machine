@@ -807,17 +807,17 @@ class MujocoEquality(SemanticAnnotation):
     The type of the equality constraint.
     """
 
-    objtype: mujoco.mjtObj
+    obj_type: mujoco.mjtObj
     """
     The type of the objects being constrained.
     """
 
-    name1: str
+    name_1: str
     """
     The name of the first entity being constrained.
     """
 
-    name2: str
+    name_2: str
     """
     The name of the second entity being constrained.
     """
@@ -1485,9 +1485,9 @@ class MujocoBuilder(MultiSimBuilder):
         ):
             equality = self.spec.add_equality()
             equality.type = equality_semantic_annotation.type
-            equality.objtype = equality_semantic_annotation.objtype
-            equality.name1 = equality_semantic_annotation.name1
-            equality.name2 = equality_semantic_annotation.name2
+            equality.objtype = equality_semantic_annotation.obj_type
+            equality.name1 = equality_semantic_annotation.name_1
+            equality.name2 = equality_semantic_annotation.name_2
             equality.data = equality_semantic_annotation.data
 
     def _find_entity(

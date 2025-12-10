@@ -545,14 +545,13 @@ class MJCFParser:
                 case mujoco.mjtEq.mjEQ_JOINT:
                     self.mimic_joints[equality.name2] = equality.name1
                 case mujoco.mjtEq.mjEQ_WELD:
-                    data = [0.0] * 6 + [1.0] + [0.0] * 3 + [1.0]  # TODO: MuJoCo Bug!!!
                     self.world.add_semantic_annotation(
                         MujocoEquality(
                             type=mujoco.mjtEq.mjEQ_WELD,
-                            objtype=mujoco.mjtObj.mjOBJ_BODY,
-                            name1=equality.name1,
-                            name2=equality.name2,
-                            data=data,
+                            obj_type=mujoco.mjtObj.mjOBJ_BODY,
+                            name_1=equality.name1,
+                            name_2=equality.name2,
+                            data=equality.data,
                         )
                     )
                 case _:
