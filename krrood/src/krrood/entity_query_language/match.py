@@ -488,7 +488,7 @@ class AttributeMatch(AbstractMatchExpression[T]):
 
 def matching(
         type_: Union[Type[T], CanBehaveLikeAVariable[T], Any, None] = None,
-) -> Union[Type[T], CanBehaveLikeAVariable[T], SelectableMatchExpression[T], Set[T]]:
+) -> Union[Type[T], CanBehaveLikeAVariable[T], Match[T]]:
     """
     Create and return a Match instance that looks for the pattern provided by the type and the
     keyword arguments.
