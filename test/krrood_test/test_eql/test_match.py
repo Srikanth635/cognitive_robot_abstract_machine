@@ -10,7 +10,7 @@ from krrood.entity_query_language.match import (
     match_all,
 )
 from krrood.entity_query_language.predicate import HasType
-from krrood.entity_query_language.entity_result_processors import the, a
+from krrood.entity_query_language.entity_result_processors import the, a, count
 from krrood.entity_query_language.symbolic import UnificationDict, SetOf
 from ..dataset.semantic_world_like_classes import (
     FixedConnection,
@@ -156,3 +156,9 @@ def test_match_any_on_collection_returns_unique_parent_entities():
     # Expect exactly the two cabinets, no duplicates
     assert len(results) == 2
     assert {id(x) for x in results} == {id(cabinet1), id(cabinet2)}
+
+
+def test_count_wih_match(handles_and_containers_world):
+    world = handles_and_containers_world
+    number_of_fixed_connections = count(matching(FixedConnection).domain_from(world.connections)).evaluate()
+    assert number_of_fixed_connections == len([con for con in world.connections if isinstance(con, FixedConnection)])
