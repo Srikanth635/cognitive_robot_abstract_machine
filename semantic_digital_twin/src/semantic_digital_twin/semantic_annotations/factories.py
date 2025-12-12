@@ -57,9 +57,7 @@ class HasDoorLikeFactories(ABC):
     Mixin for factories receiving multiple DoorLikeFactories.
     """
 
-    door_like_factory_configs: List[DoorLikeConfigForParentFactory] = field(
-        default_factory=list, hash=False
-    )
+    door_like_factory_configs: List = field(default_factory=list, hash=False)
     """
     The door factories used to create the doors.
     """
@@ -89,7 +87,6 @@ class HasDoorLikeFactories(ABC):
 
     def _add_double_door_to_world(
         self,
-        door_factory: DoubleDoorFactory,
         parent_T_double_door: TransformationMatrix,
         parent_world: World,
     ):
@@ -291,19 +288,8 @@ class HasDoorLikeFactories(ABC):
 
 
 @dataclass
-class DresserConfigForParentFactory(ConfigForParentFactory):
-    """
-    Configuration for creating a dresser from a parent factory.
-    """
-
-    factory_instance: DresserFactory
-
-
-@dataclass
 class DresserFactory(
-    SemanticAnnotationFactory[Dresser, DresserConfigForParentFactory],
     HasDoorLikeFactories,
-    HasDrawerFactories,
 ):
     """
     Factory for creating a dresser with drawers, and doors.
