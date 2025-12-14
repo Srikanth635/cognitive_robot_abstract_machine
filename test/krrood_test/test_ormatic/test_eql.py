@@ -38,7 +38,7 @@ def test_translate_simple_greater(session, database):
     session.add(PositionDAO(x=1, y=2, z=4))
     session.commit()
 
-    query = an(entity(position := var(type_=Position, domain=[]), position.z > 3))
+    query = an(entity(position := var(type_=Position, domain=[])).where(position.z > 3))
 
     translator = eql_to_sql(query, session)
     query_by_hand = select(PositionDAO).where(PositionDAO.z > 3)
@@ -59,8 +59,7 @@ def test_translate_or_condition(session, database):
     session.commit()
 
     query = an(
-        entity(
-            position := var(type_=Position, domain=[]),
+        entity(position := var(type_=Position, domain=[])).where(
             or_(position.z == 4, position.x == 2),
         )
     )
@@ -97,7 +96,7 @@ def test_translate_join_one_to_one(session, database):
     )
     session.commit()
 
-    query = an(entity(pose := var(type_=Pose, domain=[]), pose.position.z > 3))
+    query = an(entity(pose := var(type_=Pose, domain=[])).where(pose.position.z > 3))
     translator = eql_to_sql(query, session)
     query_by_hand = select(PoseDAO).join(PoseDAO.position).where(PositionDAO.z > 3)
 
@@ -119,8 +118,7 @@ def test_translate_in_operator(session, database):
     session.commit()
 
     query = an(
-        entity(
-            position := var(Position, domain=[]),
+        entity(position := var(Position, domain=[])).where(
             in_(position.x, [1, 7]),
         )
     )
@@ -145,13 +143,13 @@ def test_the_quantifier(session, database):
     session.commit()
 
     def get_query(domain=None):
-
         query = the(
             entity(
                 position := var(
                     type_=Position,
                     domain=domain,
-                ),
+                )
+            ).where(
                 position.y == 2,
             )
         )
@@ -199,8 +197,7 @@ def test_equal(session, database):
 
     # Write the query body
     query = an(
-        entity(
-            fixed_connection,
+        entity(fixed_connection).where(
             fixed_connection.parent == prismatic_connection.child,
         )
     )
@@ -259,8 +256,7 @@ def test_complicated_equal(session, database):
 
     # Write the query body - this was previously failing with "Attribute chain ended on a relationship"
     query = the(
-        entity(
-            drawer_body,
+        entity(drawer_body).where(
             and_(
                 parent_container == prismatic_connection.parent,
                 drawer_body == prismatic_connection.child,
@@ -283,8 +279,7 @@ def test_contains(session, database):
     session.commit()
 
     query = an(
-        entity(
-            b := var(type_=Body, domain=[], name="b"),
+        entity(b := var(type_=Body, domain=[], name="b")).where(
             contains("Body1TestName", b.name),
         )
     )
