@@ -203,6 +203,7 @@ class TestUnpauseUnknownFromParentPause(Goal):
         self.add_node(Sequence(nodes=[self.count_ticks2, self.cancel]))
 
         self.count_ticks1.pause_condition = cas.TrinaryUnknown
+        self.count_ticks1.end_condition = self.count_ticks1.observation_variable
 
     def build(self, context: BuildContext) -> NodeArtifacts:
         return NodeArtifacts(

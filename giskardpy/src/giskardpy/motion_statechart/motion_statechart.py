@@ -156,6 +156,33 @@ def _create_not_started_condition(
     return not_started_condition
 
 
+def _create_unpause_condition(
+    node: MotionStatechartNode,
+) -> cas.Expression:
+    """
+    Create a condition that checks if node should transition into RUNNING state from PAUSED.
+    Iterates over potential parent nodes to ensure they are not paused.
+    :param node: The node to create the condition for.
+    :return: The combined condition.
+    """
+    unpause_condition = cas.trinary_logic_or(
+        node.pause_condition == cas.TrinaryFalse,
+        node.pause_condition == cas.TrinaryUnknown,
+    )
+    current = node
+    while current.parent_node is not None:
+        parent = current.parent_node
+        unpause_condition = cas.trinary_logic_and(
+            unpause_condition,
+            cas.trinary_logic_or(
+                parent.pause_condition == cas.TrinaryUnknown,
+                parent.pause_condition == cas.TrinaryFalse,
+            ),
+        )
+        current = parent
+    return unpause_condition
+
+
 @dataclass(repr=False, eq=False)
 class LifeCycleState(State):
 
@@ -175,12 +202,6 @@ class LifeCycleState(State):
             )
             pause_or_chain = _create_condition(
                 node, lambda p: p.pause_condition, cas.TrinaryTrue, cas.trinary_logic_or
-            )
-            pause_and_chain_false = _create_condition(
-                node,
-                lambda p: p.pause_condition,
-                cas.TrinaryFalse,
-                cas.trinary_logic_and,
             )
 
             not_started_transitions = cas.if_else(
@@ -207,7 +228,7 @@ class LifeCycleState(State):
                     ),
                     (end_or_chain, cas.Expression(LifeCycleValues.DONE)),
                     (
-                        pause_and_chain_false,
+                        _create_unpause_condition(node),
                         cas.Expression(LifeCycleValues.RUNNING),
                     ),
                 ],
