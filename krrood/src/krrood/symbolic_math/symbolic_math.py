@@ -605,14 +605,27 @@ class FloatVariable(SymbolicType):
         return fmod(self, other)
 
     # %% Boolean operations
+    def is_const_true(self) -> bool:
+        return False
+
+    def is_const_unknown(self) -> bool:
+        return False
+
+    def is_const_false(self) -> bool:
+        return False
+
     def __invert__(self) -> Scalar:
-        return Scalar.from_casadi_sx(~self.casadi_sx)
+        return Scalar.from_casadi_sx(_ca.logic_not(self.casadi_sx))
 
     def __and__(self, other: Scalar | FloatVariable) -> Scalar:
-        return Scalar.from_casadi_sx(self.casadi_sx & other.casadi_sx)
+        if other.is_const_false():
+            return other
+        return Scalar.from_casadi_sx(_ca.logic_or(self.casadi_sx, other.casadi_sx))
 
     def __or__(self, other: Scalar | FloatVariable) -> Scalar:
-        return Scalar.from_casadi_sx(self.casadi_sx | other.casadi_sx)
+        if other.is_const_true():
+            return other
+        return Scalar.from_casadi_sx(_ca.logic_or(self.casadi_sx, other.casadi_sx))
 
     # %% Comparison operations
     def __eq__(self, other: Scalar | FloatVariable) -> Scalar:
@@ -920,6 +933,7 @@ class Scalar(Expression):
     def __init__(self, data: bool | int | _IntEnum | float = 0):
         self.casadi_sx = _ca.SX(data)
 
+    # %% Boolean operations
     @classmethod
     def const_false(cls) -> _te.Self:
         return cls(False)
@@ -932,6 +946,15 @@ class Scalar(Expression):
     def const_true(cls) -> _te.Self:
         return cls(True)
 
+    def is_const_true(self):
+        return self.is_constant() and self == True
+
+    def is_const_unknown(self):
+        return self.is_constant() and self == 0.5
+
+    def is_const_false(self):
+        return self.is_constant() and self == False
+
     def __bool__(self) -> bool:
         """
         Evaluates the object as a boolean value, implementing the `__bool__` special method.
@@ -939,24 +962,65 @@ class Scalar(Expression):
             This allows comparisons to work as expected, e.g. `if x > 0:`
         If the expression is scaler, non-constant and an ==, we use casadi's equivalent.
             This allows `2*FloatVariable("a") == FloatVariable("a")*2` to work as expected.
-        In any other case, we return True, because the expression is not None.
-            This is the default behavior for non bool python objects.
         """
         if self.is_constant():
             return bool(self.to_np())
+        elif self.casadi_sx.op() == _ca.OP_EQ:
+            # not evaluating bool would cause all expressions containing == to be evaluated to True, because they are not None
+            # this can cause a lot of unintended bugs, therefore we try to evaluate it
+            left = self.casadi_sx.dep(0)
+            right = self.casadi_sx.dep(1)
+            return _ca.is_equal(_ca.simplify(left), _ca.simplify(right), 5)
         raise HasFreeVariablesError(self.free_variables())
 
+    def __invert__(self) -> Scalar:
+        return Scalar.from_casadi_sx(_ca.logic_not(self.casadi_sx))
+
+    def __and__(self, other: Scalar | FloatVariable) -> Scalar:
+        if self.is_const_false():
+            return self
+        if other.is_const_false():
+            return other
+        return Scalar.from_casadi_sx(_ca.logic_or(self.casadi_sx, other.casadi_sx))
+
+    def __or__(self, other: Scalar | FloatVariable) -> Scalar:
+        if self.is_const_true():
+            return self
+        if other.is_const_true():
+            return other
+        return Scalar.from_casadi_sx(_ca.logic_or(self.casadi_sx, other.casadi_sx))
+
+    # %% Comparison operations
+    def __eq__(
+        self, other: Scalar | FloatVariable | NumericalScalar | bool
+    ) -> Scalar | bool:
+        if self.is_constant() and (
+            isinstance(other, NumericalScalar)
+            or isinstance(other, bool)
+            or (isinstance(other, Scalar) and other.is_constant())
+        ):
+            return float(self) == float(other)
+        if isinstance(other, (Scalar, FloatVariable)):
+            return Scalar.from_casadi_sx(self.casadi_sx.__eq__(other.casadi_sx))
+        return NotImplemented
+
+    def __le__(self, other: Scalar | FloatVariable) -> Scalar:
+        return Scalar.from_casadi_sx(self.casadi_sx.__le__(other.casadi_sx))
+
+    def __lt__(self, other: Scalar | FloatVariable) -> Scalar:
+        return Scalar.from_casadi_sx(self.casadi_sx.__lt__(other.casadi_sx))
+
+    def __ge__(self, other: Scalar | FloatVariable) -> Scalar:
+        return Scalar.from_casadi_sx(self.casadi_sx.__ge__(other.casadi_sx))
+
+    def __gt__(self, other: Scalar | FloatVariable) -> Scalar:
+        return Scalar.from_casadi_sx(self.casadi_sx.__gt__(other.casadi_sx))
+
+    # %% Arithmatic operations
     def __float__(self):
         if not self.is_constant():
             raise HasFreeVariablesError(self.free_variables())
         return float(self.to_np())
-
-    def __eq__(self, other) -> Scalar:
-        if isinstance(other, Scalar):
-            return self.casadi_sx.__eq__(other.casadi_sx)
-        if self.is_constant():
-            return float(self) == other
-        return NotImplemented
 
     def __add__(self, other: Scalar) -> _te.Self:
         return Scalar.from_casadi_sx(self.casadi_sx + other.casadi_sx)
@@ -1509,6 +1573,25 @@ def logic_and(*args: ScalarData) -> ScalarData:
         )
 
 
+def logic_or(*args: ScalarData) -> ScalarData:
+    assert len(args) >= 2, "and must be called with at least 2 arguments"
+    # if there is any True, return True
+    if any(x for x in args if is_const_binary_true(x)):
+        return Scalar.const_true()
+    # filter all False
+    args = [x for x in args if not is_const_binary_false(x)]
+    if len(args) == 0:
+        return Scalar(0)
+    if len(args) == 1:
+        return args[0]
+    if len(args) == 2:
+        return Expression(_ca.logic_or(to_sx(args[0]), to_sx(args[1])))
+    else:
+        return Expression(
+            _ca.logic_or(to_sx(args[0]), to_sx(logic_or(*args[1:], False)))
+        )
+
+
 def logic_not(expression: ScalarData) -> Expression:
     cas_expr = to_sx(expression)
     return Expression(_ca.logic_not(cas_expr))
@@ -1520,26 +1603,6 @@ def logic_any(args: Expression) -> ScalarData:
 
 def logic_all(args: Expression) -> ScalarData:
     return Expression(_ca.logic_all(args.casadi_sx))
-
-
-def logic_or(*args: ScalarData, simplify: bool = True) -> ScalarData:
-    assert len(args) >= 2, "and must be called with at least 2 arguments"
-    # if there is any True, return True
-    if simplify and any(x for x in args if is_const_binary_true(x)):
-        return Scalar.const_true()
-    # filter all False
-    if simplify:
-        args = [x for x in args if not is_const_binary_false(x)]
-    if len(args) == 0:
-        return Scalar(0)
-    if len(args) == 1:
-        return args[0]
-    if len(args) == 2:
-        return Expression(_ca.logic_or(to_sx(args[0]), to_sx(args[1])))
-    else:
-        return Expression(
-            _ca.logic_or(to_sx(args[0]), to_sx(logic_or(*args[1:], False)))
-        )
 
 
 def is_const_binary_true(expression: Expression) -> bool:

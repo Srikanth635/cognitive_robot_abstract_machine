@@ -1051,16 +1051,17 @@ class TestCompiledFunction:
 
 class TestScalar:
     def test_bool_casting(self):
-        s1 = cas.Scalar(1)
-        s2 = cas.Scalar(2)
-
-        # simple casting cases of constants
-        assert cas.BinaryTrue
-        assert not cas.BinaryFalse
+        v = cas.FloatVariable(name="muh")
+        v2 = cas.FloatVariable(name="kikariki")
+        v3 = cas.FloatVariable(name="oink")
+        false_ = cas.Scalar.const_false()
+        true_ = cas.Scalar.const_true()
+        assert not false_
+        assert true_
 
         # "and" and "or" are smart and will simply const True/False away.
-        assert not (v and cas.BinaryFalse)
-        assert v or cas.BinaryTrue
+        with pytest.raises(HasFreeVariablesError):
+            assert not (v and false_)
 
         # the == calls __eq__ which returns an expression.
         assert v == v
@@ -1071,11 +1072,14 @@ class TestScalar:
         assert v not in [v2, v3]
 
         # const logical expressions can be evaluated
-        assert cas.Expression(10) > cas.Expression(5)
+        assert cas.Scalar(10) > cas.Scalar(5)
 
-        # here bool is called on v and returns it if it is True, otherwise it would return v2
-        # this is the "normal" behavior for python objects
-        assert (v or v2) == v
+        # this calls __bool__ on v and not __or__ and therefore raises exception
+        with pytest.raises(HasFreeVariablesError):
+            assert (v or v2) == v
+
+        if (v | v2) == v:
+            raise Exception("This should not happen")
 
     def test_arithmetic_operations(self):
         operators = [
