@@ -556,75 +556,6 @@ class TestExpression:
         assert np.allclose(actual, expected)
 
 
-class TestScalarMathFunctions:
-    def test_float_casting(self):
-        assert float(cas.Expression(data=1)) == 1.0
-        with pytest.raises(NotScalerError):
-            assert float(cas.Expression(data=[1, 2]))
-        with pytest.raises(HasFreeVariablesError):
-            assert float(cas.FloatVariable(name="muh"))
-
-    def test_abs(self):
-        f1 = 23
-        assert np.allclose(cas.abs(f1), abs(f1))
-
-    def test_max(self):
-        f1, f2 = 23, 69
-        assert np.allclose(cas.max(f1, f2), max(f1, f2))
-
-    def test_save_division(self):
-        f1, f2 = 23, 69
-        assert np.allclose(
-            cas.Expression(data=f1).safe_division(f2), f1 / f2 if f2 != 0 else 0
-        )
-
-    def test_min(self):
-        f1, f2 = 23, 69
-        assert np.allclose(cas.min(f1, f2), min(f1, f2))
-
-    def test_sign(self):
-        f1 = 23
-        assert np.allclose(cas.sign(f1), np.sign(f1))
-
-    @pytest.mark.parametrize("x", numbers)
-    @pytest.mark.parametrize("lower_limit", numbers)
-    @pytest.mark.parametrize("upper_limit", numbers)
-    def test_limit(self, x, lower_limit, upper_limit):
-        r1 = cas.limit(x, lower_limit, upper_limit)
-        r2 = max(lower_limit, min(upper_limit, x))
-        assert np.allclose(r1, r2)
-
-    @pytest.mark.parametrize("a", numbers)
-    @pytest.mark.parametrize("b", numbers)
-    def test_fmod(self, a, b):
-        ref_r = np.fmod(a, b)
-        assert np.allclose(cas.fmod(a, b), ref_r, equal_nan=True)
-
-    @pytest.mark.parametrize("a", numbers)
-    def test_normalize_angle_positive(self, a):
-        expected = normalize_angle_positive(a)
-        actual = cas.normalize_angle_positive(a)
-        assert np.allclose(
-            shortest_angular_distance(actual.to_np(), expected),
-            0.0,
-        )
-
-    @pytest.mark.parametrize("a", numbers)
-    def test_normalize_angle(self, a):
-        ref_r = normalize_angle(a)
-        assert np.allclose(cas.normalize_angle(a), ref_r)
-
-    @pytest.mark.parametrize("angle1", numbers)
-    @pytest.mark.parametrize("angle2", numbers)
-    def test_shorted_angular_distance(self, angle1, angle2):
-        try:
-            expected = shortest_angular_distance(angle1, angle2)
-        except ValueError:
-            expected = np.nan
-        actual = cas.shortest_angular_distance(angle1, angle2)
-        assert np.allclose(actual, expected, equal_nan=True)
-
-
 class TestArrayMathFunctions:
     def test_leq_on_array(self):
         a = cas.Expression(data=np.array([1, 2, 3, 4]))
@@ -948,8 +879,77 @@ class TestScalar:
             r_cas = f(e1_cas, v)
             assert isinstance(r_cas, cas.Scalar), f"{f.__name__} result is not Scalar"
 
+    def test_float_casting(self):
+        assert float(cas.Scalar(1)) == 1.0
+
+    def test_abs(self):
+        f1 = cas.Scalar(-23)
+        assert np.allclose(abs(f1), abs(float(f1)))
+        assert isinstance(abs(f1), cas.Scalar)
+
+    def test_max(self):
+        f1, f2 = cas.Scalar(23), cas.Scalar(69)
+        assert np.allclose(max(f1, f2), max(float(f1), float(f2)))
+
+    def test_save_division(self):
+        f1, f2 = 23, 69
+        assert np.allclose(
+            cas.Expression(data=f1).safe_division(f2), f1 / f2 if f2 != 0 else 0
+        )
+
+    def test_min(self):
+        f1, f2 = 23, 69
+        assert np.allclose(cas.min(f1, f2), min(f1, f2))
+
+    def test_sign(self):
+        f1 = 23
+        assert np.allclose(cas.sign(f1), np.sign(f1))
+
+    @pytest.mark.parametrize("x", numbers)
+    @pytest.mark.parametrize("lower_limit", numbers)
+    @pytest.mark.parametrize("upper_limit", numbers)
+    def test_limit(self, x, lower_limit, upper_limit):
+        r1 = cas.limit(x, lower_limit, upper_limit)
+        r2 = max(lower_limit, min(upper_limit, x))
+        assert np.allclose(r1, r2)
+
+    @pytest.mark.parametrize("a", numbers)
+    @pytest.mark.parametrize("b", numbers)
+    def test_fmod(self, a, b):
+        ref_r = np.fmod(a, b)
+        assert np.allclose(cas.fmod(a, b), ref_r, equal_nan=True)
+
+    @pytest.mark.parametrize("a", numbers)
+    def test_normalize_angle_positive(self, a):
+        expected = normalize_angle_positive(a)
+        actual = cas.normalize_angle_positive(a)
+        assert np.allclose(
+            shortest_angular_distance(actual.to_np(), expected),
+            0.0,
+        )
+
+    @pytest.mark.parametrize("a", numbers)
+    def test_normalize_angle(self, a):
+        ref_r = normalize_angle(a)
+        assert np.allclose(cas.normalize_angle(a), ref_r)
+
+    @pytest.mark.parametrize("angle1", numbers)
+    @pytest.mark.parametrize("angle2", numbers)
+    def test_shorted_angular_distance(self, angle1, angle2):
+        try:
+            expected = shortest_angular_distance(angle1, angle2)
+        except ValueError:
+            expected = np.nan
+        actual = cas.shortest_angular_distance(angle1, angle2)
+        assert np.allclose(actual, expected, equal_nan=True)
+
 
 class TestVector:
+    def test_float_casting(self):
+        with pytest.raises(TypeError):
+            # noinspection PyTypeChecker
+            assert float(cas.Vector([1, 2]))
+
     def test_arithmetic_operations(self):
         operators = [
             operator.add,
@@ -983,6 +983,15 @@ class TestVector:
             assert (
                 result.shape == expected.shape
             ), f"{op.__name__} result shape is wrong"
+
+    def test_abs(self):
+        f1 = cas.Vector([1, -1, -23])
+        assert np.allclose(abs(f1), abs(f1.to_np()))
+        assert isinstance(abs(f1), cas.Vector)
+
+    def test_max(self):
+        v = cas.Vector([23, 69])
+        assert np.allclose(cas.max(v), max(v.to_np()))
 
     def test_comparisons(self):
         operators = [
@@ -1121,6 +1130,11 @@ class TestMatrix:
             assert (
                 result.shape == expected.shape
             ), f"{op.__name__} result shape is wrong"
+
+    def test_abs(self):
+        f1 = -cas.Matrix.eye(3)
+        assert np.allclose(abs(f1), abs(f1.to_np()))
+        assert isinstance(abs(f1), cas.Matrix)
 
     def test_matmul_scalar(self):
         m = cas.Matrix([[23]])

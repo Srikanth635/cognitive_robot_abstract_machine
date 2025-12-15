@@ -756,6 +756,12 @@ class Expression(SymbolicType):
     def __copy__(self) -> Expression:
         return Expression(_copy.copy(self.casadi_sx))
 
+    def __neg__(self) -> _te.Self:
+        return self.from_casadi_sx(self.casadi_sx.__neg__())
+
+    def __abs__(self) -> _te.Self:
+        return self.from_casadi_sx(_ca.fabs(self.casadi_sx))
+
     def jacobian(self, variables: _te.Iterable[FloatVariable]) -> Matrix:
         """
         Compute the Jacobian matrix of a vector of expressions with respect to a vector of variables.
@@ -1553,14 +1559,14 @@ def to_sx(thing: _te.Union[_ca.SX, SymbolicType]) -> _ca.SX:
 
 
 # %% basic math
-def abs(x: SymbolicType) -> Expression:
-    x_sx = to_sx(x)
-    result = _ca.fabs(x_sx)
-    return Expression(result)
+def abs(x: GenericSymbolicType) -> GenericSymbolicType:
+    return _builtins.abs(x)
 
 
-def max(x: Scalar, y: Scalar) -> Scalar:
-    return _create_return_type(x).from_casadi_sx(_ca.fmax(x.casadi_sx, y.casadi_sx))
+def max(arg1: Expression, arg2: _te.Optional[Scalar] = None, *args: Scalar) -> Scalar:
+    if not isinstance(arg1, Scalar):
+        return Scalar.from_casadi_sx(_ca.fmax([to_sx(arg) for arg in arg1]))
+    return Scalar.from_casadi_sx(_ca.fmax())
 
 
 def min(x: Scalar, y: Scalar) -> Scalar:
