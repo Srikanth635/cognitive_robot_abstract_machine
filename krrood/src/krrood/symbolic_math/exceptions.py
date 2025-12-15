@@ -72,11 +72,8 @@ class NotSquareMatrixError(WrongDimensionsError):
     Represents an error raised when an operation requires a square matrix but the input is not.
     """
 
+    expected_dimensions: Tuple[int, int] = field(default="square", init=False)
     actual_dimensions: Tuple[int, int]
-
-    def __post_init__(self):
-        msg = f"Expected a square matrix, but got {self.actual_dimensions} dimensions."
-        super().__init__(msg)
 
 
 @dataclass

@@ -5,7 +5,11 @@ import pytest
 import scipy
 
 import krrood.symbolic_math.symbolic_math as cas
-from krrood.symbolic_math.exceptions import HasFreeVariablesError, NotScalerError
+from krrood.symbolic_math.exceptions import (
+    HasFreeVariablesError,
+    NotScalerError,
+    NotSquareMatrixError,
+)
 from test.krrood_test.test_symbolic_math.reference_implementations import (
     normalize_angle_positive,
     shortest_angular_distance,
@@ -71,14 +75,14 @@ class TestLogic3:
                     expected == actual
                 ), f"a={i}, b={j}, expected {expected}, actual {actual}"
 
-    # def test_or3(self):
-    #     for i in self.values:
-    #         for j in self.values:
-    #             expected = logic_or(i, j)
-    #             actual = cas.trinary_logic_or(cas.Scalar(i), cas.Scalar(j))
-    #             assert expected == float(
-    #                 actual
-    #             ), f"a={i}, b={j}, expected {expected}, actual {actual}"
+    def test_or3(self):
+        for i in self.values:
+            for j in self.values:
+                expected = logic_or(i, j)
+                actual = cas.trinary_logic_or(cas.Scalar(i), cas.Scalar(j))
+                assert expected == float(
+                    actual
+                ), f"a={i}, b={j}, expected {expected}, actual {actual}"
 
     def test_not3(self):
         for i in self.values:
@@ -556,97 +560,6 @@ class TestExpression:
         assert np.allclose(actual, expected)
 
 
-# class TestArrayMathFunctions:
-#     def test_leq_on_array(self):
-#         a = cas.Expression(data=np.array([1, 2, 3, 4]))
-#         b = cas.Expression(data=np.array([2, 2, 2, 2]))
-#         assert not cas.logic_all(a <= b).to_np()
-#
-#     def test_trace(self):
-#         m = rotation_matrix_from_quaternion(0, 1, 0, 0)
-#         assert np.allclose(m.trace(), np.trace(m))
-#
-#     @pytest.mark.parametrize("q1", quaternions)
-#     @pytest.mark.parametrize("q2", quaternions)
-#     def test_entrywise_product(self, q1, q2):
-#         m1 = rotation_matrix_from_quaternion(*q1)
-#         m2 = rotation_matrix_from_quaternion(*q2)
-#         r1 = cas.Expression(data=m1).entrywise_product(m2)
-#         r2 = m1 * m2
-#         assert np.allclose(r1, r2)
-#
-#     def test_sum(self):
-#         m = np.arange(16, dtype=float).reshape((4, 4))
-#         actual_sum = m.sum()
-#         expected_sum = np.sum(m)
-#         assert np.allclose(actual_sum, expected_sum, rtol=1.0e-4)
-#
-#     def test_sum_row(self):
-#         m = np.arange(16, dtype=float).reshape((4, 4))
-#         actual_sum = cas.Expression(data=m).sum_row()
-#         expected_sum = np.sum(m, axis=0)
-#         assert np.allclose(actual_sum, expected_sum)
-#
-#     def test_sum_column(self):
-#         m = np.arange(16, dtype=float).reshape((4, 4))
-#         actual_sum = cas.Expression(data=m).sum_column()
-#         expected_sum = np.sum(m, axis=1)
-#         assert np.allclose(actual_sum, expected_sum)
-#
-#     def test_vstack(self):
-#         m = np.eye(4)
-#         m1 = cas.Expression(data=m)
-#         e = cas.Expression.vstack([m1, m1])
-#         r1 = e
-#         r2 = np.vstack([m, m])
-#         assert np.allclose(r1, r2)
-#
-#     def test_vstack_empty(self):
-#         m = np.eye(0)
-#         m1 = cas.Expression(data=m)
-#         e = cas.Expression.vstack([m1, m1])
-#         r1 = e
-#         r2 = np.vstack([m, m])
-#         assert np.allclose(r1, r2)
-#
-#     def test_hstack(self):
-#         m = np.eye(4)
-#         m1 = cas.Expression(data=m)
-#         e = cas.Expression.hstack([m1, m1])
-#         r1 = e
-#         r2 = np.hstack([m, m])
-#         assert np.allclose(r1, r2)
-#
-#     def test_hstack_empty(self):
-#         m = np.eye(0)
-#         m1 = cas.Expression(data=m)
-#         e = cas.Expression.hstack([m1, m1])
-#         r1 = e
-#         r2 = np.hstack([m, m])
-#         assert np.allclose(r1, r2)
-#
-#     def test_diag_stack(self):
-#         m1_np = np.eye(4)
-#         m2_np = np.ones((2, 5))
-#         m3_np = np.ones((5, 3))
-#         m1_e = cas.Expression(data=m1_np)
-#         m2_e = cas.Expression(data=m2_np)
-#         m3_e = cas.Expression(data=m3_np)
-#         e = cas.Expression.diag_stack([m1_e, m2_e, m3_e])
-#         r1 = e
-#         combined_matrix = np.zeros((4 + 2 + 5, 4 + 5 + 3))
-#         row_counter = 0
-#         column_counter = 0
-#         for matrix in [m1_np, m2_np, m3_np]:
-#             combined_matrix[
-#                 row_counter : row_counter + matrix.shape[0],
-#                 column_counter : column_counter + matrix.shape[1],
-#             ] = matrix
-#             row_counter += matrix.shape[0]
-#             column_counter += matrix.shape[1]
-#         assert np.allclose(r1, combined_matrix)
-
-
 class TestSymbolicType:
     def test_substitute(self):
         a, b, c, d = cas.create_float_variables(["a", "b", "c", "d"])
@@ -903,7 +816,21 @@ class TestScalar:
 
     @pytest.mark.parametrize("x", [-23, 0, 23])
     def test_sign(self, x):
-        assert np.allclose(cas.sign(x), np.sign(x))
+        actual = cas.sign(x)
+        assert np.allclose(actual, np.sign(x))
+        assert isinstance(actual, cas.Scalar)
+
+    @pytest.mark.parametrize("x", [-23, 0, 23])
+    def test_exp(self, x):
+        actual = cas.exp(x)
+        assert np.allclose(actual, np.exp(x))
+        assert isinstance(actual, cas.Scalar)
+
+    @pytest.mark.parametrize("x", [-23, 0, 23])
+    def test_exp(self, x):
+        actual = cas.log(x)
+        assert np.allclose(actual, np.log(x), equal_nan=True)
+        assert isinstance(actual, cas.Scalar)
 
     @pytest.mark.parametrize("x", numbers)
     @pytest.mark.parametrize("lower_limit", numbers)
@@ -952,6 +879,11 @@ class TestScalar:
 
 
 class TestVector:
+    def test_leq_on_array(self):
+        a = cas.Vector(np.array([1, 2, 3, 4]))
+        b = cas.Vector(np.array([2, 2, 2, 2]))
+        assert not cas.logic_all(a <= b)
+
     def test_float_casting(self):
         with pytest.raises(TypeError):
             # noinspection PyTypeChecker
@@ -1019,23 +951,21 @@ class TestVector:
         v = cas.Vector([23, 69])
         assert np.allclose(cas.min(v), min(v.to_np()))
 
-    # def test_comparisons(self):
-    #     operators = [
-    #         operator.lt,
-    #         operator.le,
-    #         operator.eq,
-    #         operator.ge,
-    #         operator.gt,
-    #     ]
-    #     e1_np = np.array([1, 2, 3, -1])
-    #     e2_np = np.array([1, 1, -1, 3])
-    #     e1_cas = cas.Scalar(e1_np)
-    #     e2_cas = cas.Scalar(e2_np)
-    #     for f in operators:
-    #         r_np = f(e1_np, e2_np)
-    #         r_cas = f(e1_cas, e2_cas)
-    #         assert isinstance(r_cas, cas.Expression)
-    #         assert np.all(r_np == r_cas)
+    def test_comparisons(self):
+        operators = [
+            operator.lt,
+            operator.le,
+            operator.eq,
+            operator.ge,
+            operator.gt,
+        ]
+        e1_np = np.array([1, 2, 3, -1])
+        e1_cas = cas.Vector(e1_np)
+        # todo test without float variable
+        e2_cas = cas.Vector([1, 1, -1, cas.FloatVariable(name="muh")])
+        for f in operators:
+            r_cas = f(e1_cas, e2_cas)
+            assert isinstance(r_cas, cas.Vector), f"{f.__name__} result is not Vector"
 
     def test_get_item(self):
         v = cas.Vector(np.array([1, 2, 3]))
@@ -1105,6 +1035,95 @@ class TestVector:
 
 
 class TestMatrix:
+    def test_trace(self):
+        m = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        actual = cas.Matrix(m).trace()
+        assert isinstance(actual, cas.Matrix)
+        assert np.allclose(actual, np.trace(m))
+
+        m2 = np.array([[1, 2, 3], [4, 5, 6]])
+        with pytest.raises(NotSquareMatrixError):
+            cas.Matrix(m2).trace()
+
+    def test_sum(self):
+        m = np.arange(16, dtype=float).reshape((4, 4))
+        actual_sum = cas.Matrix(m).sum()
+        expected_sum = np.sum(m)
+        assert isinstance(actual_sum, cas.Scalar)
+        assert np.allclose(actual_sum, expected_sum, rtol=1.0e-4)
+
+    def test_sum_row(self):
+        m = np.arange(16, dtype=float).reshape((4, 4))
+        actual_sum = cas.Matrix(data=m).sum_row()
+        expected_sum = np.sum(m, axis=0)
+        assert isinstance(actual_sum, cas.Vector)
+        assert np.allclose(actual_sum, expected_sum)
+
+    def test_sum_column(self):
+        m = np.arange(16, dtype=float).reshape((4, 4))
+        actual_sum = cas.Matrix(data=m).sum_column()
+        expected_sum = np.sum(m, axis=1)
+        assert isinstance(actual_sum, cas.Vector)
+        assert np.allclose(actual_sum, expected_sum)
+
+    def test_vstack(self):
+        m = np.eye(4)
+        m1 = cas.Matrix(m)
+        e = cas.Matrix.vstack([m1, m1])
+        r1 = e
+        r2 = np.vstack([m, m])
+        assert isinstance(r1, cas.Matrix)
+        assert np.allclose(r1, r2)
+
+    def test_vstack_empty(self):
+        m = np.eye(0)
+        m1 = cas.Matrix(data=m)
+        e = cas.Matrix.vstack([m1, m1])
+        r1 = e
+        r2 = np.vstack([m, m])
+        assert isinstance(r1, cas.Matrix)
+        assert np.allclose(r1, r2)
+
+    def test_hstack(self):
+        m = np.eye(4)
+        m1 = cas.Matrix(data=m)
+        e = cas.Matrix.hstack([m1, m1])
+        r1 = e
+        r2 = np.hstack([m, m])
+        assert isinstance(r1, cas.Matrix)
+        assert np.allclose(r1, r2)
+
+    def test_hstack_empty(self):
+        m = np.eye(0)
+        m1 = cas.Matrix(data=m)
+        e = cas.Matrix.hstack([m1, m1])
+        r1 = e
+        r2 = np.hstack([m, m])
+        assert isinstance(r1, cas.Matrix)
+        assert np.allclose(r1, r2)
+
+    def test_diag_stack(self):
+        m1_np = np.eye(4)
+        m2_np = np.ones((2, 5))
+        m3_np = np.ones((5, 3))
+        m1_e = cas.Matrix(data=m1_np)
+        m2_e = cas.Matrix(data=m2_np)
+        m3_e = cas.Matrix(data=m3_np)
+        e = cas.Matrix.diag_stack([m1_e, m2_e, m3_e])
+        assert isinstance(e, cas.Matrix)
+        r1 = e
+        combined_matrix = np.zeros((4 + 2 + 5, 4 + 5 + 3))
+        row_counter = 0
+        column_counter = 0
+        for matrix in [m1_np, m2_np, m3_np]:
+            combined_matrix[
+                row_counter : row_counter + matrix.shape[0],
+                column_counter : column_counter + matrix.shape[1],
+            ] = matrix
+            row_counter += matrix.shape[0]
+            column_counter += matrix.shape[1]
+        assert np.allclose(r1, combined_matrix)
+
     def test_iterable_rows(self):
         m_np = np.array([[1, 2, 3], [4, 5, 6]])
         m = cas.Matrix(m_np)

@@ -1148,19 +1148,19 @@ class Vector(Expression):
     def __eq__(self, other: Vector) -> Vector | bool:
         if self.is_constant() and other.is_constant():
             return self.to_np() == other.to_np()
-        return Vector.from_casadi_sx(self.casadi_sx.__eq__(other.casadi_sx))
+        return Vector.from_casadi_sx(to_sx(self).__eq__(to_sx(other)))
 
-    def __le__(self, other: Scalar | FloatVariable) -> Scalar:
-        return Scalar.from_casadi_sx(self.casadi_sx.__le__(other.casadi_sx))
+    def __le__(self, other: Vector) -> _te.Self:
+        return self.from_casadi_sx(to_sx(self).__le__(to_sx(other)))
 
-    def __lt__(self, other: Scalar | FloatVariable) -> Scalar:
-        return Scalar.from_casadi_sx(self.casadi_sx.__lt__(other.casadi_sx))
+    def __lt__(self, other: Vector) -> _te.Self:
+        return self.from_casadi_sx(to_sx(self).__lt__(to_sx(other)))
 
-    def __ge__(self, other: Scalar | FloatVariable) -> Scalar:
-        return Scalar.from_casadi_sx(self.casadi_sx.__ge__(other.casadi_sx))
+    def __ge__(self, other: Vector) -> _te.Self:
+        return self.from_casadi_sx(to_sx(self).__ge__(to_sx(other)))
 
-    def __gt__(self, other: Scalar | FloatVariable) -> Scalar:
-        return Scalar.from_casadi_sx(self.casadi_sx.__gt__(other.casadi_sx))
+    def __gt__(self, other: Vector) -> _te.Self:
+        return self.from_casadi_sx(to_sx(self).__gt__(to_sx(other)))
 
     def __getitem__(
         self,
@@ -1407,31 +1407,31 @@ class Matrix(Expression):
     def remove(self, rows: _te.List[int], columns: _te.List[int]):
         self.casadi_sx.remove(rows, columns)
 
-    def sum(self) -> Expression:
+    def sum(self) -> Scalar:
         """
         the equivalent to _np.sum(matrix)
         """
-        return Expression(_ca.sum1(_ca.sum2(self.casadi_sx)))
+        return Scalar.from_casadi_sx(_ca.sum1(_ca.sum2(self.casadi_sx)))
 
-    def sum_row(self) -> Expression:
+    def sum_row(self) -> _te.Self:
         """
         the equivalent to _np.sum(matrix, axis=0)
         """
-        return Expression(_ca.sum1(self.casadi_sx))
+        return Vector.from_casadi_sx(_ca.sum1(self.casadi_sx))
 
-    def sum_column(self) -> Expression:
+    def sum_column(self) -> _te.Self:
         """
         the equivalent to _np.sum(matrix, axis=1)
         """
-        return Expression(_ca.sum2(self.casadi_sx))
+        return Vector.from_casadi_sx(_ca.sum2(self.casadi_sx))
 
-    def trace(self) -> Expression:
+    def trace(self) -> Matrix:
         if not self.is_square():
             raise NotSquareMatrixError(actual_dimensions=self.casadi_sx.shape)
         s = 0
         for i in range(self.casadi_sx.shape[0]):
             s += self.casadi_sx[i, i]
-        return Expression(s)
+        return Matrix(s)
 
     def det(self) -> Expression:
         """
@@ -1449,23 +1449,6 @@ class Matrix(Expression):
 
     def is_square(self):
         return self.casadi_sx.shape[0] == self.casadi_sx.shape[1]
-
-    def entrywise_product(self, other: Expression) -> Expression:
-        """
-        Computes the entrywise (element-wise) product of two matrices, assuming they have the same dimensions. The
-        operation multiplies each corresponding element of the input matrices and stores the result in a new matrix
-        of the same shape.
-
-        :param other: The second matrix, represented as an object of type `Expression`, whose shape
-                        must match the shape of `matrix1`.
-        :return: A new matrix of type `Expression` containing the entrywise product of `matrix1` and `matrix2`.
-        """
-        assert self.shape == other.shape
-        result = Expression.zeros(*self.shape)
-        for i in range(self.shape[0]):
-            for j in range(self.shape[1]):
-                result[i, j] = self[i, j] * other[i, j]
-        return result
 
     @property
     def T(self) -> _te.Self:
@@ -1621,24 +1604,20 @@ def ceil(x: GenericSymbolicType) -> GenericSymbolicType:
     return _create_return_type(x).from_casadi_sx(_ca.ceil(to_sx(x)))
 
 
-def sign(x: ScalarData) -> Expression:
-    x = to_sx(x)
-    return Expression(_ca.sign(x))
+def sign(x: GenericSymbolicType) -> GenericSymbolicType:
+    return _create_return_type(x).from_casadi_sx(_ca.sign(to_sx(x)))
 
 
-def exp(x: ScalarData) -> Expression:
-    x = to_sx(x)
-    return Expression(_ca.exp(x))
+def exp(x: GenericSymbolicType) -> GenericSymbolicType:
+    return _create_return_type(x).from_casadi_sx(_ca.exp(to_sx(x)))
 
 
-def log(x: ScalarData) -> Expression:
-    x = to_sx(x)
-    return Expression(_ca.log(x))
+def log(x: GenericSymbolicType) -> GenericSymbolicType:
+    return _create_return_type(x).from_casadi_sx(_ca.log(to_sx(x)))
 
 
-def sqrt(x: ScalarData) -> Expression:
-    x = to_sx(x)
-    return Expression(_ca.sqrt(x))
+def sqrt(x: GenericSymbolicType) -> GenericSymbolicType:
+    return _create_return_type(x).from_casadi_sx(_ca.sqrt(to_sx(x)))
 
 
 # %% trigonometry
@@ -1800,8 +1779,8 @@ def logic_any(args: Expression) -> ScalarData:
     return Expression(_ca.logic_any(args.casadi_sx))
 
 
-def logic_all(args: Expression) -> ScalarData:
-    return Expression(_ca.logic_all(args.casadi_sx))
+def logic_all(args: GenericVectorOrMatrixType) -> GenericVectorOrMatrixType:
+    return _ca.logic_all(to_sx(args))
 
 
 def is_const_binary_true(expression: Expression) -> bool:
@@ -2194,4 +2173,10 @@ ScalarData = _te.Union[NumericalScalar, SymbolicScalar]
 GenericSymbolicType = _te.TypeVar(
     "GenericSymbolicType",
     bound=SymbolicType,
+)
+
+GenericVectorOrMatrixType = _te.TypeVar(
+    "GenericVectorOrMatrixType",
+    Vector,
+    Matrix,
 )
