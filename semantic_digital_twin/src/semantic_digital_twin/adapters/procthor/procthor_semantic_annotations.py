@@ -9,12 +9,12 @@ from typing_extensions import List
 
 from semantic_digital_twin.semantic_annotations.semantic_annotations import (
     Table,
-    IsPerceivable,
     Furniture,
 )
 from semantic_digital_twin.semantic_annotations.mixins import (
-    HasBody,
+    HasRootBody,
     HasSupportingSurface,
+    IsPerceivable,
 )
 from ...world_description.world_entity import SemanticAnnotation
 
@@ -31,7 +31,7 @@ class UnresolvedNameError(ValueError):
 class ProcthorResolver:
     """Central resolver that deterministically maps a ProcTHOR name to exactly one class."""
 
-    classes: List[Type[HasBody]] = field(default_factory=list)
+    classes: List[Type[HasRootBody]] = field(default_factory=list)
 
     def resolve(self, name: str) -> Optional[Type[SemanticAnnotation]]:
         """
@@ -68,14 +68,14 @@ class ProcthorResolver:
 
 
 @dataclass(eq=False)
-class Bottle(HasBody):
+class Bottle(HasRootBody):
     """
     Abstract class for bottles.
     """
 
 
 @dataclass(eq=False)
-class Statue(HasBody): ...
+class Statue(HasRootBody): ...
 
 
 @dataclass(eq=False)
@@ -100,7 +100,7 @@ class MustardBottle(Bottle):
 
 
 @dataclass(eq=False)
-class DrinkingContainer(HasBody): ...
+class DrinkingContainer(HasRootBody): ...
 
 
 @dataclass(eq=False)
@@ -118,11 +118,11 @@ class Mug(DrinkingContainer):
 
 
 @dataclass(eq=False)
-class CookingContainer(HasBody): ...
+class CookingContainer(HasRootBody): ...
 
 
 @dataclass(eq=False)
-class Lid(HasBody): ...
+class Lid(HasRootBody): ...
 
 
 @dataclass(eq=False)
@@ -169,7 +169,7 @@ class Bowl(HasSupportingSurface, IsPerceivable):
 
 # Food Items
 @dataclass(eq=False)
-class Food(HasBody): ...
+class Food(HasRootBody): ...
 
 
 @dataclass(eq=False)
@@ -295,7 +295,7 @@ class Desk(Table):
 
 
 @dataclass(eq=False)
-class Chair(HasBody, Furniture):
+class Chair(HasRootBody, Furniture):
     """
     Abstract class for chairs.
     """
@@ -316,28 +316,28 @@ class Armchair(Chair):
 
 
 @dataclass(eq=False)
-class ShelvingUnit(HasBody, Furniture):
+class ShelvingUnit(HasRootBody, Furniture):
     """
     A shelving unit.
     """
 
 
 @dataclass(eq=False)
-class Bed(HasBody, Furniture):
+class Bed(HasRootBody, Furniture):
     """
     A bed.
     """
 
 
 @dataclass(eq=False)
-class Sofa(HasBody, Furniture):
+class Sofa(HasRootBody, Furniture):
     """
     A sofa.
     """
 
 
 @dataclass(eq=False)
-class Sink(HasBody):
+class Sink(HasRootBody):
     """
     A sink.
     """
@@ -348,7 +348,7 @@ class Kettle(CookingContainer): ...
 
 
 @dataclass(eq=False)
-class Decor(HasBody): ...
+class Decor(HasRootBody): ...
 
 
 @dataclass(eq=False)
@@ -359,7 +359,7 @@ class WallDecor(Decor):
 
 
 @dataclass(eq=False)
-class Cloth(HasBody): ...
+class Cloth(HasRootBody): ...
 
 
 @dataclass(eq=False)
@@ -370,7 +370,7 @@ class Poster(WallDecor):
 
 
 @dataclass(eq=False)
-class WallPanel(HasBody):
+class WallPanel(HasRootBody):
     """
     A wall panel.
     """
@@ -381,43 +381,43 @@ class Potato(Produce): ...
 
 
 @dataclass(eq=False)
-class GarbageBin(HasBody):
+class GarbageBin(HasRootBody):
     """
     A garbage bin.
     """
 
 
 @dataclass(eq=False)
-class Drone(HasBody): ...
+class Drone(HasRootBody): ...
 
 
 @dataclass(eq=False)
-class ProcthorBox(HasBody): ...
+class ProcthorBox(HasRootBody): ...
 
 
 @dataclass(eq=False)
-class Houseplant(HasBody):
+class Houseplant(HasRootBody):
     """
     A houseplant.
     """
 
 
 @dataclass(eq=False)
-class SprayBottle(HasBody):
+class SprayBottle(HasRootBody):
     """
     A spray bottle.
     """
 
 
 @dataclass(eq=False)
-class Vase(HasBody):
+class Vase(HasRootBody):
     """
     A vase.
     """
 
 
 @dataclass(eq=False)
-class Book(HasBody):
+class Book(HasRootBody):
     """
     A book.
     """
@@ -426,18 +426,18 @@ class Book(HasBody):
 
 
 @dataclass(eq=False)
-class BookFront(HasBody): ...
+class BookFront(HasRootBody): ...
 
 
 @dataclass(eq=False)
-class SaltPepperShaker(HasBody):
+class SaltPepperShaker(HasRootBody):
     """
     A salt and pepper shaker.
     """
 
 
 @dataclass(eq=False)
-class Cuttlery(HasBody): ...
+class Cuttlery(HasRootBody): ...
 
 
 @dataclass(eq=False)
@@ -463,28 +463,28 @@ class Milk(Cuttlery, IsPerceivable): ...
 
 
 @dataclass(eq=False)
-class Pencil(HasBody):
+class Pencil(HasRootBody):
     """
     A pencil.
     """
 
 
 @dataclass(eq=False)
-class Pen(HasBody):
+class Pen(HasRootBody):
     """
     A pen.
     """
 
 
 @dataclass(eq=False)
-class Baseball(HasBody):
+class Baseball(HasRootBody):
     """
     A baseball.
     """
 
 
 @dataclass(eq=False)
-class LiquidCap(HasBody):
+class LiquidCap(HasRootBody):
     """
     A liquid cap.
     """

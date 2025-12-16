@@ -6,7 +6,7 @@ import rclpy
 from semantic_digital_twin.adapters.viz_marker import VizMarkerPublisher
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.exceptions import InvalidPlaneDimensions
-from semantic_digital_twin.semantic_annotations.mixins import HasCase
+from semantic_digital_twin.semantic_annotations.mixins import HasCaseAsMainBody
 
 from semantic_digital_twin.semantic_annotations.semantic_annotations import (
     Handle,
@@ -19,6 +19,7 @@ from semantic_digital_twin.semantic_annotations.semantic_annotations import (
     Fridge,
     Slider,
     Floor,
+    Aperture,
 )
 from semantic_digital_twin.spatial_types.spatial_types import (
     TransformationMatrix,
@@ -219,12 +220,12 @@ class TestFactories(unittest.TestCase):
             scale=Scale(1, 1, 2.0),
         )
 
-        assert isinstance(fridge, HasCase)
+        assert isinstance(fridge, HasCaseAsMainBody)
 
         semantic_container_annotations = world.get_semantic_annotations_by_type(Fridge)
         self.assertEqual(len(semantic_container_annotations), 1)
 
-        assert len(world.get_semantic_annotations_by_type(HasCase)) == 1
+        assert len(world.get_semantic_annotations_by_type(HasCaseAsMainBody)) == 1
 
     def test_drawer_factory(self):
         world = World()
@@ -237,7 +238,7 @@ class TestFactories(unittest.TestCase):
             parent=root,
             scale=Scale(0.2, 0.3, 0.2),
         )
-        assert isinstance(drawer, HasCase)
+        assert isinstance(drawer, HasCaseAsMainBody)
         semantic_drawer_annotations = world.get_semantic_annotations_by_type(Drawer)
         self.assertEqual(len(semantic_drawer_annotations), 1)
 
@@ -311,7 +312,41 @@ class TestFactories(unittest.TestCase):
         semantic_wall_annotations = world.get_semantic_annotations_by_type(Wall)
         self.assertEqual(len(semantic_wall_annotations), 1)
 
-    def test_has_holes_factory(self):
+    def test_aperture_factory(self):
+        world = World()
+        root = Body(name=PrefixedName("root"))
+        with world.modify_world():
+            world.add_body(root)
+        aperture = Aperture.create_with_new_region_in_world(
+            name=PrefixedName("wall"),
+            scale=Scale(0.1, 4, 2),
+            world=world,
+            parent=root,
+        )
+        semantic_aperture_annotations = world.get_semantic_annotations_by_type(Aperture)
+        self.assertEqual(len(semantic_aperture_annotations), 1)
+
+    def test_aperture_from_body_factory(self):
+        world = World()
+        root = Body(name=PrefixedName("root"))
+        with world.modify_world():
+            world.add_body(root)
+        door = Door.create_with_new_body_in_world(
+            name=PrefixedName("door"),
+            scale=Scale(0.03, 1, 2),
+            world=world,
+            parent=root,
+        )
+        aperture = Aperture.create_with_new_region_in_world_from_body(
+            name=PrefixedName("wall"),
+            world=world,
+            parent=root,
+            body=door.body,
+        )
+        semantic_aperture_annotations = world.get_semantic_annotations_by_type(Aperture)
+        self.assertEqual(len(semantic_aperture_annotations), 1)
+
+    def test_has_aperture_factory(self):
         world = World()
         root = Body(name=PrefixedName("root"))
         with world.modify_world():
@@ -328,7 +363,13 @@ class TestFactories(unittest.TestCase):
             world=world,
             parent=root,
         )
-        wall.cut_hole_for_from_body(door)
+        aperture = Aperture.create_with_new_region_in_world_from_body(
+            name=PrefixedName("wall"),
+            world=world,
+            parent=root,
+            body=door.body,
+        )
+        wall.add_aperture(aperture)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 import logging
+from dataclasses import field
 
 from krrood.entity_query_language.quantify_entity import an
 from krrood.entity_query_language.entity import entity, let, in_, inference
@@ -173,7 +174,9 @@ def test_generated_semantic_annotations(kitchen_world):
         "semantic_annotations"
     ]
     drawer_container_names = [
-        v.body.name.name for v in found_semantic_annotations if isinstance(v, HasCase)
+        v.body.name.name
+        for v in found_semantic_annotations
+        if isinstance(v, HasCaseAsMainBody)
     ]
     assert len(drawer_container_names) == 14
 
@@ -189,7 +192,9 @@ def test_apartment_semantic_annotations(apartment_world):
 
     found_semantic_annotations = world_reasoner.infer_semantic_annotations()
     drawer_container_names = [
-        v.body.name.name for v in found_semantic_annotations if isinstance(v, HasCase)
+        v.body.name.name
+        for v in found_semantic_annotations
+        if isinstance(v, HasCaseAsMainBody)
     ]
     assert len(drawer_container_names) == 19
 

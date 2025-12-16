@@ -932,9 +932,7 @@ class HeaderDAO(Base, DataAccessObject[pycram.datastructures.pose.Header]):
 
 class IsPerceivableDAO(
     Base,
-    DataAccessObject[
-        semantic_digital_twin.semantic_annotations.semantic_annotations.IsPerceivable
-    ],
+    DataAccessObject[semantic_digital_twin.semantic_annotations.mixins.IsPerceivable],
 ):
 
     __tablename__ = "IsPerceivableDAO"
@@ -3937,7 +3935,7 @@ class FurnitureDAO(
 
 class HasBodyDAO(
     SemanticAnnotationDAO,
-    DataAccessObject[semantic_digital_twin.semantic_annotations.mixins.HasBody],
+    DataAccessObject[semantic_digital_twin.semantic_annotations.mixins.HasRootBody],
 ):
 
     __tablename__ = "HasBodyDAO"
@@ -5492,7 +5490,7 @@ class WardrobeDAO(
 
 class HasRegionDAO(
     SemanticAnnotationDAO,
-    DataAccessObject[semantic_digital_twin.semantic_annotations.mixins.HasRegion],
+    DataAccessObject[semantic_digital_twin.semantic_annotations.mixins.HasRootRegion],
 ):
 
     __tablename__ = "HasRegionDAO"

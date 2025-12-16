@@ -1,66 +1,48 @@
 from __future__ import annotations
 
 from abc import ABC
-from dataclasses import dataclass, field
-from typing import Iterable, Optional, Self, Tuple
+from dataclasses import dataclass
+from typing import Iterable, Optional, Self
 
-import numpy as np
-from probabilistic_model.probabilistic_circuit.rx.helper import uniform_measure_of_event
 from random_events.interval import closed
-from random_events.product_algebra import Event, SimpleEvent
+from random_events.product_algebra import SimpleEvent
 from typing_extensions import List
 
 from krrood.entity_query_language.entity import entity, let
 from krrood.entity_query_language.quantify_entity import an
 from krrood.ormatic.utils import classproperty
 from .mixins import (
-    HasBody,
+    HasRootBody,
     HasSupportingSurface,
-    HasRegion,
+    HasRootRegion,
     HasDrawers,
     HasDoors,
     HasHandle,
-    HasCase,
+    HasCaseAsMainBody,
     HasHinge,
-    HasActiveConnection,
-    HasRevoluteConnection,
     HasLeftRightDoor,
     HasSlider,
-    HasHoles,
+    HasApertures,
 )
 from ..datastructures.prefixed_name import PrefixedName
 from ..datastructures.variables import SpatialVariables
 from ..exceptions import InvalidPlaneDimensions
 from ..reasoning.predicates import InsideOf
-from ..spatial_types import Point3, TransformationMatrix, Vector3
-from ..spatial_types.derivatives import DerivativeMap
+from ..spatial_types import Point3, TransformationMatrix
 from ..utils import Direction
 from ..world import World
-from ..world_description.connections import FixedConnection, RevoluteConnection
-from ..world_description.degree_of_freedom import DegreeOfFreedom
 from ..world_description.geometry import Scale
-from ..world_description.shape_collection import BoundingBoxCollection, ShapeCollection
+from ..world_description.shape_collection import BoundingBoxCollection
 from ..world_description.world_entity import (
     SemanticAnnotation,
     Body,
     KinematicStructureEntity,
+    Region,
 )
 
 
 @dataclass(eq=False)
-class IsPerceivable:
-    """
-    A mixin class for semantic annotations that can be perceived.
-    """
-
-    class_label: Optional[str] = field(default=None, kw_only=True)
-    """
-    The exact class label of the perceived object.
-    """
-
-
-@dataclass(eq=False)
-class Handle(HasBody):
+class Handle(HasRootBody):
 
     @classmethod
     def create_with_new_body_in_world(
@@ -121,7 +103,7 @@ class Handle(HasBody):
 
 @dataclass(eq=False)
 class Fridge(
-    HasCase,
+    HasCaseAsMainBody,
     HasDoors,
 ):
     """
@@ -134,29 +116,72 @@ class Fridge(
 
 
 @dataclass(eq=False)
-class Aperture(HasRegion):
+class Aperture(HasRootRegion):
     """
     A semantic annotation that represents an opening in a physical entity.
     An example is like a hole in a wall that can be used to enter a room.
     """
 
+    @classmethod
+    def create_with_new_region_in_world(
+        cls,
+        name: PrefixedName,
+        world: World,
+        parent: KinematicStructureEntity,
+        parent_T_self: Optional[TransformationMatrix] = None,
+        *,
+        scale: Scale = Scale(),
+    ) -> Self:
+        """
+        Create a new semantic annotation with a new region in the given world.
+        """
+        aperture_region = Region(name=name)
+
+        scale_event = scale.to_simple_event().as_composite_set()
+        aperture_geometry = BoundingBoxCollection.from_event(
+            aperture_region, scale_event
+        ).as_shapes()
+        aperture_region.area = aperture_geometry
+
+        return cls._create_with_fixed_connection_in_world(
+            name, world, aperture_region, parent, parent_T_self
+        )
+
+    @classmethod
+    def create_with_new_region_in_world_from_body(
+        cls,
+        name: PrefixedName,
+        world: World,
+        parent: KinematicStructureEntity,
+        body: Body,
+        parent_T_self: Optional[TransformationMatrix] = None,
+    ) -> Self:
+        body_scale = (
+            body.collision.as_bounding_box_collection_in_frame(body)
+            .bounding_box()
+            .scale
+        )
+        return cls.create_with_new_region_in_world(
+            name, world, parent, parent_T_self, scale=body_scale
+        )
+
 
 @dataclass(eq=False)
-class Hinge(HasBody):
+class Hinge(HasRootBody):
     """
     A hinge is a physical entity that connects two bodies and allows one to rotate around a fixed axis.
     """
 
 
 @dataclass(eq=False)
-class Slider(HasBody):
+class Slider(HasRootBody):
     """
     A Slider is a physical entity that connects two bodies and allows one to linearly translate along a fixed axis.
     """
 
 
 @dataclass(eq=False)
-class Door(HasBody, HasHandle, HasHinge):
+class Door(HasRootBody, HasHandle, HasHinge):
     """
     A door is a physical entity that has covers an opening, has a movable body and a handle.
     """
@@ -195,7 +220,7 @@ class DoubleDoor(SemanticAnnotation, HasLeftRightDoor):
 
 
 @dataclass(eq=False)
-class Drawer(HasCase, HasHandle, HasSlider):
+class Drawer(HasCaseAsMainBody, HasHandle, HasSlider):
 
     @property
     def opening_direction(self) -> Direction:
@@ -208,53 +233,35 @@ class Furniture(SemanticAnnotation, ABC): ...
 
 
 @dataclass(eq=False)
-class Table(Furniture, HasBody):
+class Table(Furniture, HasSupportingSurface):
     """
     A semantic annotation that represents a table.
     """
 
-    def points_on_table(self, amount: int = 100) -> List[Point3]:
-        """
-        Get points that are on the table.
-
-        :amount: The number of points to return.
-        :returns: A list of points that are on the table.
-        """
-        area_of_table = BoundingBoxCollection.from_shapes(self.body.collision)
-        event = area_of_table.event
-        p = uniform_measure_of_event(event)
-        p = p.marginal(SpatialVariables.xy)
-        samples = p.sample(amount)
-        z_coordinate = np.full(
-            (amount, 1), max([b.max_z for b in area_of_table]) + 0.01
-        )
-        samples = np.concatenate((samples, z_coordinate), axis=1)
-        return [Point3(*s, reference_frame=self.body) for s in samples]
-
 
 @dataclass(eq=False)
-class Cabinet(HasCase, Furniture, HasDrawers, HasDoors):
+class Cabinet(HasCaseAsMainBody, Furniture, HasDrawers, HasDoors):
     @property
     def opening_direction(self) -> Direction:
         return Direction.NEGATIVE_X
 
 
 @dataclass(eq=False)
-class Dresser(HasCase, Furniture, HasDrawers, HasDoors):
+class Dresser(HasCaseAsMainBody, Furniture, HasDrawers, HasDoors):
     @property
     def opening_direction(self) -> Direction:
         return Direction.NEGATIVE_X
 
 
 @dataclass(eq=False)
-class Cupboard(HasCase, Furniture, HasDoors):
+class Cupboard(HasCaseAsMainBody, Furniture, HasDoors):
     @property
     def opening_direction(self) -> Direction:
         return Direction.NEGATIVE_X
 
 
 @dataclass(eq=False)
-class Wardrobe(HasCase, Furniture, HasDrawers, HasDoors):
+class Wardrobe(HasCaseAsMainBody, Furniture, HasDrawers, HasDoors):
     @property
     def opening_direction(self) -> Direction:
         return Direction.NEGATIVE_X
@@ -315,7 +322,7 @@ class Room(SemanticAnnotation):
 
 
 @dataclass(eq=False)
-class Wall(HasBody, HasHoles):
+class Wall(HasRootBody, HasApertures):
 
     @classmethod
     def create_with_new_body_in_world(

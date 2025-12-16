@@ -5,12 +5,14 @@ from dataclasses import dataclass, field
 from enum import Enum
 from functools import reduce
 from operator import or_
+from typing import Optional
 
 import numpy as np
 import trimesh
 from numpy._typing import NDArray
 from probabilistic_model.probabilistic_circuit.rx.helper import (
     uniform_measure_of_simple_event,
+    uniform_measure_of_event,
 )
 from random_events.interval import SimpleInterval, Bound
 from random_events.product_algebra import SimpleEvent, Event
@@ -56,6 +58,7 @@ if TYPE_CHECKING:
         Handle,
         Hinge,
         Slider,
+        Aperture,
     )
 
 
@@ -193,7 +196,19 @@ class SemanticPositionDescription:
 
 
 @dataclass(eq=False)
-class HasBody(SemanticAnnotation, ABC):
+class IsPerceivable:
+    """
+    A mixin class for semantic annotations that can be perceived.
+    """
+
+    class_label: Optional[str] = field(default=None, kw_only=True)
+    """
+    The exact class label of the perceived object.
+    """
+
+
+@dataclass(eq=False)
+class HasRootBody(SemanticAnnotation, ABC):
     """
     Abstract base class for all household objects. Each semantic annotation refers to a single Body.
     Each subclass automatically derives a MatchRule from its own class name and
@@ -241,7 +256,7 @@ class HasBody(SemanticAnnotation, ABC):
 
         with world.modify_world():
             world.add_semantic_annotation(self_instance)
-            world.add_body(body)
+            world.add_kinematic_structure_entity(body)
             parent_C_self = FixedConnection(
                 parent=parent,
                 child=body,
@@ -253,19 +268,51 @@ class HasBody(SemanticAnnotation, ABC):
 
 
 @dataclass(eq=False)
-class HasRegion(SemanticAnnotation, ABC):
+class HasRootRegion(SemanticAnnotation, ABC):
     """
-    Abstract base class for all household objects. Each semantic annotation refers to a single Body.
-    Each subclass automatically derives a MatchRule from its own class name and
-    the names of its HouseholdObject ancestors. This makes specialized subclasses
-    naturally more specific than their bases.
+    A mixin class for semantic annotations that have a region.
     """
 
     region: Region = field(kw_only=True)
 
     @classmethod
-    @abstractmethod
-    def create_with_new_region(cls, *args, **kwargs) -> Self: ...
+    def create_with_new_region_in_world(
+        cls,
+        name: PrefixedName,
+        world: World,
+        parent: KinematicStructureEntity,
+        parent_T_self: Optional[TransformationMatrix] = None,
+        **kwargs,
+    ) -> Self:
+        """
+        Create a new semantic annotation with a new region in the given world.
+        """
+        slider_body = Region(name=name)
+
+        return cls._create_with_fixed_connection_in_world(
+            name, world, slider_body, parent, parent_T_self
+        )
+
+    @classmethod
+    def _create_with_fixed_connection_in_world(
+        cls, name, world, region, parent, parent_T_self
+    ):
+        self_instance = cls(name=name, region=region)
+        parent_T_self = (
+            parent_T_self if parent_T_self is not None else TransformationMatrix()
+        )
+
+        with world.modify_world():
+            world.add_semantic_annotation(self_instance)
+            world.add_kinematic_structure_entity(region)
+            parent_C_self = FixedConnection(
+                parent=parent,
+                child=region,
+                parent_T_connection_expression=parent_T_self,
+            )
+            world.add_connection(parent_C_self)
+
+        return self_instance
 
 
 @dataclass
@@ -349,11 +396,11 @@ class HasRevoluteConnection(HasActiveConnection):
 class SemanticAssociation(ABC):
 
     def get_new_parent_T_self(
-        self: HasBody | Self, parent: HasBody
+        self: HasRootBody | Self, parent: HasRootBody
     ) -> TransformationMatrix:
         return parent.body.global_pose.inverse() @ self.body.global_pose
 
-    def resolve_grandparent(self: HasBody | Self, parent: HasBody):
+    def resolve_grandparent(self: HasRootBody | Self, parent: HasRootBody):
         hinge_body = parent.body
         hinge_parent = hinge_body.parent_connection.parent
         new_hinge_parent = (
@@ -364,21 +411,23 @@ class SemanticAssociation(ABC):
         return new_hinge_parent
 
     def get_self_T_new_child(
-        self: HasBody | Self, child: HasBody
+        self: HasRootBody | Self, child: HasRootBody
     ) -> TransformationMatrix:
         return self.body.global_pose.inverse() @ child.body.global_pose
 
 
 @dataclass(eq=False)
-class HasHoles(SemanticAssociation, ABC):
+class HasApertures(SemanticAssociation, ABC):
 
-    def cut_hole_for_from_body(self: HasBody | Self, body_annotation: HasBody):
+    apertures: List[Aperture] = field(default_factory=list, hash=False, kw_only=True)
+
+    def add_aperture(self: HasRootBody | Self, aperture: Aperture):
         """
         Cuts a hole in the semantic annotation's body for the given body annotation.
 
         :param body_annotation: The body annotation to cut a hole for.
         """
-        hole_event = body_annotation.body.collision.as_bounding_box_collection_in_frame(
+        hole_event = aperture.region.area.as_bounding_box_collection_in_frame(
             self.body
         ).event
 
@@ -403,7 +452,7 @@ class HasHinge(HasRevoluteConnection, SemanticAssociation, ABC):
     hinge: Optional[Hinge] = field(init=False, default=None)
 
     def add_hinge(
-        self: HasBody | Self,
+        self: HasRootBody | Self,
         hinge: Hinge,
         rotation_axis: Vector3 = Vector3.Z(),
         connection_limits: Optional[
@@ -483,7 +532,7 @@ class HasSlider(HasPrismaticConnection, SemanticAssociation, ABC):
     slider: Optional[Slider] = field(init=False, default=None)
 
     def add_slider(
-        self: HasBody | Self,
+        self: HasRootBody | Self,
         slider: Slider,
         translation_axis: Vector3 = Vector3.X(),
         connection_limits: Optional[
@@ -765,7 +814,7 @@ class HasHandle(SemanticAssociation, ABC):
     """
 
     def add_handle(
-        self: HasBody | Self,
+        self: HasRootBody | Self,
         handle: Handle,
     ):
         """
@@ -796,7 +845,7 @@ class HasHandle(SemanticAssociation, ABC):
 
 
 @dataclass(eq=False)
-class HasSupportingSurface(HasBody, ABC):
+class HasSupportingSurface(HasRootBody, ABC):
     """
     A semantic annotation that represents a supporting surface.
     """
@@ -880,9 +929,27 @@ class HasSupportingSurface(HasBody, ABC):
             points_3d=points_3d,
         )
 
+    def points_on_surface(self, amount: int = 100) -> List[Point3]:
+        """
+        Get points that are on the table.
+
+        :amount: The number of points to return.
+        :returns: A list of points that are on the table.
+        """
+        area_of_table = BoundingBoxCollection.from_shapes(self.body.collision)
+        event = area_of_table.event
+        p = uniform_measure_of_event(event)
+        p = p.marginal(SpatialVariables.xy)
+        samples = p.sample(amount)
+        z_coordinate = np.full(
+            (amount, 1), max([b.max_z for b in area_of_table]) + 0.01
+        )
+        samples = np.concatenate((samples, z_coordinate), axis=1)
+        return [Point3(*s, reference_frame=self.body) for s in samples]
+
 
 @dataclass(eq=False)
-class HasCase(HasSupportingSurface, ABC):
+class HasCaseAsMainBody(HasSupportingSurface, ABC):
 
     @classproperty
     @abstractmethod

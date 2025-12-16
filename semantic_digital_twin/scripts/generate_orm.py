@@ -31,7 +31,10 @@ import semantic_digital_twin.world_description.world_entity
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.orm.model import *  # type: ignore
 from semantic_digital_twin.reasoning.predicates import ContainsType
-from semantic_digital_twin.semantic_annotations.mixins import HasBody, SemanticDirection
+from semantic_digital_twin.semantic_annotations.mixins import (
+    HasRootBody,
+    SemanticDirection,
+)
 from semantic_digital_twin.spatial_computations.forward_kinematics import (
     ForwardKinematicsManager,
 )
@@ -68,7 +71,7 @@ all_classes |= set(
 )
 all_classes |= set(classes_of_module(semantic_digital_twin.robots.abstract_robot))
 # classes |= set(recursive_subclasses(ViewFactory))
-all_classes |= set([HasBody] + recursive_subclasses(HasBody))
+all_classes |= set([HasRootBody] + recursive_subclasses(HasRootBody))
 all_classes |= set(classes_of_module(semantic_digital_twin.reasoning.predicates))
 all_classes |= set(classes_of_module(semantic_digital_twin.semantic_annotations.mixins))
 all_classes |= set(
