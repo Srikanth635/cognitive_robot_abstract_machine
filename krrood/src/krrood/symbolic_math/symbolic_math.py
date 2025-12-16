@@ -5,6 +5,7 @@ import copy as _copy
 import dataclasses as _dataclasses
 import functools as _functools
 import math as _math
+import operator
 import sys as _sys
 from collections import Counter as _Counter
 from dataclasses import field
@@ -63,6 +64,133 @@ class VariableParameters:
         cls, groups: _te.List[_te.List[FloatVariable]]
     ) -> VariableParameters:
         return cls(groups=tuple(VariableGroup(tuple(g)) for g in groups))
+
+
+class _BaseArithmeticMixin:
+    """
+    Provides generic elementwise arithmetic operator implementations by lifting to
+    CasADi SX and delegating to operations, then wrapping the result via `_wrap`.
+    """
+
+    _wrap: _ClassVar[_te.Callable[[_ca.SX], _te.Any]]
+
+    def _binary(self, other, op: _te.Callable[[_ca.SX, _ca.SX], _ca.SX]):
+        if not isinstance(other, ScalarData):
+            return NotImplemented
+        a = to_sx(self)
+        b = to_sx(other)
+        return self._wrap(op(a, b))
+
+    def _rbinary(self, other, op: _te.Callable[[_ca.SX, _ca.SX], _ca.SX]):
+        if not isinstance(other, ScalarData):
+            return NotImplemented
+        a = to_sx(other)
+        b = to_sx(self)
+        return self._wrap(op(a, b))
+
+    def __add__(self, other: ScalarData) -> Scalar:
+        return self._binary(other, operator.add)
+
+    def __radd__(self, other: ScalarData) -> Scalar:
+        return self._rbinary(other, operator.add)
+
+    def __sub__(self, other: ScalarData) -> Scalar:
+        return self._binary(other, operator.sub)
+
+    def __rsub__(self, other: ScalarData) -> Scalar:
+        return self._rbinary(other, operator.sub)
+
+    def __mul__(self, other: ScalarData) -> Scalar:
+        return self._binary(other, operator.mul)
+
+    def __rmul__(self, other: ScalarData) -> Scalar:
+        return self._rbinary(other, operator.mul)
+
+    def __truediv__(self, other: ScalarData) -> Scalar:
+        return self._binary(other, operator.truediv)
+
+    def __rtruediv__(self, other: ScalarData) -> Scalar:
+        return self._rbinary(other, operator.truediv)
+
+    def __pow__(self, other: ScalarData) -> Scalar:
+        return self._binary(other, operator.pow)
+
+    def __rpow__(self, other: ScalarData) -> Scalar:
+        return self._rbinary(other, operator.pow)
+
+    def __floordiv__(self, other: ScalarData) -> Scalar:
+        return self._binary(other, lambda a, b: _ca.floor(to_sx(a) / to_sx(b)))
+
+    def __rfloordiv__(self, other: ScalarData) -> Scalar:
+        return self._rbinary(other, lambda a, b: _ca.floor(to_sx(a) / to_sx(b)))
+
+    def __mod__(self, other: ScalarData) -> Scalar:
+        return self._binary(other, _ca.fmod)
+
+    def __rmod__(self, other: ScalarData) -> Scalar:
+        return self._rbinary(other, _ca.fmod)
+
+
+class _DenseLayout:
+    """Strategy for dense compiled function setup."""
+
+    def __init__(self, compiled: CompiledFunction) -> None:
+        self.compiled = compiled
+
+    def compile(self, casadi_parameters: _te.List[_ca.SX]) -> None:
+        self.compiled.expression.casadi_sx = _ca.densify(
+            self.compiled.expression.casadi_sx
+        )
+        self.compiled._compiled_casadi_function = _ca.Function(
+            "f", casadi_parameters, [self.compiled.expression.casadi_sx]
+        )
+        self.compiled._function_buffer, self.compiled._function_evaluator = (
+            self.compiled._compiled_casadi_function.buffer()
+        )
+
+    def setup_output(self) -> None:
+        expr = self.compiled.expression
+        if expr.shape[1] <= 1:
+            shape = expr.shape[0]
+        else:
+            shape = expr.shape
+        self.compiled._out = _np.zeros(shape, order="F")
+        self.compiled._function_buffer.set_res(0, memoryview(self.compiled._out))
+
+
+class _SparseLayout:
+    """Strategy for sparse compiled function setup."""
+
+    def __init__(self, compiled: "CompiledFunction") -> None:
+        self.compiled = compiled
+
+    def compile(self, casadi_parameters: _te.List[_ca.SX]) -> None:
+        self.compiled.expression.casadi_sx = _ca.sparsify(
+            self.compiled.expression.casadi_sx
+        )
+        self.compiled._compiled_casadi_function = _ca.Function(
+            "f", casadi_parameters, [self.compiled.expression.casadi_sx]
+        )
+        self.compiled._function_buffer, self.compiled._function_evaluator = (
+            self.compiled._compiled_casadi_function.buffer()
+        )
+        self.csc_indices, self.csc_indptr = (
+            self.compiled.expression.casadi_sx.sparsity().get_ccs()
+        )
+        self.zeroes = _np.zeros(self.compiled.expression.casadi_sx.nnz())
+
+    def setup_output(self) -> None:
+        expr = self.compiled.expression
+        out = _sp.csc_matrix(
+            arg1=(
+                self.zeroes,
+                self.csc_indptr,
+                self.csc_indices,
+            ),
+            shape=expr.shape,
+        )
+        self.compiled._out = out
+        self.compiled._function_buffer.set_res(0, memoryview(out.data))
 
 
 @_dataclasses.dataclass
@@ -185,78 +313,16 @@ class CompiledFunction:
                 for group in self.variable_parameters.groups
             ]
 
-        if self.sparse:
-            self._compile_sparse_function(casadi_parameters)
-        else:
-            self._compile_dense_function(casadi_parameters)
-
-    def _compile_sparse_function(self, casadi_parameters: _te.List[Expression]) -> None:
-        """
-        Compile function for sparse matrices.
-        """
-        self.expression.casadi_sx = _ca.sparsify(self.expression.casadi_sx)
-        self._compiled_casadi_function = _ca.Function(
-            "f", casadi_parameters, [self.expression.casadi_sx]
-        )
-
-        self._function_buffer, self._function_evaluator = (
-            self._compiled_casadi_function.buffer()
-        )
-        self.csc_indices, self.csc_indptr = (
-            self.expression.casadi_sx.sparsity().get_ccs()
-        )
-        self.zeroes = _np.zeros(self.expression.casadi_sx.nnz())
-
-    def _compile_dense_function(
-        self, casadi_parameters: _te.List[FloatVariable]
-    ) -> None:
-        """
-        Compile function for dense matrices.
-
-        :param casadi_parameters: _te.List of CasADi parameters for the function
-        """
-        self.expression.casadi_sx = _ca.densify(self.expression.casadi_sx)
-        self._compiled_casadi_function = _ca.Function(
-            "f", casadi_parameters, [self.expression.casadi_sx]
-        )
-
-        self._function_buffer, self._function_evaluator = (
-            self._compiled_casadi_function.buffer()
-        )
+        # Strategy-based compilation to remove duplicate sparse/dense logic
+        self._layout = _SparseLayout(self) if self.sparse else _DenseLayout(self)
+        self._layout.compile(casadi_parameters)
 
     def _setup_output_buffer(self) -> None:
         """
         Setup the output buffer for the compiled function.
         """
-        if self.sparse:
-            self._setup_sparse_output_buffer()
-        else:
-            self._setup_dense_output_buffer()
-
-    def _setup_sparse_output_buffer(self) -> None:
-        """
-        Setup output buffer for sparse matrices.
-        """
-        self._out = _sp.csc_matrix(
-            arg1=(
-                self.zeroes,
-                self.csc_indptr,
-                self.csc_indices,
-            ),
-            shape=self.expression.shape,
-        )
-        self._function_buffer.set_res(0, memoryview(self._out.data))
-
-    def _setup_dense_output_buffer(self) -> None:
-        """
-        Setup output buffer for dense matrices.
-        """
-        if self.expression.shape[1] <= 1:
-            shape = self.expression.shape[0]
-        else:
-            shape = self.expression.shape
-        self._out = _np.zeros(shape, order="F")
-        self._function_buffer.set_res(0, memoryview(self._out))
+        # Delegate to selected layout to avoid duplicated sparse/dense code
+        self._layout.setup_output()
 
     def _setup_constant_result(self) -> None:
         """
@@ -592,11 +658,15 @@ class SymbolicMathType(Symbol):
 
 
 @_dataclasses.dataclass(eq=False)
-class FloatVariable(SymbolicMathType):
+class FloatVariable(SymbolicMathType, _BaseArithmeticMixin):
     """
     A symbolic expression representing a single float variable.
     No matrix and no numbers.
     """
+
+    _wrap: _ClassVar[_te.Callable[[_ca.SX], Scalar]] = staticmethod(
+        lambda sx: Scalar.from_casadi_sx(sx)
+    )
 
     name: str = _dataclasses.field(kw_only=True)
 
@@ -639,76 +709,6 @@ class FloatVariable(SymbolicMathType):
 
     def __neg__(self) -> Scalar:
         return Scalar.from_casadi_sx(self.casadi_sx.__neg__())
-
-    def __add__(self, other: ScalarData) -> Scalar:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(to_sx(self) + to_sx(other))
-
-    def __radd__(self, other: ScalarData) -> Scalar:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return self.__add__(other)
-
-    def __sub__(self, other: ScalarData) -> Scalar:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(to_sx(self) - to_sx(other))
-
-    def __rsub__(self, other: ScalarData) -> Scalar:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(to_sx(other) - to_sx(self))
-
-    def __mul__(self, other: ScalarData) -> Scalar:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(to_sx(self) * to_sx(other))
-
-    def __rmul__(self, other: ScalarData) -> Scalar:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return self.__mul__(other)
-
-    def __truediv__(self, other: ScalarData) -> Scalar:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(to_sx(self) / to_sx(other))
-
-    def __rtruediv__(self, other: ScalarData) -> Scalar:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(to_sx(other) / to_sx(self))
-
-    def __pow__(self, other: ScalarData) -> Scalar:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(to_sx(self) ** to_sx(other))
-
-    def __rpow__(self, other: ScalarData) -> Scalar:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(to_sx(other) ** to_sx(self))
-
-    def __floordiv__(self, other: ScalarData) -> Scalar:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(_ca.floor(to_sx(self) / to_sx(other)))
-
-    def __rfloordiv__(self, other: ScalarData) -> Scalar:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(_ca.floor(to_sx(other) / to_sx(self)))
-
-    def __mod__(self, other: ScalarData) -> Scalar:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return fmod(Scalar(self), other)
-
-    def __rmod__(self, other: ScalarData) -> Scalar:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return fmod(Scalar(other), Scalar(self))
 
     # %% Boolean operations
     def is_const_true(self) -> bool:
@@ -967,7 +967,11 @@ class Expression(SymbolicMathType):
 
 
 @_dataclasses.dataclass(eq=False, init=False)
-class Scalar(Expression):
+class Scalar(Expression, _BaseArithmeticMixin):
+    _wrap: _ClassVar[_te.Callable[[_ca.SX], Scalar]] = staticmethod(
+        lambda sx: Scalar.from_casadi_sx(sx)
+    )
+
     def __init__(self, data: ScalarData = 0):
         self.casadi_sx = to_sx(data)
         self.verify_scalar()
@@ -1043,138 +1047,53 @@ class Scalar(Expression):
         return Scalar.from_casadi_sx(_ca.logic_or(self.casadi_sx, other.casadi_sx))
 
     # %% Comparison operations
-    def __eq__(
-        self, other: Scalar | FloatVariable | NumericalScalar | bool
+    def _compare(
+        self, other: Scalar | FloatVariable | NumericalScalar | bool, op: str
     ) -> Scalar | bool:
         if self.is_constant() and (
             isinstance(other, NumericalScalar)
             or isinstance(other, bool)
             or (isinstance(other, Scalar) and other.is_constant())
         ):
-            return float(self) == float(other)
+            left = float(self)
+            right = float(other)
+            if op == "eq":
+                return left == right
+            if op == "le":
+                return left <= right
+            if op == "lt":
+                return left < right
+            if op == "ge":
+                return left >= right
+            if op == "gt":
+                return left > right
         if isinstance(other, (Scalar, FloatVariable)):
-            return Scalar.from_casadi_sx(self.casadi_sx.__eq__(other.casadi_sx))
+            cas = getattr(self.casadi_sx, f"__{op}__")(other.casadi_sx)
+            return Scalar.from_casadi_sx(cas)
         return NotImplemented
+
+    def __eq__(
+        self, other: Scalar | FloatVariable | NumericalScalar | bool
+    ) -> Scalar | bool:
+        return self._compare(other, "eq")
 
     def __le__(self, other: Scalar | FloatVariable) -> Scalar | bool:
-        if self.is_constant() and (
-            isinstance(other, NumericalScalar)
-            or isinstance(other, bool)
-            or (isinstance(other, Scalar) and other.is_constant())
-        ):
-            return float(self) <= float(other)
-        if isinstance(other, (Scalar, FloatVariable)):
-            return Scalar.from_casadi_sx(self.casadi_sx.__le__(other.casadi_sx))
-        return NotImplemented
+        return self._compare(other, "le")
 
     def __lt__(self, other: Scalar | FloatVariable) -> Scalar | bool:
-        if self.is_constant() and (
-            isinstance(other, NumericalScalar)
-            or isinstance(other, bool)
-            or (isinstance(other, Scalar) and other.is_constant())
-        ):
-            return float(self) < float(other)
-        if isinstance(other, (Scalar, FloatVariable)):
-            return Scalar.from_casadi_sx(self.casadi_sx.__lt__(other.casadi_sx))
-        return NotImplemented
+        return self._compare(other, "lt")
 
     def __ge__(self, other: Scalar | FloatVariable) -> Scalar | bool:
-        if self.is_constant() and (
-            isinstance(other, NumericalScalar)
-            or isinstance(other, bool)
-            or (isinstance(other, Scalar) and other.is_constant())
-        ):
-            return float(self) >= float(other)
-        if isinstance(other, (Scalar, FloatVariable)):
-            return Scalar.from_casadi_sx(self.casadi_sx.__ge__(other.casadi_sx))
-        return NotImplemented
+        return self._compare(other, "ge")
 
     def __gt__(self, other: Scalar | FloatVariable) -> Scalar | bool:
-        if self.is_constant() and (
-            isinstance(other, NumericalScalar)
-            or isinstance(other, bool)
-            or (isinstance(other, Scalar) and other.is_constant())
-        ):
-            return float(self) > float(other)
-        if isinstance(other, (Scalar, FloatVariable)):
-            return Scalar.from_casadi_sx(self.casadi_sx.__gt__(other.casadi_sx))
-        return NotImplemented
+        return self._compare(other, "gt")
 
     # %% Arithmatic operations
     def __float__(self):
         if not self.is_constant():
             raise HasFreeVariablesError(self.free_variables())
         return float(self.to_np())
-
-    def __add__(self, other: ScalarData) -> _te.Self:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(to_sx(self) + to_sx(other))
-
-    def __radd__(self, other: ScalarData) -> _te.Self:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(to_sx(other) + to_sx(self))
-
-    def __sub__(self, other: ScalarData) -> _te.Self:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(to_sx(self) - to_sx(other))
-
-    def __rsub__(self, other: ScalarData) -> _te.Self:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(to_sx(other) - to_sx(self))
-
-    def __mul__(self, other: ScalarData) -> _te.Self:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(to_sx(self) * to_sx(other))
-
-    def __rmul__(self, other: ScalarData) -> _te.Self:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(to_sx(other) * to_sx(self))
-
-    def __truediv__(self, other: ScalarData) -> _te.Self:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(to_sx(self) / to_sx(other))
-
-    def __rtruediv__(self, other: ScalarData) -> _te.Self:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(to_sx(other) / to_sx(self))
-
-    def __pow__(self, other: ScalarData) -> _te.Self:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(to_sx(self) ** to_sx(other))
-
-    def __rpow__(self, other: ScalarData) -> _te.Self:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(to_sx(other) ** to_sx(self))
-
-    def __floordiv__(self, other: ScalarData) -> _te.Self:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(_ca.floor(to_sx(self) / to_sx(other)))
-
-    def __rfloordiv__(self, other: ScalarData) -> _te.Self:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return Scalar.from_casadi_sx(_ca.floor(to_sx(other) / to_sx(self)))
-
-    def __mod__(self, other: ScalarData) -> _te.Self:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return fmod(self, other)
-
-    def __rmod__(self, other: ScalarData) -> _te.Self:
-        if not isinstance(other, ScalarData):
-            return NotImplemented
-        return fmod(other, self)
 
     def hessian(self, variables: _te.Iterable[FloatVariable]) -> Matrix:
         """
@@ -1593,6 +1512,34 @@ def array_like_to_casadi_sx(data: VectorData) -> _ca.SX:
     return casadi_sx
 
 
+def _unary_function_wrapper(casadi_fn: _te.Callable[[_ca.SX], _ca.SX]):
+    """Creates a unary math wrapper that preserves the return type."""
+
+    def f(x: GenericSymbolicType) -> GenericSymbolicType:
+        return _create_return_type(x).from_casadi_sx(casadi_fn(to_sx(x)))
+
+    f.__name__ = casadi_fn.__name__
+    f.__doc__ = (
+        f"Applies {f.__name__} to the expression. Look at numpy for documentation."
+    )
+    return f
+
+
+def _binary_function_wrapper(
+    casadi_fn: _te.Callable[[_ca.SX, _ca.SX], _ca.SX],
+) -> _te.Callable[[GenericSymbolicType, GenericSymbolicType], GenericSymbolicType]:
+    """Creates a unary math wrapper that preserves the return type."""
+
+    def f(x: GenericSymbolicType, y: GenericSymbolicType) -> GenericSymbolicType:
+        return _create_return_type(x).from_casadi_sx(casadi_fn(to_sx(x), to_sx(y)))
+
+    f.__name__ = casadi_fn.__name__
+    f.__doc__ = (
+        f"Applies {f.__name__} to the expression. Look at numpy for documentation."
+    )
+    return f
+
+
 def create_float_variables(
     names: _te.Union[_te.List[str], int],
 ) -> _te.List[FloatVariable]:
@@ -1630,8 +1577,7 @@ def diag_stack(args: VectorData | MatrixData) -> Matrix:
 
 
 # %% basic math
-def abs(x: GenericSymbolicType) -> GenericSymbolicType:
-    return _builtins.abs(x)
+abs = _unary_function_wrapper(_ca.fabs)
 
 
 def max(arg1: Expression, arg2: _te.Optional[Scalar] = None) -> Scalar:
@@ -1658,36 +1604,18 @@ def dot(
     return e1.dot(e2)
 
 
-def fmod(a: GenericSymbolicType, b: ScalarData) -> GenericSymbolicType:
-    return _create_return_type(a).from_casadi_sx(_ca.fmod(to_sx(a), to_sx(b)))
-
-
 def sum(*expressions: ScalarData) -> Scalar:
     return Scalar(_ca.sum(to_sx(expressions)))
 
 
-def floor(x: GenericSymbolicType) -> GenericSymbolicType:
-    return _create_return_type(x).from_casadi_sx(_ca.floor(to_sx(x)))
+floor = _unary_function_wrapper(_ca.floor)
+ceil = _unary_function_wrapper(_ca.ceil)
+sign = _unary_function_wrapper(_ca.sign)
+exp = _unary_function_wrapper(_ca.exp)
+log = _unary_function_wrapper(_ca.log)
+sqrt = _unary_function_wrapper(_ca.sqrt)
 
-
-def ceil(x: GenericSymbolicType) -> GenericSymbolicType:
-    return _create_return_type(x).from_casadi_sx(_ca.ceil(to_sx(x)))
-
-
-def sign(x: GenericSymbolicType) -> GenericSymbolicType:
-    return _create_return_type(x).from_casadi_sx(_ca.sign(to_sx(x)))
-
-
-def exp(x: GenericSymbolicType) -> GenericSymbolicType:
-    return _create_return_type(x).from_casadi_sx(_ca.exp(to_sx(x)))
-
-
-def log(x: GenericSymbolicType) -> GenericSymbolicType:
-    return _create_return_type(x).from_casadi_sx(_ca.log(to_sx(x)))
-
-
-def sqrt(x: GenericSymbolicType) -> GenericSymbolicType:
-    return _create_return_type(x).from_casadi_sx(_ca.sqrt(to_sx(x)))
+fmod = _binary_function_wrapper(_ca.fmod)
 
 
 # %% trigonometry
@@ -1727,32 +1655,13 @@ def safe_acos(angle: GenericSymbolicType) -> GenericSymbolicType:
     return acos(angle)
 
 
-def cos(x: GenericSymbolicType) -> GenericSymbolicType:
-    return _create_return_type(x)(_ca.cos(to_sx(x)))
-
-
-def sin(x: GenericSymbolicType) -> GenericSymbolicType:
-    return _create_return_type(x)(_ca.sin(to_sx(x)))
-
-
-def tan(x: GenericSymbolicType) -> GenericSymbolicType:
-    return _create_return_type(x)(_ca.tan(to_sx(x)))
-
-
-def cosh(x: GenericSymbolicType) -> GenericSymbolicType:
-    return _create_return_type(x)(_ca.cosh(to_sx(x)))
-
-
-def sinh(x: GenericSymbolicType) -> GenericSymbolicType:
-    return _create_return_type(x)(_ca.sinh(to_sx(x)))
-
-
-def acos(x: GenericSymbolicType) -> GenericSymbolicType:
-    return _create_return_type(x)(_ca.acos(to_sx(x)))
-
-
-def atan2(x: GenericSymbolicType, y: GenericSymbolicType) -> GenericSymbolicType:
-    return _create_return_type(x)(_ca.atan2(to_sx(x), to_sx(y)))
+cos = _unary_function_wrapper(_ca.cos)
+sin = _unary_function_wrapper(_ca.sin)
+tan = _unary_function_wrapper(_ca.tan)
+cosh = _unary_function_wrapper(_ca.cosh)
+sinh = _unary_function_wrapper(_ca.sinh)
+acos = _unary_function_wrapper(_ca.acos)
+atan2 = _binary_function_wrapper(_ca.atan2)
 
 
 # %% other
@@ -1895,22 +1804,6 @@ def trinary_logic_or(*args: Scalar) -> Scalar:
         return max(args[0], args[1])
     else:
         return trinary_logic_or(args[0], trinary_logic_or(*args[1:]))
-
-
-def is_const_trinary_false(expression: Scalar) -> bool:
-    """
-    Checks if the expression has not free variables and is equal to Scalar(0.
-    If you need this check as an expression use expression == Scalar(0.
-    """
-    return expression.is_const_false()
-
-
-def is_const_trinary_unknown(expression: Scalar) -> bool:
-    """
-    Checks if the expression has not free variables and is equal to TrinaryUnknown.
-    If you need this check as an expression use expression == TrinaryUnknown.
-    """
-    return expression.is_const_unknown()
 
 
 def trinary_logic_to_str(expression: Scalar) -> str:

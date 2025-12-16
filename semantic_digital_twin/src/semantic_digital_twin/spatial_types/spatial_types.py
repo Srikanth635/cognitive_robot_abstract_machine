@@ -1466,12 +1466,12 @@ class Quaternion(Expression, SpatialType, SubclassJSONSerializer):
         pitch_half = to_sx(pitch / 2.0)
         yaw_half = to_sx(yaw / 2.0)
 
-        c_roll = cos(roll_half)
-        s_roll = sin(roll_half)
-        c_pitch = cos(pitch_half)
-        s_pitch = sin(pitch_half)
-        c_yaw = cos(yaw_half)
-        s_yaw = sin(yaw_half)
+        c_roll = ca.cos(roll_half)
+        s_roll = ca.sin(roll_half)
+        c_pitch = ca.cos(pitch_half)
+        s_pitch = ca.sin(pitch_half)
+        c_yaw = ca.cos(yaw_half)
+        s_yaw = ca.sin(yaw_half)
 
         cc = c_roll * c_yaw
         cs = c_roll * s_yaw

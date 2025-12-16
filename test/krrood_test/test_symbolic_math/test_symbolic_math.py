@@ -855,7 +855,7 @@ class TestScalar:
         assert isinstance(actual, cas.Scalar)
 
     @pytest.mark.parametrize("x", [-23, 0, 23])
-    def test_exp(self, x):
+    def test_log(self, x):
         actual = cas.log(x)
         assert np.allclose(actual, np.log(x), equal_nan=True)
         assert isinstance(actual, cas.Scalar)
