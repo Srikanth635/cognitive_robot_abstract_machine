@@ -386,6 +386,10 @@ class CanBehaveLikeAVariable(Selectable[T], ABC):
     """
     The path of the variable in the symbol graph as a sequence of relation instances.
     """
+    _attributes_: Dict[str, Attribute[T]] = field(init=False, default_factory=dict)
+    """
+    A storage of created symbolic attributes to prevent recreating same attribute multiple times.
+    """
 
     def __getattr__(self, name: str) -> CanBehaveLikeAVariable[T]:
         # Prevent debugger/private attribute lookups from being interpreted as symbolic attributes
@@ -393,7 +397,11 @@ class CanBehaveLikeAVariable(Selectable[T], ABC):
             raise AttributeError(
                 f"{self.__class__.__name__} object has no attribute {name}"
             )
-        return Attribute(self, name, self._type__)
+        if name in self._attributes_:
+            return self._attributes_[name]
+        attr = Attribute(self, name, self._type__)
+        self._attributes_[name] = attr
+        return attr
 
     def __getitem__(self, key) -> CanBehaveLikeAVariable[T]:
         return Index(self, key)
@@ -975,7 +983,7 @@ class QueryObjectDescriptor(SymbolicExpression[T], ABC):
                 continue
             selected_vars_bindings = self._evaluate_selected_variables(values.bindings)
             for result in self._apply_results_mapping(selected_vars_bindings):
-                yield OperationResult({**sources, **result}, False, self)
+                yield OperationResult({**values.bindings, **result}, False, self)
 
     @staticmethod
     def variable_is_inferred(var: CanBehaveLikeAVariable[T]) -> bool:
@@ -1048,8 +1056,10 @@ class QueryObjectDescriptor(SymbolicExpression[T], ABC):
         """
         if self._child_:
             # QueryObjectDescriptor does not yield when it's False
-            yield from filter(
-                lambda v: v.is_true, self._child_._evaluate__(sources, parent=self)
+            yield from (
+                res
+                for res in self._child_._evaluate__(sources, parent=self)
+                if res.is_true
             )
         else:
             yield from [OperationResult(sources, False, self)]
@@ -1125,11 +1135,7 @@ class SetOf(QueryObjectDescriptor[T]):
         """
         selected_variables_ids = [v._id_ for v in self._selected_variables]
         return UnificationDict(
-            {
-                self._id_expression_map_[var_id]: value
-                for var_id, value in result.bindings.items()
-                if var_id in selected_variables_ids
-            }
+            {v._var_: result[v._id_] for v in self._selected_variables}
         )
 
 
@@ -1215,7 +1221,7 @@ class Variable(CanBehaveLikeAVariable[T]):
         """
         Set the domain and ensure it is a lazy re-enterable iterable.
         """
-        if isinstance(domain, ReEnterableLazyIterable):
+        if isinstance(domain, (ReEnterableLazyIterable, CanBehaveLikeAVariable)):
             self._domain_ = domain
             return
         if not is_iterable(domain):
@@ -1253,8 +1259,14 @@ class Variable(CanBehaveLikeAVariable[T]):
                 self._is_false_ = not bool(sources[self._id_])
             yield OperationResult(sources, not bool(sources[self._id_]), self)
         elif self._domain_:
-            for v in self._domain_:
-                yield OperationResult({**sources, self._id_: v}, False, self)
+            if isinstance(self._domain_, CanBehaveLikeAVariable):
+                for domain in self._domain_._evaluate__(sources, parent=self):
+                    for v in domain.value:
+                        bindings = {**sources, **domain.bindings, self._id_: v}
+                        yield OperationResult(bindings, False, self)
+            else:
+                for v in self._domain_:
+                    yield OperationResult({**sources, self._id_: v}, False, self)
         elif self._is_inferred_ or self._predicate_type_:
             yield from self._instantiate_using_child_vars_and_yield_results_(sources)
         else:
@@ -1396,7 +1408,7 @@ class DomainMapping(CanBehaveLikeAVariable[T], ABC):
                 child_result, mapped_value
             )
             for child_result in self._child_._evaluate__(sources, parent=self)
-            for mapped_value in self._apply_mapping_(child_result[self._child_._id_])
+            for mapped_value in self._apply_mapping_(child_result.value)
         )
 
     def _build_operation_result_and_update_truth_value_(
