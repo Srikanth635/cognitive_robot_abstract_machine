@@ -3,13 +3,16 @@ from __future__ import annotations
 import enum
 import importlib
 import uuid
+from abc import ABC
 from dataclasses import dataclass, field
 from types import NoneType
 
-from typing_extensions import Dict, Any, Self, Union, Callable, Type
+from casadi import external
+from typing_extensions import Dict, Any, Self, Union, Callable, Type, ClassVar, TypeVar
 
+from ..ormatic.dao import HasGeneric
 from ..singleton import SingletonMeta
-from ..utils import get_full_class_name
+from ..utils import get_full_class_name, recursive_subclasses
 
 list_like_classes = (
     list,
@@ -106,67 +109,13 @@ class JSONSerializableTypeRegistry(metaclass=SingletonMeta):
     control its inheritance.
     """
 
-    _serializers: Dict[Type, Callable[[Any], Dict[str, Any]]] = field(
-        default_factory=dict
-    )
-    """
-    Dictionary mapping types to their respective serializer functions.
-    Signature of functions must be like `SubclassJSONSerializer.to_json`
-    """
-
-    _deserializers: Dict[Type, Callable[[Dict[str, Any], Type], Any]] = field(
-        default_factory=dict
-    )
-    """
-    Dictionary mapping types to their respective deserializer functions.
-    Signature of functions must be like `SubclassJSONSerializer._from_json`
-    """
-
-    def register(
-        self,
-        type_class: Type,
-        serializer: Callable[[Any], Dict[str, Any]],
-        deserializer: Callable[[Dict[str, Any]], Any],
-    ):
-        """
-        Register a custom serializer and deserializer for a type.
-
-        :param type_class: The type to register
-        :param serializer: Function to serialize instances of the type
-        :param deserializer: Function to deserialize instances of the type
-        """
-        self._serializers[type_class] = serializer
-        self._deserializers[type_class] = deserializer
-
-    def get_serializer(
-        self, type_class: Type
-    ) -> Callable[[Any], Dict[str, Any]] | None:
-        """
-        Get the serializer for an object's type.
-
-        :param type_class: The object to get the serializer for
-        :return: The serializer function or None if not registered
-        """
-
-        if issubclass(type_class, enum.Enum):
-            return self._serializers.get(enum.Enum)
-
-        return self._serializers.get(type_class)
-
-    def get_deserializer(
-        self, type_class: Type
-    ) -> Callable[[Dict[str, Any]], Any] | None:
-        """
-        Get the deserializer for a type name.
-
-        :param type_class: The class to get the deserializer for
-        :return: The deserializer function or None if not registered
-        """
-
-        if issubclass(type_class, enum.Enum):
-            return self._deserializers.get(enum.Enum)
-
-        return self._deserializers.get(type_class)
+    def get_external_serializer(self, clazz: Type) -> Type[ExternalClassJSONSerializer]:
+        if issubclass(clazz, enum.Enum):
+            return EnumJSONSerializer
+        for subclass in recursive_subclasses(ExternalClassJSONSerializer):
+            if subclass.original_class() == clazz:
+                return subclass
+        raise ClassNotSerializableError(clazz)
 
 
 class SubclassJSONSerializer:
@@ -231,13 +180,11 @@ class SubclassJSONSerializer:
         if issubclass(target_cls, SubclassJSONSerializer):
             return target_cls._from_json(data, **kwargs)
 
-        registered_json_deserializer = JSONSerializableTypeRegistry().get_deserializer(
-            target_cls
+        external_json_deserializer = (
+            JSONSerializableTypeRegistry().get_external_serializer(target_cls)
         )
-        if not registered_json_deserializer:
-            raise ClassNotDeserializableError(target_cls)
 
-        return registered_json_deserializer(data, clazz=target_cls, **kwargs)
+        return external_json_deserializer.deserialize(data, clazz=target_cls, **kwargs)
 
 
 def from_json(data: Dict[str, Any], **kwargs) -> Union[SubclassJSONSerializer, Any]:
@@ -254,7 +201,7 @@ def to_json(obj: Union[SubclassJSONSerializer, Any]) -> JSON_RETURN_TYPE:
     """
     Serialize an object to a JSON dict.
 
-    :param obj: The object to serialize
+    :param obj: The object to to_json
     :return: The JSON string
     """
 
@@ -267,65 +214,55 @@ def to_json(obj: Union[SubclassJSONSerializer, Any]) -> JSON_RETURN_TYPE:
     if isinstance(obj, SubclassJSONSerializer):
         return obj.to_json()
 
-    registered_json_serializer = JSONSerializableTypeRegistry().get_serializer(
+    registered_json_serializer = JSONSerializableTypeRegistry().get_external_serializer(
         type(obj)
     )
-    if not registered_json_serializer:
-        raise ClassNotSerializableError(type(obj))
 
-    return registered_json_serializer(obj)
+    return registered_json_serializer.to_json(obj)
 
 
-# %% UUID serialization functions
-def serialize_uuid(obj: uuid.UUID) -> Dict[str, Any]:
-    """
-    Serialize a UUID to a JSON-compatible dictionary.
-
-    :param obj: The UUID to serialize
-    :return: Dictionary with type information and UUID value
-    """
-    return {
-        JSON_TYPE_NAME: get_full_class_name(type(obj)),
-        "value": str(obj),
-    }
+T = TypeVar("T")
 
 
-def deserialize_uuid(data: Dict[str, Any], clazz: Type[uuid.UUID]) -> uuid.UUID:
-    """
-    Deserialize a UUID from a JSON dictionary.
+@dataclass
+class ExternalClassJSONSerializer(HasGeneric[T], ABC):
 
-    :param data: Dictionary containing the UUID value
-    :return: The deserialized UUID
-    """
-    return clazz(data["value"])
+    @classmethod
+    def to_json(cls, obj: Any) -> Dict[str, Any]: ...
 
-
-# Register UUID with the type registry
-JSONSerializableTypeRegistry().register(uuid.UUID, serialize_uuid, deserialize_uuid)
+    @classmethod
+    def deserialize(cls, data: Dict[str, Any], clazz: Type[T], **kwargs) -> Any: ...
 
 
-# %% Enum serialization functions
-def serialize_enum(obj: enum.Enum) -> Dict[str, Any]:
-    """
-    Serialize an enum to a JSON-compatible dictionary.
+@dataclass
+class UUIDJSONSerializer(ExternalClassJSONSerializer[uuid.UUID]):
 
-    :param obj: The enum to serialize
-    :return: Dictionary with enum information
-    """
-    return {
-        JSON_TYPE_NAME: get_full_class_name(type(obj)),
-        "name": obj.name,
-    }
+    @classmethod
+    def to_json(cls, obj: uuid.UUID) -> Dict[str, Any]:
+        return {
+            JSON_TYPE_NAME: get_full_class_name(type(obj)),
+            "value": str(obj),
+        }
 
-
-def deserialize_enum(data: Dict[str, Any], clazz: Type[enum.Enum]) -> enum.Enum:
-    """
-    Deserialize an Enum element from a JSON dictionary.
-
-    :param data: Dictionary containing the enum information
-    :return: The enum value
-    """
-    return clazz[data["name"]]
+    @classmethod
+    def deserialize(
+        cls, data: Dict[str, Any], clazz: Type[uuid.UUID], **kwargs
+    ) -> uuid.UUID:
+        return clazz(data["value"])
 
 
-JSONSerializableTypeRegistry().register(enum.Enum, serialize_enum, deserialize_enum)
+@dataclass
+class EnumJSONSerializer(ExternalClassJSONSerializer[enum.Enum]):
+
+    @classmethod
+    def to_json(cls, obj: enum.Enum) -> Dict[str, Any]:
+        return {
+            JSON_TYPE_NAME: get_full_class_name(type(obj)),
+            "name": obj.name,
+        }
+
+    @classmethod
+    def deserialize(
+        cls, data: Dict[str, Any], clazz: Type[enum.Enum], **kwargs
+    ) -> enum.Enum:
+        return clazz[data["name"]]
