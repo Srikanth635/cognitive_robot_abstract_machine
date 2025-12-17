@@ -342,7 +342,7 @@ class CompiledFunctionWithViews:
         returns [expr1_result, expr2_result, np.concatenate([expr1_result, expr2_result])[start:end]]
     """
 
-    expressions: List[Expression]
+    expressions: List[SymbolicMathType]
     """
     The list of expressions to be compiled.
     """
@@ -456,9 +456,6 @@ class SymbolicMathType(ABC):
 
     def __repr__(self):
         return repr(self.casadi_sx)
-
-    def __hash__(self) -> int:
-        return self.casadi_sx.__hash__()
 
     def __getitem__(
         self, item: np.ndarray | int | slice | Tuple[int | slice, int | slice]
@@ -594,64 +591,6 @@ class SymbolicMathType(ABC):
             ca.simplify(self.casadi_sx), ca.simplify(other_expression), 5
         )
 
-
-@dataclass(eq=False)
-class Expression(SymbolicMathType):
-    """
-    Represents symbolic expressions with rich mathematical capabilities, including matrix
-    operations, derivatives, and manipulation of symbolic representations.
-
-    This class is designed to encapsulate symbolic mathematical expressions and provide a wide
-    range of features for computations, including matrix constructions (zeros, ones, identity),
-    derivative computations (Jacobian, total derivatives, Hessian), reshaping, and scaling.
-    It is essential to symbolic computation workflows in applications that require gradient
-    analysis, second-order derivatives, or other advanced mathematical operations. The class
-    leverages symbolic computation libraries for handling low-level symbolic details efficiently.
-    """
-
-    casadi_sx: ca.SX = field(kw_only=True, default_factory=lambda: ca.SX())
-
-    data: InitVar[Optional[ScalarData | VectorData | MatrixData]] = None
-
-    def __post_init__(
-        self,
-        data: Optional[
-            ca.SX
-            | NumericalScalar
-            | NumericalVector
-            | NumericalMatrix
-            | Iterable[FloatVariable]
-        ],
-    ):
-        if data is None:
-            data = []
-        self.casadi_sx = to_sx(data)
-
-    def _from_iterable(
-        self,
-        data: NumericalVector | NumericalMatrix | Iterable[FloatVariable],
-    ):
-        x = len(data)
-        if x == 0:
-            self.casadi_sx = ca.SX()
-            return
-        if (
-            isinstance(data[0], list)
-            or isinstance(data[0], tuple)
-            or isinstance(data[0], np.ndarray)
-        ):
-            y = len(data[0])
-        else:
-            y = 1
-        casadi_sx = ca.SX(x, y)
-        for i in range(casadi_sx.shape[0]):
-            if y > 1:
-                for j in range(casadi_sx.shape[1]):
-                    casadi_sx[i, j] = to_sx(data[i][j])
-            else:
-                casadi_sx[i] = to_sx(data[i])
-        self.casadi_sx = casadi_sx
-
     def __copy__(self) -> Self:
         return self.from_casadi_sx(copy.copy(self.casadi_sx))
 
@@ -669,7 +608,7 @@ class Expression(SymbolicMathType):
         partial derivatives of a vector of functions with respect to a vector of variables.
 
         :param variables: The variables with respect to which the partial derivatives are taken.
-        :return: The Jacobian matrix as an Expression.
+        :return: The Jacobian matrix as an SymbolicMathType.
         """
         return Matrix.from_casadi_sx(ca.jacobian(self.casadi_sx, to_sx(variables)))
 
@@ -770,7 +709,7 @@ class Expression(SymbolicMathType):
         :param variables: Iterable containing the variables with respect to which the derivative is calculated.
         :param variables_dot: Iterable containing the first-order derivatives of the variables.
         :param variables_ddot: Iterable containing the second-order derivatives of the variables.
-        :return: The computed second-order total derivative, returned as an `Expression`.
+        :return: The computed second-order total derivative, returned as an `SymbolicMathType`.
         """
         variables = to_sx(variables)
         variables_dot = to_sx(variables_dot)
@@ -789,7 +728,7 @@ class Expression(SymbolicMathType):
 
 
 @dataclass(eq=False, init=False)
-class Scalar(Expression):
+class Scalar(SymbolicMathType):
     def __init__(self, data: ScalarData = 0):
         self.casadi_sx = to_sx(data)
 
@@ -1004,7 +943,7 @@ class FloatVariable(Scalar):
 
 
 @dataclass(eq=False)
-class Vector(Expression):
+class Vector(SymbolicMathType):
     """
     A vector of symbolic expressions.
     Should behave like a numpy array with one dimension.
@@ -1131,7 +1070,7 @@ class Vector(Expression):
 
 
 @dataclass(eq=False)
-class Matrix(Expression):
+class Matrix(SymbolicMathType):
 
     def __init__(
         self,
@@ -1247,7 +1186,7 @@ class Matrix(Expression):
     def __gt__(self, other: Scalar | FloatVariable) -> Scalar:
         return Scalar.from_casadi_sx(self.casadi_sx.__gt__(other.casadi_sx))
 
-    def _broadcast_like_self(self, other: Expression) -> ca.SX:
+    def _broadcast_like_self(self, other: SymbolicMathType) -> ca.SX:
         """
         Broadcast the other operand to match this matrix's shape for element-wise operations.
 
@@ -1365,10 +1304,10 @@ class Matrix(Expression):
         Calculate the determinant of the given expression.
 
         This function computes the determinant of the provided mathematical expression.
-        The input can be an instance of either `Expression`, `RotationMatrix`, or
-        `TransformationMatrix`. The result is returned as an `Expression`.
+        The input can be an instance of either `SymbolicMathType`, `RotationMatrix`, or
+        `TransformationMatrix`. The result is returned as an `SymbolicMathType`.
 
-        :return: An `Expression` representing the determinant of the input.
+        :return: An `SymbolicMathType` representing the determinant of the input.
         """
         if not self.is_square():
             raise NotSquareMatrixError(actual_dimensions=self.casadi_sx.shape)
@@ -1406,7 +1345,7 @@ class Matrix(Expression):
 
         :param other: The second matrix to be used in calculating the Kronecker product.
                    Supports symbolic or numerical matrix types.
-        :return: An Expression representing the resulting Kronecker product as a
+        :return: An SymbolicMathType representing the resulting Kronecker product as a
                  symbolic or numerical matrix of appropriate size.
         """
         m1 = to_sx(self)
@@ -1625,7 +1564,7 @@ atan2 = _binary_function_wrapper(ca.atan2)
 
 
 def solve_for(
-    expression: Expression,
+    expression: SymbolicMathType,
     target_value: float,
     start_value: float = 0.0001,
     max_tries: int = 10000,

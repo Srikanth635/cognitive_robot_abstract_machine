@@ -31,7 +31,7 @@ class DebugExpressionManager:
     def add_debug_expression(
         self,
         name: str,
-        expression: cas.Expression,
+        expression: cas.SymbolicMathType,
         color: Optional[Color] = None,
         derivative: Derivatives = Derivatives.position,
         derivatives_to_plot: Optional[List[Derivatives]] = None,

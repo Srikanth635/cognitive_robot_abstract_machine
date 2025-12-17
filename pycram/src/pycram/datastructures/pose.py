@@ -72,9 +72,9 @@ class Vector3(HasParameters):
 
     def to_spatial_type(self, reference_frame: Body = None) -> SpatialVector3:
         return SpatialVector3(
-            x_init=float(self.x),
-            y_init=float(self.y),
-            z_init=self.z,
+            x=float(self.x),
+            y=float(self.y),
+            z=self.z,
             reference_frame=reference_frame,
         )
 
@@ -231,10 +231,10 @@ class Quaternion(HasParameters):
         :return: A SpatialQuaternion object containing the x, y, z and w components.
         """
         return SpatialQuaternion(
-            x_init=float(self.x),
-            y_init=float(self.y),
-            z_init=float(self.z),
-            w_init=float(self.w),
+            x=float(self.x),
+            y=float(self.y),
+            z=float(self.z),
+            w=float(self.w),
         )
 
     def round(self, decimals: int = 4):
@@ -494,9 +494,9 @@ class Vector3Stamped(Vector3):
 
     def to_spatial_type(self) -> SpatialVector3:
         return SpatialVector3(
-            x_init=float(self.x),
-            y_init=float(self.y),
-            z_init=self.z,
+            x=float(self.x),
+            y=float(self.y),
+            z=self.z,
             reference_frame=self.header.frame_id,
         )
 

@@ -126,7 +126,7 @@ class SpatialType:
 
 @dataclass(eq=False, init=False)
 class HomogeneousTransformationMatrix(
-    sm.Expression, SpatialType, SubclassJSONSerializer
+    sm.SymbolicMathType, SpatialType, SubclassJSONSerializer
 ):
     """
     Represents a 4x4 transformation matrix used in kinematics and transformations.
@@ -442,7 +442,7 @@ class HomogeneousTransformationMatrix(
 
 
 @dataclass(eq=False)
-class RotationMatrix(sm.Expression, SpatialType, SubclassJSONSerializer):
+class RotationMatrix(sm.SymbolicMathType, SpatialType, SubclassJSONSerializer):
     """
     Class to represent a 4x4 symbolic rotation matrix tied to kinematic references.
 
@@ -515,7 +515,7 @@ class RotationMatrix(sm.Expression, SpatialType, SubclassJSONSerializer):
         Conversion of unit axis and angle to 4x4 rotation matrix according to:
         https://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToMatrix/index.htm
         """
-        # use casadi to prevent a bunch of sm.Expression.__init__.py calls
+        # use casadi to prevent a bunch of sm.SymbolicMathType.__init__.py calls
         axis = sm.to_sx(axis)
         angle = sm.to_sx(angle)
         ct = ca.cos(angle)
@@ -773,7 +773,7 @@ class RotationMatrix(sm.Expression, SpatialType, SubclassJSONSerializer):
 
 
 @dataclass(eq=False, init=False)
-class Point3(sm.Expression, SpatialType, SubclassJSONSerializer):
+class Point3(sm.SymbolicMathType, SpatialType, SubclassJSONSerializer):
     """
     Represents a 3D point with reference frame handling.
 
@@ -992,7 +992,7 @@ class Point3(sm.Expression, SpatialType, SubclassJSONSerializer):
 
 
 @dataclass(eq=False, init=False)
-class Vector3(sm.Expression, SpatialType, SubclassJSONSerializer):
+class Vector3(sm.SymbolicMathType, SpatialType, SubclassJSONSerializer):
     """
     Representation of a 3D vector with reference frame support for homogenous transformations.
 
@@ -1311,7 +1311,7 @@ class Vector3(sm.Expression, SpatialType, SubclassJSONSerializer):
 
 
 @dataclass(eq=False)
-class Quaternion(sm.Expression, SpatialType, SubclassJSONSerializer):
+class Quaternion(sm.SymbolicMathType, SpatialType, SubclassJSONSerializer):
     """
     Represents a quaternion, which is a mathematical entity used to encode
     rotations in three-dimensional space.
@@ -1696,7 +1696,7 @@ class Quaternion(sm.Expression, SpatialType, SubclassJSONSerializer):
 
 
 @dataclass(eq=False)
-class Pose(sm.Expression, SpatialType, SubclassJSONSerializer):
+class Pose(sm.SymbolicMathType, SpatialType, SubclassJSONSerializer):
 
     def __init__(
         self,

@@ -599,7 +599,7 @@ class TestPoint3:
 
         # Test Point.norm() = scalar (distance from origin)
         result5 = p1.norm()
-        assert isinstance(result5, cas.Expression)
+        assert isinstance(result5, cas.SymbolicMathType)
         expected_norm = np.sqrt(1**2 + 2**2 + 3**2)
         assert np.allclose(result5, expected_norm)
 
