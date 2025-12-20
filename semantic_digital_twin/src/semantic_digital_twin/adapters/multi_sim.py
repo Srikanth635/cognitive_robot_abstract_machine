@@ -3,6 +3,7 @@ import inspect
 import os
 import shutil
 import time
+import trimesh
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import IntEnum
@@ -1325,12 +1326,6 @@ class MujocoBuilder(MultiSimBuilder):
             )
 
     def _parse_geom(self, geom_props: Dict[str, Any]) -> bool:
-        """
-        Parses the geometry properties for a mesh geom. Adds the mesh to the spec if it doesn't exist.
-
-        :param geom_props: The geometry properties to parse.
-        :return: True if the mesh was parsed successfully, False otherwise.
-        """
         mesh_entity = geom_props.pop("mesh")
         if isinstance(mesh_entity, TriangleMesh):
             mesh_name = os.path.basename(mesh_entity.file.name)
@@ -1344,10 +1339,34 @@ class MujocoBuilder(MultiSimBuilder):
             )
         mesh_ext = os.path.splitext(mesh_file_path)[1].lower()
         if mesh_ext == ".dae":
-            logger.warning(
-                f"Cannot use .dae files in Mujoco. Skipping mesh {mesh_file_path}."
-            )
-            return False
+            try:
+                logger.info(
+                    f"Converting Collada mesh to STL for MuJoCo: {mesh_file_path}"
+                )
+                tm = trimesh.load(mesh_file_path, force="mesh")
+                if tm.is_empty:
+                    logger.warning(
+                        f"Failed to load .dae mesh (empty): {mesh_file_path}. Skipping."
+                    )
+                    return False
+
+                # Build output .stl path next to original or in asset folder
+                base_name = os.path.splitext(os.path.basename(mesh_file_path))[0]
+                stl_file_path = os.path.join(self.asset_folder_path, base_name + ".stl")
+
+                # Ensure asset folder exists
+                os.makedirs(self.asset_folder_path, exist_ok=True)
+
+                # Export as STL
+                tm.export(stl_file_path)
+                mesh_file_path = stl_file_path
+                mesh_ext = ".stl"
+            except Exception as e:
+                logger.warning(
+                    f"Cannot convert .dae to STL for MuJoCo. Skipping mesh {mesh_file_path}. "
+                    f"Error: {e}"
+                )
+                return False
         mesh_name = os.path.splitext(os.path.basename(mesh_file_path))[0]
         mesh_scale = [mesh_entity.scale.x, mesh_entity.scale.y, mesh_entity.scale.z]
         if not numpy.allclose(mesh_scale, [1.0, 1.0, 1.0]):
