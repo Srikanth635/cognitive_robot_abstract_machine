@@ -2466,30 +2466,32 @@ class TestLifeCycleTransitions:
     def test_end_before_start(self):
         """
         Test for node to start even if it's end condition is met before start condition.
+        Node3 should start and run for 1 tick before ending, instead of never starting.
         """
         msc = MotionStatechart()
 
         node1 = CountTicks(ticks=1)
         node2 = ConstTrueNode()
-        end = EndMotion()
+        node3 = ConstTrueNode()
 
-        msc.add_nodes(nodes=[node1, node2, end])
+        msc.add_nodes(nodes=[node1, node2, node3])
+        msc.add_node(EndMotion.when_true(node3))
 
-        end.start_condition = node1.observation_variable
-        end.end_condition = node2.observation_variable
+        node3.start_condition = node1.observation_variable
+        node3.end_condition = node2.observation_variable
 
         kin_sim = Executor(world=World())
         kin_sim.compile(motion_statechart=msc)
         kin_sim.tick()
         kin_sim.tick()
 
-        assert end.life_cycle_state == LifeCycleValues.RUNNING
-        assert end.observation_state == ObservationStateValues.UNKNOWN
+        assert node3.life_cycle_state == LifeCycleValues.RUNNING
+        assert node3.observation_state == ObservationStateValues.UNKNOWN
 
         kin_sim.tick()
 
-        assert end.life_cycle_state == LifeCycleValues.DONE
-        assert end.observation_state == ObservationStateValues.TRUE
+        assert node3.life_cycle_state == LifeCycleValues.DONE
+        assert node3.observation_state == ObservationStateValues.TRUE
 
     def test_end_before_start_in_template(self):
         """
