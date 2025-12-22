@@ -61,7 +61,7 @@ from .exceptions import (
 EPS: float = sys.float_info.epsilon * 4.0
 
 
-@dataclass(frozen=True)
+@dataclass
 class VariableGroup:
     """
     A homogeneous, ordered group of variables that forms one input block.
@@ -73,7 +73,7 @@ class VariableGroup:
         return len(self.variables)
 
 
-@dataclass(frozen=True)
+@dataclass
 class VariableParameters:
     """
     A collection of variable groups that define the input blocks of a compiled function.
@@ -108,7 +108,14 @@ class VariableParameters:
 
 @dataclass
 class _Layout(ABC):
+    """
+    Represents an abstract base class for layout handling and compilation.
+    """
+
     compiled: CompiledFunction
+    """
+    Reference to the CompiledFunction that is being compiled.
+    """
 
     def is_empty_result(self) -> bool:
         return len(self.compiled.expression) == 0

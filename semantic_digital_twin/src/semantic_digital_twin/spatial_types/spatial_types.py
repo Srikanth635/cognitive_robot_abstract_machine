@@ -460,7 +460,7 @@ class HomogeneousTransformationMatrix(
         )
 
 
-@dataclass(eq=False)
+@dataclass(eq=False, init=False)
 class RotationMatrix(sm.SymbolicMathType, SpatialType, SubclassJSONSerializer):
     """
     Class to represent a 4x4 symbolic rotation matrix tied to kinematic references.
@@ -1327,7 +1327,7 @@ class Vector3(sm.SymbolicMathType, SpatialType, SubclassJSONSerializer):
         return result
 
 
-@dataclass(eq=False)
+@dataclass(eq=False, init=False)
 class Quaternion(sm.SymbolicMathType, SpatialType, SubclassJSONSerializer):
     """
     Represents a quaternion, which is a mathematical entity used to encode
@@ -1655,7 +1655,7 @@ class Quaternion(sm.SymbolicMathType, SpatialType, SubclassJSONSerializer):
         )
 
 
-@dataclass(eq=False)
+@dataclass(eq=False, init=False)
 class Pose(sm.SymbolicMathType, SpatialType, SubclassJSONSerializer):
 
     def __init__(
