@@ -596,8 +596,41 @@ class DataAccessObject(HasGeneric[T]):
         if dao_class is None:
             raise NoDAOFoundDuringParsingError(value_in_obj, type(self), relationship)
 
-        dao_of_value = dao_class.to_dao(value_in_obj, state=state)
-        setattr(self, relationship.key, dao_of_value)
+        # Check if this object has been build already
+        existing = state.get_existing(value_in_obj)
+        if existing is not None:
+            setattr(self, relationship.key, existing)
+            return
+
+        # Allocate but do not populate yet
+        dao_obj_data = state.apply_alternative_mapping_if_needed(
+            dao_class, value_in_obj
+        )
+        if isinstance(dao_obj_data, dao_class):
+            state.register(value_in_obj, dao_obj_data)
+            setattr(self, relationship.key, dao_obj_data)
+            return
+
+        # Determine the appropriate DAO base to consider for alternative mappings.
+        alt_base: Optional[Type[DataAccessObject]] = None
+        for b in dao_class.__mro__[1:]:  # skip cls itself
+            try:
+                if issubclass(b, DataAccessObject) and issubclass(
+                    b.original_class(), AlternativeMapping
+                ):
+                    alt_base = b
+                    break
+            except Exception:
+                # Some bases may not be DAOs or may not have generic info; skip safely
+                continue
+
+        result = dao_class()
+        state.register(value_in_obj, result)
+        if id(value_in_obj) != id(dao_obj_data):
+            state.register(dao_obj_data, result)
+
+        state.add_to_queue(dao_obj_data, result, alt_base)
+        setattr(self, relationship.key, result)
 
     def _extract_collection_relationship(
         self,
@@ -609,14 +642,47 @@ class DataAccessObject(HasGeneric[T]):
         Extract a collection-valued relationship and assign a list of DAOs.
         Check `get_relationships_from` for more information.
         """
-        result = []
+        result_list = []
         value_in_obj = getattr(obj, relationship.key)
         for v in value_in_obj:
             dao_class = get_dao_class(type(v))
             if dao_class is None:
                 raise NoDAOFoundDuringParsingError(v, type(self), relationship)
-            result.append(dao_class.to_dao(v, state=state))
-        setattr(self, relationship.key, result)
+
+            # Check if this object has been build already
+            existing = state.get_existing(v)
+            if existing is not None:
+                result_list.append(existing)
+                continue
+
+            # Allocate but do not populate yet
+            dao_obj_data = state.apply_alternative_mapping_if_needed(dao_class, v)
+            if isinstance(dao_obj_data, dao_class):
+                state.register(v, dao_obj_data)
+                result_list.append(dao_obj_data)
+                continue
+
+            # Determine the appropriate DAO base to consider for alternative mappings.
+            alt_base: Optional[Type[DataAccessObject]] = None
+            for b in dao_class.__mro__[1:]:  # skip cls itself
+                try:
+                    if issubclass(b, DataAccessObject) and issubclass(
+                        b.original_class(), AlternativeMapping
+                    ):
+                        alt_base = b
+                        break
+                except Exception:
+                    # Some bases may not be DAOs or may not have generic info; skip safely
+                    continue
+
+            res = dao_class()
+            state.register(v, res)
+            if id(v) != id(dao_obj_data):
+                state.register(dao_obj_data, res)
+
+            state.add_to_queue(dao_obj_data, res, alt_base)
+            result_list.append(res)
+        setattr(self, relationship.key, result_list)
 
     def from_dao(
         self,
@@ -637,10 +703,9 @@ class DataAccessObject(HasGeneric[T]):
         result = self._allocate_uninitialized_and_memoize(state)
 
         # Add to queue for processing
-        is_entry_call = len(state.queue) == 0
         state.add_to_queue(self, result)
 
-        if is_entry_call:
+        if len(state.queue) == 1:
             while state.queue:
                 current_dao, current_obj = state.queue.popleft()
                 current_dao._fill_from_dao(current_obj, state)
@@ -671,15 +736,49 @@ class DataAccessObject(HasGeneric[T]):
         init_args = {**base_kwargs, **kwargs}
         self._call_initializer_or_assign(result, init_args)
 
+        # After __init__, populate remaining relationships that were not in argument_names
+        all_relationship_keys = {rel.key for rel in mapper.relationships}
+        remaining_rel_keys = all_relationship_keys - set(argument_names)
+
+        for relationship in mapper.relationships:
+            if relationship.key not in remaining_rel_keys:
+                continue
+
+            value = getattr(self, relationship.key)
+            if relationship.direction == MANYTOONE or (
+                relationship.direction == ONETOMANY and not relationship.uselist
+            ):
+                if value is None:
+                    setattr(result, relationship.key, None)
+                    continue
+
+                if state.has(value):
+                    setattr(result, relationship.key, state.get(value))
+                else:
+                    parsed = value._allocate_uninitialized_and_memoize(state)
+                    state.add_to_queue(value, parsed)
+                    setattr(result, relationship.key, parsed)
+            elif relationship.direction in (ONETOMANY, MANYTOMANY):
+                if not value:
+                    setattr(result, relationship.key, value)
+                    continue
+
+                instances = []
+                for v in value:
+                    if state.has(v):
+                        instances.append(state.get(v))
+                    else:
+                        instance = v._allocate_uninitialized_and_memoize(state)
+                        state.add_to_queue(v, instance)
+                        instances.append(instance)
+                setattr(result, relationship.key, type(value)(instances))
+
         self._apply_circular_fixes(result, circular_refs, state)
 
         if isinstance(result, AlternativeMapping):
             final_result = result.create_from_dao()
             # Update memo if AlternativeMapping changed the instance
             state.memo[id(self)] = final_result
-            # We must NOT delete from in_progress yet if we might still be in the loop
-            # and other things might refer to this DAO.
-            # But actually, FromDAOState doesn't use in_progress for anything other than a flag.
             return final_result
 
         return result
@@ -735,15 +834,60 @@ class DataAccessObject(HasGeneric[T]):
             if relationship.direction == MANYTOONE or (
                 relationship.direction == ONETOMANY and not relationship.uselist
             ):
-                parsed, is_circular = state.parse_single(value)
-                if is_circular:
-                    circular_refs[relationship.key] = value
-                rel_kwargs[relationship.key] = parsed
+                if value is None:
+                    rel_kwargs[relationship.key] = None
+                    continue
+
+                if state.has(value):
+                    parsed = state.get(value)
+                    # Use a sentinel to detect if the object is still being built
+                    # so we can fix it later if needed, but for now we use the allocated instance.
+                    is_circular = id(value) in state.in_progress
+                    if is_circular:
+                        circular_refs[relationship.key] = value
+                    rel_kwargs[relationship.key] = parsed
+                else:
+                    # Check if it's an AlternativeMapping
+                    original_cls = value.original_class()
+                    if issubclass(original_cls, AlternativeMapping):
+                        parsed = value.from_dao(state=state)
+                    else:
+                        # Allocate and queue
+                        parsed = value._allocate_uninitialized_and_memoize(state)
+                        state.add_to_queue(value, parsed)
+                        # We also mark it as circular if it's new and being queued,
+                        # so that it gets fixed AFTER population if needed.
+                        # This is because it might not have all its attributes set yet
+                        # (especially those set in __post_init__ or later in the queue).
+                        circular_refs[relationship.key] = value
+                    rel_kwargs[relationship.key] = parsed
             elif relationship.direction in (ONETOMANY, MANYTOMANY):
-                parsed_list, circular_list = state.parse_collection(value)
-                if circular_list:
-                    circular_refs[relationship.key] = circular_list
-                rel_kwargs[relationship.key] = parsed_list
+                if not value:
+                    rel_kwargs[relationship.key] = value
+                    continue
+
+                instances = []
+                circular_values: List[Any] = []
+                for v in value:
+                    if state.has(v):
+                        instance = state.get(v)
+                        if id(v) in state.in_progress:
+                            circular_values.append(v)
+                        instances.append(instance)
+                    else:
+                        original_cls = v.original_class()
+                        if issubclass(original_cls, AlternativeMapping):
+                            instance = v.from_dao(state=state)
+                        else:
+                            instance = v._allocate_uninitialized_and_memoize(state)
+                            state.add_to_queue(v, instance)
+                            # Also mark as circular to be fixed later
+                            circular_values.append(v)
+                        instances.append(instance)
+
+                if circular_values:
+                    circular_refs[relationship.key] = circular_values
+                rel_kwargs[relationship.key] = type(value)(instances)
             else:
                 raise UnsupportedRelationshipError(relationship)
         return rel_kwargs, circular_refs
