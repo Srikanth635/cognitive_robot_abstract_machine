@@ -589,13 +589,14 @@ class DataAccessObject(HasGeneric[T]):
 
         # Ensure columns on intermediate ancestors are also covered
         for prop in mapper.column_attrs:
-            if prop.key not in parent_column_names:
-                try:
-                    col = prop.columns[0]
-                    if is_data_column(col):
-                        setattr(self, prop.key, getattr(source_object, prop.key))
-                except (IndexError, AttributeError):
-                    continue
+            if prop.key in parent_column_names:
+                continue
+            try:
+                col = prop.columns[0]
+                if is_data_column(col):
+                    setattr(self, prop.key, getattr(source_object, prop.key))
+            except (IndexError, AttributeError):
+                continue
 
         # Partition and fill relationships
         relationships_of_parent, relationships_of_this_table = (
