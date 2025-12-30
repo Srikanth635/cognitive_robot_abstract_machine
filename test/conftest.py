@@ -48,6 +48,9 @@ Some basic facts about fixtures:
  * The return/yield value of fixtures is being cached. 
     * In case of worlds this is important since always the same world is returned by a session scoped fixture
     
+General Remarks:
+    * Apparently generating the robot semantic view takes some time so it should be done in the session scoped setup
+    
 The structure of fixtures in this conftest: 
     * World setup fixtures: 
         These setup a world and return it, they are scoped for a whole session
@@ -364,6 +367,7 @@ def pr2_apartment_world(pr2_world_setup, apartment_world_setup):
     apartment_copy.get_body_by_name("base_footprint").parent_connection.origin = (
         HomogeneousTransformationMatrix.from_xyz_rpy(1.3, 2, 0)
     )
+    PR2.from_world(apartment_copy)
     return apartment_copy
 
 
