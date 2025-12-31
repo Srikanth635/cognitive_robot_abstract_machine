@@ -936,16 +936,16 @@ class DataAccessObject(HasGeneric[T]):
         )
 
     def _handle_alternative_mapping_result(
-        self, domain_object: AlternativeMapping, state: FromDataAccessObjectState
+        self, alternative_mapping: AlternativeMapping, state: FromDataAccessObjectState
     ) -> Any:
         """
         Handle the result of an AlternativeMapping.
 
-        :param domain_object: The alternative mapping instance.
+        :param alternative_mapping: The alternative mapping instance.
         :param state: The conversion state.
         :return: The final domain object.
         """
-        final_result = domain_object.to_domain_object()
+        final_result = alternative_mapping.to_domain_object()
         # Update memo if AlternativeMapping changed the instance
         state.register(self, final_result)
         return final_result
