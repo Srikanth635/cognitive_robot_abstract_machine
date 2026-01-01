@@ -488,7 +488,7 @@ class Costmap:
             copy_map[labeled_map != i] = 0
             result_maps.append(copy_map)
         # Maps with the highest values go first
-        result_maps.reverse()
+        result_maps.sort(key=lambda m: np.max(m), reverse=True)
         return result_maps
 
 

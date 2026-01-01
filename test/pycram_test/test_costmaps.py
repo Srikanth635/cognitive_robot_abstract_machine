@@ -481,6 +481,29 @@ def test_sample_highest_first(immutable_model_world):
     assert poses[2].position.y < poses[1].position.y < poses[0].position.y
 
 
+ def test_segment_highest_first(immutable_model_world):
+    world, robot_view, context = immutable_model_world
+    np_map = np.zeros((200, 200))
+    np_map[40:45, 40:45] = 1
+    np_map[80:85, 80:85] = 3
+    np_map[120:125, 120:125] = 2
+    gaussian_map = GaussianCostmap(
+        resolution=0.02,
+        origin=PoseStamped.from_list([0, 0, 0], [0, 0, 0, 1], world.root),
+        mean=200,
+        sigma=15,
+        world=world,
+    )
+    gaussian_map.map = np_map
+
+    segmented_maps = gaussian_map.segment_map()
+
+    assert len(segmented_maps) == 3
+    assert np.max(segmented_maps[0]) == 3
+    assert np.max(segmented_maps[1]) == 2
+    assert np.max(segmented_maps[2]) == 1
+
+
 # ---- Probabilistic costmap tests (skipped) ----
 
 
