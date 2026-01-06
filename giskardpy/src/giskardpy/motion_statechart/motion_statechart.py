@@ -592,7 +592,7 @@ class MotionStatechart(SubclassJSONSerializer):
         """
         MotionStatechartGraphviz(self).to_dot_graph_pdf(file_name=file_name)
 
-    def plot_gantt_chart(self, context=None, second_length_in_cm: float = 2.0):
+    def plot_gantt_chart(self, context=None, second_length_in_cm: float = 2.5):
         HistoryGanttChartPlotter(
             self, second_width_in_cm=second_length_in_cm, context=context
         ).plot_gantt_chart("./ganttchart.pdf")
