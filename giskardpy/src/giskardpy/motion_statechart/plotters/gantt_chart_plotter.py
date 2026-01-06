@@ -39,9 +39,6 @@ class HistoryGanttChartPlotter:
     context: ExecutionContext | None = None
     second_width_in_cm: float = 2.0
 
-    final_block_buffer: float = 1
-    final_block_size: float = 2
-
     @property
     def x_width_per_control_cycle(self) -> float:
         if self.context is None:
@@ -51,12 +48,6 @@ class HistoryGanttChartPlotter:
     @property
     def total_control_cycles(self) -> int:
         return self.motion_statechart.history.history[-1].control_cycle
-
-    @property
-    def x_max(self) -> float:
-        return (
-            self.total_control_cycles + self.final_block_buffer + self.final_block_size
-        )
 
     @property
     def num_bars(self) -> int:
@@ -300,19 +291,17 @@ class HistoryGanttChartPlotter:
         ordered_nodes: List[MotionStatechartNode],
     ) -> None:
         # Configure x-axis for main timeline
-        if self.use_seconds_for_x_axis and self.time_span_seconds is not None:
+        if self.use_seconds_for_x_axis:
             ax_main.set_xlabel("Time [s]")
             base_ticks = np.arange(0.0, self.time_span_seconds + 1e-9, 0.5).tolist()
             ax_main.set_xlim(0, self.time_span_seconds)
-            ax_main.set_xticks(base_ticks)
-            ax_main.set_xticklabels([str(t) for t in base_ticks])
         else:
             ax_main.set_xlabel("Control cycle")
             step = max(int(self.x_width_per_control_cycle), 1)
             base_ticks = list(range(0, self.total_control_cycles + 1, step))
             ax_main.set_xlim(0, self.total_control_cycles)
-            ax_main.set_xticks(base_ticks)
-            ax_main.set_xticklabels([str(t) for t in base_ticks])
+        ax_main.set_xticks(base_ticks)
+        ax_main.set_xticklabels([str(t) for t in base_ticks])
 
         # Configure final-state column x-axis
         ax_final.set_xlim(0.0, 1.0)
@@ -321,8 +310,7 @@ class HistoryGanttChartPlotter:
         ax_final.grid(False)
 
         # Y axis labels and limits shown only on the right (final column)
-        num_bars = len(self.motion_statechart.history.history[0].life_cycle_state)
-        ymin, ymax = -0.8, num_bars - 1 + 0.8
+        ymin, ymax = -0.8, self.num_bars - 1 + 0.8
         ax_final.set_ylim(ymin, ymax)
 
         node_names = []
@@ -331,12 +319,18 @@ class HistoryGanttChartPlotter:
             node_names.append(self._make_label(n, prev_depth))
         node_idx = list(range(len(node_names)))
 
-        ax_main.set_yticks([])
+        # Hide y ticks on main axis but keep the shared tick locations intact
+        ax_main.tick_params(axis="y", left=False, labelleft=False)
         ax_main.set_ylabel("Nodes")
 
-        ax_final.set_yticks(node_idx, node_names)
+        # Put all y tick labels on the right (final axis)
+        ax_final.set_yticks(node_idx)
+        ax_final.set_yticklabels(node_names)
         ax_final.set_ylabel("")
-        ax_final.yaxis.tick_right()
+        ax_final.yaxis.set_ticks_position("right")
+        ax_final.tick_params(
+            axis="y", right=True, labelright=True, left=False, labelleft=False
+        )
 
         plt.tight_layout()
 
