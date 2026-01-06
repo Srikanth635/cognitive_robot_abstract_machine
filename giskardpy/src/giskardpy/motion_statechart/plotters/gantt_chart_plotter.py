@@ -39,6 +39,7 @@ class HistoryGanttChartPlotter:
     motion_statechart: MotionStatechart
     context: ExecutionContext | None = None
     second_width_in_cm: float = 2.0
+    final_state_band_height_in_cm: float = 0.5
 
     @property
     def x_width_per_control_cycle(self) -> float:
@@ -56,7 +57,7 @@ class HistoryGanttChartPlotter:
 
     @property
     def use_seconds_for_x_axis(self) -> bool:
-        return self.x_width_per_control_cycle != 1.0
+        return self.context is not None
 
     @property
     def figure_height(self) -> float:
@@ -105,7 +106,13 @@ class HistoryGanttChartPlotter:
 
         ordered_nodes = self._sort_nodes_by_parents()
 
-        ax_main, ax_final = self._build_subplots()
+        # Build node label list early so we can size the right margin adaptively
+        node_names: List[str] = []
+        for idx, n in enumerate(ordered_nodes):
+            prev_depth = 0 if idx == 0 else ordered_nodes[idx - 1].depth
+            node_names.append(self._make_label(n, prev_depth))
+
+        ax_main, ax_final = self._build_subplots(node_names)
 
         for node_idx, node in enumerate(ordered_nodes):
             self._plot_lifecycle_bar(ax=ax_main, node=node, node_idx=node_idx)
@@ -118,9 +125,9 @@ class HistoryGanttChartPlotter:
         )
         self._save_figure(file_name=file_name)
 
-    def _build_subplots(self):
+    def _build_subplots(self, node_names: List[str]):
         # Build figure so that axes widths are fixed in physical units (inches)
-        # Main axis width = length_in_units * second_width_in_cm; Final axis width = 1 * second_width_in_cm
+        # Main axis width = length_in_units * second_width_in_cm; Final axis width = fixed value independent of second_width_in_cm
         inches_per_unit = self.second_width_in_cm / 2.54
         length_in_units = (
             self.time_span_seconds
@@ -128,14 +135,20 @@ class HistoryGanttChartPlotter:
             else self.total_control_cycles
         )
         main_w_inches = inches_per_unit * float(length_in_units)
-        # Make the final-state column width independent of second_width_in_cm
-        final_w_inches = 1.0  # inches
+        final_w_inches = (
+            self.final_state_band_height_in_cm * inches_per_unit
+        )  # inches, fixed
         pad_inches = 0.25
-        # Margins in inches (tune as needed to fit labels)
-        left_margin_inches = 0.6
-        right_margin_inches = 1.2
+        # Base margins in inches
+        left_margin_inches = 0.3
         bottom_margin_inches = 0.5
         top_margin_inches = 0.2
+
+        # Measure required width for right-side y tick labels and set right margin adaptively
+        labels_w_inches = self._measure_labels_width_in(node_names)
+        label_pad_inches = -1
+        right_margin_inches = labels_w_inches + label_pad_inches
+
         fig_w_inches = (
             left_margin_inches
             + main_w_inches
@@ -405,6 +418,33 @@ class HistoryGanttChartPlotter:
             )
         else:
             return "│  " * (depth - 1) + "├─ " + node.unique_name
+
+    def _measure_labels_width_in(self, labels: List[str]) -> float:
+        """
+        Measure the maximum rendered width of the given labels in inches.
+
+        Creates a temporary figure to access a renderer so that text extents are
+        measured accurately for the current Matplotlib configuration.
+        """
+        # Use a small temporary figure
+        fig = plt.figure(figsize=(2, 2))
+        try:
+            # Ensure renderer exists
+            fig.canvas.draw()
+            renderer = fig.canvas.get_renderer()
+            max_width_px = 0.0
+            temp_texts = []
+            for s in labels:
+                t = fig.text(0, 0, s)
+                temp_texts.append(t)
+                bbox = t.get_window_extent(renderer=renderer)
+                if bbox.width > max_width_px:
+                    max_width_px = bbox.width
+            for t in temp_texts:
+                t.remove()
+            return max_width_px / fig.dpi if fig.dpi else 0.0
+        finally:
+            plt.close(fig)
 
     def _save_figure(self, file_name: str) -> None:
         create_path(file_name)

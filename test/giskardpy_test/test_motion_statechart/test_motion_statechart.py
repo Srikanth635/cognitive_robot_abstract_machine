@@ -647,7 +647,7 @@ def test_reset():
 def test_nested_goals():
     msc = MotionStatechart()
 
-    node1 = ConstTrueNode()
+    node1 = ConstTrueNode(name="w")
     msc.add_node(node1)
 
     outer = TestNestedGoal()
