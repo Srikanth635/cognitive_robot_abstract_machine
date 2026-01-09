@@ -198,13 +198,21 @@ jobs:
           docs_index.md
         sparse-checkout-cone-mode: false
 
+    - name: Install pandoc for markdown conversion
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pandoc
+
     - name: Setup index page
       run: |
         # Create .nojekyll to disable Jekyll processing
         touch _combined_docs/.nojekyll
         
-        # Copy the markdown index file
-        cp docs_index.md _combined_docs/index.md
+        # Convert markdown index to HTML
+        pandoc docs_index.md -f markdown -t html -s -o _combined_docs/index.html \
+          --metadata title="CRAM Documentation" \
+          --css https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css \
+          -H <(echo '<style>body { max-width: 980px; margin: 0 auto; padding: 45px; }</style>')
 
     - name: Upload Pages artifact
       uses: actions/upload-pages-artifact@v3
