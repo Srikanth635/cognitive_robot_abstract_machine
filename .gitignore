@@ -72,3 +72,4 @@ file::memory:
 # Jupyter book build artifacts
 **/doc/_build/
 **/doc/_jupyter_cache/
+*.doctree
