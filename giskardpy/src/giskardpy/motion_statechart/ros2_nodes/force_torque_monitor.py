@@ -14,6 +14,7 @@ class ForceTorqueNode(TopicSubscriberNode[WrenchStamped]):
     """
     Superclass for all nodes that subscribe to a ROS topic that contains force and torque data.
     """
+
     msg_type: WrenchStamped = field(init=False, default=WrenchStamped)
 
     def force_as_np(self) -> np.ndarray:
