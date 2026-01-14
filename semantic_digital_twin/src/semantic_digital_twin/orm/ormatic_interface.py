@@ -110,6 +110,18 @@ hasaperturesdao_apertures_association = Table(
     Column("source_hasaperturesdao_id", ForeignKey("HasAperturesDAO.database_id")),
     Column("target_aperturedao_id", ForeignKey("ApertureDAO.database_id")),
 )
+hasobjectsdao_objects_association = Table(
+    "hasobjectsdao_objects_association",
+    Base.metadata,
+    Column("source_hasobjectsdao_id", ForeignKey("HasObjectsDAO.database_id")),
+    Column("target_hasrootbodydao_id", ForeignKey("HasRootBodyDAO.database_id")),
+)
+cabinetdao_objects_association = Table(
+    "cabinetdao_objects_association",
+    Base.metadata,
+    Column("source_cabinetdao_id", ForeignKey("CabinetDAO.database_id")),
+    Column("target_hasrootbodydao_id", ForeignKey("HasRootBodyDAO.database_id")),
+)
 cupboarddao_doors_association = Table(
     "cupboarddao_doors_association",
     Base.metadata,
@@ -128,6 +140,18 @@ dresserdao_drawers_association = Table(
     Column("source_dresserdao_id", ForeignKey("DresserDAO.database_id")),
     Column("target_drawerdao_id", ForeignKey("DrawerDAO.database_id")),
 )
+fridgedao_drawers_association = Table(
+    "fridgedao_drawers_association",
+    Base.metadata,
+    Column("source_fridgedao_id", ForeignKey("FridgeDAO.database_id")),
+    Column("target_drawerdao_id", ForeignKey("DrawerDAO.database_id")),
+)
+fridgedao_doors_association = Table(
+    "fridgedao_doors_association",
+    Base.metadata,
+    Column("source_fridgedao_id", ForeignKey("FridgeDAO.database_id")),
+    Column("target_doordao_id", ForeignKey("DoorDAO.database_id")),
+)
 wardrobedao_doors_association = Table(
     "wardrobedao_doors_association",
     Base.metadata,
@@ -140,17 +164,11 @@ wardrobedao_drawers_association = Table(
     Column("source_wardrobedao_id", ForeignKey("WardrobeDAO.database_id")),
     Column("target_drawerdao_id", ForeignKey("DrawerDAO.database_id")),
 )
-fridgedao_drawers_association = Table(
-    "fridgedao_drawers_association",
+drawerdao_objects_association = Table(
+    "drawerdao_objects_association",
     Base.metadata,
-    Column("source_fridgedao_id", ForeignKey("FridgeDAO.database_id")),
-    Column("target_drawerdao_id", ForeignKey("DrawerDAO.database_id")),
-)
-fridgedao_doors_association = Table(
-    "fridgedao_doors_association",
-    Base.metadata,
-    Column("source_fridgedao_id", ForeignKey("FridgeDAO.database_id")),
-    Column("target_doordao_id", ForeignKey("DoorDAO.database_id")),
+    Column("source_drawerdao_id", ForeignKey("DrawerDAO.database_id")),
+    Column("target_hasrootbodydao_id", ForeignKey("HasRootBodyDAO.database_id")),
 )
 abstractrobotdao_manipulators_association = Table(
     "abstractrobotdao_manipulators_association",
@@ -2981,6 +2999,33 @@ class DoorDAO(
     }
 
 
+class HasObjectsDAO(
+    HasRootBodyDAO,
+    DataAccessObject[semantic_digital_twin.semantic_annotations.mixins.HasObjects],
+):
+
+    __tablename__ = "HasObjectsDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(HasRootBodyDAO.database_id),
+        primary_key=True,
+        use_existing_column=True,
+    )
+
+    objects: Mapped[typing.List[HasRootBodyDAO]] = relationship(
+        "HasRootBodyDAO",
+        secondary="hasobjectsdao_objects_association",
+        primaryjoin="HasObjectsDAO.database_id == hasobjectsdao_objects_association.c.source_hasobjectsdao_id",
+        secondaryjoin="HasRootBodyDAO.database_id == hasobjectsdao_objects_association.c.target_hasrootbodydao_id",
+        cascade="save-update, merge",
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "HasObjectsDAO",
+        "inherit_condition": database_id == HasRootBodyDAO.database_id,
+    }
+
+
 class HasSupportingSurfaceDAO(
     HasRootBodyDAO,
     DataAccessObject[
@@ -3123,6 +3168,13 @@ class CabinetDAO(
         foreign_keys=[supporting_surface_id],
         post_update=True,
     )
+    objects: Mapped[typing.List[HasRootBodyDAO]] = relationship(
+        "HasRootBodyDAO",
+        secondary="cabinetdao_objects_association",
+        primaryjoin="CabinetDAO.database_id == cabinetdao_objects_association.c.source_cabinetdao_id",
+        secondaryjoin="HasRootBodyDAO.database_id == cabinetdao_objects_association.c.target_hasrootbodydao_id",
+        cascade="save-update, merge",
+    )
 
     __mapper_args__ = {
         "polymorphic_identity": "CabinetDAO",
@@ -3191,6 +3243,40 @@ class DresserDAO(
     }
 
 
+class FridgeDAO(
+    CabinetDAO,
+    DataAccessObject[
+        semantic_digital_twin.semantic_annotations.semantic_annotations.Fridge
+    ],
+):
+
+    __tablename__ = "FridgeDAO"
+
+    database_id: Mapped[builtins.int] = mapped_column(
+        ForeignKey(CabinetDAO.database_id), primary_key=True, use_existing_column=True
+    )
+
+    drawers: Mapped[typing.List[DrawerDAO]] = relationship(
+        "DrawerDAO",
+        secondary="fridgedao_drawers_association",
+        primaryjoin="FridgeDAO.database_id == fridgedao_drawers_association.c.source_fridgedao_id",
+        secondaryjoin="DrawerDAO.database_id == fridgedao_drawers_association.c.target_drawerdao_id",
+        cascade="save-update, merge",
+    )
+    doors: Mapped[typing.List[DoorDAO]] = relationship(
+        "DoorDAO",
+        secondary="fridgedao_doors_association",
+        primaryjoin="FridgeDAO.database_id == fridgedao_doors_association.c.source_fridgedao_id",
+        secondaryjoin="DoorDAO.database_id == fridgedao_doors_association.c.target_doordao_id",
+        cascade="save-update, merge",
+    )
+
+    __mapper_args__ = {
+        "polymorphic_identity": "FridgeDAO",
+        "inherit_condition": database_id == CabinetDAO.database_id,
+    }
+
+
 class WardrobeDAO(
     CabinetDAO,
     DataAccessObject[
@@ -3222,42 +3308,6 @@ class WardrobeDAO(
     __mapper_args__ = {
         "polymorphic_identity": "WardrobeDAO",
         "inherit_condition": database_id == CabinetDAO.database_id,
-    }
-
-
-class FridgeDAO(
-    HasCaseAsRootBodyDAO,
-    DataAccessObject[
-        semantic_digital_twin.semantic_annotations.semantic_annotations.Fridge
-    ],
-):
-
-    __tablename__ = "FridgeDAO"
-
-    database_id: Mapped[builtins.int] = mapped_column(
-        ForeignKey(HasCaseAsRootBodyDAO.database_id),
-        primary_key=True,
-        use_existing_column=True,
-    )
-
-    drawers: Mapped[typing.List[DrawerDAO]] = relationship(
-        "DrawerDAO",
-        secondary="fridgedao_drawers_association",
-        primaryjoin="FridgeDAO.database_id == fridgedao_drawers_association.c.source_fridgedao_id",
-        secondaryjoin="DrawerDAO.database_id == fridgedao_drawers_association.c.target_drawerdao_id",
-        cascade="save-update, merge",
-    )
-    doors: Mapped[typing.List[DoorDAO]] = relationship(
-        "DoorDAO",
-        secondary="fridgedao_doors_association",
-        primaryjoin="FridgeDAO.database_id == fridgedao_doors_association.c.source_fridgedao_id",
-        secondaryjoin="DoorDAO.database_id == fridgedao_doors_association.c.target_doordao_id",
-        cascade="save-update, merge",
-    )
-
-    __mapper_args__ = {
-        "polymorphic_identity": "FridgeDAO",
-        "inherit_condition": database_id == HasCaseAsRootBodyDAO.database_id,
     }
 
 
@@ -3897,6 +3947,13 @@ class DrawerDAO(
     )
     root: Mapped[BodyDAO] = relationship(
         "BodyDAO", uselist=False, foreign_keys=[root_id], post_update=True
+    )
+    objects: Mapped[typing.List[HasRootBodyDAO]] = relationship(
+        "HasRootBodyDAO",
+        secondary="drawerdao_objects_association",
+        primaryjoin="DrawerDAO.database_id == drawerdao_objects_association.c.source_drawerdao_id",
+        secondaryjoin="HasRootBodyDAO.database_id == drawerdao_objects_association.c.target_hasrootbodydao_id",
+        cascade="save-update, merge",
     )
     slider: Mapped[SliderDAO] = relationship(
         "SliderDAO", uselist=False, foreign_keys=[slider_id], post_update=True

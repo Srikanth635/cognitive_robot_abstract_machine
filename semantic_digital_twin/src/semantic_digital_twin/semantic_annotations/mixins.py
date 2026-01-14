@@ -819,3 +819,16 @@ class HasCaseAsRootBody(HasSupportingSurface, ABC):
         container_event = outer_box.as_composite_set() - inner_box.as_composite_set()
 
         return container_event
+
+
+@dataclass(eq=False)
+class HasObjects(HasRootBody, ABC):
+    """
+    A mixin class for semantic annotations that represent storage spaces.
+    """
+
+    objects: List[HasRootBody] = field(default_factory=list, hash=False, kw_only=True)
+
+    def add_object(self, object: HasRootBody):
+        self._attach_child_entity_in_kinematic_structure(object.root)
+        self.objects.append(object)
