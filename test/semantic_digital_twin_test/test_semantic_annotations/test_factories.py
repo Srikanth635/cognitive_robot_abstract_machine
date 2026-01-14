@@ -10,6 +10,7 @@ from semantic_digital_twin.exceptions import (
     InvalidAxisError,
     InvalidConnectionLimits,
     MissingSemanticAnnotationError,
+    MismatchingWorld,
 )
 from semantic_digital_twin.semantic_annotations.mixins import (
     HasCaseAsRootBody,
@@ -27,6 +28,7 @@ from semantic_digital_twin.semantic_annotations.semantic_annotations import (
     Aperture,
     Table,
     Cup,
+    Cabinet,
 )
 from semantic_digital_twin.spatial_types import (
     Vector3,
@@ -692,6 +694,41 @@ class TestFactories(unittest.TestCase):
         cup = Cup.create_with_new_body_in_world(name=PrefixedName("cup"), world=world)
         cup.class_label = "plastic_cup"
         self.assertEqual(cup.class_label, "plastic_cup")
+
+    def test_has_objects(self):
+        world = World()
+        root = Body(name=PrefixedName("root"))
+        with world.modify_world():
+            world.add_body(root)
+
+        cabinet = Cabinet.create_with_new_body_in_world(
+            name=PrefixedName("cabinet"), world=world, scale=Scale(0.5, 0.5, 1.0)
+        )
+        cup = Cup.create_with_new_body_in_world(name=PrefixedName("cup"), world=world)
+
+        cabinet.add_object(cup)
+
+        self.assertIn(cup, cabinet.objects)
+        self.assertEqual(cup.root.parent_kinematic_structure_entity, cabinet.root)
+
+    def test_has_objects_mismatching_world(self):
+        world1 = World()
+        root1 = Body(name=PrefixedName("root1"))
+        with world1.modify_world():
+            world1.add_body(root1)
+
+        world2 = World()
+        root2 = Body(name=PrefixedName("root2"))
+        with world2.modify_world():
+            world2.add_body(root2)
+
+        cabinet = Cabinet.create_with_new_body_in_world(
+            name=PrefixedName("cabinet"), world=world1, scale=Scale(0.5, 0.5, 1.0)
+        )
+        cup = Cup.create_with_new_body_in_world(name=PrefixedName("cup"), world=world2)
+
+        with self.assertRaises(MismatchingWorld):
+            cabinet.add_object(cup)
 
 
 if __name__ == "__main__":

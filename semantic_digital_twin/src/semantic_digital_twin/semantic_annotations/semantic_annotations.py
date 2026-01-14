@@ -10,8 +10,6 @@ from random_events.interval import closed
 from random_events.product_algebra import SimpleEvent
 from typing_extensions import List, Type
 
-from krrood.entity_query_language.entity import entity, variable
-from krrood.entity_query_language.entity_result_processors import an
 from krrood.ormatic.utils import classproperty
 from .mixins import (
     HasSupportingSurface,
@@ -25,6 +23,7 @@ from .mixins import (
     HasApertures,
     IsPerceivable,
     HasRootBody,
+    HasObjects,
 )
 from ..datastructures.prefixed_name import PrefixedName
 from ..datastructures.variables import SpatialVariables
@@ -118,21 +117,6 @@ class Handle(HasRootBody):
                 SpatialVariables.z.value: z_interval,
             }
         )
-
-
-@dataclass(eq=False)
-class Fridge(
-    HasCaseAsRootBody,
-    HasDoors,
-    HasDrawers,
-):
-    """
-    A fridge that has a door and a body.
-    """
-
-    @classproperty
-    def opening_direction(self) -> Direction:
-        return Direction.NEGATIVE_X
 
 
 @dataclass(eq=False)
@@ -317,7 +301,7 @@ class DoubleDoor(SemanticAnnotation):
 
 
 @dataclass(eq=False)
-class Drawer(Furniture, HasCaseAsRootBody, HasHandle, HasSlider):
+class Drawer(Furniture, HasCaseAsRootBody, HasHandle, HasSlider, HasObjects):
 
     @property
     def opening_direction(self) -> Direction:
@@ -335,10 +319,14 @@ class Table(Furniture, HasSupportingSurface):
 
 
 @dataclass(eq=False)
-class Cabinet(Furniture, HasCaseAsRootBody):
+class Cabinet(Furniture, HasObjects, HasCaseAsRootBody):
     @property
     def opening_direction(self) -> Direction:
         return Direction.NEGATIVE_X
+
+
+@dataclass(eq=False)
+class Fridge(Cabinet, HasDoors, HasDrawers): ...
 
 
 @dataclass(eq=False)
