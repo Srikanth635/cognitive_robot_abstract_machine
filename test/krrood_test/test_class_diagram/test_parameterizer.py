@@ -2,6 +2,7 @@ from __future__ import annotations
 import pytest
 from random_events.set import Set
 from random_events.variable import Continuous, Integer, Symbolic
+from random_events.product_algebra import Event, SimpleEvent
 from krrood.class_diagrams.class_diagram import ClassDiagram
 from krrood.class_diagrams.parameterizer import Parameterizer
 from pycram.datastructures.enums import TorsoState
@@ -135,7 +136,6 @@ def test_parameterize_movetorso_action(parameterizer: Parameterizer):
     assert variable.name == expected_variable.name
     assert set(variable.domain) == set(expected_variable.domain)
 
-    # Assert that all states from TorsoState are represented in the domain
     domain_values = {str(value) for value in variable.domain}
     expected_values = {str(int(state)) for state in TorsoState}
     assert domain_values == expected_values
@@ -174,67 +174,75 @@ def test_parameterize_navigate_action(parameterizer: Parameterizer):
 
 def test_parameterize_robot_plan(parameterizer: Parameterizer):
     """
-    Test parameterization of a robot plan: MoveTorso - Navigate - MoveTorso.
+    Test parameterization of a robot plan consisting of: MoveTorso - Navigate - MoveTorso.
+
+    This test verifies:
+    1. Parameterization of robot action plan with unique prefixes.
+    2. Creation of a fully factorized distribution over the plan variables.
+    3. Application of symbolic constraints (torso consistency).
+    4. Application of numeric constraints (navigation pose conditioning).
+    5. Sampling from the constrained distribution and validation of constraints.
     """
-    class_diagram = ClassDiagram(
-        [
-            MoveTorsoAction,
-            NavigateAction,
-            PoseStamped,
-            PyCramPose,
-            PyCramVector3,
-            PyCramQuaternion,
-            Header,
-        ]
-    )
 
-    wrapped_move_torso_1 = class_diagram.get_wrapped_class(MoveTorsoAction)
-    variables_move_torso_1 = parameterizer._parameterize_wrapped_class(
-        wrapped_move_torso_1, prefix="MoveTorsoAction_1"
-    )
-
-    wrapped_navigate = class_diagram.get_wrapped_class(NavigateAction)
-    variables_navigate = parameterizer(wrapped_navigate)
-
-    variables_move_torso_2 = parameterizer._parameterize_wrapped_class(
-        wrapped_move_torso_1, prefix="MoveTorsoAction_2"
-    )
-
-    all_variables = (
-        variables_move_torso_1 + variables_navigate + variables_move_torso_2
-    )
-
-    # Remove Integer variables
-    variables_for_distribution = [
-        v for v in all_variables if not isinstance(v, Integer)
+    plan_classes = [
+        MoveTorsoAction, NavigateAction, PoseStamped, PyCramPose,
+        PyCramVector3, PyCramQuaternion, Header
     ]
+    class_diagram = ClassDiagram(plan_classes)
+    wrapped_move_torso = class_diagram.get_wrapped_class(MoveTorsoAction)
+    wrapped_navigate = class_diagram.get_wrapped_class(NavigateAction)
 
-    probabilistic_circuit = parameterizer.create_fully_factorized_distribution(
-        variables_for_distribution
-    )
+    movetorso_variables1 = parameterizer._parameterize_wrapped_class(wrapped_move_torso, prefix="MoveTorsoAction_1")
+    navigate_variables = parameterizer(wrapped_navigate)
+    movetorso_variables2 = parameterizer._parameterize_wrapped_class(wrapped_move_torso, prefix="MoveTorsoAction_2")
 
-    expected_all_variable_names = {
-        "MoveTorsoAction_1.torso_state",
-        "NavigateAction.target_location.pose.position.x",
-        "NavigateAction.target_location.pose.position.y",
-        "NavigateAction.target_location.pose.position.z",
-        "NavigateAction.target_location.pose.orientation.x",
-        "NavigateAction.target_location.pose.orientation.y",
-        "NavigateAction.target_location.pose.orientation.z",
+    all_variables = movetorso_variables1 + navigate_variables + movetorso_variables2
+    variables = {v.name: v for v in all_variables}
+
+    expected_names = {
+        "MoveTorsoAction_1.torso_state", "MoveTorsoAction_2.torso_state",
+        "NavigateAction.keep_joint_states", "NavigateAction.target_location.header.sequence",
+        "NavigateAction.target_location.pose.position.x", "NavigateAction.target_location.pose.position.y",
+        "NavigateAction.target_location.pose.position.z", "NavigateAction.target_location.pose.orientation.x",
+        "NavigateAction.target_location.pose.orientation.y", "NavigateAction.target_location.pose.orientation.z",
         "NavigateAction.target_location.pose.orientation.w",
-        "NavigateAction.target_location.header.sequence",
-        "NavigateAction.keep_joint_states",
-        "MoveTorsoAction_2.torso_state",
     }
 
-    all_variable_names = {v.name for v in all_variables}
-    assert all_variable_names == expected_all_variable_names
+    assert set(variables.keys()) == expected_names
 
-    expected_dist_variable_names = expected_all_variable_names - {
-        "NavigateAction.target_location.header.sequence"
+    dist_vars = [v for v in all_variables if not isinstance(v, Integer)]
+    probabilistic_circuit = parameterizer.create_fully_factorized_distribution(dist_vars)
+
+    expected_dist_names = expected_names - {"NavigateAction.target_location.header.sequence"}
+    assert {v.name for v in probabilistic_circuit.variables} == expected_dist_names
+
+    torso_1 = variables["MoveTorsoAction_1.torso_state"]
+    torso_2 = variables["MoveTorsoAction_2.torso_state"]
+
+    consistency_events = [SimpleEvent({torso_1: [state], torso_2: [state]}) for state in TorsoState]
+    restricted_dist, _ = probabilistic_circuit.truncated(Event(*consistency_events))
+    restricted_dist.normalize()
+
+    pose_constraints = {
+        variables["NavigateAction.target_location.pose.position.x"]: 1.5,
+        variables["NavigateAction.target_location.pose.position.y"]: -2.0,
+        variables["NavigateAction.target_location.pose.orientation.x"]: 0.0,
+        variables["NavigateAction.target_location.pose.orientation.y"]: 0.0,
+        variables["NavigateAction.target_location.pose.orientation.z"]: 0.0,
+        variables["NavigateAction.target_location.pose.orientation.w"]: 1.0,
     }
+    
+    final_distribution, _ = restricted_dist.conditional(pose_constraints)
+    final_distribution.normalize()
 
-    variable_names_in_dist = {v.name for v in probabilistic_circuit.variables}
-    assert variable_names_in_dist == expected_dist_variable_names
+    target_x, target_y = 1.5, -2.0
+    nav_x = variables["NavigateAction.target_location.pose.position.x"]
+    nav_y = variables["NavigateAction.target_location.pose.position.y"]
+
+    for sample_values in final_distribution.sample(10):
+        sample = dict(zip(final_distribution.variables, sample_values))
+        assert sample[torso_1] == sample[torso_2]
+        assert sample[nav_x] == target_x
+        assert sample[nav_y] == target_y
 
 
