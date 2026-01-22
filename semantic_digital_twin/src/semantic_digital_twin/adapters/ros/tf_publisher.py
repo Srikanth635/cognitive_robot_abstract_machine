@@ -3,7 +3,6 @@ from dataclasses import dataclass, field
 from time import sleep
 from uuid import UUID
 
-import numpy as np
 from geometry_msgs.msg import TransformStamped
 from rclpy.node import Node
 from rclpy.publisher import Publisher
@@ -14,14 +13,9 @@ from krrood.symbolic_math.symbolic_math import (
     VariableParameters,
     CompiledFunction,
 )
-from semantic_digital_twin.callbacks.callback import (
-    StateChangeCallback,
-    ModelChangeCallback,
-)
-from semantic_digital_twin.world import World
-from semantic_digital_twin.world_description.world_entity import (
-    KinematicStructureEntity,
-)
+from ...callbacks.callback import StateChangeCallback, ModelChangeCallback
+from ...world import World
+from ...world_description.world_entity import KinematicStructureEntity
 
 
 @dataclass

@@ -7,7 +7,7 @@ from typing import Dict, Type
 from typing_extensions import Generic, TypeVar, ClassVar, Any
 
 from krrood.utils import recursive_subclasses, DataclassException
-from semantic_digital_twin.world import World
+from ...world import World
 
 InputType = TypeVar("InputType")
 OutputType = TypeVar("OutputType")

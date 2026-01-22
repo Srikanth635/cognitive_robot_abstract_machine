@@ -7,13 +7,8 @@ from std_msgs.msg import ColorRGBA
 from typing_extensions import ClassVar
 from visualization_msgs.msg import MarkerArray
 
-from semantic_digital_twin.adapters.ros.msg_converter import SemDTToRos2Converter
-from semantic_digital_twin.adapters.ros.semdt_to_ros2_converters import (
-    ShapeToRos2Converter,
-)
-from semantic_digital_twin.callbacks.callback import (
-    ModelChangeCallback,
-)
+from .msg_converter import SemDTToRos2Converter
+from ...callbacks.callback import ModelChangeCallback
 
 
 @dataclass

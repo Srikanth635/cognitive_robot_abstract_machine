@@ -1,33 +1,22 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 import geometry_msgs.msg as geometry_msgs
 import std_msgs.msg as std_msgs
 import visualization_msgs.msg as visualization_msgs
-from semantic_digital_twin.adapters.ros.msg_converter import (
-    SemDTToRos2Converter,
-    InputType,
-    OutputType,
-)
 from std_msgs.msg import ColorRGBA
 from visualization_msgs.msg import Marker
 
-from semantic_digital_twin.spatial_types import (
+from .msg_converter import SemDTToRos2Converter, InputType
+from ...spatial_types import (
     HomogeneousTransformationMatrix,
     Point3,
     Vector3,
     Quaternion,
 )
-from semantic_digital_twin.spatial_types.spatial_types import Pose
-from semantic_digital_twin.world_description.geometry import (
-    Box,
-    Cylinder,
-    Sphere,
-    Color,
-    FileMesh,
-)
+from ...spatial_types.spatial_types import Pose
+from ...world_description.geometry import Box, Cylinder, Sphere, Color, FileMesh
 
 
 @dataclass
