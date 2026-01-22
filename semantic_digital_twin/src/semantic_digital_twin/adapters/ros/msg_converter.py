@@ -15,11 +15,13 @@ OutputType = TypeVar("OutputType")
 
 @dataclass
 class ROS2ConversionError(DataclassException):
+    """Base class for errors that occur during ROS2 message conversion."""
     message: str = field(init=False)
 
 
 @dataclass
 class CannotConvertSemDTToRos2Error(ROS2ConversionError):
+    """Raised when a semDT object cannot be converted to a ROS2 message."""
     data_type: Type = field(kw_only=True)
 
     def __post_init__(self):
@@ -28,6 +30,7 @@ class CannotConvertSemDTToRos2Error(ROS2ConversionError):
 
 @dataclass
 class CannotConvertRos2ToSemDTError(ROS2ConversionError):
+    """Raised when a ROS2 message cannot be converted to a semDT object."""
     data_type: Type = field(kw_only=True)
 
     def __post_init__(self):
@@ -36,6 +39,11 @@ class CannotConvertRos2ToSemDTError(ROS2ConversionError):
 
 @dataclass
 class Ros2ToSemDTConverter(ABC, Generic[InputType, OutputType]):
+    """
+    Base class for converters that convert ROS2 messages to their semDT representation.
+    If you want to add a new converter, subclass this class and override the convert method.
+    No registration is necessary.
+    """
     input_type: InputType
     """The semDT type for which this converter handles conversion."""
     output_type: OutputType
@@ -76,6 +84,11 @@ class Ros2ToSemDTConverter(ABC, Generic[InputType, OutputType]):
 
 @dataclass
 class SemDTToRos2Converter(ABC, Generic[InputType, OutputType]):
+    """
+    Base class for converters that convert semDT objects to their ROS2 message representation.
+    If you want to add a new converter, subclass this class and override the convert method.
+    No registration is necessary.
+    """
     registry: ClassVar[Dict[Type, Type[SemDTToRos2Converter]]] = field(default={})
     """Registry mapping semDT types to their corresponding ROS2MessageConverter subclass."""
 
