@@ -1195,27 +1195,6 @@ class Actuator(WorldEntityWithID):
 
     _dofs: List[DegreeOfFreedom] = field(default_factory=list, init=False, repr=False)
 
-    # def to_json(self) -> Dict[str, Any]:
-    #     result = super().to_json()
-    #     result["name"] = self.name.to_json()
-    #     result["dofs"] = to_json(self._dofs)
-    #     return result
-    #
-    # @classmethod
-    # def _from_json(cls, data: Dict[str, Any], **kwargs) -> Actuator:
-    #     actuator = cls(
-    #         name=from_json(data["name"]),
-    #         id=from_json(data["id"]),
-    #     )
-    #     dofs_data = data.get("dofs", [])
-    #     assert (
-    #         len(dofs_data) > 0
-    #     ), "An actuator must have at least one degree of freedom."
-    #     for dof_data in dofs_data:
-    #         dof = from_json(dof_data)
-    #         actuator.add_dof(dof)
-    #     return actuator
-
     @property
     def dofs(self) -> List[DegreeOfFreedom]:
         """
