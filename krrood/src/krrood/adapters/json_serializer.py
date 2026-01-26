@@ -5,12 +5,12 @@ import importlib
 import inspect
 import uuid
 from abc import ABC
-from collections import Counter
-from collections.abc import Iterable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, fields, is_dataclass
+from dataclasses import field
 from types import NoneType
 from typing import List, Optional
 
+import numpy as np
 from typing_extensions import Dict, Any, Self, Union, Type, TypeVar
 
 from .exceptions import (
@@ -21,6 +21,7 @@ from .exceptions import (
     ClassNotSerializableError,
     JSON_TYPE_NAME,
 )
+from ..class_diagrams.attribute_introspector import DataclassOnlyIntrospector
 from ..ormatic.dao import HasGeneric
 from ..singleton import SingletonMeta
 from ..utils import get_full_class_name, recursive_subclasses, inheritance_path_length
@@ -427,3 +428,70 @@ class ExceptionJSONSerializer(ExternalClassJSONSerializer[Exception]):
         cls, data: Dict[str, Any], clazz: Type[Exception], **kwargs
     ) -> Exception:
         return clazz(data["value"])
+
+
+@dataclass
+class NumpyNDarrayJSONSerializer(ExternalClassJSONSerializer[np.ndarray]):
+    """
+    External JSON serializer for numpy ndarrays.
+    """
+
+    @classmethod
+    def to_json(cls, obj: np.ndarray) -> Dict[str, Any]:
+        return {
+            JSON_TYPE_NAME: get_full_class_name(type(obj)),
+            "type": str(obj.dtype),
+            "data": obj.tolist(),
+        }
+
+    @classmethod
+    def from_json(
+        cls, data: Dict[str, Any], clazz: Type[np.ndarray], **kwargs
+    ) -> np.ndarray:
+        return np.array(data["data"], dtype=data["type"])
+
+
+@dataclass
+class DataclassJSONSerializer(ExternalClassJSONSerializer[None]):
+    """
+    Generic JSON serializer for dataclasses.
+    It creates a dict where all fields are serialized using the to_json function.
+    If this is not enough, you still need to implement a custom serializer.
+    """
+
+    @classmethod
+    def to_json(cls, obj) -> Dict[str, Any]:
+        result = {JSON_TYPE_NAME: get_full_class_name(type(obj))}
+        introspector = DataclassOnlyIntrospector()
+        for field_ in introspector.discover(obj.__class__):
+            value = getattr(obj, field_.public_name)
+
+            if isinstance(value, (list, set)):
+                current_result = [to_json(item) for item in value]
+            else:
+                current_result = to_json(value)
+            result[field_.public_name] = current_result
+        return result
+
+    @classmethod
+    def matches_generic_type(cls, clazz: Type) -> bool:
+        return is_dataclass(clazz)
+
+    @classmethod
+    def from_json(cls, data: Dict[str, Any], clazz: Type, **kwargs) -> Self:
+        fields_ = {f.name: f for f in fields(clazz)}
+
+        init_args = {}
+
+        for k, v in fields_.items():
+            if k not in data.keys():
+                continue
+
+            current_data = data[k]
+
+            if isinstance(current_data, list):
+                current_result = [from_json(data, **kwargs) for data in current_data]
+            else:
+                current_result = from_json(current_data, **kwargs)
+            init_args[k] = current_result
+        return clazz(**init_args)
