@@ -3,7 +3,6 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 
 import numpy as np
-import rclpy
 import rustworkx as rx
 from box import Box
 from probabilistic_model.distributions import (
@@ -37,7 +36,6 @@ from giskardpy.motion_statechart.goals.templates import Sequence
 from giskardpy.motion_statechart.motion_statechart import MotionStatechart
 from giskardpy.motion_statechart.tasks.cartesian_tasks import CartesianPose
 from giskardpy.qp.qp_controller_config import QPControllerConfig
-from semantic_digital_twin.adapters.viz_marker import VizMarkerPublisher
 from semantic_digital_twin.datastructures.variables import SpatialVariables
 from semantic_digital_twin.robots.abstract_robot import AbstractRobot
 from semantic_digital_twin.spatial_types import Point3

@@ -1,11 +1,11 @@
 import numpy as np
 import pytest
-import rclpy
-from sqlalchemy import select, text
-from sqlalchemy.orm import Session
 
 from krrood.ormatic.dao import to_dao
 from krrood.ormatic.utils import create_engine
+from sqlalchemy import select, text
+from sqlalchemy.orm import Session
+
 from pycram.datastructures.dataclasses import Context
 from pycram.datastructures.enums import (
     TorsoState,
@@ -35,7 +35,6 @@ from pycram.robot_plans import (
     PickUpAction,
     PlaceAction,
 )
-from semantic_digital_twin.adapters.viz_marker import VizMarkerPublisher
 
 engine = create_engine("sqlite:///:memory:")
 
