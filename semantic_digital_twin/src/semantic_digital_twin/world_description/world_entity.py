@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import inspect
-import itertools
 import uuid
 from abc import ABC, abstractmethod
 from collections import deque
 from collections.abc import Iterable, Mapping
 from copy import deepcopy
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, Field
 from dataclasses import fields
 from functools import lru_cache, cached_property
 from uuid import UUID, uuid4
@@ -30,13 +29,12 @@ from typing_extensions import (
 from typing_extensions import List, Optional, TYPE_CHECKING, Tuple
 from typing_extensions import Set
 
-from krrood.adapters.exceptions import JSON_TYPE_NAME
 from krrood.adapters.json_serializer import (
     SubclassJSONSerializer,
     to_json,
     from_json,
 )
-
+from krrood.class_diagrams.attribute_introspector import DataclassOnlyIntrospector
 from krrood.entity_query_language.predicate import Symbol
 from krrood.symbolic_math.symbolic_math import Matrix
 from .geometry import TriangleMesh
@@ -132,7 +130,26 @@ class WorldEntityWithID(WorldEntity, SubclassJSONSerializer):
 
     def to_json(self) -> Dict[str, Any]:
         result = super().to_json()
-        result["id"] = to_json(self.id)
+        introspector = DataclassOnlyIntrospector()
+        for field_ in introspector.discover(self.__class__):
+            value = getattr(self, field_.public_name)
+
+            if isinstance(value, (list, set)):
+                current_result = [self._item_to_json(item) for item in value]
+            else:
+                current_result = self._item_to_json(value)
+            result[field_.public_name] = current_result
+        return result
+
+    @classmethod
+    def _item_to_json(cls, item: Any):
+        """
+        Convert an item to JSON format, handling WorldEntityWithID objects by serializing their ID.
+        """
+        if isinstance(item, WorldEntityWithID):
+            result = to_json(item.id)
+        else:
+            result = to_json(item)
         return result
 
     def _track_object_in_from_json(
@@ -152,9 +169,57 @@ class WorldEntityWithID(WorldEntity, SubclassJSONSerializer):
         tracker.add_world_entity_with_id(self)
         return tracker
 
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        """
+        .. warn::
+
+            This will not work if any of the classes' fields have a type UUID or some container of UUID.
+            Whenever this happens, the UUIDs are resolved to WorldEntityWithID objects, which leads to undefined
+            behavior.
+        """
+        tracker = WorldEntityWithIDKwargsTracker.from_kwargs(kwargs)
+
+        half_initialized_instance = cls.__new__(cls)
+        half_initialized_instance.id = from_json(data["id"], **kwargs)
+        if tracker.has_world_entity_with_id(half_initialized_instance.id):
+            return tracker.get_world_entity_with_id(half_initialized_instance.id)
+        tracker.add_world_entity_with_id(half_initialized_instance)
+
+        fields_ = {f.name: f for f in fields(cls)}
+
+        init_args = {"id": half_initialized_instance.id}
+        for k, v in fields_.items():
+            if k == "id":
+                continue
+            if k not in data.keys():
+                continue
+
+            current_data = data[k]
+            if isinstance(current_data, list):
+                current_result = [
+                    cls._item_from_json(data, **kwargs) for data in current_data
+                ]
+            else:
+                current_result = cls._item_from_json(current_data, **kwargs)
+            init_args[k] = current_result
+        half_initialized_instance.__init__(**init_args)
+        return half_initialized_instance
+
+    @classmethod
+    def _item_from_json(cls, data: Dict[str, Any], **kwargs) -> Any:
+        state = WorldEntityWithIDKwargsTracker.from_kwargs(kwargs)
+        obj = from_json(data, **kwargs)
+
+        if isinstance(obj, uuid.UUID):
+            obj = from_json(data, **kwargs)
+            return state.get_world_entity_with_id(obj)
+        else:
+            return obj
+
 
 @dataclass
-class CollisionCheckingConfig(SubclassJSONSerializer):
+class CollisionCheckingConfig:
     buffer_zone_distance: Optional[float] = None
     """
     Distance defining a buffer zone around the entity. The buffer zone represents a soft boundary where
@@ -177,22 +242,6 @@ class CollisionCheckingConfig(SubclassJSONSerializer):
     Maximum number of other bodies this body should avoid simultaneously.
     If more bodies than this are in the buffer zone, only the closest ones are avoided.
     """
-
-    def to_json(self) -> Dict[str, Any]:
-        json_data = super().to_json()
-        for field_ in fields(self):
-            value = getattr(self, field_.name)
-            json_data[field_.name] = to_json(value)
-        return json_data
-
-    @classmethod
-    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        cls_kwargs = {}
-        for field_name, json_field_data in data.items():
-            if field_name == JSON_TYPE_NAME:
-                continue
-            cls_kwargs[field_name] = from_json(json_field_data)
-        return cls(**cls_kwargs)
 
 
 @dataclass(eq=False)
@@ -512,34 +561,6 @@ class Body(KinematicStructureEntity):
         ]
         return points_min_self, points_min_other, dist_min
 
-    def to_json(self) -> Dict[str, Any]:
-        result = super().to_json()
-        result["name"] = self.name.to_json()
-        result["collision"] = self.collision.to_json()
-        result["visual"] = self.visual.to_json()
-        result["collision_config"] = to_json(self.collision_config)
-        return result
-
-    @classmethod
-    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        result = cls(
-            name=PrefixedName.from_json(data["name"], **kwargs),
-            id=from_json(data["id"]),
-        )
-        result._track_object_in_from_json(kwargs)
-
-        collision = ShapeCollection.from_json(data["collision"], **kwargs)
-        visual = ShapeCollection.from_json(data["visual"], **kwargs)
-
-        for shape in itertools.chain(collision, visual):
-            shape.origin.reference_frame = result
-
-        result.collision = collision
-        result.visual = visual
-        result.collision_config = from_json(data["collision_config"])
-
-        return result
-
     def get_semantic_annotations_by_type(
         self, type_: Type[GenericSemanticAnnotation]
     ) -> List[GenericSemanticAnnotation]:
@@ -584,17 +605,15 @@ class Region(KinematicStructureEntity):
 
     def to_json(self) -> Dict[str, Any]:
         result = super().to_json()
-        result["name"] = self.name.to_json()
-        result["area"] = self.area.to_json()
+        result["name"] = to_json(self.name)
+        result["area"] = to_json(self.area)
         return result
 
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        result = cls(
-            name=PrefixedName.from_json(data["name"]), id=from_json(data["id"])
-        )
+        result = cls(name=from_json(data["name"]), id=from_json(data["id"]))
         result._track_object_in_from_json(kwargs)
-        area = ShapeCollection.from_json(data["area"], **kwargs)
+        area = from_json(data["area"], **kwargs)
         for shape in area:
             shape.origin.reference_frame = result
         result.area = area
@@ -609,7 +628,7 @@ GenericWorldEntity = TypeVar("GenericWorldEntity", bound=WorldEntity)
 
 
 @dataclass(eq=False)
-class SemanticAnnotation(WorldEntityWithID, SubclassJSONSerializer):
+class SemanticAnnotation(WorldEntityWithID):
     """
     Represents a semantic annotation on a set of bodies in the world.
 
@@ -656,83 +675,6 @@ class SemanticAnnotation(WorldEntityWithID, SubclassJSONSerializer):
 
     def __eq__(self, other):
         return hash(self) == hash(other)
-
-    def to_json(self) -> Dict[str, Any]:
-        """
-        .. warn::
-
-            This will not work if any of the classes' fields have a type UUID or some container of UUID.
-            Whenever this happens, the UUIDs are resolved to WorldEntityWithID objects, which leads to undefined
-            behavior.
-        """
-        result = {
-            **super().to_json(),
-        }
-
-        for semantic_annotation_field in fields(self):
-            if semantic_annotation_field.name.startswith(
-                "_"
-            ) or semantic_annotation_field.name.startswith("__"):
-                continue
-            value = getattr(self, semantic_annotation_field.name)
-
-            if isinstance(value, (list, set)):
-                current_result = [self._item_to_json(item) for item in value]
-            else:
-                current_result = self._item_to_json(value)
-            result[semantic_annotation_field.name] = current_result
-        return result
-
-    @classmethod
-    def _item_to_json(cls, item: Any):
-        if isinstance(item, WorldEntityWithID):
-            result = to_json(item.id)
-        else:
-            result = to_json(item)
-        return result
-
-    @classmethod
-    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        """
-        .. warn::
-
-            This will not work if any of the classes' fields have a type UUID or some container of UUID.
-            Whenever this happens, the UUIDs are resolved to WorldEntityWithID objects, which leads to undefined
-            behavior.
-        """
-        semantic_annotation_fields = {f.name: f for f in fields(cls)}
-
-        init_args = {}
-
-        for k, v in semantic_annotation_fields.items():
-            if k not in data.keys():
-                continue
-
-            current_data = data[k]
-
-            if k == "id":
-                current_result = from_json(current_data, **kwargs)
-            elif isinstance(current_data, list):
-                current_result = [
-                    cls._item_from_json(data, **kwargs) for data in current_data
-                ]
-            else:
-                current_result = cls._item_from_json(current_data, **kwargs)
-            init_args[k] = current_result
-        result = cls(**init_args)
-        result._track_object_in_from_json(kwargs)
-        return result
-
-    @classmethod
-    def _item_from_json(cls, data: Dict[str, Any], **kwargs) -> Any:
-        state = WorldEntityWithIDKwargsTracker.from_kwargs(kwargs)
-        obj = from_json(data, **kwargs)
-
-        if isinstance(obj, uuid.UUID):
-            obj = from_json(data, **kwargs)
-            return state.get_world_entity_with_id(obj)
-        else:
-            return obj
 
     def _kinematic_structure_entities(
         self, visited: Set[int], aggregation_type: Type[GenericKinematicStructureEntity]
@@ -993,11 +935,11 @@ class Connection(WorldEntity, SubclassJSONSerializer):
 
     def to_json(self) -> Dict[str, Any]:
         result = super().to_json()
-        result["name"] = self.name.to_json()
+        result["name"] = to_json(self.name)
         result["parent_id"] = to_json(self.parent.id)
         result["child_id"] = to_json(self.child.id)
-        result["parent_T_connection_expression"] = (
-            self.parent_T_connection_expression.to_json()
+        result["parent_T_connection_expression"] = to_json(
+            self.parent_T_connection_expression
         )
         return result
 
@@ -1007,10 +949,10 @@ class Connection(WorldEntity, SubclassJSONSerializer):
         parent = tracker.get_world_entity_with_id(id=from_json(data["parent_id"]))
         child = tracker.get_world_entity_with_id(id=from_json(data["child_id"]))
         return cls(
-            name=PrefixedName.from_json(data["name"]),
+            name=from_json(data["name"]),
             parent=parent,
             child=child,
-            parent_T_connection_expression=HomogeneousTransformationMatrix.from_json(
+            parent_T_connection_expression=from_json(
                 data["parent_T_connection_expression"], **kwargs
             ),
         )
@@ -1209,33 +1151,12 @@ def _attr_values(
 
 
 @dataclass(eq=False)
-class Actuator(WorldEntityWithID, SubclassJSONSerializer):
+class Actuator(WorldEntityWithID):
     """
     Represents an actuator in the world model.
     """
 
     _dofs: List[DegreeOfFreedom] = field(default_factory=list, init=False, repr=False)
-
-    def to_json(self) -> Dict[str, Any]:
-        result = super().to_json()
-        result["name"] = self.name.to_json()
-        result["dofs"] = to_json(self._dofs)
-        return result
-
-    @classmethod
-    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Actuator:
-        actuator = cls(
-            name=from_json(data["name"]),
-            id=from_json(data["id"]),
-        )
-        dofs_data = data.get("dofs", [])
-        assert (
-            len(dofs_data) > 0
-        ), "An actuator must have at least one degree of freedom."
-        for dof_data in dofs_data:
-            dof = from_json(dof_data)
-            actuator.add_dof(dof)
-        return actuator
 
     @property
     def dofs(self) -> List[DegreeOfFreedom]:
