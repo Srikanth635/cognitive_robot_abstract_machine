@@ -6,9 +6,9 @@ This documentation serves as a central hub for all sub-packages within the CRAM 
 
 ## Sub-packages
 
-- [pycram](pycram/index.html): Cognitive Robot Abstract Machine in Python.
-- [krrood](krrood/index.html): Knowledge Representation and Reasoning for Object-Oriented Domains.
-- [semantic_digital_twin](semantic_digital_twin/index.html): Semantic Digital Twin for Robotics.
-- [probabilistic_model](probabilistic_model/index.html): Probabilistic Modeling for Robotics.
-- [random_events](random_events/index.html): Random Events and Processes.
-- [giskardpy](https://github.com/Semion-S/giskardpy): Motion planning and control for robots.
+- [pycram](https://davidprueser.github.io/cognitive_robot_abstract_machine/pycram): Cognitive Robot Abstract Machine in Python.
+- [krrood](https://davidprueser.github.io/cognitive_robot_abstract_machine/krrood): Knowledge Representation and Reasoning for Object-Oriented Domains.
+- [semantic_digital_twin](https://davidprueser.github.io/cognitive_robot_abstract_machine/semantic_digital_twin): Semantic Digital Twin for Robotics.
+- [probabilistic_model](https://davidprueser.github.io/cognitive_robot_abstract_machine/probabilistic_model): Probabilistic Modeling for Robotics.
+- [random_events](https://davidprueser.github.io/cognitive_robot_abstract_machine/random_events): Random Events and Processes.
+- [giskardpy](https://github.com/SemRoCo/giskardpy): Motion planning and control for robots.
