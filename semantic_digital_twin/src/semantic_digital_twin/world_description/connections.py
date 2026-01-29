@@ -885,7 +885,7 @@ class OmniDrive(ActiveConnection, HasUpdateState):
 @dataclass(eq=False)
 class DiffDrive(ActiveConnection, HasUpdateState):
     """
-    A connection describing an omnidirectional drive.
+    A connection describing a differential drive.
     It can rotate about its z-axis and drive on the x-y plane simultaneously.
     - x/y: Passive dofs describing the measured odometry with respect to parent frame.
         We assume that the robot can't fly, and we can't measure its z-axis position, so z=0.
@@ -1075,7 +1075,7 @@ class DiffDrive(ActiveConnection, HasUpdateState):
 
     @property
     def active_dofs(self) -> List[DegreeOfFreedom]:
-        return [self.x_velocity, self.y_velocity, self.yaw]
+        return [self.x_velocity, self.yaw]
 
     @property
     def passive_dofs(self) -> List[DegreeOfFreedom]:
