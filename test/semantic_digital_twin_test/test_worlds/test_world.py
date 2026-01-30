@@ -1145,7 +1145,7 @@ def test_reattach_child_to_new_parent(world_setup):
     assert isinstance(l2.parent_connection, PrismaticConnection)
 
     with world.modify_world():
-        world.move_branch_with_fixed_connection(new_parent=bf, child=l2)
+        world.move_branch_with_fixed_connection(new_parent=bf, branch_root=l2)
 
     # New state: l2 is child of bf via FixedConnection
     assert l2.parent_connection.parent == bf
