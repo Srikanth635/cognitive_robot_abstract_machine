@@ -13,11 +13,14 @@ from typing_extensions import (
     Optional,
     Self,
     DefaultDict,
-    List
+    List,
 )
 
 from ..datastructures.definitions import JointStateType
-from krrood.adapters.json_serializer import SubclassJSONSerializer
+from krrood.adapters.json_serializer import (
+    SubclassJSONSerializer,
+    DataclassJSONSerializer,
+)
 from ..collision_checking.collision_detector import CollisionCheck
 from ..datastructures.prefixed_name import PrefixedName
 from ..spatial_types.derivatives import DerivativeMap
@@ -98,6 +101,11 @@ class KinematicChain(SemanticRobotAnnotation, ABC):
     A collection of sensors in the kinematic chain, such as cameras or other sensors.
     """
 
+    joint_states: List[JointState] = field(default_factory=list)
+    """
+    A list of pre-defined joint positions that this kinematic chain can perform, for example "park" for an arm.
+    """
+
     @property
     def bodies(self) -> Iterable[Body]:
         """
@@ -158,6 +166,10 @@ class KinematicChain(SemanticRobotAnnotation, ABC):
         for sensor in self.sensors:
             robot.add_sensor(sensor)
 
+    def add_joint_state(self, joint_state: JointState):
+        self.joint_states.append(joint_state)
+        joint_state.assign_to_robot(self._robot)
+
     def __hash__(self):
         """
         Returns the hash of the kinematic chain, which is based on the root and tip bodies.
@@ -199,6 +211,11 @@ class Manipulator(SemanticRobotAnnotation, ABC):
     The axis of the manipulator's tool frame that is facing forward.
     """
 
+    joint_states: List[JointState] = field(default_factory=list)
+    """
+    Fixed joint states that are defined for this manipulator, like open and close. 
+    """
+
     def assign_to_robot(self, robot: AbstractRobot):
         """
         Assigns the manipulator to the given robot. This method ensures that the manipulator is only assigned
@@ -211,6 +228,10 @@ class Manipulator(SemanticRobotAnnotation, ABC):
         if self._robot is not None:
             return
         self._robot = robot
+
+    def add_joint_state(self, joint_state: JointState):
+        self.joint_states.append(joint_state)
+        joint_state.assign_to_robot(self._robot)
 
     def __hash__(self):
         """
@@ -366,8 +387,9 @@ class Torso(KinematicChain):
         """
         return hash((self.name, self.root, self.tip))
 
+
 @dataclass
-class JointState(ABC):
+class JointState(DataclassJSONSerializer):
     """
     Represents a named joint state of a robot. For example, the park position of the arms.
     """
@@ -392,11 +414,6 @@ class JointState(ABC):
     Type of the joint state (e.g., "Park", "Open" (for gripper))
     """
 
-    kinematic_chains: List[KinematicChain]
-    """
-    Kinematic chains that are involved in the state of the joints
-    """
-
     _world: World = field(default=None)
     """
     The backreference to the world this joint state belongs to.
@@ -413,8 +430,7 @@ class JointState(ABC):
         :param world: The world in which the robot is located.
         """
         for joint, joint_position in zip(self.joints, self.joint_positions):
-            dof = list(joint.dofs)[0]
-            world.state[dof.name].position = joint_position
+            joint.position = joint_position
         world.notify_state_change()
 
     def assign_to_robot(self, robot: AbstractRobot):
@@ -436,6 +452,7 @@ class JointState(ABC):
         This allows for proper comparison and storage in sets or dictionaries.
         """
         return hash(self.name)
+
 
 @dataclass
 class Base(KinematicChain):
@@ -505,23 +522,10 @@ class AbstractRobot(Agent):
     A collection of all kinematic chains containing a sensor, such as a camera.
     """
 
-    joint_states: Set[JointState] = field(default_factory=set)
-    """
-    A collection of all joint states of the robot such as ("Park" of arms).
-    """
-
     default_collision_config: CollisionCheckingConfig = field(
         kw_only=True,
         default_factory=lambda: CollisionCheckingConfig(buffer_zone_distance=0.05),
     )
-
-
-    @abstractmethod
-    def setup_collision_config(self):
-        """
-        Loads the SRDF file for the robot, if it exists. This method is expected to be implemented in subclasses.
-        """
-        ...
 
     @abstractmethod
     def setup_collision_config(self):
@@ -662,13 +666,3 @@ class AbstractRobot(Agent):
                 )
             )
         return collision_matrx
-
-    def add_joint_states(self, joint_states: List[JointState]):
-        """
-        Adds joint states for a specific robot.
-
-        :param joint_states: A list of joint states to be added.
-        """
-        for joint_state in joint_states:
-            self.joint_states.add(joint_state)
-            joint_state.assign_to_robot(self)
