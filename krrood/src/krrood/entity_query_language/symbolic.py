@@ -380,10 +380,28 @@ class Selectable(SymbolicExpression[T], ABC):
 
 @dataclass
 class DomainMappingCacheItem:
+    """
+    A cache item for domain mapping creation. To prevent recreating same mapping multiple times, mapping instances are
+    stored in a dictionary with a hashable key. This class is used to generate the key for the dictionary that stores
+    the mapping instances.
+    """
+
     type: Type[DomainMapping]
+    """
+    The type of the domain mapping.
+    """
     child: CanBehaveLikeAVariable
+    """
+    The child of the domain mapping (i.e. the original variable on which the domain mapping is applied).
+    """
     args: Tuple[Any, ...] = field(default_factory=tuple)
+    """
+    Positional arguments to pass to the domain mapping constructor.
+    """
     kwargs: Dict[str, Any] = field(default_factory=dict)
+    """
+    Keyword arguments to pass to the domain mapping constructor.
+    """
 
     def __post_init__(self):
         self.args = (self.child,) + self.args
