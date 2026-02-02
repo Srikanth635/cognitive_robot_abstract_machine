@@ -445,15 +445,12 @@ class CanBehaveLikeAVariable(Selectable[T], ABC):
 
         :param current_value: The current value of the variable.
         """
-        if isinstance(self._parent_, LogicalOperator) or self is self._conditions_root_:
-            is_true = (
-                len(current_value) > 0
-                if is_iterable(current_value)
-                else bool(current_value)
-            )
-            self._is_false_ = not is_true
-        else:
-            self._is_false_ = False
+        is_true = (
+            len(current_value) > 0
+            if is_iterable(current_value)
+            else bool(current_value)
+        )
+        self._is_false_ = not is_true
 
     def _get_domain_mapping_(
         self, type_: Type[DomainMapping], *args, **kwargs

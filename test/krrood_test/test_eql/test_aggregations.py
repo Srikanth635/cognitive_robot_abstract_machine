@@ -1,4 +1,5 @@
 import krrood.entity_query_language.entity_result_processors as eql
+from ..dataset.department_and_employee import Department, Employee
 from krrood.entity_query_language.entity import (
     variable,
     variable_from,
@@ -127,3 +128,30 @@ def test_max_min_with_empty_list():
 
     min_query = eql.min(entity(value))
     assert list(min_query.evaluate())[0] is None
+
+
+def test_average_with_condition():
+    d1 = Department("HR")
+    d2 = Department("IT")
+    d3 = Department("Finance")
+
+    e1 = Employee("John", d1, 10000)
+    e2 = Employee("Anna", d1, 20000)
+
+    e3 = Employee("Anna", d2, 20000)
+    e4 = Employee("Mary", d2, 30000)
+
+    e5 = Employee("Peter", d3, 30000)
+    e6 = Employee("Paul", d3, 40000)
+
+    dep = variable(Department, domain=None)
+    emp = variable(Employee, domain=None)
+
+    department = emp.department
+    avg_salary = eql.average(
+        entity(emp.salary).where(department.name.startswith("F"))
+    ).per(department)
+    query = eql.an(entity(department).where(avg_salary > 20000))
+    results = list(query.evaluate())
+    assert len(results) == 1
+    assert results[0] == d3
