@@ -14,7 +14,7 @@ from .symbolic import (
     Union as EQLUnion,
     Literal,
     OperationResult,
-    LogicalBinaryOperator,
+    LogicalBinaryOperator, Bindings,
 )
 
 
@@ -73,7 +73,7 @@ class ExceptIf(ConclusionSelector):
 
     def _evaluate__(
         self,
-        sources: Optional[Dict[int, Any]] = None,
+        sources: Optional[Bindings] = None,
         parent: Optional[SymbolicExpression] = None,
     ) -> Iterable[OperationResult]:
         """
@@ -126,7 +126,7 @@ class Alternative(ElseIf, ConclusionSelector):
 
     def _evaluate__(
         self,
-        sources: Optional[Dict[int, Any]] = None,
+        sources: Optional[Bindings] = None,
         parent: Optional[SymbolicExpression] = None,
     ) -> Iterable[OperationResult]:
         outputs = super()._evaluate__(sources, parent=parent)
@@ -148,7 +148,7 @@ class Next(EQLUnion, ConclusionSelector):
 
     def _evaluate__(
         self,
-        sources: Optional[Dict[int, Any]] = None,
+        sources: Optional[Bindings] = None,
         parent: Optional[SymbolicExpression] = None,
     ) -> Iterable[OperationResult]:
         outputs = super()._evaluate__(sources, parent=parent)
