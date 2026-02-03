@@ -10,13 +10,13 @@ from ..dataset.department_and_employee import Department, Employee
 from ..dataset.semantic_world_like_classes import Cabinet
 
 
-def test_max_per(handles_and_containers_world):
+def test_max_grouped_by(handles_and_containers_world):
     world = handles_and_containers_world
     cabinet = variable(Cabinet, domain=world.views)
     drawer = variable_from(cabinet.drawers)
 
     # We want to find the drawer with the "largest" handle name (alphabetically) per cabinet.
-    max_drawer = eql.max(drawer, key=lambda d: d.handle.name).per(cabinet)
+    max_drawer = eql.an(entity(eql.max(drawer, key=lambda d: d.handle.name)).grouped_by(cabinet))
     results = list(max_drawer.evaluate())
 
     # expected: for each cabinet, one result which is the drawer with max handle name
@@ -173,11 +173,12 @@ def test_multiple_aggregations_per_group(departments_and_employees):
     emp = variable(Employee, domain=None)
     # emp_of_F = eql.an(entity(emp).where(emp.department.name.startswith("F")))
     department = emp.department
-    avg_salary = eql.average(emp.salary).per(department)
-    avg_starting_salary = eql.average(emp.starting_salary).per(department)
-    print(list(avg_salary.evaluate()))
-    print(list(avg_starting_salary.evaluate()))
-    query = eql.an(entity(department).where(avg_salary == avg_starting_salary))
+    avg_salary = eql.average(emp.salary)
+    avg_starting_salary = eql.average(emp.starting_salary)
+    salaries = eql.a(set_of(avg_salary, avg_starting_salary, department).grouped_by(department))
+    # print(list(avg_salary.evaluate()))
+    # print(list(avg_starting_salary.evaluate()))
+    query = eql.an(entity(salaries[department]).where(salaries[avg_salary] == salaries[avg_starting_salary]))
     results = list(query.evaluate())
     assert len(results) == 1
     assert results[0] == next(d for d in departments if d.name.startswith("I"))

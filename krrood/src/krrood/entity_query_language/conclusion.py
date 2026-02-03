@@ -13,7 +13,7 @@ from .symbolic import (
     Variable,
     OperationResult,
     ResultQuantifier,
-    Selectable,
+    Selectable, Bindings,
 )
 from .utils import T
 
@@ -73,7 +73,7 @@ class Set(Conclusion[T]):
 
     def _evaluate__(
         self,
-        sources: Optional[Dict[int, Any]] = None,
+        sources: Optional[Bindings] = None,
         parent: Optional[SymbolicExpression] = None,
     ) -> Iterable[OperationResult]:
         self._eval_parent_ = parent
@@ -95,7 +95,7 @@ class Add(Conclusion[T]):
 
     def _evaluate__(
         self,
-        sources: Optional[Dict[int, Any]] = None,
+        sources: Optional[Bindings] = None,
         parent: Optional[SymbolicExpression] = None,
     ) -> Iterable[OperationResult]:
         self._eval_parent_ = parent
