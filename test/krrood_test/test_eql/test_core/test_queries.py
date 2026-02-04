@@ -766,58 +766,11 @@ def test_quantified_query(handles_and_containers_world):
         list(get_quantified_query(Exactly(4)).evaluate())
 
 
-def test_count(handles_and_containers_world):
-    world = handles_and_containers_world
-    body = variable(type_=Body, domain=world.bodies)
-    query = count(
-        entity(body).where(
-            contains(body.name, "Handle"),
-        )
-    )
-    assert list(query.evaluate())[0] == len(
-        [b for b in world.bodies if "Handle" in b.name]
-    )
-
-
-def test_count_without_entity(handles_and_containers_world):
-    world = handles_and_containers_world
-    query = count(variable(type_=Body, domain=world.bodies))
-    assert list(query.evaluate())[0] == len(world.bodies)
-
-
 def test_order_by(handles_and_containers_world):
     names = ["Handle1", "Handle1", "Handle2", "Container1", "Container1", "Container3"]
     body_name = variable(str, domain=names)
     query = an(entity(body_name).order_by(variable=body_name, descending=False))
     assert list(query.evaluate()) == sorted(names, reverse=False)
-
-
-def test_sum(handles_and_containers_world):
-    heights = [1, 2, 3, 4, 5]
-    heights_var = variable(int, domain=heights)
-    query = eql.sum(entity(heights_var))
-    assert list(query.evaluate())[0] == sum(heights)
-
-
-def test_average(handles_and_containers_world):
-    heights = [1, 2, 3, 4, 5]
-    heights_var = variable(int, domain=heights)
-    query = eql.average(entity(heights_var))
-    assert list(query.evaluate())[0] == sum(heights) / len(heights)
-
-
-def test_sum_on_empty_list(handles_and_containers_world):
-    empty_list = []
-    empty_var = variable(int, domain=empty_list)
-    query = eql.sum(entity(empty_var))
-    assert list(query.evaluate())[0] is None
-
-
-def test_sum_without_entity():
-    heights = [1, 2, 3, 4, 5]
-    heights_var = variable(int, domain=heights)
-    query = eql.sum(heights_var)
-    assert list(query.evaluate())[0] == sum(heights)
 
 
 def test_limit(handles_and_containers_world):

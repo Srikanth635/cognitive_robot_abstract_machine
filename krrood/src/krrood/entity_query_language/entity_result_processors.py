@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing_extensions import Optional, Union, Type, Iterable, Callable
+from typing_extensions import Optional, Union, Type, Iterable, Callable, Any
 
 from .result_quantification_constraint import (
     ResultQuantificationConstraint,
@@ -106,7 +106,7 @@ def sum(
 
 
 def average(
-    variable: Selectable[T], key: Optional[Callable] = None, default: Optional[T] = None
+    variable: Union[Selectable[T], Any], key: Optional[Callable] = None, default: Optional[T] = None
 ) -> Union[T, Average[T]]:
     """
     Computes the sum of values produced by the given variable.

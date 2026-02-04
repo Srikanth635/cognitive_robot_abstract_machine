@@ -749,18 +749,12 @@ class Sum(EntityAggregator[T]):
     def _apply_aggregation_function_(
         self, child_results: Iterable[OperationResult]
     ) -> Iterator[Bindings]:
-        entered = False
-        sum_val = 0
-        for val in map(
-            self._get_child_value_from_result_,
-            (res for res in child_results if res.has_value),
-        ):
-            entered = True
-            sum_val += val
-        if entered:
+        for res in child_results:
+            if not res.has_value:
+                yield {self._binding_id_: self._default_value_}
+                continue
+            sum_val = sum(map(self._get_child_value_from_result_, res.value))
             yield {self._binding_id_: sum_val}
-        else:
-            yield {self._binding_id_: self._default_value_}
 
 
 @dataclass(eq=False, repr=False)
@@ -773,18 +767,12 @@ class Average(EntityAggregator[T]):
     def _apply_aggregation_function_(
         self, child_results: Iterable[OperationResult]
     ) -> Iterator[Bindings]:
-        sum_val = 0
-        count = 0
-        for val in map(
-            self._get_child_value_from_result_,
-            (res for res in child_results if res.has_value),
-        ):
-            sum_val += val
-            count += 1
-        if count:
-            yield {self._binding_id_: sum_val / count}
-        else:
-            yield {self._binding_id_: self._default_value_}
+        for res in child_results:
+            if not res.has_value:
+                yield {self._binding_id_: self._default_value_}
+                continue
+            sum_val = sum(map(self._get_child_value_from_result_, res.value))
+            yield {self._binding_id_: sum_val / len(res.value)}
 
 
 @dataclass(eq=False, repr=False)
@@ -1310,7 +1298,9 @@ class QueryObjectDescriptor(SymbolicExpression[T], ABC):
             var_value = self._distinct_on[i]._evaluate__(copy(res), parent=self)
             res[id_] = next(var_value).value
 
-    def grouped_by(self, *variables: Selectable) -> TypingUnion[Self, T]:
+    def grouped_by(
+        self, *variables: TypingUnion[Selectable, Any]
+    ) -> TypingUnion[Self, T]:
         """
         Note that the results should be grouped by the specified variables.
         """
@@ -1408,7 +1398,7 @@ class QueryObjectDescriptor(SymbolicExpression[T], ABC):
         return groups
 
     @staticmethod
-    def variable_is_inferred(var: CanBehaveLikeAVariable[T]) -> bool:
+    def variable_is_inferred(var: Selectable[T]) -> bool:
         """
         Whether the variable is inferred or not.
 
@@ -1425,14 +1415,16 @@ class QueryObjectDescriptor(SymbolicExpression[T], ABC):
         :return: True if any of the selected variables is inferred and is not bound, otherwise False.
         """
         return any(
-            not self.variable_is_bound_or_its_children_are_bound(var, values)
+            not self.variable_is_bound_or_its_children_are_bound(
+                var, tuple(values.keys())
+            )
             for var in self._selected_variables
             if self.variable_is_inferred(var)
         )
 
     @lru_cache(maxsize=None)
     def variable_is_bound_or_its_children_are_bound(
-        self, var: CanBehaveLikeAVariable[T], result: Bindings
+        self, var: Selectable[T], result: Tuple[int, ...]
     ) -> bool:
         """
         Whether the variable is directly bound or all its children are bound.
