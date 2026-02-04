@@ -281,7 +281,7 @@ class PointSpatialRelation(Symbol, ABC):
 
     point: Point3
     """
-    The point for which the check should be done. 
+    The point for which the check should be done.
     """
 
     other: Point3
