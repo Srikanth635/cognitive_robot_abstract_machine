@@ -135,8 +135,8 @@ def test_multiple_per_variables(handles_and_containers_world):
     drawer = variable_from(cabinet.drawers)
 
     # Group by both cabinet and drawer (silly, but tests multiple variables)
-    count = eql.count(drawer).per(cabinet, drawer)
-    results = list(count.evaluate())
+    query = a(set_of(cabinet, count := eql.count(drawer)).grouped_by(cabinet, drawer))
+    results = list(query.evaluate())
 
     # Each result should have count=1 because each (cabinet, drawer) pair is unique here
     for res in results:
