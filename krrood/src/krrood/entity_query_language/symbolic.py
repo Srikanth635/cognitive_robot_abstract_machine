@@ -382,6 +382,7 @@ ResultMapping = Callable[[Iterable[Bindings]], Iterator[Bindings]]
 A function that maps the results of a query object descriptor to a new set of results.
 """
 
+
 @dataclass(eq=False, repr=False)
 class ConstraintSpecifier(SymbolicExpression[T], ABC):
 
@@ -427,8 +428,8 @@ class Where(ConstraintSpecifier[T]):
     """
     A symbolic expression that represents the `where()` statement of `QueryObjectDescriptor`.
     """
-    ...
 
+    ...
 
 
 @dataclass(eq=False, repr=False)
@@ -537,14 +538,18 @@ class CanBehaveLikeAVariable(Selectable[T], ABC):
     A storage of created domain mappings to prevent recreating same mapping multiple times.
     """
 
-    def _update_truth_value_(self, current_value: Any, force_update: bool = False) -> None:
+    def _update_truth_value_(
+        self, current_value: Any, force_update: bool = False
+    ) -> None:
         """
         Updates the truth value of the variable based on the current value.
 
         :param current_value: The current value of the variable.
         :param force_update: Whether to force update the truth value.
         """
-        if force_update or isinstance(self._parent_, (LogicalOperator, ConstraintSpecifier)):
+        if force_update or isinstance(
+            self._parent_, (LogicalOperator, ConstraintSpecifier)
+        ):
             is_true = (
                 len(current_value) > 0
                 if is_iterable(current_value)
@@ -1209,7 +1214,9 @@ class QueryObjectDescriptor(SymbolicExpression[T], ABC):
     """
     The condition list of the query object descriptor.
     """
-    _having_conditions_expression_: Optional[SymbolicExpression] = field(default=None, init=False)
+    _having_conditions_expression_: Optional[SymbolicExpression] = field(
+        default=None, init=False
+    )
     """
     The having expression of the query object descriptor.
     """
@@ -1502,7 +1509,9 @@ class QueryObjectDescriptor(SymbolicExpression[T], ABC):
         if self._group_:
             group_by = GroupBy(self)
             if self._having_conditions_expression_:
-                having = Having(group_by=group_by, _child_=self._having_conditions_expression_)
+                having = Having(
+                    group_by=group_by, _child_=self._having_conditions_expression_
+                )
         if having:
             self._update_child_(having)
         elif group_by:
@@ -1923,7 +1932,7 @@ class Variable(CanBehaveLikeAVariable[T]):
         self, sources: Optional[Bindings] = None
     ):
         yield from generate_combinations(
-            {k: var._evaluate__(sources) for k, var in self._child_vars_.items()}
+            {k: var._evaluate__(sources, self) for k, var in self._child_vars_.items()}
         )
 
     def _process_output_and_update_values_(
@@ -1941,7 +1950,10 @@ class Variable(CanBehaveLikeAVariable[T]):
         values = {self._id_: instance}
         for d in kwargs.values():
             values.update(d.bindings)
-        self._update_truth_value_(instance, force_update=self._predicate_type_ is PredicateType.SubClassOfPredicate)
+        self._update_truth_value_(
+            instance,
+            force_update=self._predicate_type_ is PredicateType.SubClassOfPredicate,
+        )
         return OperationResult(values, self._is_false_, self)
 
     def _build_operation_result_and_update_truth_value_(
