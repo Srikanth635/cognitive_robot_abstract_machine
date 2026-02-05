@@ -248,10 +248,6 @@ class CostmapLocation(LocationDesignatorDescription):
             test_world = deepcopy(self.world)
             test_world.name = "Test World"
 
-            node = rclpy.create_node("test_node")
-            VizMarkerPublisher(test_world, node)
-            TFPublisher(test_world, node)
-
             params_box = Box(params)
             # Target is either a pose or an object since the object is later needed for the visibility validator
             target = (
@@ -345,6 +341,7 @@ class CostmapLocation(LocationDesignatorDescription):
                         ee.manipulator.tool_frame,
                         test_robot,
                         test_world,
+                        use_fullbody_ik=test_robot.full_body_controlled,
                     )
                     if is_reachable:
                         pose = GraspPose(
@@ -580,6 +577,7 @@ class AccessingLocation(LocationDesignatorDescription):
                         arm_chain.manipulator.tool_frame,
                         test_robot,
                         test_world,
+                        use_fullbody_ik=test_robot.full_body_controlled,
                     )
                     if is_reachable:
                         yield pose_candidate
@@ -1506,9 +1504,9 @@ class ProbabilisticCostmapLocation(LocationDesignatorDescription):
                     if params_box.grasp_descriptions
                     else GraspDescription.calculate_grasp_descriptions(
                         (
-                            test_robot.left_arm.manipulator
-                            if params_box.reachable_arm == Arms.LEFT
-                            else test_robot.right_arm.manipulator
+                            ViewManager.get_end_effector_view(
+                                params_box.reachable_arm, test_robot
+                            )
                         ),
                         target_pose,
                     )
@@ -1523,6 +1521,7 @@ class ProbabilisticCostmapLocation(LocationDesignatorDescription):
                         ee.manipulator.tool_frame,
                         test_robot,
                         self.test_world,
+                        use_fullbody_ik=test_robot.full_body_controlled,
                     )
                     logger.debug(
                         f"Pose Candidate: {pose_candidate }is_reachable: {is_reachable}"

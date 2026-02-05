@@ -219,6 +219,7 @@ class Stretch(AbstractRobot, HasArms, HasNeck):
             )
 
             stretch.add_base(base)
+            stretch.full_body_controlled = True
 
             world.add_semantic_annotation(stretch)
 
