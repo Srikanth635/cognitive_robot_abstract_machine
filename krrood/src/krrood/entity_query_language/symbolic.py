@@ -402,7 +402,8 @@ class ConstraintSpecifier(SymbolicExpression[T], ABC):
         sources: Optional[Bindings] = None,
         parent: Optional[SymbolicExpression] = None,
     ) -> Iterator[OperationResult]:
-        return self._child_._evaluate__(sources, parent)
+        self._eval_parent_ = parent
+        yield from self._child_._evaluate__(sources, self)
 
     @property
     def _is_false_(self) -> bool:
@@ -536,21 +537,20 @@ class CanBehaveLikeAVariable(Selectable[T], ABC):
     A storage of created domain mappings to prevent recreating same mapping multiple times.
     """
 
-    def _update_truth_value_(self, current_value: Any):
+    def _update_truth_value_(self, current_value: Any, force_update: bool = False) -> None:
         """
         Updates the truth value of the variable based on the current value.
 
         :param current_value: The current value of the variable.
+        :param force_update: Whether to force update the truth value.
         """
-        if isinstance(self._parent_, (LogicalOperator, QueryObjectDescriptor, GroupBy)):
+        if force_update or isinstance(self._parent_, (LogicalOperator, ConstraintSpecifier)):
             is_true = (
                 len(current_value) > 0
                 if is_iterable(current_value)
                 else bool(current_value)
             )
             self._is_false_ = not is_true
-        else:
-            self._is_false_ = False
 
     def _get_domain_mapping_(
         self, type_: Type[DomainMapping], *args, **kwargs
@@ -1053,18 +1053,22 @@ class OrderByParams:
 
 @dataclass
 class GroupBy(SymbolicExpression[T]):
-    _query_descriptor_: QueryObjectDescriptor[T]
+    query_descriptor: QueryObjectDescriptor[T]
     """
     The query object descriptor that is being grouped.
     """
+    where: Optional[Where] = None
+    """
+    The where statement to filter the results before grouping.
+    """
 
     def __post_init__(self):
-        self._child_ = self._query_descriptor_._where_conditions_expression_
+        self._child_ = self.query_descriptor._where_expression_
         super().__post_init__()
 
     @cached_property
     def _variables_to_group_by_(self) -> List[Selectable]:
-        return self._query_descriptor_._variables_to_group_by_
+        return self.query_descriptor._variables_to_group_by_
 
     @property
     def _name_(self) -> str:
@@ -1092,9 +1096,9 @@ class GroupBy(SymbolicExpression[T]):
         variables_to_group_by_ids = [
             var._binding_id_ for var in self._variables_to_group_by_
         ]
-        constrained_values = self._get_child_true_results__(sources)
-        constrained_values = self._evaluate_grouped_by_variables_(constrained_values)
-        constrained_values = self._evaluate_children_of_aggregators_(constrained_values)
+        constrained_values = self.get_child_true_results(sources)
+        constrained_values = self.evaluate_grouped_by_variables(constrained_values)
+        constrained_values = self.evaluate_children_of_aggregators(constrained_values)
         for res in constrained_values:
             group_key = tuple(
                 next(var._evaluate__(res, parent=self)).value
@@ -1109,7 +1113,7 @@ class GroupBy(SymbolicExpression[T]):
                     groups[group_key][id_].append(val)
         yield from groups.values()
 
-    def _get_child_true_results__(self, sources: Bindings) -> Iterator[Bindings]:
+    def get_child_true_results(self, sources: Bindings) -> Iterator[Bindings]:
         """
         :param sources: The current bindings.
         :return: An iterator of child results that are true.
@@ -1123,7 +1127,7 @@ class GroupBy(SymbolicExpression[T]):
         else:
             yield sources
 
-    def _evaluate_children_of_aggregators_(
+    def evaluate_children_of_aggregators(
         self, sources: Iterator[Bindings]
     ) -> Iterator[Bindings]:
         """
@@ -1136,14 +1140,14 @@ class GroupBy(SymbolicExpression[T]):
             yield from QueryObjectDescriptor._chain_evaluate_variables(
                 [
                     var._child_
-                    for var in self._query_descriptor_._selected_variables
+                    for var in self.query_descriptor._selected_variables
                     if isinstance(var, Aggregator)
                 ],
                 values,
                 parent=self,
             )
 
-    def _evaluate_grouped_by_variables_(
+    def evaluate_grouped_by_variables(
         self, sources: Iterator[Bindings]
     ) -> Iterator[Bindings]:
         """
@@ -1209,7 +1213,7 @@ class QueryObjectDescriptor(SymbolicExpression[T], ABC):
     """
     The having expression of the query object descriptor.
     """
-    _where_conditions_expression_: Optional[SymbolicExpression] = field(default=None, init=False)
+    _where_expression_: Optional[Where] = field(default=None, init=False)
     """
     The where expression of the query object descriptor.
     """
@@ -1295,7 +1299,7 @@ class QueryObjectDescriptor(SymbolicExpression[T], ABC):
             else self._where_condition_list_[0]
         )
 
-        self._where_conditions_expression_ = expression
+        self._where_expression_ = Where(expression)
         return self
 
     def having(self, *conditions: ConditionType) -> Self:
@@ -1503,9 +1507,8 @@ class QueryObjectDescriptor(SymbolicExpression[T], ABC):
             self._update_child_(having)
         elif group_by:
             self._update_child_(group_by)
-        elif self._where_conditions_expression_:
-            where = Where(self._where_conditions_expression_)
-            self._update_child_(where)
+        elif self._where_expression_:
+            self._update_child_(self._where_expression_)
 
     def _evaluate__(
         self,
@@ -1859,7 +1862,7 @@ class Variable(CanBehaveLikeAVariable[T]):
         self._eval_parent_ = parent
         sources = sources or {}
         if self._id_ in sources:
-            yield self._build_operation_result_and_update_truth_value_(sources)
+            yield OperationResult(sources, self._is_false_, self)
         elif self._domain_:
             yield from self._iterator_over_domain_values_(sources)
         elif self._is_inferred_ or self._predicate_type_:
@@ -1938,7 +1941,8 @@ class Variable(CanBehaveLikeAVariable[T]):
         values = {self._id_: instance}
         for d in kwargs.values():
             values.update(d.bindings)
-        return self._build_operation_result_and_update_truth_value_(values)
+        self._update_truth_value_(instance, force_update=self._predicate_type_ is PredicateType.SubClassOfPredicate)
+        return OperationResult(values, self._is_false_, self)
 
     def _build_operation_result_and_update_truth_value_(
         self, bindings: Bindings
@@ -2333,6 +2337,10 @@ class Having(ConstraintSpecifier[T]):
     """
 
     group_by: GroupBy
+
+    def __post_init__(self):
+        super().__post_init__()
+        self._update_children_(self.group_by)
 
     def _evaluate__(
         self,
