@@ -248,6 +248,10 @@ class CostmapLocation(LocationDesignatorDescription):
             test_world = deepcopy(self.world)
             test_world.name = "Test World"
 
+            node = rclpy.create_node("Location")
+            VizMarkerPublisher(test_world, node)
+            TFPublisher(test_world, node)
+
             params_box = Box(params)
             # Target is either a pose or an object since the object is later needed for the visibility validator
             target = (
@@ -1210,8 +1214,8 @@ class ProbabilisticCostmapLocation(LocationDesignatorDescription):
         """
         return next(iter(self))
 
-    @staticmethod
     def _calculate_room_event(
+        self,
         world: World,
         free_space_graph: GraphOfConvexSets,
         target_position: PyCramVector3,
@@ -1240,7 +1244,7 @@ class ProbabilisticCostmapLocation(LocationDesignatorDescription):
             * len(rays_end)
         )
 
-        robot = world.get_semantic_annotations_by_type(AbstractRobot)[0]
+        robot = self.robot_view
         robot_pose = robot.root.global_pose
         robot.root.parent_connection.origin = (
             HomogeneousTransformationMatrix.from_xyz_quaternion(100, 100, 0)
@@ -1279,7 +1283,7 @@ class ProbabilisticCostmapLocation(LocationDesignatorDescription):
         return room_event
 
     def _create_free_space_conditions(
-        self, world: World, target_position: PyCramVector3, search_distance: float = 1.5
+        self, world: World, target_position: PyCramVector3, search_distance: float = 2
     ) -> Tuple[Event, Event, Event]:
         """
         Creates the conditions for the free space around the target position.
@@ -1328,10 +1332,14 @@ class ProbabilisticCostmapLocation(LocationDesignatorDescription):
             )
         )
 
-        all_paths = rx.dijkstra_shortest_paths(
-            free_space.graph, free_space.box_to_index_map[target_node]
+        free_space_graph = free_space.create_subgraph(
+            [
+                i
+                for i in rx.node_connected_component(
+                    free_space.graph, free_space.box_to_index_map[target_node]
+                )
+            ]
         )
-        free_space_graph = free_space.create_subgraph([path for path in all_paths])
 
         room_condition = self._calculate_room_event(
             world, free_space_graph, target_position
