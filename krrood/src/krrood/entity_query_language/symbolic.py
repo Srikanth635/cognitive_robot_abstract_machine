@@ -467,9 +467,11 @@ class CanBehaveLikeAVariable(Selectable[T], ABC):
     """
     The path of the variable in the symbol graph as a sequence of relation instances.
     """
-    _attributes_: Dict[str, Attribute[T]] = field(init=False, default_factory=dict)
+    _known_mappings_: Dict[DomainMappingCacheItem, DomainMapping] = field(
+        init=False, default_factory=dict
+    )
     """
-    A storage of created symbolic attributes to prevent recreating same attribute multiple times.
+    A storage of created domain mappings to prevent recreating same mapping multiple times.
     """
 
     def _update_truth_value_(self, current_value: Any) -> None:
@@ -524,17 +526,13 @@ class CanBehaveLikeAVariable(Selectable[T], ABC):
             raise AttributeError(
                 f"{self.__class__.__name__} object has no attribute {name}"
             )
-        if name in self._attributes_:
-            return self._attributes_[name]
-        attr = Attribute(self, name, self._type__)
-        self._attributes_[name] = attr
-        return attr
+        return self._get_domain_mapping_(Attribute, name, self._type__)
 
     def __getitem__(self, key) -> CanBehaveLikeAVariable[T]:
-        return Index(self, key)
+        return self._get_domain_mapping_(Index, key)
 
     def __call__(self, *args, **kwargs) -> CanBehaveLikeAVariable[T]:
-        return Call(self, args, kwargs)
+        return self._get_domain_mapping_(Call, args, kwargs)
 
     def __eq__(self, other) -> Comparator:
         return Comparator(self, other, operator.eq)
@@ -566,6 +564,9 @@ class ResultProcessor(CanBehaveLikeAVariable[T], ABC):
     """
 
     _child_: SymbolicExpression[T]
+    """
+    The child expression of the processor where the results to be processed come from.
+    """
 
     def __post_init__(self):
         super().__post_init__()
@@ -1154,6 +1155,7 @@ class QueryObjectDescriptor(SymbolicExpression[T], ABC):
 
         if all(var._binding_id_ in sources for var in self._selected_variables):
             yield OperationResult(sources, False, self)
+            return
 
         results_generator = self._generate_results__(sources)
 
