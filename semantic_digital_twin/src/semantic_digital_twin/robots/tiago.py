@@ -227,7 +227,7 @@ class Tiago(AbstractRobot, SpecifiesLeftRightArm, HasNeck):
 
             torso_low = JointState.from_mapping(
                 name=PrefixedName("torso_low", prefix=tiago.name.name),
-                mapping=dict(zip(torso_joint, [0.3])),
+                mapping=dict(zip(torso_joint, [0.0])),
                 state_type=TorsoState.LOW,
             )
 
@@ -239,7 +239,7 @@ class Tiago(AbstractRobot, SpecifiesLeftRightArm, HasNeck):
 
             torso_high = JointState.from_mapping(
                 name=PrefixedName("torso_high", prefix=tiago.name.name),
-                mapping=dict(zip(torso_joint, [0.0])),
+                mapping=dict(zip(torso_joint, [0.3])),
                 state_type=TorsoState.HIGH,
             )
 

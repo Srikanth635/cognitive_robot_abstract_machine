@@ -242,6 +242,7 @@ class HSRB(AbstractRobot, HasArms, HasNeck):
             )
 
             hsrb.add_base(base)
+            hsrb.full_body_controlled = True
 
             world.add_semantic_annotation(hsrb)
 
