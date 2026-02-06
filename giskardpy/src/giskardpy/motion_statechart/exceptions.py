@@ -36,13 +36,14 @@ class EmptyMotionStatechartError(MotionStatechartError):
 @dataclass
 class NodeAlreadyBelongsToDifferentNodeError(NodeInitializationError):
     new_node: MotionStatechartNode
+    reason: str = field(init=False)
 
     def __post_init__(self):
         if self.new_node.parent_node is not None:
             parent_name = self.new_node.parent_node.unique_name
         else:
             parent_name = "top level of motion statechart"
-        self.message = (
+        self.reason = (
             f'Node "{self.new_node.unique_name}" already belongs to "{parent_name}".'
         )
 
