@@ -12,7 +12,7 @@ from giskardpy.motion_statechart.tasks.cartesian_tasks import (
     CartesianPositionStraight,
     CartesianPose,
 )
-from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
+from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix, Vector3
 from semantic_digital_twin.world_description.world_entity import Body
 
 
@@ -24,8 +24,11 @@ class DiffDriveBaseGoal(Goal):
     max_linear_velocity: float = 0.1
     max_angular_velocity: float = 0.5
     weight: float = DefaultWeights.WEIGHT_ABOVE_CA
-    pointing_axis = None
+    pointing_axis = Vector3(1, 0, 0)
     always_forward: bool = False
+
+    def __post_init__(self):
+        self.pointing_axis.reference_frame = self.tip_link
 
     def build(self, context: BuildContext) -> NodeArtifacts:
         raise NotImplementedError("not implemented yet")
