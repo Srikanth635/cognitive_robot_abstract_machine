@@ -2,20 +2,27 @@ from __future__ import division
 
 from dataclasses import dataclass, field
 
-import krrood.symbolic_math.symbolic_math as sm
 from semantic_digital_twin.spatial_types import (
     HomogeneousTransformationMatrix,
     Vector3,
     RotationMatrix,
 )
 from semantic_digital_twin.world_description.connections import DiffDrive
-from semantic_digital_twin.world_description.world_entity import Body
-from .templates import Sequence
+from semantic_digital_twin.world_description.world_entity import (
+    Body,
+    KinematicStructureEntity,
+)
+from .templates import Sequence, Parallel
+from ..binding_policy import GoalBindingPolicy
 from ..context import BuildContext
 from ..data_types import DefaultWeights
 from ..exceptions import NodeInitializationError
 from ..graph_node import Goal, MotionStatechartNode
-from ..tasks.cartesian_tasks import CartesianPosition, CartesianOrientation, CartesianPositionStraight, CartesianPose
+from ..tasks.cartesian_tasks import (
+    CartesianOrientation,
+    CartesianPositionStraight,
+    CartesianPose,
+)
 
 
 @dataclass(eq=False, repr=False)
@@ -84,46 +91,37 @@ class DiffDriveBaseGoal(Sequence):
 
 
 @dataclass(eq=False, repr=False)
-class CartesianPoseStraight(Goal):
-    root_link: Body = field(kw_only=True)
-    tip_link: Body = field(kw_only=True)
+class CartesianPoseStraight(Parallel):
+    root_link: KinematicStructureEntity = field(kw_only=True)
+    tip_link: KinematicStructureEntity = field(kw_only=True)
     goal_pose: HomogeneousTransformationMatrix = field(kw_only=True)
-    reference_linear_velocity: float = CartesianPosition.default_reference_velocity
-    reference_angular_velocity: float = CartesianOrientation.default_reference_velocity
     weight: float = DefaultWeights.WEIGHT_ABOVE_CA
-    absolute: bool = False
+    binding_policy: GoalBindingPolicy = field(
+        default=GoalBindingPolicy.Bind_at_build, kw_only=True
+    )
+    """Describes when the goal is computed. See GoalBindingPolicy for more information."""
+    nodes: list[MotionStatechartNode] = field(default_factory=list, init=False)
 
-    def __post_init__(self):
-        """
-        See CartesianPose. In contrast to it, this goal will try to move tip_link in a straight line.
-        """
-        self.add_task(
+    def expand(self, context: BuildContext) -> None:
+        self.nodes = [
             CartesianPositionStraight(
+                name=self.name + "/position",
                 root_link=self.root_link,
                 tip_link=self.tip_link,
-                name=self.name + "/pos",
                 goal_point=self.goal_pose.to_position(),
-                reference_velocity=self.reference_linear_velocity,
                 weight=self.weight,
-                absolute=self.absolute,
-            )
-        )
-        self.add_task(
+                binding_policy=self.binding_policy,
+            ),
             CartesianOrientation(
+                name=self.name + "/orientation",
                 root_link=self.root_link,
                 tip_link=self.tip_link,
-                name=self.name + "/rot",
                 goal_orientation=self.goal_pose.to_rotation_matrix(),
-                reference_velocity=self.reference_angular_velocity,
-                absolute=self.absolute,
                 weight=self.weight,
-                point_of_debug_matrix=self.goal_pose.to_position(),
-            )
-        )
-        obs_expressions = []
-        for task in self.tasks:
-            obs_expressions.append(task.observation_expression)
-        self.observation_expression = sm.logic_all(*obs_expressions)
+                binding_policy=self.binding_policy,
+            ),
+        ]
+        super().expand(context)
 
 
 @dataclass(eq=False, repr=False)

@@ -1692,7 +1692,7 @@ class TestDiffDriveBaseGoal:
         msc.add_node(goal := DiffDriveBaseGoal(goal_pose=goal_pose))
         msc.add_node(EndMotion.when_true(goal))
 
-        kin_sim = Executor(world=cylinder_bot_diff_world)
+        kin_sim = Executor(world=cylinder_bot_diff_world, pacer=SimulationPacer(1.0))
         kin_sim.compile(motion_statechart=msc)
         kin_sim.tick_until_end()
 
