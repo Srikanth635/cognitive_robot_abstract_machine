@@ -121,7 +121,7 @@ class KinematicChain(SemanticRobotAnnotation, ABC):
     The manipulator of the kinematic chain, if it exists. This is usually a gripper or similar device.
     """
 
-    sensors: Set[Sensor] = field(default_factory=set)
+    sensors: List[Sensor] = field(default_factory=list)
     """
     A collection of sensors in the kinematic chain, such as cameras or other sensors.
     """

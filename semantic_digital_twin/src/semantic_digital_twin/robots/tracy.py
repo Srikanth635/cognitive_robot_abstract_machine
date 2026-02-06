@@ -126,7 +126,7 @@ class Tracy(AbstractRobot, SpecifiesLeftRightArm, HasNeck):
             # Probably should be classified as "Neck", as that implies that i can move.
             neck = Neck(
                 name=PrefixedName("neck", prefix=robot.name.name),
-                sensors={camera},
+                sensors=[camera],
                 root=world.get_body_by_name("camera_pole"),
                 tip=world.get_body_by_name("camera_link"),
                 _world=world,

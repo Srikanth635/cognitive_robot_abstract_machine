@@ -133,7 +133,7 @@ class Stretch(AbstractRobot, HasArms, HasNeck):
 
             neck = Neck(
                 name=PrefixedName("neck", prefix=stretch.name.name),
-                sensors={camera_color, camera_depth, camera_infra1, camera_infra2},
+                sensors=[camera_color, camera_depth, camera_infra1, camera_infra2],
                 root=world.get_body_by_name("link_head"),
                 tip=world.get_body_by_name("link_head_tilt"),
                 pitch_body=world.get_body_by_name("link_head_tilt"),
