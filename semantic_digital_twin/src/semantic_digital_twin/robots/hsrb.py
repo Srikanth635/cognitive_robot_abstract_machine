@@ -153,12 +153,12 @@ class HSRB(AbstractRobot, HasArms, HasNeck):
 
             neck = Neck(
                 name=PrefixedName("neck", prefix=hsrb.name.name),
-                sensors={
+                sensors=[
                     head_center_camera,
                     head_r_camera,
                     head_l_camera,
                     head_rgbd_camera,
-                },
+                ],
                 root=world.get_body_by_name("head_pan_link"),
                 tip=world.get_body_by_name("head_tilt_link"),
                 _world=world,
