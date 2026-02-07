@@ -75,7 +75,6 @@ class Set(Conclusion[T]):
     def _evaluate__(
         self,
         sources: Optional[Bindings] = None,
-        parent: Optional[SymbolicExpression] = None,
     ) -> Iterable[OperationResult]:
 
         self._yield_when_false_ = False
@@ -97,7 +96,6 @@ class Add(Conclusion[T]):
     def _evaluate__(
         self,
         sources: Optional[Bindings] = None,
-        parent: Optional[SymbolicExpression] = None,
     ) -> Iterable[OperationResult]:
 
         self._yield_when_false_ = False
