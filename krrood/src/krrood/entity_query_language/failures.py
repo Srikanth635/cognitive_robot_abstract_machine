@@ -5,7 +5,7 @@ This module defines some custom exception types used by the entity_query_languag
 from __future__ import annotations
 
 from abc import ABC
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from typing_extensions import TYPE_CHECKING, Type, Any, List
 
@@ -19,6 +19,7 @@ if TYPE_CHECKING:
         Selectable,
         QueryObjectDescriptor,
         Aggregator,
+        GroupBy,
     )
     from .match import Match
 
@@ -153,6 +154,26 @@ class AggregationUsageError(UsageError):
     """
     The query object descriptor that contains the aggregation.
     """
+
+
+@dataclass
+class UnsupportedAggregationOfAGroupedByVariable(AggregationUsageError):
+    """
+    Raised when there is an aggregation over a grouped_by variable that is not Count.
+    """
+
+    group_by: GroupBy
+    """
+    The grouped_by variable that is not Count.
+    """
+
+    def __post_init__(self):
+        self.message = (
+            f"Aggregation over grouped_by variable that is not Count "
+            f"{list(self.group_by.aggregators_of_grouped_by_variables_that_are_not_count())} in the group_by operation"
+            f" {self.group_by}"
+        )
+        super().__post_init__()
 
 
 @dataclass

@@ -76,7 +76,7 @@ def test_add_conclusion(handles_and_containers_world):
     assert all_solutions[0].container.name == "Container3"
     assert all_solutions[1].handle.name == "Handle1"
     assert all_solutions[1].container.name == "Container1"
-    # all_drawers = list(drawers._evaluate__())
+    # all_drawers = list(drawers._evaluate_())
     # assert len(all_drawers) == 2, "Should generate components for two possible drawer."
 
 

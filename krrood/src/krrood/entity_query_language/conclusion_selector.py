@@ -75,14 +75,10 @@ class ExceptIf(ConclusionSelector):
     def _evaluate__(
         self,
         sources: Optional[Bindings] = None,
-        parent: Optional[SymbolicExpression] = None,
     ) -> Iterable[OperationResult]:
         """
         Evaluate the ExceptIf condition and yield the results.
         """
-
-        # init an empty source if none is provided
-        sources = sources or {}
 
         # constrain left values by available sources
         left_values = self.left._evaluate_(sources, parent=self)
@@ -128,9 +124,8 @@ class Alternative(ElseIf, ConclusionSelector):
     def _evaluate__(
         self,
         sources: Optional[Bindings] = None,
-        parent: Optional[SymbolicExpression] = None,
     ) -> Iterable[OperationResult]:
-        outputs = super()._evaluate__(sources, parent=parent)
+        outputs = super()._evaluate__(sources)
         for output in outputs:
             # Only yield if conclusions were successfully added (not duplicates)
             if not self.left._is_false_:
@@ -150,9 +145,8 @@ class Next(EQLUnion, ConclusionSelector):
     def _evaluate__(
         self,
         sources: Optional[Bindings] = None,
-        parent: Optional[SymbolicExpression] = None,
     ) -> Iterable[OperationResult]:
-        outputs = super()._evaluate__(sources, parent=parent)
+        outputs = super()._evaluate__(sources)
         for output in outputs:
             if self.left_evaluated:
                 self.update_conclusion(output, self.left._conclusion_)

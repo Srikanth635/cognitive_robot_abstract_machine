@@ -380,17 +380,16 @@ def test_select_a_variable_from_set_of_in_another_query(handles_and_containers_w
     PC = variable(PrismaticConnection, domain=world.connections)
 
     set_of_query = set_of(container, handle, FC, PC).where(
-            container == FC.parent,
-            handle == FC.child,
-            container == PC.child,
-        )
+        container == FC.parent,
+        handle == FC.child,
+        container == PC.child,
+    )
 
     reselected = an(entity(set_of_query[container]))
 
     orig_res = list(map(lambda r: r[container], set_of_query.tolist()))
     reselected_res = reselected.tolist()
     assert orig_res == reselected_res
-
 
 
 def test_generate_with_more_than_one_source_optimized(handles_and_containers_world):
@@ -922,9 +921,9 @@ def test_multiple_dependent_selectables(handles_and_containers_world):
     cabinet_drawers = variable_from(cabinet.drawers)
     old_evaluate = cabinet_drawers._evaluate__
 
-    def _cabinet_drawers_evaluate__(bindings, parent):
+    def _cabinet_drawers_evaluate__(bindings):
         assert cabinet._id_ in bindings
-        yield from old_evaluate(bindings, parent)
+        yield from old_evaluate(bindings)
 
     cabinet_drawers._evaluate__ = _cabinet_drawers_evaluate__
 
