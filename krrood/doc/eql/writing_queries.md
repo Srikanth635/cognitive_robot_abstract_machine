@@ -82,9 +82,22 @@ if you try to do so.
 
 EQL provides convenient ways to retrieve query results.
 
+### Using `.evaluate()`
+
+The most general way to retrieve results is using `.evaluate()` (must use a result processor like an/the) to get an
+iterator over the results. This is recommended when processing large result sets lazily.
+
+```{code-cell} ipython3
+query = an(entity(body).where(body.name.startswith("B")))
+for res in query.evaluate():
+    print(res)
+```
+
 ### Using `.tolist()`
 
-The most common way to retrieve results is using the `.tolist()` method, which is available on both `QueryObjectDescriptor` (e.g., `set_of`, `entity`) and `ResultProcessors` (e.g., `count`, `sum`). It evaluates the query and returns the results as a list.
+A common way to retrieve all results is using the `.tolist()` method, which is available on both `QueryObjectDescriptor`
+(e.g., `set_of`, `entity`) and `ResultProcessors` (e.g., `count`, `sum`). It evaluates the query and returns the results
+as a list.
 
 ```{code-cell} ipython3
 import krrood.entity_query_language.entity_result_processors as eql
@@ -97,16 +110,6 @@ print(first_body)
 # On a QueryObjectDescriptor
 all_names = entity(body.name).tolist()
 print(all_names)
-```
-
-### Using `.evaluate()`
-
-Alternatively, you can use `.evaluate()` (must use a result processor like an/the) to get an iterator over the results. This is useful for processing large result sets lazily.
-
-```{code-cell} ipython3
-query = an(entity(body).where(body.name.startswith("B")))
-for res in query.evaluate():
-    print(res)
 ```
 
 ### Ordering with `.order_by()`
