@@ -6,6 +6,10 @@ from semantic_digital_twin.robots.tiago import Tiago
 
 
 class StretchMoveSim(MoveMotion, AlternativeMotion[Tiago]):
+    """
+    Uses a diff drive goal for the tiago base.
+    """
+
     execution_type = ExecutionType.SIMULATED
 
     def perform(self):
