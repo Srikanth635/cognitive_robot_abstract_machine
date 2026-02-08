@@ -1291,16 +1291,31 @@ def get_dao_class(
     :param expected_type: The expected domain type (from relationship).
     :return: The corresponding DAO class or None.
     """
+    alternative_mapping = get_alternative_mapping(original_clazz)
+    if alternative_mapping is not None:
+        original_clazz = alternative_mapping
+
+    # If the actual class is the same as the origin of the expected type,
+    # the expected type is more specific (likely a parametrized generic)
+    # and we should prefer it.
+    if expected_type is not None and original_clazz == get_origin(expected_type):
+        dao = _get_clazz_by_original_clazz(DataAccessObject, expected_type)
+        if dao is not None:
+            return dao
+
+    # Try the actual class first.
+    # This is important for polymorphic inheritance to get the most specific DAO.
+    dao = _get_clazz_by_original_clazz(DataAccessObject, original_clazz)
+    if dao is not None:
+        return dao
+
+    # Fallback to the expected type if provided.
     if expected_type is not None:
         dao = _get_clazz_by_original_clazz(DataAccessObject, expected_type)
         if dao is not None:
             return dao
 
-    alternative_mapping = get_alternative_mapping(original_clazz)
-    if alternative_mapping is not None:
-        original_clazz = alternative_mapping
-
-    return _get_clazz_by_original_clazz(DataAccessObject, original_clazz)
+    return None
 
 
 @lru_cache(maxsize=None)
