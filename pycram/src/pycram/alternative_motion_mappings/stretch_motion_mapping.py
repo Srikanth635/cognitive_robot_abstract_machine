@@ -14,6 +14,11 @@ from semantic_digital_twin.spatial_types import Vector3
 
 
 class StretchMoveTCP(MoveTCPMotion, AlternativeMotion[Stretch]):
+    """
+    Better motions for stretch to move the tool center point to the given goal, first rotates the base such that the
+    gripper is pointing at the goal pose and then uses full body control to move the TCP to the goal.
+    """
+
     execution_type = ExecutionType.SIMULATED
 
     def perform(self):
@@ -46,6 +51,10 @@ class StretchMoveTCP(MoveTCPMotion, AlternativeMotion[Stretch]):
 
 
 class StretchMoveSim(MoveMotion, AlternativeMotion[Stretch]):
+    """
+    Different giskard goal for moving stretch to a goal pose, this uses a goal optimal for a diff drive
+    """
+
     execution_type = ExecutionType.SIMULATED
 
     def perform(self):
