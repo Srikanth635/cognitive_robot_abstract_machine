@@ -29,6 +29,7 @@ from typing_extensions import (
 
 from giskardpy.motion_statechart.graph_node import Task
 from krrood.class_diagrams.failures import ClassIsUnMappedInClassDiagram
+from krrood.ormatic.utils import leaf_types
 from semantic_digital_twin.world_description.world_entity import Body
 from semantic_digital_twin.world_description.world_modification import (
     WorldModelModificationBlock,
@@ -39,7 +40,6 @@ from .datastructures.dataclasses import ExecutionData, Context
 from .datastructures.enums import TaskStatus
 from .datastructures.pose import PoseStamped
 from .failures import PlanFailure
-from .has_parameters import leaf_types
 from .motion_executor import MotionExecutor
 
 if TYPE_CHECKING:

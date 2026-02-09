@@ -20,7 +20,6 @@ from ....datastructures.grasp import GraspDescription
 from ....datastructures.partial_designator import PartialDesignator
 from ....datastructures.pose import PoseStamped
 from ....failures import ObjectNotPlacedAtTargetLocation, ObjectStillInContact
-from ....has_parameters import has_parameters
 from ....language import SequentialPlan
 from ....view_manager import ViewManager
 from ....robot_plans.actions.base import ActionDescription
@@ -29,7 +28,6 @@ from ....validation.error_checkers import PoseErrorChecker
 from ....visualization import plot_rustworkx_interactive
 
 
-@has_parameters
 @dataclass
 class PlaceAction(ActionDescription):
     """
