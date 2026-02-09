@@ -262,9 +262,6 @@ def test_grasping(immutable_multiple_robot_apartment):
     world, robot_view, context = immutable_multiple_robot_apartment
     left_arm = ViewManager.get_arm_view(Arms.LEFT, robot_view)
 
-    node = rclpy.create_node("grasping_node")
-    VizMarkerPublisher(world, node)
-
     grasp_description = GraspDescription(
         ApproachDirection.FRONT,
         VerticalAlignment.NoAlignment,
