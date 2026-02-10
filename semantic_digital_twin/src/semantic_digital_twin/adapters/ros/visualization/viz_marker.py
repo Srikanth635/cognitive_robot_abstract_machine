@@ -56,6 +56,11 @@ class VizMarkerPublisher(ModelChangeCallback):
         time.sleep(0.2)
         self.notify()
         time.sleep(0.2)
+
+    def with_tf_publisher(self):
+        """
+        Launches a tf publisher in conjunction with the VizMarkerPublisher.
+        """
         TFPublisher(self.world, self.node)
 
     def _notify(self):

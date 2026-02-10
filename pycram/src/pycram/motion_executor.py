@@ -111,10 +111,8 @@ class ExecutionEnvironment:
 
     Example:
 
-    .. code-block:: python
-
-        with ExecutionEnvironment(ExecutionType.SIMULATED):
-            some designators
+        >>> with ExecutionEnvironment(ExecutionType.SIMULATED):
+        >>>     SequentialPlan(context, NavigateActionDescription, ...)
 
     """
 
