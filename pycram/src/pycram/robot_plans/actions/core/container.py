@@ -20,13 +20,11 @@ from ....datastructures.enums import (
 from ....datastructures.grasp import GraspDescription
 from ....datastructures.partial_designator import PartialDesignator
 from ....failures import ContainerManipulationError
-from ....has_parameters import has_parameters
 from ....language import SequentialPlan
-from ....robot_description import ViewManager
+from ....view_manager import ViewManager
 from ....robot_plans.actions.base import ActionDescription
 
 
-@has_parameters
 @dataclass
 class OpenAction(ActionDescription):
     """
@@ -94,7 +92,6 @@ class OpenAction(ActionDescription):
         )
 
 
-@has_parameters
 @dataclass
 class CloseAction(ActionDescription):
     """
