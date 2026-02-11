@@ -90,10 +90,7 @@ class Synchronizer(ABC):
         Wrap the origin subscription callback by self-skipping and disabling the next world callback.
         """
         tracker = WorldEntityWithIDKwargsTracker.from_world(self.world)
-        json_msg = json.loads(msg.data)
-        world_id = from_json(json_msg["meta_data"]["world_id"])
-        if world_id == self.world._id:
-            return
+
         msg = self.message_type.from_json(
             json.loads(msg.data), **tracker.create_kwargs()
         )
