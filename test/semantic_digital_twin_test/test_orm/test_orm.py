@@ -7,9 +7,14 @@ from krrood.ormatic.utils import create_engine
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from semantic_digital_twin.adapters.ros.world_fetcher import (
+    FetchWorldServer,
+    fetch_world_from_service,
+)
 from semantic_digital_twin.adapters.urdf import URDFParser
 from semantic_digital_twin.orm.utils import semantic_digital_twin_sessionmaker
 from semantic_digital_twin.spatial_types.derivatives import DerivativeMap
+from semantic_digital_twin.robots.pr2 import PR2
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connections import RevoluteConnection
 from semantic_digital_twin.world_description.degree_of_freedom import (
@@ -136,3 +141,27 @@ def test_degree_of_freedom_limits(session):
     reconstructed = dao.from_dao()
 
     assert obj == reconstructed
+
+
+def test_pr2_world(pr2_world_state_reset, session):
+    dao: WorldMappingDAO = to_dao(pr2_world_state_reset)
+    session.add(dao)
+    session.commit()
+
+    queried_world = session.scalar(select(WorldMappingDAO))
+    reconstructed: World = queried_world.from_dao()
+
+
+def test_pr2_semantic_annotation_and_safe_to_db(
+    rclpy_node, pr2_world_state_reset, session
+):
+    fetcher = FetchWorldServer(node=rclpy_node, world=pr2_world_state_reset)
+
+    pr2_world_copy = fetch_world_from_service(
+        rclpy_node,
+    )
+
+    dao = to_dao(pr2_world_copy)
+
+    session.add(dao)
+    session.commit()

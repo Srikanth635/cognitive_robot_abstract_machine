@@ -17,7 +17,6 @@ from sqlalchemy import (
 )
 from typing_extensions import (
     TypeVar,
-    _SpecialForm,
     Type,
     List,
     Iterable,
@@ -154,6 +153,7 @@ def create_engine(url: Union[str, URL], **kwargs: Any) -> Engine:
     :param url: The database URL.
     :return: An SQLAlchemy engine that uses the JSON (de)serializer from KRROOD.
     """
+
     return create_sqlalchemy_engine(
         url,
         json_serializer=lambda x: json.dumps(to_json(x)),
