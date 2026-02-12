@@ -463,6 +463,37 @@ def test_synchronize_6dof(rclpy_node):
     np.testing.assert_array_almost_equal(w1.state.data, w2.state.data)
 
 
+def test_synchronous_state_synchronization(rclpy_node):
+    """When synchronous=True the notify_state_change call blocks until
+    all subscribers have acknowledged receipt, so the remote world is
+    already up-to-date when the call returns. No sleep is required anymore."""
+    w1 = create_dummy_world()
+    w2 = create_dummy_world()
+
+    synchronizer_1 = StateSynchronizer(
+        node=rclpy_node,
+        world=w1,
+        synchronous=True,
+    )
+    synchronizer_2 = StateSynchronizer(
+        node=rclpy_node,
+        world=w2,
+    )
+
+    # Allow time for publishers/subscribers to discover each other
+    time.sleep(0.2)
+
+    w1.state.data[0, 0] = 1.0
+    w1.notify_state_change()
+
+    # With synchronous publishing the state must already be propagated
+    # by the time notify_state_change returns.
+    assert w1.state.data[0, 0] == w2.state.data[0, 0]
+
+    synchronizer_1.close()
+    synchronizer_2.close()
+
+
 def test_compute_state_changes_no_changes(rclpy_node):
     w = create_dummy_world()
     s = StateSynchronizer(node=rclpy_node, world=w)

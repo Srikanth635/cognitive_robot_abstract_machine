@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import lru_cache
 from uuid import UUID
+import uuid
 
 from typing_extensions import Dict, Any, Self, List
 
@@ -76,6 +77,11 @@ class WorldStateUpdate(Message):
     Class describing the updates to the free variables of a world state.
     """
 
+    event_id: UUID
+    """
+    UUID of the update (for syn/ack tracking purposes)
+    """
+
     ids: List[UUID]
     """
     The ids of the changed free variables.
@@ -89,6 +95,7 @@ class WorldStateUpdate(Message):
     def to_json(self) -> Dict[str, Any]:
         return {
             **super().to_json(),
+            "event_id": str(self.event_id),
             "ids": to_json(self.ids),
             "states": list(self.states),
         }
@@ -96,6 +103,7 @@ class WorldStateUpdate(Message):
     @classmethod
     def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         return cls(
+            event_id=data["event_id"] if "event_id" in data.keys() else uuid.uuid4(),
             meta_data=MetaData.from_json(data["meta_data"], **kwargs),
             ids=from_json(data["ids"]),
             states=data["states"],
