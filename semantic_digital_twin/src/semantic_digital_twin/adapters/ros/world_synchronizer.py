@@ -3,6 +3,7 @@ import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from functools import cached_property
+import threading
 from typing import ClassVar, Optional, Type, List, Dict
 from uuid import UUID
 
@@ -47,6 +48,11 @@ class Synchronizer(ABC):
     The topic name of the publisher and subscriber.
     """
 
+    ack_topic_name: Optional[str] = "/ack"
+    """
+    The name of the acknowledgment topic. Synchronous publication of world state waits until all subscribers acknowledged on this topic.
+    """
+
     publisher: Optional[Publisher] = field(init=False, default=None)
     """
     The publisher used to publish the world state.
@@ -62,6 +68,11 @@ class Synchronizer(ABC):
     The type of the message that is sent and received.
     """
 
+    _current_event_id = None
+    _expected_acks = set()
+    _received_acks = set()
+    _cv_ack = threading.Condition()
+
     def __post_init__(self):
         self.publisher = self.node.create_publisher(
             std_msgs.msg.String, topic=self.topic_name, qos_profile=10
@@ -70,6 +81,15 @@ class Synchronizer(ABC):
             std_msgs.msg.String,
             topic=self.topic_name,
             callback=self.subscription_callback,
+            qos_profile=10,
+        )
+        self.ack_publisher = self.node.create_publisher(
+            std_msgs.msg.String, topic=self.ack_topic_name, qos_profile=10
+        )
+        self.ack_subscriber = self.node.create_subscription(
+            std_msgs.msg.String,
+            topic=self.ack_topic_name,
+            callback=self.ack_callback,
             qos_profile=10,
         )
 
@@ -90,10 +110,49 @@ class Synchronizer(ABC):
         msg = self.message_type.from_json(
             json.loads(msg.data), **tracker.create_kwargs()
         )
+        if hasattr(msg, "event_id"):
+            event_id = str(msg.event_id)
+        else:
+            event_id = str(uuid.uuid4())
+
+        self.ack_publisher.publish(
+            std_msgs.msg.String(
+                data=json.dumps(
+                    {"event_id": event_id, "node_name": self.node.get_name()}
+                )
+            )
+        )
         if msg.meta_data == self.meta_data:
             return
         self._skip_next_world_callback = True
         self._subscription_callback(msg)
+
+    def ack_callback(self, msg: std_msgs.msg.String):
+        """
+        Called when subscribers of the sync topic acknowledge receipt of sync notifications.
+        """
+        msg_dic = json.loads(msg.data)
+
+        with self._cv_ack:
+            if not self._expected_acks or not self._current_event_id:
+                return
+
+            if msg_dic["event_id"] != str(self._current_event_id):
+                return
+
+            if msg_dic["node_name"] in self._expected_acks:
+                self._received_acks.add(msg_dic["node_name"])
+
+            if self._received_acks == self._expected_acks:
+                self._cv_ack.notify_all()
+
+    def _snapshot_subscribers(self):
+        infos = self.node.get_subscriptions_info_by_topic(self.topic_name)
+        expected = set()
+        for info in infos:
+            expected.add(info.node_name)
+
+        return expected
 
     @abstractmethod
     def _subscription_callback(self, msg: message_type):
@@ -128,12 +187,17 @@ class SynchronizerOnCallback(Synchronizer, Callback, ABC):
     Additionally, ensures that the callback is cleaned up on close.
     """
 
+    synchronous: bool = False
+    """
+    If True, world_callback will block until all subscribers acknowledge receipt of the published message.
+    """
+
     _skip_next_world_callback: bool = False
     """
     Flag to indicate if the next world callback should be skipped.
-    
-    An incoming message from some other world might trigger a change in this world that produces a notify callback that 
-    will try to send a message. 
+
+    An incoming message from some other world might trigger a change in this world that produces a notify callback that
+    will try to send a message.
     If the callback is triggered by a message, this synchronizer should not republish the change.
     """
 
@@ -149,7 +213,7 @@ class SynchronizerOnCallback(Synchronizer, Callback, ABC):
         if self._skip_next_world_callback:
             self._skip_next_world_callback = False
         else:
-            self.world_callback()
+            self.world_callback(synchronous=self.synchronous)
 
     def _subscription_callback(self, msg):
         if self._is_paused:
@@ -165,7 +229,7 @@ class SynchronizerOnCallback(Synchronizer, Callback, ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def world_callback(self):
+    def world_callback(self, synchronous=False):
         """
         Called when the world notifies and update that is not caused by this synchronizer.
         """
@@ -211,7 +275,7 @@ class StateSynchronizer(StateChangeCallback, SynchronizerOnCallback):
             self.update_previous_world_state()
             self.world.notify_state_change()
 
-    def world_callback(self):
+    def world_callback(self, synchronous=False):
         """
         Publish the current world state to the ROS topic.
         """
@@ -220,13 +284,32 @@ class StateSynchronizer(StateChangeCallback, SynchronizerOnCallback):
         if not changes:
             return
 
+        self.update_previous_world_state()
+
+        self._current_event_id = uuid.uuid4()
+
         msg = WorldStateUpdate(
+            event_id=self._current_event_id,
             ids=list(changes.keys()),
             states=list(changes.values()),
             meta_data=self.meta_data,
         )
-        self.update_previous_world_state()
-        self.publish(msg)
+
+        if synchronous:
+            with self._cv_ack:
+                self._expected_acks = self._snapshot_subscribers()
+                self._received_acks = set()
+
+                self.publish(msg)
+
+                success = self._cv_ack.wait_for(
+                    lambda: self._received_acks == self._expected_acks,
+                    timeout=5,
+                )
+                if not success:
+                    print("Message was not acknowledged, timeout")
+        else:
+            self.publish(msg)
 
     def compute_state_changes(self) -> Dict[UUID, float]:
         """
@@ -281,7 +364,7 @@ class ModelSynchronizer(
         for callback in running_callbacks:
             callback.resume()
 
-    def world_callback(self):
+    def world_callback(self, synchronous=False):
         msg = ModificationBlock(
             meta_data=self.meta_data,
             modifications=self.world.get_world_model_manager().model_modification_blocks[
