@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from .enums import PredicateType
 from .failures import UnsupportedExpressionTypeForDistinct
 from .symbol_graph import SymbolGraph
 from .utils import is_iterable, T
@@ -17,6 +18,7 @@ from typing_extensions import (
     Type,
     Callable,
     TYPE_CHECKING,
+    List,
 )
 
 from .symbolic import (
@@ -38,6 +40,8 @@ from .symbolic import (
     Concatenate,
     QueryObjectDescriptor,
     ResultQuantifier,
+    Attribute,
+    OperationResult,
 )
 
 from .predicate import (
@@ -280,3 +284,42 @@ def inference(
     return lambda **kwargs: Variable(
         _type_=type_, _name__=type_.__name__, _kwargs_=kwargs, _is_inferred_=True
     )
+
+
+def get_conditioned_statements(
+    statement, condition: Callable[OperationResult, bool]
+) -> List[SymbolicExpression]:
+    condition_results = []
+    for node in [
+        s
+        for s in statement._all_nodes_
+        if not isinstance(s, (Variable, Attribute))
+        or type(s._predicate_type_) is PredicateType
+    ]:
+        node_result = node._evaluate__(None)
+        if condition(node_result):
+            condition_results.append(node)
+    if statement in condition_results:
+        condition_results.remove(statement)
+
+    return condition_results
+
+
+def get_false_statements(statement):
+    """
+    The false statements of all statements of this condition.
+
+    :return: The false statements of all statements of this condition.
+    """
+    return get_conditioned_statements(
+        statement, lambda x: not any([r.is_true for r in x])
+    )
+
+
+def get_true_statements(statement):
+    """
+    The true statements of all statements of this condition.
+
+    :return: The true statements of this condition.
+    """
+    return get_conditioned_statements(statement, lambda x: any([r.is_true for r in x]))

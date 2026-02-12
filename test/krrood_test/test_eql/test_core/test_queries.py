@@ -20,6 +20,8 @@ from krrood.entity_query_language.entity import (
     concatenate,
     for_all,
     distinct,
+    get_false_statements,
+    get_true_statements,
 )
 from krrood.entity_query_language.entity_result_processors import an, a, the, count
 from krrood.entity_query_language.failures import (
@@ -1118,3 +1120,29 @@ def test_unsupported_distinct(handles_and_containers_world):
     body = variable(Body, domain=handles_and_containers_world.bodies)
     with pytest.raises(UnsupportedExpressionTypeForDistinct):
         query = distinct(and_(body, body), body.name)
+
+
+def test_get_false_statements(handles_and_containers_world):
+    body = variable(Body, domain=handles_and_containers_world.bodies)
+    condition1 = body.name == "Handle1"
+    condition2 = body.name == "root"
+    statement = and_(condition1, condition2)
+
+    false_statements = get_false_statements(statement)
+
+    assert len(false_statements) == 1
+    assert false_statements[0] == condition2
+
+
+def test_get_true_statements(handles_and_containers_world):
+    body = variable(Body, domain=handles_and_containers_world.bodies)
+    condition1 = body.name == "Handle1"
+    condition2 = body.size == 1
+
+    statement = and_(condition1, condition2)
+
+    true_statements = get_true_statements(statement)
+
+    assert len(true_statements) == 2
+    assert true_statements[0] == condition1
+    assert true_statements[1] == condition2

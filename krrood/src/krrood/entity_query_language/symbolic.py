@@ -2006,64 +2006,6 @@ class QueryObjectDescriptor(SymbolicExpression[T], ABC):
         return f"({', '.join(var._name_ for var in self._selected_variables)})"
 
 
-@dataclass(init=False)
-class Condition(QueryObjectDescriptor[T]):
-
-    def __init__(self, *conditions: ConditionType):
-        self.conditions: Tuple[ConditionType, ...] = conditions
-        super().__init__()
-        self.where(*self.conditions)
-
-    def _evaluate__(
-        self,
-        sources: Optional[Dict[int, Any]] = None,
-        parent: Optional[SymbolicExpression] = None,
-    ) -> Iterable[OperationResult]:
-        for res in self._root_._evaluate__(sources, parent):
-            yield res
-
-    @property
-    def _name_(self) -> str:
-        return f"Condition: {",".join([c._name_ for c in self.conditions])}"
-
-    def _all_variable_instances_(self) -> List[Variable]:
-        return self._child_._all_variable_instances_
-
-    def evaluate(self) -> bool:
-        """
-        Evaluates the condition to True or False.
-        """
-        results = list(self._child_._evaluate__())
-        return any([r.is_true for r in results])
-
-    def get_false_statements(self) -> List[ConditionType]:
-        """
-        The false statements of all statements of this condition.
-
-        :return: The false statements of all statements of this condition.
-        """
-        condition_results = []
-        for node in self.conditions:
-            node_result = node._evaluate__()
-            if not any([r.is_true for r in node_result]):
-                condition_results.append(node)
-
-        return condition_results
-
-    def get_true_statements(self) -> List[ConditionType]:
-        """
-        The true statements of all statements of this condition.
-
-        :return: The true statements of this condition.
-        """
-        false_conditions = self.get_false_statements()
-        all_conditions = copy(self.conditions)
-        for c in false_conditions:
-            if c in all_conditions:
-                all_conditions.remove(c)
-        return list(all_conditions)
-
-
 @dataclass(eq=False, repr=False)
 class SetOf(QueryObjectDescriptor[T]):
     """
