@@ -90,30 +90,31 @@ class ActionDescription(DesignatorDescription):
         cls._post_perform_callbacks.append(func)
         return func
 
-    def get_bound_variables(self) -> Dict[T, Variable[T] | T]:
-        self_fields = list(fields(self))
-        [self_fields.remove(parent_field) for parent_field in fields(ActionDescription)]
-        return {
-            getattr(self, f.name): variable(
-                type(getattr(self, f.name)), [getattr(self, f.name)]
-            )
-            for f in self_fields
-        }
+    def _create_variables(self, bound=True) -> Dict[T, Variable[T] | T]:
+        """
+        Creates krrood variables for all parameter of this action either bound or unbound.
 
-    def get_unbound_variables(self) -> Dict[T, Variable[T] | T]:
+        :return: A dict with action parameters as keys and variables as values.
+        """
         self_fields = list(fields(self))
         [self_fields.remove(parent_field) for parent_field in fields(ActionDescription)]
         return {
             getattr(self, f.name): variable(
                 type(getattr(self, f.name)),
-                find_domain_for_type(type(getattr(self, f.name))),
+                [
+                    (
+                        getattr(self, f.name)
+                        if bound
+                        else find_domain_for_type(getattr(self, f.name))
+                    )
+                ],
             )
             for f in self_fields
         }
 
-    def get_variables(self, unbound=False) -> Dict[T, Variable[T] | T]:
+    def get_variables(self, bound=True) -> Dict[T, Variable[T] | T]:
         # Maybe use python-box for a better interface
-        return self.get_unbound_variables() if unbound else self.get_bound_variables()
+        return self._create_variables(bound=bound)
 
     def evaluate_pre_condition(self) -> bool:
         evaluation = evaluate_condition(self.pre_condition())

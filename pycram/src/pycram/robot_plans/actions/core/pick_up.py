@@ -190,8 +190,8 @@ class PickUpAction(ActionDescription):
             ),
         ).perform()
 
-    def pre_condition(self, unbound=False) -> SymbolicExpression:
-        variables = self.get_variables(unbound)
+    def pre_condition(self, bound=True) -> SymbolicExpression:
+        variables = self.get_variables(bound)
         return and_(
             manipulator := ViewManager.get_end_effector_view(
                 variables[self.arm], self.robot_view
@@ -204,8 +204,8 @@ class PickUpAction(ActionDescription):
             ),
         )
 
-    def post_condition(self, unbound=False) -> SymbolicExpression:
-        variables = self.get_variables(unbound)
+    def post_condition(self, bound=True) -> SymbolicExpression:
+        variables = self.get_variables(bound)
         return and_(
             manipulator := ViewManager.get_end_effector_view(
                 variables[self.arm], self.robot_view

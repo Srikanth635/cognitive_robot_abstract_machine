@@ -18,7 +18,12 @@ from typing import Union, Iterator
 import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.colors as mcolors
-from semantic_digital_twin.world_description.world_entity import Body
+
+from semantic_digital_twin.world import World
+from semantic_digital_twin.world_description.world_entity import (
+    Body,
+    SemanticAnnotation,
+)
 
 from .tf_transformations import (
     quaternion_about_axis,
@@ -520,3 +525,13 @@ def translate_pose_along_local_axis(
     return PoseStamped.from_list(
         list(scaled_translation_vector), pose.orientation.to_list(), pose.frame_id
     )
+
+
+def find_domain_for_type(value: Any, world: World) -> List:
+    value_type = type(value)
+    if issubclass(value_type, SemanticAnnotation):
+        return [
+            sa
+            for sa in world.semantic_annotations
+            if issubclass(type(sa), (value_type, SemanticAnnotation))
+        ]

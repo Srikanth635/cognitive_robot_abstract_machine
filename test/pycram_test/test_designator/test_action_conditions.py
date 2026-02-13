@@ -29,20 +29,20 @@ def test_get_bound_variables(immutable_model_world):
         ),
     )
 
-    bound_variables = pick_action.get_bound_variables()
+    bound_variables = pick_action.get_variables(bound=True)
 
     assert len(bound_variables) == 3
     assert list(bound_variables.keys()) == [
-        "object_designator",
-        "arm",
-        "grasp_description",
+        pick_action.object_designator,
+        pick_action.arm,
+        pick_action.grasp_description,
     ]
-    assert list(bound_variables["arm"]._domain_) == [Arms.LEFT]
-    assert bound_variables["arm"]._type_ == Arms
-    assert list(bound_variables["object_designator"]._domain_) == [
+    assert list(bound_variables[pick_action.arm]._domain_) == [Arms.LEFT]
+    assert bound_variables[pick_action.arm]._type_ == Arms
+    assert list(bound_variables[pick_action.object_designator]._domain_) == [
         world.get_body_by_name("milk.stl")
     ]
-    assert bound_variables["object_designator"]._type_ == Body
+    assert bound_variables[pick_action.object_designator]._type_ == Body
 
 
 def test_get_unbound_variables(immutable_model_world):
@@ -58,7 +58,7 @@ def test_get_unbound_variables(immutable_model_world):
         ),
     )
 
-    unbound_variables = pick_action.get_unbound_variables()
+    unbound_variables = pick_action.get_variables(bound=False)
 
     assert len(unbound_variables) == 3
 
