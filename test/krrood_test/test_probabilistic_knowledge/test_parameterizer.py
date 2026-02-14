@@ -287,11 +287,11 @@ class TestDAOParameterizer(unittest.TestCase):
         """
         parameterization = Parameterization()
         var_a = Continuous("A")
-        parameterization.update_variables([var_a])
+        parameterization.extend_variables([var_a])
         self.assertEqual(parameterization.variables, [var_a])
 
         var_b = Continuous("B")
-        parameterization.update_variables([var_b])
+        parameterization.extend_variables([var_b])
         self.assertEqual(parameterization.variables, [var_a, var_b])
 
     def test_parameterization_update_simple_event(self):
@@ -331,7 +331,7 @@ class TestDAOParameterizer(unittest.TestCase):
             variables=[var_b], simple_event=SimpleEvent({var_b: 2.0})
         )
 
-        param_a.update_parameterization(param_b)
+        param_a.merge_parameterization(param_b)
 
         self.assertEqual(len(param_a.variables), 2)
         self.assertIn(var_a, param_a.variables)

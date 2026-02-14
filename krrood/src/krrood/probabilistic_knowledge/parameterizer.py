@@ -33,7 +33,7 @@ class Parameterization:
 
     variables: List[Variable] = field(default_factory=list)
     """
-    A list of random event variables that are created for the fields of the parameterized object.
+    A list of random event variables that are being parameterized.
     """
     simple_event: SimpleEvent = field(default_factory=lambda: SimpleEvent({}))
     """
@@ -43,7 +43,7 @@ class Parameterization:
     def fill_missing_variables(self):
         self.simple_event.fill_missing_variables(self.variables)
 
-    def update_variables(self, variables: List[Variable]):
+    def extend_variables(self, variables: List[Variable]):
         """
         Update the variables by extending them with the given variables.
         """
@@ -71,7 +71,7 @@ class Parameterization:
             },
         )
 
-    def update_parameterization(self, other: Parameterization):
+    def merge_parameterization(self, other: Parameterization):
         """
         Update the parameterization with another parameterization by extending the variables and updating the simple event.
 
@@ -90,6 +90,9 @@ class Parameterizer:
     """
 
     parameterization: Parameterization = field(default_factory=Parameterization)
+    """
+    Parameterization containing the variables and simple event resulting from parameterizing a DataAccessObject.
+    """
 
     def parameterize(self, object: Any, prefix: str) -> Parameterization:
         """
@@ -98,7 +101,7 @@ class Parameterizer:
         :param object: The object to parameterize.
         :param prefix: The prefix to use for variable names.
 
-        :return: A list of random event variables and a SimpleEvent containing the values.
+        :return: Parameterization containing the variables and simple event.
         """
         if type(object) in list_like_classes:
             for i, value in enumerate(object):
@@ -115,7 +118,7 @@ class Parameterizer:
         :param dao: The DataAccessObject to parameterize.
         :param prefix: The prefix to use for variable names.
 
-        :return: A list of random event variables and a SimpleEvent containing the values.
+        :return: A Parameterization containing the variables and simple event.
         """
         sql_alchemy_mapper = inspect(dao).mapper
 
@@ -136,7 +139,7 @@ class Parameterizer:
         self, variables: List[Variable], attribute_values: List[Any]
     ):
         """
-        Update the variables and simple event based on the given variables and attribute values.
+        Update the current parameterization by the given variables and attribute values.
 
         :param variables: The variables to add to the variables list.
         :param attribute_values: The attribute values to add to the simple event.
@@ -144,7 +147,7 @@ class Parameterizer:
         for variable, attribute_value in zip(variables, attribute_values):
             if variable is None:
                 continue
-            self.parameterization.update_variables([variable])
+            self.parameterization.extend_variables([variable])
             if attribute_value is None:
                 continue
 
@@ -215,7 +218,7 @@ class Parameterizer:
 
         :return: A tuple containing a list of variables and a list of corresponding attribute values.
         """
-        attribute_name = self._column_attribute_name(column)
+        attribute_name = self._column_attribute_name(column, dao)
 
         # %% Skip attributes that are not of interest.
         if not self._is_attribute_of_interest(attribute_name, dao, wrapped_field):
@@ -250,7 +253,7 @@ class Parameterizer:
         wrapped_field: WrappedField,
     ) -> bool:
         """
-        Check if we are inspecting the correct attribute, and if yes, if we should be included in the model
+        Check if the correct attribute is being inspected, and if yes, if it should be included in the model
 
         ..warning:: Included are only attributes that are not primary keys, foreign keys, and that are not optional with
         a None value. Additionally, attributes of type uuid.UUID and str are excluded.
@@ -268,17 +271,20 @@ class Parameterizer:
             and not (wrapped_field.is_optional and getattr(dao, attribute_name) is None)
         )
 
-    def _column_attribute_name(self, column: Column) -> Optional[str]:
+    def _column_attribute_name(
+        self, column: Column, dao: DataAccessObject
+    ) -> Optional[str]:
         """
         Get the attribute name corresponding to a SQLAlchemy Column, if it is not a primary key, foreign key, or polymorphic type.
 
         :return: The attribute name or None if the column is not of interest.
         """
-        if (
-            column.key == "polymorphic_type"
-            or column.primary_key
-            or column.foreign_keys
+        if hasattr(dao, "__mapper_args__") and column.key == dao.__mapper_args__.get(
+            "polymorphic_on", None
         ):
+            return None
+
+        if column.primary_key or column.foreign_keys:
             return None
 
         return column.name
