@@ -652,7 +652,7 @@ class Plan:
             new_parameterization = self.parameterizer.parameterize(
                 node.designator_type(**node.kwargs), prefix=prefix
             )
-            parameterization.update_parameterization(new_parameterization)
+            parameterization.merge_parameterization(new_parameterization)
 
         return parameterization
 

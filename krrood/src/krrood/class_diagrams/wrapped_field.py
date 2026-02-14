@@ -4,13 +4,12 @@ import enum
 import inspect
 import logging
 import sys
-import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass, Field, MISSING
 from datetime import datetime
 from functools import cached_property, lru_cache
 from inspect import isclass
-from types import NoneType, GenericAlias
+from types import NoneType
 from copy import copy
 from typing import Generic
 
