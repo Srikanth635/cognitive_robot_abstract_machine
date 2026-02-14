@@ -57,6 +57,7 @@ from .failures import (
     UnsupportedAggregationOfAGroupedByVariable,
     NestedAggregationError,
     TryingToModifyAnAlreadyBuiltQuery,
+    NoExpressionFoundForGivenID,
 )
 from .failures import VariableCannotBeEvaluated
 from .result_quantification_constraint import (
@@ -211,7 +212,7 @@ class SymbolicExpression(ABC):
                 if expression._id_ == id_
             )
         except StopIteration:
-            raise ValueError(f"Expression with ID {id_} not found.")
+            raise NoExpressionFoundForGivenID(self, id_)
 
     @property
     def _is_false_(self) -> bool:
@@ -557,7 +558,11 @@ class DerivedExpression(SymbolicExpression, ABC):
 
     @property
     @abstractmethod
-    def _original_expression_(self) -> SymbolicExpression: ...
+    def _original_expression_(self) -> SymbolicExpression:
+        """
+        The original expression from which this expression is derived.
+        """
+        ...
 
     @property
     def _binding_id_(self) -> int:

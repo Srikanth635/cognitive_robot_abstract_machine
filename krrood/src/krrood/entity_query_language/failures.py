@@ -535,14 +535,23 @@ class InvalidChildType(UsageError):
 
 
 @dataclass
-class InvalidEntityType(InvalidChildType):
+class NoExpressionFoundForGivenID(DataclassException):
     """
-    Raised when an invalid entity type is given to the quantification operation.
-
-    For further details, see :doc:`/krrood/doc/eql/writing_queries`.
+    Raised when no expression is found for the given expression ID.
     """
 
-    ...
+    symbolic_expression: SymbolicExpression
+    """
+    The current symbolic expression being evaluated.
+    """
+    expression_id: int
+    """
+    The ID of the expression that was not found.
+    """
+
+    def __post_init__(self):
+        self.message = f"No expression found for ID: {self.expression_id} during evaluation of {self.symbolic_expression}."
+        super().__post_init__()
 
 
 @dataclass
