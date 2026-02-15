@@ -97,7 +97,7 @@ Your goal:
 
 base_C_body_query = the(entity(variable(RevoluteConnection, world.connections)))
 
-base_C_body = base_C_body_query.evaluate()
+base_C_body = base_C_body_query.first()
 body = base_C_body.child
 
 with world.modify_world():
