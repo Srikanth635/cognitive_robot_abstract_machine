@@ -123,7 +123,7 @@ def chain_evaluate_variables(
     var_val_gen = [
         (
             lambda bindings, var=var: (
-                result.bindings
+                bindings | result.bindings
                 for result in var._evaluate_(copy(bindings), parent=parent)
                 if result.is_true
             )

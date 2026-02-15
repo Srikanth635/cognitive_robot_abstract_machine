@@ -2944,24 +2944,19 @@ class Comparator(BinaryExpression):
         first_operand, second_operand = self.get_first_second_operands(sources)
 
         yield from (
-            self.get_operation_result(first_val, second_val)
-            for first_val in first_operand._evaluate_(sources, parent=self)
-            if first_val.is_true
-            for second_val in second_operand._evaluate_(first_val.bindings, parent=self)
-            if second_val.is_true
+            self.get_operation_result(bindings)
+            for bindings in chain_evaluate_variables(
+                [first_operand, second_operand], sources, parent=self
+            )
         )
 
-    def get_operation_result(
-        self, first_result: OperationResult, second_result: OperationResult
-    ) -> OperationResult:
+    def get_operation_result(self, bindings: Bindings) -> OperationResult:
         """
         Evaluate the comparator operation and return the result.
 
-        :param first_result: The first operand's result.
-        :param second_result: The second operand's result.
+        :param bindings: The current bindings that has the values for the first and second operands.
         :return: The result of the operation.
         """
-        bindings = first_result.bindings | second_result.bindings
         left_value, right_value = (
             bindings[self.left._binding_id_],
             bindings[self.right._binding_id_],
