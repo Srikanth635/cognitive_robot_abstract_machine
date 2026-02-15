@@ -6,6 +6,7 @@ from typing_extensions import List
 
 import krrood.entity_query_language.entity_result_processors as eql
 from krrood.entity_query_language.predicate import length
+from krrood.entity_query_language.query_graph import QueryGraph
 from ..dataset.example_classes import NamedNumbers
 from krrood.entity_query_language.entity import (
     variable,
@@ -567,3 +568,18 @@ def test_order_by_aggregation(handles_and_containers_world):
     assert query.tolist() == sorted(
         cabinet.tolist(), key=lambda c: len(c.drawers), reverse=True
     )
+
+
+def test_where_with_aggregation_subquery_on_different_variable():
+    var1 = variable(int, domain=[1, 2, 3])
+    var2 = variable(int, domain=[1, 2, 3])
+    query = entity(var1).where(var1 == entity(eql.max(var2)))
+    # QueryGraph(query.build()).visualize()
+    assert query.tolist() == [3]
+
+
+def test_where_with_aggregation_subquery_on_same_variable():
+    var1 = variable(int, domain=[1, 2, 3])
+    query = entity(var1).where(var1 == entity(eql.max(var1)))
+    # QueryGraph(query.build()).visualize()
+    assert query.tolist() == [3]

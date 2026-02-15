@@ -1,3 +1,4 @@
+import itertools
 from dataclasses import dataclass
 from math import factorial
 
@@ -1171,3 +1172,13 @@ def test_first():
     assert first == 1
     first = an(entity(var1)).first()
     assert first == 1
+
+
+def test_evaluating_a_variable_while_it_is_being_evaluated():
+    domain = [1, 2, 3]
+    var1 = variable(int, domain)
+    v1_v2_pairs = []
+    for v in var1.evaluate():
+        for v2 in var1.evaluate():
+            v1_v2_pairs.append((v, v2))
+    assert v1_v2_pairs == list(itertools.product(domain, domain))
