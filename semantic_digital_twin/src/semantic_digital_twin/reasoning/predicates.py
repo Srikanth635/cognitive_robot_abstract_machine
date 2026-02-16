@@ -7,7 +7,8 @@ import math
 import trimesh.boolean
 from krrood.entity_query_language.predicate import (
     Predicate,
-    Symbol, symbolic_function,
+    Symbol,
+    symbolic_function,
 )
 from random_events.interval import Interval
 from typing_extensions import List, TYPE_CHECKING, Iterable, Type
@@ -24,7 +25,7 @@ from ..spatial_types import Vector3, Point3
 from ..spatial_types.spatial_types import HomogeneousTransformationMatrix
 from ..world import World
 from ..world_description.connections import FixedConnection
-from ..world_description.geometry import TriangleMesh
+from ..world_description.geometry import TriangleMesh, BoundingBox
 from ..world_description.world_entity import Body, Region, KinematicStructureEntity
 
 if TYPE_CHECKING:
@@ -189,6 +190,7 @@ def reachable(pose: HomogeneousTransformationMatrix, root: Body, tip: Body) -> b
     except UnreachableException as e:
         return False
     return True
+
 
 @symbolic_function
 def is_supported_by(
@@ -477,3 +479,20 @@ class ContainsType(Predicate):
 
     def __call__(self) -> bool:
         return any(isinstance(obj, self.obj_type) for obj in self.iterable)
+
+
+@symbolic_function
+def is_region_occupied(
+    region: BoundingBox, world: World, allowed_bodies: List[Body] = None
+) -> bool:
+    allowed_bodies = allowed_bodies or []
+    all_bbs = [
+        b.collision.as_bounding_box_collection_in_frame(
+            region.origin.reference_frame
+        ).bounding_box()
+        for b in set(world.bodies_with_enabled_collision) - set(allowed_bodies)
+    ]
+    for bb in all_bbs:
+        if region.intersection_with(bb):
+            return True
+    return False
