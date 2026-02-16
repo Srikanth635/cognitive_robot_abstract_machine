@@ -55,16 +55,9 @@ class Parallel(Goal):
             self.add_node(node)
 
     def build(self, context: BuildContext) -> NodeArtifacts:
-        if self.minimum_success is None:
-            return NodeArtifacts(
-                observation=trinary_logic_and(
-                    *[node.observation_variable for node in self.nodes]
-                )
-            )
-
-
         true_observation_variables = [x.observation_variable == True for x in self.nodes]
+        minimum_success = self.minimum_success if self.minimum_success is not None else len(self.nodes)
 
         return NodeArtifacts(
-            observation=self.minimum_success <= sum(*true_observation_variables)
+            observation=minimum_success <= sum(*true_observation_variables)
         )
