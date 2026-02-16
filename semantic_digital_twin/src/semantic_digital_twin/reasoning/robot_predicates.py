@@ -13,6 +13,8 @@ from krrood.entity_query_language.entity import (
     contains,
 )
 from krrood.entity_query_language.entity_result_processors import an, the
+from krrood.entity_query_language.predicate import symbolic_function
+from .predicates import is_region_occupied
 
 from ..collision_checking.collision_detector import Collision, CollisionCheck
 from ..collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
@@ -22,6 +24,7 @@ from ..spatial_types import HomogeneousTransformationMatrix
 from ..world_description.world_entity import Body
 
 
+@symbolic_function
 def robot_in_collision(
     robot: AbstractRobot,
     ignore_collision_with: Optional[List[Body]] = None,
@@ -63,6 +66,7 @@ def robot_in_collision(
     return collisions
 
 
+@symbolic_function
 def robot_holds_body(robot: AbstractRobot, body: Body) -> bool:
     """
     Check if a robot is holding an object.
@@ -83,6 +87,7 @@ def robot_holds_body(robot: AbstractRobot, body: Body) -> bool:
     )
 
 
+@symbolic_function
 def blocking(
     pose: HomogeneousTransformationMatrix,
     root: Body,
@@ -113,6 +118,7 @@ def blocking(
     return robot_in_collision(robot.evaluate(), [])
 
 
+@symbolic_function
 def is_body_in_gripper(
     body: Body, gripper: Manipulator, sample_size: int = 100
 ) -> float:
@@ -150,7 +156,8 @@ def is_body_in_gripper(
     return len([b for b in bodies if b == body]) / sample_size
 
 
-def gripper_is_holding_something(gripper: Manipulator) -> bool:
+@symbolic_function
+def is_gripper_holding_something(gripper: Manipulator) -> bool:
     """
     Check if the gripper is holding something.
 
@@ -161,3 +168,14 @@ def gripper_is_holding_something(gripper: Manipulator) -> bool:
         gripper.tool_frame
     )
     return len(bodies_under_tcp) > 0
+
+
+@symbolic_function
+def is_pose_free_for_robot(
+    robot: AbstractRobot, pose: HomogeneousTransformationMatrix
+) -> bool:
+    robot_bb = robot.base.bounding_box
+    target_robot_bb = robot_bb.transform_to_origin(pose)
+    return not is_region_occupied(
+        target_robot_bb, robot._world, robot.bodies_with_collisions
+    )

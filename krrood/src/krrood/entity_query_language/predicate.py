@@ -27,7 +27,7 @@ from .utils import T, merge_args_and_kwargs
 
 def symbolic_function(
     function: Callable[..., T],
-) -> Callable[..., Variable[T]]:
+) -> Callable[..., Variable[T], T]:
     """
     Function decorator that constructs a symbolic expression representing the function call
      when inside a symbolic_rule context.
