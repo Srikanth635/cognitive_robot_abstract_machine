@@ -10,6 +10,7 @@ GeneratorList -- implementation of generator list wrappers.
 from __future__ import annotations
 
 from copy import deepcopy
+from enum import Enum
 from inspect import isgeneratorfunction
 import os
 import math
@@ -23,7 +24,9 @@ from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.world_entity import (
     Body,
     SemanticAnnotation,
+    KinematicStructureEntity,
 )
+from .datastructures.grasp import GraspDescription
 
 from .tf_transformations import (
     quaternion_about_axis,
@@ -527,7 +530,7 @@ def translate_pose_along_local_axis(
     )
 
 
-def find_domain_for_type(value: Any, world: World) -> List:
+def find_domain_for_value(value: Any, world: World) -> List:
     value_type = type(value)
     if issubclass(value_type, SemanticAnnotation):
         return [
@@ -535,3 +538,12 @@ def find_domain_for_type(value: Any, world: World) -> List:
             for sa in world.semantic_annotations
             if issubclass(type(sa), (value_type, SemanticAnnotation))
         ]
+    elif issubclass(value_type, KinematicStructureEntity):
+        return world.kinematic_structure_entities
+    elif issubclass(value_type, Enum):
+        return [value_type(e.value) for e in value_type]
+    elif issubclass(value_type, PoseStamped):
+        return [value]
+    elif issubclass(value_type, GraspDescription):
+        return GraspDescription.calculate_grasp_descriptions(value.manipulator)
+    return []

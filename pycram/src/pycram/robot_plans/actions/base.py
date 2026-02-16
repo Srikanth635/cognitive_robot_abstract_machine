@@ -11,6 +11,7 @@ from krrood.entity_query_language.entity import variable, evaluate_condition
 from krrood.entity_query_language.symbolic import Variable, SymbolicExpression
 from ...designator import DesignatorDescription
 from ...failures import PlanFailure, ConditionNotSatisfied
+from ...utils import find_domain_for_value
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +106,7 @@ class ActionDescription(DesignatorDescription):
                     (
                         getattr(self, f.name)
                         if bound
-                        else find_domain_for_type(getattr(self, f.name))
+                        else find_domain_for_value(getattr(self, f.name), self.world)
                     )
                 ],
             )
