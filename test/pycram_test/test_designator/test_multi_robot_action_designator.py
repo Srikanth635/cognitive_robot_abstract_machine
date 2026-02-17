@@ -23,6 +23,7 @@ from pycram.view_manager import ViewManager
 from pycram.robot_plans import (
     MoveTorsoAction,
     MoveTorsoActionDescription,
+    MoveTCPActionDescription,
     NavigateActionDescription,
     SetGripperActionDescription,
     PickUpActionDescription,
@@ -131,6 +132,55 @@ def mutable_multiple_robot_apartment(setup_multi_robot_apartment):
     copy_world = deepcopy(world)
     copy_view = view.from_world(copy_world)
     return copy_world, copy_view, Context(copy_world, copy_view)
+
+
+def _make_sine_scan_poses(
+    anchor: PoseStamped,
+    lanes: int = 3,
+    lane_spacing: float = 0.03,
+    y_span: float = 0.12,
+    amplitude: float = 0.004,
+    wiggles: float = 1.0,
+    points_per_lane: int = 6,
+    lane_axis: str = "z",
+) -> list[PoseStamped]:
+    x0 = anchor.pose.position.x
+    y0 = anchor.pose.position.y
+    z0 = anchor.pose.position.z
+    q = anchor.pose.orientation
+
+    y_min = y0 - 0.5 * y_span
+    y_max = y0 + 0.5 * y_span
+    poses: list[PoseStamped] = []
+
+    if lane_axis not in ("x", "z"):
+        raise ValueError(f"lane_axis must be 'x' or 'z', got: {lane_axis}")
+
+    for i in range(lanes):
+        yc = np.linspace(y_min, y_max, points_per_lane)
+        if i % 2 == 1:
+            yc = yc[::-1]
+
+        phase = 2.0 * np.pi * wiggles * (yc - y_min) / max(y_span, 1e-9)
+        wiggle = amplitude * np.sin(phase)
+        if lane_axis == "x":
+            lane_center = x0 + i * lane_spacing
+            xc = lane_center + wiggle
+            zc = np.full_like(yc, z0, dtype=float)
+        else:
+            lane_center = z0 + i * lane_spacing
+            zc = lane_center + wiggle
+            xc = np.full_like(yc, x0, dtype=float)
+
+        for x, y, z in zip(xc, yc, zc):
+            poses.append(
+                PoseStamped.from_list(
+                    position=[float(x), float(y), float(z)],
+                    orientation=[q.x, q.y, q.z, q.w],
+                    frame=anchor.frame_id,
+                )
+            )
+    return poses
 
 
 def test_move_torso_multi(immutable_multiple_robot_apartment):
@@ -256,6 +306,32 @@ def test_reach_action_multi(immutable_multiple_robot_apartment):
 
     assert manipulator_position[:3] == pytest.approx([1, -2, 0.8], abs=0.01)
     compare_orientations(manipulator_orientation, target_orientation, decimal=2)
+
+
+def test_move_tcp_follows_sine_waypoints_multi(immutable_multiple_robot_apartment):
+    world, view, context = immutable_multiple_robot_apartment
+    left_arm = ViewManager.get_arm_view(Arms.LEFT, view)
+    frame = world.root
+    anchor = PoseStamped.from_list([2.2, 2, 0.7], frame=frame)
+    anchor_T = anchor.to_spatial_type()
+    offset_T = HomogeneousTransformationMatrix.from_xyz_axis_angle(
+        z=-0.03,
+        axis=(0, 1, 0),
+        angle=0,
+        reference_frame=world.root,
+    )
+    target_pose = PoseStamped.from_spatial_type(anchor_T @ offset_T)
+    waypoints = _make_sine_scan_poses(target_pose, lane_axis="z")
+
+    plan = SequentialPlan(
+        context,
+        MoveTCPActionDescription(arm=Arms.LEFT, target_locations=waypoints),
+    )
+    with simulated_robot:
+        plan.perform()
+
+    dist = np.linalg.norm(anchor.to_spatial_type().to_np()[3, :3])
+    assert dist < 0.01
 
 
 def test_grasping(immutable_multiple_robot_apartment):
