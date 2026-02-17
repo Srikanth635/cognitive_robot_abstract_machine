@@ -19,7 +19,7 @@ from ....failures import TorsoGoalNotReached, ConfigurationNotReached
 from ....language import SequentialPlan
 from ....view_manager import ViewManager
 from ....robot_plans.actions.base import ActionDescription
-from ....robot_plans.motions.gripper import MoveGripperMotion, MoveTCPMotion, MoveTCPWaypointsMotion
+from ....robot_plans.motions.gripper import MoveGripperMotion, MoveTCPMotion
 from ....robot_plans.motions.robot_body import MoveJointsMotion
 from ....validation.goal_validator import create_multiple_joint_goal_validator
 
@@ -304,15 +304,16 @@ class CarryAction(ActionDescription):
 
 
 @dataclass
-class SimpleMoveTCPAction(ActionDescription):
+class MoveTCPAction(ActionDescription):
     """
     Represents an action to move a robotic arm's TCP (Tool Center Point) to a target
-    location or through a series of waypoints.
+    location. If multiple poses are provided, only the final pose is executed.
     """
 
-    target_location: Union[Iterable[PoseStamped], PoseStamped]
+    target_location: Union[PoseStamped, Iterable[PoseStamped]]
     """
-    Target location(s) for the TCP motion. Can be a single PoseStamped object or an iterable of PoseStamped objects.
+    Target location for the TCP motion as a single PoseStamped or an iterable of
+    PoseStamped objects.
     """
 
     arm: Arms
@@ -322,18 +323,21 @@ class SimpleMoveTCPAction(ActionDescription):
 
     def execute(self) -> None:
         if isinstance(self.target_location, PoseStamped):
-            motion = MoveTCPMotion(
-                self.target_location,
-                self.arm,
-                allow_gripper_collision=True,
-                movement_type=MovementType.CARTESIAN,
-            )
+            target_locations = [self.target_location]
         else:
-            motion = MoveTCPWaypointsMotion(
-                list(self.target_location),
-                self.arm,
-                allow_gripper_collision=True,
-            )
+            target_locations = list(self.target_location)
+
+        if not target_locations:
+            raise ValueError("Provide at least one target location.")
+
+        # Some robots cannot reliably execute waypoint-constrained TCP motions.
+        # Use a single TCP goal pose for broad robot compatibility.
+        motion = MoveTCPMotion(
+            target_locations[-1],
+            self.arm,
+            allow_gripper_collision=True,
+            movement_type=MovementType.CARTESIAN,
+        )
 
         SequentialPlan(self.context, motion).perform()
 
@@ -347,10 +351,10 @@ class SimpleMoveTCPAction(ActionDescription):
     @classmethod
     def description(
         cls,
+        arm: Union[Iterable[Arms], Arms],
         target_location: Union[Iterable[PoseStamped], PoseStamped] = None,
-        arm: Union[Iterable[Arms], Arms] = None,
         target_locations: Union[Iterable[PoseStamped], PoseStamped] = None,
-    ) -> PartialDesignator[Type[SimpleMoveTCPAction]]:
+    ) -> PartialDesignator[MoveTCPAction]:
         resolved_target = (
             target_location if target_location is not None else target_locations
         )
@@ -358,20 +362,21 @@ class SimpleMoveTCPAction(ActionDescription):
             raise ValueError(
                 "Provide either target_location or target_locations."
             )
-        if arm is None:
-            raise ValueError("Provide arm.")
 
         if isinstance(resolved_target, PoseStamped):
-            target_for_designator = resolved_target
+            target_for_designator = [resolved_target]
         else:
-            resolved_target_list = list(resolved_target)
-            if all(isinstance(pose, PoseStamped) for pose in resolved_target_list):
-                target_for_designator = [resolved_target_list]
-            else:
-                target_for_designator = resolved_target
+            target_for_designator = list(resolved_target)
 
+        if not target_for_designator:
+            raise ValueError("Provide at least one target location.")
+        if not all(isinstance(pose, PoseStamped) for pose in target_for_designator):
+            raise ValueError("All target locations must be PoseStamped.")
+
+        # Wrap waypoints as one designator alternative so PartialDesignator
+        # does not split them into single PoseStamped entries.
         return PartialDesignator(
-            cls, target_location=target_for_designator, arm=arm
+            cls, target_location=[target_for_designator], arm=arm
         )
 
 
@@ -379,4 +384,4 @@ MoveTorsoActionDescription = MoveTorsoAction.description
 SetGripperActionDescription = SetGripperAction.description
 ParkArmsActionDescription = ParkArmsAction.description
 CarryActionDescription = CarryAction.description
-SimpleMoveTCPActionDescription = SimpleMoveTCPAction.description
+MoveTCPActionDescription = MoveTCPAction.description
