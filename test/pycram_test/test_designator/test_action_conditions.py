@@ -10,7 +10,7 @@ from pycram.datastructures.grasp import GraspDescription
 from pycram.failures import ConditionNotSatisfied
 from pycram.language import SequentialPlan
 from pycram.motion_executor import simulated_robot
-from pycram.robot_plans import PickUpAction
+from pycram.robot_plans import PickUpAction, PickUpActionDescription
 from semantic_digital_twin.reasoning.predicates import reachable
 from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
 from semantic_digital_twin.world_description.world_entity import Body
@@ -49,21 +49,27 @@ def test_get_unbound_variables(immutable_model_world):
     world, view, context = immutable_model_world
 
     pick_action = PickUpAction(
-        world.get_body_by_name("milk.stl"),
-        Arms.LEFT,
-        GraspDescription(
+        kse := world.get_body_by_name("milk.stl"),
+        arm := Arms.LEFT,
+        grasp_desc := GraspDescription(
             ApproachDirection.FRONT,
             VerticalAlignment.NoAlignment,
             view.left_arm.manipulator,
         ),
     )
+    SequentialPlan(context, pick_action)
 
     unbound_variables = pick_action.get_variables(bound=False)
 
     assert len(unbound_variables) == 3
+    assert list(unbound_variables[arm]._domain_) == [Arms.LEFT, Arms.RIGHT, Arms.BOTH]
+    assert len(list(unbound_variables[grasp_desc]._domain_)) == 12
+    assert len(list(unbound_variables[kse]._domain_)) == len(
+        world.kinematic_structure_entities
+    )
 
 
-def test_pick_up_conditions(immutable_model_world):
+def test_pick_up_pre_conditions(immutable_model_world):
     world, view, context = immutable_model_world
 
     pick_action = PickUpAction(
@@ -103,3 +109,34 @@ def test_pick_up_conditions(immutable_model_world):
     assert evaluate_condition(pre_condition) == False
     assert evaluate_condition(post_condition) == True
     assert pick_action.evaluate_post_condition() == True
+
+
+def test_pick_up_pose_condition(mutable_model_world):
+    world, view, context = mutable_model_world
+    pick_action = PickUpAction(
+        world.get_body_by_name("milk.stl"),
+        Arms.LEFT,
+        GraspDescription(
+            ApproachDirection.FRONT,
+            VerticalAlignment.NoAlignment,
+            view.left_arm.manipulator,
+        ),
+    )
+    view.root.parent_connection.origin = HomogeneousTransformationMatrix.from_xyz_rpy(
+        1.8, 2, 0
+    )
+
+    plan = SequentialPlan(context, pick_action)
+
+    assert pick_action.evaluate_pre_condition()
+
+    with simulated_robot:
+        plan.perform()
+
+    assert world.get_body_by_name(
+        "milk.stl"
+    ) in world.get_kinematic_structure_entities_of_branch(
+        view.left_arm.manipulator.tool_frame
+    )
+
+    assert pick_action.evaluate_post_condition()

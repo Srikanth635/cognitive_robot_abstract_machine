@@ -6,11 +6,12 @@ from datetime import timedelta
 
 from typing_extensions import Union, Optional, Type, Any, Iterable
 
-from krrood.entity_query_language.entity import and_, not_
+from krrood.entity_query_language.entity import and_, not_, or_
 from krrood.entity_query_language.predicate import Symbol
 from krrood.entity_query_language.symbolic import SymbolicExpression
 from semantic_digital_twin.datastructures.definitions import GripperState
 from semantic_digital_twin.reasoning.predicates import reachable
+from semantic_digital_twin.reasoning.robot_predicates import is_body_in_gripper
 from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
 from semantic_digital_twin.world_description.connections import FixedConnection
 from semantic_digital_twin.world_description.world_entity import Body
@@ -27,7 +28,7 @@ from ....datastructures.pose import PoseStamped
 from ....failures import ObjectNotGraspedError
 from ....failures import ObjectNotInGraspingArea
 from ....language import SequentialPlan
-from ....querying.predicates import GripperIsFree
+from ....querying.predicates import GripperIsFree, GripperIsNotFree
 from ....view_manager import ViewManager
 from ....robot_plans.actions.base import ActionDescription
 from ....utils import translate_pose_along_local_axis
@@ -206,11 +207,12 @@ class PickUpAction(ActionDescription):
 
     def post_condition(self, bound=True) -> SymbolicExpression:
         variables = self.get_variables(bound)
-        return and_(
+        return or_(
             manipulator := ViewManager.get_end_effector_view(
                 variables[self.arm], self.robot_view
             ),
-            not_(GripperIsFree(manipulator)),
+            GripperIsNotFree(manipulator),
+            is_body_in_gripper(self.object_designator, manipulator) > 0.9,
         )
 
     @classmethod

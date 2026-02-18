@@ -4,14 +4,34 @@ import os.path
 from abc import abstractmethod
 import logging
 from dataclasses import dataclass, fields
+from enum import Enum
+from itertools import product
 
-from typing_extensions import Any, Optional, Callable, TypeVar, Dict, Type
+from typing_extensions import (
+    Any,
+    Optional,
+    Callable,
+    TypeVar,
+    Dict,
+    Type,
+    List,
+    Union,
+    Iterable,
+)
 
 from krrood.entity_query_language.entity import variable, evaluate_condition
 from krrood.entity_query_language.symbolic import Variable, SymbolicExpression
+from semantic_digital_twin.world import World
+from semantic_digital_twin.world_description.world_entity import (
+    SemanticAnnotation,
+    KinematicStructureEntity,
+)
+from ...datastructures.enums import ApproachDirection, VerticalAlignment
+from ...datastructures.grasp import GraspDescription
+from ...datastructures.pose import PoseStamped
 from ...designator import DesignatorDescription
 from ...failures import PlanFailure, ConditionNotSatisfied
-from ...utils import find_domain_for_value
+from ...utils import get_all_values_in_enum
 
 logger = logging.getLogger(__name__)
 
@@ -102,13 +122,11 @@ class ActionDescription(DesignatorDescription):
         return {
             getattr(self, f.name): variable(
                 type(getattr(self, f.name)),
-                [
-                    (
-                        getattr(self, f.name)
-                        if bound
-                        else find_domain_for_value(getattr(self, f.name), self.world)
-                    )
-                ],
+                (
+                    [getattr(self, f.name)]
+                    if bound
+                    else self._find_domain_for_value(getattr(self, f.name), self.world)
+                ),
             )
             for f in self_fields
         }
@@ -129,5 +147,31 @@ class ActionDescription(DesignatorDescription):
             return True
         raise ConditionNotSatisfied(False, self.__class__, self.post_condition())
 
+    def _find_domain_for_value(self, value: Any, world: World) -> List:
+        value_type = type(value)
+        if issubclass(value_type, SemanticAnnotation):
+            return [
+                sa
+                for sa in world.semantic_annotations
+                if issubclass(type(sa), (value_type, SemanticAnnotation))
+            ]
+        elif issubclass(value_type, KinematicStructureEntity):
+            return world.kinematic_structure_entities
+        elif issubclass(value_type, Enum):
+            return get_all_values_in_enum(value_type)
+        elif issubclass(value_type, PoseStamped):
+            return [value]
+        elif issubclass(value_type, GraspDescription):
+            return [
+                GraspDescription(approach, align, value.manipulator)
+                for approach, align in product(
+                    get_all_values_in_enum(ApproachDirection),
+                    get_all_values_in_enum(VerticalAlignment),
+                )
+            ]
+        logger.warning(f"There is no domain for type {value_type}")
+        return []
+
 
 ActionType = TypeVar("ActionType", bound=ActionDescription)
+type DescriptionType[T] = Union[Iterable[T], T]
