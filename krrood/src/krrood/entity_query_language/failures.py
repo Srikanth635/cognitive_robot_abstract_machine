@@ -13,14 +13,14 @@ from ..utils import DataclassException
 
 if TYPE_CHECKING:
     from krrood.entity_query_language.query.query_descriptor import (
-        QueryObjectDescriptor,
+        Query,
     )
     from krrood.entity_query_language.query.query_descriptor_operations import GroupedBy
     from krrood.entity_query_language.query.result_quantifiers import ResultQuantifier
     from krrood.entity_query_language.operators.aggregators import Aggregator
     from krrood.entity_query_language.query.query_builders import GroupedByBuilder
-    from .base_expressions import SymbolicExpression
-    from .variable import Selectable, Variable
+    from krrood.entity_query_language.core.base_expressions import SymbolicExpression
+    from krrood.entity_query_language.core.variable import Selectable, Variable
     from krrood.entity_query_language.query.match import Match
 
 
@@ -146,7 +146,7 @@ class TryingToModifyAnAlreadyBuiltQuery(UsageError):
     Check how to write queries correctly in :doc:`/krrood/doc/eql/writing_queries`.
     """
 
-    query_descriptor: QueryObjectDescriptor
+    query_descriptor: Query
     """
     The query object descriptor that has already been built.
     """
@@ -179,7 +179,7 @@ class NoConditionsProvided(UsageError):
     For further details, see the section on writing queries and `where` clauses in :doc:`/krrood/doc/eql/writing_queries`.
     """
 
-    descriptor: QueryObjectDescriptor
+    descriptor: Query
     """
     The query object descriptor that has no conditions in its where/having statement.
     """
@@ -220,7 +220,7 @@ class AggregationUsageError(UsageError):
     For further details, see :doc:`/krrood/doc/eql/result_processors`.
     """
 
-    descriptor: Optional[QueryObjectDescriptor] = field(default=None, kw_only=True)
+    descriptor: Optional[Query] = field(default=None, kw_only=True)
     """
     The query object descriptor that contains the aggregation.
     """
@@ -366,7 +366,7 @@ class LiteralConditionError(UsageError):
     For further details, see the warning about literal conditions in :doc:`/krrood/doc/eql/writing_queries`.
     """
 
-    query_descriptor: QueryObjectDescriptor
+    query_descriptor: Query
     """
     The query object descriptor that contains the literal condition.
     """

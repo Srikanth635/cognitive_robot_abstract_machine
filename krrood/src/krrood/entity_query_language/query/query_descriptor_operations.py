@@ -1,50 +1,24 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass, field
 from functools import cached_property, lru_cache
 
 from typing_extensions import Tuple, Any, Iterator, Iterable, Optional, Callable, Dict
 
-from krrood.entity_query_language.operators.aggregators import Aggregator, Count
-from krrood.entity_query_language.base_expressions import DerivedExpression, TruthValueOperator, SymbolicExpression, \
-    UnaryExpression, Bindings, OperationResult, BinaryExpression
-from krrood.entity_query_language.failures import UnsupportedAggregationOfAGroupedByVariable
-from krrood.entity_query_language.operators.set_operations import MultiArityExpressionThatPerformsACartesianProduct
-from krrood.entity_query_language.utils import ensure_hashable, is_iterable
-from krrood.entity_query_language.variable import Selectable, DomainMapping
+from ..operators.aggregators import Aggregator, Count
+from krrood.entity_query_language.core.base_expressions import DerivedExpression, SymbolicExpression, \
+    UnaryExpression, Bindings, OperationResult, BinaryExpression, Filter
+from ..failures import UnsupportedAggregationOfAGroupedByVariable
+from ..operators.set_operations import MultiArityExpressionThatPerformsACartesianProduct
+from ..utils import ensure_hashable, is_iterable
+from krrood.entity_query_language.core.variable import Selectable, DomainMapping
 
 
 GroupKey = Tuple[Any, ...]
 """
 A tuple representing values of variables that are used in the grouped_by clause.
 """
-
-
-@dataclass(eq=False, repr=False)
-class Filter(DerivedExpression, TruthValueOperator, ABC):
-    """
-    Data source that evaluates the truth value for each data point according to a condition expression and filters out
-    the data points that do not satisfy the condition.
-    The truth value of this expression is derived from the truth value of the condition expression.
-    """
-
-    @property
-    def _original_expression_(self) -> SymbolicExpression:
-        return self.condition
-
-    @property
-    @abstractmethod
-    def condition(self) -> SymbolicExpression:
-        """
-        The conditions expression which generate the valid bindings that satisfy the constraints.
-        """
-        ...
-
-    @property
-    def _name_(self):
-        return self.__class__.__name__
 
 
 @dataclass(eq=False, repr=False)

@@ -5,25 +5,18 @@ import uuid
 from abc import ABC, abstractmethod
 from collections import UserDict
 from copy import copy
-
 from dataclasses import dataclass, field
 from functools import cached_property, lru_cache
 
-from typing import Dict, Any, Optional, ClassVar, List, Iterator, Union as TypingUnion, Tuple, Set, Self
+from typing_extensions import Dict, Any, Optional, ClassVar, List, Iterator, Union as TypingUnion, Tuple, Set, Self, \
+    TYPE_CHECKING
 
-from typing_extensions import TYPE_CHECKING
-
-from .failures import NoExpressionFoundForGivenID, NonPositiveLimitValue
-
-from krrood.symbol_graph.symbol_graph import SymbolGraph
-
-from krrood.entity_query_language.query.query_descriptor_operations import Filter
-from krrood.entity_query_language.operators.core_logical_operators import Not, AND, OR
-
-from .utils import make_list, T, make_set
+from ..failures import NoExpressionFoundForGivenID, NonPositiveLimitValue
+from ..utils import make_list, T, make_set
+from ...symbol_graph.symbol_graph import SymbolGraph
 
 if TYPE_CHECKING:
-    from krrood.entity_query_language.rules.conclusion import Conclusion
+    from ..rules.conclusion import Conclusion
     from .variable import Variable, Selectable
 
 
@@ -31,85 +24,6 @@ Bindings = Dict[int, Any]
 """
 A dictionary for variable bindings in EQL operations
 """
-
-@dataclass
-class OperationResult:
-    """
-    A data structure that carries information about the result of an operation in EQL.
-    """
-
-    bindings: Bindings
-    """
-    The bindings resulting from the operation, mapping variable IDs to their values.
-    """
-    is_false: bool
-    """
-    Whether the operation resulted in a false value (i.e., The operation condition was not satisfied)
-    """
-    operand: SymbolicExpression
-    """
-    The operand that produced the result.
-    """
-    previous_operation_result: Optional[OperationResult] = None
-    """
-    The result of the operation that was evaluated before this one.
-    """
-
-    @cached_property
-    def all_bindings(self) -> Bindings:
-        """
-        :return: All the bindings from all the evaluated operations until this one, including this one.
-        """
-        if (
-                self.previous_operation_result is None
-                or self.previous_operation_result.bindings is self.bindings
-        ):
-            return self.bindings
-        return self.previous_operation_result.bindings | self.bindings
-
-    @cached_property
-    def has_value(self) -> bool:
-        return self.operand._binding_id_ in self.bindings
-
-    @cached_property
-    def is_true(self) -> bool:
-        return not self.is_false
-
-    @property
-    def value(self) -> Any:
-        """
-        The value of the operation result, retrieved from the bindings using the operand's ID.
-
-        :raises: KeyError if the operand is not found in the bindings.
-        """
-        return self.bindings[self.operand._binding_id_]
-
-    def __contains__(self, item):
-        return item in self.bindings
-
-    def __getitem__(self, item):
-        return self.bindings[item]
-
-    def __setitem__(self, key, value):
-        self.bindings[key] = value
-
-    def update(self, other: Bindings | OperationResult):
-        if isinstance(other, OperationResult):
-            self.bindings.update(other.bindings)
-        else:
-            self.bindings.update(other)
-        return self
-
-    def __hash__(self):
-        return id(self)
-
-    def __eq__(self, other):
-        return (
-                self.bindings == other.bindings
-                and self.is_true == other.is_true
-                and self.operand == other.operand
-                and self.previous_operation_result == other.previous_operation_result
-        )
 
 
 @dataclass(eq=False)
@@ -483,15 +397,18 @@ class SymbolicExpression(ABC):
         ...
 
     def __and__(self, other):
+        from ..operators.core_logical_operators import AND
         return AND(self, other)
 
     def __or__(self, other):
+        from ..operators.core_logical_operators import OR
         return OR(self, other)
 
     def _invert_(self):
         """
         Invert the symbolic expression.
         """
+        from ..operators.core_logical_operators import Not
         return Not(self)
 
     def __enter__(self) -> Self:
@@ -519,41 +436,6 @@ class SymbolicExpression(ABC):
 
 
 @dataclass(eq=False, repr=False)
-class TruthValueOperator(SymbolicExpression, ABC):
-    """
-    An abstract superclass for operators that work with truth values of operations, thus requiring its children expressions to update
-    their truth value when yielding results.
-    """
-
-
-@dataclass(eq=False, repr=False)
-class DerivedExpression(SymbolicExpression, ABC):
-    """
-    A symbolic expression that has its results derived from another symbolic expression, and thus it's value is the
-    value of the child expression.
-    """
-
-    @property
-    @abstractmethod
-    def _original_expression_(self) -> SymbolicExpression:
-        """
-        The original expression from which this expression is derived.
-        """
-        ...
-
-    @property
-    def _binding_id_(self) -> int:
-        return self._original_expression_._binding_id_
-
-    @property
-    def _is_false_(self) -> bool:
-        return self._original_expression_._is_false_
-
-    def _process_result_(self, result: OperationResult) -> Any:
-        return self._original_expression_._process_result_(result)
-
-
-@dataclass(eq=False, repr=False)
 class UnaryExpression(SymbolicExpression, ABC):
     """
     A unary expression is a symbolic expression that takes a single argument (i.e., has a single child expression).
@@ -566,6 +448,7 @@ class UnaryExpression(SymbolicExpression, ABC):
     """
 
     def __post_init__(self):
+        super().__post_init__()
         self._child_ = self._update_children_(self._child_)[0]
 
     def _replace_child_field_(
@@ -596,6 +479,7 @@ class MultiArityExpression(SymbolicExpression, ABC):
     """
 
     def __post_init__(self):
+        super().__post_init__()
         self.update_children(*self._operation_children_)
 
     def _replace_child_field_(
@@ -646,6 +530,7 @@ class BinaryExpression(SymbolicExpression, ABC):
     """
 
     def __post_init__(self):
+        super().__post_init__()
         self.left, self.right = self._update_children_(self.left, self.right)
 
     def _replace_child_field_(
@@ -663,6 +548,146 @@ class BinaryExpression(SymbolicExpression, ABC):
         This is useful for accessing the leaves of the symbolic expression tree.
         """
         return self.left._all_variable_instances_ + self.right._all_variable_instances_
+
+
+@dataclass(eq=False, repr=False)
+class TruthValueOperator(SymbolicExpression, ABC):
+    """
+    An abstract superclass for operators that work with truth values of operations, thus requiring its children expressions to update
+    their truth value when yielding results.
+    """
+
+
+@dataclass(eq=False, repr=False)
+class DerivedExpression(SymbolicExpression, ABC):
+    """
+    A symbolic expression that has its results derived from another symbolic expression, and thus it's value is the
+    value of the child expression.
+    """
+
+    @property
+    @abstractmethod
+    def _original_expression_(self) -> SymbolicExpression:
+        """
+        The original expression from which this expression is derived.
+        """
+        ...
+
+    @property
+    def _binding_id_(self) -> int:
+        return self._original_expression_._binding_id_
+
+    @property
+    def _is_false_(self) -> bool:
+        return self._original_expression_._is_false_
+
+    def _process_result_(self, result: OperationResult) -> Any:
+        return self._original_expression_._process_result_(result)
+
+
+@dataclass(eq=False, repr=False)
+class Filter(DerivedExpression, TruthValueOperator, ABC):
+    """
+    Data source that evaluates the truth value for each data point according to a condition expression and filters out
+    the data points that do not satisfy the condition.
+    The truth value of this expression is derived from the truth value of the condition expression.
+    """
+
+    @property
+    def _original_expression_(self) -> SymbolicExpression:
+        return self.condition
+
+    @property
+    @abstractmethod
+    def condition(self) -> SymbolicExpression:
+        """
+        The conditions expression which generate the valid bindings that satisfy the constraints.
+        """
+        ...
+
+    @property
+    def _name_(self):
+        return self.__class__.__name__
+
+
+@dataclass
+class OperationResult:
+    """
+    A data structure that carries information about the result of an operation in EQL.
+    """
+
+    bindings: Bindings
+    """
+    The bindings resulting from the operation, mapping variable IDs to their values.
+    """
+    is_false: bool
+    """
+    Whether the operation resulted in a false value (i.e., The operation condition was not satisfied)
+    """
+    operand: SymbolicExpression
+    """
+    The operand that produced the result.
+    """
+    previous_operation_result: Optional[OperationResult] = None
+    """
+    The result of the operation that was evaluated before this one.
+    """
+
+    @cached_property
+    def all_bindings(self) -> Bindings:
+        """
+        :return: All the bindings from all the evaluated operations until this one, including this one.
+        """
+        if (
+                self.previous_operation_result is None
+                or self.previous_operation_result.bindings is self.bindings
+        ):
+            return self.bindings
+        return self.previous_operation_result.bindings | self.bindings
+
+    @cached_property
+    def has_value(self) -> bool:
+        return self.operand._binding_id_ in self.bindings
+
+    @cached_property
+    def is_true(self) -> bool:
+        return not self.is_false
+
+    @property
+    def value(self) -> Any:
+        """
+        The value of the operation result, retrieved from the bindings using the operand's ID.
+
+        :raises: KeyError if the operand is not found in the bindings.
+        """
+        return self.bindings[self.operand._binding_id_]
+
+    def __contains__(self, item):
+        return item in self.bindings
+
+    def __getitem__(self, item):
+        return self.bindings[item]
+
+    def __setitem__(self, key, value):
+        self.bindings[key] = value
+
+    def update(self, other: Bindings | OperationResult):
+        if isinstance(other, OperationResult):
+            self.bindings.update(other.bindings)
+        else:
+            self.bindings.update(other)
+        return self
+
+    def __hash__(self):
+        return id(self)
+
+    def __eq__(self, other):
+        return (
+                self.bindings == other.bindings
+                and self.is_true == other.is_true
+                and self.operand == other.operand
+                and self.previous_operation_result == other.previous_operation_result
+        )
 
 
 class UnificationDict(UserDict):

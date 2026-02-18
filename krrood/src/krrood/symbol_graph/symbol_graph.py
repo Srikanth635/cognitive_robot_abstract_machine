@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-from copy import copy
 import os
 import weakref
 from collections import defaultdict
 from dataclasses import dataclass, field, InitVar
-from typing import ClassVar
 
 from rustworkx import PyDiGraph
 from typing_extensions import (
-    TYPE_CHECKING,
     Any,
     Iterable,
     Optional,
@@ -18,19 +15,17 @@ from typing_extensions import (
     Dict,
     DefaultDict,
     Callable,
+    ClassVar
 )
 
-from krrood import logger
-from krrood.class_diagrams import ClassDiagram
-from krrood.class_diagrams.wrapped_field import WrappedField
-from krrood.ontomatic.property_descriptor.attribute_introspector import (
+from .. import logger
+from ..class_diagrams import ClassDiagram
+from ..class_diagrams.wrapped_field import WrappedField
+from ..ontomatic.property_descriptor.attribute_introspector import (
     DescriptorAwareIntrospector,
 )
-from krrood.singleton import SingletonMeta
-from krrood.utils import recursive_subclasses
-
-if TYPE_CHECKING:
-    from krrood.entity_query_language.predicate import Symbol
+from ..singleton import SingletonMeta
+from ..utils import recursive_subclasses
 
 
 @dataclass(unsafe_hash=True)

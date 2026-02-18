@@ -7,15 +7,15 @@ from typing_extensions import ClassVar, Optional, Dict
 from krrood.entity_query_language.rules.conclusion import Conclusion
 from krrood.entity_query_language.rules.conclusion_selector import ConclusionSelector
 from krrood.entity_query_language.query.query_descriptor import (
-    QueryObjectDescriptor,
+    Query,
 )
-from krrood.entity_query_language.query.query_descriptor_operations import Filter, OrderedBy, GroupedBy
+from krrood.entity_query_language.query.query_descriptor_operations import OrderedBy, GroupedBy
 from krrood.entity_query_language.query.result_quantifiers import ResultQuantifier
-from krrood.entity_query_language.operators.set_operations import Concatenate
+from .operators.concatenation import Concatenation
 from krrood.entity_query_language.operators.aggregators import Aggregator
 from krrood.entity_query_language.operators.core_logical_operators import LogicalOperator
-from .base_expressions import SymbolicExpression
-from .variable import Variable, Literal, DomainMapping
+from krrood.entity_query_language.core.base_expressions import SymbolicExpression, Filter
+from krrood.entity_query_language.core.variable import Variable, Literal, DomainMapping
 from krrood.entity_query_language.operators.comparator import Comparator
 
 try:
@@ -133,7 +133,7 @@ class QueryGraph:
         parent_expression = parent_node.data
         for child in parent_expression._children_:
             child_node = self.construct_graph(child)
-            if isinstance(parent_expression, QueryObjectDescriptor):
+            if isinstance(parent_expression, Query):
                 if child._binding_id_ in [
                     v._binding_id_
                     for v in parent_expression._selected_variables_
@@ -161,14 +161,14 @@ class ColorLegend(RXUtilsColorLegend):
             case ResultQuantifier():
                 name = "ResultQuantifier"
                 color = "#9467bd"
-            case QueryObjectDescriptor():
+            case Query():
                 name = "QueryObjectDescriptor"
                 color = "#d62728"
             case Literal():
                 color = "#949292"
             case Variable():
                 color = "cornflowerblue"
-            case Concatenate():
+            case Concatenation():
                 name = "Union"
                 color = "#949292"
             case DomainMapping():

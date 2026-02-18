@@ -27,29 +27,29 @@ from typing_extensions import (
     Iterator,
 )
 
-from krrood.entity_query_language.operators.aggregators import Aggregator
-from krrood.entity_query_language.base_expressions import Bindings, OperationResult, SymbolicExpression, UnaryExpression
-from .query_descriptor_operations import Where, Having, GroupedBy
-from krrood.entity_query_language.operators.set_operations import MultiArityExpressionThatPerformsACartesianProduct
-from krrood.entity_query_language.cache_data import (
-    SeenSet,
-)
-from krrood.entity_query_language.failures import (
-    UnsupportedNegation,
-    TryingToModifyAnAlreadyBuiltQuery,
-)
+from krrood.entity_query_language.core.variable import Selectable, CanBehaveLikeAVariable
 from .query_builders import WhereBuilder, HavingBuilder, GroupedByBuilder, QuantifierBuilder, OrderedByBuilder
+from .query_descriptor_operations import Where, Having, GroupedBy
 from .result_quantifiers import (
     ResultQuantificationConstraint,
     ResultQuantifier, An,
 )
-from krrood.entity_query_language.utils import (
+from krrood.entity_query_language.core.base_expressions import Bindings, OperationResult, SymbolicExpression, UnaryExpression
+from ..cache_data import (
+    SeenSet,
+)
+from ..failures import (
+    UnsupportedNegation,
+    TryingToModifyAnAlreadyBuiltQuery,
+)
+from ..operators.aggregators import Aggregator
+from ..operators.set_operations import MultiArityExpressionThatPerformsACartesianProduct
+from ..utils import (
     T,
 )
-from krrood.entity_query_language.variable import Selectable, CanBehaveLikeAVariable
 
 if TYPE_CHECKING:
-    from krrood.entity_query_language.factories import ConditionType
+    from ..factories import ConditionType
 
 ResultMapping = Callable[[Iterator[OperationResult]], Iterator[OperationResult]]
 """
@@ -58,7 +58,7 @@ A function that maps the results of a query object descriptor to a new set of re
 
 
 @dataclass(eq=False, repr=False)
-class QueryObjectDescriptor(MultiArityExpressionThatPerformsACartesianProduct, ABC):
+class Query(MultiArityExpressionThatPerformsACartesianProduct, ABC):
     """
     Describes the queried object(s), could be a query over a single variable or a set of variables,
     also describes the condition(s)/properties of the queried object(s).
@@ -115,7 +115,7 @@ class QueryObjectDescriptor(MultiArityExpressionThatPerformsACartesianProduct, A
 
     def __post_init__(self):
         for var in self._selected_variables_:
-            if isinstance(var, QueryObjectDescriptor):
+            if isinstance(var, Query):
                 var.build()
         self._operation_children_ = tuple(self._selected_variables_)
         super().__post_init__()
@@ -443,7 +443,7 @@ class QueryObjectDescriptor(MultiArityExpressionThatPerformsACartesianProduct, A
 
 
 @dataclass(eq=False, repr=False)
-class SetOf(QueryObjectDescriptor):
+class SetOf(Query):
     """
     A query over a set of variables.
     """
@@ -476,6 +476,7 @@ class SetOfSelectable(UnaryExpression, CanBehaveLikeAVariable[T]):
     """
 
     def __post_init__(self):
+        super().__post_init__()
         self._var_ = self
 
     @property
@@ -498,7 +499,7 @@ class SetOfSelectable(UnaryExpression, CanBehaveLikeAVariable[T]):
 
     @property
     def _name_(self) -> str:
-        return f"{self._set_of_._name_}.{self._selected_var_._name_}"
+        return f"{self._set_of_._name_}[{self._selected_var_._name_}]"
 
     @cached_property
     def _all_variable_instances_(self) -> List[Selectable]:
@@ -506,7 +507,7 @@ class SetOfSelectable(UnaryExpression, CanBehaveLikeAVariable[T]):
 
 
 @dataclass(eq=False, repr=False)
-class Entity(QueryObjectDescriptor, CanBehaveLikeAVariable[T]):
+class Entity(Query, CanBehaveLikeAVariable[T]):
     """
     A query over a single variable.
     """

@@ -5,11 +5,10 @@ from dataclasses import dataclass, field
 
 from typing_extensions import Optional, Iterator, Iterable, Callable, Any, Collection, Dict
 
-from krrood.entity_query_language.base_expressions import UnaryExpression, Bindings, OperationResult, SymbolicExpression
-from krrood.entity_query_language.failures import NestedAggregationError, InvalidChildType
-from krrood.entity_query_language.query.query_descriptor import Entity
-from krrood.entity_query_language.utils import T
-from krrood.entity_query_language.variable import CanBehaveLikeAVariable, Variable, Selectable
+from krrood.entity_query_language.core.base_expressions import UnaryExpression, Bindings, OperationResult, SymbolicExpression
+from ..failures import NestedAggregationError, InvalidChildType
+from ..utils import T
+from krrood.entity_query_language.core.variable import CanBehaveLikeAVariable, Variable, Selectable
 
 
 @dataclass(eq=False, repr=False)
@@ -44,12 +43,14 @@ class Aggregator(UnaryExpression, CanBehaveLikeAVariable[T], ABC):
         :param limit: The maximum number of results to return. If None, all results are returned.
         :return: An iterator over the aggregator results.
         """
+        from ..query.query_descriptor import Entity
         return Entity(_selected_variables_=(self,)).evaluate()
 
     def grouped_by(self, *variables: Variable) -> Entity[T]:
         """
         Group the results by the given variables.
         """
+        from ..query.query_descriptor import Entity
         return Entity(_selected_variables_=(self,)).grouped_by(*variables)
 
     def _evaluate__(

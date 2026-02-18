@@ -6,13 +6,13 @@ from dataclasses import dataclass
 
 from typing_extensions import Callable, Any, ClassVar, Dict, Tuple, Iterable, TYPE_CHECKING
 
-from krrood.entity_query_language.query.result_quantifiers import The
-from krrood.entity_query_language.base_expressions import Bindings, OperationResult, SymbolicExpression, BinaryExpression
+from ..query.result_quantifiers import The
+from krrood.entity_query_language.core.base_expressions import Bindings, OperationResult, SymbolicExpression, BinaryExpression
 from .set_operations import PerformsCartesianProduct
-from krrood.entity_query_language.utils import is_iterable, make_set
+from ..utils import is_iterable, make_set
 
 if TYPE_CHECKING:
-    from krrood.entity_query_language.variable import Selectable
+    from krrood.entity_query_language.core.variable import Selectable
 
 
 @dataclass(eq=False, repr=False)
