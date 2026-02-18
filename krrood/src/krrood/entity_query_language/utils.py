@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import inspect
-from copy import copy
 from functools import lru_cache
 
 """
@@ -19,8 +18,6 @@ try:
     from graphviz import Source
 except ImportError:
     Source = None
-
-import rustworkx as rx
 
 from typing_extensions import (
     Set,
@@ -40,7 +37,7 @@ from typing_extensions import (
 )
 
 if TYPE_CHECKING:
-    from .base_expressions import Bindings, OperationResult, SymbolicExpression
+    from krrood.entity_query_language.core.base_expressions import Bindings, OperationResult, SymbolicExpression
 
 
 class IDGenerator:

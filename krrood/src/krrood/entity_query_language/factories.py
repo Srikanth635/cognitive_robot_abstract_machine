@@ -7,25 +7,25 @@ from __future__ import annotations
 
 import operator
 
-from typing_extensions import Union
+from typing_extensions import Union, Iterable
 
-from .base_expressions import SymbolicExpression
+from krrood.entity_query_language.core.base_expressions import SymbolicExpression
 from .enums import RDREdge
 from .failures import UnsupportedExpressionTypeForDistinct
-from krrood.entity_query_language.query.match import Match, MatchVariable
+from .query.match import Match, MatchVariable
 from .operators.aggregators import Max, Min, Sum, Average, Count
 from .operators.comparator import Comparator
 from .operators.core_logical_operators import chained_logic, AND, OR, LogicalOperator
 from .operators.logical_quantifiers import ForAll, Exists
-from .operators.set_operations import Concatenate
-from krrood.entity_query_language.query.result_quantifiers import ResultQuantifier, ResultQuantificationConstraint, An, The
+from .operators.concatenation import Concatenation
+from .query.result_quantifiers import ResultQuantifier, ResultQuantificationConstraint, An, The
 from .rules.conclusion_selector import ExceptIf, Alternative, Next
-from krrood.entity_query_language.query.query_descriptor import Entity, SetOf, QueryObjectDescriptor
+from .query.query_descriptor import Entity, SetOf, Query
 from .utils import is_iterable
-from .variable import Selectable, DomainType, Literal, CanBehaveLikeAVariable, \
+from krrood.entity_query_language.core.variable import Selectable, DomainType, Literal, CanBehaveLikeAVariable, \
     Flatten
 from .predicate import *  # type: ignore
-from ..symbol_graph.symbol_graph import Symbol
+from ..symbol_graph.symbol_graph import Symbol, SymbolGraph
 
 ConditionType = Union[SymbolicExpression, bool, Predicate]
 """
@@ -108,6 +108,15 @@ def variable_from(
     return Literal(data=domain, name=name, wrap_in_iterator=False)
 
 
+def concatenate(
+    *variables: Union[Iterable[T], Selectable[T]],
+) -> Union[T, Selectable[T]]:
+    """
+    Concatenation of two or more variables.
+    """
+    return Concatenation(_operation_children_=variables)
+
+
 def distinct(
     expression: T,
     *on: Any,
@@ -115,7 +124,7 @@ def distinct(
     """
     Indicate that the result of the expression should be distinct.
     """
-    if isinstance(expression, QueryObjectDescriptor):
+    if isinstance(expression, Query):
         return expression.distinct(*on)
     elif isinstance(expression, ResultQuantifier):
         return expression._child_.distinct(*on)
@@ -123,48 +132,6 @@ def distinct(
         return entity(expression).distinct(*on)
     else:
         raise UnsupportedExpressionTypeForDistinct(type(expression))
-
-
-def concatenate(
-    *variables: Union[Iterable[T], Selectable[T]],
-) -> Union[T, Selectable[T]]:
-    """
-    Concatenation of two or more variables.
-    """
-    return Concatenate(_operation_children_=variables)
-
-
-def and_(*conditions: ConditionType):
-    """
-    Logical conjunction of conditions.
-
-    :param conditions: One or more conditions to combine.
-    :type conditions: SymbolicExpression | bool
-    :return: An AND operator joining the conditions.
-    :rtype: SymbolicExpression
-    """
-    return chained_logic(AND, *conditions)
-
-
-def or_(*conditions):
-    """
-    Logical disjunction of conditions.
-
-    :param conditions: One or more conditions to combine.
-    :type conditions: SymbolicExpression | bool
-    :return: An OR operator joining the conditions.
-    :rtype: SymbolicExpression
-    """
-    return chained_logic(OR, *conditions)
-
-
-def not_(operand: ConditionType) -> SymbolicExpression:
-    """
-    A symbolic NOT operation that can be used to negate symbolic expressions.
-    """
-    if not isinstance(operand, SymbolicExpression):
-        operand = Literal(operand)
-    return operand._invert_()
 
 
 def contains(
@@ -204,6 +171,41 @@ def flatten(
     return Flatten(var)
 
 
+# %% Logical Operators
+
+def and_(*conditions: ConditionType):
+    """
+    Logical conjunction of conditions.
+
+    :param conditions: One or more conditions to combine.
+    :type conditions: SymbolicExpression | bool
+    :return: An AND operator joining the conditions.
+    :rtype: SymbolicExpression
+    """
+    return chained_logic(AND, *conditions)
+
+
+def or_(*conditions):
+    """
+    Logical disjunction of conditions.
+
+    :param conditions: One or more conditions to combine.
+    :type conditions: SymbolicExpression | bool
+    :return: An OR operator joining the conditions.
+    :rtype: SymbolicExpression
+    """
+    return chained_logic(OR, *conditions)
+
+
+def not_(operand: ConditionType) -> SymbolicExpression:
+    """
+    A symbolic NOT operation that can be used to negate symbolic expressions.
+    """
+    if not isinstance(operand, SymbolicExpression):
+        operand = Literal(operand)
+    return operand._invert_()
+
+
 def for_all(
     universal_variable: Union[CanBehaveLikeAVariable[T], T],
     condition: ConditionType,
@@ -233,6 +235,38 @@ def exists(
     """
     return Exists(universal_variable, condition)
 
+# %% Result Quantifiers
+
+def an(
+    entity_: Union[T, Query],
+    quantification: Optional[ResultQuantificationConstraint] = None,
+) -> Union[T, Query]:
+    """
+    Select all values satisfying the given entity description.
+
+    :param entity_: An entity or a set expression to quantify over.
+    :param quantification: Optional quantification constraint.
+    :return: The entity with the quantifier applied.
+    """
+    return entity_._quantify_(An, quantification_constraint=quantification)
+
+a = an
+"""
+This is an alias to accommodate for words not starting with vowels.
+"""
+
+def the(
+    entity_: Union[T, Query],
+) -> Union[T, Query]:
+    """
+    Select the unique value satisfying the given entity description.
+
+    :param entity_: An entity or a set expression to quantify over.
+    :return: The entity with the quantifier applied.
+    """
+    return entity_._quantify_(The)
+
+# %% Rules
 
 def inference(
     type_: Type[T],
@@ -251,40 +285,6 @@ def inference(
         _is_inferred_=True,
         _is_instantiated_=True,
     )
-
-# %% Result Quantifiers
-
-def an(
-    entity_: Union[T, QueryObjectDescriptor],
-    quantification: Optional[ResultQuantificationConstraint] = None,
-) -> Union[T, QueryObjectDescriptor]:
-    """
-    Select all values satisfying the given entity description.
-
-    :param entity_: An entity or a set expression to quantify over.
-    :param quantification: Optional quantification constraint.
-    :return: The entity with the quantifier applied.
-    """
-    return entity_._quantify_(An, quantification_constraint=quantification)
-
-
-a = an
-"""
-This is an alias to accommodate for words not starting with vowels.
-"""
-
-def the(
-    entity_: Union[T, QueryObjectDescriptor],
-) -> Union[T, QueryObjectDescriptor]:
-    """
-    Select the unique value satisfying the given entity description.
-
-    :param entity_: An entity or a set expression to quantify over.
-    :return: The entity with the quantifier applied.
-    """
-    return entity_._quantify_(The)
-
-# %% Rules
 
 def refinement(*conditions: ConditionType) -> SymbolicExpression:
     """

@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import itertools
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import Iterable, Tuple, Iterator
+from dataclasses import dataclass
 
-from krrood.entity_query_language.base_expressions import MultiArityExpression, Bindings, OperationResult, \
+from typing_extensions import Iterable, Tuple, Iterator
+
+from krrood.entity_query_language.core.base_expressions import MultiArityExpression, Bindings, OperationResult, \
     SymbolicExpression
-from krrood.entity_query_language.utils import T, cartesian_product_while_passing_the_bindings_around
-from krrood.entity_query_language.variable import CanBehaveLikeAVariable, Selectable
+from ..utils import cartesian_product_while_passing_the_bindings_around
 
 
 @dataclass(eq=False, repr=False)
@@ -31,41 +31,6 @@ class Union(MultiArityExpression):
     def get_result_and_update_truth_value(self, child_result: OperationResult) -> OperationResult:
         self._is_false_ = child_result.is_false
         return OperationResult(child_result.bindings, self._is_false_, self, child_result)
-
-
-@dataclass(eq=False, repr=False)
-class Concatenate(Union, CanBehaveLikeAVariable[T]):
-    """
-    Concatenation of two or more variables.
-    """
-
-    _operation_children_: Tuple[Selectable, ...] = field(default_factory=tuple)
-    """
-    The children of the concatenate operation. They must be selectables.
-    """
-
-    def __post_init__(self):
-        if not all(
-                isinstance(child, Selectable) for child in self._operation_children_
-        ):
-            raise ValueError(
-                f"All children of Concatenate must be Selectable instances."
-            )
-        super().__post_init__()
-        self._var_ = self
-
-    def _evaluate__(self, sources: Bindings) -> Iterable[OperationResult]:
-        yield from (
-            result.update({self._binding_id_: result.previous_operation_result.value})
-            for result in super()._evaluate__(sources)
-        )
-
-    @property
-    def _variables_(self) -> Tuple[Selectable[T], ...]:
-        """
-        The variables to concatenate.
-        """
-        return self._operation_children_
 
 
 @dataclass(eq=False, repr=False)

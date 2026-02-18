@@ -315,7 +315,7 @@ def test_entity_association(session, database):
     session.commit()
 
     queried_association = session.scalars(select(EntityAssociationDAO)).one()
-    assert factories.entity.overwritten_name == entity.name
+    assert queried_association.entity.overwritten_name == entity.name
     reconstructed = queried_association.from_dao()
     assert reconstructed == association
 

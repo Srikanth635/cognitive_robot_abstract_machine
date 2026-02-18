@@ -4,20 +4,21 @@ import operator
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, MISSING, is_dataclass, fields
 from functools import cached_property
-from typing import Generic, Type, Tuple, Any, Dict, Optional, Iterable, List, Union as TypingUnion
 
-from ..class_diagrams.class_diagram import WrappedClass
-from ..class_diagrams.failures import ClassIsUnMappedInClassDiagram
-from ..class_diagrams.wrapped_field import WrappedField
+from typing_extensions import Generic, Type, Tuple, Any, Dict, Optional, Iterable, List, Union as TypingUnion
 
-from .cache_data import ReEnterableLazyIterable
-from krrood.entity_query_language.operators.comparator import Comparator
-from .enums import PredicateType
-from .failures import VariableCannotBeEvaluated
-from krrood.symbol_graph.symbol_graph import SymbolGraph
+from ...class_diagrams.class_diagram import WrappedClass
+from ...class_diagrams.failures import ClassIsUnMappedInClassDiagram
+from ...class_diagrams.wrapped_field import WrappedField
+
+from ..cache_data import ReEnterableLazyIterable
+from ..operators.comparator import Comparator
+from ..enums import PredicateType
+from ..failures import VariableCannotBeEvaluated
+from ...symbol_graph.symbol_graph import SymbolGraph
 
 from .base_expressions import Bindings, OperationResult, SymbolicExpression, TruthValueOperator, UnaryExpression
-from .utils import T, merge_args_and_kwargs, convert_args_and_kwargs_into_a_hashable_key, \
+from ..utils import T, merge_args_and_kwargs, convert_args_and_kwargs_into_a_hashable_key, \
     is_iterable, generate_combinations, make_list
 
 
@@ -274,7 +275,7 @@ class Variable(CanBehaveLikeAVariable[T]):
     """
 
     def __post_init__(self):
-        self._child_ = None
+        super().__post_init__()
 
         if self._domain_source_ is not None:
             self._update_domain_(self._domain_source_)

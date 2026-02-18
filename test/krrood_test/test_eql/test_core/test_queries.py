@@ -4,10 +4,9 @@ from math import factorial
 
 import pytest
 
-import krrood.entity_query_language.factories.entity as eql
+import krrood.entity_query_language.factories as eql
 
-from krrood.entity_query_language import factories
-from krrood.entity_query_language.factories import aggregators, entity, set_of, variable, variable_from, distinct, \
+from krrood.entity_query_language.factories import entity, set_of, variable, variable_from, distinct, \
     concatenate, and_, or_, not_, contains, in_, flatten, for_all, exists, an, a, the
 from krrood.entity_query_language.failures import (
     MultipleSolutionFound,
@@ -1125,7 +1124,7 @@ def test_chain_evaluate_variables():
 
 def test_subquery_independence():
     var1 = variable(int, [1, 2, 4, 3])
-    count = entity(factories.count(var1))
+    count = entity(eql.count(var1))
     assert count.tolist() == [4]
 
     query = the(entity(var1).where(count == var1))

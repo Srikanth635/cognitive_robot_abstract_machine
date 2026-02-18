@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from functools import cached_property
 from typing import List, Iterable
 
-from krrood.entity_query_language.base_expressions import Bindings, OperationResult
+from krrood.entity_query_language.core.base_expressions import Bindings, OperationResult
 from krrood.entity_query_language.operators.core_logical_operators import LogicalBinaryOperator
 
 

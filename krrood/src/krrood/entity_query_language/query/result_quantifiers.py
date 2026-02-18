@@ -2,21 +2,17 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Optional, Iterable, Union as TypingUnion, Dict
 
-from typing_extensions import TYPE_CHECKING
+from typing_extensions import Optional, Iterable, Union as TypingUnion, Dict
 
-from krrood.entity_query_language.base_expressions import UnaryExpression, DerivedExpression, SymbolicExpression, Bindings, OperationResult
-from krrood.entity_query_language.failures import (
+from krrood.entity_query_language.core.base_expressions import UnaryExpression, DerivedExpression, SymbolicExpression, Bindings, OperationResult
+from ..failures import (
     NegativeQuantificationError,
     QuantificationConsistencyError,
     GreaterThanExpectedNumberOfSolutions,
     LessThanExpectedNumberOfSolutions, UnsupportedNegation, NoSolutionFound, MultipleSolutionFound,
 )
-from krrood.entity_query_language.utils import T
-
-if TYPE_CHECKING:
-    pass
+from ..utils import T
 
 
 @dataclass

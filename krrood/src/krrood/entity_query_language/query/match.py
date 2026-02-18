@@ -13,20 +13,21 @@ from typing_extensions import (
     List,
     Union,
     Self,
-    Generic,
+    Generic, TYPE_CHECKING,
 )
 
-from krrood.entity_query_language.factories import ConditionType, entity, variable
-from krrood.entity_query_language.failures import (
+from ..failures import (
     NoKwargsInMatchVar,
 )
-from krrood.entity_query_language.predicate import HasType
-from .query_descriptor import (
-    Entity,
-)
+from ..predicate import HasType
 from .result_quantifiers import An
-from krrood.entity_query_language.variable import Selectable, CanBehaveLikeAVariable, Literal, Attribute, Flatten, DomainType
-from krrood.entity_query_language.utils import T
+from krrood.entity_query_language.core.variable import Selectable, CanBehaveLikeAVariable, Literal, Attribute, Flatten, DomainType
+from ..utils import T
+
+
+if TYPE_CHECKING:
+    from ..factories import ConditionType
+    from .query_descriptor import Entity
 
 
 @dataclass
@@ -158,6 +159,8 @@ class Match(AbstractMatchExpression[T]):
         """
         Return the entity expression corresponding to the match query.
         """
+        from ..factories import entity
+
         if self.variable is None:
             self.resolve()
         entity_ = entity(self.variable)
@@ -209,6 +212,7 @@ class Match(AbstractMatchExpression[T]):
         self.parent = parent
 
     def create_variable(self):
+        from ..factories import variable
         self.variable = variable(self.type, domain=None)
 
     def evaluate(self):
@@ -245,6 +249,7 @@ class MatchVariable(Match[T]):
     """
 
     def create_variable(self):
+        from ..factories import variable
         self.variable = variable(self.type, domain=self.domain)
 
     def __call__(self, **kwargs) -> Union[An[T], T]:

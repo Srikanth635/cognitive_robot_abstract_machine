@@ -6,8 +6,8 @@ from functools import cached_property
 
 from typing_extensions import Any, List, Iterable
 
-from krrood.entity_query_language.base_expressions import Bindings, OperationResult, SymbolicExpression
-from krrood.entity_query_language.variable import Selectable, Variable
+from krrood.entity_query_language.core.base_expressions import Bindings, OperationResult, SymbolicExpression
+from krrood.entity_query_language.core.variable import Selectable, Variable
 
 
 @dataclass(eq=False)
