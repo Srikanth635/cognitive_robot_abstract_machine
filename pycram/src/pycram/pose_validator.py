@@ -1,10 +1,7 @@
 import logging
-import random
 from copy import deepcopy
 
-import numpy as np
-from numpy.ma import masked_array
-from skimage.measure import label
+from typing_extensions import List, Union
 
 from giskardpy.executor import Executor
 from giskardpy.motion_statechart.goals.templates import Sequence
@@ -19,25 +16,21 @@ from semantic_digital_twin.collision_checking.collision_detector import (
 )
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.robots.abstract_robot import AbstractRobot
-from semantic_digital_twin.spatial_computations.ik_solver import (
-    MaxIterationsException,
-    UnreachableException,
-)
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connections import Connection6DoF
-from semantic_digital_twin.world_description.degree_of_freedom import DegreeOfFreedom
 from semantic_digital_twin.world_description.geometry import Box, Scale
 from semantic_digital_twin.world_description.shape_collection import ShapeCollection
 from semantic_digital_twin.world_description.world_entity import (
     Body,
     KinematicStructureEntity,
 )
-from typing_extensions import List, Union, Dict, Iterable, Optional, Iterator, Callable
-
-from .costmaps import Costmap
-from .datastructures.pose import PoseStamped, TransformStamped
-from .failures import IKError, RobotInCollision
-from .tf_transformations import quaternion_from_euler
+from .alternative_motion_mapping import AlternativeMotion
+from .datastructures.dataclasses import Context
+from .datastructures.enums import Arms
+from .datastructures.pose import PoseStamped
+from .plan import PlanNode, Plan
+from .robot_plans.motions.gripper import MoveTCPMotion
+from .view_manager import ViewManager
 
 logger = logging.getLogger("pycram")
 
@@ -131,18 +124,37 @@ def pose_sequence_reachability_validator(
     old_state = deepcopy(world.state.data)
     root = robot_view.root if not use_fullbody_ik else world.root
 
-    msc = MotionStatechart()
-    msc.add_node(
-        cart_sequence := Sequence(
-            [
-                CartesianPose(
-                    root_link=root, tip_link=tip_link, goal_pose=pose.to_spatial_type()
-                )
-                for pose in target_sequence
-            ]
-        )
+    alternative_motion = AlternativeMotion.check_for_alternative(
+        robot_view, MoveTCPMotion
     )
-    msc.add_node(EndMotion.when_true(cart_sequence))
+    if alternative_motion:
+        correct_arm = None
+        for arm in Arms:
+            if (
+                tip_link
+                == ViewManager.get_end_effector_view(arm, robot_view).tool_frame
+            ):
+                correct_arm = arm
+        sequence = []
+        for pose in target_sequence:
+            motion = alternative_motion(pose, correct_arm, True)
+            node = PlanNode()
+            # Image a plan for  the motion node
+            Plan(node, Context(world, robot_view))
+            motion.plan_node = node
+            sequence.append(motion._motion_chart)
+
+    else:
+        sequence = [
+            CartesianPose(
+                root_link=root, tip_link=tip_link, goal_pose=pose.to_spatial_type()
+            )
+            for pose in target_sequence
+        ]
+
+    msc = MotionStatechart()
+    msc.add_node(n := Sequence(sequence))
+    msc.add_node(EndMotion.when_true(n))
 
     executor = Executor(
         world,
