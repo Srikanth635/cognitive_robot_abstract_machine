@@ -110,8 +110,15 @@ class Parameterization:
         result = dao.from_dao()
         return result
 
-    def get_variable_by_name(self, name: str):
-        return next((v for v in self.variables if v.variable.name == name), None)
+    def get_variable_by_name(self, name: str) -> ObjectAccessVariable:
+        """
+        Get an ObjectAccessVariable by its name.
+
+        :param name: The name of the variable to retrieve.
+        :return: The variable with the specified name.
+        """
+        [result] = [v for v in self.variables if v.variable.name == name]
+        return result
 
     def create_assignment_from_variables_and_sample(
         self, variables: Iterable[Variable], sample: np.ndarray
