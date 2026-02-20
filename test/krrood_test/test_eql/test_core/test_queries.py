@@ -18,7 +18,7 @@ from krrood.entity_query_language.factories import (
     not_,
     contains,
     in_,
-    flatten,
+    flattened_variable,
     for_all,
     exists,
     an,
@@ -697,7 +697,7 @@ def test_equivalent_to_contains_type_using_exists():
     fb = variable(FruitBox, domain=None)
     fruit_box_query = an(
         entity(fb).where(
-            exists(fb, HasType(flatten(fb.fruits), Apple)),
+            exists(fb, HasType(flattened_variable(fb.fruits), Apple)),
         )
     )
 
@@ -905,7 +905,7 @@ def test_variable_from(handles_and_containers_world):
 def test_multiple_dependent_selectables(handles_and_containers_world):
     world = handles_and_containers_world
     cabinet = variable(Cabinet, domain=world.views)
-    cabinet_drawers = flatten(cabinet.drawers)
+    cabinet_drawers = flattened_variable(cabinet.drawers)
     old_evaluate = cabinet_drawers._evaluate__
 
     def _cabinet_drawers_evaluate__(bindings):
@@ -927,7 +927,7 @@ def test_flatten_iterable_attribute(handles_and_containers_world):
     world = handles_and_containers_world
 
     views = variable(Cabinet, world.views)
-    drawers = flatten(views.drawers)
+    drawers = flattened_variable(views.drawers)
     query = an(entity(drawers))
 
     results = list(query.evaluate())
@@ -943,7 +943,7 @@ def test_flatten_iterable_attribute_and_use_not_equal(handles_and_containers_wor
     cabinets = variable(Cabinet, world.views)
     drawer_1_var = variable(Drawer, world.views)
     drawer_1 = an(entity(drawer_1_var).where(drawer_1_var.handle.name == "Handle1"))
-    drawers = flatten(cabinets.drawers)
+    drawers = flattened_variable(cabinets.drawers)
     query = an(entity(drawers).where(drawer_1 != drawers))
 
     results = list(query.evaluate())

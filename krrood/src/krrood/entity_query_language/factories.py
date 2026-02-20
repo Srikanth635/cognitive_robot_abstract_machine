@@ -191,7 +191,7 @@ def in_(item: Any, container: Union[Iterable, CanBehaveLikeAVariable[T]]):
     return Comparator(container, item, operator.contains)
 
 
-def flatten(
+def flattened_variable(
     var: Union[CanBehaveLikeAVariable[T], Iterable[T]],
 ) -> Union[CanBehaveLikeAVariable[T], T]:
     """
