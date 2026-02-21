@@ -1,10 +1,11 @@
 from dataclasses import dataclass
+
 from typing_extensions import List, Any, Union
 
 from random_events.variable import Variable
 
 
-from ..entity_query_language.symbolic import Index, Attribute
+from ..entity_query_language.core.mapped_variable import Index, Attribute
 
 AttributeAccessLike = Union[Index, Attribute]
 
