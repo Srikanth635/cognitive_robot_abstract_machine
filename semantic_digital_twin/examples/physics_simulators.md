@@ -302,7 +302,7 @@ if __name__ == "__main__":
     )
 
     constraints = SimulatorConstraints(
-        max_number_of_steps=1_000_000
+        max_number_of_steps=10000
     )
 
     multi_sim.start_simulation(constraints=constraints)
