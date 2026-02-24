@@ -19,7 +19,7 @@ We use **MuJoCo** as an example backend, but the same workflow applies to other 
 
 # 1. Simulating a Predefined World
 
-A world can be loaded from a predefined scene description, tutored in the [Loading Worlds](loading-worlds.md) tutorial,
+A world can be loaded from a predefined scene description, tutored in the [Loading Worlds](loading-worlds) tutorial,
 in this tutorial, we show how to run a physics simulation for such a predefined world description.
 
 ## 1.1 Required Imports
@@ -168,8 +168,9 @@ During execution, the world state can be modified dynamically.
 Bodies, connections, and degrees of freedom may be added or removed at runtime.
 These changes are immediately reflected in the physics simulation.
 
-In the following example, we demonstrate how to spawn new bodies and connections while the simulation is running.
-We begin by importing the required components for programmatic world construction and defining two helper functions to spawn a robot body and shoulder bodies.
+In the following example, we illustrate how new bodies and connections can be introduced while the simulation is already running.
+We start by importing the necessary components for constructing a world programmatically and defining two helper functions: one for spawning a robot body and another for creating shoulder bodies.
+Detailed implementation of these functions is provided in the [Creating Custom Bodies](creating-custom-bodies) tutorial.
 
 ```{code-cell} ipython3
 :tags: [hide-input]
