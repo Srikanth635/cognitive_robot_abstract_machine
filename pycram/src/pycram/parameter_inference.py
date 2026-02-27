@@ -13,6 +13,7 @@ from typing_extensions import (
     Generic,
     Type,
     TYPE_CHECKING,
+    Dict,
 )
 
 from pycram.datastructures.enums import ApproachDirection, VerticalAlignment
@@ -91,7 +92,7 @@ class ParameterInferrer:
     A set of rules that restrict the domain
     """
 
-    type_domains: List[Domain] = field(init=False, default_factory=list)
+    type_domains: List[DomainSpecification] = field(init=False, default_factory=list)
     """
     Domains for all defined types
     """
@@ -110,7 +111,7 @@ class ParameterInferrer:
         self.parameter_rules.append(inference_rule)
         inference_rule.parameter_infeerer = self
 
-    def add_domain(self, domain: Domain[Type[T]]):
+    def add_domain(self, domain: DomainSpecification[Type[T]]):
         """
         Adds a domain to the set of domains
 
@@ -118,7 +119,7 @@ class ParameterInferrer:
         """
         self.type_domains.append(domain)
 
-    def add_domains(self, *domains: Domain[Type[T]]):
+    def add_domains(self, *domains: DomainSpecification[Type[T]]):
         """
         Adds a set set of domains
         """
@@ -178,11 +179,6 @@ class InferenceRule(Generic[T], ABC):
     Rule that restricts a domain
     """
 
-    parameter_type: Type[T]
-    """
-    Type for which this rule is defined (??)
-    """
-
     parameter_infeerer: ParameterInferrer = field(init=False)
 
     @abstractmethod
@@ -239,7 +235,75 @@ class ParameterIdentifier:
 
 
 @dataclass
-class Domain(Generic[T], ABC):
+class PlanDomain:
+    plan: Plan
+
+    designator_domains: Dict[PartialDesignator, DesignatorDomain] = field(
+        default_factory=dict, init=False
+    )
+
+    domain_specifications: List[DomainSpecification] = field(
+        default_factory=list, init=False
+    )
+
+    def create_plan_domain(self):
+        for description_node in self.plan.actions:
+            domains = {
+                f.name: self.find_domain(
+                    ParameterIdentifier(description_node.designator_ref, f.name)
+                )
+                for f in description_node.designator_ref.performable.fields
+            }
+            self.designator_domains[description_node.designator_ref] = DesignatorDomain(
+                description_node.designator_ref,
+                description_node.kwargs,
+                domains,
+                self.plan,
+            )
+
+    def find_domain(self, parameter_identifier: ParameterIdentifier):
+        parameter_type = parameter_identifier.type_
+        specs = [
+            spec
+            for spec in self.domain_specifications
+            if spec.domain_type == parameter_type
+        ]
+        if specs:
+            return specs[0]
+        elif parameter_identifier.parameter is not Ellipsis:
+            return ValueDomainSpecification(
+                parameter_type, parameter_identifier.parameter
+            )
+        else:
+            return ValueDomainSpecification(None, [])
+
+    def add_domain(self, domain: DomainSpecification):
+        self.domain_specifications.append(domain)
+
+    def add_domains(self, *domains: DomainSpecification):
+        for domain in domains:
+            self.add_domain(domain)
+
+
+@dataclass
+class DesignatorDomain:
+    designator: PartialDesignator
+
+    kwargs: Dict[str, Any]
+
+    parameter_domains: Dict[str, DomainSpecification]
+
+    plan: Plan = None
+
+    def domain(self) -> List:
+        d = []
+        for designator_domain in self.parameter_domains.values():
+            d.extend(designator_domain.domain(self.plan.context))
+        return d
+
+
+@dataclass
+class DomainSpecification(Generic[T], ABC):
     """
     Defines a domain of values. A domain are all possible values that a type can be.
     """
@@ -251,6 +315,15 @@ class Domain(Generic[T], ABC):
 
     @abstractmethod
     def domain(self, context: Context) -> List[T]: ...
+
+
+@dataclass
+class ValueDomainSpecification(DomainSpecification):
+
+    domain_values: List[T]
+
+    def domain(self, context: Context) -> List[T]:
+        return [self.domain_values]
 
 
 @dataclass
