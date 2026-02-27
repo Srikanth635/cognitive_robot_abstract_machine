@@ -149,6 +149,9 @@ class QueryToRandomEventTranslator:
         result[variable.variable] = variable.variable.domain
         for comparator in comparators:
 
+            if isinstance(comparator.right._value_, type(Ellipsis)):
+                continue
+
             match comparator.operation:
                 case operator.eq:
                     self._translate_eq(comparator, variable, result)
@@ -316,7 +319,8 @@ class MatchToInstanceTranslator:
     """
 
     def __post_init__(self):
-        self._assert_all_comparators_are_equalities()
+        ...
+        # self._assert_all_comparators_are_equalities()
 
     def _assert_all_comparators_are_equalities(self):
         """
