@@ -11,11 +11,12 @@ from semantic_digital_twin.datastructures.definitions import GripperState
 from semantic_digital_twin.reasoning.robot_predicates import is_body_in_gripper
 from semantic_digital_twin.world_description.connections import Connection6DoF
 from semantic_digital_twin.world_description.world_entity import Body
-from typing_extensions import Union, Optional, Type, Any, Iterable
+from typing_extensions import Union, Optional, Type, Any, Iterable, Dict
 
 from .pick_up import ReachActionDescription, PickUpAction
 from ....config.action_conf import ActionConfig
 from ...motions.gripper import MoveTCPMotion, MoveGripperMotion, ReachMotion
+from ....datastructures.dataclasses import Context
 from ....datastructures.enums import (
     Arms,
     ApproachDirection,
@@ -103,27 +104,27 @@ class PlaceAction(ActionDescription):
 
         SequentialPlan(self.context, MoveTCPMotion(retract_pose, self.arm)).perform()
 
-    def pre_condition(self, bound=True) -> SymbolicExpression:
-        variables = self.bound_variables if bound else self.unbound_variables
-        manipulator = ViewManager.get_end_effector_view(
-            variables[self.arm], self.robot_view
-        )
+    @staticmethod
+    def pre_condition(
+        variables, context: Context, kwargs: Dict[str, Any]
+    ) -> SymbolicExpression:
+        manipulator = ViewManager.get_end_effector_view(variables["arm"], context.robot)
         return or_(
             not_(GripperIsFree(manipulator)),
-            is_body_in_gripper(self.object_designator, manipulator) > 0.9,
+            is_body_in_gripper(kwargs["object_designator"], manipulator) > 0.9,
         )
 
-    def post_condition(self, bound=True) -> SymbolicExpression:
-        variables = self.bound_variables if bound else self.unbound_variables
-        manipulator = ViewManager.get_end_effector_view(
-            variables[self.arm], self.robot_view
-        )
+    @staticmethod
+    def post_condition(
+        variables, context: Context, kwargs: Dict[str, Any]
+    ) -> SymbolicExpression:
+        manipulator = ViewManager.get_end_effector_view(variables["arm"], context.robot)
         return and_(
             GripperIsFree(manipulator),
-            is_body_in_gripper(self.object_designator, manipulator) < 0.1,
+            is_body_in_gripper(kwargs["object_designator"], manipulator) < 0.1,
             np.allclose(
-                self.object_designator.global_pose,
-                self.target_location.to_spatial_type(),
+                kwargs["object_designator"].global_pose,
+                kwargs["target_location"].to_spatial_type(),
                 atol=0.03,
             ),
         )

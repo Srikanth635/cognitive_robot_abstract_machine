@@ -144,6 +144,9 @@ class PartialDesignator(Iterable[T]):
             bindings = result.data
             yield {var_to_field[k].name: v for k, v in bindings.items()}
 
+    def create_unbound_variables(self):
+        return self.plan.parameter_infeerer.plan_domain.designator_domains[self].create_variables()
+
 
     def resolve(self) -> T:
         """

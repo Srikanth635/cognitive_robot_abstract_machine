@@ -93,11 +93,15 @@ class ActionDescription(DesignatorDescription, ABC):
 
     @cached_property
     def bound_variables(self) -> Dict[T, Variable[T] | T]:
-        return self._create_variables(True)
+        return self._create_variables()
 
-    @cached_property
-    def unbound_variables(self) -> Dict[T, Variable[T] | T]:
-        return self._create_variables(False)
+    # @cached_property
+    # def unbound_variables(self) -> Dict[T, Variable[T] | T]:
+    #     return self._create_variables(False)
+
+    @property
+    def kwargs(self) -> Dict[str, Any]:
+        return {f.name: getattr(self, f.name) for f in self.fields}
 
     @classmethod
     @property
@@ -113,22 +117,16 @@ class ActionDescription(DesignatorDescription, ABC):
             field.type = cls.get_type_hints()[field.name]
         return self_fields
 
-    def _create_variables(self, bound=True) -> Dict[T, Variable[T] | T]:
+    def _create_variables(self) -> Dict[str, Variable[T] | T]:
         """
-        Creates krrood variables for all parameter of this action either bound or unbound.
+        Creates krrood variables for all parameter of this action
 
         :return: A dict with action parameters as keys and variables as values.
         """
         return {
-            getattr(self, f.name): variable(
+            f.name: variable(
                 type(getattr(self, f.name)),
-                (
-                    [getattr(self, f.name)]
-                    if bound
-                    else self.plan.parameter_infeerer.infer_domain_for_parameter(
-                        ParameterIdentifier(self, f.name)
-                    )
-                ),
+                ([getattr(self, f.name)]),
             )
             for f in self.fields
         }

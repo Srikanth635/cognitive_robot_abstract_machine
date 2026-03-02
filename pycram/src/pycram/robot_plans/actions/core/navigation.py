@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 import numpy as np
-from typing_extensions import Union, Optional, Type, Any, Iterable
+from typing_extensions import Union, Optional, Type, Any, Iterable, Dict
 
 from krrood.entity_query_language.entity import and_
 from krrood.entity_query_language.symbolic import SymbolicExpression
@@ -14,6 +14,7 @@ from ..base import ActionDescription, DescriptionType
 from ...motions.robot_body import LookingMotion
 from ...motions.navigation import MoveMotion
 from ....config.action_conf import ActionConfig
+from ....datastructures.dataclasses import Context
 from ....datastructures.partial_designator import PartialDesignator
 from ....datastructures.pose import PoseStamped
 from ....failures import LookAtGoalNotReached
@@ -43,21 +44,25 @@ class NavigateAction(ActionDescription):
             self.context, MoveMotion(self.target_location, self.keep_joint_states)
         ).perform()
 
-    def pre_condition(self, bound=True) -> SymbolicExpression:
-        variables = self.bound_variables if bound else self.unbound_variables
+    @staticmethod
+    def pre_condition(
+        variables, context: Context, kwargs: Dict[str, Any]
+    ) -> SymbolicExpression:
         return and_(
             is_pose_free_for_robot(
-                self.robot_view, variables[self.target_location].to_spatial_type()
+                context.robot, variables["target_location"].to_spatial_type()
             ),
-            self.robot_view.drive is not None,
+            context.robot.drive is not None,
         )
 
-    def post_condition(self, bound=True) -> SymbolicExpression:
-        variables = self.bound_variables if bound else self.unbound_variables
+    @staticmethod
+    def post_condition(
+        variables, context: Context, kwargs: Dict[str, Any]
+    ) -> SymbolicExpression:
         return and_(
             np.allclose(
-                self.robot_view.root.global_pose,
-                self.target_location.to_spatial_type(),
+                context.robot.root.global_pose,
+                kwargs["target_location"].to_spatial_type(),
                 atol=0.03,
             )
         )
@@ -98,15 +103,6 @@ class LookAtAction(ActionDescription):
         SequentialPlan(
             self.context, LookingMotion(target=self.target, camera=camera)
         ).perform()
-
-    def validate(
-        self, result: Optional[Any] = None, max_wait_time: Optional[timedelta] = None
-    ):
-        """
-        Check if the robot is looking at the target location by spawning a virtual object at the target location and
-        creating a ray from the camera and checking if it intersects with the object.
-        """
-        return
 
     @classmethod
     def description(

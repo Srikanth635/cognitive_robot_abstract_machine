@@ -12,12 +12,13 @@ from semantic_digital_twin.reasoning.robot_predicates import is_body_in_gripper
 from semantic_digital_twin.robots.abstract_robot import AbstractRobot
 from semantic_digital_twin.datastructures.definitions import GripperState
 from semantic_digital_twin.world_description.world_entity import Body, Connection
-from typing_extensions import Union, Optional, Type, Any, Iterable
+from typing_extensions import Union, Optional, Type, Any, Iterable, Dict
 
 from .pick_up import GraspingActionDescription
 from ...motions.container import OpeningMotion, ClosingMotion
 from ...motions.gripper import MoveGripperMotion
 from ....config.action_conf import ActionConfig
+from ....datastructures.dataclasses import Context
 from ....datastructures.enums import (
     Arms,
     ContainerManipulationType,
@@ -75,25 +76,29 @@ class OpenAction(ActionDescription):
             ),
         ).perform()
 
-    def pre_condition(self, bound=True) -> SymbolicExpression:
-        variables = self.bound_variables if bound else self.unbound_variables
-        manipulator = ViewManager.get_end_effector_view(variables[self.arm])
+    @staticmethod
+    def pre_condition(
+        variables, context: Context, kwargs: Dict[str, Any]
+    ) -> SymbolicExpression:
+        manipulator = ViewManager.get_end_effector_view(variables["arm"])
 
         return and_(
             GripperIsFree(manipulator),
             reachability_validator(
-                PoseStamped.from_spatial_type(self.object_designator.global_pose),
+                PoseStamped.from_spatial_type(kwargs["object_designator"].global_pose),
                 manipulator.tool_frame,
-                self.robot_view,
-                self.world,
-                self.robot_view.full_body_controlled,
+                context.robot,
+                context.world,
+                context.robot.full_body_controlled,
             ),
         )
 
-    def post_condition(self, bound=True) -> SymbolicExpression:
-        variables = self.bound_variables if bound else self.unbound_variables
-        manipulator = ViewManager.get_end_effector_view(variables[self.arm])
-        return is_body_in_gripper(self.object_designator, manipulator)
+    @staticmethod
+    def post_condition(
+        variables, context: Context, kwargs: Dict[str, Any]
+    ) -> SymbolicExpression:
+        manipulator = ViewManager.get_end_effector_view(variables["arm"])
+        return is_body_in_gripper(kwargs["object_designator"], manipulator) > 0.9
 
     @classmethod
     def description(
@@ -152,14 +157,29 @@ class CloseAction(ActionDescription):
             ),
         ).perform()
 
-    def validate(
-        self, result: Optional[Any] = None, max_wait_time: Optional[timedelta] = None
-    ):
-        """
-        Check if the container is closed, this assumes that the container state can be read accurately from the
-        real world.
-        """
-        validate_close_open(self.object_designator, self.arm, CloseAction)
+    @staticmethod
+    def post_condition(
+        variables, context: Context, kwargs: Dict[str, Any]
+    ) -> SymbolicExpression:
+        manipulator = ViewManager.get_end_effector_view(variables["arm"])
+
+        return and_(
+            GripperIsFree(manipulator),
+            reachability_validator(
+                PoseStamped.from_spatial_type(kwargs["object_designator"].global_pose),
+                manipulator.tool_frame,
+                context.robot,
+                context.world,
+                context.robot.full_body_controlled,
+            ),
+        )
+
+    @staticmethod
+    def pre_condition(
+        variables, context: Context, kwargs: Dict[str, Any]
+    ) -> SymbolicExpression:
+        manipulator = ViewManager.get_end_effector_view(variables["arm"])
+        return is_body_in_gripper(kwargs["object_designator"], manipulator) > 0.9
 
     @classmethod
     def description(

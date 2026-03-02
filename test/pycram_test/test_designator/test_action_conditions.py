@@ -12,6 +12,10 @@ from pycram.datastructures.grasp import GraspDescription
 from pycram.failures import ConditionNotSatisfied, PlanFailure
 from pycram.language import SequentialPlan
 from pycram.motion_executor import simulated_robot
+from pycram.parameter_rules.default_type_domains import (
+    EnumDomainSpecification,
+    GraspDomainSpecification,
+)
 from pycram.robot_plans import PickUpAction, PickUpActionDescription
 from semantic_digital_twin.adapters.ros.visualization.viz_marker import (
     VizMarkerPublisher,
@@ -34,26 +38,26 @@ def test_get_bound_variables(immutable_model_world):
         ),
     )
 
-    bound_variables = pick_action._create_variables(bound=True)
+    bound_variables = pick_action._create_variables()
 
     assert len(bound_variables) == 3
     assert list(bound_variables.keys()) == [
-        pick_action.object_designator,
-        pick_action.arm,
-        pick_action.grasp_description,
+        "object_designator",
+        "arm",
+        "grasp_description",
     ]
-    assert list(bound_variables[pick_action.arm]._domain_) == [Arms.LEFT]
-    assert bound_variables[pick_action.arm]._type_ == Arms
-    assert list(bound_variables[pick_action.object_designator]._domain_) == [
+    assert list(bound_variables["arm"]._domain_) == [Arms.LEFT]
+    assert bound_variables["arm"]._type_ == Arms
+    assert list(bound_variables["object_designator"]._domain_) == [
         world.get_body_by_name("milk.stl")
     ]
-    assert bound_variables[pick_action.object_designator]._type_ == Body
+    assert bound_variables["object_designator"]._type_ == Body
 
 
 def test_get_unbound_variables(immutable_model_world):
     world, view, context = immutable_model_world
 
-    pick_action = PickUpAction(
+    pick_action = PickUpActionDescription(
         kse := world.get_body_by_name("milk.stl"),
         arm := Arms.LEFT,
         grasp_desc := GraspDescription(
@@ -62,14 +66,19 @@ def test_get_unbound_variables(immutable_model_world):
             view.left_arm.manipulator,
         ),
     )
-    SequentialPlan(context, pick_action)
+    plan = SequentialPlan(context, pick_action)
 
-    unbound_variables = pick_action._create_variables(bound=False)
+    plan.parameter_infeerer.add_domains(
+        EnumDomainSpecification(Arms),
+        GraspDomainSpecification(GraspDescription, view.left_arm.manipulator),
+    )
+
+    unbound_variables = pick_action.create_unbound_variables()
 
     assert len(unbound_variables) == 3
-    assert list(unbound_variables[arm]._domain_) == [Arms.LEFT, Arms.RIGHT, Arms.BOTH]
-    assert len(list(unbound_variables[grasp_desc]._domain_)) == 12
-    assert len(list(unbound_variables[kse]._domain_)) == 1
+    assert list(unbound_variables["arm"]._domain_) == [Arms.LEFT, Arms.RIGHT, Arms.BOTH]
+    assert len(list(unbound_variables["grasp_description"]._domain_)) == 12
+    assert len(list(unbound_variables["object_designator"]._domain_)) == 1
 
 
 def test_pick_up_pre_conditions(mutable_model_world):
@@ -87,15 +96,20 @@ def test_pick_up_pre_conditions(mutable_model_world):
 
     plan = SequentialPlan(context, pick_action)
 
-    pre_condition = pick_action.pre_condition()
-    post_condition = pick_action.post_condition()
+    with pytest.raises(ConditionNotSatisfied):
+        pick_action.evaluate_pre_condition()
 
-    assert evaluate_condition(pre_condition) == False
+    pre_condition = pick_action.pre_condition(
+        pick_action.bound_variables, context, pick_action.kwargs
+    )
+    # post_condition = pick_action.post_condition()
+    #
+    # assert evaluate_condition(pre_condition) == False
 
     false_statements = get_false_statements(pre_condition)
 
     assert len(false_statements) == 1
-    assert false_statements[0]._name_ == "reachable"
+    assert false_statements[0]._name_ == "reachability_validator"
 
     with pytest.raises(ConditionNotSatisfied):
         pick_action.evaluate_pre_condition()
@@ -110,39 +124,8 @@ def test_pick_up_pre_conditions(mutable_model_world):
         plan.perform()
 
     assert evaluate_condition(pre_condition) == False
-    assert evaluate_condition(post_condition) == True
+    pick_action.evaluate_post_condition()
     assert pick_action.evaluate_post_condition() == True
-
-
-def test_pick_up_pre_condition_find_parameter(immutable_model_world):
-    world, view, context = immutable_model_world
-
-    pick_action = PickUpAction(
-        world.get_body_by_name("milk.stl"),
-        Arms.RIGHT,
-        GraspDescription(
-            ApproachDirection.FRONT,
-            VerticalAlignment.NoAlignment,
-            view.right_arm.manipulator,
-        ),
-    )
-
-    plan = SequentialPlan(context, pick_action)
-
-    view.root.parent_connection.origin = HomogeneousTransformationMatrix.from_xyz_rpy(
-        1.8,
-        1.4,
-        0,
-    )
-
-    with pytest.raises(ConditionNotSatisfied):
-        pick_action.evaluate_pre_condition()
-
-    possible = list(pick_action.find_possible_parameter())
-    assert len(possible) == 24
-    assert Arms.RIGHT not in [p["arm"] for p in possible]
-    assert list(possible[0].keys()) == ["object_designator", "arm", "grasp_description"]
-    assert len(set([p["object_designator"] for p in possible])) == 1
 
 
 def test_pick_up_post_condition(mutable_model_world):

@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 
+from semantic_digital_twin.reasoning.predicates import visible
 from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
 from semantic_digital_twin.world_description.geometry import BoundingBox
 from semantic_digital_twin.world_description.world_entity import (
@@ -10,7 +11,7 @@ from semantic_digital_twin.world_description.world_entity import (
     SemanticAnnotation,
     SemanticEnvironmentAnnotation,
 )
-from typing_extensions import Union, Optional, Type, Any, Iterable
+from typing_extensions import Union, Optional, Type, Any, Iterable, Dict
 
 from ....perception import PerceptionQuery
 from ....datastructures.enums import DetectionTechnique, DetectionState
@@ -73,21 +74,16 @@ class DetectAction(ActionDescription):
 
         return query.from_world()
 
-    def validate(
-        self, result: Optional[Any] = None, max_wait_time: Optional[timedelta] = None
-    ):
-        return
-        # if not result:
-        #     raise PerceptionObjectNotFound(self.object_designator, self.technique, self.region)
+    @staticmethod
+    def pre_condition(variables, context, kwargs: Dict[str, Any]) -> None:
+        return visible(context.robot.get_default_camera(), kwargs["object_designator"])
 
     @classmethod
     def description(
         cls,
-        technique: DescriptionType[ DetectionTechnique],
+        technique: DescriptionType[DetectionTechnique],
         state: DescriptionType[DetectionState] = None,
-        object_sem_annotation: DescriptionType[
-            Type[SemanticAnnotation]
-        ] = None,
+        object_sem_annotation: DescriptionType[Type[SemanticAnnotation]] = None,
         region: Union[Iterable[Region], Region] = None,
     ) -> PartialDesignator[DetectAction]:
         return PartialDesignator[DetectAction](

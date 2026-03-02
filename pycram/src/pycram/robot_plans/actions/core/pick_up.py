@@ -31,10 +31,6 @@ from ....view_manager import ViewManager
 logger = logging.getLogger(__name__)
 
 
-def _and():
-    pass
-
-
 @dataclass
 class ReachAction(ActionDescription):
     """
@@ -80,28 +76,28 @@ class ReachAction(ActionDescription):
             ),
         ).perform()
 
-    def pre_condition(self, bound=True) -> SymbolicExpression:
-        variables = self.bound_variables if bound else self.unbound_variables
-        manipulator = ViewManager.get_end_effector_view(
-            variables[self.arm], self.robot_view
-        )
+    @staticmethod
+    def pre_condition(
+        variables, context: Context, kwargs: Dict[str, Any]
+    ) -> SymbolicExpression:
+        manipulator = ViewManager.get_end_effector_view(variables["arm"], context.robot)
         return and_(
             GripperIsFree(manipulator),
             reachability_validator(
-                PoseStamped.from_spatial_type(self.object_designator.global_pose),
+                PoseStamped.from_spatial_type(kwargs["object_designator"].global_pose),
                 manipulator.tool_frame,
-                self.robot_view,
-                self.world,
-                self.robot_view.full_body_controlled,
+                context.robot,
+                context.world,
+                context.robot.full_body_controlled,
             ),
         )
 
-    def post_condition(self, bound=True) -> SymbolicExpression:
-        variables = self.bound_variables if bound else self.unbound_variables
-        manipulator = ViewManager.get_end_effector_view(
-            variables[self.arm], self.robot_view
-        )
-        return and_(is_body_in_gripper(self.object_designator, manipulator) > 0.9)
+    @staticmethod
+    def post_condition(
+        variables, context: Context, kwargs: Dict[str, Any]
+    ) -> SymbolicExpression:
+        manipulator = ViewManager.get_end_effector_view(variables["arm"], context.robot)
+        return and_(is_body_in_gripper(kwargs["object_designator"], manipulator) > 0.9)
 
     @classmethod
     def description(
@@ -257,18 +253,6 @@ class GraspingAction(ActionDescription):
                 GripperState.CLOSE, self.arm, allow_gripper_collision=True
             ),
         ).perform()
-
-    def validate(
-        self, result: Optional[Any] = None, max_wait_time: Optional[timedelta] = None
-    ):
-        body = self.object_designator
-        contact_links = body.get_contact_points_with_body(World.robot).get_all_bodies()
-        arm_chain = RobotDescription.current_robot_description.get_arm_chain(self.arm)
-        gripper_links = arm_chain.end_effector.links
-        if not any([link.name in gripper_links for link in contact_links]):
-            raise ObjectNotGraspedError(
-                self.object_designator, World.robot, self.arm, None
-            )
 
     @classmethod
     def description(
