@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Union, TYPE_CHECKING
 
@@ -8,6 +9,51 @@ from scipy.sparse import issparse
 
 if TYPE_CHECKING:
     import scipy.sparse as sp
+
+
+@dataclass
+class Conditioning:
+    """
+    Change the conditioning of a QP problem.
+    Inherit from this to implement different strategies
+    """
+
+    C: np.ndarray | None = field(init=False, default=None)
+    R_eq: np.ndarray | None = field(init=False, default=None)
+    R_neq: np.ndarray | None = field(init=False, default=None)
+
+    def apply(self, qp_data: QPData) -> QPData:
+        """
+        Apply the conditioning to the QP problem data.
+        """
+        new_qp_data = deepcopy(qp_data)
+        if self.C is not None:
+            new_qp_data.quadratic_weights = (
+                self.C @ new_qp_data.quadratic_weights @ self.C
+            )
+            new_qp_data.linear_weights = self.C @ new_qp_data.linear_weights
+            new_qp_data.box_lower_constraints = (
+                self.C @ new_qp_data.box_lower_constraints
+            )
+            new_qp_data.box_upper_constraints = (
+                self.C @ new_qp_data.box_upper_constraints
+            )
+            new_qp_data.eq_matrix = new_qp_data.eq_matrix @ self.C
+            new_qp_data.neq_matrix = new_qp_data.neq_matrix @ self.C
+        if self.R_eq is not None:
+            new_qp_data.eq_matrix = self.R_eq @ new_qp_data.eq_matrix
+            new_qp_data.eq_bounds = self.R_eq @ new_qp_data.eq_bounds
+        if self.R_neq is not None:
+            new_qp_data.neq_matrix = self.R_neq @ new_qp_data.neq_matrix
+            new_qp_data.neq_lower_bounds = self.R_neq @ new_qp_data.neq_lower_bounds
+            new_qp_data.neq_upper_bounds = self.R_neq @ new_qp_data.neq_upper_bounds
+        return new_qp_data
+
+    def unapply(self, xdot: np.ndarray) -> np.ndarray:
+        """
+        Retrieve the xdot of the original QP Problem
+        """
+        return np.linalg.inv(self.C) @ xdot
 
 
 @dataclass
@@ -27,6 +73,9 @@ class QPData:
 
     num_eq_constraints: int = field(default=None)
     num_neq_constraints: int = field(default=None)
+
+    R_eq: np.ndarray | None = None
+    C: np.ndarray | None = None
 
     def explicit_data(self):
         return (
@@ -272,13 +321,15 @@ class QPData:
         return QPData(
             quadratic_weights=C @ self.quadratic_weights @ C,
             linear_weights=self.linear_weights,
-            box_lower_constraints=self.box_lower_constraints,
-            box_upper_constraints=self.box_upper_constraints,
+            box_lower_constraints=self.box_lower_constraints @ C,
+            box_upper_constraints=self.box_upper_constraints @ C,
             eq_matrix=R_eq @ self.eq_matrix @ C,
             eq_bounds=R_eq @ self.eq_bounds,
             neq_matrix=self.neq_matrix,
             neq_lower_bounds=self.neq_lower_bounds,
             neq_upper_bounds=self.neq_upper_bounds,
+            R_eq=R_eq,
+            C=C,
         )
 
     def _analyze_constraints(self):
