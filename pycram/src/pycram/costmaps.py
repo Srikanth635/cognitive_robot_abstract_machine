@@ -663,10 +663,10 @@ class VisibilityCostmap(Costmap):
 
         for _ in range(4):
             rotated_origin_copy = (
-                origin_copy.to_homogeneous_matrix()
-                @ HomogeneousTransformationMatrix.from_point_rotation_matrix(
+                HomogeneousTransformationMatrix.from_point_rotation_matrix(
                     rotation_matrix=Quaternion(0, 0, 1, 1).to_rotation_matrix()
                 )
+                @ origin_copy.to_homogeneous_matrix()
             )
             images.append(
                 r_t.create_depth_map(
