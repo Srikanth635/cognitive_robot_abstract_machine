@@ -41,12 +41,6 @@ class HomeWidget(QWidget):
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
 
-        # Home Title
-        title_label = QLabel("Home")
-        title_label.setStyleSheet("font-size: 24pt; font-weight: bold;")
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(title_label)
-
         # Logo
         logo_label = QLabel()
         logo_path = self.get_logo_path()

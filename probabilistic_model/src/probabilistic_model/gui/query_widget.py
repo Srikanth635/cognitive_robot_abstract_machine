@@ -12,6 +12,7 @@ from PySide6.QtCore import Qt
 
 from .controller import ModelController
 from .variable_constraint_widget import VariableConstraintWidget
+from PySide6.QtGui import QIcon
 from random_events.product_algebra import SimpleEvent, Event
 
 
@@ -31,16 +32,11 @@ class QueryWidget(QWidget):
     def init_ui(self):
         main_layout = QVBoxLayout(self)
 
-        title_label = QLabel("Query")
-        title_label.setStyleSheet("font-size: 24pt; font-weight: bold;")
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        main_layout.addWidget(title_label)
-
         # Content Area
         content_layout = QHBoxLayout()
 
         # Query Section
-        query_section = self.create_section("Query (P)", self.query_widgets)
+        query_section = self.create_section("Query", self.query_widgets)
         content_layout.addWidget(query_section)
 
         # Vertical separator
@@ -50,7 +46,7 @@ class QueryWidget(QWidget):
         content_layout.addWidget(line)
 
         # Evidence Section
-        evidence_section = self.create_section("Evidence (|)", self.evidence_widgets)
+        evidence_section = self.create_section("Evidence", self.evidence_widgets)
         content_layout.addWidget(evidence_section)
 
         main_layout.addLayout(content_layout)
@@ -78,7 +74,8 @@ class QueryWidget(QWidget):
         header_label.setStyleSheet("font-size: 16pt; font-weight: bold;")
         header_layout.addWidget(header_label)
 
-        add_button = QPushButton("+")
+        add_button = QPushButton()
+        add_button.setIcon(QIcon("icon:/primary/checklist.svg"))
         add_button.setFixedWidth(30)
         add_button.clicked.connect(
             lambda: self.add_variable_row(widgets_list, layout_container)
@@ -120,7 +117,8 @@ class QueryWidget(QWidget):
         widgets_list.append(var_widget)
         row_layout.addWidget(var_widget)
 
-        remove_button = QPushButton("-")
+        remove_button = QPushButton()
+        remove_button.setIcon(QIcon("icon:/primary/close.svg"))
         remove_button.setFixedWidth(30)
         remove_button.clicked.connect(
             lambda: self.remove_variable_row(row_widget, var_widget, widgets_list)
