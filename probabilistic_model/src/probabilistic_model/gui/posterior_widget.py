@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtCore import Qt, QUrl
+from PySide6.QtGui import QPixmap, QIcon
 import plotly.graph_objects as go
 import tempfile
 import os
@@ -38,11 +39,6 @@ class PosteriorWidget(QWidget):
 
     def init_ui(self):
         main_layout = QVBoxLayout(self)
-
-        title_label = QLabel("Posterior")
-        title_label.setStyleSheet("font-size: 24pt; font-weight: bold;")
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        main_layout.addWidget(title_label)
 
         # Content Area
         content_layout = QHBoxLayout()
@@ -72,7 +68,8 @@ class PosteriorWidget(QWidget):
         result_area = QHBoxLayout()
 
         # Navigation Buttons
-        self.prev_button = QPushButton("<")
+        self.prev_button = QPushButton()
+        self.prev_button.setIcon(QIcon("icon:/primary/leftarrow.svg"))
         self.prev_button.setFixedWidth(40)
         self.prev_button.clicked.connect(self.show_previous)
         self.prev_button.setEnabled(False)
@@ -91,7 +88,8 @@ class PosteriorWidget(QWidget):
 
         result_area.addLayout(self.plot_container, 4)
 
-        self.next_button = QPushButton(">")
+        self.next_button = QPushButton()
+        self.next_button.setIcon(QIcon("icon:/primary/rightarrow.svg"))
         self.next_button.setFixedWidth(40)
         self.next_button.clicked.connect(self.show_next)
         self.next_button.setEnabled(False)
@@ -123,11 +121,12 @@ class PosteriorWidget(QWidget):
         layout = QVBoxLayout(section)
 
         header_layout = QHBoxLayout()
-        header_label = QLabel("Evidence (|)")
+        header_label = QLabel("Evidence")
         header_label.setStyleSheet("font-size: 16pt; font-weight: bold;")
         header_layout.addWidget(header_label)
 
-        add_button = QPushButton("+")
+        add_button = QPushButton()
+        add_button.setIcon(QIcon("icon:/primary/checklist.svg"))
         add_button.setFixedWidth(30)
         add_button.clicked.connect(self.add_evidence_row)
         header_layout.addWidget(add_button)
@@ -162,7 +161,8 @@ class PosteriorWidget(QWidget):
         self.evidence_widgets.append(var_widget)
         row_layout.addWidget(var_widget)
 
-        remove_button = QPushButton("-")
+        remove_button = QPushButton()
+        remove_button.setIcon(QIcon("icon:/primary/close.svg"))
         remove_button.setFixedWidth(30)
         remove_button.clicked.connect(
             lambda: self.remove_evidence_row(row_widget, var_widget)

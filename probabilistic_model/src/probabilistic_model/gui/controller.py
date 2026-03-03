@@ -19,6 +19,13 @@ class ModelController:
     variable_map: Dict[str, Variable] = field(default_factory=dict)
     priors: Optional[VariableMap] = None
 
+    def __post_init__(self):
+        """
+        Initializes the controller. If a model is provided, sets it.
+        """
+        if self.model:
+            self.set_model(self.model)
+
     def set_model(self, model: ProbabilisticModel) -> None:
         """
         Sets the current model and updates related states.

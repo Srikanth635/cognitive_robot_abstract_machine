@@ -12,6 +12,7 @@ from PySide6.QtCore import Qt
 
 from .controller import ModelController
 from .variable_constraint_widget import VariableConstraintWidget
+from PySide6.QtGui import QIcon
 from random_events.product_algebra import SimpleEvent, Event
 
 
@@ -33,25 +34,6 @@ class ModeWidget(QWidget):
     def init_ui(self):
         main_layout = QVBoxLayout(self)
 
-        title_label = QLabel("Most Probable Explanation")
-        title_label.setStyleSheet("font-size: 24pt; font-weight: bold;")
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        main_layout.addWidget(title_label)
-
-        # argmax P(Q | E) header
-        header_layout = QHBoxLayout()
-        header_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        argmax_label = QLabel("argmax P")
-        argmax_label.setStyleSheet("font-size: 20pt;")
-        header_layout.addWidget(argmax_label)
-
-        q_label = QLabel("(Q | E)")
-        q_label.setStyleSheet("font-size: 30pt;")
-        header_layout.addWidget(q_label)
-
-        main_layout.addLayout(header_layout)
-
         # Evidence Section
         evidence_section = self.create_evidence_section()
         main_layout.addWidget(evidence_section)
@@ -68,7 +50,8 @@ class ModeWidget(QWidget):
 
         # Navigation
         nav_layout = QHBoxLayout()
-        self.prev_button = QPushButton("<")
+        self.prev_button = QPushButton()
+        self.prev_button.setIcon(QIcon("icon:/primary/leftarrow.svg"))
         self.prev_button.setFixedWidth(50)
         self.prev_button.clicked.connect(self.show_prev_mode)
         self.prev_button.setEnabled(False)
@@ -79,7 +62,8 @@ class ModeWidget(QWidget):
         self.mode_info_label.setStyleSheet("font-size: 14pt; font-weight: bold;")
         nav_layout.addWidget(self.mode_info_label)
 
-        self.next_button = QPushButton(">")
+        self.next_button = QPushButton()
+        self.next_button.setIcon(QIcon("icon:/primary/rightarrow.svg"))
         self.next_button.setFixedWidth(50)
         self.next_button.clicked.connect(self.show_next_mode)
         self.next_button.setEnabled(False)
@@ -103,11 +87,12 @@ class ModeWidget(QWidget):
         layout = QVBoxLayout(section)
 
         header_layout = QHBoxLayout()
-        header_label = QLabel("Evidence (|)")
+        header_label = QLabel("Evidence")
         header_label.setStyleSheet("font-size: 16pt; font-weight: bold;")
         header_layout.addWidget(header_label)
 
-        add_button = QPushButton("+")
+        add_button = QPushButton()
+        add_button.setIcon(QIcon("icon:/primary/checklist.svg"))
         add_button.setFixedWidth(30)
         add_button.clicked.connect(self.add_evidence_row)
         header_layout.addWidget(add_button)
@@ -144,7 +129,8 @@ class ModeWidget(QWidget):
         self.evidence_widgets.append(var_widget)
         row_layout.addWidget(var_widget)
 
-        remove_button = QPushButton("-")
+        remove_button = QPushButton()
+        remove_button.setIcon(QIcon("icon:/primary/close.svg"))
         remove_button.setFixedWidth(30)
         remove_button.clicked.connect(
             lambda: self.remove_evidence_row(row_widget, var_widget)
