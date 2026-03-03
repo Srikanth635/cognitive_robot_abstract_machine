@@ -195,7 +195,7 @@ class TestGLTFLoader:
         loader = GLTFLoader(file_path="/dummy/path.gltf")
         loader.scene = scene
 
-        with pytest.raises(ValueError, match="More than one root"):
+        with pytest.raises(ValueError, match="Multiple root nodes found in scene"):
             loader._get_root_node()
 
     def test_build_world_single_body(self):
