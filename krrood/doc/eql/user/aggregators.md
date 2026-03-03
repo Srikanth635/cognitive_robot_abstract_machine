@@ -20,10 +20,11 @@ EQL supports powerful aggregation functions that allow you to summarize data acr
 The `.grouped_by()` method allows you to group results by one or more symbolic variables. When you use an aggregator in a query, EQL automatically calculates it for each group.
 
 ```python
-from krrood.entity_query_language.factories import entity, count
+from krrood.entity_query_language.factories import entity
+import krrood.entity_query_language.factories as eql
 
-# Group robots by their 'type' and count them
-query = entity(r.type).grouped_by(r.type)
+# Group robots by their 'type' and count them by type, returning a count for the occurrences of each type.
+query = eql.count(r.type).grouped_by(r.type)
 ```
 
 ## Using Aggregators

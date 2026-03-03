@@ -24,7 +24,7 @@ from krrood.entity_query_language.factories import variable
 
 robot = variable(ExampleRobot, domain=my_robots)
 # Accessing the 'name' attribute symbolically
-name_attr = robot.name
+name_attr = robot.name # -> returns Attribute(robot, "name")
 ```
 
 ```{hint}
@@ -37,10 +37,10 @@ If a variable represents a list or a dictionary, you can use standard indexing o
 
 ```python
 # Accessing the first element of a list
-first_part = robot.parts[0]
+first_part = robot.parts[0] # -> returns IndexedVariable(robot.parts, 0)
 
 # Accessing a value by key in a dictionary
-config_val = robot.config["battery_limit"]
+config_val = robot.config["battery_limit"] # -> returns IndexedVariable(robot.config, "battery_limit")
 ```
 
 ## Flattening Collections
@@ -50,12 +50,15 @@ When an attribute returns a collection (like a list), you might want to treat ea
 ```python
 from krrood.entity_query_language.factories import flat_variable
 
-# robot.parts is a List[ExamplePart]. We want to iterate over each part.
-part = flat_variable(robot.parts)
+# robot.parts is a List[ExamplePart]. We want to iterate over each part. Since robot itself is a variable, if we just do
+# robot.parts, we will get for each item of this iterable a list of parts, but we want instead to get for each item of
+# the iterable a single part. And that's what flat_variable does.
+part = flat_variable(robot.parts) # -> returns FlatVariable(robot.parts)
 ```
 
 ```{note}
-`flat_variable` behaves similarly to a `JOIN` or `UNNEST` in SQL, creating a new solution for every element in the collection while keeping the original variable bindings.
+`flat_variable` behaves similarly to a `JOIN` or `UNNEST` in SQL, creating a new solution for every element in the 
+collection while keeping the original variable bindings.
 ```
 
 ## Symbolic Method Calls
@@ -64,16 +67,18 @@ You can also call methods on symbolic variables. These calls are deferred and ex
 
 ```python
 # Calling a method on the robot variable
-status = robot.get_status()
+status = robot.get_status(time.now()) # -> returns Call(robot, "get_status", [time.now()])
 ```
 
 ```{warning}
-The method must exist on the underlying objects in the domain. If the method takes arguments, those arguments can also be symbolic variables!
+The method must exist on the underlying objects in the domain. If the method takes arguments, those arguments can also
+ be symbolic variables!
 ```
 
 ## Full Example: Mapping and Flattening
 
-This example shows how to navigate from a `ExampleWorld` to individual `ExamplePart` objects using attribute access and flattening.
+This example shows how to navigate from a `ExampleWorld` to individual `ExamplePart` objects using attribute access
+and flattening.
 
 ```{code-cell} ipython3
 from dataclasses import dataclass

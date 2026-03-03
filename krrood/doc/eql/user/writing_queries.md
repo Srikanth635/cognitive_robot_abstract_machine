@@ -33,7 +33,8 @@ r = variable(ExampleRobot, domain=robots_list)
 ```
 
 ### 2. Variables with Implicit Domains
-If no domain is provided, EQL will attempt to use a default domain. For `Symbol` types, it uses the global `SymbolGraph`.
+If no domain is provided, EQL will attempt to use a default domain. For types inheriting from `Symbol`,
+it uses the global `SymbolGraph`.
 
 ```python
 # 'r' will use all Robots in the SymbolGraph
@@ -64,7 +65,8 @@ If you need to select multiple variables at once, use {py:func}`~krrood.entity_q
 ## Adding Filters with `.where()`
 
 The `.where()` method is used to add constraints to your query. You can pass multiple conditions, which are treated as
-a logical **AND**.
+a logical **AND**. Constraints can be Comparison Operators (`==`, `!=`, `<`, `<=`, `>`, `>=`), custom functions, 
+predicates, or any boolean function/attribute that is accessed from a variable (e.g. `'abc'.startswith('a')`).
 
 ```python
 # Select robots named 'R1'

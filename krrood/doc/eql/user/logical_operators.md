@@ -33,8 +33,14 @@ query = entity(r).where(r.name == "R2D2", r.battery > 50)
 query = entity(r).where((r.name == "R2D2") & (r.battery > 50))
 ```
 
+### 2. Using the `and_()` operator
+```python
+# This produces the same result
+query = entity(r).where(and_(r.name == "R2D2", r.battery > 50))
+```
+
 ```{hint}
-Using multiple arguments in `.where()` is generally cleaner for simple conjunctions.
+Using multiple arguments in `.where()` is generally cleaner for simple (unnested) conjunctions.
 ```
 
 ## The Disjunction (OR)
