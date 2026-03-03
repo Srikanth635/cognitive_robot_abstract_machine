@@ -178,7 +178,6 @@ def test_visibility_costmap_location(immutable_multiple_robot_simple_apartment):
 
 def test_visibility_pose_costmap_location(immutable_multiple_robot_simple_apartment):
     world, robot_view, context = immutable_multiple_robot_simple_apartment
-    VizMarkerPublisher(_world=world, node=rclpy.create_node("d")).with_tf_publisher()
     plan = SequentialPlan(
         context,
         ParkArmsActionDescription(Arms.BOTH),
