@@ -260,6 +260,27 @@ class QPData:
             if condition_number > 1_000:
                 print("  Warning: Weight Matrix is poorly conditioned.")
 
+    def improve_condition(self) -> QPData:
+        C = np.ones(self.quadratic_weights.shape)
+        C[-3:] = 1 / np.sqrt(self.quadratic_weights[-3:])
+        C = np.diag(C)
+        new_eq_matrix = self.eq_matrix @ C
+        maxx = np.abs(new_eq_matrix[-3:, :]).max(axis=1)
+        R_eq = np.ones(self.eq_matrix.shape[0])
+        R_eq[-3:] = 1 / maxx
+        R_eq = np.diag(R_eq)
+        return QPData(
+            quadratic_weights=C @ self.quadratic_weights @ C,
+            linear_weights=self.linear_weights,
+            box_lower_constraints=self.box_lower_constraints,
+            box_upper_constraints=self.box_upper_constraints,
+            eq_matrix=R_eq @ self.eq_matrix @ C,
+            eq_bounds=R_eq @ self.eq_bounds,
+            neq_matrix=self.neq_matrix,
+            neq_lower_bounds=self.neq_lower_bounds,
+            neq_upper_bounds=self.neq_upper_bounds,
+        )
+
     def _analyze_constraints(self):
         """
         Checks for scale imbalances and potential rank issues in constraints.
