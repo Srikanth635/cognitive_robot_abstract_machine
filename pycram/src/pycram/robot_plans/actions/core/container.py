@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -83,14 +84,15 @@ class OpenAction(ActionDescription):
         variables, context: Context, kwargs: Dict[str, Any]
     ) -> SymbolicExpression:
         manipulator = ViewManager.get_end_effector_view(variables["arm"], context.robot)
+        test_world = deepcopy(context.world)
 
         return and_(
             GripperIsFree(manipulator),
             reachability_validator(
                 PoseStamped.from_spatial_type(kwargs["object_designator"].global_pose),
                 manipulator.tool_frame,
-                context.robot,
-                context.world,
+                context.robot.from_world(test_world),
+                test_world,
                 context.robot.full_body_controlled,
             ),
         )

@@ -421,9 +421,6 @@ def test_detect(immutable_multiple_robot_apartment):
 def test_open(immutable_multiple_robot_apartment):
     world, robot_view, context = immutable_multiple_robot_apartment
 
-    node = rclpy.create_node("test")
-    VizMarkerPublisher(world, node).with_tf_publisher()
-
     plan = SequentialPlan(
         context,
         MoveTorsoActionDescription([TorsoState.HIGH]),
