@@ -105,8 +105,10 @@ query = set_of(r.type, count(r), average(r.battery)) \
 ```
 
 ```{warning}
-While EQL is powerful, remember that it operates on object graphs in memory. For extremely large
+While EQL is powerful, remember that it operates on objects in memory. For extremely large
 datasets
 typically found in data warehouses, SQL is still the preferred tool. EQL is optimized for complex symbolic reasoning
 over structured object models.
+If your case includes calling functions/predicates as part of the query, or if you prefer to work on live domain objects
+then EQL is the way to go.
 ```
