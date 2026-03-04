@@ -1,0 +1,1951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Terminal - Interactive Visualizer</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@300;400;600;800&family=Fira+Code:wght@400;500;600&display=swap"
+          rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Color Palette - Data Terminal Theme */
+            --bg-primary: #0a0e14;
+            --bg-secondary: #0f1419;
+            --bg-tertiary: #151a21;
+            --bg-input: #1a1f28;
+
+            --border: #1f2430;
+            --border-active: #2a3140;
+
+            --text-primary: #e6eef7;
+            --text-secondary: #95a3b3;
+            --text-muted: #6b7785;
+
+            /* Neon Accents */
+            --accent-cyan: #00e5ff;
+            --accent-pink: #ff0080;
+            --accent-purple: #a855f7;
+            --accent-green: #00ff9f;
+
+            /* JSON Syntax Colors */
+            --json-key: #00ff9f;
+            --json-string: #00d4ff;
+            --json-number: #ff0080;
+            --json-boolean: #ffaa00;
+            --json-null: #95a3b3;
+
+            --shadow-glow: rgba(0, 229, 255, 0.15);
+            --shadow-dark: rgba(0, 0, 0, 0.4);
+        }
+
+        body {
+            font-family: 'IBM Plex Mono', 'Fira Code', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated background effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 30%, rgba(0, 229, 255, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 80% 70%, rgba(255, 0, 128, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Tab Navigation */
+        .tab-container {
+            position: relative;
+            z-index: 10;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            height: 60px;
+        }
+
+        .app-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.25rem;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-right: 3rem;
+            letter-spacing: -0.02em;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .tab {
+            position: relative;
+            padding: 0.625rem 1.5rem;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            letter-spacing: 0.02em;
+        }
+
+        .tab:hover {
+            color: var(--accent-cyan);
+            background: rgba(0, 229, 255, 0.05);
+        }
+
+        .tab.active {
+            color: var(--accent-cyan);
+            background: rgba(0, 229, 255, 0.1);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 20px var(--shadow-glow);
+        }
+
+        /* Main Layout */
+        .main-container {
+            position: relative;
+            z-index: 1;
+            height: calc(100vh - 60px);
+        }
+
+        .tab-content {
+            display: none;
+            height: 100%;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* Left Panel - Input */
+        .left-panel {
+            width: 40%;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .left-panel::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -1px;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(180deg,
+            transparent 0%,
+            var(--accent-cyan) 50%,
+            transparent 100%);
+            opacity: 0.3;
+        }
+
+        .panel-header {
+            padding: 2rem 2rem 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.01em;
+        }
+
+        .panel-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .input-section {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .input-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 600;
+        }
+
+        .input-textarea {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            color: var(--text-primary);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            resize: vertical;
+            min-height: 200px;
+            transition: all 0.3s ease;
+        }
+
+        .input-textarea:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.1),
+            0 0 20px var(--shadow-glow);
+        }
+
+        .input-textarea::placeholder {
+            color: var(--text-muted);
+            opacity: 0.5;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.875rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 0.02em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: var(--bg-primary);
+            box-shadow: 0 4px 20px rgba(0, 229, 255, 0.3);
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(0, 229, 255, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-input);
+            color: var(--text-primary);
+            border-color: var(--border-active);
+        }
+
+        /* Status Messages */
+        .status-container {
+            min-height: 60px;
+            padding: 1rem 2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .status-message {
+            padding: 0.875rem 1.25rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .status-message.show {
+            display: block;
+        }
+
+        .status-success {
+            background: rgba(0, 255, 159, 0.1);
+            border: 1px solid rgba(0, 255, 159, 0.3);
+            color: var(--accent-green);
+        }
+
+        .status-error {
+            background: rgba(255, 0, 128, 0.1);
+            border: 1px solid rgba(255, 0, 128, 0.3);
+            color: var(--accent-pink);
+        }
+
+        .status-loading {
+            background: rgba(0, 229, 255, 0.1);
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            color: var(--accent-cyan);
+        }
+
+        /* Right Panel - Visualization */
+        .right-panel {
+            flex: 1;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .viz-header {
+            padding: 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .viz-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+        }
+
+        .viz-controls {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .viz-btn {
+            padding: 0.5rem 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .viz-btn:hover {
+            background: var(--bg-input);
+            color: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+        }
+
+        .viz-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            opacity: 0.3;
+        }
+
+        .empty-state-text {
+            font-size: 1.125rem;
+            font-weight: 500;
+        }
+
+        /* JSON Viewer Styles */
+        .json-viewer {
+            font-size: 0.875rem;
+            display: none;
+        }
+
+        .json-viewer.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .json-item {
+            margin-left: 1.5rem;
+            position: relative;
+        }
+
+        .json-line {
+            display: flex;
+            align-items: flex-start;
+            padding: 0.25rem 0;
+            position: relative;
+            transition: background 0.15s ease;
+            border-radius: 4px;
+        }
+
+        .json-line:hover {
+            background: rgba(0, 229, 255, 0.05);
+        }
+
+        .toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            margin-right: 0.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            user-select: none;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .toggle:hover {
+            color: var(--accent-cyan);
+            transform: scale(1.1);
+        }
+
+        .toggle::before {
+            content: '▶';
+            font-size: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        .toggle.expanded::before {
+            transform: rotate(90deg);
+        }
+
+        .toggle.empty {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .json-nested {
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .json-nested.expanded {
+            max-height: 10000px;
+            opacity: 1;
+        }
+
+        .json-key {
+            color: var(--json-key);
+            font-weight: 500;
+        }
+
+        .json-string {
+            color: var(--json-string);
+            word-wrap: break-word;
+        }
+
+        .json-number {
+            color: var(--json-number);
+        }
+
+        .json-boolean {
+            color: var(--json-boolean);
+            font-weight: 500;
+        }
+
+        .json-null {
+            color: var(--json-null);
+            font-style: italic;
+        }
+
+        .bracket {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .colon {
+            color: var(--text-muted);
+            margin: 0 0.25rem;
+        }
+
+        .comma {
+            color: var(--text-muted);
+        }
+
+        .count-badge {
+            display: inline-block;
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 10px;
+            margin-left: 0.5rem;
+            border: 1px solid var(--border);
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-cyan);
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent-cyan);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Ontology Tree Styles */
+        .ontology-stats {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(0, 229, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+        }
+
+        .ontology-tree {
+            display: none;
+        }
+
+        .ontology-tree.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .tree-node {
+            margin: 0.25rem 0;
+        }
+
+        .node-content {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .node-content:hover {
+            background: rgba(0, 229, 255, 0.1);
+            transform: translateX(2px);
+        }
+
+        .node-content.attribute-node {
+            background: rgba(255, 170, 0, 0.05);
+        }
+
+        .node-content.attribute-node:hover {
+            background: rgba(255, 170, 0, 0.15);
+        }
+
+        .node-toggle-btn {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--accent-cyan);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            background: var(--bg-primary);
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .node-toggle-btn:hover {
+            border-color: var(--accent-purple);
+            color: var(--accent-purple);
+            transform: scale(1.1);
+        }
+
+        .node-toggle-btn.collapsed {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: var(--bg-primary);
+        }
+
+        .node-toggle-btn.leaf {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+            color: var(--bg-primary);
+            font-size: 10px;
+        }
+
+        .node-toggle-btn.attribute {
+            background: var(--json-boolean);
+            border-color: var(--json-boolean);
+            color: var(--bg-primary);
+            font-size: 10px;
+        }
+
+        .node-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .node-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .edge-label {
+            padding: 0.125rem 0.5rem;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: var(--bg-primary);
+            font-size: 0.7rem;
+            font-weight: 600;
+            border-radius: 10px;
+            white-space: nowrap;
+        }
+
+        .edge-label.attribute-edge {
+            background: linear-gradient(135deg, var(--json-boolean), var(--accent-pink));
+        }
+
+        .node-id {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+
+        .node-class {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-style: italic;
+        }
+
+        .node-label {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+
+        .node-label::before {
+            content: '"';
+        }
+
+        .node-label::after {
+            content: '"';
+        }
+
+        .node-label.attribute-label {
+            color: var(--json-boolean);
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .node-label.attribute-label::before {
+            content: '';
+        }
+
+        .node-label.attribute-label::after {
+            content: '';
+        }
+
+        .children-container {
+            margin-left: 2rem;
+            border-left: 2px solid var(--border);
+            padding-left: 1rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        .children-container.expanded {
+            display: block;
+            animation: slideIn 0.25s ease;
+        }
+
+        #tab-pycram .status-message {
+            padding: 0.875rem 1.25rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: none;
+            animation: slideIn 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        #tab-pycram .status-message.show {
+            display: block;
+        }
+
+        #tab-pycram .left-panel .status-message {
+            padding: 0.875rem 1.25rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        #tab-pycram .left-panel .status-message.show {
+            display: block;
+        }
+
+        #tab-pycram .right-panel .status-message {
+            padding: 0.875rem 1.25rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        #tab-pycram .right-panel .status-message.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<!-- Tab Navigation -->
+<div class="tab-container">
+    <div class="app-title"></div>
+    <div class="tabs">
+        <div class="tab active" data-tab="visualizer">Action Representation</div>
+        <div class="tab" data-tab="ontology">Ontology Tree</div>
+        <div class="tab" data-tab="pycram">Grounded Actions</div>
+    </div>
+</div>
+
+<!-- Main Split View Container -->
+<div class="main-container">
+    <!-- Tab Content: Data Visualizer -->
+    <div class="tab-content active" id="tab-visualizer">
+        <!-- Left Panel: Input -->
+        <div class="left-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Generate Symbolic Actions</h2>
+                <p class="panel-subtitle">Enter instruction to create and visualize action data structures</p>
+            </div>
+
+            <div class="input-section">
+                <div class="input-group">
+                    <label class="input-label">Instruction</label>
+                    <textarea
+                            id="instructionInput"
+                            class="input-textarea"
+                            placeholder="Enter Instruction"
+                    ></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" id="generateBtn">
+                        Generate All
+                    </button>
+                    <button class="btn btn-secondary" id="clearBtn">
+                        Clear
+                    </button>
+                </div>
+            </div>
+
+            <div class="status-container">
+                <div id="statusMessage" class="status-message"></div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Visualization -->
+        <div class="right-panel">
+            <div class="viz-header">
+                <h2 class="viz-title">Symbolic Action Hierarchy</h2>
+                <div class="viz-controls">
+                    <button class="viz-btn" id="expandAllBtn">Expand All</button>
+                    <button class="viz-btn" id="collapseAllBtn">Collapse All</button>
+                </div>
+            </div>
+
+            <div class="viz-content">
+                <!-- Empty State -->
+                <div id="emptyState" class="empty-state">
+                    <div class="empty-state-icon">{ }</div>
+                    <div class="empty-state-text">No data to display yet</div>
+                    <div class="panel-subtitle">Enter an instruction and generate visualizations to begin</div>
+                </div>
+
+                <!-- JSON Viewer Container -->
+                <div id="jsonViewer" class="json-viewer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Content: Ontology Tree -->
+    <div class="tab-content" id="tab-ontology">
+        <!-- Ontology Tree View (Full Width) -->
+        <div class="right-panel" style="width: 100%;">
+            <div class="viz-header">
+                <h2 class="viz-title">Ontology Tree</h2>
+                <div class="viz-controls">
+                    <button class="viz-btn" id="expandAllOntologyBtn">Expand All</button>
+                    <button class="viz-btn" id="collapseAllOntologyBtn">Collapse All</button>
+                </div>
+            </div>
+
+            <div class="viz-content">
+                <!-- Stats Bar -->
+                <div id="ontologyStats" class="ontology-stats" style="display: none;">
+                    <div class="stat-item">
+                        <span class="stat-label">Nodes</span>
+                        <span class="stat-value" id="totalNodes">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Visible</span>
+                        <span class="stat-value" id="visibleNodes">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Depth</span>
+                        <span class="stat-value" id="maxDepth">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Attributes</span>
+                        <span class="stat-value" id="attrCount">0</span>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="ontologyEmptyState" class="empty-state">
+                    <div class="empty-state-icon">🌳</div>
+                    <div class="empty-state-text">No ontology to display yet</div>
+                    <div class="panel-subtitle">Generate data see ontology tree</div>
+                </div>
+
+                <!-- Ontology Tree Container -->
+                <div id="ontologyTree" class="ontology-tree"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Content: Grounded Actions with RViz2 -->
+    <div class="tab-content" id="tab-pycram">
+        <!-- Left Panel: Grounded Actions Data -->
+        <!-- Left Panel: Grounded Actions Data -->
+        <div class="left-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Grounded Actions</h2>
+                <p class="panel-subtitle">View symbolic to grounded action mapping</p>
+            </div>
+
+            <div class="input-section" style="padding: 1.5rem 2rem;">
+                <div class="button-group">
+                    <button class="btn btn-primary" id="groundBtn">
+                        Ground Actions
+                    </button>
+                </div>
+            </div>
+
+            <div class="status-container">
+                <div id="groundingStatusMessage" class="status-message"></div>
+            </div>
+
+            <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                <!-- Add Expand/Collapse buttons here -->
+                <div style="padding: 0 2rem 1rem 2rem; display: none;" id="groundingControls">
+                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                        <button class="viz-btn" id="expandAllGroundingBtn">Expand All</button>
+                        <button class="viz-btn" id="collapseAllGroundingBtn">Collapse All</button>
+                    </div>
+                </div>
+
+                <div style="flex: 1; overflow-y: auto; padding: 0 2rem 2rem 2rem;">
+                    <!-- Empty State -->
+                    <div id="groundingEmptyState" class="empty-state" style="height: auto; min-height: 300px;">
+                        <div class="empty-state-icon">⚙️</div>
+                        <div class="empty-state-text">No grounding data yet</div>
+                        <div class="panel-subtitle">Click "Ground Actions" to map symbolic actions to belief state</div>
+                    </div>
+
+                    <!-- Grounding Viewer Container -->
+                    <div id="groundingViewer" class="json-viewer"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: RViz2 Simulation -->
+        <div class="right-panel">
+            <div class="viz-header">
+                <h2 class="viz-title">RViz2 Simulation</h2>
+                <div class="viz-controls">
+                    <button class="viz-btn btn-primary" id="startRvizBtn" style="padding: 0.5rem 1rem;">Start RViz2
+                    </button>
+                    <button class="viz-btn" id="stopRvizBtn" style="padding: 0.5rem 1rem;">Stop</button>
+                    <button class="viz-btn" id="reconnectRvizBtn">Reconnect</button>
+                    <button class="viz-btn" id="fullscreenRvizBtn">Fullscreen</button>
+                </div>
+            </div>
+
+            <div class="viz-content" style="padding: 0; background: #000; position: relative;">
+                <!-- Status message -->
+                <div id="rvizStatusContainer"
+                     style="position: absolute; top: 1rem; left: 50%; transform: translateX(-50%); z-index: 1000; width: 90%; max-width: 600px;">
+                    <div id="rvizStatusMessage" class="status-message"></div>
+                </div>
+
+                <!-- Loading indicator -->
+                <div id="rvizLoading"
+                     style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 999; text-align: center; color: var(--text-primary);">
+                    <div class="spinner"
+                         style="width: 50px; height: 50px; border-width: 4px; margin: 0 auto 1rem;"></div>
+                    <div style="font-size: 1rem;">Starting RViz2...</div>
+                    <div style="font-size: 0.875rem; color: var(--text-muted); margin-top: 0.5rem;">This may take a few
+                        seconds
+                    </div>
+                </div>
+
+                <!-- VNC Container -->
+                <div id="vncContainer"
+                     style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #000;">
+                    <div id="rvizPlaceholder" class="empty-state">
+                        <div class="empty-state-icon">🖥️</div>
+                        <div class="empty-state-text">RViz2 Not Running</div>
+                        <div class="panel-subtitle">Click "Start RViz2" to launch interactive simulation</div>
+                    </div>
+
+                    <iframe
+                            id="rvizFrame"
+                            style="display: none; width: 100%; height: 100%; border: none; background: #000;"
+                            allow="fullscreen">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // State Management
+    let currentData = null;
+    let currentOntologyData = null;
+    let currentGroundingData = null;
+
+    // DOM Elements
+    const instructionInput = document.getElementById('instructionInput');
+    const generateBtn = document.getElementById('generateBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const statusMessage = document.getElementById('statusMessage');
+    const emptyState = document.getElementById('emptyState');
+    const jsonViewer = document.getElementById('jsonViewer');
+    const expandAllBtn = document.getElementById('expandAllBtn');
+    const collapseAllBtn = document.getElementById('collapseAllBtn');
+
+    // Ontology Elements
+    const ontologyEmptyState = document.getElementById('ontologyEmptyState');
+    const ontologyTree = document.getElementById('ontologyTree');
+    const ontologyStatsDiv = document.getElementById('ontologyStats');
+    const expandAllOntologyBtn = document.getElementById('expandAllOntologyBtn');
+    const collapseAllOntologyBtn = document.getElementById('collapseAllOntologyBtn');
+
+    // Grounding Elements
+    const groundingEmptyState = document.getElementById('groundingEmptyState');
+    const groundingViewer = document.getElementById('groundingViewer');
+    const groundBtn = document.getElementById('groundBtn');  // Changed from refreshGroundingBtn
+    const expandAllGroundingBtn = document.getElementById('expandAllGroundingBtn');
+    const collapseAllGroundingBtn = document.getElementById('collapseAllGroundingBtn');
+
+    let ontologyStats = {totalNodes: 0, maxDepth: 0, attrCount: 0};
+
+    // Show status message
+    function showStatus(message, type = 'loading') {
+        statusMessage.textContent = message;
+        statusMessage.className = `status-message status-${type} show`;
+
+        if (type === 'success' || type === 'error') {
+            setTimeout(() => {
+                statusMessage.classList.remove('show');
+            }, 3000);
+        }
+    }
+
+    // Generate All Data
+    async function generateAll() {
+        const instruction = instructionInput.value.trim();
+
+        if (!instruction) {
+            showStatus('Please enter an instruction', 'error');
+            return;
+        }
+
+        try {
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<span class="spinner"></span> Generating...';
+            showStatus('Generating all visualizations...', 'loading');
+
+            const response = await fetch('/generate_all', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({instruction})
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Update Data Visualizer
+                currentData = result.visualizer_data;
+                renderJson(currentData);
+
+                // Update Ontology Tree
+                currentOntologyData = result.ontology_data;
+                renderOntologyTree(currentOntologyData);
+
+                // Reset grounding data since new data was generated
+                currentGroundingData = null;
+                groundingViewer.innerHTML = '';
+                groundingViewer.classList.remove('active');
+                groundingEmptyState.style.display = 'flex';
+
+                showStatus('All visualizations generated successfully!', 'success');
+            } else {
+                throw new Error(result.error || 'Failed to generate visualizations');
+            }
+
+        } catch (error) {
+            showStatus(`Error: ${error.message}`, 'error');
+            console.error('Generation error:', error);
+        } finally {
+            generateBtn.disabled = false;
+            generateBtn.textContent = 'Generate All';
+        }
+    }
+
+    // Clear Everything
+    function clearAll() {
+        instructionInput.value = '';
+        currentData = null;
+        currentOntologyData = null;
+        currentGroundingData = null;
+
+        // Clear JSON Viewer
+        jsonViewer.innerHTML = '';
+        jsonViewer.classList.remove('active');
+        emptyState.style.display = 'flex';
+
+        // Clear Ontology Tree
+        ontologyTree.innerHTML = '';
+        ontologyTree.classList.remove('active');
+        ontologyEmptyState.style.display = 'flex';
+        ontologyStatsDiv.style.display = 'none';
+
+        // Clear Grounding
+        groundingViewer.innerHTML = '';
+        groundingViewer.classList.remove('active');
+        groundingEmptyState.style.display = 'flex';
+
+        statusMessage.classList.remove('show');
+    }
+
+    // JSON Viewer Functions
+    function createJsonElement(key, value, isLast = false, depth = 0) {
+        const item = document.createElement('div');
+        item.className = 'json-item';
+
+        const line = document.createElement('div');
+        line.className = 'json-line';
+
+        const isExpandable = (typeof value === 'object' && value !== null &&
+                (Array.isArray(value) ? value.length > 0 : Object.keys(value).length > 0));
+
+        const toggle = document.createElement('span');
+        toggle.className = `toggle ${isExpandable ? '' : 'empty'}`;
+
+        const content = document.createElement('span');
+
+        if (key !== null) {
+            const keySpan = document.createElement('span');
+            keySpan.className = 'json-key';
+            keySpan.textContent = `"${key}"`;
+            content.appendChild(keySpan);
+
+            const colon = document.createElement('span');
+            colon.className = 'colon';
+            colon.textContent = ':';
+            content.appendChild(colon);
+        }
+
+        if (Array.isArray(value)) {
+            const bracket = document.createElement('span');
+            bracket.className = 'bracket';
+            bracket.textContent = '[';
+            content.appendChild(bracket);
+
+            if (value.length > 0) {
+                const badge = document.createElement('span');
+                badge.className = 'count-badge';
+                badge.textContent = `${value.length} items`;
+                content.appendChild(badge);
+            }
+        } else if (typeof value === 'object' && value !== null) {
+            const bracket = document.createElement('span');
+            bracket.className = 'bracket';
+            bracket.textContent = '{';
+            content.appendChild(bracket);
+
+            const count = Object.keys(value).length;
+            if (count > 0) {
+                const badge = document.createElement('span');
+                badge.className = 'count-badge';
+                badge.textContent = `${count} keys`;
+                content.appendChild(badge);
+            }
+        } else {
+            const valueSpan = document.createElement('span');
+            if (typeof value === 'string') {
+                valueSpan.className = 'json-string';
+                if (key === 'cram_plan') {
+                    valueSpan.style.whiteSpace = 'pre-wrap';
+                    valueSpan.style.fontFamily = 'inherit';
+                    valueSpan.style.maxWidth = '100%';
+                    valueSpan.style.overflowX = 'auto';
+                    valueSpan.style.display = 'block';
+                    valueSpan.style.wordBreak = 'break-word';
+                    valueSpan.textContent = value;
+                } else {
+                    valueSpan.textContent = `"${value}"`;
+                }
+            } else if (typeof value === 'number') {
+                valueSpan.className = 'json-number';
+                valueSpan.textContent = value;
+            } else if (typeof value === 'boolean') {
+                valueSpan.className = 'json-boolean';
+                valueSpan.textContent = value;
+            } else if (value === null) {
+                valueSpan.className = 'json-null';
+                valueSpan.textContent = 'null';
+            }
+            content.appendChild(valueSpan);
+        }
+
+        if (!isLast && key !== null) {
+            const comma = document.createElement('span');
+            comma.className = 'comma';
+            comma.textContent = ',';
+            content.appendChild(comma);
+        }
+
+        line.appendChild(toggle);
+        line.appendChild(content);
+        item.appendChild(line);
+
+        if (isExpandable) {
+            const nested = document.createElement('div');
+            nested.className = 'json-nested';
+
+            if (Array.isArray(value)) {
+                value.forEach((item, index) => {
+                    nested.appendChild(createJsonElement(null, item, index === value.length - 1, depth + 1));
+                });
+
+                const closeLine = document.createElement('div');
+                closeLine.className = 'json-line';
+                const closeBracket = document.createElement('span');
+                closeBracket.className = 'bracket';
+                closeBracket.textContent = ']';
+                if (!isLast) {
+                    const comma = document.createElement('span');
+                    comma.className = 'comma';
+                    comma.textContent = ',';
+                    closeBracket.appendChild(comma);
+                }
+                closeLine.appendChild(closeBracket);
+                nested.appendChild(closeLine);
+            } else {
+                const entries = Object.entries(value);
+                entries.forEach(([k, v], index) => {
+                    nested.appendChild(createJsonElement(k, v, index === entries.length - 1, depth + 1));
+                });
+
+                const closeLine = document.createElement('div');
+                closeLine.className = 'json-line';
+                const closeBracket = document.createElement('span');
+                closeBracket.className = 'bracket';
+                closeBracket.textContent = '}';
+                if (!isLast) {
+                    const comma = document.createElement('span');
+                    comma.className = 'comma';
+                    comma.textContent = ',';
+                    closeBracket.appendChild(comma);
+                }
+                closeLine.appendChild(closeBracket);
+                nested.appendChild(closeLine);
+            }
+
+            item.appendChild(nested);
+
+            toggle.addEventListener('click', () => {
+                toggle.classList.toggle('expanded');
+                nested.classList.toggle('expanded');
+            });
+        }
+
+        return item;
+    }
+
+    function renderJson(data) {
+        jsonViewer.innerHTML = '';
+        emptyState.style.display = 'none';
+        jsonViewer.classList.add('active');
+
+        const root = document.createElement('div');
+        root.className = 'json-item';
+
+        if (typeof data === 'object' && data !== null) {
+            if (Array.isArray(data)) {
+                const openBracket = document.createElement('div');
+                openBracket.className = 'json-line';
+                openBracket.innerHTML = '<span class="bracket">[</span>';
+                root.appendChild(openBracket);
+
+                data.forEach((item, index) => {
+                    root.appendChild(createJsonElement(null, item, index === data.length - 1, 0));
+                });
+
+                const closeBracket = document.createElement('div');
+                closeBracket.className = 'json-line';
+                closeBracket.innerHTML = '<span class="bracket">]</span>';
+                root.appendChild(closeBracket);
+            } else {
+                const openBracket = document.createElement('div');
+                openBracket.className = 'json-line';
+                openBracket.innerHTML = '<span class="bracket">{</span>';
+                root.appendChild(openBracket);
+
+                const entries = Object.entries(data);
+                entries.forEach(([key, value], index) => {
+                    root.appendChild(createJsonElement(key, value, index === entries.length - 1, 0));
+                });
+
+                const closeBracket = document.createElement('div');
+                closeBracket.className = 'json-line';
+                closeBracket.innerHTML = '<span class="bracket">}</span>';
+                root.appendChild(closeBracket);
+            }
+        }
+
+        jsonViewer.appendChild(root);
+    }
+
+    function expandAll() {
+        document.querySelectorAll('#jsonViewer .toggle:not(.empty)').forEach(toggle => {
+            toggle.classList.add('expanded');
+        });
+        document.querySelectorAll('#jsonViewer .json-nested').forEach(nested => {
+            nested.classList.add('expanded');
+        });
+    }
+
+    function collapseAll() {
+        document.querySelectorAll('#jsonViewer .toggle').forEach(toggle => {
+            toggle.classList.remove('expanded');
+        });
+        document.querySelectorAll('#jsonViewer .json-nested').forEach(nested => {
+            nested.classList.remove('expanded');
+        });
+    }
+
+    // Parse ontology data to tree structure
+    function parseOntologyData(data) {
+        let enrichmentData = {};
+        ontologyStats = {totalNodes: 0, maxDepth: 0, attrCount: 0};
+
+        // Extract enrichment data
+        if (data.enrichment_sidecar && data.enrichment_sidecar.per_action) {
+            for (const [actionId, actionData] of Object.entries(data.enrichment_sidecar.per_action)) {
+                if (actionData.entity_attributes) {
+                    for (const [entityId, attributes] of Object.entries(actionData.entity_attributes)) {
+                        const key = `${actionId}_${entityId}`;
+                        enrichmentData[key] = attributes;
+                    }
+                }
+            }
+        }
+
+        const spine = data.ontology_spine || data;
+        const root = {
+            id: spine.id || 'root',
+            ontologyClass: spine.ontology_class || 'Unknown',
+            children: []
+        };
+
+        if (spine.actions && spine.actions.length > 0) {
+            spine.actions.forEach(action => {
+                root.children.push(parseAction(action, 'actions', enrichmentData));
+            });
+        }
+
+        return root;
+    }
+
+    function parseAction(action, edgeLabel, enrichmentData) {
+        const actionId = action.id || 'unknown';
+        const actionNode = {
+            id: actionId,
+            ontologyClass: action.ontology_class || 'Unknown',
+            edgeLabel: edgeLabel,
+            children: []
+        };
+
+        if (action.has_participant && action.has_participant.length > 0) {
+            action.has_participant.forEach(participant => {
+                actionNode.children.push(
+                        parseParticipant(participant, 'has_participant', actionId, enrichmentData)
+                );
+            });
+        }
+
+        if (action.executes_task && action.executes_task.length > 0) {
+            action.executes_task.forEach(task => {
+                actionNode.children.push({
+                    id: task.id || 'unknown',
+                    ontologyClass: task.ontology_class || 'Unknown',
+                    label: task.label || '',
+                    edgeLabel: 'executes_task',
+                    children: []
+                });
+            });
+        }
+
+        return actionNode;
+    }
+
+    function parseParticipant(participant, edgeLabel, actionId, enrichmentData) {
+        const partData = participant.participant || {};
+        const entityId = partData.id || 'unknown';
+
+        const partNode = {
+            id: entityId,
+            ontologyClass: partData.ontology_class || 'Unknown',
+            label: partData.label || '',
+            edgeLabel: edgeLabel,
+            children: []
+        };
+
+        // Add role
+        if (participant.role) {
+            const role = participant.role;
+            partNode.children.push({
+                id: role.id || 'unknown',
+                ontologyClass: role.ontology_class || 'Unknown',
+                label: role.label || '',
+                edgeLabel: 'role',
+                children: []
+            });
+        }
+
+        // Add enrichment attributes
+        const enrichmentKey = `${actionId}_${entityId}`;
+        if (enrichmentData[enrichmentKey]) {
+            const attributes = enrichmentData[enrichmentKey];
+            for (const [attrName, attrValue] of Object.entries(attributes)) {
+                if (!attrName.startsWith('_')) {  // Skip _provenance and other metadata
+                    partNode.children.push({
+                        id: `${entityId}_${attrName}`,
+                        ontologyClass: 'Attribute',
+                        label: String(attrValue),
+                        edgeLabel: attrName,
+                        isAttribute: true,
+                        children: []
+                    });
+                }
+            }
+        }
+
+        return partNode;
+    }
+
+    // Count nodes for stats
+    function countNodes(node, depth = 0) {
+        ontologyStats.totalNodes++;
+        ontologyStats.maxDepth = Math.max(ontologyStats.maxDepth, depth);
+        if (node.isAttribute) ontologyStats.attrCount++;
+
+        if (node.children && node.children.length > 0) {
+            node.children.forEach(child => countNodes(child, depth + 1));
+        }
+    }
+
+    // Render ontology tree node
+    function renderOntologyNode(node, isExpanded = false) {
+        const hasChildren = node.children && node.children.length > 0;
+        const nodeId = `ont-node-${node.id}-${Math.random().toString(36).substr(2, 9)}`;
+        const isAttribute = node.isAttribute || false;
+
+        let html = `<div class="tree-node">
+                <div class="node-content ${isAttribute ? 'attribute-node' : ''}" onclick="toggleOntologyNode('${nodeId}')">`;
+
+        if (hasChildren) {
+            html += `<div class="node-toggle-btn ${isExpanded ? '' : 'collapsed'}" id="toggle-${nodeId}">${isExpanded ? '−' : '+'}</div>`;
+        } else {
+            html += `<div class="node-toggle-btn ${isAttribute ? 'attribute' : 'leaf'}">●</div>`;
+        }
+
+        html += `<div class="node-info"><div class="node-header">`;
+
+        if (node.edgeLabel) {
+            html += `<span class="edge-label ${isAttribute ? 'attribute-edge' : ''}">${node.edgeLabel}</span>`;
+        }
+
+        if (!isAttribute) {
+            html += `<span class="node-id">${node.id}</span>`;
+            html += `<span class="node-class">(${node.ontologyClass})</span>`;
+        }
+
+        html += `</div>`;
+
+        if (node.label) {
+            html += `<span class="node-label ${isAttribute ? 'attribute-label' : ''}">${node.label}</span>`;
+        }
+
+        html += `</div></div>`;
+
+        if (hasChildren) {
+            html += `<div class="children-container ${isExpanded ? 'expanded' : ''}" id="children-${nodeId}">`;
+            node.children.forEach(child => {
+                html += renderOntologyNode(child, isExpanded);
+            });
+            html += `</div>`;
+        }
+
+        html += `</div>`;
+        return html;
+    }
+
+    // Toggle ontology node
+    function toggleOntologyNode(nodeId) {
+        const container = document.getElementById(`children-${nodeId}`);
+        const toggle = document.getElementById(`toggle-${nodeId}`);
+
+        if (container && toggle) {
+            const isExpanded = container.classList.contains('expanded');
+            if (isExpanded) {
+                container.classList.remove('expanded');
+                toggle.classList.add('collapsed');
+                toggle.textContent = '+';
+            } else {
+                container.classList.add('expanded');
+                toggle.classList.remove('collapsed');
+                toggle.textContent = '−';
+            }
+            updateVisibleNodesCount();
+        }
+    }
+
+    window.toggleOntologyNode = toggleOntologyNode;
+
+    // Update visible nodes count
+    function updateVisibleNodesCount() {
+        let visible = 0;
+        document.querySelectorAll('#ontologyTree .tree-node').forEach(n => {
+            const rect = n.getBoundingClientRect();
+            if (rect.height > 0) visible++;
+        });
+        document.getElementById('visibleNodes').textContent = visible;
+    }
+
+    // Render ontology tree
+    function renderOntologyTree(data) {
+        ontologyTree.innerHTML = '';
+        ontologyEmptyState.style.display = 'none';
+        ontologyTree.classList.add('active');
+        ontologyStatsDiv.style.display = 'flex';
+
+        const treeData = parseOntologyData(data);
+        countNodes(treeData);
+
+        ontologyTree.innerHTML = renderOntologyNode(treeData, false);
+
+        // Update stats
+        document.getElementById('totalNodes').textContent = ontologyStats.totalNodes;
+        document.getElementById('maxDepth').textContent = ontologyStats.maxDepth;
+        document.getElementById('attrCount').textContent = ontologyStats.attrCount;
+        updateVisibleNodesCount();
+    }
+
+    // Expand/Collapse all ontology nodes
+    function expandAllOntology() {
+        document.querySelectorAll('#ontologyTree .node-toggle-btn:not(.leaf):not(.attribute)').forEach(toggle => {
+            toggle.classList.remove('collapsed');
+            toggle.textContent = '−';
+        });
+        document.querySelectorAll('#ontologyTree .children-container').forEach(container => {
+            container.classList.add('expanded');
+        });
+        updateVisibleNodesCount();
+    }
+
+    function collapseAllOntology() {
+        document.querySelectorAll('#ontologyTree .node-toggle-btn:not(.leaf):not(.attribute)').forEach(toggle => {
+            toggle.classList.add('collapsed');
+            toggle.textContent = '+';
+        });
+        document.querySelectorAll('#ontologyTree .children-container').forEach(container => {
+            container.classList.remove('expanded');
+        });
+        updateVisibleNodesCount();
+    }
+
+    // ============================================================================
+    // GROUNDING FUNCTIONALITY
+    // ============================================================================
+
+    // Fetch grounding data
+    // Fetch grounding data
+    async function fetchGroundingData() {
+        try {
+            groundBtn.disabled = true;
+            groundBtn.innerHTML = '<span class="spinner"></span> Grounding...';
+
+            const response = await fetch('/grounding', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                currentGroundingData = {
+                    atomics: result.atomics,
+                    cram_plans: result.cram_plans,
+                    action_names: result.action_names
+                };
+                renderGroundingData(currentGroundingData);
+
+                // Show success message
+                showGroundingStatus('Grounding completed successfully!', 'success');
+            } else if (result.error) {
+                // Handle error from backend
+                showGroundingStatus(result.error, 'error');
+                console.error('Grounding error:', result.error);
+            }
+
+        } catch (error) {
+            showGroundingStatus('Failed to perform grounding. Please generate data first.', 'error');
+            console.error('Grounding fetch error:', error);
+        } finally {
+            groundBtn.disabled = false;
+            groundBtn.textContent = 'Ground';
+        }
+    }
+
+    // Show grounding status message
+    function showGroundingStatus(message, type = 'loading') {
+        // Create or get status message element for grounding tab
+        let groundingStatus = document.getElementById('groundingStatusMessage');
+
+        if (!groundingStatus) {
+            // Create status message element if it doesn't exist
+            const vizContent = document.querySelector('#tab-pycram .viz-content');
+            const statusContainer = document.createElement('div');
+            statusContainer.style.padding = '1rem 0';
+            statusContainer.style.marginBottom = '1rem';
+
+            groundingStatus = document.createElement('div');
+            groundingStatus.id = 'groundingStatusMessage';
+            groundingStatus.className = 'status-message';
+
+            statusContainer.appendChild(groundingStatus);
+            vizContent.insertBefore(statusContainer, vizContent.firstChild);
+        }
+
+        groundingStatus.textContent = message;
+        groundingStatus.className = `status-message status-${type} show`;
+
+        if (type === 'success' || type === 'error') {
+            setTimeout(() => {
+                groundingStatus.classList.remove('show');
+            }, 3000);
+        }
+    }
+
+    // Render grounding data (reuse JSON viewer)
+    // Render grounding data (reuse JSON viewer)
+    function renderGroundingData(data) {
+        groundingViewer.innerHTML = '';
+        groundingEmptyState.style.display = 'none';
+        groundingViewer.classList.add('active');
+
+        // Show expand/collapse controls
+        document.getElementById('groundingControls').style.display = 'block';
+
+        const root = document.createElement('div');
+        root.className = 'json-item';
+
+        if (typeof data === 'object' && data !== null) {
+            const openBracket = document.createElement('div');
+            openBracket.className = 'json-line';
+            openBracket.innerHTML = '<span class="bracket">{</span>';
+            root.appendChild(openBracket);
+
+            const entries = Object.entries(data);
+            entries.forEach(([key, value], index) => {
+                root.appendChild(createJsonElement(key, value, index === entries.length - 1, 0));
+            });
+
+            const closeBracket = document.createElement('div');
+            closeBracket.className = 'json-line';
+            closeBracket.innerHTML = '<span class="bracket">}</span>';
+            root.appendChild(closeBracket);
+        }
+
+        groundingViewer.appendChild(root);
+    }
+
+    // Expand/Collapse all for grounding
+    function expandAllGrounding() {
+        document.querySelectorAll('#groundingViewer .toggle:not(.empty)').forEach(toggle => {
+            toggle.classList.add('expanded');
+        });
+        document.querySelectorAll('#groundingViewer .json-nested').forEach(nested => {
+            nested.classList.add('expanded');
+        });
+    }
+
+    function collapseAllGrounding() {
+        document.querySelectorAll('#groundingViewer .toggle').forEach(toggle => {
+            toggle.classList.remove('expanded');
+        });
+        document.querySelectorAll('#groundingViewer .json-nested').forEach(nested => {
+            nested.classList.remove('expanded');
+        });
+    }
+
+    // Event Listeners
+    generateBtn.addEventListener('click', generateAll);
+    clearBtn.addEventListener('click', clearAll);
+    expandAllBtn.addEventListener('click', expandAll);
+    collapseAllBtn.addEventListener('click', collapseAll);
+    expandAllOntologyBtn.addEventListener('click', expandAllOntology);
+    collapseAllOntologyBtn.addEventListener('click', collapseAllOntology);
+    groundBtn.addEventListener('click', fetchGroundingData);
+    expandAllGroundingBtn.addEventListener('click', expandAllGrounding);
+    collapseAllGroundingBtn.addEventListener('click', collapseAllGrounding);
+
+    // Allow Enter key to generate (with Shift+Enter for new line)
+    instructionInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            generateAll();
+        }
+    });
+
+    // Tab Switching
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function () {
+            const tabId = this.getAttribute('data-tab');
+
+            // Update active tab
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+
+            // Update active content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+
+            // REMOVE THIS SECTION:
+            // // Auto-fetch grounding data when tab is opened
+            // if (tabId === 'pycram' && currentGroundingData === null) {
+            //     fetchGroundingData();
+            // }
+        });
+    });
+
+
+    // ============================================================================
+    // SIMULATION (INTERACTIVE RViz2) FUNCTIONALITY
+    // ============================================================================
+
+    const startRvizBtn = document.getElementById('startRvizBtn');
+    const stopRvizBtn = document.getElementById('stopRvizBtn');
+    const reconnectRvizBtn = document.getElementById('reconnectRvizBtn');
+    const fullscreenRvizBtn = document.getElementById('fullscreenRvizBtn');
+    const rvizFrame = document.getElementById('rvizFrame');
+    const rvizPlaceholder = document.getElementById('rvizPlaceholder');
+    const rvizLoading = document.getElementById('rvizLoading');
+    const rvizStatusMessage = document.getElementById('rvizStatusMessage');
+
+    let isRvizRunning = false;
+
+    // Show RViz status message
+    function showRvizStatus(message, type = 'loading') {
+        rvizStatusMessage.textContent = message;
+        rvizStatusMessage.className = `status-message status-${type} show`;
+
+        if (type === 'success' || type === 'error') {
+            setTimeout(() => {
+                rvizStatusMessage.classList.remove('show');
+            }, 3000);
+        }
+    }
+
+    // Start RViz2 with VNC
+    async function startRviz() {
+        try {
+            startRvizBtn.disabled = true;
+            startRvizBtn.innerHTML = '<span class="spinner"></span> Starting...';
+            rvizLoading.style.display = 'block';
+            rvizPlaceholder.style.display = 'none';
+            showRvizStatus('Starting RViz2 with VNC server...', 'loading');
+
+            const response = await fetch('/start_rviz', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showRvizStatus('RViz2 started! Loading viewer...', 'loading');
+
+                // Wait a bit for services to be fully ready
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
+                // Check if services are ready
+                const statusResponse = await fetch('/rviz_status');
+                const status = await statusResponse.json();
+
+                if (status.ready) {
+                    // Load noVNC viewer
+                    const vncUrl = 'http://localhost:6080/vnc.html?autoconnect=true&reconnect=true&resize=scale&quality=9';
+                    rvizFrame.src = vncUrl;
+
+                    // Wait for iframe to load
+                    rvizFrame.onload = () => {
+                        rvizLoading.style.display = 'none';
+                        rvizFrame.style.display = 'block';
+                        isRvizRunning = true;
+                        showRvizStatus('RViz2 ready! You can now interact with it.', 'success');
+                    };
+
+                } else {
+                    throw new Error('Services not ready. Please try again.');
+                }
+            } else {
+                throw new Error(result.error || 'Failed to start RViz2');
+            }
+
+        } catch (error) {
+            rvizLoading.style.display = 'none';
+            rvizPlaceholder.style.display = 'flex';
+            showRvizStatus(`Error: ${error.message}`, 'error');
+            console.error('RViz2 start error:', error);
+        } finally {
+            startRvizBtn.disabled = false;
+            startRvizBtn.textContent = 'Start RViz2';
+        }
+    }
+
+    // Stop RViz2
+    async function stopRviz() {
+        try {
+            stopRvizBtn.disabled = true;
+            stopRvizBtn.innerHTML = '<span class="spinner"></span> Stopping...';
+            showRvizStatus('Stopping RViz2...', 'loading');
+
+            const response = await fetch('/stop_rviz', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                isRvizRunning = false;
+                rvizFrame.src = '';
+                rvizFrame.style.display = 'none';
+                rvizPlaceholder.style.display = 'flex';
+                showRvizStatus('RViz2 stopped', 'success');
+            } else {
+                throw new Error(result.error || 'Failed to stop RViz2');
+            }
+
+        } catch (error) {
+            showRvizStatus(`Error: ${error.message}`, 'error');
+            console.error('RViz2 stop error:', error);
+        } finally {
+            stopRvizBtn.disabled = false;
+            stopRvizBtn.textContent = 'Stop RViz2';
+        }
+    }
+
+    // Reconnect VNC
+    function reconnectRviz() {
+        if (isRvizRunning) {
+            showRvizStatus('Reconnecting...', 'loading');
+            const vncUrl = 'http://localhost:6080/vnc.html?autoconnect=true&reconnect=true&resize=scale&quality=9';
+            rvizFrame.src = vncUrl;
+
+            rvizFrame.onload = () => {
+                showRvizStatus('Reconnected successfully', 'success');
+            };
+        } else {
+            showRvizStatus('Please start RViz2 first', 'error');
+        }
+    }
+
+    // Toggle fullscreen
+    function toggleRvizFullscreen() {
+        if (!document.fullscreenElement) {
+            rvizFrame.requestFullscreen().catch(err => {
+                showRvizStatus(`Fullscreen error: ${err.message}`, 'error');
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    // Event Listeners
+    startRvizBtn.addEventListener('click', startRviz);
+    stopRvizBtn.addEventListener('click', stopRviz);
+    reconnectRvizBtn.addEventListener('click', reconnectRviz);
+    fullscreenRvizBtn.addEventListener('click', toggleRvizFullscreen);
+
+    // Handle fullscreen changes
+    document.addEventListener('fullscreenchange', () => {
+        if (document.fullscreenElement) {
+            fullscreenRvizBtn.textContent = 'Exit Fullscreen';
+        } else {
+            fullscreenRvizBtn.textContent = 'Fullscreen';
+        }
+    });
+
+    // Initialize
+    console.log('Data Terminal initialized');
+</script>
+
+</body>
+</html>

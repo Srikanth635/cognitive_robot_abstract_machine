@@ -1,0 +1,451 @@
+{
+  "actions": [
+    {
+      "action_id": "action_00000001",
+      "layers": {
+        "semantic": {
+          "framenet": "picking_up_object",
+          "frame": "Getting",
+          "lexical-unit": "pick_up.v",
+          "core": {
+            "agent": "robot",
+            "theme": "cup",
+            "patient": null,
+            "instrument": "robot gripper",
+            "source": null,
+            "goal": "robot's grasp",
+            "result": "robot holds cup",
+            "other_core_elements": null
+          },
+          "peripheral": {
+            "location": "kitchen",
+            "manner": "gently",
+            "direction": "upward",
+            "time": null,
+            "purpose": "for drinking",
+            "quantity": "one cup",
+            "portion": null,
+            "speed": null,
+            "path": null,
+            "other_peripheral_elements": null
+          }
+        },
+        "flanagan": {
+          "instruction": "pick up the cup",
+          "phases": [
+            {
+              "phase": "Approach",
+              "target_object": "cup",
+              "description": "move to cup on table",
+              "symbol": "->[ robot approachs cup]",
+              "goal_state": {
+                "cup_reachable": true,
+                "cup_visible": true
+              },
+              "preconditions": {
+                "cup_reachable": true,
+                "cup_visible": true
+              },
+              "force_dynamics": {
+                "contact": false,
+                "motion_type": "",
+                "force_exerted": "",
+                "force_profile": {
+                  "type": "N/A",
+                  "expected_range_N": null,
+                  "expected_range_Nm": null
+                }
+              },
+              "sensory_feedback": {
+                "sensor_signal": {
+                  "contact": false,
+                  "motion_type": "linear",
+                  "force_exerted": 0,
+                  "force_profile": {
+                    "type": "N/A",
+                    "expected_range_N": null,
+                    "expected_range_Nm": null
+                  },
+                  "cup_reachable": true,
+                  "cup_visible": true
+                }
+              },
+              "failure_and_recovery": {
+                "possible_failures": [
+                  "Cup not reachable due to obstacles",
+                  "Cup not visible due to lighting or angle",
+                  "Robot miscalculates distance and overshoots"
+                ],
+                "recovery_strategies": [
+                  "Reassess the environment for obstacles and adjust trajectory",
+                  "Change the robot's position or angle to improve visibility",
+                  "Slow down the approach to ensure accurate positioning"
+                ]
+              },
+              "temporal_constraints": {
+                "max_duration_sec": 3.0,
+                "urgency": "medium"
+              }
+            },
+            {
+              "phase": "Grasp",
+              "target_object": "cup",
+              "description": "grip the cup",
+              "symbol": "->[ robot grasps cup]",
+              "goal_state": {
+                "cup_graspable": true,
+                "sufficient_space": true,
+                "cup_grasped": true
+              },
+              "preconditions": {
+                "cup_graspable": true,
+                "sufficient_space": true
+              },
+              "force_dynamics": {
+                "contact": false,
+                "motion_type": "",
+                "force_exerted": "",
+                "force_profile": {
+                  "type": "3-8N compression",
+                  "expected_range_N": [
+                    3.0,
+                    8.0
+                  ],
+                  "expected_range_Nm": null
+                }
+              },
+              "sensory_feedback": {
+                "sensor_signal": {
+                  "contact": true,
+                  "motion_type": "grasping",
+                  "force_exerted": 5,
+                  "force_profile": {
+                    "type": "3-8N compression",
+                    "expected_range_N": [
+                      3.0,
+                      8.0
+                    ],
+                    "expected_range_Nm": null
+                  },
+                  "cup_graspable": true,
+                  "sufficient_space": true,
+                  "cup_grasped": true
+                }
+              },
+              "failure_and_recovery": {
+                "possible_failures": [
+                  "Cup is not graspable due to slippery surface",
+                  "Insufficient space to perform the grasp",
+                  "Robot fails to apply adequate force to grasp the cup"
+                ],
+                "recovery_strategies": [
+                  "Adjust the grip force based on the feedback from sensors",
+                  "Reposition the robot to ensure sufficient space for grasping",
+                  "Try a different grasping technique or approach"
+                ]
+              },
+              "temporal_constraints": {
+                "max_duration_sec": 2.0,
+                "urgency": "high"
+              }
+            },
+            {
+              "phase": "Lift",
+              "target_object": "cup",
+              "description": "lift cup off table",
+              "symbol": "->[ robot lifts cup]",
+              "goal_state": {
+                "cup_grasped": true,
+                "safe_orientation": "vertical"
+              },
+              "preconditions": {
+                "cup_grasped": true,
+                "safe_orientation": "vertical"
+              },
+              "force_dynamics": {
+                "contact": false,
+                "motion_type": "",
+                "force_exerted": "",
+                "force_profile": {
+                  "type": "5-15N lift",
+                  "expected_range_N": [
+                    5.0,
+                    15.0
+                  ],
+                  "expected_range_Nm": null
+                }
+              },
+              "sensory_feedback": {
+                "sensor_signal": {
+                  "contact": true,
+                  "motion_type": "lifting",
+                  "force_exerted": 10,
+                  "force_profile": {
+                    "type": "5-15N lift",
+                    "expected_range_N": [
+                      5.0,
+                      15.0
+                    ],
+                    "expected_range_Nm": null
+                  },
+                  "cup_grasped": true,
+                  "safe_orientation": "vertical"
+                }
+              },
+              "failure_and_recovery": {
+                "possible_failures": [
+                  "Cup slips from grasp due to insufficient force",
+                  "Robot lifts at an unsafe angle causing instability",
+                  "Unexpected weight or resistance from the cup"
+                ],
+                "recovery_strategies": [
+                  "Increase the lifting force gradually to ensure stability",
+                  "Reassess the orientation and adjust to a safe vertical position",
+                  "Lower the cup back down and reattempt the lift with a better grip"
+                ]
+              },
+              "temporal_constraints": {
+                "max_duration_sec": 4.0,
+                "urgency": "high"
+              }
+            }
+          ]
+        },
+        "intent": {
+          "action_id": "action_00000001",
+          "atomic_instruction": "pick up the cup",
+          "intent": "PickingUp",
+          "roles": {
+            "agent": null,
+            "patient": "the cup",
+            "instrument": null,
+            "source_location": "the table",
+            "destination_location": null,
+            "beneficiary": null
+          },
+          "parameters": {
+            "amount": null,
+            "attribute": null,
+            "manner": null,
+            "time": null,
+            "duration": null,
+            "priority": null,
+            "force": null,
+            "speed": null,
+            "spatial_info": null
+          },
+          "conditions": null,
+          "metadata": {
+            "status": "pending",
+            "confidence": 0.95,
+            "comments": null,
+            "safety_constraints": null,
+            "estimated_duration": null,
+            "dependencies": null,
+            "alternatives": null
+          }
+        }
+      },
+      "phases": [
+        {
+          "phase": "Approach",
+          "target_object": "cup",
+          "description": "move to cup on table",
+          "symbol": "->[ robot approachs cup]",
+          "goal_state": {
+            "cup_reachable": true,
+            "cup_visible": true
+          },
+          "preconditions": {
+            "cup_reachable": true,
+            "cup_visible": true
+          },
+          "force_dynamics": {
+            "contact": false,
+            "motion_type": "",
+            "force_exerted": "",
+            "force_profile": {
+              "type": "N/A",
+              "expected_range_N": null,
+              "expected_range_Nm": null
+            }
+          },
+          "sensory_feedback": {
+            "sensor_signal": {
+              "contact": false,
+              "motion_type": "linear",
+              "force_exerted": 0,
+              "force_profile": {
+                "type": "N/A",
+                "expected_range_N": null,
+                "expected_range_Nm": null
+              },
+              "cup_reachable": true,
+              "cup_visible": true
+            }
+          },
+          "failure_and_recovery": {
+            "possible_failures": [
+              "Cup not reachable due to obstacles",
+              "Cup not visible due to lighting or angle",
+              "Robot miscalculates distance and overshoots"
+            ],
+            "recovery_strategies": [
+              "Reassess the environment for obstacles and adjust trajectory",
+              "Change the robot's position or angle to improve visibility",
+              "Slow down the approach to ensure accurate positioning"
+            ]
+          },
+          "temporal_constraints": {
+            "max_duration_sec": 3.0,
+            "urgency": "medium"
+          },
+          "phase_id": "phase_001",
+          "phase_name": "Approach"
+        },
+        {
+          "phase": "Grasp",
+          "target_object": "cup",
+          "description": "grip the cup",
+          "symbol": "->[ robot grasps cup]",
+          "goal_state": {
+            "cup_graspable": true,
+            "sufficient_space": true,
+            "cup_grasped": true
+          },
+          "preconditions": {
+            "cup_graspable": true,
+            "sufficient_space": true
+          },
+          "force_dynamics": {
+            "contact": false,
+            "motion_type": "",
+            "force_exerted": "",
+            "force_profile": {
+              "type": "3-8N compression",
+              "expected_range_N": [
+                3.0,
+                8.0
+              ],
+              "expected_range_Nm": null
+            }
+          },
+          "sensory_feedback": {
+            "sensor_signal": {
+              "contact": true,
+              "motion_type": "grasping",
+              "force_exerted": 5,
+              "force_profile": {
+                "type": "3-8N compression",
+                "expected_range_N": [
+                  3.0,
+                  8.0
+                ],
+                "expected_range_Nm": null
+              },
+              "cup_graspable": true,
+              "sufficient_space": true,
+              "cup_grasped": true
+            }
+          },
+          "failure_and_recovery": {
+            "possible_failures": [
+              "Cup is not graspable due to slippery surface",
+              "Insufficient space to perform the grasp",
+              "Robot fails to apply adequate force to grasp the cup"
+            ],
+            "recovery_strategies": [
+              "Adjust the grip force based on the feedback from sensors",
+              "Reposition the robot to ensure sufficient space for grasping",
+              "Try a different grasping technique or approach"
+            ]
+          },
+          "temporal_constraints": {
+            "max_duration_sec": 2.0,
+            "urgency": "high"
+          },
+          "phase_id": "phase_002",
+          "phase_name": "Grasp"
+        },
+        {
+          "phase": "Lift",
+          "target_object": "cup",
+          "description": "lift cup off table",
+          "symbol": "->[ robot lifts cup]",
+          "goal_state": {
+            "cup_grasped": true,
+            "safe_orientation": "vertical"
+          },
+          "preconditions": {
+            "cup_grasped": true,
+            "safe_orientation": "vertical"
+          },
+          "force_dynamics": {
+            "contact": false,
+            "motion_type": "",
+            "force_exerted": "",
+            "force_profile": {
+              "type": "5-15N lift",
+              "expected_range_N": [
+                5.0,
+                15.0
+              ],
+              "expected_range_Nm": null
+            }
+          },
+          "sensory_feedback": {
+            "sensor_signal": {
+              "contact": true,
+              "motion_type": "lifting",
+              "force_exerted": 10,
+              "force_profile": {
+                "type": "5-15N lift",
+                "expected_range_N": [
+                  5.0,
+                  15.0
+                ],
+                "expected_range_Nm": null
+              },
+              "cup_grasped": true,
+              "safe_orientation": "vertical"
+            }
+          },
+          "failure_and_recovery": {
+            "possible_failures": [
+              "Cup slips from grasp due to insufficient force",
+              "Robot lifts at an unsafe angle causing instability",
+              "Unexpected weight or resistance from the cup"
+            ],
+            "recovery_strategies": [
+              "Increase the lifting force gradually to ensure stability",
+              "Reassess the orientation and adjust to a safe vertical position",
+              "Lower the cup back down and reattempt the lift with a better grip"
+            ]
+          },
+          "temporal_constraints": {
+            "max_duration_sec": 4.0,
+            "urgency": "high"
+          },
+          "phase_id": "phase_003",
+          "phase_name": "Lift"
+        }
+      ],
+      "objects": {
+        "primary": {
+          "name": "cup",
+          "properties": {},
+          "action_verb": "pick_up",
+          "source_location": "table"
+        }
+      },
+      "dependencies": {
+        "requires": [],
+        "enables": []
+      },
+      "atomic_instruction": "pick up the cup",
+      "instruction": "pick up the cup",
+      "action_type": "PickingUp",
+      "cram_plan": "(an action (type PickingUp) (object (:tag cup (an object (type Artifact size medium color white material ceramic shape cylindrical condition whole handle present))) (source (a location (on (:tag table (an object (type Surface size large material wood shape rectangular position on))))))"
+    }
+  ]
+}
