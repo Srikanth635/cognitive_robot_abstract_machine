@@ -13,7 +13,7 @@ from krrood.entity_query_language.query.match import (
 from krrood.underspecified_knowledge.parameterizer import (
     UnderspecifiedToCallableAndKwargsTranslator,
 )
-from krrood.underspecified_knowledge.probable_variable import (
+from krrood.underspecified_knowledge.random_events_translator import (
     WhereExpressionToRandomEventTranslator,
     is_disjunctive_normal_form,
 )
