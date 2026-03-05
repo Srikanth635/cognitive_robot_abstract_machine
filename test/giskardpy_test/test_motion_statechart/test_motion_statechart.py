@@ -92,6 +92,7 @@ from giskardpy.qp.qp_controller_config import QPControllerConfig
 from giskardpy.qp.solvers.qp_solver_gurobi import QPSolverGurobi
 from giskardpy.qp.solvers.qp_solver_ids import SupportedQPSolver
 from giskardpy.qp.solvers.qp_solver_qpSWIFT import QPSolverQPSwift
+from giskardpy.qp.solvers.qp_solver_qpalm import QPSolverQPalm
 from giskardpy.utils.math import angle_between_vector
 from krrood.symbolic_math.symbolic_math import (
     trinary_logic_and,
@@ -1072,6 +1073,11 @@ class TestJointTasks:
         kin_sim = Executor(
             MotionStatechartContext(
                 world=world,
+                qp_controller_config=QPControllerConfig(
+                    target_frequency=20,
+                    prediction_horizon=7,
+                    qp_solver_class=QPSolverQPalm,
+                ),
             )
         )
         kin_sim.compile(motion_statechart=msc)
@@ -3197,7 +3203,7 @@ class TestCollisionAvoidance:
                 qp_controller_config=QPControllerConfig(
                     target_frequency=100,
                     prediction_horizon=30,
-                    qp_solver_class=QPSolverGurobi,
+                    qp_solver_class=QPSolverQPalm,
                 ),
             )
         )

@@ -73,7 +73,6 @@ class QPSolverGurobi(QPSolver[QPDataExplicit]):
           lb <= x <= ub
     """
 
-    solver_id = SupportedQPSolver.gurobi
     STATUS_VALUE_DICT = {
         getattr(gurobipy.GRB.status, name): name
         for name in dir(gurobipy.GRB.status)
