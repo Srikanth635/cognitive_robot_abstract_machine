@@ -11,7 +11,7 @@ import rustworkx as rx
 import rustworkx.visualization
 
 from krrood.entity_query_language.query.match import Match
-from krrood.probabilistic_knowledge.probable_variable import MatchToInstanceTranslator
+from krrood.underspecified_knowledge.probable_variable import MatchToInstanceTranslator
 from random_events.variable import Variable
 from typing_extensions import (
     Optional,
@@ -40,7 +40,7 @@ from semantic_digital_twin.world_description.world_modification import (
     WorldModelModificationBlock,
 )
 from krrood.class_diagrams.class_diagram import ClassDiagram
-from krrood.probabilistic_knowledge.parameterizer import (
+from krrood.underspecified_knowledge.parameterizer import (
     DataAccessObjectParameterizer,
     DataAccessObjectParameterizer,
     Parameterization,

@@ -10,34 +10,44 @@ from krrood.entity_query_language.factories import (
 from krrood.entity_query_language.query.match import (
     UnderspecifiedVariable,
 )
-from krrood.probabilistic_knowledge.parameterizer import (
+from krrood.underspecified_knowledge.parameterizer import (
     UnderspecifiedToCallableAndKwargsTranslator,
 )
-from krrood.probabilistic_knowledge.probable_variable import (
-    QueryToRandomEventTranslator,
+from krrood.underspecified_knowledge.probable_variable import (
+    WhereExpressionToRandomEventTranslator,
     is_disjunctive_normal_form,
 )
 from random_events.interval import singleton, open, closed, closed_open
 from random_events.product_algebra import SimpleEvent, Event
 from random_events.variable import Continuous
+from semantic_digital_twin.spatial_types import Vector3
 
 from ..dataset.example_classes import Pose, Position, Orientation
 from ..dataset.ormatic_interface import *  # type: ignore
 
 
 def test_parameterizer_with_where():
-    pose_variable = variable(Pose, None)
-
-    q = entity(pose_variable).where(
-        pose_variable.position.y > 0.0,
-        pose_variable.position.x == 0.0,
-        pose_variable.position.y < 10.0,
-        pose_variable.position.z >= -1.0,
-        pose_variable.position.z <= 1.0,
-        pose_variable.orientation.x != 1.0,
+    underspecified_pose = underspecified(Pose)(
+        position=underspecified(Position)(x=..., y=..., z=...),
+        orientation=underspecified(Orientation)(x=..., y=..., z=..., w=...),
     )
-    q.build()
-    t = QueryToRandomEventTranslator(q)
+
+    q = underspecified_pose.where(
+        underspecified_pose.variable.position.y > 0.0,
+        underspecified_pose.variable.position.x == 0.0,
+        underspecified_pose.variable.position.y < 10.0,
+        underspecified_pose.variable.position.z >= -1.0,
+        underspecified_pose.variable.position.z <= 1.0,
+        underspecified_pose.variable.orientation.x != 1.0,
+    )
+
+    factory = UnderspecifiedToCallableAndKwargsTranslator(
+        underspecified_pose
+    ).translate()
+    # q.expression.build()
+    t = WhereExpressionToRandomEventTranslator(
+        and_(*q._where_expressions), factory.flat_variables
+    )
     r = t.translate()
 
     result_by_hand = SimpleEvent(
@@ -67,11 +77,15 @@ def test_dnf_checking():
             ),
         )
     )
-    q1.build()
 
-    assert not is_disjunctive_normal_form(q1)
+    assert not is_disjunctive_normal_form(q1._conditions_root_)
 
-    q2 = entity(pose_variable).where(
+    underspecified_pose = underspecified(Pose)(
+        position=underspecified(Position)(x=..., y=..., z=...),
+        orientation=underspecified(Orientation)(x=..., y=..., z=..., w=...),
+    )
+    pose_variable = underspecified_pose.variable
+    q2 = underspecified_pose.where(
         or_(
             pose_variable.position.x == 0,
             and_(
@@ -82,10 +96,15 @@ def test_dnf_checking():
             and_(pose_variable.orientation.z > 0),
         )
     )
-    q2.build()
-    assert is_disjunctive_normal_form(q2)
 
-    t = QueryToRandomEventTranslator(q2)
+    where_expression = and_(*q2._where_expressions)
+    assert is_disjunctive_normal_form(where_expression)
+
+    factory = UnderspecifiedToCallableAndKwargsTranslator(
+        underspecified_pose
+    ).translate()
+
+    t = WhereExpressionToRandomEventTranslator(where_expression, factory.flat_variables)
     translated = t.translate()
 
     variables = [
@@ -144,7 +163,7 @@ def test_probable_variable_with_concrete_kwarg():
     instance = factory.construct_instance()
     assert instance.orientation == Orientation(x=0.0, y=0.0, z=0.0, w=1.0)
 
-    assert len(factory.flat_assignments) == 4
+    assert len(factory.flat_variables) == 4
 
 
 def test_new_underspecified_translator():
@@ -156,10 +175,11 @@ def test_new_underspecified_translator():
     ).where(probable_pose.variable.position.x > 0.5)
 
     factory = UnderspecifiedToCallableAndKwargsTranslator(prob_q).translate()
-    assignments = factory.flat_assignments
-    print(factory.flat_assignments)
-    for v, k in factory.flat_assignments.items():
-        if isinstance(k, type(...)):
+
+    assignments = {}
+
+    for v in factory.flat_variables:
+        if isinstance(v.value, type(...)):
             assignments[v] = 0.0
 
     factory.apply_assignments(assignments)

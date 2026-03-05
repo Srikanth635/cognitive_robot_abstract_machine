@@ -13,7 +13,9 @@ from krrood.entity_query_language.factories import (
     variable_from,
 )
 from krrood.ormatic.dao import to_dao
-from krrood.probabilistic_knowledge.model_registries import DictRegistry
+from krrood.underspecified_knowledge.model_registries import DictRegistry
+from krrood.underspecified_knowledge.parameterizer import UnderspecifiedParameters
+from probabilistic_model.probabilistic_circuit.rx.helper import fully_factorized
 from ..dataset.example_classes import Pose, Position, Orientation
 
 
@@ -51,7 +53,8 @@ def test_same_query_multiple_domains(session, database):
     )
     prob_q.where(prob_q.variable.position.x > 0.5)
 
-    model = ...  # parameters.create_fully_factorized_distribution()
+    parameters = UnderspecifiedParameters(prob_q)
+    model = fully_factorized(parameters.random_event_variables)
 
     registry = DictRegistry({Pose: model})
 

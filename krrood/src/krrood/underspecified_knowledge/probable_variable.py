@@ -1,26 +1,30 @@
+from __future__ import annotations
+
 import operator
 from collections import deque
 from dataclasses import dataclass
 from typing import assert_never, List, Dict
 
 import numpy as np
+from typing_extensions import TYPE_CHECKING
 
 from krrood.entity_query_language.core.base_expressions import SymbolicExpression
 from krrood.entity_query_language.core.mapped_variable import MappedVariable
 from krrood.entity_query_language.core.variable import Literal
 from krrood.entity_query_language.operators.comparator import Comparator
 from krrood.entity_query_language.operators.core_logical_operators import OR, AND
-from krrood.entity_query_language.predicate import symbolic_function
-from krrood.entity_query_language.query.query import Entity
-from krrood.probabilistic_knowledge.exceptions import (
+from krrood.underspecified_knowledge.exceptions import (
     WhereExpressionNotInDisjunctiveNormalForm,
 )
 from random_events.interval import closed_open, closed, open
 from random_events.product_algebra import Event, SimpleEvent
 
+if TYPE_CHECKING:
+    from krrood.underspecified_knowledge.parameterizer import ParametrizationVariable
+
 
 @dataclass
-class QueryToRandomEventTranslator:
+class WhereExpressionToRandomEventTranslator:
     """
     Class that translates a query into a random event.
     Requires that the query is in disjunctive normal form.
@@ -29,16 +33,37 @@ class QueryToRandomEventTranslator:
 
     """
 
-    query: Entity
+    conditions_root: Comparator
     """
     The query in disjunctive normal form to translate.
     """
 
+    parametrization_variables: List[ParametrizationVariable]
+    """
+    Parametrization variables that are used in the query.
+    """
+
     def __post_init__(self):
-        if not is_disjunctive_normal_form(self.query):
-            raise WhereExpressionNotInDisjunctiveNormalForm(
-                self.query._where_expression_
-            )
+        if not is_disjunctive_normal_form(self.conditions_root):
+            raise WhereExpressionNotInDisjunctiveNormalForm(self.conditions_root)
+
+    @property
+    def leaf_variables_with_topology(self):
+        return [
+            v
+            for v in self.parametrization_variables
+            if v.is_leaf and v.random_events_variable is not None
+        ]
+
+    def _get_parameterization_variable_from_comparator(
+        self, expression: Comparator
+    ) -> ParametrizationVariable:
+        [parameterization_variable] = [
+            v
+            for v in self.leaf_variables_with_topology
+            if v.name == expression.left._name_
+        ]
+        return parameterization_variable
 
     def translate(self) -> Event:
         """
@@ -48,9 +73,8 @@ class QueryToRandomEventTranslator:
         simple_events = []
 
         # Traverse the logical tree starting from the conditions root
-        root = self.query._conditions_root_
+        queue = deque([self.conditions_root])
 
-        queue = deque([root])
         while queue:
             expression = queue.popleft()
 
@@ -62,10 +86,14 @@ class QueryToRandomEventTranslator:
                 simple_event = self._translate_conjunction(expression)
             elif isinstance(expression, Comparator):
                 simple_event = SimpleEvent(
-                    {v.variable: v.variable.domain for v in self.all_variables}
+                    {
+                        v.random_events_variable: v.random_events_variable.domain
+                        for v in self.leaf_variables_with_topology
+                    }
                 )
+
                 self._translate_comparators(
-                    self._object_access_variable_from_comparator(expression),
+                    self._get_parameterization_variable_from_comparator(expression),
                     [expression],
                     simple_event,
                 )
@@ -92,30 +120,9 @@ class QueryToRandomEventTranslator:
 
         return result
 
-    @symbolic_function
-    def _object_access_variable_from_comparator(
-        self, comparator: Comparator
-    ) -> ObjectAccessVariable:
-        """
-        Create an ObjectAccessVariable from a comparator.
-        Requires that the comparator's left operand is an attribute access like operation.
-
-        :param comparator: The comparator to extract the variable from.
-        :return: The ObjectAccessVariable corresponding to the comparator's left operand.
-        """
-        assert isinstance(comparator.left, AttributeAccessLike)
-        return ObjectAccessVariable.from_attribute_access_and_type(
-            comparator.left, comparator.left._type_
-        )
-
-    @property
-    def all_variables(self) -> List[ObjectAccessVariable]:
-        root = self.query._conditions_root_
-        return list(self.comparators_grouped_by_variable(root).keys())
-
     def comparators_grouped_by_variable(
         self, expression: SymbolicExpression
-    ) -> Dict[ObjectAccessVariable, List[Comparator]]:
+    ) -> Dict[ParametrizationVariable, List[Comparator]]:
         """
         Group comparators by their variable given an expression.
 
@@ -124,17 +131,17 @@ class QueryToRandomEventTranslator:
         """
 
         # Collect all Comparator descendants and group them by their accessed variable
-        grouped: Dict[ObjectAccessVariable, List[Comparator]] = {}
+        grouped: Dict[ParametrizationVariable, List[Comparator]] = {}
         for expr in expression._descendants_:
             if not isinstance(expr, Comparator):
                 continue
-            key = self._object_access_variable_from_comparator(expr)
+            key = self._get_parameterization_variable_from_comparator(expr)
             grouped.setdefault(key, []).append(expr)
         return grouped
 
     def _translate_comparators(
         self,
-        variable: ObjectAccessVariable,
+        variable: ParametrizationVariable,
         comparators: List[Comparator],
         result: SimpleEvent,
     ) -> None:
@@ -147,7 +154,7 @@ class QueryToRandomEventTranslator:
         :return: None
         """
 
-        result[variable.variable] = variable.variable.domain
+        result[variable.random_events_variable] = variable.random_events_variable.domain
         for comparator in comparators:
 
             if isinstance(comparator.right._value_, type(Ellipsis)):
@@ -172,70 +179,72 @@ class QueryToRandomEventTranslator:
     def _translate_eq(
         self,
         comparator: Comparator,
-        object_access_variable: ObjectAccessVariable,
+        parametrization_variable: ParametrizationVariable,
         result: SimpleEvent,
     ) -> None:
         result[
-            object_access_variable.variable
-        ] &= object_access_variable.variable.make_value(comparator.right._domain_[0])
+            parametrization_variable.random_events_variable
+        ] &= parametrization_variable.random_events_variable.make_value(
+            comparator.right._value_
+        )
 
     def _translate_ne(
         self,
         comparator: Comparator,
-        object_access_variable: ObjectAccessVariable,
+        parametrization_variable: ParametrizationVariable,
         result: SimpleEvent,
     ) -> None:
         result[
-            object_access_variable.variable
-        ] &= object_access_variable.variable.make_value(
-            comparator.right._domain_[0]
+            parametrization_variable.random_events_variable
+        ] &= parametrization_variable.random_events_variable.make_value(
+            comparator.right._value_
         ).complement()
 
     def _translate_gt(
         self,
         comparator: Comparator,
-        object_access_variable: ObjectAccessVariable,
+        parametrization_variable: ParametrizationVariable,
         result: SimpleEvent,
     ) -> None:
-        result[object_access_variable.variable] &= open(
-            comparator.right._domain_[0], np.inf
+        result[parametrization_variable.random_events_variable] &= open(
+            comparator.right._value_, np.inf
         )
 
     def _translate_lt(
         self,
         comparator: Comparator,
-        object_access_variable: ObjectAccessVariable,
+        parametrization_variable: ParametrizationVariable,
         result: SimpleEvent,
     ) -> None:
-        result[object_access_variable.variable] &= closed_open(
+        result[parametrization_variable.random_events_variable] &= closed_open(
             -np.inf,
-            comparator.right._domain_[0],
+            comparator.right._value_,
         )
 
     def _translate_le(
         self,
         comparator: Comparator,
-        object_access_variable: ObjectAccessVariable,
+        parametrization_variable: ParametrizationVariable,
         result: SimpleEvent,
     ) -> None:
-        result[object_access_variable.variable] &= closed(
+        result[parametrization_variable.random_events_variable] &= closed(
             -np.inf,
-            comparator.right._domain_[0],
+            comparator.right._value_,
         )
 
     def _translate_ge(
         self,
         comparator: Comparator,
-        object_access_variable: ObjectAccessVariable,
+        parametrization_variable: ParametrizationVariable,
         result: SimpleEvent,
     ) -> None:
-        result[object_access_variable.variable] &= closed(
-            comparator.right._domain_[0],
+        result[parametrization_variable.random_events_variable] &= closed(
+            comparator.right._value_,
             np.inf,
         )
 
 
-def is_disjunctive_normal_form(query: Entity) -> bool:
+def is_disjunctive_normal_form(condition_root: Comparator) -> bool:
     """
     Checks if the given query is disjunctive normal form (DNF).
 
@@ -255,11 +264,9 @@ def is_disjunctive_normal_form(query: Entity) -> bool:
 
         (x > 3) & ((y > 5) | (z < 2)) is not DNF
 
-    :param query: The query to check
+    :param condition_root: The condition root of the query to check
     :return: True if the query is disjunctive normal form, False otherwise
     """
-
-    condition_root = query._conditions_root_
 
     return (
         is_disjunction_of_conjunction_of_literal_comparators(condition_root)

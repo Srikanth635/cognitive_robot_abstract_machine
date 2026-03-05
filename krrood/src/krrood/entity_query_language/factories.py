@@ -117,7 +117,7 @@ def match_variable(
 
 def underspecified(
     expression: Union[Type[T], Selectable[T], Callable[..., T]],
-) -> Union[Type[T], MatchVariable[T]]:
+) -> Union[Type[T], UnderspecifiedVariable[T]]:
     """
     Same as :py:func:`krrood.entity_query_language.match.match_variable` but instead of searching for solutions in
     the domain objects, it is used as a query for generative processes to infer solutions that satisfy the constraints

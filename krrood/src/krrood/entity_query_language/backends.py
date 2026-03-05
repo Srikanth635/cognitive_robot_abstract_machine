@@ -2,9 +2,10 @@ from abc import abstractmethod, ABC
 from dataclasses import dataclass
 from typing import Iterable, TypeVar
 
-from krrood.probabilistic_knowledge.parameterizer import (
+from krrood.underspecified_knowledge.parameterizer import (
     UnderspecifiedToCallableAndKwargsTranslator,
     CallableAndKwargs,
+    UnderspecifiedParameters,
 )
 from sqlalchemy.orm import sessionmaker
 
@@ -16,10 +17,10 @@ from krrood.entity_query_language.failures import (
 from krrood.entity_query_language.query.match import Match, UnderspecifiedVariable
 from krrood.entity_query_language.query.query import Query
 from krrood.ormatic.eql_interface import eql_to_sql
-from krrood.probabilistic_knowledge.model_registries import ModelRegistry
+from krrood.underspecified_knowledge.model_registries import ModelRegistry
 
-from krrood.probabilistic_knowledge.probable_variable import (
-    QueryToRandomEventTranslator,
+from krrood.underspecified_knowledge.probable_variable import (
+    WhereExpressionToRandomEventTranslator,
 )
 
 T = TypeVar("T")
@@ -121,15 +122,8 @@ class ProbabilisticBackend(GenerativeBackend):
 
     def _evaluate(self, expression: UnderspecifiedVariable) -> Iterable[T]:
 
-        factory = self._generate_factory_from_expression(expression)
-
-        # translate where conditions to random event
-        random_events_translator = QueryToRandomEventTranslator(
-            and_(*expression._where_expression)
-        )
-        truncation_event = random_events_translator.translate()
-
         # generate parameters from example instance values
+        parameters = UnderspecifiedParameters(expression)
 
         # apply conditions from the parameters
         conditioned, _ = self.model_registry.get_model(expression).conditional(
@@ -140,7 +134,7 @@ class ProbabilisticBackend(GenerativeBackend):
             raise NoSolutionFound(expression.expression)
 
         # apply conditions from the where statements
-        truncated, _ = conditioned.truncated(truncation_event)
+        truncated, _ = conditioned.truncated(parameters.truncation_event)
 
         if truncated is None:
             raise NoSolutionFound(expression.expression)
@@ -153,10 +147,6 @@ class ProbabilisticBackend(GenerativeBackend):
             sample_dict = parameters.create_assignment_from_variables_and_sample(
                 truncated.variables, sample
             )
-
-            current_example_instance = copy_partial_object(example_instance)
-
-            instance = parameters.parameterize_object_with_sample(
-                current_example_instance, sample_dict
-            )
+            parameters.factory.apply_assignments(sample_dict)
+            instance = parameters.factory.construct_instance()
             yield instance

@@ -186,7 +186,7 @@ class Match(AbstractMatchExpression[T]):
     This is needed to apply where conditions directly to the match instance. 
     """
 
-    _where_expression: List[ConditionType] = field(init=False, default_factory=list)
+    _where_expressions: List[ConditionType] = field(init=False, default_factory=list)
     """
     A list of all conditions that have been applied to this instance using the `where` method.
     """
@@ -285,7 +285,7 @@ class Match(AbstractMatchExpression[T]):
         return self.name
 
     def where(self, *conditions: ConditionType) -> Match[T]:
-        self._where_expression.extend(conditions)
+        self._where_expressions.extend(conditions)
         self.expression.where(*conditions)
         return self
 

@@ -6,17 +6,19 @@ from dataclasses import dataclass, field
 from functools import cached_property
 from typing import Dict, Callable, Type, Optional
 
-from typing_extensions import Any
+import numpy as np
+from typing_extensions import Any, List, get_args
 
 import random_events.variable
-from krrood.adapters.json_serializer import list_like_classes
+from krrood.adapters.json_serializer import list_like_classes, leaf_types
 from krrood.entity_query_language.core.base_expressions import SymbolicExpression
 from krrood.entity_query_language.core.mapped_variable import MappedVariable
 from krrood.entity_query_language.factories import variable, and_
 from krrood.entity_query_language.query.match import UnderspecifiedVariable
-from krrood.probabilistic_knowledge.probable_variable import (
-    QueryToRandomEventTranslator,
+from krrood.underspecified_knowledge.probable_variable import (
+    WhereExpressionToRandomEventTranslator,
 )
+from random_events.product_algebra import Event
 from random_events.set import Set
 from random_events.variable import variable_from_name_and_type
 
@@ -45,13 +47,13 @@ class CallableAndKwargs:
         )
 
     @cached_property
-    def flat_assignments(
+    def flat_variables(
         self,
-    ) -> Dict[ParametrizationVariable, Any]:
+    ) -> List[ParametrizationVariable]:
         """
         :return: A dictionary mapping all variables mentioned in the CallableAndKwargs to their values.
         """
-        result = {}
+        result = []
 
         symbolic_access_for_kwargs = variable(self.callable, [])
         symbolic_access_for_where = variable(self.callable, [])
@@ -62,7 +64,7 @@ class CallableAndKwargs:
             value=None,
         )
 
-        self._flat_assignments(symbolic_access, result)
+        self._flat_variables(symbolic_access, result)
         return result
 
     def get_type_hint_of_keyword_argument(self, name: str):
@@ -74,10 +76,10 @@ class CallableAndKwargs:
         )
         return hints.get(name)
 
-    def _flat_assignments(
+    def _flat_variables(
         self,
         symbolic_access: ParametrizationVariable,
-        result: Dict,
+        result: List,
     ):
         """
         Recursively extract all variables and their values from the CallableAndKwargs.
@@ -90,8 +92,8 @@ class CallableAndKwargs:
 
             # update access patterns
             current_symbolic_access = symbolic_access.apply_attribute_access(key)
-            current_symbolic_access.type_hint = self.get_type_hint_of_keyword_argument(
-                key
+            current_symbolic_access._update_type_hint(
+                self.get_type_hint_of_keyword_argument(key)
             )
 
             if isinstance(value, list_like_classes):
@@ -102,26 +104,28 @@ class CallableAndKwargs:
                     current_symbolic_access_index = (
                         current_symbolic_access.apply_index_access(index)
                     )
-                    current_symbolic_access.type_hint = (
-                        self.get_type_hint_of_keyword_argument(key)
+                    current_symbolic_access._update_type_hint(
+                        (self.get_type_hint_of_keyword_argument(key))
                     )  # get the type hint from the signature of the function
                     if isinstance(element, CallableAndKwargs):
-                        element._flat_assignments(
+                        element._flat_variables(
                             current_symbolic_access_index,
                             result,
                         )
                     else:
                         current_symbolic_access.is_leaf = True
-                        result[current_symbolic_access_index] = element
+                        current_symbolic_access.value = element
+                        result.append(current_symbolic_access)
 
             elif isinstance(value, CallableAndKwargs):
-                value._flat_assignments(
+                value._flat_variables(
                     current_symbolic_access,
                     result,
                 )
             else:
                 current_symbolic_access.is_leaf = True
-                result[current_symbolic_access] = value
+                current_symbolic_access.value = value
+                result.append(current_symbolic_access)
 
     def apply_assignments(self, bindings: Dict[ParametrizationVariable, Any]):
         """
@@ -251,6 +255,12 @@ class ParametrizationVariable:
     def name(self) -> str:
         return self.variable_in_where_conditions._name_
 
+    def _update_type_hint(self, type_hint: Type):
+        if args := get_args(type_hint):
+            self.type_hint = args[0]
+        else:
+            self.type_hint = type_hint
+
     def apply_attribute_access(self, attribute: str):
         """
         Apply attribute access to the EQL variables.
@@ -289,7 +299,8 @@ class ParametrizationVariable:
     def random_events_variable(self) -> Optional[random_events.variable.Variable]:
         if not self.is_leaf:
             return None
-
+        if not self.type_hint in leaf_types:
+            return None
         if isinstance(self.value, SymbolicExpression):
             return random_events.variable.Symbolic(
                 self.name,
@@ -298,18 +309,104 @@ class ParametrizationVariable:
 
         return variable_from_name_and_type(self.name, self.type_hint)
 
+    def __repr__(self):
+        return f"{self.name}: {self.type_hint} = {self.value}"
+
 
 @dataclass
-class Parameters:
+class UnderspecifiedParameters:
+    """
+    A class that extracts all necessary information from an UnderspecifiedVariable and binds it together.
+    Instances of this can be used to parameterize objects with underspecified variables using generative models.
+    """
+
     statement: UnderspecifiedVariable
+    """
+    The UnderspecifiedVariable to extract information from.
+    """
 
     _factory_compiler: UnderspecifiedToCallableAndKwargsTranslator = field(init=False)
-    _random_event_compiler: QueryToRandomEventTranslator = field(init=False)
+    """
+    The UnderspecifiedToCallableAndKwargsTranslator that extracts the factory from the statement
+    """
+
+    _random_event_compiler: WhereExpressionToRandomEventTranslator = field(init=False)
+    """
+    The translator that extracts a random event from the where conditions
+    """
+
+    factory: CallableAndKwargs = field(init=False)
+    """
+    The factory for constructing new objects from samples.
+    """
+
+    truncation_event: Event = field(init=False)
+    """
+    The where condition as random event"""
 
     def __post_init__(self):
         self._factory_compiler = UnderspecifiedToCallableAndKwargsTranslator(
             self.statement
         )
-        self._random_event_compiler = QueryToRandomEventTranslator(
-            and_(*self.statement._where_expression)
+        self.factory = self._factory_compiler.translate()
+        self._random_event_compiler = WhereExpressionToRandomEventTranslator(
+            and_(*self.statement._where_expressions), self.factory.flat_variables
         )
+        self.truncation_event = self._random_event_compiler.translate()
+
+    @property
+    def assignments_for_conditioning(
+        self,
+    ) -> Dict[random_events.variable.Variable, Any]:
+        """
+        :return: A dictionary that contains all facts from the statement and that can be directly used for
+        conditioning a probabilistic model.
+        """
+        return {
+            v.random_events_variable: v.value
+            for v in self._random_event_compiler.leaf_variables_with_topology
+            if v.value is not None and not isinstance(v.value, type(Ellipsis))
+        }
+
+    @property
+    def random_event_variables(self) -> List[random_events.variable.Variable]:
+        """
+        :return: A list of all random event variables that are used in the statement.
+        """
+        return [
+            v.random_events_variable
+            for v in self.factory.flat_variables
+            if v.random_events_variable is not None
+        ]
+
+    def get_variable_by_name(self, name: str) -> ParametrizationVariable:
+        [result] = [v for v in self.factory.flat_variables if v.name == name]
+        return result
+
+    def create_assignment_from_variables_and_sample(
+        self,
+        variables: typing.Iterable[random_events.variable.Variable],
+        sample: np.ndarray,
+    ) -> Dict[ParametrizationVariable, Any]:
+        """
+        Create an assignment dictionary that can be used to construct a new object from a sample.
+        :param variables: The variables from a probabilistic model.
+        :param sample: A sample from the same model-
+        :return: A dictionary that can be used to construct a new object from a sample.
+        """
+
+        result = {}
+        for variable_, value in zip(variables, sample):
+            parametrization_variable = self.get_variable_by_name(variable_.name)
+
+            if not variable_.is_numeric:
+                [value] = [
+                    domain_value.element
+                    for domain_value in variable_.domain
+                    if hash(domain_value) == value
+                ]
+            else:
+                value = value.item()
+            result[parametrization_variable] = value
+
+        return result

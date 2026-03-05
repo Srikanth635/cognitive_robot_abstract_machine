@@ -7,10 +7,10 @@ from krrood.entity_query_language.factories import (
     variable_from,
     underspecified,
 )
-from krrood.probabilistic_knowledge.parameterizer import (
+from krrood.underspecified_knowledge.parameterizer import (
     MatchParameterizer,
 )
-from krrood.probabilistic_knowledge.probable_variable import MatchToInstanceTranslator
+from krrood.underspecified_knowledge.probable_variable import MatchToInstanceTranslator
 from pycram.datastructures.dataclasses import Context
 from pycram.datastructures.enums import TaskStatus
 from pycram.datastructures.pose import (
