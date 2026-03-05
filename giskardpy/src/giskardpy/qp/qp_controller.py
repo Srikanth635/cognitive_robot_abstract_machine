@@ -476,7 +476,7 @@ class QPController:
         # 2. apply filter
         qp_data_filtered = qp_data_raw.apply_filters()
         # 3. apply conditioning
-        conditioning = Conditioning()
+        conditioning = MyConditioning()
         conditioning.update(qp_data_filtered)
         qp_data_filtered = qp_data_filtered.apply_conditioning(conditioning)
         # 4. solve qp
