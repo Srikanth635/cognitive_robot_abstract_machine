@@ -2,25 +2,20 @@ from abc import abstractmethod, ABC
 from dataclasses import dataclass
 from typing import Iterable, TypeVar
 
-from krrood.underspecified_knowledge.parameterizer import (
-    UnderspecifiedToCallableAndKwargsTranslator,
-    CallableAndKwargs,
-    UnderspecifiedParameters,
-)
 from sqlalchemy.orm import sessionmaker
 
-from krrood.entity_query_language.factories import and_
 from krrood.entity_query_language.failures import (
     NoSolutionFound,
     GenerativeBackendQueryIsNotUnderspecifiedVariable,
 )
-from krrood.entity_query_language.query.match import Match, UnderspecifiedVariable
+from krrood.entity_query_language.query.match import UnderspecifiedVariable
 from krrood.entity_query_language.query.query import Query
 from krrood.ormatic.eql_interface import eql_to_sql
 from krrood.underspecified_knowledge.model_registries import ModelRegistry
-
-from krrood.underspecified_knowledge.probable_variable import (
-    WhereExpressionToRandomEventTranslator,
+from krrood.underspecified_knowledge.parameterizer import (
+    UnderspecifiedToCallableAndKwargsTranslator,
+    CallableAndKwargs,
+    UnderspecifiedParameters,
 )
 
 T = TypeVar("T")

@@ -10,7 +10,6 @@ from krrood.entity_query_language.factories import (
     entity,
     an,
     underspecified,
-    variable_from,
 )
 from krrood.ormatic.dao import to_dao
 from krrood.underspecified_knowledge.model_registries import DictRegistry

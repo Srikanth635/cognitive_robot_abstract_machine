@@ -12,11 +12,12 @@ from typing_extensions import Any, List, get_args
 
 import random_events.variable
 from krrood.adapters.json_serializer import list_like_classes, leaf_types
+from krrood.class_diagrams.utils import get_type_hint_of_keyword_argument
 from krrood.entity_query_language.core.base_expressions import SymbolicExpression
 from krrood.entity_query_language.core.mapped_variable import MappedVariable
 from krrood.entity_query_language.factories import variable, and_
 from krrood.entity_query_language.query.match import UnderspecifiedVariable
-from krrood.underspecified_knowledge.probable_variable import (
+from krrood.underspecified_knowledge.random_events_translator import (
     WhereExpressionToRandomEventTranslator,
 )
 from random_events.product_algebra import Event
@@ -68,15 +69,6 @@ class CallableAndKwargs:
         self._flat_variables(symbolic_access, result)
         return result
 
-    def get_type_hint_of_keyword_argument(self, name: str):
-        hints = typing.get_type_hints(
-            self.callable,
-            globalns=getattr(self.callable, "__globals__", None),
-            localns=None,
-            include_extras=True,  # keeps Annotated[...] / other extras if you use them
-        )
-        return hints.get(name)
-
     def _flat_variables(
         self,
         symbolic_access: ParametrizationVariable,
@@ -94,7 +86,7 @@ class CallableAndKwargs:
             # update access patterns
             current_symbolic_access = symbolic_access.apply_attribute_access(key)
             current_symbolic_access._update_type_hint(
-                self.get_type_hint_of_keyword_argument(key)
+                get_type_hint_of_keyword_argument(self.callable, key)
             )
 
             if isinstance(value, list_like_classes):
@@ -106,7 +98,7 @@ class CallableAndKwargs:
                         current_symbolic_access.apply_index_access(index)
                     )
                     current_symbolic_access._update_type_hint(
-                        (self.get_type_hint_of_keyword_argument(key))
+                        (get_type_hint_of_keyword_argument(self.callable, key))
                     )  # get the type hint from the signature of the function
                     if isinstance(element, CallableAndKwargs):
                         element._flat_variables(
