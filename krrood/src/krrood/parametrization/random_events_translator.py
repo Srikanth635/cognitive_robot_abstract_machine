@@ -62,6 +62,10 @@ class WhereExpressionToRandomEventTranslator:
     def _get_parameterization_variable_from_comparator(
         self, expression: Comparator
     ) -> ParametrizationVariable:
+        """
+        :param expression: The comparator to get the parameterization variable from.
+        :return: The parameterization variable that corresponds to the comparator's left side.
+        """
         [parameterization_variable] = [
             v
             for v in self.leaf_variables_with_random_events_variable
