@@ -705,7 +705,7 @@ def test_algebra_sequential_plan(mutable_model_world):
     )
 
     parameters = UnderspecifiedParameters(navigate_action)
-    model = fully_factorized(parameters.random_event_variables)
+    model = fully_factorized(parameters.variables.values())
 
     registry = DictRegistry({NavigateAction: model})
 
@@ -739,7 +739,7 @@ def test_parameterization_of_pick_up(mutable_model_world):
 
     parameters = UnderspecifiedParameters(pick_up_description)
 
-    assert len(parameters.random_event_variables) == 7
+    assert len(parameters.variables) == 7
 
     [manipulator_offset] = [
         v
@@ -749,7 +749,7 @@ def test_parameterization_of_pick_up(mutable_model_world):
 
     assert manipulator_offset.value == 0.05
 
-    model = fully_factorized(parameters.random_event_variables)
+    model = fully_factorized(parameters.variables.values())
     registry = DictRegistry({PickUpAction: model})
 
     pm_backend = ProbabilisticBackend(registry, 10)

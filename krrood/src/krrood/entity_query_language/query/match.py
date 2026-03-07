@@ -177,6 +177,13 @@ class Match(AbstractMatchExpression[T], HasFactoryAndKwargs[T]):
         >>> class Drawer:
         >>>     body: Body
         >>> drawer = match_variable(Drawer, domain=None)(body=match(Body)(name="drawer_1")))
+
+    .. warn::
+        Match can take a factory as a mean to construct `T`. If the keyword argument names of the match are not
+        available in the class itself, the variables reffered to in the `where` conditions will not align with the
+        variables from the factory. It is strongly recommended to have the names of the factory available in the class,
+        either as field, or as property.
+        Dataclass-generated `__init__` never have this problem unless `InitVar` is used.
     """
 
     _expression: Query = field(init=False, default=None)
@@ -336,6 +343,14 @@ class Match(AbstractMatchExpression[T], HasFactoryAndKwargs[T]):
     def _update_kwargs_from_literal_values(self):
         for literal in self.literals:
             literal._update_kwargs_from(self)
+
+    def _get_mapped_variable_by_name(self, name: str) -> MappedVariable:
+        [result] = [
+            literal.assigned_variable
+            for literal in self.literals
+            if literal.assigned_variable._name_ == name
+        ]
+        return result
 
 
 @dataclass(eq=False)

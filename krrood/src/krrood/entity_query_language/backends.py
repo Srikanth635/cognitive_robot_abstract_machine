@@ -131,10 +131,7 @@ class ProbabilisticBackend(GenerativeBackend):
 
         # create new objects with the values from the samples
         for sample in samples:
-
-            sample_dict = parameters.create_assignment_from_variables_and_sample(
+            instance = parameters.create_instance_from_variables_and_sample(
                 truncated.variables, sample
             )
-            parameters.factory.apply_assignments(sample_dict)
-            instance = parameters.factory.statement.construct_instance()
             yield instance

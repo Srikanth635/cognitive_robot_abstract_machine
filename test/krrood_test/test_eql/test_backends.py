@@ -54,7 +54,7 @@ def test_same_query_multiple_backends(session, database):
     prob_q.where(prob_q.variable.position.x > 0.5)
 
     parameters = UnderspecifiedParameters(prob_q)
-    model = fully_factorized(parameters.random_event_variables)
+    model = fully_factorized(parameters.variables.values())
 
     registry = DictRegistry({Pose: model})
 
