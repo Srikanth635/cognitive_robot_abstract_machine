@@ -6,11 +6,10 @@ from functools import cached_property
 from typing import Dict, Optional
 
 import numpy as np
-from typing_extensions import Any, List
+from typing_extensions import Any
 
 import random_events.variable
 from krrood.adapters.json_serializer import leaf_types
-from krrood.entity_query_language.core.mapped_variable import MappedVariable
 from krrood.entity_query_language.factories import and_
 from krrood.entity_query_language.query.match import MatchVariable
 from krrood.parametrization.random_events_translator import (
@@ -22,8 +21,9 @@ from random_events.product_algebra import Event
 @dataclass
 class UnderspecifiedParameters:
     """
-    A class that extracts all necessary information from an UnderspecifiedVariable and binds it together.
+    A class that extracts all necessary information from a `Match` and binds it together.
     Instances of this can be used to parameterize objects with underspecified variables using generative models.
+    This generally serves as glue between `ProbabilisticModel` and `Match`.
     """
 
     statement: MatchVariable
@@ -53,16 +53,22 @@ class UnderspecifiedParameters:
             self.truncation_event = self._random_event_compiler.translate()
 
     @cached_property
-    def variables(self) -> Dict[MappedVariable, random_events.variable.Variable]:
-        result = self._random_event_compiler.variables
+    def variables(self) -> Dict[str, random_events.variable.Variable]:
+        """
+        :return: A dictionary that maps variable names to random events variables that appear in
+        the `where` or `Match` statement.
+        """
+        result = {v.name: v for v in self._random_event_compiler.variables.values()}
+
         for literal in self.statement.literals:
             if literal.assigned_variable._type_ not in leaf_types:
                 continue
-            result[literal.assigned_variable] = (
-                random_events.variable.variable_from_name_and_type(
-                    literal.assigned_variable._name_, literal.assigned_variable._type_
-                )
+
+            random_events_variable = random_events.variable.variable_from_name_and_type(
+                literal.assigned_variable._name_, literal.assigned_variable._type_
             )
+
+            result[random_events_variable.name] = random_events_variable
         return result
 
     @property
@@ -71,40 +77,35 @@ class UnderspecifiedParameters:
     ) -> Dict[random_events.variable.Variable, Any]:
         """
         :return: A dictionary that contains all facts from the statement and that can be directly used for
-        conditioning a probabilistic model.
+        conditioning a probabilistic model. These values ignore the `where` conditions.
         """
-        return {
-            v: v.value
-            for v in self._random_event_compiler.variables.keys()
-            if v.left._value_ is not None and isinstance(v.value, leaf_types)
-        }
-
-    @property
-    def random_event_variables(self) -> List[random_events.variable.Variable]:
-        """
-        :return: A list of all random event variables that are used in the statement.
-        """
-        return list(self.variables.values())
-
-    def get_variable_by_name(self, name: str) -> random_events.variable.Variable:
-        [result] = [v for v in self.random_event_variables if v.name == name]
+        result = {}
+        for literal in self.statement.literals:
+            variable = self.variables.get(literal.assigned_variable._name_, None)
+            if variable is None or isinstance(
+                literal.assigned_variable._value_, type(Ellipsis)
+            ):
+                continue
+            result[variable] = literal.assigned_variable._value_
         return result
 
-    def create_assignment_from_variables_and_sample(
+    def create_instance_from_variables_and_sample(
         self,
         variables: typing.Iterable[random_events.variable.Variable],
         sample: np.ndarray,
     ) -> Dict[random_events.variable.Variable, Any]:
         """
-        Create an assignment dictionary that can be used to construct a new object from a sample.
+        Create an instance from a sample of a probabilistic model.
+
         :param variables: The variables from a probabilistic model.
         :param sample: A sample from the same model-
-        :return: A dictionary that can be used to construct a new object from a sample.
+        :return: The instance
         """
 
-        result = {}
         for variable_, value in zip(variables, sample):
-            parametrization_variable = self.get_variable_by_name(variable_.name)
+            mapped_variable = self.statement._get_mapped_variable_by_name(
+                variable_.name
+            )
 
             if not variable_.is_numeric:
                 [value] = [
@@ -114,6 +115,8 @@ class UnderspecifiedParameters:
                 ]
             else:
                 value = value.item()
-            result[parametrization_variable] = value
+            mapped_variable._value_ = value
 
+        self.statement._update_kwargs_from_literal_values()
+        result = self.statement.construct_instance()
         return result
