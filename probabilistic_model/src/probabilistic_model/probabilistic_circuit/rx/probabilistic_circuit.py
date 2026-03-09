@@ -10,16 +10,11 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from enum import IntEnum
 
-import rustworkx as rx
 import numpy as np
+import rustworkx as rx
 import rustworkx.visualization
-from random_events.interval import SimpleInterval, Interval
-from scipy.special import logsumexp
 import tqdm
-from random_events.product_algebra import VariableMap, SimpleEvent, Event
-from random_events.set import Set
-from random_events.utils import SubclassJSONSerializer
-from random_events.variable import Variable, Symbolic, Continuous, Integer
+from scipy.special import logsumexp
 from sortedcontainers import SortedSet
 from typing_extensions import (
     List,
@@ -54,6 +49,11 @@ from probabilistic_model.probabilistic_model import (
     MomentType,
 )
 from probabilistic_model.utils import MissingDict
+from random_events.interval import SimpleInterval, Interval
+from random_events.product_algebra import VariableMap, SimpleEvent, Event
+from random_events.set import Set
+from random_events.utils import SubclassJSONSerializer
+from random_events.variable import Variable, Symbolic, Continuous, Integer
 
 
 class PlotAlignment(IntEnum):
@@ -310,9 +310,13 @@ class LeafUnit(Unit):
 
     def moment(self, order, center, variable_to_index_map):
         result = np.zeros(len(variable_to_index_map))
-        moment = self.distribution.moment(order, center)
-        for variable in self.variables:
-            result[variable_to_index_map[variable]] = moment[variable]
+
+        # check if this nodes distribution is queried
+        requested_variables = set(order.keys())
+        if set(self.distribution.variables).issubset(requested_variables):
+            moment = self.distribution.moment(order, center)
+            for variable in self.variables:
+                result[variable_to_index_map[variable]] = moment[variable]
         self.result_of_current_query = result
 
     def sample(self, samples: np.array, variable_to_index_map: Dict[Variable, int]):
