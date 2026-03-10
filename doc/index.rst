@@ -199,9 +199,10 @@ our system to ensure high-quality, maintainable, and robust code.
 
           counter = 0 # outer scope state
 
-          def increment_counter(): global counter counter += 1 # side
-          effect: modifies outer scope state print(f”Counter is now
-          {counter}“) # side effect: I/O \``\`
+          def increment_counter():
+              global counter
+              counter += 1 # side effect: modifies outer scope state
+              print(f"Counter is now {counter}") # side effect: I/O
 
 4. 📐 Adhere to Code Style and Principles
 
@@ -337,6 +338,7 @@ Beyond Bremen, AICOR is also part of several research networks:
 `Github <https://github.com/code-iai>`__
 
 .. _research--publications:
+
 Research & Publications
 -----------------------
 
