@@ -144,7 +144,7 @@ class TestGLTFLoader:
         loader = GLTFLoader(file_path="/dummy/path.gltf")
         loader.scene = scene
 
-        fused = loader._fusion_meshes(["box"])
+        fused = loader._fusion_meshes({"box"})
 
         assert isinstance(fused, trimesh.Trimesh)
         assert len(fused.vertices) > 0
@@ -167,7 +167,7 @@ class TestGLTFLoader:
         loader = GLTFLoader(file_path="/dummy/path.gltf")
         loader.scene = scene
 
-        fused = loader._fusion_meshes(["box", "cylinder"])
+        fused = loader._fusion_meshes({"box", "cylinder"})
 
         assert isinstance(fused, trimesh.Trimesh)
         assert len(fused.vertices) == len(mesh1.vertices) + len(mesh2.vertices)

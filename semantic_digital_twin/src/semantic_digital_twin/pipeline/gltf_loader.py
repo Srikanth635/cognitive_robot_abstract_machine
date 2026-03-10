@@ -68,10 +68,10 @@ class GLTFLoader(Step):
 
     def _get_root_node(self) -> str:
         """
-        Get the single root node of the scene graph.
+        Identify the primary root node of the scene graph.
 
-        :returns: The name of the root node.
-        :raises RootNodeNotFoundError: If no root node exists or multiple root nodes are found.
+        :returns: Root node name.
+        :raises RootNodeNotFoundError: If the scene has no root or multiple candidates.
         """
         base_frame = self.scene.graph.base_frame
         root_children = self.scene.graph.transforms.children.get(base_frame, [])
@@ -86,13 +86,11 @@ class GLTFLoader(Step):
         self, parent_node: str, child_node: str
     ) -> HomogeneousTransformationMatrix:
         """
-        Get the relative transform from parent to child node.
+        Determine the transformation from a parent node to its child.
 
-        Computes the transform that converts from parent frame to child frame.
-
-        :param parent_node: Name of the parent node.
-        :param child_node: Name of the child node.
-        :returns: The relative transformation matrix from parent to child.
+        :param parent_node: Parent node name.
+        :param child_node: Child node name.
+        :returns: Relative transformation matrix.
         """
         parent_transform, _ = self.scene.graph.get(parent_node)
         child_transform, _ = self.scene.graph.get(child_node)
@@ -105,11 +103,11 @@ class GLTFLoader(Step):
 
     def _trimesh_to_body(self, mesh: trimesh.Trimesh, name: str) -> Body:
         """
-        Convert a trimesh.Trimesh to a Body object.
+        Create a Body representation from a trimesh object.
 
-        :param mesh: The trimesh mesh to convert.
-        :param name: The name for the resulting Body.
-        :returns: A Body object with the mesh as both collision and visual geometry.
+        :param mesh: Trimesh geometry.
+        :param name: Resulting body name.
+        :returns: Body with visual and collision geometry.
         """
         # Create TriangleMesh geometry from trimesh
         triangle_mesh = TriangleMesh(
@@ -132,30 +130,24 @@ class GLTFLoader(Step):
 
     def _extract_base_name(self, node_name: str) -> str:
         """
-        Extract the prefix before the first underscore.
+        Determine the base name of a node by removing suffixes.
 
-        This handles FreeCAD suffixes (e.g., ``_001``, ``_002``) and trimesh-generated
-        hex hash suffixes (e.g., ``_3a7ad2``). For example:
-
-        - ``Bolt_001_abc123`` → ``Bolt``
-        - ``Scale060_1_00e71f`` → ``Scale060``
-
-        :param node_name: The original node name with potential suffix.
-        :returns: The base name (text before the first underscore).
+        :param node_name: Node name to process.
+        :returns: Base name without suffixes.
         """
-        match = re.match(r"^([^_]+)", str(node_name))
-        return match.group(1) if match else str(node_name)
+        match = re.match(r"^([^_]+)", node_name)
+        return match.group(1) if match else node_name
 
     def _collect_matching_children(
         self, node: str, base_name: str, object_nodes: Set[str]
     ) -> Tuple[Set[str], Set[str]]:
         """
-        Collect children that match base_name and those that don't.
+        Find child nodes sharing the same base name.
 
-        :param node: The parent node to collect children from.
-        :param base_name: The base name to match against.
-        :param object_nodes: Set of already processed object nodes to exclude.
-        :returns: A tuple of (matching children, non-matching children).
+        :param node: Parent node.
+        :param base_name: Base name for comparison.
+        :param object_nodes: Previously identified object nodes.
+        :returns: Matching and non-matching children.
         """
         matching = set()
         non_matching = set()
@@ -170,14 +162,10 @@ class GLTFLoader(Step):
 
     def _grouping_similar_meshes(self, base_node: str) -> Tuple[Set[str], Set[str]]:
         """
-        Group meshes with similar names (e.g., ``Bolt_001``, ``Bolt_002`` -> ``Bolt``).
+        Identify related mesh nodes based on their naming patterns.
 
-        This method recursively collects all nodes that share the same base name
-        as the given node, which is useful for FreeCAD exports where parts are
-        split into multiple numbered meshes.
-
-        :param base_node: The starting node to group from.
-        :returns: A tuple of (grouped object nodes, non-matching child nodes to visit).
+        :param base_node: Initial node for grouping.
+        :returns: Grouped nodes and unrelated children.
         """
         base_name = self._extract_base_name(base_node)
         object_nodes = {base_node}
@@ -205,12 +193,10 @@ class GLTFLoader(Step):
 
     def _fusion_meshes(self, object_nodes: Set[str]) -> trimesh.Trimesh:
         """
-        Fuse multiple mesh nodes into a single mesh.
+        Combine several geometry nodes into one unified mesh.
 
-        Applies the world transform to each mesh before concatenating them.
-
-        :param object_nodes: Set of node names to fuse.
-        :returns: A single concatenated mesh, or empty Trimesh if no geometry found.
+        :param object_nodes: Nodes to consolidate.
+        :returns: Unified trimesh object.
         """
         meshes: List[trimesh.Trimesh] = []
         for node in object_nodes:
@@ -235,15 +221,12 @@ class GLTFLoader(Step):
         world_elements: Dict[str, Body],
     ) -> None:
         """
-        Add a child body and its connection to the world.
+        Establish a fixed relationship between two bodies in the world.
 
-        Creates a :class:`FixedConnection` between the parent and child bodies
-        with the appropriate relative transform.
-
-        :param world: The world to add the connection to.
-        :param parent_node: The name of the parent node.
-        :param child_node: The name of the child node.
-        :param world_elements: Dictionary mapping node names to Body objects.
+        :param world: Destination world.
+        :param parent_node: Parent node name.
+        :param child_node: Child node name.
+        :param world_elements: Known body mappings.
         """
         if child_node not in world_elements or parent_node not in world_elements:
             return
@@ -266,13 +249,13 @@ class GLTFLoader(Step):
         world: World,
     ) -> World:
         """
-        Build the world from parsed elements and their connections.
+        Construct the world hierarchy from parsed bodies and connections.
 
-        :param world_elements: Dictionary mapping node names to Body objects.
-        :param connection: Dictionary mapping parent node names to list of child node names.
-        :param world: The world to add entities to.
-        :returns: The modified world.
-        :raises RootNodeNotFoundError: If the root node is not found in world_elements.
+        :param world_elements: Body mappings.
+        :param connection: Parent-to-children mappings.
+        :param world: Destination world.
+        :returns: Updated world.
+        :raises RootNodeNotFoundError: If the scene root is missing from elements.
         """
         object_root = self._get_root_node()
         if object_root not in world_elements:
@@ -306,10 +289,10 @@ class GLTFLoader(Step):
 
     def _create_empty_body(self, name: str) -> Body:
         """
-        Create an empty body with no geometry.
+        Generate a body instance without any geometry.
 
-        :param name: The name for the Body.
-        :returns: A Body object with empty collision and visual shape collections.
+        :param name: Body name.
+        :returns: Empty body instance.
         """
         return Body(name=PrefixedName(name))
 
@@ -317,15 +300,12 @@ class GLTFLoader(Step):
         self, node: str, body_parent: str, visited_nodes: Set[str]
     ) -> Tuple[Optional[NodeProcessingResult], Set[Tuple[str, str]]]:
         """
-        Process any node (geometry or non-geometry) and return result.
+        Analyze a scene node and convert it to a body if it contains geometry.
 
-        Groups similar meshes, fuses them, and creates a Body object if geometry exists.
-        Otherwise, passes children through to the body_parent.
-
-        :param node: The node name to process.
-        :param body_parent: The parent body name for connections.
-        :param visited_nodes: Set of already visited node names.
-        :returns: Tuple of (NodeProcessingResult if body created, children to visit with parents).
+        :param node: Node to analyze.
+        :param body_parent: Closest parent body.
+        :param visited_nodes: Already processed nodes.
+        :returns: Processing result and subsequent tasks.
         """
         object_nodes, remaining_children = self._grouping_similar_meshes(node)
         mesh = self._fusion_meshes(object_nodes)
@@ -358,12 +338,10 @@ class GLTFLoader(Step):
         self, root: str
     ) -> Tuple[Body, Set[str], Set[Tuple[str, str]]]:
         """
-        Process the root node of the scene graph.
+        Initial processing of the scene's root node.
 
-        Creates the root Body object and identifies children to visit.
-
-        :param root: The root node name.
-        :returns: A tuple of (root body, visited nodes, children to visit with their body parents).
+        :param root: Root node name.
+        :returns: Root body, visited nodes, and subsequent tasks.
         """
         result, children_to_visit = self._process_node(root, root, set())
 
@@ -383,15 +361,12 @@ class GLTFLoader(Step):
         body: Body,
     ) -> None:
         """
-        Add a body to world_elements, merging meshes if the base name already exists.
+        Integrate a body into the element collection, merging if necessary.
 
-        If a body with the same base name already exists, fuses the new body's
-        meshes into the existing body.
-
-        :param world_elements: Dictionary mapping node names to Body objects.
-        :param base_name_to_node: Dictionary mapping base names to their first node key.
-        :param node: The node name to use as the key.
-        :param body: The Body object to add.
+        :param world_elements: Known body mappings.
+        :param base_name_to_node: Base name mappings.
+        :param node: Current node name.
+        :param body: Body to integrate.
         """
         base_name = str(body.name)
 
@@ -416,16 +391,10 @@ class GLTFLoader(Step):
 
     def _create_world_objects(self, world: World) -> World:
         """
-        Parse the scene graph and create world objects with connections.
+        Traverse the scene graph and populate the world with objects.
 
-        This method traverses the scene graph, groups similar meshes (e.g., ``Bolt_001``,
-        ``Bolt_002``), fuses them and creates Body objects with parent-child connections.
-
-        Non-geometry nodes (like transforms/sketches) are skipped but their children
-        are still processed with the correct parent body.
-
-        :param world: The world to populate with objects.
-        :returns: The modified world with all bodies and connections added.
+        :param world: Destination world.
+        :returns: Populated world.
         """
         root = self._get_root_node()
         world_elements: Dict[str, Body] = {}
@@ -465,11 +434,11 @@ class GLTFLoader(Step):
 
     def _apply(self, world: World) -> World:
         """
-        Load GLTF/GLB file and create world objects.
+        Execute the loading process from file to world.
 
-        :param world: The world to populate with loaded objects.
-        :returns: The modified world with bodies and connections from the GLTF file.
-        :raises ValueError: If the file cannot be loaded.
+        :param world: Destination world.
+        :returns: Populated world.
+        :raises ValueError: If the file is inaccessible.
         """
         try:
             self.scene = trimesh.load(self.file_path)  # type: ignore[assignment]
