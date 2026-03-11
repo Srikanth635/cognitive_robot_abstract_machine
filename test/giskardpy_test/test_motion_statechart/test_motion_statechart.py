@@ -1368,11 +1368,8 @@ class TestCartesianPositionTrajectory:
         )
 
     def test_cartesian_position_trajectory_spiral_pr2(
-        self, pr2_world_state_reset: World, better_pr2_pose, rclpy_node
+        self, pr2_world_state_reset: World, better_pr2_pose
     ):
-        VizMarkerPublisher(
-            _world=pr2_world_state_reset, node=rclpy_node
-        ).with_tf_publisher()
         root = pr2_world_state_reset.get_kinematic_structure_entity_by_name(
             "base_footprint"
         )
@@ -1535,14 +1532,10 @@ class TestCartesianTasks:
         kin_sim.compile(motion_statechart=msc)
         kin_sim.tick_until_end()
 
-    def test_cart_goal_sequence_at_build(
-        self, pr2_world_state_reset: World, rclpy_node
-    ):
+    def test_cart_goal_sequence_at_build(self, pr2_world_state_reset: World):
         """
         Test CartesianPose sequence with Bind_at_build policy.
         """
-        tf_publisher = TFPublisher(node=rclpy_node, _world=pr2_world_state_reset)
-        viz = VizMarkerPublisher(_world=pr2_world_state_reset, node=rclpy_node)
         tip = pr2_world_state_reset.get_kinematic_structure_entity_by_name(
             "base_footprint"
         )
@@ -2057,13 +2050,11 @@ class TestDiffDriveBaseGoal:
 class TestFeatureFunctions:
     """Test suite for feature function tasks (HeightGoal, DistanceGoal, etc.)."""
 
-    def test_height_goal_within_bounds(self, pr2_world_state_reset: World, rclpy_node):
+    def test_height_goal_within_bounds(self, pr2_world_state_reset: World):
         """
         Test that HeightGoal successfully constrains the vertical distance
         between tip and reference points within specified bounds.
         """
-        tf_publisher = TFPublisher(node=rclpy_node, _world=pr2_world_state_reset)
-        viz = VizMarkerPublisher(_world=pr2_world_state_reset, node=rclpy_node)
 
         tip = pr2_world_state_reset.get_kinematic_structure_entity_by_name(
             "r_gripper_tool_frame"
@@ -2109,14 +2100,10 @@ class TestFeatureFunctions:
             lower_limit <= height_diff <= upper_limit
         ), f"Height {height_diff:.4f} not in [{lower_limit}, {upper_limit}]"
 
-    def test_height_goal_negative_bounds(
-        self, pr2_world_state_reset: World, rclpy_node
-    ):
+    def test_height_goal_negative_bounds(self, pr2_world_state_reset: World):
         """
         Test HeightGoal with negative height bounds (tip below reference).
         """
-        tf_publisher = TFPublisher(node=rclpy_node, _world=pr2_world_state_reset)
-        viz = VizMarkerPublisher(_world=pr2_world_state_reset, node=rclpy_node)
 
         tip = pr2_world_state_reset.get_kinematic_structure_entity_by_name(
             "r_gripper_tool_frame"
@@ -2162,16 +2149,11 @@ class TestFeatureFunctions:
             lower_limit <= height_diff <= upper_limit
         ), f"Height {height_diff:.4f} not in [{lower_limit}, {upper_limit}]"
 
-    def test_distance_goal_within_bounds(
-        self, pr2_world_state_reset: World, rclpy_node
-    ):
+    def test_distance_goal_within_bounds(self, pr2_world_state_reset: World):
         """
         Test that DistanceGoal successfully constrains the horizontal distance
         (in x-y plane) between tip and reference points within specified bounds.
         """
-        tf_publisher = TFPublisher(node=rclpy_node, _world=pr2_world_state_reset)
-        viz = VizMarkerPublisher(_world=pr2_world_state_reset, node=rclpy_node)
-
         tip = pr2_world_state_reset.get_kinematic_structure_entity_by_name(
             "r_gripper_tool_frame"
         )
@@ -2218,15 +2200,10 @@ class TestFeatureFunctions:
             lower_limit <= horizontal_distance <= upper_limit
         ), f"Distance {horizontal_distance:.4f} not in [{lower_limit}, {upper_limit}]"
 
-    def test_distance_goal_zero_distance(
-        self, pr2_world_state_reset: World, rclpy_node
-    ):
+    def test_distance_goal_zero_distance(self, pr2_world_state_reset: World):
         """
         Test DistanceGoal with bounds that include zero (tip and reference at same x-y position).
         """
-        tf_publisher = TFPublisher(node=rclpy_node, _world=pr2_world_state_reset)
-        viz = VizMarkerPublisher(_world=pr2_world_state_reset, node=rclpy_node)
-
         tip = pr2_world_state_reset.get_kinematic_structure_entity_by_name(
             "r_gripper_tool_frame"
         )
@@ -2273,16 +2250,11 @@ class TestFeatureFunctions:
             lower_limit <= horizontal_distance <= upper_limit
         ), f"Distance {horizontal_distance:.4f} not in [{lower_limit}, {upper_limit}]"
 
-    def test_distance_goal_ignores_z_axis(
-        self, pr2_world_state_reset: World, rclpy_node
-    ):
+    def test_distance_goal_ignores_z_axis(self, pr2_world_state_reset: World):
         """
         Test that DistanceGoal only considers x-y plane distance and ignores z-axis.
         Even with large z difference, if x-y distance is within bounds, goal succeeds.
         """
-        tf_publisher = TFPublisher(node=rclpy_node, _world=pr2_world_state_reset)
-        viz = VizMarkerPublisher(_world=pr2_world_state_reset, node=rclpy_node)
-
         tip = pr2_world_state_reset.get_kinematic_structure_entity_by_name(
             "r_gripper_tool_frame"
         )
@@ -2330,15 +2302,11 @@ class TestFeatureFunctions:
             lower_limit <= horizontal_distance <= upper_limit
         ), f"Distance {horizontal_distance:.4f} not in [{lower_limit}, {upper_limit}]"
 
-    def test_height_and_distance_combined(
-        self, pr2_world_state_reset: World, rclpy_node
-    ):
+    def test_height_and_distance_combined(self, pr2_world_state_reset: World):
         """
         Test combining HeightGoal and DistanceGoal in parallel to constrain
         both vertical and horizontal distances simultaneously.
         """
-        tf_publisher = TFPublisher(node=rclpy_node, _world=pr2_world_state_reset)
-        viz = VizMarkerPublisher(_world=pr2_world_state_reset, node=rclpy_node)
 
         tip = pr2_world_state_reset.get_kinematic_structure_entity_by_name(
             "r_gripper_tool_frame"
@@ -2406,16 +2374,13 @@ class TestFeatureFunctions:
         ), f"Distance {horizontal_distance:.4f} not in [{distance_lower}, {distance_upper}]"
 
     def test_distance_height_angle_perpendicular_combined(
-        self, pr2_world_state_reset: World, rclpy_node
+        self, pr2_world_state_reset: World
     ):
         """
         Test combining DistanceGoal, HeightGoal, and AlignPerpendicular
         to constrain horizontal distance, vertical distance, and perpendicular
         alignment simultaneously.
         """
-        tf_publisher = TFPublisher(node=rclpy_node, _world=pr2_world_state_reset)
-        viz = VizMarkerPublisher(_world=pr2_world_state_reset, node=rclpy_node)
-
         tip = pr2_world_state_reset.get_kinematic_structure_entity_by_name(
             "r_gripper_tool_frame"
         )
@@ -3402,10 +3367,7 @@ class TestCollisionAvoidance:
         assert collisions.contacts[0].distance > 0.049
         assert len(cylinder_bot_world.collision_manager.collision_consumers) == 0
 
-    def test_update_collision_matrix_later(self, cylinder_bot_world: World, rclpy_node):
-        VizMarkerPublisher(
-            _world=cylinder_bot_world, node=rclpy_node
-        ).with_tf_publisher()
+    def test_update_collision_matrix_later(self, cylinder_bot_world: World):
         robot = cylinder_bot_world.get_semantic_annotations_by_type(AbstractRobot)[0]
         tip = cylinder_bot_world.get_kinematic_structure_entity_by_name("bot")
         env1 = cylinder_bot_world.get_kinematic_structure_entity_by_name("environment")
