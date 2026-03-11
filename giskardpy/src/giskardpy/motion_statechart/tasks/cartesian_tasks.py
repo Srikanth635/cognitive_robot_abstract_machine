@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from dataclasses import field, dataclass
 from functools import cached_property
 from typing import Optional, ClassVar
@@ -38,7 +39,7 @@ from giskardpy.motion_statechart.graph_node import Task
 
 
 @dataclass(eq=False, repr=False)
-class CartesianTask(Task):
+class CartesianTask(Task, ABC):
     root_link: KinematicStructureEntity = field(kw_only=True)
     """Base link of the kinematic chain."""
 
@@ -50,8 +51,6 @@ class CartesianTask(Task):
     )
     """Describes when the goal is computed. See GoalBindingPolicy for more information."""
 
-    goal_reference_frame: KinematicStructureEntity = field(kw_only=True, init=False)
-    """Reference frame for the goal."""
     root_T_goal_reference_frame: HomogeneousTransformationMatrix = field(
         kw_only=True, init=False
     )
@@ -77,6 +76,13 @@ class CartesianTask(Task):
     def on_start(self, context: MotionStatechartContext):
         if self.binding_policy == GoalBindingPolicy.Bind_on_start:
             self._fk_binding.bind(context.world)
+
+    @property
+    @abstractmethod
+    def goal_reference_frame(self) -> KinematicStructureEntity:
+        """
+        :return: Reference frame for the goal.
+        """
 
 
 @dataclass(eq=False, repr=False)
@@ -104,6 +110,10 @@ class CartesianPosition(CartesianTask):
 
     _fk_binding: ForwardKinematicsBinding = field(kw_only=True, init=False, repr=False)
 
+    @property
+    def goal_reference_frame(self) -> KinematicStructureEntity:
+        return self.goal_point.reference_frame
+
     def build(self, context: MotionStatechartContext) -> NodeArtifacts:
         """
         Build motion constraints for reaching the goal position.
@@ -111,8 +121,6 @@ class CartesianPosition(CartesianTask):
         :param context: Provides access to world model and kinematic expressions.
         :return: NodeArtifacts containing constraints and observation conditions.
         """
-        self.goal_reference_frame = self.goal_point.reference_frame
-
         artifacts = super().build(context)
 
         root_P_goal = self.root_T_goal_reference_frame @ self.goal_point
@@ -237,19 +245,13 @@ class CartesianPositionTrajectory(Task):
 
 
 @dataclass(eq=False, repr=False)
-class CartesianPositionStraight(Task):
+class CartesianPositionStraight(CartesianTask):
     """
     Move a tip link to a goal position along a straight line.
 
     Unlike CartesianPosition, this task constrains the tip link to move in a straight
     line towards the goal, useful for tasks requiring linear trajectories.
     """
-
-    root_link: KinematicStructureEntity = field(kw_only=True)
-    """Base link of the kinematic chain."""
-
-    tip_link: KinematicStructureEntity = field(kw_only=True)
-    """End link that should reach the goal position."""
 
     goal_point: Point3 = field(kw_only=True)
     """Target 3D point to reach."""
@@ -262,15 +264,9 @@ class CartesianPositionStraight(Task):
     threshold: float = field(default=0.01, kw_only=True)
     """Distance threshold for goal achievement in meters."""
 
-    weight: float = field(default=DefaultWeights.WEIGHT_ABOVE_CA, kw_only=True)
-    """Task priority relative to other tasks."""
-
-    binding_policy: GoalBindingPolicy = field(
-        default=GoalBindingPolicy.Bind_on_start, kw_only=True
-    )
-    """Describes when the goal is computed. See GoalBindingPolicy for more information."""
-
-    _fk_binding: ForwardKinematicsBinding = field(kw_only=True, init=False)
+    @property
+    def goal_reference_frame(self) -> KinematicStructureEntity:
+        return self.goal_point.reference_frame
 
     def build(self, context: MotionStatechartContext) -> NodeArtifacts:
         """
@@ -282,16 +278,9 @@ class CartesianPositionStraight(Task):
         :param context: Provides access to world model and kinematic expressions.
         :return: NodeArtifacts containing constraints and observation conditions.
         """
-        artifacts = NodeArtifacts()
+        artifacts = super().build(context)
 
-        # Create forward kinematics binding for the goal
-        self._fk_binding = ForwardKinematicsBinding(
-            name=PrefixedName("root_T_goal_ref", str(self.name)),
-            root=self.root_link,
-            tip=self.goal_point.reference_frame,
-            build_context=context,
-        )
-        root_P_goal = self._fk_binding.root_T_tip @ self.goal_point
+        root_P_goal = self.root_T_goal_reference_frame @ self.goal_point
 
         # Get current tip position and transformations
         root_P_tip = context.world.compose_forward_kinematics_expression(
@@ -345,28 +334,12 @@ class CartesianPositionStraight(Task):
                 task_expression=expr_p[i],
             )
 
-        # Note: Debug expressions for current_point and goal_point were removed
-        # due to Color/ColorRGBA API incompatibility in the current codebase version.
-        # The core functionality works correctly without visualization.
-
-        # Success condition: distance below threshold
         artifacts.observation = dist < self.threshold
         return artifacts
 
-    def on_start(self, context: MotionStatechartContext):
-        """
-        Called when task starts execution.
-
-        Binds the goal pose transformation if binding policy is Bind_on_start.
-
-        :param context: Provides access to current world state.
-        """
-        if self.binding_policy == GoalBindingPolicy.Bind_on_start:
-            self._fk_binding.bind(context)
-
 
 @dataclass(eq=False, repr=False)
-class CartesianOrientation(Task):
+class CartesianOrientation(CartesianTask):
     """
     Rotate a tip link to match a goal orientation.
 
@@ -377,12 +350,6 @@ class CartesianOrientation(Task):
     """
 
     default_reference_velocity: ClassVar[float] = 0.2
-
-    root_link: KinematicStructureEntity = field(kw_only=True)
-    """Base link of the kinematic chain."""
-
-    tip_link: KinematicStructureEntity = field(kw_only=True)
-    """End link whose orientation should match the goal."""
 
     goal_orientation: RotationMatrix = field(kw_only=True)
     """Target rotation matrix to match."""
@@ -395,15 +362,9 @@ class CartesianOrientation(Task):
     )
     """Reference angular velocity for normalization in rad/s."""
 
-    weight: float = field(default=DefaultWeights.WEIGHT_ABOVE_CA, kw_only=True)
-    """Task priority relative to other tasks."""
-
-    binding_policy: GoalBindingPolicy = field(
-        default=GoalBindingPolicy.Bind_on_start, kw_only=True
-    )
-    """Describes when the goal is computed. See GoalBindingPolicy for more information."""
-
-    _fk_binding: ForwardKinematicsBinding = field(kw_only=True, init=False)
+    @property
+    def goal_reference_frame(self) -> KinematicStructureEntity:
+        return self.goal_orientation.reference_frame
 
     def build(self, context: MotionStatechartContext) -> NodeArtifacts:
         """
@@ -412,16 +373,9 @@ class CartesianOrientation(Task):
         :param context: Provides access to world model and kinematic expressions.
         :return: NodeArtifacts containing constraints and observation conditions.
         """
-        artifacts = NodeArtifacts()
+        artifacts = super().build(context)
 
-        # Create forward kinematics binding for the goal
-        self._fk_binding = ForwardKinematicsBinding(
-            name=PrefixedName("root_T_goal_ref", str(self.name)),
-            root=self.root_link,
-            tip=self.goal_orientation.reference_frame,
-            build_context=context,
-        )
-        root_R_goal = self._fk_binding.root_T_tip @ self.goal_orientation
+        root_R_goal = self.root_T_goal_reference_frame @ self.goal_orientation
 
         # Get current tip orientation in root frame
         root_T_current = context.world.compose_forward_kinematics_expression(
@@ -442,29 +396,12 @@ class CartesianOrientation(Task):
         artifacts.observation = sm.abs(rotation_error) < self.threshold
         return artifacts
 
-    def on_start(self, context: MotionStatechartContext):
-        """
-        Called when task starts execution.
-
-        Binds the goal pose transformation if binding policy is Bind_on_start.
-
-        :param context: Provides access to current world state.
-        """
-        if self.binding_policy == GoalBindingPolicy.Bind_on_start:
-            self._fk_binding.bind(context)
-
 
 @dataclass(eq=False, repr=False)
-class CartesianPose(Task):
+class CartesianPose(CartesianTask):
     """
     This goal will use the kinematic chain between root and tip link to move tip_link into the 6D goal_pose.
     """
-
-    root_link: Optional[KinematicStructureEntity] = field(kw_only=True, default=None)
-    """Name of the root link of the kin chain."""
-
-    tip_link: KinematicStructureEntity = field(kw_only=True)
-    """Name of the tip link of the kin chain."""
 
     goal_pose: HomogeneousTransformationMatrix = field(kw_only=True)
     """The goal pose."""
@@ -482,46 +419,24 @@ class CartesianPose(Task):
     threshold: float = field(default=0.01, kw_only=True)
     """If the error falls below this threshold, the goal is achieved. This is used for both position and orientation. Units are m and rad."""
 
-    binding_policy: GoalBindingPolicy = field(
-        default=GoalBindingPolicy.Bind_on_start, kw_only=True
-    )
-    """Describes when the goal is computed. See GoalBindingPolicy for more information."""
-
-    _fk_binding: ForwardKinematicsBinding = field(kw_only=True, init=False)
-
-    weight: float = field(default=DefaultWeights.WEIGHT_BELOW_CA, kw_only=True)
-    """Task priority relative to other tasks."""
+    @property
+    def goal_reference_frame(self) -> KinematicStructureEntity:
+        return self.goal_pose.reference_frame
 
     def build(self, context: MotionStatechartContext) -> NodeArtifacts:
-        """
-        Build motion constraints for reaching the full 6D goal pose.
-
-        Combines position and orientation constraints for complete pose matching.
-
-        :param context: Provides access to world model and kinematic expressions.
-        :return: NodeArtifacts containing constraints and observation conditions.
-        """
-        artifacts = NodeArtifacts()
+        artifacts = super().build(context)
 
         # Use world root if no root link specified
         if self.root_link is None:
             self.root_link = context.world.root
-
-        # Create binding for goal pose's reference frame
-        self._fk_binding = ForwardKinematicsBinding(
-            name=PrefixedName("root_T_ref", str(self.name)),
-            root=self.root_link,
-            tip=self.goal_pose.reference_frame,
-            float_variable_data=context.float_variable_data,
-        )
 
         # Extract position and orientation from goal pose
         goal_orientation = self.goal_pose.to_rotation_matrix()
         goal_point = self.goal_pose.to_position()
 
         # Transform goal into root frame
-        root_P_goal = self._fk_binding.root_T_tip @ goal_point
-        root_R_goal = self._fk_binding.root_T_tip @ goal_orientation
+        root_P_goal = self.root_T_goal_reference_frame @ goal_point
+        root_R_goal = self.root_T_goal_reference_frame @ goal_orientation
 
         # Get current tip pose in root frame
         root_T_current = context.world.compose_forward_kinematics_expression(
@@ -574,17 +489,6 @@ class CartesianPose(Task):
         )
 
         return artifacts
-
-    def on_start(self, context: MotionStatechartContext):
-        """
-        Called when task starts execution.
-
-        Binds the goal pose transformation if binding policy is Bind_on_start.
-
-        :param context: Provides access to current world state.
-        """
-        if self.binding_policy == GoalBindingPolicy.Bind_on_start:
-            self._fk_binding.bind(context.world)
 
 
 @dataclass(eq=False, repr=False)
