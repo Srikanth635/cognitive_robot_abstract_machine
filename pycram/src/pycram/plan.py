@@ -28,10 +28,7 @@ from typing_extensions import (
 from giskardpy.motion_statechart.graph_node import Task
 from krrood.entity_query_language.query.match import Match
 from krrood.ormatic.utils import leaf_types
-from krrood.probabilistic_knowledge.parameterizer import (
-    Parameterization,
-)
-from krrood.probabilistic_knowledge.probable_variable import MatchToInstanceTranslator
+
 from pycram.datastructures.dataclasses import ExecutionData, Context
 from pycram.datastructures.enums import TaskStatus
 from pycram.datastructures.pose import PoseStamped
@@ -616,31 +613,6 @@ class Plan:
         """
         if cls.on_end_callback and action_type in cls.on_end_callback:
             cls.on_end_callback[action_type].remove(callback)
-
-    def generate_parameterizations(
-        self,
-    ) -> List[Tuple[ActionDescription, Optional[Parameterization]]]:
-        """
-        Parameterize all parameters of a plan using the krrood parameterizer.
-
-        :return: Dictionary mapping all Designator nodes to their parameterizations.
-        """
-
-        ordered_nodes = [self.root] + self.root.recursive_children
-
-        designator_nodes = [
-            node
-            for node in ordered_nodes
-            if isinstance(node, DesignatorNode) and node.designator_type is not None
-        ]
-
-        result = []
-        for node in designator_nodes:
-            if isinstance(node, Match):
-                obj = MatchToInstanceTranslator(node)
-            else:
-                result.append((node, None))
-        return result
 
 
 def managed_node(func: Callable) -> Callable:
