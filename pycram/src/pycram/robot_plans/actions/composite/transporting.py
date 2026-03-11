@@ -72,7 +72,7 @@ class TransportAction(ActionDescription):
         pickup_loc = CostmapLocation(
             target=PoseStamped.from_spatial_type(self.object_designator.global_pose),
             reachable_arm=self.arm,
-            reachable_for=self.robot_view,
+            reachable_for=self.robot,
         )
         pickup_loc.plan_node = self.plan_node
         # Tries to find a pick-up position for the robot that uses the given arm
@@ -96,7 +96,7 @@ class TransportAction(ActionDescription):
                 CostmapLocation(
                     target=self.target_location,
                     reachable_arm=self.arm,
-                    reachable_for=self.robot_view,
+                    reachable_for=self.robot,
                     grasp_descriptions=pickup_pose.grasp_description,
                 ),
                 True,

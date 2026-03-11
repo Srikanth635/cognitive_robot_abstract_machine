@@ -1,32 +1,33 @@
-from typing_extensions import List, assert_never, Union, Optional
+from __future__ import annotations
+from typing_extensions import List, assert_never, Union, Optional, TYPE_CHECKING
 
 from krrood.entity_query_language.query.match import Match
 from pycram.datastructures.dataclasses import Context
-from pycram.language import SequentialNode
-from pycram.plans.plan import Plan
-from pycram.plans.plan_node import (
-    PlanNode,
-    UnderspecifiedActionNode,
-    ActionNode,
-    MotionNode,
-)
-from pycram.robot_plans import ActionDescription, BaseMotion
 
-ActionLike = Union[Match, ActionDescription, PlanNode, BaseMotion]
+from pycram.plans.plan import Plan
+
+
+if TYPE_CHECKING:
+    from pycram.language import SequentialNode
+    from pycram.plans.plan_node import ActionLike, PlanNode
 
 
 def execute_single(
     action_like: ActionLike, context: Optional[Context] = None
 ) -> PlanNode:
+
+    node = make_node(action_like)
     plan = Plan(context=context)
-    plan.add_node(make_node(action_like))
-    return make_node(action_like)
+    plan.add_node(node)
+    return node
 
 
 def sequential(
     children: List[ActionLike],
     context: Optional[Context] = None,
 ) -> SequentialNode:
+    from pycram.language import SequentialNode
+
     result = SequentialNode()
     plan = Plan(context=context)
     plan.add_node(result)
@@ -36,6 +37,13 @@ def sequential(
 
 
 def make_node(action_like: ActionLike) -> PlanNode:
+    from pycram.plans.plan_node import (
+        PlanNode,
+        UnderspecifiedActionNode,
+        ActionNode,
+        MotionNode,
+    )
+    from pycram.robot_plans import ActionDescription, BaseMotion
 
     if isinstance(action_like, PlanNode):
         return action_like
@@ -45,8 +53,8 @@ def make_node(action_like: ActionLike) -> PlanNode:
         )
         return underspecified_action
     elif isinstance(action_like, ActionDescription):
-        return ActionNode(action=action_like)
+        return ActionNode(designator=action_like)
     elif isinstance(action_like, BaseMotion):
-        return MotionNode(motion=action_like)
+        return MotionNode(designator=action_like)
     else:
         assert_never(action_like)

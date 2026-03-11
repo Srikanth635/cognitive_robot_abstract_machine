@@ -6,13 +6,12 @@ from dataclasses import dataclass
 from inspect import signature
 from typing import Optional
 
-from typing_extensions import TypeVar, ClassVar, Type
-
 from giskardpy.motion_statechart.graph_node import Task
 from krrood.ormatic.dao import HasGeneric
+from pycram.plans.designator import Designator
 from semantic_digital_twin.robots.abstract_robot import AbstractRobot
 from pycram.datastructures.enums import ExecutionType
-from typing_extensions import TypeVar
+from typing_extensions import TypeVar, ClassVar, Type
 
 from pycram.motion_executor import MotionExecutor
 
@@ -49,7 +48,13 @@ class AlternativeMotion(HasGeneric[T], ABC):
 
 
 @dataclass
-class BaseMotion:
+class BaseMotion(Designator):
+    """
+    Base class for all motions.
+    Motions are like builders for Motion State Charts.
+    Motions never create any other motions or actions.
+    Motions create exactly one goal.
+    """
 
     @abstractmethod
     def perform(self):
@@ -82,7 +87,7 @@ class BaseMotion:
         pass
 
     def get_alternative_motion(self) -> Optional[Type[AlternativeMotion]]:
-        return AlternativeMotion.check_for_alternative(self.robot_view, self)
+        return AlternativeMotion.check_for_alternative(self.robot, self)
 
 
 MotionType = TypeVar("MotionType", bound=BaseMotion)

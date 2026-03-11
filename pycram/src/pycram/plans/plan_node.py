@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Optional, Any, List, Type, TYPE_CHECKING
 
 import rustworkx as rx
+from typing_extensions import Union
 
 from giskardpy.motion_statechart.graph_node import Task
 from krrood.entity_query_language.query.match import Match
@@ -15,17 +16,14 @@ from pycram.datastructures.enums import TaskStatus
 from pycram.datastructures.pose import PoseStamped
 from pycram.failures import PlanFailure
 from pycram.motion_executor import MotionExecutor
+from pycram.plans.designator import Designator
 
-from pycram.robot_plans import ActionDescription, BaseMotion
-from semantic_digital_twin.world_description.world_entity import Body
-from semantic_digital_twin.world_description.world_modification import (
-    WorldModelModificationBlock,
-)
-from pycram.plans.plan import PlanEntity
+from pycram.plans.plan_entity import PlanEntity
 from pycram.datastructures.execution_data import ExecutionData
 
 if TYPE_CHECKING:
     from pycram.plans.plan import Plan
+    from pycram.robot_plans import ActionDescription, BaseMotion
 
 logger = logging.getLogger(__name__)
 
@@ -225,15 +223,25 @@ class UnderspecifiedActionNode(PlanNode):
         raise NotImplemented
 
 
-@dataclass(eq=False)
-class ActionNode(PlanNode):
+@dataclass
+class DesignatorNode(PlanNode, ABC):
     """
-    A node representing a fully specified action.
+    Abstract base class for all nodes that represent a designator.
     """
 
-    action: ActionDescription = field(kw_only=True)
+    designator: Designator = field(kw_only=True)
     """
-    The fully specified action that will be executed.
+    The designator that is managed by this node.
+    """
+
+    def __post_init__(self):
+        self.designator.plan_node = self
+
+
+@dataclass(eq=False)
+class ActionNode(DesignatorNode):
+    """
+    A node representing a fully specified action.
     """
 
     execution_data: ExecutionData = None
@@ -252,6 +260,10 @@ class ActionNode(PlanNode):
     Used to check if the model has changed during execution.
     """
 
+    @property
+    def action(self) -> ActionDescription:
+        return self.designator
+
     def collect_motions(self) -> List[Task]:
         """
         Collects all child motions of this action. A motion is considered if it is a direct child of this action node,
@@ -263,7 +275,7 @@ class ActionNode(PlanNode):
                 self.recursive_children,
             )
         )
-        return [m.designator_ref.motion_chart for m in motion_desigs]
+        return [m.motion.motion_chart for m in motion_desigs]
 
     def construct_motion_state_chart(self):
         """
@@ -319,12 +331,16 @@ class ActionNode(PlanNode):
 
 
 @dataclass(eq=False)
-class MotionNode(PlanNode):
+class MotionNode(DesignatorNode):
     """
-    A node in the plan representing a fully specified motion
+    A node in the plan representing a fully specified motion.
+    Motions are not directly performed. Motions get merged with their siblings into one motion state chart which then is
+    executed.
     """
 
-    motion: BaseMotion = field(kw_only=True)
+    @property
+    def motion(self) -> BaseMotion:
+        return self.designator
 
     def perform(self):
         """
@@ -341,3 +357,6 @@ class MotionNode(PlanNode):
         Returns the next resolved action node in the plan above this motion node.
         """
         return list(filter(lambda x: isinstance(x, ActionNode), self.all_parents))[0]
+
+
+ActionLike = Union[Match, Designator, PlanNode]

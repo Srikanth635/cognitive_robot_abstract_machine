@@ -6,7 +6,7 @@
 #
 #
 # def test_eql_designator(immutable_model_world):
-#     world, robot_view, context = immutable_model_world
+#     world, robot, context = immutable_model_world
 #     obj = variable(type_=Body, domain=world.bodies)
 #     milk_desig = EQLObjectDesignator(
 #         an(
@@ -22,7 +22,7 @@
 #
 #
 # def test_named_object(immutable_model_world):
-#     world, robot_view, context = immutable_model_world
+#     world, robot, context = immutable_model_world
 #     named_desig = NamedObject("milk.stl")
 #     plan = SequentialPlan(context, named_desig)
 #     found_milks = list(named_desig)

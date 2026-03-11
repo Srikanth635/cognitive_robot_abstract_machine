@@ -40,7 +40,7 @@ class OpenAction(ActionDescription):
     """
 
     def execute(self) -> None:
-        arm = ViewManager.get_arm_view(self.arm, self.robot_view)
+        arm = ViewManager.get_arm_view(self.arm, self.robot)
         manipulator = arm.manipulator
 
         grasp_description = GraspDescription(
@@ -90,7 +90,7 @@ class CloseAction(ActionDescription):
     """
 
     def execute(self) -> None:
-        arm = ViewManager.get_arm_view(self.arm, self.robot_view)
+        arm = ViewManager.get_arm_view(self.arm, self.robot)
         manipulator = arm.manipulator
 
         grasp_description = GraspDescription(

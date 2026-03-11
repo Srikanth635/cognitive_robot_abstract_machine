@@ -132,7 +132,7 @@
 #
 #
 # def test_reachability_pose_costmap_location(immutable_multiple_robot_simple_apartment):
-#     world, robot_view, context = immutable_multiple_robot_simple_apartment
+#     world, robot, context = immutable_multiple_robot_simple_apartment
 #     plan = SequentialPlan(
 #         context,
 #         ParkArmsActionDescription(Arms.BOTH),
@@ -142,7 +142,7 @@
 #         plan.perform()
 #     location_desig = CostmapLocation(
 #         PoseStamped.from_list([-2.2, 0, 1], [0, 0, 0, 1], world.root),
-#         reachable_for=robot_view,
+#         reachable_for=robot,
 #     )
 #     plan = SequentialPlan(context, NavigateActionDescription(location_desig))
 #     location = location_desig.resolve()
@@ -151,7 +151,7 @@
 #
 #
 # def test_visibility_costmap_location(immutable_multiple_robot_simple_apartment):
-#     world, robot_view, context = immutable_multiple_robot_simple_apartment
+#     world, robot, context = immutable_multiple_robot_simple_apartment
 #     plan = SequentialPlan(
 #         context,
 #         ParkArmsActionDescription(Arms.BOTH),
@@ -160,7 +160,7 @@
 #     with simulated_robot:
 #         plan.perform()
 #     location_desig = CostmapLocation(
-#         world.get_body_by_name("milk.stl"), visible_for=robot_view
+#         world.get_body_by_name("milk.stl"), visible_for=robot
 #     )
 #     plan = SequentialPlan(context, NavigateActionDescription(location_desig))
 #     location = location_desig.resolve()
@@ -169,7 +169,7 @@
 #
 #
 # def test_visibility_pose_costmap_location(immutable_multiple_robot_simple_apartment):
-#     world, robot_view, context = immutable_multiple_robot_simple_apartment
+#     world, robot, context = immutable_multiple_robot_simple_apartment
 #     plan = SequentialPlan(
 #         context,
 #         ParkArmsActionDescription(Arms.BOTH),
@@ -179,7 +179,7 @@
 #         plan.perform()
 #     location_desig = CostmapLocation(
 #         PoseStamped.from_list([-1, 0, 1.2], frame=world.root),
-#         visible_for=robot_view,
+#         visible_for=robot,
 #     )
 #     plan = SequentialPlan(context, NavigateActionDescription(location_desig))
 #     location = location_desig.resolve()
@@ -190,7 +190,7 @@
 # def test_reachability_and_visibility_costmap_location(
 #     immutable_multiple_robot_simple_apartment,
 # ):
-#     world, robot_view, context = immutable_multiple_robot_simple_apartment
+#     world, robot, context = immutable_multiple_robot_simple_apartment
 #     plan = SequentialPlan(
 #         context,
 #         ParkArmsActionDescription(Arms.BOTH),
@@ -201,8 +201,8 @@
 #     world.notify_state_change()
 #     location_desig = CostmapLocation(
 #         world.get_body_by_name("milk.stl"),
-#         reachable_for=robot_view,
-#         visible_for=robot_view,
+#         reachable_for=robot,
+#         visible_for=robot,
 #     )
 #     plan = SequentialPlan(context, NavigateActionDescription(location_desig))
 #     location = location_desig.resolve()
@@ -213,7 +213,7 @@
 # def test_reachability_probabilistic_costmap_location(
 #     immutable_multiple_robot_simple_apartment,
 # ):
-#     world, robot_view, context = immutable_multiple_robot_simple_apartment
+#     world, robot, context = immutable_multiple_robot_simple_apartment
 #     plan = SequentialPlan(
 #         context,
 #         ParkArmsActionDescription(Arms.BOTH),
@@ -223,7 +223,7 @@
 #         plan.perform()
 #     world.notify_state_change()
 #     location_desig = ProbabilisticCostmapLocation(
-#         world.get_body_by_name("milk.stl"), reachable_for=robot_view
+#         world.get_body_by_name("milk.stl"), reachable_for=robot
 #     )
 #     plan = SequentialPlan(context, NavigateActionDescription(location_desig))
 #     location = location_desig.resolve()
@@ -235,7 +235,7 @@
 # def test_reachability_pose_probabilistic_costmap_location(
 #     immutable_multiple_robot_simple_apartment,
 # ):
-#     world, robot_view, context = immutable_multiple_robot_simple_apartment
+#     world, robot, context = immutable_multiple_robot_simple_apartment
 #
 #     plan = SequentialPlan(
 #         context,
@@ -246,7 +246,7 @@
 #         plan.perform()
 #     location_desig = ProbabilisticCostmapLocation(
 #         PoseStamped.from_list([0.4, 0.6, 0.9], [0, 0, 0, 1], frame=world.root),
-#         reachable_for=robot_view,
+#         reachable_for=robot,
 #     )
 #     plan = SequentialPlan(context, NavigateActionDescription(location_desig))
 #     location = location_desig.resolve()
@@ -258,7 +258,7 @@
 # def test_visibility_probabilistic_costmap_location(
 #     immutable_multiple_robot_simple_apartment,
 # ):
-#     world, robot_view, context = immutable_multiple_robot_simple_apartment
+#     world, robot, context = immutable_multiple_robot_simple_apartment
 #     plan = SequentialPlan(
 #         context,
 #         ParkArmsActionDescription(Arms.BOTH),
@@ -267,7 +267,7 @@
 #     with simulated_robot:
 #         plan.perform()
 #     location_desig = ProbabilisticCostmapLocation(
-#         world.get_body_by_name("milk.stl"), visible_for=robot_view
+#         world.get_body_by_name("milk.stl"), visible_for=robot
 #     )
 #     plan = SequentialPlan(context, NavigateActionDescription(location_desig))
 #     location = location_desig.resolve()
@@ -278,7 +278,7 @@
 # def test_visibility_pose_probabilistic_costmap_location(
 #     immutable_multiple_robot_simple_apartment,
 # ):
-#     world, robot_view, context = immutable_multiple_robot_simple_apartment
+#     world, robot, context = immutable_multiple_robot_simple_apartment
 #     plan = SequentialPlan(
 #         context,
 #         ParkArmsActionDescription(Arms.BOTH),
@@ -288,7 +288,7 @@
 #         plan.perform()
 #     location_desig = ProbabilisticCostmapLocation(
 #         PoseStamped.from_list([-1, 0, 1.2], frame=world.root),
-#         visible_for=robot_view,
+#         visible_for=robot,
 #     )
 #     plan = SequentialPlan(context, NavigateActionDescription(location_desig))
 #     location = location_desig.resolve()
@@ -299,7 +299,7 @@
 # def test_reachability_and_visibility_probabilistic_costmap_location(
 #     immutable_multiple_robot_simple_apartment,
 # ):
-#     world, robot_view, context = immutable_multiple_robot_simple_apartment
+#     world, robot, context = immutable_multiple_robot_simple_apartment
 #     plan = SequentialPlan(
 #         context,
 #         ParkArmsActionDescription(Arms.BOTH),
@@ -310,8 +310,8 @@
 #     world.notify_state_change()
 #     location_desig = ProbabilisticCostmapLocation(
 #         world.get_body_by_name("milk.stl"),
-#         reachable_for=robot_view,
-#         visible_for=robot_view,
+#         reachable_for=robot,
+#         visible_for=robot,
 #     )
 #     plan = SequentialPlan(context, NavigateActionDescription(location_desig))
 #     location = location_desig.resolve()
@@ -320,7 +320,7 @@
 #
 #
 # def test_semantic_location(immutable_model_world):
-#     world, robot_view, context = immutable_model_world
+#     world, robot, context = immutable_model_world
 #     location_desig = SemanticCostmapLocation(
 #         world.get_body_by_name("island_countertop")
 #     )
@@ -338,7 +338,7 @@
 #
 #
 # def test_probabilistic_semantic_location(immutable_multiple_robot_simple_apartment):
-#     world, robot_view, context = immutable_multiple_robot_simple_apartment
+#     world, robot, context = immutable_multiple_robot_simple_apartment
 #     location_desig = ProbabilisticSemanticLocation(
 #         [world.get_body_by_name("box_2")], link_is_center_link=True
 #     )
@@ -359,10 +359,10 @@
 #
 #
 # def test_accessing_location(immutable_model_world):
-#     world, robot_view, context = immutable_model_world
+#     world, robot, context = immutable_model_world
 #     location_desig = AccessingLocation(
 #         world.get_body_by_name("handle_cab10_m"),
-#         robot_desig=robot_view,
+#         robot_desig=robot,
 #         arm=Arms.RIGHT,
 #     )
 #     plan = SequentialPlan(context, NavigateActionDescription(location_desig))
@@ -373,7 +373,7 @@
 #
 #
 # def test_giskard_location_pose(immutable_model_world):
-#     world, robot_view, context = immutable_model_world
+#     world, robot, context = immutable_model_world
 #     location_desig = GiskardLocation(
 #         PoseStamped.from_list([1.9, 2, 1], frame=world.root), Arms.RIGHT
 #     )
@@ -388,7 +388,7 @@
 #
 #
 # def test_costmap_location_last_result(immutable_multiple_robot_simple_apartment):
-#     world, robot_view, context = immutable_multiple_robot_simple_apartment
+#     world, robot, context = immutable_multiple_robot_simple_apartment
 #     plan = SequentialPlan(
 #         context,
 #         ParkArmsActionDescription(Arms.BOTH),
@@ -399,7 +399,7 @@
 #     world.notify_state_change()
 #     location_desig = CostmapLocation(
 #         PoseStamped.from_list([-2.2, 0, 1], [0, 0, 0, 1], world.root),
-#         reachable_for=robot_view,
+#         reachable_for=robot,
 #     )
 #     plan = SequentialPlan(context, NavigateActionDescription(location_desig))
 #     location = location_desig.resolve()

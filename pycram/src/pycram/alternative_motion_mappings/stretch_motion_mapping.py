@@ -7,14 +7,14 @@ from giskardpy.motion_statechart.tasks.align_planes import AlignPlanes
 from giskardpy.motion_statechart.tasks.cartesian_tasks import CartesianPose
 from giskardpy.motion_statechart.tasks.pointing import Pointing
 from pycram.datastructures.enums import ExecutionType
-from pycram.robot_plans import MoveTCPMotion, MoveMotion, ClosingMotion
+from pycram.robot_plans import MoveToolCenterPointMotion, MoveMotion, ClosingMotion
 from pycram.robot_plans.motions.base import AlternativeMotion
 from pycram.view_manager import ViewManager
 from semantic_digital_twin.robots.stretch import Stretch
 from semantic_digital_twin.spatial_types import Vector3, HomogeneousTransformationMatrix
 
 
-class StretchMoveTCP(MoveTCPMotion, AlternativeMotion[Stretch]):
+class StretchMoveToolCenterPoint(MoveToolCenterPointMotion, AlternativeMotion[Stretch]):
     """
     Better motions for stretch to move the tool center point to the given goal, first rotates the base such that the
     gripper is pointing at the goal pose and then uses full body control to move the TCP to the goal.

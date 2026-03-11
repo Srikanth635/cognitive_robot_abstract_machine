@@ -114,7 +114,7 @@ class MoveGripperMotion(BaseMotion):
 
     @property
     def _motion_chart(self):
-        arm = ViewManager().get_end_effector_view(self.gripper, self.robot_view)
+        arm = ViewManager().get_end_effector_view(self.gripper, self.robot)
 
         return JointPositionList(
             goal_state=arm.get_joint_state_by_type(self.motion),
@@ -125,7 +125,7 @@ class MoveGripperMotion(BaseMotion):
 
 
 @dataclass
-class MoveTCPMotion(BaseMotion):
+class MoveToolCenterPointMotion(BaseMotion):
     """
     Moves the Tool center point (TCP) of the robot
     """
@@ -152,12 +152,8 @@ class MoveTCPMotion(BaseMotion):
 
     @property
     def _motion_chart(self):
-        tip = ViewManager().get_end_effector_view(self.arm, self.robot_view).tool_frame
-        root = (
-            self.world.root
-            if self.robot_view.full_body_controlled
-            else self.robot_view.root
-        )
+        tip = ViewManager().get_end_effector_view(self.arm, self.robot).tool_frame
+        root = self.world.root if self.robot.full_body_controlled else self.robot.root
         task = None
         if self.movement_type == MovementType.TRANSLATION:
             task = CartesianPosition(
@@ -206,12 +202,8 @@ class MoveTCPWaypointsMotion(BaseMotion):
 
     @property
     def _motion_chart(self):
-        tip = ViewManager().get_end_effector_view(self.arm, self.robot_view).tool_frame
-        root = (
-            self.world.root
-            if self.robot_view.full_body_controlled
-            else self.robot_view.root
-        )
+        tip = ViewManager().get_end_effector_view(self.arm, self.robot).tool_frame
+        root = self.world.root if self.robot.full_body_controlled else self.robot.root
         nodes = [
             CartesianPose(
                 root_link=root,

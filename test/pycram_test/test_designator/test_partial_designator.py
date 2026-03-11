@@ -108,7 +108,7 @@
 #
 #
 # def test_partial_desig_iter(immutable_model_world):
-#     world, robot_view, context = immutable_model_world
+#     world, robot, context = immutable_model_world
 #     partial_desig = PartialDesignator(
 #         PickUpAction,
 #         world.get_body_by_name("milk.stl"),
@@ -153,7 +153,7 @@
 #
 #
 # def test_partial_navigate_action_perform(immutable_model_world):
-#     world, robot_view, context = immutable_model_world
+#     world, robot, context = immutable_model_world
 #     with simulated_robot:
 #         move1 = SequentialPlan(
 #             context,
@@ -163,14 +163,14 @@
 #         )
 #         move1.perform()
 #         np.testing.assert_almost_equal(
-#             list(robot_view.root.global_pose.to_np()[:3, 3]),
+#             list(robot.root.global_pose.to_np()[:3, 3]),
 #             [1, 0, 0],
 #             decimal=1,
 #         )
 #
 #
 # def test_partial_navigate_action_multiple(immutable_model_world):
-#     world, robot_view, context = immutable_model_world
+#     world, robot, context = immutable_model_world
 #     nav = NavigateActionDescription(
 #         [
 #             PoseStamped.from_list([1, 0, 0], frame=world.root),
@@ -183,14 +183,14 @@
 #         with simulated_robot:
 #             SequentialPlan(context, action).perform()
 #             np.testing.assert_almost_equal(
-#                 robot_view.root.global_pose.to_np()[:3, 3],
+#                 robot.root.global_pose.to_np()[:3, 3],
 #                 nav_goals[i],
 #                 decimal=2,
 #             )
 #
 #
 # def test_partial_pickup_action(immutable_model_world):
-#     world, robot_view, context = immutable_model_world
+#     world, robot, context = immutable_model_world
 #     grasp_description = GraspDescription(
 #         ApproachDirection.FRONT, VerticalAlignment.NoAlignment, False
 #     )
@@ -206,7 +206,7 @@
 #
 #
 # def test_partial_pickup_action_insert_param(immutable_model_world):
-#     world, robot_view, context = immutable_model_world
+#     world, robot, context = immutable_model_world
 #     grasp_description = GraspDescription(
 #         ApproachDirection.FRONT, VerticalAlignment.NoAlignment, False
 #     )

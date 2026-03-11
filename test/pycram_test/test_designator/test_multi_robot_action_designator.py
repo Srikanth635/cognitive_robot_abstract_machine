@@ -190,7 +190,7 @@
 #
 #
 # def test_park_arms_multi(immutable_multiple_robot_apartment):
-#     world, robot_view, context = immutable_multiple_robot_apartment
+#     world, robot, context = immutable_multiple_robot_apartment
 #     description = ParkArmsActionDescription([Arms.BOTH])
 #     plan = SequentialPlan(context, description)
 #     assert description.resolve().arm == Arms.BOTH
@@ -199,7 +199,7 @@
 #
 #     joints = []
 #     states = []
-#     for arm in robot_view.arms:
+#     for arm in robot.arms:
 #         joint_state = arm.get_joint_state_by_type(StaticJointState.PARK)
 #         joints.extend(joint_state.connections)
 #         states.extend(joint_state.target_values)
@@ -257,25 +257,25 @@
 #
 #
 # def test_follow_tcp_path_multi(immutable_multiple_robot_apartment):
-#     world, robot_view, context = immutable_multiple_robot_apartment
+#     world, robot, context = immutable_multiple_robot_apartment
 #
-#     if isinstance(robot_view, (Tiago)):
+#     if isinstance(robot, (Tiago)):
 #         #do not allow since
-#         robot_view.full_body_controlled = False
-#         robot_view.root.parent_connection.origin = HomogeneousTransformationMatrix.from_xyz_rpy(
+#         robot.full_body_controlled = False
+#         robot.root.parent_connection.origin = HomogeneousTransformationMatrix.from_xyz_rpy(
 #             1.7, 1.7, 0, reference_frame=world.root
 #         )
 #         world.notify_state_change()
 #
-#     if isinstance(robot_view, (Stretch)):
+#     if isinstance(robot, (Stretch)):
 #         # do not allow since
-#         robot_view.full_body_controlled = False
-#         robot_view.root.parent_connection.origin = HomogeneousTransformationMatrix.from_xyz_rpy(
+#         robot.full_body_controlled = False
+#         robot.root.parent_connection.origin = HomogeneousTransformationMatrix.from_xyz_rpy(
 #             2.12, 2.2, 0, reference_frame=world.root
 #         )
 #         world.notify_state_change()
-#     # robot_view.full_body_controlled = True
-#     left_arm = ViewManager.get_arm_view(Arms.LEFT, robot_view)
+#     # robot.full_body_controlled = True
+#     left_arm = ViewManager.get_arm_view(Arms.LEFT, robot)
 #
 #
 #     front_axis = tuple(
@@ -315,8 +315,8 @@
 #
 #
 # def test_grasping(immutable_multiple_robot_apartment):
-#     world, robot_view, context = immutable_multiple_robot_apartment
-#     left_arm = ViewManager.get_arm_view(Arms.LEFT, robot_view)
+#     world, robot, context = immutable_multiple_robot_apartment
+#     left_arm = ViewManager.get_arm_view(Arms.LEFT, robot)
 #
 #     grasp_description = GraspDescription(
 #         ApproachDirection.FRONT,
@@ -331,7 +331,7 @@
 #     milk_body.parent_connection.origin = HomogeneousTransformationMatrix.from_xyz_rpy(
 #         1, -2, 0.8, reference_frame=world.root
 #     )
-#     robot_view.root.parent_connection.origin = (
+#     robot.root.parent_connection.origin = (
 #         HomogeneousTransformationMatrix.from_xyz_rpy(
 #             0.3, -2.4, 0, reference_frame=world.root
 #         )
@@ -441,7 +441,7 @@
 #
 #
 # def test_look_at(immutable_multiple_robot_apartment):
-#     world, robot_view, context = immutable_multiple_robot_apartment
+#     world, robot, context = immutable_multiple_robot_apartment
 #     description = LookAtActionDescription(
 #         [PoseStamped.from_list([3, 0, 1], frame=world.root)]
 #     )
@@ -455,12 +455,12 @@
 #
 #
 # def test_detect(immutable_multiple_robot_apartment):
-#     world, robot_view, context = immutable_multiple_robot_apartment
+#     world, robot, context = immutable_multiple_robot_apartment
 #     milk_body = world.get_body_by_name("milk.stl")
 #     with world.modify_world():
 #         world.add_semantic_annotation(Milk(root=milk_body))
 #
-#     robot_view.root.parent_connection.origin = (
+#     robot.root.parent_connection.origin = (
 #         HomogeneousTransformationMatrix.from_xyz_rpy(1.5, -2, 0)
 #     )
 #     milk_body.parent_connection.origin = HomogeneousTransformationMatrix.from_xyz_rpy(
@@ -480,7 +480,7 @@
 #
 #
 # def test_open(immutable_multiple_robot_apartment):
-#     world, robot_view, context = immutable_multiple_robot_apartment
+#     world, robot, context = immutable_multiple_robot_apartment
 #
 #     plan = SequentialPlan(
 #         context,
@@ -499,7 +499,7 @@
 #
 #
 # def test_close(immutable_multiple_robot_apartment):
-#     world, robot_view, context = immutable_multiple_robot_apartment
+#     world, robot, context = immutable_multiple_robot_apartment
 #
 #     world.get_connection_by_name("cabinet10_drawer_middle_joint").position = 0.3
 #     world.notify_state_change()
@@ -521,7 +521,7 @@
 #
 #
 # def test_facing(immutable_multiple_robot_apartment):
-#     world, robot_view, context = immutable_multiple_robot_apartment
+#     world, robot, context = immutable_multiple_robot_apartment
 #
 #     with simulated_robot:
 #         milk_pose = PoseStamped.from_spatial_type(
@@ -531,14 +531,14 @@
 #         plan.perform()
 #         milk_in_robot_frame = world.transform(
 #             world.get_body_by_name("milk.stl").global_pose,
-#             robot_view.root,
+#             robot.root,
 #         )
 #         milk_in_robot_frame = PoseStamped.from_spatial_type(milk_in_robot_frame)
 #         assert milk_in_robot_frame.position.y == pytest.approx(0.0, abs=0.01)
 #
 #
 # def test_transport(mutable_multiple_robot_apartment):
-#     world, robot_view, context = mutable_multiple_robot_apartment
+#     world, robot, context = mutable_multiple_robot_apartment
 #
 #     description = TransportActionDescription(
 #         world.get_body_by_name("milk.stl"),

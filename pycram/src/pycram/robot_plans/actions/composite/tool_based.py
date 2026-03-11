@@ -11,7 +11,7 @@ from semantic_digital_twin.world_description.world_entity import (
 )
 from typing_extensions import Union, Optional, Iterable
 
-from pycram.robot_plans.motions.gripper import MoveTCPMotion
+from pycram.robot_plans.motions.gripper import MoveToolCenterPointMotion
 from pycram import utils
 from pycram.datastructures.pose import PoseStamped
 from pycram.datastructures.enums import (
@@ -63,7 +63,7 @@ class MixingAction(ActionDescription):
             spiral = lt.transform_pose(p, "map")
             spiral.pose.position.z += height_offset
             World.current_world.add_vis_axis(spiral)
-            MoveTCPMotion(spiral, self.arm).perform()
+            MoveToolCenterPointMotion(spiral, self.arm).perform()
 
         World.current_world.remove_vis_axis()
 
@@ -114,7 +114,7 @@ class PouringAction(ActionDescription):
         pose = lt.transform_pose(pose, "map")
 
         World.current_world.add_vis_axis(pose)
-        MoveTCPMotion(
+        MoveToolCenterPointMotion(
             pose,
             self.arm,
             allow_gripper_collision=False,
@@ -127,14 +127,14 @@ class PouringAction(ActionDescription):
         )
         World.current_world.add_vis_axis(pour_pose)
 
-        MoveTCPMotion(
+        MoveToolCenterPointMotion(
             pour_pose,
             self.arm,
             allow_gripper_collision=False,
             movement_type=MovementType.CARTESIAN,
         ).perform()
         sleep(3)
-        MoveTCPMotion(
+        MoveToolCenterPointMotion(
             pose,
             self.arm,
             allow_gripper_collision=False,

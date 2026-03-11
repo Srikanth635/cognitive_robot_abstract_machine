@@ -58,12 +58,13 @@ MoveTCP is used to move the tool center point (TCP) of the given arm to the targ
 Like any designator we start by creating a description and then resolving and performing it.
 
 ```python
-from pycram.robot_plans.motions import MoveTCPMotion
+from pycram.robot_plans.motions import MoveToolCenterPointMotion
 from pycram.process_module import simulated_robot
 from pycram.datastructures.enums import Arms
 
 with simulated_robot:
-    motion_description = MoveTCPMotion(target=PoseStamped.from_list([0.5, 0.6, 0.6], [0, 0, 0, 1], world.root), arm=Arms.LEFT)
+    motion_description = MoveToolCenterPointMotion(
+        target=PoseStamped.from_list([0.5, 0.6, 0.6], [0, 0, 0, 1], world.root), arm=Arms.LEFT)
 
     SequentialPlan(context, motion_description).perform()
 ```

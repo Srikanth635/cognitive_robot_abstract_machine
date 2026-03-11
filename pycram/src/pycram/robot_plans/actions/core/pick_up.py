@@ -18,7 +18,10 @@ from pycram.failures import ObjectNotInGraspingArea
 from pycram.plans.factories import sequential, execute_single
 
 from pycram.robot_plans.actions.base import ActionDescription
-from pycram.robot_plans.motions.gripper import MoveGripperMotion, MoveTCPMotion
+from pycram.robot_plans.motions.gripper import (
+    MoveGripperMotion,
+    MoveToolCenterPointMotion,
+)
 from pycram.view_manager import ViewManager
 from semantic_digital_twin.datastructures.definitions import GripperState
 from semantic_digital_twin.world_description.world_entity import Body
@@ -54,23 +57,25 @@ class ReachAction(ActionDescription):
 
     reverse_reach_order: bool = False
 
-    def __post_init__(self):
-        super().__post_init__()
-
     def execute(self) -> None:
 
         target_pre_pose, target_pose, _ = self.grasp_description._pose_sequence(
             self.target_pose, self.object_designator, reverse=self.reverse_reach_order
         )
-        SequentialPlan(
-            self.context,
-            MoveTCPMotion(target_pre_pose, self.arm, allow_gripper_collision=False),
-            MoveTCPMotion(
-                target_pose,
-                self.arm,
-                allow_gripper_collision=False,
-                movement_type=MovementType.CARTESIAN,
-            ),
+        self.add_subplan(
+            sequential(
+                children=[
+                    MoveToolCenterPointMotion(
+                        target_pre_pose, self.arm, allow_gripper_collision=False
+                    ),
+                    MoveToolCenterPointMotion(
+                        target_pose,
+                        self.arm,
+                        allow_gripper_collision=False,
+                        movement_type=MovementType.CARTESIAN,
+                    ),
+                ]
+            )
         ).perform()
 
     def validate(
@@ -136,7 +141,7 @@ class PickUpAction(ActionDescription):
                 ]
             )
         ).perform()
-        end_effector = ViewManager.get_end_effector_view(self.arm, self.robot_view)
+        end_effector = ViewManager.get_end_effector_view(self.arm, self.robot)
 
         # Attach the object to the end effector
         with self.world.modify_world():
@@ -149,7 +154,7 @@ class PickUpAction(ActionDescription):
         )
         self.add_subplan(
             execute_single(
-                MoveTCPMotion(
+                MoveToolCenterPointMotion(
                     lift_to_pose,
                     self.arm,
                     allow_gripper_collision=True,
@@ -196,9 +201,11 @@ class GraspingAction(ActionDescription):
 
         SequentialPlan(
             self.context,
-            MoveTCPMotion(pre_pose, self.arm),
+            MoveToolCenterPointMotion(pre_pose, self.arm),
             MoveGripperMotion(GripperState.OPEN, self.arm),
-            MoveTCPMotion(grasp_pose, self.arm, allow_gripper_collision=True),
+            MoveToolCenterPointMotion(
+                grasp_pose, self.arm, allow_gripper_collision=True
+            ),
             MoveGripperMotion(
                 GripperState.CLOSE, self.arm, allow_gripper_collision=True
             ),

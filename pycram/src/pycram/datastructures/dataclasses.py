@@ -7,7 +7,8 @@ from typing_extensions import (
     Any,
 )
 
-from pycram.plans.plan import Plan, PlanEntity
+from pycram.plans.plan import Plan
+from pycram.plans.plan_entity import PlanEntity
 from semantic_digital_twin.robots.abstract_robot import AbstractRobot
 from semantic_digital_twin.world import World
 

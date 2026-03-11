@@ -37,9 +37,7 @@ class SearchAction(ActionDescription):
         SequentialPlan(
             self.context,
             NavigateActionDescription(
-                CostmapLocation(
-                    target=self.target_location, visible_for=self.robot_view
-                )
+                CostmapLocation(target=self.target_location, visible_for=self.robot)
             ),
         ).perform()
 

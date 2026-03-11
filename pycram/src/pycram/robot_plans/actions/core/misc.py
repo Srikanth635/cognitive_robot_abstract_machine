@@ -52,13 +52,11 @@ class DetectAction(ActionDescription):
             )
         region_bb = (
             self.region.area.as_bounding_box_collection_in_frame(
-                self.robot_view.root
+                self.robot.root
             ).bounding_box
             if self.region
             else BoundingBox(
-                origin=HomogeneousTransformationMatrix(
-                    reference_frame=self.robot_view.root
-                ),
+                origin=HomogeneousTransformationMatrix(reference_frame=self.robot.root),
                 min_x=-1,
                 min_y=-1,
                 min_z=0,
@@ -70,7 +68,7 @@ class DetectAction(ActionDescription):
         if not self.object_sem_annotation:
             self.object_sem_annotation = SemanticEnvironmentAnnotation
         query = PerceptionQuery(
-            self.object_sem_annotation, region_bb, self.robot_view, self.world
+            self.object_sem_annotation, region_bb, self.robot, self.world
         )
 
         return query.from_world()

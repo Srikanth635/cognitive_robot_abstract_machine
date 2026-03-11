@@ -180,8 +180,8 @@
 #
 #
 # def test_grasping(immutable_tracy_block_world):
-#     world, robot_view, context = immutable_tracy_block_world
-#     left_arm = ViewManager.get_arm_view(Arms.LEFT, robot_view)
+#     world, robot, context = immutable_tracy_block_world
+#     left_arm = ViewManager.get_arm_view(Arms.LEFT, robot)
 #
 #     grasp_description = GraspDescription(
 #         ApproachDirection.FRONT,

@@ -4,7 +4,6 @@ import logging
 from copy import deepcopy
 from dataclasses import field, dataclass
 from enum import IntEnum
-from itertools import chain
 
 import numpy as np
 import rustworkx as rx
@@ -16,22 +15,24 @@ from typing_extensions import (
     List,
     Iterable,
     TYPE_CHECKING,
-    Type,
     Tuple,
     TypeVar,
+    Type,
 )
 
-
+from pycram.plans.designator import Designator
+from pycram.plans.plan_entity import PlanEntity
 from semantic_digital_twin.robots.abstract_robot import AbstractRobot
 from semantic_digital_twin.world import World
+from pycram.plans.plan_node import (
+    PlanNode,
+    ActionNode,
+    DesignatorNode,
+)
 
 if TYPE_CHECKING:
     from pycram.plans.plan_callbacks import PlanCallback
     from pycram.datastructures.dataclasses import Context
-    from pycram.plans.plan_node import (
-        PlanNode,
-        ActionNode,
-    )
 
 
 logger = logging.getLogger(__name__)
@@ -52,7 +53,7 @@ class Plan:
     traverse the plan structure in depth first order and perform each PlanNode
     """
 
-    context: Context
+    context: Optional[Context] = None
     """
     The context where the plan can extract information from.
     """
@@ -75,7 +76,8 @@ class Plan:
     """
 
     def __post_init__(self):
-        self.add_plan_entity(self.context)
+        if self.context is not None:
+            self.add_plan_entity(self.context)
 
     @property
     def root(self):
@@ -167,75 +169,18 @@ class Plan:
 
     def add_edge(self, source: PlanNode, target: PlanNode, **attr):
         """
-        Adds an edge to the plan. If one or both nodes are not in the plan, they will be added to the plan.
+        Adds an edge to the plan. Nodes that are not in the plan will be added to the plan.
 
         :param source: Origin node of the edge
         :param target: Target node of the edge
         """
         self.add_node(source)
         self.add_node(target)
-        # self._set_layer_indices(source, target)
 
         self.plan_graph.add_edge(
             source.index,
             target.index,
             (source, target),
-        )
-
-    def _set_layer_indices(
-        self,
-        parent_node: PlanNode,
-        child_node: PlanNode,
-        node_to_insert_after: PlanNode = None,
-        node_to_insert_before: PlanNode = None,
-    ):
-        """
-        Shifts the layer indices of nodes in the layer such that the index for the child node is free and does not collide
-        with another index.
-        If a node_to_insert_after is given the index of all nodes after the given node will be shifted by one.
-        if an node_to_insert_before is given the index of all nodes after the given node will be shifted by one plus the
-        index of the node_to_insert_before.
-        If none is given the child node will be inserted after the last child of the parent node and all indices will
-        be shifter accordingly.
-
-        :param parent_node: The parent node under which the new node will be inserted.
-        :param child_node: The node that will be inserted.
-        :param node_to_insert_after: The node after which the new node will be inserted.
-        :param node_to_insert_before: The node before which the new node will be inserted.
-        """
-        if node_to_insert_after:
-            child_node.layer_index = node_to_insert_after.layer_index + 1
-            for node in self.get_following_nodes(node_to_insert_after, on_layer=True):
-                node.layer_index += 1
-        elif node_to_insert_before:
-            child_node.layer_index = node_to_insert_before.layer_index
-            for node in self.get_following_nodes(
-                node_to_insert_before, on_layer=True
-            ) + [node_to_insert_before]:
-                node.layer_index += 1
-        else:
-            new_position, nodes_to_shift = self._find_nodes_to_shift_index(parent_node)
-            child_node.layer_index = new_position
-            for node in nodes_to_shift:
-                node.layer_index += 1
-
-    def _find_nodes_to_shift_index(
-        self, parent_node: PlanNode
-    ) -> Tuple[int, List[PlanNode]]:
-
-        parent_prev_nodes = self.get_previous_nodes(parent_node, on_layer=True)
-        parent_follow_nodes = self.get_following_nodes(parent_node, on_layer=True)
-
-        prev_nodes_child_layer = (
-            list(chain(*[p.children for p in parent_prev_nodes])) + parent_node.children
-        )
-        follow_nodes_child_layer = list(
-            chain(*[p.children for p in parent_follow_nodes])
-        )
-
-        return (
-            max([n.layer_index for n in prev_nodes_child_layer] + [-1]) + 1,
-            follow_nodes_child_layer,
         )
 
     def add_edges_from(
@@ -300,79 +245,13 @@ class Plan:
         layer = rx.layers(self.plan_graph, [self.root.index], index_output=False)
         return [sorted(l, key=lambda x: x.layer_index) for l in layer]
 
-    def get_layer_by_node(self, node: PlanNode) -> List[PlanNode]:
-        """
-        Returns the layer this node is on
-
-        :param node: The node to get layer for
-        :return: The layer as a list of nodes
-        """
-        return [l for l in self.layers if node in l][0]
-
-    def get_previous_nodes(
-        self, node: PlanNode, on_layer: bool = False
-    ) -> List[PlanNode]:
-        """
-        Gets the previous nodes to the given node. Previous meaning the nodes that are before the given one in
-        depth first order of nodes.
-
-        :param node: The node to get previous nodes for
-        :param on_layer: Returns the previous nodes from the same layer as the given node
-        :return: The previous nodes as a list of nodes
-        """
-        search_space = self.get_layer_by_node(node) if on_layer else self.nodes
-        previous_nodes = []
-        for search_node in search_space:
-            if search_node == node:
-                break
-            previous_nodes.append(search_node)
-        return previous_nodes
-
-    def get_following_nodes(self, node: PlanNode, on_layer: bool = False):
-        """
-        Gets the nodes that come after the given node. Following meaning the nodes that are after the given node
-        for all nodes in depth first order of nodes.
-
-        :param node: The node to get following nodes for
-        :param on_layer: Returns the following nodes from the same layer as the given node
-        :return: The following nodes as a list of nodes
-        """
-        search_space = self.get_layer_by_node(node) if on_layer else self.nodes
-        for i, search_node in enumerate(search_space):
-            if search_node == node:
-                return search_space[i + 1 :]
-        return []
-
-    def get_previous_node_by_type(
-        self, origin_node: PlanNode, node_type: Type[T], on_layer: bool = False
-    ) -> T:
-        """
-        Returns the Plan Node that precedes the given node on the same level
-
-        :param origin_node: The node to be preceded, also determines the layer of the plan
-        :param node_type: The type of the plan node
-        :param on_layer: Whether the returned node should be on the same layer as the given one
-        :return: The Plan Node that precedes the given node
-        """
-        search_space = self.get_previous_nodes(origin_node, on_layer)
-        search_space.reverse()
-
-        return [node for node in search_space if type(node) == node_type]
-
-    def get_nodes_by_type(self, node_type: Type[T]) -> List[T]:
-        """
-        Returns a list of nodes that match the given type.
-
-        :param node_type: The type of the node that should be returned
-        :return: A list of nodes that match the given type
-        """
-        return [node for node in self.nodes if type(node) is node_type]
-
     def _migrate_nodes_from_plan(self, other: Plan) -> PlanNode:
         """
         Steal all nodes from another plan and add them to this plan.
         After this the other plan will be empty.
+
         :param other: The plan to steal nodes from
+        :return: The root node of the other plan mounted in this plan
         """
         other_plans_edge = other.edges
         root_ref = other.root
@@ -382,6 +261,13 @@ class Plan:
             self.add_edge(edge[0], edge[1])
 
         return root_ref
+
+    def get_nodes_by_designator_type(self, *args: Type[Designator]):
+        return [
+            node
+            for node in self.nodes
+            if isinstance(node, DesignatorNode) and isinstance(node.designator, args)
+        ]
 
     # %% Plotting functions
 
@@ -446,12 +332,3 @@ class Plan:
         plt.gca().invert_yaxis()
         plt.gca().invert_xaxis()
         plt.show()
-
-
-@dataclass
-class PlanEntity:
-    """
-    A base class for entities that are managed by a plan.
-    """
-
-    plan: Optional[Plan] = field(kw_only=True, default=None)

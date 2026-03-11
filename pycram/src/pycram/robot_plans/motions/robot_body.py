@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional
 
+from typing_extensions import List
+
 from giskardpy.motion_statechart.tasks.pointing import Pointing
 from semantic_digital_twin.robots.abstract_robot import Camera
 
@@ -17,11 +19,11 @@ class MoveJointsMotion(BaseMotion):
     Moves any joint on the robot
     """
 
-    names: list
+    names: List[str]
     """
     List of joint names that should be moved 
     """
-    positions: list
+    positions: List[float]
     """
     Target positions of joints, should correspond to the list of names
     """

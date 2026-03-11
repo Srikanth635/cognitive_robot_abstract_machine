@@ -16,7 +16,7 @@ from pycram.failures import ObjectNotPlacedAtTargetLocation, ObjectStillInContac
 from pycram.robot_plans.actions.base import ActionDescription
 from pycram.robot_plans.actions.core.pick_up import PickUpAction
 from pycram.robot_plans.motions.gripper import (
-    MoveTCPMotion,
+    MoveToolCenterPointMotion,
     MoveGripperMotion,
 )
 from pycram.validation.error_checkers import PoseErrorChecker
@@ -53,7 +53,7 @@ class PlaceAction(ActionDescription):
         super().__post_init__()
 
     def execute(self) -> None:
-        arm = ViewManager.get_arm_view(self.arm, self.robot_view)
+        arm = ViewManager.get_arm_view(self.arm, self.robot)
         manipulator = arm.manipulator
 
         previous_pick = self.plan.get_previous_node_by_designator_type(
@@ -96,7 +96,9 @@ class PlaceAction(ActionDescription):
             self.target_location, self.object_designator, reverse=True
         )
 
-        SequentialPlan(self.context, MoveTCPMotion(retract_pose, self.arm)).perform()
+        SequentialPlan(
+            self.context, MoveToolCenterPointMotion(retract_pose, self.arm)
+        ).perform()
 
     def validate(
         self, result: Optional[Any] = None, max_wait_time: Optional[timedelta] = None

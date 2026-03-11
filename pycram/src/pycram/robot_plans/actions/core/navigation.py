@@ -8,6 +8,7 @@ from typing_extensions import Optional, Any
 from pycram.config.action_conf import ActionConfig
 from pycram.datastructures.pose import PoseStamped
 from pycram.failures import NavigationGoalNotReachedError
+from pycram.plans.factories import execute_single
 from pycram.robot_plans.actions.base import ActionDescription
 from pycram.robot_plans.motions.navigation import MoveMotion
 from pycram.robot_plans.motions.robot_body import LookingMotion
@@ -32,8 +33,8 @@ class NavigateAction(ActionDescription):
     """
 
     def execute(self) -> None:
-        return SequentialPlan(
-            self.context, MoveMotion(self.target_location, self.keep_joint_states)
+        self.add_subplan(
+            execute_single(MoveMotion(self.target_location, self.keep_joint_states))
         ).perform()
 
     def validate(
@@ -63,7 +64,7 @@ class LookAtAction(ActionDescription):
     """
 
     def execute(self) -> None:
-        camera = self.camera or self.robot_view.get_default_camera()
+        camera = self.camera or self.robot.get_default_camera()
         SequentialPlan(
             self.context, LookingMotion(target=self.target, camera=camera)
         ).perform()

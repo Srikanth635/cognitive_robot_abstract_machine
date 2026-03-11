@@ -2,38 +2,27 @@ from __future__ import annotations
 
 import abc
 import logging
-from abc import ABC
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from typing_extensions import Any, Optional, TYPE_CHECKING
 
 from pycram.failures import PlanFailure
 from semantic_digital_twin.world import World
 
-if TYPE_CHECKING:
-    from pycram.plans.plan_node import ActionNode, PlanNode
-    from pycram.plans.plan import Plan
+from pycram.plans.plan_node import PlanNode
+from pycram.plans.designator import Designator
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
-class ActionDescription(ABC):
+class ActionDescription(Designator):
     """
     Abstract base class for all actions.
     Actions are like builders for plans.
     An action has a set of parameters (its fields) from which it builds a symbolic plan and hence can be viewed as
     an easy abstraction of concrete low-level behavior that makes sense in certain contexts.
     """
-
-    action_node: Optional[ActionNode] = field(default=None, kw_only=True)
-    """
-    The action node in the plan that executes this action.
-    """
-
-    @property
-    def plan(self) -> Optional[Plan]:
-        return self.action_node.plan if self.action_node else None
 
     @property
     def world(self) -> Optional[World]:
@@ -78,6 +67,7 @@ class ActionDescription(ABC):
         """
         pass
 
-    def add_subplan(self, plan: PlanNode) -> PlanNode:
-        subplan_root = self.plan._migrate_nodes_from_plan(plan)
-        self.plan.add_edge(self.action_node, subplan_root)
+    def add_subplan(self, subplan_root: PlanNode) -> PlanNode:
+        subplan_root = self.plan._migrate_nodes_from_plan(subplan_root.plan)
+        self.plan.add_edge(self.plan_node, subplan_root)
+        return subplan_root

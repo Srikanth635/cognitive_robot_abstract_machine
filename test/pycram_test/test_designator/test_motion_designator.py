@@ -46,11 +46,10 @@ def test_pick_up_motion(immutable_model_world):
         test_world.get_body_by_name("milk.stl"), Arms.LEFT, grasp_description
     )
 
-    plan = sequential(
-        Context.from_world(test_world),
-        [
+    root = sequential(
+        children=[
             ActionNode(
-                action=NavigateAction(
+                designator=NavigateAction(
                     PoseStamped.from_list([1.7, 1.5, 0], [0, 0, 0, 1], test_world.root),
                     True,
                 )
@@ -58,11 +57,13 @@ def test_pick_up_motion(immutable_model_world):
             MoveTorsoAction(TorsoState.HIGH),
             pick_up,
         ],
+        context=Context.from_world(test_world),
     )
+    assert pick_up.plan is not None
     with simulated_robot:
-        plan.perform()
+        root.perform()
 
-    pick_up_node = plan.get_nodes_by_designator_type(PickUpAction)[0]
+    pick_up_node = root.plan.get_nodes_by_designator_type(PickUpAction)[0]
 
     motion_nodes = list(
         filter(lambda x: isinstance(x, MotionNode), pick_up_node.recursive_children)
@@ -70,7 +71,7 @@ def test_pick_up_motion(immutable_model_world):
 
     assert len(motion_nodes) == 5
 
-    motion_charts = [type(m.designator_ref.motion_chart) for m in motion_nodes]
+    motion_charts = [type(m.designator.motion_chart) for m in motion_nodes]
     assert all(mc is not None for mc in motion_charts)
     assert CartesianPose in motion_charts
     assert JointPositionList in motion_charts

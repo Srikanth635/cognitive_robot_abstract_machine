@@ -11,7 +11,7 @@ from giskardpy.motion_statechart.ros2_nodes.ros_tasks import (
 from semantic_digital_twin.robots.hsrb import HSRB
 from pycram.datastructures.enums import ExecutionType
 from pycram.view_manager import ViewManager
-from pycram.robot_plans import MoveMotion, MoveTCPMotion, LookingMotion
+from pycram.robot_plans import MoveMotion, MoveToolCenterPointMotion, LookingMotion
 
 from pycram.robot_plans.motions.base import AlternativeMotion
 

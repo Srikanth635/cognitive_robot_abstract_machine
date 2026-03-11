@@ -11,6 +11,7 @@ from pycram.datastructures.enums import AxisIdentifier, Arms
 from pycram.datastructures.pose import Vector3Stamped
 from pycram.datastructures.trajectory import PoseTrajectory
 from pycram.failures import TorsoGoalNotReached, ConfigurationNotReached
+from pycram.plans.factories import execute_single
 from pycram.robot_plans.actions.base import ActionDescription
 from pycram.robot_plans.motions.gripper import MoveGripperMotion, MoveTCPWaypointsMotion
 from pycram.robot_plans.motions.robot_body import MoveJointsMotion
@@ -35,14 +36,14 @@ class MoveTorsoAction(ActionDescription):
     """
 
     def execute(self) -> None:
-        joint_state = self.robot_view.torso.get_joint_state_by_type(self.torso_state)
-
-        SequentialPlan(
-            self.context,
-            MoveJointsMotion(
-                [c.name.name for c in joint_state.connections],
-                joint_state.target_values,
-            ),
+        joint_state = self.robot.torso.get_joint_state_by_type(self.torso_state)
+        self.add_subplan(
+            execute_single(
+                MoveJointsMotion(
+                    [c.name.name for c in joint_state.connections],
+                    joint_state.target_values,
+                ),
+            )
         ).perform()
 
     def validate(
@@ -124,7 +125,7 @@ class ParkArmsAction(ActionDescription):
         """
         :return: The joint positions that should be set for the arm to be in the park position.
         """
-        arm_chain = ViewManager().get_all_arm_views(self.arm, self.robot_view)
+        arm_chain = ViewManager().get_all_arm_views(self.arm, self.robot)
         names = []
         values = []
         for arm in arm_chain:
