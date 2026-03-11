@@ -4,7 +4,6 @@ from .core.base_expressions import OperationResult, SymbolicExpression
 from .core.mapped_variable import Attribute
 from .core.variable import Variable
 from .factories import ConditionType
-from .failures import UnsupportedExpressionTypeForDistinct
 from .utils import is_iterable, T
 
 """
