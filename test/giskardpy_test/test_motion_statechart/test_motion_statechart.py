@@ -1257,6 +1257,7 @@ class TestCartesianTasks:
         tip_goal = HomogeneousTransformationMatrix.from_xyz_quaternion(
             pos_x=-0.2, reference_frame=tip
         )
+        expected = pr2_world_state_reset.transform(tip_goal, root)
 
         msc = MotionStatechart()
         cart_goal = CartesianPose(
@@ -1278,7 +1279,9 @@ class TestCartesianTasks:
         kin_sim.tick_until_end()
 
         assert np.allclose(
-            kin_sim.context.world.compute_forward_kinematics(root, tip), tip_goal
+            kin_sim.context.world.compute_forward_kinematics(root, tip),
+            expected,
+            atol=cart_goal.threshold,
         )
 
     def test_front_facing_orientation(self, hsr_world_setup: World):

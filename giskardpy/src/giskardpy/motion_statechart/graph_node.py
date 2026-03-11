@@ -887,7 +887,7 @@ class Task(MotionStatechartNode):
     Tasks are MotionStatechartNodes that add motion constraints.
     """
 
-    weight: float = field(default=DefaultWeights.WEIGHT_ABOVE_CA, kw_only=True)
+    weight: float = field(default=DefaultWeights.WEIGHT_BELOW_CA, kw_only=True)
     """Task priority relative to other tasks."""
 
     plot_specs: NodePlotSpec = field(
