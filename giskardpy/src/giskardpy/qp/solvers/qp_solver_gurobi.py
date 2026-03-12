@@ -9,10 +9,9 @@ import numpy as np
 from gurobipy import GRB, GurobiError
 from line_profiler.explicit_profiler import profile
 
+from giskardpy.qp.exceptions import QPSolverException, InfeasibleException
 from giskardpy.qp.qp_data import QPDataExplicit
 from giskardpy.qp.solvers.qp_solver import QPSolver
-from giskardpy.qp.solvers.qp_solver_ids import SupportedQPSolver
-from giskardpy.qp.exceptions import QPSolverException, InfeasibleException
 
 logger = logging.getLogger(__name__)
 

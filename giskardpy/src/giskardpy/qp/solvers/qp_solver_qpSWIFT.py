@@ -64,7 +64,7 @@ class QPSolverQPSwift(QPSolver[QPDataExplicit]):
         exit_flag = result.exit_flag
         print(result)
         if not self.ignore_fail:
-            if exit_flag == 4:
+            if exit_flag != 1:
                 error_code = QPSWIFTExitFlags(exit_flag)
                 if error_code == QPSWIFTExitFlags.INFEASIBLE:
                     raise InfeasibleException(f"Failed to solve qp: {str(error_code)}")

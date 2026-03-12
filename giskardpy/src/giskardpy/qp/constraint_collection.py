@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 import numpy as np
-from typing_extensions import List, Optional, Union, TYPE_CHECKING, Set
+from typing_extensions import List, Optional, Union, TYPE_CHECKING
 
 import krrood.symbolic_math.symbolic_math as sm
 from giskardpy.data_types.exceptions import (
@@ -20,7 +20,6 @@ from giskardpy.qp.constraint import (
     DerivativeEqualityConstraint,
     BaseConstraint,
 )
-from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types import Point3, Vector3, RotationMatrix
 from semantic_digital_twin.spatial_types.derivatives import Derivatives
 
@@ -80,7 +79,7 @@ class ConstraintCollection:
                 )
             names.add(c.name)
 
-    def get_all_float_variable_names(self) -> Set[PrefixedName]:
+    def get_all_float_variable_names(self) -> set[str]:
         return {
             v.name for c in self._constraints for v in c.expression.free_variables()
         }
@@ -161,7 +160,7 @@ class ConstraintCollection:
                                     enforced.
         :param lower_error: lower bound for the error of expression
         :param upper_error: upper bound for the error of expression
-        :param weight:
+        :param quadratic_weight:
         :param task_expression: defines the task function
         :param name: give this constraint a name, required if you add more than one in the same goal
         :param lower_slack_limit: how much the lower error can be violated, don't use unless you know what you are doing
@@ -259,7 +258,7 @@ class ConstraintCollection:
             reference_velocity=reference_velocity,
             lower_error=error_min,
             upper_error=error_max,
-            weight=weight,
+            quadratic_weight=weight,
             task_expression=expr_current,
             name=name,
         )
@@ -413,11 +412,9 @@ class ConstraintCollection:
 
     def add_velocity_eq_constraint_vector(
         self,
-        velocity_goals: Union[sm.ScalarScalar, Vector3, Point3, List[sm.ScalarData]],
-        reference_velocities: Union[
-            sm.ScalarScalar, Vector3, Point3, List[sm.ScalarData]
-        ],
-        weights: Union[sm.ScalarScalar, Vector3, Point3, List[sm.ScalarData]],
+        velocity_goals: Union[sm.Scalar, Vector3, Point3, List[sm.ScalarData]],
+        reference_velocities: Union[sm.Scalar, Vector3, Point3, List[sm.ScalarData]],
+        weights: Union[sm.Scalar, Vector3, Point3, List[sm.ScalarData]],
         task_expression: Union[sm.Scalar, Vector3, Point3, List[sm.SymbolicScalar]],
         names: List[str],
     ):

@@ -2,7 +2,6 @@ import json
 import time
 from dataclasses import dataclass
 from math import radians
-from time import sleep
 from typing import Type
 
 import numpy as np
@@ -87,14 +86,8 @@ from giskardpy.motion_statechart.test_nodes.test_nodes import (
 )
 from giskardpy.qp.constraint import EqualityConstraint
 from giskardpy.qp.constraint_collection import ConstraintCollection
-from giskardpy.qp.exceptions import HardConstraintsViolatedException
 from giskardpy.qp.qp_controller_config import QPControllerConfig
-from giskardpy.qp.solvers.qp_solver_gurobi import QPSolverGurobi
-from giskardpy.qp.solvers.qp_solver_ids import SupportedQPSolver
-from giskardpy.qp.solvers.qp_solver_osqp import QPSolverOSQP
 from giskardpy.qp.solvers.qp_solver_piqp import QPSolverPIQP
-from giskardpy.qp.solvers.qp_solver_qpSWIFT import QPSolverQPSwift
-from giskardpy.qp.solvers.qp_solver_qpalm import QPSolverQPalm
 from giskardpy.utils.math import angle_between_vector
 from krrood.symbolic_math.symbolic_math import (
     trinary_logic_and,
@@ -109,9 +102,6 @@ from semantic_digital_twin.adapters.ros.visualization.viz_marker import (
 )
 from semantic_digital_twin.adapters.world_entity_kwargs_tracker import (
     WorldEntityWithIDKwargsTracker,
-)
-from semantic_digital_twin.collision_checking.collision_matrix import (
-    MaxAvoidedCollisionsOverride,
 )
 from semantic_digital_twin.collision_checking.collision_rules import (
     AvoidCollisionBetweenGroups,
@@ -150,7 +140,6 @@ from semantic_digital_twin.world_description.geometry import (
     Cylinder,
     Box,
     Scale,
-    Sphere,
     Color,
 )
 from semantic_digital_twin.world_description.shape_collection import ShapeCollection

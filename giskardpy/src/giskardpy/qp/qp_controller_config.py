@@ -8,13 +8,9 @@ from typing import Optional, Dict, Type
 
 from typing_extensions import TYPE_CHECKING
 
-from giskardpy.qp.exceptions import QPSolverException
-from giskardpy.qp.qp_data import ConditioningStrategy, NoConditioningStrategy
+from giskardpy.qp.qp_data import ConditioningStrategy
 from giskardpy.qp.qp_formulation import QPFormulation
-from giskardpy.qp.solvers.qp_solver_ids import SupportedQPSolver
 from giskardpy.qp.solvers.qp_solver_piqp import QPSolverPIQP
-from giskardpy.qp.solvers.qp_solver_qpSWIFT import QPSolverQPSwift
-from giskardpy.utils.utils import get_all_classes_in_module
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.derivatives import DerivativeMap
 from semantic_digital_twin.spatial_types.derivatives import Derivatives

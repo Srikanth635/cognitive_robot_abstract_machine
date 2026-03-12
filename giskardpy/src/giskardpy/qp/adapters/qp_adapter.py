@@ -5,10 +5,9 @@ import logging
 from abc import ABC
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Tuple, List, Union, Dict, TYPE_CHECKING, DefaultDict, Optional, Type
+from typing import Tuple, List, Dict, TYPE_CHECKING, DefaultDict, Type
 
 import numpy as np
-from line_profiler import profile
 
 import krrood.symbolic_math.symbolic_math as sm
 from giskardpy.qp.constraint import (
@@ -22,7 +21,6 @@ from giskardpy.qp.exceptions import (
 )
 from giskardpy.qp.pos_in_vel_limits import b_profile
 from giskardpy.qp.solvers.qp_solver import QPSolver
-from giskardpy.qp.weight_gain import QuadraticWeightGain, LinearWeightGain
 from giskardpy.utils.decorators import memoize
 from giskardpy.utils.math import mpc
 from krrood.symbolic_math.symbolic_math import Vector, Matrix
@@ -32,7 +30,6 @@ from semantic_digital_twin.world_description.degree_of_freedom import DegreeOfFr
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    import scipy.sparse as sp
     from giskardpy.qp.qp_controller_config import QPControllerConfig
 
 
@@ -212,7 +209,6 @@ class ProblemDataPart(ABC):
         free_variable_model.remove([], column_ids)
         return free_variable_model
 
-    @profile
     def velocity_limit(
         self, v: DegreeOfFreedom, max_derivative: Derivatives
     ) -> Tuple[sm.Vector, sm.Vector]:
@@ -316,7 +312,6 @@ class Weights(ProblemDataPart):
         x_offset = sm.solve_for(f, target_value)
         return (sm.abs(current_position + x_offset - limit) * a) ** exp, x_offset
 
-    @profile
     def construct_expression(self) -> Tuple[sm.Vector, sm.Vector]:
         components = []
         components.extend(self.free_variable_weights_expression())
@@ -332,7 +327,6 @@ class Weights(ProblemDataPart):
             linear_weights.append(linear_weight)
         return sm.Vector(quadratic_weights), sm.Vector(linear_weights)
 
-    @profile
     def free_variable_weights_expression(self) -> List[tuple[defaultdict, defaultdict]]:
         max_derivative = self.config.max_derivative
         params = []
@@ -463,7 +457,6 @@ class FreeVariableBounds(ProblemDataPart):
     names_eq_slack: np.ndarray = field(default=None)
     evaluated: bool = field(default=True)
 
-    @profile
     def free_variable_bounds(
         self,
     ) -> Tuple[List[Dict[str, sm.ScalarData]], List[Dict[str, sm.ScalarData]]]:
@@ -585,7 +578,6 @@ class FreeVariableBounds(ProblemDataPart):
             for c in self.constraint_collection.neq_constraints
         }
 
-    @profile
     def construct_expression(
         self,
     ) -> Tuple[sm.Vector, sm.Vector]:
@@ -697,7 +689,6 @@ class EqualityBounds(ProblemDataPart):
                     bound[f"t{t:03}/{c.name}"] = c.bound[t] * self.config.mpc_dt
         return bound
 
-    @profile
     def construct_expression(
         self,
     ) -> sm.Vector:
@@ -887,7 +878,6 @@ class InequalityBounds(ProblemDataPart):
                         ub_jerk[f"t{t:03}/{v.name}/{Derivatives.jerk}"] = j_max
         return [lb_acc, lb_jerk], [ub_acc, ub_jerk]
 
-    @profile
     def construct_expression(
         self,
     ) -> Tuple[sm.Vector, sm.Vector]:
@@ -1050,7 +1040,6 @@ class EqualityModel(ProblemDataPart):
             result += jerk_columns
         return result
 
-    @profile
     def derivative_link_model(self, max_derivative: Derivatives) -> sm.Matrix:
         """
         Layout for prediction horizon 5
@@ -1106,7 +1095,6 @@ class EqualityModel(ProblemDataPart):
         )
         return derivative_link_model
 
-    @profile
     def derivative_link_model_no_acc(self, max_derivative: Derivatives) -> sm.Matrix:
         """
         Layout for prediction horizon 5
@@ -1174,7 +1162,6 @@ class EqualityModel(ProblemDataPart):
         derivative_link_model.remove(row_ids, [])
         return derivative_link_model
 
-    @profile
     def equality_constraint_model(self) -> Tuple[sm.Matrix, sm.Matrix]:
         """
         |   t1   |   t2   |   t1   |   t2   |   t1   |   t2   |   t1   |   t2   | prediction horizon
@@ -1273,7 +1260,6 @@ class EqualityModel(ProblemDataPart):
                 return model, slack_model
         return sm.Matrix(), sm.Matrix()
 
-    @profile
     def construct_expression(
         self,
     ) -> Tuple[sm.Matrix, sm.Matrix]:
@@ -1543,7 +1529,6 @@ class InequalityModel(ProblemDataPart):
             return model, slack_model
         return sm.Matrix(), sm.Matrix()
 
-    @profile
     def inequality_constraint_model(
         self, max_derivative: Derivatives
     ) -> Tuple[sm.Matrix, sm.Matrix]:
@@ -1707,7 +1692,6 @@ class InequalityModel(ProblemDataPart):
         slack_model = sm.Matrix.zeros(model.shape[0], self.number_ineq_slack_variables)
         return model, slack_model
 
-    @profile
     def construct_expression(
         self,
     ) -> Tuple[sm.Matrix, sm.Matrix]:
