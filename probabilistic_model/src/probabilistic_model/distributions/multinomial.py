@@ -1,14 +1,10 @@
 import itertools
 
 import numpy as np
-from random_events.product_algebra import SimpleEvent, Event
-from random_events.utils import SubclassJSONSerializer
-from random_events.variable import Symbolic, Variable
 from typing_extensions import Self, Any, Iterable, List, Optional, Tuple, Dict
 
 from probabilistic_model.probabilistic_circuit.rx.probabilistic_circuit import (
     SymbolicDistribution,
-    UnivariateDiscreteLeaf,
     ProductUnit,
     SumUnit,
     ProbabilisticCircuit,
@@ -16,7 +12,9 @@ from probabilistic_model.probabilistic_circuit.rx.probabilistic_circuit import (
 )
 from probabilistic_model.probabilistic_model import ProbabilisticModel
 from probabilistic_model.utils import MissingDict
-from semantic_digital_twin import utils
+from random_events.product_algebra import SimpleEvent, Event
+from random_events.utils import SubclassJSONSerializer
+from random_events.variable import Symbolic, Variable
 
 
 class MultinomialDistribution(ProbabilisticModel, SubclassJSONSerializer):
@@ -185,7 +183,7 @@ class MultinomialDistribution(ProbabilisticModel, SubclassJSONSerializer):
         return self.probabilities[np.ix_(*indices)].sum()
 
     def log_likelihood(self, events: np.array) -> np.array:
-        return np.log(self.probabilities[tuple(utils.T)])
+        return np.log(self.probabilities[tuple(events.T)])
 
     def log_truncated(self, event: Event) -> Tuple[Optional[Self], float]:
         probabilities = np.zeros_like(self.probabilities)
