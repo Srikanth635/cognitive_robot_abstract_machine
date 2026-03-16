@@ -232,13 +232,14 @@ class CartesianPositionTrajectory(CartesianTask):
             weight=self.weight,
         )
 
-        self.compile_current_point_for_on_tick(context)
+        self.compile_current_point_on_tick(context)
         return artifacts
 
-    def compile_current_point_for_on_tick(self, context: MotionStatechartContext):
+    def compile_current_point_on_tick(self, context: MotionStatechartContext):
         """
         Computing the current point relative to the goal reference frame is expensive, this method turns it into
         a compiled expression.
+        :param context: the current context, needed for the world reference.
         """
         root_T_tip = context.world.compose_forward_kinematics_expression(
             self.root_link, self.tip_link
@@ -264,6 +265,7 @@ class CartesianPositionTrajectory(CartesianTask):
     def _update_trajectory_index(self, goal_reference_frame_P_tip_np: np.ndarray):
         """
         Search for the closest point in the trajectory to the current position, without going backwards.
+        :param goal_reference_frame_P_tip_np: the current position in the goal reference frame as a 3d numpy array.
         """
         if self.maximum_skip_ahead is None:
             remaining_points = self._goal_points_np[self.current_index :]
@@ -280,6 +282,11 @@ class CartesianPositionTrajectory(CartesianTask):
     def _compute_target_point(
         self, goal_reference_frame_P_tip_np: np.ndarray
     ) -> np.ndarray:
+        """
+        Computes a target point at a fixed distance away from the current position projected onto the trajectory.
+        This ensures a constant velocity and pulls the tip onto the trajectory.
+        :param goal_reference_frame_P_tip_np: the current position in the goal reference frame as a 3d numpy array.
+        """
         if self.current_index >= len(self._goal_points_np) - 1:
             # If we've reached the end of the trajectory, return the last point
             return self._goal_points_np[-1]
@@ -311,6 +318,9 @@ class CartesianPositionTrajectory(CartesianTask):
     def on_tick(
         self, context: MotionStatechartContext
     ) -> Optional[ObservationStateValues]:
+        """
+        Update the target point on the trajectory and return true if we have reached the end of the trajectory.
+        """
         goal_reference_frame_P_tip_np = (
             self._compiled_goal_reference_frame_P_tip.evaluate()
         )
@@ -332,6 +342,7 @@ class CartesianPositionTrajectory(CartesianTask):
     ):
         """
         Initialize the symbolic expression representing the current target point in the goal reference frame.
+        :param float_variable_data: The FloatVariableData instance to register the expression with.
         """
         self.goal_reference_frame_P_current_target_point = Point3.create_with_variables(
             "goal_reference_frame_P_current_target_point"
