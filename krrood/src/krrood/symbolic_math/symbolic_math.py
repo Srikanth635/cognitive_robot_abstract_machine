@@ -56,6 +56,8 @@ from krrood.symbolic_math.exceptions import (
     NotScalerError,
     UnsupportedOperationError,
     WrongDimensionsError,
+    CannotConvertToStringError,
+    NoArgsAllowedError,
 )
 
 EPS: float = sys.float_info.epsilon * 4.0
@@ -2064,7 +2066,7 @@ def trinary_logic_to_str(expression: Scalar) -> str:
             right = trinary_logic_to_str(cas_expr.dep(1))
             return f"({left} or {right})"
         case _:
-            raise SymbolicMathError(message=f"cannot convert {expression} to a string")
+            raise CannotConvertToStringError(expression=expression)
 
 
 # %% ifs
@@ -2315,9 +2317,7 @@ def substitution_cache(method):
 
     def wrapper(*args, **kwargs):
         if len(kwargs) > 0:
-            raise SymbolicMathError(
-                message="substitution_cache does not support kwargs"
-            )
+            raise NoArgsAllowedError()
         global _substitution_cache
         cache_key = method.__name__
         if not cache_key in _substitution_cache:
