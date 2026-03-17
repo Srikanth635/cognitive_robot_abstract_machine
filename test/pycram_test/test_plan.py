@@ -706,7 +706,7 @@ def test_algebra_sequential_plan(mutable_model_world):
 
     registry = DictRegistry({NavigateAction: model})
 
-    pm_backend = ProbabilisticBackend(registry, 10)
+    pm_backend = ProbabilisticBackend(model_registry=registry, number_of_samples=10)
 
     resolved_navigate = next(pm_backend.evaluate(navigate_action))
 

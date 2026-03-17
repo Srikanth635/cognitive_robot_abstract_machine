@@ -11,10 +11,7 @@ from typing_extensions import Any
 import random_events.variable
 from krrood.entity_query_language.core.base_expressions import SymbolicExpression
 from krrood.entity_query_language.factories import and_
-from krrood.entity_query_language.query.match import (
-    MatchVariable,
-    AbstractMatchExpression,
-)
+from krrood.entity_query_language.query.match import MatchVariable
 from krrood.parametrization.random_events_translator import (
     WhereExpressionToRandomEventTranslator,
 )
@@ -75,7 +72,6 @@ class UnderspecifiedParameters:
                 )
                 result[random_events_variable.name] = random_events_variable
                 continue
-            print(name, attribute_match.assigned_variable._type_)
             if attribute_match.assigned_variable._type_ is None or not issubclass(
                 attribute_match.assigned_variable._type_,
                 random_events.variable.compatible_types,
