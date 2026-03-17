@@ -1350,9 +1350,7 @@ class TestCartesianTasks:
         kin_sim.compile(motion_statechart=msc)
         kin_sim.tick_until_end()
 
-    def test_cart_goal_sequence_at_build(
-        self, pr2_world_state_reset: World
-    ):
+    def test_cart_goal_sequence_at_build(self, pr2_world_state_reset: World):
         """
         Test CartesianPose sequence with Bind_at_build policy.
         """
@@ -1919,9 +1917,7 @@ class TestFeatureFunctions:
             lower_limit <= height_diff <= upper_limit
         ), f"Height {height_diff:.4f} not in [{lower_limit}, {upper_limit}]"
 
-    def test_height_goal_negative_bounds(
-        self, pr2_world_state_reset: World
-    ):
+    def test_height_goal_negative_bounds(self, pr2_world_state_reset: World):
         """
         Test HeightGoal with negative height bounds (tip below reference).
         """
@@ -1969,9 +1965,7 @@ class TestFeatureFunctions:
             lower_limit <= height_diff <= upper_limit
         ), f"Height {height_diff:.4f} not in [{lower_limit}, {upper_limit}]"
 
-    def test_distance_goal_within_bounds(
-        self, pr2_world_state_reset: World
-    ):
+    def test_distance_goal_within_bounds(self, pr2_world_state_reset: World):
         """
         Test that DistanceGoal successfully constrains the horizontal distance
         (in x-y plane) between tip and reference points within specified bounds.
@@ -2022,9 +2016,7 @@ class TestFeatureFunctions:
             lower_limit <= horizontal_distance <= upper_limit
         ), f"Distance {horizontal_distance:.4f} not in [{lower_limit}, {upper_limit}]"
 
-    def test_distance_goal_zero_distance(
-        self, pr2_world_state_reset: World
-    ):
+    def test_distance_goal_zero_distance(self, pr2_world_state_reset: World):
         """
         Test DistanceGoal with bounds that include zero (tip and reference at same x-y position).
         """
@@ -2074,9 +2066,7 @@ class TestFeatureFunctions:
             lower_limit <= horizontal_distance <= upper_limit
         ), f"Distance {horizontal_distance:.4f} not in [{lower_limit}, {upper_limit}]"
 
-    def test_distance_goal_ignores_z_axis(
-        self, pr2_world_state_reset: World
-    ):
+    def test_distance_goal_ignores_z_axis(self, pr2_world_state_reset: World):
         """
         Test that DistanceGoal only considers x-y plane distance and ignores z-axis.
         Even with large z difference, if x-y distance is within bounds, goal succeeds.
@@ -2128,9 +2118,7 @@ class TestFeatureFunctions:
             lower_limit <= horizontal_distance <= upper_limit
         ), f"Distance {horizontal_distance:.4f} not in [{lower_limit}, {upper_limit}]"
 
-    def test_height_and_distance_combined(
-        self, pr2_world_state_reset: World
-    ):
+    def test_height_and_distance_combined(self, pr2_world_state_reset: World):
         """
         Test combining HeightGoal and DistanceGoal in parallel to constrain
         both vertical and horizontal distances simultaneously.
