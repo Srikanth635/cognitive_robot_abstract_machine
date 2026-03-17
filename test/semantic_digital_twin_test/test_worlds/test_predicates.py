@@ -1,12 +1,7 @@
 from copy import deepcopy
 
 import numpy as np
-import rclpy
 
-from semantic_digital_twin.adapters.ros.tf_publisher import TFPublisher
-from semantic_digital_twin.adapters.ros.visualization.viz_marker import (
-    VizMarkerPublisher,
-)
 from semantic_digital_twin.reasoning.predicates import (
     contact,
     visible,
@@ -20,7 +15,7 @@ from semantic_digital_twin.reasoning.predicates import (
     occluding_bodies,
     is_supported_by,
     reachable,
-    is_region_occupied,
+    is_place_occupied,
 )
 from semantic_digital_twin.reasoning.robot_predicates import (
     robot_in_collision,
@@ -455,16 +450,16 @@ def test_region_is_occupied(pr2_world_state_reset):
     target_region = BoundingBox(
         3, 2, 0, 4, 3, 2, pr2_world_state_reset.root.global_pose
     )
-    assert not is_region_occupied(target_region, pr2_world_state_reset)
+    assert not is_place_occupied(target_region, pr2_world_state_reset)
 
     view.root.parent_connection.origin = HomogeneousTransformationMatrix.from_xyz_rpy(
         3.5, 2.5, 0
     )
     pr2_world_state_reset.notify_state_change()
 
-    assert is_region_occupied(target_region, pr2_world_state_reset)
+    assert is_place_occupied(target_region, pr2_world_state_reset)
 
-    assert not is_region_occupied(
+    assert not is_place_occupied(
         target_region, pr2_world_state_reset, view.bodies_with_collision
     )
 
