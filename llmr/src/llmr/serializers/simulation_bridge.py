@@ -499,7 +499,7 @@ class SimulationBridge:
             partials.append(
                 self.to_partial_designator(cram_str, arm=arm, approach_from=placement_nav_pose)
             )
-
+            print("Pycram partial designator :", partials[-1].to_dict())
         logger.info("execute_batch: executing %d steps in one SequentialPlan", len(partials))
         seq_plan = SequentialPlan(self._context, *partials)
         result = seq_plan.perform()
