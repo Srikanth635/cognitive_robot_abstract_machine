@@ -28,7 +28,8 @@ from abc import ABC, abstractmethod
 from collections import Counter
 from dataclasses import field, dataclass
 from enum import IntEnum
-from functools import partial
+from functools import partial, wraps
+import inspect
 
 import casadi as ca
 import numpy as np
@@ -2297,7 +2298,9 @@ def if_less_eq_cases(
     return _create_return_type(else_result).from_casadi_sx(result_sx)
 
 
-_substitution_cache: Dict[str, Tuple[SymbolicMathType, List[FloatVariable]]] = {}
+_substitution_cache: Dict[
+    str, Tuple[SymbolicMathType, List[FloatVariable], inspect.Signature]
+] = {}
 
 
 def substitution_cache(method):
@@ -2308,31 +2311,55 @@ def substitution_cache(method):
     avoiding rebuilding of the computation graph.
     """
 
+    @wraps(method)
     def wrapper(*args, **kwargs):
-        if len(kwargs) > 0:
-            raise SymbolicMathError(
-                message="substitution_cache does not support kwargs"
-            )
         global _substitution_cache
-        cache_key = method.__name__
+        signature = inspect.signature(method)
+        bound_arguments = signature.bind(*args, **kwargs)
+        bound_arguments.apply_defaults()
+        cache_key = (
+            method.__name__,
+            tuple(
+                arg
+                for arg in bound_arguments.arguments.values()
+                if not isinstance(arg, SymbolicMathType)
+            ),
+        )
         if not cache_key in _substitution_cache:
-            variable_args = []
-            for i, arg in enumerate(args):
-                variable_args.append(
-                    Matrix.create_filled_with_variables(arg.shape, name=f"arg{i}")
-                )
+            variable_args = {}
+            for name, arg in bound_arguments.arguments.items():
+                match arg:
+                    case Scalar():
+                        variable_args[name] = FloatVariable(name=name)
+                    case SymbolicMathType():
+                        variable_args[name] = Matrix.create_filled_with_variables(
+                            arg.shape, name=name
+                        )
+                    case _:
+                        variable_args[name] = arg
+
+            symbol_args = [
+                arg
+                for arg in variable_args.values()
+                if isinstance(arg, SymbolicMathType)
+            ]
             variables = [
                 item.free_variables()[0]
-                for arg in variable_args
+                for arg in symbol_args
                 for item in arg.flatten()
             ]
-            result = method(*variable_args)
-            _substitution_cache[cache_key] = (result, variables)
-        expr, variables = _substitution_cache[cache_key]
-        try:
-            substitutions = [item for arg in args for item in arg.flatten()]
-        except Exception as e:
-            pass
+            result = method(**variable_args)
+            _substitution_cache[cache_key] = (result, variables, signature)
+
+        expr, variables, signature = _substitution_cache[cache_key]
+        substitutions = [
+            item
+            for arg in bound_arguments.arguments.values()
+            if isinstance(arg, SymbolicMathType)
+            for item in arg.flatten()
+        ]
+        if isinstance(expr, tuple):
+            return (e.substitute(variables, substitutions) for e in expr)
         return expr.substitute(variables, substitutions)
 
     return wrapper
