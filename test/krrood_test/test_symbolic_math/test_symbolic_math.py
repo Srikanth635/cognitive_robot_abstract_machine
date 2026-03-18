@@ -1092,6 +1092,72 @@ class TestVector:
         assert np.allclose(sm.concatenate(v1, v1, v1), np.concatenate([v1, v1, v1]))
 
 
+class TestSubstitutionCache:
+    def test_substitution_cache_args(self):
+        @sm.substitution_cache
+        def add_vectors(v1, v2):
+            return v1 + v2
+
+        vec1 = sm.Vector([1, 2])
+        vec2 = sm.Vector([3, 4])
+
+        # First call: builds cache
+        result1 = add_vectors(vec1, vec2)
+        assert np.allclose(result1.to_np(), [4, 6])
+
+        # Second call: uses cache
+        vec3 = sm.Vector([5, 6])
+        vec4 = sm.Vector([7, 8])
+        result2 = add_vectors(vec3, vec4)
+        assert np.allclose(result2.to_np(), [12, 14])
+
+    def test_substitution_cache_kwargs(self):
+        @sm.substitution_cache
+        def add_vectors_kwargs(v1, v2):
+            return v1 + v2
+
+        vec1 = sm.Vector([1, 2])
+        vec2 = sm.Vector([3, 4])
+
+        # First call with kwargs: builds cache
+        result1 = add_vectors_kwargs(v1=vec1, v2=vec2)
+        assert np.allclose(result1.to_np(), [4, 6])
+
+        # Second call with different kwargs: uses cache
+        vec3 = sm.Vector([5, 6])
+        vec4 = sm.Vector([7, 8])
+        result2 = add_vectors_kwargs(v1=vec3, v2=vec4)
+        assert np.allclose(result2.to_np(), [12, 14])
+
+        # Mixed call
+        result3 = add_vectors_kwargs(vec1, v2=vec2)
+        assert np.allclose(result3.to_np(), [4, 6])
+
+        # Reordered kwargs
+        result4 = add_vectors_kwargs(v2=vec2, v1=vec1)
+        assert np.allclose(result4.to_np(), [4, 6])
+
+    def test_substitution_cache_default_values(self):
+        @sm.substitution_cache
+        def add_with_default(v1, v2=sm.Vector([10, 10])):
+            return v1 + v2
+
+        vec1 = sm.Vector([1, 2])
+
+        # First call with default
+        result1 = add_with_default(vec1)
+        assert np.allclose(result1.to_np(), [11, 12])
+
+        # Second call with explicit value
+        vec2 = sm.Vector([3, 4])
+        result2 = add_with_default(vec1, vec2)
+        assert np.allclose(result2.to_np(), [4, 6])
+
+        # Third call with default again
+        result3 = add_with_default(sm.Vector([5, 6]))
+        assert np.allclose(result3.to_np(), [15, 16])
+
+
 class TestMatrix:
     @pytest.mark.parametrize("shape", [(1, 1), (1, 5), (3, 1), (2, 3), (4, 4)])
     def test_create_filled_with_variables(self, shape):

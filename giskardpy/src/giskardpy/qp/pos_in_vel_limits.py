@@ -1,8 +1,6 @@
 from copy import copy
-from typing import List
 
 import numpy as np
-from line_profiler.explicit_profiler import profile
 from typing_extensions import Tuple
 
 import giskardpy.utils.math as gm
@@ -12,7 +10,6 @@ from krrood.symbolic_math.symbolic_math import FloatVariable, Scalar, Vector
 from semantic_digital_twin.spatial_types.derivatives import DerivativeMap
 
 
-@sm.substitution_cache
 def shifted_velocity_profile(
     vel_profile: Vector, acc_profile: Vector, distance: Scalar, dt: float
 ) -> Tuple[Vector, Vector]:
@@ -46,7 +43,6 @@ def r_gauss(integral: Scalar) -> Scalar:
 
 
 @sm.substitution_cache
-@profile
 def acc_cap(current_vel: Scalar, jerk_limit: Scalar, dt: Scalar) -> Scalar:
     acc_integral = sm.abs(current_vel) / dt
     jerk_step = jerk_limit * dt
@@ -56,7 +52,6 @@ def acc_cap(current_vel: Scalar, jerk_limit: Scalar, dt: Scalar) -> Scalar:
 
 
 @sm.substitution_cache
-@profile
 def compute_next_vel_and_acc(
     current_vel: Scalar,
     current_acc: Scalar,
@@ -97,7 +92,6 @@ def compute_next_vel_and_acc(
 
 
 @sm.substitution_cache
-@profile
 def compute_slowdown_asap_vel_profile(
     current_vel: Scalar,
     current_acc: Scalar,
@@ -121,7 +115,7 @@ def compute_slowdown_asap_vel_profile(
             jerk_limit,
             dt,
             ph - i - 1,
-            sm.logic_and(skip_first, i == 0),
+            sm.logic_and(skip_first, sm.Scalar(i == 0)),
         )
         vel_profile.append(next_vel)
         acc_profile.append(next_acc)
@@ -135,7 +129,6 @@ def compute_slowdown_asap_vel_profile(
 
 
 @memoize
-@profile
 def b_profile(
     dof_symbols: DerivativeMap[FloatVariable],
     lower_limits: DerivativeMap[float],
@@ -209,7 +202,7 @@ def b_profile(
         goal_profile = sm.Vector.zeros(ph)
         pos_vel_profile_ub = sm.Vector.ones(ph) * vel_limit
         pos_vel_profile_lb = -pos_vel_profile_ub
-        skip_first = 0
+        skip_first = sm.Scalar.const_false()
 
     acc_profile = sm.Vector.ones(pos_vel_profile_ub.shape[0]) * acc_limit
     jerk_profile = sm.Vector.ones(pos_vel_profile_ub.shape[0]) * jerk_limit
