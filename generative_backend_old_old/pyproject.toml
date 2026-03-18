@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "generative_backend"
+version = "0.1.0"
+description = "LLM-based generative backend for NL → PartialDesignator → FullAction resolution"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.0",
+    "langchain-openai>=0.1",
+    "langchain-ollama>=0.1",
+    "langgraph>=0.1",
+    "python-dotenv",
+    "typing_extensions",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-asyncio"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
