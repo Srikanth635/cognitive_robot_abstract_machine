@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Optional, List, Union, Iterator, Iterable, Tuple
 
 import numpy as np
+import rclpy
 import rustworkx as rx
 from box import Box
 from random_events.interval import closed
@@ -37,6 +38,9 @@ from probabilistic_model.probabilistic_circuit.rx.probabilistic_circuit import (
     SumUnit,
     ProbabilisticCircuit,
     ProductUnit,
+)
+from semantic_digital_twin.adapters.ros.visualization.viz_marker import (
+    VizMarkerPublisher,
 )
 from semantic_digital_twin.collision_checking.collision_rules import (
     AvoidExternalCollisions,
@@ -1603,7 +1607,11 @@ class GiskardLocation(LocationDesignatorDescription):
         """
         Setup the reachability costmap for initial pose estimation.
         """
-        pose.z = 0
+        ground_pose = Pose(
+            position=Point3(pose.x, pose.y, 0.0),
+            orientation=pose.to_quaternion(),
+            reference_frame=pose.reference_frame,
+        )
 
         base_bb = self.robot_view.base.bounding_box
 
@@ -1613,12 +1621,12 @@ class GiskardLocation(LocationDesignatorDescription):
             width=200,
             world=self.world,
             robot_view=self.robot_view,
-            origin=pose,
+            origin=ground_pose,
             distance_to_obstacle=(base_bb.width / 2 + base_bb.depth / 2) / 2,
         )
         gaussian_map = GaussianCostmap(
             resolution=0.02,
-            origin=pose,
+            origin=ground_pose,
             mean=200,
             sigma=15,
             world=self.world,
@@ -1650,7 +1658,7 @@ class GiskardLocation(LocationDesignatorDescription):
                 CartesianPose(
                     root_link=world.root,
                     tip_link=end_effector,
-                    goal_pose=pose.to_homogeneous_matrix(),
+                    goal_pose=pose,
                 )
                 for pose in pose_sequence
             ]

@@ -1811,30 +1811,6 @@ class Pose(sm.SymbolicMathType, SpatialType, SubclassJSONSerializer):
         return result
 
     @classmethod
-    def from_point_mapping_quaternion_mapping(
-        cls,
-        point_mapping: Point3Mapping,
-        quaternion_mapping: QuaternionMapping,
-        reference_frame: KinematicStructureEntity,
-    ) -> Self:
-        """
-        Creates a Pose instance from a Point3Mapping and a QuaternionMapping.
-
-        This method constructs a Pose object by utilizing the provided Point3Mapping for the position and the
-        QuaternionMapping for the orientation. The resulting Pose is associated with the specified reference frame.
-
-        :param point_mapping: A Point3Mapping object that provides the position data for the Pose.
-        :param quaternion_mapping: A QuaternionMapping object that provides the orientation data for the Pose.
-        :param reference_frame: The reference frame to which the Pose will be associated.
-        :return: A Pose instance created from the given Point3Mapping and QuaternionMapping.
-        """
-        return cls(
-            position=point_mapping.to_domain_object(),
-            orientation=quaternion_mapping.to_domain_object(),
-            reference_frame=reference_frame,
-        )
-
-    @classmethod
     def from_xyz_rpy(
         cls,
         x: sm.ScalarData = 0,
