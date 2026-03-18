@@ -19,11 +19,14 @@ from pycram.orm.ormatic_interface import *  # type: ignore
 from pycram.plan import PlanNode, Plan, ActionDescriptionNode, ActionNode, MotionNode
 from pycram.robot_plans import *
 from semantic_digital_twin.adapters.urdf import URDFParser
-from semantic_digital_twin.orm.model import Point3Mapping, QuaternionMapping
+from semantic_digital_twin.orm.model import (
+    Point3Mapping,
+    QuaternionMapping,
+    PoseMapping,
+)
 from semantic_digital_twin.robots.abstract_robot import (
     Manipulator,
 )
-from semantic_digital_twin.spatial_types.spatial_types import Pose, Quaternion, Point3
 
 
 @pytest.fixture(scope="session")
@@ -687,7 +690,7 @@ def test_algebra_sequential_plan(mutable_model_world):
     """
     world, robot_view, context = mutable_model_world
 
-    target_location = underspecified(Pose.from_point_mapping_quaternion_mapping)(
+    target_location = underspecified(PoseMapping.from_point_mapping_quaternion_mapping)(
         point_mapping=underspecified(Point3Mapping)(x=..., y=..., z=0.0),
         quaternion_mapping=QuaternionMapping(x=0, y=0, z=0, w=1),
         reference_frame=variable_from([robot_view.root]),

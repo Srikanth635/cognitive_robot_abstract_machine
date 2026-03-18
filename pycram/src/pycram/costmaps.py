@@ -661,7 +661,7 @@ class VisibilityCostmap(Costmap):
         for _ in range(4):
             rotated_origin_copy = (
                 HomogeneousTransformationMatrix.from_point_rotation_matrix(
-                    rotation_matrix=RotationMatrix.from_rpy(yaw=np.pi / 2),
+                    rotation_matrix=Quaternion(0, 0, 1, 1).to_rotation_matrix()
                 )
                 @ origin_copy
             )
