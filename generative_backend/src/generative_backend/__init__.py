@@ -11,7 +11,7 @@ from .planning.motion_precondition_planner import (
 )
 from .execution_loop import ExecutionLoop, ExecutionResult
 from .task_decomposer import TaskDecomposer
-from .world_setup import load_pr2_apartment_world, get_base_world
+from .world_setup import load_pr2_apartment_world
 
 __all__ = [
     # Pipeline
@@ -33,5 +33,4 @@ __all__ = [
     "TaskDecomposer",
     # World setup
     "load_pr2_apartment_world",
-    "get_base_world",
 ]

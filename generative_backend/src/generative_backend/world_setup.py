@@ -7,26 +7,19 @@ environment in a single call::
 
     world, pr2, context = load_pr2_apartment_world()
 
-The first call is slow (parses URDFs and merges objects).  Subsequent calls are
-fast because the assembled base world is cached at module level and each call
-returns a fresh ``deepcopy``.
+Each call parses URDFs and merges objects from scratch.  This preserves
+semantic annotations (no ``deepcopy`` involved).
 
 API
 ---
-``load_pr2_apartment_world(reload=False)``
-    Returns ``(world, pr2, context)`` — a mutable copy ready for simulation.
-    Pass ``reload=True`` to force a full rebuild (e.g. after changing assets).
-
-``get_base_world()``
-    Returns the cached (immutable) base world directly.  Useful when you need
-    to manage ``deepcopy`` yourself.
+``load_pr2_apartment_world()``
+    Returns ``(world, pr2, context)`` — a mutable world ready for simulation.
 """
 
 from __future__ import annotations
 
 import os
 import pathlib
-from copy import deepcopy
 from typing import Optional, Tuple, Type
 
 from semantic_digital_twin.adapters.mesh import STLParser
@@ -61,8 +54,6 @@ _MILK_STL = str(_PYCRAM_RESOURCES / "objects" / "milk.stl")
 _CEREAL_STL = str(_PYCRAM_RESOURCES / "objects" / "breakfast_cereal.stl")
 _PR2_URDF = "package://iai_pr2_description/robots/pr2_with_ft2_cableguide.xacro"
 
-# ── Module-level base world cache ──────────────────────────────────────────────
-_base_world_cache: Optional[World] = None
 
 
 # ── Internal builders ──────────────────────────────────────────────────────────
@@ -134,53 +125,28 @@ def _build_pr2_apartment_world() -> World:
     pr2_world = _build_pr2_world()
     apartment_world = _build_apartment_world()
 
-    merged = deepcopy(pr2_world)
-    PR2.from_world(merged)
-    merged.merge_world(deepcopy(apartment_world))
-    merged.get_body_by_name("base_footprint").parent_connection.origin = (
+    pr2_world.merge_world(apartment_world)
+    pr2_world.get_body_by_name("base_footprint").parent_connection.origin = (
         HomogeneousTransformationMatrix.from_xyz_rpy(1.3, 2, 0)
     )
-    return merged
-
-
-def _make_mutable_copy(base_world: World) -> Tuple[World, PR2, Context]:
-    """Return a fresh mutable deepcopy of *base_world* with PR2 + Context attached."""
-    world = deepcopy(base_world)
-    pr2 = PR2.from_world(world)
-    return world, pr2, Context(world, pr2)
+    return pr2_world
 
 
 # ── Public API ─────────────────────────────────────────────────────────────────
 
 
-def get_base_world(*, reload: bool = False) -> World:
-    """Return the cached immutable PR2 apartment base world.
-
-    Builds it on first call (slow); subsequent calls return the cached instance.
-
-    :param reload: Force a full rebuild even if the cache is populated.
-    :return: The assembled base ``World`` (do not modify — deepcopy it first).
-    """
-    global _base_world_cache
-    if _base_world_cache is None or reload:
-        _base_world_cache = _build_pr2_apartment_world()
-    return _base_world_cache
-
-
-def load_pr2_apartment_world(*, reload: bool = False) -> Tuple[World, PR2, Context]:
+def load_pr2_apartment_world() -> Tuple[World, PR2, Context]:
     """Load a mutable PR2 apartment world ready for simulation.
 
-    Returns a fresh ``deepcopy`` of the cached base world so each call is
-    independent.  The first call is slow (URDF parsing + object placement);
-    subsequent calls are fast (deepcopy only).
+    Builds the world from scratch on every call so that semantic annotations
+    are preserved (no deepcopy).
 
     Usage::
 
         world, pr2, context = load_pr2_apartment_world()
 
-    :param reload: Pass ``True`` to force a full rebuild of the base world
-        (e.g. after changing asset files on disk).
     :return: ``(world, pr2, context)`` — a mutable simulation-ready tuple.
     """
-    base = get_base_world(reload=reload)
-    return _make_mutable_copy(base)
+    world = _build_pr2_apartment_world()
+    pr2 = world.get_semantic_annotations_by_type(PR2)[0]
+    return world, pr2, Context(world, pr2)
