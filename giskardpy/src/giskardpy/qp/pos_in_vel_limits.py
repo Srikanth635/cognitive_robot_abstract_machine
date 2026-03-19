@@ -2,7 +2,6 @@ from copy import copy
 from typing import List
 
 import numpy as np
-from line_profiler import profile
 from typing_extensions import Tuple
 
 import giskardpy.utils.math as gm

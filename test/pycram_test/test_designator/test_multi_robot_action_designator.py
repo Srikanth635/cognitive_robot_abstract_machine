@@ -41,9 +41,7 @@ from pycram.robot_plans import (
     TransportActionDescription,
 )
 from pycram.view_manager import ViewManager
-from semantic_digital_twin.adapters.ros.visualization.viz_marker import (
-    VizMarkerPublisher,
-)
+
 from semantic_digital_twin.datastructures.definitions import (
     TorsoState,
     GripperState,

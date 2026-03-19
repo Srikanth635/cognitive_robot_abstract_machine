@@ -226,7 +226,8 @@ class HomogeneousTransformationMatrix(
                     name=f"{cls.__name__}_{name}[{row},{column}]",
                 )
                 column_variables.append(variable)
-                variable.resolve = lambda: resolver()[row, column]
+                if resolver is not None:
+                    variable.resolve = lambda: resolver()[row, column]
             transformation_matrix.append(column_variables)
         transformation_matrix.append([0, 0, 0, 1])
         return cls(transformation_matrix)

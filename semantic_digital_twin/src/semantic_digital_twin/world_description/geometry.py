@@ -993,17 +993,19 @@ class BoundingBox:
 
         # Get all 8 corners of the BB in link-local space
         list_self_T_corner = [
-            HomogeneousTransformationMatrix.from_point_rotation_matrix(self_T_corner)
+            HomogeneousTransformationMatrix.from_point_rotation_matrix(
+                self_T_corner
+            ).to_np()
             for self_T_corner in self.get_points()
         ]  # shape (8, 3)
 
         list_reference_T_corner = [
-            self_T_new_pose @ self_T_corner for self_T_corner in list_self_T_corner
+            self_T_new_pose.to_np() @ self_T_corner
+            for self_T_corner in list_self_T_corner
         ]
 
         list_reference_P_corner = [
-            reference_T_corner.to_position().to_np()[:3]
-            for reference_T_corner in list_reference_T_corner
+            reference_T_corner[:3, 3:] for reference_T_corner in list_reference_T_corner
         ]
 
         # Compute new corner points
