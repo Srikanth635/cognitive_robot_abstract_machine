@@ -47,8 +47,8 @@ jobs:
           path: /github/home/.cache/semantic_digital_twin
           key: ${{ runner.os }}-cache-${{ inputs.lib }}-${{ github.ref_name }}-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-cache-${{ inputs.lib }}-${{ github.ref_name }}
-            ${{ runner.os }}-cache-${{ inputs.lib }}
+            ${{ runner.os }}-cache-${{ inputs.repo_lowercase }}-${{ github.ref_name }}
+            ${{ runner.os }}-cache-${{ inputs.repo_lowercase }}
             ${{ runner.os }}-cache-
 
       - name: Build ORM
