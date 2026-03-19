@@ -1,9 +1,11 @@
 import threading
 import time
+
+import numpy as np
 import pytest
 
 from pycram.datastructures.enums import TaskStatus, MonitorBehavior, DetectionTechnique
-from pycram.failure_handling import RetryMonitor
+
 from pycram.failures import PlanFailure
 from pycram.fluent import Fluent
 from pycram.language import (
@@ -14,7 +16,15 @@ from pycram.language import (
     TryInOrderNode,
 )
 from pycram.motion_executor import simulated_robot
-from pycram.plans.factories import sequential, parallel, try_in_order, try_all, monitor
+from pycram.plans.factories import (
+    sequential,
+    parallel,
+    try_in_order,
+    try_all,
+    monitor,
+    repeat,
+    code,
+)
 from pycram.robot_plans import *
 from pycram.robot_plans.actions.core.misc import DetectAction
 from pycram.robot_plans.actions.core.navigation import NavigateAction
@@ -103,115 +113,22 @@ def test_monitor_construction():
     root.plan.validate()
 
 
-def test_retry_monitor_construction(immutable_model_world):
-    world, robot_view, context = immutable_model_world
+def test_repeat_construction():
     act = ParkArmsAction(Arms.BOTH)
     act2 = MoveTorsoAction(TorsoState.HIGH)
 
-    def monitor_func():
-        time.sleep(1)
-        return True
-
-    def recovery1():
-        return
-
-    recovery = {NotALanguageExpression: recovery1}
-
-    subplan = MonitorPlan(monitor_func, context, SequentialPlan(context, act, act2))
-    plan = RetryMonitor(subplan, max_tries=6, recovery=recovery)
-    assert len(plan.recovery) == 1
-    assert isinstance(plan.plan, MonitorPlan)
+    root = repeat([act, act2], 10)
+    assert len(root.children) == 2
+    root.plan.validate()
 
 
-def test_retry_monitor_tries(immutable_model_world):
+def test_perform_execute_single(immutable_model_world):
     world, robot_view, context = immutable_model_world
+    act = NavigateAction(PoseStamped.from_list([0.3, 0.3, 0], frame=world.root))
+    act2 = MoveTorsoAction(TorsoState.HIGH)
+    act3 = ParkArmsAction(Arms.BOTH)
 
-    def raise_failure():
-        raise PlanFailure
-
-    tries_counter = 0
-
-    def monitor_func():
-        nonlocal tries_counter
-        tries_counter += 1
-        return True
-
-    act2 = MoveTorsoActionDescription([TorsoState.HIGH])
-    fail = CodePlan(context, raise_failure)
-    counter = CodePlan(context, monitor_func)
-
-    subplan = SequentialPlan(context, counter, fail)
-    plan = RetryMonitor(subplan, max_tries=6)
-    with pytest.raises(PlanFailure):
-        plan.perform()
-
-    assert tries_counter == 6
-
-
-def test_retry_monitor_recovery(immutable_model_world):
-    world, robot_view, context = immutable_model_world
-    recovery1_counter = 0
-    recovery2_counter = 0
-
-    def monitor_func():
-        if not hasattr(monitor_func, "tries_counter"):
-            monitor_func.tries_counter = 0
-        if monitor_func.tries_counter % 2:
-            monitor_func.tries_counter += 1
-            raise NotALanguageExpression
-        monitor_func.tries_counter += 1
-        raise PlanFailure
-
-    def recovery1():
-        nonlocal recovery1_counter
-        recovery1_counter += 1
-
-    def recovery2():
-        nonlocal recovery2_counter
-        recovery2_counter += 1
-
-    recovery = {NotALanguageExpression: recovery1, PlanFailure: recovery2}
-
-    code = CodePlan(context, monitor_func)
-    subplan = SequentialPlan(context, code)
-    plan = RetryMonitor(subplan, max_tries=6, recovery=recovery)
-    try:
-        plan.perform()
-    except PlanFailure:
-        pass
-    assert recovery1_counter == 2
-    assert recovery2_counter == 3
-
-
-def test_repeat_construction(immutable_model_world):
-    world, robot_view, context = immutable_model_world
-    act = ParkArmsActionDescription([Arms.BOTH])
-    act2 = MoveTorsoActionDescription([TorsoState.HIGH])
-
-    plan = RepeatPlan(context, 5, SequentialPlan(context, act, act2))
-    assert len(plan.root.children) == 1
-    assert isinstance(plan.root.children[0], SequentialNode)
-
-
-def test_repeat_construction_error(immutable_model_world):
-    world, robot_view, context = immutable_model_world
-    act = ParkArmsActionDescription([Arms.BOTH])
-    act2 = MoveTorsoActionDescription([TorsoState.HIGH])
-    park = ParkArmsActionDescription([Arms.BOTH])
-
-    with pytest.raises(AttributeError):
-        RepeatPlan(context, park, SequentialPlan(context, act, act2))
-
-
-def test_perform_desig(immutable_model_world):
-    world, robot_view, context = immutable_model_world
-    act = NavigateActionDescription(
-        [PoseStamped.from_list([0.3, 0.3, 0], frame=world.root)]
-    )
-    act2 = MoveTorsoActionDescription([TorsoState.HIGH])
-    act3 = ParkArmsActionDescription([Arms.BOTH])
-
-    plan = SequentialPlan(context, act, act2, act3)
+    plan = sequential([act, act2, act3], context).plan
     with simulated_robot:
         plan.perform()
     np.testing.assert_almost_equal(
@@ -221,14 +138,13 @@ def test_perform_desig(immutable_model_world):
         world.get_degree_of_freedom_by_name("torso_lift_joint").id
     ].position == pytest.approx(0.3, abs=0.1)
 
-    assert len(plan.nodes) == len(plan.all_nodes)
-    assert len(plan.edges) == len(plan.all_nodes) - 1
+    plan.validate()
 
 
 def test_perform_single_designator(immutable_model_world):
     world, robot_view, context = immutable_model_world
 
-    plan = SequentialPlan(context, MoveTorsoActionDescription([TorsoState.HIGH]))
+    plan = sequential([MoveTorsoAction(TorsoState.HIGH)], context).plan
     with simulated_robot:
         plan.perform()
 
@@ -236,8 +152,7 @@ def test_perform_single_designator(immutable_model_world):
         world.get_degree_of_freedom_by_name("torso_lift_joint").id
     ].position == pytest.approx(0.3, abs=0.1)
 
-    assert len(plan.nodes) == len(plan.all_nodes)
-    assert len(plan.edges) == len(plan.all_nodes) - 1
+    plan.validate()
 
 
 def test_perform_parallel(immutable_model_world):
@@ -246,13 +161,14 @@ def test_perform_parallel(immutable_model_world):
     def check_thread_id(main_id):
         assert main_id != threading.get_ident()
 
-    act = CodePlan(context, check_thread_id, {"main_id": threading.get_ident()})
-    act2 = CodePlan(context, check_thread_id, {"main_id": threading.get_ident()})
-    act3 = CodePlan(context, check_thread_id, {"main_id": threading.get_ident()})
+    act = code(lambda: check_thread_id(threading.get_ident()), context=context)
+    act2 = code(lambda: check_thread_id(threading.get_ident()), context=context)
+    act3 = code(lambda: check_thread_id(threading.get_ident()), context=context)
 
-    plan = ParallelPlan(context, act, act2, act3)
+    plan = parallel([act, act2, act3], context).plan
     with simulated_robot:
         plan.perform()
+    plan.validate()
 
 
 def test_perform_repeat(immutable_model_world):
@@ -262,25 +178,26 @@ def test_perform_repeat(immutable_model_world):
     def inc(var):
         var.set_value(var.get_value() + 1)
 
-    plan = RepeatPlan(context, 10, CodePlan(context, lambda: inc(test_var)))
+    plan = repeat([code(lambda: inc(test_var))], 10, context=context).plan
     with simulated_robot:
         plan.perform()
     assert test_var.get_value() == 10
-
-    assert len(plan.nodes) == len(plan.all_nodes)
-    assert len(plan.edges) == len(plan.all_nodes) - 1
+    plan.validate()
 
 
 def test_exception_sequential(immutable_model_world):
     world, robot_view, context = immutable_model_world
 
     def raise_except():
-        raise PlanFailure
+        raise PlanFailure()
 
-    act = NavigateActionDescription([PoseStamped().from_list(frame=world.root)])
-    code = CodePlan(context, raise_except)
+    act = NavigateAction(PoseStamped().from_list(frame=world.root))
+    act2 = code(raise_except)
 
-    plan = SequentialPlan(context, act, code)
+    plan = sequential(
+        [act, act2],
+        context,
+    ).plan
 
     def perform_plan():
         with simulated_robot:
@@ -296,12 +213,12 @@ def test_exception_try_in_order(immutable_model_world):
     world, robot_view, context = immutable_model_world
 
     def raise_except():
-        raise PlanFailure
+        raise PlanFailure()
 
-    act = NavigateActionDescription([PoseStamped().from_list(frame=world.root)])
-    code = CodePlan(context, raise_except)
+    act = NavigateAction(PoseStamped().from_list(frame=world.root))
+    act2 = code(raise_except)
 
-    plan = TryInOrderPlan(context, act, code)
+    plan = try_in_order([act, act2], context).plan
     with simulated_robot:
         _ = plan.perform()
     assert len(plan.root.children) == 2
@@ -312,14 +229,15 @@ def test_exception_parallel(immutable_model_world):
     world, robot_view, context = immutable_model_world
 
     def raise_except():
-        raise PlanFailure
+        raise PlanFailure()
 
-    act = NavigateActionDescription([PoseStamped()])
-    code = CodePlan(context, raise_except)
+    act = NavigateAction(PoseStamped().from_list(frame=world.root))
+    act2 = code(raise_except)
 
-    plan = ParallelPlan(context, act, code)
-    with simulated_robot:
-        _ = plan.perform()
+    plan = parallel([act, act2], context).plan
+    with pytest.raises(PlanFailure):
+        with simulated_robot:
+            _ = plan.perform()
     assert type(plan.root.reason) is PlanFailure
     assert plan.root.status == TaskStatus.FAILED
 
@@ -328,12 +246,12 @@ def test_exception_try_all(immutable_model_world):
     world, robot_view, context = immutable_model_world
 
     def raise_except():
-        raise PlanFailure
+        raise PlanFailure()
 
-    act = NavigateActionDescription([PoseStamped()])
-    code = CodePlan(context, raise_except)
+    act = NavigateAction(PoseStamped().from_list(frame=world.root))
+    act2 = code(raise_except)
 
-    plan = TryAllPLan(context, act, code)
+    plan = try_all([act, act2], context).plan
     with simulated_robot:
         _ = plan.perform()
 
@@ -343,19 +261,21 @@ def test_exception_try_all(immutable_model_world):
 
 def test_monitor_resume(immutable_model_world):
     world, robot_view, context = immutable_model_world
-    act = ParkArmsActionDescription(Arms.BOTH)
-    act2 = MoveTorsoActionDescription(TorsoState.HIGH)
+    act = ParkArmsAction(Arms.BOTH)
+    act2 = MoveTorsoAction(TorsoState.HIGH)
 
     def monitor_func():
         time.sleep(2)
         return True
 
-    plan = MonitorPlan(
-        monitor_func,
-        context,
-        SequentialPlan(context, act, act2),
+    plan = monitor(
+        [
+            sequential([act, act2]),
+        ],
+        condition=monitor_func,
         behavior=MonitorBehavior.RESUME,
-    )
+        context=context,
+    ).plan
     with simulated_robot:
         plan.perform()
     assert len(plan.root.children) == 1

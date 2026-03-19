@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from abc import abstractmethod, ABC
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional, Any, List, Type, TYPE_CHECKING, Iterable, Iterator
@@ -103,18 +104,19 @@ class PlanNode(PlanEntity):
         return list(sort_by_layer_index(children))
 
     @property
-    def recursive_children(self) -> List[PlanNode]:
+    def descendants(self) -> List[PlanNode]:
         """
-        Recursively lists all children and their children.
-
-        :return: A list of all nodes below this node
+        :return: A list of all descendants in breadth-first order.
         """
-        rec_children = []
-        for child in self.children:
-            rec_children.append(child)
-            rec_children.extend(child.recursive_children)
+        result = []
+        queue = deque(self.children)
 
-        return rec_children
+        while queue:
+            node = queue.popleft()
+            result.append(node)
+            queue.extend(node.children)
+
+        return result
 
     @property
     def path(self) -> List[PlanNode]:
@@ -159,6 +161,14 @@ class PlanNode(PlanEntity):
             sibling
             for sibling in self.siblings
             if sibling.layer_index < self.layer_index
+        ]
+
+    @property
+    def right_siblings(self) -> List[PlanNode]:
+        return [
+            sibling
+            for sibling in self.siblings
+            if sibling.layer_index > self.layer_index
         ]
 
     @property
@@ -215,15 +225,31 @@ class PlanNode(PlanEntity):
         """
         Suspends the execution of this node and all nodes below.
         """
-        self.status = TaskStatus.SLEEPING
+        self.status = TaskStatus.PAUSE
 
     def add_child(self, child: PlanNode):
         self.plan.add_edge(self, child)
+
+    @property
+    def is_interrupted(self) -> bool:
+        return any(
+            parent.status == TaskStatus.INTERRUPTED for parent in [self] + self.path
+        )
+
+    @property
+    def is_paused(self) -> bool:
+        return any(parent.status == TaskStatus.PAUSE for parent in [self] + self.path)
 
     def perform(self):
         """
         Perform the node and update the fields of this node.
         """
+
+        for parent in self.path:
+            if parent.status == TaskStatus.INTERRUPTED:
+                self.status = TaskStatus.INTERRUPTED
+                return None
+
         self.status = TaskStatus.RUNNING
         try:
             self.result = self._perform()
@@ -344,7 +370,7 @@ class ActionNode(DesignatorNode):
         motion_desigs = list(
             filter(
                 lambda x: x.is_leaf and x.parent_action_node == self,
-                self.recursive_children,
+                self.descendants,
             )
         )
         return [m.motion.motion_chart for m in motion_desigs]
@@ -354,7 +380,10 @@ class ActionNode(DesignatorNode):
         Builds a giskard Motion State Chart from the collected motions of this action node.
         """
         self.motion_executor = MotionExecutor(
-            self.collect_motions(), self.plan.world, ros_node=self.plan.context.ros_node
+            self.collect_motions(),
+            self.plan.world,
+            ros_node=self.plan.context.ros_node,
+            plan_node=self,
         )
         self.motion_executor.construct_msc()
 

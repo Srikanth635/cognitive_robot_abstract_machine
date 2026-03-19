@@ -13,8 +13,7 @@ from pycram.datastructures.enums import (
 )
 from pycram.datastructures.grasp import GraspDescription
 from pycram.datastructures.pose import PoseStamped
-from pycram.failures import ObjectNotGraspedError
-from pycram.failures import ObjectNotInGraspingArea
+
 from pycram.plans.factories import sequential, execute_single
 
 from pycram.robot_plans.actions.base import ActionDescription

@@ -87,7 +87,7 @@ class TaskStatus(int, Enum):
     SUCCEEDED = 2
     FAILED = 3
     INTERRUPTED = 4
-    SLEEPING = 5
+    PAUSE = 5
 
 class JointType(Enum):
     """

@@ -65,7 +65,7 @@ def test_pick_up_motion(immutable_model_world):
     pick_up_node = root.plan.get_nodes_by_designator_type(PickUpAction)[0]
 
     motion_nodes = list(
-        filter(lambda x: isinstance(x, MotionNode), pick_up_node.recursive_children)
+        filter(lambda x: isinstance(x, MotionNode), pick_up_node.descendants)
     )
 
     assert len(motion_nodes) == 5

@@ -34,7 +34,7 @@ from pycram.datastructures.grasp import GraspDescription
 
 from pycram.datastructures.pose import PoseStamped, GraspPose
 
-from pycram.failures import ObjectUnfetchable, ConfigurationNotReached
+from pycram.failures import ConfigurationNotReached
 from pycram.robot_plans.actions.base import ActionDescription
 
 

@@ -54,9 +54,13 @@ class ExecutesSequentially(LanguageNode):
     Base class for nodes that execute their children sequentially.
     """
 
+    def _perform(self):
+        result = [child.perform() for child in self.children]
+        return result
+
 
 @dataclass
-class ExecutesInParallel(LanguageNode):
+class ExecutesInParallel(LanguageNode, ABC):
     """
     Base class for nodes that execute their children in parallel.
     """
@@ -85,10 +89,6 @@ class SequentialNode(ExecutesSequentially):
     Executes all children sequentially. Any failure is immediately raised.
     """
 
-    def _perform(self):
-        result = [child.perform() for child in self.children]
-        return result
-
 
 @dataclass
 class ParallelNode(ExecutesInParallel):
@@ -105,7 +105,7 @@ class ParallelNode(ExecutesInParallel):
 
 
 @dataclass(eq=False)
-class RepeatNode(SequentialNode):
+class RepeatNode(ExecutesSequentially):
     """
     Executes all children a given number of times in sequential order.
     """

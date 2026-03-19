@@ -115,7 +115,7 @@ class Plan:
 
         :return: All nodes under the root node in depth first order
         """
-        return [self.root] + self.root.recursive_children
+        return [self.root] + self.root.descendants
 
     @property
     def all_nodes(self) -> List[PlanNode]:
@@ -247,7 +247,7 @@ class Plan:
         return result
 
     def re_perform(self):
-        for child in self.root.recursive_children:
+        for child in self.root.descendants:
             if child.is_leaf:
                 child.perform()
 

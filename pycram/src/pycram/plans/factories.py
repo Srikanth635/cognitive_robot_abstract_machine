@@ -18,6 +18,8 @@ if TYPE_CHECKING:
         TryInOrderNode,
         TryAllNode,
         MonitorNode,
+        RepeatNode,
+        CodeNode,
     )
     from pycram.plans.plan_node import ActionLike, PlanNode
 
@@ -64,6 +66,8 @@ def try_all(
     children: List[ActionLike],
     context: Optional[Context] = None,
 ) -> TryAllNode:
+    from pycram.language import TryAllNode
+
     return _make_plan_from_type_and_children(TryAllNode(), children, context)
 
 
@@ -78,6 +82,24 @@ def monitor(
     return _make_plan_from_type_and_children(
         MonitorNode(condition=condition, behavior=behavior), children, context
     )
+
+
+def repeat(
+    children: List[ActionLike],
+    repetitions: int,
+    context: Optional[Context] = None,
+) -> RepeatNode:
+    from pycram.language import RepeatNode
+
+    root = RepeatNode(repetitions=repetitions)
+    return _make_plan_from_type_and_children(root, children, context)
+
+
+def code(function: Callable, context: Optional[Context] = None) -> CodeNode:
+    from pycram.language import CodeNode
+
+    root = CodeNode(code=function)
+    return execute_single(root, context=context)
 
 
 T = TypeVar("T")
