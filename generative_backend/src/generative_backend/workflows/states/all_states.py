@@ -67,3 +67,32 @@ class DiscreteResolutionState(MessagesState):
     depending on the action type being resolved)."""
 
     error: Optional[str]
+
+
+class RecoveryState(MessagesState):
+    """State for the recovery resolution pipeline.
+
+    Flows through the recovery resolver node when an action execution has
+    failed.  The node receives the failure context and produces a
+    ``RecoverySchema`` describing whether to replan or abort.
+    """
+
+    # ── Inputs ────────────────────────────────────────────────────────────────
+    world_context: str
+    """Serialised world snapshot at the time of failure."""
+
+    original_instruction: str
+    """The NL instruction that was being executed when the failure occurred."""
+
+    failed_action_description: str
+    """Human-readable description of the action that failed (type + parameters)."""
+
+    error_message: str
+    """The exception message from the failed execution."""
+
+    # ── Output ────────────────────────────────────────────────────────────────
+    resolved_schema: Optional[Dict[str, Any]]
+    """Serialised ``RecoverySchema`` produced by the recovery resolver LLM."""
+
+    error: Optional[str]
+    """Non-fatal error from the LLM node itself (distinct from the robot error)."""
