@@ -28,7 +28,7 @@ from semantic_digital_twin.adapters.package_resolver import PathResolver
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.robots.abstract_robot import AbstractRobot
 from semantic_digital_twin.robots.pr2 import PR2
-from semantic_digital_twin.semantic_annotations.semantic_annotations import Milk
+from semantic_digital_twin.semantic_annotations.semantic_annotations import Milk, Cereal
 from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connections import (
@@ -82,8 +82,14 @@ def _build_apartment_world() -> World:
     milk_view = Milk(
         root=apartment_world.get_body_by_name("milk.stl"), _world=apartment_world
     )
+
+    cereal_view = Cereal(
+        root=apartment_world.get_body_by_name("breakfast_cereal.stl"), _world=apartment_world
+    )
+
     with apartment_world.modify_world():
         apartment_world.add_semantic_annotation(milk_view)
+        apartment_world.add_semantic_annotation(cereal_view)
 
     return apartment_world
 
