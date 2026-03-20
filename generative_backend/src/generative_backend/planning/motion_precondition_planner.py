@@ -246,9 +246,19 @@ class PickUpPreconditionProvider(PreconditionProvider):
         CostmapLocation.ground() requires robot_view (i.e. plan_node must be set).
         By wrapping it in a PartialDesignator and letting the plan resolve it, the
         plan's plan_node propagation wires up robot_view automatically.
+
+        The target is converted to a PoseStamped so CostmapLocation computes
+        reachable base poses from the object's exact world position rather than
+        its bounding box geometry (which can shift the nav pose out of reach
+        for objects that are off-center relative to the robot).
         """
+        try:
+            from pycram.datastructures.pose import PoseStamped as PyCramPoseStamped
+            target = PyCramPoseStamped.from_spatial_type(obj_body.global_pose)
+        except Exception:
+            target = obj_body
         loc = CostmapLocation(
-            target=obj_body,
+            target=target,
             reachable_for=robot,
             reachable_arm=arm,
         )
@@ -364,7 +374,11 @@ class PlacePreconditionProvider(PreconditionProvider):
         # target is a Body – compute placement pose on its surface.
         try:
             sem_loc = SemanticCostmapLocation(body=target, for_object=for_object)
-            return sem_loc.ground()
+            grd = sem_loc.ground()
+            logger.debug("SemanticCostmapLocation Body: %s", target)
+            logger.debug("SemanticCostmapLocation for object: %s", for_object)
+            logger.debug("SemanticCostmapLocation: %s", grd)
+            return grd
         except Exception as exc:
             logger.warning(
                 "SemanticCostmapLocation failed (%s). Falling back to body global pose.", exc
