@@ -2,6 +2,7 @@
 from .common import EntityDescriptionSchema
 from .pick_up import GraspParamsSchema, PickUpDiscreteResolutionSchema, PickUpSlotSchema
 from .place import PlaceDiscreteResolutionSchema, PlaceSlotSchema
+from .recovery import RecoverySchema
 
 __all__ = [
     "EntityDescriptionSchema",
@@ -10,4 +11,5 @@ __all__ = [
     "PickUpSlotSchema",
     "PlaceDiscreteResolutionSchema",
     "PlaceSlotSchema",
+    "RecoverySchema",
 ]

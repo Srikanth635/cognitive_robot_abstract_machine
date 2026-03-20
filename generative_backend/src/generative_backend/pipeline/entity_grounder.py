@@ -146,6 +146,12 @@ class EntityGrounder:
         if description.semantic_type:
             result = self._annotation_ground(description)
             if result.bodies:
+                logger.debug(
+                    "Tier 1 grounding: semantic_type=%r → %d body/bodies: %s",
+                    description.semantic_type,
+                    len(result.bodies),
+                    [str(getattr(getattr(b, "name", None), "name", b)) for b in result.bodies],
+                )
                 return result
             logger.debug(
                 "Annotation grounding for type '%s' returned no results, "

@@ -41,6 +41,7 @@ from pycram.datastructures.partial_designator import PartialDesignator
 from pycram.robot_plans.actions.core.pick_up import PickUpAction
 from pycram.robot_plans.actions.core.placing import PlaceAction
 
+from .clarification import ClarificationNeededError, ClarificationRequest
 from .entity_grounder import EntityGrounder, GroundingResult
 from ..workflows._utils import _pose_to_xyz
 from ..workflows.nodes.resolver import run_pickup_resolver
@@ -139,9 +140,20 @@ class PickUpActionHandler(ActionHandler):
         # Step 1 — ground the object
         grounding = self._ground(schema.object_description)
         if not grounding.bodies:
-            raise RuntimeError(
-                f"No Body found for object '{schema.object_description.name}'. "
-                "Check that the object exists in the world."
+            available = [
+                str(getattr(getattr(b, "name", None), "name", b))
+                for b in self._world.bodies
+            ]
+            raise ClarificationNeededError(
+                ClarificationRequest(
+                    entity_name=schema.object_description.name or "",
+                    entity_role="object",
+                    available_names=available,
+                    message=(
+                        f"Cannot find object '{schema.object_description.name}' in the world. "
+                        f"Available objects: {available}"
+                    ),
+                )
             )
         logger.info("PickUp grounding – %d body/bodies.", len(grounding.bodies))
 
@@ -153,11 +165,11 @@ class PickUpActionHandler(ActionHandler):
             logger.debug("PartialDesignator fully specified – resolving directly.")
             return partial.resolve()
 
-        resolution = self._resolve_discrete(partial)
+        resolution = self._resolve_discrete(partial, grounding.bodies)
         logger.debug("LLM reasoning: %s", resolution.reasoning)
 
         # Step 4 — assemble action
-        return self._build_action(partial, resolution)
+        return self._build_action(partial, resolution, grounding.bodies)
 
     # ── PartialDesignator construction ─────────────────────────────────────────
 
@@ -218,8 +230,9 @@ class PickUpActionHandler(ActionHandler):
     def _resolve_discrete(
         self,
         partial: PartialDesignator[PickUpAction],
+        grounded_bodies: List[Body],
     ) -> PickUpDiscreteResolutionSchema:
-        world_ctx = self._build_world_context(partial)
+        world_ctx = self._build_world_context(grounded_bodies)
         known = self._known_params(partial)
         missing = self._missing_params(partial)
         logger.debug("PickUp world context:\n%s", world_ctx)
@@ -235,16 +248,12 @@ class PickUpActionHandler(ActionHandler):
             raise RuntimeError("Discrete resolver LLM returned None. Check logs.")
         return resolution
 
-    def _build_world_context(self, partial: PartialDesignator[PickUpAction]) -> str:
+    def _build_world_context(self, grounded_bodies: List[Body]) -> str:
         robot_xyz, lines = self._get_robot_context()
 
-        object_param = partial.kwargs.get("object_designator")
-        objects: List[Body] = (
-            object_param if isinstance(object_param, list) else [object_param]
-        ) if object_param is not None else []
-
-        for obj in objects:
-            name = str(getattr(obj, "name", obj))
+        for obj in grounded_bodies:
+            name_obj = getattr(obj, "name", None)
+            name = str(getattr(name_obj, "name", name_obj) if name_obj is not None else obj)
             try:
                 xyz = _pose_to_xyz(obj.global_pose)
                 if xyz:
@@ -319,6 +328,7 @@ class PickUpActionHandler(ActionHandler):
         self,
         partial: PartialDesignator[PickUpAction],
         resolution: PickUpDiscreteResolutionSchema,
+        grounded_bodies: Optional[List[Body]] = None,
     ) -> PickUpAction:
         arm: Arms = partial.kwargs.get("arm") or Arms[resolution.arm]
 
@@ -336,9 +346,13 @@ class PickUpActionHandler(ActionHandler):
                 manipulator=manipulator,
             )
 
-        obj = partial.kwargs.get("object_designator")
-        if isinstance(obj, list):
-            obj = obj[0]
+        # Use grounded_bodies directly to avoid partial.kwargs plan-context interference.
+        if grounded_bodies:
+            obj = grounded_bodies if len(grounded_bodies) > 1 else grounded_bodies[0]
+        else:
+            obj = partial.kwargs.get("object_designator")
+            if isinstance(obj, list):
+                obj = obj[0]
 
         return PickUpAction(object_designator=obj, arm=arm, grasp_description=grasp)
 
@@ -370,16 +384,38 @@ class PlaceActionHandler(ActionHandler):
     def execute(self, schema: PlaceSlotSchema) -> PlaceAction:
         obj_grounding = self._ground(schema.object_description)
         if not obj_grounding.bodies:
-            raise RuntimeError(
-                f"No Body found for object '{schema.object_description.name}'. "
-                "Check that the object exists in the world."
+            available = [
+                str(getattr(getattr(b, "name", None), "name", b))
+                for b in self._world.bodies
+            ]
+            raise ClarificationNeededError(
+                ClarificationRequest(
+                    entity_name=schema.object_description.name or "",
+                    entity_role="object",
+                    available_names=available,
+                    message=(
+                        f"Cannot find object '{schema.object_description.name}' in the world. "
+                        f"Available objects: {available}"
+                    ),
+                )
             )
 
         tgt_grounding = self._ground(schema.target_description)
         if not tgt_grounding.bodies:
-            raise RuntimeError(
-                f"No Body found for target '{schema.target_description.name}'. "
-                "Check that the surface/location exists in the world."
+            available = [
+                str(getattr(getattr(b, "name", None), "name", b))
+                for b in self._world.bodies
+            ]
+            raise ClarificationNeededError(
+                ClarificationRequest(
+                    entity_name=schema.target_description.name or "",
+                    entity_role="target surface",
+                    available_names=available,
+                    message=(
+                        f"Cannot find target '{schema.target_description.name}' in the world. "
+                        f"Available locations: {available}"
+                    ),
+                )
             )
 
         logger.info(
