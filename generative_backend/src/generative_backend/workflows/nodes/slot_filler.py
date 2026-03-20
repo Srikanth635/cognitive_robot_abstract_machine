@@ -131,9 +131,10 @@ def slot_filler_node(state: SlotFillingState) -> Dict[str, Any]:
         )
         typed = _to_typed_schema(raw)
         logger.debug(
-            "slot_filler_node – action_type=%s, object=%s",
+            "slot_filler_node – action_type=%s, object=%s, semantic_type=%s",
             typed.action_type,
             typed.object_description.name,
+            typed.object_description.semantic_type,
         )
         return {"slot_schema": typed.model_dump(), "error": None}
     except Exception as exc:  # noqa: BLE001
