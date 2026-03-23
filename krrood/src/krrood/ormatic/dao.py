@@ -7,10 +7,8 @@ import threading
 import time
 from dataclasses import dataclass, field, is_dataclass, fields, MISSING
 from functools import lru_cache
-from typing import TYPE_CHECKING, get_origin, get_args
-import typing
+from typing import _GenericAlias
 
-import rustworkx
 import sqlalchemy.inspection
 import sqlalchemy.orm
 from sqlalchemy import Column
@@ -263,23 +261,6 @@ class FromDataAccessObjectState(DataAccessObjectState[FromDataAccessObjectWorkIt
     Cache for synthetic parent DAOs to maintain identity across discovery and filling phases.
     """
 
-    dependencies: rustworkx.PyDiGraph = field(
-        default_factory=lambda: rustworkx.PyDiGraph(multigraph=False)
-    )
-    """
-    Dependency graph between DAOs.
-    """
-
-    id_to_node: Dict[int, int] = field(default_factory=dict)
-    """
-    Map of DAO IDs to their node indices in the dependency graph.
-    """
-
-    current_dao: Optional[DataAccessObject] = None
-    """
-    The DAO instance currently being processed during the discovery phase.
-    """
-
     def is_initialized(self, dao_instance: DataAccessObject) -> bool:
         """
         Check if the given DAO instance has been fully initialized.
@@ -296,38 +277,6 @@ class FromDataAccessObjectState(DataAccessObjectState[FromDataAccessObjectWorkIt
         :param dao_instance: The DAO instance to mark.
         """
         self.initialized_ids.add(id(dao_instance))
-
-    def record_dependency(
-        self,
-        parent_dao: DataAccessObject,
-        dependency: DataAccessObject,
-        relationship_name: Optional[str] = None,
-    ):
-        """
-        Record a dependency from one DAO to another during the discovery phase.
-
-        :param parent_dao: The DAO that depends on another.
-        :param dependency: The DAO that is depended upon.
-        :param relationship_name: The name of the field/relationship that triggered the discovery.
-        """
-        if self.discovery_mode:
-            parent_id = id(parent_dao)
-            dependency_id = id(dependency)
-
-            if parent_id not in self.id_to_node:
-                self.id_to_node[parent_id] = self.dependencies.add_node(parent_id)
-            if dependency_id not in self.id_to_node:
-                self.id_to_node[dependency_id] = self.dependencies.add_node(
-                    dependency_id
-                )
-
-            if parent_id != dependency_id:
-                # An edge from dependency to parent means dependency must be resolved before parent.
-                self.dependencies.add_edge(
-                    self.id_to_node[dependency_id],
-                    self.id_to_node[parent_id],
-                    relationship_name,
-                )
 
     def push_work_item(self, dao_instance: DataAccessObject, domain_object: Any):
         """
@@ -392,7 +341,7 @@ class HasGeneric(Generic[T]):
         cannot be constructed directly.
         """
         original_class = cls.original_class()
-        if hasattr(original_class, "__origin__"):
+        if type(original_class) is _GenericAlias:
             return get_origin(original_class)
         else:
             return original_class
@@ -406,7 +355,7 @@ class HasGeneric(Generic[T]):
         """
         # filter for instances of generic aliases in the superclasses
         for base in filter(
-            lambda x: hasattr(x, "__origin__"),
+            lambda x: isinstance(x, _GenericAlias),
             cls.__orig_bases__,
         ):
             return get_args(base)[0]
@@ -561,8 +510,6 @@ class DataAccessObject(HasGeneric[T]):
         :param class_to_check: The class to check.
         :return: True if alternative mapping is used.
         """
-        if not inspect.isclass(class_to_check):
-            return False
         return issubclass(class_to_check, DataAccessObject) and issubclass(
             class_to_check.original_class(), AlternativeMapping
         )
@@ -829,13 +776,11 @@ class DataAccessObject(HasGeneric[T]):
     def from_dao(
         self,
         state: Optional[FromDataAccessObjectState] = None,
-        relationship_name: Optional[str] = None,
     ) -> T:
         """
         Convert the DAO back into a domain object instance.
 
         :param state: The conversion state.
-        :param relationship_name: The name of the field/relationship that triggered the discovery.
         :return: The converted domain object.
         """
         state = state or FromDataAccessObjectState()
@@ -846,7 +791,7 @@ class DataAccessObject(HasGeneric[T]):
         if not state.is_processing:
             return self._perform_from_dao_conversion(state)
 
-        return self._register_for_conversion(state, relationship_name)
+        return self._register_for_conversion(state)
 
     def _perform_from_dao_conversion(self, state: FromDataAccessObjectState) -> T:
         """
@@ -887,9 +832,7 @@ class DataAccessObject(HasGeneric[T]):
             # Use pop() to treat the deque as a stack (LIFO) for DFS
             work_item = state.work_items.pop()
             discovery_order.append(work_item)
-            state.current_dao = work_item.dao_instance
             work_item.dao_instance._fill_from_dao(work_item.domain_object, state)
-            state.current_dao = None
 
         state.discovery_mode = False
 
@@ -901,30 +844,11 @@ class DataAccessObject(HasGeneric[T]):
         """
         Phase 2: Filling (Bottom-Up) to initialize domain objects.
 
-        This phase consists of two passes:
-        1. Populate all relationships and scalars to ensure all objects are linked.
-        2. Resolve alternative mappings in topological order to satisfy dependencies.
-
         :param state: The conversion state.
         :param discovery_order: The order in which DAOs were discovered.
         """
-        self._populate_all_objects(state, discovery_order)
-        self._resolve_all_objects_topologically(state, discovery_order)
-
-    def _populate_all_objects(
-        self,
-        state: FromDataAccessObjectState,
-        discovery_order: List[FromDataAccessObjectWorkItem],
-    ) -> None:
-        """
-        Pass 2.1: Populate all relationships and scalars for all discovered instances.
-
-        This ensures that all objects point to each other, even if some (like
-        AlternativeMappings) are not yet fully resolved into their final domain objects.
-
-        :param state: The conversion state.
-        :param discovery_order: The order in which DAOs were discovered.
-        """
+        # Pass 2.1: Populate all relationships and scalars for all discovered instances.
+        # This ensures that all objects point to each other (even if not yet fully resolved).
         state.resolution_mode = False
         for work_item in reversed(discovery_order):
             if not state.is_initialized(work_item.dao_instance):
@@ -932,106 +856,12 @@ class DataAccessObject(HasGeneric[T]):
                     work_item.domain_object, state
                 )
 
-    def _resolve_all_objects_topologically(
-        self,
-        state: FromDataAccessObjectState,
-        discovery_order: List[FromDataAccessObjectWorkItem],
-    ) -> None:
-        """
-        Pass 2.2: Finalize resolution of domain objects in topological order.
-
-        Uses a refcount-based topological sort to ensure that AlternativeMapping
-        instances are resolved only after all their dependent domain objects are
-        fully initialized.
-
-        :param state: The conversion state.
-        :param discovery_order: The order in which DAOs were discovered.
-        """
+        # Pass 2.2: Finalize resolution and resolve AlternativeMappings.
         state.resolution_mode = True
-
-        graph = state.dependencies
-        id_to_node = state.id_to_node
-        node_to_index = {
-            node: i
-            for i, wi in enumerate(discovery_order)
-            if (node := id_to_node.get(id(wi.dao_instance))) is not None
-        }
-
-        # Initialize the set of ready objects (in-degree zero).
-        pending_counts = {node: graph.in_degree(node) for node in graph.node_indices()}
-        ready_indices = [
-            i
-            for i, wi in enumerate(discovery_order)
-            if (node := id_to_node.get(id(wi.dao_instance))) is not None
-            and pending_counts[node] == 0
-        ]
-        unresolved_indices = list(range(len(discovery_order)))
-
-        while unresolved_indices:
-            current_index = self._pick_next_ready_index(
-                ready_indices, unresolved_indices, discovery_order
-            )
-            work_item = discovery_order[current_index]
-
-            self._finalize_work_item(work_item, state)
-            unresolved_indices.remove(current_index)
-
-            # Update dependants and move newly ready ones to the queue.
-            current_node = id_to_node.get(id(work_item.dao_instance))
-            if current_node is not None:
-                for dependant_node in graph.successor_indices(current_node):
-                    pending_counts[dependant_node] -= 1
-                    if pending_counts[dependant_node] == 0:
-                        idx = node_to_index.get(dependant_node)
-                        if idx is not None and idx in unresolved_indices:
-                            ready_indices.append(idx)
-
-    def _pick_next_ready_index(
-        self,
-        ready_indices: List[int],
-        unresolved_indices: List[int],
-        discovery_order: List[FromDataAccessObjectWorkItem],
-    ) -> int:
-        """
-        Pick the next object to resolve from the ready queue.
-
-        If the queue is empty, a cycle exists, and we break it by picking
-        the latest discovered item.
-
-        :param ready_indices: List of indices ready for resolution.
-        :param unresolved_indices: Set of indices yet to be resolved.
-        :param discovery_order: The order in which DAOs were discovered.
-        :return: The index of the next object to resolve.
-        """
-        if not ready_indices:
-            # Cycle detected: break it by picking the latest discovered item.
-            next_index = max(unresolved_indices)
-            ready_indices.append(next_index)
-
-        # Prioritize items discovered later (closer to the leaves in DFS).
-        # We also want to process AlternativeMapping items last, as they
-        # depend on their attributes being fully resolved to domain objects.
-        def _is_alternative_mapping(idx: int) -> bool:
-            return issubclass(
-                discovery_order[idx].dao_instance.constructable_original_class(),
-                AlternativeMapping,
-            )
-
-        ready_indices.sort(key=lambda idx: (_is_alternative_mapping(idx), idx))
-        return ready_indices.pop()
-
-    def _finalize_work_item(
-        self, work_item: FromDataAccessObjectWorkItem, state: FromDataAccessObjectState
-    ) -> None:
-        """
-        Fully resolve and initialize a single work item.
-
-        :param work_item: The work item to finalize.
-        :param state: The conversion state.
-        """
-        if not state.is_initialized(work_item.dao_instance):
-            work_item.dao_instance._resolve_from_dao(work_item.domain_object, state)
-            state.mark_initialized(work_item.dao_instance)
+        for work_item in reversed(discovery_order):
+            if not state.is_initialized(work_item.dao_instance):
+                work_item.dao_instance._resolve_from_dao(work_item.domain_object, state)
+                state.mark_initialized(work_item.dao_instance)
 
     def _finalize_containers(
         self,
@@ -1089,19 +919,13 @@ class DataAccessObject(HasGeneric[T]):
                     domain_object.__post_init__()
                 processed_ids.add(id(domain_object))
 
-    def _register_for_conversion(
-        self, state: FromDataAccessObjectState, relationship_name: Optional[str] = None
-    ) -> T:
+    def _register_for_conversion(self, state: FromDataAccessObjectState) -> T:
         """
         Register this DAO for conversion if not already present.
 
         :param state: The conversion state.
-        :param relationship_name: The name of the field/relationship that triggered the discovery.
         :return: The uninitialized domain object.
         """
-        if state.current_dao is not None:
-            state.record_dependency(state.current_dao, self, relationship_name)
-
         if not state.has(self):
             domain_object = state.allocate_and_memoize(
                 self, self.constructable_original_class()
@@ -1205,23 +1029,18 @@ class DataAccessObject(HasGeneric[T]):
                 continue
 
             if self._is_single_relationship(relationship):
-                value.from_dao(state=state, relationship_name=relationship.key)
+                value.from_dao(state=state)
             elif relationship.direction in (ONETOMANY, MANYTOMANY):
                 target_dao_clazz = relationship.mapper.class_
                 if issubclass(target_dao_clazz, AssociationDataAccessObject):
                     # Collection of Association Objects
                     [
-                        item.target.from_dao(
-                            state=state, relationship_name=relationship.key
-                        )
+                        item.target.from_dao(state=state)
                         for item in value
                         if item.target is not None
                     ]
                 else:
-                    [
-                        item.from_dao(state=state, relationship_name=relationship.key)
-                        for item in value
-                    ]
+                    [item.from_dao(state=state) for item in value]
 
         self._build_base_keyword_arguments_for_alternative_parent(domain_object, state)
         return domain_object
@@ -1347,7 +1166,7 @@ class DataAccessObject(HasGeneric[T]):
             )
         parent_dao = state.synthetic_parent_daos[cache_key]
 
-        base_result = parent_dao.from_dao(state=state, relationship_name="parent")
+        base_result = parent_dao.from_dao(state=state)
 
         if state.discovery_mode:
             return
