@@ -1,5 +1,7 @@
 from typing import Tuple, Type, List, Dict, Any
 
+from jaxtyping import Array
+
 from random_events.set import SetElement
 from random_events.variable import Symbolic, Variable
 from sortedcontainers import SortedSet
@@ -24,7 +26,7 @@ from probabilistic_model.utils import MissingDict
 
 class DiscreteLayer(InputLayer):
 
-    log_probabilities: jnp.array
+    log_probabilities: Array
     """
     The logarithm of probability for each state of the variable.
     
@@ -43,18 +45,18 @@ class DiscreteLayer(InputLayer):
         return True
 
     @property
-    def log_normalization_constant(self) -> jnp.array:
+    def log_normalization_constant(self) -> Array:
         return jax.scipy.special.logsumexp(self.log_probabilities, axis=1)
 
     @property
-    def normalized_log_probabilities(self) -> jnp.array:
+    def normalized_log_probabilities(self) -> Array:
         return self.log_probabilities - self.log_normalization_constant[:, None]
 
     @property
     def number_of_nodes(self) -> int:
         return self.log_probabilities.shape[0]
 
-    def log_likelihood_of_nodes_single(self, x: jnp.array) -> jnp.array:
+    def log_likelihood_of_nodes_single(self, x: Array) -> Array:
         return self.normalized_log_probabilities[:, x.astype(int)][:, 0]
 
     @classmethod
@@ -94,7 +96,7 @@ class DiscreteLayer(InputLayer):
         }
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         return cls(data["variable"], jnp.array(data["log_probabilities"]))
 
     def to_nx(
@@ -114,8 +116,8 @@ class DiscreteLayer(InputLayer):
         nodes = [
             UnivariateDiscreteLeaf(
                 SymbolicDistribution(
-                    variable,
-                    MissingDict(
+                    variable=variable,
+                    probabilities=MissingDict(
                         float,
                         {
                             state: value.item()

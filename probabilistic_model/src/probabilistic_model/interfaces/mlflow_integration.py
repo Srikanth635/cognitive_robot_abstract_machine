@@ -41,11 +41,17 @@ def infer_signature(model: ProbabilisticModel) -> ModelSignature:
     inputs = []
     for variable in model.variables:
         if isinstance(variable, Continuous):
-            inputs.append(ColSpec(type=DataType.float, name=variable.name, required=False))
+            inputs.append(
+                ColSpec(type=DataType.float, name=variable.name, required=False)
+            )
         elif isinstance(variable, Symbolic):
-            inputs.append(ColSpec(type=DataType.string, name=variable.name, required=False))
+            inputs.append(
+                ColSpec(type=DataType.string, name=variable.name, required=False)
+            )
         elif isinstance(variable, Integer):
-            inputs.append(ColSpec(type=DataType.integer, name=variable.name, required=False))
+            inputs.append(
+                ColSpec(type=DataType.integer, name=variable.name, required=False)
+            )
         else:
             raise ValueError(f"Unknown variable type {type(variable)}")
     result = ModelSignature(inputs=Schema(inputs))

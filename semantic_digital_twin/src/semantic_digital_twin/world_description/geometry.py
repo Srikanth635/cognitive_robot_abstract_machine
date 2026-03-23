@@ -117,7 +117,7 @@ class Scale:
         extend_result_in_direction: Optional[Vector3] = None,
         amount: float = 0.0,
     ) -> SimpleEvent:
-        simple_event = SimpleEvent(
+        simple_event = SimpleEvent.from_data(
             {
                 SpatialVariables.x.value: closed(-self.x / 2, self.x / 2),
                 SpatialVariables.y.value: closed(-self.y / 2, self.y / 2),
@@ -781,7 +781,7 @@ class BoundingBox:
         """
         :return: The bounding box as a random event.
         """
-        return SimpleEvent(
+        return SimpleEvent.from_data(
             {
                 SpatialVariables.x.value: self.x_interval,
                 SpatialVariables.y.value: self.y_interval,

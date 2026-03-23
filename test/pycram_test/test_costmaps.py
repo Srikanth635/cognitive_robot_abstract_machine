@@ -78,7 +78,7 @@ def test_partition_into_rectangles(immutable_model_world):
 
     events = []
     for rectangle in rectangles:
-        event = SimpleEvent(
+        event = SimpleEvent.from_data(
             {
                 x: open(rectangle.x_lower, rectangle.x_upper),
                 y: open(rectangle.y_lower, rectangle.y_upper),
@@ -86,7 +86,7 @@ def test_partition_into_rectangles(immutable_model_world):
         )
         events.append(event)
 
-    event = Event(*events)
+    event = Event.from_simple_sets(*events)
     # fig = go.Figure(event.plot(), event.plotly_layout())
     # fig.update_xaxes(range=[-2, 2])
     # fig.update_yaxes(range=[-2, 2])

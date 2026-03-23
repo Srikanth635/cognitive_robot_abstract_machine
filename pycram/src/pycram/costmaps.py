@@ -1079,7 +1079,7 @@ class AlgebraicSemanticCostmap(SemanticCostmap):
         y_origin = self.origin.position.y
         left = self.original_valid_area[self.y].simple_sets[0].lower
         left += margin
-        event = SimpleEvent(
+        event = SimpleEvent.from_data(
             {self.x: reals(), self.y: random_events.interval.open(left, y_origin)}
         ).as_composite_set()
         return event
@@ -1094,7 +1094,7 @@ class AlgebraicSemanticCostmap(SemanticCostmap):
         y_origin = self.origin.position.y
         right = self.original_valid_area[self.y].simple_sets[0].upper
         right -= margin
-        event = SimpleEvent(
+        event = SimpleEvent.from_data(
             {self.x: reals(), self.y: closed_open(y_origin, right)}
         ).as_composite_set()
         return event
@@ -1109,7 +1109,7 @@ class AlgebraicSemanticCostmap(SemanticCostmap):
         x_origin = self.origin.position.x
         top = self.original_valid_area[self.x].simple_sets[0].upper
         top -= margin
-        event = SimpleEvent(
+        event = SimpleEvent.from_data(
             {self.x: random_events.interval.closed_open(x_origin, top), self.y: reals()}
         ).as_composite_set()
         return event
@@ -1124,7 +1124,7 @@ class AlgebraicSemanticCostmap(SemanticCostmap):
         x_origin = self.origin.position.x
         lower = self.original_valid_area[self.x].simple_sets[0].lower
         lower += margin
-        event = SimpleEvent(
+        event = SimpleEvent.from_data(
             {self.x: random_events.interval.open(lower, x_origin), self.y: reals()}
         ).as_composite_set()
         return event
@@ -1140,7 +1140,7 @@ class AlgebraicSemanticCostmap(SemanticCostmap):
         min_y += margin
         max_y -= margin
 
-        inner_event = SimpleEvent(
+        inner_event = SimpleEvent.from_data(
             {self.x: closed(min_x, max_x), self.y: closed(min_y, max_y)}
         ).as_composite_set()
         return inner_event
@@ -1154,7 +1154,7 @@ class AlgebraicSemanticCostmap(SemanticCostmap):
         for rectangle in self.partitioning_rectangles():
             # rectangle.scale(1/self.resolution, 1/self.resolution)
             rectangle.translate(self.origin.position.x, self.origin.position.y)
-            rectangle_event = SimpleEvent(
+            rectangle_event = SimpleEvent.from_data(
                 {
                     self.x: closed(rectangle.x_lower, rectangle.x_upper),
                     self.y: closed(rectangle.y_lower, rectangle.y_upper),

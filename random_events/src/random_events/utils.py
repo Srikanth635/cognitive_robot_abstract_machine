@@ -1,13 +1,16 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
+from dataclasses import dataclass, field
+
 from typing_extensions import Dict, Any, Self
 
 
-class CPPWrapper:
+@dataclass
+class CPPWrapper(ABC):
     """
     Class for wrapping C++ objects.
     """
 
-    _cpp_object: Any
+    _cpp_object: Any = field(init=False)
     """
     The C++ object that this class wraps.
     """

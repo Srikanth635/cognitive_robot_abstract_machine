@@ -6,8 +6,12 @@ from random_events.product_algebra import VariableMap, SimpleEvent
 
 from probabilistic_model.learning.jpt.jpt import JPT
 from probabilistic_model.learning.jpt.variables import infer_variables_from_dataframe
-from probabilistic_model.probabilistic_circuit.jax.probabilistic_circuit import ProbabilisticCircuit
-from probabilistic_model.probabilistic_circuit.rx.probabilistic_circuit import ProbabilisticCircuit as RXProbabilisticCircuit
+from probabilistic_model.probabilistic_circuit.jax.probabilistic_circuit import (
+    ProbabilisticCircuit,
+)
+from probabilistic_model.probabilistic_circuit.rx.probabilistic_circuit import (
+    ProbabilisticCircuit as RXProbabilisticCircuit,
+)
 import numpy as np
 import jax
 import jax.numpy as jnp
@@ -17,6 +21,7 @@ from probabilistic_model.utils import timeit
 import pandas as pd
 import equinox
 import os
+
 np.random.seed(69)
 
 
@@ -51,7 +56,9 @@ for component in tqdm.trange(number_of_components, desc="Generating data"):
 data = np.concatenate(data, axis=0)
 df = pd.DataFrame(data, columns=[f"x_{i}" for i in range(number_of_variables)])
 
-variables = infer_variables_from_dataframe(df, min_samples_per_quantile=min_samples_per_quantile)
+variables = infer_variables_from_dataframe(
+    df, min_samples_per_quantile=min_samples_per_quantile
+)
 
 # create models
 if not load_from_disc:
@@ -71,12 +78,19 @@ else:
 
 
 print("Number of edges:", len(list(rx_model.edges())))
-print("Number of parameters:",  jax_model.root.number_of_trainable_parameters)
+print("Number of parameters:", jax_model.root.number_of_trainable_parameters)
 compiled_ll_jax = equinox.filter_jit(jax_model.root.log_likelihood_of_nodes)
 # compiled_prob_jax = equinox.filter_jit(model.root.probability_of_simple_event)
 
 
-def eval_performance(rx_method, nx_args, jax_method, jax_args, number_of_iterations=15, warmup_iterations=10):
+def eval_performance(
+    rx_method,
+    nx_args,
+    jax_method,
+    jax_args,
+    number_of_iterations=15,
+    warmup_iterations=10,
+):
 
     @timeit
     def timed_nx_method():
@@ -99,6 +113,7 @@ def eval_performance(rx_method, nx_args, jax_method, jax_args, number_of_iterati
 
     return times_nx, times_jax
 
+
 data = rx_model.sample(number_of_samples_for_evaluation)
 data_jax = jnp.array(data)
 
@@ -109,10 +124,12 @@ data_jax = jnp.array(data)
 # ll = jax_model.log_likelihood(samples)
 # assert (ll > -jnp.inf).all()
 
-times_nx, times_jax = eval_performance(rx_model.log_likelihood, (data,), compiled_ll_jax, (data_jax,), 15, 10)
+times_nx, times_jax = eval_performance(
+    rx_model.log_likelihood, (data,), compiled_ll_jax, (data_jax,), 15, 10
+)
 
 time_jax = np.mean(times_jax), np.std(times_jax)
 time_nx = np.mean(times_nx), np.std(times_nx)
 print("Jax:", time_jax)
 print("Networkx:", time_nx)
-print("Networkx/Jax ",time_nx[0]/time_jax[0])
+print("Networkx/Jax ", time_nx[0] / time_jax[0])

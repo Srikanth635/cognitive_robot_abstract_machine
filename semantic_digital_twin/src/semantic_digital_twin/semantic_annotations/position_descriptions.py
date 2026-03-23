@@ -94,7 +94,7 @@ class SemanticPositionDescription:
         span = base.upper - base.lower
         new_lower = base.lower + span * target.lower
         new_upper = base.lower + span * target.upper
-        return SimpleInterval(new_lower, new_upper, base.left, base.right)
+        return SimpleInterval.from_data(new_lower, new_upper, base.left, base.right)
 
     def _apply_zoom(self, simple_event: SimpleEvent) -> SimpleEvent:
         """
@@ -136,7 +136,7 @@ class SemanticPositionDescription:
         for step in directions:
             current_interval = self._zoom_interval(current_interval, step)
 
-        return SimpleEvent({axis: current_interval})
+        return SimpleEvent.from_data({axis: current_interval})
 
     def sample_point_from_event(self, event: Event) -> Tuple[float, float]:
         """

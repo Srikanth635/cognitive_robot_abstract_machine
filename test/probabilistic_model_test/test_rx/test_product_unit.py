@@ -16,8 +16,8 @@ class ProductUnitTestCase(unittest.TestCase):
 
     def setUp(self):
         pc = ProbabilisticCircuit()
-        u1 = leaf(UniformDistribution(self.x, closed(0, 1).simple_sets[0]), pc)
-        u2 = leaf(UniformDistribution(self.y, closed(3, 4).simple_sets[0]), pc)
+        u1 = leaf(UniformDistribution(variable=self.x, interval=closed(0, 1).simple_sets[0]), pc)
+        u2 = leaf(UniformDistribution(variable=self.y, interval=closed(3, 4).simple_sets[0]), pc)
 
         product_unit = ProductUnit(probabilistic_circuit=pc)
         product_unit.add_subcircuit(u1)
@@ -40,7 +40,7 @@ class ProductUnitTestCase(unittest.TestCase):
         self.assertEqual(result, 1)
 
     def test_probability(self):
-        event = SimpleEvent(
+        event = SimpleEvent.from_data(
             {self.x: closed(0, 0.5), self.y: closed(3, 3.5)}
         ).as_composite_set()
         result = self.model.probability(event)
@@ -51,7 +51,7 @@ class ProductUnitTestCase(unittest.TestCase):
         self.assertEqual(likelihood, 1)
         self.assertEqual(
             mode,
-            SimpleEvent(
+            SimpleEvent.from_data(
                 {self.x: closed(0, 1), self.y: closed(3, 4)}
             ).as_composite_set(),
         )
@@ -67,14 +67,14 @@ class ProductUnitTestCase(unittest.TestCase):
         self.assertEqual(expectation[self.y], 3.5)
 
     def test_conditional(self):
-        event = SimpleEvent({self.x: closed(0, 0.5)}).as_composite_set()
+        event = SimpleEvent.from_data({self.x: closed(0, 0.5)}).as_composite_set()
         result, probability = self.model.truncated(event)
         self.assertEqual(probability, 0.5)
         self.assertEqual(len(list(result.nodes())), 3)
         self.assertIsInstance(result.root, ProductUnit)
 
     def test_conditional_with_0_evidence(self):
-        event = SimpleEvent({self.x: closed(1.5, 2)}).as_composite_set()
+        event = SimpleEvent.from_data({self.x: closed(1.5, 2)}).as_composite_set()
         result, probability = self.model.truncated(event)
         self.assertEqual(probability, 0)
         self.assertEqual(result, None)
@@ -90,13 +90,13 @@ class ProductUnitTestCase(unittest.TestCase):
 
     def test_domain(self):
         domain = self.model.support
-        domain_by_hand = SimpleEvent(
+        domain_by_hand = SimpleEvent.from_data(
             {self.x: closed(0, 1), self.y: closed(3, 4)}
         ).as_composite_set()
         self.assertEqual(domain, domain_by_hand)
 
     def test_serialization(self):
-        event = SimpleEvent(
+        event = SimpleEvent.from_data(
             {self.x: closed(0, 0.5), self.y: closed(3, 3.5)}
         ).as_composite_set()
         serialized = self.model.to_json()
@@ -104,7 +104,7 @@ class ProductUnitTestCase(unittest.TestCase):
         self.assertEqual(deserialized.probability(event), self.model.probability(event))
 
     def test_copy(self):
-        event = SimpleEvent(
+        event = SimpleEvent.from_data(
             {self.x: closed(0, 0.5), self.y: closed(3, 3.5)}
         ).as_composite_set()
         copy = self.model.__deepcopy__()

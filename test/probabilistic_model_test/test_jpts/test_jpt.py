@@ -3,6 +3,7 @@ import json
 import math
 import random
 import tempfile
+from dataclasses import dataclass
 from datetime import datetime
 from enum import IntEnum, Enum
 
@@ -51,7 +52,7 @@ class SymbolEnum(Enum):
 
 
 class VariableTestCase(unittest.TestCase):
-    variable: ScaledContinuous = ScaledContinuous("x", 2, 3)
+    variable: ScaledContinuous = ScaledContinuous(name="x", mean=2, std=3)
 
     def test_encode(self):
         self.assertEqual(self.variable.encode(2), 0)
@@ -137,7 +138,7 @@ class JPTTestCase(unittest.TestCase):
         self.real, self.integer, self.symbol = infer_variables_from_dataframe(
             self.data, scale_continuous_types=False
         )
-        self.model = JPT([self.real, self.integer, self.symbol])
+        self.model = JPT(variables=[self.real, self.integer, self.symbol])
 
     def test_construct_impurity(self):
         impurity = self.model.construct_impurity()
@@ -168,7 +169,7 @@ class JPTTestCase(unittest.TestCase):
         self.assertEqual(len(self.model.root.subcircuits[0].subcircuits), 3)
 
     def test_fit(self):
-        self.model._min_samples_leaf = 10
+        self.model.min_samples_per_leaf = 10
         pc = self.model.fit(self.data)
         self.assertTrue(
             len(pc.root.subcircuits)
@@ -202,7 +203,7 @@ class JPTTestCase(unittest.TestCase):
         )
 
     def test_fit_and_compare_to_jpt(self):
-        self.model._min_samples_leaf = 10
+        self.model.min_samples_per_leaf = 10
         self.model.keep_sample_indices = True
         self.model.fit(self.data)
         variables = old_infer_from_dataframe(
@@ -251,7 +252,7 @@ class JPTTestCase(unittest.TestCase):
         )
 
     def test_serialization(self):
-        self.model._min_samples_leaf = 10
+        self.model.min_samples_per_leaf = 10
         self.model.fit(self.data)
         serialized = self.model.to_json()
         deserialized = JPT.from_json(serialized)
@@ -278,7 +279,7 @@ class BreastCancerTestCase(unittest.TestCase):
             cls.data, scale_continuous_types=False, min_samples_per_quantile=600
         )
 
-        cls.model = JPT(variables, min_samples_leaf=0.4)
+        cls.model = JPT(variables=variables, min_samples_per_leaf=0.4)
         cls.pc = cls.model.fit(cls.data)
 
     def test_serialization(self):
@@ -300,7 +301,7 @@ class BreastCancerTestCase(unittest.TestCase):
         file.close()
 
     def test_conditional_inference(self):
-        evidence = SimpleEvent(
+        evidence = SimpleEvent.from_data(
             {variable: variable.domain for variable in self.model.variables}
         ).as_composite_set()
         query = evidence
@@ -320,7 +321,7 @@ class BreastCancerTestCase(unittest.TestCase):
     def test_serialization_of_circuit(self):
         json_dict = self.pc.to_json()
         model = ProbabilisticCircuit.from_json(json_dict)
-        event = SimpleEvent(
+        event = SimpleEvent.from_data(
             {variable: variable.domain for variable in self.model.variables}
         ).as_composite_set()
         self.assertAlmostEqual(model.probability(event), 1.0)
@@ -329,7 +330,7 @@ class BreastCancerTestCase(unittest.TestCase):
         model = self.pc
         marginal = model.marginal(self.model.variables[:2])
         x, y = self.model.variables[:2]
-        event = SimpleEvent({x: closed(0, 10)}).as_composite_set()
+        event = SimpleEvent.from_data({x: closed(0, 10)}).as_composite_set()
         conditional, probability = model.truncated(event)
 
     def test_mode(self):
@@ -351,7 +352,7 @@ class MNISTTestCase(unittest.TestCase):
         variables = infer_variables_from_dataframe(
             df, scale_continuous_types=False, min_likelihood_improvement=0.01
         )
-        cls.model = JPT(variables, min_samples_leaf=0.1)
+        cls.model = JPT(variables=variables, min_samples_per_leaf=0.1)
         cls.model.fit(df)
 
     def test_serialization(self):
@@ -387,8 +388,8 @@ class GaussianJPTTestCase(unittest.TestCase):
         np.random.seed(69)
         pc = ProbabilisticCircuit()
         prod = ProductUnit(probabilistic_circuit=pc)
-        prod.add_subcircuit(leaf(GaussianDistribution(Continuous("x"), 2, 4), pc))
-        prod.add_subcircuit(leaf(GaussianDistribution(Continuous("y"), 2, 4), pc))
+        prod.add_subcircuit(leaf(GaussianDistribution(variable=Continuous("x"), location=2, scale=4), pc))
+        prod.add_subcircuit(leaf(GaussianDistribution(variable=Continuous("y"), location=2, scale=4), pc))
         cls.multivariate_normal = pc
         samples = cls.multivariate_normal.sample(1000)
         cls.data = pd.DataFrame(
@@ -400,7 +401,7 @@ class GaussianJPTTestCase(unittest.TestCase):
         )
 
     def test_plot_2d_jpt(self):
-        model = JPT([self.x, self.y], min_samples_leaf=0.9)
+        model = JPT([self.x, self.y], min_samples_per_leaf=0.9)
         pc = model.fit(self.data)
         fig = go.Figure(pc.plot(500, surface=True), pc.plotly_layout())
         # fig.show()

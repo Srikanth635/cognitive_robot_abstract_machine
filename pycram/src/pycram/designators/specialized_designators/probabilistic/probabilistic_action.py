@@ -77,19 +77,19 @@ class ProbabilisticAction:
 
 
 class MoveAndPickUpVariables(Variables):
-    arm = Symbolic("arm", Set.from_iterable(Arms))
-    keep_joint_states = Symbolic("keep_joint_states", Set.from_iterable([False, True]))
+    arm = Symbolic(name="arm", domain=Set.from_iterable(Arms))
+    keep_joint_states = Symbolic(name="keep_joint_states", domain=Set.from_iterable([False, True]))
 
-    rotate_gripper = Symbolic("rotate_gripper", Set.from_iterable([False, True]))
+    rotate_gripper = Symbolic(name="rotate_gripper", domain=Set.from_iterable([False, True]))
 
     x = Continuous("x")
     y = Continuous("y")
 
     approach_direction = Symbolic(
-        "approach_direction", Set.from_iterable(ApproachDirection)
+        name="approach_direction", domain=Set.from_iterable(ApproachDirection)
     )
     vertical_alignment = Symbolic(
-        "vertical_alignment", Set.from_iterable(VerticalAlignment)
+        name="vertical_alignment", domain=Set.from_iterable(VerticalAlignment)
     )
 
 
@@ -163,7 +163,7 @@ class MoveAndPickUpParameterizer(ProbabilisticAction):
         free_space = free_space.marginal(xy)
 
         # create floor level
-        z_event = SimpleEvent({SpatialVariables.z.value: 0.0}).as_composite_set()
+        z_event = SimpleEvent.from_data({SpatialVariables.z.value: 0.0}).as_composite_set()
         z_event.fill_missing_variables(xy)
         free_space.fill_missing_variables(SortedSet([SpatialVariables.z.value]))
         free_space &= z_event
@@ -186,7 +186,7 @@ class MoveAndPickUpParameterizer(ProbabilisticAction):
 
         # move model to position of the object
         obj_pose = PoseStamped.from_spatial_type(obj.global_pose)
-        model.translate(
+        model.apply_translation(
             {
                 self.variables.x.value: obj_pose.pose.position.x,
                 self.variables.y.value: obj_pose.pose.position.y,
@@ -198,7 +198,7 @@ class MoveAndPickUpParameterizer(ProbabilisticAction):
         condition.fill_missing_variables(model.variables)
 
         # apply grasp conditions
-        grasp_condition = SimpleEvent(
+        grasp_condition = SimpleEvent.from_data(
             {
                 self.variables.approach_direction.value: [
                     ApproachDirection.FRONT,
@@ -217,7 +217,7 @@ class MoveAndPickUpParameterizer(ProbabilisticAction):
         condition &= grasp_condition
 
         # apply arm condition
-        arm_condition = SimpleEvent(
+        arm_condition = SimpleEvent.from_data(
             {
                 self.variables.arm.value: [Arms.LEFT, Arms.RIGHT],
             }

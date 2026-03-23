@@ -60,8 +60,13 @@ class CouplingCircuit(eqx.Module):
     The columns in a matrix that the circuit takes as input for calculating likelihoods.
     """
 
-    def __init__(self, conditioner: Conditioner, conditioner_columns: jax.Array,
-                 circuit: Layer, circuit_columns):
+    def __init__(
+        self,
+        conditioner: Conditioner,
+        conditioner_columns: jax.Array,
+        circuit: Layer,
+        circuit_columns,
+    ):
         self.conditioner = conditioner
         self.conditioner_columns = conditioner_columns
         self.circuit = circuit
@@ -95,7 +100,6 @@ class CouplingCircuit(eqx.Module):
 
         return slices
 
-
     def create_circuit_from_parameters(self, params: jax.Array) -> Layer:
         """
         Generate a circuit with the structure from self.circuit and the parameters from params.
@@ -110,7 +114,9 @@ class CouplingCircuit(eqx.Module):
         flat_model, flat_tree_def = jax.tree_util.tree_flatten(tree_def)
 
         # slice the parameters such that they match the pytree
-        slices_parameters = [params[start:end] for start, end in self.slices_of_parameters_for_flat_model]
+        slices_parameters = [
+            params[start:end] for start, end in self.slices_of_parameters_for_flat_model
+        ]
 
         # update the parameters
         params = tree_unflatten(flat_tree_def, slices_parameters)
@@ -138,7 +144,10 @@ class CouplingCircuit(eqx.Module):
         Check if the output of the conditioner matches the parametrization of the circuit.
         """
         self.circuit.validate()
-        assert self.circuit.number_of_trainable_parameters == self.conditioner.output_length
+        assert (
+            self.circuit.number_of_trainable_parameters
+            == self.conditioner.output_length
+        )
 
 
 class LinearConditioner(eqx.Module, Conditioner):
@@ -149,7 +158,9 @@ class LinearConditioner(eqx.Module, Conditioner):
     linear: eqx.nn.Linear
 
     def __init__(self, in_features: int, out_features: int):
-        self.linear = eqx.nn.Linear(in_features, out_features, key=jax.random.PRNGKey(69))
+        self.linear = eqx.nn.Linear(
+            in_features, out_features, key=jax.random.PRNGKey(69)
+        )
 
     def generate_parameters(self, x: jax.Array) -> jax.Array:
         return self.linear(x)

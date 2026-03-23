@@ -1,8 +1,14 @@
+from dataclasses import dataclass
+
 from typing_extensions import Dict, Any
 
-circled_product = "verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.flowchart.or;"
+circled_product = (
+    "verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.flowchart.or;"
+)
 circled_sum = "verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.flowchart.summing_function;"
 
+
+@dataclass
 class DrawIOInterface:
     """
     Mixin class for objects that can be used with a drawio exporter.

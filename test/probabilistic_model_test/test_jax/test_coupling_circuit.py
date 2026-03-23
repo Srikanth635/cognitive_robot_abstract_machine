@@ -130,7 +130,7 @@ class CouplingCircuit4DTestCase(unittest.TestCase):
             samples, columns=[f"x_{i}" for i in range(cls.number_of_variables)]
         )
         variables = infer_variables_from_dataframe(df, min_samples_per_quantile=30)
-        jpt = JPT(variables, min_samples_leaf=0.1)
+        jpt = JPT(variables=tuple(variables), min_samples_per_leaf=0.1)
         cls.non_marginalized_jpt = jpt.fit(df)
 
         cls.jpt = cls.non_marginalized_jpt.marginal(

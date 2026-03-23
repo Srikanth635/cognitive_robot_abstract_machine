@@ -63,10 +63,10 @@ class SmallCircuitIntegrationTestCase(unittest.TestCase):
         prod2.add_subcircuit(sum3)
         prod2.add_subcircuit(sum5)
 
-        d_x1 = leaf(DiracDeltaDistribution(cls.x, 0, 1), nx_model)
-        d_x2 = leaf(DiracDeltaDistribution(cls.x, 1, 2), nx_model)
-        d_y1 = leaf(DiracDeltaDistribution(cls.y, 2, 3), nx_model)
-        d_y2 = leaf(DiracDeltaDistribution(cls.y, 3, 4), nx_model)
+        d_x1 = leaf(DiracDeltaDistribution(variable=cls.x, location=0, density_cap=1), nx_model)
+        d_x2 = leaf(DiracDeltaDistribution(variable=cls.x, location=1, density_cap=2), nx_model)
+        d_y1 = leaf(DiracDeltaDistribution(variable=cls.y, location=2, density_cap=3), nx_model)
+        d_y2 = leaf(DiracDeltaDistribution(variable=cls.y, location=3, density_cap=4), nx_model)
 
         sum2.add_subcircuit(d_x1, np.log(0.8))
         sum2.add_subcircuit(d_x2, np.log(0.2))
@@ -125,7 +125,7 @@ class JPTIntegrationTestCase(unittest.TestCase):
             samples, columns=[f"x_{i}" for i in range(cls.number_of_variables)]
         )
         variables = infer_variables_from_dataframe(df, min_samples_per_quantile=100)
-        jpt = JPT(variables, min_samples_leaf=0.1)
+        jpt = JPT(variables=variables, min_samples_per_leaf=0.1)
 
         cls.jpt = jpt.fit(df)
 
@@ -194,10 +194,10 @@ class NanGradientTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        event1 = SimpleEvent(
+        event1 = SimpleEvent.from_data(
             {cls.x: closed(0, 1) | closed(2, 3), cls.y: closed(0, 1) | closed(2, 3)}
         ).as_composite_set()
-        event2 = SimpleEvent(
+        event2 = SimpleEvent.from_data(
             {cls.x: closed(1, 2) | closed(3, 4), cls.y: closed(1, 2) | closed(3, 4)}
         ).as_composite_set()
         cls.event = event1 | event2

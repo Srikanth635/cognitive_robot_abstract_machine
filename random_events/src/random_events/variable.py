@@ -1,5 +1,6 @@
 import enum
 from abc import abstractmethod
+from dataclasses import dataclass, field
 from typing import assert_never
 
 import random_events_lib as rl
@@ -19,6 +20,7 @@ compatible_types = (
 )  # types that can be expressed variable
 
 
+@dataclass
 class Variable(SubclassJSONSerializer, CPPWrapper):
     """
     Parent class for all random variables.
@@ -29,20 +31,10 @@ class Variable(SubclassJSONSerializer, CPPWrapper):
     The name of the variable.
     """
 
-    domain: AbstractCompositeSet
+    domain: AbstractCompositeSet = field(kw_only=True, default=None)
     """
     The domain of the variable.
     """
-
-    def __init__(self, name: str, domain: AbstractCompositeSet):
-        """
-        Construct a new random variable.
-
-        :param name: The name of the variable.
-        :param domain: The domain of the variable.
-        """
-        self.name = name
-        self.domain = domain
 
     def __lt__(self, other: Self) -> bool:
         return self._cpp_object < other._cpp_object
@@ -63,8 +55,8 @@ class Variable(SubclassJSONSerializer, CPPWrapper):
         return {**super().to_json(), "name": self.name, "domain": self.domain.to_json()}
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(data["name"], AbstractCompositeSet.from_json(data["domain"]))
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        return cls(data["name"])
 
     @property
     @abstractmethod
@@ -99,6 +91,7 @@ class Variable(SubclassJSONSerializer, CPPWrapper):
         raise NotImplementedError
 
 
+@dataclass(eq=False, repr=False)
 class Continuous(Variable):
     """
     Class for continuous random variables.
@@ -106,22 +99,18 @@ class Continuous(Variable):
     The domain of a continuous variable is the real line.
     """
 
-    def __init__(self, name: str, *args, **kwargs):
-        """
-        Construct a continuous variable.
+    domain: Interval = field(kw_only=True, default=reals())
 
-        :param name: The name.
-        """
-        super().__init__(name, reals())
-
+    def __post_init__(self):
         self._cpp_object = rl.Continuous(self.name)
 
     @property
     def is_numeric(self):
         return True
 
-    def _from_cpp(self, cpp_object):
-        return self.__class__(cpp_object.name)
+    @classmethod
+    def _from_cpp(cls, cpp_object):
+        return cls(cpp_object.name)
 
     def make_value(self, value: Any) -> Interval:
         if isinstance(value, (int, float)):
@@ -136,6 +125,7 @@ class Continuous(Variable):
             raise ValueError(f"Value {value} cannot be parsed to an interval.")
 
 
+@dataclass(eq=False, repr=False)
 class Symbolic(Variable):
     """
     Class for unordered, finite, discrete random variables.
@@ -143,27 +133,25 @@ class Symbolic(Variable):
     The domain of a symbolic variable is a set.
     """
 
-    domain: Set
+    domain: Set = field(kw_only=True)
 
-    def __init__(self, name: Optional[str], domain: Set):
-        """
-        Construct a symbolic variable.
-
-        :param name: The name.
-        :param domain: The domain of the variable.
-        """
-        # TODO this deepcopy here needs investigation.
-        #  The bug seems to be that not doing a deepcopy here destroys the domain as soon as the object is deleted.
-        super().__init__(name, domain.__deepcopy__())
-
+    def __post_init__(self):
+        self.domain = self.domain.__deepcopy__()
         self._cpp_object = rl.Symbolic(self.name, self.domain._cpp_object)
 
     @property
     def is_numeric(self):
         return False
 
-    def _from_cpp(self, cpp_object):
-        return self.__class__(cpp_object.name, self.domain._from_cpp(cpp_object.domain))
+    @classmethod
+    def _from_cpp(cls, cpp_object):
+        return cls(
+            name=cpp_object.name, domain=cpp_object.domain._from_cpp(cpp_object.domain)
+        )
+
+    @classmethod
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        return cls(name=data["name"], domain=Set.from_json(data["domain"]))
 
     def make_value(self, value) -> Set:
         if not isinstance(value, Iterable):
@@ -190,9 +178,10 @@ class Symbolic(Variable):
                     )
                 parsed_value += matches
 
-        return Set(*parsed_value)
+        return Set.from_simple_sets(*parsed_value)
 
 
+@dataclass(eq=False, repr=False)
 class Integer(Variable):
     """
     Class for ordered, discrete random variables.
@@ -200,22 +189,18 @@ class Integer(Variable):
     The domain of an integer variable is the number line.
     """
 
-    def __init__(self, name: str, domain: AbstractCompositeSet = reals()):
-        """
-        Construct an integer variable.
-        :param name: The name.
-        :param domain: The domain of the variable.
-        """
-        super().__init__(name, reals())
+    domain: Interval = field(kw_only=True, default=reals())
 
+    def __post_init__(self):
         self._cpp_object = rl.Integer(self.name)
 
     @property
     def is_numeric(self):
         return True
 
-    def _from_cpp(self, cpp_object):
-        return self.__class__(cpp_object.name)
+    @classmethod
+    def _from_cpp(cls, cpp_object):
+        return cls(name=cpp_object.name)
 
     def make_value(self, value: Any) -> Interval:
         return Continuous.make_value(self, value)
@@ -230,9 +215,9 @@ def variable_from_name_and_type(name: str, type_: Type) -> Variable:
     :return: The created variable
     """
     if issubclass(type_, enum.Enum):
-        result = Symbolic(name, Set.from_iterable(type_))
+        result = Symbolic(name=name, domain=Set.from_iterable(type_))
     elif issubclass(type_, bool):
-        result = Symbolic(name, Set.from_iterable([True, False]))
+        result = Symbolic(name=name, domain=Set.from_iterable([True, False]))
     elif issubclass(type_, int):
         result = Integer(name)
     elif issubclass(type_, float):

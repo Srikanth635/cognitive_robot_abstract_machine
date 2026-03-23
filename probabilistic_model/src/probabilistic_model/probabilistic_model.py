@@ -1,17 +1,45 @@
 from __future__ import annotations
 
-import abc
+import itertools
 import math
+import plotly.graph_objects as go
+from dataclasses import dataclass
+from typing import (
+    TYPE_CHECKING,
+    Union,
+    Tuple,
+    Iterable,
+    Optional,
+    Self,
+    Dict,
+    Any,
+    List,
+)
 
+import numpy as np
+import numpy.typing as npt
 import tqdm
-from random_events.interval import closed, SimpleInterval
-from random_events.product_algebra import *
-from random_events.set import *
-from random_events.variable import *
 
-from probabilistic_model.constants import *
+from probabilistic_model.constants import (
+    MODE_TRACE_COLOR,
+    PDF_TRACE_COLOR,
+    PDF_TRACE_NAME,
+    CDF_TRACE_NAME,
+    CDF_TRACE_COLOR,
+    SCALING_FACTOR_FOR_EXPECTATION_IN_PLOT,
+    EXPECTATION_TRACE_NAME,
+    EXPECTATION_TRACE_COLOR,
+    MODE_TRACE_NAME,
+    PADDING_FACTOR_FOR_X_AXIS_IN_PLOT,
+    SAMPLES_TRACE_NAME,
+)
+from random_events.interval import closed, SimpleInterval, Interval
+from abc import abstractmethod, ABC
+
 from probabilistic_model.error import IntractableError, UndefinedOperationError
 from probabilistic_model.utils import neighbouring_points
+from random_events.product_algebra import VariableMap, Event, SimpleEvent
+from random_events.variable import Integer, Continuous, Variable, Symbolic
 
 # Type definitions
 FullEvidenceType = np.array  # [Union[float, int, SetElement]]
@@ -27,7 +55,8 @@ else:
     MomentType = VariableMap
 
 
-class ProbabilisticModel(abc.ABC):
+@dataclass
+class ProbabilisticModel(ABC):
     """
     Abstract base class for probabilistic models.
 
@@ -61,7 +90,7 @@ class ProbabilisticModel(abc.ABC):
         """
         raise NotImplementedError
 
-    def likelihood(self, events: np.array) -> np.array:
+    def likelihood(self, events: npt.NDArray) -> npt.NDArray:
         """
         Calculate the likelihood of an array of events.
 
@@ -82,7 +111,7 @@ class ProbabilisticModel(abc.ABC):
         return np.exp(self.log_likelihood(events))
 
     @abstractmethod
-    def log_likelihood(self, events: np.array) -> np.array:
+    def log_likelihood(self, events: npt.NDArray) -> npt.NDArray:
         """
         Calculate the log-likelihood of an event.
 
@@ -93,7 +122,7 @@ class ProbabilisticModel(abc.ABC):
         """
         raise NotImplementedError
 
-    def cdf(self, events: np.array) -> np.array:
+    def cdf(self, events: npt.NDArray) -> npt.NDArray:
         """
         Calculate the cumulative distribution function of an event-array.
 
@@ -226,7 +255,7 @@ class ProbabilisticModel(abc.ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def sample(self, amount: int) -> np.array:
+    def sample(self, amount: int) -> npt.NDArray:
         """
         Sample from the model.
 
@@ -295,9 +324,11 @@ class ProbabilisticModel(abc.ABC):
         """
         :return: A simple event that contains every possible value.
         """
-        return SimpleEvent({variable: variable.domain for variable in self.variables})
+        return SimpleEvent.from_data(
+            {variable: variable.domain for variable in self.variables}
+        )
 
-    def translate(self, translation: Dict[Variable, float]):
+    def apply_translation(self, translation: Dict[Variable, float]):
         """
         Translate the model in-place.
         Translation is done by adding the translation to the variable location influencing values.
@@ -308,7 +339,7 @@ class ProbabilisticModel(abc.ABC):
         """
         raise NotImplementedError
 
-    def scale(self, scaling: Dict[Variable, float]):
+    def apply_scaling(self, scaling: Dict[Variable, float]):
         """
         Scale the model in-place.
         Scaling is done by multiplying the variable location influencing values.
@@ -317,7 +348,7 @@ class ProbabilisticModel(abc.ABC):
 
         :param scaling: The variable value pairs to scale the model by.
         """
-        ...
+        raise NotImplementedError
 
     def __copy__(self):
         raise NotImplementedError
@@ -403,7 +434,7 @@ class ProbabilisticModel(abc.ABC):
         # calculate probabilities of every element in the domain
         probabilities = {
             str(element): self.probability_of_simple_event(
-                SimpleEvent({variable: element})
+                SimpleEvent.from_data({variable: element})
             )
             for element in variable.domain
         }
@@ -567,7 +598,9 @@ class ProbabilisticModel(abc.ABC):
             max_of_samples + max_of_samples * PADDING_FACTOR_FOR_X_AXIS_IN_PLOT,
         )
         limited_complement_of_support = complement_of_support & limiting_interval
-        traces = SimpleEvent({self.variables[0]: limited_complement_of_support}).plot()
+        traces = SimpleEvent.from_data(
+            {self.variables[0]: limited_complement_of_support}
+        ).plot()
         for trace in traces:
             trace.update(name=PDF_TRACE_NAME, marker=dict(color=PDF_TRACE_COLOR))
         return traces
@@ -633,7 +666,7 @@ class ProbabilisticModel(abc.ABC):
         first = True
         for simple_set in tqdm.tqdm(support.simple_sets):
             for i1, i2 in itertools.product(*simple_set.values()):
-                simple_event = SimpleEvent(
+                simple_event = SimpleEvent.from_data(
                     {self.variables[0]: i1, self.variables[1]: i2}
                 )
                 trace = self.plot_2d_surface_of_simple_event(simple_event, samples)
@@ -659,7 +692,7 @@ class ProbabilisticModel(abc.ABC):
         )
 
     def bounding_box_trace_of_simple_event(
-        self, simple_event: SimpleEvent, samples: np.array, fill_value=0.0
+        self, simple_event: SimpleEvent, samples: npt.NDArray, fill_value=0.0
     ) -> go.Surface:
         """
         Create a bounding box trace for a simple event.
@@ -694,7 +727,7 @@ class ProbabilisticModel(abc.ABC):
         )
 
     def plot_2d_surface_of_simple_event(
-        self, simple_event: SimpleEvent, samples: np.array
+        self, simple_event: SimpleEvent, samples: npt.NDArray
     ):
         # filter samples by this event
         samples_of_this_event = [s for s in samples if simple_event.contains(s)]

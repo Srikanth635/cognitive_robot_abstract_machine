@@ -29,7 +29,7 @@ class Animal(IntEnum):
 
 class DiscreteLayerTestCase(unittest.TestCase):
     model: DiscreteLayer
-    x = Symbolic("x", Set.from_iterable(Animal))
+    x = Symbolic(name="x", domain=Set.from_iterable(Animal))
 
     @classmethod
     def setUpClass(cls):
@@ -62,12 +62,12 @@ class DiscreteLayerTestCase(unittest.TestCase):
         p1 = MissingDict(
             float, {hash(Animal.CAT): 0.0, hash(Animal.DOG): 1, hash(Animal.FISH): 2}
         )
-        d1 = leaf(SymbolicDistribution(self.x, p1), nx_pc)
+        d1 = leaf(SymbolicDistribution(variable=self.x, probabilities=p1), nx_pc)
 
         p2 = MissingDict(
             float, {hash(Animal.CAT): 3, hash(Animal.DOG): 4, hash(Animal.FISH): 0}
         )
-        d2 = leaf(SymbolicDistribution(self.x, p2), nx_pc)
+        d2 = leaf(SymbolicDistribution(variable=self.x, probabilities=p2), nx_pc)
         s = SumUnit(probabilistic_circuit=nx_pc)
         s.add_subcircuit(d2, np.log(0.5))
         s.add_subcircuit(d1, np.log(0.5))
