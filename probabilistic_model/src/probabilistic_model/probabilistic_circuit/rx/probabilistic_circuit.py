@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from enum import IntEnum
 
+import networkx as nx
 import numpy as np
 import rustworkx as rx
 import rustworkx.visualization
@@ -242,7 +243,7 @@ class Unit(SubclassJSONSerializer, DrawIOInterface, ABC):
         }
 
 
-@dataclass
+@dataclass(eq=False)
 class LeafUnit(Unit):
     """
     Class for Leaf units.
@@ -351,7 +352,7 @@ class LeafUnit(Unit):
         return result
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         distribution = SubclassJSONSerializer.from_json(data["distribution"])
         return cls(distribution)
 
@@ -367,6 +368,7 @@ class LeafUnit(Unit):
         return self.__class__(distribution=self.distribution.__deepcopy__())
 
 
+@dataclass(eq=False)
 class InnerUnit(Unit):
     """
     Class for inner units
@@ -391,7 +393,7 @@ class InnerUnit(Unit):
         return self
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         return cls()
 
     def add_subcircuit(self, subcircuit: Unit, log_weight: float = None):
@@ -410,6 +412,7 @@ class InnerUnit(Unit):
         self.probabilistic_circuit.add_edge(self, subcircuit, log_weight)
 
 
+@dataclass(eq=False)
 class SumUnit(InnerUnit):
     _latent_variable: Optional[Symbolic] = None
     """
@@ -461,7 +464,7 @@ class SumUnit(InnerUnit):
                 for index, subcircuit in enumerate(self.subcircuits)
             },
         )
-        result = Symbolic(name, Set.from_iterable(subcircuit_enum))
+        result = Symbolic(name=name, domain=Set.from_iterable(subcircuit_enum))
         self._latent_variable = result
         return result
 
@@ -528,7 +531,7 @@ class SumUnit(InnerUnit):
                 total += count
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         result = cls()
         return result
 
@@ -568,7 +571,9 @@ class SumUnit(InnerUnit):
             own_index = own_latent_variable.domain.simple_sets[0].element.__class__(
                 own_index
             )
-            condition = SimpleEvent({own_latent_variable: own_index}).as_composite_set()
+            condition = SimpleEvent.from_data(
+                {own_latent_variable: own_index}
+            ).as_composite_set()
             p_condition = interaction_model.probability(condition)
 
             # skip iterations that are impossible
@@ -599,7 +604,9 @@ class SumUnit(InnerUnit):
                     0
                 ].element.__class__(other_index)
                 query = (
-                    SimpleEvent({other_latent_variable: other_index}).as_composite_set()
+                    SimpleEvent.from_data(
+                        {other_latent_variable: other_index}
+                    ).as_composite_set()
                     & condition
                 )
                 p_query = interaction_model.probability(query)
@@ -677,7 +684,7 @@ class SumUnit(InnerUnit):
                     new_weight = sub_weight + weight
 
                     # add an edge to that subcircuit
-                    self.add_subcircuit(sub_subcircuit, new_weight, mount=False)
+                    self.add_subcircuit(sub_subcircuit, new_weight)
 
                 # remove the old node
                 self.probabilistic_circuit.remove_node(subcircuit)
@@ -738,6 +745,7 @@ class SumUnit(InnerUnit):
         return result
 
 
+@dataclass(eq=False)
 class ProductUnit(InnerUnit):
     """
     Decomposable Product Units for Probabilistic Circuits
@@ -1622,15 +1630,15 @@ class ProbabilisticCircuit(ProbabilisticModel, SubclassJSONSerializer):
                     self.graph.remove_edge(predecessor, leaf)
                 self.graph.remove_node(leaf)
 
-    def translate(self, translation: Dict[Variable, float]):
+    def apply_translation(self, translation: Dict[Variable, float]):
         for leaf in self.leaves:
             if any(v.is_numeric for v in leaf.variables):
-                leaf.distribution.translate(translation)
+                leaf.distribution.apply_translation(translation)
 
-    def scale(self, scale: Dict[Variable, float]):
+    def apply_scaling(self, scale: Dict[Variable, float]):
         for leaf in self.leaves:
             if any(v.is_numeric for v in leaf.variables):
-                leaf.distribution.scale(scale)
+                leaf.distribution.apply_scaling(scale)
 
     def mount(self, other: Unit) -> Dict[int, Unit]:
         """
@@ -1936,7 +1944,8 @@ class UnivariateDiscreteLeaf(UnivariateLeaf):
             result.add_subcircuit(
                 leaf(
                     self.distribution.__class__(
-                        self.variable, MissingDict(float, {element: 1.0})
+                        variable=self.variable,
+                        probabilities=MissingDict(float, {element: 1.0}),
                     ),
                     self.probabilistic_circuit,
                 ),
@@ -1962,7 +1971,7 @@ class UnivariateDiscreteLeaf(UnivariateLeaf):
 
         for element in mixture.support.simple_sets[0][variable].simple_sets:
             probability = mixture.probability_of_simple_event(
-                SimpleEvent({variable: element})
+                SimpleEvent.from_data({variable: element})
             )
             if isinstance(element, SimpleInterval):
                 element = element.lower
@@ -1973,7 +1982,9 @@ class UnivariateDiscreteLeaf(UnivariateLeaf):
             if isinstance(variable, Integer)
             else SymbolicDistribution
         )
-        distribution = distribution_class(variable, probabilities)
+        distribution = distribution_class(
+            variable=variable, probabilities=probabilities
+        )
         return cls(distribution)
 
 

@@ -110,7 +110,7 @@ class ProbabilisticCircuit(SubclassJSONSerializer):
         return result
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         variables = SortedSet(
             Variable.from_json(variable) for variable in data["variables"]
         )

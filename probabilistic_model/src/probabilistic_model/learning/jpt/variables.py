@@ -1,15 +1,25 @@
+from dataclasses import dataclass, field
 from enum import IntEnum
+from typing import Optional
 
 import numpy as np
 import pandas as pd
 from random_events.set import SetElement, Set
-from random_events.variable import Variable, Continuous as REContinuous, Integer as REInteger, Symbolic
+from random_events.variable import (
+    Variable,
+    Continuous as REContinuous,
+    Integer as REInteger,
+    Symbolic,
+)
 from typing_extensions import Self, List, Any, Dict
 
 
-def infer_variables_from_dataframe(data: pd.DataFrame, scale_continuous_types: bool = False,
-                                   min_likelihood_improvement: float = 0.1, min_samples_per_quantile: int = 10) \
-        -> List[Variable]:
+def infer_variables_from_dataframe(
+    data: pd.DataFrame,
+    scale_continuous_types: bool = False,
+    min_likelihood_improvement: float = 0.1,
+    min_samples_per_quantile: int = 10,
+) -> List[Variable]:
     """
     Infer the variables from a dataframe.
     The variables are inferred by the column names and types of the dataframe.
@@ -30,7 +40,7 @@ def infer_variables_from_dataframe(data: pd.DataFrame, scale_continuous_types: b
         if np.issubdtype(datatype, np.number) and datatype != int:
 
             if len(unique_values) == 1:
-                minimal_distance_between_values = 1.
+                minimal_distance_between_values = 1.0
             else:
                 minimal_distance_between_values = np.diff(np.sort(unique_values)).min()
             mean = data[column].mean()
@@ -43,8 +53,14 @@ def infer_variables_from_dataframe(data: pd.DataFrame, scale_continuous_types: b
             else:
                 variable_class = Continuous
 
-            variable = variable_class(column, mean, std, minimal_distance_between_values, min_likelihood_improvement,
-                                      min_samples_per_quantile)
+            variable = variable_class(
+                column,
+                mean,
+                std,
+                minimal_distance_between_values,
+                min_likelihood_improvement,
+                min_samples_per_quantile,
+            )
 
         # handle discrete variables
         elif datatype in [object, int]:
@@ -56,18 +72,25 @@ def infer_variables_from_dataframe(data: pd.DataFrame, scale_continuous_types: b
                 unique_values = data[column].unique()
                 # unique_values.sort()
                 # enum = IntEnum(column, {value: index for index, value in enumerate(unique_values)})
-                variable = Symbolic(column, Set.from_iterable(unique_values))
+                variable = Symbolic(
+                    name=column, domain=Set.from_iterable(unique_values)
+                )
             else:
-                raise ValueError(f"Datatype {datatype} of column {column} is not supported.")
+                raise ValueError(
+                    f"Datatype {datatype} of column {column} is not supported."
+                )
 
         else:
-            raise ValueError(f"Datatype {datatype} of column {column} is not supported.")
+            raise ValueError(
+                f"Datatype {datatype} of column {column} is not supported."
+            )
 
         result.append(variable)
 
     return result
 
 
+@dataclass
 class Integer(REInteger):
     mean: float
     """
@@ -79,11 +102,6 @@ class Integer(REInteger):
     Standard Deviation of the random variable.
     """
 
-    def __init__(self, name: str, mean, std):
-        super().__init__(name)
-        self.mean = mean
-        self.std = std
-
     def to_json(self) -> Dict[str, Any]:
         result = super().to_json()
         result["mean"] = self.mean
@@ -91,7 +109,7 @@ class Integer(REInteger):
         return result
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
         return cls(name=data["name"], mean=data["mean"], std=data["std"])
 
     def __eq__(self, other):
@@ -101,6 +119,7 @@ class Integer(REInteger):
         return hash(self.name)
 
 
+@dataclass(eq=False)
 class Continuous(REContinuous):
     """
     Base class for continuous variables in JPTs. This class does not standardize the data,
@@ -117,29 +136,20 @@ class Continuous(REContinuous):
     Standard Deviation of the random variable.
     """
 
-    minimal_distance: float
+    minimal_distance: float = field(default=1.0)
     """
     The minimal distance between two values of the variable.
     """
 
-    min_likelihood_improvement: float
+    min_likelihood_improvement: float = field(default=0.1)
     """
     The minimum likelihood improvement passed to the Nyga Distributions.
     """
 
-    min_samples_per_quantile: int
+    min_samples_per_quantile: int = field(default=10)
     """
     The minimum number of samples per quantile passed to the Nyga Distributions.
     """
-
-    def __init__(self, name: str, mean: float, std: float, minimal_distance: float = 1.,
-                 min_likelihood_improvement: float = 0.1, min_samples_per_quantile: int = 10):
-        super().__init__(name)
-        self.mean = mean
-        self.std = std
-        self.minimal_distance = minimal_distance
-        self.min_likelihood_improvement = min_likelihood_improvement
-        self.min_samples_per_quantile = min_samples_per_quantile
 
     def to_json(self) -> Dict[str, Any]:
         result = super().to_json()
@@ -151,20 +161,22 @@ class Continuous(REContinuous):
         return result
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(name=data["name"], mean=data["mean"], std=data["std"], minimal_distance=data["minimal_distance"],
-                   min_likelihood_improvement=data["min_likelihood_improvement"],
-                   min_samples_per_quantile=data["min_samples_per_quantile"])
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        return cls(
+            name=data["name"],
+            mean=data["mean"],
+            std=data["std"],
+            minimal_distance=data["minimal_distance"],
+            min_likelihood_improvement=data["min_likelihood_improvement"],
+            min_samples_per_quantile=data["min_samples_per_quantile"],
+        )
 
 
+@dataclass
 class ScaledContinuous(Continuous):
     """
     A continuous variable that is standardized.
     """
-
-    def __init__(self, name: str, mean: float, std: float, minimal_distance: float = 1.,
-                 min_likelihood_improvement: float = 0.1, min_samples_per_quantile: int = 10):
-        super().__init__(name, mean, std, minimal_distance, min_likelihood_improvement, min_samples_per_quantile)
 
     def encode(self, value: Any):
         return (value - self.mean) / self.std

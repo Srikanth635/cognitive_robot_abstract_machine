@@ -886,7 +886,7 @@ class HasSupportingSurface(HasStorageSpace, ABC):
         surface_circuit_root = SumUnit(probabilistic_circuit=surface_circuit)
 
         objects_of_interest_variable = Symbolic(
-            "objects_of_interest", Set.from_iterable(objects_of_interest)
+            name="objects_of_interest", domain=Set.from_iterable(objects_of_interest)
         )
 
         for object_of_interest in objects_of_interest:

@@ -8,7 +8,10 @@ import tqdm
 from random_events.variable import Continuous
 
 from probabilistic_model.learning.nyga_distribution import NygaDistribution
-from probabilistic_model.interfaces.mlflow_integration import infer_signature, ProbabilisticModelWrapper
+from probabilistic_model.interfaces.mlflow_integration import (
+    infer_signature,
+    ProbabilisticModelWrapper,
+)
 
 np.random.seed(69)
 
@@ -22,7 +25,7 @@ min_samples_per_quantile = 60
 
 data = []
 for component in tqdm.trange(number_of_components, desc="Generating data"):
-    samples = np.random.normal(component, 1., (number_of_samples_per_component, 1))
+    samples = np.random.normal(component, 1.0, (number_of_samples_per_component, 1))
     data.append(samples)
 
 data = np.concatenate(data, axis=0)
@@ -51,7 +54,9 @@ model_info = mlflow.pyfunc.log_model(
     registered_model_name="tracking-quickstart",
 )
 
-loaded_model = mlflow.pyfunc.load_model(model_uri=run.info.artifact_uri + "/mlflow_integration_test")
+loaded_model = mlflow.pyfunc.load_model(
+    model_uri=run.info.artifact_uri + "/mlflow_integration_test"
+)
 loaded_model = loaded_model.unwrap_python_model().model
 
 fig = go.Figure(loaded_model.plot(), loaded_model.plotly_layout())

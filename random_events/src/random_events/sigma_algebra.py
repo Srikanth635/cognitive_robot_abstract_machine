@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod, ABC
+from dataclasses import dataclass, field, InitVar
 from typing import Tuple, Dict, Any
 
 import random_events_lib as rl
@@ -12,7 +13,8 @@ from krrood.adapters.json_serializer import SubclassJSONSerializer
 EMPTY_SET_SYMBOL = "∅"
 
 
-class AbstractSimpleSet(SubclassJSONSerializer, CPPWrapper):
+@dataclass(init=False)
+class AbstractSimpleSet(SubclassJSONSerializer, CPPWrapper, ABC):
     """
     Abstract class for simple sets.
 
@@ -22,6 +24,13 @@ class AbstractSimpleSet(SubclassJSONSerializer, CPPWrapper):
     """
 
     _cpp_object: rl.AbstractSimpleSet
+
+    @classmethod
+    def from_data(cls, *args, **kwargs) -> Self:
+        """
+        Create a simple set from data.
+        """
+        raise NotImplementedError
 
     def intersection_with(self, other: Self) -> Self:
         """
@@ -36,7 +45,10 @@ class AbstractSimpleSet(SubclassJSONSerializer, CPPWrapper):
         """
         :return: The complement of this set as disjoint set of simple sets.
         """
-        return tuple(self._from_cpp(cpp_simple_set) for cpp_simple_set in self._cpp_object.complement())
+        return tuple(
+            self._from_cpp(cpp_simple_set)
+            for cpp_simple_set in self._cpp_object.complement()
+        )
 
     def is_empty(self) -> bool:
         """
@@ -105,7 +117,8 @@ class AbstractSimpleSet(SubclassJSONSerializer, CPPWrapper):
         raise NotImplementedError
 
 
-class AbstractCompositeSet(SubclassJSONSerializer, CPPWrapper, ABC):
+@dataclass
+class AbstractCompositeSet(CPPWrapper, SubclassJSONSerializer, ABC):
     """
     Abstract class for composite sets.
 
@@ -125,12 +138,23 @@ class AbstractCompositeSet(SubclassJSONSerializer, CPPWrapper, ABC):
     Fields that are python only are read from this instance when reading from cpp.
     """
 
+    @classmethod
+    def from_simple_sets(cls, *simple_sets: Tuple[AbstractSimpleSet, ...]) -> Self:
+        """
+        Create a composite set from simple sets.
+        :param simple_sets: The simple sets that make up the union.
+        """
+        raise NotImplementedError
+
     @property
     def simple_sets(self) -> SimpleSetContainer:
         """
         :return: The simple sets contained in the union described by this set.
         """
-        return tuple(self.simple_set_example._from_cpp(cpp_object) for cpp_object in self._cpp_object.simple_sets)
+        return tuple(
+            self.simple_set_example._from_cpp(cpp_object)
+            for cpp_object in self._cpp_object.simple_sets
+        )
 
     def union_with(self, other: Self) -> Self:
         """
@@ -262,14 +286,24 @@ class AbstractCompositeSet(SubclassJSONSerializer, CPPWrapper, ABC):
         return self._cpp_object < other._cpp_object
 
     def to_json(self) -> Dict[str, Any]:
-        return {**super().to_json(), "simple_sets": [simple_set.to_json() for simple_set in self.simple_sets]}
+        return {
+            **super().to_json(),
+            "simple_sets": [simple_set.to_json() for simple_set in self.simple_sets],
+        }
 
     @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> Self:
-        return cls(*[AbstractSimpleSet.from_json(simple_set) for simple_set in data["simple_sets"]])
+    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
+        return cls.from_simple_sets(
+            *[
+                AbstractSimpleSet.from_json(simple_set)
+                for simple_set in data["simple_sets"]
+            ]
+        )
 
     def __deepcopy__(self):
-        return self.__class__(*[ss.__deepcopy__() for ss in self.simple_sets])
+        return self.__class__.from_simple_sets(
+            *[ss.__deepcopy__() for ss in self.simple_sets]
+        )
 
 
 # Type definitions

@@ -158,7 +158,7 @@ class ProbabilisticModelPlotWidget(QWidget):
         for element in variable.domain:
             from random_events.product_algebra import SimpleEvent
 
-            event = SimpleEvent({variable: element})
+            event = SimpleEvent.from_data({variable: element})
             probabilities[str(element)] = model.probability_of_simple_event(event)
 
         series = QPieSeries()

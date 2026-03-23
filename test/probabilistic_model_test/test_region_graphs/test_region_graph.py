@@ -45,7 +45,7 @@ class RandomRegionGraphTestCase(unittest.TestCase):
 class RandomRegionGraphLearningTestCase(unittest.TestCase):
     variables = SortedSet(
         [Continuous(str(i)) for i in range(8)]
-        + [Symbolic("target", Set.from_iterable(Target))]
+        + [Symbolic(name="target", domain=Set.from_iterable(Target))]
     )
     region_graph = RegionGraph(variables, partitions=2, depth=2, repetitions=2)
     region_graph = region_graph.create_random_region_graph()
@@ -68,7 +68,7 @@ class RandomRegionGraphLearningTestCase(unittest.TestCase):
 
 class ClassificationTestCase(unittest.TestCase):
     features = SortedSet([Continuous(f"x{i}") for i in range(4)])
-    target = Symbolic("target", Set.from_iterable(Target))
+    target = Symbolic(name="target", domain=Set.from_iterable(Target))
     region_graph = RegionGraph(
         features, partitions=2, depth=1, repetitions=6, classes=2
     )
@@ -92,7 +92,7 @@ class ClassificationTestCase(unittest.TestCase):
         p_target = nx_pc.marginal(SortedSet([self.target]))
         probabilities = {
             str(element): p_target.probability_of_simple_event(
-                SimpleEvent({self.target: element})
+                SimpleEvent.from_data({self.target: element})
             )
             for element in self.target.domain
         }

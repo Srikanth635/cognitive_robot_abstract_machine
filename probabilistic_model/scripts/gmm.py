@@ -14,10 +14,17 @@ from random_events.variable import Continuous
 from probabilistic_model.distributions import GaussianDistribution, UniformDistribution
 from probabilistic_model.probabilistic_circuit.jax.gaussian_layer import GaussianLayer
 from probabilistic_model.probabilistic_circuit.jax.uniform_layer import UniformLayer
-from probabilistic_model.probabilistic_circuit.jax.probabilistic_circuit import ProbabilisticCircuit
-from probabilistic_model.probabilistic_circuit.rx.distributions import UnivariateContinuousLeaf
-from probabilistic_model.probabilistic_circuit.rx.probabilistic_circuit import \
-    ProbabilisticCircuit as NXProbabilisticCircuit, ProductUnit, SumUnit
+from probabilistic_model.probabilistic_circuit.jax.probabilistic_circuit import (
+    ProbabilisticCircuit,
+)
+from probabilistic_model.probabilistic_circuit.rx.distributions import (
+    UnivariateContinuousLeaf,
+)
+from probabilistic_model.probabilistic_circuit.rx.probabilistic_circuit import (
+    ProbabilisticCircuit as NXProbabilisticCircuit,
+    ProductUnit,
+    SumUnit,
+)
 import plotly.express as px
 import plotly.graph_objects as go
 import jax.profiler
@@ -70,7 +77,9 @@ if not load_from_disc:
 
     result = SumUnit()
     for i in tqdm.trange(number_of_mixtures, desc="Generating model"):
-        result.add_subcircuit(generate_gaussian_component(data[i], [1] * number_of_variables), 1.)
+        result.add_subcircuit(
+            generate_gaussian_component(data[i], [1] * number_of_variables), 1.0
+        )
     result.normalize()
 
     nx_model = result.probabilistic_circuit
@@ -101,6 +110,7 @@ jax_data = jnp.array(data)
 
 jax.config.update("jax_traceback_filtering", "off")
 
+
 @eqx.filter_jit
 def loss(model, x):
     ll = model.log_likelihood_of_nodes(x)
@@ -115,7 +125,9 @@ for _ in tqdm.trange(1000, desc="Fitting model"):
     losses.append(loss_value)
     grads_of_sum_layer = eqx.filter(tree_flatten(grads), eqx.is_inexact_array)[0][0]
 
-    updates, opt_state = optim.update(grads, opt_state, eqx.filter(root, eqx.is_inexact_array))
+    updates, opt_state = optim.update(
+        grads, opt_state, eqx.filter(root, eqx.is_inexact_array)
+    )
     root = eqx.apply_updates(root, updates)
 
 jax.profiler.save_device_memory_profile("memory.prof")

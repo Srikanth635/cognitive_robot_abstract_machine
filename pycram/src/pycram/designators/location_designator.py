@@ -854,7 +854,7 @@ class ProbabilisticSemanticLocation(LocationDesignatorDescription):
         :return: An Event that describes the navigation space for the link, or None if the navigation space event is empty.
         """
         # Event that describes the robot standing on the ground
-        stand_on_ground = SimpleEvent(
+        stand_on_ground = SimpleEvent.from_data(
             {SpatialVariables.z.value: (0, 0.05)}
         ).as_composite_set()
         stand_on_ground.fill_missing_variables(
@@ -891,7 +891,7 @@ class ProbabilisticSemanticLocation(LocationDesignatorDescription):
         navigation_space_graph = free_space.create_subgraph(
             [path for path in all_paths]
         )
-        navigation_space_event = Event(
+        navigation_space_event = Event.from_simple_sets(
             *[node.simple_event for node in navigation_space_graph.graph.nodes()]
         )
         navigation_space_event.fill_missing_variables(
@@ -1344,10 +1344,10 @@ class ProbabilisticCostmapLocation(LocationDesignatorDescription):
             world, free_space_graph, target_position
         )
 
-        reachable_space_condition = Event(
+        reachable_space_condition = Event.from_simple_sets(
             *[node.simple_event for node in free_space_graph.graph.nodes()]
         )
-        navigation_space_condition = Event(
+        navigation_space_condition = Event.from_simple_sets(
             *[node.simple_event for node in free_space_nav.graph.nodes()]
         )
 
@@ -1422,7 +1422,7 @@ class ProbabilisticCostmapLocation(LocationDesignatorDescription):
                 self._create_free_space_conditions(self.test_world, target_position)
             )
 
-            stand_on_ground = SimpleEvent(
+            stand_on_ground = SimpleEvent.from_data(
                 {SpatialVariables.z.value: (0, 0.05)}
             ).as_composite_set()
             stand_on_ground.fill_missing_variables(
@@ -1460,7 +1460,7 @@ class ProbabilisticCostmapLocation(LocationDesignatorDescription):
 
                 # Unpack the first sample, and cut out all surrounding samples that are within the costmap resolution
                 _, _, nav_x, nav_y = samples[0]
-                event = SimpleEvent(
+                event = SimpleEvent.from_data(
                     {
                         SpatialVariables.x.value: closed(
                             nav_x - params_box.costmap_resolution,

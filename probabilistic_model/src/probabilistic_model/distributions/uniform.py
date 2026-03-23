@@ -1,24 +1,28 @@
 import numpy as np
 
 from probabilistic_model.distributions.distributions import *
-from probabilistic_model.constants import PADDING_FACTOR_FOR_X_AXIS_IN_PLOT, EXPECTATION_TRACE_NAME, MODE_TRACE_NAME, MODE_TRACE_COLOR, \
-    PDF_TRACE_NAME, CDF_TRACE_NAME, CDF_TRACE_COLOR, PDF_TRACE_COLOR
+from probabilistic_model.constants import (
+    PADDING_FACTOR_FOR_X_AXIS_IN_PLOT,
+    EXPECTATION_TRACE_NAME,
+    MODE_TRACE_NAME,
+    MODE_TRACE_COLOR,
+    PDF_TRACE_NAME,
+    CDF_TRACE_NAME,
+    CDF_TRACE_COLOR,
+    PDF_TRACE_COLOR,
+)
 
 
+@dataclass(eq=False)
 class UniformDistribution(ContinuousDistributionWithFiniteSupport):
     """
     Class for uniform distributions over the half-open interval [lower, upper).
     """
 
-    def __init__(self, variable: Continuous, interval: SimpleInterval):
-        super().__init__()
-        self.variable = variable
-        self.interval = interval
-
-    def log_likelihood_without_bounds_check(self, x: np.array) -> np.array:
+    def log_likelihood_without_bounds_check(self, x: npt.NDArray) -> npt.NDArray:
         return np.full((len(x),), self.log_pdf_value())
 
-    def cdf(self, x: np.array) -> np.array:
+    def cdf(self, x: npt.NDArray) -> npt.NDArray:
         result = (x - self.lower) / (self.upper - self.lower)
         result = np.minimum(1, np.maximum(0, result))
         return result[:, 0]
@@ -26,8 +30,12 @@ class UniformDistribution(ContinuousDistributionWithFiniteSupport):
     def univariate_log_mode(self) -> Tuple[AbstractCompositeSet, float]:
         return self.interval.as_composite_set(), self.log_pdf_value()
 
-    def log_conditional_from_simple_interval(self, interval: SimpleInterval) -> Tuple[Self, float]:
-        probability = self.probability_of_simple_event(SimpleEvent({self.variable: interval}))
+    def log_conditional_from_simple_interval(
+        self, interval: SimpleInterval
+    ) -> Tuple[Self, float]:
+        probability = self.probability_of_simple_event(
+            SimpleEvent.from_data({self.variable: interval})
+        )
 
         if probability == 0.0:
             return None, -np.inf
@@ -38,9 +46,11 @@ class UniformDistribution(ContinuousDistributionWithFiniteSupport):
         if new_interval.is_empty():
             return None, -np.inf
 
-        return self.__class__(self.variable, new_interval), np.log(probability)
+        return self.__class__(variable=self.variable, interval=new_interval), np.log(
+            probability
+        )
 
-    def sample(self, amount: int) -> np.array:
+    def sample(self, amount: int) -> npt.NDArray:
         return np.random.uniform(self.lower, self.upper, (amount, 1))
 
     def pdf_value(self) -> float:
@@ -76,8 +86,11 @@ class UniformDistribution(ContinuousDistributionWithFiniteSupport):
         return VariableMap({self.variable: result})
 
     def __eq__(self, other):
-        return (isinstance(other, UniformDistribution) and self.interval == other.interval
-                and self.variable == other.variable)
+        return (
+            isinstance(other, UniformDistribution)
+            and self.interval == other.interval
+            and self.variable == other.variable
+        )
 
     @property
     def drawio_label(self):
@@ -97,10 +110,16 @@ class UniformDistribution(ContinuousDistributionWithFiniteSupport):
     @property
     def image(self):
         # TODO rewrite
-        return os.path.join(os.path.dirname(__file__),"../../../", "resources", "icons", "defaultIcon.png")
+        return os.path.join(
+            os.path.dirname(__file__),
+            "../../../",
+            "resources",
+            "icons",
+            "defaultIcon.png",
+        )
 
     def __copy__(self):
-        return self.__class__(self.variable, self.interval)
+        return self.__class__(variable=self.variable, interval=self.interval)
 
     def __deepcopy__(self, memo=None):
         if memo is None:
@@ -111,7 +130,7 @@ class UniformDistribution(ContinuousDistributionWithFiniteSupport):
 
         variable = Continuous(self.variable.name)
         interval = self.interval.__deepcopy__()
-        result = self.__class__(variable, interval)
+        result = self.__class__(variable=variable, interval=interval)
         memo[id_self] = result
         return result
 
@@ -122,25 +141,45 @@ class UniformDistribution(ContinuousDistributionWithFiniteSupport):
     def _from_json(cls, data: Dict[str, Any]) -> Self:
         variable = Continuous.from_json(data["variable"])
         interval = SimpleInterval.from_json(data["interval"])
-        return cls(variable, interval)
+        return cls(variable=variable, interval=interval)
 
     def x_axis_points_for_plotly(self) -> List[Union[None, float]]:
         interval_size = self.upper - self.lower
-        x = [self.lower - interval_size * PADDING_FACTOR_FOR_X_AXIS_IN_PLOT, self.lower, None,
-             self.lower, self.upper, None,
-             self.upper, self.upper + interval_size * PADDING_FACTOR_FOR_X_AXIS_IN_PLOT]
+        x = [
+            self.lower - interval_size * PADDING_FACTOR_FOR_X_AXIS_IN_PLOT,
+            self.lower,
+            None,
+            self.lower,
+            self.upper,
+            None,
+            self.upper,
+            self.upper + interval_size * PADDING_FACTOR_FOR_X_AXIS_IN_PLOT,
+        ]
         return x
 
     def pdf_trace(self) -> go.Scatter:
         pdf_values = [0, 0, None, self.pdf_value(), self.pdf_value(), None, 0, 0]
-        pdf_trace = go.Scatter(x=self.x_axis_points_for_plotly(),
-                               y=pdf_values, mode='lines', name=PDF_TRACE_NAME, line=dict(color=PDF_TRACE_COLOR))
+        pdf_trace = go.Scatter(
+            x=self.x_axis_points_for_plotly(),
+            y=pdf_values,
+            mode="lines",
+            name=PDF_TRACE_NAME,
+            line=dict(color=PDF_TRACE_COLOR),
+        )
         return pdf_trace
 
     def cdf_trace(self) -> go.Scatter:
         x = self.x_axis_points_for_plotly()
-        cdf_values = [value if value is None else self.cdf(np.array([[value]]))[0] for value in x]
-        cdf_trace = go.Scatter(x=x, y=cdf_values, mode='lines', name=CDF_TRACE_NAME, line=dict(color=CDF_TRACE_COLOR))
+        cdf_values = [
+            value if value is None else self.cdf(np.array([[value]]))[0] for value in x
+        ]
+        cdf_trace = go.Scatter(
+            x=x,
+            y=cdf_values,
+            mode="lines",
+            name=CDF_TRACE_NAME,
+            line=dict(color=CDF_TRACE_COLOR),
+        )
         return cdf_trace
 
     def plot(self, **kwargs) -> List:
