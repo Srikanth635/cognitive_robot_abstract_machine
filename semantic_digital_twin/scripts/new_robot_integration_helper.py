@@ -7,6 +7,8 @@ from semantic_digital_twin.adapters.ros.visualization.viz_marker import (
 )
 from semantic_digital_twin.adapters.urdf import URDFParser
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
+from semantic_digital_twin.robots.abstract_robot import AbstractRobot
+from semantic_digital_twin.robots.unitree_g1 import UnitreeG1
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.world_entity import Body
 
@@ -27,4 +29,10 @@ rclpy.init()
 VizMarkerPublisher(
     _world=world, node=rclpy.create_node("urdf_visualization_node")
 ).with_tf_publisher()
+sleep(2)
+
+your_robot_class: AbstractRobot = UnitreeG1
+
+robot = your_robot_class.from_world(world)
+
 sleep(2)
