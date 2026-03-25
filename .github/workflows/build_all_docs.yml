@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - fix-landing-page
 
 jobs:
   build-docs:
@@ -59,7 +58,7 @@ jobs:
       - name: Install Jupyter-Book
         run: pip install 'jupyter-book<2'
       
-      - name: Install Dependencies
+      - name: Install Build Dependencies
         run: pip install sphinxcontrib-mermaid
 
       - name: Build root documentation
