@@ -7,7 +7,12 @@ from typing import Dict, Any
 
 from typing_extensions import Tuple, TYPE_CHECKING, Self
 
-from krrood.adapters.json_serializer import SubclassJSONSerializer, to_json, from_json
+from krrood.adapters.json_serializer import (
+    SubclassJSONSerializer,
+    to_json,
+    from_json,
+    list_like_classes,
+)
 from krrood.class_diagrams.attribute_introspector import DataclassOnlyIntrospector
 from semantic_digital_twin.adapters.world_entity_kwargs_tracker import (
     WorldEntityWithIDKwargsTracker,
@@ -17,7 +22,7 @@ from semantic_digital_twin.exceptions import (
     InvalidBodiesInCollisionCheckError,
     BodyHasNoGeometryError,
 )
-from semantic_digital_twin.world_description.world_entity import Body
+from semantic_digital_twin.world_description.world_entity import Body, WorldEntityWithID
 
 if TYPE_CHECKING:
     from semantic_digital_twin.collision_checking.collision_groups import CollisionGroup
@@ -182,16 +187,6 @@ class CollisionRule(ABC):
     Used to prevent updating the collision matrix when the world model has not changed.
     """
 
-    def get_init_kwargs_for_world(self, world: World) -> dict[str, Any]:
-        """
-        Returns a dictionary of keyword arguments that can be used to initialize the collision rule.
-        """
-        return {}
-
-    def copy_for_world(self, world: World) -> Self:
-        kwargs = self.get_init_kwargs_for_world(world)
-        return self.__class__(**kwargs)
-
     @abstractmethod
     def apply_to_collision_matrix(self, collision_matrix: CollisionMatrix):
         """
@@ -228,13 +223,6 @@ class MaxAvoidedCollisionsRule(ABC):
     Base class for collision rules that define the maximum number of collisions that can be avoided for a given body.
     """
 
-    def get_init_kwargs_for_world(self, world: World) -> dict[str, Any]:
-        return {}
-
-    def copy_for_world(self, world: World) -> Self:
-        kwargs = self.get_init_kwargs_for_world(world)
-        return self.__class__(**kwargs)
-
     @abstractmethod
     def get_max_avoided_collisions(self, body: Body) -> int | None:
         """
@@ -267,15 +255,6 @@ class MaxAvoidedCollisionsOverride(MaxAvoidedCollisionsRule, SubclassJSONSeriali
     """
     Bodies for which the maximum number of avoided collisions is overridden.
     """
-
-    def get_init_kwargs_for_world(self, world: World) -> dict[str, Any]:
-        return {
-            **super().get_init_kwargs_for_world(world),
-            "value": self.value,
-            "bodies": set(
-                world.get_world_entity_with_id_by_id(b.id) for b in self.bodies
-            ),
-        }
 
     def get_max_avoided_collisions(self, body: Body) -> int | None:
         if body not in self.bodies:

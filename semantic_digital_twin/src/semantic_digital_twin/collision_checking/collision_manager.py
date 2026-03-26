@@ -319,30 +319,3 @@ class CollisionManager(ModelChangeCallback):
                 data["max_avoided_bodies_rules"], **kwargs
             ),
         )
-
-    def merge_collision_manager(self, other: CollisionManager):
-        """
-        Merges the collision rules of another collision manager into this one.
-        """
-        world = self._world
-        for default_rule in other.default_rules:
-            new_rule = default_rule.copy_for_world(world)
-            if new_rule not in self.default_rules:
-                self.add_default_rule(new_rule)
-
-        for ignore_collision_rule in other.ignore_collision_rules:
-            new_rule = ignore_collision_rule.copy_for_world(world)
-
-            if new_rule not in self.ignore_collision_rules:
-                self.add_ignore_collision_rule(new_rule)
-
-        for temporary_rule in other.temporary_rules:
-            new_rule = temporary_rule.copy_for_world(world)
-
-            if new_rule not in self.temporary_rules:
-                self.add_temporary_rule(new_rule)
-
-        for max_avoided_bodies_rule in other.max_avoided_bodies_rules:
-            new_rule = max_avoided_bodies_rule.copy_for_world(world)
-            if new_rule not in self.max_avoided_bodies_rules:
-                self.extend_max_avoided_bodies_rules([new_rule])
