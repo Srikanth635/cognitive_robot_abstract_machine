@@ -206,8 +206,8 @@ class CostmapLocation(Location):
 
         for pose_candidate in final_map:
             logger.debug(f"Testing candidate pose at {pose_candidate}")
-            pose_candidate.position.z = 0
-            test_robot.root.parent_connection.origin = pose_candidate.to_spatial_type()
+            pose_candidate.z = 0
+            test_robot.root.parent_connection.origin = pose_candidate
 
             collisions = collision_check(
                 robot=test_robot,
@@ -259,9 +259,8 @@ class CostmapLocation(Location):
                     use_fullbody_ik=test_robot.full_body_controlled,
                 )
                 if is_reachable:
-                    pose = GraspPose(
-                        pose_candidate.pose,
-                        pose_candidate.header,
+                    pose = GraspPose.from_pose(
+                        pose=pose_candidate,
                         arm=self.reachable_arm,
                         grasp_description=grasp_description,
                     )
@@ -374,7 +373,9 @@ class AccessingLocation(Location):
         )
         final_map = occupancy
 
-        gaussian = GaussianCostmap(200, 15, handle._world, 0.02, ground_pose)
+        gaussian = GaussianCostmap(
+            mean=200, sigma=15, world=handle._world, resolution=0.02, origin=ground_pose
+        )
         final_map += gaussian
 
         return final_map
@@ -441,8 +442,8 @@ class AccessingLocation(Location):
         final_map.number_of_samples = 600
         final_map.orientation_generator = orientation_generator
         for pose_candidate in final_map:
-            pose_candidate.position.z = 0
-            test_robot.root.parent_connection.origin = pose_candidate.to_spatial_type()
+            pose_candidate.z = 0
+            test_robot.root.parent_connection.origin = pose_candidate
             try:
                 collision_check(test_robot, test_world)
             except RobotInCollision:
@@ -454,9 +455,12 @@ class AccessingLocation(Location):
                     VerticalAlignment.NoAlignment,
                     arm_chain.manipulator,
                 ).grasp_orientation()
+                grasp.reference_frame = test_world.root
                 current_target_sequence = [deepcopy(pose) for pose in target_sequence]
-                for pose in current_target_sequence:
-                    pose.rotate_by_quaternion(grasp)
+                grasp_rotation = grasp.to_rotation_matrix()
+                current_target_sequence = [
+                    grasp_rotation @ pose for pose in current_target_sequence
+                ]
 
                 is_reachable = pose_sequence_reachability_validator(
                     current_target_sequence,
@@ -501,7 +505,7 @@ class GiskardLocation(Location):
         Setup the reachability costmap for initial pose estimation.
         """
         ground_pose = deepcopy(pose)
-        ground_pose.position.z = 0.0
+        ground_pose.z = 0.0
 
         base_bb = self.robot.base.bounding_box
 
@@ -548,7 +552,7 @@ class GiskardLocation(Location):
                 CartesianPose(
                     root_link=world.root,
                     tip_link=end_effector,
-                    goal_pose=pose.to_spatial_type(),
+                    goal_pose=pose,
                 )
                 for pose in pose_sequence
             ]
@@ -609,7 +613,7 @@ class GiskardLocation(Location):
 
                 target_sequence = grasp_desc._pose_sequence(self.target_pose)
 
-                test_robot.root.parent_connection.origin = candidate.to_spatial_type()
+                test_robot.root.parent_connection.origin = candidate
 
                 executor = self.setup_giskard_executor(
                     target_sequence, test_world, test_robot, test_ee
@@ -621,13 +625,15 @@ class GiskardLocation(Location):
                     pass
 
                 dist = test_ee.global_pose.to_position().euclidean_distance(
-                    target_sequence[-1].to_spatial_type().to_position()
+                    target_sequence[-1].to_position()
                 )
 
                 if dist > 0.02:
                     continue
 
-                ret = GraspPose.from_spatial_type(test_robot.root.global_pose)
-                ret.grasp_description = grasp_desc
-                ret.arm = self.arm
+                ret = GraspPose.from_pose(
+                    test_robot.root.global_pose,
+                    grasp_description=grasp_desc,
+                    arm=self.arm,
+                )
                 yield ret

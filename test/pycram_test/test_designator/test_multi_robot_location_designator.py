@@ -115,7 +115,7 @@ def test_reachability_costmap_location(immutable_multiple_robot_simple_apartment
     world.notify_state_change()
 
     location_desig = CostmapLocation(
-        PoseStamped.from_spatial_type(world.get_body_by_name("milk.stl").global_pose),
+        world.get_body_by_name("milk.stl").global_pose,
         context=context,
     )
     location = next(iter(location_desig))
@@ -163,7 +163,7 @@ def test_visibility_costmap_location(immutable_multiple_robot_simple_apartment):
     with simulated_robot:
         plan.perform()
     location_desig = CostmapLocation(
-        PoseStamped.from_spatial_type(world.get_body_by_name("milk.stl").global_pose),
+        world.get_body_by_name("milk.stl").global_pose,
         context=context,
         visible=True,
     )
@@ -210,15 +210,15 @@ def test_reachability_and_visibility_costmap_location(
         plan.perform()
     world.notify_state_change()
     location_desig = CostmapLocation(
-        PoseStamped.from_spatial_type(world.get_body_by_name("milk.stl").global_pose),
+        world.get_body_by_name("milk.stl").global_pose,
         reachable=True,
         visible=True,
         context=context,
         reachable_arm=Arms.BOTH,
     )
     location = next(iter(location_desig))
-    assert len(location.position.to_list()) == 3
-    assert len(location.orientation.to_list()) == 4
+    assert len(location.to_position().to_list()) == 4
+    assert len(location.to_quaternion().to_list()) == 4
 
 
 def test_accessing_location(immutable_model_world):
