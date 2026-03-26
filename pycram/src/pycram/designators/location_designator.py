@@ -25,10 +25,8 @@ from giskardpy.motion_statechart.motion_statechart import MotionStatechart
 from giskardpy.motion_statechart.tasks.cartesian_tasks import CartesianPose
 from giskardpy.qp.exceptions import InfeasibleException
 from giskardpy.qp.qp_controller_config import QPControllerConfig
-from probabilistic_model.distributions import (
-    DiracDeltaDistribution,
-    GaussianDistribution,
-)
+from probabilistic_model.distributions.distributions import DiracDeltaDistribution
+from probabilistic_model.distributions.gaussian import GaussianDistribution
 from probabilistic_model.distributions.helper import make_dirac
 from probabilistic_model.probabilistic_circuit.rx.helper import (
     uniform_measure_of_event,
