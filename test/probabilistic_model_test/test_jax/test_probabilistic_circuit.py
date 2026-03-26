@@ -14,7 +14,7 @@ from random_events.product_algebra import Event, SimpleEvent
 from random_events.variable import Continuous
 
 from probabilistic_model.distributions.distributions import DiracDeltaDistribution
-from probabilistic_model.learning.jpt.jpt import JPT
+from probabilistic_model.learning.jpt.jpt import JointProbabilityTree
 from probabilistic_model.learning.jpt.variables import infer_variables_from_dataframe
 from probabilistic_model.probabilistic_circuit.jax import SparseSumLayer, UniformLayer
 from probabilistic_model.probabilistic_circuit.jax.probabilistic_circuit import (
@@ -125,7 +125,7 @@ class JPTIntegrationTestCase(unittest.TestCase):
             samples, columns=[f"x_{i}" for i in range(cls.number_of_variables)]
         )
         variables = infer_variables_from_dataframe(df, min_samples_per_quantile=100)
-        jpt = JPT(annotated_variables=variables, min_samples_per_leaf=0.1)
+        jpt = JointProbabilityTree(annotated_variables=variables, min_samples_per_leaf=0.1)
 
         cls.jpt = jpt.fit(df)
 

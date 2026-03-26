@@ -22,7 +22,7 @@ class UniformDistribution(ContinuousDistributionWithFiniteSupport):
     def log_likelihood_without_bounds_check(self, x: npt.NDArray) -> npt.NDArray:
         return np.full((len(x),), self.log_pdf_value())
 
-    def cdf(self, x: npt.NDArray) -> npt.NDArray:
+    def cumulative_distribution(self, x: npt.NDArray) -> npt.NDArray:
         result = (x - self.lower) / (self.upper - self.lower)
         result = np.minimum(1, np.maximum(0, result))
         return result[:, 0]
@@ -86,10 +86,6 @@ class UniformDistribution(ContinuousDistributionWithFiniteSupport):
         return VariableMap({self.variable: result})
 
     @property
-    def drawio_label(self):
-        return "rounded=1;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;html=1;labelBorderColor=default;"
-
-    @property
     def representation(self):
         return f"U({self.variable.name} | {self.interval})"
 
@@ -99,17 +95,6 @@ class UniformDistribution(ContinuousDistributionWithFiniteSupport):
 
     def __repr__(self):
         return f"U({self.variable.name})"
-
-    @property
-    def image(self):
-        # TODO rewrite
-        return os.path.join(
-            os.path.dirname(__file__),
-            "../../../",
-            "resources",
-            "icons",
-            "defaultIcon.png",
-        )
 
     def __copy__(self):
         return self.__class__(variable=self.variable, interval=self.interval)
@@ -141,40 +126,46 @@ class UniformDistribution(ContinuousDistributionWithFiniteSupport):
         ]
         return x
 
-    def pdf_trace(self) -> go.Scatter:
-        pdf_values = [0, 0, None, self.pdf_value(), self.pdf_value(), None, 0, 0]
-        pdf_trace = go.Scatter(
+    def probability_density_function_trace(self) -> go.Scatter:
+        """
+        Create a Plotly trace for the probability density function (PDF) of the uniform distribution.
+        """
+        probability_density_values = [0, 0, None, self.pdf_value(), self.pdf_value(), None, 0, 0]
+        probability_density_trace = go.Scatter(
             x=self.x_axis_points_for_plotly(),
-            y=pdf_values,
+            y=probability_density_values,
             mode="lines",
             name=PDF_TRACE_NAME,
             line=dict(color=PDF_TRACE_COLOR),
         )
-        return pdf_trace
+        return probability_density_trace
 
-    def cdf_trace(self) -> go.Scatter:
+    def cumulative_density_function_trace(self) -> go.Scatter:
+        """
+        Create a Plotly trace for the cumulative distribution function (CDF) of the uniform distribution.
+        """
         x = self.x_axis_points_for_plotly()
-        cdf_values = [
-            value if value is None else self.cdf(np.array([[value]]))[0] for value in x
+        cumulative_density_values = [
+            value if value is None else self.cumulative_distribution(np.array([[value]]))[0] for value in x
         ]
-        cdf_trace = go.Scatter(
+        cumulative_density_trace = go.Scatter(
             x=x,
-            y=cdf_values,
+            y=cumulative_density_values,
             mode="lines",
             name=CDF_TRACE_NAME,
             line=dict(color=CDF_TRACE_COLOR),
         )
-        return cdf_trace
+        return cumulative_density_trace
 
     def plot(self, **kwargs) -> List:
-        pdf_trace = self.pdf_trace()
-        cdf_trace = self.cdf_trace()
+        probability_density_trace = self.probability_density_function_trace()
+        cumulative_density_trace = self.cumulative_density_function_trace()
 
         height = self.pdf_value() * SCALING_FACTOR_FOR_EXPECTATION_IN_PLOT
 
         mode_trace = self.univariate_mode_traces(self.mode()[0], height)
         expectation_trace = self.univariate_expectation_trace(height)
-        return [pdf_trace, cdf_trace, expectation_trace] + mode_trace
+        return [probability_density_trace, cumulative_density_trace, expectation_trace] + mode_trace
 
     def __hash__(self):
         return hash((self.variable.name, hash(self.interval)))

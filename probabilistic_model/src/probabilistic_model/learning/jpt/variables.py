@@ -9,8 +9,6 @@ from random_events.set import Set
 from typing_extensions import List, Any
 
 
-
-
 @dataclass
 class AnnotatedVariable:
     """

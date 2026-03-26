@@ -52,7 +52,7 @@ class InductionStep:
     Excluded index of the last sample.
     """
 
-    nyga_distribution: NygaDistribution
+    nyga_distribution: NygaLearning
     """
     The Nyga Distribution to mount the quantile distributions into and read the parameters from.
     """
@@ -384,7 +384,7 @@ class InductionStep:
 
 
 @dataclass
-class NygaDistribution:
+class NygaLearning:
     """
     A Nyga distribution is a way to learn a deterministic mixture of uniform distributions.
     """

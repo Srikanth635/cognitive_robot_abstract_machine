@@ -11,7 +11,7 @@ from scipy.special import logsumexp
 from probabilistic_model.distributions.distributions import DiracDeltaDistribution
 from probabilistic_model.distributions.uniform import UniformDistribution
 from probabilistic_model.learning.nyga_distribution import (
-    NygaDistribution,
+    NygaLearning,
     InductionStep,
 )
 from probabilistic_model.probabilistic_circuit.rx.probabilistic_circuit import (
@@ -29,7 +29,7 @@ class InductionStepTestCase(unittest.TestCase):
     induction_step: InductionStep
 
     def setUp(self) -> None:
-        nyga_distribution = NygaDistribution(
+        nyga_distribution = NygaLearning(
             self.variable, min_samples_per_quantile=1, min_likelihood_improvement=0.01
         )
         cumulative_log_weights = np.cumsum(np.log(self.weights))
@@ -235,11 +235,11 @@ class InductionStepTestCase(unittest.TestCase):
     def test_serialization(self):
         np.random.seed(69)
         data = np.random.normal(0, 1, 100).tolist()
-        distribution = NygaDistribution(self.variable, min_likelihood_improvement=0.01)
+        distribution = NygaLearning(self.variable, min_likelihood_improvement=0.01)
         distribution.fit(data)
         serialized = to_json(distribution)
         deserialized = from_json(serialized)
-        self.assertIsInstance(deserialized, NygaDistribution)
+        self.assertIsInstance(deserialized, NygaLearning)
         self.assertEqual(distribution, deserialized)
 
     def test_from_mixture_of_uniform_distributions(self):
@@ -249,7 +249,7 @@ class InductionStepTestCase(unittest.TestCase):
         sum_unit = SumUnit(probabilistic_circuit=pc1)
         sum_unit.add_subcircuit(u1, np.log(0.5))
         sum_unit.add_subcircuit(u2, np.log(0.5))
-        distribution = NygaDistribution.from_uniform_mixture(
+        distribution = NygaLearning.from_uniform_mixture(
             sum_unit.probabilistic_circuit
         )
 
@@ -277,12 +277,12 @@ class InductionStepTestCase(unittest.TestCase):
 
 class FittedNygaDistributionTestCase(unittest.TestCase):
     x: Continuous = Continuous("x")
-    model: NygaDistribution
+    model: NygaLearning
     data: np.array
 
     def setUp(self) -> None:
         np.random.seed(420)
-        self.model = NygaDistribution(
+        self.model = NygaLearning(
             self.x, min_likelihood_improvement=0.001, min_samples_per_quantile=300
         )
         data = np.random.normal(0.0, 1.0, 1000).astype(np.float32)

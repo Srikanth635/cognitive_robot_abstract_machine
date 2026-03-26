@@ -5,7 +5,7 @@ import numpy as np
 from equinox import tree_flatten_one_level
 from jax.tree_util import tree_flatten, tree_map
 
-from probabilistic_model.learning.jpt.jpt import JPT
+from probabilistic_model.learning.jpt.jpt import JointProbabilityTree
 from probabilistic_model.learning.jpt.variables import infer_variables_from_dataframe
 from probabilistic_model.probabilistic_circuit.jax import UniformLayer, SparseSumLayer
 from probabilistic_model.probabilistic_circuit.jax.coupling_circuit import (
@@ -130,7 +130,7 @@ class CouplingCircuit4DTestCase(unittest.TestCase):
             samples, columns=[f"x_{i}" for i in range(cls.number_of_variables)]
         )
         variables = infer_variables_from_dataframe(df, min_samples_per_quantile=30)
-        jpt = JPT(annotated_variables=variables, min_samples_per_leaf=0.1)
+        jpt = JointProbabilityTree(annotated_variables=variables, min_samples_per_leaf=0.1)
         cls.non_marginalized_jpt = jpt.fit(df)
 
         cls.jpt = cls.non_marginalized_jpt.marginal(

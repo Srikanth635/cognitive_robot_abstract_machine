@@ -19,7 +19,7 @@ from random_events.product_algebra import SimpleEvent
 from random_events.variable import Continuous, Symbolic, Integer
 from random_events.set import Set
 from probabilistic_model.distributions.gaussian import GaussianDistribution
-from probabilistic_model.learning.jpt.jpt import JPT
+from probabilistic_model.learning.jpt.jpt import JointProbabilityTree
 from probabilistic_model.learning.jpt.variables import (
     infer_variables_from_dataframe,
     AnnotatedVariable,
@@ -108,7 +108,7 @@ class InferFromDataFrameTestCase(unittest.TestCase):
 
 class JPTTestCase(unittest.TestCase):
     data: pd.DataFrame
-    model: JPT
+    model: JointProbabilityTree
 
     def setUp(self):
         np.random.seed(69)
@@ -122,7 +122,7 @@ class JPTTestCase(unittest.TestCase):
         self.real, self.integer, self.symbol = infer_variables_from_dataframe(
             self.data
         )
-        self.model = JPT(annotated_variables=[self.real, self.integer, self.symbol])
+        self.model = JointProbabilityTree(annotated_variables=[self.real, self.integer, self.symbol])
 
     def test_construct_impurity(self):
         impurity = self.model.construct_impurity()
@@ -203,21 +203,21 @@ class JPTTestCase(unittest.TestCase):
     def test_jpt_continuous_variables_only(self):
         data = self.data[["real"]].astype(float)
         variables = infer_variables_from_dataframe(data)
-        model = JPT(variables)
+        model = JointProbabilityTree(variables)
         model.fit(data)
         self.assertEqual(len(model.root.subcircuits), 1)
 
     def test_jpt_integer_variables_only(self):
         data = self.data[["integer"]]
         variables = infer_variables_from_dataframe(data)
-        model = JPT(variables)
+        model = JointProbabilityTree(variables)
         model.fit(data)
         self.assertEqual(len(model.root.subcircuits), 1)
 
     def test_jpt_symbolic_variables_only(self):
         data = self.data[["symbol"]]
         variables = infer_variables_from_dataframe(data)
-        model = JPT(variables)
+        model = JointProbabilityTree(variables)
         pc = model.fit(data)
         pc.plot_structure()
         self.assertEqual(len(pc.root.subcircuits), 3)
@@ -244,7 +244,7 @@ class JPTTestCase(unittest.TestCase):
 
 class BreastCancerTestCase(unittest.TestCase):
     data: pd.DataFrame
-    model: JPT
+    model: JointProbabilityTree
     pc: ProbabilisticCircuit
 
     @classmethod
@@ -262,7 +262,7 @@ class BreastCancerTestCase(unittest.TestCase):
             cls.data, min_samples_per_quantile=600
         )
 
-        cls.model = JPT(annotated_variables=variables, min_samples_per_leaf=0.4)
+        cls.model = JointProbabilityTree(annotated_variables=variables, min_samples_per_leaf=0.4)
         cls.pc = cls.model.fit(cls.data)
 
     def test_serialization(self):
@@ -322,7 +322,7 @@ class BreastCancerTestCase(unittest.TestCase):
 
 
 class MNISTTestCase(unittest.TestCase):
-    model: JPT
+    model: JointProbabilityTree
 
     @classmethod
     def setUpClass(cls):
@@ -335,7 +335,7 @@ class MNISTTestCase(unittest.TestCase):
         variables = infer_variables_from_dataframe(
             df, min_likelihood_improvement=0.01
         )
-        cls.model = JPT(annotated_variables=variables, min_samples_per_leaf=0.1)
+        cls.model = JointProbabilityTree(annotated_variables=variables, min_samples_per_leaf=0.1)
         cls.model.fit(df)
 
     def test_serialization(self):
@@ -385,7 +385,7 @@ class GaussianJPTTestCase(unittest.TestCase):
         )
 
     def test_plot_2d_jpt(self):
-        model = JPT([self.x, self.y], min_samples_per_leaf=0.9)
+        model = JointProbabilityTree([self.x, self.y], min_samples_per_leaf=0.9)
         pc = model.fit(self.data)
         fig = go.Figure(pc.plot(500, surface=True), pc.plotly_layout())
         # fig.show()

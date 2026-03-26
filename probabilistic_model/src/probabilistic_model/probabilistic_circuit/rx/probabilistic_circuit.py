@@ -38,11 +38,6 @@ from probabilistic_model.distributions.distributions import (
 )
 from probabilistic_model.distributions.helper import make_dirac
 from probabilistic_model.exceptions import IntractableError
-from probabilistic_model.interfaces.drawio.drawio import (
-    DrawIOInterface,
-    circled_product,
-    circled_sum,
-)
 from probabilistic_model.probabilistic_model import (
     ProbabilisticModel,
     OrderType,
@@ -63,7 +58,7 @@ class PlotAlignment(IntEnum):
 
 
 @dataclass
-class Unit(SubclassJSONSerializer, DrawIOInterface, ABC):
+class Unit(SubclassJSONSerializer, ABC):
     """
     Class for all units of a probabilistic circuit.
 
@@ -234,14 +229,6 @@ class Unit(SubclassJSONSerializer, DrawIOInterface, ABC):
     def moment(self, *args, **kwargs):
         raise NotImplementedError
 
-    @property
-    def drawio_style(self) -> Dict[str, Any]:
-        return {
-            "style": self.drawio_label,
-            "width": 30,
-            "height": 30,
-        }
-
 
 @dataclass(eq=False)
 class LeafUnit(Unit):
@@ -256,19 +243,6 @@ class LeafUnit(Unit):
 
     def __repr__(self):
         return f"leaf({repr(self.distribution)}"
-
-    @property
-    def drawio_label(self):
-        return "ellipse;whiteSpace=wrap;html=1;aspect=fixed;"
-
-    @property
-    def drawio_style(self) -> Dict[str, Any]:
-        return {
-            "style": self.drawio_label,
-            "width": 30,
-            "height": 30,
-            "label": self.distribution.abbreviated_symbol,
-        }
 
     @property
     def variables(self) -> Iterable[Variable]:
@@ -289,8 +263,8 @@ class LeafUnit(Unit):
     def log_likelihood(self, events: npt.NDArray):
         self.result_of_current_query = self.distribution.log_likelihood(events)
 
-    def cdf(self, events: npt.NDArray):
-        self.result_of_current_query = self.distribution.cdf(events)
+    def cumulative_distribution(self, events: npt.NDArray):
+        self.result_of_current_query = self.distribution.cumulative_distribution(events)
 
     def probability_of_simple_event(self, event: SimpleEvent):
         self.result_of_current_query = self.distribution.probability_of_simple_event(
@@ -369,7 +343,7 @@ class LeafUnit(Unit):
 
 
 @dataclass(eq=False)
-class InnerUnit(Unit):
+class InnerUnit(Unit, ABC):
     """
     Class for inner units
     """
@@ -430,10 +404,6 @@ class SumUnit(InnerUnit):
     @property
     def representation(self) -> str:
         return "+"
-
-    @property
-    def drawio_label(self) -> str:
-        return circled_sum
 
     @property
     def log_weighted_subcircuits(self) -> List[Tuple[float, Unit]]:
@@ -529,10 +499,6 @@ class SumUnit(InnerUnit):
                 count = counts[index]
                 subcircuit.result_of_current_query.append((start_index + total, count))
                 total += count
-
-    @classmethod
-    def _from_json(cls, data: Dict[str, Any], **kwargs) -> Self:
-        return cls()
 
     def mount_with_interaction_terms(
         self, other: Self, interaction_model: ProbabilisticModel
@@ -752,10 +718,6 @@ class ProductUnit(InnerUnit):
 
     representation = "×"
     __hash__ = Unit.__hash__
-
-    @property
-    def drawio_label(self) -> str:
-        return circled_product
 
     def __repr__(self):
         return "⊗"
@@ -1046,13 +1008,13 @@ class ProbabilisticCircuit(ProbabilisticModel, SubclassJSONSerializer):
                     unit.log_forward()  # Synch trheads 1
         return self.root.result_of_current_query
 
-    def cdf(self, events: npt.NDArray) -> npt.NDArray:
+    def cumulative_distribution(self, events: npt.NDArray) -> npt.NDArray:
         variable_to_index_map = self.variable_to_index_map
         for layer in reversed(self.layers):
             for unit in layer:
                 unit: LeafUnit
                 if unit.is_leaf:
-                    unit.cdf(
+                    unit.cumulative_distribution(
                         events[
                             :,
                             [
@@ -1266,7 +1228,6 @@ class ProbabilisticCircuit(ProbabilisticModel, SubclassJSONSerializer):
         return result.marginal_in_place(variables)
 
     def sample(self, amount: int) -> npt.NDArray:
-
         # initialize all results
         for node in self.graph.nodes():
             node.result_of_current_query = []
@@ -1386,7 +1347,7 @@ class ProbabilisticCircuit(ProbabilisticModel, SubclassJSONSerializer):
         # get super result
         result = super().to_json()
 
-        index_to_node_map = {node.index: node.to_json() for node in self.nodes()}
+        index_to_node_map = {node.index: to_json(node) for node in self.nodes()}
         edges = [
             (parent.index, child.index, data) for parent, child, data in self.edges()
         ]
@@ -1487,7 +1448,7 @@ class ProbabilisticCircuit(ProbabilisticModel, SubclassJSONSerializer):
                 node_colors[node] = "black"
         return node_colors
 
-    def bfs_layout(
+    def breadth_first_search_layout(
         self, scale: float = 1.0, align: PlotAlignment = PlotAlignment.VERTICAL
     ) -> Dict[int, np.array]:
         """
@@ -1497,33 +1458,33 @@ class ProbabilisticCircuit(ProbabilisticModel, SubclassJSONSerializer):
         """
         layers = self.layers
 
-        pos = None
+        position = None
         nodes = []
         width = len(layers)
-        for i, layer in enumerate(layers):
+        for index, layer in enumerate(layers):
             height = len(layer)
-            xs = np.repeat(i, height)
+            xs = np.repeat(index, height)
             ys = np.arange(0, height, dtype=float)
             offset = ((width - 1) / 2, (height - 1) / 2)
-            layer_pos = np.column_stack([xs, ys]) - offset
-            if pos is None:
-                pos = layer_pos
+            layer_position = np.column_stack([xs, ys]) - offset
+            if position is None:
+                position = layer_position
             else:
-                pos = np.concatenate([pos, layer_pos])
+                position = np.concatenate([position, layer_position])
             nodes.extend(layer)
 
         # Find max length over all dimensions
-        pos -= pos.mean(axis=0)
-        lim = np.abs(pos).max()  # max coordinate for all axes
+        position -= position.mean(axis=0)
+        lim = np.abs(position).max()  # max coordinate for all axes
         # rescale to (-scale, scale) in all directions, preserves aspect
         if lim > 0:
-            pos *= scale / lim
+            position *= scale / lim
 
         if align == PlotAlignment.HORIZONTAL:
-            pos = pos[:, ::-1]  # swap x and y coords
+            position = position[:, ::-1]  # swap x and y coords
 
-        pos = dict(zip([node.index for node in nodes], pos))
-        return pos
+        position = dict(zip([node.index for node in nodes], position))
+        return position
 
     def plot_structure(
         self,
@@ -1553,7 +1514,7 @@ class ProbabilisticCircuit(ProbabilisticModel, SubclassJSONSerializer):
         layers = self.layers
 
         # get the positions of the nodes
-        positions = self.bfs_layout(scale=scale, align=PlotAlignment.VERTICAL)
+        positions = self.breadth_first_search_layout(scale=scale, align=PlotAlignment.VERTICAL)
         position_for_variable_name = {
             node: (x + variable_name_offset, y) for node, (x, y) in positions.items()
         }

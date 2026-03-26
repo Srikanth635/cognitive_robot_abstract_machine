@@ -15,7 +15,7 @@ from typing_extensions import Self
 from probabilistic_model.learning.jpt.variables import (
     AnnotatedVariable
 )
-from probabilistic_model.learning.nyga_distribution import NygaDistribution
+from probabilistic_model.learning.nyga_distribution import NygaLearning
 from probabilistic_model.distributions.distributions import (
     DiracDeltaDistribution,
     SymbolicDistribution,
@@ -31,7 +31,7 @@ from probabilistic_model.utils import MissingDict
 
 
 @dataclass
-class JPT(SubclassJSONSerializer):
+class JointProbabilityTree(SubclassJSONSerializer):
     """
     Class that implements the JPT learning algorithm for probabilistic circuits.
     """
@@ -316,7 +316,7 @@ class JPT(SubclassJSONSerializer):
 
         for index, annotated_variable in enumerate(self.annotated_variables):
             if isinstance(annotated_variable.variable, Continuous):
-                distribution = NygaDistribution(
+                distribution = NygaLearning(
                     annotated_variable.variable,
                     min_likelihood_improvement=annotated_variable.min_likelihood_improvement,
                     min_samples_per_quantile=annotated_variable.min_samples_per_quantile,
@@ -475,7 +475,7 @@ class JPT(SubclassJSONSerializer):
         result["max_depth"] = self.max_depth
         result["dependencies"] = self._variable_dependencies_to_json()
         result["total_samples"] = self.total_samples
-        result["probabilistic_circuit"] = self.probabilistic_circuit.to_json()
+        result["probabilistic_circuit"] = to_json(self.probabilistic_circuit)
         return result
 
     @classmethod
@@ -511,9 +511,7 @@ class JPT(SubclassJSONSerializer):
             dependencies=dependencies,
         )
         result.total_samples = data["total_samples"]
-        result.probabilistic_circuit = ProbabilisticCircuit.from_json(
-            data["probabilistic_circuit"]
-        )
+        result.probabilistic_circuit = from_json(data["probabilistic_circuit"])
         return result
 
     def __eq__(self, other: Self):

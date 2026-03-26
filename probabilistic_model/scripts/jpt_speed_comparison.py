@@ -4,7 +4,7 @@ import networkx as nx
 from random_events.interval import closed
 from random_events.product_algebra import VariableMap, SimpleEvent
 
-from probabilistic_model.learning.jpt.jpt import JPT
+from probabilistic_model.learning.jpt.jpt import JointProbabilityTree
 from probabilistic_model.learning.jpt.variables import infer_variables_from_dataframe
 from probabilistic_model.probabilistic_circuit.jax.probabilistic_circuit import (
     ProbabilisticCircuit,
@@ -62,7 +62,7 @@ variables = infer_variables_from_dataframe(
 
 # create models
 if not load_from_disc:
-    rx_model = JPT(variables, min_samples_per_leaf=min_samples_leaf)
+    rx_model = JointProbabilityTree(variables, min_samples_per_leaf=min_samples_leaf)
     rx_model = rx_model.fit(df)
     jax_model = ProbabilisticCircuit.from_rustworkx(rx_model, True)
     if save_to_disc:

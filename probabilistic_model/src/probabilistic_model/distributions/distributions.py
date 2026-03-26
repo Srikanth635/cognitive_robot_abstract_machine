@@ -1,23 +1,16 @@
 from __future__ import annotations
 
 import os
-from abc import ABC
-from dataclasses import dataclass, field
-
 import numpy as np
 import numpy.typing as npt
 import plotly.graph_objects as go
-
-from krrood.entity_query_language.exceptions import UnsupportedOperation
 from probabilistic_model.exceptions import UndefinedOperationError
 from random_events.interval import *
 from random_events.product_algebra import Event, SimpleEvent, VariableMap
-from random_events.sigma_algebra import AbstractSimpleSet
 from random_events.variable import *
 from typing_extensions import Union, Iterable, Any, Self, Dict, List, Tuple
 
 from probabilistic_model.constants import SCALING_FACTOR_FOR_EXPECTATION_IN_PLOT
-from probabilistic_model.interfaces.drawio.drawio import DrawIOInterface
 from probabilistic_model.probabilistic_model import (
     ProbabilisticModel,
     OrderType,
@@ -29,7 +22,7 @@ from probabilistic_model.utils import MissingDict, interval_as_array
 
 @dataclass
 class UnivariateDistribution(
-    ProbabilisticModel, DrawIOInterface
+    ProbabilisticModel
 ):
     """
     Abstract Base class for Univariate distributions.
@@ -87,15 +80,6 @@ class UnivariateDistribution(
     def abbreviated_symbol(self) -> str:
         return "P"
 
-    @property
-    def drawio_style(self) -> Dict[str, Any]:
-        return {
-            "style": self.drawio_label,
-            "width": 30,
-            "height": 30,
-            "label": self.abbreviated_symbol,
-        }
-
 
 @dataclass(eq=False)
 class ContinuousDistribution(UnivariateDistribution):
@@ -110,7 +94,7 @@ class ContinuousDistribution(UnivariateDistribution):
     def univariate_support(self) -> Interval:
         raise NotImplementedError
 
-    def cdf(self, x: npt.NDArray) -> npt.NDArray:
+    def cumulative_distribution(self, x: npt.NDArray) -> npt.NDArray:
         """
         Calculate the cumulative distribution function at x.
         :param x: The data
@@ -121,8 +105,8 @@ class ContinuousDistribution(UnivariateDistribution):
     def probability_of_simple_event(self, event: SimpleEvent) -> float:
         interval: Interval = event[self.variable]
         points = interval_as_array(interval)
-        upper_bound_cdf = self.cdf(points[:, (1,)])
-        lower_bound_cdf = self.cdf(points[:, (0,)])
+        upper_bound_cdf = self.cumulative_distribution(points[:, (1,)])
+        lower_bound_cdf = self.cumulative_distribution(points[:, (0,)])
         return (upper_bound_cdf - lower_bound_cdf).sum()
 
     def log_truncated(self, event: Event) -> Tuple[Optional[Self], float]:
@@ -458,20 +442,6 @@ class SymbolicDistribution(DiscreteDistribution):
     def representation(self):
         return f"Nominal({self.variable.name})"
 
-    @property
-    def drawio_label(self):
-        return "rounded=1;whiteSpace=wrap;html=1;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;"
-
-    @property
-    def image(self):
-        return os.path.join(
-            os.path.dirname(__file__),
-            "../../../",
-            "resources",
-            "icons",
-            "defaultIcon.png",
-        )
-
     def fit(self, data: npt.NDArray) -> Self:
         unique, counts = np.unique(data, return_counts=True)
         probabilities = MissingDict(float)
@@ -531,7 +501,7 @@ class IntegerDistribution(ContinuousDistribution, DiscreteDistribution):
                 result |= singleton(key)
         return result
 
-    def cdf(self, x: npt.NDArray) -> npt.NDArray:
+    def cumulative_distribution(self, x: npt.NDArray) -> npt.NDArray:
         result = np.zeros((len(x),))
         maximum_value = max(x)
         for value, p in self.probabilities.items():
@@ -619,7 +589,7 @@ class DiracDeltaDistribution(ContinuousDistribution):
         result[within_tolerance] = np.log(self.density_cap)
         return result
 
-    def cdf(self, x: npt.NDArray) -> npt.NDArray:
+    def cumulative_distribution(self, x: npt.NDArray) -> npt.NDArray:
         result = np.zeros((len(x),))
         result[x[:, 0] >= self.location - self.tolerance] = 1.0
         return result
@@ -679,7 +649,7 @@ class DiracDeltaDistribution(ContinuousDistribution):
         return f"δ({self.variable.name})"
 
     def __copy__(self):
-        return self.__class__(self.variable, self.location, self.density_cap)
+        return self.__class__(variable=self.variable, location=self.location, density_cap=self.density_cap)
 
     def __deepcopy__(self, memo=None):
         if memo is None:

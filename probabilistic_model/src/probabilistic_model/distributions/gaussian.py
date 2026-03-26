@@ -43,7 +43,7 @@ class GaussianDistribution(ContinuousDistribution):
     def log_likelihood(self, x: npt.NDArray) -> npt.NDArray:
         return norm.logpdf(x[:, 0], loc=self.location, scale=self.scale)
 
-    def cdf(self, x: npt.NDArray) -> npt.NDArray:
+    def cumulative_distribution(self, x: npt.NDArray) -> npt.NDArray:
         return norm.cdf(x[:, 0], loc=self.location, scale=self.scale)
 
     def univariate_log_mode(self) -> Tuple[AbstractCompositeSet, float]:
@@ -55,7 +55,7 @@ class GaussianDistribution(ContinuousDistribution):
     def sample(self, amount: int) -> npt.NDArray:
         return norm.rvs(loc=self.location, scale=self.scale, size=(amount, 1))
 
-    def ppf(self, value):
+    def probability_point(self, value):
         return norm.ppf(value, loc=self.location, scale=self.scale)
 
     def raw_moment(self, order: int) -> float:
@@ -114,7 +114,7 @@ class GaussianDistribution(ContinuousDistribution):
     def log_conditional_from_simple_interval(
         self, interval: SimpleInterval
     ) -> Tuple[Optional[TruncatedGaussianDistribution], float]:
-        cdf_values = self.cdf(simple_interval_as_array(interval).reshape(-1, 1))
+        cdf_values = self.cumulative_distribution(simple_interval_as_array(interval).reshape(-1, 1))
         probability = cdf_values[1] - cdf_values[0]
         if probability <= 0.0:
             return None, -np.inf
@@ -184,24 +184,24 @@ class TruncatedGaussianDistribution(
             - \mathbf{\Phi}\left( \frac{\text{self.interval.lower} - \mu}{\sigma} \right)
         """
         return (
-            GaussianDistribution.cdf(self, np.array([[self.upper]]))
-            - GaussianDistribution.cdf(self, np.array([[self.lower]]))
+            GaussianDistribution.cumulative_distribution(self, np.array([[self.upper]]))
+            - GaussianDistribution.cumulative_distribution(self, np.array([[self.lower]]))
         )[0]
 
     @property
     def cdf_of_lower(self):
-        return GaussianDistribution.cdf(self, np.array([[self.lower]]))[0]
+        return GaussianDistribution.cumulative_distribution(self, np.array([[self.lower]]))[0]
 
     def log_likelihood_without_bounds_check(self, x: npt.NDArray) -> npt.NDArray:
         return GaussianDistribution.log_likelihood(self, x) - np.log(
             self.normalizing_constant
         )
 
-    def cdf(self, x: npt.NDArray) -> npt.NDArray:
+    def cumulative_distribution(self, x: npt.NDArray) -> npt.NDArray:
         result = np.zeros(len(x))
         non_zero_condition = self.left_included_condition(x)
         x_non_zero = x[non_zero_condition].reshape(-1, 1)
-        cdf_non_zero = GaussianDistribution.cdf(self, x_non_zero)
+        cdf_non_zero = GaussianDistribution.cumulative_distribution(self, x_non_zero)
         result[non_zero_condition[:, 0]] = (
             cdf_non_zero - self.cdf_of_lower
         ) / self.normalizing_constant
@@ -297,11 +297,11 @@ class TruncatedGaussianDistribution(
 
             gamma_term_lower = (
                 -0.5
-                * gamma.cdf(lower_bound**2 / 2, (value + 1) / 2)
+                * gamma.cdf(lower_bound ** 2 / 2, (value + 1) / 2)
                 * bound_selection_lower
             )
             gamma_term_upper = (
-                0.5 * gamma.cdf(upper_bound**2 / 2, (value + 1) / 2) * bound_selection_upper
+                    0.5 * gamma.cdf(upper_bound ** 2 / 2, (value + 1) / 2) * bound_selection_upper
             )
 
             truncated_moment += (
@@ -337,7 +337,6 @@ class TruncatedGaussianDistribution(
         id_self = id(self)
         if id_self in memo:
             return memo[id_self]
-        import copy
 
         variable = self.variable.__class__(self.variable.name)
         interval = self.interval.__deepcopy__()

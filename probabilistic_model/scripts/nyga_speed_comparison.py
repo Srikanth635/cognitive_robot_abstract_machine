@@ -4,8 +4,8 @@ from random_events.interval import closed
 from random_events.product_algebra import VariableMap, SimpleEvent
 from random_events.variable import Continuous
 
-from probabilistic_model.learning.jpt.jpt import JPT
-from probabilistic_model.learning.nyga_distribution import NygaDistribution
+from probabilistic_model.learning.jpt.jpt import JointProbabilityTree
+from probabilistic_model.learning.nyga_distribution import NygaLearning
 from probabilistic_model.probabilistic_circuit.jax.probabilistic_circuit import (
     ProbabilisticCircuit,
 )
@@ -53,7 +53,7 @@ variable = Continuous("x")
 
 # create models
 if not load_from_disc:
-    nx_model = NygaDistribution(
+    nx_model = NygaLearning(
         variable, min_samples_per_quantile=min_samples_per_quantile
     )
     nx_model.fit(data)

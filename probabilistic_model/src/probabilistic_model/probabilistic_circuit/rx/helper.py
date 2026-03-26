@@ -45,10 +45,10 @@ def uniform_measure_of_simple_event(simple_event: SimpleEvent) -> ProbabilisticC
             # create a uniform distribution for every interval in a continuous variables description
             distribution = SumUnit(probabilistic_circuit=result)
             for assignment_ in assignment:
-                u = UniformDistribution(variable=variable, interval=assignment_)
+                uniform = UniformDistribution(variable=variable, interval=assignment_)
                 distribution.add_subcircuit(
-                    UnivariateContinuousLeaf(u, probabilistic_circuit=result),
-                    1 / u.pdf_value(),
+                    UnivariateContinuousLeaf(uniform, probabilistic_circuit=result),
+                    1 / uniform.pdf_value(),
                 )
             distribution.normalize()
 
