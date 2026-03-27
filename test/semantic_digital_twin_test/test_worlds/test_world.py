@@ -612,9 +612,12 @@ def test_degree_of_freedom_hash(world_setup):
     assert hash(dof) == hash(dof.id)
 
 
-def test_copy_world(world_setup):
-    world, l1, l2, bf, r1, r2 = world_setup
+def test_copy_world(pr2_apartment_world):
+    world = pr2_apartment_world
+    l2 = world.bodies[5]
+    bf = world.get_connections_by_type(Connection6DoF)[0].child
     world_copy = deepcopy(world)
+
     assert l2 in world_copy.bodies
     l2_copy = world_copy.get_kinematic_structure_entity_by_id(l2.id)
     assert id(l2) != id(l2_copy)
@@ -629,13 +632,26 @@ def test_copy_world(world_setup):
     )
     assert (
         float(
-            world_copy.get_kinematic_structure_entity_by_name(
-                "bf"
-            ).global_transform.to_np()[0, 3]
+            world_copy.get_world_entity_with_id_by_id(bf.id).global_transform.to_np()[
+                0, 3
+            ]
         )
         == 0.0
     )
     assert float(bf.global_transform.to_np()[0, 3]) == 1.5
+
+    assert all(
+        hash(s) in world_copy._world_entity_hash_table.keys()
+        for s in pr2_apartment_world.semantic_annotations
+    )
+    assert all(
+        hash(d) in world_copy._world_entity_hash_table.keys()
+        for d in pr2_apartment_world.degrees_of_freedom
+    )
+    assert all(
+        hash(k) in world_copy._world_entity_hash_table.keys()
+        for k in pr2_apartment_world.kinematic_structure_entities
+    )
 
 
 def test_copy_world_state(world_setup):
