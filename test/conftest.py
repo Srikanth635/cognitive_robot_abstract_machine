@@ -618,7 +618,6 @@ def pr2_apartment_world(pr2_world_setup, apartment_world_setup):
         -> apartment urdf
     """
     pr2_copy = deepcopy(pr2_world_setup)
-    PR2.from_world(pr2_copy)  # semantic annotations are lost on copy
 
     apartment_copy = deepcopy(apartment_world_setup)
 

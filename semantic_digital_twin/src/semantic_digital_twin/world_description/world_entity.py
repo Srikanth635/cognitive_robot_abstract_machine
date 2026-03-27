@@ -38,6 +38,7 @@ from krrood.entity_query_language.predicate import Symbol
 from krrood.ormatic.utils import classproperty
 from krrood.symbolic_math.symbolic_math import Matrix
 from krrood.utils import get_full_class_name
+from semantic_digital_twin.datastructures.joint_state import JointState
 from semantic_digital_twin.world_description.geometry import TriangleMesh
 from semantic_digital_twin.world_description.inertial_properties import Inertial
 from semantic_digital_twin.world_description.shape_collection import (
@@ -246,6 +247,8 @@ class WorldEntityWithID(WorldEntity, SubclassJSONSerializer):
         def _resolve_item(item: Any, world: World) -> Any:
             if isinstance(item, WorldEntityWithID):
                 return world.get_world_entity_with_id_by_id(item.id)
+            elif isinstance(item, JointState):
+                return item.copy_for_world(world)
             return deepcopy(item)
 
         result = {}
