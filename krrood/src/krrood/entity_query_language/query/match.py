@@ -46,6 +46,7 @@ from krrood.entity_query_language.core.variable import Literal, DomainType, Vari
 from krrood.entity_query_language.exceptions import (
     NoKwargsInMatchVar,
     CalledMatchMultipleTimes,
+    MatchTypeCannotBeDetermined,
 )
 from krrood.entity_query_language.predicate import HasType
 from krrood.entity_query_language.utils import T
@@ -227,20 +228,23 @@ class Match(AbstractMatchExpression[T], HasFactoryAndKwargs[T]):
 
     def __post_init__(self):
         if self.type_ is None:
-            if isclass(self.factory):
-                self.type_ = self.factory
-            elif ismethod(self.factory):
-                self.type_ = self.factory.__class__
-            elif isfunction(self.factory):
+            self._initialize_type_()
 
-                type_ = get_type_hints(self.factory)["return"]
-                assert isclass(
-                    type_
-                ), f"factory must return a class, got {type_} which is of type {type(type_)}"
-                self.type_ = type_
-
-            else:
-                assert_never(self.factory)
+    def _initialize_type_(self):
+        """
+        Initialize the type of the match based on the provided information.
+        """
+        if isclass(self.factory):
+            self.type_ = self.factory
+        elif ismethod(self.factory):
+            self.type_ = self.factory.__class__
+        elif isfunction(self.factory):
+            type_ = get_type_hints(self.factory)["return"]
+            if not isclass(type_):
+                raise MatchTypeCannotBeDetermined(self)
+            self.type_ = type_
+        else:
+            assert_never(self.factory)
 
     def __call__(self, **kwargs) -> Union[T, Self, CanBehaveLikeAVariable[T]]:
         """
