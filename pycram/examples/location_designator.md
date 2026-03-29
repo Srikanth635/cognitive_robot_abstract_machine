@@ -124,7 +124,6 @@ location_description = CostmapLocation(target=Pose(Point3.from_iterable([-1, 0, 
 
 plan = execute_single(NavigateAction(next(iter(location_description))), context=context)
 
-
 with simulated_robot:
     plan.perform()
 ```
@@ -160,5 +159,5 @@ spawned it in a previous example. Furthermore, we need a robot, so we also spawn
 from pycram.locations.locations import AccessingLocation
 
 access_location = AccessingLocation(world.get_body_by_name("handle_cab10_t").global_pose, arm=Arms.LEFT, context=context)
-print(access_location.resolve())
+print(next(iter(access_location)))
 ```
