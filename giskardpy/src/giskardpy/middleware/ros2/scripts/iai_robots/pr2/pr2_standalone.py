@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from rclpy import Parameter
 
-from giskardpy.middleware import get_middleware
 from giskardpy.qp.qp_controller_config import QPControllerConfig
 from giskardpy.middleware.ros2.behavior_tree_config import StandAloneBTConfig
 from giskardpy.middleware.ros2.giskard import Giskard

@@ -21,13 +21,21 @@ from numpy import pi
 from rclpy.duration import Duration
 
 import semantic_digital_twin.spatial_types.spatial_types as cas
-
-# from conftest import kitchen_setup
 from giskardpy.data_types.exceptions import (
     MaxTrajectoryLengthException,
 )
 from giskardpy.middleware.ros2 import rospy
+from giskardpy.middleware.ros2.behavior_tree_config import StandAloneBTConfig
+from giskardpy.middleware.ros2.configs.iai_robots.pr2 import (
+    PR2StandaloneInterface,
+    WorldWithPR2Config,
+)
+from giskardpy.middleware.ros2.giskard import Giskard
 from giskardpy.middleware.ros2.rospy import wait_for_future_to_complete
+from giskardpy.middleware.ros2.utils.utils import load_xacro
+from giskardpy.middleware.ros2.utils.utils_for_tests import (
+    GiskardTester,
+)
 from giskardpy.motion_statechart.data_types import (
     DefaultWeights,
     ObservationStateValues,
@@ -54,24 +62,14 @@ from giskardpy.motion_statechart.tasks.joint_tasks import (
 )
 from giskardpy.motion_statechart.tasks.pointing import Pointing
 from giskardpy.qp.qp_controller_config import QPControllerConfig
+from giskardpy.tree.blackboard_utils import GiskardBlackboard
 from giskardpy.utils.math import (
     quaternion_from_axis_angle,
     quaternion_from_rotation_matrix,
 )
-from giskardpy.middleware.ros2.behavior_tree_config import StandAloneBTConfig
-from giskardpy.middleware.ros2.giskard import Giskard
-from giskardpy.middleware.ros2.configs.iai_robots.pr2 import (
-    PR2StandaloneInterface,
-    WorldWithPR2Config,
-)
 from giskardpy_ros.exceptions import (
     ExecutionCanceledException,
     ExecutionAbortedException,
-)
-from giskardpy.tree.blackboard_utils import GiskardBlackboard
-from giskardpy.middleware.ros2.utils.utils import load_xacro
-from giskardpy.middleware.ros2.utils.utils_for_tests import (
-    GiskardTester,
 )
 from krrood.symbolic_math import symbolic_math as sm
 from semantic_digital_twin.collision_checking.collision_rules import (

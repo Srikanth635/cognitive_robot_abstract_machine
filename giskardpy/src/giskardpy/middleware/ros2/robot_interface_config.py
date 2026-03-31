@@ -29,6 +29,7 @@ from semantic_digital_twin.world_description.connections import (
     OmniDrive,
     ActiveConnection,
     Connection6DoF,
+    DifferentialDrive,
 )
 from semantic_digital_twin.world_description.world_entity import Connection
 
@@ -55,7 +56,7 @@ class RobotInterfaceConfig(ABC):
     def sync_odometry_topic(
         self,
         odometry_topic: Optional[str] = None,
-        joint: OmniDrive = None,
+        joint: Union[OmniDrive, DifferentialDrive] = None,
         sync_in_control_loop: bool = True,
     ):
         """
@@ -63,7 +64,7 @@ class RobotInterfaceConfig(ABC):
         """
         if odometry_topic is None:
             odometry_topic = search_for_unique_publisher_of_type(Odometry)
-        assert isinstance(joint, OmniDrive)
+        assert isinstance(joint, (OmniDrive, DifferentialDrive))
         self.tree.wait_for_goal.synchronization.sync_odometry_topic(
             odometry_topic, joint
         )
