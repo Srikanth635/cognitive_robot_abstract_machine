@@ -1,154 +1,48 @@
-import json
-import time
-from dataclasses import dataclass
-from math import radians
-from typing import Type
-
 import numpy as np
-import pytest
 
-from giskardpy.data_types.exceptions import DuplicateNameException
-from giskardpy.executor import Executor, SimulationPacer
-from giskardpy.motion_statechart.binding_policy import GoalBindingPolicy
+from giskardpy.executor import Executor
 from giskardpy.motion_statechart.context import MotionStatechartContext
 from giskardpy.motion_statechart.data_types import (
     LifeCycleValues,
     ObservationStateValues,
-    DefaultWeights,
 )
-from giskardpy.motion_statechart.exceptions import (
-    NotInMotionStatechartError,
-    EndMotionInGoalError,
-    InputNotExpressionError,
-    SelfInStartConditionError,
-    NonObservationVariableError,
-    NodeAlreadyBelongsToDifferentNodeError,
-)
-from giskardpy.motion_statechart.goals.cartesian_goals import (
-    DifferentialDriveBaseGoal,
-    CartesianPoseStraight,
-)
-from giskardpy.motion_statechart.goals.collision_avoidance import (
-    ExternalCollisionAvoidance,
-    SelfCollisionAvoidance,
-    ExternalCollisionDistanceMonitor,
-    SelfCollisionDistanceMonitor,
-    UpdateTemporaryCollisionRules,
-)
-from giskardpy.motion_statechart.goals.open_close import Open, Close
-from giskardpy.motion_statechart.goals.templates import Sequence, Parallel
+from giskardpy.motion_statechart.goals.templates import Sequence
 from giskardpy.motion_statechart.graph_node import (
     EndMotion,
-    CancelMotion,
 )
-from giskardpy.motion_statechart.graph_node import ThreadPayloadMonitor
-from giskardpy.motion_statechart.monitors.joint_monitors import JointPositionReached
-from giskardpy.motion_statechart.monitors.monitors import LocalMinimumReached
 from giskardpy.motion_statechart.monitors.overwrite_state_monitors import (
     SetSeedConfiguration,
     SetOdometry,
 )
-from giskardpy.motion_statechart.monitors.payload_monitors import (
-    Print,
-    Pulse,
-    CountSeconds,
-    CountControlCycles,
-)
 from giskardpy.motion_statechart.motion_statechart import (
     MotionStatechart,
 )
-from giskardpy.motion_statechart.tasks.align_planes import AlignPlanes
-from giskardpy.motion_statechart.tasks.cartesian_tasks import (
-    CartesianPose,
-    CartesianOrientation,
-    CartesianPosition,
-    CartesianPositionStraight,
-    CartesianVelocityLimit,
-    CartesianPositionVelocityLimit,
-    CartesianRotationVelocityLimit,
-    CartesianPositionTrajectory,
-)
-from giskardpy.motion_statechart.tasks.feature_functions import (
-    AngleGoal,
-    AlignPerpendicular,
-    DistanceGoal,
-    HeightGoal,
-)
 from giskardpy.motion_statechart.tasks.joint_tasks import JointPositionList, JointState
-from giskardpy.motion_statechart.tasks.pointing import Pointing, PointingCone
 from giskardpy.motion_statechart.test_nodes.test_nodes import (
-    ChangeStateOnEvents,
     ConstTrueNode,
-    TestGoal,
-    TestNestedGoal,
-    ConstFalseNode,
-    TestRunAfterStop,
-    TestRunAfterStopFromPause,
-    TestEndBeforeStart,
-    TestUnpauseUnknownFromParentPause,
 )
-from giskardpy.qp.constraint import EqualityConstraint
-from giskardpy.qp.constraint_collection import ConstraintCollection
 from giskardpy.qp.qp_controller_config import QPControllerConfig
-from giskardpy.utils.math import angle_between_vector
 from krrood.symbolic_math.symbolic_math import (
     trinary_logic_and,
-    trinary_logic_not,
-    trinary_logic_or,
-    FloatVariable,
     shortest_angular_distance,
 )
-from semantic_digital_twin.adapters.world_entity_kwargs_tracker import (
-    WorldEntityWithIDKwargsTracker,
-)
-from semantic_digital_twin.collision_checking.collision_rules import (
-    AvoidCollisionBetweenGroups,
-    AvoidExternalCollisions,
-    AvoidAllCollisions,
-    AllowAllCollisions,
-)
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
-from semantic_digital_twin.robots.abstract_robot import Manipulator, AbstractRobot
-from semantic_digital_twin.robots.hsrb import HSRB
-from semantic_digital_twin.robots.minimal_robot import MinimalRobot
-from semantic_digital_twin.semantic_annotations.semantic_annotations import (
-    Handle,
-    Door,
-    Hinge,
-)
 from semantic_digital_twin.spatial_types import (
     HomogeneousTransformationMatrix,
     Vector3,
-    Point3,
-    RotationMatrix,
 )
 from semantic_digital_twin.spatial_types.derivatives import DerivativeMap
-from semantic_digital_twin.spatial_types.spatial_types import Pose
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connections import (
     RevoluteConnection,
     ActiveConnection1DOF,
-    FixedConnection,
-    OmniDrive,
 )
 from semantic_digital_twin.world_description.degree_of_freedom import (
     DegreeOfFreedom,
     DegreeOfFreedomLimits,
 )
-from semantic_digital_twin.world_description.geometry import (
-    Cylinder,
-    Box,
-    Scale,
-    Color,
-)
-from semantic_digital_twin.world_description.shape_collection import ShapeCollection
 from semantic_digital_twin.world_description.world_entity import (
     Body,
-    KinematicStructureEntity,
-)
-from semantic_digital_twin.world_description.world_state import WorldStateTrajectory
-from semantic_digital_twin.world_description.world_state_trajectory_plotter import (
-    WorldStateTrajectoryPlotter,
 )
 
 
@@ -223,7 +117,7 @@ def test_set_seed_odometry(pr2_world_state_reset):
     )
 
 
-def test_joint_goal(self, tmp_path):
+def test_joint_goal(tmp_path):
     world = World()
     with world.modify_world():
         root = Body(name=PrefixedName("root"))
@@ -302,7 +196,7 @@ def test_joint_goal(self, tmp_path):
     )
 
 
-def test_continuous_joint(self, pr2_world_state_reset):
+def test_continuous_joint(pr2_world_state_reset):
     r_wrist_roll_joint = pr2_world_state_reset.get_connection_by_name(
         "r_wrist_roll_joint"
     )
@@ -342,7 +236,7 @@ def test_continuous_joint(self, pr2_world_state_reset):
     )
 
 
-def test_revolute_joint(self, pr2_world_state_reset):
+def test_revolute_joint(pr2_world_state_reset):
     head_pan_joint = pr2_world_state_reset.get_connection_by_name("head_pan_joint")
     head_tilt_joint = pr2_world_state_reset.get_connection_by_name("head_tilt_joint")
     msc = MotionStatechart()
@@ -370,7 +264,7 @@ def test_revolute_joint(self, pr2_world_state_reset):
     assert np.isclose(head_tilt_joint.position, -0.37, atol=1e-2)
 
 
-def test_joint_sequence(self, pr2_world_state_reset):
+def test_joint_sequence(pr2_world_state_reset):
     msc = MotionStatechart()
     msc.add_node(
         sequence := Sequence(
