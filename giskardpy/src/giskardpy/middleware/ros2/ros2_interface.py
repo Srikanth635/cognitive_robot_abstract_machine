@@ -15,7 +15,7 @@ from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 from std_msgs.msg import String
 from giskardpy.middleware.ros2.utils.asynio_utils import wait_until_not_none
 
-from giskardpy_ros.exceptions import (
+from giskardpy.middleware.ros2.exceptions import (
     ExecutionAbortedException,
     ExecutionCanceledException,
 )

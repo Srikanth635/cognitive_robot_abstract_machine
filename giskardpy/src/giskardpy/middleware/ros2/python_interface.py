@@ -20,7 +20,7 @@ from giskardpy.motion_statechart.motion_statechart import (
     LifeCycleState,
     ObservationState,
 )
-from giskardpy_ros.exceptions import ExecutionException
+from giskardpy.middleware.ros2.exceptions import ExecutionException
 from giskardpy.middleware.ros2 import rospy
 from giskardpy.middleware.ros2.ros2_interface import MyActionClient
 from semantic_digital_twin.adapters.ros.world_fetcher import fetch_world_from_service

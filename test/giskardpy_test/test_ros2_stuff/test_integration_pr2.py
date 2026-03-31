@@ -67,7 +67,7 @@ from giskardpy.utils.math import (
     quaternion_from_axis_angle,
     quaternion_from_rotation_matrix,
 )
-from giskardpy_ros.exceptions import (
+from giskardpy.middleware.ros2.exceptions import (
     ExecutionCanceledException,
     ExecutionAbortedException,
 )

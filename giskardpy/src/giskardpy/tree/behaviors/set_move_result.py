@@ -4,7 +4,7 @@ from giskard_msgs.action import JsonAction
 from py_trees.common import Status
 
 from giskardpy.utils.decorators import record_time
-from giskardpy_ros.exceptions import (
+from giskardpy.middleware.ros2.exceptions import (
     ExecutionCanceledException,
     ExecutionAbortedException,
 )
