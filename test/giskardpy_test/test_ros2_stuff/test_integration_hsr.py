@@ -7,7 +7,6 @@ import pytest
 from geometry_msgs.msg import PoseStamped, PointStamped, Vector3Stamped, Point
 from numpy import pi
 
-from conftest import kitchen_setup
 from giskardpy.middleware.ros2.configs.iai_robots.hsr import (
     WorldWithHSRConfig,
     HSRStandaloneInterface,
