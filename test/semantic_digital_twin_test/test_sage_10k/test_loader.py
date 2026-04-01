@@ -1,9 +1,7 @@
-from krrood.adapters.json_serializer import from_json
 from semantic_digital_twin.adapters.ros.visualization.viz_marker import (
     VizMarkerPublisher,
 )
 from semantic_digital_twin.adapters.sage_10k_dataset.loader import Sage10kDatasetLoader
-from semantic_digital_twin.adapters.sage_10k_dataset.schema import Sage10kScene
 
 
 def test_loader(rclpy_node):
@@ -12,6 +10,9 @@ def test_loader(rclpy_node):
     )
     scene = loader.create_scene()
 
+    print(*{o.type for room in scene.rooms for o in room.objects}, sep="\n")
+
+    return
     world = scene.create_world()
     pub = VizMarkerPublisher(
         _world=world,
