@@ -35,7 +35,10 @@ from semantic_digital_twin.world_description.connections import (
     FixedConnection,
     Connection6DoF,
 )
-from semantic_digital_twin.world_description.degree_of_freedom import DegreeOfFreedom, DegreeOfFreedomLimits
+from semantic_digital_twin.world_description.degree_of_freedom import (
+    DegreeOfFreedom,
+    DegreeOfFreedomLimits,
+)
 from semantic_digital_twin.world_description.geometry import (
     Box,
     Sphere,
@@ -43,7 +46,7 @@ from semantic_digital_twin.world_description.geometry import (
     Scale,
     Shape,
     Color,
-    FileMesh,
+    Mesh,
 )
 from semantic_digital_twin.world_description.inertial_properties import (
     Inertial,
@@ -305,7 +308,7 @@ class MJCFParser:
                 )
                 meshscale = Scale(*mujoco_mesh.scale)
                 if mujoco_material is None:
-                    return FileMesh(
+                    return Mesh(
                         filename=filename,
                         origin=origin_transform,
                         color=color,
@@ -316,7 +319,7 @@ class MJCFParser:
                     mujoco_texture: mujoco.MjsTexture = self.spec.texture(texture_name)
                     if mujoco_texture is None:
                         color = Color(*mujoco_material.rgba)
-                        return FileMesh(
+                        return Mesh(
                             filename=filename,
                             origin=origin_transform,
                             color=color,
@@ -327,7 +330,7 @@ class MJCFParser:
                     )
                     texture_file_path = os.path.join(texturedir, mujoco_texture.file)
                     if os.path.isfile(texture_file_path):
-                        return FileMesh.from_file(
+                        return Mesh.from_file(
                             file_path=filename,
                             origin=origin_transform,
                             color=color,
@@ -335,7 +338,7 @@ class MJCFParser:
                             scale=meshscale,
                         )
                     else:
-                        return FileMesh(
+                        return Mesh(
                             filename=filename,
                             origin=origin_transform,
                             color=color,
