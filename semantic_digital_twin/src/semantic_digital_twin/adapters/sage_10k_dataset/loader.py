@@ -26,10 +26,6 @@ class Sage10kDatasetLoader:
     The directory where the scene should be downloaded to.
     """
 
-    def __post_init__(self):
-        if not self.directory.exists():
-            ...
-
     def _download_scene(self) -> Path:
         """
         Download the scene from the Sage10k dataset and return it as a Path.

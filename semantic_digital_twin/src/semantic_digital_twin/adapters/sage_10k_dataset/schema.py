@@ -558,7 +558,7 @@ class Sage10kDoor(Sage10kWithID):
                 world=world,
                 world_root_T_self=world_root_T_self,
             )
-        assert annotation.entry_way is not None
+
         body = annotation.root
 
         geometry_with_texture = ShapeCollection(
