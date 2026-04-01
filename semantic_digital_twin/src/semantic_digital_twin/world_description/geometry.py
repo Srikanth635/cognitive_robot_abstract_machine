@@ -455,13 +455,18 @@ class Mesh(Shape):
         ply_file = PlyData.read(ply_file_path)
         # Raw data
         vertices = np.stack(
-            [ply_file["vertex"]["x"], ply_file["vertex"]["y"], ply_file["vertex"]["z"]], axis=-1
+            [ply_file["vertex"]["x"], ply_file["vertex"]["y"], ply_file["vertex"]["z"]],
+            axis=-1,
         )
 
-        texture_coordinates = np.stack([ply_file["texcoord"]["s"], ply_file["texcoord"]["t"]], axis=-1)
+        texture_coordinates = np.stack(
+            [ply_file["texcoord"]["s"], ply_file["texcoord"]["t"]], axis=-1
+        )
 
         faces = np.stack([np.array(f["vertex_indices"]) for f in ply_file["face"]])
-        texture_coordinate_indices = np.stack([np.array(f["texcoord_indices"]) for f in ply_file["face"]])
+        texture_coordinate_indices = np.stack(
+            [np.array(f["texcoord_indices"]) for f in ply_file["face"]]
+        )
 
         # Build per-vertex UV by unpacking face-corner UVs
         # texture_coordinate_indices[f, c] -> index into texture_coordinates for face f, corner c
