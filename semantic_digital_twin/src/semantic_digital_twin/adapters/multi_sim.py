@@ -42,8 +42,6 @@ from ..world_description.geometry import (
     Cylinder,
     Sphere,
     Shape,
-    FileMesh,
-    TriangleMesh,
     Mesh,
     Color,
 )
@@ -465,16 +463,7 @@ class MeshConverter(ShapeConverter, ABC):
     Converts a Mesh object to a dictionary of mesh properties for Multiverse simulator.
     """
 
-    entity_type: ClassVar[Type[FileMesh]] = FileMesh
-
-
-@dataclass
-class TriangleMeshConverter(ShapeConverter, ABC):
-    """
-    Converts a Mesh object to a dictionary of mesh properties for Multiverse simulator.
-    """
-
-    entity_type: ClassVar[Type[TriangleMesh]] = TriangleMesh
+    entity_type: ClassVar[Type[Mesh]] = Mesh
 
 
 @dataclass
@@ -1622,11 +1611,7 @@ class MujocoBuilder(MultiSimBuilder):
         :return: True if the mesh was parsed successfully, False otherwise.
         """
         mesh_entity = geom_props.pop("mesh")
-        if isinstance(mesh_entity, TriangleMesh):
-            mesh_name = os.path.basename(mesh_entity.file.name)
-            mesh_file_path = os.path.join(self.asset_folder_path, f"{mesh_name}.obj")
-            shutil.move(mesh_entity.file.name, mesh_file_path)
-        elif isinstance(mesh_entity, FileMesh):
+        if isinstance(mesh_entity, Mesh):
             mesh_file_path = mesh_entity.filename
         else:
             raise NotImplementedError(
