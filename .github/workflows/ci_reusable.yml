@@ -61,18 +61,10 @@ jobs:
 
       - name: Build ROS2 packages
         run: |
-          pwd
-          ll
           source /opt/ros/overlay_ws/install/setup.bash
           source /opt/ros/cram-env/bin/activate
-          cd /opt/ros
-          ll
-          cd overlay_ws
-          ll
-          cd src
-          ll
-          ln -s /opt/ros/cognitive_robot_abstract_machine/cram_ros2_packages cram_ros2_packages
-          ll
+          ln -s /__w/cognitive_robot_abstract_machine/cognitive_robot_abstract_machine/cram_ros2_packages cram_ros2_packages
+          ls -la
           colcon build --merge-install
 
       - name: Run tests
