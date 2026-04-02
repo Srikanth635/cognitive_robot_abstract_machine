@@ -5,7 +5,6 @@ type.  Each action type has an ``ActionHandler`` that encapsulates every step
 from slot schema to concrete pycram action:
 
   - How many entities to ground (and which descriptions to use).
-  - How to build a ``PartialDesignator`` for that action.
   - Which discrete parameters to resolve via LLM and how.
   - How to assemble the final pycram action object.
 
@@ -37,7 +36,6 @@ from semantic_digital_twin.world_description.world_entity import Body
 
 from pycram.datastructures.enums import ApproachDirection, Arms, VerticalAlignment
 from pycram.datastructures.grasp import GraspDescription
-from pycram.datastructures.partial_designator import PartialDesignator
 from pycram.robot_plans.actions.core.pick_up import PickUpAction
 from pycram.robot_plans.actions.core.placing import PlaceAction
 
@@ -120,7 +118,7 @@ class PickUpActionHandler(ActionHandler):
 
     Execution steps (all contained here):
       1. Ground the object.
-      2. Build a ``PartialDesignator[PickUpAction]`` from the slot schema.
+      2. Parse known parameters (arm, grasp) from the slot schema.
       3. Resolve free parameters (arm, grasp) via world context + LLM.
       4. Return the fully specified ``PickUpAction``.
     """
@@ -157,36 +155,21 @@ class PickUpActionHandler(ActionHandler):
             )
         logger.info("PickUp grounding – %d body/bodies.", len(grounding.bodies))
 
-        # Step 2 — build PartialDesignator
-        partial = self._build_partial(schema, grounding.bodies)
+        # Step 2 — parse known parameters
+        arm = self._parse_arm(schema.arm)
+        grasp = self._parse_grasp(schema.grasp_params)
+        obj = grounding.bodies if len(grounding.bodies) > 1 else grounding.bodies[0]
 
-        # Step 3 — resolve free parameters
-        if not partial.missing_parameter():
-            logger.debug("PartialDesignator fully specified – resolving directly.")
-            return partial.resolve()
+        # Step 3 — resolve free parameters via LLM if needed
+        if arm is not None and grasp is not None:
+            logger.debug("All parameters specified – building action directly.")
+            return PickUpAction(object_designator=obj, arm=arm, grasp_description=grasp)
 
-        resolution = self._resolve_discrete(partial, grounding.bodies)
+        resolution = self._resolve_discrete(arm, grasp, grounding.bodies)
         logger.debug("LLM reasoning: %s", resolution.reasoning)
 
         # Step 4 — assemble action
-        return self._build_action(partial, resolution, grounding.bodies)
-
-    # ── PartialDesignator construction ─────────────────────────────────────────
-
-    def _build_partial(
-        self,
-        schema: PickUpSlotSchema,
-        grounded_bodies: List[Body],
-    ) -> PartialDesignator[PickUpAction]:
-        arm = self._parse_arm(schema.arm)
-        grasp = self._parse_grasp(schema.grasp_params)
-        obj = grounded_bodies if len(grounded_bodies) > 1 else grounded_bodies[0]
-        return PartialDesignator(
-            PickUpAction,
-            object_designator=obj,
-            arm=arm,
-            grasp_description=grasp,
-        )
+        return self._build_action(arm, grasp, resolution, grounding.bodies)
 
     def _parse_arm(self, arm_str: Optional[str]) -> Optional[Arms]:
         if arm_str is None:
@@ -229,12 +212,13 @@ class PickUpActionHandler(ActionHandler):
 
     def _resolve_discrete(
         self,
-        partial: PartialDesignator[PickUpAction],
+        arm: Optional[Arms],
+        grasp: Optional[GraspDescription],
         grounded_bodies: List[Body],
     ) -> PickUpDiscreteResolutionSchema:
         world_ctx = self._build_world_context(grounded_bodies)
-        known = self._known_params(partial)
-        missing = self._missing_params(partial)
+        known = self._known_params(arm, grasp)
+        missing = self._missing_params(arm, grasp)
         logger.debug("PickUp world context:\n%s", world_ctx)
         logger.debug("PickUp known parameters: %s", known)
         logger.debug("PickUp missing parameters: %s", missing)
@@ -296,11 +280,10 @@ class PickUpActionHandler(ActionHandler):
         return "\n".join(lines) if lines else "World context unavailable."
 
     @staticmethod
-    def _known_params(partial: PartialDesignator[PickUpAction]) -> str:
+    def _known_params(arm: Optional[Arms], grasp: Optional[GraspDescription]) -> str:
         lines = []
-        if partial.kwargs.get("arm") is not None:
-            lines.append(f"arm = {partial.kwargs['arm']}")
-        grasp = partial.kwargs.get("grasp_description")
+        if arm is not None:
+            lines.append(f"arm = {arm}")
         if grasp is not None:
             lines.append(
                 f"approach_direction = {grasp.approach_direction.name}, "
@@ -310,11 +293,11 @@ class PickUpActionHandler(ActionHandler):
         return "\n".join(lines) if lines else "None – all discrete parameters are unspecified."
 
     @staticmethod
-    def _missing_params(partial: PartialDesignator[PickUpAction]) -> str:
+    def _missing_params(arm: Optional[Arms], grasp: Optional[GraspDescription]) -> str:
         missing = []
-        if partial.kwargs.get("arm") is None:
+        if arm is None:
             missing.append("arm  (choose LEFT or RIGHT based on object position)")
-        if partial.kwargs.get("grasp_description") is None:
+        if grasp is None:
             missing += [
                 "approach_direction  (FRONT / BACK / LEFT / RIGHT)",
                 "vertical_alignment  (TOP / BOTTOM / NoAlignment)",
@@ -326,35 +309,29 @@ class PickUpActionHandler(ActionHandler):
 
     def _build_action(
         self,
-        partial: PartialDesignator[PickUpAction],
+        arm: Optional[Arms],
+        grasp: Optional[GraspDescription],
         resolution: PickUpDiscreteResolutionSchema,
-        grounded_bodies: Optional[List[Body]] = None,
+        grounded_bodies: List[Body],
     ) -> PickUpAction:
-        arm: Arms = partial.kwargs.get("arm") or Arms[resolution.arm]
+        resolved_arm: Arms = arm or Arms[resolution.arm]
 
-        grasp: Optional[GraspDescription] = partial.kwargs.get("grasp_description")
-        if grasp is None:
+        resolved_grasp: Optional[GraspDescription] = grasp
+        if resolved_grasp is None:
             manipulator = self._world_context.manipulator
             if manipulator is None:
                 raise RuntimeError(
                     "Cannot construct GraspDescription: manipulator is None in WorldContext."
                 )
-            grasp = GraspDescription(
+            resolved_grasp = GraspDescription(
                 approach_direction=ApproachDirection[resolution.approach_direction],
                 vertical_alignment=VerticalAlignment[resolution.vertical_alignment],
                 rotate_gripper=resolution.rotate_gripper,
                 manipulator=manipulator,
             )
 
-        # Use grounded_bodies directly to avoid partial.kwargs plan-context interference.
-        if grounded_bodies:
-            obj = grounded_bodies if len(grounded_bodies) > 1 else grounded_bodies[0]
-        else:
-            obj = partial.kwargs.get("object_designator")
-            if isinstance(obj, list):
-                obj = obj[0]
-
-        return PickUpAction(object_designator=obj, arm=arm, grasp_description=grasp)
+        obj = grounded_bodies if len(grounded_bodies) > 1 else grounded_bodies[0]
+        return PickUpAction(object_designator=obj, arm=resolved_arm, grasp_description=resolved_grasp)
 
 
 # ── Place handler ──────────────────────────────────────────────────────────────
@@ -363,7 +340,7 @@ class PickUpActionHandler(ActionHandler):
 class PlaceActionHandler(ActionHandler):
     """Handles the full execution chain for PlaceAction.
 
-    Execution steps (all contained here):
+    Execution steps:
       1. Ground the object being placed.
       2. Ground the target surface.
       3. Resolve arm (from schema or LLM).
@@ -428,13 +405,10 @@ class PlaceActionHandler(ActionHandler):
         tgt_body = tgt_grounding.bodies[0]
 
         arm: Optional[Arms] = Arms[schema.arm] if schema.arm else None
-        partial: PartialDesignator[PlaceAction] = PartialDesignator(
-            PlaceAction, object_designator=obj_body, arm=arm, target_location=tgt_body,
-        )
 
-        if partial.missing_parameter():
+        if arm is None:
             resolution = self._resolve_arm(obj_grounding.bodies, tgt_grounding.bodies)
-            arm = partial.kwargs.get("arm") or Arms[resolution.arm]
+            arm = Arms[resolution.arm]
             logger.debug(
                 "Place arm resolved by LLM: %s | %s", arm, resolution.reasoning
             )
