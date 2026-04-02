@@ -41,13 +41,12 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Callable, ContextManager, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, ContextManager, Dict, List, Optional, Set, Tuple
 
 from semantic_digital_twin.world import World
 
 from pycram.datastructures.dataclasses import Context
-from pycram.datastructures.partial_designator import PartialDesignator
-from pycram.language import SequentialPlan
+from pycram.plans.factories import sequential
 from pycram.robot_plans.actions.base import ActionDescription
 
 from .pipeline.action_pipeline import ActionPipeline
@@ -123,7 +122,7 @@ class ExecutionLoop:
     _exec_state: ExecutionState = field(init=False)
 
     def __post_init__(self) -> None:
-        self._planner = MotionPreconditionPlanner(self.world)
+        self._planner = MotionPreconditionPlanner(self.world, self.context)
         self._exec_state = ExecutionState()
 
     # ── Public API ──────────────────────────────────────────────────────────────
@@ -465,11 +464,11 @@ class ExecutionLoop:
 
     # ── Internal helpers ────────────────────────────────────────────────────────
 
-    def _execute(self, actions: List[Union[ActionDescription, PartialDesignator]]) -> None:
-        """Wrap *actions* in a SequentialPlan and perform it."""
-        plan = SequentialPlan(self.context, *actions)
+    def _execute(self, actions: List[Any]) -> None:
+        """Wrap *actions* in a sequential plan node and perform it."""
+        node = sequential(actions, context=self.context)
         if self.robot_context is not None:
             with self.robot_context():
-                plan.perform()
+                node.perform()
         else:
-            plan.perform()
+            node.perform()

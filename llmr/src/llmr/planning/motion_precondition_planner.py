@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing_extensions import Any, Dict, List, Optional, Type, Union
+from typing_extensions import Any, Dict, List, Optional, Type
 
 from semantic_digital_twin.datastructures.definitions import TorsoState
 from semantic_digital_twin.robots.abstract_robot import AbstractRobot
@@ -13,9 +13,10 @@ from semantic_digital_twin.world_description.world_entity import Body
 
 from semantic_digital_twin.spatial_types.spatial_types import Pose
 
+from krrood.entity_query_language.factories import underspecified, variable
+from pycram.datastructures.dataclasses import Context
 from pycram.datastructures.enums import Arms
-from pycram.datastructures.partial_designator import PartialDesignator
-from pycram.designators.location_designator import CostmapLocation, SemanticCostmapLocation
+from pycram.locations.locations import CostmapLocation
 from pycram.robot_plans.actions.base import ActionDescription
 from pycram.robot_plans.actions.core.navigation import NavigateAction
 from pycram.robot_plans.actions.core.placing import PlaceAction
@@ -69,6 +70,7 @@ class PreconditionProvider(ABC):
     """Base class for action-type-specific precondition logic."""
 
     world: World
+    context: Context
 
     def _get_robot(self) -> Optional[AbstractRobot]:
         """Return the first AbstractRobot annotation found in the world, or None."""
@@ -132,8 +134,6 @@ class PickUpPreconditionProvider(PreconditionProvider):
             preconditions.insert(0, ParkArmsAction(arm=arm_to_park))
 
         if nav_designator is not None:
-            # Use NavigateAction.description (PartialDesignator) so the plan propagates
-            # plan_node into the nested CostmapLocation before it tries to access robot_view.
             preconditions.append(nav_designator)
 
         return PreconditionResult(preconditions=preconditions, action=action)
@@ -198,25 +198,23 @@ class PickUpPreconditionProvider(PreconditionProvider):
         obj_body: Body,
         arm: Arms,
         robot: Optional[AbstractRobot],
-    ) -> Optional[PartialDesignator]:
-        """Return a NavigateAction PartialDesignator whose target is a CostmapLocation.
+    ) -> Any:
+        """Return an underspecified NavigateAction resolved lazily at execution time.
 
-        CostmapLocation.ground() requires robot_view (i.e. plan_node must be set).
-        By wrapping it in a PartialDesignator and letting the plan resolve it, the
-        plan's plan_node propagation wires up robot_view automatically.
-
-        The target is converted to a PoseStamped so CostmapLocation computes
-        reachable base poses from the object's exact world position rather than
-        its bounding box geometry (which can shift the nav pose out of reach
-        for objects that are off-center relative to the robot).
+        Uses the krrood entity query language so CostmapLocation is evaluated
+        inside the plan (matching the new pycram pattern from TransportAction).
         """
-        target = obj_body.global_pose
-        loc = CostmapLocation(
-            target=target,
-            reachable_for=robot,
-            reachable_arm=arm,
+        return underspecified(NavigateAction)(
+            target_location=variable(
+                Pose,
+                domain=CostmapLocation(
+                    target=obj_body.global_pose,
+                    reachable_arm=arm,
+                    reachable=True,
+                    context=self.context,
+                ),
+            ),
         )
-        return NavigateAction.description(target_location=loc)
 
     def update_state(
         self,
@@ -247,12 +245,7 @@ class PlacePreconditionProvider(PreconditionProvider):
         obj_body = action.object_designator or exec_state.last_pickup_body
         arm = self._find_holding_arm(obj_body, exec_state) or action.arm
 
-        # Resolve the placement pose (Body → PoseStamped on surface).
-        # SemanticCostmapLocation does NOT access robot_view, so .ground() is safe here.
         place_pose = self._resolve_place_pose(action.target_location, obj_body)
-
-        # Build a NavigateAction PartialDesignator whose CostmapLocation will be
-        # resolved lazily inside the plan (plan_node propagation sets robot_view).
         nav_designator = self._make_nav_designator(place_pose, arm, robot)
 
         preconditions: List[Any] = [
@@ -308,45 +301,34 @@ class PlacePreconditionProvider(PreconditionProvider):
         """Convert a placement target to a Pose.
 
         If *target* is already a ``Pose`` it is returned as-is.
-        If it is a ``Body`` (as returned by the ActionDispatcher), the pose is
-        computed by ``SemanticCostmapLocation`` so the object rests on the surface.
-        SemanticCostmapLocation does not access robot_view, so this is safe outside a plan.
+        If it is a ``Body``, use its global pose directly as the placement target.
         """
         if isinstance(target, Pose):
             return target
-
-        # target is a Body – compute placement pose on its surface.
-        try:
-            sem_loc = SemanticCostmapLocation(body=target, for_object=for_object)
-            grd = sem_loc.ground()
-            logger.debug("SemanticCostmapLocation Body: %s", target)
-            logger.debug("SemanticCostmapLocation for object: %s", for_object)
-            logger.debug("SemanticCostmapLocation: %s", grd)
-            return grd
-        except Exception as exc:
-            logger.warning(
-                "SemanticCostmapLocation failed (%s). Falling back to body global pose.", exc
-            )
-            return target.global_pose
+        return target.global_pose
 
     def _make_nav_designator(
         self,
         place_pose: Pose,
         arm: Arms,
         robot: Optional[AbstractRobot],
-    ) -> Optional[PartialDesignator]:
-        """Return a NavigateAction PartialDesignator whose target is a CostmapLocation.
+    ) -> Any:
+        """Return an underspecified NavigateAction resolved lazily at execution time.
 
-        CostmapLocation.ground() requires robot_view (plan_node must be set).
-        Wrapping in a PartialDesignator defers resolution until plan execution,
-        at which point the plan propagates plan_node into the CostmapLocation.
+        Uses the krrood entity query language so CostmapLocation is evaluated
+        inside the plan (matching the new pycram pattern from TransportAction).
         """
-        loc = CostmapLocation(
-            target=place_pose,
-            reachable_for=robot,
-            reachable_arm=arm,
+        return underspecified(NavigateAction)(
+            target_location=variable(
+                Pose,
+                domain=CostmapLocation(
+                    target=place_pose,
+                    reachable_arm=arm,
+                    reachable=True,
+                    context=self.context,
+                ),
+            ),
         )
-        return NavigateAction.description(target_location=loc)
 
 
 # ── MotionPreconditionPlanner ───────────────────────────────────────────────────
@@ -371,8 +353,9 @@ class MotionPreconditionPlanner:
             action_type.__name__,
         )
 
-    def __init__(self, world: World) -> None:
+    def __init__(self, world: World, context: Context) -> None:
         self._world = world
+        self._context = context
 
     def compute(
         self,
@@ -392,7 +375,7 @@ class MotionPreconditionPlanner:
             )
             return PreconditionResult(preconditions=[], action=action)
 
-        provider = provider_cls(self._world)
+        provider = provider_cls(self._world, self._context)
         return provider.compute(action, exec_state)
 
     def update_state(
@@ -403,7 +386,7 @@ class MotionPreconditionPlanner:
         """Update *exec_state* after *action* has been performed."""
         provider_cls = self._registry.get(type(action))
         if provider_cls is not None:
-            provider_cls(self._world).update_state(action, exec_state)
+            provider_cls(self._world, self._context).update_state(action, exec_state)
 
 
 # ── Default registrations ───────────────────────────────────────────────────────

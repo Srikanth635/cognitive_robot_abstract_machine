@@ -43,11 +43,10 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from semantic_digital_twin.world import World
 
-from pycram.datastructures.partial_designator import PartialDesignator
 from pycram.robot_plans.actions.base import ActionDescription
 
 from .pipeline.action_pipeline import ActionPipeline, _serialise_world_for_llm  # type: ignore[attr-defined]
@@ -88,7 +87,7 @@ class RecoveryAttemptResult:
 
 
 def _serialise_failed_action(
-    action: Optional[Union[ActionDescription, PartialDesignator]],
+    action: Optional[ActionDescription],
 ) -> str:
     """Produce a human-readable description of a failed action for the LLM.
 
@@ -156,7 +155,7 @@ class RecoveryHandler:
     def attempt_recovery(
         self,
         instruction: str,
-        failed_action: Optional[Union[ActionDescription, PartialDesignator]],
+        failed_action: Optional[ActionDescription],
         error: Exception,
         exec_state: ExecutionState,
         pipeline: ActionPipeline,
