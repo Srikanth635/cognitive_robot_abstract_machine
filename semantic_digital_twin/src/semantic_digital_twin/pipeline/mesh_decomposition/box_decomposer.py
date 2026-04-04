@@ -13,8 +13,29 @@ from semantic_digital_twin.world_description.geometry import Mesh, Box, Scale
 
 @dataclass(frozen=True)
 class FrozenBox:
-    position: list[float]
-    size: list[float]
+    """
+    A frozen non-oriented box optimized for the BoxDecomposer.
+    """
+
+    x: float
+    """
+    X position.
+    """
+
+    y: float
+    """
+    Y position.
+    """
+
+    z: float
+    """
+    Z position.
+    """
+
+    scale: Scale
+    """
+    The scale of the box.
+    """
 
 
 @dataclass(frozen=True)
@@ -45,199 +66,259 @@ class IndexBox:
         dx, dy, dz = sorted(self.dims())
         return int(dy * dz)
 
-
-def index_box_to_box(idx: IndexBox, pitch: float, origin: np.ndarray) -> FrozenBox:
-    mins = origin + pitch * np.array([idx.x0, idx.y0, idx.z0], dtype=float)
-    maxs = origin + pitch * np.array([idx.x1, idx.y1, idx.z1], dtype=float)
-    return FrozenBox(
-        position=((mins + maxs) / 2.0).tolist(),
-        size=((maxs - mins) / 2.0).tolist(),
-    )
+    def to_frozen_box(self, pitch: float, origin: np.ndarray) -> FrozenBox:
+        mins = origin + pitch * np.array([self.x0, self.y0, self.z0], dtype=float)
+        maxs = origin + pitch * np.array([self.x1, self.y1, self.z1], dtype=float)
+        position = (mins + maxs) / 2.0
+        size = (maxs - mins) / 2.0
+        return FrozenBox(
+            x=float(position[0]),
+            y=float(position[1]),
+            z=float(position[2]),
+            scale=Scale(x=float(size[0]), y=float(size[1]), z=float(size[2])),
+        )
 
 
 def greedy_merge_boxes(
     occupancy: np.ndarray, pitch: float, origin: np.ndarray
 ) -> list[FrozenBox]:
-    occ = occupancy.copy()
-    nx, ny, nz = occ.shape
+    """
+    Greedily merge occupied voxels into boxes.
+
+    :param occupancy: The 3D occupancy grid.
+    :param pitch: The size of one voxel.
+    :param origin: The 3D origin of the occupancy grid.
+    :return: A list of FrozenBoxes.
+    """
+    remaining_occupancy = occupancy.copy()
+    nx, ny, nz = remaining_occupancy.shape
     boxes: list[FrozenBox] = []
 
     for z in range(nz):
         for y in range(ny):
             x = 0
             while x < nx:
-                if not occ[x, y, z]:
+                if not remaining_occupancy[x, y, z]:
                     x += 1
                     continue
 
-                x1 = x
-                while x1 + 1 < nx and occ[x1 + 1, y, z]:
-                    x1 += 1
-
-                y1 = y
-                while y1 + 1 < ny and occ[x : x1 + 1, y1 + 1, z].all():
-                    y1 += 1
-
-                z1 = z
-                while z1 + 1 < nz and occ[x : x1 + 1, y : y1 + 1, z1 + 1].all():
-                    z1 += 1
-
-                occ[x : x1 + 1, y : y1 + 1, z : z1 + 1] = False
-
-                mins = origin + pitch * np.array([x, y, z], dtype=float)
-                maxs = origin + pitch * np.array([x1 + 1, y1 + 1, z1 + 1], dtype=float)
-                boxes.append(
-                    FrozenBox(
-                        position=((mins + maxs) / 2.0).tolist(),
-                        size=((maxs - mins) / 2.0).tolist(),
-                    )
+                x1 = _find_extent(remaining_occupancy, x, y, z, axis=0)
+                y1 = _find_extent(remaining_occupancy, x, y, z, axis=1, x_limit=x1)
+                z1 = _find_extent(
+                    remaining_occupancy, x, y, z, axis=2, x_limit=x1, y_limit=y1
                 )
+
+                remaining_occupancy[x : x1 + 1, y : y1 + 1, z : z1 + 1] = False
+
+                index_box = IndexBox(x, x1 + 1, y, y1 + 1, z, z1 + 1)
+                boxes.append(index_box.to_frozen_box(pitch, origin))
 
                 x = x1 + 1
 
     return boxes
 
 
+def _find_extent(
+    occupancy: np.ndarray,
+    x: int,
+    y: int,
+    z: int,
+    axis: int,
+    x_limit: int = -1,
+    y_limit: int = -1,
+) -> int:
+    """Find the extent of a box along a given axis."""
+    nx, ny, nz = occupancy.shape
+    if axis == 0:
+        x1 = x
+        while x1 + 1 < nx and occupancy[x1 + 1, y, z]:
+            x1 += 1
+        return x1
+    elif axis == 1:
+        y1 = y
+        while y1 + 1 < ny and occupancy[x : x_limit + 1, y1 + 1, z].all():
+            y1 += 1
+        return y1
+    else:
+        z1 = z
+        while z1 + 1 < nz and occupancy[x : x_limit + 1, y : y_limit + 1, z1 + 1].all():
+            z1 += 1
+        return z1
+
+
 def clean_occupancy(occupancy: np.ndarray, fill_thin_holes: bool = True) -> np.ndarray:
-    occ = occupancy.copy().astype(bool)
-    occ = ndimage.binary_fill_holes(occ)
+    """
+    Clean the occupancy grid by filling holes.
+
+    :param occupancy: The 3D occupancy grid.
+    :param fill_thin_holes: Whether to fill 1-voxel thin holes.
+    :return: The cleaned occupancy grid.
+    """
+    cleaned_occupancy = occupancy.copy().astype(bool)
+    cleaned_occupancy = ndimage.binary_fill_holes(cleaned_occupancy)
 
     if not fill_thin_holes:
-        return occ.astype(bool)
+        return cleaned_occupancy.astype(bool)
 
-    empty = ~occ
+    empty_mask = ~cleaned_occupancy
     structure = ndimage.generate_binary_structure(rank=3, connectivity=1)
-    labels, num = ndimage.label(empty, structure=structure)
-    if num == 0:
-        return occ.astype(bool)
+    labels, num_labels = ndimage.label(empty_mask, structure=structure)
+    if num_labels == 0:
+        return cleaned_occupancy.astype(bool)
 
     slices = ndimage.find_objects(labels)
-    for lab, slc in enumerate(slices, start=1):
-        if slc is None:
+    for label_idx, slice_obj in enumerate(slices, start=1):
+        if slice_obj is None:
             continue
-        sx, sy, sz = slc
+        sx, sy, sz = slice_obj
         dx = sx.stop - sx.start
         dy = sy.stop - sy.start
         dz = sz.stop - sz.start
 
         # Optional crack fill; disable with --no-thin-hole-fill if it fattens boards too much.
         if dx <= 1 or dy <= 1 or dz <= 1:
-            occ[labels == lab] = True
+            cleaned_occupancy[labels == label_idx] = True
 
-    return occ.astype(bool)
-
-
-def add_candidate(
-    candidates: list[IndexBox],
-    x0: int,
-    x1: int,
-    y0: int,
-    y1: int,
-    z0: int,
-    z1: int,
-) -> None:
-    if x1 > x0 and y1 > y0 and z1 > z0:
-        candidates.append(IndexBox(x0, x1, y0, y1, z0, z1))
-
-
-def fill_ratio_2d(mask2d: np.ndarray) -> float:
-    if mask2d.size == 0:
-        return 0.0
-    return float(mask2d.mean())
+    return cleaned_occupancy.astype(bool)
 
 
 def detect_planar_boards(
     occupancy: np.ndarray,
-    max_thickness_vox: int = 2,
-    min_span_vox: int = 3,
+    max_thickness_voxels: int = 2,
+    min_span_voxels: int = 3,
     min_fill_ratio: float = 0.75,
 ) -> list[IndexBox]:
-    occ = occupancy
-    nx, ny, nz = occ.shape
+    """
+    Detect planar board-like structures in the occupancy grid.
+
+    :param occupancy: The 3D occupancy grid.
+    :param max_thickness_voxels: Maximum thickness of the board in voxels.
+    :param min_span_voxels: Minimum span of the board in other dimensions.
+    :param min_fill_ratio: Minimum ratio of occupied voxels to bounding box area.
+    :return: A list of candidate IndexBoxes.
+    """
     candidates: list[IndexBox] = []
 
-    # thin in X -> YZ boards
-    for x0 in range(nx):
-        for t in range(1, max_thickness_vox + 1):
-            x1 = x0 + t
-            if x1 > nx:
-                continue
-            slab = occ[x0:x1, :, :]
-            if not slab.any():
-                continue
-
-            proj = slab.any(axis=0)  # (ny, nz)
-            labels, num = ndimage.label(proj)
-            for lab in range(1, num + 1):
-                m = labels == lab
-                ys, zs = np.where(m)
-                if ys.size == 0:
-                    continue
-                y0, y1 = int(ys.min()), int(ys.max()) + 1
-                z0, z1 = int(zs.min()), int(zs.max()) + 1
-
-                if (y1 - y0) < min_span_vox or (z1 - z0) < min_span_vox:
-                    continue
-                if fill_ratio_2d(m[y0:y1, z0:z1]) < min_fill_ratio:
-                    continue
-
-                add_candidate(candidates, x0, x1, y0, y1, z0, z1)
-
-    # thin in Y -> XZ boards
-    for y0 in range(ny):
-        for t in range(1, max_thickness_vox + 1):
-            y1 = y0 + t
-            if y1 > ny:
-                continue
-            slab = occ[:, y0:y1, :]
-            if not slab.any():
-                continue
-
-            proj = slab.any(axis=1)  # (nx, nz)
-            labels, num = ndimage.label(proj)
-            for lab in range(1, num + 1):
-                m = labels == lab
-                xs, zs = np.where(m)
-                if xs.size == 0:
-                    continue
-                x0, x1 = int(xs.min()), int(xs.max()) + 1
-                z0, z1 = int(zs.min()), int(zs.max()) + 1
-
-                if (x1 - x0) < min_span_vox or (z1 - z0) < min_span_vox:
-                    continue
-                if fill_ratio_2d(m[x0:x1, z0:z1]) < min_fill_ratio:
-                    continue
-
-                add_candidate(candidates, x0, x1, y0, y1, z0, z1)
-
-    # thin in Z -> XY boards
-    for z0 in range(nz):
-        for t in range(1, max_thickness_vox + 1):
-            z1 = z0 + t
-            if z1 > nz:
-                continue
-            slab = occ[:, :, z0:z1]
-            if not slab.any():
-                continue
-
-            proj = slab.any(axis=2)  # (nx, ny)
-            labels, num = ndimage.label(proj)
-            for lab in range(1, num + 1):
-                m = labels == lab
-                xs, ys = np.where(m)
-                if xs.size == 0:
-                    continue
-                x0, x1 = int(xs.min()), int(xs.max()) + 1
-                y0, y1 = int(ys.min()), int(ys.max()) + 1
-
-                if (x1 - x0) < min_span_vox or (y1 - y0) < min_span_vox:
-                    continue
-                if fill_ratio_2d(m[x0:x1, y0:y1]) < min_fill_ratio:
-                    continue
-
-                add_candidate(candidates, x0, x1, y0, y1, z0, z1)
+    for axis in range(3):
+        candidates.extend(
+            _detect_boards_along_axis(
+                occupancy,
+                axis,
+                max_thickness_voxels,
+                min_span_voxels,
+                min_fill_ratio,
+            )
+        )
 
     return candidates
+
+
+def _detect_boards_along_axis(
+    occupancy: np.ndarray,
+    axis: int,
+    max_thickness_voxels: int,
+    min_span_voxels: int,
+    min_fill_ratio: float,
+) -> list[IndexBox]:
+    """
+    Detect board-like structures along a specific axis.
+
+    :param occupancy: The 3D occupancy grid.
+    :param axis: The axis (0, 1, or 2) along which boards are thin.
+    :param max_thickness_voxels: Maximum thickness of the board in voxels.
+    :param min_span_voxels: Minimum span of the board in other dimensions.
+    :param min_fill_ratio: Minimum ratio of occupied voxels to bounding box area.
+    :return: A list of candidate IndexBoxes.
+    """
+    num_voxels = occupancy.shape[axis]
+    candidates: list[IndexBox] = []
+
+    for start_voxel in range(num_voxels):
+        for thickness in range(1, max_thickness_voxels + 1):
+            end_voxel = start_voxel + thickness
+            if end_voxel > num_voxels:
+                continue
+
+            slab = _get_slab(occupancy, axis, start_voxel, end_voxel)
+            if not slab.any():
+                continue
+
+            projection = slab.any(axis=axis)
+            labels, num_labels = ndimage.label(projection)
+            for label in range(1, num_labels + 1):
+                mask = labels == label
+                other_indices = np.where(mask)
+                if other_indices[0].size == 0:
+                    continue
+
+                dim1_min, dim1_max = (
+                    int(other_indices[0].min()),
+                    int(other_indices[0].max()) + 1,
+                )
+                dim2_min, dim2_max = (
+                    int(other_indices[1].min()),
+                    int(other_indices[1].max()) + 1,
+                )
+
+                if (dim1_max - dim1_min) < min_span_voxels or (
+                    dim2_max - dim2_min
+                ) < min_span_voxels:
+                    continue
+
+                if (
+                    _calculate_fill_ratio(mask[dim1_min:dim1_max, dim2_min:dim2_max])
+                    < min_fill_ratio
+                ):
+                    continue
+
+                candidates.append(
+                    _create_index_box_from_axis_info(
+                        axis,
+                        start_voxel,
+                        end_voxel,
+                        dim1_min,
+                        dim1_max,
+                        dim2_min,
+                        dim2_max,
+                    )
+                )
+
+    return candidates
+
+
+def _get_slab(occupancy: np.ndarray, axis: int, start: int, stop: int) -> np.ndarray:
+    """Extract a slab from the occupancy grid along the given axis."""
+    if axis == 0:
+        return occupancy[start:stop, :, :]
+    elif axis == 1:
+        return occupancy[:, start:stop, :]
+    else:
+        return occupancy[:, :, start:stop]
+
+
+def _create_index_box_from_axis_info(
+    axis: int,
+    start: int,
+    stop: int,
+    dim1_min: int,
+    dim1_max: int,
+    dim2_min: int,
+    dim2_max: int,
+) -> IndexBox:
+    """Create an IndexBox based on axis and coordinates."""
+    if axis == 0:
+        return IndexBox(start, stop, dim1_min, dim1_max, dim2_min, dim2_max)
+    elif axis == 1:
+        return IndexBox(dim1_min, dim1_max, start, stop, dim2_min, dim2_max)
+    else:
+        return IndexBox(dim1_min, dim1_max, dim2_min, dim2_max, start, stop)
+
+
+def _calculate_fill_ratio(mask2d: np.ndarray) -> float:
+    """Calculate the fill ratio of a 2D mask."""
+    if mask2d.size == 0:
+        return 0.0
+    return float(mask2d.mean())
 
 
 def intersection_volume_vox(a: IndexBox, b: IndexBox) -> int:
@@ -252,6 +333,8 @@ def deduplicate_index_boxes(
     overlap_ratio_threshold: float = 0.8,
 ) -> list[IndexBox]:
     """
+    Deduplicate IndexBox candidates.
+
     Prefer board candidates with:
     1) larger planar area
     2) thinner thickness
@@ -259,70 +342,95 @@ def deduplicate_index_boxes(
 
     This avoids keeping a too-thick candidate when a thinner candidate covers
     the same board.
+
+    :param candidates: A list of candidate IndexBoxes.
+    :param overlap_ratio_threshold: The threshold for overlapping boxes to be considered duplicates.
+    :return: A list of deduplicated IndexBoxes.
     """
-    ordered = sorted(
+    ordered_candidates = sorted(
         candidates,
-        key=lambda b: (
-            -b.planar_area_vox(),  # prefer large boards
-            b.thickness_vox(),  # prefer thinner boards
-            -b.volume_vox(),  # tie-breaker
-            b.x0,
-            b.y0,
-            b.z0,
+        key=lambda box: (
+            -box.planar_area_vox(),  # prefer large boards
+            box.thickness_vox(),  # prefer thinner boards
+            -box.volume_vox(),  # tie-breaker
+            box.x0,
+            box.y0,
+            box.z0,
         ),
     )
-    kept: list[IndexBox] = []
+    kept_boxes: list[IndexBox] = []
 
-    for cand in ordered:
-        cand_vol = cand.volume_vox()
-        if cand_vol == 0:
+    for candidate in ordered_candidates:
+        candidate_volume = candidate.volume_vox()
+        if candidate_volume == 0:
             continue
 
         discard = False
-        for prev in kept:
-            inter = intersection_volume_vox(cand, prev)
+        for previous in kept_boxes:
+            intersection_volume = intersection_volume_vox(candidate, previous)
 
             # If most of this candidate is already covered, drop it.
-            if inter / cand_vol >= overlap_ratio_threshold:
+            if intersection_volume / candidate_volume >= overlap_ratio_threshold:
                 discard = True
                 break
 
-            # Extra rule: if same planar support but cand is thicker and overlaps strongly,
+            # Extra rule: if same planar support but candidate is thicker and overlaps strongly,
             # drop the thicker one.
-            same_thin_axis = cand.thin_axis() == prev.thin_axis()
-            similar_planar_area = (
-                min(cand.planar_area_vox(), prev.planar_area_vox())
-                / max(cand.planar_area_vox(), prev.planar_area_vox())
-                >= 0.9
-            )
-            if (
-                same_thin_axis
-                and similar_planar_area
-                and cand.thickness_vox() >= prev.thickness_vox()
-            ):
-                if inter / min(cand_vol, prev.volume_vox()) >= 0.6:
-                    discard = True
-                    break
+            if _is_redundant_thicker_box(candidate, previous, intersection_volume):
+                discard = True
+                break
 
         if not discard:
-            kept.append(cand)
+            kept_boxes.append(candidate)
 
-    return kept
+    return kept_boxes
+
+
+def _is_redundant_thicker_box(
+    candidate: IndexBox,
+    previous: IndexBox,
+    intersection_volume: int,
+) -> bool:
+    """Check if the candidate is a redundant thicker box compared to a previous one."""
+    same_thin_axis = candidate.thin_axis() == previous.thin_axis()
+    candidate_area = candidate.planar_area_vox()
+    previous_area = previous.planar_area_vox()
+    similar_planar_area = (
+        min(candidate_area, previous_area) / max(candidate_area, previous_area) >= 0.9
+    )
+
+    if (
+        same_thin_axis
+        and similar_planar_area
+        and candidate.thickness_vox() >= previous.thickness_vox()
+    ):
+        min_volume = min(candidate.volume_vox(), previous.volume_vox())
+        if intersection_volume / min_volume >= 0.6:
+            return True
+    return False
 
 
 def subtract_index_boxes_from_occupancy(
     occupancy: np.ndarray, boxes: list[IndexBox]
 ) -> np.ndarray:
-    occ = occupancy.copy()
-    for b in boxes:
-        occ[b.x0 : b.x1, b.y0 : b.y1, b.z0 : b.z1] = False
-    return occ
+    """
+    Subtract boxes from the occupancy grid.
+
+    :param occupancy: The 3D occupancy grid.
+    :param boxes: A list of IndexBoxes to subtract.
+    :return: The occupancy grid with the boxes removed.
+    """
+    remaining_occupancy = occupancy.copy()
+    for box in boxes:
+        remaining_occupancy[box.x0 : box.x1, box.y0 : box.y1, box.z0 : box.z1] = False
+    return remaining_occupancy
 
 
 @dataclass
 class BoxDecomposer(MeshDecomposer):
     """
     Decompose a mesh into boxes using voxelization.
+
     This is very efficient and works well for blocky furniture.
     This works poorly for non-blocky furniture.
 
@@ -332,52 +440,45 @@ class BoxDecomposer(MeshDecomposer):
     Next, it detects planar boards and then for each axis (X, Y, Z):
 
         Extract thin slabs (1–N voxels thick)
-
         Deduplicate boards
-
         Remove overlapping duplicates, preferring thinner boards.
-
         Merge leftovers
-
 
     The results are that large planar structures (shelves, walls) become clean single boxes,
     while smaller details are handled separately.
     """
 
     voxel_size: float = 0.02
-    """
-    Voxel size in mesh units.
-    """
+    """Voxel size in mesh units."""
 
     fill_thin_holes: bool = True
-    """
-    Rather to filling 1-voxel cracks/voids or not
-    """
+    """Whether to fill 1-voxel cracks/voids or not."""
 
     max_board_thickness: int = 2
     """
     Maximum board thickness in voxels.
-    If a board is bigger than this in the Z direction, it will be clipped to this thickness.
+    If a board is bigger than this, it will be clipped to this thickness.
     """
 
     min_span_voxel: int = 3
     """
     Threshold for keeping boards.
-    If a board has less than this voxels in the XY plane, it is removed.
-    You can control the bumpiness in the XY plane using this parameter.
+    If a board has less than this voxels in its planar dimensions, it is removed.
     """
 
     min_fill_ratio: float = 0.75
-    """
-    TODO
-    """
+    """Minimum ratio of occupied voxels to bounding box area."""
 
     overlap_threshold: float = 0.8
-    """
-    Overlap threshold at which two boards are merged into one. 
-    """
+    """Overlap threshold at which two boards are merged into one."""
 
     def apply_to_mesh(self, mesh: Mesh) -> List[Box]:
+        """
+        Decompose a mesh into boxes.
+
+        :param mesh: The mesh to decompose.
+        :return: A list of Box objects.
+        """
         trimesh_mesh = mesh.mesh
         voxelized = trimesh_mesh.voxelized(pitch=self.voxel_size).fill()
 
@@ -391,8 +492,8 @@ class BoxDecomposer(MeshDecomposer):
 
         board_candidates = detect_planar_boards(
             occupancy=occupancy,
-            max_thickness_vox=self.max_board_thickness,
-            min_span_vox=self.min_span_voxel,
+            max_thickness_voxels=self.max_board_thickness,
+            min_span_voxels=self.min_span_voxel,
             min_fill_ratio=self.min_fill_ratio,
         )
         board_index_boxes = deduplicate_index_boxes(
@@ -400,7 +501,7 @@ class BoxDecomposer(MeshDecomposer):
             overlap_ratio_threshold=self.overlap_threshold,
         )
         board_boxes = [
-            index_box_to_box(b, self.voxel_size, origin) for b in board_index_boxes
+            box.to_frozen_box(self.voxel_size, origin) for box in board_index_boxes
         ]
 
         remainder_occupancy = subtract_index_boxes_from_occupancy(
@@ -415,9 +516,15 @@ class BoxDecomposer(MeshDecomposer):
         return [
             Box(
                 origin=HomogeneousTransformationMatrix.from_xyz_rpy(
-                    *box.position, reference_frame=mesh.origin.reference_frame
+                    box.x,
+                    box.y,
+                    box.z,
+                    0,
+                    0,
+                    0,
+                    reference_frame=mesh.origin.reference_frame,
                 ),
-                scale=Scale(*box.size),
+                scale=box.scale,
             )
             for box in all_boxes
         ]
