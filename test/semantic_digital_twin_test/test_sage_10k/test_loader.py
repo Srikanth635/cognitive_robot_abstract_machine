@@ -6,6 +6,9 @@ from semantic_digital_twin.adapters.ros.visualization.viz_marker import (
 )
 from semantic_digital_twin.adapters.sage_10k_dataset.loader import Sage10kDatasetLoader
 from semantic_digital_twin.adapters.sage_10k_dataset.schema import Sage10kScene
+from semantic_digital_twin.pipeline.mesh_decomposition.box_decomposer import (
+    BoxDecomposer,
+)
 from semantic_digital_twin.pipeline.mesh_decomposition.coacd import (
     PreprocessingMode,
     COACDMeshDecomposer,
@@ -66,9 +69,7 @@ def test_different_decomposition_methods(
         room.doors = []
 
     world = scene.create_world()
-    decomposer = COACDMeshDecomposer(
-        threshold=0.05, preprocess_mode=PreprocessingMode.ON, pca=True, seed=69
-    )
+    decomposer = BoxDecomposer()
     pipeline = Pipeline([decomposer])
     pipeline.apply(world)
 

@@ -15,17 +15,27 @@ from semantic_digital_twin.world_description.geometry import Mesh, Box, Scale
 class FrozenBox:
     """
     A frozen non-oriented box optimized for the BoxDecomposer.
-
-    :param x: X position.
-    :param y: Y position.
-    :param z: Z position.
-    :param scale: The scale of the box.
     """
 
     x: float
+    """
+    X position.
+    """
+
     y: float
+    """
+    Y position.
+    """
+
     z: float
+    """
+    Z position.
+    """
+
     scale: Scale
+    """
+    The size of the box.
+    """
 
 
 @dataclass(frozen=True)
@@ -70,7 +80,7 @@ class IndexBox:
 
         :return: The dimensions along each axis.
         """
-        return (self.x1 - self.x0, self.y1 - self.y0, self.z1 - self.z0)
+        return self.x1 - self.x0, self.y1 - self.y0, self.z1 - self.z0
 
     def volume_vox(self) -> int:
         """
@@ -544,21 +554,32 @@ class BoxDecomposer(MeshDecomposer):
 
     The results are that large planar structures (shelves, walls) become clean single boxes,
     while smaller details are handled separately.
-
-    :param voxel_size: Voxel size in mesh units.
-    :param fill_thin_holes: Whether to fill 1-voxel cracks/voids or not.
-    :param max_board_thickness: Maximum board thickness in voxels.
-    :param min_span_voxel: Threshold for keeping boards.
-    :param min_fill_ratio: Minimum ratio of occupied voxels to bounding box area.
-    :param overlap_threshold: Overlap threshold at which two boards are merged into one.
     """
 
     voxel_size: float = 0.02
+    """
+    Voxel size in mesh units.
+    """
     fill_thin_holes: bool = True
+    """
+    Whether to fill 1-voxel cracks/voids or not
+    """
     max_board_thickness: int = 2
+    """
+    Maximum board thickness in voxels.
+    """
     min_span_voxel: int = 3
+    """
+    Threshold for keeping boards.
+    """
     min_fill_ratio: float = 0.75
+    """
+    Minimum ratio of occupied voxels to bounding box area.
+    """
     overlap_threshold: float = 0.8
+    """
+    Overlap threshold at which two boards are merged into one.
+    """
 
     def apply_to_mesh(self, mesh: Mesh) -> List[Box]:
         """
