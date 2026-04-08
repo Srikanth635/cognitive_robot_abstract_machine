@@ -5,16 +5,10 @@ import inspect
 import logging
 import re
 from dataclasses import dataclass, field
-from typing_extensions import List, Optional, Type
+from typing_extensions import TYPE_CHECKING, Any, List, Optional, Type
 
-from semantic_digital_twin.semantic_annotations.semantic_annotations import (
-    HasSupportingSurface,
-)
-from semantic_digital_twin.world import World
-from semantic_digital_twin.world_description.world_entity import (
-    Body,
-    SemanticAnnotation,
-)
+if TYPE_CHECKING:
+    from llmr.sdt_interfaces import WorldLike
 
 from llmr.workflows._utils import _pose_to_xyz
 from llmr.workflows.schemas.common import EntityDescriptionSchema
@@ -29,7 +23,7 @@ logger = logging.getLogger(__name__)
 class GroundingResult:
     """Result of an entity grounding attempt."""
 
-    bodies: List[Body] = field(default_factory=list)
+    bodies: List[Any] = field(default_factory=list)
     """Candidate Body objects that match the description, ranked by confidence."""
 
     # kept for backwards compatibility
@@ -44,9 +38,10 @@ class GroundingResult:
 # ── Annotation class registry ──────────────────────────────────────────────────
 
 
-def _all_annotation_subclasses() -> List[Type[SemanticAnnotation]]:
+def _all_annotation_subclasses() -> List[Type]:
     """Return all concrete (non-abstract) SemanticAnnotation subclasses."""
-    result: List[Type[SemanticAnnotation]] = []
+    from semantic_digital_twin.world_description.world_entity import SemanticAnnotation  # lazy
+    result: List[Type] = []
 
     def _recurse(cls: type) -> None:
         for sub in cls.__subclasses__():
@@ -93,7 +88,7 @@ def resolve_annotation_class(semantic_type: str) -> Optional[Type[SemanticAnnota
 class EntityGrounder:
     """Grounds an ``EntityDescriptionSchema`` to ``Body`` objects in the world."""
 
-    def __init__(self, world: World) -> None:
+    def __init__(self, world: "WorldLike") -> None:
         self._world = world
 
     # ── Main entry point ───────────────────────────────────────────────────────
@@ -159,7 +154,7 @@ class EntityGrounder:
         if not annotations:
             return GroundingResult()
 
-        candidates: List[Body] = []
+        candidates: List[Any] = []
         for ann in annotations:
             for body in ann.bodies:
                 if body not in candidates:
@@ -199,7 +194,7 @@ class EntityGrounder:
 
     # ── refinement ─────────────────────────────────────────────────
 
-    def _refine(self, candidates: List[Body], description: EntityDescriptionSchema) -> List[Body]:
+    def _refine(self, candidates: List[Any], description: EntityDescriptionSchema) -> List[Any]:
         """Apply spatial context and attribute filters to narrow candidates."""
         if description.spatial_context and len(candidates) > 1:
             refined = self._filter_by_spatial_context(candidates, description.spatial_context)
@@ -216,12 +211,15 @@ class EntityGrounder:
     # ── Spatial context filter ─────────────────────────────────────────────────
 
     def _filter_by_spatial_context(
-        self, candidates: List[Body], spatial_context: str
-    ) -> List[Body]:
+        self, candidates: List[Any], spatial_context: str
+    ) -> List[Any]:
         """Narrow candidates using a spatial context hint."""
         context_lower = spatial_context.lower()
 
         try:
+            from semantic_digital_twin.semantic_annotations.semantic_annotations import (  # lazy
+                HasSupportingSurface,
+            )
             surface_annotations = self._world.get_semantic_annotations_by_type(
                 HasSupportingSurface
             )
@@ -260,7 +258,7 @@ class EntityGrounder:
         ]
         return tree_filtered if tree_filtered else candidates
 
-    def _near_any_surface(self, body: Body, surfaces: list) -> bool:
+    def _near_any_surface(self, body: Any, surfaces: list) -> bool:
         """Return True if *body* is positioned above any of the *surfaces*."""
         try:
             body_xyz = _pose_to_xyz(body.global_pose)
@@ -283,7 +281,7 @@ class EntityGrounder:
 
     # ── Attribute filter ───────────────────────────────────────────────────────
 
-    def _filter_by_attributes(self, candidates: List[Body], attributes: dict) -> List[Body]:
+    def _filter_by_attributes(self, candidates: List[Any], attributes: dict) -> List[Any]:
         """Filter by key/value attributes from the entity description."""
         filtered = []
         for body in candidates:
@@ -301,7 +299,7 @@ class EntityGrounder:
     # ── Helpers ────────────────────────────────────────────────────────────────
 
     @staticmethod
-    def _body_name(body: Body) -> str:
+    def _body_name(body: Any) -> str:
         """Return a normalised string name for a Body."""
         name_obj = getattr(body, "name", None)
         if name_obj is None:
@@ -311,7 +309,7 @@ class EntityGrounder:
         return str(name_obj)
 
     @staticmethod
-    def _multi_match_warning(candidates: List[Body], name: str) -> Optional[str]:
+    def _multi_match_warning(candidates: List[Any], name: Optional[str]) -> Optional[str]:
         if len(candidates) > 1:
             names = [str(getattr(getattr(b, "name", None), "name", b)) for b in candidates]
             return (
@@ -326,7 +324,7 @@ class EntityGrounder:
 
 def ground_entity(
     description: EntityDescriptionSchema,
-    world: World,
+    world: "WorldLike",
 ) -> GroundingResult:
     """Convenience wrapper around ``EntityGrounder.ground``.
 

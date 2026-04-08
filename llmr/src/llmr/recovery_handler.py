@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing_extensions import TYPE_CHECKING, List, Optional
+from typing_extensions import List, Optional, TYPE_CHECKING
 
-from semantic_digital_twin.world import World
+if TYPE_CHECKING:
+    from llmr.sdt_interfaces import WorldLike
 
 from pycram.robot_plans.actions.base import ActionDescription
 
@@ -88,8 +89,8 @@ def _serialise_failed_action(
 class RecoveryHandler:
     """Performs LLM-driven replanning after a failed action execution."""
 
-    world: World
-    max_retries: int = field(default=2)
+    world: "WorldLike"
+    max_retries: int = field(default=1)
 
     # ── Public API ───────────────────────────────────────────────────────────
 

@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing_extensions import Any, Callable, ContextManager, Dict, List, Optional, Set, Tuple
+from typing_extensions import TYPE_CHECKING, Any, Callable, ContextManager, Dict, List, Optional, Set, Tuple
 
-from semantic_digital_twin.world import World
+if TYPE_CHECKING:
+    from llmr.sdt_interfaces import WorldLike
 
 from pycram.datastructures.dataclasses import Context
 from pycram.plans.factories import sequential
@@ -29,7 +30,9 @@ from llmr.task_decomposer import DecomposedPlan, TaskDecomposer
 
 logger = logging.getLogger(__name__)
 
-_ROBOT_ARM_COUNT = 2  # PR2 has two arms (LEFT + RIGHT)
+_ROBOT_ARM_COUNT = 2  # PR2 has two arms (LEFT + RIGHT) # CHANGE NEEDED HERE
+
+_PlanStep = Tuple[str, Optional[PreconditionResult]]
 
 
 # ── Result dataclass ────────────────────────────────────────────────────────────
@@ -54,9 +57,9 @@ class ExecutionResult:
 
 @dataclass
 class ExecutionLoop:
-    """Automated execution loop: NL instructions → preconditions + actions → robot."""
+    """Orchestrates NL instructions → decompose → plan → execute."""
 
-    world: World
+    world: "WorldLike"
     pipeline: ActionPipeline
     context: Context
     robot_context: Optional[Callable[[], ContextManager]] = field(default=None)
@@ -64,7 +67,6 @@ class ExecutionLoop:
     decomposer: Optional[TaskDecomposer] = field(default=None)
     recovery_handler: Optional[RecoveryHandler] = field(default=None)
 
-    # ── Internal state (not passed at construction) ─────────────────────────────
     _planner: MotionPreconditionPlanner = field(init=False)
     _exec_state: ExecutionState = field(init=False)
 
@@ -75,41 +77,38 @@ class ExecutionLoop:
     # ── Public API ──────────────────────────────────────────────────────────────
 
     def reset_state(self) -> None:
-        """Reset the cross-instruction execution state (held object, active arm).
-
-        Call this before re-running a sequence on a freshly reset world.
-        """
+        """Reset cross-instruction state (held objects, active arm)."""
         self._exec_state = ExecutionState()
 
-    def run(self, instructions: List[str]) -> Tuple[List[ExecutionResult], Any]:
-        """Plan all instructions, then execute them as one combined sequential plan.
-
-        Running as a single plan is required so that actions like ``PlaceAction``
-        can find preceding actions (e.g. ``PickUpAction``) via
-        ``plan.get_previous_node_by_designator_type``.
-
-        Planning uses a local ``ExecutionState`` that is updated after each
-        instruction is planned so that cross-instruction dependencies (e.g.
-        pickup arm → place arm) are resolved correctly before execution starts.
+    def run(self, instructions: List[str]) -> List[ExecutionResult]:
+        """Decompose, plan, then execute *instructions* in order.
 
         :param instructions: Natural language instructions in execution order.
-        :return: Tuple of (one :class:`ExecutionResult` per instruction, SQLAlchemy session
-                 containing ORM records for the executed plan).
+        :return: One :class:`ExecutionResult` per atomic step.
         """
-        session = None  # ORM disabled — re-enable when pycram.orm is available
-        # ── Phase 0: decompose compound instructions ──────────────────────────
-        # Collect atomic steps and merge per-instruction dependency graphs into
-        # a single global dependency map (indices offset per instruction block).
+        atomic_instructions, global_deps = self._decompose_all(instructions)
+        plan_steps, early_exit = self._plan_all(atomic_instructions, global_deps)
+        if early_exit:
+            return early_exit
+        return self._execute_all(plan_steps)
+
+    # ── Phase helpers ───────────────────────────────────────────────────────────
+
+    def _decompose_all(
+        self,
+        instructions: List[str],
+    ) -> Tuple[List[str], Dict[int, List[int]]]:
+        """Decompose each instruction into atomic steps; merge dependency graphs."""
         atomic_instructions: List[str] = []
-        global_deps: Dict[int, List[int]] = {}  # global step idx → prerequisite indices
+        global_deps: Dict[int, List[int]] = {}
 
         for instruction in instructions:
             if self.decomposer is not None:
                 plan: DecomposedPlan = self.decomposer.decompose(instruction)
-                offset = len(atomic_instructions)
+                start_idx = len(atomic_instructions)
                 atomic_instructions.extend(plan.steps)
                 for step_idx, deps in plan.dependencies.items():
-                    global_deps[offset + step_idx] = [offset + d for d in deps]
+                    global_deps[start_idx + step_idx] = [start_idx + d for d in deps]
                 logger.debug(
                     "ExecutionLoop: '%s' → %d sub-instructions, deps=%s",
                     instruction,
@@ -119,27 +118,32 @@ class ExecutionLoop:
             else:
                 atomic_instructions.append(instruction)
 
-        # ── Phase 1+2: plan all instructions sequentially ────────────────────
-        # Seed planning_state from the real exec_state so prior executions
-        # (from previous run() calls) are visible to the LLM during planning.
-        planning_state = self._exec_state.copy()
+        return atomic_instructions, global_deps
 
-        # plan_steps entries are (instruction, PreconditionResult) for successful
-        # steps and (instruction, None) for skipped steps.
-        plan_steps: List[Tuple[str, Optional["PreconditionResult"]]] = []
-        failed_step_indices: Set[int] = set()
+    def _plan_all(
+        self,
+        atomic_instructions: List[str],
+        global_deps: Dict[int, List[int]],
+    ) -> Tuple[List[_PlanStep], List[ExecutionResult]]:
+        """Plan every atomic step sequentially.
+
+        Returns ``(plan_steps, early_exit)``.  ``early_exit`` is non-empty only
+        when planning must abort (clarification needed, arm capacity exceeded,
+        unrecoverable error).
+        """
+        planning_state = self._exec_state.copy()
+        plan_steps: List[_PlanStep] = []
+        failed_indices: Set[int] = set()
 
         for i, instruction in enumerate(atomic_instructions):
-            # ── Dependency check: skip if any prerequisite failed ─────────────
-            blocking_deps = [d for d in global_deps.get(i, []) if d in failed_step_indices]
-            if blocking_deps:
+            blocking = [d for d in global_deps.get(i, []) if d in failed_indices]
+            if blocking:
                 logger.info(
                     "ExecutionLoop: skipping '%s' — prerequisite step(s) %s failed.",
-                    instruction,
-                    blocking_deps,
+                    instruction, blocking,
                 )
                 plan_steps.append((instruction, None))
-                failed_step_indices.add(i)
+                failed_indices.add(i)
                 continue
 
             logger.info("ExecutionLoop: planning '%s'", instruction)
@@ -148,35 +152,26 @@ class ExecutionLoop:
                 action = self.pipeline.run(instruction, exec_state=planning_state)
             except ClarificationNeededError as exc:
                 logger.warning("Clarification needed for '%s': %s", instruction, exc)
-                failed_step_indices.add(i)
-                plan_steps.append((instruction, None))
-                # Surface clarification immediately — stop planning
-                return self._partial_results(plan_steps) + [
+                failed_indices.add(i)
+                return plan_steps, self._make_early_exit(
+                    plan_steps,
                     ExecutionResult(
-                        instruction=instruction,
-                        action=None,
-                        preconditions=[],
-                        success=False,
-                        error=exc,
-                        clarification=exc.request,
-                    )
-                ], session
+                        instruction=instruction, action=None, preconditions=[],
+                        success=False, error=exc, clarification=exc.request,
+                    ),
+                )
             except Exception as exc:
                 logger.error("Pipeline failed for '%s': %s", instruction, exc)
-                failed_step_indices.add(i)
-                plan_steps.append((instruction, None))
-                return self._partial_results(plan_steps) + [
+                failed_indices.add(i)
+                return plan_steps, self._make_early_exit(
+                    plan_steps,
                     ExecutionResult(
-                        instruction=instruction,
-                        action=None,
-                        preconditions=[],
-                        success=False,
-                        error=exc,
-                    )
-                ], session
+                        instruction=instruction, action=None, preconditions=[],
+                        success=False, error=exc,
+                    ),
+                )
 
-            # ── Arm capacity check ────────────────────────────────────────────
-            if isinstance(action, PickUpAction):
+            if isinstance(action, PickUpAction):    # CHANGE NEEDED HERE
                 occupied = {
                     arm: body
                     for arm, body in planning_state.held_objects.items()
@@ -198,155 +193,75 @@ class ExecutionLoop:
                         )
                     )
                     logger.warning("Arm capacity exceeded for '%s': %s", instruction, exc)
-                    failed_step_indices.add(i)
-                    plan_steps.append((instruction, None))
-                    return self._partial_results(plan_steps) + [
+                    failed_indices.add(i)
+                    return plan_steps, self._make_early_exit(
+                        plan_steps,
                         ExecutionResult(
-                            instruction=instruction,
-                            action=None,
-                            preconditions=[],
-                            success=False,
-                            error=exc,
-                            arm_capacity_error=exc.request,
-                        )
-                    ], session
+                            instruction=instruction, action=None, preconditions=[],
+                            success=False, error=exc, arm_capacity_error=exc.request,
+                        ),
+                    )
 
             try:
                 plan_result = self._planner.compute(action, planning_state)
             except Exception as exc:
                 logger.error("Precondition planning failed for '%s': %s", instruction, exc)
-                failed_step_indices.add(i)
-                plan_steps.append((instruction, None))
-                return self._partial_results(plan_steps) + [
+                failed_indices.add(i)
+                return plan_steps, self._make_early_exit(
+                    plan_steps,
                     ExecutionResult(
-                        instruction=instruction,
-                        action=action,
-                        preconditions=[],
-                        success=False,
-                        error=exc,
-                    )
-                ], session
+                        instruction=instruction, action=action, preconditions=[],
+                        success=False, error=exc,
+                    ),
+                )
 
-            # Update planning_state immediately so the next instruction's
-            # precondition provider can reference results from this one
-            # (e.g. PlaceAction needs to know which arm PickUpAction used).
             self._planner.update_state(plan_result.action, planning_state)
             plan_steps.append((instruction, plan_result))
 
-        if not plan_steps:
-            return [], session
+        return plan_steps, []
 
-        # ── Phase 3: flatten planned (non-skipped) actions into one combined plan
-        # ── Phase 3+4: execute each instruction's plan separately ─────────────
-        # Each instruction runs as its own sequential plan so that a failure in
-        # one instruction does not prevent subsequent independent instructions
-        # from executing.  exec_state is updated after each success so that
-        # cross-instruction state (e.g. which arm holds what) stays correct.
+    def _execute_all(
+        self,
+        plan_steps: List[_PlanStep],
+    ) -> List[ExecutionResult]:
+        """Execute each planned step; honour stop_on_failure."""
         results: List[ExecutionResult] = []
-        first_error: Optional[Exception] = None
+        failed = False
 
         for instruction, plan_result in plan_steps:
             if plan_result is None:
                 results.append(ExecutionResult(
-                    instruction=instruction,
-                    action=None,
-                    preconditions=[],
-                    success=False,
-                    skipped=True,
+                    instruction=instruction, action=None, preconditions=[],
+                    success=False, skipped=True,
                 ))
                 continue
 
-            if first_error is not None and self.stop_on_failure:
+            if failed and self.stop_on_failure:
                 results.append(ExecutionResult(
                     instruction=instruction,
                     action=plan_result.action,
                     preconditions=plan_result.preconditions,
-                    success=False,
-                    skipped=True,
+                    success=False, skipped=True,
                 ))
                 continue
 
-            actions = plan_result.preconditions + [plan_result.action]
-            logger.info(
-                "ExecutionLoop: executing '%s' → [%s]",
-                instruction,
-                ", ".join(type(a).__name__ for a in actions),
-            )
-            try:
-                self._execute(actions)
+            result = self._execute_with_recovery(plan_result, instruction)
+            if result.success:
                 self._planner.update_state(plan_result.action, self._exec_state)
-                results.append(ExecutionResult(
-                    instruction=instruction,
-                    action=plan_result.action,
-                    preconditions=plan_result.preconditions,
-                    success=True,
-                ))
-            except Exception as exc:
-                logger.error("Execution failed for '%s': %s", instruction, exc)
-                if first_error is None:
-                    first_error = exc
-                results.append(ExecutionResult(
-                    instruction=instruction,
-                    action=plan_result.action,
-                    preconditions=plan_result.preconditions,
-                    success=False,
-                    error=exc,
-                ))
+            else:
+                failed = True
+            results.append(result)
 
-        return results, session
+        return results
 
-    def run_single(self, instruction: str) -> ExecutionResult:
-        """Run a single NL instruction through the full pipeline and execute it.
+    # ── Per-step execution ──────────────────────────────────────────────────────
 
-        :param instruction: Natural language instruction.
-        :return: :class:`ExecutionResult` describing what happened.
-        """
-        logger.info("ExecutionLoop.run_single: '%s'", instruction)
-
-        # ── Phase 1: LLM pipeline ──────────────────────────────────────────────
-        try:
-            action = self.pipeline.run(instruction, exec_state=self._exec_state)
-        except ClarificationNeededError as exc:
-            logger.warning("Clarification needed for '%s': %s", instruction, exc)
-            return ExecutionResult(
-                instruction=instruction,
-                action=None,
-                preconditions=[],
-                success=False,
-                error=exc,
-                clarification=exc.request,
-            )
-        except Exception as exc:
-            logger.error("Pipeline failed for '%s': %s", instruction, exc)
-            return ExecutionResult(
-                instruction=instruction,
-                action=None,
-                preconditions=[],
-                success=False,
-                error=exc,
-            )
-
-        # ── Phase 2: precondition planning ────────────────────────────────────
-        try:
-            plan_result = self._planner.compute(action, self._exec_state)
-        except Exception as exc:
-            logger.error("Precondition planning failed for '%s': %s", instruction, exc)
-            return ExecutionResult(
-                instruction=instruction,
-                action=action,
-                preconditions=[],
-                success=False,
-                error=exc,
-            )
-
-        all_actions = plan_result.preconditions + [plan_result.action]
-        logger.info(
-            "ExecutionLoop: '%s' → [%s]",
-            instruction,
-            ", ".join(type(a).__name__ for a in all_actions),
-        )
-
-        # ── Phase 3: execute (with optional recovery loop) ────────────────────
+    def _execute_with_recovery(
+        self,
+        plan_result: PreconditionResult,
+        instruction: str,
+    ) -> ExecutionResult:
+        """Execute one planned step with optional recovery retries."""
         current_action = plan_result.action
         current_preconditions = plan_result.preconditions
         max_attempts = (
@@ -357,8 +272,6 @@ class ExecutionLoop:
         for attempt in range(max_attempts):
             try:
                 self._execute(current_preconditions + [current_action])
-                # ── Phase 4: update state on success ──────────────────────────
-                self._planner.update_state(current_action, self._exec_state)
                 return ExecutionResult(
                     instruction=instruction,
                     action=current_action,
@@ -369,14 +282,11 @@ class ExecutionLoop:
                 last_exc = exc
                 logger.error(
                     "Execution failed for '%s' (attempt %d/%d): %s",
-                    instruction,
-                    attempt + 1,
-                    max_attempts,
-                    exc,
+                    instruction, attempt + 1, max_attempts, exc,
                 )
                 if self.recovery_handler is None or attempt + 1 >= max_attempts:
                     break
-                recovery_result = self.recovery_handler.attempt_recovery(
+                recovery = self.recovery_handler.attempt_recovery(
                     instruction=instruction,
                     failed_action=current_action,
                     error=exc,
@@ -385,11 +295,11 @@ class ExecutionLoop:
                     planner=self._planner,
                     attempt_number=attempt + 1,
                 )
-                if not recovery_result.success:
-                    last_exc = recovery_result.error or exc
+                if not recovery.success:
+                    last_exc = recovery.error or exc
                     break
-                current_action = recovery_result.action
-                current_preconditions = recovery_result.preconditions
+                current_action = recovery.action
+                current_preconditions = recovery.preconditions
 
         return ExecutionResult(
             instruction=instruction,
@@ -402,20 +312,23 @@ class ExecutionLoop:
     # ── Internal helpers ────────────────────────────────────────────────────────
 
     @staticmethod
-    def _partial_results(
-        plan_steps: List[Tuple[str, Optional["PreconditionResult"]]],
+    def _make_early_exit(
+        plan_steps: List[_PlanStep],
+        failed_result: ExecutionResult,
     ) -> List[ExecutionResult]:
-        """Build ExecutionResult entries for all steps planned so far (excluding the last)."""
-        return [
+        """Return results for all previously planned (unexecuted) steps plus the failed one."""
+        results = [
             ExecutionResult(
                 instruction=ins,
                 action=pr.action if pr else None,
                 preconditions=pr.preconditions if pr else [],
                 success=False,
-                skipped=(pr is None),
+                skipped=True,
             )
-            for ins, pr in plan_steps[:-1]
+            for ins, pr in plan_steps
         ]
+        results.append(failed_result)
+        return results
 
     def _execute(self, actions: List[Any]) -> None:
         """Wrap *actions* in a sequential plan node and perform it."""

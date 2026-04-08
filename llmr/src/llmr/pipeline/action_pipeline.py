@@ -5,8 +5,8 @@ import logging
 from dataclasses import dataclass
 from typing_extensions import TYPE_CHECKING, Any, Optional, Union
 
-from semantic_digital_twin.robots.abstract_robot import AbstractRobot, Manipulator
-from semantic_digital_twin.world import World
+if TYPE_CHECKING:
+    from llmr.sdt_interfaces import WorldLike
 
 from pycram.datastructures.enums import Arms
 
@@ -69,7 +69,7 @@ def _serialise_robot_state(exec_state: "ExecutionState") -> str:
 
 
 def _serialise_world_for_llm(
-    world: World,
+    world: "WorldLike",
     exec_state: Optional["ExecutionState"] = None,
 ) -> str:
     """Produce a concise string description of the world state for LLM context.
@@ -144,7 +144,7 @@ class ActionPipeline:
     :param world_context: Runtime context carrying the robot manipulator.
     """
 
-    world: World
+    world: "WorldLike"
     world_context: WorldContext
 
     # ── Factory ────────────────────────────────────────────────────────────────
@@ -152,7 +152,7 @@ class ActionPipeline:
     @classmethod
     def from_world(
         cls,
-        world: World,
+        world: "WorldLike",
         arm: Optional[Arms] = None,
     ) -> "ActionPipeline":
         """Create a pipeline from a world instance.
@@ -176,25 +176,11 @@ class ActionPipeline:
         )
 
     @staticmethod
-    def _find_manipulator(world: World, arm: Arms) -> Optional[Manipulator]:
-        """Retrieve the ``Manipulator`` annotation for *arm* from the world."""
+    def _find_manipulator(world: "WorldLike", arm: Arms) -> Optional[Any]:
+        """Retrieve the Manipulator annotation for *arm* from the world."""
+        from llmr.sdt_interfaces import WorldAdapter
         try:
-            robots = world.get_semantic_annotations_by_type(AbstractRobot)
-            if not robots:
-                return None
-            robot = robots[0]
-            if hasattr(robot, "get_manipulator_for_arm"):
-                return robot.get_manipulator_for_arm(arm)
-            if hasattr(robot, "manipulators"):
-                manipulators = robot.manipulators
-                if isinstance(manipulators, dict):
-                    return manipulators.get(arm)
-                if isinstance(manipulators, list) and manipulators:
-                    return (
-                        manipulators[arm.value]
-                        if arm.value < len(manipulators)
-                        else manipulators[0]
-                    )
+            return WorldAdapter(world).find_manipulator(arm)
         except Exception as exc:
             logger.warning("Could not retrieve manipulator: %s", exc)
         return None
@@ -237,7 +223,7 @@ class ActionPipeline:
         """
         world_ctx_str = _serialise_world_for_llm(self.world, exec_state)
         logger.debug("World context for slot filling:\n%s", world_ctx_str)
-        schema = run_slot_filler(instruction=instruction, world_context=world_ctx_str)
+        schema = run_slot_filler(instruction=instruction, world_context=world_ctx_str)   #node
         if schema is not None:
             logger.info(
                 "classify_and_extract – action_type=%s, object='%s', arm=%s",
