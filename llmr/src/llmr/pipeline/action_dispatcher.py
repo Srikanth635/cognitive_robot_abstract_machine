@@ -4,11 +4,10 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing_extensions import Any, ClassVar, Dict, List, Optional, Tuple, Type
+from typing_extensions import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, Tuple, Type
 
-from semantic_digital_twin.robots.abstract_robot import AbstractRobot, Manipulator
-from semantic_digital_twin.world import World
-from semantic_digital_twin.world_description.world_entity import Body
+if TYPE_CHECKING:
+    from llmr.sdt_interfaces import WorldLike
 
 from pycram.datastructures.enums import ApproachDirection, Arms, VerticalAlignment
 from pycram.datastructures.grasp import GraspDescription
@@ -38,7 +37,7 @@ logger = logging.getLogger(__name__)
 class WorldContext:
     """Runtime objects shared across all action handlers."""
 
-    manipulator: Optional[Manipulator] = None
+    manipulator: Optional[Any] = None
 
 
 # ── ActionHandler base ─────────────────────────────────────────────────────────
@@ -48,7 +47,7 @@ class WorldContext:
 class ActionHandler(ABC):
     """Base class for action-specific execution handlers."""
 
-    world: World
+    world: "WorldLike"
     world_context: WorldContext
     _grounder: EntityGrounder = field(init=False)
 
@@ -69,11 +68,12 @@ class ActionHandler(ABC):
         self,
     ) -> Tuple[Optional[Tuple[float, float, float]], List[str]]:
         """Return robot (x, y, z) and initial context lines including robot position."""
+        from llmr.sdt_interfaces import WorldAdapter
         lines: List[str] = []
         robot_xyz: Optional[Tuple[float, float, float]] = None
         try:
-            robot = self.world.get_semantic_annotations_by_type(AbstractRobot)[0]
-            robot_body = robot.base.root if robot.base is not None else None
+            robot = WorldAdapter(self.world).get_robot()
+            robot_body = robot.base.root if robot is not None and robot.base is not None else None
             if robot_body is not None:
                 robot_xyz = _pose_to_xyz(robot_body.global_pose)
                 if robot_xyz:
@@ -182,7 +182,7 @@ class PickUpActionHandler(ActionHandler):
         self,
         arm: Optional[Arms],
         grasp: Optional[GraspDescription],
-        grounded_bodies: List[Body],
+        grounded_bodies: List[Any],
     ) -> PickUpDiscreteResolutionSchema:
         world_ctx = self._build_world_context(grounded_bodies)
         known = self._known_params(arm, grasp)
@@ -200,7 +200,7 @@ class PickUpActionHandler(ActionHandler):
             raise RuntimeError("Discrete resolver LLM returned None. Check logs.")
         return resolution
 
-    def _build_world_context(self, grounded_bodies: List[Body]) -> str:
+    def _build_world_context(self, grounded_bodies: List[Any]) -> str:
         robot_xyz, lines = self._get_robot_context()
 
         for obj in grounded_bodies:
@@ -277,7 +277,7 @@ class PickUpActionHandler(ActionHandler):
         arm: Optional[Arms],
         grasp: Optional[GraspDescription],
         resolution: PickUpDiscreteResolutionSchema,
-        grounded_bodies: List[Body],
+        grounded_bodies: List[Any],
     ) -> PickUpAction:
         resolved_arm: Arms = arm or Arms[resolution.arm]
 
@@ -372,7 +372,7 @@ class PlaceActionHandler(ActionHandler):
         return PlaceAction(object_designator=obj_body, arm=arm, target_location=tgt_body)
 
     def _resolve_arm(
-        self, obj_bodies: List[Body], tgt_bodies: List[Body]
+        self, obj_bodies: List[Any], tgt_bodies: List[Any]
     ) -> PlaceDiscreteResolutionSchema:
         from llmr.workflows.nodes.resolver import run_place_resolver
 
@@ -389,7 +389,7 @@ class PlaceActionHandler(ActionHandler):
             raise RuntimeError("Place resolver LLM returned None. Check logs.")
         return resolution
 
-    def _build_world_context(self, obj_bodies: List[Body], tgt_bodies: List[Body]) -> str:
+    def _build_world_context(self, obj_bodies: List[Any], tgt_bodies: List[Any]) -> str:
         robot_xyz, lines = self._get_robot_context()
 
         for obj in obj_bodies:
@@ -455,7 +455,7 @@ class ActionDispatcher:
         cls._registry[action_type] = handler_class
         logger.debug("ActionDispatcher: registered handler for '%s'.", action_type)
 
-    def __init__(self, world: World, world_context: WorldContext) -> None:
+    def __init__(self, world: "WorldLike", world_context: WorldContext) -> None:
         self._handlers: Dict[str, ActionHandler] = {
             action_type: handler_cls(world, world_context)
             for action_type, handler_cls in self._registry.items()

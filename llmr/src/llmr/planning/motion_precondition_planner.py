@@ -4,14 +4,10 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing_extensions import Any, Dict, List, Optional, Type
+from typing_extensions import TYPE_CHECKING, Any, Dict, List, Optional, Type
 
-from semantic_digital_twin.datastructures.definitions import TorsoState
-from semantic_digital_twin.robots.abstract_robot import AbstractRobot
-from semantic_digital_twin.world import World
-from semantic_digital_twin.world_description.world_entity import Body
-
-from semantic_digital_twin.spatial_types.spatial_types import Pose
+if TYPE_CHECKING:
+    from llmr.sdt_interfaces import WorldLike
 
 from krrood.entity_query_language.factories import underspecified, variable
 from pycram.datastructures.dataclasses import Context
@@ -36,10 +32,10 @@ class ExecutionState:
     last_pickup_arm: Optional[Arms] = None
     """Arm used in the most recent PickUpAction."""
 
-    last_pickup_body: Optional[Body] = None
+    last_pickup_body: Optional[Any] = None
     """Object body grasped in the most recent PickUpAction."""
 
-    held_objects: Dict[Arms, Optional[Body]] = field(default_factory=dict)
+    held_objects: Dict[Arms, Optional[Any]] = field(default_factory=dict)
     """Per-arm occupancy: maps Arms.LEFT / Arms.RIGHT → held Body (or None if empty)."""
 
     def copy(self) -> "ExecutionState":
@@ -69,14 +65,14 @@ class PreconditionResult:
 class PreconditionProvider(ABC):
     """Base class for action-type-specific precondition logic."""
 
-    world: World
+    world: "WorldLike"
     context: Context
 
-    def _get_robot(self) -> Optional[AbstractRobot]:
+    def _get_robot(self) -> Optional[Any]:
         """Return the first AbstractRobot annotation found in the world, or None."""
         try:
-            robots = self.world.get_semantic_annotations_by_type(AbstractRobot)
-            return robots[0] if robots else None
+            from llmr.sdt_interfaces import WorldAdapter  # lazy via adapter
+            return WorldAdapter(self.world).get_robot()
         except Exception:
             return None
 
@@ -124,6 +120,7 @@ class PickUpPreconditionProvider(PreconditionProvider):
 
         nav_designator = self._make_nav_designator(action.object_designator, action.arm, robot)
 
+        from semantic_digital_twin.datastructures.definitions import TorsoState  # lazy
         preconditions: List[Any] = [
             MoveTorsoAction(torso_state=TorsoState.HIGH),
         ]
@@ -195,15 +192,16 @@ class PickUpPreconditionProvider(PreconditionProvider):
 
     def _make_nav_designator(
         self,
-        obj_body: Body,
+        obj_body: Any,
         arm: Arms,
-        robot: Optional[AbstractRobot],
+        robot: Optional[Any],
     ) -> Any:
         """Return an underspecified NavigateAction resolved lazily at execution time.
 
         Uses the krrood entity query language so CostmapLocation is evaluated
         inside the plan (matching the new pycram pattern from TransportAction).
         """
+        from semantic_digital_twin.spatial_types.spatial_types import Pose  # lazy
         return underspecified(NavigateAction)(
             target_location=variable(
                 Pose,
@@ -249,7 +247,7 @@ class PlacePreconditionProvider(PreconditionProvider):
         nav_designator = self._make_nav_designator(place_pose, arm, robot)
 
         preconditions: List[Any] = [
-            MoveTorsoAction(torso_state=TorsoState.HIGH),
+            # MoveTorsoAction(torso_state=TorsoState.HIGH),
         ]
         if nav_designator is not None:
             preconditions.append(nav_designator)
@@ -264,7 +262,7 @@ class PlacePreconditionProvider(PreconditionProvider):
 
     @staticmethod
     def _find_holding_arm(
-        object_body: Optional[Body],
+        object_body: Optional[Any],
         exec_state: ExecutionState,
     ) -> Optional[Arms]:
         """Return the arm currently holding *object_body*.
@@ -296,28 +294,30 @@ class PlacePreconditionProvider(PreconditionProvider):
     def _resolve_place_pose(
         self,
         target: Any,
-        for_object: Optional[Body],
-    ) -> Pose:
+        for_object: Optional[Any],
+    ) -> Any:
         """Convert a placement target to a Pose.
 
-        If *target* is already a ``Pose`` it is returned as-is.
-        If it is a ``Body``, use its global pose directly as the placement target.
+        If *target* is already a Pose it is returned as-is.
+        If it is a Body, use its global pose directly as the placement target.
         """
+        from semantic_digital_twin.spatial_types.spatial_types import Pose  # lazy
         if isinstance(target, Pose):
             return target
         return target.global_pose
 
     def _make_nav_designator(
         self,
-        place_pose: Pose,
+        place_pose: Any,
         arm: Arms,
-        robot: Optional[AbstractRobot],
+        robot: Optional[Any],
     ) -> Any:
         """Return an underspecified NavigateAction resolved lazily at execution time.
 
         Uses the krrood entity query language so CostmapLocation is evaluated
         inside the plan (matching the new pycram pattern from TransportAction).
         """
+        from semantic_digital_twin.spatial_types.spatial_types import Pose  # lazy
         return underspecified(NavigateAction)(
             target_location=variable(
                 Pose,
@@ -353,7 +353,7 @@ class MotionPreconditionPlanner:
             action_type.__name__,
         )
 
-    def __init__(self, world: World, context: Context) -> None:
+    def __init__(self, world: "WorldLike", context: Context) -> None:
         self._world = world
         self._context = context
 
