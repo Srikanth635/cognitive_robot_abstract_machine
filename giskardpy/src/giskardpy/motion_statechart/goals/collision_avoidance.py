@@ -327,6 +327,10 @@ class ExternalCollisionAvoidance(Goal):
     """
     Reference to the external collision variable manager shared by other external collision avoidance nodes.
     """
+    cancel_if_collision_violated: bool = field(default=True, kw_only=True)
+    """
+    If True, the motion will be canceled if a collision is violated.
+    """
 
     def expand(self, context: MotionStatechartContext) -> None:
         if self.robot is None:
@@ -370,12 +374,13 @@ class ExternalCollisionAvoidance(Goal):
                 task.pause_condition = distance_monitor.observation_variable
                 tasks.append(task)
 
-        self.add_node(
-            _CancelBecauseExternalCollisionViolated(
-                tasks=tasks,
-                name="External Collision Violated",
+        if self.cancel_if_collision_violated:
+            self.add_node(
+                _CancelBecauseExternalCollisionViolated(
+                    tasks=tasks,
+                    name="External Collision Violated",
+                )
             )
-        )
 
 
 @dataclass(eq=False, repr=False)
@@ -599,6 +604,10 @@ class SelfCollisionAvoidance(Goal):
     """
     Reference to the self collision variable manager shared by other self collision avoidance nodes.
     """
+    cancel_if_collision_violated: bool = field(default=True, kw_only=True)
+    """
+    If True, the motion will be canceled if a collision is violated.
+    """
 
     def create_self_collision_matrix(
         self, context: MotionStatechartContext
@@ -671,11 +680,12 @@ class SelfCollisionAvoidance(Goal):
             task.pause_condition = distance_monitor.observation_variable
             tasks.append(task)
 
-        self.add_node(
-            _CancelBecauseSelfCollisionViolated(
-                name="self collision violated", tasks=tasks
+        if self.cancel_if_collision_violated:
+            self.add_node(
+                _CancelBecauseSelfCollisionViolated(
+                    name="self collision violated", tasks=tasks
+                )
             )
-        )
 
 
 @dataclass(eq=False, repr=False)
