@@ -10,7 +10,7 @@ from typing_extensions import TYPE_CHECKING, Any, List, Optional, Type
 if TYPE_CHECKING:
     from llmr.sdt_interfaces import WorldLike
 
-from llmr.workflows._utils import _pose_to_xyz
+from llmr.sdt_interfaces import body_bounding_box_dims, body_display_name, body_xyz
 from llmr.workflows.schemas.common import EntityDescriptionSchema
 
 logger = logging.getLogger(__name__)
@@ -110,7 +110,7 @@ class EntityGrounder:
                     "Tier 1 grounding: semantic_type=%r → %d body/bodies: %s",
                     description.semantic_type,
                     len(result.bodies),
-                    [str(getattr(getattr(b, "name", None), "name", b)) for b in result.bodies],
+                    [body_display_name(b) for b in result.bodies],
                 )
                 return result
             logger.debug(
@@ -162,7 +162,7 @@ class EntityGrounder:
 
         if description.name and candidates:
             name_lower = description.name.lower()
-            name_filtered = [b for b in candidates if name_lower in self._body_name(b).lower()]
+            name_filtered = [b for b in candidates if name_lower in body_display_name(b).lower()]
             if name_filtered:
                 candidates = name_filtered
 
@@ -176,12 +176,23 @@ class EntityGrounder:
     # ── name-based grounding ──────────────────────────────────────────
 
     def _name_ground(self, description: EntityDescriptionSchema) -> GroundingResult:
-        """Ground by substring-matching the entity name over all world bodies."""
+        """Ground by name — tries SDT's direct lookup first, falls back to substring scan."""
         if not description.name:
             return GroundingResult()
 
-        name_lower = description.name.lower()
-        candidates = [b for b in self._world.bodies if name_lower in self._body_name(b).lower()]
+        # Primary: use SDT's own name lookup (exact / prefix-matched)
+        try:
+            candidates = list(self._world.get_bodies_by_name(description.name))
+        except Exception:
+            candidates = []
+
+        # Fallback: substring scan when exact lookup returns nothing
+        if not candidates:
+            name_lower = description.name.lower()
+            candidates = [
+                b for b in self._world.bodies
+                if name_lower in body_display_name(b).lower()
+            ]
 
         if not candidates:
             return GroundingResult()
@@ -239,7 +250,7 @@ class EntityGrounder:
             logger.debug("Surface-based spatial filter failed: %s", exc)
 
         anchor_bodies = [
-            b for b in self._world.bodies if self._body_name(b).lower() in context_lower
+            b for b in self._world.bodies if body_display_name(b).lower() in context_lower
         ]
         if not anchor_bodies:
             return candidates
@@ -261,18 +272,20 @@ class EntityGrounder:
     def _near_any_surface(self, body: Any, surfaces: list) -> bool:
         """Return True if *body* is positioned above any of the *surfaces*."""
         try:
-            body_xyz = _pose_to_xyz(body.global_pose)
-            if body_xyz is None:
+            xyz = body_xyz(body)
+            if xyz is None:
                 return True
-            bz = body_xyz[2]
+            bz = xyz[2]
 
             for ann in surfaces:
                 try:
-                    bb = ann.as_bounding_box_collection_in_frame(self._world.root).bounding_box()
-                    dims = bb.dimensions
-                    surface_top_z = float(_pose_to_xyz(ann.bodies[0].global_pose)[2]) + dims[2] / 2
-                    if bz >= surface_top_z - 0.05:
-                        return True
+                    ann_body = ann.bodies[0]
+                    ann_xyz = body_xyz(ann_body)
+                    dims = body_bounding_box_dims(ann_body, self._world.root)
+                    if ann_xyz is not None and dims is not None:
+                        surface_top_z = ann_xyz[2] + dims[2] / 2
+                        if bz >= surface_top_z - 0.05:
+                            return True
                 except Exception:
                     continue
         except Exception:
@@ -285,7 +298,7 @@ class EntityGrounder:
         """Filter by key/value attributes from the entity description."""
         filtered = []
         for body in candidates:
-            body_str = self._body_name(body).lower()
+            body_str = body_display_name(body).lower()
             ann_type_names = " ".join(
                 type(a).__name__.lower() for a in getattr(body, "_semantic_annotations", [])
             )
@@ -299,19 +312,9 @@ class EntityGrounder:
     # ── Helpers ────────────────────────────────────────────────────────────────
 
     @staticmethod
-    def _body_name(body: Any) -> str:
-        """Return a normalised string name for a Body."""
-        name_obj = getattr(body, "name", None)
-        if name_obj is None:
-            return ""
-        if hasattr(name_obj, "name"):
-            return str(name_obj.name)
-        return str(name_obj)
-
-    @staticmethod
     def _multi_match_warning(candidates: List[Any], name: Optional[str]) -> Optional[str]:
         if len(candidates) > 1:
-            names = [str(getattr(getattr(b, "name", None), "name", b)) for b in candidates]
+            names = [body_display_name(b) for b in candidates]
             return (
                 f"Grounding for '{name}' returned {len(candidates)} candidates: "
                 f"{names}. All passed to PartialDesignator."
