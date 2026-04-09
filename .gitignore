@@ -1,3 +1,7 @@
+# Secrets — never commit
+.env
+**/.env
+
 tmp/
 *.mypy_cache/
 build/
