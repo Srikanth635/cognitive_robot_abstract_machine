@@ -16,7 +16,7 @@ from pycram.robot_plans.actions.core.placing import PlaceAction
 
 from llmr.pipeline.clarification import ClarificationNeededError, ClarificationRequest
 from llmr.pipeline.entity_grounder import EntityGrounder, GroundingResult
-from llmr.workflows._utils import _pose_to_xyz
+from llmr.sdt_interfaces import body_display_name, body_bounding_box_dims, body_xyz
 from llmr.workflows.nodes.resolver import run_pickup_resolver
 from llmr.workflows.schemas.common import EntityDescriptionSchema
 from llmr.workflows.schemas.pick_up import (
@@ -75,7 +75,7 @@ class ActionHandler(ABC):
             robot = WorldAdapter(self.world).get_robot()
             robot_body = robot.base.root if robot is not None and robot.base is not None else None
             if robot_body is not None:
-                robot_xyz = _pose_to_xyz(robot_body.global_pose)
+                robot_xyz = body_xyz(robot_body)
                 if robot_xyz:
                     rx, ry, rz = robot_xyz
                     lines.append(f"Robot position: x={rx:.3f}, y={ry:.3f}, z={rz:.3f}")
@@ -108,7 +108,7 @@ class PickUpActionHandler(ActionHandler):
         grounding = self._ground(schema.object_description)
         if not grounding.bodies:
             available = [
-                str(getattr(getattr(b, "name", None), "name", b)) for b in self.world.bodies
+                body_display_name(b) for b in self.world.bodies
             ]
             raise ClarificationNeededError(
                 ClarificationRequest(
@@ -204,10 +204,9 @@ class PickUpActionHandler(ActionHandler):
         robot_xyz, lines = self._get_robot_context()
 
         for obj in grounded_bodies:
-            name_obj = getattr(obj, "name", None)
-            name = str(getattr(name_obj, "name", name_obj) if name_obj is not None else obj)
+            name = body_display_name(obj)
             try:
-                xyz = _pose_to_xyz(obj.global_pose)
+                xyz = body_xyz(obj)
                 if xyz:
                     ox, oy, oz = xyz
                     lines.append(f"Object '{name}': x={ox:.3f}, y={oy:.3f}, z={oz:.3f}")
@@ -235,12 +234,9 @@ class PickUpActionHandler(ActionHandler):
             except Exception:
                 pass
 
-            try:
-                bb = obj.collision.as_bounding_box_collection_in_frame(obj).bounding_box()
-                d = bb.dimensions
-                lines.append(f"  → Bounding box (w×d×h): {d[0]:.3f} × {d[1]:.3f} × {d[2]:.3f} m")
-            except Exception:
-                pass
+            dims = body_bounding_box_dims(obj)
+            if dims:
+                lines.append(f"  → Bounding box (w×d×h): {dims[0]:.3f} × {dims[1]:.3f} × {dims[2]:.3f} m")
 
         return "\n".join(lines) if lines else "World context unavailable."
 
@@ -322,7 +318,7 @@ class PlaceActionHandler(ActionHandler):
         obj_grounding = self._ground(schema.object_description)
         if not obj_grounding.bodies:
             available = [
-                str(getattr(getattr(b, "name", None), "name", b)) for b in self.world.bodies
+                body_display_name(b) for b in self.world.bodies
             ]
             raise ClarificationNeededError(
                 ClarificationRequest(
@@ -339,7 +335,7 @@ class PlaceActionHandler(ActionHandler):
         tgt_grounding = self._ground(schema.target_description)
         if not tgt_grounding.bodies:
             available = [
-                str(getattr(getattr(b, "name", None), "name", b)) for b in self.world.bodies
+                body_display_name(b) for b in self.world.bodies
             ]
             raise ClarificationNeededError(
                 ClarificationRequest(
@@ -393,21 +389,18 @@ class PlaceActionHandler(ActionHandler):
         robot_xyz, lines = self._get_robot_context()
 
         for obj in obj_bodies:
-            name = str(getattr(obj, "name", obj))
-            try:
-                xyz = _pose_to_xyz(obj.global_pose)
-                lines.append(
-                    f"Object to place '{name}': x={xyz[0]:.3f}, y={xyz[1]:.3f}, z={xyz[2]:.3f}"
-                    if xyz
-                    else f"Object to place '{name}': pose unknown"
-                )
-            except Exception:
-                lines.append(f"Object to place '{name}': pose unknown")
+            name = body_display_name(obj)
+            xyz = body_xyz(obj)
+            lines.append(
+                f"Object to place '{name}': x={xyz[0]:.3f}, y={xyz[1]:.3f}, z={xyz[2]:.3f}"
+                if xyz
+                else f"Object to place '{name}': pose unknown"
+            )
 
         for tgt in tgt_bodies:
-            name = str(getattr(tgt, "name", tgt))
+            name = body_display_name(tgt)
             try:
-                tgt_xyz = _pose_to_xyz(tgt.global_pose)
+                tgt_xyz = body_xyz(tgt)
                 if tgt_xyz:
                     tx, ty, tz = tgt_xyz
                     lines.append(f"Target surface '{name}': x={tx:.3f}, y={ty:.3f}, z={tz:.3f}")

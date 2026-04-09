@@ -8,6 +8,7 @@ from typing_extensions import TYPE_CHECKING, Any, Optional, Union
 if TYPE_CHECKING:
     from llmr.sdt_interfaces import WorldLike
 
+from llmr.sdt_interfaces import body_display_name
 from pycram.datastructures.enums import Arms
 
 from llmr.pipeline.action_dispatcher import ActionDispatcher, WorldContext
@@ -49,16 +50,14 @@ def _serialise_robot_state(exec_state: "ExecutionState") -> str:
         for arm in all_arms:
             body = exec_state.held_objects.get(arm)
             if body is not None:
-                body_name = str(getattr(getattr(body, "name", None), "name", body))
+                body_name = body_display_name(body)
                 lines.append(f"  {arm.name} arm: holding {body_name}")
             else:
                 lines.append(f"  {arm.name} arm: empty")
     elif exec_state.last_pickup_arm is not None:
         # Fallback for state objects created before held_objects was introduced.
         body = exec_state.last_pickup_body
-        body_name = (
-            str(getattr(getattr(body, "name", None), "name", body)) if body else "unknown object"
-        )
+        body_name = body_display_name(body) if body else "unknown object"
         lines.append(f"  {exec_state.last_pickup_arm.name} arm: holding {body_name}")
         other = Arms.LEFT if exec_state.last_pickup_arm == Arms.RIGHT else Arms.RIGHT
         lines.append(f"  {other.name} arm: empty")
@@ -82,7 +81,7 @@ def _serialise_world_for_llm(
     lines = ["## World State Summary\n"]
 
     try:
-        all_names = [str(getattr(getattr(b, "name", None), "name", b)) for b in world.bodies]
+        all_names = [body_display_name(b) for b in world.bodies]
         # Strip robot kinematic links — they dominate the list and are irrelevant
         # to the LLM. Keep only environment objects and surfaces.
         scene_names = [n for n in all_names if not _is_robot_link(n)]
@@ -103,11 +102,11 @@ def _serialise_world_for_llm(
     lines.append("\n## Semantic annotations")
     try:
         ann_summary: dict[str, list[str]] = {}
-        for ann in getattr(world, "semantic_annotations", []):
+        for ann in world.semantic_annotations:
             ann_type = type(ann).__name__
             try:
                 for body in ann.bodies:
-                    b_name = str(getattr(getattr(body, "name", None), "name", body))
+                    b_name = body_display_name(body)
                     if _is_robot_link(b_name):
                         continue
                     ann_summary.setdefault(b_name, []).append(ann_type)
