@@ -14,9 +14,14 @@ Variable assignment pattern (mirrors parameterizer.py and backends.py):
 """
 from __future__ import annotations
 
+import dataclasses
+import logging
 import typing
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any, Dict, Iterable, List, Optional, Tuple, TypeVar
+
+logger = logging.getLogger(__name__)
 
 from krrood.entity_query_language.backends import GenerativeBackend
 from krrood.entity_query_language.query.match import Match
@@ -92,13 +97,15 @@ class LLMBackend(GenerativeBackend):
         # ------------------------------------------------------------------ #
         free_slots: List[Tuple[str, Any]] = []   # [(field_name, field_type), ...]
         fixed_slots: Dict[str, Any] = {}
+        field_types: Dict[str, Any] = {}         # field_name → resolved type
 
         for attr_match in expression.matches_with_variables:
             field_name = attr_match.name_from_variable_access_path
             value = attr_match.assigned_variable._value_
+            field_type = attr_match.assigned_variable._type_
+            field_types[field_name] = field_type
 
             if isinstance(value, type(Ellipsis)):
-                field_type = attr_match.assigned_variable._type_
                 free_slots.append((field_name, field_type))
             else:
                 fixed_slots[field_name] = value
@@ -134,14 +141,143 @@ class LLMBackend(GenerativeBackend):
             return
 
         # ------------------------------------------------------------------ #
-        # Step 4: Write resolved values back into the Match variable graph    #
-        # Mirrors _generate_raw_results() in EntityQueryLanguageBackend and   #
-        # create_instance_from_variables_and_sample() in parameterizer.py     #
+        # Step 4: Reconstruct complex objects and coerce enums                #
+        # For COMPLEX free slots (dataclasses like GraspDescription), the LLM #
+        # returns flat "field.sub_field" keys. Reassemble them into an        #
+        # instance and inject CONTEXT sub-fields (Manipulator) from the world.#
+        # For simple ENUM slots, coerce the string to the enum member.        #
+        # ------------------------------------------------------------------ #
+        from llm_reasoner.workflows.slot_filler import (
+            _unwrap_type, _is_context_type, _complex_subfields,
+        )
+
+        for field_name, field_type in free_slots:
+            unwrapped = _unwrap_type(field_type)
+            if not (isinstance(unwrapped, type) and dataclasses.is_dataclass(unwrapped)):
+                continue  # handled below for simple types
+            resolved[field_name] = _reconstruct_complex(
+                field_name, unwrapped, resolved, self.world
+            )
+
+        # ------------------------------------------------------------------ #
+        # Step 5: Write values into the Match variable graph                  #
         # ------------------------------------------------------------------ #
         for field_name, value in resolved.items():
+            if "." in field_name:
+                continue  # consumed sub-field key, skip
             mapped_var = expression._get_mapped_variable_by_name(field_name)
-            if mapped_var is not None:
-                mapped_var._value_ = value
+            if mapped_var is None:
+                continue
+            field_type = field_types.get(field_name)
+            if (
+                isinstance(value, str)
+                and isinstance(field_type, type)
+                and issubclass(field_type, Enum)
+            ):
+                value = _coerce_enum(value, field_type)
+            mapped_var._value_ = value
 
         expression._update_kwargs_from_literal_values()
         yield expression.construct_instance()
+
+
+def _reconstruct_complex(
+    field_name: str,
+    cls: type,
+    resolved: Dict[str, Any],
+    world: Any,
+) -> Any:
+    """Build a dataclass instance (e.g. GraspDescription) from flat 'field.sub' keys.
+
+    For each sub-field of *cls*:
+    - CONTEXT types (Manipulator, Camera): injected from *world* using the already-
+      resolved arm value so the right manipulator is chosen.
+    - ENUM sub-fields: coerced from string → enum member.
+    - PRIMITIVE sub-fields with defaults: uses the resolved value or falls back to
+      the dataclass field default.
+    """
+    from llm_reasoner.workflows.slot_filler import _unwrap_type, _is_context_type
+
+    try:
+        hints = typing.get_type_hints(cls)
+    except Exception:
+        hints = getattr(cls, "__annotations__", {})
+
+    kwargs: Dict[str, Any] = {}
+    for f in dataclasses.fields(cls):
+        sub_type = _unwrap_type(hints.get(f.name, f.type))
+        sub_key = f"{field_name}.{f.name}"
+
+        if _is_context_type(sub_type):
+            # Inject the matching Manipulator from the world.
+            # Look for any resolved arm value to pick the right one.
+            arm_value = next(
+                (v for k, v in resolved.items() if "arm" in k.lower() and not isinstance(v, str)),
+                None,
+            )
+            manip = _get_manipulator(world, arm_value)
+            if manip is not None:
+                kwargs[f.name] = manip
+            # If no manipulator found, omit and let the dataclass default handle it.
+
+        elif sub_key in resolved:
+            val = resolved[sub_key]
+            if isinstance(val, str) and isinstance(sub_type, type) and issubclass(sub_type, Enum):
+                val = _coerce_enum(val, sub_type)
+            elif isinstance(val, str) and sub_type is bool:
+                val = val.lower() in ("true", "1", "yes")
+            kwargs[f.name] = val
+
+        # Sub-fields not in resolved and not CONTEXT fall through — the dataclass
+        # will use its own default if one exists.
+
+    try:
+        return cls(**kwargs)
+    except Exception as exc:
+        logger.warning("_reconstruct_complex: could not build %s(%s): %s", cls.__name__, kwargs, exc)
+        return None
+
+
+def _get_manipulator(world: Any, arm: Any) -> Any:
+    """Return the Manipulator for *arm* from the SDT world, or None."""
+    try:
+        from semantic_digital_twin.robots.abstract_robot import AbstractRobot
+        robots = world.get_semantic_annotations_by_type(AbstractRobot)
+        if not robots:
+            return None
+        robot = robots[0]
+        if hasattr(robot, "get_manipulator_for_arm") and arm is not None:
+            return robot.get_manipulator_for_arm(arm)
+        if hasattr(robot, "manipulators"):
+            manips = robot.manipulators
+            if isinstance(manips, dict) and arm is not None:
+                return manips.get(arm) or next(iter(manips.values()), None)
+            if isinstance(manips, list) and manips:
+                idx = getattr(arm, "value", 0)
+                return manips[idx] if idx < len(manips) else manips[0]
+    except Exception as exc:
+        logger.debug("_get_manipulator: %s", exc)
+    return None
+
+
+def _coerce_enum(value: str, enum_type: type) -> Any:
+    """Convert a string returned by the LLM to the matching enum member.
+
+    Tries exact match first, then case-insensitive match.
+    Falls back to the first member and logs a warning if nothing matches.
+    Mirrors the coercion logic in krrood/pycram_bridge/auto_handler._resolve_enum().
+    """
+    try:
+        return enum_type[value]
+    except KeyError:
+        pass
+    value_upper = value.upper()
+    for member in enum_type:
+        if member.name.upper() == value_upper:
+            return member
+    first = next(iter(enum_type))
+    logger.warning(
+        "_coerce_enum: '%s' is not a valid member of %s %s — falling back to %s",
+        value, enum_type.__name__, list(enum_type.__members__), first.name,
+    )
+    return first
