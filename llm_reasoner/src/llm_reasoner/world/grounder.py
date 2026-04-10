@@ -9,26 +9,24 @@ Tier 1  Annotation-based: find instances whose *class name* matches the
 Tier 2  Name-based: duck-type access to ``.name`` / ``.name.name`` on every
         groundable instance, substring-matching the extracted name string.
 """
-
 from __future__ import annotations
 
 import logging
 import re
 from dataclasses import dataclass, field
-from typing_extensions import Any, List, Optional, Tuple, Type
+from typing import Any, List, Optional, Tuple, Type
 
 from krrood.symbol_graph.symbol_graph import Symbol, SymbolGraph
 
-from krrood.llmr_decoupled.workflows.schemas.common import EntityDescriptionSchema
+from llm_reasoner.schemas.entities import EntityDescriptionSchema
 
 logger = logging.getLogger(__name__)
 
 
 # ── Duck-typing helpers ────────────────────────────────────────────────────────
-# These access attributes on unknown Symbol instances using plain getattr/duck
-# typing. They are the ONLY place in krrood.llmr_decoupled that knows about the
-# attribute-chain conventions of the downstream world representation.
-# If sdt renames PrefixedName.name, Pose.to_position(), etc., fix it here.
+# Plain getattr / duck typing — the only place in llm_reasoner that knows about
+# SDT attribute-chain conventions.  If SDT renames PrefixedName.name,
+# Pose.to_position(), etc., fix it here and in world/serializer.py.
 
 
 def body_display_name(body: Any) -> str:
@@ -131,7 +129,7 @@ class EntityGrounder:
 
     :param groundable_type: The Symbol subclass representing groundable world
         entities (e.g. ``Body`` from sdt).  Passed by the caller at setup time;
-        krrood.llmr_decoupled never imports this class directly.
+        llm_reasoner never imports this class directly.
     """
 
     def __init__(self, groundable_type: Type[Symbol]) -> None:

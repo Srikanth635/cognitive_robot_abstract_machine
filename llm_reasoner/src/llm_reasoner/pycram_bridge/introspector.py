@@ -2,20 +2,21 @@
 
 Field kinds
 -----------
+CONTEXT   Manipulator/Camera/robot-component → injected from caller context dict.
+          NOTE: checked BEFORE ENTITY because Manipulator IS a Symbol subclass;
+          without this ordering it would be mis-classified as ENTITY.
 ENTITY    Symbol/Body/Region subclass → SymbolGraph grounding, passes instance directly.
 POSE      Pose type → SymbolGraph grounding, then uses .global_pose on the result.
 ENUM      Enum subclass → string-to-enum coercion or LLM resolution.
 COMPLEX   Complex dataclass (e.g. GraspDescription) → recursive construction from
           the flat parameters dict in ActionSlotSchema.
-CONTEXT   Manipulator/Camera/robot-component → injected from caller context dict.
 PRIMITIVE bool / int / float / str → taken as-is from ActionSlotSchema.parameters.
 TYPE_REF  Type[SomeClass] (e.g. Type[SemanticAnnotation]) → resolve class by name
           from SymbolGraph class diagram.
 
-All pycram imports are lazy so this module can be imported without pycram installed
-(imports happen inside methods, not at module level).
+All pycram/sdt imports are lazy so this module can be imported without either
+package installed (imports happen inside methods, not at module level).
 """
-
 from __future__ import annotations
 
 import ast
@@ -25,7 +26,7 @@ import textwrap
 import typing
 from dataclasses import dataclass, field
 from enum import Enum
-from typing_extensions import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 import logging
 
@@ -61,8 +62,8 @@ class FieldSpec:
     docstring: str = ""                     # attribute docstring from class source
     is_optional: bool = False
     default: Any = field(default_factory=lambda: NO_DEFAULT)  # NO_DEFAULT means required
-    enum_members: List[str] = field(default_factory=list)   # for ENUM kind
-    sub_fields: List["FieldSpec"] = field(default_factory=list)  # for COMPLEX kind
+    enum_members: List[str] = field(default_factory=list)      # for ENUM kind
+    sub_fields: List["FieldSpec"] = field(default_factory=list) # for COMPLEX kind
 
 
 @dataclass
@@ -88,7 +89,7 @@ class PycramIntrospector:
     """
 
     # Types that cannot be extracted from NL and must come from caller context.
-    # Populated lazily on first call to _is_context_type().
+    # Stored as a tuple of base classes (empty tuple = tried and failed to import).
     _CONTEXT_BASE_CLASSES: Optional[tuple] = None
 
     # Base class for all sdt Symbol types (for ENTITY detection).
@@ -182,7 +183,16 @@ class PycramIntrospector:
     # ── Type classification ────────────────────────────────────────────────────
 
     def _classify_type(self, t: Any, depth: int = 0) -> FieldKind:
-        """Return the :class:`FieldKind` for a resolved Python type *t*."""
+        """Return the :class:`FieldKind` for a resolved Python type *t*.
+
+        IMPORTANT ordering note
+        -----------------------
+        CONTEXT is checked **before** ENTITY.  Manipulator and Camera are
+        Symbol subclasses (so _is_entity_type returns True for them), but they
+        must be injected from the caller's context dict rather than grounded
+        from SymbolGraph.  Checking CONTEXT first ensures they are classified
+        correctly even though they satisfy the ENTITY predicate too.
+        """
         if t is None or t is type(None):
             return FieldKind.PRIMITIVE
 
@@ -206,13 +216,15 @@ class PycramIntrospector:
         if self._is_pose_type(t):
             return FieldKind.POSE
 
+        # Context-injected robot components (Manipulator, Camera, …)
+        # Must come BEFORE the ENTITY check: Manipulator IS a Symbol subclass,
+        # so without this ordering it would be mis-classified as ENTITY.
+        if self._is_context_type(t):
+            return FieldKind.CONTEXT
+
         # Symbol / Entity types (Body, Region, etc.)
         if self._is_entity_type(t):
             return FieldKind.ENTITY
-
-        # Context-injected robot components (Manipulator, Camera, …)
-        if self._is_context_type(t):
-            return FieldKind.CONTEXT
 
         # Complex dataclass → recursive construction
         if dataclasses.is_dataclass(t):
@@ -247,6 +259,11 @@ class PycramIntrospector:
             return False
 
     def _is_context_type(self, t: type) -> bool:
+        """Return True if *t* is a robot-component type (Manipulator, Camera, …).
+
+        Uses an empty tuple sentinel (not None) to distinguish "tried and found
+        nothing" from "not yet tried", preventing repeated failed imports.
+        """
         if self._CONTEXT_BASE_CLASSES is None:
             bases = []
             try:
@@ -254,7 +271,9 @@ class PycramIntrospector:
                 bases.extend([Manipulator, Camera])
             except Exception:
                 pass
-            PycramIntrospector._CONTEXT_BASE_CLASSES = tuple(bases) or None
+            # Use empty tuple (not None) to mark "already tried" even when
+            # no bases were found, so we don't retry the failing import every call.
+            PycramIntrospector._CONTEXT_BASE_CLASSES = tuple(bases)
         if not self._CONTEXT_BASE_CLASSES:
             return False
         try:
@@ -326,7 +345,6 @@ def _resolve_type_string(name: str, module_globals: dict) -> Optional[type]:
     """
     import sys
 
-    # Strip Optional / List wrappers — handled by _unwrap_optional separately
     bare = name.strip()
 
     # 1. Module globals
@@ -347,7 +365,7 @@ def _resolve_type_string(name: str, module_globals: dict) -> Optional[type]:
     return None
 
 
-def _unwrap_optional(t: Any) -> tuple[Any, bool]:
+def _unwrap_optional(t: Any) -> tuple:
     """Strip ``Optional[X]`` / ``Union[X, None]`` and return ``(inner_type, is_optional)``."""
     if typing.get_origin(t) is typing.Union:
         args = [a for a in typing.get_args(t) if a is not type(None)]
@@ -358,7 +376,7 @@ def _unwrap_optional(t: Any) -> tuple[Any, bool]:
     return t, False
 
 
-# Module-level singleton
+# Module-level singleton — shared across the package
 _introspector = PycramIntrospector()
 
 

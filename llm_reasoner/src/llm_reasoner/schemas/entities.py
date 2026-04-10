@@ -1,6 +1,8 @@
 """
-Shared Pydantic schemas used across multiple LLM calls.
-Migrated from llmr/workflows/schemas/common.py — no functional changes.
+Shared Pydantic schemas for entity descriptions.
+
+EntityDescriptionSchema is used by the LLM slot-filler to describe a world entity
+before it is resolved to a Symbol instance by the grounder.
 """
 from __future__ import annotations
 

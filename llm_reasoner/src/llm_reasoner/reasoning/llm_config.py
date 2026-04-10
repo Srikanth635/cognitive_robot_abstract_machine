@@ -1,8 +1,8 @@
 """
 LLM factory — lightweight, provider-agnostic.
 
-Design difference from llmr/workflows/llm_configuration.py:
-  - No global singletons (no module-level default_llm, gpt_llm_small, etc.)
+Design:
+  - No global singletons (no module-level default_llm, etc.)
   - No hardcoded default model names
   - No abstract base class wrapping LangChain — use BaseChatModel directly
   - Users create their LLM explicitly and inject it into LLMBackend
@@ -15,7 +15,8 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import Any
-
+from dotenv import load_dotenv
+load_dotenv()
 
 class LLMProvider(str, Enum):
     """Supported LLM providers."""
@@ -43,7 +44,7 @@ def make_llm(
 
     Example::
 
-        from llm_reasoner.workflows.llm_config import make_llm, LLMProvider
+        from llm_reasoner.reasoning.llm_config import make_llm, LLMProvider
         from llm_reasoner import nl_plan
 
         llm = make_llm(LLMProvider.OPENAI, model="gpt-4o")
