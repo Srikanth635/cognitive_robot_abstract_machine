@@ -17,14 +17,19 @@ Design difference from llmr/workflows/nodes/slot_filler.py:
 """
 from __future__ import annotations
 
+import dataclasses
 import importlib
 import inspect
+import logging
 import pkgutil
 import typing
+from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Type
 
 if typing.TYPE_CHECKING:
     from langchain_core.language_models import BaseChatModel
+
+logger = logging.getLogger(__name__)
 
 from llm_reasoner.workflows.schemas.action_slot import (
     ActionClassification,
@@ -162,6 +167,7 @@ def run_slot_filler(
         ])
         return {slot.field_name: slot.value for slot in output.slots}
     except Exception:
+        logger.exception("run_slot_filler: LLM invocation failed")
         return None
 
 
@@ -183,12 +189,25 @@ def _build_slot_filler_message(
         "Free slots to fill:",
     ]
     for field_name, field_type in free_slots:
-        type_hint = (
-            getattr(field_type, "__name__", str(field_type))
-            if field_type is not None
-            else "unknown"
-        )
-        lines.append(f"  - {field_name}  (type: {type_hint})")
+        unwrapped = _unwrap_type(field_type)
+        type_hint = getattr(unwrapped, "__name__", str(unwrapped)) if unwrapped is not None else "unknown"
+
+        if unwrapped is not None and isinstance(unwrapped, type) and issubclass(unwrapped, Enum):
+            members = " | ".join(unwrapped.__members__)
+            lines.append(f"  - {field_name}  (type: {type_hint}, allowed values: {members})")
+
+        elif unwrapped is not None and isinstance(unwrapped, type) and dataclasses.is_dataclass(unwrapped):
+            lines.append(f"  - {field_name}  (type: {type_hint} — fill its sub-fields using '{field_name}.<sub_field>' naming):")
+            for sub_name, sub_type in _complex_subfields(unwrapped):
+                sub_hint = getattr(sub_type, "__name__", str(sub_type)) if sub_type is not None else "unknown"
+                if sub_type is not None and isinstance(sub_type, type) and issubclass(sub_type, Enum):
+                    members = " | ".join(sub_type.__members__)
+                    lines.append(f"      - {field_name}.{sub_name}  (type: {sub_hint}, allowed values: {members})")
+                else:
+                    lines.append(f"      - {field_name}.{sub_name}  (type: {sub_hint})")
+
+        else:
+            lines.append(f"  - {field_name}  (type: {type_hint})")
 
     if fixed_slots:
         lines.append("\nAlready-fixed slots (honour these, do not change):")
@@ -197,6 +216,44 @@ def _build_slot_filler_message(
 
     lines.append(f"\n{world_context}")
     return "\n".join(lines)
+
+
+def _unwrap_type(t: Any) -> Any:
+    """Strip Optional[X] / Union[X, None] → X. Returns t unchanged for anything else."""
+    if typing.get_origin(t) is typing.Union:
+        args = [a for a in typing.get_args(t) if a is not type(None)]
+        if len(args) == 1:
+            return args[0]
+    return t
+
+
+def _is_context_type(t: Any) -> bool:
+    """Return True for robot-component types that must be injected from context, not LLM-resolved."""
+    try:
+        from semantic_digital_twin.robots.abstract_robot import Manipulator, Camera
+        return isinstance(t, type) and issubclass(t, (Manipulator, Camera))
+    except Exception:
+        return False
+
+
+def _complex_subfields(cls: type) -> List[Tuple[str, Any]]:
+    """Return (name, resolved_type) for each LLM-fillable sub-field of a dataclass.
+
+    Skips CONTEXT-typed fields (Manipulator, Camera) — those are injected from
+    the world, not resolved by the LLM.
+    """
+    try:
+        hints = typing.get_type_hints(cls)
+    except Exception:
+        hints = getattr(cls, "__annotations__", {})
+
+    result = []
+    for f in dataclasses.fields(cls):
+        sub_type = _unwrap_type(hints.get(f.name, f.type))
+        if _is_context_type(sub_type):
+            continue
+        result.append((f.name, sub_type))
+    return result
 
 
 def _discover_action_classes() -> Dict[str, type]:

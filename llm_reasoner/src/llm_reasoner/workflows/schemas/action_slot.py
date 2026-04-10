@@ -10,7 +10,7 @@ Design difference from llmr/workflows/schemas/:
 """
 from __future__ import annotations
 
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -32,13 +32,13 @@ class SlotValue(BaseModel):
     field_name: str
     """Name of the Match field being resolved. Must match an attribute name on the action class."""
 
-    value: Any
+    value: str
     """
-    The resolved concrete value.
-    - For entity slots: the world body name as a string (e.g. "milk_1").
+    The resolved concrete value as a string.
+    - For entity slots: the world body name (e.g. "milk_1").
       LLMBackend will look this up in the world to get the actual Body object.
-    - For enum/parameter slots: the enum member name or primitive value
-      (e.g. "LEFT", "FRONT", True).
+    - For enum/parameter slots: the enum member name (e.g. "LEFT", "FRONT").
+      The backend converts this string to the actual enum value.
     """
 
     entity_description: Optional[EntityDescriptionSchema] = None

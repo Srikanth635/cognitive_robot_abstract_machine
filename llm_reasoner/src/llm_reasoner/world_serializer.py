@@ -104,22 +104,27 @@ def _serialize_annotations(world: Any) -> str:
     lines = ["=== Semantic Annotations ==="]
     for body_name, annos in annotations.items():
         if annos:
-            anno_str = ", ".join(type(a).__name__ for a in annos)
+            anno_str = ", ".join(annos)
             lines.append(f"  - {body_name}: {anno_str}")
 
     return "\n".join(lines)
 
 
 def _get_all_annotations(world: Any) -> Dict[str, List[Any]]:
+    # Iterate world.semantic_annotations directly: per-body lookup via
+    # get_semantic_annotations_of_body() is not part of the World API and
+    # body identity breaks after deepcopy/merge anyway.
     result: Dict[str, List[Any]] = {}
     try:
-        for body in _get_scene_bodies(world):
-            name = body_display_name(body)
+        for ann in world.semantic_annotations:
+            ann_type = type(ann).__name__
             try:
-                annos = world.get_semantic_annotations_of_body(body)
-                result[name] = list(annos) if annos else []
+                for body in ann.bodies:
+                    if _is_scene_body(body):
+                        name = body_display_name(body)
+                        result.setdefault(name, []).append(ann_type)
             except Exception:
-                result[name] = []
+                pass
     except AttributeError:
         pass
     return result
@@ -148,30 +153,32 @@ def _serialize_exec_state(exec_state: Any) -> str:
 # --------------------------------------------------------------------------- #
 
 def body_display_name(body: Any) -> str:
-    """Return a clean display name for a body, unwrapping PrefixedName chains."""
+    """Return a clean display name for a body, unwrapping PrefixedName chains.
+
+    PrefixedName(name="milk_box", prefix="apartment") → "milk_box" (local part).
+    Falls back to str(name) if the .name attribute is absent.
+    """
     try:
         name = body.name
-        # Handle PrefixedName or similar wrappers that have a .local attribute
-        if hasattr(name, "local"):
-            return str(name.local)
+        # PrefixedName stores the local part in .name and the prefix in .prefix.
+        # str(name) produces "prefix/local" which is the robot-link form we want
+        # to avoid for scene objects — return just the local part instead.
+        if hasattr(name, "name"):
+            return str(name.name)
         return str(name)
     except AttributeError:
         return repr(body)
 
 
 def body_xyz(body: Any) -> Optional[Tuple[float, float, float]]:
-    """Return (x, y, z) position of a body, or None if unavailable."""
+    """Return (x, y, z) position of a body, or None if unavailable.
+
+    SDT Pose is a HomogeneousTransformationMatrix; call .to_position() to get
+    a Point3 with .x / .y / .z properties.
+    """
     try:
-        pose = body.global_pose
-        if pose is None:
-            return None
-        # Try common pose representations
-        if hasattr(pose, "position"):
-            p = pose.position
-            return (float(p.x), float(p.y), float(p.z))
-        if hasattr(pose, "translation"):
-            t = pose.translation
-            return (float(t[0]), float(t[1]), float(t[2]))
+        pt = body.global_pose.to_position()
+        return (float(pt.x), float(pt.y), float(pt.z))
     except Exception:
         pass
     return None
@@ -181,19 +188,16 @@ def body_bounding_box(
     body: Any,
     reference_frame: Optional[Any] = None,
 ) -> Optional[Tuple[float, float, float]]:
-    """Return (width, depth, height) bounding box dims, or None if unavailable."""
+    """Return (depth, width, height) bounding box dims, or None if unavailable.
+
+    SDT API: ShapeCollection.as_bounding_box_collection_in_frame(ref) returns a
+    BoundingBoxCollection; calling .bounding_box() on that gives a BoundingBox
+    whose .dimensions property is [depth, width, height].
+    The reference frame defaults to the body itself (local frame).
+    """
     try:
-        collision = body.collision
-        if collision is None:
-            return None
-        if reference_frame is not None:
-            bb = collision.bounding_box(reference_frame)
-        else:
-            bb = collision.bounding_box()
-        if bb is None:
-            return None
-        # Normalise to (w, d, h) regardless of internal representation
-        dims = bb.dimensions if hasattr(bb, "dimensions") else bb
+        ref = reference_frame if reference_frame is not None else body
+        dims = body.collision.as_bounding_box_collection_in_frame(ref).bounding_box().dimensions
         return (float(dims[0]), float(dims[1]), float(dims[2]))
     except Exception:
         return None
