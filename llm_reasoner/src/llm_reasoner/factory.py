@@ -1,63 +1,52 @@
-"""
-User-facing factory functions for NL-driven plan construction.
+"""User-facing factory functions for NL-driven plan construction.
 
-Two entry points:
-  nl_plan()       — single atomic instruction → single PlanNode
-  nl_sequential() — multi-step instruction → list of PlanNodes (decomposed)
-
-Both functions wire up LLMBackend on the provided context, so the user
-never has to instantiate the backend directly.
-
-The caller must supply groundable_type (e.g. Body from SDT). This is the only
-robot-framework type that crosses the boundary here — it is passed to LLMBackend
-and never imported by this package.
+All pycram access goes through llm_reasoner.pycram_bridge — no direct pycram imports here.
 """
 from __future__ import annotations
 
 import dataclasses
 import inspect
 import typing
-from typing import Dict, List, Optional
+from typing_extensions import Any, Callable, Dict, List, Optional
+
+from krrood.symbol_graph.symbol_graph import Symbol
+from llm_reasoner.exceptions import LLMActionClassificationFailed
+from llm_reasoner.pycram_bridge import PycramContext, PycramPlanNode, execute_single
 
 if typing.TYPE_CHECKING:
     from langchain_core.language_models import BaseChatModel
-    from pycram.datastructures.dataclasses import Context
-    from pycram.plans.nodes import PlanNode
-    from krrood.symbol_graph.symbol_graph import Symbol
+
+_SKIP_FIELDS = {"id", "plan_node"}
 
 
 def nl_plan(
     instruction: str,
-    context: "Context",
+    context: PycramContext,
     llm: "BaseChatModel",
-    groundable_type: "type[Symbol]",
+    groundable_type: type = Symbol,
     action_registry: Optional[Dict[str, type]] = None,
-    robot_context: Optional[Dict] = None,
-) -> "PlanNode":
+) -> PycramPlanNode:
     """
     Build a single executable PlanNode from a natural-language instruction.
 
     Internally:
       1. LLM classifies the instruction → action class
-      2. Builds a fully-underspecified Match (all fields set to ...)
-      3. Sets LLMBackend as context.query_backend
+      2. Builds an underspecified Match for required schema fields
+      3. Sets a strict LLMBackend as context.query_backend
       4. Returns execute_single(match, context)
 
     :param instruction:    The natural-language instruction.
     :param context:        PyCRAM Context (world + robot + query_backend).
     :param llm:            LangChain-compatible chat model.
-    :param groundable_type: Symbol subclass for scene objects (e.g. Body from SDT).
+    :param groundable_type: Symbol subclass for scene objects.
                            Passed to LLMBackend for entity grounding; never imported here.
     :param action_registry: Optional {class_name: class} dict.
-                           Auto-discovered from pycram if None.
-    :param robot_context:  Optional dict injected into LLMBackend.context.
-                           Put manipulators here: {"manipulators": {"LEFT": l, "RIGHT": r}}.
+                           Auto-discovered by the PyCRAM bridge if None.
     :returns: A PlanNode ready to be performed.
     :raises ValueError: If the LLM cannot classify the action type.
     """
     from llm_reasoner.backend import LLMBackend
     from llm_reasoner.reasoning.slot_filler import classify_action
-    from pycram.plans.factories import execute_single
 
     # Step 1: Classify action type from NL instruction
     action_cls = classify_action(
@@ -66,20 +55,17 @@ def nl_plan(
         action_registry=action_registry,
     )
     if action_cls is None:
-        raise ValueError(
-            f"Could not classify an action type from: {instruction!r}. "
-            "Check that pycram action classes are importable and the LLM is reachable."
-        )
+        raise LLMActionClassificationFailed(instruction=instruction)
 
-    # Step 2: Build a fully-underspecified Match (all fields set to ...)
+    # Step 2: Build an underspecified Match for required schema fields.
     match = _fully_underspecified(action_cls)
 
-    # Step 3: Set LLMBackend on context
+    # Step 3: Set strict LLMBackend on context.
     context.query_backend = LLMBackend(
-        instruction=instruction,
         llm=llm,
         groundable_type=groundable_type,
-        context=robot_context or {},
+        instruction=instruction,
+        strict_required=True,
     )
 
     # Step 4: Return the plan node
@@ -88,12 +74,11 @@ def nl_plan(
 
 def nl_sequential(
     instruction: str,
-    context: "Context",
+    context: PycramContext,
     llm: "BaseChatModel",
-    groundable_type: "type[Symbol]",
+    groundable_type: type = Symbol,
     action_registry: Optional[Dict[str, type]] = None,
-    robot_context: Optional[Dict] = None,
-) -> List["PlanNode"]:
+) -> List[PycramPlanNode]:
     """
     Decompose a multi-step NL instruction and return one PlanNode per atomic step.
 
@@ -103,9 +88,8 @@ def nl_sequential(
     :param instruction:    The (possibly multi-step) natural-language instruction.
     :param context:        PyCRAM Context shared across all steps.
     :param llm:            LangChain-compatible chat model.
-    :param groundable_type: Symbol subclass for scene objects (e.g. Body from SDT).
+    :param groundable_type: Symbol subclass for scene objects.
     :param action_registry: Optional action class registry (auto-discovered if None).
-    :param robot_context:  Optional robot context dict forwarded to each LLMBackend.
     :returns: List of PlanNodes, one per atomic step, in execution order.
     """
     from llm_reasoner.reasoning.decomposer import TaskDecomposer
@@ -118,19 +102,81 @@ def nl_sequential(
             llm,
             groundable_type=groundable_type,
             action_registry=action_registry,
-            robot_context=robot_context,
         )
         for step in decomposed.steps
     ]
 
 
+def resolve_match(
+    match: Any,
+    context: PycramContext,
+    llm: "BaseChatModel",
+    groundable_type: type = Symbol,
+    instruction: Optional[str] = None,
+    world_context_provider: Optional[Callable[[], str]] = None,
+    strict_required: bool = False,
+) -> PycramPlanNode:
+    """Return a PlanNode for an already-built underspecified Match.
+
+    Plan helper for Role 2.  For a non-executing resolved action instance, use
+    ``resolve_params``.
+
+    :param match:           A fully or partially underspecified krrood Match expression.
+    :param context:         PyCRAM Context (world + robot).
+    :param llm:             LangChain-compatible chat model.
+    :param groundable_type: Symbol subclass scoping entity grounding. Defaults to Symbol.
+    :param instruction:     Optional NL hint included in the slot-filler prompt.
+                            Omit when the action type and fixed slots carry the intent.
+    :param world_context_provider: Optional callable returning runtime world context text.
+    :param strict_required: Raise if required fields remain unresolved before construction.
+    :returns: A PlanNode ready to be performed.
+    """
+    from llm_reasoner.backend import LLMBackend
+    context.query_backend = LLMBackend(
+        llm=llm,
+        groundable_type=groundable_type,
+        instruction=instruction,
+        world_context_provider=world_context_provider,
+        strict_required=strict_required,
+    )
+    return execute_single(match, context)
+
+
+def resolve_params(
+    match: Any,
+    llm: "BaseChatModel",
+    groundable_type: type = Symbol,
+    instruction: Optional[str] = None,
+    world_context_provider: Optional[Callable[[], str]] = None,
+    strict_required: bool = False,
+) -> Any:
+    """Resolve an underspecified Match and return the concrete action instance.
+
+    Role 2 standalone API: no action classification, no Match construction, and no
+    PyCRAM PlanNode creation.  The supplied Match is still updated by the backend as
+    part of normal KRROOD evaluation.
+    """
+    from llm_reasoner.backend import LLMBackend
+
+    backend = LLMBackend(
+        llm=llm,
+        groundable_type=groundable_type,
+        instruction=instruction,
+        world_context_provider=world_context_provider,
+        strict_required=strict_required,
+    )
+    return next(iter(backend.evaluate(match)))
+
+
 # ── Internal helpers ───────────────────────────────────────────────────────────
 
 def _fully_underspecified(action_cls: type):
-    """Build a Match for action_cls with ALL fields set to Ellipsis."""
+    """Return a Match(*action_cls*) with required schema fields set to ``...``."""
     from krrood.entity_query_language.query.match import Match
 
-    free_fields = _get_settable_fields(action_cls)
+    free_fields = _get_required_schema_fields(action_cls)
+    if free_fields is None:
+        free_fields = _get_settable_fields(action_cls)
     match = Match(action_cls)
     if free_fields:
         match(**{name: ... for name in free_fields})
@@ -142,7 +188,6 @@ def _get_settable_fields(action_cls: type) -> List[str]:
 
     Skips internal krrood/pycram bookkeeping fields that the LLM must not fill.
     """
-    _SKIP_FIELDS = {"id", "plan_node"}
     if dataclasses.is_dataclass(action_cls):
         return [
             f.name
@@ -158,3 +203,23 @@ def _get_settable_fields(action_cls: type) -> List[str]:
         ]
     except (TypeError, ValueError):
         return []
+
+
+def _get_required_schema_fields(action_cls: type) -> Optional[List[str]]:
+    """Return required action fields from PycramIntrospector, or None on failure."""
+    try:
+        from llm_reasoner.pycram_bridge import PycramIntrospector
+
+        schema = PycramIntrospector().introspect(action_cls)
+    except Exception:
+        return None
+
+    return [
+        field.name
+        for field in schema.fields
+        if (
+            not field.is_optional
+            and not field.name.startswith("_")
+            and field.name not in _SKIP_FIELDS
+        )
+    ]

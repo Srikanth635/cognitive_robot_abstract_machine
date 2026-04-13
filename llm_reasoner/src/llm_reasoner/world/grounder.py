@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass, field
-from typing import Any, List, Optional, Tuple, Type
+from typing_extensions import Any, List, Optional, Tuple, Type
 
 from krrood.symbol_graph.symbol_graph import Symbol, SymbolGraph
 
@@ -25,8 +25,8 @@ logger = logging.getLogger(__name__)
 
 # ── Duck-typing helpers ────────────────────────────────────────────────────────
 # Plain getattr / duck typing — the only place in llm_reasoner that knows about
-# SDT attribute-chain conventions.  If SDT renames PrefixedName.name,
-# Pose.to_position(), etc., fix it here and in world/serializer.py.
+# world-object attribute-chain conventions.  If name/pose conventions change,
+# fix it here and in world/serializer.py.
 
 
 def body_display_name(body: Any) -> str:
@@ -80,7 +80,7 @@ class GroundingResult:
 
 
 def _camel_to_tokens(name: str) -> str:
-    """``'DrinkingContainer'`` → ``'drinking container'``."""
+    """Split a CamelCase class name into a lowercase token string for fuzzy matching."""
     return re.sub(r"(?<=[a-z])(?=[A-Z])", " ", name).lower()
 
 
@@ -88,7 +88,7 @@ def resolve_symbol_class(semantic_type: str) -> Optional[Type[Symbol]]:
     """Resolve a semantic type string to a Symbol subclass via the SymbolGraph class diagram.
 
     Walks ``SymbolGraph().class_diagram`` — all Symbol subclasses are registered
-    there at instantiation time, so no sdt import is needed.
+    there at instantiation time, so no world-package import is needed.
 
     :param semantic_type: String from the LLM slot schema.
     :return: Matching Symbol subclass, or ``None`` if nothing found.
@@ -125,14 +125,15 @@ class EntityGrounder:
     """Grounds an :class:`EntityDescriptionSchema` to Symbol instances in the world.
 
     Uses :class:`~krrood.symbol_graph.symbol_graph.SymbolGraph` as the sole
-    data source — no world object or sdt import required.
+        data source — no world object or world-package import required.
 
     :param groundable_type: The Symbol subclass representing groundable world
-        entities (e.g. ``Body`` from sdt).  Passed by the caller at setup time;
-        llm_reasoner never imports this class directly.
+        entities (for example a caller-provided ``Body`` class).  Defaults to ``Symbol`` (the base
+        class), which covers all instances in the SymbolGraph.  Pass a more
+        specific subclass (e.g. ``Body``) to narrow the search pool.
     """
 
-    def __init__(self, groundable_type: Type[Symbol]) -> None:
+    def __init__(self, groundable_type: Type[Symbol] = Symbol) -> None:
         self._groundable_type = groundable_type
 
     # ── Main entry point ───────────────────────────────────────────────────────
@@ -177,7 +178,7 @@ class EntityGrounder:
     # ── Tier 1: annotation-based ───────────────────────────────────────────────
 
     def _annotation_ground(self, description: EntityDescriptionSchema) -> GroundingResult:
-        """Ground via semantic annotation type resolved from SymbolGraph class diagram."""
+        """Tier 1: resolve semantic_type to a Symbol subclass, collect its annotated bodies."""
         cls = resolve_symbol_class(description.semantic_type)
         if cls is None:
             logger.debug(
@@ -223,7 +224,7 @@ class EntityGrounder:
     # ── Tier 2: name-based ─────────────────────────────────────────────────────
 
     def _name_ground(self, description: EntityDescriptionSchema) -> GroundingResult:
-        """Ground by name — substring scan over all groundable Symbol instances."""
+        """Tier 2: substring scan of description.name over all groundable_type instances."""
         if not description.name:
             return GroundingResult()
 
@@ -252,7 +253,7 @@ class EntityGrounder:
     def _refine(
         self, candidates: List[Any], description: EntityDescriptionSchema
     ) -> List[Any]:
-        """Apply spatial context and attribute filters to narrow candidates."""
+        """Narrow *candidates* using spatial_context then attribute filters; skips if only one candidate."""
         if description.spatial_context and len(candidates) > 1:
             refined = self._filter_by_spatial_context(candidates, description.spatial_context)
             if refined:
@@ -268,7 +269,7 @@ class EntityGrounder:
     def _filter_by_spatial_context(
         self, candidates: List[Any], spatial_context: str
     ) -> List[Any]:
-        """Narrow candidates using a spatial context hint via SymbolGraph class lookup."""
+        """Filter to candidates near surfaces matching *spatial_context*; falls back to name-proximity subtree."""
         context_lower = spatial_context.lower()
 
         # Try to find a surface annotation type by name from SymbolGraph class diagram
@@ -319,7 +320,7 @@ class EntityGrounder:
 
     @staticmethod
     def _near_any_surface(body: Any, surfaces: list) -> bool:
-        """Return True if *body* is positioned above any of the *surfaces*."""
+        """True if *body*'s z-position is at or above the top of any surface in *surfaces*."""
         try:
             xyz = body_xyz(body)
             if xyz is None:
@@ -343,7 +344,7 @@ class EntityGrounder:
     def _filter_by_attributes(
         self, candidates: List[Any], attributes: dict
     ) -> List[Any]:
-        """Filter by key/value attributes from the entity description."""
+        """Retain candidates whose display name or annotation types contain any attribute value."""
         filtered = []
         for body in candidates:
             body_str = body_display_name(body).lower()
@@ -362,6 +363,7 @@ class EntityGrounder:
 
     @staticmethod
     def _multi_match_warning(candidates: List[Any], name: Optional[str]) -> Optional[str]:
+        """Return a warning string when grounding is ambiguous (> 1 candidate), else None."""
         if len(candidates) > 1:
             names = [body_display_name(b) for b in candidates]
             return (
@@ -376,12 +378,13 @@ class EntityGrounder:
 
 def ground_entity(
     description: EntityDescriptionSchema,
-    groundable_type: Type[Symbol],
+    groundable_type: Type[Symbol] = Symbol,
 ) -> GroundingResult:
     """Convenience wrapper around :class:`EntityGrounder`.
 
     :param description: LLM-extracted entity description.
     :param groundable_type: The Symbol subclass to search in SymbolGraph.
+        Defaults to ``Symbol`` (all instances).
     :return: :class:`GroundingResult`.
     """
     return EntityGrounder(groundable_type).ground(description)

@@ -10,7 +10,7 @@ SlotValue carries either:
 """
 from __future__ import annotations
 
-from typing import List, Optional
+from typing_extensions import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -66,7 +66,8 @@ class ActionReasoningOutput(BaseModel):
     Complex fields are represented as multiple dotted entries, e.g.:
       SlotValue(field_name='grasp_description.grasp_type', value='TOP')
       SlotValue(field_name='grasp_description.approach_direction', value='FRONT')
-    Context-injected fields (Manipulator, Camera) must NOT appear here.
+    Entity sub-fields inside complex fields may also appear as dotted entries
+    with entity_description populated.
     """
 
     overall_reasoning: str = ""

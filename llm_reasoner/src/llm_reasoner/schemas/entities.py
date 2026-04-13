@@ -6,7 +6,7 @@ before it is resolved to a Symbol instance by the grounder.
 """
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing_extensions import Dict, Optional
 
 from pydantic import BaseModel
 

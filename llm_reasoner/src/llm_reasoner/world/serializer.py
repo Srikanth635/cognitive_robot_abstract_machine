@@ -2,16 +2,15 @@
 World serializer — converts SymbolGraph state into an LLM-readable string.
 
 Package-independent: uses SymbolGraph (krrood) as the sole data source.
-No world object, no SDT imports anywhere in this module.
+No world object, no world-package imports anywhere in this module.
 
-The caller passes groundable_type (e.g. Body from SDT) so the module never
-needs to import it directly — the same pattern as llmr_decoupled's
-serialise_world_from_symbol_graph().
+The caller passes groundable_type (for example a Body class from its world
+package) so this module never imports a world package directly.
 """
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple, Type
+from typing_extensions import Any, Dict, List, Optional, Tuple, Type
 
 from krrood.symbol_graph.symbol_graph import Symbol, SymbolGraph
 
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 # Kinematic-link name suffixes — these are robot structural parts, not scene objects.
 # Suffix-based filter is representation-agnostic (unlike the old "/" heuristic which
-# relied on SDT PrefixedName.__str__ format).
+# relied on a particular prefixed-name string format).
 _STRUCTURAL_SUFFIXES = (
     "_link", "_frame", "_joint", "_screw", "_plate",
     "_optical_frame", "_motor", "_pad", "_finger",
@@ -27,16 +26,19 @@ _STRUCTURAL_SUFFIXES = (
 
 
 def _is_structural_link(name: str) -> bool:
+    """True if *name* ends with a robot kinematic-link suffix — these are filtered from scene listings."""
     return any(name.endswith(s) for s in _STRUCTURAL_SUFFIXES)
 
 
 def serialize_world_from_symbol_graph(
-    groundable_type: Type[Symbol],
+    groundable_type: Type[Symbol] = Symbol,
     extra_context: str = "",
 ) -> str:
     """Build an LLM world-context string from SymbolGraph contents.
 
-    :param groundable_type: Symbol subclass representing scene objects (e.g. Body).
+    :param groundable_type: Symbol subclass representing scene objects.
+        Defaults to ``Symbol`` (all instances).  Pass a more specific caller
+        type for a tighter scope covering only the intended world entities.
     :param extra_context: Optional extra text appended at the end.
     :returns: Multi-line string describing the current world state.
     """
@@ -98,8 +100,8 @@ def serialize_world_from_symbol_graph(
 
 
 # ── Duck-type body helpers (public, reusable) ──────────────────────────────────
-# These use plain getattr / duck typing — no SDT imports needed.
-# If SDT renames PrefixedName.name or Pose.to_position(), fix only here.
+# These use plain getattr / duck typing — no world-package imports needed.
+# If name/pose attribute conventions change, fix only here.
 
 
 def body_display_name(body: Any) -> str:

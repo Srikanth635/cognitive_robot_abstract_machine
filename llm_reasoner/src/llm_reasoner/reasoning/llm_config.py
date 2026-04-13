@@ -13,13 +13,22 @@ extras installed by the user based on their setup.
 """
 from __future__ import annotations
 
+import typing
 from enum import Enum
-from typing import Any
+
 from dotenv import load_dotenv
+from typing_extensions import Any
+
+from llm_reasoner.exceptions import LLMProviderNotSupported
+
+if typing.TYPE_CHECKING:
+    from langchain_core.language_models import BaseChatModel
+
 load_dotenv()
 
+
 class LLMProvider(str, Enum):
-    """Supported LLM providers."""
+    """Provider tag passed to ``make_llm()`` to select the LangChain backend."""
     OPENAI = "openai"
     OLLAMA = "ollama"
 
@@ -29,7 +38,7 @@ def make_llm(
     model: str,
     temperature: float = 0.0,
     **kwargs: Any,
-):
+) -> "BaseChatModel":
     """
     Factory function for creating a LangChain-compatible chat model.
 
@@ -73,7 +82,7 @@ def make_llm(
             ) from e
         return ChatOllama(model=model, temperature=temperature, **kwargs)
 
-    raise ValueError(
-        f"Unknown LLM provider: {provider!r}. "
-        f"Valid options: {[p.value for p in LLMProvider]}"
+    raise LLMProviderNotSupported(
+        provider=provider,
+        valid_providers=[p.value for p in LLMProvider],
     )

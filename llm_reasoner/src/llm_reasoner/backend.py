@@ -1,27 +1,8 @@
-"""
-LLMBackend — a GenerativeBackend that uses an LLM as a reasoning engine.
+"""LLMBackend — GenerativeBackend implementation that uses an LLM to fill underspecified Match slots.
 
-Design
-------
-1. No `world: Any` field — world context comes from SymbolGraph (via groundable_type)
-   or a caller-injected world_context_provider callable.
-
-2. No hard SDT imports anywhere in this module.
-   Robot components (Manipulator, Camera) come from the `context` dict supplied
-   by the caller.
-
-3. Entity slots are symbolically grounded via EntityGrounder (llm_reasoner.world.grounder)
-   after the LLM returns an EntityDescriptionSchema.
-
-4. Slot filling is driven by PycramIntrospector (llm_reasoner.pycram_bridge.introspector)
-   so each free slot is resolved the right way (ENTITY grounding, ENUM coercion,
-   COMPLEX reconstruction, CONTEXT injection, PRIMITIVE coercion).
-
-Variable assignment pattern (mirrors ProbabilisticBackend):
-    mapped_var = expression._get_mapped_variable_by_name(field_name)
-    mapped_var._value_ = resolved_value
-    expression._update_kwargs_from_literal_values()
-    yield expression.construct_instance()
+World context is derived from SymbolGraph (no world object held). All Symbol subclasses —
+including Manipulator and Camera — are grounded from SymbolGraph; no caller-provided
+component registry is required. No world-package imports anywhere in this module.
 """
 from __future__ import annotations
 
@@ -30,51 +11,87 @@ import logging
 import typing
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, TypeVar
+from typing_extensions import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
 from krrood.entity_query_language.backends import GenerativeBackend
 from krrood.entity_query_language.query.match import Match
+from krrood.symbol_graph.symbol_graph import Symbol
+
+from krrood.entity_query_language.utils import T
+
+from llm_reasoner._utils import field_short_name as _field_short_name
+from llm_reasoner.exceptions import LLMSlotFillingFailed, LLMUnresolvedRequiredFields
 
 if typing.TYPE_CHECKING:
     from langchain_core.language_models import BaseChatModel
-    from krrood.symbol_graph.symbol_graph import Symbol
 
-T = TypeVar("T")
 
-# Sentinel — means "could not resolve, skip this field"
-_UNRESOLVED = object()
+# ── Typed sentinel ─────────────────────────────────────────────────────────────
+
+class _Unresolved:
+    """Singleton sentinel returned when a slot cannot be resolved.
+
+    Using a dedicated class (rather than ``object()``) lets type checkers
+    distinguish unresolved returns from legitimate ``Any`` values, and gives
+    a descriptive ``repr`` in log output.
+    """
+
+    _instance: "_Unresolved | None" = None
+
+    def __new__(cls) -> "_Unresolved":
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __repr__(self) -> str:
+        return "<UNRESOLVED>"
+
+
+_UNRESOLVED = _Unresolved()
 
 
 # ── LLMBackend ─────────────────────────────────────────────────────────────────
 
 @dataclass
 class LLMBackend(GenerativeBackend):
-    """
-    A GenerativeBackend that uses an LLM to fill underspecified Match slots.
+    """A GenerativeBackend that uses an LLM to fill underspecified Match slots."""
 
-    :param instruction:           Natural-language instruction describing the action.
-    :param llm:                   LangChain BaseChatModel (injected, no global singletons).
-    :param groundable_type:       Symbol subclass for scene objects (e.g. Body from SDT).
-                                  Passed by the caller — never imported here.
-    :param context:               Caller-supplied dict for robot components:
-                                    - ``"manipulators"`` : {arm_name: Manipulator}
-                                    - ``"manipulator"``  : single Manipulator fallback
-    :param world_context_provider: Optional callable returning a world-context string.
-                                  When provided, replaces SymbolGraph serialization.
-    """
-
-    instruction: str
     llm: "BaseChatModel"
-    groundable_type: "type[Symbol]"
-    context: Dict[str, Any] = field(default_factory=dict)
-    world_context_provider: Optional[Callable[[], str]] = field(default=None)
+    """LangChain BaseChatModel — the reasoning engine for slot filling and action classification."""
+
+    groundable_type: Type[Symbol] = field(default=Symbol)
+    """
+    Symbol subclass scoping entity grounding and world serialisation.
+    Defaults to ``Symbol`` (all instances); pass ``Body`` for physical-body-only scope.
+    """
+
+    instruction: Optional[str] = field(kw_only=True, default=None)
+    """
+    NL instruction included in the slot-filler prompt for semantic grounding
+    (e.g. ``"the milk from the table"``).  Omit when the action type and fixed
+    slots already carry the intent.
+    """
+
+    world_context_provider: Optional[Callable[[], str]] = field(kw_only=True, default=None)
+    """
+    Callable returning a world-context string.  Replaces the default SymbolGraph
+    serialisation when provided.  Useful for injecting a custom or pre-cached
+    world description.
+    """
+
+    strict_required: bool = field(kw_only=True, default=False)
+    """
+    When ``True``, raise :class:`~llm_reasoner.exceptions.LLMUnresolvedRequiredFields`
+    if required action fields remain unresolved instead of constructing a partially
+    resolved action.
+    """
 
     # ── Core interface ─────────────────────────────────────────────────────────
 
     def _evaluate(self, expression: Match[T]) -> Iterable[T]:
-        """Fill all free slots in the Match expression via LLM reasoning."""
+        """Resolve all free slots in *expression* and yield a fully-constructed action instance."""
 
         # ── 1. Parse free / fixed slots from the Match variable graph ──────────
         free_slots: List[Tuple[str, Any]] = []
@@ -106,32 +123,11 @@ class LLMBackend(GenerativeBackend):
         # ── 2. World context ───────────────────────────────────────────────────
         world_context = self._get_world_context()
 
-        # ── 3. Introspect action class for field metadata ──────────────────────
-        from llm_reasoner.pycram_bridge.introspector import FieldKind, PycramIntrospector
-        try:
-            action_schema = PycramIntrospector().introspect(expression.type)
-            field_specs = {f.name: f for f in action_schema.fields}
-        except Exception as exc:
-            logger.debug(
-                "LLMBackend: introspection failed for %s: %s — field-kind fallback active.",
-                expression.type.__name__, exc,
-            )
-            field_specs = {}
-
-        # ── 4. Separate CONTEXT fields (injected from self.context, not LLM) ──
-        context_field_names = {
-            name
-            for name, _ in free_slots
-            if (
-                (fspec := field_specs.get(name)) is not None
-                and fspec.kind == FieldKind.CONTEXT
-            )
-        }
-        llm_free_slot_names = [
-            name for name, _ in free_slots if name not in context_field_names
-        ]
-
-        # ── 5. Run the slot filler (LLM call with dynamic prompt) ─────────────
+        # ── 3. Run the slot filler (LLM call with dynamic prompt) ─────────────
+        # krrood already resolved each field's type via get_field_type_endpoint()
+        # and stored it in attr_match.assigned_variable._type_ — we use those
+        # types directly below instead of re-running full action-class introspection.
+        llm_free_slot_names = [name for name, _ in free_slots]
         output = None
         if llm_free_slot_names:
             from llm_reasoner.reasoning.slot_filler import run_slot_filler
@@ -144,52 +140,62 @@ class LLMBackend(GenerativeBackend):
                 llm=self.llm,
             )
             if output is None:
-                logger.warning(
-                    "LLMBackend: slot filler returned None for %s — yielding nothing.",
-                    expression.type.__name__,
-                )
-                return
+                raise LLMSlotFillingFailed(action_name=expression.type.__name__)
 
-        # ── 6. Resolve each free slot ──────────────────────────────────────────
+        # ── 4. Resolve each free slot ──────────────────────────────────────────
+        from llm_reasoner.pycram_bridge.introspector import FieldKind, PycramIntrospector
         from llm_reasoner.world.grounder import EntityGrounder
+
+        _intro = PycramIntrospector()
         grounder = EntityGrounder(self.groundable_type)
 
         slot_by_name = (
             {sv.field_name: sv for sv in output.slots} if output else {}
         )
-        resolved_params: Dict[str, Any] = {}  # used for arm → manipulator lookup
+        # Tracks successfully resolved top-level values so COMPLEX reconstruction
+        # can use them (e.g. arm → pick matching Manipulator from SymbolGraph).
+        resolved_params: Dict[str, Any] = {}
 
         for field_name, field_type in free_slots:
-            fspec = field_specs.get(field_name)
-            kind = fspec.kind if fspec is not None else None
+            # Classify using krrood's already-resolved type — no re-introspection needed.
+            kind = _intro._classify_type(field_type)
 
             resolved = _UNRESOLVED
 
-            if field_name in context_field_names:
-                resolved = _resolve_context_field(
-                    field_name=field_name,
-                    fspec=fspec,
-                    context=self.context,
-                    resolved_params=resolved_params,
-                )
-
-            elif kind in (FieldKind.ENTITY, FieldKind.POSE, FieldKind.TYPE_REF):
+            if kind in (FieldKind.ENTITY, FieldKind.POSE, FieldKind.TYPE_REF):
                 sv = slot_by_name.get(field_name)
                 if sv is not None:
-                    resolved = _resolve_entity_slot(sv, grounder, kind, field_name)
+                    resolved = _resolve_entity_slot(
+                        sv, grounder, kind, field_name, expected_type=field_type
+                    )
 
             elif kind == FieldKind.ENUM:
+                # field_type IS the enum class — krrood resolved it already.
                 sv = slot_by_name.get(field_name)
                 if sv is not None and sv.value:
-                    resolved = _coerce_enum(sv.value, fspec.raw_type)
+                    resolved = _coerce_enum(sv.value, field_type)
 
             elif kind == FieldKind.COMPLEX:
-                if fspec is not None and fspec.sub_fields:
+                # Lazily introspect sub-fields only for complex types that need
+                # recursive construction — avoids upfront full action introspection.
+                try:
+                    sub_schema = _intro.introspect(field_type)
+                    sub_fields = sub_schema.fields
+                except Exception:
+                    sub_fields = []
+                if sub_fields:
+                    from llm_reasoner.pycram_bridge.introspector import FieldSpec
+                    fspec = FieldSpec(
+                        name=field_name,
+                        raw_type=field_type,
+                        kind=kind,
+                        sub_fields=sub_fields,
+                    )
                     resolved = _reconstruct_complex(
                         field_name=field_name,
                         fspec=fspec,
                         slot_by_name=slot_by_name,
-                        context=self.context,
+                        grounder=grounder,
                         resolved_params=resolved_params,
                     )
 
@@ -218,6 +224,14 @@ class LLMBackend(GenerativeBackend):
                     "LLMBackend: cannot set field '%s': %s", field_name, exc
                 )
 
+        if self.strict_required:
+            unresolved_required = _unresolved_required_fields(expression, _intro)
+            if unresolved_required:
+                raise LLMUnresolvedRequiredFields(
+                    action_name=getattr(expression.type, "__name__", str(expression.type)),
+                    unresolved_fields=unresolved_required,
+                )
+
         expression._update_kwargs_from_literal_values()
         yield expression.construct_instance()
 
@@ -243,6 +257,7 @@ def _resolve_entity_slot(
     grounder: Any,
     kind: Any,
     field_name: str,
+    expected_type: Any = None,
 ) -> Any:
     """Ground an ENTITY/POSE/TYPE_REF slot to a Symbol instance via EntityGrounder."""
     from llm_reasoner.pycram_bridge.introspector import FieldKind
@@ -274,6 +289,13 @@ def _resolve_entity_slot(
         return _UNRESOLVED
 
     body = grounding.bodies[0]
+    if kind == FieldKind.ENTITY and isinstance(expected_type, type):
+        if not isinstance(body, expected_type):
+            logger.warning(
+                "_resolve_entity_slot: grounded value for field '%s' has type %s, expected %s.",
+                field_name, type(body).__name__, expected_type.__name__,
+            )
+            return _UNRESOLVED
 
     if kind == FieldKind.POSE:
         try:
@@ -298,15 +320,18 @@ def _reconstruct_complex(
     field_name: str,
     fspec: Any,
     slot_by_name: Dict[str, Any],
-    context: Dict[str, Any],
-    resolved_params: Dict[str, Any],
+    grounder: Any,
+    resolved_params: Optional[Dict[str, Any]] = None,
 ) -> Any:
     """Build a complex dataclass (e.g. GraspDescription) from dotted SlotValue entries.
 
     For each sub-field:
-      - CONTEXT kind   → inject from context dict (Manipulator, Camera, etc.)
-      - ENUM kind      → coerce string from the dotted SlotValue
-      - PRIMITIVE kind → use string value from the dotted SlotValue
+      - ENTITY/POSE kind → ground via EntityGrounder (Manipulator, Camera, Body, etc.)
+      - ENUM kind        → coerce string from the dotted SlotValue
+      - PRIMITIVE kind   → use string value from the dotted SlotValue
+      - Missing ENTITY sub-fields that are required → auto-ground from SymbolGraph,
+        using the resolved arm value (from resolved_params) to pick the right one
+        when multiple instances exist (e.g. left vs right Manipulator).
       - Missing optional sub-fields → let the dataclass default handle them
     """
     from llm_reasoner.pycram_bridge.introspector import FieldKind
@@ -315,30 +340,44 @@ def _reconstruct_complex(
     for sub in fspec.sub_fields:
         sub_key = f"{field_name}.{sub.name}"
 
-        if sub.kind == FieldKind.CONTEXT:
-            val = _resolve_context_field(
-                field_name=sub.name,
-                fspec=sub,
-                context=context,
-                resolved_params=resolved_params,
-            )
-            if val is not _UNRESOLVED:
-                kwargs[sub.name] = val
-            continue  # never fall through to slot_by_name for CONTEXT fields
-
         if sub_key not in slot_by_name:
-            continue  # missing optional sub-field — use dataclass default
+            # For required ENTITY sub-fields omitted by the LLM, auto-ground
+            # from SymbolGraph so the dataclass constructor doesn't fail.
+            if sub.kind in (FieldKind.ENTITY, FieldKind.POSE) and not sub.is_optional:
+                val = _auto_ground_sub_entity(sub.raw_type, resolved_params or {})
+                if val is not _UNRESOLVED:
+                    kwargs[sub.name] = val
+            continue
 
         sv = slot_by_name[sub_key]
-        raw_val = sv.value
-        if raw_val is None:
-            continue
-        if sub.kind == FieldKind.ENUM:
-            kwargs[sub.name] = _coerce_enum(raw_val, sub.raw_type)
+        if sub.kind in (FieldKind.ENTITY, FieldKind.POSE, FieldKind.TYPE_REF):
+            val = _UNRESOLVED
+            if (
+                sub.kind == FieldKind.ENTITY
+                and not sub.is_optional
+                and _type_mro_contains(sub.raw_type, "Manipulator")
+            ):
+                val = _auto_ground_sub_entity(sub.raw_type, resolved_params or {})
+            if val is _UNRESOLVED:
+                val = _resolve_entity_slot(
+                    sv, grounder, sub.kind, sub_key, expected_type=sub.raw_type
+                )
+            if (
+                val is _UNRESOLVED
+                and sub.kind in (FieldKind.ENTITY, FieldKind.POSE)
+                and not sub.is_optional
+            ):
+                val = _auto_ground_sub_entity(sub.raw_type, resolved_params or {})
+            if val is not _UNRESOLVED:
+                kwargs[sub.name] = val
+        elif sub.kind == FieldKind.ENUM:
+            if sv.value is not None:
+                kwargs[sub.name] = _coerce_enum(sv.value, sub.raw_type)
         elif sub.kind == FieldKind.PRIMITIVE:
-            kwargs[sub.name] = _coerce_primitive(raw_val, sub.raw_type)
-        else:
-            kwargs[sub.name] = raw_val
+            if sv.value is not None:
+                kwargs[sub.name] = _coerce_primitive(sv.value, sub.raw_type)
+        elif sv.value is not None:
+            kwargs[sub.name] = sv.value
 
     try:
         return fspec.raw_type(**kwargs)
@@ -350,46 +389,55 @@ def _reconstruct_complex(
         return _UNRESOLVED
 
 
-def _resolve_context_field(
-    field_name: str,
-    fspec: Optional[Any],
-    context: Dict[str, Any],
-    resolved_params: Dict[str, Any],
-) -> Any:
-    """Return a context-injected value (Manipulator, Camera, etc.).
+def _auto_ground_sub_entity(raw_type: Any, resolved_params: Dict[str, Any]) -> Any:
+    """Auto-ground a required ENTITY sub-field the LLM omitted.
 
-    No SDT imports — robot components are looked up by name convention in the
-    caller-supplied context dict.
+    Queries SymbolGraph for all instances of *raw_type*.  When multiple exist
+    (e.g. left and right Manipulator), uses the already-resolved arm value from
+    *resolved_params* to pick the matching one.  Falls back to the first instance.
     """
-    # Direct key lookup
-    val = context.get(field_name)
-    if val is not None:
-        return val
+    try:
+        from krrood.symbol_graph.symbol_graph import SymbolGraph
+        instances = list(SymbolGraph().get_instances_of_type(raw_type))
+    except Exception:
+        return _UNRESOLVED
 
-    # Arm-specific manipulator lookup
-    type_name = ""
-    if fspec is not None and isinstance(fspec.raw_type, type):
-        type_name = fspec.raw_type.__name__
+    if not instances:
+        return _UNRESOLVED
+    if len(instances) == 1:
+        return instances[0]
 
-    if "manipulator" in type_name.lower() or "manipulator" in field_name.lower():
-        manipulators: Dict[str, Any] = context.get("manipulators", {})
-        # Try to match by already-resolved arm value
-        for k, v in resolved_params.items():
-            if "arm" in k.lower() and hasattr(v, "name"):
-                manip = manipulators.get(v.name)
-                if manip is not None:
-                    return manip
-        # Fallback: first available manipulator
-        if manipulators:
-            return next(iter(manipulators.values()))
-        # Last resort: single "manipulator" key
-        return context.get("manipulator") or _UNRESOLVED
+    # Try to narrow by arm selection already resolved at the top level.
+    for val in resolved_params.values():
+        arm_name = _name_to_string(getattr(val, "name", None))
+        if arm_name is None:
+            continue
+        arm_upper = arm_name.upper()
+        for inst in instances:
+            inst_name = _name_to_string(getattr(inst, "name", "")) or ""
+            inst_name = inst_name.upper()
+            if arm_upper in inst_name or inst_name in arm_upper:
+                return inst
 
-    logger.debug(
-        "_resolve_context_field: '%s' not found in context (keys: %s).",
-        field_name, list(context.keys()),
-    )
-    return _UNRESOLVED
+    return instances[0]
+
+
+def _type_mro_contains(raw_type: Any, class_name: str) -> bool:
+    """Return True when *raw_type* or one of its base classes has *class_name*."""
+    try:
+        return any(cls.__name__ == class_name for cls in raw_type.__mro__)
+    except AttributeError:
+        return False
+
+
+def _name_to_string(name: Any) -> Optional[str]:
+    """Normalize PrefixedName-like values and plain strings to a comparable string."""
+    if name is None:
+        return None
+    if hasattr(name, "name"):
+        name = name.name
+    return str(name)
+
 
 
 def _coerce_enum(value: str, enum_type: type) -> Any:
@@ -411,7 +459,7 @@ def _coerce_enum(value: str, enum_type: type) -> Any:
 
 
 def _coerce_primitive(value: str, field_type: Any) -> Any:
-    """Coerce a string value to the expected primitive Python type."""
+    """Cast LLM string output to bool / int / float as required by *field_type*; str passthrough."""
     unwrapped = _unwrap_field_type(field_type)
     if unwrapped is bool:
         return value.lower() in ("true", "1", "yes")
@@ -428,6 +476,32 @@ def _coerce_primitive(value: str, field_type: Any) -> Any:
     return value  # str or unknown → return as-is
 
 
+def _unresolved_required_fields(expression: Match[Any], introspector: Any) -> List[str]:
+    """Return required action fields that are still unset in a Match expression."""
+    try:
+        required = {
+            field.name
+            for field in introspector.introspect(expression.type).fields
+            if not field.is_optional
+        }
+    except Exception:
+        return []
+
+    unresolved: List[str] = []
+    seen: set[str] = set()
+    for attr_match in expression.matches_with_variables:
+        field_name = _field_short_name(attr_match.name_from_variable_access_path)
+        seen.add(field_name)
+        value = attr_match.assigned_variable._value_
+        if field_name in required and isinstance(value, type(Ellipsis)):
+            unresolved.append(field_name)
+
+    for field_name in sorted(required - seen):
+        unresolved.append(field_name)
+
+    return unresolved
+
+
 def _unwrap_field_type(t: Any) -> Any:
     """Strip Optional[X] / Union[X, None] → X."""
     import typing as _typing
@@ -438,13 +512,4 @@ def _unwrap_field_type(t: Any) -> Any:
     return t
 
 
-def _field_short_name(name: str) -> str:
-    """Strip 'ClassName.' prefix from the EQL access path name.
 
-    ``name_from_variable_access_path`` returns the last element of the EQL
-    access path, which can be prefixed with the action class name
-    (e.g. ``'PickUpAction.object_designator'``).  PycramIntrospector and the
-    LLM both work with bare field names (``'object_designator'``), so we strip
-    everything up to and including the last dot.
-    """
-    return name.rsplit(".", 1)[-1] if "." in name else name

@@ -1,19 +1,9 @@
-"""
-TaskDecomposer — splits compound NL instructions into atomic robot steps.
-
-Refactored from llmr/task_decomposer.py with one key change:
-  - The LLM is injected via the constructor, NOT pulled from a global singleton.
-    This eliminates the hardcoded default_llm dependency and makes the
-    decomposer fully testable and provider-agnostic.
-
-Everything else (prompt rules, dependency tracking, deduplication) is
-preserved from the original implementation.
-"""
+"""TaskDecomposer — splits compound NL instructions into atomic robot steps with object-flow dependency tracking."""
 from __future__ import annotations
 
 import typing
 from dataclasses import dataclass, field
-from typing import Dict, List
+from typing_extensions import Dict, List
 
 from pydantic import BaseModel
 
@@ -45,11 +35,13 @@ class DecomposedPlan:
 # --------------------------------------------------------------------------- #
 
 class _AtomicStep(BaseModel):
+    """LLM structured-output schema for one atomic step and its object-flow dependencies."""
     instruction: str
     dependencies: List[int]
 
 
 class _DecomposedInstructions(BaseModel):
+    """LLM structured-output schema for the full decomposed plan."""
     steps: List[_AtomicStep]
 
 
@@ -106,6 +98,9 @@ class TaskDecomposer:
     """
 
     def __init__(self, llm: "BaseChatModel") -> None:
+        """
+        :param llm: Injected LangChain BaseChatModel — no global singletons.
+        """
         self._llm = llm
 
     def decompose(self, instruction: str) -> DecomposedPlan:
@@ -141,7 +136,7 @@ class TaskDecomposer:
 
     @staticmethod
     def _dedup(steps: List[_AtomicStep]) -> List[_AtomicStep]:
-        """Remove duplicate steps (LLM occasionally repeats the same step)."""
+        """Remove exact-duplicate instructions; preserves order."""
         seen: List[str] = []
         deduped: List[_AtomicStep] = []
         for step in steps:

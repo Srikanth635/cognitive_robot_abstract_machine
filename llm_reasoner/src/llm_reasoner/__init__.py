@@ -6,22 +6,23 @@ PyCRAM underspecified action Match expressions to be resolved via LLM reasoning.
 
 Package-independence guarantees
 ---------------------------------
-- No SDT (semantic_digital_twin) imports anywhere in this package.
-- No hard pycram imports outside factory.py (integration layer).
+- No direct world-package imports anywhere in this package.
+- PyCRAM imports are isolated to llm_reasoner.pycram_bridge.adapter.
 - World context is derived from SymbolGraph (krrood), not from a world object.
-- Robot components (Manipulator, Camera) are injected via the `context` dict.
+- Symbol subclasses, including robot components, are grounded from SymbolGraph.
 
 Dependency direction: llm_reasoner → krrood (one-way, no circular imports).
 
 Package layout
 --------------
   backend.py              LLMBackend — the GenerativeBackend implementation
-  factory.py              nl_plan() / nl_sequential() — user-facing entry points
+  factory.py              nl_plan() / nl_sequential() / resolve_params() — user-facing entry points
   schemas/
     entities.py           EntityDescriptionSchema — pre-grounding entity description
     slots.py              SlotValue, ActionReasoningOutput, ActionClassification
   pycram_bridge/
     introspector.py       PycramIntrospector, FieldKind, ActionSchema, FieldSpec
+    adapter.py            PyCRAM execution and action-discovery boundary
   world/
     serializer.py         serialize_world_from_symbol_graph() — world → LLM string
     grounder.py           EntityGrounder — description → Symbol instance
@@ -36,7 +37,7 @@ Quickstart — simple (fully NL-driven)
 
     from llm_reasoner import LLMBackend, nl_plan, nl_sequential
     from llm_reasoner.reasoning.llm_config import make_llm, LLMProvider
-    from sdt_module import Body  # caller's groundable type
+    from your_world_package import Body  # caller's groundable type
 
     llm = make_llm(LLMProvider.OPENAI, model="gpt-4o")
 
@@ -61,21 +62,36 @@ Quickstart — power user (action type known, LLM fills free slots)
 ::
 
     from krrood.entity_query_language.query.match import Match
-    from pycram.plans.factories import execute_single
-    from pycram.robot_plans.actions.core import PickUpAction
+    from your_action_package import PickUpAction
 
-    context.query_backend = LLMBackend(
-        instruction="pick up the milk from the table",
-        llm=llm,
-        groundable_type=Body,
-        context={"manipulators": {"LEFT": left_manip, "RIGHT": right_manip}},
-    )
     match = Match(PickUpAction)(object_designator=..., arm=..., grasp_description=...)
-    plan = execute_single(match, context)
+    action = resolve_params(
+        match,
+        llm=llm,
+        instruction="pick up the milk from the table",
+        groundable_type=Body,
+    )
+    plan = resolve_match(match, context=context, llm=llm, groundable_type=Body)
     plan.perform()
 """
 
 from llm_reasoner.backend import LLMBackend
-from llm_reasoner.factory import nl_plan, nl_sequential
+from llm_reasoner.exceptions import (
+    LLMActionClassificationFailed,
+    LLMProviderNotSupported,
+    LLMSlotFillingFailed,
+    LLMUnresolvedRequiredFields,
+)
+from llm_reasoner.factory import nl_plan, nl_sequential, resolve_match, resolve_params
 
-__all__ = ["LLMBackend", "nl_plan", "nl_sequential"]
+__all__ = [
+    "LLMBackend",
+    "nl_plan",
+    "nl_sequential",
+    "resolve_match",
+    "resolve_params",
+    "LLMActionClassificationFailed",
+    "LLMProviderNotSupported",
+    "LLMSlotFillingFailed",
+    "LLMUnresolvedRequiredFields",
+]
