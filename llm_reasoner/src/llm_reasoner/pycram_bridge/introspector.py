@@ -1,21 +1,15 @@
-"""PycramIntrospector — reads pycram action dataclass fields and classifies them.
+"""PycramIntrospector — classifies action dataclass fields by how they should be resolved.
 
-Field kinds
------------
-CONTEXT   Manipulator/Camera/robot-component → injected from caller context dict.
-          NOTE: checked BEFORE ENTITY because Manipulator IS a Symbol subclass;
-          without this ordering it would be mis-classified as ENTITY.
-ENTITY    Symbol/Body/Region subclass → SymbolGraph grounding, passes instance directly.
-POSE      Pose type → SymbolGraph grounding, then uses .global_pose on the result.
-ENUM      Enum subclass → string-to-enum coercion or LLM resolution.
-COMPLEX   Complex dataclass (e.g. GraspDescription) → recursive construction from
-          the flat parameters dict in ActionSlotSchema.
-PRIMITIVE bool / int / float / str → taken as-is from ActionSlotSchema.parameters.
-TYPE_REF  Type[SomeClass] (e.g. Type[SemanticAnnotation]) → resolve class by name
-          from SymbolGraph class diagram.
+FieldKind classification drives the slot-filler prompt and per-slot resolution in LLMBackend:
+  ENTITY    Symbol subclass → SymbolGraph grounding, instance passed directly.
+  POSE      Pose/HomogeneousTransformationMatrix → grounded entity's .global_pose.
+  ENUM      Enum subclass → string-to-enum coercion.
+  COMPLEX   Non-primitive dataclass (e.g. GraspDescription) → recursive sub-field construction.
+  PRIMITIVE bool / int / float / str → taken directly from LLM output.
+  TYPE_REF  Type[X] annotation → resolved to a Symbol subclass via SymbolGraph class diagram.
 
-All pycram/sdt imports are lazy so this module can be imported without either
-package installed (imports happen inside methods, not at module level).
+No PyCRAM or world-package imports live here; execution and action discovery are isolated
+in llm_reasoner.pycram_bridge.adapter.
 """
 from __future__ import annotations
 
@@ -26,7 +20,7 @@ import textwrap
 import typing
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Type
+from typing_extensions import Any, Dict, List, Optional, Type
 
 import logging
 
@@ -37,11 +31,11 @@ logger = logging.getLogger(__name__)
 
 
 class FieldKind(str, Enum):
+    """How an action field should be resolved — drives prompt generation and slot resolution."""
     ENTITY    = "entity"
     POSE      = "pose"
     ENUM      = "enum"
     COMPLEX   = "complex"
-    CONTEXT   = "context"
     PRIMITIVE = "primitive"
     TYPE_REF  = "type_ref"
 
@@ -54,7 +48,7 @@ NO_DEFAULT = object()
 
 @dataclass
 class FieldSpec:
-    """Describes one field of a pycram action dataclass."""
+    """Metadata for one action dataclass field, used to build slot-filler prompts."""
 
     name: str
     raw_type: Any                           # resolved Python type (not a string)
@@ -68,7 +62,7 @@ class FieldSpec:
 
 @dataclass
 class ActionSchema:
-    """Introspected description of one pycram action class."""
+    """Full introspection result for one action class — action type, docstring, and per-field specs."""
 
     action_type: str       # e.g. "PickUpAction"
     action_cls: Any        # the actual class object
@@ -80,28 +74,28 @@ class ActionSchema:
 
 
 class PycramIntrospector:
-    """Introspects pycram action dataclasses and produces :class:`ActionSchema` objects.
+    """Reads an action dataclass and classifies each field into a FieldKind.
+
+    Results drive the slot-filler prompt (which fields to ask the LLM about, what
+    types/enum members to list) and LLMBackend resolution (how to ground or coerce
+    each slot value returned by the LLM).
 
     Usage::
 
-        intro = PycramIntrospector()
-        schema = intro.introspect(PickUpAction)
+        schema = PycramIntrospector().introspect(PickUpAction)
     """
 
-    # Types that cannot be extracted from NL and must come from caller context.
-    # Stored as a tuple of base classes (empty tuple = tried and failed to import).
-    _CONTEXT_BASE_CLASSES: Optional[tuple] = None
+    # Names of types (and their subclasses via MRO) treated as spatial poses.
+    # Matched against every class in the type's MRO — no world-package import needed.
+    POSE_TYPE_NAMES: frozenset = frozenset({"Pose", "HomogeneousTransformationMatrix"})
 
-    # Base class for all sdt Symbol types (for ENTITY detection).
+    # Base class for all krrood Symbol types (lazy, cached after first load).
     _SYMBOL_BASE: Optional[type] = None
-
-    # Pose type from sdt.
-    _POSE_TYPE: Optional[type] = None
 
     def introspect(self, action_cls: type, _depth: int = 0) -> ActionSchema:
         """Return an :class:`ActionSchema` for *action_cls*.
 
-        :param action_cls: A pycram action dataclass (subclass of ActionDescription).
+        :param action_cls: An action dataclass.
         """
         import sys
         cls_doc = (inspect.getdoc(action_cls) or "").strip()
@@ -185,13 +179,8 @@ class PycramIntrospector:
     def _classify_type(self, t: Any, depth: int = 0) -> FieldKind:
         """Return the :class:`FieldKind` for a resolved Python type *t*.
 
-        IMPORTANT ordering note
-        -----------------------
-        CONTEXT is checked **before** ENTITY.  Manipulator and Camera are
-        Symbol subclasses (so _is_entity_type returns True for them), but they
-        must be injected from the caller's context dict rather than grounded
-        from SymbolGraph.  Checking CONTEXT first ensures they are classified
-        correctly even though they satisfy the ENTITY predicate too.
+        Symbol subclasses, including robot components such as manipulators and
+        cameras, are classified as ENTITY and grounded from SymbolGraph.
         """
         if t is None or t is type(None):
             return FieldKind.PRIMITIVE
@@ -212,17 +201,12 @@ class PycramIntrospector:
         if issubclass(t, Enum):
             return FieldKind.ENUM
 
-        # Pose type from sdt
+        # Spatial pose types, matched by class name to avoid importing a world package.
         if self._is_pose_type(t):
             return FieldKind.POSE
 
-        # Context-injected robot components (Manipulator, Camera, …)
-        # Must come BEFORE the ENTITY check: Manipulator IS a Symbol subclass,
-        # so without this ordering it would be mis-classified as ENTITY.
-        if self._is_context_type(t):
-            return FieldKind.CONTEXT
-
-        # Symbol / Entity types (Body, Region, etc.)
+        # Symbol / Entity types (Body, Region, Manipulator, Camera, etc.)
+        # All Symbol subclasses are grounded from SymbolGraph — no injection needed.
         if self._is_entity_type(t):
             return FieldKind.ENTITY
 
@@ -235,6 +219,7 @@ class PycramIntrospector:
     # ── Type predicates (lazy imports) ────────────────────────────────────────
 
     def _is_entity_type(self, t: type) -> bool:
+        """True if *t* is a Symbol subclass — grounds to a SymbolGraph instance."""
         if self._SYMBOL_BASE is None:
             try:
                 from krrood.symbol_graph.symbol_graph import Symbol
@@ -247,38 +232,10 @@ class PycramIntrospector:
             return False
 
     def _is_pose_type(self, t: type) -> bool:
-        if self._POSE_TYPE is None:
-            try:
-                from semantic_digital_twin.spatial_types.spatial_types import Pose
-                PycramIntrospector._POSE_TYPE = Pose
-            except Exception:
-                return False
+        """True if *t* is a spatial pose type — matched by name across the MRO, no world-package import."""
         try:
-            return issubclass(t, self._POSE_TYPE)
-        except TypeError:
-            return False
-
-    def _is_context_type(self, t: type) -> bool:
-        """Return True if *t* is a robot-component type (Manipulator, Camera, …).
-
-        Uses an empty tuple sentinel (not None) to distinguish "tried and found
-        nothing" from "not yet tried", preventing repeated failed imports.
-        """
-        if self._CONTEXT_BASE_CLASSES is None:
-            bases = []
-            try:
-                from semantic_digital_twin.robots.abstract_robot import Manipulator, Camera
-                bases.extend([Manipulator, Camera])
-            except Exception:
-                pass
-            # Use empty tuple (not None) to mark "already tried" even when
-            # no bases were found, so we don't retry the failing import every call.
-            PycramIntrospector._CONTEXT_BASE_CLASSES = tuple(bases)
-        if not self._CONTEXT_BASE_CLASSES:
-            return False
-        try:
-            return issubclass(t, self._CONTEXT_BASE_CLASSES)
-        except TypeError:
+            return any(cls.__name__ in self.POSE_TYPE_NAMES for cls in t.__mro__)
+        except (TypeError, AttributeError):
             return False
 
     # ── Attribute docstring extraction ─────────────────────────────────────────
@@ -287,7 +244,7 @@ class PycramIntrospector:
     def _extract_field_docstrings(cls: type) -> Dict[str, str]:
         """Parse class source with AST to extract attribute-level docstrings.
 
-        Pycram documents each field as a string literal immediately following
+        The action classes document each field as a string literal immediately following
         the annotated assignment::
 
             object_designator: Body
@@ -337,30 +294,15 @@ class PycramIntrospector:
 def _resolve_type_string(name: str, module_globals: dict) -> Optional[type]:
     """Try to resolve a bare string annotation (e.g. ``'Body'``) to an actual type.
 
-    Search order:
-    1. The class's own module globals (fastest, most accurate).
-    2. All loaded pycram / sdt modules in ``sys.modules``.
-
+    Resolution is deliberately limited to the action class module globals.  This
+    avoids coupling llm_reasoner to PyCRAM or world package module names.
     Returns ``None`` if the name cannot be resolved.
     """
-    import sys
-
     bare = name.strip()
 
-    # 1. Module globals
     found = module_globals.get(bare)
     if isinstance(found, type):
         return found
-
-    # 2. Scan loaded pycram / sdt modules
-    for mod_name, mod in sys.modules.items():
-        if mod is None:
-            continue
-        if "pycram" not in mod_name and "semantic_digital_twin" not in mod_name:
-            continue
-        found = getattr(mod, bare, None)
-        if isinstance(found, type):
-            return found
 
     return None
 
@@ -381,5 +323,5 @@ _introspector = PycramIntrospector()
 
 
 def introspect(action_cls: type) -> ActionSchema:
-    """Module-level convenience wrapper around :class:`PycramIntrospector`."""
+    """Introspect *action_cls* using the package-level singleton introspector."""
     return _introspector.introspect(action_cls)

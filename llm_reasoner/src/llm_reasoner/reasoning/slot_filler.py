@@ -11,23 +11,21 @@ Design:
     get field docstrings, FieldKind, and enum member lists for every free slot.
     The LLM therefore receives the exact pycram parameter names, their types,
     valid enum values, and doc-string descriptions — eliminating guesswork.
-  - CONTEXT fields (Manipulator, Camera) are excluded from the LLM prompt; the
-    caller injects those via the context dict, not via LLM reasoning.
+  - All Symbol subclasses (including Manipulator and Camera) are treated as
+    ENTITY slots — grounded from SymbolGraph like any other world object.
   - Entity slots get a dedicated section in the prompt that instructs the LLM to
     fill entity_description (name + semantic_type + spatial_context + attributes).
   - Complex fields (e.g. GraspDescription) are expanded into dotted sub-field
     entries so the LLM reasons about each sub-field individually.
   - No global LLM singletons — the model is always injected by the caller.
-  - No SDT imports anywhere in this module.
+  - No world-package imports anywhere in this module.
 """
 from __future__ import annotations
 
-import importlib
 import inspect
 import logging
-import pkgutil
 import typing
-from typing import Any, Dict, List, Optional, Tuple, Type
+from typing_extensions import Any, Dict, List, Optional, Tuple, Type
 
 if typing.TYPE_CHECKING:
     from langchain_core.language_models import BaseChatModel
@@ -35,6 +33,7 @@ if typing.TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+from llm_reasoner._utils import field_short_name as _field_short_name
 from llm_reasoner.schemas.slots import (
     ActionClassification,
     ActionReasoningOutput,
@@ -81,8 +80,10 @@ Return a SlotValue with:
 
 For ENUM slots use EXACTLY one of the listed allowed values.
 For COMPLEX fields use dotted names (e.g. 'grasp_description.grasp_type').
-Do NOT include context-injected fields (Manipulator, Camera) — they are listed
-in the prompt only as FYI; omit them from your output.
+For ENTITY slots inside complex fields (e.g. 'grasp_description.manipulator'),
+return a SlotValue with entity_description populated — treat them like any other
+entity slot. For Manipulator fields, choose a concrete manipulator/gripper name
+from the world context; never use the robot/platform name.
 
 Always provide per-slot reasoning. Return structured JSON.
 """
@@ -93,7 +94,7 @@ You are a robot action classifier.
 Given a natural-language instruction, identify which robot action class it
 corresponds to from the list of available action classes below.
 
-Available action classes:
+Available action classes and schema summaries:
 {action_classes}
 
 Return the EXACT Python class name (e.g. "PickUpAction" not "pick up action").
@@ -108,21 +109,20 @@ def classify_action(
     llm: "BaseChatModel",
     action_registry: Optional[Dict[str, type]] = None,
 ) -> Optional[type]:
-    """Use the LLM to classify which pycram action class corresponds to the NL
-    instruction.
+    """Map an NL instruction to an action class via structured LLM output.
 
     :param instruction:     The NL instruction.
     :param llm:             LangChain-compatible chat model.
-    :param action_registry: Optional pre-built {class_name: class} dict.
-                            Auto-discovered from pycram if not provided.
-    :returns: The action class, or None if classification fails.
+    :param action_registry: Pre-built {class_name: class} dict; auto-discovered by the bridge if None.
+    :returns: The matched action class, or None if classification fails.
     """
     if action_registry is None:
-        action_registry = _discover_action_classes()
+        from llm_reasoner.pycram_bridge import discover_action_classes
+        action_registry = discover_action_classes()
     if not action_registry:
         return None
 
-    class_list = "\n".join(f"  - {name}" for name in sorted(action_registry))
+    class_list = _format_action_catalog(action_registry)
     system = _CLASSIFIER_SYSTEM.format(action_classes=class_list)
 
     structured_llm = llm.with_structured_output(ActionClassification)
@@ -140,23 +140,23 @@ def classify_action(
 # ── Public: slot filling ───────────────────────────────────────────────────────
 
 def run_slot_filler(
-    instruction: str,
+    instruction: Optional[str],
     action_cls: type,
     free_slot_names: List[str],
     fixed_slots: Dict[str, Any],
     world_context: str,
     llm: "BaseChatModel",
 ) -> Optional[ActionReasoningOutput]:
-    """Resolve free Match slots using LLM reasoning driven by pycram introspection.
+    """Resolve free Match slots using LLM reasoning driven by action introspection.
 
     The prompt is built dynamically from PycramIntrospector output:
       - ENTITY/POSE fields get an entity-description section with role, type, and docstring
-      - ENUM fields list all valid member names from the actual pycram Enum class
+        (includes Manipulator, Camera — all Symbol subclasses ground from SymbolGraph)
+      - ENUM fields list all valid member names from the actual Enum class
       - COMPLEX fields are expanded into dotted sub-field entries
-      - CONTEXT fields (Manipulator, Camera) are noted as injected — LLM must omit them
 
     :param instruction:     Natural-language instruction.
-    :param action_cls:      The pycram action dataclass being resolved.
+    :param action_cls:      The action dataclass being resolved.
     :param free_slot_names: Field names (from the Match expression) to fill.
     :param fixed_slots:     Already-resolved {field_name: value} map.
     :param world_context:   Serialized world state string.
@@ -201,7 +201,7 @@ def _introspect_free_slots(
 ) -> Dict[str, "FieldSpec"]:
     """Return a {field_name: FieldSpec} map for the given free slot names.
 
-    Falls back to an empty dict if pycram introspection fails.
+    Falls back to an empty dict if action introspection fails.
     Normalises ``free_slot_names`` by stripping any 'ClassName.' prefix before
     matching — ``name_from_variable_access_path`` may return prefixed names.
     """
@@ -219,7 +219,7 @@ def _introspect_free_slots(
 
 
 def _build_dynamic_message(
-    instruction: str,
+    instruction: Optional[str],
     action_cls: type,
     free_slot_names: List[str],
     fixed_slots: Dict[str, Any],
@@ -229,7 +229,7 @@ def _build_dynamic_message(
     """Build the rich user message for the slot-filler LLM call.
 
     Sections:
-      - Action type + docstring (from pycram class)
+      - Action type + docstring (from action class)
       - Entity slots: role, type name, docstring
       - Parameter slots: name, type, allowed enum values, docstring
       - Complex slots: expanded into dotted sub-field entries
@@ -238,10 +238,9 @@ def _build_dynamic_message(
     """
     from llm_reasoner.pycram_bridge.introspector import FieldKind
 
-    lines: List[str] = [
-        f"Instruction: {instruction!r}",
-        f"Action type: {action_cls.__name__}",
-    ]
+    lines: List[str] = [f"Action type: {action_cls.__name__}"]
+    if instruction:
+        lines.insert(0, f"Instruction: {instruction!r}")
 
     # Action class docstring
     action_doc = (inspect.getdoc(action_cls) or "").strip()
@@ -252,7 +251,6 @@ def _build_dynamic_message(
     entity_specs: List["FieldSpec"] = []
     param_specs: List["FieldSpec"] = []    # ENUM + PRIMITIVE
     complex_specs: List["FieldSpec"] = []  # COMPLEX
-    context_names: List[str] = []          # CONTEXT — mentioned but excluded from LLM output
     unknown_names: List[str] = []          # no introspection data
 
     for name in free_slot_names:
@@ -260,7 +258,7 @@ def _build_dynamic_message(
         if fspec is None:
             unknown_names.append(name)
             continue
-        if fspec.kind in (FieldKind.ENTITY, FieldKind.POSE):
+        if fspec.kind in (FieldKind.ENTITY, FieldKind.POSE, FieldKind.TYPE_REF):
             entity_specs.append(fspec)
         elif fspec.kind == FieldKind.ENUM:
             param_specs.append(fspec)
@@ -268,11 +266,6 @@ def _build_dynamic_message(
             param_specs.append(fspec)
         elif fspec.kind == FieldKind.COMPLEX:
             complex_specs.append(fspec)
-        elif fspec.kind == FieldKind.CONTEXT:
-            context_names.append(name)
-        elif fspec.kind == FieldKind.TYPE_REF:
-            # Treat like entity — needs a semantic type resolved from world context
-            entity_specs.append(fspec)
 
     # ── Entity slots section ───────────────────────────────────────────────────
     if entity_specs:
@@ -323,14 +316,6 @@ def _build_dynamic_message(
             lines.append(f"  {fspec.name} ({type_name}){doc_str}")
             if fspec.sub_fields:
                 for sub in fspec.sub_fields:
-                    if sub.kind == FieldKind.CONTEXT:
-                        # Robot components (Manipulator, Camera, etc.) — injected at
-                        # runtime from the caller's context dict, not filled by the LLM.
-                        lines.append(
-                            f"    {fspec.name}.{sub.name}  "
-                            f"[injected from robot context — DO NOT include in output]"
-                        )
-                        continue
                     sub_type = (
                         sub.raw_type.__name__
                         if isinstance(sub.raw_type, type) else str(sub.raw_type)
@@ -344,6 +329,11 @@ def _build_dynamic_message(
                         )
                     else:
                         sub_doc = f": {sub.docstring}" if sub.docstring else ""
+                        if "manipulator" in sub_type.lower():
+                            sub_doc += (
+                                " Choose a concrete gripper/manipulator name, "
+                                "not the robot name."
+                            )
                         lines.append(
                             f"    {fspec.name}.{sub.name} ({sub_type}){sub_doc}"
                         )
@@ -352,15 +342,6 @@ def _build_dynamic_message(
     if unknown_names:
         lines += ["", "── Additional free slots (no type info — fill by best judgement) ────────"]
         for name in unknown_names:
-            lines.append(f"  - {name}")
-
-    # ── Context-injected slots (informational) ─────────────────────────────────
-    if context_names:
-        lines += ["", "── Context-injected fields (DO NOT include in your output) ───────────────"]
-        lines.append(
-            "These fields are provided by the robot context dict at runtime:"
-        )
-        for name in context_names:
             lines.append(f"  - {name}")
 
     # ── Fixed slots ────────────────────────────────────────────────────────────
@@ -375,38 +356,45 @@ def _build_dynamic_message(
     return "\n".join(lines)
 
 
-# ── Name normalisation helper ──────────────────────────────────────────────────
-
-def _field_short_name(name: str) -> str:
-    """Strip 'ClassName.' prefix — mirrors the same helper in backend.py."""
-    return name.rsplit(".", 1)[-1] if "." in name else name
-
-
-# ── Action class discovery ─────────────────────────────────────────────────────
-
-def _discover_action_classes() -> Dict[str, type]:
-    """Auto-discover concrete pycram action classes by scanning the package.
-
-    Returns {class_name: class}. Falls back to empty dict if pycram is absent.
-    """
+def _format_action_catalog(action_registry: Dict[str, type]) -> str:
+    """Return classifier prompt lines with action names, docs, and field summaries."""
     try:
-        import pycram.robot_plans.actions as actions_pkg
-    except ImportError:
-        return {}
+        from llm_reasoner.pycram_bridge import PycramIntrospector
 
-    result: Dict[str, type] = {}
-    for _, module_name, _ in pkgutil.walk_packages(
-        actions_pkg.__path__, prefix=actions_pkg.__name__ + "."
-    ):
+        introspector = PycramIntrospector()
+    except Exception:
+        introspector = None
+
+    lines: List[str] = []
+    for name in sorted(action_registry):
+        action_cls = action_registry[name]
+        doc = " ".join((inspect.getdoc(action_cls) or "").split())
+        if len(doc) > 180:
+            doc = f"{doc[:177]}..."
+
+        header = f"  - {name}"
+        if doc:
+            header += f": {doc}"
+        lines.append(header)
+
+        if introspector is None:
+            continue
         try:
-            mod = importlib.import_module(module_name)
-            for name, obj in inspect.getmembers(mod, inspect.isclass):
-                if (
-                    name.endswith("Action")
-                    and not inspect.isabstract(obj)
-                    and obj.__module__.startswith("pycram")
-                ):
-                    result[name] = obj
+            schema = introspector.introspect(action_cls)
         except Exception:
             continue
-    return result
+        if schema.fields:
+            fields = ", ".join(_format_catalog_field(field) for field in schema.fields)
+            lines.append(f"    fields: {fields}")
+
+    return "\n".join(lines)
+
+
+def _format_catalog_field(fspec: "FieldSpec") -> str:
+    type_name = (
+        fspec.raw_type.__name__
+        if isinstance(fspec.raw_type, type)
+        else str(fspec.raw_type)
+    )
+    required = "optional" if fspec.is_optional else "required"
+    return f"{fspec.name}:{type_name}({required})"

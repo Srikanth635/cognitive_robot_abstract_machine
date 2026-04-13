@@ -24,11 +24,11 @@ from semantic_digital_twin.world_description.world_entity import Body
 from pycram.datastructures.dataclasses import Context
 
 # ── Path resolution ────────────────────────────────────────────────────────────
-# This file lives at:  <repo>/cognitive_robot_abstract_machine/llmr/src/llmr/world_setup.py
-# parents[2]  →  <repo>/cognitive_robot_abstract_machine/llmr/
+# This file lives at:  <repo>/cognitive_robot_abstract_machine/uniworld/src/uniworld/world_setup.py
+# parents[2]  →  <repo>/cognitive_robot_abstract_machine/uniworld/
 # parents[3]  →  <repo>/cognitive_robot_abstract_machine/
 _HERE = pathlib.Path(__file__).resolve()
-_PROJECT_ROOT = _HERE.parents[2]  # llmr/
+_PROJECT_ROOT = _HERE.parents[2]  # uniworld/
 _REPO_ROOT = _HERE.parents[3]  # cognitive_robot_abstract_machine/
 
 _PYCRAM_RESOURCES = _REPO_ROOT / "pycram" / "resources"

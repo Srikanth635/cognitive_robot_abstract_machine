@@ -21,8 +21,8 @@ dependencies = [
   "probabilistic_model",
   "physics_simulators",
   "multiverse_simulators",
-  "old-llm-reasoner",
   "llm-reasoner",
+  "uniworld",
   "ipykernel>=7.2.0",
 ]
 
@@ -36,8 +36,8 @@ members = [
   "probabilistic_model",
   "physics_simulators",
   "multiverse_simulators",
-  "old_llmr",
-  "llm_reasoner"
+  "llm_reasoner",
+  "uniworld"
 ]
 
 [tool.uv.sources]
@@ -49,8 +49,8 @@ probabilistic_model   = { workspace = true }
 random_events         = { workspace = true }
 physics_simulators    = { workspace = true }
 multiverse_simulators = { workspace = true }
-old-llm-reasoner      = { workspace = true }
 llm-reasoner          = { workspace = true }
+uniworld              = { workspace = true }
 
 [tool.poetry]
 package-mode = false
@@ -64,8 +64,8 @@ random_events = { path = "random_events", develop = true }
 probabilistic_model = { path = "probabilistic_model", develop = true }
 physics_simulators = { path = "physics_simulators", develop = true }
 multiverse_simulators = { path = "multiverse_simulators", develop = true }
-old-llm-reasoner = { path = "old_llmr", develop = true }
 llm-reasoner = { path = "llm_reasoner", develop = true }
+uniworld = { path = "uniworld", develop = true }
 
 [tool.setuptools]
 packages = []
