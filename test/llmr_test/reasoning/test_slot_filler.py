@@ -1,13 +1,11 @@
 """Tests for slot-filler — LLM-driven parameter resolution.
 
 Uses ScriptedLLM with pre-built responses. No network, no API keys.
-
-Coverage target: 80% (18 tests covering classify_action, run_slot_filler, and helpers).
 """
 from __future__ import annotations
 
 import pytest
-from ..scripted_llm import ScriptedLLM
+from ..scripted_llm import RecordingLLM, ScriptedLLM
 from ..test_actions import (
     MockPickUpAction,
     MockNavigateAction,
@@ -20,6 +18,11 @@ from llmr.reasoning.slot_filler import (
 )
 from llmr.schemas.slots import ActionClassification, ActionReasoningOutput, SlotValue
 from llmr.schemas.entities import EntityDescriptionSchema
+
+
+def _last_user_prompt(llm: RecordingLLM) -> str:
+    messages = llm.messages[-1]
+    return next(msg["content"] for msg in messages if msg["role"] == "user")
 
 
 class TestClassifyAction:
@@ -149,17 +152,19 @@ class TestRunSlotFiller:
         output = ActionReasoningOutput(
             action_type="MockPickUpAction", slots=[]
         )
-        llm = ScriptedLLM(responses=[output])
-        # The prompt should include the world context
-        result = run_slot_filler(
+        llm = RecordingLLM(responses=[output])
+        world_context = "milk is on the table, table is in kitchen"
+
+        run_slot_filler(
             instruction="pick up the milk",
             action_cls=MockPickUpAction,
             free_slot_names=[],
             fixed_slots={},
-            world_context="milk is on the table, table is in kitchen",
+            world_context=world_context,
             llm=llm,
         )
-        assert result is not None
+
+        assert world_context in _last_user_prompt(llm)
 
     def test_handles_complex_field_expansion(self) -> None:
         """run_slot_filler expands complex fields to dotted sub-fields."""
@@ -181,6 +186,7 @@ class TestRunSlotFiller:
             llm=llm,
         )
         assert result is not None
+        assert result.slots[0].field_name == "grasp_description.grasp_type"
 
     def test_optional_instruction(self) -> None:
         """run_slot_filler works with None instruction."""
@@ -221,9 +227,8 @@ class TestRunSlotFiller:
         output = ActionReasoningOutput(
             action_type="MockPickUpAction", slots=[]
         )
-        llm = ScriptedLLM(responses=[output])
-        # The prompt should reference docstrings from introspection
-        result = run_slot_filler(
+        llm = RecordingLLM(responses=[output])
+        run_slot_filler(
             instruction="pick up",
             action_cls=MockPickUpAction,
             free_slot_names=["object_designator"],
@@ -231,7 +236,12 @@ class TestRunSlotFiller:
             world_context="",
             llm=llm,
         )
-        assert result is not None
+
+        prompt = _last_user_prompt(llm)
+        assert "Action type: MockPickUpAction" in prompt
+        assert "Minimal stand-in for PyCRAM PickUpAction." in prompt
+        assert "object_designator" in prompt
+        assert "The object to pick up." in prompt
 
     def test_enum_slot_includes_valid_members(self) -> None:
         """Prompt lists enum member names for ENUM slots."""
@@ -239,8 +249,8 @@ class TestRunSlotFiller:
             action_type="MockPickUpAction",
             slots=[SlotValue(field_name="grasp_description.grasp_type", value="FRONT")],
         )
-        llm = ScriptedLLM(responses=[output])
-        result = run_slot_filler(
+        llm = RecordingLLM(responses=[output])
+        run_slot_filler(
             instruction="grasp from front",
             action_cls=MockPickUpAction,
             free_slot_names=["grasp_description"],
@@ -248,4 +258,25 @@ class TestRunSlotFiller:
             world_context="",
             llm=llm,
         )
-        assert result is not None
+
+        prompt = _last_user_prompt(llm)
+        assert "grasp_description.grasp_type" in prompt
+        assert "allowed values: FRONT | TOP | SIDE" in prompt
+
+    def test_fixed_slots_are_included_in_prompt(self) -> None:
+        """Prompt includes fixed slots so the LLM can preserve them."""
+        output = ActionReasoningOutput(action_type="MockPickUpAction", slots=[])
+        llm = RecordingLLM(responses=[output])
+
+        run_slot_filler(
+            instruction="pick up the milk",
+            action_cls=MockPickUpAction,
+            free_slot_names=["timeout"],
+            fixed_slots={"object_designator": "milk"},
+            world_context="world",
+            llm=llm,
+        )
+
+        prompt = _last_user_prompt(llm)
+        assert "Already-fixed slots" in prompt
+        assert "object_designator = 'milk'" in prompt
