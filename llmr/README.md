@@ -1,8 +1,8 @@
-# llm_reasoner
+# llmr
 
 **LLM-powered GenerativeBackend for KRROOD** — Translate natural language instructions into robot actions using LLMs.
 
-llm_reasoner is a standalone package that implements `LLMBackend(GenerativeBackend)`, allowing PyCRAM underspecified action expressions to be resolved via LLM reasoning. It bridges natural language and structured robot planning.
+`llmr` is a KRROOD-integrated package that implements `LLMBackend(GenerativeBackend)`, allowing PyCRAM underspecified action expressions to be resolved via LLM reasoning. It bridges natural language and structured robot planning.
 
 ---
 
@@ -12,14 +12,14 @@ llm_reasoner is a standalone package that implements `LLMBackend(GenerativeBacke
 
 ```bash
 # From repo root
-pip install ./llm_reasoner
+pip install ./llmr
 ```
 
 ### Basic Usage: Natural Language → Robot Action
 
 ```python
-from llm_reasoner import nl_plan, nl_sequential
-from llm_reasoner.reasoning.llm_config import make_llm, LLMProvider
+from llmr import nl_plan, nl_sequential
+from llmr.reasoning.llm_config import make_llm, LLMProvider
 
 # Create an LLM
 llm = make_llm(LLMProvider.OPENAI, model="gpt-4o")
@@ -46,7 +46,7 @@ for plan in nl_sequential(
 
 ```python
 from krrood.entity_query_language.query.match import Match
-from llm_reasoner import resolve_params, resolve_match
+from llmr import resolve_params, resolve_match
 from your_actions import PickUpAction
 
 # Build underspecified action match
@@ -314,10 +314,10 @@ for plan in plans: plan.perform()
 
 ```bash
 # All tests
-pytest test/llm_reasoner_test/ -v
+pytest test/llmr_test/ -v
 
 # Specific module
-pytest test/llm_reasoner_test/reasoning/test_slot_filler.py -v
+pytest test/llmr_test/reasoning/test_slot_filler.py -v
 ```
 
 ### Test Infrastructure
