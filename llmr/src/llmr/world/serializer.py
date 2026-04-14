@@ -8,12 +8,9 @@ package) so this module never imports a world directly.
 """
 from __future__ import annotations
 
-import logging
 from typing_extensions import Any, Dict, List, Optional, Tuple, Type
 
 from krrood.symbol_graph.symbol_graph import Symbol, SymbolGraph
-
-logger = logging.getLogger(__name__)
 
 # Kinematic-link name suffixes — these are robot structural parts, not scene objects.
 # Suffix-based filter is representation-agnostic (unlike the old "/" heuristic which
@@ -32,6 +29,7 @@ def _is_structural_link(name: str) -> bool:
 def serialize_world_from_symbol_graph(
     groundable_type: Type[Symbol] = Symbol,
     extra_context: str = "",
+    symbol_graph: Optional[SymbolGraph] = None,
 ) -> str:
     """Build an LLM world-context string from SymbolGraph contents.
 
@@ -39,13 +37,21 @@ def serialize_world_from_symbol_graph(
         Defaults to ``Symbol`` (all instances).  Pass a more specific caller
         type for a tighter scope covering only the intended world entities.
     :param extra_context: Optional extra text appended at the end.
+    :param symbol_graph: Existing KRROOD SymbolGraph to query; defaults to the singleton.
     :returns: Multi-line string describing the current world state.
     """
     lines = ["## World State Summary\n"]
 
+    try:
+        graph = symbol_graph or SymbolGraph()
+    except Exception:
+        graph = None
+
     # ── Scene objects ──────────────────────────────────────────────────────────
     try:
-        all_instances = list(SymbolGraph().get_instances_of_type(groundable_type))
+        if graph is None:
+            raise RuntimeError("SymbolGraph unavailable")
+        all_instances = list(graph.get_instances_of_type(groundable_type))
         all_names = [body_display_name(b) for b in all_instances]
         scene_names = [n for n in all_names if not _is_structural_link(n)]
         if scene_names:
@@ -62,8 +68,9 @@ def serialize_world_from_symbol_graph(
     # ── Semantic annotations ───────────────────────────────────────────────────
     lines.append("\n## Semantic annotations")
     try:
+        if graph is None:
+            raise RuntimeError("SymbolGraph unavailable")
         ann_summary: Dict[str, List[str]] = {}
-        graph = SymbolGraph()
         for wrapped in graph.wrapped_instances:
             inst = wrapped.instance
             if inst is None:

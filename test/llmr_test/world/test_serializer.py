@@ -1,14 +1,11 @@
 """Tests for serialize_world_from_symbol_graph — world state serialization.
-
-Coverage target: 80% (8 tests covering serialization and helper functions).
 """
 from __future__ import annotations
 
 from typing_extensions import Dict, Any
-import pytest
 from types import SimpleNamespace
 
-from krrood.symbol_graph.symbol_graph import Symbol, SymbolGraph
+from krrood.symbol_graph.symbol_graph import Symbol
 
 from llmr.world.serializer import (
     serialize_world_from_symbol_graph,
@@ -45,7 +42,6 @@ class TestSerializeWorld:
     def test_respects_groundable_type_parameter(self) -> None:
         """serialize respects groundable_type parameter."""
         result = serialize_world_from_symbol_graph(groundable_type=Symbol)
-        # Should work with Symbol as groundable type
         assert isinstance(result, str)
 
     def test_handles_empty_extra_context(self) -> None:
@@ -62,8 +58,35 @@ class TestSerializeWorld:
     def test_includes_bodies_or_annotations(self) -> None:
         """Output contains bodies or annotations section."""
         result = serialize_world_from_symbol_graph()
-        # Should contain either bodies or annotations
-        assert "Bodies" in result or "objects" in result or "annotations" in result
+        assert "Semantic annotations" in result
+
+    def test_serializes_registered_bodies(self, symbol_world: Dict[str, Any]) -> None:
+        """Registered SymbolGraph bodies appear in the scene listing."""
+        result = serialize_world_from_symbol_graph(symbol_world["body_type"])
+
+        assert "milk_on_table" in result
+        assert "red_cup" in result
+        assert "table" in result
+
+    def test_filters_structural_links_from_scene_listing(
+        self, symbol_world: Dict[str, Any]
+    ) -> None:
+        """Structural link suffixes are excluded from scene objects."""
+        result = serialize_world_from_symbol_graph(symbol_world["body_type"])
+        scene_line = next(
+            line for line in result.splitlines() if line.startswith("Scene objects")
+        )
+
+        assert "base_link" not in scene_line
+
+    def test_serializes_semantic_annotations(
+        self, symbol_world: Dict[str, Any]
+    ) -> None:
+        """Annotation instances are grouped by their associated body."""
+        result = serialize_world_from_symbol_graph(symbol_world["body_type"])
+
+        assert "Available types: MilkAnnotation" in result
+        assert "milk_on_table: MilkAnnotation" in result
 
 
 class TestBodyDisplayNameHelper:

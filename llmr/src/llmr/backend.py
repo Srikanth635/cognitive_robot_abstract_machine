@@ -4,11 +4,9 @@ World context is derived from SymbolGraph.
 """
 from __future__ import annotations
 
-import dataclasses
 import logging
 import typing
 from dataclasses import dataclass, field
-from enum import Enum
 from typing_extensions import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
@@ -19,7 +17,6 @@ from krrood.symbol_graph.symbol_graph import Symbol
 
 from krrood.entity_query_language.utils import T
 
-from llmr._utils import field_short_name as _field_short_name
 from llmr.exceptions import LLMSlotFillingFailed, LLMUnresolvedRequiredFields
 
 if typing.TYPE_CHECKING:
@@ -105,7 +102,7 @@ class LLMBackend(GenerativeBackend):
 
         for attr_match in expression.matches_with_variables:
             fname_raw = attr_match.name_from_variable_access_path
-            fname = _field_short_name(fname_raw)   # strip 'ClassName.' prefix
+            fname = attr_match.attribute_name
             value = attr_match.assigned_variable._value_
             ftype = attr_match.assigned_variable._type_
             field_types[fname] = ftype
@@ -159,7 +156,7 @@ class LLMBackend(GenerativeBackend):
 
         for field_name, field_type in free_slots:
             # Classify using krrood's already-resolved type — no re-introspection needed.
-            kind = _intro._classify_type(field_type)
+            kind = _intro.classify_type(field_type)
 
             resolved = _UNRESOLVED
 
@@ -203,7 +200,7 @@ class LLMBackend(GenerativeBackend):
             elif kind == FieldKind.PRIMITIVE or kind is None:
                 sv = slot_by_name.get(field_name)
                 if sv is not None and sv.value is not None:
-                    resolved = _coerce_primitive(sv.value, field_type)
+                    resolved = coerce_primitive(sv.value, field_type)
 
             if resolved is _UNRESOLVED:
                 logger.debug(
@@ -309,7 +306,10 @@ def _resolve_entity_slot(
         # TYPE_REF fields expect the *class* (e.g. Type[SemanticAnnotation]),
         # resolved from SymbolGraph class diagram.
         if ed is not None and ed.semantic_type:
-            cls = resolve_symbol_class(ed.semantic_type)
+            cls = resolve_symbol_class(
+                ed.semantic_type,
+                symbol_graph=getattr(grounder, "symbol_graph", None),
+            )
             if cls is not None:
                 return cls
         return body  # fallback: return the instance
@@ -356,7 +356,10 @@ def _reconstruct_complex(
             if (
                 sub.kind == FieldKind.ENTITY
                 and not sub.is_optional
-                and _type_mro_contains(sub.raw_type, "Manipulator")
+                and any(
+                    cls.__name__ == "Manipulator"
+                    for cls in getattr(sub.raw_type, "__mro__", ())
+                )
             ):
                 val = _auto_ground_sub_entity(sub.raw_type, resolved_params or {})
             if val is _UNRESOLVED:
@@ -376,7 +379,7 @@ def _reconstruct_complex(
                 kwargs[sub.name] = _coerce_enum(sv.value, sub.raw_type)
         elif sub.kind == FieldKind.PRIMITIVE:
             if sv.value is not None:
-                kwargs[sub.name] = _coerce_primitive(sv.value, sub.raw_type)
+                kwargs[sub.name] = coerce_primitive(sv.value, sub.raw_type)
         elif sv.value is not None:
             kwargs[sub.name] = sv.value
 
@@ -423,14 +426,6 @@ def _auto_ground_sub_entity(raw_type: Any, resolved_params: Dict[str, Any]) -> A
     return instances[0]
 
 
-def _type_mro_contains(raw_type: Any, class_name: str) -> bool:
-    """Return True when *raw_type* or one of its base classes has *class_name*."""
-    try:
-        return any(cls.__name__ == class_name for cls in raw_type.__mro__)
-    except AttributeError:
-        return False
-
-
 def _name_to_string(name: Any) -> Optional[str]:
     """Normalize PrefixedName-like values and plain strings to a comparable string."""
     if name is None:
@@ -459,9 +454,15 @@ def _coerce_enum(value: str, enum_type: type) -> Any:
     return first
 
 
-def _coerce_primitive(value: str, field_type: Any) -> Any:
+def coerce_primitive(value: str, field_type: Any) -> Any:
     """Cast LLM string output to bool / int / float as required by *field_type*; str passthrough."""
-    unwrapped = _unwrap_field_type(field_type)
+    origin = typing.get_origin(field_type)
+    if origin is typing.Union:
+        args = [arg for arg in typing.get_args(field_type) if arg is not type(None)]
+        unwrapped = args[0] if len(args) == 1 else field_type
+    else:
+        unwrapped = field_type
+
     if unwrapped is bool:
         return value.lower() in ("true", "1", "yes")
     if unwrapped is int:
@@ -491,7 +492,7 @@ def _unresolved_required_fields(expression: Match[Any], introspector: "PycramInt
     unresolved: List[str] = []
     seen: set[str] = set()
     for attr_match in expression.matches_with_variables:
-        field_name = _field_short_name(attr_match.name_from_variable_access_path)
+        field_name = attr_match.attribute_name
         seen.add(field_name)
         value = attr_match.assigned_variable._value_
         if field_name in required and isinstance(value, type(Ellipsis)):
@@ -501,16 +502,3 @@ def _unresolved_required_fields(expression: Match[Any], introspector: "PycramInt
         unresolved.append(field_name)
 
     return unresolved
-
-
-def _unwrap_field_type(t: Any) -> Any:
-    """Strip Optional[X] / Union[X, None] → X."""
-    import typing as _typing
-    if _typing.get_origin(t) is _typing.Union:
-        args = [a for a in _typing.get_args(t) if a is not type(None)]
-        if len(args) == 1:
-            return args[0]
-    return t
-
-
-
