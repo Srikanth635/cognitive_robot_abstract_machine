@@ -20,7 +20,9 @@ import textwrap
 import typing
 from dataclasses import dataclass, field
 from enum import Enum
-from typing_extensions import Any, Dict, List, Optional, Type
+from typing_extensions import Any, ClassVar, Dict, List, Optional, Tuple, Type
+
+from krrood.symbol_graph.symbol_graph import Symbol
 
 import logging
 
@@ -73,6 +75,7 @@ class ActionSchema:
 # ── PycramIntrospector ─────────────────────────────────────────────────────────
 
 
+@dataclass
 class PycramIntrospector:
     """Reads an action dataclass and classifies each field into a FieldKind.
 
@@ -87,10 +90,7 @@ class PycramIntrospector:
 
     # Names of types (and their subclasses via MRO) treated as spatial poses.
     # Matched against every class in the type's MRO — no world-package import needed.
-    POSE_TYPE_NAMES: frozenset = frozenset({"Pose", "HomogeneousTransformationMatrix"})
-
-    # Base class for all krrood Symbol types (lazy, cached after first load).
-    _SYMBOL_BASE: Optional[type] = None
+    POSE_TYPE_NAMES: ClassVar[frozenset] = frozenset({"Pose", "HomogeneousTransformationMatrix"})
 
     def introspect(self, action_cls: type, _depth: int = 0) -> ActionSchema:
         """Return an :class:`ActionSchema` for *action_cls*.
@@ -216,18 +216,12 @@ class PycramIntrospector:
 
         return FieldKind.PRIMITIVE
 
-    # ── Type predicates (lazy imports) ────────────────────────────────────────
+    # ── Type predicates ───────────────────────────────────────────────────────
 
     def _is_entity_type(self, t: type) -> bool:
         """True if *t* is a Symbol subclass — grounds to a SymbolGraph instance."""
-        if self._SYMBOL_BASE is None:
-            try:
-                from krrood.symbol_graph.symbol_graph import Symbol
-                PycramIntrospector._SYMBOL_BASE = Symbol
-            except Exception:
-                return False
         try:
-            return issubclass(t, self._SYMBOL_BASE)
+            return issubclass(t, Symbol)
         except TypeError:
             return False
 
@@ -307,7 +301,7 @@ def _resolve_type_string(name: str, module_globals: dict) -> Optional[type]:
     return None
 
 
-def _unwrap_optional(t: Any) -> tuple:
+def _unwrap_optional(t: Any) -> Tuple[Any, bool]:
     """Strip ``Optional[X]`` / ``Union[X, None]`` and return ``(inner_type, is_optional)``."""
     if typing.get_origin(t) is typing.Union:
         args = [a for a in typing.get_args(t) if a is not type(None)]
@@ -318,10 +312,6 @@ def _unwrap_optional(t: Any) -> tuple:
     return t, False
 
 
-# Module-level singleton — shared across the package
-_introspector = PycramIntrospector()
-
-
 def introspect(action_cls: type) -> ActionSchema:
-    """Introspect *action_cls* using the package-level singleton introspector."""
-    return _introspector.introspect(action_cls)
+    """Introspect *action_cls* using a fresh introspector instance."""
+    return PycramIntrospector().introspect(action_cls)

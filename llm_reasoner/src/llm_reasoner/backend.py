@@ -26,6 +26,9 @@ from llm_reasoner.exceptions import LLMSlotFillingFailed, LLMUnresolvedRequiredF
 
 if typing.TYPE_CHECKING:
     from langchain_core.language_models import BaseChatModel
+    from llm_reasoner.pycram_bridge.introspector import FieldKind, FieldSpec, PycramIntrospector
+    from llm_reasoner.schemas.slots import SlotValue
+    from llm_reasoner.world.grounder import EntityGrounder
 
 
 # ── Typed sentinel ─────────────────────────────────────────────────────────────
@@ -253,11 +256,11 @@ class LLMBackend(GenerativeBackend):
 # ── Per-slot resolvers (module-level, reusable) ────────────────────────────────
 
 def _resolve_entity_slot(
-    sv: Any,
-    grounder: Any,
-    kind: Any,
+    sv: "SlotValue",
+    grounder: "EntityGrounder",
+    kind: "FieldKind",
     field_name: str,
-    expected_type: Any = None,
+    expected_type: Optional[type] = None,
 ) -> Any:
     """Ground an ENTITY/POSE/TYPE_REF slot to a Symbol instance via EntityGrounder."""
     from llm_reasoner.pycram_bridge.introspector import FieldKind
@@ -318,9 +321,9 @@ def _resolve_entity_slot(
 
 def _reconstruct_complex(
     field_name: str,
-    fspec: Any,
+    fspec: "FieldSpec",
     slot_by_name: Dict[str, Any],
-    grounder: Any,
+    grounder: "EntityGrounder",
     resolved_params: Optional[Dict[str, Any]] = None,
 ) -> Any:
     """Build a complex dataclass (e.g. GraspDescription) from dotted SlotValue entries.
@@ -476,7 +479,7 @@ def _coerce_primitive(value: str, field_type: Any) -> Any:
     return value  # str or unknown → return as-is
 
 
-def _unresolved_required_fields(expression: Match[Any], introspector: Any) -> List[str]:
+def _unresolved_required_fields(expression: Match[Any], introspector: "PycramIntrospector") -> List[str]:
     """Return required action fields that are still unset in a Match expression."""
     try:
         required = {

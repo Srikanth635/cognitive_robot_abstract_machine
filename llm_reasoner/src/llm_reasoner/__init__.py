@@ -78,6 +78,7 @@ Quickstart — power user (action type known, LLM fills free slots)
 from llm_reasoner.backend import LLMBackend
 from llm_reasoner.exceptions import (
     LLMActionClassificationFailed,
+    LLMActionRegistryEmpty,
     LLMProviderNotSupported,
     LLMSlotFillingFailed,
     LLMUnresolvedRequiredFields,
@@ -91,6 +92,7 @@ __all__ = [
     "resolve_match",
     "resolve_params",
     "LLMActionClassificationFailed",
+    "LLMActionRegistryEmpty",
     "LLMProviderNotSupported",
     "LLMSlotFillingFailed",
     "LLMUnresolvedRequiredFields",

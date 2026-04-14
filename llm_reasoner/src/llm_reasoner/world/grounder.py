@@ -19,47 +19,9 @@ from typing_extensions import Any, List, Optional, Tuple, Type
 from krrood.symbol_graph.symbol_graph import Symbol, SymbolGraph
 
 from llm_reasoner.schemas.entities import EntityDescriptionSchema
+from llm_reasoner.world.serializer import body_bounding_box, body_display_name, body_xyz
 
 logger = logging.getLogger(__name__)
-
-
-# ── Duck-typing helpers ────────────────────────────────────────────────────────
-# Plain getattr / duck typing — the only place in llm_reasoner that knows about
-# world-object attribute-chain conventions.  If name/pose conventions change,
-# fix it here and in world/serializer.py.
-
-
-def body_display_name(body: Any) -> str:
-    """Return the display string for a Symbol instance (hides PrefixedName chain)."""
-    name_obj = getattr(body, "name", None)
-    if name_obj is None:
-        return ""
-    if hasattr(name_obj, "name"):
-        return str(name_obj.name)
-    return str(name_obj)
-
-
-def body_xyz(body: Any) -> Optional[Tuple[float, float, float]]:
-    """Return ``(x, y, z)`` for any object with a ``.global_pose`` property."""
-    try:
-        pt = body.global_pose.to_position()
-        return float(pt.x), float(pt.y), float(pt.z)
-    except Exception:
-        return None
-
-
-def body_bounding_box_dims(
-    body: Any,
-    reference_frame: Any = None,
-) -> Optional[Tuple[float, float, float]]:
-    """Return ``(w, d, h)`` bounding box dimensions via duck typing."""
-    try:
-        ref = reference_frame if reference_frame is not None else body
-        bb = body.collision.as_bounding_box_collection_in_frame(ref).bounding_box()
-        d = bb.dimensions
-        return float(d[0]), float(d[1]), float(d[2])
-    except Exception:
-        return None
 
 
 # ── Result type ────────────────────────────────────────────────────────────────
@@ -121,20 +83,18 @@ def resolve_symbol_class(semantic_type: str) -> Optional[Type[Symbol]]:
 # ── EntityGrounder ─────────────────────────────────────────────────────────────
 
 
+@dataclass
 class EntityGrounder:
     """Grounds an :class:`EntityDescriptionSchema` to Symbol instances in the world.
 
     Uses :class:`~krrood.symbol_graph.symbol_graph.SymbolGraph` as the sole
-        data source — no world object or world-package import required.
-
-    :param groundable_type: The Symbol subclass representing groundable world
-        entities (for example a caller-provided ``Body`` class).  Defaults to ``Symbol`` (the base
-        class), which covers all instances in the SymbolGraph.  Pass a more
-        specific subclass (e.g. ``Body``) to narrow the search pool.
+    data source — no world object or world-package import required.
     """
 
-    def __init__(self, groundable_type: Type[Symbol] = Symbol) -> None:
-        self._groundable_type = groundable_type
+    groundable_type: Type[Symbol] = Symbol
+    """The Symbol subclass representing groundable world entities (e.g. Body).
+    Defaults to Symbol (all instances in SymbolGraph). Pass a more specific
+    subclass to narrow the search pool."""
 
     # ── Main entry point ───────────────────────────────────────────────────────
 
@@ -230,7 +190,7 @@ class EntityGrounder:
 
         name_lower = description.name.lower()
         try:
-            all_instances = list(SymbolGraph().get_instances_of_type(self._groundable_type))
+            all_instances = list(SymbolGraph().get_instances_of_type(self.groundable_type))
         except Exception as exc:
             logger.warning("SymbolGraph.get_instances_of_type raised: %s", exc)
             return GroundingResult()
@@ -293,7 +253,7 @@ class EntityGrounder:
 
         # Fallback: anchor body name substring match via SymbolGraph
         try:
-            all_instances = list(SymbolGraph().get_instances_of_type(self._groundable_type))
+            all_instances = list(SymbolGraph().get_instances_of_type(self.groundable_type))
         except Exception:
             return candidates
 
@@ -330,7 +290,7 @@ class EntityGrounder:
                 try:
                     ann_body = ann.bodies[0]
                     ann_xyz = body_xyz(ann_body)
-                    dims = body_bounding_box_dims(ann_body)
+                    dims = body_bounding_box(ann_body)
                     if ann_xyz is not None and dims is not None:
                         surface_top_z = ann_xyz[2] + dims[2] / 2
                         if bz >= surface_top_z - 0.05:

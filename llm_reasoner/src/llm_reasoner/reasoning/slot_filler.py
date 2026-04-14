@@ -34,6 +34,7 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 from llm_reasoner._utils import field_short_name as _field_short_name
+from llm_reasoner.exceptions import LLMActionRegistryEmpty
 from llm_reasoner.schemas.slots import (
     ActionClassification,
     ActionReasoningOutput,
@@ -120,7 +121,7 @@ def classify_action(
         from llm_reasoner.pycram_bridge import discover_action_classes
         action_registry = discover_action_classes()
     if not action_registry:
-        return None
+        raise LLMActionRegistryEmpty()
 
     class_list = _format_action_catalog(action_registry)
     system = _CLASSIFIER_SYSTEM.format(action_classes=class_list)

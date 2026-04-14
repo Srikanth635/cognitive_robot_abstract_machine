@@ -15,6 +15,7 @@ from llm_reasoner.pycram_bridge import PycramContext, PycramPlanNode, execute_si
 
 if typing.TYPE_CHECKING:
     from langchain_core.language_models import BaseChatModel
+    from krrood.entity_query_language.query.match import Match
 
 _SKIP_FIELDS = {"id", "plan_node"}
 
@@ -170,7 +171,7 @@ def resolve_params(
 
 # ── Internal helpers ───────────────────────────────────────────────────────────
 
-def _fully_underspecified(action_cls: type):
+def _fully_underspecified(action_cls: type) -> "Match[Any]":
     """Return a Match(*action_cls*) with required schema fields set to ``...``."""
     from krrood.entity_query_language.query.match import Match
 
