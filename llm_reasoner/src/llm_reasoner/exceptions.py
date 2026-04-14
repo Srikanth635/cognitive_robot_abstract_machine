@@ -78,3 +78,15 @@ class LLMUnresolvedRequiredFields(DataclassException):
             f"{fields_str}."
         )
         super().__post_init__()
+
+
+@dataclass
+class LLMActionRegistryEmpty(DataclassException):
+    """Raised when action discovery yields no registered PyCRAM actions."""
+
+    def __post_init__(self):
+        self.message = (
+            "No PyCRAM actions found in registry. "
+            "Check that action packages are properly imported and registered."
+        )
+        super().__post_init__()
