@@ -153,7 +153,7 @@ def resolve_params(
 ) -> Any:
     """Resolve an underspecified Match and return the concrete action instance.
 
-    Role 2 standalone API: no action classification, no Match construction, and no
+    Role 2 non-executing API: no action classification, no Match construction, and no
     PyCRAM PlanNode creation.  The supplied Match is still updated by the backend as
     part of normal KRROOD evaluation.
     """
