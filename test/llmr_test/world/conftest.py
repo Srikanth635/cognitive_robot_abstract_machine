@@ -34,6 +34,13 @@ class MilkAnnotation(Symbol):
         self.bodies = list(bodies)
 
 
+class FakeRobotAnnotation(Symbol):
+    def __init__(self, *bodies: WorldBody):
+        self.bodies = list(bodies)
+        self.root = bodies[0] if bodies else None
+        self._robot = self
+
+
 @pytest.fixture
 def symbol_world() -> Dict[str, Any]:
     """Populate SymbolGraph with small deterministic world objects."""
@@ -46,7 +53,9 @@ def symbol_world() -> Dict[str, Any]:
     red_cup = WorldBody("red_cup")
     blue_cup = WorldBody("blue_cup")
     structural = WorldBody("base_link")
+    robot_owned = WorldBody("robot_base")
     annotation = MilkAnnotation(milk_on_table)
+    robot_annotation = FakeRobotAnnotation(robot_owned)
     for instance in (
         table,
         counter,
@@ -55,7 +64,9 @@ def symbol_world() -> Dict[str, Any]:
         red_cup,
         blue_cup,
         structural,
+        robot_owned,
         annotation,
+        robot_annotation,
     ):
         graph.ensure_wrapped_instance(instance)
     return {
@@ -66,7 +77,10 @@ def symbol_world() -> Dict[str, Any]:
         "red_cup": red_cup,
         "blue_cup": blue_cup,
         "structural": structural,
+        "robot_owned": robot_owned,
         "annotation": annotation,
+        "robot_annotation": robot_annotation,
         "body_type": WorldBody,
         "annotation_type": MilkAnnotation,
+        "robot_annotation_type": FakeRobotAnnotation,
     }

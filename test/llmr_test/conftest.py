@@ -1,9 +1,6 @@
 """Root conftest for llmr tests — krrood-aligned test fixtures.
 
-Autouse cleanup: SymbolGraph is real, singleton, and fully rebuilt between tests.
-Pattern: clear → rebuild ClassDiagram → reinitialise SymbolGraph before each test,
-then clear + class_diagram.clear() after — mirrors the root test/conftest.py pattern
-without pulling in World or semantic_digital_twin (llmr has no such dependency).
+
 """
 from __future__ import annotations
 

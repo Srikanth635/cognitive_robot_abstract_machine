@@ -18,6 +18,7 @@ from krrood.symbol_graph.symbol_graph import Symbol
 from krrood.entity_query_language.utils import T
 
 from llmr.exceptions import LLMSlotFillingFailed, LLMUnresolvedRequiredFields
+from llmr._utils import field_short_name as _leaf_field_name, slot_prompt_name as _slot_prompt_name
 
 if typing.TYPE_CHECKING:
     from langchain_core.language_models import BaseChatModel
@@ -103,7 +104,7 @@ class LLMBackend(GenerativeBackend):
         for attr_match in expression.matches_with_variables:
             fname_raw = attr_match.name_from_variable_access_path
             fname = attr_match.attribute_name
-            value = attr_match.assigned_variable._value_
+            value = _assigned_variable_value(attr_match.assigned_variable)
             ftype = attr_match.assigned_variable._type_
             field_types[fname] = ftype
             _full_name_map[fname] = fname_raw
@@ -125,7 +126,10 @@ class LLMBackend(GenerativeBackend):
         # krrood already resolved each field's type via get_field_type_endpoint()
         # and stored it in attr_match.assigned_variable._type_ — we use those
         # types directly below instead of re-running full action-class introspection.
-        llm_free_slot_names = [name for name, _ in free_slots]
+        llm_free_slot_names = [
+            _slot_prompt_name(_full_name_map.get(name, name), expression.type)
+            for name, _ in free_slots
+        ]
         output = None
         if llm_free_slot_names:
             from llmr.reasoning.slot_filler import run_slot_filler
@@ -147,9 +151,11 @@ class LLMBackend(GenerativeBackend):
         _intro = PycramIntrospector()
         grounder = EntityGrounder(self.groundable_type)
 
-        slot_by_name = (
-            {sv.field_name: sv for sv in output.slots} if output else {}
-        )
+        slot_by_name: Dict[str, "SlotValue"] = {}
+        if output:
+            for sv in output.slots:
+                slot_by_name[sv.field_name] = sv
+                slot_by_name.setdefault(_leaf_field_name(sv.field_name), sv)  # _leaf_field_name from _utils
         # Tracks successfully resolved top-level values so COMPLEX reconstruction
         # can use them (e.g. arm → pick matching Manipulator from SymbolGraph).
         resolved_params: Dict[str, Any] = {}
@@ -435,6 +441,58 @@ def _name_to_string(name: Any) -> Optional[str]:
     return str(name)
 
 
+def _assigned_variable_value(assigned_variable: Any) -> Any:
+    """Return the concrete value of a KRROOD variable, evaluating it when needed."""
+    try:
+        value = vars(assigned_variable).get("_value_", _UNRESOLVED)
+    except TypeError:
+        value = getattr(assigned_variable, "_value_", _UNRESOLVED)
+    if value is not _UNRESOLVED:
+        return value
+
+    # Try evaluating as a KRROOD selectable via the public .evaluate() API.
+    evaluate = getattr(assigned_variable, "evaluate", None)
+    if not callable(evaluate):
+        return _UNRESOLVED
+    try:
+        value = next(iter(evaluate()))
+    except Exception:
+        return _UNRESOLVED
+    assigned_variable._value_ = value
+    return value
+
+
+def _top_level_field_name(attr_match: Any) -> Optional[str]:
+    """Return the first field name in a KRROOD variable access path, if present."""
+    try:
+        access_path = attr_match.assigned_variable._access_path_
+    except AttributeError:
+        return None
+
+    try:
+        steps = iter(access_path)
+    except TypeError:
+        steps = iter((access_path,))
+
+    for step in steps:
+        attribute_name = getattr(step, "_attribute_name_", None)
+        if attribute_name:
+            return attribute_name
+    return None
+
+
+def _match_kwarg_is_resolved(value: Any) -> bool:
+    """Return whether a Match kwarg value can be constructed without ellipses."""
+    if isinstance(value, type(Ellipsis)):
+        return False
+    if isinstance(value, Match):
+        return all(_match_kwarg_is_resolved(item) for item in value.kwargs.values())
+    if isinstance(value, dict):
+        return all(_match_kwarg_is_resolved(item) for item in value.values())
+    if isinstance(value, (list, tuple)):
+        return all(_match_kwarg_is_resolved(item) for item in value)
+    return True
+
 
 def _coerce_enum(value: str, enum_type: type) -> Any:
     """Convert a string to the matching enum member (exact, then case-insensitive)."""
@@ -479,7 +537,13 @@ def coerce_primitive(value: str, field_type: Any) -> Any:
 
 
 def _unresolved_required_fields(expression: Match[Any], introspector: "PycramIntrospector") -> List[str]:
-    """Return required action fields that are still unset in a Match expression."""
+    """Return required action fields that are still unset in a Match expression.
+
+    KRROOD may represent a required top-level field as a nested ``Match`` whose
+    unresolved leaves live below it, for example ``action.slot.member``.  In
+    that case the top-level slot is present even though no direct variable named
+    ``slot`` appears in ``matches_with_variables``.
+    """
     try:
         required = {
             field.name
@@ -493,12 +557,18 @@ def _unresolved_required_fields(expression: Match[Any], introspector: "PycramInt
     seen: set[str] = set()
     for attr_match in expression.matches_with_variables:
         field_name = attr_match.attribute_name
+        top_level_name = _top_level_field_name(attr_match)
         seen.add(field_name)
+        if top_level_name:
+            seen.add(top_level_name)
         value = attr_match.assigned_variable._value_
         if field_name in required and isinstance(value, type(Ellipsis)):
             unresolved.append(field_name)
 
+    expression._update_kwargs_from_literal_values()
     for field_name in sorted(required - seen):
+        if _match_kwarg_is_resolved(expression.kwargs.get(field_name)):
+            continue
         unresolved.append(field_name)
 
     return unresolved

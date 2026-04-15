@@ -28,7 +28,7 @@ class MockBody(Symbol):
 
 def _free_field_names(match) -> set[str]:
     return {
-        attr.name_from_variable_access_path.rsplit(".", 1)[-1]
+        attr.attribute_name
         for attr in match.matches_with_variables
         if attr.assigned_variable._value_ is ...
     }
@@ -78,6 +78,15 @@ class TestGetRequiredSchemaFields:
         """Internal fields (id, plan_node) are skipped."""
         fields = _get_required_schema_fields(MockPickUpAction)
         assert fields == ["object_designator"]
+
+    def test_uses_introspector_and_excludes_optional_fields(self) -> None:
+        """Uses PycramIntrospector and excludes optional fields from required list."""
+        fields = _get_required_schema_fields(MockPickUpAction)
+        assert fields is not None
+        assert "object_designator" in fields
+        # grasp_description and timeout are optional — must not appear
+        assert "grasp_description" not in fields
+        assert "timeout" not in fields
 
 
 class TestGetSettableFields:
