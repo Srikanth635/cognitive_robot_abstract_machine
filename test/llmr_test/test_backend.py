@@ -22,6 +22,7 @@ from llmr.pycram_bridge.introspector import FieldKind
 from llmr.schemas.entities import EntityDescriptionSchema
 from llmr.schemas.slots import ActionReasoningOutput, SlotValue
 from krrood.symbol_graph.symbol_graph import Symbol
+from krrood.entity_query_language.factories import variable_from
 from krrood.entity_query_language.query.match import Match
 
 
@@ -52,6 +53,12 @@ class RaisingLLM(ScriptedLLM):
 class MockBody(Symbol):
     def __init__(self, name: str):
         self.name = name
+
+
+@dataclass
+class MockRequiredNestedAction:
+    object_designator: Symbol
+    grasp_description: MockGraspDescription
 
 
 # ── Existing tests (kept for compatibility) ──────────────────────────────────
@@ -175,6 +182,20 @@ class TestLLMBackendEvaluate:
 
         assert results == [MockPickUpAction(object_designator=milk)]
 
+    def test_fully_specified_symbolic_variable_constructs_concrete_value(self) -> None:
+        """A fixed singleton KRROOD variable is evaluated before construction."""
+        milk = MockBody("milk")
+        backend_inst = LLMBackend(llm=RaisingLLM(responses=[]))
+
+        results = list(
+            backend_inst.evaluate(
+                Match(MockPickUpAction)(object_designator=variable_from([milk]))
+            )
+        )
+
+        assert results == [MockPickUpAction(object_designator=milk)]
+        assert results[0].object_designator is milk
+
     def test_evaluate_preserves_fixed_slots(self) -> None:
         """evaluate() respects fixed slot values."""
         output = ActionReasoningOutput(
@@ -220,6 +241,35 @@ class TestLLMBackendEvaluate:
 
         assert results == [
             MockPickUpAction(
+                object_designator=milk,
+                grasp_description=MockGraspDescription(grasp_type=GraspType.FRONT),
+            )
+        ]
+
+    def test_strict_required_accepts_resolved_nested_match(self) -> None:
+        """A required top-level field can be satisfied by a resolved nested Match."""
+        output = ActionReasoningOutput(
+            action_type="MockRequiredNestedAction",
+            slots=[
+                SlotValue(
+                    field_name="grasp_description.grasp_type",
+                    value="FRONT",
+                )
+            ],
+        )
+        milk = MockBody("milk")
+
+        results = list(
+            LLMBackend(llm=ScriptedLLM(responses=[output]), strict_required=True).evaluate(
+                Match(MockRequiredNestedAction)(
+                    object_designator=milk,
+                    grasp_description=Match(MockGraspDescription)(grasp_type=...),
+                )
+            )
+        )
+
+        assert results == [
+            MockRequiredNestedAction(
                 object_designator=milk,
                 grasp_description=MockGraspDescription(grasp_type=GraspType.FRONT),
             )
@@ -319,7 +369,7 @@ class TestGetWorldContext:
         backend_inst = LLMBackend(llm=llm)
         context = backend_inst._get_world_context()
         assert "## World State Summary" in context
-        assert "## Semantic annotations" in context
+        assert "## Available Semantic Types" in context
 
     def test_get_world_context_uses_provider_when_set(self) -> None:
         """_get_world_context uses world_context_provider if set."""
@@ -349,3 +399,51 @@ class TestPrivateEvaluate:
         )
 
         assert results == [MockPickUpAction(object_designator=milk)]
+
+
+class TestAssignedVariableValue:
+    """_assigned_variable_value — KRROOD variable resolution."""
+
+    def test_resolves_variable_from_selectable_to_first_value(self) -> None:
+        """_assigned_variable_value resolves a variable_from([...]) selectable."""
+        from llmr.backend import _assigned_variable_value
+
+        milk = MockBody("milk")
+        juice = MockBody("juice")
+        var = variable_from([milk, juice])
+        result = _assigned_variable_value(var)
+        assert result is milk
+
+    def test_returns_unresolved_when_selectable_is_empty(self) -> None:
+        """_assigned_variable_value returns _UNRESOLVED for an empty selectable."""
+        from llmr.backend import _assigned_variable_value, _UNRESOLVED
+
+        var = variable_from([])
+        result = _assigned_variable_value(var)
+        assert result is _UNRESOLVED
+
+
+class TestCoerceEnum:
+    """_coerce_enum() — string-to-enum coercion with fallback warning."""
+
+    def test_coerce_enum_exact_match(self) -> None:
+        """_coerce_enum returns correct member for exact name match."""
+        from llmr.backend import _coerce_enum
+        result = _coerce_enum("FRONT", GraspType)
+        assert result is GraspType.FRONT
+
+    def test_coerce_enum_case_insensitive_match(self) -> None:
+        """_coerce_enum returns correct member for case-insensitive match."""
+        from llmr.backend import _coerce_enum
+        result = _coerce_enum("front", GraspType)
+        assert result is GraspType.FRONT
+
+    def test_coerce_enum_warns_and_falls_back_on_unknown_value(self, capfd) -> None:
+        """_coerce_enum logs a warning and returns the first member for unknown values."""
+        from llmr.backend import _coerce_enum
+
+        result = _coerce_enum("UNKNOWN_GRASP", GraspType)
+
+        assert result is GraspType.FRONT  # first member is the fallback
+        captured = capfd.readouterr()
+        assert "UNKNOWN_GRASP" in captured.err

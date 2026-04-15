@@ -263,6 +263,27 @@ class TestRunSlotFiller:
         assert "grasp_description.grasp_type" in prompt
         assert "allowed values: FRONT | TOP | SIDE" in prompt
 
+    def test_nested_enum_slot_includes_valid_members(self) -> None:
+        """Prompt lists enum values when the free slot is already nested."""
+        output = ActionReasoningOutput(
+            action_type="MockPickUpAction",
+            slots=[SlotValue(field_name="grasp_description.grasp_type", value="FRONT")],
+        )
+        llm = RecordingLLM(responses=[output])
+        run_slot_filler(
+            instruction="grasp from front",
+            action_cls=MockPickUpAction,
+            free_slot_names=["MockPickUpAction.grasp_description.grasp_type"],
+            fixed_slots={},
+            world_context="",
+            llm=llm,
+        )
+
+        prompt = _last_user_prompt(llm)
+        assert "grasp_description.grasp_type" in prompt
+        assert "allowed values: FRONT | TOP | SIDE" in prompt
+        assert "Additional free slots" not in prompt
+
     def test_fixed_slots_are_included_in_prompt(self) -> None:
         """Prompt includes fixed slots so the LLM can preserve them."""
         output = ActionReasoningOutput(action_type="MockPickUpAction", slots=[])
@@ -280,3 +301,44 @@ class TestRunSlotFiller:
         prompt = _last_user_prompt(llm)
         assert "Already-fixed slots" in prompt
         assert "object_designator = 'milk'" in prompt
+
+
+class TestSlotPromptName:
+    """slot_prompt_name utility — field name prefix handling for LLM prompts."""
+
+    def test_removes_class_prefix(self) -> None:
+        """slot_prompt_name removes only the leading 'ClassName.' prefix."""
+        from llmr._utils import slot_prompt_name
+        assert slot_prompt_name("MockPickUpAction.arm", MockPickUpAction) == "arm"
+        assert slot_prompt_name("arm", MockPickUpAction) == "arm"
+
+    def test_preserves_nested_dotted_paths(self) -> None:
+        """slot_prompt_name keeps nested paths intact after removing the root prefix."""
+        from llmr._utils import slot_prompt_name
+        result = slot_prompt_name(
+            "MockPickUpAction.grasp_description.grasp_type", MockPickUpAction
+        )
+        assert result == "grasp_description.grasp_type"
+
+    def test_prefixed_dotted_enum_slot_renders_allowed_values_not_fallback(self) -> None:
+        """A fully-prefixed dotted enum slot renders allowed values, not the fallback section."""
+        output = ActionReasoningOutput(
+            action_type="MockPickUpAction",
+            slots=[SlotValue(field_name="grasp_description.grasp_type", value="SIDE")],
+        )
+        llm = RecordingLLM(responses=[output])
+        run_slot_filler(
+            instruction="grasp from side",
+            action_cls=MockPickUpAction,
+            # Full KRROOD-style path with class prefix + nested dotted name
+            free_slot_names=["MockPickUpAction.grasp_description.grasp_type"],
+            fixed_slots={},
+            world_context="",
+            llm=llm,
+        )
+
+        prompt = _last_user_prompt(llm)
+        assert "grasp_description.grasp_type" in prompt
+        assert "allowed values:" in prompt
+        assert "FRONT" in prompt and "TOP" in prompt and "SIDE" in prompt
+        assert "Additional free slots" not in prompt
