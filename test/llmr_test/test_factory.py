@@ -4,10 +4,12 @@ Uses ScriptedLLM with pre-built responses. Real SymbolGraph cleared via autouse.
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import pytest
 
 from .scripted_llm import ScriptedLLM
-from .test_actions import MockPickUpAction
+from .test_actions import GraspType, MockGraspDescription, MockPickUpAction
 
 from llmr.factory import (
     _fully_underspecified,
@@ -24,6 +26,11 @@ from krrood.symbol_graph.symbol_graph import Symbol
 class MockBody(Symbol):
     def __init__(self, name: str):
         self.name = name
+
+
+@dataclass
+class MockRequiredComplexAction:
+    grasp_description: MockGraspDescription
 
 
 def _free_field_names(match) -> set[str]:
@@ -58,6 +65,15 @@ class TestFullyUnderspecified:
         match = _fully_underspecified(MockPickUpAction)
         assert "id" not in _free_field_names(match)
         assert "plan_node" not in _free_field_names(match)
+
+    def test_required_complex_field_is_nested_match(self) -> None:
+        """Required complex fields are recursively represented as nested Match objects."""
+        match = _fully_underspecified(MockRequiredComplexAction)
+        grasp_match = match.kwargs["grasp_description"]
+
+        assert isinstance(grasp_match, Match)
+        assert grasp_match.kwargs == {"grasp_type": ...}
+        assert _free_field_names(match) == {"grasp_type"}
 
 
 class TestGetRequiredSchemaFields:
@@ -191,6 +207,27 @@ class TestResolveParams:
             )
 
         assert exc_info.value.unresolved_fields == ["object_designator"]
+
+    def test_resolves_factory_generated_required_complex_match(self) -> None:
+        """Factory-generated nested complex Matches resolve through KRROOD leaves."""
+        output = ActionReasoningOutput(
+            action_type="MockRequiredComplexAction",
+            slots=[
+                SlotValue(
+                    field_name="grasp_description.grasp_type",
+                    value="TOP",
+                )
+            ],
+        )
+        llm = ScriptedLLM(responses=[output])
+
+        match = _fully_underspecified(MockRequiredComplexAction)
+
+        result = resolve_params(match, llm=llm, strict_required=True)
+
+        assert result == MockRequiredComplexAction(
+            grasp_description=MockGraspDescription(grasp_type=GraspType.TOP)
+        )
 
 
 class TestMatchConstruction:

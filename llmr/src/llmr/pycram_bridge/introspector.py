@@ -21,11 +21,13 @@ from typing_extensions import Any, ClassVar, Dict, List, Type
 
 from krrood.class_diagrams.attribute_introspector import (
     AttributeIntrospector,
+    DataclassOnlyIntrospector,
     DiscoveredAttribute,
 )
 from krrood.class_diagrams.class_diagram import ClassDiagram
 from krrood.class_diagrams.wrapped_field import WrappedField
 from krrood.symbol_graph.symbol_graph import Symbol
+from krrood.utils import get_default_values_for_dataclass
 
 import logging
 
@@ -79,17 +81,19 @@ class ActionSchema:
 
 
 @dataclass
-class OwnDataclassIntrospector(AttributeIntrospector):
-    """Discover only fields declared directly on the inspected dataclass."""
+class OwnDataclassIntrospector(DataclassOnlyIntrospector):
+    """Discover only fields declared directly on the inspected dataclass.
+
+    Delegates all standard checks (is_dataclass, _ prefix, init=False) to
+    krrood's DataclassOnlyIntrospector and adds only the own-annotations
+    filter to exclude inherited fields (e.g. Designator.plan_node).
+    """
 
     def discover(self, owner_cls: Type) -> List[DiscoveredAttribute]:
         own_names = set(getattr(owner_cls, "__annotations__", {}))
-        if not dataclasses.is_dataclass(owner_cls):
-            return []
         return [
-            DiscoveredAttribute(public_name=f.name, field=f)
-            for f in dataclasses.fields(owner_cls)
-            if f.name in own_names and not f.name.startswith("_") and f.init
+            attr for attr in super().discover(owner_cls)
+            if attr.public_name in own_names
         ]
 
 
@@ -124,6 +128,7 @@ class PycramIntrospector:
 
         cls_doc = (inspect.getdoc(action_cls) or "").strip()
         field_docs = self._extract_field_docstrings(action_cls)
+        defaults = get_default_values_for_dataclass(action_cls)
         class_diagram = ClassDiagram([action_cls], introspector=self.introspector)
         wrapped_class = class_diagram.get_wrapped_class(action_cls)
 
@@ -133,6 +138,7 @@ class PycramIntrospector:
                 self._field_spec_from_wrapped_field(
                     wrapped_field=wrapped_field,
                     field_docs=field_docs,
+                    defaults=defaults,
                     depth=_depth,
                 )
             )
@@ -148,6 +154,7 @@ class PycramIntrospector:
         self,
         wrapped_field: WrappedField,
         field_docs: Dict[str, str],
+        defaults: Dict[str, Any],
         depth: int,
     ) -> FieldSpec:
         """Convert KRROOD field metadata into llmr's prompt-facing schema."""
@@ -160,24 +167,14 @@ class PycramIntrospector:
         else:
             raw_type = wrapped_field.type_endpoint
             kind = self.classify_type(raw_type, depth)
-        dc_field = wrapped_field.field
 
-        has_default = dc_field.default is not dataclasses.MISSING
-        has_factory = dc_field.default_factory is not dataclasses.MISSING  # type: ignore[misc]
-        if has_default:
-            field_default = dc_field.default
-        elif has_factory:
-            field_default = dc_field.default_factory  # type: ignore[misc]
-        else:
-            field_default = NO_DEFAULT
-
+        has_default = wrapped_field.name in defaults
         spec = FieldSpec(
             name=wrapped_field.name,
             raw_type=raw_type,
             kind=kind,
             docstring=field_docs.get(wrapped_field.name, ""),
-            is_optional=wrapped_field.is_optional or has_default or has_factory,
-            default=field_default,
+            is_optional=wrapped_field.is_optional or has_default,
         )
 
         if kind == FieldKind.ENUM:
