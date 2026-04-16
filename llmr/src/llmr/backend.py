@@ -7,7 +7,7 @@ from __future__ import annotations
 import logging
 import typing
 from dataclasses import dataclass, field
-from typing_extensions import Any, Callable, Dict, Iterable, List, Optional, Tuple
+from typing_extensions import Any, Callable, Dict, Iterable, List, Optional, Type
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +49,22 @@ class _Unresolved:
 
 
 _UNRESOLVED = _Unresolved()
+
+
+@dataclass(frozen=True)
+class _SlotBinding:
+    """KRROOD Match leaf metadata used while resolving one action slot."""
+
+    attribute_name: str
+    prompt_name: str
+    leaf_name: str
+    variable: Any
+    field_type: Any
+    value: Any
+
+    @property
+    def is_free(self) -> bool:
+        return isinstance(self.value, type(Ellipsis))
 
 
 # ── LLMBackend ─────────────────────────────────────────────────────────────────
@@ -93,28 +109,15 @@ class LLMBackend(GenerativeBackend):
         """Resolve all free slots in *expression* and yield a fully-constructed action instance."""
 
         # ── 1. Parse free / fixed slots from the Match variable graph ──────────
-        free_slots: List[Tuple[str, Any]] = []
-        fixed_slots: Dict[str, Any] = {}
-        field_types: Dict[str, Any] = {}
-        # name_from_variable_access_path may return 'ClassName.field_name'.
-        # We normalise to bare field names for all lookups but keep the full
-        # path so we can call _get_mapped_variable_by_name() with it later.
-        _full_name_map: Dict[str, str] = {}   # short_name → full access path
+        bindings = _slot_bindings(expression)
+        free_bindings = [binding for binding in bindings if binding.is_free]
+        fixed_slots: Dict[str, Any] = {
+            binding.prompt_name: binding.value
+            for binding in bindings
+            if not binding.is_free
+        }
 
-        for attr_match in expression.matches_with_variables:
-            fname_raw = attr_match.name_from_variable_access_path
-            fname = attr_match.attribute_name
-            value = _assigned_variable_value(attr_match.assigned_variable)
-            ftype = attr_match.assigned_variable._type_
-            field_types[fname] = ftype
-            _full_name_map[fname] = fname_raw
-
-            if isinstance(value, type(Ellipsis)):
-                free_slots.append((fname, ftype))
-            else:
-                fixed_slots[fname] = value
-
-        if not free_slots:
+        if not free_bindings:
             expression._update_kwargs_from_literal_values()
             yield expression.construct_instance()
             return
@@ -127,8 +130,8 @@ class LLMBackend(GenerativeBackend):
         # and stored it in attr_match.assigned_variable._type_ — we use those
         # types directly below instead of re-running full action-class introspection.
         llm_free_slot_names = [
-            _slot_prompt_name(_full_name_map.get(name, name), expression.type)
-            for name, _ in free_slots
+            binding.prompt_name
+            for binding in free_bindings
         ]
         output = None
         if llm_free_slot_names:
@@ -160,51 +163,45 @@ class LLMBackend(GenerativeBackend):
         # can use them (e.g. arm → pick matching Manipulator from SymbolGraph).
         resolved_params: Dict[str, Any] = {}
 
-        for field_name, field_type in free_slots:
+        for binding in free_bindings:
+            field_name = binding.attribute_name
+            field_type = binding.field_type
+            prompt_name = binding.prompt_name
+
             # Classify using krrood's already-resolved type — no re-introspection needed.
             kind = _intro.classify_type(field_type)
 
             resolved = _UNRESOLVED
 
             if kind in (FieldKind.ENTITY, FieldKind.POSE, FieldKind.TYPE_REF):
-                sv = slot_by_name.get(field_name)
+                if kind == FieldKind.ENTITY and _is_manipulator_type(field_type):
+                    resolved = _auto_ground_sub_entity(field_type, resolved_params)
+                if resolved is _UNRESOLVED:
+                    sv = _slot_value_for_binding(slot_by_name, binding)
+                else:
+                    sv = None
                 if sv is not None:
                     resolved = _resolve_entity_slot(
-                        sv, grounder, kind, field_name, expected_type=field_type
+                        sv, grounder, kind, prompt_name, expected_type=field_type
                     )
 
             elif kind == FieldKind.ENUM:
                 # field_type IS the enum class — krrood resolved it already.
-                sv = slot_by_name.get(field_name)
+                sv = _slot_value_for_binding(slot_by_name, binding)
                 if sv is not None and sv.value:
                     resolved = _coerce_enum(sv.value, field_type)
 
             elif kind == FieldKind.COMPLEX:
-                # Lazily introspect sub-fields only for complex types that need
-                # recursive construction — avoids upfront full action introspection.
-                try:
-                    sub_schema = _intro.introspect(field_type)
-                    sub_fields = sub_schema.fields
-                except Exception:
-                    sub_fields = []
-                if sub_fields:
-                    from llmr.pycram_bridge.introspector import FieldSpec
-                    fspec = FieldSpec(
-                        name=field_name,
-                        raw_type=field_type,
-                        kind=kind,
-                        sub_fields=sub_fields,
-                    )
-                    resolved = _reconstruct_complex(
-                        field_name=field_name,
-                        fspec=fspec,
-                        slot_by_name=slot_by_name,
-                        grounder=grounder,
-                        resolved_params=resolved_params,
-                    )
+                resolved = _resolve_complex_ellipsis_binding(
+                    binding=binding,
+                    introspector=_intro,
+                    slot_by_name=slot_by_name,
+                    grounder=grounder,
+                    resolved_params=resolved_params,
+                )
 
             elif kind == FieldKind.PRIMITIVE or kind is None:
-                sv = slot_by_name.get(field_name)
+                sv = _slot_value_for_binding(slot_by_name, binding)
                 if sv is not None and sv.value is not None:
                     resolved = coerce_primitive(sv.value, field_type)
 
@@ -217,12 +214,7 @@ class LLMBackend(GenerativeBackend):
 
             resolved_params[field_name] = resolved
             try:
-                # Use the original full access path (e.g. 'PickUpAction.arm') since
-                # _get_mapped_variable_by_name matches on name_from_variable_access_path.
-                mapped_var = expression._get_mapped_variable_by_name(
-                    _full_name_map.get(field_name, field_name)
-                )
-                mapped_var._value_ = resolved
+                binding.variable._value_ = resolved
             except Exception as exc:
                 logger.warning(
                     "LLMBackend: cannot set field '%s': %s", field_name, exc
@@ -255,6 +247,85 @@ class LLMBackend(GenerativeBackend):
 
 
 # ── Per-slot resolvers (module-level, reusable) ────────────────────────────────
+
+def _slot_bindings(expression: Match[Any]) -> List[_SlotBinding]:
+    """Collect one binding per KRROOD Match leaf variable."""
+    bindings: List[_SlotBinding] = []
+    for attr_match in expression.matches_with_variables:
+        variable = attr_match.assigned_variable
+        full_path = attr_match.name_from_variable_access_path
+        prompt_name = _slot_prompt_name(full_path, expression.type)
+        bindings.append(
+            _SlotBinding(
+                attribute_name=attr_match.attribute_name,
+                prompt_name=prompt_name,
+                leaf_name=_leaf_field_name(prompt_name),
+                variable=variable,
+                field_type=variable._type_,
+                value=_assigned_variable_value(variable),
+            )
+        )
+    return bindings
+
+
+def _slot_value_for_binding(
+    slot_by_name: Dict[str, "SlotValue"],
+    binding: _SlotBinding,
+) -> Optional["SlotValue"]:
+    """Return the LLM SlotValue for a binding, preferring canonical paths."""
+    return (
+        slot_by_name.get(binding.prompt_name)
+        or slot_by_name.get(binding.attribute_name)
+        or slot_by_name.get(binding.leaf_name)
+    )
+
+
+def _resolve_complex_ellipsis_binding(
+    binding: _SlotBinding,
+    introspector: "PycramIntrospector",
+    slot_by_name: Dict[str, "SlotValue"],
+    grounder: "EntityGrounder",
+    resolved_params: Dict[str, Any],
+) -> Any:
+    """Compatibility path for top-level complex slots still written as ``field=...``.
+
+    Factory-generated matches now model required complex values as nested
+    ``Match`` objects, so those normally resolve through their leaf bindings and
+    KRROOD's recursive construction. This helper keeps older hand-written
+    ``complex_field=...`` expressions working.
+    """
+    try:
+        sub_schema = introspector.introspect(binding.field_type)
+        sub_fields = sub_schema.fields
+    except Exception:
+        return _UNRESOLVED
+    if not sub_fields:
+        return _UNRESOLVED
+
+    from llmr.pycram_bridge.introspector import FieldKind, FieldSpec
+
+    fspec = FieldSpec(
+        name=binding.attribute_name,
+        raw_type=binding.field_type,
+        kind=FieldKind.COMPLEX,
+        sub_fields=sub_fields,
+    )
+    return _reconstruct_complex(
+        field_name=binding.prompt_name,
+        fspec=fspec,
+        slot_by_name=slot_by_name,
+        grounder=grounder,
+        resolved_params=resolved_params,
+    )
+
+
+def _is_manipulator_type(field_type: Any) -> bool:
+    """Return whether a field type is PyCRAM's Manipulator class or subclass."""
+    return any(
+        cls.__name__ == "Manipulator"
+        for cls in getattr(field_type, "__mro__", ())
+    )
+
 
 def _resolve_entity_slot(
     sv: "SlotValue",
@@ -566,9 +637,14 @@ def _unresolved_required_fields(expression: Match[Any], introspector: "PycramInt
             unresolved.append(field_name)
 
     expression._update_kwargs_from_literal_values()
-    for field_name in sorted(required - seen):
-        if _match_kwarg_is_resolved(expression.kwargs.get(field_name)):
+    for field_name in sorted(required):
+        if field_name not in expression.kwargs:
+            if field_name in seen:
+                continue
+            unresolved.append(field_name)
+            continue
+        if _match_kwarg_is_resolved(expression.kwargs[field_name]):
             continue
         unresolved.append(field_name)
 
-    return unresolved
+    return list(dict.fromkeys(unresolved))

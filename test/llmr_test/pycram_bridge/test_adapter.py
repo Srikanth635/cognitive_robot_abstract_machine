@@ -30,7 +30,7 @@ class TestDiscoverActionClasses:
             return original_import(name, *args, **kwargs)
 
         monkeypatch.setattr("importlib.import_module", mock_import)
-        result = discover_action_classes(package_root="pycram.robot_plans.actions")
+        result = discover_action_classes()
         assert result == {}
 
     def test_discovers_action_classes_with_action_suffix(self) -> None:

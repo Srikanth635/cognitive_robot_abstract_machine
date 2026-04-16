@@ -4,7 +4,6 @@ All pycram access goes through llmr.pycram_bridge.
 """
 from __future__ import annotations
 
-import inspect
 import typing
 from typing_extensions import Any, Callable, Dict, List, Optional
 
@@ -15,8 +14,6 @@ from llmr.pycram_bridge import PycramContext, PycramPlanNode, execute_single
 if typing.TYPE_CHECKING:
     from langchain_core.language_models import BaseChatModel
     from krrood.entity_query_language.query.match import Match
-
-_SKIP_FIELDS = {"id", "plan_node"}
 
 
 def nl_plan(
@@ -174,33 +171,55 @@ def _fully_underspecified(action_cls: type) -> "Match[Any]":
     """Return a Match(*action_cls*) with required schema fields set to ``...``."""
     from krrood.entity_query_language.query.match import Match
 
-    free_fields = _get_required_schema_fields(action_cls)
-    if free_fields is None:
+    free_kwargs = _get_required_schema_kwargs(action_cls)
+    if free_kwargs is None:
         free_fields = _get_settable_fields(action_cls)
+        free_kwargs = {name: ... for name in free_fields}
+
     match = Match(action_cls)
-    if free_fields:
-        match(**{name: ... for name in free_fields})
+    if free_kwargs:
+        match(**free_kwargs)
     return match
 
 
-def _get_settable_fields(action_cls: type) -> List[str]:
-    """Return names of all settable fields on an action class.
-
-    Skips internal krrood/pycram bookkeeping fields that the LLM must not fill.
-    """
-    schema_fields = _get_schema_fields(action_cls, required_only=False)
-    if schema_fields is not None:
-        return schema_fields
-
+def _get_required_schema_kwargs(action_cls: type) -> Optional[Dict[str, Any]]:
+    """Return required Match kwargs, nesting complex fields when possible."""
     try:
-        sig = inspect.signature(action_cls.__init__)
-        return [
-            name
-            for name, param in sig.parameters.items()
-            if name != "self" and not name.startswith("_")
-        ]
-    except (TypeError, ValueError):
-        return []
+        from llmr.pycram_bridge import PycramIntrospector
+
+        schema = PycramIntrospector().introspect(action_cls)
+    except Exception:
+        return None
+
+    return _required_kwargs_from_field_specs(schema.fields)
+
+
+def _required_kwargs_from_field_specs(fields: List[Any]) -> Dict[str, Any]:
+    """Build ``Match`` kwargs for required fields from introspected FieldSpecs."""
+    return {
+        field.name: _underspecified_value_for_field(field)
+        for field in fields
+        if _is_schema_field_settable(field, required_only=True)
+    }
+
+
+def _underspecified_value_for_field(field: Any) -> Any:
+    """Return ``...`` or a nested Match for a required FieldSpec."""
+    from krrood.entity_query_language.query.match import Match
+    from llmr.pycram_bridge.introspector import FieldKind
+
+    if field.kind != FieldKind.COMPLEX:
+        return ...
+
+    nested_kwargs = _required_kwargs_from_field_specs(field.sub_fields)
+    nested_match = Match(field.raw_type)
+    nested_match(**nested_kwargs)
+    return nested_match
+
+
+def _get_settable_fields(action_cls: type) -> List[str]:
+    """Return names of all settable fields on an action class."""
+    return _get_schema_fields(action_cls, required_only=False) or []
 
 
 def _get_required_schema_fields(action_cls: type) -> Optional[List[str]]:
@@ -220,9 +239,13 @@ def _get_schema_fields(action_cls: type, required_only: bool) -> Optional[List[s
     return [
         field.name
         for field in schema.fields
-        if (
-            (not required_only or not field.is_optional)
-            and not field.name.startswith("_")
-            and field.name not in _SKIP_FIELDS
-        )
+        if _is_schema_field_settable(field, required_only=required_only)
     ]
+
+
+def _is_schema_field_settable(field: Any, required_only: bool) -> bool:
+    """Return whether a schema field should be exposed as LLM-settable."""
+    return (
+        (not required_only or not field.is_optional)
+        and not field.name.startswith("_")
+    )

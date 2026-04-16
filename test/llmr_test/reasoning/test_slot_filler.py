@@ -147,6 +147,89 @@ class TestRunSlotFiller:
         assert result is not None
         assert len(result.slots) == 2
 
+    def test_prompt_lists_required_output_field_names(self) -> None:
+        """Prompt explicitly names every SlotValue the LLM must return."""
+        output = ActionReasoningOutput(
+            action_type="MockPickUpAction",
+            slots=[
+                SlotValue(field_name="object_designator", value="milk"),
+                SlotValue(field_name="timeout", value="30.0"),
+            ],
+        )
+        llm = RecordingLLM(responses=[output])
+
+        run_slot_filler(
+            instruction="pick up milk",
+            action_cls=MockPickUpAction,
+            free_slot_names=["object_designator", "timeout"],
+            fixed_slots={},
+            world_context="",
+            llm=llm,
+        )
+
+        prompt = _last_user_prompt(llm)
+        assert "Required free slot field_names:" in prompt
+        assert "  - object_designator" in prompt
+        assert "  - timeout" in prompt
+        assert "Return exactly 2 SlotValue entries" in prompt
+        assert "Do not omit enum or primitive slots" in prompt
+
+    def test_retries_and_merges_when_required_slots_are_omitted(self) -> None:
+        """A partial LLM response gets one correction call and is merged."""
+        first = ActionReasoningOutput(
+            action_type="MockPickUpAction",
+            slots=[SlotValue(field_name="object_designator", value="milk")],
+        )
+        repair = ActionReasoningOutput(
+            action_type="MockPickUpAction",
+            slots=[SlotValue(field_name="timeout", value="30.0")],
+        )
+        llm = RecordingLLM(responses=[first, repair])
+
+        result = run_slot_filler(
+            instruction="pick up milk",
+            action_cls=MockPickUpAction,
+            free_slot_names=["object_designator", "timeout"],
+            fixed_slots={},
+            world_context="",
+            llm=llm,
+        )
+
+        assert result is not None
+        assert [slot.field_name for slot in result.slots] == [
+            "object_designator",
+            "timeout",
+        ]
+        assert len(llm.messages) == 2
+        repair_prompt = _last_user_prompt(llm)
+        assert (
+            "Correction: the previous structured response omitted required free slots."
+            in repair_prompt
+        )
+        assert "  - timeout" in repair_prompt
+
+    def test_retries_for_missing_nested_dotted_slot(self) -> None:
+        """Missing nested enum SlotValues are detected by dotted field name."""
+        first = ActionReasoningOutput(action_type="MockPickUpAction", slots=[])
+        repair = ActionReasoningOutput(
+            action_type="MockPickUpAction",
+            slots=[SlotValue(field_name="grasp_description.grasp_type", value="FRONT")],
+        )
+        llm = RecordingLLM(responses=[first, repair])
+
+        result = run_slot_filler(
+            instruction="grasp from front",
+            action_cls=MockPickUpAction,
+            free_slot_names=["MockPickUpAction.grasp_description.grasp_type"],
+            fixed_slots={},
+            world_context="",
+            llm=llm,
+        )
+
+        assert result is not None
+        assert result.slots[0].field_name == "grasp_description.grasp_type"
+        assert len(llm.messages) == 2
+
     def test_passes_world_context_to_prompt(self) -> None:
         """run_slot_filler includes world_context in the LLM prompt."""
         output = ActionReasoningOutput(

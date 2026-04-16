@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from types import SimpleNamespace
+from typing_extensions import Optional
 import pytest
 
 from .scripted_llm import ScriptedLLM
@@ -31,8 +32,9 @@ class FakeComplex:
     manipulator: object
 
 
-class Manipulator:
-    ...
+class Manipulator(Symbol):
+    def __init__(self, name: str = "manipulator"):
+        self.name = name
 
 
 class PrefixedNameLike:
@@ -59,6 +61,23 @@ class MockBody(Symbol):
 class MockRequiredNestedAction:
     object_designator: Symbol
     grasp_description: MockGraspDescription
+
+
+@dataclass
+class MockGraspWithManipulator:
+    grasp_type: GraspType
+    manipulator: Manipulator
+
+
+@dataclass
+class MockRequiredManipulatorAction:
+    grasp_description: MockGraspWithManipulator
+
+
+@dataclass
+class MockNestedWithTimeoutAction:
+    grasp_description: MockGraspDescription
+    timeout: Optional[float] = None
 
 
 # ── Existing tests (kept for compatibility) ──────────────────────────────────
@@ -196,6 +215,29 @@ class TestLLMBackendEvaluate:
         assert results == [MockPickUpAction(object_designator=milk)]
         assert results[0].object_designator is milk
 
+    def test_fully_specified_nested_match_constructs_without_llm(self) -> None:
+        """A fully specified nested Match is recursively constructed by KRROOD."""
+        milk = MockBody("milk")
+        backend_inst = LLMBackend(llm=RaisingLLM(responses=[]))
+
+        results = list(
+            backend_inst.evaluate(
+                Match(MockRequiredNestedAction)(
+                    object_designator=milk,
+                    grasp_description=Match(MockGraspDescription)(
+                        grasp_type=GraspType.TOP,
+                    ),
+                )
+            )
+        )
+
+        assert results == [
+            MockRequiredNestedAction(
+                object_designator=milk,
+                grasp_description=MockGraspDescription(grasp_type=GraspType.TOP),
+            )
+        ]
+
     def test_evaluate_preserves_fixed_slots(self) -> None:
         """evaluate() respects fixed slot values."""
         output = ActionReasoningOutput(
@@ -246,6 +288,68 @@ class TestLLMBackendEvaluate:
             )
         ]
 
+    def test_nested_match_accepts_leaf_slot_names_for_compatibility(self) -> None:
+        """Nested free leaves can still be filled by their leaf names."""
+        output = ActionReasoningOutput(
+            action_type="MockRequiredNestedAction",
+            slots=[SlotValue(field_name="grasp_type", value="SIDE")],
+        )
+        milk = MockBody("milk")
+
+        results = list(
+            LLMBackend(llm=ScriptedLLM(responses=[output]), strict_required=True).evaluate(
+                Match(MockRequiredNestedAction)(
+                    object_designator=milk,
+                    grasp_description=Match(MockGraspDescription)(grasp_type=...),
+                )
+            )
+        )
+
+        assert results == [
+            MockRequiredNestedAction(
+                object_designator=milk,
+                grasp_description=MockGraspDescription(grasp_type=GraspType.SIDE),
+            )
+        ]
+
+    def test_fixed_nested_slots_are_passed_to_llm_as_dotted_paths(self, monkeypatch) -> None:
+        """Fixed nested leaves are exposed to the LLM with canonical dotted names."""
+        captured = {}
+
+        def fake_run_slot_filler(**kwargs):
+            captured.update(kwargs)
+            return ActionReasoningOutput(
+                action_type="MockNestedWithTimeoutAction",
+                slots=[SlotValue(field_name="timeout", value="5.0")],
+            )
+
+        monkeypatch.setattr(
+            "llmr.reasoning.slot_filler.run_slot_filler",
+            fake_run_slot_filler,
+        )
+
+        results = list(
+            LLMBackend(llm=ScriptedLLM(responses=[])).evaluate(
+                Match(MockNestedWithTimeoutAction)(
+                    grasp_description=Match(MockGraspDescription)(
+                        grasp_type=GraspType.FRONT,
+                    ),
+                    timeout=...,
+                )
+            )
+        )
+
+        assert captured["free_slot_names"] == ["timeout"]
+        assert captured["fixed_slots"] == {
+            "grasp_description.grasp_type": GraspType.FRONT,
+        }
+        assert results == [
+            MockNestedWithTimeoutAction(
+                grasp_description=MockGraspDescription(grasp_type=GraspType.FRONT),
+                timeout=5.0,
+            )
+        ]
+
     def test_strict_required_accepts_resolved_nested_match(self) -> None:
         """A required top-level field can be satisfied by a resolved nested Match."""
         output = ActionReasoningOutput(
@@ -275,6 +379,58 @@ class TestLLMBackendEvaluate:
             )
         ]
 
+    def test_nested_manipulator_leaf_auto_grounds_before_entity_grounding(
+        self,
+        monkeypatch,
+    ) -> None:
+        """Nested Manipulator leaves use SymbolGraph auto-grounding, not Body grounding."""
+        fallback_manipulator = Manipulator("left_manipulator")
+
+        monkeypatch.setattr(
+            backend,
+            "_auto_ground_sub_entity",
+            lambda raw_type, resolved_params: fallback_manipulator,
+        )
+
+        output = ActionReasoningOutput(
+            action_type="MockRequiredManipulatorAction",
+            slots=[
+                SlotValue(
+                    field_name="grasp_description.grasp_type",
+                    value="TOP",
+                ),
+                SlotValue(
+                    field_name="grasp_description.manipulator",
+                    entity_description=EntityDescriptionSchema(name="gripper"),
+                ),
+            ],
+        )
+
+        results = list(
+            LLMBackend(
+                llm=ScriptedLLM(responses=[output]),
+                groundable_type=MockBody,
+                strict_required=True,
+            ).evaluate(
+                Match(MockRequiredManipulatorAction)(
+                    grasp_description=Match(MockGraspWithManipulator)(
+                        grasp_type=...,
+                        manipulator=...,
+                    ),
+                )
+            )
+        )
+
+        assert results == [
+            MockRequiredManipulatorAction(
+                grasp_description=MockGraspWithManipulator(
+                    grasp_type=GraspType.TOP,
+                    manipulator=fallback_manipulator,
+                )
+            )
+        ]
+        assert results[0].grasp_description.manipulator is fallback_manipulator
+
     def test_strict_required_raises_for_unresolved_required_slot(self) -> None:
         """strict_required=True reports required slots that remain Ellipsis."""
         llm = ScriptedLLM(
@@ -289,6 +445,25 @@ class TestLLMBackendEvaluate:
             )
 
         assert exc_info.value.unresolved_fields == ["object_designator"]
+
+    def test_strict_required_raises_for_unresolved_required_nested_match(self) -> None:
+        """strict_required=True catches required nested matches with unresolved leaves."""
+        milk = MockBody("milk")
+        llm = ScriptedLLM(
+            responses=[ActionReasoningOutput(action_type="MockRequiredNestedAction", slots=[])]
+        )
+
+        with pytest.raises(LLMUnresolvedRequiredFields) as exc_info:
+            list(
+                LLMBackend(llm=llm, strict_required=True).evaluate(
+                    Match(MockRequiredNestedAction)(
+                        object_designator=milk,
+                        grasp_description=Match(MockGraspDescription)(grasp_type=...),
+                    )
+                )
+            )
+
+        assert exc_info.value.unresolved_fields == ["grasp_description"]
 
     def test_coerce_primitive_float_via_evaluate(self) -> None:
         """String float value from LLM is coerced to float, not kept as string."""
@@ -443,7 +618,7 @@ class TestCoerceEnum:
         from llmr.backend import _coerce_enum
 
         result = _coerce_enum("UNKNOWN_GRASP", GraspType)
+        captured = capfd.readouterr()
 
         assert result is GraspType.FRONT  # first member is the fallback
-        captured = capfd.readouterr()
         assert "UNKNOWN_GRASP" in captured.err
