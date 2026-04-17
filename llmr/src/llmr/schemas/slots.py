@@ -63,7 +63,7 @@ class ActionReasoningOutput(BaseModel):
     slots: List[SlotValue]
     """
     One entry per free slot in the Match expression.
-    Complex fields are represented as multiple dotted entries, e.g.:
+    Nested complex Match leaves are represented as dotted entries, e.g.:
       SlotValue(field_name='grasp_description.grasp_type', value='TOP')
       SlotValue(field_name='grasp_description.approach_direction', value='FRONT')
     Entity sub-fields inside complex fields may also appear as dotted entries

@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass, field
-from typing_extensions import Any, List, Optional, Tuple, Type
+from typing_extensions import Any, Dict, List, Optional, Tuple, Type
 
 from krrood.symbol_graph.symbol_graph import Symbol, SymbolGraph
 
@@ -83,6 +83,81 @@ def resolve_symbol_class(
             return cls
 
     return None
+
+
+# ── Expected-type grounding ───────────────────────────────────────────────────
+
+def grounder_can_return_type(grounder: "EntityGrounder", expected_type: type) -> bool:
+    """Return whether *grounder* can yield instances of *expected_type*."""
+    groundable_type = getattr(grounder, "groundable_type", Symbol)
+    try:
+        return issubclass(expected_type, groundable_type)
+    except TypeError:
+        return False
+
+
+def ground_expected_entity(
+    raw_type: type,
+    description: EntityDescriptionSchema,
+    resolved_params: Optional[Dict[str, Any]] = None,
+    symbol_graph: Optional[SymbolGraph] = None,
+) -> Optional[Any]:
+    """Ground directly by an expected Symbol type.
+
+    This covers action fields whose concrete type is outside the configured
+    groundable body scope, for example a field expecting a Manipulator while
+    ordinary entity grounding is scoped to Body instances.
+    """
+    try:
+        instances = list((symbol_graph or SymbolGraph()).get_instances_of_type(raw_type))
+    except Exception:
+        return None
+
+    if not instances:
+        return None
+
+    if description.name:
+        query = description.name.lower()
+        named = [
+            inst for inst in instances
+            if query in _display_name(inst).lower()
+        ]
+        if named:
+            instances = named
+
+    if len(instances) == 1:
+        return instances[0]
+
+    for value in (resolved_params or {}).values():
+        resolved_name = _display_name(value)
+        if not resolved_name:
+            continue
+        resolved_name = resolved_name.upper()
+        for inst in instances:
+            instance_name = _display_name(inst).upper()
+            if resolved_name in instance_name or instance_name in resolved_name:
+                return inst
+
+    return instances[0]
+
+
+def _display_name(value: Any) -> str:
+    """Return a comparable name for Symbol-like values, enums, and strings."""
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+
+    display_name = body_display_name(value)
+    if display_name:
+        return display_name
+
+    name = getattr(value, "name", None)
+    if name is None:
+        return ""
+    if hasattr(name, "name"):
+        return str(name.name)
+    return str(name)
 
 
 # ── EntityGrounder ─────────────────────────────────────────────────────────────

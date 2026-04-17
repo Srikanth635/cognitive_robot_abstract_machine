@@ -17,6 +17,9 @@ Package layout
 --------------
   backend.py              LLMBackend — the GenerativeBackend implementation
   factory.py              nl_plan() / nl_sequential() / resolve_params() — user-facing entry points
+  match_construction.py   required_match() — schema-driven Match construction
+  match_inspection.py     Match variable graph inspection helpers
+  slot_resolution.py      LLM slot output coercion and grounding dispatch
   schemas/
     entities.py           EntityDescriptionSchema — pre-grounding entity description
     slots.py              SlotValue, ActionReasoningOutput, ActionClassification
@@ -35,7 +38,7 @@ Quickstart — simple (fully NL-driven)
 ---------------------------------------
 ::
 
-    from llmr import LLMBackend, nl_plan, nl_sequential
+    from llmr import nl_plan, nl_sequential
     from llmr.reasoning.llm_config import make_llm, LLMProvider
     from your_world_package import Body  # caller's groundable type
 
@@ -62,9 +65,19 @@ Quickstart — power user (action type known, LLM fills free slots)
 ::
 
     from krrood.entity_query_language.query.match import Match
+    from llmr import resolve_match, resolve_params
     from your_action_package import PickUpAction
+    from your_action_package import GraspDescription
 
-    match = Match(PickUpAction)(object_designator=..., arm=..., grasp_description=...)
+    match = Match(PickUpAction)(
+        object_designator=...,
+        arm=...,
+        grasp_description=Match(GraspDescription)(
+            approach_direction=...,
+            vertical_alignment=...,
+            manipulator=...,
+        ),
+    )
     action = resolve_params(
         match,
         llm=llm,

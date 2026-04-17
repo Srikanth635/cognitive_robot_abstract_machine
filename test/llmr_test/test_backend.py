@@ -5,7 +5,6 @@ Uses ScriptedLLM with pre-built responses. Real SymbolGraph cleared via autouse 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from types import SimpleNamespace
 from typing_extensions import Optional
 import pytest
 
@@ -16,10 +15,8 @@ from .test_actions import (
     GraspType,
 )
 
-from llmr import backend
-from llmr.backend import LLMBackend, coerce_primitive
+from llmr.backend import LLMBackend
 from llmr.exceptions import LLMSlotFillingFailed, LLMUnresolvedRequiredFields
-from llmr.pycram_bridge.introspector import FieldKind
 from llmr.schemas.entities import EntityDescriptionSchema
 from llmr.schemas.slots import ActionReasoningOutput, SlotValue
 from krrood.symbol_graph.symbol_graph import Symbol
@@ -27,24 +24,9 @@ from krrood.entity_query_language.factories import variable_from
 from krrood.entity_query_language.query.match import Match
 
 
-@dataclass
-class FakeComplex:
-    manipulator: object
-
-
 class Manipulator(Symbol):
     def __init__(self, name: str = "manipulator"):
         self.name = name
-
-
-class PrefixedNameLike:
-    def __init__(self, name):
-        self.name = name
-
-
-class RaisingGrounder:
-    def ground(self, _description):
-        raise AssertionError("Manipulator fallback should not call the entity grounder")
 
 
 class RaisingLLM(ScriptedLLM):
@@ -78,72 +60,6 @@ class MockRequiredManipulatorAction:
 class MockNestedWithTimeoutAction:
     grasp_description: MockGraspDescription
     timeout: Optional[float] = None
-
-
-# ── Existing tests (kept for compatibility) ──────────────────────────────────
-
-
-def test_reconstruct_complex_falls_back_for_unresolved_required_entity(monkeypatch):
-    fallback_manipulator = object()
-    fspec = SimpleNamespace(
-        raw_type=FakeComplex,
-        sub_fields=[
-            SimpleNamespace(
-                name="manipulator",
-                kind=FieldKind.ENTITY,
-                raw_type=Manipulator,
-                is_optional=False,
-            )
-        ],
-    )
-    slot_by_name = {
-        "grasp_description.manipulator": SimpleNamespace(
-            entity_description=EntityDescriptionSchema(
-                name="robot",
-                semantic_type="Robot",
-            ),
-            value=None,
-        )
-    }
-
-    monkeypatch.setattr(
-        backend,
-        "_auto_ground_sub_entity",
-        lambda raw_type, resolved_params: fallback_manipulator,
-    )
-
-    result = backend._reconstruct_complex(
-        field_name="grasp_description",
-        fspec=fspec,
-        slot_by_name=slot_by_name,
-        grounder=RaisingGrounder(),
-        resolved_params={},
-    )
-
-    assert result.manipulator is fallback_manipulator
-
-
-def test_auto_ground_sub_entity_handles_prefixed_arm_names(monkeypatch):
-    alpha = SimpleNamespace(name=PrefixedNameLike("alpha_manipulator"))
-    beta = SimpleNamespace(name=PrefixedNameLike("beta_manipulator"))
-    resolved_params = {"arm": SimpleNamespace(name=PrefixedNameLike("alpha"))}
-
-    class FakeSymbolGraph:
-        def get_instances_of_type(self, _raw_type):
-            return [beta, alpha]
-
-    monkeypatch.setattr(backend, "SymbolGraph", None, raising=False)
-    monkeypatch.setattr(
-        "krrood.symbol_graph.symbol_graph.SymbolGraph",
-        lambda: FakeSymbolGraph(),
-    )
-
-    result = backend._auto_ground_sub_entity(Manipulator, resolved_params)
-
-    assert result is alpha
-
-
-# ── New tests for expanded coverage ────────────────────────────────────────
 
 
 class TestLLMBackendFields:
@@ -258,10 +174,10 @@ class TestLLMBackendEvaluate:
             MockPickUpAction(object_designator=milk, timeout=30.0)
         ]
 
-    def test_evaluate_reconstructs_complex_enum_slot(self) -> None:
-        """Dotted complex sub-field output reconstructs the complex dataclass."""
+    def test_top_level_complex_ellipsis_requires_nested_match(self) -> None:
+        """Complex dataclass fields must be represented as nested KRROOD Match objects."""
         output = ActionReasoningOutput(
-            action_type="MockPickUpAction",
+            action_type="MockRequiredNestedAction",
             slots=[
                 SlotValue(
                     field_name="grasp_description.grasp_type",
@@ -272,45 +188,17 @@ class TestLLMBackendEvaluate:
         llm = ScriptedLLM(responses=[output])
         milk = MockBody("milk")
 
-        results = list(
-            LLMBackend(llm=llm).evaluate(
-                Match(MockPickUpAction)(
-                    object_designator=milk,
-                    grasp_description=...,
+        with pytest.raises(LLMUnresolvedRequiredFields) as exc_info:
+            list(
+                LLMBackend(llm=llm, strict_required=True).evaluate(
+                    Match(MockRequiredNestedAction)(
+                        object_designator=milk,
+                        grasp_description=...,
+                    )
                 )
             )
-        )
 
-        assert results == [
-            MockPickUpAction(
-                object_designator=milk,
-                grasp_description=MockGraspDescription(grasp_type=GraspType.FRONT),
-            )
-        ]
-
-    def test_nested_match_accepts_leaf_slot_names_for_compatibility(self) -> None:
-        """Nested free leaves can still be filled by their leaf names."""
-        output = ActionReasoningOutput(
-            action_type="MockRequiredNestedAction",
-            slots=[SlotValue(field_name="grasp_type", value="SIDE")],
-        )
-        milk = MockBody("milk")
-
-        results = list(
-            LLMBackend(llm=ScriptedLLM(responses=[output]), strict_required=True).evaluate(
-                Match(MockRequiredNestedAction)(
-                    object_designator=milk,
-                    grasp_description=Match(MockGraspDescription)(grasp_type=...),
-                )
-            )
-        )
-
-        assert results == [
-            MockRequiredNestedAction(
-                object_designator=milk,
-                grasp_description=MockGraspDescription(grasp_type=GraspType.SIDE),
-            )
-        ]
+        assert exc_info.value.unresolved_fields == ["grasp_description"]
 
     def test_fixed_nested_slots_are_passed_to_llm_as_dotted_paths(self, monkeypatch) -> None:
         """Fixed nested leaves are exposed to the LLM with canonical dotted names."""
@@ -386,10 +274,17 @@ class TestLLMBackendEvaluate:
         """Nested Manipulator leaves use SymbolGraph auto-grounding, not Body grounding."""
         fallback_manipulator = Manipulator("left_manipulator")
 
+        def fake_ground_expected_entity(
+            raw_type,
+            description,
+            resolved_params,
+            symbol_graph=None,
+        ):
+            return fallback_manipulator
+
         monkeypatch.setattr(
-            backend,
-            "_auto_ground_sub_entity",
-            lambda raw_type, resolved_params: fallback_manipulator,
+            "llmr.world.grounder.ground_expected_entity",
+            fake_ground_expected_entity,
         )
 
         output = ActionReasoningOutput(
@@ -495,46 +390,6 @@ class TestLLMBackendEvaluate:
             )
 
 
-class TestCoercePrimitive:
-    """coerce_primitive() — string-to-type coercion for LLM slot values."""
-
-    def test_float_string_coerced_to_float(self) -> None:
-        """String float is cast to float."""
-        assert coerce_primitive("42.5", float) == 42.5
-        assert isinstance(coerce_primitive("42.5", float), float)
-
-    def test_int_string_coerced_to_int(self) -> None:
-        """String int is cast to int."""
-        assert coerce_primitive("7", int) == 7
-        assert isinstance(coerce_primitive("7", int), int)
-
-    @pytest.mark.parametrize("value,expected", [
-        ("true", True),
-        ("True", True),
-        ("1", True),
-        ("yes", True),
-        ("false", False),
-        ("False", False),
-        ("0", False),
-        ("no", False),
-    ])
-    def test_bool_string_coerced_to_bool(self, value: str, expected: bool) -> None:
-        """Bool string variants are correctly coerced to bool."""
-        assert coerce_primitive(value, bool) is expected
-
-    def test_str_passthrough(self) -> None:
-        """String values for str fields are returned unchanged."""
-        assert coerce_primitive("hello", str) == "hello"
-
-    def test_invalid_float_returns_original_string(self) -> None:
-        """Non-numeric string for float field returns the string unchanged."""
-        assert coerce_primitive("not_a_float", float) == "not_a_float"
-
-    def test_invalid_int_returns_original_string(self) -> None:
-        """Non-numeric string for int field returns the string unchanged."""
-        assert coerce_primitive("not_an_int", int) == "not_an_int"
-
-
 class TestGetWorldContext:
     """LLMBackend._get_world_context() — world context generation."""
 
@@ -575,50 +430,3 @@ class TestPrivateEvaluate:
 
         assert results == [MockPickUpAction(object_designator=milk)]
 
-
-class TestAssignedVariableValue:
-    """_assigned_variable_value — KRROOD variable resolution."""
-
-    def test_resolves_variable_from_selectable_to_first_value(self) -> None:
-        """_assigned_variable_value resolves a variable_from([...]) selectable."""
-        from llmr.backend import _assigned_variable_value
-
-        milk = MockBody("milk")
-        juice = MockBody("juice")
-        var = variable_from([milk, juice])
-        result = _assigned_variable_value(var)
-        assert result is milk
-
-    def test_returns_unresolved_when_selectable_is_empty(self) -> None:
-        """_assigned_variable_value returns _UNRESOLVED for an empty selectable."""
-        from llmr.backend import _assigned_variable_value, _UNRESOLVED
-
-        var = variable_from([])
-        result = _assigned_variable_value(var)
-        assert result is _UNRESOLVED
-
-
-class TestCoerceEnum:
-    """_coerce_enum() — string-to-enum coercion with fallback warning."""
-
-    def test_coerce_enum_exact_match(self) -> None:
-        """_coerce_enum returns correct member for exact name match."""
-        from llmr.backend import _coerce_enum
-        result = _coerce_enum("FRONT", GraspType)
-        assert result is GraspType.FRONT
-
-    def test_coerce_enum_case_insensitive_match(self) -> None:
-        """_coerce_enum returns correct member for case-insensitive match."""
-        from llmr.backend import _coerce_enum
-        result = _coerce_enum("front", GraspType)
-        assert result is GraspType.FRONT
-
-    def test_coerce_enum_warns_and_falls_back_on_unknown_value(self, capfd) -> None:
-        """_coerce_enum logs a warning and returns the first member for unknown values."""
-        from llmr.backend import _coerce_enum
-
-        result = _coerce_enum("UNKNOWN_GRASP", GraspType)
-        captured = capfd.readouterr()
-
-        assert result is GraspType.FRONT  # first member is the fallback
-        assert "UNKNOWN_GRASP" in captured.err
