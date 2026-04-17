@@ -249,17 +249,13 @@ class TestRunSlotFiller:
 
         assert world_context in _last_user_prompt(llm)
 
-    def test_handles_complex_field_expansion(self) -> None:
-        """run_slot_filler expands complex fields to dotted sub-fields."""
+    def test_top_level_complex_slot_is_not_expanded(self) -> None:
+        """Top-level complex dataclass slots are left to nested KRROOD Match leaves."""
         output = ActionReasoningOutput(
             action_type="MockPickUpAction",
-            slots=[
-                SlotValue(
-                    field_name="grasp_description.grasp_type", value="TOP"
-                ),
-            ],
+            slots=[],
         )
-        llm = ScriptedLLM(responses=[output])
+        llm = RecordingLLM(responses=[output])
         result = run_slot_filler(
             instruction="pick up",
             action_cls=MockPickUpAction,
@@ -269,7 +265,10 @@ class TestRunSlotFiller:
             llm=llm,
         )
         assert result is not None
-        assert result.slots[0].field_name == "grasp_description.grasp_type"
+
+        prompt = _last_user_prompt(llm)
+        assert "grasp_description.grasp_type" not in prompt
+        assert "Complex slots" not in prompt
 
     def test_optional_instruction(self) -> None:
         """run_slot_filler works with None instruction."""
@@ -336,7 +335,7 @@ class TestRunSlotFiller:
         run_slot_filler(
             instruction="grasp from front",
             action_cls=MockPickUpAction,
-            free_slot_names=["grasp_description"],
+            free_slot_names=["grasp_description.grasp_type"],
             fixed_slots={},
             world_context="",
             llm=llm,

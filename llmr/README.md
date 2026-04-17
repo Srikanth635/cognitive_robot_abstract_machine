@@ -48,9 +48,18 @@ for plan in nl_sequential(
 from krrood.entity_query_language.query.match import Match
 from llmr import resolve_params, resolve_match
 from your_actions import PickUpAction
+from your_actions import GraspDescription
 
 # Build underspecified action match
-match = Match(PickUpAction)(object_designator=..., arm=...)
+match = Match(PickUpAction)(
+    object_designator=...,
+    arm=...,
+    grasp_description=Match(GraspDescription)(
+        approach_direction=...,
+        vertical_alignment=...,
+        manipulator=...,
+    ),
+)
 
 # Option 1: Get resolved action instance (no execution)
 action = resolve_params(
@@ -86,12 +95,11 @@ The main executor: resolves free Match slots using LLM reasoning.
 
 **Workflow:**
 1. Receives an underspecified Match with free slots (`...`)
-2. Introspects action class to get field types and docstrings
-3. Calls LLM to fill free slots
-4. Grounds entity slots using EntityGrounder
-5. Coerces primitive/enum slots to correct types
-6. Reconstructs complex nested fields
-7. Returns concrete action instance
+2. Reads KRROOD's Match variable graph and resolved leaf field types
+3. Calls the LLM slot filler with canonical free slot names
+4. Grounds entity slots using EntityGrounder and SymbolGraph
+5. Coerces primitive/enum slots to correct Python values
+6. Lets KRROOD construct the final action, including nested Match dataclasses
 
 
 #### **`factory.py`** — User-Facing Entry Points
@@ -110,6 +118,18 @@ High-level functions for common workflows.
 - `resolve_params(match, llm, groundable_type, instruction, strict_required)` → Action Instance  
   Already-built Match → concrete action (no execution)
 
+#### **`match_construction.py`** — KRROOD Match Builders
+Schema-driven helpers for constructing underspecified KRROOD `Match` expressions.
+
+**Key Function:**
+- `required_match(action_cls)` → `Match` with required public fields set free
+
+#### **`match_inspection.py`** — KRROOD Match Inspection
+Reads KRROOD Match variable graphs and exposes canonical binding metadata.
+
+#### **`slot_resolution.py`** — Slot Value Resolution
+Converts LLM slot outputs into concrete Python values and delegates entity grounding.
+
 ---
 
 ### 🌐 Reasoning Modules (`reasoning/`)
@@ -127,7 +147,7 @@ Dynamic prompts from action introspection; LLM fills free slots.
 **Prompt Features:**
 - Per-field docstrings extracted via AST parsing
 - Enum members listed for ENUM slots
-- Complex fields expanded to dotted sub-fields
+- Nested Match leaves represented with canonical dotted field names
 - World state context provided
 - Entity slots get dedicated section for semantic grounding
 
@@ -182,7 +202,7 @@ Classifies action dataclass fields by resolution strategy.
   - `ENTITY` — Symbol subclass → grounded from SymbolGraph
   - `POSE` — Pose/HomogeneousTransformationMatrix
   - `ENUM` — Enum subclass → coerced from string
-  - `COMPLEX` — Dataclass → recursively constructed
+  - `COMPLEX` — Dataclass → represented as nested KRROOD Match leaves
   - `PRIMITIVE` — bool/int/float/str → taken directly
   - `TYPE_REF` — Type[X] annotation → resolved via SymbolGraph
 
@@ -212,7 +232,7 @@ Maps LLM entity descriptions to Symbol instances in SymbolGraph.
 - `resolve_symbol_class(semantic_type: str)` → `Optional[Type[Symbol]]`  
   Resolve semantic type string to Symbol subclass
 
-- `ground_entity(description, grounder)` → Symbol instance or None
+- `ground_entity(description, groundable_type=Symbol)` → `GroundingResult`
 
 #### **`serializer.py`** — World State Serialization
 Convert SymbolGraph to LLM-readable string.
@@ -276,14 +296,13 @@ nl_plan("pick up the milk")
     ↓
 classify_action() [LLM]
     ↓ action_cls = PickUpAction
-_fully_underspecified(action_cls)
+build required-field Match
     ↓ match = Match(PickUpAction)(object_designator=...)
 LLMBackend.evaluate(match)
-    ├─ introspect(PickUpAction) → ActionSchema
-    ├─ run_slot_filler() [LLM fills slots]
-    ├─ ground_entity() [SymbolGraph lookup]
-    ├─ _coerce_value() [type conversion]
-    └─ reconstruct_complex() [nested fields]
+    ├─ read KRROOD Match leaf variables
+    ├─ run_slot_filler() [LLM fills free canonical slots]
+    ├─ ground entity slots [SymbolGraph lookup]
+    └─ coerce enum / primitive slot values
     ↓ action = PickUpAction(object_designator=milk_symbol, ...)
 execute_single(action, context)
     ↓
