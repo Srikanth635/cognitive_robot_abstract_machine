@@ -23,6 +23,26 @@ _ROBOT_ANNOTATION_TYPE_NAMES = frozenset(
         "SemanticRobotAnnotation",
         "KinematicChain",
         "Manipulator",
+        "ParallelGripper",
+        "HumanoidGripper",
+        "Sensor",
+        "Camera",
+        "Base",
+        "Torso",
+        "Neck",
+        "Arm",
+        "Finger",
+    }
+)
+
+# Subset shown in "Available Semantic Types" for LLM grounding.
+# Includes abstract types (e.g. Manipulator) so instances appear under the type
+# name the action schema uses, not just the concrete subclass name.
+_ROBOT_CONTEXT_TYPE_NAMES = frozenset(
+    {
+        "Manipulator",
+        "ParallelGripper",
+        "HumanoidGripper",
         "Sensor",
         "Camera",
         "Base",
@@ -199,11 +219,31 @@ def _collect_annotations(
         inst = wrapped.instance
         if inst is None:
             continue
+
+        ann_type = type(inst).__name__
+        inst_mro_names = {cls.__name__ for cls in type(inst).__mro__}
+
+        # Robot semantic annotations: checked BEFORE the .bodies guard because
+        # Manipulator subclasses (e.g. ParallelGripper, SuctionGripper) don't
+        # inherit KinematicChain and have no .bodies property.
+        # MRO check catches any subclass of a known abstract type without requiring
+        # explicit enumeration of every concrete robot component class.
+        # Register the instance under every parent type in _ROBOT_CONTEXT_TYPE_NAMES
+        # so the LLM sees it under the abstract type name the action schema uses
+        # (e.g. Manipulator) not only under the concrete class name.
+        if inst_mro_names & _ROBOT_ANNOTATION_TYPE_NAMES:
+            inst_name = body_display_name(inst) or f"{ann_type}@{id(inst):x}"
+            for cls in type(inst).__mro__:
+                if cls.__name__ in _ROBOT_CONTEXT_TYPE_NAMES:
+                    names_list = annotation_summary.setdefault(cls.__name__, [])
+                    if inst_name not in names_list:
+                        names_list.append(inst_name)
+            continue
+
         bodies_attr = getattr(inst, "bodies", None)
         if bodies_attr is None:
             continue
 
-        ann_type = type(inst).__name__
         try:
             bodies = list(bodies_attr)
         except Exception:

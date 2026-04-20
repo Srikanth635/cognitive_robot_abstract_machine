@@ -81,7 +81,10 @@ def resolve_entity_slot(
     if ed is not None:
         grounding_ed = ed
     elif sv.value:
-        grounding_ed = EntityDescriptionSchema(name=sv.value)
+        # LLM used the plain value field instead of entity_description.
+        # Recover semantic_type from the known field type so Tier 1 grounding fires.
+        inferred_type = expected_type.__name__ if isinstance(expected_type, type) else None
+        grounding_ed = EntityDescriptionSchema(name=sv.value, semantic_type=inferred_type)
     else:
         logger.warning(
             "resolve_entity_slot: field '%s' has neither entity_description nor value.",
@@ -89,7 +92,7 @@ def resolve_entity_slot(
         )
         return unresolved
 
-    grounding = grounder.ground(grounding_ed)
+    grounding = grounder.ground(grounding_ed, expected_type=expected_type)
     if grounding.warning:
         logger.warning("Grounding warning for '%s': %s", field_name, grounding.warning)
     if not grounding.bodies:

@@ -6,10 +6,10 @@ from __future__ import annotations
 
 import pytest
 from ..scripted_llm import RecordingLLM, ScriptedLLM
-from ..test_actions import (
-    MockPickUpAction,
-    MockNavigateAction,
+from .._fixtures.actions import (
     GraspType,
+    MockNavigateAction,
+    MockPickUpAction,
 )
 from llmr.exceptions import LLMActionRegistryEmpty
 from llmr.reasoning.slot_filler import (
@@ -385,22 +385,8 @@ class TestRunSlotFiller:
         assert "object_designator = 'milk'" in prompt
 
 
-class TestSlotPromptName:
-    """slot_prompt_name utility — field name prefix handling for LLM prompts."""
-
-    def test_removes_class_prefix(self) -> None:
-        """slot_prompt_name removes only the leading 'ClassName.' prefix."""
-        from llmr._utils import slot_prompt_name
-        assert slot_prompt_name("MockPickUpAction.arm", MockPickUpAction) == "arm"
-        assert slot_prompt_name("arm", MockPickUpAction) == "arm"
-
-    def test_preserves_nested_dotted_paths(self) -> None:
-        """slot_prompt_name keeps nested paths intact after removing the root prefix."""
-        from llmr._utils import slot_prompt_name
-        result = slot_prompt_name(
-            "MockPickUpAction.grasp_description.grasp_type", MockPickUpAction
-        )
-        assert result == "grasp_description.grasp_type"
+class TestPrefixedDottedSlotPrompt:
+    """Prompt rendering for KRROOD-prefixed dotted slot names."""
 
     def test_prefixed_dotted_enum_slot_renders_allowed_values_not_fallback(self) -> None:
         """A fully-prefixed dotted enum slot renders allowed values, not the fallback section."""
@@ -412,7 +398,6 @@ class TestSlotPromptName:
         run_slot_filler(
             instruction="grasp from side",
             action_cls=MockPickUpAction,
-            # Full KRROOD-style path with class prefix + nested dotted name
             free_slot_names=["MockPickUpAction.grasp_description.grasp_type"],
             fixed_slots={},
             world_context="",

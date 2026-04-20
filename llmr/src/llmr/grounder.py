@@ -57,10 +57,20 @@ class EntityGrounder:
 
     # ── Main entry point ───────────────────────────────────────────────────────
 
-    def ground(self, description: EntityDescriptionSchema) -> GroundingResult:
-        """Resolve *description* to Symbol instances (Tier 1, then Tier 2)."""
+    def ground(
+        self,
+        description: EntityDescriptionSchema,
+        expected_type: Optional[type] = None,
+    ) -> GroundingResult:
+        """Resolve *description* to Symbol instances (Tier 1, then Tier 2).
+
+        :param expected_type: Python type the caller needs (e.g. ``Manipulator``).
+            Passed to Tier 1 so annotation instances are returned directly when
+            they are themselves of the required type, rather than expanding to
+            their physical bodies.
+        """
         if description.semantic_type:
-            result = self._annotation_ground(description)
+            result = self._annotation_ground(description, expected_type=expected_type)
             if result.bodies:
                 logger.debug(
                     "Tier 1 grounding: semantic_type=%r → %d instance(s): %s",
@@ -89,21 +99,53 @@ class EntityGrounder:
 
     # ── Tier 1: annotation-based ───────────────────────────────────────────────
 
-    def _annotation_ground(self, description: EntityDescriptionSchema) -> GroundingResult:
-        """Resolve ``semantic_type`` to a class, then collect its annotated bodies."""
+    def _annotation_ground(
+        self,
+        description: EntityDescriptionSchema,
+        expected_type: Optional[type] = None,
+    ) -> GroundingResult:
+        """Resolve ``semantic_type`` to a class, then collect its annotated bodies.
+
+        When *expected_type* is provided and annotation instances are already of
+        that type, return the annotations directly instead of expanding to their
+        physical bodies.  This handles robot-semantic-annotation fields such as
+        ``Manipulator`` where the action slot wants the annotation object, not a
+        kinematic link.
+        """
         cls = resolve_symbol_class(
             description.semantic_type,
             symbol_graph=self.symbol_graph,
         )
         if cls is None:
-            logger.debug(
-                "Cannot resolve '%s' to a Symbol subclass.", description.semantic_type
-            )
-            return GroundingResult()
+            if expected_type is not None:
+                # Class diagram may be empty or unpopulated; use the known field type directly.
+                cls = expected_type
+            else:
+                logger.debug(
+                    "Cannot resolve '%s' to a Symbol subclass.", description.semantic_type
+                )
+                return GroundingResult()
 
         annotations = get_instances(cls, self.symbol_graph)
         if not annotations:
             return GroundingResult()
+
+        # If the annotation instances themselves are of expected_type, return them
+        # directly — no body expansion needed (e.g. Manipulator field → Manipulator instance).
+        if expected_type is not None and isinstance(annotations[0], expected_type):
+            candidates = list(annotations)
+            if description.name and candidates:
+                name_lower = description.name.lower()
+                name_filtered = [
+                    a for a in candidates if name_lower in body_display_name(a).lower()
+                ]
+                if name_filtered:
+                    candidates = name_filtered
+            candidates = self._refine(candidates, description)
+            return GroundingResult(
+                bodies=candidates,
+                warning=self._multi_match_warning(candidates, description.name),
+            )
 
         candidates: List[Any] = []
         for ann in annotations:

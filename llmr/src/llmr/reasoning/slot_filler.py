@@ -43,14 +43,15 @@ ENTITY SLOTS  (objects / surfaces in the world)
 Return a SlotValue with:
   - field_name  = the role name exactly as listed
   - entity_description populated:
-      name           = noun phrase from the instruction (head noun only, no articles)
-      semantic_type  = ontological type from world annotations (null if unknown)
+      name           = exact name from Available Semantic Types (for the matching
+                       instance) or body_name from Scene Objects
+      semantic_type  = EXACT type name from Available Semantic Types that matches
+                       the slot's expected type; null only if no match found
       spatial_context = spatial qualifier from instruction ("on the table") or null
       attributes     = discriminating key/value attributes (color, size) or null
   - reasoning   = 1-2 sentences explaining which world object was identified
 
 The entity_description is used for symbolic grounding in SymbolGraph.
-The name must be the local part of the body name visible in the world context.
 
 ────────────────────────────────────────────────────
 PARAMETER SLOTS  (enum, primitive, complex sub-fields)
@@ -64,9 +65,7 @@ For ENUM slots use EXACTLY one of the listed allowed values. Never paraphrase,
 translate, or describe enum values in natural language.
 Complex dataclass fields are resolved through nested KRROOD Match leaves. When
 a dotted field is listed (e.g. 'grasp_description.manipulator'), return a
-SlotValue using that exact dotted field_name. For Manipulator fields, choose a
-concrete manipulator/gripper name from the world context; never use the
-robot/platform name.
+SlotValue using that exact dotted field_name.
 
 Always provide per-slot reasoning. Return structured JSON.
 """
