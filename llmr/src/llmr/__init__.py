@@ -17,22 +17,26 @@ Package layout
 --------------
   backend.py              LLMBackend — the GenerativeBackend implementation
   factory.py              nl_plan() / nl_sequential() / resolve_params() — user-facing entry points
-  match_construction.py   required_match() — schema-driven Match construction
-  match_inspection.py     Match variable graph inspection helpers
+  grounder.py             EntityGrounder — description → Symbol instance
   slot_resolution.py      LLM slot output coercion and grounding dispatch
+  bridge/                 single gateway to krrood — all krrood calls funnel here
+    introspect.py         PycramIntrospector, FieldKind, ActionSchema, FieldSpec
+    world_reader.py       SymbolGraph read + serialize_world_from_symbol_graph
+    match_reader.py       Match snapshot: MatchData, MatchSlot, read_match, required_match
   schemas/
     entities.py           EntityDescriptionSchema — pre-grounding entity description
     slots.py              SlotValue, ActionReasoningOutput, ActionClassification
   pycram_bridge/
-    introspector.py       PycramIntrospector, FieldKind, ActionSchema, FieldSpec
     adapter.py            PyCRAM execution and action-discovery boundary
-  world/
-    serializer.py         serialize_world_from_symbol_graph() — world → LLM string
-    grounder.py           EntityGrounder — description → Symbol instance
   reasoning/
     slot_filler.py        run_slot_filler(), classify_action() — LLM prompt pipeline
     decomposer.py         TaskDecomposer — compound NL → atomic steps
     llm_config.py         make_llm(), LLMProvider — LLM factory
+
+Backward-compat shims re-export from the canonical homes:
+  world/serializer.py          → bridge/world_reader.py
+  world/grounder.py            → grounder.py  (+ resolve_symbol_class from bridge/world_reader.py)
+  pycram_bridge/introspector.py → bridge/introspect.py
 
 Quickstart — simple (fully NL-driven)
 ---------------------------------------

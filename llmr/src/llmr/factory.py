@@ -8,8 +8,9 @@ from typing import TYPE_CHECKING
 from typing_extensions import Any, Callable, Dict, List, Optional
 
 from krrood.symbol_graph.symbol_graph import Symbol
+from llmr.bridge.introspect import PycramIntrospector
+from llmr.bridge.match_reader import required_match
 from llmr.exceptions import LLMActionClassificationFailed
-from llmr.match_construction import required_match
 from llmr.pycram_bridge import PycramContext, PycramPlanNode, execute_single
 
 if TYPE_CHECKING:
@@ -54,7 +55,7 @@ def nl_plan(
         raise LLMActionClassificationFailed(instruction=instruction)
 
     # Step 2: Build an underspecified Match for required schema fields.
-    match = required_match(action_cls)
+    match = required_match(action_cls, PycramIntrospector())
 
     # Step 3: Set strict LLMBackend on context.
     context.query_backend = _backend(

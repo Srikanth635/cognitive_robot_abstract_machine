@@ -1,4 +1,11 @@
-"""Small value-conversion helpers for LLM slot outputs."""
+"""Slot-value resolution — turns LLM slot outputs into concrete Python values.
+
+Dispatches by :class:`FieldKind` (pre-classified on each :class:`MatchSlot`):
+  ENTITY / POSE / TYPE_REF → ground via :class:`EntityGrounder`.
+  ENUM                     → coerce string to enum member.
+  PRIMITIVE                → cast string to bool / int / float / str.
+  COMPLEX                  → not resolved here (nested Match handles it).
+"""
 from __future__ import annotations
 
 import logging
@@ -6,56 +13,54 @@ import typing
 from typing import TYPE_CHECKING
 from typing_extensions import Any, Dict, Optional
 
-logger = logging.getLogger(__name__)
+from llmr.bridge.introspect import FieldKind
+from llmr.bridge.world_reader import resolve_symbol_class
 
 if TYPE_CHECKING:
-    from llmr.match_inspection import MatchBinding
-    from llmr.pycram_bridge.introspector import FieldKind, PycramIntrospector
+    from llmr.bridge.match_reader import MatchSlot
+    from llmr.grounder import EntityGrounder
     from llmr.schemas.slots import SlotValue
-    from llmr.world.grounder import EntityGrounder
+
+logger = logging.getLogger(__name__)
 
 
 def resolve_binding_value(
-    binding: "MatchBinding",
-    introspector: "PycramIntrospector",
+    slot: "MatchSlot",
     slot_by_name: Dict[str, "SlotValue"],
     grounder: "EntityGrounder",
     resolved_params: Dict[str, Any],
     unresolved: Any,
 ) -> Any:
-    """Resolve one free KRROOD Match binding from LLM output and SymbolGraph."""
-    from llmr.pycram_bridge.introspector import FieldKind
-
-    field_type = binding.field_type
-    kind = introspector.classify_type(field_type)
+    """Resolve one free :class:`MatchSlot` from LLM output and SymbolGraph grounding."""
+    field_type = slot.field_type
+    kind = slot.field_kind
 
     if kind in (FieldKind.ENTITY, FieldKind.POSE, FieldKind.TYPE_REF):
-        slot = slot_by_name.get(binding.prompt_name)
-        if slot is None:
+        slot_value = slot_by_name.get(slot.prompt_name)
+        if slot_value is None:
             return unresolved
         return resolve_entity_slot(
-            slot,
+            slot_value,
             grounder,
             kind,
-            binding.prompt_name,
+            slot.prompt_name,
             expected_type=field_type,
             resolved_params=resolved_params,
             unresolved=unresolved,
         )
 
     if kind == FieldKind.ENUM:
-        slot = slot_by_name.get(binding.prompt_name)
-        if slot is not None and slot.value:
-            return coerce_enum(slot.value, field_type)
+        slot_value = slot_by_name.get(slot.prompt_name)
+        if slot_value is not None and slot_value.value:
+            return coerce_enum(slot_value.value, field_type)
         return unresolved
 
     if kind == FieldKind.COMPLEX:
         return unresolved
 
-    if kind == FieldKind.PRIMITIVE or kind is None:
-        slot = slot_by_name.get(binding.prompt_name)
-        if slot is not None and slot.value is not None:
-            return coerce_primitive(slot.value, field_type)
+    slot_value = slot_by_name.get(slot.prompt_name)
+    if slot_value is not None and slot_value.value is not None:
+        return coerce_primitive(slot_value.value, field_type)
 
     return unresolved
 
@@ -63,20 +68,14 @@ def resolve_binding_value(
 def resolve_entity_slot(
     sv: "SlotValue",
     grounder: "EntityGrounder",
-    kind: "FieldKind",
+    kind: FieldKind,
     field_name: str,
     expected_type: Optional[type] = None,
     resolved_params: Optional[Dict[str, Any]] = None,
     unresolved: Any = None,
 ) -> Any:
-    """Ground an ENTITY/POSE/TYPE_REF slot to a Symbol instance via EntityGrounder."""
-    from llmr.pycram_bridge.introspector import FieldKind
+    """Ground an ENTITY / POSE / TYPE_REF slot to a Symbol instance via :class:`EntityGrounder`."""
     from llmr.schemas.entities import EntityDescriptionSchema
-    from llmr.world.grounder import (
-        ground_expected_entity,
-        grounder_can_return_type,
-        resolve_symbol_class,
-    )
 
     ed = sv.entity_description
     if ed is not None:
@@ -94,19 +93,6 @@ def resolve_entity_slot(
     if grounding.warning:
         logger.warning("Grounding warning for '%s': %s", field_name, grounding.warning)
     if not grounding.bodies:
-        if (
-            kind == FieldKind.ENTITY
-            and isinstance(expected_type, type)
-            and not grounder_can_return_type(grounder, expected_type)
-        ):
-            expected_entity = ground_expected_entity(
-                expected_type,
-                grounding_ed,
-                resolved_params or {},
-                symbol_graph=getattr(grounder, "symbol_graph", None),
-            )
-            if expected_entity is not None:
-                return expected_entity
         logger.warning(
             "resolve_entity_slot: no bodies found for field '%s' (name=%r, type=%r).",
             field_name,
@@ -116,16 +102,9 @@ def resolve_entity_slot(
         return unresolved
 
     body = grounding.bodies[0]
+
     if kind == FieldKind.ENTITY and isinstance(expected_type, type):
         if not isinstance(body, expected_type):
-            expected_entity = ground_expected_entity(
-                expected_type,
-                grounding_ed,
-                resolved_params or {},
-                symbol_graph=getattr(grounder, "symbol_graph", None),
-            )
-            if expected_entity is not None:
-                return expected_entity
             logger.warning(
                 "resolve_entity_slot: grounded value for field '%s' has type %s, expected %s.",
                 field_name,
@@ -155,7 +134,7 @@ def resolve_entity_slot(
 
 
 def coerce_enum(value: str, enum_type: type) -> Any:
-    """Convert a string to the matching enum member."""
+    """Convert a string to the matching enum member (case-insensitive fallback)."""
     try:
         return enum_type[value]
     except KeyError:

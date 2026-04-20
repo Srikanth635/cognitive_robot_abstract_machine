@@ -1,50 +1,39 @@
 """LLMBackend — GenerativeBackend implementation that uses an LLM to fill underspecified Match slots.
 
-World context is derived from SymbolGraph.
+World context is derived from SymbolGraph.  All krrood access goes through ``llmr.bridge``.
 """
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 from typing_extensions import Any, Callable, Dict, Iterable, Optional, Type
-
-logger = logging.getLogger(__name__)
 
 from krrood.entity_query_language.backends import GenerativeBackend
 from krrood.entity_query_language.query.match import Match
+from krrood.entity_query_language.utils import T
 from krrood.symbol_graph.symbol_graph import Symbol
 
-from krrood.entity_query_language.utils import T
-
-from llmr.exceptions import LLMSlotFillingFailed, LLMUnresolvedRequiredFields
-from llmr.match_inspection import (
-    match_bindings,
+from llmr.bridge.match_reader import (
+    finalize_match,
+    read_match,
     unresolved_required_fields,
+    write_slot_value,
 )
+from llmr.bridge.introspect import PycramIntrospector
+from llmr.exceptions import LLMSlotFillingFailed, LLMUnresolvedRequiredFields
 from llmr.slot_resolution import resolve_binding_value
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from langchain_core.language_models import BaseChatModel
+
+logger = logging.getLogger(__name__)
 
 
 # ── Typed sentinel ─────────────────────────────────────────────────────────────
 
 class _Unresolved:
-    """Singleton sentinel returned when a slot cannot be resolved.
-
-    Using a dedicated class (rather than ``object()``) lets type checkers
-    distinguish unresolved returns from legitimate ``Any`` values, and gives
-    a descriptive ``repr`` in log output.
-    """
-
-    _instance: "_Unresolved | None" = None
-
-    def __new__(cls) -> "_Unresolved":
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
+    """Typed sentinel returned when a slot cannot be resolved."""
 
     def __repr__(self) -> str:
         return "<UNRESOLVED>"
@@ -94,60 +83,43 @@ class LLMBackend(GenerativeBackend):
     def _evaluate(self, expression: Match[T]) -> Iterable[T]:
         """Resolve all free slots in *expression* and yield a fully-constructed action instance."""
 
-        # ── 1. Parse free / fixed slots from the Match variable graph ──────────
-        bindings = match_bindings(expression, unresolved=_UNRESOLVED)
-        free_bindings = [binding for binding in bindings if binding.is_free]
-        fixed_slots: Dict[str, Any] = {
-            binding.prompt_name: binding.value
-            for binding in bindings
-            if not binding.is_free
-        }
+        # ── 1. Snapshot the Match expression into plain data ──────────────────
+        introspector = PycramIntrospector()
+        match_data = read_match(expression, introspector, unresolved=_UNRESOLVED)
 
-        if not free_bindings:
-            expression._update_kwargs_from_literal_values()
-            yield expression.construct_instance()
+        if not match_data.free_slots:
+            yield finalize_match(match_data)
             return
 
         # ── 2. World context ───────────────────────────────────────────────────
         world_context = self._get_world_context()
 
-        # ── 3. Run the slot filler (LLM call with dynamic prompt) ─────────────
-        # krrood already resolved each field's type via get_field_type_endpoint()
-        # and stored it in attr_match.assigned_variable._type_ — we use those
-        # types directly below instead of re-running full action-class introspection.
-        llm_free_slot_names = [
-            binding.prompt_name
-            for binding in free_bindings
-        ]
-        output = None
-        if llm_free_slot_names:
-            from llmr.reasoning.slot_filler import run_slot_filler
-            output = run_slot_filler(
-                instruction=self.instruction,
-                action_cls=expression.type,
-                free_slot_names=llm_free_slot_names,
-                fixed_slots=fixed_slots,
-                world_context=world_context,
-                llm=self.llm,
-            )
-            if output is None:
-                raise LLMSlotFillingFailed(action_name=expression.type.__name__)
+        # ── 3. Slot filler (LLM call with dynamic prompt) ─────────────────────
+        from llmr.reasoning.slot_filler import run_slot_filler
 
-        # ── 4. Resolve each free slot ──────────────────────────────────────────
-        from llmr.pycram_bridge.introspector import PycramIntrospector
-        from llmr.world.grounder import EntityGrounder
+        output = run_slot_filler(
+            instruction=self.instruction,
+            action_cls=match_data.action_type,
+            free_slot_names=match_data.free_slot_names,
+            fixed_slots=match_data.fixed_bindings,
+            world_context=world_context,
+            llm=self.llm,
+        )
+        if output is None:
+            raise LLMSlotFillingFailed(action_name=match_data.action_name)
 
-        _intro = PycramIntrospector()
+        # ── 4. Resolve each free slot and write it back into the Match ─────────
+        from llmr.grounder import EntityGrounder
+
         grounder = EntityGrounder(self.groundable_type)
-        slot_by_name = {slot.field_name: slot for slot in output.slots} if output else {}
-        # Tracks successfully resolved top-level values so nested entity
-        # auto-grounding can use them (e.g. arm → pick matching Manipulator).
+        slot_by_name = {slot.field_name: slot for slot in output.slots}
+        # Successfully resolved top-level values are threaded into nested entity
+        # auto-grounding (e.g. arm → matching Manipulator).
         resolved_params: Dict[str, Any] = {}
 
-        for binding in free_bindings:
+        for slot in match_data.free_slots:
             resolved = resolve_binding_value(
-                binding=binding,
-                introspector=_intro,
+                slot=slot,
                 slot_by_name=slot_by_name,
                 grounder=grounder,
                 resolved_params=resolved_params,
@@ -157,30 +129,22 @@ class LLMBackend(GenerativeBackend):
             if resolved is _UNRESOLVED:
                 logger.debug(
                     "LLMBackend: field '%s' unresolved — leaving as default.",
-                    binding.attribute_name,
+                    slot.attribute_name,
                 )
                 continue
 
-            resolved_params[binding.attribute_name] = resolved
-            try:
-                binding.variable._value_ = resolved
-            except Exception as exc:
-                logger.warning(
-                    "LLMBackend: cannot set field '%s': %s",
-                    binding.attribute_name,
-                    exc,
-                )
+            resolved_params[slot.attribute_name] = resolved
+            write_slot_value(slot, resolved)
 
         if self.strict_required:
-            unresolved_required = unresolved_required_fields(expression, _intro)
-            if unresolved_required:
+            unresolved = unresolved_required_fields(match_data, introspector)
+            if unresolved:
                 raise LLMUnresolvedRequiredFields(
-                    action_name=getattr(expression.type, "__name__", str(expression.type)),
-                    unresolved_fields=unresolved_required,
+                    action_name=match_data.action_name,
+                    unresolved_fields=unresolved,
                 )
 
-        expression._update_kwargs_from_literal_values()
-        yield expression.construct_instance()
+        yield finalize_match(match_data)
 
     # ── Internal ───────────────────────────────────────────────────────────────
 
@@ -193,5 +157,5 @@ class LLMBackend(GenerativeBackend):
                     "LLMBackend: world_context_provider raised %s — falling back to SymbolGraph.",
                     exc,
                 )
-        from llmr.world.serializer import serialize_world_from_symbol_graph
+        from llmr.bridge.world_reader import serialize_world_from_symbol_graph
         return serialize_world_from_symbol_graph(self.groundable_type)
