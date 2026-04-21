@@ -1,5 +1,5 @@
-"""Tests for LLM factory — make_llm and LLMProvider.
-"""
+"""Tests for LLM factory — make_llm and LLMProvider."""
+
 from __future__ import annotations
 
 import sys
@@ -20,6 +20,7 @@ class TestMakeLlm:
         # Monkeypatch the import to fail
         import sys
         import builtins
+
         original_import = builtins.__import__
 
         def mock_import(name, *args, **kwargs):
@@ -37,6 +38,7 @@ class TestMakeLlm:
     ) -> None:
         """make_llm with OLLAMA raises ImportError if langchain_ollama not available."""
         import builtins
+
         original_import = builtins.__import__
 
         def mock_import(name, *args, **kwargs):
@@ -84,6 +86,7 @@ class TestMakeLlm:
 
     def test_model_name_passed_through(self, monkeypatch) -> None:
         """make_llm passes model name to the provider client."""
+
         # Mock ChatOpenAI to capture the model argument
         class FakeChatOpenAI:
             def __init__(self, model: str, temperature: float = 0.0, **kwargs):
@@ -102,6 +105,7 @@ class TestMakeLlm:
 
     def test_temperature_passed_through(self, monkeypatch) -> None:
         """make_llm passes temperature to the provider client."""
+
         class FakeChatOpenAI:
             def __init__(self, model: str, temperature: float = 0.0, **kwargs):
                 self.model = model

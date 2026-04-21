@@ -2,6 +2,7 @@
 
 Uses ScriptedLLM with pre-built responses. No network, no API keys.
 """
+
 from __future__ import annotations
 
 import pytest
@@ -16,8 +17,12 @@ from llmr.reasoning.slot_filler import (
     classify_action,
     run_slot_filler,
 )
-from llmr.schemas.slots import ActionClassification, ActionReasoningOutput, SlotValue
-from llmr.schemas.entities import EntityDescriptionSchema
+from llmr.schemas import (
+    ActionClassification,
+    ActionReasoningOutput,
+    EntityDescriptionSchema,
+    SlotValue,
+)
 
 
 def _last_user_prompt(llm: RecordingLLM) -> str:
@@ -42,9 +47,7 @@ class TestClassifyAction:
 
     def test_returns_none_when_llm_returns_unknown_name(self) -> None:
         """Returns None when LLM classifies to unknown action."""
-        llm = ScriptedLLM(
-            responses=[ActionClassification(action_type="UnknownAction")]
-        )
+        llm = ScriptedLLM(responses=[ActionClassification(action_type="UnknownAction")])
         result = classify_action(
             "do something",
             llm,
@@ -75,6 +78,7 @@ class TestClassifyAction:
             action_registry={"MockNavigateAction": MockNavigateAction},
         )
         assert result is MockNavigateAction
+
 
 class TestRunSlotFiller:
     """run_slot_filler() — action class + free slots → filled parameters."""
@@ -113,6 +117,7 @@ class TestRunSlotFiller:
             def with_structured_output(self, schema):
                 def _failing_invoke(messages):
                     raise RuntimeError("LLM error")
+
                 return RunnableLambda(_failing_invoke)
 
         llm = FailingLLM()
@@ -232,9 +237,7 @@ class TestRunSlotFiller:
 
     def test_passes_world_context_to_prompt(self) -> None:
         """run_slot_filler includes world_context in the LLM prompt."""
-        output = ActionReasoningOutput(
-            action_type="MockPickUpAction", slots=[]
-        )
+        output = ActionReasoningOutput(action_type="MockPickUpAction", slots=[])
         llm = RecordingLLM(responses=[output])
         world_context = "milk is on the table, table is in kitchen"
 
@@ -272,9 +275,7 @@ class TestRunSlotFiller:
 
     def test_optional_instruction(self) -> None:
         """run_slot_filler works with None instruction."""
-        output = ActionReasoningOutput(
-            action_type="MockPickUpAction", slots=[]
-        )
+        output = ActionReasoningOutput(action_type="MockPickUpAction", slots=[])
         llm = ScriptedLLM(responses=[output])
         result = run_slot_filler(
             instruction=None,
@@ -306,9 +307,7 @@ class TestRunSlotFiller:
 
     def test_uses_per_field_docstrings(self) -> None:
         """Prompt includes docstrings extracted from action class."""
-        output = ActionReasoningOutput(
-            action_type="MockPickUpAction", slots=[]
-        )
+        output = ActionReasoningOutput(action_type="MockPickUpAction", slots=[])
         llm = RecordingLLM(responses=[output])
         run_slot_filler(
             instruction="pick up",
@@ -388,7 +387,9 @@ class TestRunSlotFiller:
 class TestPrefixedDottedSlotPrompt:
     """Prompt rendering for KRROOD-prefixed dotted slot names."""
 
-    def test_prefixed_dotted_enum_slot_renders_allowed_values_not_fallback(self) -> None:
+    def test_prefixed_dotted_enum_slot_renders_allowed_values_not_fallback(
+        self,
+    ) -> None:
         """A fully-prefixed dotted enum slot renders allowed values, not the fallback section."""
         output = ActionReasoningOutput(
             action_type="MockPickUpAction",

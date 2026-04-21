@@ -1,4 +1,5 @@
 """Conftest for reasoning tests — shared PycramIntrospector fixture."""
+
 from __future__ import annotations
 
 import pytest

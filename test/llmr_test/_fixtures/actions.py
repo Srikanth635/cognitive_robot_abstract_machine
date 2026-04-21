@@ -13,6 +13,7 @@ Covered FieldKind paths:
   TYPE_REF  ``Type[Symbol]`` — :class:`MockTypeRefAction.annotation_type`.
   Container ``List[Symbol]`` — :class:`MockContainerAction.object_designators`.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

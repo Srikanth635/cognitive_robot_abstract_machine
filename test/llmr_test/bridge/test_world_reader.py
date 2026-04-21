@@ -1,4 +1,5 @@
 """Tests for :mod:`llmr.bridge.world_reader` — SymbolGraph gateway and duck-typed body helpers."""
+
 from __future__ import annotations
 
 from types import SimpleNamespace
@@ -77,9 +78,7 @@ class TestBodyBoundingBox:
         """A duck-typed collision chain returns the (d, w, h) tuple."""
         bb = SimpleNamespace(dimensions=(0.5, 1.0, 1.5))
         bbox = SimpleNamespace(bounding_box=lambda: bb)
-        coll = SimpleNamespace(
-            as_bounding_box_collection_in_frame=lambda _frame: bbox
-        )
+        coll = SimpleNamespace(as_bounding_box_collection_in_frame=lambda _frame: bbox)
         body = SimpleNamespace(collision=coll)
         assert body_bounding_box(body) == (0.5, 1.0, 1.5)
 
@@ -117,7 +116,9 @@ class TestResolveSymbolClass:
         """``_synonyms`` on a Symbol subclass enables a shortcut alias."""
         assert resolve_symbol_class("milk") is MilkAnnotation
 
-    def test_returns_none_for_unknown(self, symbol_world: Dict[str, Any]) -> None:  # noqa: F811
+    def test_returns_none_for_unknown(
+        self, symbol_world: Dict[str, Any]
+    ) -> None:  # noqa: F811
         assert resolve_symbol_class("UnknownType") is None
 
 

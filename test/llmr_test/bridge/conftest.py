@@ -1,4 +1,5 @@
 """Shared fixtures for the bridge test package."""
+
 from __future__ import annotations
 
 import pytest

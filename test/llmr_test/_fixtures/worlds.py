@@ -12,6 +12,7 @@ Fixtures:
   :func:`robot_world`   — small SymbolGraph with a :class:`Manipulator` instance
                           registered so tests can exercise MRO-based routing.
 """
+
 from __future__ import annotations
 
 from types import SimpleNamespace

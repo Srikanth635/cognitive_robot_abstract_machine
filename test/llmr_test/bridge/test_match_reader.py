@@ -1,4 +1,5 @@
 """Tests for :mod:`llmr.bridge.match_reader` — Match → MatchData snapshots."""
+
 from __future__ import annotations
 
 import pytest
@@ -98,9 +99,7 @@ class TestReadMatch:
         assert kinds["priority"] is FieldKind.PRIMITIVE
         assert kinds["grasp_type"] is FieldKind.ENUM
 
-    def test_free_slots_all_ellipsis(
-        self, introspector: PycramIntrospector
-    ) -> None:
+    def test_free_slots_all_ellipsis(self, introspector: PycramIntrospector) -> None:
         match = required_match(MockPickUpAction, introspector)
         data = read_match(match, introspector)
         assert data.free_slot_names == ["object_designator"]
@@ -137,9 +136,7 @@ class TestReadMatch:
 class TestWriteSlotValue:
     """:func:`write_slot_value` updates both the variable and the snapshot."""
 
-    def test_writes_and_flips_is_free(
-        self, introspector: PycramIntrospector
-    ) -> None:
+    def test_writes_and_flips_is_free(self, introspector: PycramIntrospector) -> None:
         match = required_match(MockPickUpAction, introspector)
         data = read_match(match, introspector)
         slot = data.slots[0]
@@ -155,6 +152,7 @@ class TestWriteSlotValue:
         self, introspector: PycramIntrospector
     ) -> None:
         """A variable whose ``_value_`` assignment fails returns False instead of raising."""
+
         class ImmutableVar:
             _type_ = str
 
@@ -192,9 +190,7 @@ class TestFinalizeMatch:
         assert isinstance(result.target_location, WorldBody)
         assert result.target_location.name == "kitchen"
 
-    def test_nested_enum_resolution(
-        self, introspector: PycramIntrospector
-    ) -> None:
+    def test_nested_enum_resolution(self, introspector: PycramIntrospector) -> None:
         match = required_match(MockRequiredNestedAction, introspector)
         data = read_match(match, introspector)
         for slot in data.slots:
@@ -292,9 +288,7 @@ class TestMatchDataProperties:
 class TestRequiredManipulatorMatch:
     """Symbol subclasses are still classified ENTITY and required when un-defaulted."""
 
-    def test_manipulator_slot_is_entity(
-        self, introspector: PycramIntrospector
-    ) -> None:
+    def test_manipulator_slot_is_entity(self, introspector: PycramIntrospector) -> None:
         match = required_match(MockRequiredManipulatorAction, introspector)
         data = read_match(match, introspector)
         slot = next(s for s in data.slots if s.attribute_name == "manipulator")

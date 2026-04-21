@@ -12,6 +12,7 @@ Classes:
   :class:`MilkAnnotation`   — semantic annotation with ``.bodies`` and a ``_synonyms`` class var.
   :class:`FakeRobotAnnotation` — imitates a robot annotation (``.root``, ``._robot``).
 """
+
 from __future__ import annotations
 
 from types import SimpleNamespace

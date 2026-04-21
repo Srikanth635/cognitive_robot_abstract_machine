@@ -1,4 +1,5 @@
 """Tests for :mod:`llmr.backend` — LLMBackend._evaluate pipeline with scripted LLM."""
+
 from __future__ import annotations
 
 from typing_extensions import Any, Dict
@@ -8,8 +9,7 @@ import pytest
 from llmr.backend import LLMBackend, _UNRESOLVED, _Unresolved
 from llmr.bridge.match_reader import required_match
 from llmr.exceptions import LLMSlotFillingFailed, LLMUnresolvedRequiredFields
-from llmr.schemas.entities import EntityDescriptionSchema
-from llmr.schemas.slots import ActionReasoningOutput, SlotValue
+from llmr.schemas import ActionReasoningOutput, EntityDescriptionSchema, SlotValue
 
 from ._fixtures.actions import (
     GraspType,
@@ -164,6 +164,7 @@ class TestWorldContextProvider:
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
         """If the custom provider raises, the backend still serialises the SymbolGraph."""
+
         def _boom() -> str:
             raise RuntimeError("provider down")
 

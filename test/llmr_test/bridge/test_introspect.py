@@ -1,4 +1,5 @@
 """Tests for :mod:`llmr.bridge.introspect` — action dataclass field classification."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -48,25 +49,19 @@ class TestIntrospectSchema:
         schema = introspector.introspect(MockPickUpAction)
         assert schema.docstring == "Minimal stand-in for PyCRAM PickUpAction."
 
-    def test_own_fields_extracted(
-        self, introspector: PycramIntrospector
-    ) -> None:
+    def test_own_fields_extracted(self, introspector: PycramIntrospector) -> None:
         schema = introspector.introspect(MockPickUpAction)
         names = {f.name for f in schema.fields}
         assert names == {"object_designator", "grasp_description", "timeout"}
 
-    def test_non_dataclass_raises(
-        self, introspector: PycramIntrospector
-    ) -> None:
+    def test_non_dataclass_raises(self, introspector: PycramIntrospector) -> None:
         class NotADataclass:
             pass
 
         with pytest.raises(TypeError):
             introspector.introspect(NotADataclass)
 
-    def test_entity_field_spec(
-        self, introspector: PycramIntrospector
-    ) -> None:
+    def test_entity_field_spec(self, introspector: PycramIntrospector) -> None:
         schema = introspector.introspect(MockPickUpAction)
         field = next(f for f in schema.fields if f.name == "object_designator")
         assert field.kind == FieldKind.ENTITY
@@ -92,17 +87,13 @@ class TestIntrospectSchema:
         sub_names = {sf.name for sf in field.sub_fields}
         assert sub_names == {"grasp_type", "manipulator"}
 
-    def test_enum_field_lists_members(
-        self, introspector: PycramIntrospector
-    ) -> None:
+    def test_enum_field_lists_members(self, introspector: PycramIntrospector) -> None:
         schema = introspector.introspect(MockGraspDescription)
         field = next(f for f in schema.fields if f.name == "grasp_type")
         assert field.kind == FieldKind.ENUM
         assert set(field.enum_members) == {"FRONT", "TOP", "SIDE"}
 
-    def test_type_ref_keeps_inner_type(
-        self, introspector: PycramIntrospector
-    ) -> None:
+    def test_type_ref_keeps_inner_type(self, introspector: PycramIntrospector) -> None:
         schema = introspector.introspect(MockTypeRefAction)
         field = next(f for f in schema.fields if f.name == "annotation_type")
         assert field.kind == FieldKind.TYPE_REF
@@ -152,16 +143,12 @@ class TestClassifyType:
     def test_enum_subclass(self, introspector: PycramIntrospector) -> None:
         assert introspector.classify_type(GraspType) is FieldKind.ENUM
 
-    def test_symbol_subclass_is_entity(
-        self, introspector: PycramIntrospector
-    ) -> None:
+    def test_symbol_subclass_is_entity(self, introspector: PycramIntrospector) -> None:
         assert introspector.classify_type(Symbol) is FieldKind.ENTITY
         assert introspector.classify_type(Manipulator) is FieldKind.ENTITY
         assert introspector.classify_type(ParallelGripperLike) is FieldKind.ENTITY
 
-    def test_dataclass_is_complex(
-        self, introspector: PycramIntrospector
-    ) -> None:
+    def test_dataclass_is_complex(self, introspector: PycramIntrospector) -> None:
         assert introspector.classify_type(MockGraspDescription) is FieldKind.COMPLEX
 
     def test_type_annotation_is_type_ref(
@@ -171,6 +158,7 @@ class TestClassifyType:
 
     def test_pose_name_match(self, introspector: PycramIntrospector) -> None:
         """Any class whose MRO contains a name in POSE_TYPE_NAMES is classified POSE."""
+
         class Pose:
             pass
 

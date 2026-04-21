@@ -1,4 +1,5 @@
-"""Tests for :mod:`llmr.grounder` — two-tier EntityGrounder (annotation → name)."""
+"""Tests for :mod:`llmr.resolution.grounder` — two-tier EntityGrounder (annotation → name)."""
+
 from __future__ import annotations
 
 from typing_extensions import Any, Dict
@@ -6,10 +7,15 @@ from typing_extensions import Any, Dict
 import pytest
 from krrood.symbol_graph.symbol_graph import SymbolGraph
 
-from llmr.grounder import EntityGrounder, GroundingResult
-from llmr.schemas.entities import EntityDescriptionSchema
+from llmr.resolution.grounder import EntityGrounder, GroundingResult
+from llmr.schemas import EntityDescriptionSchema
 
-from ._fixtures.symbols import Manipulator, MilkAnnotation, ParallelGripperLike, WorldBody
+from ._fixtures.symbols import (
+    Manipulator,
+    MilkAnnotation,
+    ParallelGripperLike,
+    WorldBody,
+)
 from ._fixtures.worlds import robot_world, symbol_world  # noqa: F401
 
 
@@ -57,7 +63,9 @@ class TestAnnotationGrounding:
     ) -> None:
         """``ParallelGripperLike`` is a subclass of :class:`Manipulator`."""
         grounder = EntityGrounder(groundable_type=Manipulator)
-        desc = EntityDescriptionSchema(name="right", semantic_type="ParallelGripperLike")
+        desc = EntityDescriptionSchema(
+            name="right", semantic_type="ParallelGripperLike"
+        )
         result = grounder.ground(desc, expected_type=Manipulator)
         assert robot_world["right"] in result.bodies
 
@@ -83,9 +91,7 @@ class TestAnnotationGrounding:
 class TestNameGrounding:
     """Tier 2 — substring match on ``description.name`` across ``groundable_type`` instances."""
 
-    def test_exact_name_match(
-        self, symbol_world: Dict[str, Any]  # noqa: F811
-    ) -> None:
+    def test_exact_name_match(self, symbol_world: Dict[str, Any]) -> None:  # noqa: F811
         grounder = EntityGrounder(groundable_type=WorldBody)
         desc = EntityDescriptionSchema(name="counter")
         result = grounder.ground(desc)
