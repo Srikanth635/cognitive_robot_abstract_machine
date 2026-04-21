@@ -5,7 +5,7 @@ import pytest
 
 from krrood.entity_query_language.backends import ProbabilisticBackend
 from llmr.backend import LLMBackend
-from llmr.schemas.slots import ActionReasoningOutput, SlotValue
+from llmr.schemas import ActionReasoningOutput, SlotValue
 from pycram.datastructures.enums import ApproachDirection, VerticalAlignment
 from krrood.entity_query_language.factories import (
     variable_from,
