@@ -2,6 +2,7 @@
 
 World context is derived from SymbolGraph.  All krrood access goes through ``llmr.bridge``.
 """
+
 from __future__ import annotations
 
 import logging
@@ -22,7 +23,7 @@ from llmr.bridge.match_reader import (
 )
 from llmr.bridge.introspect import PycramIntrospector
 from llmr.exceptions import LLMSlotFillingFailed, LLMUnresolvedRequiredFields
-from llmr.slot_resolution import resolve_binding_value
+from llmr.resolution.slot_resolution import resolve_binding_value
 
 if TYPE_CHECKING:
     from langchain_core.language_models import BaseChatModel
@@ -31,6 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 # ── Typed sentinel ─────────────────────────────────────────────────────────────
+
 
 class _Unresolved:
     """Typed sentinel returned when a slot cannot be resolved."""
@@ -43,6 +45,7 @@ _UNRESOLVED = _Unresolved()
 
 
 # ── LLMBackend ─────────────────────────────────────────────────────────────────
+
 
 @dataclass
 class LLMBackend(GenerativeBackend):
@@ -64,7 +67,9 @@ class LLMBackend(GenerativeBackend):
     slots already carry the intent.
     """
 
-    world_context_provider: Optional[Callable[[], str]] = field(kw_only=True, default=None)
+    world_context_provider: Optional[Callable[[], str]] = field(
+        kw_only=True, default=None
+    )
     """
     Callable returning a world-context string.  Replaces the default SymbolGraph
     serialisation when provided.  Useful for injecting a custom or pre-cached
@@ -109,7 +114,7 @@ class LLMBackend(GenerativeBackend):
             raise LLMSlotFillingFailed(action_name=match_data.action_name)
 
         # ── 4. Resolve each free slot and write it back into the Match ─────────
-        from llmr.grounder import EntityGrounder
+        from llmr.resolution.grounder import EntityGrounder
 
         grounder = EntityGrounder(self.groundable_type)
         slot_by_name = {slot.field_name: slot for slot in output.slots}
@@ -158,4 +163,5 @@ class LLMBackend(GenerativeBackend):
                     exc,
                 )
         from llmr.bridge.world_reader import serialize_world_from_symbol_graph
+
         return serialize_world_from_symbol_graph(self.groundable_type)

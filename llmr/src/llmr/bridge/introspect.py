@@ -8,6 +8,7 @@ FieldKind classification drives the slot-filler prompt and per-slot resolution i
   PRIMITIVE bool / int / float / str → taken directly from LLM output.
   TYPE_REF  Type[X] annotation → resolved to a Symbol subclass via SymbolGraph class diagram.
 """
+
 from __future__ import annotations
 
 import ast
@@ -39,12 +40,13 @@ logger = logging.getLogger(__name__)
 
 class FieldKind(str, Enum):
     """How an action field should be resolved — drives prompt generation and slot resolution."""
-    ENTITY    = "entity"
-    POSE      = "pose"
-    ENUM      = "enum"
-    COMPLEX   = "complex"
+
+    ENTITY = "entity"
+    POSE = "pose"
+    ENUM = "enum"
+    COMPLEX = "complex"
     PRIMITIVE = "primitive"
-    TYPE_REF  = "type_ref"
+    TYPE_REF = "type_ref"
 
 
 # Sentinel meaning "field has no default" — cannot use dataclasses.MISSING
@@ -58,22 +60,24 @@ class FieldSpec:
     """Metadata for one action dataclass field, used to build slot-filler prompts."""
 
     name: str
-    raw_type: Any                           # resolved Python type (not a string)
+    raw_type: Any  # resolved Python type (not a string)
     kind: FieldKind
-    docstring: str = ""                     # attribute docstring from class source
+    docstring: str = ""  # attribute docstring from class source
     is_optional: bool = False
-    default: Any = field(default_factory=lambda: NO_DEFAULT)  # NO_DEFAULT means required
-    enum_members: List[str] = field(default_factory=list)      # for ENUM kind
-    sub_fields: List["FieldSpec"] = field(default_factory=list) # for COMPLEX kind
+    default: Any = field(
+        default_factory=lambda: NO_DEFAULT
+    )  # NO_DEFAULT means required
+    enum_members: List[str] = field(default_factory=list)  # for ENUM kind
+    sub_fields: List["FieldSpec"] = field(default_factory=list)  # for COMPLEX kind
 
 
 @dataclass
 class ActionSchema:
     """Full introspection result for one action class — action type, docstring, and per-field specs."""
 
-    action_type: str       # e.g. "PickUpAction"
-    action_cls: Any        # the actual class object
-    docstring: str         # class-level docstring
+    action_type: str  # e.g. "PickUpAction"
+    action_cls: Any  # the actual class object
+    docstring: str  # class-level docstring
     fields: List[FieldSpec]
 
 
@@ -92,7 +96,8 @@ class OwnDataclassIntrospector(DataclassOnlyIntrospector):
     def discover(self, owner_cls: Type) -> List[DiscoveredAttribute]:
         own_names = set(getattr(owner_cls, "__annotations__", {}))
         return [
-            attr for attr in super().discover(owner_cls)
+            attr
+            for attr in super().discover(owner_cls)
             if attr.public_name in own_names
         ]
 
@@ -112,7 +117,9 @@ class PycramIntrospector:
 
     # Names of types (and their subclasses via MRO) treated as spatial poses.
     # Matched against every class in the type's MRO — no world-package import needed.
-    POSE_TYPE_NAMES: ClassVar[frozenset] = frozenset({"Pose", "HomogeneousTransformationMatrix"})
+    POSE_TYPE_NAMES: ClassVar[frozenset] = frozenset(
+        {"Pose", "HomogeneousTransformationMatrix"}
+    )
 
     introspector: AttributeIntrospector = field(
         default_factory=OwnDataclassIntrospector
@@ -188,7 +195,9 @@ class PycramIntrospector:
                 logger.debug("Cannot introspect sub-fields of %s: %s", raw_type, exc)
 
         elif kind == FieldKind.TYPE_REF:
-            args = typing.get_args(raw_type) or typing.get_args(wrapped_field.resolved_type)
+            args = typing.get_args(raw_type) or typing.get_args(
+                wrapped_field.resolved_type
+            )
             if args:
                 spec.raw_type = args[0]
 

@@ -6,6 +6,7 @@ Dispatches by :class:`FieldKind` (pre-classified on each :class:`MatchSlot`):
   PRIMITIVE                → cast string to bool / int / float / str.
   COMPLEX                  → not resolved here (nested Match handles it).
 """
+
 from __future__ import annotations
 
 import logging
@@ -18,8 +19,8 @@ from llmr.bridge.world_reader import resolve_symbol_class
 
 if TYPE_CHECKING:
     from llmr.bridge.match_reader import MatchSlot
-    from llmr.grounder import EntityGrounder
-    from llmr.schemas.slots import SlotValue
+    from llmr.resolution.grounder import EntityGrounder
+    from llmr.schemas import SlotValue
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +76,7 @@ def resolve_entity_slot(
     unresolved: Any = None,
 ) -> Any:
     """Ground an ENTITY / POSE / TYPE_REF slot to a Symbol instance via :class:`EntityGrounder`."""
-    from llmr.schemas.entities import EntityDescriptionSchema
+    from llmr.schemas import EntityDescriptionSchema
 
     ed = sv.entity_description
     if ed is not None:
@@ -83,8 +84,12 @@ def resolve_entity_slot(
     elif sv.value:
         # LLM used the plain value field instead of entity_description.
         # Recover semantic_type from the known field type so Tier 1 grounding fires.
-        inferred_type = expected_type.__name__ if isinstance(expected_type, type) else None
-        grounding_ed = EntityDescriptionSchema(name=sv.value, semantic_type=inferred_type)
+        inferred_type = (
+            expected_type.__name__ if isinstance(expected_type, type) else None
+        )
+        grounding_ed = EntityDescriptionSchema(
+            name=sv.value, semantic_type=inferred_type
+        )
     else:
         logger.warning(
             "resolve_entity_slot: field '%s' has neither entity_description nor value.",

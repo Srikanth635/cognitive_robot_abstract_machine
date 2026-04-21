@@ -8,6 +8,7 @@ Two-tier strategy:
 
 All SymbolGraph access is delegated to :mod:`llmr.bridge.world_reader`.
 """
+
 from __future__ import annotations
 
 import logging
@@ -19,7 +20,7 @@ from llmr.bridge.world_reader import (
     get_instances,
     resolve_symbol_class,
 )
-from llmr.schemas.entities import EntityDescriptionSchema
+from llmr.schemas import EntityDescriptionSchema
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +123,8 @@ class EntityGrounder:
                 cls = expected_type
             else:
                 logger.debug(
-                    "Cannot resolve '%s' to a Symbol subclass.", description.semantic_type
+                    "Cannot resolve '%s' to a Symbol subclass.",
+                    description.semantic_type,
                 )
                 return GroundingResult()
 
@@ -208,9 +210,7 @@ class EntityGrounder:
         return candidates
 
     @staticmethod
-    def _filter_by_attributes(
-        candidates: List[Any], attributes: dict
-    ) -> List[Any]:
+    def _filter_by_attributes(candidates: List[Any], attributes: dict) -> List[Any]:
         """Retain candidates whose display name or annotation types contain any attribute value."""
         filtered: List[Any] = []
         for body in candidates:
@@ -229,7 +229,9 @@ class EntityGrounder:
     # ── Helpers ────────────────────────────────────────────────────────────────
 
     @staticmethod
-    def _multi_match_warning(candidates: List[Any], name: Optional[str]) -> Optional[str]:
+    def _multi_match_warning(
+        candidates: List[Any], name: Optional[str]
+    ) -> Optional[str]:
         """Return a warning string when grounding is ambiguous (> 1 candidate), else ``None``."""
         if len(candidates) > 1:
             names = [body_display_name(b) for b in candidates]

@@ -6,6 +6,7 @@ Other llmr modules import plain data structures from here and stay krrood-free.
   world_reader — read SymbolGraph contents and resolve Symbol classes by name.
   match_reader — snapshot krrood Match expressions into :class:`MatchData` / :class:`MatchSlot`.
 """
+
 from llmr.bridge.introspect import (
     ActionSchema,
     FieldKind,

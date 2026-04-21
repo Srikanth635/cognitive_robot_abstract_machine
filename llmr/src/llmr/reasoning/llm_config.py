@@ -11,6 +11,7 @@ This keeps the dependency surface minimal: only langchain-core is required.
 Provider-specific packages (langchain-openai, langchain-ollama) are optional
 extras installed by the user based on their setup.
 """
+
 from __future__ import annotations
 
 import typing
@@ -26,6 +27,7 @@ if typing.TYPE_CHECKING:
 
 class LLMProvider(str, Enum):
     """Provider tag passed to ``make_llm()`` to select the LangChain backend."""
+
     OPENAI = "openai"
     OLLAMA = "ollama"
 
@@ -77,8 +79,7 @@ def make_llm(
             from langchain_openai import ChatOpenAI
         except ImportError as e:
             raise ImportError(
-                "langchain-openai is not installed. "
-                "Run: pip install 'llmr[openai]'"
+                "langchain-openai is not installed. " "Run: pip install 'llmr[openai]'"
             ) from e
         return ChatOpenAI(model=model, temperature=temperature, **kwargs)
 
@@ -87,8 +88,7 @@ def make_llm(
             from langchain_ollama import ChatOllama
         except ImportError as e:
             raise ImportError(
-                "langchain-ollama is not installed. "
-                "Run: pip install 'llmr[ollama]'"
+                "langchain-ollama is not installed. " "Run: pip install 'llmr[ollama]'"
             ) from e
         return ChatOllama(model=model, temperature=temperature, **kwargs)
 

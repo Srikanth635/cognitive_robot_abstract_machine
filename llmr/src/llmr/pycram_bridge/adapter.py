@@ -2,6 +2,7 @@
 
 This is the module in llmr that imports or scans PyCRAM packages.
 """
+
 from __future__ import annotations
 
 import dataclasses
@@ -58,6 +59,7 @@ def discover_action_classes() -> Dict[str, type]:
             logger.debug("discover_action_classes: skipping %s: %s", modname, exc)
 
     from pycram.robot_plans.actions.base import ActionDescription
+
     return {
         cls.__name__: cls
         for cls in recursive_subclasses(ActionDescription)

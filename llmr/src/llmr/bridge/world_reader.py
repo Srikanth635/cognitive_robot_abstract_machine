@@ -6,6 +6,7 @@ Single access point for every SymbolGraph query used by llmr:
   get_instances                     — safe wrapper over SymbolGraph.get_instances_of_type.
   body_display_name / body_xyz / body_bounding_box — duck-typed body helpers.
 """
+
 from __future__ import annotations
 
 import logging
@@ -55,8 +56,15 @@ _ROBOT_CONTEXT_TYPE_NAMES = frozenset(
 
 # Fallback only: semantic robot annotations are preferred when present.
 _STRUCTURAL_SUFFIXES = (
-    "_link", "_frame", "_joint", "_screw", "_plate",
-    "_optical_frame", "_motor", "_pad", "_finger",
+    "_link",
+    "_frame",
+    "_joint",
+    "_screw",
+    "_plate",
+    "_optical_frame",
+    "_motor",
+    "_pad",
+    "_finger",
 )
 
 
@@ -188,7 +196,9 @@ def _collect_body_records(
         ):
             continue
 
-        parent_name = _nearest_parent_name(body) if options.include_parent_context else None
+        parent_name = (
+            _nearest_parent_name(body) if options.include_parent_context else None
+        )
         xyz = body_xyz(body) if options.include_geometry else None
         size = body_bounding_box(body) if options.include_geometry else None
         records.append(
@@ -290,8 +300,12 @@ def _collect_relation_lines(
         if id(source) not in visible_ids and id(target) not in visible_ids:
             continue
 
-        source_name = body_display_name(source) or f"{type(source).__name__}@{id(source):x}"
-        target_name = body_display_name(target) or f"{type(target).__name__}@{id(target):x}"
+        source_name = (
+            body_display_name(source) or f"{type(source).__name__}@{id(source):x}"
+        )
+        target_name = (
+            body_display_name(target) or f"{type(target).__name__}@{id(target):x}"
+        )
         if not options.include_structural and (
             _is_structural_body(source, source_name, structural_body_ids, options)
             or _is_structural_body(target, target_name, structural_body_ids, options)
@@ -423,7 +437,7 @@ def _render_world_context(
     extra_context: str,
     options: WorldSerializationOptions,
 ) -> str:
-    shown_records = records[:max(options.max_objects, 0)]
+    shown_records = records[: max(options.max_objects, 0)]
     unique_types = sorted(
         {ann_type for record in records for ann_type in record.semantic_types}
         | set(annotation_summary)
@@ -452,7 +466,9 @@ def _render_world_context(
     lines.extend(_render_scene_table(shown_records, options))
 
     if len(shown_records) < len(records):
-        lines.append(f"- Truncated {len(records) - len(shown_records)} additional object(s).")
+        lines.append(
+            f"- Truncated {len(records) - len(shown_records)} additional object(s)."
+        )
 
     lines += ["", "## Available Semantic Types"]
     if annotation_summary:
@@ -487,7 +503,9 @@ def _render_scene_table(
         "| --- | --- | --- | --- | --- | --- | --- |",
     ]
     if not records:
-        rows.append("| - | - | - | - | - | - | No scene objects found in SymbolGraph. |")
+        rows.append(
+            "| - | - | - | - | - | - | No scene objects found in SymbolGraph. |"
+        )
         return rows
 
     for record in records:
@@ -559,8 +577,7 @@ def body_bounding_box(
     try:
         ref = reference_frame if reference_frame is not None else body
         dims = (
-            body.collision
-            .as_bounding_box_collection_in_frame(ref)
+            body.collision.as_bounding_box_collection_in_frame(ref)
             .bounding_box()
             .dimensions
         )
@@ -596,7 +613,9 @@ def resolve_symbol_class(
     try:
         class_diagram = (symbol_graph or SymbolGraph()).class_diagram
     except Exception:
-        logger.debug("SymbolGraph not yet initialised — cannot resolve '%s'.", semantic_type)
+        logger.debug(
+            "SymbolGraph not yet initialised — cannot resolve '%s'.", semantic_type
+        )
         return None
 
     for wrapped_cls in class_diagram.wrapped_classes:

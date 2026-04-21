@@ -9,6 +9,7 @@ touch the underlying Match expression directly.
   required_match           — build a Match with required public fields left free.
   unresolved_required_fields — list required fields still unset after resolution.
 """
+
 from __future__ import annotations
 
 import logging
@@ -232,7 +233,7 @@ def unresolved_required_fields(
 def _strip_root_prefix(name: str, action_cls: type) -> str:
     """Strip the ``<ActionClass>.`` root prefix from a variable access path name."""
     prefix = f"{action_cls.__name__}."
-    return name[len(prefix):] if name.startswith(prefix) else name
+    return name[len(prefix) :] if name.startswith(prefix) else name
 
 
 def _read_variable_value(variable: Any, unresolved: Any) -> Any:
