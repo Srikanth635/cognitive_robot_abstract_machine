@@ -22,6 +22,7 @@ from llmr.hypotheses import (
     SupportedByEdge,
     SymbolGroundingEvidenceNode,
 )
+from llmr.hypotheses.common.nodes import ClaimNode, ContextNode, EvidenceNode
 
 
 class _FakeAction:
@@ -229,6 +230,25 @@ class TestGraphDomains:
         graph, _ = _sample_graph()
         assert len(graph.domain(FrameHypothesisNode)) == 1
         assert len(graph.domain(FrameRoleHypothesisNode)) == 2
+
+    def test_domain_mro_aware_abstract_superclasses(self) -> None:
+        graph, _ = _sample_graph()
+        # ClaimNode is abstract; domain() must return all subclass instances
+        claim_ids = {n.id for n in graph.domain(ClaimNode)}
+        assert {"f1", "r1", "r2"}.issubset(claim_ids)
+        # EvidenceNode is abstract; must include both evidence subtypes
+        evidence_ids = {n.id for n in graph.domain(EvidenceNode)}
+        assert evidence_ids == {"ev1", "ev2"}
+        # ContextNode is abstract; must include instruction, action, run
+        context_ids = {n.id for n in graph.domain(ContextNode)}
+        assert {"i1", "a1", "run1"}.issubset(context_ids)
+
+    def test_get_instances_of_type_matches_domain(self) -> None:
+        graph, _ = _sample_graph()
+        assert graph.get_instances_of_type(FrameHypothesisNode) == graph.domain(
+            FrameHypothesisNode
+        )
+        assert graph.get_instances_of_type(EvidenceNode) == graph.domain(EvidenceNode)
 
 
 class TestGraphIndexes:
