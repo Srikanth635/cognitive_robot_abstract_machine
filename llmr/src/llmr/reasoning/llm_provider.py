@@ -43,7 +43,8 @@ def make_llm(
     Factory function for creating a LangChain-compatible chat model.
 
     The returned object is a standard LangChain BaseChatModel — it can be
-    passed directly to LLMBackend, nl_plan(), nl_sequential(), or TaskDecomposer.
+    passed directly to `LLMBackend`, `plan_from_instruction()`,
+    `sequential_plan_from_instruction()`, or `TaskDecomposer`.
 
     :param provider:    LLM provider (OPENAI or OLLAMA).
     :param model:       Model name/identifier (e.g. "gpt-4o", "qwen3:14b").
@@ -55,11 +56,11 @@ def make_llm(
 
     Example::
 
-        from llmr.reasoning.llm_config import make_llm, LLMProvider
-        from llmr import nl_plan
+        from llmr.reasoning.llm_provider import make_llm, LLMProvider
+        from llmr import plan_from_instruction
 
         llm = make_llm(LLMProvider.OPENAI, model="gpt-4o")
-        plan = nl_plan("pick up the milk", context=context, llm=llm)
+        plan = plan_from_instruction("pick up the milk", context=context, llm=llm)
 
         # Or with Ollama for local inference:
         llm = make_llm(LLMProvider.OLLAMA, model="qwen3:14b")
@@ -90,7 +91,7 @@ def make_llm(
             raise ImportError(
                 "langchain-ollama is not installed. " "Run: pip install 'llmr[ollama]'"
             ) from e
-        return ChatOllama(model=model, temperature=temperature, **kwargs)
+        return ChatOllama(model=model,  reasoning = True,temperature=temperature, **kwargs)
 
     raise LLMProviderNotSupported(
         provider=provider,

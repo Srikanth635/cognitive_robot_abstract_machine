@@ -2,8 +2,8 @@
 
 Two public functions:
 
-  classify_action()  — NL instruction → action class (for nl_plan factory)
-  run_slot_filler()  — action class + free slots → ActionReasoningOutput
+  infer_action_class()  — NL instruction → action class
+  fill_slots()  — action class + free slots → SlotFillingOutput
 """
 
 from __future__ import annotations
@@ -14,13 +14,13 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 from typing_extensions import Any, Dict, List, Optional, Tuple
 
-from llmr.bridge.introspect import FieldKind, PycramIntrospector
+from llmr.bridge.introspect import FieldKind, ActionFieldIntrospector
 from llmr.exceptions import LLMActionRegistryEmpty
-from llmr.schemas import ActionClassification, ActionReasoningOutput
+from llmr.schemas import ActionClassificationResult, SlotFillingOutput
 
 if TYPE_CHECKING:
     from langchain_core.language_models import BaseChatModel
-    from llmr.bridge.introspect import ActionSchema, FieldSpec
+    from llmr.bridge.introspect import ActionSpec as ActionSchema, DiscoveredField as FieldSpec
 
 logger = logging.getLogger(__name__)
 
@@ -88,20 +88,28 @@ Return structured JSON.
 # ── Public: action classification ─────────────────────────────────────────────
 
 
-def classify_action(
+def infer_action_class(
     instruction: str,
     llm: "BaseChatModel",
     action_registry: Optional[Dict[str, type]] = None,
-) -> Optional[type]:
-    """Map an NL instruction to an action class via structured LLM output.
+) -> Optional[ActionClassificationResult]:
+    """Classify an NL instruction via structured LLM output.
+
+    Returns the raw :class:`ActionClassificationResult`.  Callers map
+    ``classification.action_type`` to a concrete class using their own action
+    registry (``action_registry[classification.action_type]``).
 
     :param instruction:     The NL instruction.
     :param llm:             LangChain-compatible chat model.
-    :param action_registry: Pre-built ``{class_name: class}``; auto-discovered by the bridge if ``None``.
-    :returns: The matched action class, or ``None`` if classification fails.
+    :param action_registry: Pre-built ``{class_name: class}`` used to build the
+        classifier catalog; auto-discovered by the bridge if ``None``.
+    :returns: The :class:`ActionClassificationResult` returned by the LLM, or ``None``
+        on LLM failure.  The ``action_type`` field may reference a name that is
+        not in the registry — the caller is responsible for that check.
+    :raises LLMActionRegistryEmpty: If the resolved registry has no entries.
     """
     if action_registry is None:
-        from llmr.pycram_bridge import discover_action_classes
+        from llmr.pycram import discover_action_classes
 
         action_registry = discover_action_classes()
     if not action_registry:
@@ -110,31 +118,30 @@ def classify_action(
     system = _CLASSIFIER_SYSTEM.format(
         action_classes=_build_action_catalog(action_registry)
     )
-    structured_llm = llm.with_structured_output(ActionClassification)
+    structured_llm = llm.with_structured_output(ActionClassificationResult)
     try:
-        result: ActionClassification = structured_llm.invoke(
+        return structured_llm.invoke(
             [
                 {"role": "system", "content": system},
                 {"role": "user", "content": instruction},
             ]
         )
-        return action_registry.get(result.action_type)
     except Exception:
-        logger.exception("classify_action: LLM call failed")
+        logger.exception("infer_action_class: LLM call failed")
         return None
 
 
 # ── Public: slot filling ───────────────────────────────────────────────────────
 
 
-def run_slot_filler(
+def fill_slots(
     instruction: Optional[str],
     action_cls: type,
     free_slot_names: List[str],
     fixed_slots: Dict[str, Any],
     world_context: str,
     llm: "BaseChatModel",
-) -> Optional[ActionReasoningOutput]:
+) -> Optional[SlotFillingOutput]:
     """Resolve free Match slots using LLM reasoning driven by action introspection.
 
     The prompt is built dynamically from the bridge's introspection output:
@@ -148,12 +155,12 @@ def run_slot_filler(
     :param fixed_slots:     Already-resolved ``{field_name: value}`` map.
     :param world_context:   Serialised world state string.
     :param llm:             LangChain-compatible chat model.
-    :returns: :class:`ActionReasoningOutput` on success; ``None`` on LLM failure.
+    :returns: :class:`SlotFillingOutput` on success; ``None`` on LLM failure.
     """
     slot_names = [_strip_root(n, action_cls) for n in free_slot_names]
     prompt_fixed_slots = {_strip_root(k, action_cls): v for k, v in fixed_slots.items()}
 
-    user_message, expected_slot_names = _build_prompt(
+    user_message, expected_slot_names = _compose_slot_filler_prompt(
         instruction=instruction,
         action_cls=action_cls,
         free_slot_names=slot_names,
@@ -161,23 +168,23 @@ def run_slot_filler(
         world_context=world_context,
     )
 
-    structured_llm = llm.with_structured_output(ActionReasoningOutput)
+    structured_llm = llm.with_structured_output(SlotFillingOutput)
     try:
-        return _invoke_with_repair(
+        return _invoke_with_slot_repair(
             structured_llm=structured_llm,
             action_cls=action_cls,
             user_message=user_message,
             expected_slot_names=expected_slot_names,
         )
     except Exception:
-        logger.exception("run_slot_filler: LLM call failed for %s", action_cls.__name__)
+        logger.exception("fill_slots: LLM call failed for %s", action_cls.__name__)
         return None
 
 
 # ── Prompt construction ────────────────────────────────────────────────────────
 
 
-def _build_prompt(
+def _compose_slot_filler_prompt(
     instruction: Optional[str],
     action_cls: type,
     free_slot_names: List[str],
@@ -190,12 +197,12 @@ def _build_prompt(
     nested dotted field_names (``'grasp_description.grasp_type'``).
     """
     try:
-        action_schema: Optional["ActionSchema"] = PycramIntrospector().introspect(
+        action_schema: Optional["ActionSchema"] = ActionFieldIntrospector().introspect_action(
             action_cls
         )
     except Exception as exc:
         logger.debug(
-            "_build_prompt: introspection failed for %s: %s",
+            "_compose_slot_filler_prompt: introspection failed for %s: %s",
             action_cls.__name__,
             exc,
         )
@@ -268,15 +275,15 @@ def _build_prompt(
             "── Entity slots (world objects) ──────────────────────────────────────",
             "For each entity slot: return a SlotValue with entity_description populated.",
         ]
-        for f in entity_specs:
+        for fspec in entity_specs:
             pose_note = (
                 " [return .global_pose of the grounded body]"
-                if f.kind == FieldKind.POSE
+                if fspec.kind == FieldKind.POSE
                 else ""
             )
-            doc_str = f": {f.docstring}" if f.docstring else ""
+            doc_str = f": {fspec.docstring}" if fspec.docstring else ""
             lines.append(
-                f"  - {f.name} ({_type_display(f.raw_type)}{pose_note}){doc_str}"
+                f"  - {fspec.name} ({_type_display(fspec.raw_type)}{pose_note}){doc_str}"
             )
 
     if param_specs:
@@ -285,14 +292,14 @@ def _build_prompt(
             "── Parameter slots (discrete / primitive values) ──────────────────────",
             "For each: return a SlotValue with value = chosen string.",
         ]
-        for f in param_specs:
-            if f.enum_members:
-                members_str = " | ".join(f.enum_members)
-                doc_str = f" — {f.docstring}" if f.docstring else ""
-                lines.append(f"  - {f.name} (allowed values: {members_str}){doc_str}")
+        for fspec in param_specs:
+            if fspec.enum_members:
+                members_str = " | ".join(fspec.enum_members)
+                doc_str = f" — {fspec.docstring}" if fspec.docstring else ""
+                lines.append(f"  - {fspec.name} (allowed values: {members_str}){doc_str}")
             else:
-                doc_str = f": {f.docstring}" if f.docstring else ""
-                lines.append(f"  - {f.name} ({_type_display(f.raw_type)}){doc_str}")
+                doc_str = f": {fspec.docstring}" if fspec.docstring else ""
+                lines.append(f"  - {fspec.name} ({_type_display(fspec.raw_type)}){doc_str}")
 
     if unknown_names:
         lines += [
@@ -312,28 +319,28 @@ def _build_prompt(
     return "\n".join(lines), expected
 
 
-def _invoke_with_repair(
+def _invoke_with_slot_repair(
     structured_llm: Any,
     action_cls: type,
     user_message: str,
     expected_slot_names: List[str],
-) -> ActionReasoningOutput:
+) -> SlotFillingOutput:
     """Invoke the slot-filler LLM; if slots are missing, make one repair call and merge."""
-    output: ActionReasoningOutput = structured_llm.invoke(
+    slot_filling_output: SlotFillingOutput = structured_llm.invoke(
         [
             {"role": "system", "content": _SLOT_FILLER_SYSTEM},
             {"role": "user", "content": user_message},
         ]
     )
-    _normalise_output_slot_names(output, action_cls)
+    _normalize_output_slot_names(slot_filling_output, action_cls)
 
-    returned = {slot.field_name for slot in output.slots}
+    returned = {slot.field_name for slot in slot_filling_output.slots}
     missing = [name for name in expected_slot_names if name not in returned]
     if not missing:
-        return output
+        return slot_filling_output
 
     logger.warning(
-        "run_slot_filler: LLM omitted required slot(s) for %s: %s",
+        "fill_slots: LLM omitted required slot(s) for %s: %s",
         action_cls.__name__,
         ", ".join(missing),
     )
@@ -346,31 +353,31 @@ def _invoke_with_repair(
             *[f"  - {name}" for name in missing],
             "",
             (
-                "Return a complete ActionReasoningOutput. Include one SlotValue "
+                "Return a complete SlotFillingOutput. Include one SlotValue "
                 "for each required field_name:"
             ),
             *[f"  - {name}" for name in expected_slot_names],
             "",
             "Previous structured response:",
-            output.model_dump_json(),
+            slot_filling_output.model_dump_json(),
         ]
     )
-    repaired: ActionReasoningOutput = structured_llm.invoke(
+    repaired: SlotFillingOutput = structured_llm.invoke(
         [
             {"role": "system", "content": _SLOT_FILLER_SYSTEM},
             {"role": "user", "content": repair_message},
         ]
     )
-    _normalise_output_slot_names(repaired, action_cls)
+    _normalize_output_slot_names(repaired, action_cls)
 
-    merged = {slot.field_name: slot for slot in output.slots}
+    merged = {slot.field_name: slot for slot in slot_filling_output.slots}
     for slot in repaired.slots:
         merged[slot.field_name] = slot
     return repaired.model_copy(update={"slots": list(merged.values())})
 
 
-def _normalise_output_slot_names(
-    output: ActionReasoningOutput,
+def _normalize_output_slot_names(
+    output: SlotFillingOutput,
     action_cls: type,
 ) -> None:
     """Strip root class prefixes from returned field names in-place."""
@@ -381,7 +388,7 @@ def _normalise_output_slot_names(
 def _build_action_catalog(action_registry: Dict[str, type]) -> str:
     """Return classifier prompt lines with action names, docs, and field summaries."""
     try:
-        introspector: Optional[PycramIntrospector] = PycramIntrospector()
+        introspector: Optional[ActionFieldIntrospector] = ActionFieldIntrospector()
     except Exception:
         introspector = None
 
@@ -391,7 +398,7 @@ def _build_action_catalog(action_registry: Dict[str, type]) -> str:
         schema = None
         if introspector is not None:
             try:
-                schema = introspector.introspect(action_cls)
+                schema = introspector.introspect_action(action_cls)
             except Exception:
                 schema = None
 
@@ -433,3 +440,4 @@ def _strip_root(name: str, action_cls: type) -> str:
 def _type_display(raw_type: Any) -> str:
     """Clean display name for a raw type annotation."""
     return raw_type.__name__ if isinstance(raw_type, type) else str(raw_type)
+

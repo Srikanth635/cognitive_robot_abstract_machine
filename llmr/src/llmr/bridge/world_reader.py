@@ -1,10 +1,10 @@
 """World-state gateway: read SymbolGraph contents and resolve Symbol classes by name.
 
 Single access point for every SymbolGraph query used by llmr:
-  serialize_world_from_symbol_graph — LLM-readable world-context string.
+  render_world_context — LLM-readable world-context string.
   resolve_symbol_class              — semantic-type string → Symbol subclass.
   get_instances                     — safe wrapper over SymbolGraph.get_instances_of_type.
-  body_display_name / body_xyz / body_bounding_box — duck-typed body helpers.
+  symbol_display_name / symbol_xyz / symbol_bounding_box — duck-typed body helpers.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from krrood.symbol_graph.symbol_graph import Symbol, SymbolGraph
 
 logger = logging.getLogger(__name__)
 
-_ROBOT_ANNOTATION_TYPE_NAMES = frozenset(
+_SEMANTIC_ANNOTATION_TYPE_NAMES = frozenset(
     {
         "AbstractRobot",
         "SemanticRobotAnnotation",
@@ -55,7 +55,7 @@ _ROBOT_CONTEXT_TYPE_NAMES = frozenset(
 )
 
 # Fallback only: semantic robot annotations are preferred when present.
-_STRUCTURAL_SUFFIXES = (
+_KINEMATIC_LINK_SUFFIXES = (
     "_link",
     "_frame",
     "_joint",
@@ -70,14 +70,14 @@ _STRUCTURAL_SUFFIXES = (
 
 def _is_structural_name(name: str) -> bool:
     """Fallback name heuristic for robot kinematic links when semantic metadata is unavailable."""
-    return any(name.endswith(s) for s in _STRUCTURAL_SUFFIXES)
+    return any(name.endswith(s) for s in _KINEMATIC_LINK_SUFFIXES)
 
 
 # ── World serialisation ───────────────────────────────────────────────────────
 
 
 @dataclass(frozen=True)
-class WorldSerializationOptions:
+class WorldContextConfig:
     """Controls how much SymbolGraph detail is rendered for the LLM prompt."""
 
     max_objects: int = 40
@@ -104,15 +104,15 @@ class _BodyRecord:
     notes: List[str] = field(default_factory=list)
 
 
-def serialize_world_from_symbol_graph(
-    groundable_type: Type[Symbol] = Symbol,
+def render_world_context(
+    symbol_type: Type[Symbol] = Symbol,
     extra_context: str = "",
     symbol_graph: Optional[SymbolGraph] = None,
-    options: Optional[WorldSerializationOptions] = None,
+    options: Optional[WorldContextConfig] = None,
 ) -> str:
     """Build an LLM world-context string from SymbolGraph contents.
 
-    :param groundable_type: Symbol subclass representing scene objects.
+    :param symbol_type: Symbol subclass representing scene objects.
         Defaults to ``Symbol`` (all instances).  Pass a more specific caller
         type for a tighter scope covering only the intended world entities.
     :param extra_context: Optional extra text appended at the end.
@@ -120,7 +120,7 @@ def serialize_world_from_symbol_graph(
     :param options: Optional rendering controls for prompt size and detail.
     :returns: Multi-line string describing the current world state.
     """
-    opts = options or WorldSerializationOptions()
+    opts = options or WorldContextConfig()
 
     try:
         graph = symbol_graph or SymbolGraph()
@@ -142,7 +142,7 @@ def serialize_world_from_symbol_graph(
         )
         records = _collect_body_records(
             graph=graph,
-            groundable_type=groundable_type,
+            symbol_type=symbol_type,
             annotations_by_id=annotations_by_id,
             structural_body_ids=structural_body_ids,
             options=opts,
@@ -171,21 +171,21 @@ def serialize_world_from_symbol_graph(
 
 def _collect_body_records(
     graph: SymbolGraph,
-    groundable_type: Type[Symbol],
+    symbol_type: Type[Symbol],
     annotations_by_id: Dict[int, List[str]],
     structural_body_ids: Set[int],
-    options: WorldSerializationOptions,
+    options: WorldContextConfig,
 ) -> List[_BodyRecord]:
     records: List[_BodyRecord] = []
     seen: Set[int] = set()
 
-    for body in graph.get_instances_of_type(groundable_type):
+    for body in graph.get_instances_of_type(symbol_type):
         body_id = id(body)
         if body_id in seen:
             continue
         seen.add(body_id)
 
-        body_name = body_display_name(body)
+        body_name = symbol_display_name(body)
         if not body_name:
             body_name = f"{type(body).__name__}@{body_id:x}"
         if not options.include_structural and _is_structural_body(
@@ -199,8 +199,8 @@ def _collect_body_records(
         parent_name = (
             _nearest_parent_name(body) if options.include_parent_context else None
         )
-        xyz = body_xyz(body) if options.include_geometry else None
-        size = body_bounding_box(body) if options.include_geometry else None
+        xyz = symbol_xyz(body) if options.include_geometry else None
+        size = symbol_bounding_box(body) if options.include_geometry else None
         records.append(
             _BodyRecord(
                 instance=body,
@@ -219,7 +219,7 @@ def _collect_body_records(
 
 def _collect_annotations(
     graph: SymbolGraph,
-    options: WorldSerializationOptions,
+    options: WorldContextConfig,
     structural_body_ids: Set[int],
 ) -> Tuple[Dict[int, List[str]], Dict[str, List[str]]]:
     annotations_by_id: Dict[int, List[str]] = {}
@@ -241,8 +241,8 @@ def _collect_annotations(
         # Register the instance under every parent type in _ROBOT_CONTEXT_TYPE_NAMES
         # so the LLM sees it under the abstract type name the action schema uses
         # (e.g. Manipulator) not only under the concrete class name.
-        if inst_mro_names & _ROBOT_ANNOTATION_TYPE_NAMES:
-            inst_name = body_display_name(inst) or f"{ann_type}@{id(inst):x}"
+        if inst_mro_names & _SEMANTIC_ANNOTATION_TYPE_NAMES:
+            inst_name = symbol_display_name(inst) or f"{ann_type}@{id(inst):x}"
             for cls in type(inst).__mro__:
                 if cls.__name__ in _ROBOT_CONTEXT_TYPE_NAMES:
                     names_list = annotation_summary.setdefault(cls.__name__, [])
@@ -260,7 +260,7 @@ def _collect_annotations(
             continue
 
         for body in bodies:
-            b_name = body_display_name(body)
+            b_name = symbol_display_name(body)
             if not b_name:
                 b_name = f"{type(body).__name__}@{id(body):x}"
             if not options.include_structural and _is_structural_body(
@@ -282,7 +282,7 @@ def _collect_relation_lines(
     graph: SymbolGraph,
     visible_ids: Set[int],
     structural_body_ids: Set[int],
-    options: WorldSerializationOptions,
+    options: WorldContextConfig,
 ) -> List[str]:
     lines: List[str] = []
     seen: Set[str] = set()
@@ -301,10 +301,10 @@ def _collect_relation_lines(
             continue
 
         source_name = (
-            body_display_name(source) or f"{type(source).__name__}@{id(source):x}"
+            symbol_display_name(source) or f"{type(source).__name__}@{id(source):x}"
         )
         target_name = (
-            body_display_name(target) or f"{type(target).__name__}@{id(target):x}"
+            symbol_display_name(target) or f"{type(target).__name__}@{id(target):x}"
         )
         if not options.include_structural and (
             _is_structural_body(source, source_name, structural_body_ids, options)
@@ -325,7 +325,7 @@ def _collect_relation_lines(
 
 def _collect_structural_body_ids(
     graph: SymbolGraph,
-    options: WorldSerializationOptions,
+    options: WorldContextConfig,
 ) -> Set[int]:
     if not options.exclude_robot_structures:
         return set()
@@ -351,7 +351,7 @@ def _is_robot_annotation(instance: Any) -> bool:
         mro_names = {cls.__name__ for cls in type(instance).__mro__}
     except AttributeError:
         return False
-    if mro_names & _ROBOT_ANNOTATION_TYPE_NAMES:
+    if mro_names & _SEMANTIC_ANNOTATION_TYPE_NAMES:
         return True
     return hasattr(instance, "_robot") and (
         hasattr(instance, "root")
@@ -421,7 +421,7 @@ def _is_structural_body(
     body: Any,
     body_name: str,
     semantic_structural_ids: Set[int],
-    options: WorldSerializationOptions,
+    options: WorldContextConfig,
 ) -> bool:
     if options.structural_body_filter is not None:
         return options.structural_body_filter(body)
@@ -435,7 +435,7 @@ def _render_world_context(
     annotation_summary: Dict[str, List[str]],
     relation_lines: List[str],
     extra_context: str,
-    options: WorldSerializationOptions,
+    options: WorldContextConfig,
 ) -> str:
     shown_records = records[: max(options.max_objects, 0)]
     unique_types = sorted(
@@ -496,7 +496,7 @@ def _render_world_context(
 
 def _render_scene_table(
     records: List[_BodyRecord],
-    options: WorldSerializationOptions,
+    options: WorldContextConfig,
 ) -> List[str]:
     rows = [
         "| body_name | class | semantic_types | parent_or_surface | xyz | size | notes |",
@@ -532,7 +532,7 @@ def _nearest_parent_name(body: Any) -> Optional[str]:
     parent = getattr(parent_conn, "parent", None) if parent_conn else None
     if parent is None:
         return None
-    return body_display_name(parent) or f"{type(parent).__name__}@{id(parent):x}"
+    return symbol_display_name(parent) or f"{type(parent).__name__}@{id(parent):x}"
 
 
 def _format_tuple(
@@ -550,7 +550,7 @@ def _format_tuple(
 # If name/pose attribute conventions change, fix only here.
 
 
-def body_display_name(body: Any) -> str:
+def symbol_display_name(body: Any) -> str:
     """Return a clean display name for a body instance (hides PrefixedName chain)."""
     name_obj = getattr(body, "name", None)
     if name_obj is None:
@@ -560,7 +560,7 @@ def body_display_name(body: Any) -> str:
     return str(name_obj)
 
 
-def body_xyz(body: Any) -> Optional[Tuple[float, float, float]]:
+def symbol_xyz(body: Any) -> Optional[Tuple[float, float, float]]:
     """Return (x, y, z) position of a body, or None if unavailable."""
     try:
         pt = body.global_pose.to_position()
@@ -569,7 +569,7 @@ def body_xyz(body: Any) -> Optional[Tuple[float, float, float]]:
         return None
 
 
-def body_bounding_box(
+def symbol_bounding_box(
     body: Any,
     reference_frame: Optional[Any] = None,
 ) -> Optional[Tuple[float, float, float]]:
@@ -641,3 +641,7 @@ def get_instances(
         return list(graph.get_instances_of_type(cls if cls is not None else Symbol))
     except Exception:
         return []
+
+
+# ── Backward-compat aliases (remove in Phase 6) ──────────────────────────────
+

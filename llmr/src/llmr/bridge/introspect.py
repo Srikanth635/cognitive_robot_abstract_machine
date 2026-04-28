@@ -1,4 +1,4 @@
-"""PycramIntrospector — classifies action dataclass fields by how they should be resolved.
+"""ActionFieldIntrospector — classifies action dataclass fields by how they should be resolved.
 
 FieldKind classification drives the slot-filler prompt and per-slot resolution in LLMBackend:
   ENTITY    Symbol subclass → SymbolGraph grounding, instance passed directly.
@@ -52,11 +52,11 @@ class FieldKind(str, Enum):
 # Sentinel meaning "field has no default" — cannot use dataclasses.MISSING
 # directly as a dataclass field default because the dataclasses machinery
 # interprets MISSING as "no default", causing TypeError on class creation.
-NO_DEFAULT = object()
+_MISSING_DEFAULT = object()
 
 
 @dataclass
-class FieldSpec:
+class DiscoveredField:
     """Metadata for one action dataclass field, used to build slot-filler prompts."""
 
     name: str
@@ -65,27 +65,27 @@ class FieldSpec:
     docstring: str = ""  # attribute docstring from class source
     is_optional: bool = False
     default: Any = field(
-        default_factory=lambda: NO_DEFAULT
-    )  # NO_DEFAULT means required
+        default_factory=lambda: _MISSING_DEFAULT
+    )  # _MISSING_DEFAULT means required
     enum_members: List[str] = field(default_factory=list)  # for ENUM kind
-    sub_fields: List["FieldSpec"] = field(default_factory=list)  # for COMPLEX kind
+    sub_fields: List["DiscoveredField"] = field(default_factory=list)  # for COMPLEX kind
 
 
 @dataclass
-class ActionSchema:
+class ActionSpec:
     """Full introspection result for one action class — action type, docstring, and per-field specs."""
 
     action_type: str  # e.g. "PickUpAction"
     action_cls: Any  # the actual class object
     docstring: str  # class-level docstring
-    fields: List[FieldSpec]
+    fields: List[DiscoveredField]
 
 
-# ── PycramIntrospector ─────────────────────────────────────────────────────────
+# ── ActionFieldIntrospector ─────────────────────────────────────────────────────────
 
 
 @dataclass
-class OwnDataclassIntrospector(DataclassOnlyIntrospector):
+class DeclaredFieldsIntrospector(DataclassOnlyIntrospector):
     """Discover only fields declared directly on the inspected dataclass.
 
     Delegates all standard checks (is_dataclass, _ prefix, init=False) to
@@ -103,7 +103,7 @@ class OwnDataclassIntrospector(DataclassOnlyIntrospector):
 
 
 @dataclass
-class PycramIntrospector:
+class ActionFieldIntrospector:
     """Reads an action dataclass and classifies each field into a FieldKind.
 
     Results drive the slot-filler prompt (which fields to ask the LLM about, what
@@ -112,7 +112,7 @@ class PycramIntrospector:
 
     Usage::
 
-        schema = PycramIntrospector().introspect(PickUpAction)
+        schema = ActionFieldIntrospector().introspect_action(PickUpAction)
     """
 
     # Names of types (and their subclasses via MRO) treated as spatial poses.
@@ -122,48 +122,48 @@ class PycramIntrospector:
     )
 
     introspector: AttributeIntrospector = field(
-        default_factory=OwnDataclassIntrospector
+        default_factory=DeclaredFieldsIntrospector
     )
 
-    def introspect(self, action_cls: type, _depth: int = 0) -> ActionSchema:
-        """Return an :class:`ActionSchema` for *action_cls*.
+    def introspect_action(self, action_cls: type, _depth: int = 0) -> ActionSpec:
+        """Return an :class:`ActionSpec` for *action_cls*.
 
         :param action_cls: An action dataclass.
         """
         if not dataclasses.is_dataclass(action_cls):
             raise TypeError(f"{action_cls!r} is not a dataclass")
 
-        cls_doc = (inspect.getdoc(action_cls) or "").strip()
-        field_docs = self._extract_field_docstrings(action_cls)
+        class_docstring = (inspect.getdoc(action_cls) or "").strip()
+        field_docstrings = self._extract_field_docstrings(action_cls)
         defaults = get_default_values_for_dataclass(action_cls)
         class_diagram = ClassDiagram([action_cls], introspector=self.introspector)
         wrapped_class = class_diagram.get_wrapped_class(action_cls)
 
-        field_specs: List[FieldSpec] = []
+        field_specs: List[DiscoveredField] = []
         for wrapped_field in wrapped_class.fields:
             field_specs.append(
                 self._field_spec_from_wrapped_field(
                     wrapped_field=wrapped_field,
-                    field_docs=field_docs,
+                    field_docstrings=field_docstrings,
                     defaults=defaults,
                     depth=_depth,
                 )
             )
 
-        return ActionSchema(
+        return ActionSpec(
             action_type=action_cls.__name__,
             action_cls=action_cls,
-            docstring=cls_doc,
+            docstring=class_docstring,
             fields=field_specs,
         )
 
     def _field_spec_from_wrapped_field(
         self,
         wrapped_field: WrappedField,
-        field_docs: Dict[str, str],
+        field_docstrings: Dict[str, str],
         defaults: Dict[str, Any],
         depth: int,
-    ) -> FieldSpec:
+    ) -> DiscoveredField:
         """Convert KRROOD field metadata into llmr's prompt-facing schema."""
         if wrapped_field.is_type_type:
             raw_type = wrapped_field.type_endpoint
@@ -176,11 +176,11 @@ class PycramIntrospector:
             kind = self.classify_type(raw_type, depth)
 
         has_default = wrapped_field.name in defaults
-        spec = FieldSpec(
+        spec = DiscoveredField(
             name=wrapped_field.name,
             raw_type=raw_type,
             kind=kind,
-            docstring=field_docs.get(wrapped_field.name, ""),
+            docstring=field_docstrings.get(wrapped_field.name, ""),
             is_optional=wrapped_field.is_optional or has_default,
         )
 
@@ -189,7 +189,7 @@ class PycramIntrospector:
 
         elif kind == FieldKind.COMPLEX and depth < 2:
             try:
-                sub_schema = self.introspect(raw_type, _depth=depth + 1)
+                sub_schema = self.introspect_action(raw_type, _depth=depth + 1)
                 spec.sub_fields = sub_schema.fields
             except Exception as exc:
                 logger.debug("Cannot introspect sub-fields of %s: %s", raw_type, exc)
@@ -311,6 +311,8 @@ class PycramIntrospector:
         return docs
 
 
-def introspect(action_cls: type) -> ActionSchema:
+def introspect_action(action_cls: type) -> ActionSpec:
     """Introspect *action_cls* using a fresh introspector instance."""
-    return PycramIntrospector().introspect(action_cls)
+    return ActionFieldIntrospector().introspect_action(action_cls)
+
+

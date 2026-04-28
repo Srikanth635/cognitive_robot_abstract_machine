@@ -1,10 +1,10 @@
-"""PyCRAM bridge — the single boundary layer between llmr and pycram.
+"""PyCRAM integration — the single boundary layer between llmr and pycram.
 
 All pycram imports for the entire llmr package are funnelled through
-the adapter module in this package. Nothing outside pycram_bridge imports
+the adapter module in this package. Nothing outside pycram imports
 pycram directly.
 
-For field introspection (``FieldKind``, ``PycramIntrospector``, etc.) use
+For field introspection (``FieldKind``, ``ActionFieldIntrospector``, etc.) use
 :mod:`llmr.bridge.introspect` — the canonical home.
 
 Public surface:
@@ -14,7 +14,7 @@ Public surface:
   discover_action_classes — scans pycram action package tree
 """
 
-from llmr.pycram_bridge.adapter import (
+from llmr.pycram.adapter import (
     PycramContext,
     PycramPlanNode,
     discover_action_classes,

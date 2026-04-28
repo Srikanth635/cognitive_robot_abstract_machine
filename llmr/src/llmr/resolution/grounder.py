@@ -4,7 +4,7 @@ Two-tier strategy:
   Tier 1  Annotation-based: resolve ``semantic_type`` to a Symbol subclass, collect
           its annotated bodies (via ``.bodies``) or fall back to the annotation itself.
   Tier 2  Name-based: substring-match ``description.name`` across all instances of
-          ``groundable_type``.
+          ``symbol_type``.
 
 All SymbolGraph access is delegated to :mod:`llmr.bridge.world_reader`.
 """
@@ -16,11 +16,11 @@ from dataclasses import dataclass, field
 from typing_extensions import Any, List, Optional
 
 from llmr.bridge.world_reader import (
-    body_display_name,
+    symbol_display_name,
     get_instances,
     resolve_symbol_class,
 )
-from llmr.schemas import EntityDescriptionSchema
+from llmr.schemas import EntityDescription
 
 logger = logging.getLogger(__name__)
 
@@ -32,25 +32,25 @@ logger = logging.getLogger(__name__)
 class GroundingResult:
     """Result of an entity grounding attempt."""
 
-    bodies: List[Any] = field(default_factory=list)
-    """Candidate Symbol instances that match the description, ranked by confidence."""
+    candidates: List[Any] = field(default_factory=list)
+    """Symbol instances that match the description, ranked by confidence."""
 
     warning: Optional[str] = None
     """Non-fatal diagnostic message (e.g. multiple matches, fallback used)."""
 
 
-# ── EntityGrounder ─────────────────────────────────────────────────────────────
+# ── EntityGrounding ─────────────────────────────────────────────────────────────
 
 
 @dataclass
-class EntityGrounder:
-    """Grounds an :class:`EntityDescriptionSchema` to Symbol instances in the world.
+class EntityGrounding:
+    """Grounds an :class:`EntityDescription` to Symbol instances in the world.
 
     All SymbolGraph queries go through the bridge — this class stays krrood-free.
     """
 
-    groundable_type: Any = None
-    """Symbol subclass representing groundable world entities (e.g. ``Body``).
+    symbol_type: Any = None
+    """Symbol subclass scoping the entity search (e.g. ``Body``).
     ``None`` falls back to ``Symbol`` via :func:`get_instances` (all instances)."""
 
     symbol_graph: Any = None
@@ -60,7 +60,7 @@ class EntityGrounder:
 
     def ground(
         self,
-        description: EntityDescriptionSchema,
+        description: EntityDescription,
         expected_type: Optional[type] = None,
     ) -> GroundingResult:
         """Resolve *description* to Symbol instances (Tier 1, then Tier 2).
@@ -72,12 +72,12 @@ class EntityGrounder:
         """
         if description.semantic_type:
             result = self._annotation_ground(description, expected_type=expected_type)
-            if result.bodies:
+            if result.candidates:
                 logger.debug(
                     "Tier 1 grounding: semantic_type=%r → %d instance(s): %s",
                     description.semantic_type,
-                    len(result.bodies),
-                    [body_display_name(b) for b in result.bodies],
+                    len(result.candidates),
+                    [symbol_display_name(b) for b in result.candidates],
                 )
                 return result
             logger.debug(
@@ -87,7 +87,7 @@ class EntityGrounder:
             )
 
         result = self._name_ground(description)
-        if result.bodies:
+        if result.candidates:
             return result
 
         warning = (
@@ -96,13 +96,13 @@ class EntityGrounder:
             "Check that the object exists in the world."
         )
         logger.warning(warning)
-        return GroundingResult(bodies=[], warning=warning)
+        return GroundingResult(candidates=[], warning=warning)
 
     # ── Tier 1: annotation-based ───────────────────────────────────────────────
 
     def _annotation_ground(
         self,
-        description: EntityDescriptionSchema,
+        description: EntityDescription,
         expected_type: Optional[type] = None,
     ) -> GroundingResult:
         """Resolve ``semantic_type`` to a class, then collect its annotated bodies.
@@ -139,13 +139,13 @@ class EntityGrounder:
             if description.name and candidates:
                 name_lower = description.name.lower()
                 name_filtered = [
-                    a for a in candidates if name_lower in body_display_name(a).lower()
+                    a for a in candidates if name_lower in symbol_display_name(a).lower()
                 ]
                 if name_filtered:
                     candidates = name_filtered
             candidates = self._refine(candidates, description)
             return GroundingResult(
-                bodies=candidates,
+                candidates=candidates,
                 warning=self._multi_match_warning(candidates, description.name),
             )
 
@@ -163,29 +163,29 @@ class EntityGrounder:
         if description.name and candidates:
             name_lower = description.name.lower()
             name_filtered = [
-                b for b in candidates if name_lower in body_display_name(b).lower()
+                b for b in candidates if name_lower in symbol_display_name(b).lower()
             ]
             if name_filtered:
                 candidates = name_filtered
 
         candidates = self._refine(candidates, description)
         return GroundingResult(
-            bodies=candidates,
+            candidates=candidates,
             warning=self._multi_match_warning(candidates, description.name),
         )
 
     # ── Tier 2: name-based ─────────────────────────────────────────────────────
 
-    def _name_ground(self, description: EntityDescriptionSchema) -> GroundingResult:
-        """Substring-scan ``description.name`` over all groundable_type instances."""
+    def _name_ground(self, description: EntityDescription) -> GroundingResult:
+        """Substring-scan ``description.name`` over all ``symbol_type`` instances."""
         if not description.name:
             return GroundingResult()
 
         name_lower = description.name.lower()
-        all_instances = get_instances(self.groundable_type, self.symbol_graph)
+        all_instances = get_instances(self.symbol_type, self.symbol_graph)
 
         candidates = [
-            b for b in all_instances if name_lower in body_display_name(b).lower()
+            b for b in all_instances if name_lower in symbol_display_name(b).lower()
         ]
 
         if not candidates:
@@ -193,14 +193,14 @@ class EntityGrounder:
 
         candidates = self._refine(candidates, description)
         return GroundingResult(
-            bodies=candidates,
+            candidates=candidates,
             warning=self._multi_match_warning(candidates, description.name),
         )
 
     # ── Refinement ─────────────────────────────────────────────────────────────
 
     def _refine(
-        self, candidates: List[Any], description: EntityDescriptionSchema
+        self, candidates: List[Any], description: EntityDescription
     ) -> List[Any]:
         """Narrow *candidates* with an attribute-value filter; skipped when only one remains."""
         if description.attributes and len(candidates) > 1:
@@ -214,7 +214,7 @@ class EntityGrounder:
         """Retain candidates whose display name or annotation types contain any attribute value."""
         filtered: List[Any] = []
         for body in candidates:
-            body_str = body_display_name(body).lower()
+            body_str = symbol_display_name(body).lower()
             ann_type_names = " ".join(
                 type(a).__name__.lower()
                 for a in getattr(body, "_semantic_annotations", [])
@@ -234,9 +234,11 @@ class EntityGrounder:
     ) -> Optional[str]:
         """Return a warning string when grounding is ambiguous (> 1 candidate), else ``None``."""
         if len(candidates) > 1:
-            names = [body_display_name(b) for b in candidates]
+            names = [symbol_display_name(b) for b in candidates]
             return (
                 f"Grounding for '{name}' returned {len(candidates)} candidates: "
                 f"{names}. All passed to the action handler."
             )
         return None
+
+

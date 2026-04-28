@@ -1,7 +1,7 @@
 """Slot-value resolution — turns LLM slot outputs into concrete Python values.
 
 Dispatches by :class:`FieldKind` (pre-classified on each :class:`MatchSlot`):
-  ENTITY / POSE / TYPE_REF → ground via :class:`EntityGrounder`.
+  ENTITY / POSE / TYPE_REF → ground via :class:`EntityGrounding`.
   ENUM                     → coerce string to enum member.
   PRIMITIVE                → cast string to bool / int / float / str.
   COMPLEX                  → not resolved here (nested Match handles it).
@@ -18,14 +18,14 @@ from llmr.bridge.introspect import FieldKind
 from llmr.bridge.world_reader import resolve_symbol_class
 
 if TYPE_CHECKING:
-    from llmr.bridge.match_reader import MatchSlot
-    from llmr.resolution.grounder import EntityGrounder
+    from llmr.bridge.match_reader import MatchField as MatchSlot
+    from llmr.resolution.grounder import EntityGrounding as EntityGrounder
     from llmr.schemas import SlotValue
 
 logger = logging.getLogger(__name__)
 
 
-def resolve_binding_value(
+def resolve_slot(
     slot: "MatchSlot",
     slot_by_name: Dict[str, "SlotValue"],
     grounder: "EntityGrounder",
@@ -40,7 +40,7 @@ def resolve_binding_value(
         slot_value = slot_by_name.get(slot.prompt_name)
         if slot_value is None:
             return unresolved
-        return resolve_entity_slot(
+        return ground_entity_slot(
             slot_value,
             grounder,
             kind,
@@ -66,8 +66,8 @@ def resolve_binding_value(
     return unresolved
 
 
-def resolve_entity_slot(
-    sv: "SlotValue",
+def ground_entity_slot(
+    slot_value: "SlotValue",
     grounder: "EntityGrounder",
     kind: FieldKind,
     field_name: str,
@@ -75,46 +75,46 @@ def resolve_entity_slot(
     resolved_params: Optional[Dict[str, Any]] = None,
     unresolved: Any = None,
 ) -> Any:
-    """Ground an ENTITY / POSE / TYPE_REF slot to a Symbol instance via :class:`EntityGrounder`."""
-    from llmr.schemas import EntityDescriptionSchema
+    """Ground an ENTITY / POSE / TYPE_REF slot to a Symbol instance via :class:`EntityGrounding`."""
+    from llmr.schemas import EntityDescription
 
-    ed = sv.entity_description
-    if ed is not None:
-        grounding_ed = ed
-    elif sv.value:
+    entity_description = slot_value.entity_description
+    if entity_description is not None:
+        grounding_description = entity_description
+    elif slot_value.value:
         # LLM used the plain value field instead of entity_description.
         # Recover semantic_type from the known field type so Tier 1 grounding fires.
         inferred_type = (
             expected_type.__name__ if isinstance(expected_type, type) else None
         )
-        grounding_ed = EntityDescriptionSchema(
-            name=sv.value, semantic_type=inferred_type
+        grounding_description = EntityDescription(
+            name=slot_value.value, semantic_type=inferred_type
         )
     else:
         logger.warning(
-            "resolve_entity_slot: field '%s' has neither entity_description nor value.",
+            "ground_entity_slot: field '%s' has neither entity_description nor value.",
             field_name,
         )
         return unresolved
 
-    grounding = grounder.ground(grounding_ed, expected_type=expected_type)
+    grounding = grounder.ground(grounding_description, expected_type=expected_type)
     if grounding.warning:
         logger.warning("Grounding warning for '%s': %s", field_name, grounding.warning)
-    if not grounding.bodies:
+    if not grounding.candidates:
         logger.warning(
-            "resolve_entity_slot: no bodies found for field '%s' (name=%r, type=%r).",
+            "ground_entity_slot: no candidates found for field '%s' (name=%r, type=%r).",
             field_name,
-            grounding_ed.name,
-            grounding_ed.semantic_type,
+            grounding_description.name,
+            grounding_description.semantic_type,
         )
         return unresolved
 
-    body = grounding.bodies[0]
+    body = grounding.candidates[0]
 
     if kind == FieldKind.ENTITY and isinstance(expected_type, type):
         if not isinstance(body, expected_type):
             logger.warning(
-                "resolve_entity_slot: grounded value for field '%s' has type %s, expected %s.",
+                "ground_entity_slot: grounded value for field '%s' has type %s, expected %s.",
                 field_name,
                 type(body).__name__,
                 expected_type.__name__,
@@ -129,9 +129,9 @@ def resolve_entity_slot(
             return unresolved
 
     if kind == FieldKind.TYPE_REF:
-        if ed is not None and ed.semantic_type:
+        if entity_description is not None and entity_description.semantic_type:
             cls = resolve_symbol_class(
-                ed.semantic_type,
+                entity_description.semantic_type,
                 symbol_graph=getattr(grounder, "symbol_graph", None),
             )
             if cls is not None:
@@ -186,3 +186,5 @@ def coerce_primitive(value: str, field_type: Any) -> Any:
         except (ValueError, TypeError):
             return value
     return value
+
+
