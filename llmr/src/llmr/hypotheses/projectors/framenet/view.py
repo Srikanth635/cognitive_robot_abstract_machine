@@ -27,9 +27,8 @@ class FrameNetGraphView(ReasonerGraphView):
 
         return [
             node
-            for node in self.graph.iter_nodes()
-            if isinstance(node, FrameHypothesisNode)
-            and node.meta.source_reasoner == self.REASONER_NAME
+            for node in self.graph.domain(FrameHypothesisNode)
+            if node.meta.source_reasoner == self.REASONER_NAME
         ]
 
     def roles(self) -> list[FrameRoleHypothesisNode]:
@@ -37,9 +36,8 @@ class FrameNetGraphView(ReasonerGraphView):
 
         return [
             node
-            for node in self.graph.iter_nodes()
-            if isinstance(node, FrameRoleHypothesisNode)
-            and node.meta.source_reasoner == self.REASONER_NAME
+            for node in self.graph.domain(FrameRoleHypothesisNode)
+            if node.meta.source_reasoner == self.REASONER_NAME
         ]
 
     def frames_by_frame(self, frame_name: str) -> list[FrameHypothesisNode]:

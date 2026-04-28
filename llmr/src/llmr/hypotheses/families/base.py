@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC
 from dataclasses import dataclass
-from typing import ClassVar
+from typing import Callable, ClassVar, Dict, List, TypeVar as TypingTypeVar
 
 from typing_extensions import Generic, TypeVar
 
@@ -18,6 +18,26 @@ from llmr.hypotheses.views import ReasonerGraphView
 
 TProjector = TypeVar("TProjector", bound=HypothesisProjector)
 TView = TypeVar("TView", bound=ReasonerGraphView)
+_TFamily = TypingTypeVar("_TFamily")
+
+_FAMILY_REGISTRY: Dict[str, type] = {}
+
+
+def hypothesis_family(*, reasoner: str) -> Callable[[type[_TFamily]], type[_TFamily]]:
+    """Class decorator that registers a HypothesisFamily subclass by reasoner name."""
+
+    def decorator(cls: type[_TFamily]) -> type[_TFamily]:
+        cls.REASONER_NAME = reasoner  # type: ignore[attr-defined]
+        _FAMILY_REGISTRY[reasoner] = cls
+        return cls
+
+    return decorator
+
+
+def get_all_families() -> List[type]:
+    """Return all registered HypothesisFamily subclasses in registration order."""
+
+    return list(_FAMILY_REGISTRY.values())
 
 
 @dataclass(frozen=True)

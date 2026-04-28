@@ -26,9 +26,8 @@ class FlanaganGraphView(ReasonerGraphView):
 
         return [
             node
-            for node in self.graph.iter_nodes()
-            if isinstance(node, MotionPlanHypothesisNode)
-            and node.meta.source_reasoner == self.REASONER_NAME
+            for node in self.graph.domain(MotionPlanHypothesisNode)
+            if node.meta.source_reasoner == self.REASONER_NAME
         ]
 
     def phases(self) -> list[MotionPhaseHypothesisNode]:
@@ -36,9 +35,8 @@ class FlanaganGraphView(ReasonerGraphView):
 
         return [
             node
-            for node in self.graph.iter_nodes()
-            if isinstance(node, MotionPhaseHypothesisNode)
-            and node.meta.source_reasoner == self.REASONER_NAME
+            for node in self.graph.domain(MotionPhaseHypothesisNode)
+            if node.meta.source_reasoner == self.REASONER_NAME
         ]
 
     def phases_by_name(self, phase_name: str) -> list[MotionPhaseHypothesisNode]:

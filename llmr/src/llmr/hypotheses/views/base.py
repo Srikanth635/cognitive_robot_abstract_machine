@@ -77,9 +77,9 @@ class ReasonerGraphView(HypothesisGraphView, ABC):
 
         return [
             node
-            for node in self.graph.iter_nodes()
-            if isinstance(node, self.CLAIM_TYPES)
-            and node.meta.source_reasoner == self.REASONER_NAME
+            for cls in self.CLAIM_TYPES
+            for node in self.graph.domain(cls)
+            if node.meta.source_reasoner == self.REASONER_NAME
         ]
 
     def root_claims(self) -> list[HypothesisNode]:
@@ -87,9 +87,9 @@ class ReasonerGraphView(HypothesisGraphView, ABC):
 
         return [
             node
-            for node in self.graph.iter_nodes()
-            if isinstance(node, self.ROOT_CLAIM_TYPES)
-            and node.meta.source_reasoner == self.REASONER_NAME
+            for cls in self.ROOT_CLAIM_TYPES
+            for node in self.graph.domain(cls)
+            if node.meta.source_reasoner == self.REASONER_NAME
         ]
 
     def claims_for_run(self, run_id: str) -> list[HypothesisNode]:
@@ -97,9 +97,10 @@ class ReasonerGraphView(HypothesisGraphView, ABC):
 
         return [
             node
-            for node in self.graph.nodes_for_run(run_id)
-            if isinstance(node, self.CLAIM_TYPES)
-            and node.meta.source_reasoner == self.REASONER_NAME
+            for cls in self.CLAIM_TYPES
+            for node in self.graph.domain(cls)
+            if node.meta.source_reasoner == self.REASONER_NAME
+            and node.meta.run_id == run_id
         ]
 
     def claims_for_action(self, action_ref: object) -> list[HypothesisNode]:

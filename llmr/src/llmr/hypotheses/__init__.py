@@ -66,6 +66,14 @@ from llmr.hypotheses.projectors.flanagan.nodes import (
     MotionPhaseHypothesisNode,
     MotionPlanHypothesisNode,
 )
+from llmr.hypotheses.algorithms import (
+    conflicting_role_claims,
+    hypothesis_closure,
+    invalidate_from_symbol,
+    reasoning_chain,
+)
+from llmr.hypotheses.linked import GraphLinked, graph_context
+from llmr.hypotheses.families.base import hypothesis_family, get_all_families
 
 __all__ = [
     "ClaimStatus",
@@ -110,4 +118,12 @@ __all__ = [
     "FrameNetFamily",
     "FrameNetProjector",
     "FrameNetGraphView",
+    "invalidate_from_symbol",
+    "reasoning_chain",
+    "conflicting_role_claims",
+    "hypothesis_closure",
+    "GraphLinked",
+    "graph_context",
+    "hypothesis_family",
+    "get_all_families",
 ]

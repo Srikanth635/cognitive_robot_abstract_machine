@@ -41,9 +41,11 @@ def _normalize_instruction_text(text: str) -> str:
 class HypothesisGraph:
     """Graph-native repository of epistemic nodes and relations.
 
-    Nodes and edges are stored directly inside a ``rustworkx.PyDiGraph`` while
-    stable id/type indexes are maintained alongside it for EQL domains and
-    metadata-based lookup.
+    Nodes and edges are stored directly inside a ``rustworkx.PyDiGraph``.
+    Six lean indexes are maintained alongside it: two id→index maps for graph
+    operations, one MRO-aware type index for O(1) inheritance-aware queries,
+    two deduplication keys (instruction text, action identity), and one reverse
+    symbol-grounding lookup needed for invalidation propagation.
     """
 
     _graph: PyDiGraph[HypothesisNode, HypothesisEdge] = field(
@@ -51,45 +53,16 @@ class HypothesisGraph:
     )
     _node_indices_by_id: Dict[str, int] = field(default_factory=dict, init=False)
     _edge_indices_by_id: Dict[str, int] = field(default_factory=dict, init=False)
-    _nodes_by_id: Dict[str, HypothesisNode] = field(default_factory=dict, init=False)
-    _edges_by_id: Dict[str, HypothesisEdge] = field(default_factory=dict, init=False)
-    _nodes_by_type: Dict[type, List[HypothesisNode]] = field(
-        default_factory=dict, init=False
-    )
-    _edges_by_type: Dict[type, List[HypothesisEdge]] = field(
-        default_factory=dict, init=False
-    )
+    _type_index: Dict[type, List[int]] = field(default_factory=dict, init=False)
     _instruction_nodes_by_normalized_text: Dict[str, InstructionNode] = field(
         default_factory=dict, init=False
     )
     _action_nodes_by_ref_id: Dict[int, ActionNode] = field(
         default_factory=dict, init=False
     )
-    _nodes_by_status: Dict[ClaimStatus, List[HypothesisNode]] = field(
-        default_factory=dict, init=False
-    )
-    _nodes_by_grounding: Dict[GroundingState, List[HypothesisNode]] = field(
-        default_factory=dict, init=False
-    )
-    _nodes_by_run_id: Dict[str, List[HypothesisNode]] = field(
-        default_factory=dict, init=False
-    )
-    _nodes_by_reasoner: Dict[str, List[HypothesisNode]] = field(
-        default_factory=dict, init=False
-    )
-    _edges_by_run_id: Dict[str, List[HypothesisEdge]] = field(
-        default_factory=dict, init=False
-    )
-    _edges_by_reasoner: Dict[str, List[HypothesisEdge]] = field(
-        default_factory=dict, init=False
-    )
-    _edges_by_relation: Dict[Tuple[type, str, str], List[HypothesisEdge]] = field(
-        default_factory=dict, init=False
-    )
-    _edges_by_relation_and_run: Dict[
-        Tuple[type, str, str, Optional[str]], List[HypothesisEdge]
+    _symbol_groundings_by_symbol_ref_id: Dict[
+        int, List[SymbolGroundingEvidenceNode]
     ] = field(default_factory=dict, init=False)
-    _symbol_groundings_by_symbol_ref_id: Dict[int, List[SymbolGroundingEvidenceNode]] = field(default_factory=dict, init=False)
 
     def add_node(self, node: TNode) -> TNode:
         """Insert *node* into the graph, reusing stable context nodes when possible."""
@@ -98,16 +71,17 @@ class HypothesisGraph:
         if existing is not None:
             return existing  # type: ignore[return-value]
 
-        existing = self._nodes_by_id.get(node.id)
-        if existing is not None:
+        if node.id in self._node_indices_by_id:
+            existing = self._graph.get_node_data(self._node_indices_by_id[node.id])
             if existing != node:
                 raise ValueError(f"node id collision for {node.id!r}")
             return existing  # type: ignore[return-value]
 
         node_index = self._graph.add_node(node)
         self._node_indices_by_id[node.id] = node_index
-        self._nodes_by_id[node.id] = node
-        self._index_node(node)
+        self._index_by_mro(node, node_index)
+        self._index_dedup_keys(node)
+        self._index_special(node)
         return node
 
     def add_edge(self, edge: TEdge) -> TEdge:
@@ -120,16 +94,16 @@ class HypothesisGraph:
         if target_index is None:
             raise KeyError(f"edge destination node {edge.dst_id!r} not found")
 
-        existing = self._edges_by_id.get(edge.id)
-        if existing is not None:
+        if edge.id in self._edge_indices_by_id:
+            existing = self._graph.get_edge_data_by_index(
+                self._edge_indices_by_id[edge.id]
+            )
             if existing != edge:
                 raise ValueError(f"edge id collision for {edge.id!r}")
             return existing  # type: ignore[return-value]
 
         edge_index = self._graph.add_edge(source_index, target_index, edge)
         self._edge_indices_by_id[edge.id] = edge_index
-        self._edges_by_id[edge.id] = edge
-        self._index_edge(edge)
         return edge
 
     def add_projection(self, projection: "HypothesisProjection") -> None:
@@ -143,32 +117,43 @@ class HypothesisGraph:
     def get_node(self, node_id: str) -> Optional[HypothesisNode]:
         """Return the node with *node_id*, if present."""
 
-        return self._nodes_by_id.get(node_id)
+        index = self._node_indices_by_id.get(node_id)
+        if index is None:
+            return None
+        return self._graph.get_node_data(index)
 
     def get_edge(self, edge_id: str) -> Optional[HypothesisEdge]:
         """Return the edge with *edge_id*, if present."""
 
-        return self._edges_by_id.get(edge_id)
+        index = self._edge_indices_by_id.get(edge_id)
+        if index is None:
+            return None
+        return self._graph.get_edge_data_by_index(index)
 
     def has_node(self, node_id: str) -> bool:
         """Return whether a node with *node_id* exists."""
 
-        return node_id in self._nodes_by_id
+        return node_id in self._node_indices_by_id
 
     def has_edge(self, edge_id: str) -> bool:
         """Return whether an edge with *edge_id* exists."""
 
-        return edge_id in self._edges_by_id
+        return edge_id in self._edge_indices_by_id
 
     def iter_nodes(self) -> Iterable[HypothesisNode]:
         """Iterate over nodes preserving graph insertion order."""
 
-        return iter(self._nodes_by_id.values())
+        return (
+            self._graph.get_node_data(i) for i in self._node_indices_by_id.values()
+        )
 
     def iter_edges(self) -> Iterable[HypothesisEdge]:
         """Iterate over edges preserving graph insertion order."""
 
-        return iter(self._edges_by_id.values())
+        return (
+            self._graph.get_edge_data_by_index(i)
+            for i in self._edge_indices_by_id.values()
+        )
 
     def out_edges(
         self,
@@ -305,24 +290,35 @@ class HypothesisGraph:
         return neighbors  # type: ignore[return-value]
 
     def domain(self, node_type: type[TNode]) -> List[TNode]:
-        """Return a query domain for *node_type* preserving insertion order."""
+        """Return a query domain for *node_type* preserving insertion order.
 
-        exact = self._nodes_by_type.get(node_type)
-        if exact is not None:
-            return list(exact)  # type: ignore[return-value]
+        MRO-aware: returns instances of *node_type* and all its concrete
+        subclasses that have been inserted into the graph.
+        """
+
         return [
-            node for node in self._nodes_by_id.values() if isinstance(node, node_type)
-        ]
+            self._graph.get_node_data(i)
+            for i in self._type_index.get(node_type, [])
+        ]  # type: ignore[return-value]
 
     def edge_domain(self, edge_type: type[TEdge]) -> List[TEdge]:
         """Return a query domain for *edge_type* preserving insertion order."""
 
-        exact = self._edges_by_type.get(edge_type)
-        if exact is not None:
-            return list(exact)  # type: ignore[return-value]
         return [
-            edge for edge in self._edges_by_id.values() if isinstance(edge, edge_type)
-        ]
+            edge for edge in self.iter_edges() if isinstance(edge, edge_type)
+        ]  # type: ignore[return-value]
+
+    def get_instances_of_type(self, cls: type) -> List[HypothesisNode]:
+        """KRROOD-compatible instance provider. Same signature as SymbolGraph."""
+
+        return self.domain(cls)
+
+    def query_context(self):
+        """Return a context manager that makes this graph available to GraphLinked nodes."""
+
+        from llmr.hypotheses.linked import graph_context
+
+        return graph_context(self)
 
     @property
     def graph(self) -> PyDiGraph[HypothesisNode, HypothesisEdge]:
@@ -332,11 +328,11 @@ class HypothesisGraph:
 
     @property
     def node_count(self) -> int:
-        return len(self._nodes_by_id)
+        return len(self._node_indices_by_id)
 
     @property
     def edge_count(self) -> int:
-        return len(self._edges_by_id)
+        return len(self._edge_indices_by_id)
 
     @property
     def instructions(self) -> List[InstructionNode]:
@@ -356,7 +352,7 @@ class HypothesisGraph:
 
     @property
     def edges(self) -> List[HypothesisEdge]:
-        return list(self._edges_by_id.values())
+        return list(self.iter_edges())
 
     def get_instruction(self, text: str) -> Optional[InstructionNode]:
         """Return the instruction node matching *text* after normalization."""
@@ -373,32 +369,36 @@ class HypothesisGraph:
     def nodes_by_status(self, status: ClaimStatus) -> List[HypothesisNode]:
         """Return all nodes with the given claim status."""
 
-        return list(self._nodes_by_status.get(status, []))
+        return [n for n in self.iter_nodes() if n.meta.status == status]
 
     def nodes_by_grounding(self, grounding: GroundingState) -> List[HypothesisNode]:
         """Return all nodes with the given grounding state."""
 
-        return list(self._nodes_by_grounding.get(grounding, []))
+        return [n for n in self.iter_nodes() if n.meta.grounding == grounding]
 
     def nodes_for_run(self, run_id: str) -> List[HypothesisNode]:
         """Return all nodes produced or tagged within *run_id*."""
 
-        return list(self._nodes_by_run_id.get(run_id, []))
+        return [n for n in self.iter_nodes() if n.meta.run_id == run_id]
 
     def nodes_from_reasoner(self, reasoner_name: str) -> List[HypothesisNode]:
         """Return all nodes attributed to *reasoner_name*."""
 
-        return list(self._nodes_by_reasoner.get(reasoner_name, []))
+        return [
+            n for n in self.iter_nodes() if n.meta.source_reasoner == reasoner_name
+        ]
 
     def edges_for_run(self, run_id: str) -> List[HypothesisEdge]:
         """Return all edges produced or tagged within *run_id*."""
 
-        return list(self._edges_by_run_id.get(run_id, []))
+        return [e for e in self.iter_edges() if e.meta.run_id == run_id]
 
     def edges_from_reasoner(self, reasoner_name: str) -> List[HypothesisEdge]:
         """Return all edges attributed to *reasoner_name*."""
 
-        return list(self._edges_by_reasoner.get(reasoner_name, []))
+        return [
+            e for e in self.iter_edges() if e.meta.source_reasoner == reasoner_name
+        ]
 
     def groundings_for_symbol(
         self, symbol_ref: Any
@@ -417,37 +417,65 @@ class HypothesisGraph:
     ) -> bool:
         """Return whether a typed edge exists between *src_id* and *dst_id*."""
 
-        if run_id is None:
-            return bool(self._edges_by_relation.get((edge_type, src_id, dst_id), []))
-        return bool(
-            self._edges_by_relation_and_run.get((edge_type, src_id, dst_id, run_id), [])
-        )
+        src_idx = self._node_indices_by_id.get(src_id)
+        dst_idx = self._node_indices_by_id.get(dst_id)
+        if src_idx is None or dst_idx is None:
+            return False
+        for _, target_idx, edge in self._graph.out_edges(src_idx):
+            if target_idx != dst_idx:
+                continue
+            if not isinstance(edge, edge_type):
+                continue
+            if run_id is not None and edge.meta.run_id != run_id:
+                continue
+            return True
+        return False
 
     def remove_edge(self, edge_id: str) -> Optional[HypothesisEdge]:
         """Remove the edge with *edge_id*, if present."""
 
-        edge = self._edges_by_id.get(edge_id)
-        if edge is None:
+        edge_index = self._edge_indices_by_id.pop(edge_id, None)
+        if edge_index is None:
             return None
-        self._graph.remove_edge_from_index(self._edge_indices_by_id[edge_id])
-        self._rebuild_indexes()
+        edge = self._graph.get_edge_data_by_index(edge_index)
+        self._graph.remove_edge_from_index(edge_index)
         return edge
 
     def remove_node(self, node_id: str) -> Optional[HypothesisNode]:
         """Remove the node with *node_id* and any incident edges, if present."""
 
-        node = self._nodes_by_id.get(node_id)
-        if node is None:
+        index = self._node_indices_by_id.pop(node_id, None)
+        if index is None:
             return None
-        self._graph.remove_node(self._node_indices_by_id[node_id])
-        self._rebuild_indexes()
+        node = self._graph.get_node_data(index)
+
+        # Collect incident edge IDs before rustworkx removes them with the node
+        incident_edge_ids: Set[str] = set()
+        for _, _, edge in self._graph.in_edges(index):
+            incident_edge_ids.add(edge.id)
+        for _, _, edge in self._graph.out_edges(index):
+            incident_edge_ids.add(edge.id)
+
+        self._graph.remove_node(index)
+
+        for edge_id in incident_edge_ids:
+            self._edge_indices_by_id.pop(edge_id, None)
+
+        self._unindex_by_mro(node, index)
+        self._unindex_dedup_keys(node)
+        self._unindex_special(node)
         return node
 
     def clear(self) -> None:
         """Remove every node and edge from the graph."""
 
         self._graph = PyDiGraph()
-        self._reset_indexes()
+        self._node_indices_by_id.clear()
+        self._edge_indices_by_id.clear()
+        self._type_index.clear()
+        self._instruction_nodes_by_normalized_text.clear()
+        self._action_nodes_by_ref_id.clear()
+        self._symbol_groundings_by_symbol_ref_id.clear()
 
     def prune_run(self, run_id: str) -> Tuple[int, int]:
         """Remove all run-scoped nodes for *run_id* and their incident edges."""
@@ -501,7 +529,9 @@ class HypothesisGraph:
         edge_ids: Set[str] = set()
 
         root_claims = self.get_sources(action_node.id, AboutActionEdge)
-        edge_ids.update(edge.id for edge in self.in_edges(action_node.id, AboutActionEdge))
+        edge_ids.update(
+            edge.id for edge in self.in_edges(action_node.id, AboutActionEdge)
+        )
         node_ids.update(claim.id for claim in root_claims)
 
         for claim in root_claims:
@@ -522,6 +552,15 @@ class HypothesisGraph:
 
         return self._clone_subset(node_ids, edge_ids)
 
+    def make_orchestrator(self) -> "ProjectionOrchestrator":
+        """Return a ProjectionOrchestrator pre-populated with all registered families."""
+
+        from llmr.hypotheses.families.base import get_all_families
+        from llmr.hypotheses.projection import ProjectionOrchestrator, ProjectorRegistry
+
+        projectors = [fam.make_projector() for fam in get_all_families()]
+        return ProjectionOrchestrator(graph=self, registry=ProjectorRegistry(projectors))
+
     def to_dot(self) -> str:
         """Return a DOT representation of the current hypothesis graph."""
 
@@ -540,101 +579,91 @@ class HypothesisGraph:
             dict(rankdir="LR"),
         )
 
-    def _get_existing_context_node(self, node: HypothesisNode) -> Optional[HypothesisNode]:
-        """Return an existing stable context node for deduplicated node types."""
+    # ------------------------------------------------------------------
+    # Internal indexing helpers
+    # ------------------------------------------------------------------
 
+    def _get_existing_context_node(
+        self, node: HypothesisNode
+    ) -> Optional[HypothesisNode]:
         if isinstance(node, InstructionNode):
             return self._instruction_nodes_by_normalized_text.get(node.normalized_text)
         if isinstance(node, ActionNode):
             return self._action_nodes_by_ref_id.get(id(node.action_ref))
         return None
 
-    def _index_node(self, node: HypothesisNode) -> None:
-        self._nodes_by_type.setdefault(type(node), []).append(node)
-        self._nodes_by_status.setdefault(node.meta.status, []).append(node)
-        self._nodes_by_grounding.setdefault(node.meta.grounding, []).append(node)
-        self._nodes_by_reasoner.setdefault(node.meta.source_reasoner, []).append(node)
+    def _index_by_mro(self, node: HypothesisNode, index: int) -> None:
+        for cls in type(node).__mro__:
+            if cls is HypothesisNode or not issubclass(cls, HypothesisNode):
+                continue
+            self._type_index.setdefault(cls, []).append(index)
 
-        if node.meta.run_id is not None:
-            self._nodes_by_run_id.setdefault(node.meta.run_id, []).append(node)
+    def _unindex_by_mro(self, node: HypothesisNode, index: int) -> None:
+        for cls in type(node).__mro__:
+            if cls is HypothesisNode or not issubclass(cls, HypothesisNode):
+                continue
+            bucket = self._type_index.get(cls)
+            if bucket is not None:
+                try:
+                    bucket.remove(index)
+                except ValueError:
+                    pass
 
+    def _index_dedup_keys(self, node: HypothesisNode) -> None:
         if isinstance(node, InstructionNode):
             self._instruction_nodes_by_normalized_text[node.normalized_text] = node
         elif isinstance(node, ActionNode):
             self._action_nodes_by_ref_id[id(node.action_ref)] = node
-        elif isinstance(node, SymbolGroundingEvidenceNode):
+
+    def _unindex_dedup_keys(self, node: HypothesisNode) -> None:
+        if isinstance(node, InstructionNode):
+            self._instruction_nodes_by_normalized_text.pop(node.normalized_text, None)
+        elif isinstance(node, ActionNode):
+            self._action_nodes_by_ref_id.pop(id(node.action_ref), None)
+
+    def _index_special(self, node: HypothesisNode) -> None:
+        if isinstance(node, SymbolGroundingEvidenceNode):
             self._symbol_groundings_by_symbol_ref_id.setdefault(
                 id(node.symbol_ref), []
             ).append(node)
 
-    def _index_edge(self, edge: HypothesisEdge) -> None:
-        self._edges_by_type.setdefault(type(edge), []).append(edge)
-        self._edges_by_reasoner.setdefault(edge.meta.source_reasoner, []).append(edge)
-        self._edges_by_relation.setdefault(
-            (type(edge), edge.src_id, edge.dst_id), []
-        ).append(edge)
-        self._edges_by_relation_and_run.setdefault(
-            (type(edge), edge.src_id, edge.dst_id, edge.meta.run_id), []
-        ).append(edge)
-        if edge.meta.run_id is not None:
-            self._edges_by_run_id.setdefault(edge.meta.run_id, []).append(edge)
-
-    def _reset_indexes(self) -> None:
-        self._node_indices_by_id.clear()
-        self._edge_indices_by_id.clear()
-        self._nodes_by_id.clear()
-        self._edges_by_id.clear()
-        self._nodes_by_type.clear()
-        self._edges_by_type.clear()
-        self._instruction_nodes_by_normalized_text.clear()
-        self._action_nodes_by_ref_id.clear()
-        self._nodes_by_status.clear()
-        self._nodes_by_grounding.clear()
-        self._nodes_by_run_id.clear()
-        self._nodes_by_reasoner.clear()
-        self._edges_by_run_id.clear()
-        self._edges_by_reasoner.clear()
-        self._edges_by_relation.clear()
-        self._edges_by_relation_and_run.clear()
-        self._symbol_groundings_by_symbol_ref_id.clear()
-
-    def _rebuild_indexes(self) -> None:
-        self._reset_indexes()
-        for node_index in self._graph.node_indexes():
-            node = self._graph.get_node_data(node_index)
-            self._node_indices_by_id[node.id] = node_index
-            self._nodes_by_id[node.id] = node
-            self._index_node(node)
-        for edge_index in self._graph.edge_indices():
-            edge = self._graph.get_edge_data_by_index(edge_index)
-            self._edge_indices_by_id[edge.id] = edge_index
-            self._edges_by_id[edge.id] = edge
-            self._index_edge(edge)
+    def _unindex_special(self, node: HypothesisNode) -> None:
+        if isinstance(node, SymbolGroundingEvidenceNode):
+            bucket = self._symbol_groundings_by_symbol_ref_id.get(id(node.symbol_ref))
+            if bucket is not None:
+                try:
+                    bucket.remove(node)
+                except ValueError:
+                    pass
 
     def _remove_node_ids(self, node_ids: Set[str]) -> Tuple[int, int]:
-        existing_node_ids = [
-            node_id for node_id in node_ids if node_id in self._node_indices_by_id
-        ]
-        if not existing_node_ids:
+        existing = [nid for nid in node_ids if nid in self._node_indices_by_id]
+        if not existing:
             return (0, 0)
 
+        # Collect incident edge IDs before any removal to avoid double-counting
         removed_edge_ids: Set[str] = set()
-        for node_id in existing_node_ids:
-            removed_edge_ids.update(edge.id for edge in self.in_edges(node_id))
-            removed_edge_ids.update(edge.id for edge in self.out_edges(node_id))
+        for node_id in existing:
+            node_idx = self._node_indices_by_id[node_id]
+            for _, _, edge in self._graph.in_edges(node_idx):
+                removed_edge_ids.add(edge.id)
+            for _, _, edge in self._graph.out_edges(node_idx):
+                removed_edge_ids.add(edge.id)
 
-        indexed_nodes = sorted(
-            (
-                (self._node_indices_by_id[node_id], node_id)
-                for node_id in existing_node_ids
-            ),
-            reverse=True,
-        )
-        for node_index, _ in indexed_nodes:
-            self._graph.remove_node(node_index)
+        for node_id in existing:
+            self.remove_node(node_id)
 
-        self._rebuild_indexes()
-        return (len(existing_node_ids), len(removed_edge_ids))
+        return (len(existing), len(removed_edge_ids))
+
+    def _clone_subset_by_indices(self, indices: Set[int]) -> "HypothesisGraph":
+        """Return a new HypothesisGraph containing only nodes at *indices*."""
+        node_ids = {self._graph.get_node_data(i).id for i in indices}
+        edge_ids: Set[str] = set()
+        for i in indices:
+            for _, target_idx, edge in self._graph.out_edges(i):
+                if target_idx in indices:
+                    edge_ids.add(edge.id)
+        return self._clone_subset(node_ids, edge_ids)
 
     def _clone_subset(
         self,

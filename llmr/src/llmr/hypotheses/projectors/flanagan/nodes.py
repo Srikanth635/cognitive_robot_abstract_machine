@@ -3,18 +3,26 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import List
 from typing_extensions import Any, Dict, Optional, Tuple
 
 from llmr.hypotheses.common.nodes import ReasonerClaimNode
+from llmr.hypotheses.linked import GraphLinked
+from llmr.hypotheses.projectors.flanagan.edges import HasMotionPhaseEdge
 
 
 @dataclass
-class MotionPlanHypothesisNode(ReasonerClaimNode):
+class MotionPlanHypothesisNode(ReasonerClaimNode, GraphLinked):
     """Top-level claim representing one Flanagan motion-phase plan."""
 
     action_type: str
     instruction_text: Optional[str]
     phase_count: int
+
+    @property
+    def phases(self) -> List[MotionPhaseHypothesisNode]:
+        """Return phase nodes attached to this plan via HasMotionPhaseEdge."""
+        return self.linked(HasMotionPhaseEdge, MotionPhaseHypothesisNode)
 
 
 @dataclass
