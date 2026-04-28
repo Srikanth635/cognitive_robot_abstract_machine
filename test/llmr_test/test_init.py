@@ -11,10 +11,10 @@ class TestPackagePublicSurface:
 
         expected = {
             "LLMBackend",
-            "nl_plan",
-            "nl_sequential",
-            "resolve_match",
-            "resolve_params",
+            "plan_from_instruction",
+            "sequential_plan_from_instruction",
+            "plan_from_match",
+            "instance_from_match",
             "LLMActionClassificationFailed",
             "LLMActionRegistryEmpty",
             "LLMProviderNotSupported",
@@ -27,10 +27,10 @@ class TestPackagePublicSurface:
 
 
 class TestPycramBridgeSurface:
-    """:mod:`llmr.pycram_bridge` exposes the PyCRAM adapter surface."""
+    """:mod:`llmr.pycram` exposes the PyCRAM adapter surface."""
 
     def test_adapter_exports(self) -> None:
-        from llmr.pycram_bridge import (
+        from llmr.pycram import (
             PycramContext,
             PycramPlanNode,
             discover_action_classes,
@@ -48,35 +48,35 @@ class TestBridgeSurface:
 
     def test_introspect_exports(self) -> None:
         from llmr.bridge.introspect import (
-            ActionSchema,
+            ActionSpec,
             FieldKind,
-            FieldSpec,
-            PycramIntrospector,
+            DiscoveredField,
+            ActionFieldIntrospector,
         )
 
         assert FieldKind.ENTITY.name == "ENTITY"
-        assert FieldSpec is not None
-        assert ActionSchema is not None
-        assert PycramIntrospector is not None
+        assert DiscoveredField is not None
+        assert ActionSpec is not None
+        assert ActionFieldIntrospector is not None
 
     def test_match_reader_exports(self) -> None:
         from llmr.bridge.match_reader import (
-            MatchData,
-            MatchSlot,
-            finalize_match,
-            read_match,
-            required_match,
-            unresolved_required_fields,
-            write_slot_value,
+            MatchSnapshot,
+            MatchField,
+            construct_action,
+            snapshot_match,
+            underspecified_match,
+            missing_required_fields,
+            bind_slot_value,
         )
 
-        assert MatchData is not None
-        assert MatchSlot is not None
+        assert MatchSnapshot is not None
+        assert MatchField is not None
         for fn in (
-            read_match,
-            write_slot_value,
-            finalize_match,
-            required_match,
-            unresolved_required_fields,
+            snapshot_match,
+            bind_slot_value,
+            construct_action,
+            underspecified_match,
+            missing_required_fields,
         ):
             assert callable(fn)

@@ -11,7 +11,7 @@ import os
 import pytest
 from dotenv import load_dotenv
 
-from llmr.reasoning.llm_config import LLMProvider, make_llm
+from llmr.reasoning.llm_provider import LLMProvider, make_llm
 
 load_dotenv("llmr/.env", override=True)
 

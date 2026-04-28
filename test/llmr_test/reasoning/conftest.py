@@ -1,13 +1,13 @@
-"""Conftest for reasoning tests — shared PycramIntrospector fixture."""
+"""Conftest for reasoning tests — shared ActionFieldIntrospector fixture."""
 
 from __future__ import annotations
 
 import pytest
 
-from llmr.bridge.introspect import PycramIntrospector
+from llmr.bridge.introspect import ActionFieldIntrospector
 
 
 @pytest.fixture
-def introspector() -> PycramIntrospector:
-    """Return a fresh PycramIntrospector instance."""
-    return PycramIntrospector()
+def introspector() -> ActionFieldIntrospector:
+    """Return a fresh ActionFieldIntrospector instance."""
+    return ActionFieldIntrospector()

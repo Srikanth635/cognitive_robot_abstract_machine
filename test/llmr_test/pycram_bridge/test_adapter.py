@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
-from llmr.pycram_bridge.adapter import (
+from llmr.pycram.adapter import (
     PycramContext,
     PycramPlanNode,
     discover_action_classes,

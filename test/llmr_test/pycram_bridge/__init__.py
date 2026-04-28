@@ -1,1 +1,1 @@
-"""Tests for llmr.pycram_bridge module."""
+"""Tests for llmr.pycram module."""

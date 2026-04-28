@@ -1,6 +1,6 @@
 """Tests for :mod:`llmr.resolution.slot_resolution` — LLM slot output → Python value dispatch.
 
-Each :class:`FieldKind` path is exercised once with a free :class:`MatchSlot` whose
+Each :class:`FieldKind` path is exercised once with a free :class:`MatchField` whose
 ``field_kind`` is pre-classified, plus the ENUM coercion and primitive coercion helpers.
 """
 
@@ -13,15 +13,15 @@ import pytest
 from krrood.symbol_graph.symbol_graph import Symbol
 
 from llmr.bridge.introspect import FieldKind
-from llmr.bridge.match_reader import MatchSlot
-from llmr.resolution.grounder import EntityGrounder
-from llmr.resolution.slot_resolution import (
+from llmr.bridge.match_reader import MatchField
+from llmr.resolution.grounder import EntityGrounding
+from llmr.resolution.resolver import (
     coerce_enum,
     coerce_primitive,
-    resolve_binding_value,
-    resolve_entity_slot,
+    resolve_slot,
+    ground_entity_slot,
 )
-from llmr.schemas import EntityDescriptionSchema, SlotValue
+from llmr.schemas import EntityDescription, SlotValue
 
 from ._fixtures.actions import GraspType, MockGraspDescription
 from ._fixtures.symbols import Manipulator, MilkAnnotation, WorldBody
@@ -36,9 +36,9 @@ def _make_slot(
     field_kind: FieldKind,
     *,
     prompt_name: Optional[str] = None,
-) -> MatchSlot:
-    """Construct a free :class:`MatchSlot` stub for resolver tests."""
-    return MatchSlot(
+) -> MatchField:
+    """Construct a free :class:`MatchField` stub for resolver tests."""
+    return MatchField(
         attribute_name=attribute_name,
         prompt_name=prompt_name or attribute_name,
         field_type=field_type,
@@ -50,7 +50,7 @@ def _make_slot(
 
 
 class TestResolveBindingEntity:
-    """ENTITY slots delegate to :func:`resolve_entity_slot` via the grounder."""
+    """ENTITY slots delegate to :func:`ground_entity_slot` via the grounder."""
 
     def test_returns_grounded_body(
         self, symbol_world: Dict[str, Any]  # noqa: F811
@@ -58,10 +58,10 @@ class TestResolveBindingEntity:
         slot = _make_slot("object_designator", WorldBody, FieldKind.ENTITY)
         sv = SlotValue(
             field_name="object_designator",
-            entity_description=EntityDescriptionSchema(name="milk_on_table"),
+            entity_description=EntityDescription(name="milk_on_table"),
         )
-        grounder = EntityGrounder(groundable_type=WorldBody)
-        out = resolve_binding_value(
+        grounder = EntityGrounding(symbol_type=WorldBody)
+        out = resolve_slot(
             slot, {"object_designator": sv}, grounder, {}, _SENTINEL
         )
         assert out is symbol_world["milk_on_table"]
@@ -70,8 +70,8 @@ class TestResolveBindingEntity:
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
         slot = _make_slot("object_designator", WorldBody, FieldKind.ENTITY)
-        grounder = EntityGrounder(groundable_type=WorldBody)
-        out = resolve_binding_value(slot, {}, grounder, {}, _SENTINEL)
+        grounder = EntityGrounding(symbol_type=WorldBody)
+        out = resolve_slot(slot, {}, grounder, {}, _SENTINEL)
         assert out is _SENTINEL
 
     def test_wrong_expected_type_returns_unresolved(
@@ -81,10 +81,10 @@ class TestResolveBindingEntity:
         slot = _make_slot("manipulator", Manipulator, FieldKind.ENTITY)
         sv = SlotValue(
             field_name="manipulator",
-            entity_description=EntityDescriptionSchema(name="milk_on_table"),
+            entity_description=EntityDescription(name="milk_on_table"),
         )
-        grounder = EntityGrounder(groundable_type=WorldBody)
-        out = resolve_binding_value(slot, {"manipulator": sv}, grounder, {}, _SENTINEL)
+        grounder = EntityGrounding(symbol_type=WorldBody)
+        out = resolve_slot(slot, {"manipulator": sv}, grounder, {}, _SENTINEL)
         assert out is _SENTINEL
 
 
@@ -96,17 +96,17 @@ class TestResolveBindingPose:
         body = SimpleNamespace(name="kitchen_origin", global_pose=pose)
 
         class FixedGrounder:
-            def ground(self, description: EntityDescriptionSchema, expected_type=None):
+            def ground(self, description: EntityDescription, expected_type=None):
                 from llmr.resolution.grounder import GroundingResult
 
-                return GroundingResult(bodies=[body])
+                return GroundingResult(candidates=[body])
 
         slot = _make_slot("target_pose", object, FieldKind.POSE)
         sv = SlotValue(
             field_name="target_pose",
-            entity_description=EntityDescriptionSchema(name="kitchen_origin"),
+            entity_description=EntityDescription(name="kitchen_origin"),
         )
-        out = resolve_binding_value(
+        out = resolve_slot(
             slot, {"target_pose": sv}, FixedGrounder(), {}, _SENTINEL
         )
         assert out is pose
@@ -118,14 +118,14 @@ class TestResolveBindingPose:
             def ground(self, description, expected_type=None):
                 from llmr.resolution.grounder import GroundingResult
 
-                return GroundingResult(bodies=[body])
+                return GroundingResult(candidates=[body])
 
         slot = _make_slot("target_pose", object, FieldKind.POSE)
         sv = SlotValue(
             field_name="target_pose",
-            entity_description=EntityDescriptionSchema(name="no_pose_body"),
+            entity_description=EntityDescription(name="no_pose_body"),
         )
-        out = resolve_binding_value(
+        out = resolve_slot(
             slot, {"target_pose": sv}, FixedGrounder(), {}, _SENTINEL
         )
         assert out is _SENTINEL
@@ -140,12 +140,12 @@ class TestResolveBindingTypeRef:
         slot = _make_slot("annotation_type", Symbol, FieldKind.TYPE_REF)
         sv = SlotValue(
             field_name="annotation_type",
-            entity_description=EntityDescriptionSchema(
+            entity_description=EntityDescription(
                 name="milk", semantic_type="MilkAnnotation"
             ),
         )
-        grounder = EntityGrounder(groundable_type=Symbol)
-        out = resolve_binding_value(
+        grounder = EntityGrounding(symbol_type=Symbol)
+        out = resolve_slot(
             slot, {"annotation_type": sv}, grounder, {}, _SENTINEL
         )
         assert out is MilkAnnotation
@@ -156,10 +156,10 @@ class TestResolveBindingTypeRef:
         slot = _make_slot("annotation_type", Symbol, FieldKind.TYPE_REF)
         sv = SlotValue(
             field_name="annotation_type",
-            entity_description=EntityDescriptionSchema(name="milk_on_table"),
+            entity_description=EntityDescription(name="milk_on_table"),
         )
-        grounder = EntityGrounder(groundable_type=WorldBody)
-        out = resolve_binding_value(
+        grounder = EntityGrounding(symbol_type=WorldBody)
+        out = resolve_slot(
             slot, {"annotation_type": sv}, grounder, {}, _SENTINEL
         )
         assert out is symbol_world["milk_on_table"]
@@ -171,16 +171,16 @@ class TestResolveBindingEnum:
     def test_enum_coercion(self) -> None:
         slot = _make_slot("grasp_type", GraspType, FieldKind.ENUM)
         sv = SlotValue(field_name="grasp_type", value="FRONT")
-        out = resolve_binding_value(
-            slot, {"grasp_type": sv}, EntityGrounder(), {}, _SENTINEL
+        out = resolve_slot(
+            slot, {"grasp_type": sv}, EntityGrounding(), {}, _SENTINEL
         )
         assert out is GraspType.FRONT
 
     def test_empty_enum_returns_unresolved(self) -> None:
         slot = _make_slot("grasp_type", GraspType, FieldKind.ENUM)
         sv = SlotValue(field_name="grasp_type", value=None)
-        out = resolve_binding_value(
-            slot, {"grasp_type": sv}, EntityGrounder(), {}, _SENTINEL
+        out = resolve_slot(
+            slot, {"grasp_type": sv}, EntityGrounding(), {}, _SENTINEL
         )
         assert out is _SENTINEL
 
@@ -191,14 +191,14 @@ class TestResolveBindingPrimitive:
     def test_float_value_coerced(self) -> None:
         slot = _make_slot("timeout", float, FieldKind.PRIMITIVE)
         sv = SlotValue(field_name="timeout", value="1.5")
-        out = resolve_binding_value(
-            slot, {"timeout": sv}, EntityGrounder(), {}, _SENTINEL
+        out = resolve_slot(
+            slot, {"timeout": sv}, EntityGrounding(), {}, _SENTINEL
         )
         assert out == 1.5
 
     def test_missing_primitive_returns_unresolved(self) -> None:
         slot = _make_slot("timeout", float, FieldKind.PRIMITIVE)
-        out = resolve_binding_value(slot, {}, EntityGrounder(), {}, _SENTINEL)
+        out = resolve_slot(slot, {}, EntityGrounding(), {}, _SENTINEL)
         assert out is _SENTINEL
 
 
@@ -211,8 +211,8 @@ class TestResolveBindingComplex:
             field_name="grasp_description",
             value="doesn't matter",
         )
-        out = resolve_binding_value(
-            slot, {"grasp_description": sv}, EntityGrounder(), {}, _SENTINEL
+        out = resolve_slot(
+            slot, {"grasp_description": sv}, EntityGrounding(), {}, _SENTINEL
         )
         assert out is _SENTINEL
 
@@ -224,8 +224,8 @@ class TestResolveEntitySlotRecovery:
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
         sv = SlotValue(field_name="object_designator", value="milk_on_table")
-        grounder = EntityGrounder(groundable_type=WorldBody)
-        out = resolve_entity_slot(
+        grounder = EntityGrounding(symbol_type=WorldBody)
+        out = ground_entity_slot(
             sv,
             grounder,
             FieldKind.ENTITY,
@@ -237,8 +237,8 @@ class TestResolveEntitySlotRecovery:
 
     def test_both_missing_returns_unresolved(self) -> None:
         sv = SlotValue(field_name="object_designator")
-        grounder = EntityGrounder(groundable_type=WorldBody)
-        out = resolve_entity_slot(
+        grounder = EntityGrounding(symbol_type=WorldBody)
+        out = ground_entity_slot(
             sv,
             grounder,
             FieldKind.ENTITY,
@@ -250,10 +250,10 @@ class TestResolveEntitySlotRecovery:
     def test_no_bodies_returns_unresolved(self) -> None:
         sv = SlotValue(
             field_name="object_designator",
-            entity_description=EntityDescriptionSchema(name="does_not_exist"),
+            entity_description=EntityDescription(name="does_not_exist"),
         )
-        grounder = EntityGrounder(groundable_type=WorldBody)
-        out = resolve_entity_slot(
+        grounder = EntityGrounding(symbol_type=WorldBody)
+        out = ground_entity_slot(
             sv,
             grounder,
             FieldKind.ENTITY,

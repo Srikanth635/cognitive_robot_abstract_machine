@@ -9,14 +9,14 @@ import pytest
 from krrood.symbol_graph.symbol_graph import Symbol
 
 from llmr.bridge.world_reader import (
-    WorldSerializationOptions,
+    WorldContextConfig,
     _camel_to_tokens,
-    body_bounding_box,
-    body_display_name,
-    body_xyz,
+    symbol_bounding_box,
+    symbol_display_name,
+    symbol_xyz,
     get_instances,
     resolve_symbol_class,
-    serialize_world_from_symbol_graph,
+    render_world_context,
 )
 
 from .._fixtures.symbols import (
@@ -30,49 +30,49 @@ from .._fixtures.worlds import robot_world, simple_world, symbol_world  # noqa: 
 
 
 class TestBodyDisplayName:
-    """:func:`body_display_name` — safe wrapper over ``.name`` with PrefixedName unwrapping."""
+    """:func:`symbol_display_name` — safe wrapper over ``.name`` with PrefixedName unwrapping."""
 
     def test_plain_string_name(self) -> None:
         body = SimpleNamespace(name="milk")
-        assert body_display_name(body) == "milk"
+        assert symbol_display_name(body) == "milk"
 
     def test_prefixed_name_chain(self) -> None:
         """``body.name.name`` is collapsed to its leaf string."""
         inner = SimpleNamespace(name="leaf")
         body = SimpleNamespace(name=inner)
-        assert body_display_name(body) == "leaf"
+        assert symbol_display_name(body) == "leaf"
 
     def test_none_name_returns_empty(self) -> None:
-        assert body_display_name(SimpleNamespace(name=None)) == ""
+        assert symbol_display_name(SimpleNamespace(name=None)) == ""
 
     def test_missing_name_returns_empty(self) -> None:
-        assert body_display_name(SimpleNamespace()) == ""
+        assert symbol_display_name(SimpleNamespace()) == ""
 
 
 class TestBodyXYZ:
-    """:func:`body_xyz` — returns ``(x, y, z)`` or ``None`` on failure."""
+    """:func:`symbol_xyz` — returns ``(x, y, z)`` or ``None`` on failure."""
 
     def test_successful_extraction(self) -> None:
         pose = SimpleNamespace(to_position=lambda: SimpleNamespace(x=1.0, y=2.0, z=3.0))
         body = SimpleNamespace(global_pose=pose)
-        assert body_xyz(body) == (1.0, 2.0, 3.0)
+        assert symbol_xyz(body) == (1.0, 2.0, 3.0)
 
     def test_missing_pose_returns_none(self) -> None:
-        assert body_xyz(SimpleNamespace()) is None
+        assert symbol_xyz(SimpleNamespace()) is None
 
     def test_raising_pose_returns_none(self) -> None:
         pose = SimpleNamespace()  # no to_position
-        assert body_xyz(SimpleNamespace(global_pose=pose)) is None
+        assert symbol_xyz(SimpleNamespace(global_pose=pose)) is None
 
 
 class TestBodyBoundingBox:
-    """:func:`body_bounding_box` — returns dims tuple or ``None`` on failure."""
+    """:func:`symbol_bounding_box` — returns dims tuple or ``None`` on failure."""
 
     def test_missing_collision_returns_none(self) -> None:
-        assert body_bounding_box(SimpleNamespace()) is None
+        assert symbol_bounding_box(SimpleNamespace()) is None
 
     def test_none_collision_returns_none(self) -> None:
-        assert body_bounding_box(SimpleNamespace(collision=None)) is None
+        assert symbol_bounding_box(SimpleNamespace(collision=None)) is None
 
     def test_successful_extraction(self) -> None:
         """A duck-typed collision chain returns the (d, w, h) tuple."""
@@ -80,7 +80,7 @@ class TestBodyBoundingBox:
         bbox = SimpleNamespace(bounding_box=lambda: bb)
         coll = SimpleNamespace(as_bounding_box_collection_in_frame=lambda _frame: bbox)
         body = SimpleNamespace(collision=coll)
-        assert body_bounding_box(body) == (0.5, 1.0, 1.5)
+        assert symbol_bounding_box(body) == (0.5, 1.0, 1.5)
 
 
 class TestCamelToTokens:
@@ -129,7 +129,7 @@ class TestGetInstances:
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
         bodies = get_instances(WorldBody)
-        names = {body_display_name(b) for b in bodies}
+        names = {symbol_display_name(b) for b in bodies}
         # base_link is registered too — filter only tests presence of expected names.
         assert {"red_cup", "blue_cup", "milk_on_table"}.issubset(names)
 
@@ -149,11 +149,11 @@ class TestSerializeWorldHeaders:
     """Serialiser output contains the expected markdown sections."""
 
     def test_includes_world_state_summary(self) -> None:
-        result = serialize_world_from_symbol_graph()
+        result = render_world_context()
         assert result.startswith("## World State Summary")
 
     def test_includes_all_expected_sections(self) -> None:
-        result = serialize_world_from_symbol_graph()
+        result = render_world_context()
         for section in (
             "## Grounding Instructions",
             "## Scene Objects",
@@ -164,12 +164,12 @@ class TestSerializeWorldHeaders:
             assert section in result
 
     def test_extra_context_has_section(self) -> None:
-        result = serialize_world_from_symbol_graph(extra_context="Prefer left cup.")
+        result = render_world_context(extra_context="Prefer left cup.")
         assert "## Extra Context" in result
         assert "Prefer left cup." in result
 
     def test_empty_extra_context_omits_section(self) -> None:
-        result = serialize_world_from_symbol_graph(extra_context="")
+        result = render_world_context(extra_context="")
         assert "## Extra Context" not in result
 
 
@@ -179,29 +179,29 @@ class TestSerializeWorldContent:
     def test_registered_bodies_listed(
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
-        result = serialize_world_from_symbol_graph(symbol_world["body_type"])
+        result = render_world_context(symbol_world["body_type"])
         for name in ("milk_on_table", "red_cup", "blue_cup", "table", "counter"):
             assert name in result
 
     def test_structural_suffix_filtered_by_default(
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
-        result = serialize_world_from_symbol_graph(symbol_world["body_type"])
+        result = render_world_context(symbol_world["body_type"])
         assert "base_link" not in result
 
     def test_robot_owned_bodies_excluded_via_annotation(
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
         """Bodies under a robot annotation are dropped from the scene table."""
-        result = serialize_world_from_symbol_graph(symbol_world["body_type"])
+        result = render_world_context(symbol_world["body_type"])
         assert "robot_base" not in result
 
     def test_include_structural_restores_filtered_bodies(
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
-        result = serialize_world_from_symbol_graph(
+        result = render_world_context(
             symbol_world["body_type"],
-            options=WorldSerializationOptions(include_structural=True),
+            options=WorldContextConfig(include_structural=True),
         )
         assert "base_link" in result
         assert "robot_base" in result
@@ -209,22 +209,22 @@ class TestSerializeWorldContent:
     def test_semantic_annotation_table_entry(
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
-        result = serialize_world_from_symbol_graph(symbol_world["body_type"])
+        result = render_world_context(symbol_world["body_type"])
         assert "- MilkAnnotation: milk_on_table" in result
         assert "| milk_on_table | WorldBody | MilkAnnotation | table |" in result
 
     def test_parent_context_section(
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
-        result = serialize_world_from_symbol_graph(symbol_world["body_type"])
+        result = render_world_context(symbol_world["body_type"])
         assert "- milk_on_table is under/within parent table" in result
 
     def test_max_objects_truncates_and_reports(
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
-        result = serialize_world_from_symbol_graph(
+        result = render_world_context(
             symbol_world["body_type"],
-            options=WorldSerializationOptions(max_objects=2),
+            options=WorldContextConfig(max_objects=2),
         )
         assert "(showing 2)" in result
         assert "Truncated" in result
@@ -232,8 +232,8 @@ class TestSerializeWorldContent:
     def test_deterministic_output(
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
-        a = serialize_world_from_symbol_graph(symbol_world["body_type"])
-        b = serialize_world_from_symbol_graph(symbol_world["body_type"])
+        a = render_world_context(symbol_world["body_type"])
+        b = render_world_context(symbol_world["body_type"])
         assert a == b
 
 
@@ -244,14 +244,14 @@ class TestRobotAnnotationMRO:
         self, robot_world: Dict[str, Any]  # noqa: F811
     ) -> None:
         """A :class:`Manipulator` instance shows up under the ``Manipulator`` key."""
-        result = serialize_world_from_symbol_graph(Manipulator)
+        result = render_world_context(Manipulator)
         assert "- Manipulator:" in result
 
     def test_concrete_subclass_groups_under_parent_name(
         self, robot_world: Dict[str, Any]  # noqa: F811
     ) -> None:
         """Subclasses of Manipulator are still grouped under ``Manipulator`` via MRO."""
-        result = serialize_world_from_symbol_graph(Manipulator)
+        result = render_world_context(Manipulator)
         # Both instances appear under the abstract type name.
         assert "left_hand" in result
         assert "right_hand" in result
@@ -268,7 +268,7 @@ class TestSerializerNoGraphFallback:
                 raise RuntimeError("boom")
 
         monkeypatch.setattr(reader, "SymbolGraph", BrokenGraph)
-        result = reader.serialize_world_from_symbol_graph()
+        result = reader.render_world_context()
         assert "## Scene Objects" in result
         assert "No scene objects found in SymbolGraph." in result
 
@@ -280,6 +280,6 @@ class TestSerializerWithExternalGraph:
         from krrood.symbol_graph.symbol_graph import SymbolGraph
 
         graph = SymbolGraph()
-        result = serialize_world_from_symbol_graph(symbol_graph=graph)
+        result = render_world_context(symbol_graph=graph)
         # The bridge still prints "Objects: 0 visible" when everything is hidden.
         assert "Objects:" in result

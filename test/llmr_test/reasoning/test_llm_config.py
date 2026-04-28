@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 import pytest
 from llmr.exceptions import LLMProviderNotSupported
-from llmr.reasoning.llm_config import make_llm, LLMProvider
+from llmr.reasoning.llm_provider import make_llm, LLMProvider
 
 
 class TestMakeLlm:

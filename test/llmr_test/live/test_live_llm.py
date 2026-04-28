@@ -11,7 +11,7 @@ import os
 import pytest
 from dotenv import load_dotenv
 
-from llmr.reasoning.slot_filler import classify_action, run_slot_filler
+from llmr.reasoning.slot_filler import infer_action_class, fill_slots
 
 from .._fixtures.actions import MockPickUpAction
 
@@ -24,17 +24,20 @@ pytestmark = pytest.mark.skipif(
 
 
 def test_live_classify_action_returns_registered_action(live_llm) -> None:
-    result = classify_action(
+    registry = {"MockPickUpAction": MockPickUpAction}
+    classification = infer_action_class(
         "pick up the milk",
         live_llm,
-        action_registry={"MockPickUpAction": MockPickUpAction},
+        action_registry=registry,
     )
 
-    assert result is MockPickUpAction
+    assert classification is not None
+    assert classification.action_type == "MockPickUpAction"
+    assert registry[classification.action_type] is MockPickUpAction
 
 
 def test_live_slot_filler_returns_required_slot(live_llm) -> None:
-    result = run_slot_filler(
+    result = fill_slots(
         instruction="pick up the milk",
         action_cls=MockPickUpAction,
         free_slot_names=["object_designator"],

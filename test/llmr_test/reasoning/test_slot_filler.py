@@ -14,13 +14,13 @@ from .._fixtures.actions import (
 )
 from llmr.exceptions import LLMActionRegistryEmpty
 from llmr.reasoning.slot_filler import (
-    classify_action,
-    run_slot_filler,
+    infer_action_class,
+    fill_slots,
 )
 from llmr.schemas import (
-    ActionClassification,
-    ActionReasoningOutput,
-    EntityDescriptionSchema,
+    ActionClassificationResult,
+    SlotFillingOutput,
+    EntityDescription,
     SlotValue,
 )
 
@@ -31,72 +31,73 @@ def _last_user_prompt(llm: RecordingLLM) -> str:
 
 
 class TestClassifyAction:
-    """classify_action() — NL instruction → action class."""
+    """infer_action_class() — NL instruction → action class."""
 
-    def test_returns_matching_class_from_registry(self) -> None:
-        """Returns the action class matching LLM classification."""
+    def test_returns_classification_for_registered_name(self) -> None:
+        """Returns the raw ActionClassificationResult; callers do their own registry lookup."""
+        registry = {"MockPickUpAction": MockPickUpAction}
         llm = ScriptedLLM(
-            responses=[ActionClassification(action_type="MockPickUpAction")]
+            responses=[ActionClassificationResult(action_type="MockPickUpAction")]
         )
-        result = classify_action(
-            "pick up the milk",
-            llm,
-            action_registry={"MockPickUpAction": MockPickUpAction},
-        )
-        assert result is MockPickUpAction
+        classification = infer_action_class("pick up the milk", llm, action_registry=registry)
+        assert classification is not None
+        assert classification.action_type == "MockPickUpAction"
+        assert registry[classification.action_type] is MockPickUpAction
 
-    def test_returns_none_when_llm_returns_unknown_name(self) -> None:
-        """Returns None when LLM classifies to unknown action."""
-        llm = ScriptedLLM(responses=[ActionClassification(action_type="UnknownAction")])
-        result = classify_action(
-            "do something",
-            llm,
-            action_registry={"MockPickUpAction": MockPickUpAction},
-        )
-        assert result is None
+    def test_returns_classification_even_for_unknown_name(self) -> None:
+        """The raw classification is returned untouched when action_type is not in the registry."""
+        registry = {"MockPickUpAction": MockPickUpAction}
+        llm = ScriptedLLM(responses=[ActionClassificationResult(action_type="UnknownAction")])
+        classification = infer_action_class("do something", llm, action_registry=registry)
+        assert classification is not None
+        assert classification.action_type == "UnknownAction"
+        assert classification.action_type not in registry
 
     def test_raises_registry_empty_when_no_actions(self) -> None:
         """Raises LLMActionRegistryEmpty when registry is empty."""
-        llm = ScriptedLLM(responses=[ActionClassification(action_type="X")])
+        llm = ScriptedLLM(responses=[ActionClassificationResult(action_type="X")])
         with pytest.raises(LLMActionRegistryEmpty):
-            classify_action("pick up milk", llm, action_registry={})
+            infer_action_class("pick up milk", llm, action_registry={})
 
-    def test_handles_classification_with_confidence_and_reasoning(self) -> None:
-        """classify_action works with confidence and reasoning fields."""
+    def test_preserves_confidence_and_reasoning(self) -> None:
+        """infer_action_class returns confidence and reasoning unchanged."""
         llm = ScriptedLLM(
             responses=[
-                ActionClassification(
+                ActionClassificationResult(
                     action_type="MockNavigateAction",
                     confidence=0.95,
                     reasoning="user said navigate",
                 )
             ]
         )
-        result = classify_action(
+        classification = infer_action_class(
             "navigate to the kitchen",
             llm,
             action_registry={"MockNavigateAction": MockNavigateAction},
         )
-        assert result is MockNavigateAction
+        assert classification is not None
+        assert classification.action_type == "MockNavigateAction"
+        assert classification.confidence == 0.95
+        assert classification.reasoning == "user said navigate"
 
 
 class TestRunSlotFiller:
-    """run_slot_filler() — action class + free slots → filled parameters."""
+    """fill_slots() — action class + free slots → filled parameters."""
 
     def test_returns_action_reasoning_output(self) -> None:
-        """run_slot_filler returns ActionReasoningOutput."""
-        expected = ActionReasoningOutput(
+        """fill_slots returns SlotFillingOutput."""
+        expected = SlotFillingOutput(
             action_type="MockPickUpAction",
             slots=[
                 SlotValue(
                     field_name="object_designator",
-                    entity_description=EntityDescriptionSchema(name="milk"),
+                    entity_description=EntityDescription(name="milk"),
                     reasoning="instruction mentions milk",
                 )
             ],
         )
         llm = ScriptedLLM(responses=[expected])
-        result = run_slot_filler(
+        result = fill_slots(
             instruction="pick up the milk",
             action_cls=MockPickUpAction,
             free_slot_names=["object_designator"],
@@ -109,7 +110,7 @@ class TestRunSlotFiller:
         assert len(result.slots) == 1
 
     def test_returns_none_when_llm_raises(self) -> None:
-        """run_slot_filler returns None when LLM call fails."""
+        """fill_slots returns None when LLM call fails."""
         # Create an LLM that raises an exception on invoke
         from langchain_core.runnables import RunnableLambda
 
@@ -121,7 +122,7 @@ class TestRunSlotFiller:
                 return RunnableLambda(_failing_invoke)
 
         llm = FailingLLM()
-        result = run_slot_filler(
+        result = fill_slots(
             instruction="pick up",
             action_cls=MockPickUpAction,
             free_slot_names=["object_designator"],
@@ -132,8 +133,8 @@ class TestRunSlotFiller:
         assert result is None
 
     def test_handles_multiple_free_slots(self) -> None:
-        """run_slot_filler processes multiple free slots."""
-        output = ActionReasoningOutput(
+        """fill_slots processes multiple free slots."""
+        output = SlotFillingOutput(
             action_type="MockPickUpAction",
             slots=[
                 SlotValue(field_name="object_designator", value="milk"),
@@ -141,7 +142,7 @@ class TestRunSlotFiller:
             ],
         )
         llm = ScriptedLLM(responses=[output])
-        result = run_slot_filler(
+        result = fill_slots(
             instruction="pick up milk",
             action_cls=MockPickUpAction,
             free_slot_names=["object_designator", "timeout"],
@@ -154,7 +155,7 @@ class TestRunSlotFiller:
 
     def test_prompt_lists_required_output_field_names(self) -> None:
         """Prompt explicitly names every SlotValue the LLM must return."""
-        output = ActionReasoningOutput(
+        output = SlotFillingOutput(
             action_type="MockPickUpAction",
             slots=[
                 SlotValue(field_name="object_designator", value="milk"),
@@ -163,7 +164,7 @@ class TestRunSlotFiller:
         )
         llm = RecordingLLM(responses=[output])
 
-        run_slot_filler(
+        fill_slots(
             instruction="pick up milk",
             action_cls=MockPickUpAction,
             free_slot_names=["object_designator", "timeout"],
@@ -181,17 +182,17 @@ class TestRunSlotFiller:
 
     def test_retries_and_merges_when_required_slots_are_omitted(self) -> None:
         """A partial LLM response gets one correction call and is merged."""
-        first = ActionReasoningOutput(
+        first = SlotFillingOutput(
             action_type="MockPickUpAction",
             slots=[SlotValue(field_name="object_designator", value="milk")],
         )
-        repair = ActionReasoningOutput(
+        repair = SlotFillingOutput(
             action_type="MockPickUpAction",
             slots=[SlotValue(field_name="timeout", value="30.0")],
         )
         llm = RecordingLLM(responses=[first, repair])
 
-        result = run_slot_filler(
+        result = fill_slots(
             instruction="pick up milk",
             action_cls=MockPickUpAction,
             free_slot_names=["object_designator", "timeout"],
@@ -215,14 +216,14 @@ class TestRunSlotFiller:
 
     def test_retries_for_missing_nested_dotted_slot(self) -> None:
         """Missing nested enum SlotValues are detected by dotted field name."""
-        first = ActionReasoningOutput(action_type="MockPickUpAction", slots=[])
-        repair = ActionReasoningOutput(
+        first = SlotFillingOutput(action_type="MockPickUpAction", slots=[])
+        repair = SlotFillingOutput(
             action_type="MockPickUpAction",
             slots=[SlotValue(field_name="grasp_description.grasp_type", value="FRONT")],
         )
         llm = RecordingLLM(responses=[first, repair])
 
-        result = run_slot_filler(
+        result = fill_slots(
             instruction="grasp from front",
             action_cls=MockPickUpAction,
             free_slot_names=["MockPickUpAction.grasp_description.grasp_type"],
@@ -236,12 +237,12 @@ class TestRunSlotFiller:
         assert len(llm.messages) == 2
 
     def test_passes_world_context_to_prompt(self) -> None:
-        """run_slot_filler includes world_context in the LLM prompt."""
-        output = ActionReasoningOutput(action_type="MockPickUpAction", slots=[])
+        """fill_slots includes world_context in the LLM prompt."""
+        output = SlotFillingOutput(action_type="MockPickUpAction", slots=[])
         llm = RecordingLLM(responses=[output])
         world_context = "milk is on the table, table is in kitchen"
 
-        run_slot_filler(
+        fill_slots(
             instruction="pick up the milk",
             action_cls=MockPickUpAction,
             free_slot_names=[],
@@ -254,12 +255,12 @@ class TestRunSlotFiller:
 
     def test_top_level_complex_slot_is_not_expanded(self) -> None:
         """Top-level complex dataclass slots are left to nested KRROOD Match leaves."""
-        output = ActionReasoningOutput(
+        output = SlotFillingOutput(
             action_type="MockPickUpAction",
             slots=[],
         )
         llm = RecordingLLM(responses=[output])
-        result = run_slot_filler(
+        result = fill_slots(
             instruction="pick up",
             action_cls=MockPickUpAction,
             free_slot_names=["grasp_description"],
@@ -274,10 +275,10 @@ class TestRunSlotFiller:
         assert "Complex slots" not in prompt
 
     def test_optional_instruction(self) -> None:
-        """run_slot_filler works with None instruction."""
-        output = ActionReasoningOutput(action_type="MockPickUpAction", slots=[])
+        """fill_slots works with None instruction."""
+        output = SlotFillingOutput(action_type="MockPickUpAction", slots=[])
         llm = ScriptedLLM(responses=[output])
-        result = run_slot_filler(
+        result = fill_slots(
             instruction=None,
             action_cls=MockPickUpAction,
             free_slot_names=[],
@@ -288,14 +289,14 @@ class TestRunSlotFiller:
         assert result is not None
 
     def test_strips_field_name_prefixes(self) -> None:
-        """run_slot_filler handles 'ClassName.field' format."""
-        output = ActionReasoningOutput(
+        """fill_slots handles 'ClassName.field' format."""
+        output = SlotFillingOutput(
             action_type="MockPickUpAction",
             slots=[SlotValue(field_name="object_designator", value="x")],
         )
         llm = ScriptedLLM(responses=[output])
         # Free slot names may have 'MockPickUpAction.' prefix
-        result = run_slot_filler(
+        result = fill_slots(
             instruction="pick up",
             action_cls=MockPickUpAction,
             free_slot_names=["MockPickUpAction.object_designator"],
@@ -307,9 +308,9 @@ class TestRunSlotFiller:
 
     def test_uses_per_field_docstrings(self) -> None:
         """Prompt includes docstrings extracted from action class."""
-        output = ActionReasoningOutput(action_type="MockPickUpAction", slots=[])
+        output = SlotFillingOutput(action_type="MockPickUpAction", slots=[])
         llm = RecordingLLM(responses=[output])
-        run_slot_filler(
+        fill_slots(
             instruction="pick up",
             action_cls=MockPickUpAction,
             free_slot_names=["object_designator"],
@@ -326,12 +327,12 @@ class TestRunSlotFiller:
 
     def test_enum_slot_includes_valid_members(self) -> None:
         """Prompt lists enum member names for ENUM slots."""
-        output = ActionReasoningOutput(
+        output = SlotFillingOutput(
             action_type="MockPickUpAction",
             slots=[SlotValue(field_name="grasp_description.grasp_type", value="FRONT")],
         )
         llm = RecordingLLM(responses=[output])
-        run_slot_filler(
+        fill_slots(
             instruction="grasp from front",
             action_cls=MockPickUpAction,
             free_slot_names=["grasp_description.grasp_type"],
@@ -346,12 +347,12 @@ class TestRunSlotFiller:
 
     def test_nested_enum_slot_includes_valid_members(self) -> None:
         """Prompt lists enum values when the free slot is already nested."""
-        output = ActionReasoningOutput(
+        output = SlotFillingOutput(
             action_type="MockPickUpAction",
             slots=[SlotValue(field_name="grasp_description.grasp_type", value="FRONT")],
         )
         llm = RecordingLLM(responses=[output])
-        run_slot_filler(
+        fill_slots(
             instruction="grasp from front",
             action_cls=MockPickUpAction,
             free_slot_names=["MockPickUpAction.grasp_description.grasp_type"],
@@ -367,10 +368,10 @@ class TestRunSlotFiller:
 
     def test_fixed_slots_are_included_in_prompt(self) -> None:
         """Prompt includes fixed slots so the LLM can preserve them."""
-        output = ActionReasoningOutput(action_type="MockPickUpAction", slots=[])
+        output = SlotFillingOutput(action_type="MockPickUpAction", slots=[])
         llm = RecordingLLM(responses=[output])
 
-        run_slot_filler(
+        fill_slots(
             instruction="pick up the milk",
             action_cls=MockPickUpAction,
             free_slot_names=["timeout"],
@@ -391,12 +392,12 @@ class TestPrefixedDottedSlotPrompt:
         self,
     ) -> None:
         """A fully-prefixed dotted enum slot renders allowed values, not the fallback section."""
-        output = ActionReasoningOutput(
+        output = SlotFillingOutput(
             action_type="MockPickUpAction",
             slots=[SlotValue(field_name="grasp_description.grasp_type", value="SIDE")],
         )
         llm = RecordingLLM(responses=[output])
-        run_slot_filler(
+        fill_slots(
             instruction="grasp from side",
             action_cls=MockPickUpAction,
             free_slot_names=["MockPickUpAction.grasp_description.grasp_type"],

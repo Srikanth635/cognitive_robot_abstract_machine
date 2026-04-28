@@ -1,4 +1,4 @@
-"""Tests for :mod:`llmr.resolution.grounder` — two-tier EntityGrounder (annotation → name)."""
+"""Tests for :mod:`llmr.resolution.grounder` — two-tier EntityGrounding (annotation → name)."""
 
 from __future__ import annotations
 
@@ -7,8 +7,8 @@ from typing_extensions import Any, Dict
 import pytest
 from krrood.symbol_graph.symbol_graph import SymbolGraph
 
-from llmr.resolution.grounder import EntityGrounder, GroundingResult
-from llmr.schemas import EntityDescriptionSchema
+from llmr.resolution.grounder import EntityGrounding, GroundingResult
+from llmr.schemas import EntityDescription
 
 from ._fixtures.symbols import (
     Manipulator,
@@ -22,9 +22,9 @@ from ._fixtures.worlds import robot_world, symbol_world  # noqa: F401
 class TestGroundingResultDefaults:
     """:class:`GroundingResult` — simple dataclass invariants."""
 
-    def test_defaults_to_empty_bodies_and_no_warning(self) -> None:
+    def test_defaults_to_empty_candidates_and_no_warning(self) -> None:
         result = GroundingResult()
-        assert result.bodies == []
+        assert result.candidates == []
         assert result.warning is None
 
 
@@ -35,84 +35,84 @@ class TestAnnotationGrounding:
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
         """``semantic_type='milk'`` hits ``MilkAnnotation._synonyms`` then yields its body."""
-        grounder = EntityGrounder(groundable_type=WorldBody)
-        desc = EntityDescriptionSchema(name="milk_on_table", semantic_type="milk")
+        grounder = EntityGrounding(symbol_type=WorldBody)
+        desc = EntityDescription(name="milk_on_table", semantic_type="milk")
         result = grounder.ground(desc)
-        assert symbol_world["milk_on_table"] in result.bodies
+        assert symbol_world["milk_on_table"] in result.candidates
 
     def test_unknown_semantic_type_falls_back_to_name(
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
         """When ``semantic_type`` is unresolvable, Tier 2 name search takes over."""
-        grounder = EntityGrounder(groundable_type=WorldBody)
-        desc = EntityDescriptionSchema(name="table", semantic_type="UnknownThing")
+        grounder = EntityGrounding(symbol_type=WorldBody)
+        desc = EntityDescription(name="table", semantic_type="UnknownThing")
         result = grounder.ground(desc)
-        assert symbol_world["table"] in result.bodies
+        assert symbol_world["table"] in result.candidates
 
     def test_annotation_without_bodies_returns_annotation_itself(
         self, robot_world: Dict[str, Any]  # noqa: F811
     ) -> None:
         """Manipulator instances lack ``.bodies`` → the annotation is itself returned."""
-        grounder = EntityGrounder(groundable_type=Manipulator)
-        desc = EntityDescriptionSchema(name="left", semantic_type="Manipulator")
+        grounder = EntityGrounding(symbol_type=Manipulator)
+        desc = EntityDescription(name="left", semantic_type="Manipulator")
         result = grounder.ground(desc, expected_type=Manipulator)
-        assert robot_world["left"] in result.bodies
+        assert robot_world["left"] in result.candidates
 
     def test_expected_type_returns_subclass_instance_directly(
         self, robot_world: Dict[str, Any]  # noqa: F811
     ) -> None:
         """``ParallelGripperLike`` is a subclass of :class:`Manipulator`."""
-        grounder = EntityGrounder(groundable_type=Manipulator)
-        desc = EntityDescriptionSchema(
+        grounder = EntityGrounding(symbol_type=Manipulator)
+        desc = EntityDescription(
             name="right", semantic_type="ParallelGripperLike"
         )
         result = grounder.ground(desc, expected_type=Manipulator)
-        assert robot_world["right"] in result.bodies
+        assert robot_world["right"] in result.candidates
 
     def test_expected_type_without_resolvable_class_uses_expected(
         self, robot_world: Dict[str, Any]  # noqa: F811
     ) -> None:
         """If ``semantic_type`` cannot be resolved, ``expected_type`` seeds Tier 1."""
-        grounder = EntityGrounder(groundable_type=Manipulator)
-        desc = EntityDescriptionSchema(name="left", semantic_type="NotAClass")
+        grounder = EntityGrounding(symbol_type=Manipulator)
+        desc = EntityDescription(name="left", semantic_type="NotAClass")
         result = grounder.ground(desc, expected_type=Manipulator)
-        assert robot_world["left"] in result.bodies
+        assert robot_world["left"] in result.candidates
 
     def test_name_filter_narrows_annotation_candidates(
         self, robot_world: Dict[str, Any]  # noqa: F811
     ) -> None:
         """When multiple annotations are found, the ``name`` substring narrows them."""
-        grounder = EntityGrounder(groundable_type=Manipulator)
-        desc = EntityDescriptionSchema(name="right_hand", semantic_type="Manipulator")
+        grounder = EntityGrounding(symbol_type=Manipulator)
+        desc = EntityDescription(name="right_hand", semantic_type="Manipulator")
         result = grounder.ground(desc, expected_type=Manipulator)
-        assert result.bodies == [robot_world["right"]]
+        assert result.candidates == [robot_world["right"]]
 
 
 class TestNameGrounding:
-    """Tier 2 — substring match on ``description.name`` across ``groundable_type`` instances."""
+    """Tier 2 — substring match on ``description.name`` across ``symbol_type`` instances."""
 
     def test_exact_name_match(self, symbol_world: Dict[str, Any]) -> None:  # noqa: F811
-        grounder = EntityGrounder(groundable_type=WorldBody)
-        desc = EntityDescriptionSchema(name="counter")
+        grounder = EntityGrounding(symbol_type=WorldBody)
+        desc = EntityDescription(name="counter")
         result = grounder.ground(desc)
-        assert symbol_world["counter"] in result.bodies
+        assert symbol_world["counter"] in result.candidates
 
     def test_substring_match_case_insensitive(
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
-        grounder = EntityGrounder(groundable_type=WorldBody)
-        desc = EntityDescriptionSchema(name="CUP")
+        grounder = EntityGrounding(symbol_type=WorldBody)
+        desc = EntityDescription(name="CUP")
         result = grounder.ground(desc)
-        display_names = {b.name for b in result.bodies}
+        display_names = {b.name for b in result.candidates}
         assert {"red_cup", "blue_cup"}.issubset(display_names)
 
     def test_missing_name_returns_warning(
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
-        grounder = EntityGrounder(groundable_type=WorldBody)
-        desc = EntityDescriptionSchema(name="nonexistent")
+        grounder = EntityGrounding(symbol_type=WorldBody)
+        desc = EntityDescription(name="nonexistent")
         result = grounder.ground(desc)
-        assert result.bodies == []
+        assert result.candidates == []
         assert result.warning is not None
         assert "nonexistent" in result.warning
 
@@ -120,10 +120,10 @@ class TestNameGrounding:
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
         """An empty ``name`` skips Tier 2 and yields the standard not-found warning."""
-        grounder = EntityGrounder(groundable_type=WorldBody)
-        desc = EntityDescriptionSchema(name="")
+        grounder = EntityGrounding(symbol_type=WorldBody)
+        desc = EntityDescription(name="")
         result = grounder.ground(desc)
-        assert result.bodies == []
+        assert result.candidates == []
         assert result.warning is not None
 
 
@@ -133,29 +133,29 @@ class TestAttributeRefinement:
     def test_attribute_narrows_candidates(
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
-        grounder = EntityGrounder(groundable_type=WorldBody)
-        desc = EntityDescriptionSchema(name="cup", attributes={"color": "red"})
+        grounder = EntityGrounding(symbol_type=WorldBody)
+        desc = EntityDescription(name="cup", attributes={"color": "red"})
         result = grounder.ground(desc)
-        assert result.bodies == [symbol_world["red_cup"]]
+        assert result.candidates == [symbol_world["red_cup"]]
 
     def test_attribute_on_single_candidate_skipped(
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
         """With a single candidate the attribute filter is not applied."""
-        grounder = EntityGrounder(groundable_type=WorldBody)
-        desc = EntityDescriptionSchema(name="table", attributes={"color": "green"})
+        grounder = EntityGrounding(symbol_type=WorldBody)
+        desc = EntityDescription(name="table", attributes={"color": "green"})
         result = grounder.ground(desc)
-        assert symbol_world["table"] in result.bodies
+        assert symbol_world["table"] in result.candidates
 
     def test_attribute_no_match_returns_original_candidates(
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
         """If no candidate matches the attribute, keep the original list."""
-        grounder = EntityGrounder(groundable_type=WorldBody)
-        desc = EntityDescriptionSchema(name="cup", attributes={"color": "purple"})
+        grounder = EntityGrounding(symbol_type=WorldBody)
+        desc = EntityDescription(name="cup", attributes={"color": "purple"})
         result = grounder.ground(desc)
         # Both cups still come back because no filter hit.
-        display_names = {b.name for b in result.bodies}
+        display_names = {b.name for b in result.candidates}
         assert {"red_cup", "blue_cup"}.issubset(display_names)
 
 
@@ -165,8 +165,8 @@ class TestMultiMatchWarning:
     def test_multi_match_produces_warning(
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
-        grounder = EntityGrounder(groundable_type=WorldBody)
-        desc = EntityDescriptionSchema(name="cup")
+        grounder = EntityGrounding(symbol_type=WorldBody)
+        desc = EntityDescription(name="cup")
         result = grounder.ground(desc)
         assert result.warning is not None
         assert "cup" in result.warning
@@ -174,10 +174,10 @@ class TestMultiMatchWarning:
     def test_single_match_has_no_warning(
         self, symbol_world: Dict[str, Any]  # noqa: F811
     ) -> None:
-        grounder = EntityGrounder(groundable_type=WorldBody)
-        desc = EntityDescriptionSchema(name="blue_cup")
+        grounder = EntityGrounding(symbol_type=WorldBody)
+        desc = EntityDescription(name="blue_cup")
         result = grounder.ground(desc)
-        assert result.bodies == [symbol_world["blue_cup"]]
+        assert result.candidates == [symbol_world["blue_cup"]]
         assert result.warning is None
 
 
@@ -186,8 +186,8 @@ class TestExplicitSymbolGraph:
 
     def test_empty_graph_returns_no_bodies(self) -> None:
         graph = SymbolGraph()
-        grounder = EntityGrounder(groundable_type=WorldBody, symbol_graph=graph)
-        desc = EntityDescriptionSchema(name="milk")
+        grounder = EntityGrounding(symbol_type=WorldBody, symbol_graph=graph)
+        desc = EntityDescription(name="milk")
         result = grounder.ground(desc)
-        assert result.bodies == []
+        assert result.candidates == []
         assert result.warning is not None

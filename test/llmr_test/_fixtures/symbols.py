@@ -2,7 +2,7 @@
 
 These are intentionally lightweight — no simulator, no geometry engine — so tests
 only rely on the duck-typed accessors in :mod:`llmr.bridge.world_reader`
-(``body_display_name``, ``body_xyz``, ``body_bounding_box``) and the
+(``symbol_display_name``, ``symbol_xyz``, ``symbol_bounding_box``) and the
 ``.bodies`` / ``.parent_connection`` conventions.
 
 Classes:

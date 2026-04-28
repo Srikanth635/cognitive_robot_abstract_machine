@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from llmr.bridge.introspect import PycramIntrospector
+from llmr.bridge.introspect import ActionFieldIntrospector
 
 
 @pytest.fixture
-def introspector() -> PycramIntrospector:
-    """Return a fresh :class:`PycramIntrospector` for each test."""
-    return PycramIntrospector()
+def introspector() -> ActionFieldIntrospector:
+    """Return a fresh :class:`ActionFieldIntrospector` for each test."""
+    return ActionFieldIntrospector()

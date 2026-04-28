@@ -6,7 +6,7 @@ Every action here is an ordinary dataclass so the introspector and KRROOD
 
 Covered FieldKind paths:
   ENTITY    ``Symbol`` / ``Symbol`` subclass — :class:`MockPickUpAction.object_designator`, :class:`MockRequiredManipulatorAction.manipulator`.
-  POSE      resolved via ``body_xyz`` — :class:`MockPoseAction.target_pose` (name-matched by MRO).
+  POSE      resolved via ``symbol_xyz`` — :class:`MockPoseAction.target_pose` (name-matched by MRO).
   ENUM      :class:`GraspType` — :class:`MockGraspDescription.grasp_type`.
   COMPLEX   nested dataclass — :class:`MockPickUpAction.grasp_description`, :class:`MockRequiredNestedAction.grasp`.
   PRIMITIVE scalar — :class:`MockPickUpAction.timeout`, :class:`MockNestedWithTimeoutAction.priority`.
@@ -127,7 +127,7 @@ class Pose:
     """Minimal stand-in for ``Pose``.
 
     Classification keys off the class name via MRO, so the class itself must be
-    named exactly ``Pose`` — see :attr:`PycramIntrospector.POSE_TYPE_NAMES`.
+    named exactly ``Pose`` — see :attr:`ActionFieldIntrospector.POSE_TYPE_NAMES`.
     """
 
 

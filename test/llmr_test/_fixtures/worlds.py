@@ -35,7 +35,7 @@ def simple_world() -> Dict[str, Any]:
     """Return duck-typed body stand-ins — useful for accessor / serialiser unit tests.
 
     Nothing is registered in SymbolGraph; the dict is only for tests that exercise
-    body-level helpers (``body_display_name``, ``body_xyz``, ``body_bounding_box``)
+    body-level helpers (``symbol_display_name``, ``symbol_xyz``, ``symbol_bounding_box``)
     or grounding warnings against an empty graph.
     """
     milk = SimpleNamespace(name="milk")
