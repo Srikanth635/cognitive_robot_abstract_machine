@@ -119,15 +119,8 @@ class InteractiveMarkerNode:
         :raises WorldEntityNotFoundError: If entities cannot be found after all retries.
         """
         for root, tip in zip(self.root_links, self.tip_links):
-            try:
-                root_body = self.giskard.world.get_kinematic_structure_entity_by_name(
-                    root
-                )
-                tip_body = self.giskard.world.get_kinematic_structure_entity_by_name(
-                    tip
-                )
-            except WorldEntityNotFoundError as error:
-                raise error
+            root_body = self.giskard.world.get_kinematic_structure_entity_by_name(root)
+            tip_body = self.giskard.world.get_kinematic_structure_entity_by_name(tip)
             kinematic_chain = KinematicChainMarker(root, tip, root_body, tip_body)
             self.markers[kinematic_chain.name] = kinematic_chain
 
