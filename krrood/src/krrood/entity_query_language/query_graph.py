@@ -21,7 +21,12 @@ from krrood.entity_query_language.core.base_expressions import (
     Filter,
 )
 from krrood.entity_query_language.core.variable import Variable, Literal
-from krrood.entity_query_language.core.mapped_variable import MappedVariable
+from krrood.entity_query_language.core.mapped_variable import (
+    MappedVariable,
+    Attribute,
+    Index,
+    FlatVariable,
+)
 from krrood.entity_query_language.operators.comparator import Comparator
 
 from krrood.rustworkx_utils import (
@@ -99,6 +104,28 @@ class QueryGraph:
         )
         return visualizer.render()
 
+    @staticmethod
+    def get_expression_name(expression: SymbolicExpression) -> str:
+        """
+        Retrieves the name of a symbolic expression for visualization purposes.
+
+        :param expression: The symbolic expression to get the name for.
+        :type expression: SymbolicExpression
+        :return: The name of the expression.
+        :rtype: str
+        """
+        match expression:
+            case Attribute():
+                return f".{expression._name_.split('.')[-1]}"
+            case Index():
+                return f"[{expression._name_.split('[')[-1]}"
+            case FlatVariable():
+                return "Flatten"
+            case Query():
+                return f"({','.join(QueryGraph.get_expression_name(v) for v in expression._selected_variables_)})"
+            case _:
+                return expression._name_
+
     def construct_graph(
         self,
         expression: Optional[SymbolicExpression] = None,
@@ -112,7 +139,7 @@ class QueryGraph:
             return self.expression_node_map[expression]
 
         node = QueryNode(
-            expression._name_,
+            self.get_expression_name(expression),
             self.graph,
             color=ColorLegend.from_expression(expression),
             data=expression,

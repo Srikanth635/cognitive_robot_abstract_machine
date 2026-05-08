@@ -47,6 +47,7 @@ from krrood.entity_query_language.query.quantifiers import (
     AtMost,
     Range,
 )
+from krrood.entity_query_language.query_graph import QueryGraph
 from krrood.entity_query_language.utils import (
     cartesian_product_while_passing_the_bindings_around,
 )
@@ -72,7 +73,7 @@ def test_variable_from_type_setting(handles_and_containers_world):
     world = handles_and_containers_world
     B = variable_from(world.bodies)
     assert (
-            B._type_ is None
+        B._type_ is None
     ), "The type of the variable should be None when created only from a domain."
 
 
@@ -86,7 +87,7 @@ def test_empty_conditions(handles_and_containers_world, doors_and_drawers_world)
 
 
 def test_empty_conditions_and_no_domain(
-        handles_and_containers_world, doors_and_drawers_world
+    handles_and_containers_world, doors_and_drawers_world
 ):
     world = handles_and_containers_world
     world2 = doors_and_drawers_world
@@ -115,7 +116,7 @@ def test_reevaluation_of_simple_query(handles_and_containers_world):
 
 
 def test_filtering_connections_without_joining_with_parent_or_child_queries(
-        handles_and_containers_world,
+    handles_and_containers_world,
 ):
     world = handles_and_containers_world
 
@@ -279,11 +280,11 @@ def test_reevaluation_of_or_and_query(handles_and_containers_world):
 
     handles_and_container1 = list(query.evaluate())
     assert (
-            len(handles_and_container1) == 2
+        len(handles_and_container1) == 2
     ), "Should generate one handle and one container."
     handles_and_container1 = list(query.evaluate())
     assert (
-            len(handles_and_container1) == 2
+        len(handles_and_container1) == 2
     ), "Re-eval: Should generate one handle and one container."
 
 
@@ -346,7 +347,7 @@ def test_reevaluate_with_multi_and(handles_and_containers_world):
         all_solutions[0], Container
     ), "Re-eval: The generated item should be of type Container."
     assert (
-            all_solutions[0].name == "Container1"
+        all_solutions[0].name == "Container1"
     ), "Re-eval: The generated item should be of type Container."
 
 
@@ -368,7 +369,7 @@ def test_generate_with_more_than_one_source(handles_and_containers_world):
 
     all_solutions = list(solutions.evaluate())
     assert (
-            len(all_solutions) == 2
+        len(all_solutions) == 2
     ), "Should generate components for two possible drawer."
     for sol in all_solutions:
         assert sol[C] == sol[FC].parent
@@ -412,7 +413,7 @@ def test_generate_with_more_than_one_source_optimized(handles_and_containers_wor
 
     all_solutions = list(query.evaluate())
     assert (
-            len(all_solutions) == 2
+        len(all_solutions) == 2
     ), "Should generate components for two possible drawer."
     for sol in all_solutions:
         assert isinstance(sol[FC].parent, Container)
@@ -662,7 +663,7 @@ def test_select_predicate(handles_and_containers_world):
     handle1 = query.tolist()[0]
     assert isinstance(handle1, HasName), "Should generate a handle."
     assert (
-            handle1.body.name == "Handle1"
+        handle1.body.name == "Handle1"
     ), "The generated handle should have the expected name."
 
 
@@ -919,9 +920,9 @@ def test_multiple_dependent_selectables(handles_and_containers_world):
     world_cabinets = [c for c in world.views if isinstance(c, Cabinet)]
     cabinet_drawer_pairs_expected = [(c, d) for c in world_cabinets for d in c.drawers]
     assert {
-               (res[cabinet], res[cabinet_drawers])
-               for res in cabinet_drawer_pairs_query.evaluate()
-           } == set(cabinet_drawer_pairs_expected)
+        (res[cabinet], res[cabinet_drawers])
+        for res in cabinet_drawer_pairs_query.evaluate()
+    } == set(cabinet_drawer_pairs_expected)
 
 
 def test_flatten_iterable_attribute(handles_and_containers_world):
@@ -948,6 +949,8 @@ def test_flatten_iterable_attribute_and_use_not_equal(handles_and_containers_wor
     query = an(entity(drawers).where(drawer_1 != drawers))
 
     results = list(query.evaluate())
+
+    QueryGraph(query).visualize()
 
     # We should get one row for each drawer and the parent view preserved
     assert len(results) == 2
@@ -1296,12 +1299,10 @@ def test_presentation_example():
         Robot("Robot3", 75, [Task("Task5", False), Task("Task6", True)]),
     ]
     r = variable(Robot, robots)
-    q = an(entity(r).where(
-        r.battery > 50, not_(r.tasks[0].completed)
-    )
-    )
+    q = an(entity(r).where(r.battery > 50, not_(r.tasks[0].completed)))
     visualize = False
     if visualize:
         from krrood.entity_query_language.query_graph import QueryGraph
+
         QueryGraph(q).visualize((20, 20), spacing_x=2, spacing_y=2)
     assert q.tolist() == [robots[2]]
