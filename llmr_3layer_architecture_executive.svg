@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">llmr Executive Three-Layer Architecture</title>
+  <desc id="desc">A simplified three-layer architecture diagram showing llmr with LLMBackend as the central orchestrator, connecting user intent and world context to executable actions and a semantic hypothesis graph.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f7f9fc; }
+      .title { font: 700 32px 'DejaVu Sans', Arial, sans-serif; fill: #17324d; }
+      .subtitle { font: 400 16px 'DejaVu Sans', Arial, sans-serif; fill: #49657d; }
+      .layer { stroke-width: 2; rx: 26; }
+      .layer-a { fill: #e9f4fb; stroke: #8db7d0; }
+      .layer-b { fill: #fff6e4; stroke: #d6b56e; }
+      .layer-c { fill: #eaf7ef; stroke: #92c6a1; }
+      .layer-label { font: 700 21px 'DejaVu Sans', Arial, sans-serif; fill: #17324d; }
+      .panel { fill: #ffffff; stroke-width: 1.5; rx: 18; }
+      .panel-blue { stroke: #8db7d0; }
+      .panel-gold { stroke: #d3a74f; }
+      .panel-green { stroke: #8cc19a; }
+      .box-title { font: 700 18px 'DejaVu Sans', Arial, sans-serif; fill: #17324d; }
+      .box-text { font: 400 14px 'DejaVu Sans', Arial, sans-serif; fill: #36526c; }
+      .small { font: 400 13px 'DejaVu Sans', Arial, sans-serif; fill: #56738c; }
+      .connector { stroke: #5b758d; stroke-width: 3; fill: none; }
+      .connector-soft { stroke: #89a1b4; stroke-width: 2.5; fill: none; stroke-dasharray: 8 6; }
+    </style>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#5b758d"/>
+    </marker>
+    <marker id="arrow-soft" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#89a1b4"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1600" height="1000"/>
+
+  <text class="title" x="60" y="58">llmr · Architecture</text>
+  <text class="subtitle" x="60" y="88">Natural language to executable action and a parallel semantic graph.</text>
+
+  <!-- Layer 1 -->
+  <rect class="layer layer-a" x="40" y="120" width="1520" height="190"/>
+  <text class="layer-label" x="68" y="156">Layer 1 · Inputs &amp; Context</text>
+
+  <rect class="panel panel-blue" x="90" y="190" width="330" height="88"/>
+  <text class="box-title" x="115" y="224">User Intent</text>
+  <text class="box-text" x="115" y="248">Instruction or partial action request</text>
+
+  <rect class="panel panel-blue" x="470" y="190" width="330" height="88"/>
+  <text class="box-title" x="495" y="224">Action Knowledge</text>
+  <text class="box-text" x="495" y="248">Available actions and execution context</text>
+
+  <rect class="panel panel-blue" x="850" y="190" width="620" height="88"/>
+  <text class="box-title" x="875" y="224">World Context</text>
+  <text class="box-text" x="875" y="248">Scene state, known objects, and grounding context from SymbolGraph</text>
+
+  <!-- Layer 2 -->
+  <rect class="layer layer-b" x="40" y="345" width="1520" height="360"/>
+  <text class="layer-label" x="68" y="381">Layer 2 · Central Orchestration</text>
+
+  <rect class="panel panel-gold" x="205" y="420" width="1190" height="220" style="fill:#fffdf7;stroke-width:2.2;"/>
+  <text class="box-title" x="235" y="460" style="font-size:26px;">LLMBackend</text>
+  <text class="box-text" x="235" y="490">Central orchestrator for interpretation, resolution, grounding, semantic reasoning, and final action construction.</text>
+
+  <rect class="panel panel-gold" x="245" y="535" width="300" height="72"/>
+  <text class="box-title" x="268" y="564">Resolve the Action</text>
+  <text class="box-text" x="268" y="588">Identify and fill only unresolved fields</text>
+
+  <rect class="panel panel-gold" x="650" y="535" width="300" height="72"/>
+  <text class="box-title" x="673" y="564">Ground Against the World</text>
+  <text class="box-text" x="673" y="588">Mapping to concrete objects, params</text>
+
+  <rect class="panel panel-gold" x="1055" y="535" width="300" height="72"/>
+  <text class="box-title" x="1078" y="564">Add Semantic Reasoning</text>
+  <text class="box-text" x="1078" y="588">Structured semantic interpretations</text>
+
+  <path class="connector" marker-end="url(#arrow)" d="M545 571 H650"/>
+  <path class="connector" marker-end="url(#arrow)" d="M950 571 H1055"/>
+
+  <!-- Layer 3 -->
+  <rect class="layer layer-c" x="40" y="740" width="1520" height="220"/>
+  <text class="layer-label" x="68" y="776">Layer 3 · Outputs &amp; Insight</text>
+
+  <rect class="panel panel-green" x="100" y="815" width="360" height="100"/>
+  <text class="box-title" x="125" y="850">Executable Robot Action</text>
+  <text class="box-text" x="125" y="874">Concrete action instance for robot execution</text>
+  <text class="box-text" x="125" y="894">Operational output</text>
+
+  <rect class="panel panel-green" x="620" y="800" width="380" height="130"/>
+  <text class="box-title" x="645" y="835">Hypothesis Projection Pipeline</text>
+  <text class="box-text" x="645" y="859">Transforms semantic outputs into graph structure</text>
+  <text class="box-text" x="645" y="879">Adds claims, evidence, and grounding metadata</text>
+  <text class="box-text" x="645" y="899">Supports multiple semantic families</text>
+
+  <rect class="panel panel-green" x="1140" y="800" width="360" height="130"/>
+  <text class="box-title" x="1165" y="835">HypothesisGraph + Queries</text>
+  <text class="box-text" x="1165" y="859">Queryable semantic layer</text>
+<!--  <text class="box-text" x="1165" y="879">Family views and EQL expose the graph</text>
+  <text class="box-text" x="1165" y="899">Interpretive output</text> -->
+
+  <!-- Connectors -->
+  <path class="connector" marker-end="url(#arrow)" d="M255 278 V420"/>
+  <path class="connector-soft" marker-end="url(#arrow-soft)" d="M635 278 V420"/>
+  <path class="connector-soft" marker-end="url(#arrow-soft)" d="M1160 278 V420"/>
+
+  <path class="connector" marker-end="url(#arrow)" d="M420 640 V815"/>
+  <path class="connector" marker-end="url(#arrow)" d="M1220 640 V800"/>
+  <path class="connector" marker-end="url(#arrow)" d="M1000 865 H1140"/>
+
+  <text class="small" x="60" y="985">Core message: llmr produces both an executable action and a queryable semantic interpretation of that action.</text>
+</svg>

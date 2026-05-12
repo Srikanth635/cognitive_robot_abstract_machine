@@ -1,0 +1,208 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1080" viewBox="0 0 1600 1080" role="img" aria-labelledby="title desc">
+  <title id="title">llmr Three-Layer Architecture</title>
+  <desc id="desc">A three-layer system architecture diagram with LLMBackend as the central orchestration layer, showing interface and context inputs above and execution plus hypothesis graph outputs below.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f7f9fc; }
+      .title { font: 700 30px 'DejaVu Sans', Arial, sans-serif; fill: #17324d; }
+      .subtitle { font: 400 15px 'DejaVu Sans', Arial, sans-serif; fill: #46637d; }
+      .layer-label { font: 700 20px 'DejaVu Sans', Arial, sans-serif; fill: #17324d; }
+      .box-title { font: 700 16px 'DejaVu Sans', Arial, sans-serif; fill: #17324d; }
+      .box-text { font: 400 13px 'DejaVu Sans', Arial, sans-serif; fill: #36526c; }
+      .small-text { font: 400 12px 'DejaVu Sans', Arial, sans-serif; fill: #4d6982; }
+      .layer-a { fill: #e9f4fb; stroke: #8db7d0; stroke-width: 2; }
+      .layer-b { fill: #fff6e4; stroke: #d6b56e; stroke-width: 2; }
+      .layer-c { fill: #eaf7ef; stroke: #92c6a1; stroke-width: 2; }
+      .panel { fill: #ffffff; stroke: #a7bed0; stroke-width: 1.5; }
+      .panel-strong { fill: #fffdf7; stroke: #d3a74f; stroke-width: 2; }
+      .panel-green { fill: #ffffff; stroke: #8cc19a; stroke-width: 1.5; }
+      .panel-blue { fill: #ffffff; stroke: #8db7d0; stroke-width: 1.5; }
+      .connector { stroke: #58738b; stroke-width: 2.5; fill: none; }
+      .connector-soft { stroke: #8aa1b4; stroke-width: 2; fill: none; stroke-dasharray: 7 6; }
+      .accent { fill: #17324d; }
+    </style>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#58738b"/>
+    </marker>
+    <marker id="arrow-soft" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#8aa1b4"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1600" height="1080"/>
+
+  <text class="title" x="60" y="54">llmr · Three-Layer Architecture</text>
+  <text class="subtitle" x="60" y="82">Natural language to executable robot action, with a parallel semantic hypothesis graph for explanation, monitoring, and query.</text>
+
+  <!-- Layer 1 -->
+  <rect class="layer-a" x="40" y="110" width="1520" height="215" rx="24"/>
+  <text class="layer-label" x="68" y="146">Layer 1 · Interface &amp; Context</text>
+
+  <rect class="panel panel-blue" x="70" y="175" width="230" height="110" rx="16"/>
+  <text class="box-title" x="90" y="205">User / Planner / Notebook</text>
+  <text class="box-text" x="90" y="229">Natural-language instruction</text>
+  <text class="box-text" x="90" y="248">Optional underspecified Match</text>
+  <text class="box-text" x="90" y="267">Interactive analysis / demos</text>
+
+  <rect class="panel panel-blue" x="340" y="175" width="270" height="110" rx="16"/>
+  <text class="box-title" x="360" y="205">Factory API</text>
+  <text class="box-text" x="360" y="229">plan_from_instruction</text>
+  <text class="box-text" x="360" y="248">sequential_plan_from_instruction</text>
+  <text class="box-text" x="360" y="267">plan_from_match / instance_from_match</text>
+
+  <rect class="panel panel-blue" x="650" y="175" width="250" height="110" rx="16"/>
+  <text class="box-title" x="670" y="205">PyCRAM Adapter</text>
+  <text class="box-text" x="670" y="229">Action discovery / registry</text>
+  <text class="box-text" x="670" y="248">Runtime action type lookup</text>
+  <text class="box-text" x="670" y="267">Bridge to execution layer</text>
+
+  <rect class="panel panel-blue" x="1030" y="175" width="210" height="110" rx="16"/>
+  <text class="box-title" x="1050" y="205">LLM Provider</text>
+  <text class="box-text" x="1050" y="229">OpenAI / other chat model</text>
+  <text class="box-text" x="1050" y="248">Structured output calls</text>
+  <text class="box-text" x="1050" y="267">Reasoning backend</text>
+
+  <rect class="panel panel-blue" x="1280" y="175" width="240" height="110" rx="16"/>
+  <text class="box-title" x="1300" y="205">KRROOD SymbolGraph</text>
+  <text class="box-text" x="1300" y="229">World entities / annotations</text>
+  <text class="box-text" x="1300" y="248">Relations / object context</text>
+  <text class="box-text" x="1300" y="267">Grounding candidates</text>
+
+  <!-- Layer 2 -->
+  <rect class="layer-b" x="40" y="350" width="1520" height="430" rx="24"/>
+  <text class="layer-label" x="68" y="386">Layer 2 · Central Orchestration</text>
+
+  <rect class="panel-strong" x="150" y="410" width="1300" height="320" rx="24"/>
+  <text class="box-title" x="180" y="446" style="font-size:22px;">LLMBackend</text>
+  <text class="small-text" x="180" y="470">Central runtime orchestrator: resolves action parameters, accumulates reasoner sidecars, constructs the final action, and triggers hypothesis projection.</text>
+
+  <rect class="panel" x="190" y="500" width="128" height="170" rx="16"/>
+  <text class="box-title" x="208" y="530">1. Match</text>
+  <text class="box-title" x="208" y="550">Snapshot</text>
+  <text class="box-text" x="208" y="580">snapshot_match()</text>
+  <text class="box-text" x="208" y="599">MatchSnapshot</text>
+  <text class="box-text" x="208" y="618">MatchField</text>
+
+  <rect class="panel" x="342" y="500" width="146" height="170" rx="16"/>
+  <text class="box-title" x="360" y="530">2. World Context</text>
+  <text class="box-text" x="360" y="560">bridge.world_reader</text>
+  <text class="box-text" x="360" y="579">serialize visible state</text>
+  <text class="box-text" x="360" y="598">current object relations</text>
+  <text class="box-text" x="360" y="617">context for LLM</text>
+
+  <rect class="panel" x="512" y="500" width="146" height="170" rx="16"/>
+  <text class="box-title" x="530" y="530">3. Slot Filling</text>
+  <text class="box-text" x="530" y="560">reasoning.slot_filler</text>
+  <text class="box-text" x="530" y="579">LLM resolves free fields</text>
+  <text class="box-text" x="530" y="598">structured slot values</text>
+
+  <rect class="panel" x="682" y="500" width="170" height="170" rx="16"/>
+  <text class="box-title" x="700" y="530">4. Grounding &amp;</text>
+  <text class="box-title" x="700" y="550">Resolution</text>
+  <text class="box-text" x="700" y="580">entity description -&gt; Symbol</text>
+  <text class="box-text" x="700" y="599">enums / primitives / types</text>
+  <text class="box-text" x="700" y="618">bind back into Match</text>
+
+  <rect class="panel" x="876" y="500" width="170" height="170" rx="16"/>
+  <text class="box-title" x="894" y="530">5. Annotation</text>
+  <text class="box-title" x="894" y="550">Bundle</text>
+  <text class="box-text" x="894" y="580">ActionAnnotationBundle</text>
+  <text class="box-text" x="894" y="599">raw semantic sidecars</text>
+  <text class="box-text" x="894" y="618">shared semantic workspace</text>
+
+  <rect class="panel" x="1070" y="500" width="170" height="170" rx="16"/>
+  <text class="box-title" x="1088" y="530">6. Pluggable</text>
+  <text class="box-title" x="1088" y="550">Reasoners</text>
+  <text class="box-text" x="1088" y="580">FrameNetReasoner</text>
+  <text class="box-text" x="1088" y="599">FlanaganReasoner</text>
+  <text class="box-text" x="1088" y="618">future semantic analyzers</text>
+
+  <rect class="panel" x="1264" y="500" width="146" height="170" rx="16"/>
+  <text class="box-title" x="1282" y="530">7. Action</text>
+  <text class="box-title" x="1282" y="550">Construction</text>
+  <text class="box-text" x="1282" y="580">construct_action()</text>
+  <text class="box-text" x="1282" y="599">final PyCRAM instance</text>
+  <text class="box-text" x="1282" y="618">execution-ready output</text>
+
+  <rect class="panel" x="1195" y="690" width="215" height="60" rx="16"/>
+  <text class="box-title" x="1213" y="726">8. Projection Hook</text>
+  <text class="box-text" x="1327" y="726" text-anchor="end">ProjectionInput -&gt; ProjectionOrchestrator</text>
+
+  <!-- Internal backend arrows -->
+  <path class="connector" marker-end="url(#arrow)" d="M318 585 H342"/>
+  <path class="connector" marker-end="url(#arrow)" d="M488 585 H512"/>
+  <path class="connector" marker-end="url(#arrow)" d="M658 585 H682"/>
+  <path class="connector" marker-end="url(#arrow)" d="M852 585 H876"/>
+  <path class="connector" marker-end="url(#arrow)" d="M1046 585 H1070"/>
+  <path class="connector" marker-end="url(#arrow)" d="M1240 585 H1264"/>
+  <path class="connector" marker-end="url(#arrow)" d="M1337 670 V690"/>
+
+  <!-- Sidecar callout -->
+  <rect class="panel" x="960" y="405" width="420" height="70" rx="16"/>
+  <text class="box-title" x="980" y="434">Raw semantic sidecars on ActionAnnotationBundle</text>
+  <text class="box-text" x="980" y="458">frames : FrameNetAnnotation   ·   motion_phases : FlanaganMotionPlan   ·   extra : future reasoners</text>
+
+  <!-- Layer 3 -->
+  <rect class="layer-c" x="40" y="805" width="1520" height="235" rx="24"/>
+  <text class="layer-label" x="68" y="841">Layer 3 · Outputs, Projection &amp; Query</text>
+
+  <rect class="panel panel-green" x="100" y="885" width="270" height="105" rx="16"/>
+  <text class="box-title" x="120" y="915">Executable Action</text>
+  <text class="box-text" x="120" y="939">Concrete PyCRAM action instance</text>
+  <text class="box-text" x="120" y="958">Consumed by robot / planner</text>
+  <text class="box-text" x="120" y="977">Operational output path</text>
+
+  <rect class="panel panel-green" x="420" y="885" width="185" height="105" rx="16"/>
+  <text class="box-title" x="440" y="915">ProjectionInput</text>
+  <text class="box-text" x="440" y="939">Normalized runtime context</text>
+  <text class="box-text" x="440" y="958">instruction / action / semantics</text>
+  <text class="box-text" x="440" y="977">resolved slots / world context</text>
+
+  <rect class="panel panel-green" x="645" y="885" width="230" height="105" rx="16"/>
+  <text class="box-title" x="665" y="915">ProjectorRegistry +</text>
+  <text class="box-title" x="665" y="935">ProjectionOrchestrator</text>
+  <text class="box-text" x="665" y="958">Select matching projectors</text>
+  <text class="box-text" x="665" y="977">Run projection into graph</text>
+
+  <rect class="panel panel-green" x="915" y="885" width="205" height="105" rx="16"/>
+  <text class="box-title" x="935" y="915">Family Projectors</text>
+  <text class="box-text" x="935" y="939">FrameNetProjector</text>
+  <text class="box-text" x="935" y="958">FlanaganProjector</text>
+  <text class="box-text" x="935" y="977">future projectors</text>
+
+  <rect class="panel panel-green" x="1160" y="865" width="185" height="145" rx="16"/>
+  <text class="box-title" x="1180" y="895">HypothesisGraph</text>
+  <text class="box-text" x="1180" y="919">Shared epistemic graph</text>
+  <text class="box-text" x="1180" y="938">claims + evidence + metadata</text>
+  <text class="box-text" x="1180" y="957">multiple families coexist</text>
+  <text class="box-text" x="1180" y="976">queryable / visualizable</text>
+  <text class="box-text" x="1180" y="995">action-local and run-local views</text>
+
+  <rect class="panel panel-green" x="1385" y="885" width="145" height="105" rx="16"/>
+  <text class="box-title" x="1405" y="915">Views + EQL</text>
+  <text class="box-text" x="1405" y="939">FrameNetGraphView</text>
+  <text class="box-text" x="1405" y="958">FlanaganGraphView</text>
+  <text class="box-text" x="1405" y="977">analysis / monitoring</text>
+
+  <!-- Cross-layer connectors -->
+  <path class="connector" marker-end="url(#arrow)" d="M300 230 H340"/>
+  <path class="connector-soft" marker-end="url(#arrow-soft)" d="M900 230 H1030"/>
+  <path class="connector-soft" marker-end="url(#arrow-soft)" d="M1240 230 H1280"/>
+
+  <path class="connector" marker-end="url(#arrow)" d="M475 285 V410"/>
+  <path class="connector-soft" marker-end="url(#arrow-soft)" d="M1135 285 V405"/>
+  <path class="connector-soft" marker-end="url(#arrow-soft)" d="M1400 285 V500"/>
+
+  <path class="connector" marker-end="url(#arrow)" d="M1337 750 V885"/>
+  <path class="connector" marker-end="url(#arrow)" d="M1337 670 C1337 760, 235 760, 235 885"/>
+
+  <!-- Bottom arrows -->
+  <path class="connector" marker-end="url(#arrow)" d="M370 937 H420"/>
+  <path class="connector" marker-end="url(#arrow)" d="M605 937 H645"/>
+  <path class="connector" marker-end="url(#arrow)" d="M875 937 H915"/>
+  <path class="connector" marker-end="url(#arrow)" d="M1120 937 H1160"/>
+  <path class="connector" marker-end="url(#arrow)" d="M1345 937 H1385"/>
+
+  <!-- Footer -->
+  <text class="small-text" x="60" y="1060">Core idea: llmr produces both an execution-ready action and a queryable semantic hypothesis graph from the same natural-language interaction.</text>
+</svg>

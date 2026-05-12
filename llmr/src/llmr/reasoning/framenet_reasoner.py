@@ -199,9 +199,7 @@ Provide the complete output with all fields, using "null" for non-applicable ele
 
 _FRAMENET_PROMPT = ChatPromptTemplate.from_template(_FRAMENET_PROMPT_TEMPLATE)
 
-# ── Shared constants (canonical home: hypotheses/projectors/framenet/constants.py) ──
-
-from llmr.hypotheses.projectors.framenet.constants import (  # noqa: E402
+from llmr.hypotheses import (  # noqa: E402
     FRAMENET_PROMPT_VERSION,
     FRAMENET_REASONER_NAME,
 )

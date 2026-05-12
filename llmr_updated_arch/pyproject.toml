@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llmr-updated-arch"
+version = "0.1.0"
+description = "Component-oriented LLM action resolution pipeline for KRROOD and PyCRAM."
+requires-python = ">=3.10"
+dependencies = [
+    "krrood",
+    "langchain-core>=0.2.0",
+    "pydantic>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "typing_extensions>=4.0.0",
+]
+
+[project.optional-dependencies]
+openai = ["langchain-openai>=0.1.0"]
+ollama = ["langchain-ollama>=0.1.0"]
+pycram = ["pycram-robotics"]
+dev = ["pytest", "pytest-asyncio"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

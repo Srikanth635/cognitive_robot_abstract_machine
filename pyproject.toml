@@ -22,6 +22,7 @@ dependencies = [
   "physics_simulators",
   "ipykernel>=7.2.0",
   "llmr",
+  "llmr-updated-arch",
   "uniworld"
 ]
 
@@ -35,6 +36,7 @@ members = [
   "probabilistic_model",
   "physics_simulators",
   "llmr",
+  "llmr_updated_arch",
   "uniworld"
 ]
 
@@ -47,6 +49,7 @@ probabilistic_model   = { workspace = true }
 random_events         = { workspace = true }
 physics_simulators    = { workspace = true }
 llmr                  = { workspace = true }
+llmr-updated-arch     = { workspace = true }
 uniworld              = { workspace = true }
 
 [tool.poetry]
@@ -61,6 +64,7 @@ random_events = { path = "random_events", develop = true }
 probabilistic_model = { path = "probabilistic_model", develop = true }
 physics_simulators = { path = "physics_simulators", develop = true }
 llmr = { path = "llmr", develop = true }
+llmr-updated-arch = { path = "llmr_updated_arch", develop = true }
 uniworld = { path = "uniworld", develop = true }
 
 [tool.setuptools]

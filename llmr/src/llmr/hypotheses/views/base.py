@@ -1,4 +1,4 @@
-"""Generic graph view abstractions layered on top of HypothesisGraph."""
+"""View abstractions layered on top of the sg_model repository."""
 
 from __future__ import annotations
 
@@ -8,59 +8,38 @@ from typing import ClassVar
 
 from typing_extensions import Optional, Tuple, TypeVar
 
-from llmr.hypotheses.common.edges import AboutActionEdge
-from llmr.hypotheses.elements import HypothesisEdge, HypothesisNode
+from llmr.hypotheses.entities.base import ClaimHypothesis, Hypothesis
 from llmr.hypotheses.graph import HypothesisGraph
 
-TNode = TypeVar("TNode", bound=HypothesisNode)
-TEdge = TypeVar("TEdge", bound=HypothesisEdge)
+THypothesis = TypeVar("THypothesis", bound=Hypothesis)
+TClaim = TypeVar("TClaim", bound=ClaimHypothesis)
 
 
 @dataclass(frozen=True)
 class HypothesisGraphView:
-    """Thin typed facade over a generic HypothesisGraph."""
+    """Thin typed facade over a generic sg_model repository."""
 
     graph: HypothesisGraph
 
-    def nodes(self, node_type: type[TNode]) -> list[TNode]:
-        """Return graph nodes of *node_type* preserving insertion order."""
+    def nodes(self, entity_type: type[THypothesis]) -> list[THypothesis]:
+        """Return repository entities of *entity_type* preserving insertion order."""
 
-        return self.graph.domain(node_type)
+        return self.graph.domain(entity_type)
 
-    def edges(self, edge_type: type[TEdge]) -> list[TEdge]:
-        """Return graph edges of *edge_type* preserving insertion order."""
+    def get(self, entity_id: str) -> Optional[Hypothesis]:
+        """Return the entity with *entity_id*, if present."""
 
-        return self.graph.edge_domain(edge_type)
+        return self.graph.get(entity_id)
 
-    def get_node(self, node_id: str) -> Optional[HypothesisNode]:
-        """Return the node with *node_id*, if present."""
-
-        return self.graph.get_node(node_id)
-
-    def get_edge(self, edge_id: str) -> Optional[HypothesisEdge]:
-        """Return the edge with *edge_id*, if present."""
-
-        return self.graph.get_edge(edge_id)
-
-    def nodes_for_run(self, run_id: str) -> list[HypothesisNode]:
-        """Return nodes tagged with *run_id*."""
+    def nodes_for_run(self, run_id: str) -> list[Hypothesis]:
+        """Return entities tagged with *run_id*."""
 
         return self.graph.nodes_for_run(run_id)
 
-    def nodes_from_reasoner(self, reasoner_name: str) -> list[HypothesisNode]:
-        """Return nodes attributed to *reasoner_name*."""
+    def nodes_from_reasoner(self, reasoner_name: str) -> list[Hypothesis]:
+        """Return entities attributed to *reasoner_name*."""
 
         return self.graph.nodes_from_reasoner(reasoner_name)
-
-    def subgraph_for_run(self, run_id: str) -> "HypothesisGraphView":
-        """Return a same-view wrapper over the run-local hypothesis subgraph."""
-
-        return type(self)(self.graph.subgraph_for_run(run_id))
-
-    def subgraph_for_reasoner(self, reasoner_name: str) -> "HypothesisGraphView":
-        """Return a same-view wrapper over the reasoner-local hypothesis subgraph."""
-
-        return type(self)(self.graph.subgraph_for_reasoner(reasoner_name))
 
 
 @dataclass(frozen=True)
@@ -68,52 +47,63 @@ class ReasonerGraphView(HypothesisGraphView, ABC):
     """Base view contract shared by reasoner-family query facades."""
 
     REASONER_NAME: ClassVar[str]
-    ROOT_CLAIM_TYPES: ClassVar[Tuple[type[HypothesisNode], ...]] = ()
-    CLAIM_TYPES: ClassVar[Tuple[type[HypothesisNode], ...]] = ()
-    ACTION_EDGE_TYPE: ClassVar[type[HypothesisEdge]] = AboutActionEdge
+    ROOT_CLAIM_TYPES: ClassVar[Tuple[type[ClaimHypothesis], ...]] = ()
+    CLAIM_TYPES: ClassVar[Tuple[type[ClaimHypothesis], ...]] = ()
 
-    def claims(self) -> list[HypothesisNode]:
-        """Return claim nodes belonging to this reasoner family."""
-
-        return [
-            node
-            for cls in self.CLAIM_TYPES
-            for node in self.graph.domain(cls)
-            if node.meta.source_reasoner == self.REASONER_NAME
-        ]
-
-    def root_claims(self) -> list[HypothesisNode]:
-        """Return top-level claim nodes belonging to this reasoner family."""
+    def claims(self) -> list[ClaimHypothesis]:
+        """Return claim entities belonging to this reasoner family."""
 
         return [
-            node
-            for cls in self.ROOT_CLAIM_TYPES
-            for node in self.graph.domain(cls)
-            if node.meta.source_reasoner == self.REASONER_NAME
+            claim
+            for claim_type in self.CLAIM_TYPES
+            for claim in self.graph.domain(claim_type)
+            if claim.meta.source_reasoner == self.REASONER_NAME
         ]
 
-    def claims_for_run(self, run_id: str) -> list[HypothesisNode]:
+    def root_claims(self) -> list[ClaimHypothesis]:
+        """Return top-level claim entities belonging to this reasoner family."""
+
+        return [
+            claim
+            for claim_type in self.ROOT_CLAIM_TYPES
+            for claim in self.graph.domain(claim_type)
+            if claim.meta.source_reasoner == self.REASONER_NAME
+        ]
+
+    def claims_for_run(self, run_id: str) -> list[ClaimHypothesis]:
         """Return this family's claims tagged with *run_id*."""
 
         return [
-            node
-            for cls in self.CLAIM_TYPES
-            for node in self.graph.domain(cls)
-            if node.meta.source_reasoner == self.REASONER_NAME
-            and node.meta.run_id == run_id
+            claim
+            for claim in self.claims()
+            if claim.meta.run_id == run_id
         ]
 
-    def claims_for_action(self, action_ref: object) -> list[HypothesisNode]:
-        """Return this family's claims in the action-local hypothesis closure."""
+    def claims_for_action(self, action_ref: object) -> list[ClaimHypothesis]:
+        """Return this family's claims in the action-local reasoning closure."""
 
-        return self.action_subgraph(action_ref).claims()
+        root_claims = [
+            claim
+            for claim in self.root_claims()
+            if getattr(getattr(claim, "action", None), "action_ref", None) is action_ref
+        ]
+        if not root_claims:
+            return []
 
-    def action_subgraph(self, action_ref: object) -> "ReasonerGraphView":
-        """Return a same-view wrapper over the action-local hypothesis subgraph."""
+        ordered: list[ClaimHypothesis] = []
+        seen_ids: set[str] = set()
+        run_ids: list[str] = []
+        for claim in root_claims:
+            if claim.id not in seen_ids:
+                ordered.append(claim)
+                seen_ids.add(claim.id)
+            if claim.meta.run_id is not None and claim.meta.run_id not in run_ids:
+                run_ids.append(claim.meta.run_id)
 
-        return type(self)(self.graph.subgraph_for_action(action_ref))
-
-    def run_subgraph(self, run_id: str) -> "ReasonerGraphView":
-        """Return a same-view wrapper over the run-local hypothesis subgraph."""
-
-        return type(self)(self.graph.subgraph_for_run(run_id))
+        for run_id in run_ids:
+            for claim in self.claims_for_run(run_id):
+                if claim.id in seen_ids:
+                    continue
+                ordered.append(claim)
+                seen_ids.add(claim.id)
+        return ordered
