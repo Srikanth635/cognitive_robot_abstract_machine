@@ -152,15 +152,6 @@ class MoveToReach(ActionDescription):
         ).perform()
 
     @property
-    def manipulator(self) -> Manipulator:
-        """
-        Returns the manipulator that is used for reaching.
-
-        :return: The manipulator.
-        """
-        return self.grasp_description.manipulator
-
-    @property
     def standing_pose(self) -> Pose:
         """
         Calculates the pose where the robot should stand to reach the target.
