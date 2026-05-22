@@ -1,0 +1,266 @@
+{
+  "main": {
+    "id": "5ac3bbab0aec2088",
+    "type": "split",
+    "children": [
+      {
+        "id": "e3818565df771e20",
+        "type": "tabs",
+        "dimension": 40.62111801242236,
+        "children": [
+          {
+            "id": "b475804907b4eade",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
+            },
+            "group": "d3483c943b551805"
+          }
+        ]
+      },
+      {
+        "id": "8eab7cf1d6a4d490",
+        "type": "tabs",
+        "dimension": 59.378881987577635,
+        "children": [
+          {
+            "id": "9aca9b85b1a584c3",
+            "type": "leaf",
+            "state": {
+              "type": "localgraph",
+              "state": {
+                "file": "llm-wiki/wiki/entities/pycram.robot_plans.actions.core.PickUpAction.md",
+                "options": {
+                  "collapse-filter": true,
+                  "search": "",
+                  "localJumps": 1,
+                  "localBacklinks": true,
+                  "localForelinks": true,
+                  "localInterlinks": false,
+                  "showTags": false,
+                  "showAttachments": false,
+                  "hideUnresolved": false,
+                  "collapse-color-groups": true,
+                  "colorGroups": [],
+                  "collapse-display": true,
+                  "showArrow": false,
+                  "textFadeMultiplier": 0,
+                  "nodeSizeMultiplier": 1,
+                  "lineSizeMultiplier": 1,
+                  "collapse-forces": true,
+                  "centerStrength": 0.518713248970312,
+                  "repelStrength": 10,
+                  "linkStrength": 1,
+                  "linkDistance": 250,
+                  "scale": 1,
+                  "close": false
+                }
+              },
+              "icon": "lucide-git-fork",
+              "title": "Graph of pycram.robot_plans.actions.core.PickUpAction"
+            },
+            "group": "d3483c943b551805"
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "6f9386beee5e82de",
+    "type": "split",
+    "children": [
+      {
+        "id": "067d8d1ff1620752",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "1efc3979143044fc",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "c3368d8607db3f33",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "4a57d90be43d44b5",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 207.5
+  },
+  "right": {
+    "id": "f317c7164b854867",
+    "type": "split",
+    "children": [
+      {
+        "id": "8b6806b03a81ac77",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "52f32e17e26f0de4",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "6b3feb769e6acdf7",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "6db35727a6847d34",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "36013cce3638df83",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "dec0b2374432c9bc",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "9aca9b85b1a584c3",
+  "lastOpenFiles": [
+    "llm-wiki/index.md",
+    "llm-wiki/CLAUDE.md",
+    "llm-wiki/wiki/bridges/bridge.pycram-sdt.md",
+    "llm-wiki/wiki/bridges/bridge.sdt-giskardpy.md",
+    "llm-wiki/index-pycram.md",
+    "llm-wiki/index-giskardpy.md",
+    "llm-wiki/index-sdt.md",
+    "agent_design_conversation.md",
+    "llm-wiki/wiki/entities/sdt.spatial_types.spatial_types.md",
+    "llm-wiki/wiki/entities/sdt.robots.abstract_robot.Manipulator.md",
+    "llm-wiki/wiki/entities/pycram.robot_plans.actions.core.PickUpAction.md",
+    "llm-wiki/wiki/concepts/concept.semantic-annotation.md",
+    "llm-wiki/wiki/concepts/concept.qp-controller.md",
+    "llm-wiki/wiki/concepts/concept.motion-statechart.md",
+    "llm-wiki/wiki/concepts/concept.krrood-eql.md",
+    "llm-wiki/wiki/concepts/concept.designator.md",
+    "llm-wiki/wiki/entities/giskardpy.model.world_config.md",
+    "llm-wiki/wiki/entities/giskardpy.motion_statechart.goals.md",
+    "llm-wiki/wiki/entities/giskardpy.motion_statechart.tasks.md",
+    "llm-wiki/wiki/entities/giskardpy.motion_statechart.graph_node.Task.md",
+    "llm-wiki/wiki/entities/giskardpy.motion_statechart.graph_node.Goal.md",
+    "llm-wiki/wiki/entities/giskardpy.motion_statechart.graph_node.CancelMotion.md",
+    "llm-wiki/wiki/entities/giskardpy.motion_statechart.context.md",
+    "llm-wiki/raw/snapshots/0528d8c__designator_base.md",
+    "llm-wiki/log.md",
+    "llm-wiki/wiki/entities/pycram.robot_plans.motions.navigation.md",
+    "Untitled.canvas",
+    "llm-wiki/index-giskardpy.md.tmp.73936.2e84977d6a6c",
+    "llm-wiki/wiki/concepts/concept.motion-statechart.md.tmp.73936.c2881a479a43",
+    "llm-wiki/wiki/bridges/bridge.pycram-giskardpy.md.tmp.73936.181fec2a1587",
+    "llm-wiki/index-giskardpy.md.tmp.73936.fa83026c38bc",
+    "llm-wiki/index.md.tmp.73936.6faaa0658f0d",
+    "llm-wiki/wiki/entities/sdt.collision_checking.md.tmp.73936.296ee1f916b0",
+    "llm-wiki/wiki/entities/sdt.robots.concrete.md.tmp.73936.0787832dbea6",
+    "llm-wiki/wiki/entities/sdt.reasoning.WorldReasoner.md.tmp.73936.e1c7bbc98438",
+    "llm-wiki/wiki/entities/sdt.semantic_annotations.SemanticAnnotations.md.tmp.73936.c3b16c7a95f6",
+    "llm-wiki/wiki/concepts/concept.semantic-annotation.md.tmp.73936.dcf0002617fd"
+  ]
+}
