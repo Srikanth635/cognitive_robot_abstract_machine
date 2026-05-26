@@ -19,13 +19,12 @@ dependencies = [
   "krrood",
   "random-events",
   "probabilistic_model",
+  "robokudo",
   "physics_simulators",
-  "ipykernel>=7.2.0",
-  "llmr",
-  "llmr-updated-arch",
-  "minimal_llmr",
   "agentic-llmr",
-  "uniworld"
+  "uniworld",
+  "ipykernel>=7.2.0",
+  "lark-parser>=0.12.0",
 ]
 
 [tool.uv.workspace]
@@ -37,9 +36,7 @@ members = [
   "random_events",
   "probabilistic_model",
   "physics_simulators",
-  "llmr",
-  "llmr_updated_arch",
-  "minimal_llmr",
+  "robokudo",
   "agentic_llmr",
   "uniworld"
 ]
@@ -51,10 +48,8 @@ semantic_digital_twin = { workspace = true }
 krrood                = { workspace = true }
 probabilistic_model   = { workspace = true }
 random_events         = { workspace = true }
+robokudo              = { workspace = true }
 physics_simulators    = { workspace = true }
-llmr                  = { workspace = true }
-llmr-updated-arch     = { workspace = true }
-minimal_llmr          = { workspace = true }
 agentic_llmr	      = { workspace = true }
 uniworld              = { workspace = true }
 
@@ -68,10 +63,8 @@ semantic_digital_twin = { path = "semantic_digital_twin", develop = true }
 krrood = { path = "krrood", develop = true }
 random_events = { path = "random_events", develop = true }
 probabilistic_model = { path = "probabilistic_model", develop = true }
+robokudo = { path = "robokudo", develop = true }
 physics_simulators = { path = "physics_simulators", develop = true }
-llmr = { path = "llmr", develop = true }
-llmr-updated-arch = { path = "llmr_updated_arch", develop = true }
-minimal_llmr = { path = "minimal_llmr", develop = true }
 agentic_llmr = { path = "agentic_llmr", develop = true }
 uniworld = { path = "uniworld", develop = true }
 

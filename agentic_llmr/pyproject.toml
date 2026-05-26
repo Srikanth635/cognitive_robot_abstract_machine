@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentic-llmr"
+version = "0.1.0"
+description = "Agentic LLM action resolution pipeline for KRROOD using ReAct loop."
+requires-python = ">=3.10"
+dependencies = [
+    "krrood",
+    "langchain>=0.2.0",
+    "langchain-core>=0.2.0",
+    "langgraph>=0.0.60",
+    "pydantic>=2.0.0",
+    "typing_extensions>=4.0.0",
+]
+
+[project.optional-dependencies]
+openai  = ["langchain-openai>=0.1.0"]
+ollama  = ["langchain-ollama>=0.1.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

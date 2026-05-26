@@ -1,0 +1,6 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "orchestrator": "./src/agentic_llmr/studio.py:graph"
+  }
+}
