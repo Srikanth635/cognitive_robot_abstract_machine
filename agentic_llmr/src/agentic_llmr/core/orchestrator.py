@@ -153,8 +153,8 @@ class ReActAgent(BaseCognitiveAgent):
 
     def parse_and_hydrate_action(self, agent_response: str) -> Any:
         """Parse the JSON from the agent's final response and return PyCRAM Action instance(s)."""
-        from agentic_llmr.resolution.deserializer import hydrate_action_kwargs
-        from agentic_llmr.integrations.pycram_adapter import discover_action_classes
+        from agentic_llmr.platform.type_bridge import hydrate_action_kwargs
+        from agentic_llmr.platform.actions import discover_action_classes
 
         json_match = re.search(r'```json\s*(.*?)\s*```', agent_response, re.DOTALL)
         if not json_match:

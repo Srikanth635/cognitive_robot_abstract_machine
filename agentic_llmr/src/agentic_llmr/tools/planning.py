@@ -3,8 +3,7 @@
 from typing import Any, Dict, List, Type
 from pydantic import BaseModel, Field
 from agentic_llmr.core.interfaces import AgenticTool
-from agentic_llmr.integrations.pycram_adapter import discover_action_classes
-from agentic_llmr.resolution.schema_docs import build_action_documentation
+from agentic_llmr.platform.actions import discover_action_classes, build_action_documentation
 
 class ListActionsInput(BaseModel):
     pass
@@ -50,7 +49,7 @@ class GetActionDocumentationTool(AgenticTool):
 # Tool: SimulateAction (merged from execution.py)
 # ---------------------------------------------------------------------------
 
-from agentic_llmr.integrations.world_manager import get_active_world
+from agentic_llmr.platform.world import get_active_world
 
 class SimulateActionInput(BaseModel):
     action_type: str = Field(description="The type of action (e.g., 'PickUp', 'Place').")
@@ -69,7 +68,7 @@ class SimulateActionTool(AgenticTool):
             if not action_cls:
                 return f"Simulation Failed: Action '{action_type}' is not a valid PyCRAM action class."
             try:
-                from agentic_llmr.resolution.deserializer import hydrate_action_kwargs
+                from agentic_llmr.platform.type_bridge import hydrate_action_kwargs
                 hydrated_kwargs = hydrate_action_kwargs(action_cls, parameters)
             except Exception as e:
                 import traceback

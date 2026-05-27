@@ -12,7 +12,7 @@ os.environ["ROS_PACKAGE_PATH"] = _IAI_PR2_SRC + ":" + os.environ.get("ROS_PACKAG
 from langchain_openai import ChatOpenAI
 from agentic_llmr.backend import AgenticLLMBackend
 from krrood.entity_query_language.query.match import Match
-from agentic_llmr.integrations.world_manager import set_active_world
+from agentic_llmr.platform.world import set_active_world
 
 
 os.environ["OPENAI_API_KEY"] = "REPLACE_WITH_OPENAI_API_KEY"

@@ -1,8 +1,11 @@
-"""action_match — KRROOD Match expression snapshot and parameter binding.
+"""Type bridge — converts between KRROOD/PyCRAM type representations and LLM-facing JSON.
 
-Public:  snapshot_match, bind_parameter,
-         underspecified_match, missing_required_parameters,
-         is_referent, is_nested
+Merged from: resolution/action_match.py + resolution/deserializer.py
+
+Responsibilities:
+  - Snapshot a KRROOD Match expression into a plain ActionTemplate (action_match logic)
+  - Bind resolved values back into the Match for KRROOD construction
+  - Hydrate LLM JSON output into native PyCRAM Python objects (deserializer logic)
 """
 
 from __future__ import annotations
@@ -10,13 +13,20 @@ from __future__ import annotations
 import dataclasses
 import functools
 import logging
+import re
+import sys
 from dataclasses import MISSING, dataclass, field
-from typing import TYPE_CHECKING, Any, Optional
+from enum import Enum
+from typing import TYPE_CHECKING, Any, Dict, Optional, Type, Union, get_args, get_origin
 
 from krrood.class_diagrams.class_diagram import ClassDiagram
 from krrood.entity_query_language.query.match import Match
 from krrood.symbol_graph.symbol_graph import Symbol
-from krrood.utils import own_dataclass_fields, get_default_values_for_dataclass
+from krrood.utils import own_dataclass_fields, get_default_values_for_dataclass, is_builtin_type
+
+from pycram.view_manager import ViewManager
+
+from agentic_llmr.platform.world import find_body_by_name, get_active_world
 
 if TYPE_CHECKING:
     from krrood.class_diagrams.wrapped_field import WrappedField
@@ -27,7 +37,7 @@ _UNRESOLVED = object()
 _POSE_NAMES: frozenset[str] = frozenset({"Pose", "HomogeneousTransformationMatrix"})
 
 
-# ── Data structures ────────────────────────────────────────────────────────────
+# ── ActionParameter / ActionTemplate data structures ──────────────────────────
 
 
 @dataclass
@@ -119,7 +129,7 @@ def is_nested(wf: Optional["WrappedField"], field_type: Any) -> bool:
         return True
 
 
-# ── Public API ─────────────────────────────────────────────────────────────────
+# ── KRROOD Match snapshot ──────────────────────────────────────────────────────
 
 
 def snapshot_match(match: Any) -> ActionTemplate:
@@ -128,8 +138,6 @@ def snapshot_match(match: Any) -> ActionTemplate:
     Also discovers own dataclass fields with defaults that were not included in the
     Match — for both the top-level action class and nested dataclass types — and
     appends them as optional-default parameters so they appear in the LLM context.
-    Uses wf.field.default / wf.field.default_factory from the already-computed
-    wf_by_name; no extra imports or helpers needed.
     """
     action_cls = match.type
     try:
@@ -154,8 +162,6 @@ def snapshot_match(match: Any) -> ActionTemplate:
     ]
 
     # Required fields not captured in the Match at all — surface them as free parameters
-    # so _build_template_context can tell the LLM about them. _variable is None because
-    # there is no MappedVariable backing; construction injects them directly into kwargs.
     captured_attr_names = {p.attribute_name for p in parameters}
     for name in sorted(_required_field_names(action_cls) - captured_attr_names):
         wf = wf_by_name.get(name)
@@ -170,8 +176,7 @@ def snapshot_match(match: Any) -> ActionTemplate:
             wf=wf,
         ))
 
-    # Optional default parameters — use KRROOD's get_default_values_for_dataclass
-    # (returns all fields with defaults; we index only own fields via wf_by_name)
+    # Optional default parameters
     all_prompt_names = {p.prompt_name for p in parameters}
     _top_defaults = get_default_values_for_dataclass(action_cls)
 
@@ -242,7 +247,6 @@ def bind_parameter(param: ActionParameter, value: Any) -> bool:
         return False
 
 
-
 def underspecified_match(action_cls: type) -> Match:
     """Return Match(action_cls) with every required public field left free (...)."""
     match = Match(action_cls)
@@ -271,8 +275,7 @@ def missing_required_parameters(template: ActionTemplate) -> list[str]:
     return sorted(required & free_names)
 
 
-
-# ── Internal helpers ───────────────────────────────────────────────────────────
+# ── Internal helpers (action_match) ───────────────────────────────────────────
 
 
 @functools.lru_cache(maxsize=None)
@@ -312,14 +315,13 @@ def _read_variable(variable: Any) -> Any:
         value = vars(variable).get("_value_", _UNRESOLVED)
     except TypeError:
         value = getattr(variable, "_value_", _UNRESOLVED)
-    # Ellipsis is KRROOD's sentinel for a free (unbound) variable
     if value is not _UNRESOLVED and value is not ...:
         return value
     evaluate = getattr(variable, "evaluate", None)
     if callable(evaluate):
         try:
             value = next(iter(evaluate()))
-            if value is not ...:   # evaluate() also yields ... for free variables
+            if value is not ...:
                 variable._value_ = value
                 return value
         except Exception:
@@ -330,3 +332,142 @@ def _read_variable(variable: Any) -> Any:
 def _strip_root(name: str, action_cls: type) -> str:
     prefix = f"{action_cls.__name__}."
     return name[len(prefix):] if name.startswith(prefix) else name
+
+
+# ── Deserializer — JSON → native PyCRAM objects ───────────────────────────────
+
+
+def _is_body_type(t: Any) -> bool:
+    return "Body" in {cls.__name__ for cls in getattr(t, "__mro__", [])}
+
+
+def _is_manipulator_type(t: Any) -> bool:
+    return "Manipulator" in {cls.__name__ for cls in getattr(t, "__mro__", [])}
+
+
+def _is_body_instance(v: Any) -> bool:
+    return "Body" in {cls.__name__ for cls in type(v).__mro__}
+
+
+def _resolve_annotation(annotation: Any, owner_cls: type) -> Optional[type]:
+    """Resolve a string annotation to its actual type.
+
+    ``from __future__ import annotations`` stores all annotations as strings.
+    We resolve them against the owning class's module globals, then fall back
+    to sys.modules so that plain names resolve correctly.
+    Returns None if the annotation cannot be resolved (e.g. complex generics
+    like ``Optional[PlanNode]``).
+    """
+    if isinstance(annotation, type):
+        return annotation
+
+    if not isinstance(annotation, str):
+        return None
+
+    name = annotation.strip("'\"")
+
+    # Skip complex generics like Optional[X], Union[X, Y], List[X], etc.
+    if re.search(r"[\[\]|,]", name):
+        return None
+
+    module_globals = vars(sys.modules.get(owner_cls.__module__, object))
+    import builtins as _builtins
+    resolved = module_globals.get(name) or getattr(_builtins, name, None)
+    return resolved if isinstance(resolved, type) else None
+
+
+def hydrate_value(raw_type: Any, value: Any, context: Dict[str, Any], owner_cls: type) -> Any:
+    """Recursively hydrates a single value based on its target type annotation."""
+
+    target_type = _resolve_annotation(raw_type, owner_cls) if not isinstance(raw_type, type) else raw_type
+
+    # Handle Optional[X] / Union[X, None] on already-resolved typing generics
+    if target_type is None:
+        origin = get_origin(raw_type)
+        if origin is Union:
+            args = [a for a in get_args(raw_type) if a is not type(None)]
+            if args:
+                target_type = args[0] if isinstance(args[0], type) else None
+
+    if target_type is None:
+        return value
+
+    # Manipulator — auto-inject from context arm.
+    # This check MUST come before `value is None` because the dataclass hydration loop
+    # intentionally passes None as the sentinel value to trigger injection here.
+    if _is_manipulator_type(target_type):
+        arm = context.get("arm")
+        if arm is None:
+            raise ValueError("Cannot hydrate Manipulator: 'arm' was not provided in context.")
+        _, robot_view = get_active_world()
+        return ViewManager.get_end_effector_view(arm, robot_view)
+
+    if value is None:
+        return None
+
+    # Enum
+    if issubclass(target_type, Enum):
+        if isinstance(value, target_type):
+            return value
+        for member in target_type:
+            if member.name.upper() == str(value).upper():
+                return member
+        raise ValueError(f"'{value}' is not a valid member of Enum {target_type.__name__}.")
+
+    # Body — accept either a Body instance, a plain string name, or a dict with body_name key
+    if _is_body_type(target_type):
+        if _is_body_instance(value):
+            return value
+        if isinstance(value, dict):
+            name = value.get("body_name") or value.get("name") or str(value)
+        else:
+            name = str(value)
+        body = find_body_by_name(name)
+        if body is None:
+            raise ValueError(f"Body '{name}' not found in the active world.")
+        return body
+
+    # Dataclass (e.g. GraspDescription) — recurse
+    if dataclasses.is_dataclass(target_type) and isinstance(value, dict):
+        kwargs = {}
+        for f in dataclasses.fields(target_type):
+            if f.name in value:
+                kwargs[f.name] = hydrate_value(f.type, value[f.name], context, target_type)
+            elif _resolve_annotation(f.type, target_type) is not None:
+                resolved = _resolve_annotation(f.type, target_type)
+                if resolved is not None and isinstance(resolved, type) and _is_manipulator_type(resolved) and "arm" in context:
+                    kwargs[f.name] = hydrate_value(f.type, None, context, target_type)
+        return target_type(**kwargs)
+
+    # Scalar builtin — use KRROOD's is_builtin_type so the check isn't a hardcoded tuple
+    if is_builtin_type(target_type):
+        try:
+            return target_type(value)
+        except (TypeError, ValueError):
+            return value
+
+    return value
+
+
+def hydrate_action_kwargs(action_cls: Type, raw_kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    """Convert a dict of raw JSON arguments into native PyCRAM objects for action_cls."""
+    hydrated: Dict[str, Any] = {}
+    context: Dict[str, Any] = {}
+
+    # First pass: hydrate Enums so they populate context for nested objects
+    for f in dataclasses.fields(action_cls):
+        if f.name not in raw_kwargs:
+            continue
+        resolved = _resolve_annotation(f.type, action_cls)
+        if resolved is not None and issubclass(resolved, Enum):
+            hydrated_val = hydrate_value(f.type, raw_kwargs[f.name], {}, action_cls)
+            context[f.name] = hydrated_val
+            hydrated[f.name] = hydrated_val
+
+    # Second pass: hydrate everything else
+    for f in dataclasses.fields(action_cls):
+        if f.name not in raw_kwargs or f.name in hydrated:
+            continue
+        hydrated[f.name] = hydrate_value(f.type, raw_kwargs[f.name], context, action_cls)
+
+    return hydrated

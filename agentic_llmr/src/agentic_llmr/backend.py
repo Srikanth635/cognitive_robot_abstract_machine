@@ -13,13 +13,13 @@ from krrood.entity_query_language.backends import GenerativeBackend
 from krrood.entity_query_language.utils import T
 
 from agentic_llmr.core.orchestrator import ReActAgent
-from agentic_llmr.resolution.action_match import (
+from agentic_llmr.platform.type_bridge import (
     ActionTemplate,
     bind_parameter,
     snapshot_match,
+    hydrate_value,
 )
-from agentic_llmr.resolution.deserializer import hydrate_value
-from agentic_llmr.resolution.schema_docs import build_action_documentation
+from agentic_llmr.platform.actions import build_action_documentation
 
 if TYPE_CHECKING:
     from langchain_core.language_models import BaseChatModel
@@ -37,7 +37,7 @@ def _render_bound_value(val: Any) -> str:
     try:
         from krrood.symbol_graph.symbol_graph import Symbol
         if isinstance(val, Symbol):
-            from agentic_llmr.resolution.scene import symbol_display_name
+            from agentic_llmr.platform.world import symbol_display_name
             return f'"{symbol_display_name(val)}"  (body name in active world)'
     except Exception:
         pass
@@ -96,8 +96,7 @@ def _build_template_context(template: ActionTemplate) -> str:
 
 def _action_has_manipulator_field(action_cls: type) -> bool:
     """Return True if action_cls (or any of its nested dataclass fields) has a Manipulator-typed field."""
-    from agentic_llmr.resolution.deserializer import _is_manipulator_type
-    from agentic_llmr.resolution.deserializer import _resolve_annotation
+    from agentic_llmr.platform.type_bridge import _is_manipulator_type, _resolve_annotation
 
     def _scan(cls: type, seen: set) -> bool:
         if cls in seen or not dataclasses.is_dataclass(cls):

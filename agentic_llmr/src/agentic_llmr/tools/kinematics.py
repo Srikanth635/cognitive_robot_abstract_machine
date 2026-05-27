@@ -5,8 +5,8 @@ import concurrent.futures
 from typing import Any, Dict, List, Optional, Type
 from pydantic import BaseModel, Field
 from agentic_llmr.core.interfaces import AgenticTool
-from agentic_llmr.integrations.world_manager import get_active_world
-from agentic_llmr.resolution.scene import (
+from agentic_llmr.platform.world import (
+    get_active_world,
     compute_grasp_descriptions, get_bodies, get_arm_label,
     get_robot_base_body, symbol_display_name,
 )

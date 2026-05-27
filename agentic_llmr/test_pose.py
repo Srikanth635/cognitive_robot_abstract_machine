@@ -3,7 +3,7 @@ import os
 
 try:
     from uniworld import load_pr2_apartment_world
-    from agentic_llmr.integrations.world_manager import set_active_world
+    from agentic_llmr.platform.world import set_active_world
 except ImportError:
     print("Failed to import")
     sys.exit(1)

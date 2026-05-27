@@ -1,13 +1,73 @@
-"""Scene graph gateway — single access point for every SymbolGraph and SDT query in agentic_llmr."""
+"""World — runtime SDT world reference management and scene graph queries.
+
+Merged from: integrations/world_manager.py + resolution/scene.py
+
+Responsibilities:
+  - Hold and vend the active SDT world / robot_view references (set by the caller)
+  - Answer questions about the live scene: bodies, annotations, poses, relations
+  - Provide kinematics helpers used by tool modules
+
+Data access strategy:
+  - Bodies and semantic annotations are queried directly through the SDT World
+    instance (world.bodies, world.semantic_annotations, world.get_body_by_name).
+    The World is the authoritative per-world data store.
+  - Forward kinematics, collision geometry, and simulation are world-instance-only
+    operations with no KRROOD equivalent.
+  - KRROOD (ClassDiagram, Match, EQL) is used in platform/type_bridge.py for
+    PyCRAM type introspection and action parameterisation — not here.
+"""
 
 from __future__ import annotations
 
-from typing_extensions import Any, List, Optional, Set, Tuple
+from typing import Any, Callable, List, Optional, Tuple
 
 from krrood.symbol_graph.symbol_graph import SymbolGraph
 
-# Robot annotation class names used for MRO-based type discrimination throughout
-# the package. A single frozenset here avoids scattered string literals.
+
+# ── Active-world state ─────────────────────────────────────────────────────────
+
+_ACTIVE_WORLD: Any = None
+_ACTIVE_ROBOT_VIEW: Any = None
+
+# Callables registered by other modules via register_world_cache().
+# All are invoked by set_active_world() so stale caches never outlive a world switch.
+_WORLD_CACHE_CLEARERS: List[Callable[[], None]] = []
+
+
+def register_world_cache(clear_fn: Callable[[], None]) -> None:
+    """Register a cache-clear callable to be called on every set_active_world()."""
+    _WORLD_CACHE_CLEARERS.append(clear_fn)
+
+
+def set_active_world(world: Any, robot_view: Any) -> None:
+    """Store references to the active SDT world and robot view, then clear world caches."""
+    global _ACTIVE_WORLD, _ACTIVE_ROBOT_VIEW
+    _ACTIVE_WORLD = world
+    _ACTIVE_ROBOT_VIEW = robot_view
+    for clear_fn in _WORLD_CACHE_CLEARERS:
+        try:
+            clear_fn()
+        except Exception:
+            pass
+
+
+def get_active_world() -> Tuple[Any, Any]:
+    """Return (world, robot_view) for the active SDT world.
+
+    Raises:
+        RuntimeError: If no world has been initialised yet.
+    """
+    if _ACTIVE_WORLD is None:
+        raise RuntimeError(
+            "No active world is set. Call set_active_world() after loading the environment."
+        )
+    return _ACTIVE_WORLD, _ACTIVE_ROBOT_VIEW
+
+
+# ── Robot annotation class names ───────────────────────────────────────────────
+
+# Used for MRO-based type discrimination throughout the package.
+# A single frozenset here avoids scattered string literals.
 _SEMANTIC_ANNOTATION_TYPE_NAMES = frozenset(
     {
         "AbstractRobot",
@@ -25,19 +85,6 @@ _SEMANTIC_ANNOTATION_TYPE_NAMES = frozenset(
         "Finger",
     }
 )
-
-
-# ── Active-world helper ────────────────────────────────────────────────────────
-
-
-def _get_active_world_or_none() -> Optional[Any]:
-    """Return the current active SDT world, or None if unavailable."""
-    try:
-        from agentic_llmr.integrations.world_manager import get_active_world
-        world, _ = get_active_world()
-        return world
-    except Exception:
-        return None
 
 
 # ── Robot annotation predicate ─────────────────────────────────────────────────
@@ -75,75 +122,78 @@ def symbol_bounding_box(
     body: Any,
     reference_frame: Optional[Any] = None,
 ) -> Optional[Tuple[float, float, float]]:
-    """Return (depth, width, height) bounding box dims, or None if unavailable."""
+    """Return (x, y, z) bounding box extents from the body's collision mesh, or None if unavailable.
+
+    Uses body.combined_mesh.extents — pure trimesh computation in body-local frame.
+    No world access or FK required.
+    reference_frame is accepted for API compatibility but ignored; extents are always
+    in body-local frame, which is what all callers need (volume, half-extents for AABB tests).
+    """
     try:
-        ref = reference_frame if reference_frame is not None else body
-        dims = (
-            body.collision.as_bounding_box_collection_in_frame(ref)
-            .bounding_box()
-            .dimensions
-        )
-        return float(dims[0]), float(dims[1]), float(dims[2])
+        mesh = getattr(body, "combined_mesh", None)
+        if mesh is None:
+            return None
+        ex = mesh.extents  # trimesh: (x_extent, y_extent, z_extent) AABB in local frame
+        return float(ex[0]), float(ex[1]), float(ex[2])
     except Exception:
         return None
 
 
-# ── SymbolGraph entity discovery ───────────────────────────────────────────────
+# ── SymbolGraph entity access ──────────────────────────────────────────────────
+#
+# SymbolGraph is the primary source for entity enumeration and all property
+# queries (names, dimensions, annotation types, etc.).  SDT types are never
+# imported here — entities are discriminated by MRO class-name strings so the
+# module stays SDT-import-free at the top level.
+#
+# The SDT World instance is used only where the SymbolGraph has no answer:
+#   - forward kinematics  (world.compute_forward_kinematics_np)
+#   - simulation context  (world.modify_world, world.root)
+# ──────────────────────────────────────────────────────────────────────────────
 
 
-def get_annotations(symbol_graph: Optional[SymbolGraph] = None) -> List[Any]:
-    """Return semantic annotation instances from the SymbolGraph for the active world.
+def get_annotations() -> List[Any]:
+    """Return all SemanticAnnotation instances from the SymbolGraph.
 
-    Covers both environmental annotations (Milk, Table — have .bodies) and
-    robot-structural annotations (Arm, ParallelGripper — match
-    _SEMANTIC_ANNOTATION_TYPE_NAMES via MRO).
-
-    Filters by active world so stale entries from earlier kernel runs are excluded.
+    Covers environmental annotations (Milk, Table — have a .bodies attribute)
+    and robot-structural annotations (Arm, Gripper — MRO matches
+    _SEMANTIC_ANNOTATION_TYPE_NAMES).  Callers can filter with
+    _is_robot_annotation() to separate the two groups.
+    SDT types are not imported; discrimination is MRO-name-based.
     """
     try:
-        graph = symbol_graph or SymbolGraph()
+        graph = SymbolGraph()
     except Exception:
         return []
-    active_world = _get_active_world_or_none()
     result: List[Any] = []
-    seen: Set[int] = set()
+    seen: set = set()
     for wrapped in graph.wrapped_instances:
         inst = wrapped.instance
         if inst is None or id(inst) in seen:
             continue
         seen.add(id(inst))
-        if active_world is not None and getattr(inst, "_world", None) is not active_world:
-            continue
         mro_names = {cls.__name__ for cls in type(inst).__mro__}
         if hasattr(inst, "bodies") or (mro_names & _SEMANTIC_ANNOTATION_TYPE_NAMES):
             result.append(inst)
     return result
 
 
-def get_bodies(symbol_graph: Optional[SymbolGraph] = None) -> List[Any]:
-    """Return physical body (link) instances from the SymbolGraph for the active world.
+def get_bodies() -> List[Any]:
+    """Return all Body instances from the SymbolGraph.
 
-    Body subclasses KinematicStructureEntity → WorldEntity(Symbol), so Body IS a
-    Symbol subclass. We iterate wrapped_instances and discriminate by MRO name "Body"
-    for SDT-independence.
-
-    Filters by active world so stale SymbolGraph entries from prior world loads
-    in the same kernel session are excluded — prevents cross-world FK failures.
+    Discriminates by MRO class name "Body" — no SDT import needed.
     """
     try:
-        graph = symbol_graph or SymbolGraph()
+        graph = SymbolGraph()
     except Exception:
         return []
-    active_world = _get_active_world_or_none()
     result: List[Any] = []
-    seen: Set[int] = set()
+    seen: set = set()
     for wrapped in graph.wrapped_instances:
         inst = wrapped.instance
         if inst is None or id(inst) in seen:
             continue
         seen.add(id(inst))
-        if active_world is not None and getattr(inst, "_world", None) is not active_world:
-            continue
         if "Body" in {cls.__name__ for cls in type(inst).__mro__}:
             result.append(inst)
     return result
@@ -160,7 +210,7 @@ def compute_grasp_descriptions(
 ) -> Any:
     """Bridge function: construct SDT Pose internally and delegate to GraspDescription.
 
-    Callers pass plain Python tuples — no SDT spatial type imports needed outside bridge.
+    Callers pass plain Python tuples — no SDT spatial type imports needed outside this module.
     """
     from semantic_digital_twin.spatial_types.spatial_types import Pose, Point3, Quaternion
     from pycram.datastructures.grasp import GraspDescription
@@ -215,7 +265,12 @@ def get_arm_label(arm: Any, robot_view: Any) -> str:
 
 
 def find_body_by_name(name: str) -> Optional[Any]:
-    """Return the first Body in the active world whose display name matches *name*, or None."""
+    """Return the Body whose display name matches *name*, or None if not found.
+
+    Iterates the SymbolGraph-sourced body list and compares via symbol_display_name()
+    (which extracts the plain string from PrefixedName).  No SDT import or World
+    access needed — SymbolGraph is the authoritative source for entity lookup.
+    """
     for body in get_bodies():
         if symbol_display_name(body) == name:
             return body
