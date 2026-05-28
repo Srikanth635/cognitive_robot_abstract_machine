@@ -1,37 +1,48 @@
 """Planning Tools — PyCRAM action schema, documentation, and simulation."""
 
+import logging
 from typing import Any, Dict, List, Type
 from pydantic import BaseModel, Field
 from agentic_llmr.core.interfaces import AgenticTool
 from agentic_llmr.platform.actions import discover_action_classes, build_action_documentation
 
+logger = logging.getLogger(__name__)
+
 class ListActionsInput(BaseModel):
+    """Input schema for ListAvailableActionsTool (no parameters required)."""
+
     pass
 
 class ListAvailableActionsTool(AgenticTool):
+    """Return all registered PyCRAM action class names."""
+
     name: str = "list_available_actions"
     description: str = "Get a list of all available PyCRAM action classes."
     args_schema: Type[BaseModel] = ListActionsInput
 
     def _run(self) -> List[str]:
         try:
-            print("[PyCRAM Tool] Listing available actions dynamically...")
+            logger.debug("[PyCRAM Tool] Listing available actions dynamically...")
             actions = discover_action_classes()
             return list(actions.keys())
         except Exception as e:
             return [self._handle_error(e)]
 
 class ActionDocInput(BaseModel):
+    """Input schema for GetActionDocumentationTool."""
+
     action_name: str = Field(description="The exact name of the PyCRAM action class (e.g., 'PickUpAction').")
 
 class GetActionDocumentationTool(AgenticTool):
+    """Return the full parameter schema for a named PyCRAM action class."""
+
     name: str = "get_action_documentation"
     description: str = "Retrieve the documentation, required parameters, and constraints for a specific PyCRAM action class."
     args_schema: Type[BaseModel] = ActionDocInput
 
     def _run(self, action_name: str) -> str:
         try:
-            print(f"[PyCRAM Tool] Fetching documentation for: {action_name}")
+            logger.debug(f"[PyCRAM Tool] Fetching documentation for: {action_name}")
             
             actions = discover_action_classes()
             action_cls = actions.get(action_name)
@@ -52,17 +63,21 @@ class GetActionDocumentationTool(AgenticTool):
 from agentic_llmr.platform.world import get_active_world
 
 class SimulateActionInput(BaseModel):
+    """Input schema for SimulateActionTool."""
+
     action_type: str = Field(description="The type of action (e.g., 'PickUp', 'Place').")
     parameters: Dict[str, Any] = Field(description="Dictionary of parameters for the action.")
 
 class SimulateActionTool(AgenticTool):
+    """Execute a proposed action in the physics engine and report success or the exact error."""
+
     name: str = "simulate_action"
     description: str = "Simulate an action with the given parameters in the physics engine to verify success before executing in the real world."
     args_schema: Type[BaseModel] = SimulateActionInput
 
     def _run(self, action_type: str, parameters: Dict[str, Any]) -> str:
         try:
-            print(f"[Planning Tool] Simulating {action_type} with parameters: {parameters}")
+            logger.debug(f"[Planning Tool] Simulating {action_type} with parameters: {parameters}")
             actions = discover_action_classes()
             action_cls = actions.get(action_type)
             if not action_cls:

@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 from langchain_core.callbacks import BaseCallbackHandler
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Node model
@@ -23,6 +26,12 @@ _NODE_STYLES = {
 
 @dataclass
 class TraceNode:
+    """One node in the reasoning trace tree.
+
+    The root is always the Orchestrator; children are sub-agents or primitive tools.
+    Input/output summaries are truncated so the tree stays displayable.
+    """
+
     run_id: str
     name: str
     node_type: str          # "orchestrator" | "sub_agent" | "tool"
@@ -95,6 +104,7 @@ class TraceCollector(BaseCallbackHandler):
         parent_run_id: Optional[uuid.UUID] = None,
         **kwargs: Any,
     ) -> None:
+        """Track this run's parent so tool events can walk up to a known node."""
         self._track(run_id, parent_run_id)
 
     def on_llm_start(
@@ -106,6 +116,7 @@ class TraceCollector(BaseCallbackHandler):
         parent_run_id: Optional[uuid.UUID] = None,
         **kwargs: Any,
     ) -> None:
+        """Track LLM runs in the parent map for tool-parent resolution."""
         self._track(run_id, parent_run_id)
 
     # -- LangChain events: tool calls --
@@ -119,6 +130,7 @@ class TraceCollector(BaseCallbackHandler):
         parent_run_id: Optional[uuid.UUID] = None,
         **kwargs: Any,
     ) -> None:
+        """Create a TraceNode for this tool call and attach it to its parent."""
         self._track(run_id, parent_run_id)
         name = serialized.get("name") or kwargs.get("name", "unknown_tool")
         parent = self._parent_node(parent_run_id)
@@ -139,33 +151,20 @@ class TraceCollector(BaseCallbackHandler):
         run_id: uuid.UUID,
         **kwargs: Any,
     ) -> None:
+        """Record the tool's output summary on its existing TraceNode."""
         node = self._nodes.get(str(run_id))
         if node:
             node.output_summary = self._truncate(str(output), 200)
 
 
 # ---------------------------------------------------------------------------
-# Pyvis renderer
+# Pyvis renderer helpers
 # ---------------------------------------------------------------------------
 
-def render_trace(
-    collector: TraceCollector,
-    title: str = "Agent Reasoning Trace",
-    output_path: Optional[str] = None,
-    open_browser: bool = True,
-) -> None:
-    """Render the trace tree as an interactive pyvis graph.
 
-    If output_path is given, the HTML is saved to that file and opened in the
-    default browser (set open_browser=False to skip). Otherwise the graph is
-    displayed inline in a Jupyter notebook cell.
-    """
-    try:
-        from pyvis.network import Network
-    except ImportError as e:
-        print(f"render_trace requires pyvis: {e}")
-        return
-
+def _build_pyvis_network() -> Any:
+    """Construct and configure the pyvis Network with fixed layout and style settings."""
+    from pyvis.network import Network
     net = Network(
         height="520px",
         width="100%",
@@ -195,47 +194,89 @@ def render_trace(
       "interaction": { "hover": true, "tooltipDelay": 100 }
     }
     """)
+    return net
 
-    def _add_node(node: TraceNode) -> None:
-        style = _NODE_STYLES[node.node_type]
-        tooltip = (
-            f"<b>{node.name}</b><br>"
-            f"<b>In:</b> {node.input_summary or '—'}<br>"
-            f"<b>Out:</b> {node.output_summary or '—'}"
-        )
-        net.add_node(
-            node.run_id,
-            label=node.name,
-            title=tooltip,
-            color=style["color"],
-            shape=style["shape"],
-            font={"color": style["font_color"], "size": 13},
-            size=style["size"],
-        )
-        for child in node.children:
-            _add_node(child)
-            net.add_edge(node.run_id, child.run_id)
 
-    _add_node(collector.root)
+def _add_trace_node(net: Any, node: TraceNode) -> None:
+    """Recursively add a TraceNode and its children to the pyvis Network."""
+    style = _NODE_STYLES[node.node_type]
+    tooltip = (
+        f"<b>{node.name}</b><br>"
+        f"<b>In:</b> {node.input_summary or '—'}<br>"
+        f"<b>Out:</b> {node.output_summary or '—'}"
+    )
+    net.add_node(
+        node.run_id,
+        label=node.name,
+        title=tooltip,
+        color=style["color"],
+        shape=style["shape"],
+        font={"color": style["font_color"], "size": 13},
+        size=style["size"],
+    )
+    for child in node.children:
+        _add_trace_node(net, child)
+        net.add_edge(node.run_id, child.run_id)
 
+
+def _generate_trace_html(net: Any, title: str) -> str:
+    """Generate the pyvis HTML string and inject a title banner into the body."""
     html_str = net.generate_html(name="trace.html")
     banner = (
         f'<div style="font-family:monospace;color:#cba6f7;font-size:13px;'
         f'padding:6px 12px;background:#181825;">{title}</div>'
     )
-    html_str = html_str.replace("<body>", f"<body>{banner}", 1)
+    return html_str.replace("<body>", f"<body>{banner}", 1)
+
+
+def _write_html_to_file(html_str: str, output_path: str, open_browser: bool) -> None:
+    """Write rendered HTML to a file and optionally open it in the default browser."""
+    import os
+    import webbrowser
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write(html_str)
+    logger.info("Trace saved → %s", os.path.abspath(output_path))
+    if open_browser:
+        webbrowser.open(f"file://{os.path.abspath(output_path)}")
+
+
+def _display_html_inline(html_str: str) -> None:
+    """Display the HTML string inline in a Jupyter notebook cell."""
+    try:
+        from IPython.display import display, HTML
+        display(HTML(html_str))
+    except ImportError:
+        logger.warning("IPython not available — pass output_path to save as HTML file.")
+
+
+# ---------------------------------------------------------------------------
+# Pyvis renderer
+# ---------------------------------------------------------------------------
+
+
+def render_trace(
+    collector: TraceCollector,
+    title: str = "Agent Reasoning Trace",
+    output_path: Optional[str] = None,
+    open_browser: bool = True,
+) -> None:
+    """Render the trace tree as an interactive pyvis graph.
+
+    If output_path is given, the HTML is saved to that file and opened in the
+    default browser (set open_browser=False to skip). Otherwise the graph is
+    displayed inline in a Jupyter notebook cell.
+    """
+    try:
+        from pyvis.network import Network  # noqa: F401 — import guard only
+    except ImportError as e:
+        logger.warning("render_trace requires pyvis: %s", e)
+        return
+
+    net = _build_pyvis_network()
+    _add_trace_node(net, collector.root)
+    html_str = _generate_trace_html(net, title)
 
     if output_path is not None:
-        import os
-        import webbrowser
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write(html_str)
-        print(f"Trace saved → {os.path.abspath(output_path)}")
-        if open_browser:
-            webbrowser.open(f"file://{os.path.abspath(output_path)}")
+        _write_html_to_file(html_str, output_path, open_browser)
     else:
-        try:
-            from IPython.display import display, HTML
-            display(HTML(html_str))
-        except ImportError:
-            print("IPython not available — pass output_path to save as HTML file.")
+        _display_html_inline(html_str)

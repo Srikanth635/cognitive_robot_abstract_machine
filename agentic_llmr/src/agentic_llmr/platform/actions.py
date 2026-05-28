@@ -25,12 +25,22 @@ from typing import Any, Dict, List
 from krrood.class_diagrams.class_diagram import ClassDiagram
 from krrood.utils import own_dataclass_fields
 
+from agentic_llmr.platform.world import register_world_cache
+
 logger = logging.getLogger(__name__)
 
 
 # ── PyCRAM action class discovery ─────────────────────────────────────────────
 
 _ACTION_CACHE: Dict[str, type] | None = None
+
+
+def _clear_action_cache() -> None:
+    global _ACTION_CACHE
+    _ACTION_CACHE = None
+
+
+register_world_cache(_clear_action_cache)
 
 
 def discover_action_classes() -> Dict[str, type]:

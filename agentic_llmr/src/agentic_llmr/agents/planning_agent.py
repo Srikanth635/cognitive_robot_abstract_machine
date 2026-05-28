@@ -1,9 +1,14 @@
 """Planning Agent — specialist for action schema discovery and physics simulation."""
 
-from typing import Any
+import logging
+from typing import Any, Literal
 from langgraph.prebuilt import create_react_agent
+from langgraph.types import Command
+from langchain_core.messages import HumanMessage
 
-from agentic_llmr.core.interfaces import SubAgentTool
+from agentic_llmr.core.state import RobotAgentState
+
+logger = logging.getLogger(__name__)
 from agentic_llmr.tools.scratchpad import WriteScratchpadTool, ReadScratchpadTool
 from agentic_llmr.tools.planning import ListAvailableActionsTool, GetActionDocumentationTool
 from agentic_llmr.tools.planning import SimulateActionTool
@@ -42,23 +47,6 @@ Rules:
 """
 
 
-class PlanningAgentTool(SubAgentTool):
-    """Tool wrapper that lets the orchestrator call the PyCRAM sub-agent."""
-    name: str = "query_action_schema"
-    description: str = (
-        "Delegate to the PyCRAM specialist for action schema discovery or physics simulation. "
-        "Use for: (a) finding the correct PyCRAM action class and its parameter schema, or "
-        "(b) simulating a fully-specified action to validate it (only when explicitly requested). "
-        "Provide a natural language query for schema discovery, or a JSON action description for simulation."
-    )
-
-    def _run(self, query: str) -> str:
-        print(f"\n  ► [PyCRAM Agent] {query[:120]}")
-        result = super()._run(query)
-        print(f"  ◄ [PyCRAM Agent] Done.\n")
-        return result
-
-
 class PlanningAgent:
     """Action schema and simulation specialist."""
 
@@ -75,7 +63,32 @@ class PlanningAgent:
             model=self.llm,
             tools=self.tools,
             prompt=SYSTEM_PROMPT,
+            name="planning",
         )
 
-    def as_tool(self) -> PlanningAgentTool:
-        return PlanningAgentTool(agent=self._agent)
+
+def _build_query(state: RobotAgentState) -> str:
+    """Construct the task string from the original instruction and template context."""
+    ctx = state.get("template_context", "")
+    return f"Instruction: {state['instruction']}\nContext: {ctx}" if ctx else state["instruction"]
+
+
+def planning_node(
+    state: RobotAgentState,
+    agent: "PlanningAgent",
+) -> Command[Literal["supervisor"]]:
+    """LangGraph node: invoke the PyCRAM planning react agent."""
+    base_query = _build_query(state)
+    kin_ctx = ""
+    if state.get("kinematic_facts"):
+        facts_str = "\n".join(f"  {k}: {v}" for k, v in state["kinematic_facts"].items())
+        kin_ctx = f"\n\nKnown kinematic facts (do NOT re-query these):\n{facts_str}"
+    enriched = base_query + kin_ctx
+    logger.debug("  ► [PyCRAM Agent] %s", enriched[:120])
+    result = agent._agent.invoke({"messages": [HumanMessage(content=enriched)]})
+    last_msg = result["messages"][-1]
+    logger.debug("  ◄ [PyCRAM Agent] Done.")
+    return Command(
+        goto="supervisor",
+        update={"messages": [last_msg]},
+    )

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import logging
 import re
 from dataclasses import dataclass, field
 from enum import Enum
@@ -23,6 +24,8 @@ from agentic_llmr.platform.actions import build_action_documentation
 
 if TYPE_CHECKING:
     from langchain_core.language_models import BaseChatModel
+
+logger = logging.getLogger(__name__)
 
 
 # ── Context rendering ──────────────────────────────────────────────────────────
@@ -177,7 +180,7 @@ def _construct_via_krrood(
         try:
             hydrated = hydrate_value(param.field_type, raw, context, template.action_type)
         except Exception as exc:
-            print(f"[Backend] hydrate_value failed for '{param.prompt_name}': {exc}")
+            logger.warning("[Backend] hydrate_value failed for '%s': %s", param.prompt_name, exc)
             continue
 
         if param._variable is not None:
@@ -192,6 +195,58 @@ def _construct_via_krrood(
         expression.kwargs[name] = val
 
     return expression.construct_instance()
+
+
+# ── _evaluate helpers ──────────────────────────────────────────────────────────
+
+
+def _prepare_agent_inputs(
+    expression: Any,
+    instruction: Optional[str],
+) -> tuple:
+    """Route expression to either NL or KRROOD-Match path.
+
+    Returns (instruction_text, context_str, template) where template is None
+    for the NL path or when snapshot_match fails.
+    """
+    if isinstance(expression, str):
+        instruction_text = instruction or "Follow the instruction and output execution parameters."
+        return instruction_text, f"Raw Instruction: {expression}", None
+
+    instruction_text = instruction or "Resolve the free parameters for the provided action."
+    try:
+        template = snapshot_match(expression)
+        context_str = _build_template_context(template)
+        logger.debug(
+            "[AgenticLLMBackend] Action: %s | free: %s | bound: %s",
+            template.action_name, template.free_parameter_names, list(template.fixed_bindings)
+        )
+        return instruction_text, context_str, template
+    except Exception as exc:
+        action_class_name = getattr(expression.type, "__name__", str(expression.type))
+        logger.warning("[AgenticLLMBackend] snapshot_match failed (%s), falling back to class name only.", exc)
+        return instruction_text, f"Target Action Class: {action_class_name}", None
+
+
+def _try_krrood_construction(template: ActionTemplate, agent_result_str: str) -> tuple:
+    """Parse agent JSON and construct KRROOD instances from the template.
+
+    Returns (True, result) on success, (False, None) on failure.
+    Uses a tuple so a legitimate None return from construct_instance() is not
+    mistaken for a failure sentinel.
+    """
+    try:
+        payload = _parse_json_response(agent_result_str)
+        items = payload if isinstance(payload, list) else [payload]
+        instances = []
+        for item in items:
+            raw_params = item.get("parameters", item)
+            instances.append(_construct_via_krrood(template, raw_params))
+        result = instances if len(instances) > 1 else instances[0]
+        return True, result
+    except Exception as exc:
+        logger.warning("[AgenticLLMBackend] KRROOD construction failed (%s), falling back to hydrator.", exc)
+        return False, None
 
 
 # ── Backend ────────────────────────────────────────────────────────────────────
@@ -209,55 +264,27 @@ class AgenticLLMBackend(GenerativeBackend):
         self._agent = ReActAgent(llm=self.llm)
 
     def _evaluate(self, expression: Any) -> Iterable[T]:
-        print("[AgenticLLMBackend] Routing input to ReActAgent...")
+        logger.debug("[AgenticLLMBackend] Routing input to ReActAgent...")
 
-        if isinstance(expression, str):
-            # Raw NL instruction — no Match template available
-            instruction_text = self.instruction or "Follow the instruction and output execution parameters."
-            context_str = f"Raw Instruction: {expression}"
-            template = None
-        else:
-            # KRROOD Match — snapshot to extract bound/free parameters
-            instruction_text = self.instruction or "Resolve the free parameters for the provided action."
-            template = None
-            try:
-                template = snapshot_match(expression)
-                context_str = _build_template_context(template)
-                print(
-                    f"[AgenticLLMBackend] Action: {template.action_name} | "
-                    f"free: {template.free_parameter_names} | "
-                    f"bound: {list(template.fixed_bindings)}"
-                )
-            except Exception as exc:
-                action_class_name = getattr(expression.type, "__name__", str(expression.type))
-                context_str = f"Target Action Class: {action_class_name}"
-                print(f"[AgenticLLMBackend] snapshot_match failed ({exc}), falling back to class name only.")
-
+        instruction_text, context_str, template = _prepare_agent_inputs(
+            expression, self.instruction
+        )
         agent_result_str = self._agent.resolve_action(
             instruction=instruction_text,
             template_context=context_str,
         )
-        print("[AgenticLLMBackend] Agent finished. Constructing action instance...")
+        logger.debug("[AgenticLLMBackend] Agent finished. Constructing action instance...")
 
         if template is not None:
-            # Match path — use KRROOD-native construction
-            try:
-                payload = _parse_json_response(agent_result_str)
-                items = payload if isinstance(payload, list) else [payload]
-                instances = []
-                for item in items:
-                    raw_params = item.get("parameters", item)
-                    instances.append(_construct_via_krrood(template, raw_params))
-                result = instances if len(instances) > 1 else instances[0]
+            ok, result = _try_krrood_construction(template, agent_result_str)
+            if ok:
                 yield result
                 return
-            except Exception as exc:
-                print(f"[AgenticLLMBackend] KRROOD construction failed ({exc}), falling back to hydrator.")
 
         # Fallback / raw-string path — use hydrator-based construction
         try:
             action_instance = self._agent.parse_and_hydrate_action(agent_result_str)
             yield action_instance
         except Exception as e:
-            print(f"[AgenticLLMBackend] Error parsing agent response: {e}")
+            logger.warning("[AgenticLLMBackend] Error parsing agent response: %s", e)
             yield agent_result_str  # type: ignore

@@ -1,155 +1,83 @@
-"""Orchestrator — top-level ReAct agent that decomposes instructions and delegates to specialist sub-agents."""
+"""Orchestrator — LangGraph StateGraph supervisor that routes between specialist sub-agents."""
 
 import logging
 import json
 import re
 from typing import Any
+
 from langchain_core.messages import HumanMessage
-from langgraph.prebuilt import create_react_agent
+from langgraph.graph import StateGraph, START
 
 from agentic_llmr.core.interfaces import BaseCognitiveAgent
 from agentic_llmr.core.trace import TraceCollector
-from agentic_llmr.tools.scratchpad import WriteScratchpadTool, ReadScratchpadTool
-from agentic_llmr.agents import SceneQueryAgent, KinematicsAgent, PlanningAgent
+from agentic_llmr.core.state import RobotAgentState
+from agentic_llmr.core.supervisor import make_supervisor_node
+from agentic_llmr.agents import (
+    SceneQueryAgent, scene_query_node,
+    KinematicsAgent, kinematics_node,
+    PlanningAgent, planning_node,
+)
 
 logger = logging.getLogger(__name__)
 
-_SCRATCHPAD = "orchestrator_scratchpad.md"
-
-SYSTEM_PROMPT = """You are the Orchestrator Agent for a cognitive robot system.
-
-━━━ OUTPUT CONTRACT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Every response is exactly one of two things:
-
-  ANSWER      — plain text. Used when the instruction asks about the world,
-                asks for a recommendation, or asks the agent to reason about
-                what should be done. No JSON, no action schemas.
-
-  DESIGNATOR  — a fully-resolved JSON action designator with every parameter
-                filled in. Used when the instruction is a direct command for
-                the robot to act ("Pick up X", "Place X on Y", "Navigate to X").
-                The designator is handed to the user for execution — never
-                simulated here.
-
-Never produce a partial designator. Never simulate. Never ask the user for
-missing values — resolve everything from the tools before outputting.
-
-━━━ DECIDING WHICH OUTPUT TO PRODUCE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Ask: is the instruction a direct command for the robot to perform a physical action?
-
-  YES → produce a DESIGNATOR.  Follow the resolution pipeline below.
-  NO  → produce an ANSWER.     Gather whatever facts are needed from
-        query_scene_perception and query_kinematics, then reason over
-        them and return plain text. Do NOT call query_action_schema.
-
-━━━ RESOLUTION PIPELINE (DESIGNATOR path only) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Step 1 — Schema discovery
-  Call query_action_schema to identify the action class and the exact set of
-  parameters it requires. Use this only to learn the schema — do not simulate.
-
-Step 2 — Scene fact gathering
-  Call query_scene_perception to fill in object poses, surface positions,
-  spatial relations, dimensions, and any other world-state parameters the
-  schema requires.
-
-Step 3 — Kinematic resolution
-  Call query_kinematics with the real world-frame poses retrieved in Step 2.
-  a. Call check_kinematic_reachability to determine which arms can reach
-     the target. Never pass (0, 0, 0) — always use actual coordinates.
-  b. If both arms are Reachable, call compare_arm_suitability.
-     Build the nearby_obstacles list by asking query_scene_perception for
-     the nearest objects to the target (get_nearest_objects). Pass their
-     exact body_name strings — not descriptions or distances.
-     Pass [] if no nearby objects were found.
-     Use the arm recommended by the suitability score.
-  c. If the target is Unreachable for all arms, compute a floor-level
-     navigation goal (offset target xy by 0.6 m toward the robot, z = 0)
-     and prepend a NavigateAction to the designator.
-
-Step 4 — Assemble and output the designator
-  Fill every schema parameter from the facts gathered in Steps 2–3.
-  Output the completed JSON and nothing else after it.
-
-━━━ SUB-AGENT ROLES ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  query_scene_perception — scene facts: poses, surfaces, sizes, orientations,
-                           spatial relations, containment, accessibility
-  query_kinematics       — arm reachability, arm selection, grasp poses,
-                           robot and gripper state
-  query_action_schema    — action class schemas (DESIGNATOR path only,
-                           schema discovery only — never simulation)
-
-━━━ DESIGNATOR FORMAT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Single action:
-```json
-{"action_type": "PickUpAction", "parameters": { ... }}
-```
-Multi-step (navigate then act):
-```json
-[
-  {"action_type": "NavigateAction", "parameters": { ... }},
-  {"action_type": "PickUpAction",   "parameters": { ... }}
-]
-```
-"""
-
 
 class ReActAgent(BaseCognitiveAgent):
-    """Orchestrator that delegates perception, kinematics, schema, and execution to sub-agents."""
+    """Orchestrator — LangGraph StateGraph with supervisor routing across specialist sub-agents."""
 
     def __init__(self, llm: Any):
         self.llm = llm
 
-        # Build specialist sub-agents
-        self._scene_query_agent     = SceneQueryAgent(llm)
+        self._scene_agent = SceneQueryAgent(llm)
         self._kinematics_agent = KinematicsAgent(llm)
-        self._planning_agent  = PlanningAgent(llm)
+        self._planning_agent = PlanningAgent(llm)
 
-        # Orchestrator only holds sub-agent tools + its own scratchpad
-        self.tools = [
-            WriteScratchpadTool(scratchpad_path=_SCRATCHPAD),
-            ReadScratchpadTool(scratchpad_path=_SCRATCHPAD),
-            self._scene_query_agent.as_tool(),
-            self._kinematics_agent.as_tool(),
-            self._planning_agent.as_tool(),
-        ]
+        builder = StateGraph(RobotAgentState)
 
-        self.agent_executor = create_react_agent(
-            model=self.llm,
-            tools=self.tools,
-            prompt=SYSTEM_PROMPT,
+        builder.add_node("supervisor", make_supervisor_node(llm))
+        builder.add_node(
+            "scene_perception",
+            lambda s: scene_query_node(s, self._scene_agent),
         )
+        builder.add_node(
+            "kinematics",
+            lambda s: kinematics_node(s, self._kinematics_agent),
+        )
+        builder.add_node(
+            "planning",
+            lambda s: planning_node(s, self._planning_agent),
+        )
+
+        builder.add_edge(START, "supervisor")
+
+        self.agent_executor = builder.compile()
 
     def resolve_action(self, instruction: str, template_context: str = "") -> str:
-        prompt = (
-            f"Instruction: {instruction}\n"
-            f"Context: {template_context}\n\n"
-            "Please resolve this into executable parameters."
-        )
-        inputs = {"messages": [HumanMessage(content=prompt)]}
+        """Run the supervisor graph and return the final message content.
+
+        Initialises shared state with the instruction and empty fact dicts, then
+        invokes the compiled StateGraph. Returns the last assistant message as a string.
+        """
+        initial_state: RobotAgentState = {
+            "messages": [HumanMessage(content=(
+                f"Instruction: {instruction}\nContext: {template_context}"
+            ))],
+            "instruction": instruction,
+            "template_context": template_context,
+            "scene_facts": {},
+            "kinematic_facts": {},
+            "action_schema": {},
+        }
 
         collector = TraceCollector()
+        config = {"callbacks": [collector]}
 
-        print("\n--- [ORCHESTRATOR STARTED] ---")
-        final_message = None
-        for s in self.agent_executor.stream(
-            inputs, stream_mode="values", config={"callbacks": [collector]}
-        ):
-            message = s["messages"][-1]
-            if hasattr(message, "content") and message.content:
-                print(f"[Orchestrator]:\n{message.content}\n")
-            if hasattr(message, "tool_calls") and message.tool_calls:
-                for tc in message.tool_calls:
-                    print(f"[Delegate] → {tc['name']}({list(tc['args'].keys())})")
-            final_message = message
+        logger.debug("[ORCHESTRATOR STARTED]")
+        result = self.agent_executor.invoke(initial_state, config=config)
+        logger.debug("[ORCHESTRATOR FINISHED]")
 
         self.last_trace = collector
-        print("--- [ORCHESTRATOR FINISHED] ---\n")
-        return final_message.content if final_message else ""
+        final_messages = result.get("messages", [])
+        return final_messages[-1].content if final_messages else ""
 
     def parse_and_hydrate_action(self, agent_response: str) -> Any:
         """Parse the JSON from the agent's final response and return PyCRAM Action instance(s)."""
@@ -167,12 +95,11 @@ class ReActAgent(BaseCognitiveAgent):
 
         actions = discover_action_classes()
 
-        # Support both single action dict and list of actions
         items = payload if isinstance(payload, list) else [payload]
         instances = []
         for item in items:
             action_type = item.get("action_type")
-            parameters  = item.get("parameters", {})
+            parameters = item.get("parameters", {})
             if not action_type:
                 raise ValueError("JSON item missing 'action_type'.")
             action_cls = actions.get(action_type)

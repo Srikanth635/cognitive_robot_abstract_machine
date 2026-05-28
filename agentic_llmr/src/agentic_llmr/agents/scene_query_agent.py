@@ -1,9 +1,15 @@
 """Scene Query Agent — specialist for querying the semantic scene graph."""
 
-from typing import Any
+import json
+import logging
+from typing import Any, Dict, Literal
 from langgraph.prebuilt import create_react_agent
+from langgraph.types import Command
+from langchain_core.messages import HumanMessage
 
-from agentic_llmr.core.interfaces import SubAgentTool
+from agentic_llmr.core.state import RobotAgentState
+
+logger = logging.getLogger(__name__)
 from agentic_llmr.tools.scratchpad import WriteScratchpadTool, ReadScratchpadTool
 from agentic_llmr.tools.scene_query import (
     # Segment 1 — World Inventory & Taxonomy
@@ -183,26 +189,6 @@ over that data — not by calling additional tools.
 """
 
 
-class SceneQueryAgentTool(SubAgentTool):
-    """Tool wrapper that lets the orchestrator call the scene perception sub-agent."""
-    name: str = "query_scene_perception"
-    description: str = (
-        "Delegate perception queries to the scene perception specialist. "
-        "Use for ANY question about the current scene state: finding objects, 3D poses, "
-        "spatial relations, object sizes and orientation, surface contents, container contents, "
-        "articulated joint states, collision status, placement spots, object accessibility, "
-        "what is held by the robot, causal support relationships. "
-        "This is the ONLY agent for scene facts — do not call query_kinematics for object "
-        "positions or sizes."
-    )
-
-    def _run(self, query: str) -> str:
-        print(f"\n  ► [Scene Agent] {query}")
-        result = super()._run(query)
-        print(f"  ◄ [Scene Agent] Done.\n")
-        return result
-
-
 class SceneQueryAgent:
     """Scene perception specialist. Holds all scene query tools and its own scratchpad."""
 
@@ -252,7 +238,78 @@ class SceneQueryAgent:
             model=self.llm,
             tools=self.tools,
             prompt=SYSTEM_PROMPT,
+            name="scene_perception",
         )
 
-    def as_tool(self) -> SceneQueryAgentTool:
-        return SceneQueryAgentTool(agent=self._agent)
+
+def _extract_scene_facts(messages: list) -> Dict[str, Any]:
+    """Parse ToolMessage results from the scene agent into a structured fact dict.
+
+    Builds an AIMessage tool-call lookup (call_id → name + args), then matches
+    each ToolMessage by call_id and stores the parsed result under a semantic key.
+    """
+    tool_calls_by_id: Dict[str, tuple] = {}
+    for msg in messages:
+        if hasattr(msg, "tool_calls") and msg.tool_calls:
+            for tc in msg.tool_calls:
+                tool_calls_by_id[tc["id"]] = (tc["name"], tc["args"])
+
+    facts: Dict[str, Any] = {}
+    for msg in messages:
+        call_id = getattr(msg, "tool_call_id", None)
+        if call_id is None or call_id not in tool_calls_by_id:
+            continue
+        tool_name, tool_args = tool_calls_by_id[call_id]
+        try:
+            content = json.loads(msg.content) if isinstance(msg.content, str) else msg.content
+        except (json.JSONDecodeError, TypeError):
+            content = msg.content
+
+        if tool_name == "get_object_pose":
+            body = tool_args.get("body_name", "unknown")
+            facts.setdefault(body, {})["pose"] = content
+        elif tool_name == "find_objects_by_type":
+            type_name = tool_args.get("type_name", "unknown")
+            facts[f"type:{type_name}"] = {"matches": content}
+        elif tool_name == "get_object_dimensions":
+            body = tool_args.get("body_name", "unknown")
+            facts.setdefault(body, {})["dimensions"] = content
+        elif tool_name == "get_object_orientation":
+            body = tool_args.get("body_name", "unknown")
+            facts.setdefault(body, {})["orientation"] = content
+        elif tool_name == "get_nearest_objects":
+            ref = tool_args.get("reference_body_name", "scene")
+            facts[f"nearest_to:{ref}"] = content
+        elif tool_name == "get_objects_on_surface":
+            surface = tool_args.get("surface_name", "surface")
+            facts[f"on_surface:{surface}"] = content
+        elif tool_name == "get_object_color":
+            body = tool_args.get("body_name", "unknown")
+            facts.setdefault(body, {})["color"] = content
+        elif tool_name == "list_all_objects":
+            facts["scene:all_objects"] = content
+
+    return facts
+
+
+def _build_query(state: RobotAgentState) -> str:
+    """Construct the task string from the original instruction and template context."""
+    ctx = state.get("template_context", "")
+    return f"Instruction: {state['instruction']}\nContext: {ctx}" if ctx else state["instruction"]
+
+
+def scene_query_node(
+    state: RobotAgentState,
+    agent: "SceneQueryAgent",
+) -> Command[Literal["supervisor"]]:
+    """LangGraph node: invoke the scene perception react agent and forward its response."""
+    query = _build_query(state)
+    logger.debug("  ► [Scene Agent] %s", query[:120])
+    result = agent._agent.invoke({"messages": [HumanMessage(content=query)]})
+    last_msg = result["messages"][-1]
+    scene_facts = _extract_scene_facts(result["messages"])
+    logger.debug("  ◄ [Scene Agent] Done. Extracted %d scene fact entries.", len(scene_facts))
+    return Command(
+        goto="supervisor",
+        update={"messages": [last_msg], "scene_facts": scene_facts},
+    )
