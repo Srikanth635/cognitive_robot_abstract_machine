@@ -8,6 +8,17 @@ import numpy as np
 from typing import Any, Dict, List, Optional, Tuple, Type
 from pydantic import BaseModel, Field
 from agentic_llmr.core.interfaces import AgenticTool
+from agentic_llmr.tools.artifacts import (
+    SceneObjectsArtifact, SemanticAnnotationsArtifact, FindObjectsArtifact,
+    ObjectTypeArtifact, ClassifyByRoleArtifact, PoseArtifact, DimensionsArtifact,
+    OrientationArtifact, ColorArtifact, SpatialRelationArtifact,
+    NearestObjectsArtifact, ObjectsOnSurfaceArtifact, SortBySizeArtifact,
+    ArticulatedJointsArtifact, ContainedItemsArtifact,
+    JointStatesArtifact, RobotPoseArtifact, EndEffectorPoseArtifact,
+    GripperStateArtifact, HeldObjectArtifact, SceneCollisionsArtifact,
+    FreeSpotsArtifact, WouldCollideArtifact, IsAccessibleArtifact,
+    SupportingObjectArtifact, SupportedByArtifact,
+)
 from agentic_llmr.platform.world import (
     get_active_world, register_world_cache,
     _is_robot_annotation, sort_by_volume, get_annotations, get_bodies,
@@ -22,11 +33,9 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 def _extract_body_name(body: Any) -> str:
-    """Return the display name of a body, falling back to a unique id-based string."""
     return symbol_display_name(body) or f"body_{id(body)}"
 
 def _extract_semantic_types(body: Any) -> List[str]:
-    """Extract all semantic annotation class names for a Body via SymbolGraph."""
     body_id = id(body)
     types = []
     for ann in get_annotations():
@@ -38,10 +47,6 @@ def _extract_semantic_types(body: Any) -> List[str]:
     return types
 
 def _get_body_position(body: Any) -> Optional[Tuple[float, float, float]]:
-    """Return the (x, y, z) world-frame origin of a body via body.global_pose.
-
-    No world parameter needed — the body carries its own _world back-reference.
-    """
     try:
         pose = body.global_pose
         return float(pose.x), float(pose.y), float(pose.z)
@@ -49,11 +54,6 @@ def _get_body_position(body: Any) -> Optional[Tuple[float, float, float]]:
         return None
 
 def _extract_body_pose(body: Any) -> Dict[str, Any]:
-    """Extract the world-frame position and orientation of a body via body.global_pose.
-
-    Uses body.global_pose (position: pose.x/y/z) and pose.to_quaternion() for orientation.
-    No world parameter or scipy required.
-    """
     try:
         pose = body.global_pose
         quat = pose.to_quaternion()
@@ -66,7 +66,6 @@ def _extract_body_pose(body: Any) -> Dict[str, Any]:
 
 @functools.lru_cache(maxsize=1)
 def _build_robot_type_names() -> frozenset:
-    """Return frozenset of all robot annotation class names via SymbolGraph."""
     names: set = set()
     for ann in get_annotations():
         if _is_robot_annotation(ann):
@@ -85,11 +84,6 @@ def _find_annotation_by_query(
     *,
     require_attr: Optional[str] = None,
 ) -> Optional[Any]:
-    """Find an annotation by semantic type name or body display name.
-
-    Two-pass lookup: class-name substring match first, body-name exact match second.
-    If require_attr is given, only annotations that have that attribute are considered.
-    """
     def _eligible(ann: Any) -> bool:
         return require_attr is None or hasattr(ann, require_attr)
 
@@ -105,7 +99,6 @@ def _find_annotation_by_query(
 
 
 def _resolve_annotation_root(ann: Any) -> Optional[Any]:
-    """Return the root body of an annotation: tries .root first, then bodies[0]."""
     root = getattr(ann, "root", None)
     if root is not None:
         return root
@@ -117,7 +110,6 @@ def _fmt_pos(
     pos: Optional[Tuple[float, float, float]],
     fallback: str = "unknown",
 ) -> str:
-    """Format a (x, y, z) position tuple as '(x.xxx, y.yyy, z.zzz)', or return fallback if None."""
     if pos is None:
         return fallback
     return f"({pos[0]:.3f}, {pos[1]:.3f}, {pos[2]:.3f})"
@@ -128,8 +120,6 @@ def _fmt_pos(
 # ---------------------------------------------------------------------------
 
 class SceneQueryInput(BaseModel):
-    """Input schema for GetSceneObjectsTool (no parameters required)."""
-
     pass
 
 
@@ -138,15 +128,15 @@ class GetSceneObjectsTool(AgenticTool):
 
     name: str = "list_all_objects"
     description: str = (
-        "Primary scene inventory primitive — returns every task-relevant object in the scene "
+        "Scene inventory — returns every task-relevant object in the scene "
         "as a table of body_name, semantic type(s), and 3D position. "
-        "Call this first for any scene overview before using more specific queries. "
+        "A broad starting point when you need an overview of what is present. "
         "Robot structural parts (arms, grippers, base links) are filtered out automatically. "
-        "Use the returned body_name values as input to all other tools that require an exact object identifier."
+        "The returned body_name values are the identifiers other tools expect."
     )
     args_schema: Type[BaseModel] = SceneQueryInput
 
-    def _run(self) -> str:
+    def _run(self):
         try:
             logger.debug("[SDT Tool] Querying native semantic scene graph...")
             _, robot_view = get_active_world()
@@ -154,7 +144,6 @@ class GetSceneObjectsTool(AgenticTool):
             annotations = get_annotations()
             robot_type_names = _build_robot_type_names()
 
-            # Collect body IDs that belong to at least one annotation
             annotated_ids = set()
             for ann in annotations:
                 for b in getattr(ann, "bodies", []):
@@ -165,6 +154,7 @@ class GetSceneObjectsTool(AgenticTool):
                 "| --- | --- | --- |"
             ]
 
+            objects = []
             found = 0
             for body in get_bodies():
                 if id(body) not in annotated_ids:
@@ -178,6 +168,7 @@ class GetSceneObjectsTool(AgenticTool):
                 pos = _get_body_position(body)
                 xyz = _fmt_pos(pos, fallback="-")
                 lines.append(f"| {name} | {types_str} | {xyz} |")
+                objects.append({"body_name": name, "types": types_str, "position": xyz})
                 found += 1
 
             robot_base = get_robot_base_body(robot_view)
@@ -186,6 +177,7 @@ class GetSceneObjectsTool(AgenticTool):
                 rpos = _get_body_position(robot_base)
                 rxyz = _fmt_pos(rpos, fallback="-")
                 lines.append(f"| {rname} | Robot | {rxyz} |")
+                objects.append({"body_name": rname, "types": "Robot", "position": rxyz})
 
             if found == 0:
                 lines = ["| annotation | root_body | xyz_position |", "| --- | --- | --- |"]
@@ -195,19 +187,20 @@ class GetSceneObjectsTool(AgenticTool):
                     pos = _get_body_position(root) if root else None
                     xyz = _fmt_pos(pos, fallback="-")
                     lines.append(f"| {ann.__class__.__name__} | {rname} | {xyz} |")
+                    objects.append({"body_name": rname, "types": ann.__class__.__name__, "position": xyz})
 
-            return "\n".join(lines)
+            artifact = SceneObjectsArtifact(objects=objects)
+            return "\n".join(lines), artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
+
 
 # ---------------------------------------------------------------------------
 # Tool: GetSemanticAnnotations
 # ---------------------------------------------------------------------------
 
 class SemanticAnnotationsInput(BaseModel):
-    """Input schema for GetSemanticAnnotationsTool (no parameters required)."""
-
     pass
 
 
@@ -224,7 +217,7 @@ class GetSemanticAnnotationsTool(AgenticTool):
     )
     args_schema: Type[BaseModel] = SemanticAnnotationsInput
 
-    def _run(self) -> str:
+    def _run(self):
         try:
             logger.debug("[SDT Tool] Listing semantic annotations...")
 
@@ -242,7 +235,7 @@ class GetSemanticAnnotationsTool(AgenticTool):
                     pass
 
             if not summary:
-                return "No semantic annotations found in the world."
+                return "No semantic annotations found in the world.", None
 
             robot_type_names = _build_robot_type_names()
             lines = ["Active Semantic Annotations:"]
@@ -255,18 +248,18 @@ class GetSemanticAnnotationsTool(AgenticTool):
                     bnames_str = ", ".join(bnames) if bnames else "(no direct bodies)"
                     lines.append(f"- {cls_name}: {bnames_str}")
 
-            return "\n".join(lines)
+            artifact = SemanticAnnotationsArtifact(annotations=summary)
+            return "\n".join(lines), artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
+
 
 # ---------------------------------------------------------------------------
 # Tool: FindObjectsByType
 # ---------------------------------------------------------------------------
 
 class FindObjectsByTypeInput(BaseModel):
-    """Input schema for FindObjectsByTypeTool."""
-
     semantic_type: str = Field(
         description="Semantic class name to search for (e.g., 'Table', 'Milk', 'Cup'). Case-insensitive partial match."
     )
@@ -279,17 +272,18 @@ class FindObjectsByTypeTool(AgenticTool):
     description: str = (
         "Resolves a semantic type name to all matching objects with their exact body names and world-frame positions. "
         "Case-insensitive partial match — 'milk' matches 'Milk', 'FreshMilk', etc. "
-        "Always call this to convert a semantic name (e.g. 'Milk') into the body_name(s) required by all other tools. "
-        "If no match is found, call list_object_types to discover the correct type name."
+        "This is how a semantic name (e.g. 'Milk') becomes the exact body_name(s) other tools require. "
+        "When no match is found, list_object_types reveals the valid type names."
     )
     args_schema: Type[BaseModel] = FindObjectsByTypeInput
 
-    def _run(self, semantic_type: str) -> str:
+    def _run(self, semantic_type: str):
         try:
             logger.debug(f"[SDT Tool] Searching for semantic type: {semantic_type}")
             query = semantic_type.strip().lower()
 
             matches = []
+            artifact_matches = []
             for ann in get_annotations():
                 cls_name = ann.__class__.__name__
                 if query not in cls_name.lower():
@@ -300,31 +294,34 @@ class FindObjectsByTypeTool(AgenticTool):
                     pos = _get_body_position(body)
                     pos_str = _fmt_pos(pos)
                     body_entries.append(f"body_name='{bname}'  pos={pos_str}")
+                    pos_dict = {"x": pos[0], "y": pos[1], "z": pos[2]} if pos else {}
+                    artifact_matches.append({"cls_name": cls_name, "body_name": bname, "position": pos_dict})
                 matches.append((cls_name, body_entries))
 
             if not matches:
                 return (
                     f"No objects matching type '{semantic_type}' found. "
                     "Use list_semantic_annotations to see all available types."
-                )
+                ), None
 
             lines = [f"Found {len(matches)} annotation(s) matching '{semantic_type}':"]
             for cls_name, body_entries in matches:
                 lines.append(f"  [{cls_name}]")
                 for entry in body_entries:
                     lines.append(f"    {entry}")
-            return "\n".join(lines)
+
+            artifact = FindObjectsArtifact(type_name=semantic_type, matches=artifact_matches)
+            return "\n".join(lines), artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
+
 
 # ---------------------------------------------------------------------------
 # Tool: GetObjectType
 # ---------------------------------------------------------------------------
 
 class ObjectTypeInput(BaseModel):
-    """Input schema for GetObjectTypeTool."""
-
     object_name: str = Field(description="The exact body_name of the object (e.g., 'milk.stl').")
 
 
@@ -342,13 +339,13 @@ class GetObjectTypeTool(AgenticTool):
     )
     args_schema: Type[BaseModel] = ObjectTypeInput
 
-    def _run(self, object_name: str) -> str:
+    def _run(self, object_name: str):
         try:
             logger.debug(f"[SDT Tool] Getting semantic type for: {object_name}")
 
             target_body = find_body_by_name(object_name)
             if target_body is None:
-                return f"Object '{object_name}' not found. Use list_all_objects to see valid body names."
+                return f"Object '{object_name}' not found. Use list_all_objects to see valid body names.", None
 
             target_id = id(target_body)
             matched = []
@@ -360,28 +357,31 @@ class GetObjectTypeTool(AgenticTool):
                             cls.__name__ for cls in type(ann).__mro__
                             if cls is not object
                         ]
-                        matched.append((direct_type, " → ".join(hierarchy)))
+                        matched.append((direct_type, " → ".join(hierarchy), hierarchy))
                         break
 
             if not matched:
-                return f"No semantic annotation found for '{object_name}'."
+                return f"No semantic annotation found for '{object_name}'.", None
 
             lines = [f"Object '{object_name}':"]
-            for direct_type, hierarchy_str in matched:
+            all_hierarchies = []
+            for direct_type, hierarchy_str, hierarchy in matched:
                 lines.append(f"  Semantic type:   {direct_type}")
                 lines.append(f"  Type hierarchy:  {hierarchy_str}")
-            return "\n".join(lines)
+                all_hierarchies.extend(hierarchy)
+
+            artifact = ObjectTypeArtifact(body_name=object_name, type_hierarchy=list(dict.fromkeys(all_hierarchies)))
+            return "\n".join(lines), artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
+
 
 # ---------------------------------------------------------------------------
 # Tool: ClassifyObjectsByRole
 # ---------------------------------------------------------------------------
 
 class ClassifyByRoleInput(BaseModel):
-    """Input schema for ClassifyObjectsByRoleTool (no parameters required)."""
-
     pass
 
 
@@ -395,12 +395,12 @@ class ClassifyObjectsByRoleTool(AgenticTool):
         "articulated (objects with controllable joints, e.g. Fridge, Drawer, Door), "
         "object (movable items, containers, tools — everything else), "
         "agent (the robot and its structural parts). "
-        "Use this as a structural map of the scene before planning multi-step tasks. "
-        "It tells you what can be opened, what can be placed on, and what can be picked up."
+        "A structural map of the scene: what can be opened, what can be placed on, "
+        "and what can be picked up."
     )
     args_schema: Type[BaseModel] = ClassifyByRoleInput
 
-    def _run(self) -> str:
+    def _run(self):
         try:
             logger.debug("[SDT Tool] Classifying scene objects by role...")
             _, robot_view = get_active_world()
@@ -410,19 +410,23 @@ class ClassifyObjectsByRoleTool(AgenticTool):
             objects = []
             agent_entries = []
 
+            art_artifact = []
+            surf_artifact = []
+            obj_artifact = []
+            agent_artifact = []
+
             for ann in get_annotations():
-                # Agent (robot structural parts) — highest priority
                 if _is_robot_annotation(ann):
                     root = getattr(ann, "root", None)
                     rname = _extract_body_name(root) if root else "-"
                     agent_entries.append((ann.__class__.__name__, rname))
+                    agent_artifact.append({"cls_name": ann.__class__.__name__, "body_name": rname})
                     continue
 
                 cls_name = ann.__class__.__name__
                 body_names = [_extract_body_name(b) for b in getattr(ann, "bodies", [])]
                 primary_name = body_names[0] if body_names else "-"
 
-                # Compute position of root or first body
                 pos = None
                 root = getattr(ann, "root", None)
                 ref_body = root if root is not None else (
@@ -432,12 +436,11 @@ class ClassifyObjectsByRoleTool(AgenticTool):
                     pos = _get_body_position(ref_body)
                 pos_str = _fmt_pos(pos)
 
-                # Surface: has supporting_surface attribute
                 if hasattr(ann, "supporting_surface"):
                     surfaces.append((cls_name, primary_name, pos_str))
+                    surf_artifact.append({"cls_name": cls_name, "body_name": primary_name, "position": pos_str})
                     continue
 
-                # Articulated: any body has a controlled parent_connection
                 is_articulated = False
                 for b in getattr(ann, "bodies", []):
                     conn = getattr(b, "parent_connection", None)
@@ -446,10 +449,11 @@ class ClassifyObjectsByRoleTool(AgenticTool):
                         break
                 if is_articulated:
                     articulateds.append((cls_name, primary_name, pos_str))
+                    art_artifact.append({"cls_name": cls_name, "body_name": primary_name, "position": pos_str})
                     continue
 
-                # Everything else is a movable object
                 objects.append((cls_name, primary_name, pos_str))
+                obj_artifact.append({"cls_name": cls_name, "body_name": primary_name, "position": pos_str})
 
             lines = ["Scene object roles:"]
 
@@ -474,24 +478,25 @@ class ClassifyObjectsByRoleTool(AgenticTool):
                     lines.append(f"  [{cls_name}]  root={rname}")
 
             if len(lines) == 1:
-                return "No objects found in the current scene."
+                return "No objects found in the current scene.", None
 
-            return "\n".join(lines)
+            artifact = ClassifyByRoleArtifact(
+                surfaces=surf_artifact,
+                articulated=art_artifact,
+                objects=obj_artifact,
+                agent=agent_artifact,
+            )
+            return "\n".join(lines), artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
+
 
 # ---------------------------------------------------------------------------
 # Segment 2 — Geometric & Spatial Properties
 # ---------------------------------------------------------------------------
 
-# ---------------------------------------------------------------------------
-# Tool: GetObjectPose
-# ---------------------------------------------------------------------------
-
 class ObjectPoseInput(BaseModel):
-    """Input schema for GetObjectPoseTool."""
-
     object_name: str = Field(description="The exact body_name of the object (e.g., 'milk.stl').")
 
 class GetObjectPoseTool(AgenticTool):
@@ -501,16 +506,26 @@ class GetObjectPoseTool(AgenticTool):
     description: str = "Get the 3D pose (position and orientation) of a specific object by its exact body_name."
     args_schema: Type[BaseModel] = ObjectPoseInput
 
-    def _run(self, object_name: str) -> Dict[str, Any]:
+    def _run(self, object_name: str):
         try:
             logger.debug(f"[SDT Tool] Getting pose for: {object_name}")
             target_body = find_body_by_name(object_name)
             if target_body is None:
-                return {"error": f"Object '{object_name}' not found in the semantic digital twin."}
-            return _extract_body_pose(target_body)
+                return f"Object '{object_name}' not found in the semantic digital twin.", None
+            pose = _extract_body_pose(target_body)
+            if "error" in pose:
+                return f"Error getting pose for '{object_name}': {pose['error']}", None
+            pos = pose["position"]
+            ori = pose["orientation"]
+            artifact = PoseArtifact(body_name=object_name, position=pos, orientation=ori)
+            content = (
+                f"Pose of '{object_name}':\n"
+                f"  position: ({pos['x']:.3f}, {pos['y']:.3f}, {pos['z']:.3f})\n"
+                f"  orientation (xyzw): ({ori['x']:.3f}, {ori['y']:.3f}, {ori['z']:.3f}, {ori['w']:.3f})"
+            )
+            return content, artifact
         except Exception as e:
-            return self._handle_error(e)
-
+            return self._handle_error(e), None
 
 
 # ---------------------------------------------------------------------------
@@ -518,8 +533,6 @@ class GetObjectPoseTool(AgenticTool):
 # ---------------------------------------------------------------------------
 
 class ObjectDimensionsInput(BaseModel):
-    """Input schema for GetObjectDimensionsTool."""
-
     object_name: str = Field(description="The exact body_name of the object (e.g., 'milk.stl').")
 
 class GetObjectDimensionsTool(AgenticTool):
@@ -533,63 +546,74 @@ class GetObjectDimensionsTool(AgenticTool):
     )
     args_schema: Type[BaseModel] = ObjectDimensionsInput
 
-    def _run(self, object_name: str) -> Dict[str, Any]:
+    def _run(self, object_name: str):
         try:
             logger.debug(f"[SDT Tool] Getting dimensions for: {object_name}")
 
             target_body = find_body_by_name(object_name)
             if target_body is None:
-                return {"error": f"Object '{object_name}' not found."}
+                return f"Object '{object_name}' not found.", None
 
-            result: Dict[str, Any] = {"body_name": object_name}
+            bb_m = {}
+            volume_m3 = None
+            com = None
 
-            # Bounding box — from combined collision mesh (body-local frame, no world needed).
-            # combined_mesh.extents is a pure trimesh AABB computation with no FK.
             try:
                 mesh = getattr(target_body, "combined_mesh", None)
                 if mesh is not None:
-                    ex = mesh.extents  # (x, y, z) extents in body-local frame
-                    result["bounding_box_m"] = {
+                    ex = mesh.extents
+                    bb_m = {
                         "width":  round(float(ex[0]), 4),
                         "depth":  round(float(ex[1]), 4),
                         "height": round(float(ex[2]), 4),
                     }
-                    result["volume_m3"] = round(float(ex[0]) * float(ex[1]) * float(ex[2]), 6)
+                    volume_m3 = round(float(ex[0]) * float(ex[1]) * float(ex[2]), 6)
                 else:
-                    result["bounding_box_m"] = {"error": "No collision mesh available."}
+                    bb_m = {"error": "No collision mesh available."}
             except Exception:
-                result["bounding_box_m"] = {"error": "Could not compute bounding box."}
+                bb_m = {"error": "Could not compute bounding box."}
 
-            # Centre of mass via body property (uses self._world internally — no explicit world param).
             try:
-                com = target_body.center_of_mass
-                result["center_of_mass"] = {
-                    "x": round(float(com.x), 4),
-                    "y": round(float(com.y), 4),
-                    "z": round(float(com.z), 4),
+                com_obj = target_body.center_of_mass
+                com = {
+                    "x": round(float(com_obj.x), 4),
+                    "y": round(float(com_obj.y), 4),
+                    "z": round(float(com_obj.z), 4),
                 }
             except Exception:
                 pos = _get_body_position(target_body)
                 if pos:
-                    result["center_of_mass"] = {
-                        "x": round(pos[0], 4), "y": round(pos[1], 4), "z": round(pos[2], 4),
-                        "note": "origin fallback (no mesh COM)",
-                    }
-                else:
-                    result["center_of_mass"] = {"error": "Could not compute COM."}
+                    com = {"x": round(pos[0], 4), "y": round(pos[1], 4), "z": round(pos[2], 4),
+                           "note": "origin fallback (no mesh COM)"}
 
-            return result
+            artifact = DimensionsArtifact(
+                body_name=object_name,
+                bounding_box_m=bb_m,
+                volume_m3=volume_m3,
+                center_of_mass=com,
+            )
+
+            lines = [f"Dimensions of '{object_name}':"]
+            if "error" not in bb_m:
+                lines.append(f"  bounding_box_m: width={bb_m.get('width')}, depth={bb_m.get('depth')}, height={bb_m.get('height')}")
+            else:
+                lines.append(f"  bounding_box_m: {bb_m['error']}")
+            if volume_m3 is not None:
+                lines.append(f"  volume_m3: {volume_m3}")
+            if com:
+                lines.append(f"  center_of_mass: {com}")
+
+            return "\n".join(lines), artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
+
 
 # ---------------------------------------------------------------------------
 # Tool: GetObjectOrientation
 # ---------------------------------------------------------------------------
 
 class ObjectOrientationInput(BaseModel):
-    """Input schema for GetObjectOrientationTool."""
-
     object_name: str = Field(description="The exact body_name of the object to analyse.")
 
 class GetObjectOrientationTool(AgenticTool):
@@ -603,18 +627,17 @@ class GetObjectOrientationTool(AgenticTool):
     )
     args_schema: Type[BaseModel] = ObjectOrientationInput
 
-    def _run(self, object_name: str) -> str:
+    def _run(self, object_name: str):
         try:
             logger.debug(f"[SDT Tool] Analysing orientation of: {object_name}")
 
             body = find_body_by_name(object_name)
             if body is None:
-                return f"Object '{object_name}' not found."
+                return f"Object '{object_name}' not found.", None
 
             T = np.array(body.global_transform.to_np())
             R = T[:3, :3]
 
-            # Object's local Z-axis expressed in world frame
             local_z_in_world = R[:, 2]
             world_z = np.array([0.0, 0.0, 1.0])
 
@@ -630,29 +653,39 @@ class GetObjectOrientationTool(AgenticTool):
             else:
                 label = f"tilted at {tilt_deg:.1f}° from vertical"
 
-            # Roll-pitch-yaw from rotation matrix
             roll = float(np.degrees(np.arctan2(R[2, 1], R[2, 2])))
             pitch = float(np.degrees(np.arcsin(-np.clip(R[2, 0], -1, 1))))
             yaw = float(np.degrees(np.arctan2(R[1, 0], R[0, 0])))
+            lz = local_z_in_world.tolist()
 
-            return (
+            artifact = OrientationArtifact(
+                body_name=object_name,
+                status=label,
+                tilt_deg=round(tilt_deg, 1),
+                local_z_in_world=[round(v, 3) for v in lz],
+                roll=round(roll, 1),
+                pitch=round(pitch, 1),
+                yaw=round(yaw, 1),
+            )
+
+            content = (
                 f"Object '{object_name}' orientation:\n"
                 f"  Status: {label}\n"
                 f"  Tilt from vertical: {tilt_deg:.1f}°\n"
-                f"  Local Z-axis in world: ({local_z_in_world[0]:.3f}, {local_z_in_world[1]:.3f}, {local_z_in_world[2]:.3f})\n"
+                f"  Local Z-axis in world: ({lz[0]:.3f}, {lz[1]:.3f}, {lz[2]:.3f})\n"
                 f"  RPY (deg): roll={roll:.1f}  pitch={pitch:.1f}  yaw={yaw:.1f}"
             )
+            return content, artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
+
 
 # ---------------------------------------------------------------------------
-# Shared helpers for new tools
+# Shared helpers for color tools
 # ---------------------------------------------------------------------------
-
 
 def _rgb_to_color_name(r: float, g: float, b: float) -> str:
-    """Approximate an RGB value as a human-readable color name."""
     if r > 0.7 and g < 0.3 and b < 0.3:
         return "red"
     if r < 0.3 and g > 0.7 and b < 0.3:
@@ -675,13 +708,12 @@ def _rgb_to_color_name(r: float, g: float, b: float) -> str:
         return "light grey"
     return f"mixed (R={r:.2f} G={g:.2f} B={b:.2f})"
 
+
 # ---------------------------------------------------------------------------
 # Tool: GetObjectColor
 # ---------------------------------------------------------------------------
 
 class ObjectColorInput(BaseModel):
-    """Input schema for GetObjectColorTool."""
-
     object_name: str = Field(description="The exact body_name of the object.")
 
 class GetObjectColorTool(AgenticTool):
@@ -695,17 +727,17 @@ class GetObjectColorTool(AgenticTool):
     )
     args_schema: Type[BaseModel] = ObjectColorInput
 
-    def _run(self, object_name: str) -> str:
+    def _run(self, object_name: str):
         try:
             logger.debug(f"[SDT Tool] Getting color of: {object_name}")
 
             body = find_body_by_name(object_name)
             if body is None:
-                return f"Object '{object_name}' not found."
+                return f"Object '{object_name}' not found.", None
 
             shapes = getattr(body, "visual", None)
             if shapes is None:
-                return f"'{object_name}' has no visual geometry."
+                return f"'{object_name}' has no visual geometry.", None
 
             shape_list = getattr(shapes, "shapes", [])
             colors_found = []
@@ -722,22 +754,24 @@ class GetObjectColorTool(AgenticTool):
                     continue
 
             if not colors_found:
-                return f"No explicit color found on '{object_name}'. Color may be from a texture or mesh material."
+                return f"No explicit color found on '{object_name}'. Color may be from a texture or mesh material.", None
 
             lines = [f"Visual color of '{object_name}':"]
             for c in colors_found:
                 lines.append(f"  {c}")
-            return "\n".join(lines)
+
+            artifact = ColorArtifact(body_name=object_name, colors=colors_found)
+            return "\n".join(lines), artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
+
+
 # ---------------------------------------------------------------------------
 # Tool: GetSpatialRelation
 # ---------------------------------------------------------------------------
 
 class SpatialRelationInput(BaseModel):
-    """Input schema for GetSpatialRelationTool."""
-
     object_name: str = Field(description="The body_name of the object to locate.")
     reference_name: str = Field(
         description=(
@@ -757,14 +791,14 @@ class GetSpatialRelationTool(AgenticTool):
     )
     args_schema: Type[BaseModel] = SpatialRelationInput
 
-    def _run(self, object_name: str, reference_name: str) -> str:
+    def _run(self, object_name: str, reference_name: str):
         try:
             logger.debug(f"[SDT Tool] Computing spatial relation: '{object_name}' relative to '{reference_name}'")
             _, robot_view = get_active_world()
 
             obj_body = find_body_by_name(object_name)
             if obj_body is None:
-                return f"Object '{object_name}' not found."
+                return f"Object '{object_name}' not found.", None
 
             use_robot = reference_name.strip().lower() in ("robot", "me", "self")
             if use_robot:
@@ -775,20 +809,20 @@ class GetSpatialRelationTool(AgenticTool):
                 ref_label = reference_name
 
             if ref_body is None:
-                return f"Reference '{reference_name}' not found."
+                return f"Reference '{reference_name}' not found.", None
 
             obj_pos_raw = _get_body_position(obj_body)
             ref_pos_raw = _get_body_position(ref_body)
             if obj_pos_raw is None:
-                return f"Could not compute position for '{object_name}'."
+                return f"Could not compute position for '{object_name}'.", None
             if ref_pos_raw is None:
-                return f"Could not compute position for reference '{ref_label}'."
+                return f"Could not compute position for reference '{ref_label}'.", None
+
             obj_pos = np.array(obj_pos_raw)
             ref_pos = np.array(ref_pos_raw)
-            delta = obj_pos - ref_pos  # vector from reference → object
+            delta = obj_pos - ref_pos
             distance = float(np.linalg.norm(delta))
 
-            # Try to express in robot/reference local frame for directional labels
             try:
                 T_ref = np.array(ref_body.global_transform.to_np())
                 R_ref = T_ref[:3, :3]
@@ -814,22 +848,29 @@ class GetSpatialRelationTool(AgenticTool):
                 parts.append(f"{abs(dy):.3f}m {lateral_label}")
             direction_str = ", ".join(parts) if parts else "at approximately the same location as"
 
-            return (
+            content = (
                 f"'{object_name}' is {direction_str} '{ref_label}' ({frame}).\n"
                 f"Offset vector: dx={dx:.3f}m  dy={dy:.3f}m  dz={dz:.3f}m\n"
                 f"Euclidean distance: {distance:.3f}m"
             )
+            artifact = SpatialRelationArtifact(
+                object_name=object_name,
+                reference_name=reference_name,
+                direction_str=direction_str,
+                offset={"dx": round(float(dx), 3), "dy": round(float(dy), 3), "dz": round(float(dz), 3)},
+                distance_m=round(distance, 3),
+            )
+            return content, artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
+
 
 # ---------------------------------------------------------------------------
 # Tool: GetNearestObjects
 # ---------------------------------------------------------------------------
 
 class NearestObjectsInput(BaseModel):
-    """Input schema for GetNearestObjectsTool."""
-
     object_name: str = Field(description="The exact body_name of the reference object.")
     max_count: int = Field(default=5, description="Maximum number of nearest objects to return (default 5).")
     radius_m: Optional[float] = Field(
@@ -854,17 +895,17 @@ class GetNearestObjectsTool(AgenticTool):
     )
     args_schema: Type[BaseModel] = NearestObjectsInput
 
-    def _run(self, object_name: str, max_count: int = 5, radius_m: Optional[float] = None) -> str:
+    def _run(self, object_name: str, max_count: int = 5, radius_m: Optional[float] = None):
         try:
             logger.debug(f"[SDT Tool] Finding nearest objects to: {object_name}")
 
             ref_body = find_body_by_name(object_name)
             if ref_body is None:
-                return f"Reference object '{object_name}' not found."
+                return f"Reference object '{object_name}' not found.", None
 
             ref_pos = _get_body_position(ref_body)
             if ref_pos is None:
-                return f"Could not compute position for '{object_name}'."
+                return f"Could not compute position for '{object_name}'.", None
             ref_arr = np.array(ref_pos)
 
             distances = []
@@ -882,29 +923,34 @@ class GetNearestObjectsTool(AgenticTool):
                     distances.append((dist, ann.__class__.__name__, _extract_body_name(body)))
 
             if not distances:
-                return f"No other annotated objects found to compare with '{object_name}'."
+                return f"No other annotated objects found to compare with '{object_name}'.", None
 
             distances.sort(key=lambda x: x[0])
             if radius_m is not None:
                 distances = [(d, c, n) for d, c, n in distances if d <= radius_m]
                 if not distances:
-                    return f"No objects found within {radius_m:.3f}m of '{object_name}'."
+                    return f"No objects found within {radius_m:.3f}m of '{object_name}'.", None
 
-            lines = [f"Nearest objects to '{object_name}'" + (f" (within {radius_m:.3f}m)" if radius_m is not None else "") + ":"]
-            for dist, cls_name, bname in distances[:max_count]:
+            selected = distances[:max_count]
+            header = f"Nearest objects to '{object_name}'" + (f" (within {radius_m:.3f}m)" if radius_m is not None else "") + ":"
+            lines = [header]
+            nearest_list = []
+            for dist, cls_name, bname in selected:
                 lines.append(f"  [{cls_name}]  body: {bname}  distance: {dist:.3f}m")
-            return "\n".join(lines)
+                nearest_list.append({"cls_name": cls_name, "body_name": bname, "distance_m": round(dist, 3)})
+
+            artifact = NearestObjectsArtifact(reference=object_name, nearest=nearest_list)
+            return "\n".join(lines), artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
+
 
 # ---------------------------------------------------------------------------
 # Tool: GetObjectsOnSurface
 # ---------------------------------------------------------------------------
 
 class SurfaceQueryInput(BaseModel):
-    """Input schema for GetObjectsOnSurfaceTool."""
-
     surface_name: str = Field(
         description=(
             "Semantic type name (e.g., 'Table', 'CounterTop', 'Shelf') or exact body_name "
@@ -922,7 +968,7 @@ class GetObjectsOnSurfaceTool(AgenticTool):
     )
     args_schema: Type[BaseModel] = SurfaceQueryInput
 
-    def _run(self, surface_name: str) -> str:
+    def _run(self, surface_name: str):
         try:
             logger.debug(f"[SDT Tool] Querying objects on surface: {surface_name}")
             query = surface_name.strip().lower()
@@ -930,12 +976,12 @@ class GetObjectsOnSurfaceTool(AgenticTool):
             annotations = get_annotations()
             surface_ann = _find_annotation_by_query(query, annotations)
             if surface_ann is None:
-                return f"No annotation named '{surface_name}' found in this scene."
+                return f"No annotation named '{surface_name}' found in this scene.", None
 
             surface_root = getattr(surface_ann, "root", None)
             surface_pos = _get_body_position(surface_root) if surface_root else None
             if surface_pos is None:
-                return f"Objects on {surface_ann.__class__.__name__}: none."
+                return f"Objects on {surface_ann.__class__.__name__}: none.", None
 
             sx, sy, sz = surface_pos
             found = []
@@ -954,26 +1000,34 @@ class GetObjectsOnSurfaceTool(AgenticTool):
                     found.append((ann, pos))
 
             if not found:
-                return f"Objects on {surface_ann.__class__.__name__}: none."
+                return f"Objects on {surface_ann.__class__.__name__}: none.", None
+
             lines = [f"Objects on {surface_ann.__class__.__name__}:"]
+            obj_list = []
             for ann, pos in found:
                 rname = _extract_body_name(getattr(ann, "root", None))
                 lines.append(
                     f"  [{type(ann).__name__}]  body={rname}  "
                     f"pos={_fmt_pos(pos)}"
                 )
-            return "\n".join(lines)
+                obj_list.append({
+                    "cls_name": type(ann).__name__,
+                    "body_name": rname,
+                    "position": _fmt_pos(pos),
+                })
+
+            artifact = ObjectsOnSurfaceArtifact(surface_name=surface_name, objects=obj_list)
+            return "\n".join(lines), artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
+
 
 # ---------------------------------------------------------------------------
 # Tool: SortObjectsBySize
 # ---------------------------------------------------------------------------
 
 class SortBySizeInput(BaseModel):
-    """Input schema for SortObjectsBySizeTool."""
-
     semantic_type: str = Field(
         description="Semantic class name to filter by (e.g., 'Cup', 'Bottle'). Returns all matches sorted by volume."
     )
@@ -989,7 +1043,7 @@ class SortObjectsBySizeTool(AgenticTool):
     )
     args_schema: Type[BaseModel] = SortBySizeInput
 
-    def _run(self, semantic_type: str, largest_first: bool = True) -> str:
+    def _run(self, semantic_type: str, largest_first: bool = True):
         try:
             logger.debug(f"[SDT Tool] Sorting '{semantic_type}' objects by size...")
 
@@ -1000,13 +1054,14 @@ class SortObjectsBySizeTool(AgenticTool):
             ]
 
             if not candidates:
-                return f"No '{semantic_type}' objects with root bodies found in the scene."
+                return f"No '{semantic_type}' objects with root bodies found in the scene.", None
 
             sorted_anns = sort_by_volume(candidates, largest_first=largest_first)
 
             lines = [
                 f"'{semantic_type}' objects sorted by size ({'largest' if largest_first else 'smallest'} first):"
             ]
+            ranked = []
             for i, ann in enumerate(sorted_anns, 1):
                 body_names = [_extract_body_name(b) for b in getattr(ann, "bodies", [])]
                 pos = None
@@ -1015,24 +1070,28 @@ class SortObjectsBySizeTool(AgenticTool):
                     pos = _get_body_position(ref_body)
                 pos_str = _fmt_pos(pos)
                 dims = symbol_bounding_box(ref_body) if ref_body is not None else None
-                vol_str = f"  vol={dims[0]*dims[1]*dims[2]:.5f}m³" if dims else ""
+                vol = round(dims[0]*dims[1]*dims[2], 5) if dims else None
+                vol_str = f"  vol={vol}m³" if vol else ""
                 lines.append(f"  {i}. [{ann.__class__.__name__}]  body: {', '.join(body_names)}  pos: {pos_str}{vol_str}")
-            return "\n".join(lines)
+                ranked.append({
+                    "cls_name": ann.__class__.__name__,
+                    "body_names": body_names,
+                    "volume_m3": vol,
+                    "position": pos_str,
+                })
+
+            artifact = SortBySizeArtifact(type_name=semantic_type, ranked=ranked)
+            return "\n".join(lines), artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
+
 
 # ---------------------------------------------------------------------------
 # Segment 3 — Structural & Topological Relations
 # ---------------------------------------------------------------------------
 
-# ---------------------------------------------------------------------------
-# Tool: GetArticulatedObjectJoints
-# ---------------------------------------------------------------------------
-
 class ArticulatedJointsInput(BaseModel):
-    """Input schema for GetArticulatedObjectJointsTool."""
-
     object_name: str = Field(
         description="Semantic type name or body_name of the articulated object (e.g., 'Drawer', 'Fridge', 'Door')."
     )
@@ -1043,13 +1102,12 @@ class GetArticulatedObjectJointsTool(AgenticTool):
     name: str = "get_articulated_object_joints"
     description: str = (
         "Get the controllable joints of a non-robot articulated object (drawer, door, fridge, cabinet, etc.), "
-        "including joint type, current position, and limits. "
-        "Use this before planning an OpenAction or CloseAction. "
+        "including joint type, current position, and limits — what is needed to reason about opening or closing it. "
         "For robot arm joints, use get_joint_states instead."
     )
     args_schema: Type[BaseModel] = ArticulatedJointsInput
 
-    def _run(self, object_name: str) -> str:
+    def _run(self, object_name: str):
         try:
             logger.debug(f"[SDT Tool] Getting joints for articulated object: {object_name}")
 
@@ -1057,14 +1115,14 @@ class GetArticulatedObjectJointsTool(AgenticTool):
             annotations = get_annotations()
             target_ann = _find_annotation_by_query(query, annotations)
             if target_ann is None:
-                return f"No object '{object_name}' found in semantic annotations."
+                return f"No object '{object_name}' found in semantic annotations.", None
 
             ann_bodies = list(getattr(target_ann, "bodies", []))
             if not ann_bodies:
-                return f"'{object_name}' annotation has no associated bodies."
+                return f"'{object_name}' annotation has no associated bodies.", None
 
-            # Each body carries its own parent_connection — no world.connections needed.
             rows = []
+            joints_data = []
             seen: set = set()
             for body in ann_bodies:
                 conn = getattr(body, "parent_connection", None)
@@ -1082,14 +1140,16 @@ class GetArticulatedObjectJointsTool(AgenticTool):
                     )
                     pos = round(float(conn.position), 5)
                     dof = conn.dof
+                    lo, hi = None, None
                     if dof.has_position_limits():
                         lims = dof.limits
-                        lo = lims.lower.position if lims.lower is not None else None
-                        hi = lims.upper.position if lims.upper is not None else None
-                        lim_str = f"[{float(lo):.3f}, {float(hi):.3f}]" if (lo is not None and hi is not None) else "limited"
+                        lo = float(lims.lower.position) if lims.lower is not None else None
+                        hi = float(lims.upper.position) if lims.upper is not None else None
+                        lim_str = f"[{lo:.3f}, {hi:.3f}]" if (lo is not None and hi is not None) else "limited"
                     else:
                         lim_str = "unlimited"
                     rows.append(f"  {jname}  type={jtype}  pos={pos}  limits={lim_str}")
+                    joints_data.append({"name": jname, "type": jtype, "position": pos, "limits": [lo, hi]})
                 except Exception:
                     continue
 
@@ -1097,22 +1157,26 @@ class GetArticulatedObjectJointsTool(AgenticTool):
                 return (
                     f"No active controllable joints found for '{target_ann.__class__.__name__}'. "
                     "It may be a rigid object."
-                )
+                ), None
 
             lines = [f"Joints of [{target_ann.__class__.__name__}]:"]
             lines.extend(rows)
-            return "\n".join(lines)
+            artifact = ArticulatedJointsArtifact(
+                object_name=object_name,
+                cls_name=target_ann.__class__.__name__,
+                joints=joints_data,
+            )
+            return "\n".join(lines), artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
+
 
 # ---------------------------------------------------------------------------
 # Tool: GetContainedItems
 # ---------------------------------------------------------------------------
 
 class ContainedItemsInput(BaseModel):
-    """Input schema for GetContainedItemsTool."""
-
     container_name: str = Field(
         description=(
             "Semantic type name or body_name of the container "
@@ -1121,7 +1185,6 @@ class ContainedItemsInput(BaseModel):
     )
 
 def _lookup_semantic_contents(container_ann: Any) -> Optional[List[Tuple]]:
-    """Return (cls_name, body_name, pos) triples from the annotation's .objects list, or None if empty."""
     semantic_objects = getattr(container_ann, "objects", None)
     if not semantic_objects:
         return None
@@ -1144,13 +1207,11 @@ def _detect_geometric_contents(
     dims: Tuple[float, float, float],
     annotations: List[Any],
 ) -> List[Tuple]:
-    """Return (cls_name, body_name, pos_tuple) for annotations whose root body falls inside container AABB."""
     t_c = T_c[:3, 3]
     R_c = T_c[:3, :3]
     depth, width, height = dims
     container_body_ids = {id(b) for b in getattr(container_ann, "bodies", [])}
 
-    # 5 cm XY margin; generous Z range handles both bottom-origin and centre-origin conventions.
     xy_margin = 0.05
     z_lo = -(height / 2) - xy_margin
     z_hi = height + xy_margin
@@ -1189,7 +1250,7 @@ class GetContainedItemsTool(AgenticTool):
     )
     args_schema: Type[BaseModel] = ContainedItemsInput
 
-    def _run(self, container_name: str) -> str:
+    def _run(self, container_name: str):
         try:
             logger.debug(f"[SDT Tool] Finding items contained in: {container_name}")
             query = container_name.strip().lower()
@@ -1197,11 +1258,11 @@ class GetContainedItemsTool(AgenticTool):
 
             container_ann = _find_annotation_by_query(query, annotations)
             if container_ann is None:
-                return f"No container named '{container_name}' found in the scene."
+                return f"No container named '{container_name}' found in the scene.", None
 
             container_root = _resolve_annotation_root(container_ann)
             if container_root is None:
-                return f"Container '{container_ann.__class__.__name__}' has no root body."
+                return f"Container '{container_ann.__class__.__name__}' has no root body.", None
 
             T_c = np.array(container_root.global_transform.to_np())
             dims = symbol_bounding_box(container_root)
@@ -1209,56 +1270,43 @@ class GetContainedItemsTool(AgenticTool):
                 return (
                     f"Could not compute bounding box for '{container_ann.__class__.__name__}'. "
                     "Containment check unavailable."
-                )
+                ), None
 
-            # Path 1: semantic storage list (authoritative when populated)
             found = _lookup_semantic_contents(container_ann)
-            if found is not None:
-                lines = [
-                    f"Objects inside '{container_ann.__class__.__name__}' "
-                    f"({len(found)} found, semantic list):"
-                ]
-                for cls_name, bname, pos in found:
-                    pos_str = _fmt_pos(pos)
-                    lines.append(f"  [{cls_name}]  body={bname}  pos={pos_str}")
-                return "\n".join(lines)
+            method = "semantic"
+            if found is None:
+                found = _detect_geometric_contents(container_ann, container_root, T_c, dims, annotations)
+                method = "geometric"
 
-            # Path 2: geometric AABB containment fallback
-            found = _detect_geometric_contents(container_ann, container_root, T_c, dims, annotations)
             if not found:
-                return f"No objects found inside '{container_ann.__class__.__name__}'."
+                return f"No objects found inside '{container_ann.__class__.__name__}'.", None
 
             lines = [
                 f"Objects inside '{container_ann.__class__.__name__}' "
-                f"({len(found)} found, geometric detection):"
+                f"({len(found)} found, {method} detection):"
             ]
+            items_list = []
             for cls_name, bname, pos in found:
-                lines.append(
-                    f"  [{cls_name}]  body={bname}  "
-                    f"pos={_fmt_pos(pos)}"
-                )
-            return "\n".join(lines)
+                pos_str = _fmt_pos(pos)
+                lines.append(f"  [{cls_name}]  body={bname}  pos={pos_str}")
+                items_list.append({"cls_name": cls_name, "body_name": bname, "position": pos_str})
+
+            artifact = ContainedItemsArtifact(
+                container=container_name,
+                items=items_list,
+                method=method,
+            )
+            return "\n".join(lines), artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
+
 
 # ---------------------------------------------------------------------------
-# Segment 4 — Functional State & Affordances
-# (stubs — require SDT to model dynamic object state before implementation)
-# ---------------------------------------------------------------------------
-
-# ---------------------------------------------------------------------------
-# Tool: GetObjectState  [STUB]
-# Queries dynamic functional state attributes of an object annotation:
-# temperature, fill_level, is_clean, is_powered, is_on, etc.
-# Blocked on: SDT annotations do not currently model dynamic state.
-# When SDT adds these attributes, this tool reads them via hasattr inspection
-# on the annotation instance and returns all non-structural attributes.
+# Segment 4 — Functional State & Affordances (stubs)
 # ---------------------------------------------------------------------------
 
 class ObjectStateInput(BaseModel):
-    """Input schema for GetObjectStateTool."""
-
     object_name: str = Field(
         description="Semantic type name or body_name of the object (e.g., 'Milk', 'milk.stl')."
     )
@@ -1274,28 +1322,17 @@ class GetObjectStateTool(AgenticTool):
     )
     args_schema: Type[BaseModel] = ObjectStateInput
 
-    def _run(self, object_name: str) -> str:
-        return (
+    def _run(self, object_name: str):
+        msg = (
             "get_object_state is not yet implemented. "
             "The SDT framework does not currently model dynamic object state "
             "(temperature, fill_level, is_clean, is_powered, etc.). "
             "This tool will be completed once those attributes are added to the annotation classes."
         )
+        return msg, None
 
-
-# ---------------------------------------------------------------------------
-# Tool: GetObjectAffordances  [STUB]
-# Returns a structured affordance profile for an object: what actions can be
-# performed on it (pick up, open, fill, place on, stack on, etc.).
-# Partial implementation possible via type-hierarchy inspection (HasDoors,
-# HasStorageSpace, HasSupportingSurface, HasHandle in MRO). Full implementation
-# requires SDT to expose explicit affordance attributes and reachability data
-# from Segment 7 (is_pickable depends on kinematic accessibility).
-# ---------------------------------------------------------------------------
 
 class ObjectAffordancesInput(BaseModel):
-    """Input schema for GetObjectAffordancesTool."""
-
     object_name: str = Field(
         description="Semantic type name or body_name of the object (e.g., 'Fridge', 'cup.stl')."
     )
@@ -1312,8 +1349,8 @@ class GetObjectAffordancesTool(AgenticTool):
     )
     args_schema: Type[BaseModel] = ObjectAffordancesInput
 
-    def _run(self, object_name: str) -> str:
-        return (
+    def _run(self, object_name: str):
+        msg = (
             "get_object_affordances is not yet fully implemented. "
             "In the meantime, derive affordances from: "
             "(1) get_object_type — check MRO for HasSupportingSurface, HasStorageSpace, "
@@ -1321,20 +1358,14 @@ class GetObjectAffordancesTool(AgenticTool):
             "(2) get_articulated_object_joints — confirms openable joints; "
             "(3) classify_objects_by_role — confirms surface/articulated/object role."
         )
+        return msg, None
 
 
-# ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------
 # Segment 5 — Robot & Interaction State
 # ---------------------------------------------------------------------------
 
-# ---------------------------------------------------------------------------
-# Tool: GetJointStates
-# ---------------------------------------------------------------------------
-
 class JointStatesInput(BaseModel):
-    """Input schema for GetJointStatesTool (no parameters required)."""
-
     pass
 
 class GetJointStatesTool(AgenticTool):
@@ -1342,22 +1373,22 @@ class GetJointStatesTool(AgenticTool):
 
     name: str = "get_joint_states"
     description: str = (
-        "Get the current position and limits of all active robot arm joints (shoulder, elbow, wrist, etc.). "
+        "Get the current position of all active robot arm joints (shoulder, elbow, wrist, etc.). "
         "Returns only the robot's own controllable arm joints — not joints of furniture or objects. "
         "Use this to inspect the robot's current arm configuration (e.g. parked vs extended). "
-        "For joints of non-robot articulated objects like drawers or doors, "
-        "use get_articulated_object_joints instead."
+        "This reports current positions only; for a joint's motion limits use the kinematics "
+        "specialist's joint-limit capability. For joints of non-robot articulated objects like "
+        "drawers or doors, use get_articulated_object_joints instead."
     )
     args_schema: Type[BaseModel] = JointStatesInput
 
-    def _run(self) -> str:
+    def _run(self):
         try:
             logger.debug("[SDT Tool] Reading active joint states...")
             _, robot_view = get_active_world()
 
-            # Traverse robot view parts directly to avoid world.connections which can
-            # hang if the world's kinematic graph is in an inconsistent state.
             rows = []
+            joints_data = []
             parts = []
             for attr in ("arms", "neck", "torso", "base", "drive"):
                 val = getattr(robot_view, attr, None)
@@ -1373,7 +1404,6 @@ class GetJointStatesTool(AgenticTool):
                         if conn_id in seen:
                             continue
                         seen.add(conn_id)
-                        # Duck-typed ActiveConnection1DOF check
                         if not (hasattr(conn, "position") and hasattr(conn, "dof") and hasattr(conn, "is_controlled")):
                             continue
                         if not getattr(conn, "is_controlled", False):
@@ -1382,33 +1412,26 @@ class GetJointStatesTool(AgenticTool):
                             name_obj = getattr(conn, "name", None)
                             name = str(name_obj.name) if hasattr(name_obj, "name") else str(name_obj)
                             pos = round(float(conn.position), 5)
-                            dof = conn.dof
-                            if dof.has_position_limits():
-                                lims = dof.limits
-                                lo = lims.lower.position if lims.lower is not None else None
-                                hi = lims.upper.position if lims.upper is not None else None
-                                lim_str = f"[{float(lo):.3f}, {float(hi):.3f}]" if (lo is not None and hi is not None) else "limited"
-                            else:
-                                lim_str = "unlimited"
-                            rows.append(f"  {name}: position={pos}  limits={lim_str}")
+                            rows.append(f"  {name}: position={pos}")
+                            joints_data.append({"name": name, "position": pos})
                         except Exception:
                             continue
 
             if not rows:
-                return "No controllable joints found via robot model traversal."
+                return "No controllable joints found via robot model traversal.", None
 
-            return "Active Joint States:\n" + "\n".join(rows)
+            artifact = JointStatesArtifact(joints=joints_data)
+            return "Active Joint States:\n" + "\n".join(rows), artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
+
 
 # ---------------------------------------------------------------------------
 # Tool: GetRobotPose
 # ---------------------------------------------------------------------------
 
 class RobotPoseInput(BaseModel):
-    """Input schema for GetRobotPoseTool (no parameters required)."""
-
     pass
 
 class GetRobotPoseTool(AgenticTool):
@@ -1422,7 +1445,7 @@ class GetRobotPoseTool(AgenticTool):
     )
     args_schema: Type[BaseModel] = RobotPoseInput
 
-    def _run(self) -> str:
+    def _run(self):
         try:
             logger.debug("[SDT Tool] Getting robot base pose...")
             _, robot_view = get_active_world()
@@ -1430,32 +1453,37 @@ class GetRobotPoseTool(AgenticTool):
 
             base_body = get_robot_base_body(robot_view)
             if base_body is None:
-                return "Could not locate robot base body."
+                return "Could not locate robot base body.", None
 
             T = np.array(base_body.global_transform.to_np())
             pos = T[:3, 3]
             quat = R.from_matrix(T[:3, :3]).as_quat()  # x, y, z, w
             bname = _extract_body_name(base_body)
-            return (
+
+            artifact = RobotPoseArtifact(
+                body_name=bname,
+                position=[round(float(pos[0]), 3), round(float(pos[1]), 3), round(float(pos[2]), 3)],
+                orientation=[round(float(quat[0]), 3), round(float(quat[1]), 3),
+                             round(float(quat[2]), 3), round(float(quat[3]), 3)],
+            )
+            content = (
                 f"Robot base ({bname}):\n"
                 f"  position: ({float(pos[0]):.3f}, {float(pos[1]):.3f}, {float(pos[2]):.3f})\n"
                 f"  orientation (xyzw): ({float(quat[0]):.3f}, {float(quat[1]):.3f}, "
                 f"{float(quat[2]):.3f}, {float(quat[3]):.3f})"
             )
+            return content, artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
+
 
 # ---------------------------------------------------------------------------
 # Tool: GetEndEffectorPose
 # ---------------------------------------------------------------------------
 
 class EndEffectorPoseInput(BaseModel):
-    """Input schema for GetEndEffectorPoseTool."""
-
-    arm: str = Field(
-        description="Which arm to query: 'left' or 'right'."
-    )
+    arm: str = Field(description="Which arm to query: 'left' or 'right'.")
 
 class GetEndEffectorPoseTool(AgenticTool):
     """Return the current world-frame pose of a gripper tool frame by arm name."""
@@ -1468,7 +1496,7 @@ class GetEndEffectorPoseTool(AgenticTool):
     )
     args_schema: Type[BaseModel] = EndEffectorPoseInput
 
-    def _run(self, arm: str) -> str:
+    def _run(self, arm: str):
         try:
             logger.debug(f"[SDT Tool] Getting end-effector pose for: {arm} arm")
             _, robot_view = get_active_world()
@@ -1482,39 +1510,45 @@ class GetEndEffectorPoseTool(AgenticTool):
                     break
 
             if target_arm is None:
-                return f"No arm matching '{arm}' found. Use 'left' or 'right'."
+                return f"No arm matching '{arm}' found. Use 'left' or 'right'.", None
 
             manip = getattr(target_arm, "manipulator", None)
             tool_frame = getattr(manip, "tool_frame", None) if manip else None
             if tool_frame is None:
                 tool_frame = getattr(target_arm, "tip", None)
             if tool_frame is None:
-                return f"Could not find tool frame for {arm} arm."
+                return f"Could not find tool frame for {arm} arm.", None
 
             T = np.array(tool_frame.global_transform.to_np())
             pos = T[:3, 3]
-            quat = R.from_matrix(T[:3, :3]).as_quat()  # x, y, z, w
+            quat = R.from_matrix(T[:3, :3]).as_quat()
             tf_name = _extract_body_name(tool_frame)
-            return (
+
+            artifact = EndEffectorPoseArtifact(
+                arm=side,
+                body_name=tf_name,
+                position=[round(float(pos[0]), 3), round(float(pos[1]), 3), round(float(pos[2]), 3)],
+                orientation=[round(float(quat[0]), 3), round(float(quat[1]), 3),
+                             round(float(quat[2]), 3), round(float(quat[3]), 3)],
+            )
+            content = (
                 f"{side.upper()} end-effector ({tf_name}):\n"
                 f"  position: ({float(pos[0]):.3f}, {float(pos[1]):.3f}, {float(pos[2]):.3f})\n"
                 f"  orientation (xyzw): ({float(quat[0]):.3f}, {float(quat[1]):.3f}, "
                 f"{float(quat[2]):.3f}, {float(quat[3]):.3f})"
             )
+            return content, artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
+
 
 # ---------------------------------------------------------------------------
 # Tool: GetGripperState
 # ---------------------------------------------------------------------------
 
 class GripperStateInput(BaseModel):
-    """Input schema for GetGripperStateTool."""
-
-    arm: str = Field(
-        description="Which arm's gripper to query: 'left' or 'right'."
-    )
+    arm: str = Field(description="Which arm's gripper to query: 'left' or 'right'.")
 
 class GetGripperStateTool(AgenticTool):
     """Return the opening width and open/closed/partial status of a named gripper."""
@@ -1528,7 +1562,7 @@ class GetGripperStateTool(AgenticTool):
     )
     args_schema: Type[BaseModel] = GripperStateInput
 
-    def _run(self, arm: str) -> str:
+    def _run(self, arm: str):
         try:
             logger.debug(f"[SDT Tool] Getting gripper state for: {arm} arm")
             _, robot_view = get_active_world()
@@ -1541,16 +1575,14 @@ class GetGripperStateTool(AgenticTool):
                     break
 
             if target_arm is None:
-                return f"No arm matching '{arm}' found. Use 'left' or 'right'."
+                return f"No arm matching '{arm}' found. Use 'left' or 'right'.", None
 
             manip = getattr(target_arm, "manipulator", None)
             if manip is None:
-                return f"No gripper/manipulator attached to {arm} arm."
+                return f"No gripper/manipulator attached to {arm} arm.", None
 
             gripper_type = type(manip).__name__
 
-            # Physical opening width: FK distance between finger tip and thumb tip.
-            # Duck-typed: ParallelGripper has finger+thumb, HumanoidGripper has fingers list+thumb.
             width_m = None
             if hasattr(manip, "finger") and hasattr(manip, "thumb"):
                 finger = getattr(manip, "finger", None)
@@ -1573,7 +1605,6 @@ class GetGripperStateTool(AgenticTool):
                     except Exception:
                         pass
 
-            # Joint range percentage: first controlled connection in any gripper joint state.
             pct = None
             seen: set = set()
             for js in getattr(manip, "joint_states", []):
@@ -1581,7 +1612,6 @@ class GetGripperStateTool(AgenticTool):
                     if id(conn) in seen:
                         continue
                     seen.add(id(conn))
-                    # Duck-typed ActiveConnection1DOF check
                     if not (hasattr(conn, "position") and hasattr(conn, "dof") and hasattr(conn, "is_controlled")):
                         continue
                     if not getattr(conn, "is_controlled", False):
@@ -1597,7 +1627,7 @@ class GetGripperStateTool(AgenticTool):
                     break
 
             if width_m is None and pct is None:
-                return f"Could not determine gripper state for {side} arm ({gripper_type})."
+                return f"Could not determine gripper state for {side} arm ({gripper_type}).", None
 
             if pct is not None:
                 status = "closed" if pct < 5 else ("fully open" if pct > 90 else "partially open")
@@ -1609,10 +1639,18 @@ class GetGripperStateTool(AgenticTool):
                 parts.append(f"  finger-to-thumb gap: {width_m:.4f}m")
             if pct is not None:
                 parts.append(f"  joint range used: {pct:.1f}%")
-            return "\n".join(parts)
+
+            artifact = GripperStateArtifact(
+                arm=side,
+                gripper_type=gripper_type,
+                status=status,
+                width_m=round(width_m, 4) if width_m is not None else None,
+                range_pct=pct,
+            )
+            return "\n".join(parts), artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
 
 
 # ---------------------------------------------------------------------------
@@ -1620,8 +1658,6 @@ class GetGripperStateTool(AgenticTool):
 # ---------------------------------------------------------------------------
 
 class HeldObjectInput(BaseModel):
-    """Input schema for GetHeldObjectTool."""
-
     arm: str = Field(description="Which arm to query: 'left' or 'right'.")
 
 class GetHeldObjectTool(AgenticTool):
@@ -1639,29 +1675,24 @@ class GetHeldObjectTool(AgenticTool):
     )
     args_schema: Type[BaseModel] = HeldObjectInput
 
-    def _run(self, arm: str) -> str:
+    def _run(self, arm: str):
         try:
             logger.debug(f"[SDT Tool] Checking held object for: {arm} arm")
             _, robot_view = get_active_world()
             side = arm.strip().lower()
 
-            # Locate the target arm
             target_arm = None
             for a in getattr(robot_view, "arms", []):
                 if get_arm_label(a, robot_view) == side:
                     target_arm = a
                     break
             if target_arm is None:
-                return f"No arm matching '{arm}' found. Use 'left' or 'right'."
+                return f"No arm matching '{arm}' found. Use 'left' or 'right'.", None
 
-            # Collect every body ID that belongs to this arm's gripper structure.
-            # When grasping, PyCRAM re-parents the object to one of these bodies.
             gripper_ids = _collect_gripper_body_ids(target_arm)
             if not gripper_ids:
-                return f"Could not resolve gripper bodies for {side} arm."
+                return f"Could not resolve gripper bodies for {side} arm.", None
 
-            # Scan all non-robot annotations for one whose root body has a
-            # FixedConnection parent inside the gripper.
             for ann in get_annotations():
                 if _is_robot_annotation(ann):
                     continue
@@ -1671,37 +1702,34 @@ class GetHeldObjectTool(AgenticTool):
                 conn = getattr(root, "parent_connection", None)
                 if conn is None:
                     continue
-                # Active connections (joints) have is_controlled; skip them.
-                # Fixed attachment from grasping does NOT have is_controlled.
                 if hasattr(conn, "is_controlled"):
                     continue
                 parent_body = getattr(conn, "parent", None)
                 if parent_body is not None and id(parent_body) in gripper_ids:
                     bname = _extract_body_name(root)
                     pos = _get_body_position(root)
-                    pos_str = (
-                        _fmt_pos(pos)
+                    pos_str = _fmt_pos(pos)
+                    artifact = HeldObjectArtifact(
+                        arm=side,
+                        body_name=bname,
+                        cls_name=ann.__class__.__name__,
+                        position=[round(float(p), 3) for p in pos] if pos else None,
                     )
                     return (
                         f"{side.upper()} arm is holding: [{ann.__class__.__name__}]  "
                         f"body={bname}  pos={pos_str}"
-                    )
+                    ), artifact
 
-            return f"{side.upper()} arm is not holding any object."
+            artifact = HeldObjectArtifact(arm=side, body_name=None, cls_name=None, position=None)
+            return f"{side.upper()} arm is not holding any object.", artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
 
 
 def _collect_gripper_body_ids(arm: Any) -> set:
-    """Return the set of body IDs that form the gripper/end-effector of the given arm.
-
-    Uses only duck-typed attribute access — no SDT imports required.
-    Covers ParallelGripper (finger + thumb) and HumanoidGripper (fingers list + thumb).
-    """
     ids: set = set()
 
-    # Arm-level tip (some robots expose this directly)
     tip = getattr(arm, "tip", None)
     if tip is not None:
         ids.add(id(tip))
@@ -1710,12 +1738,10 @@ def _collect_gripper_body_ids(arm: Any) -> set:
     if manip is None:
         return ids
 
-    # Tool frame — the primary kinematic attachment point for grasping
     tool_frame = getattr(manip, "tool_frame", None)
     if tool_frame is not None:
         ids.add(id(tool_frame))
 
-    # ParallelGripper: single finger + single thumb
     for part_attr in ("finger", "thumb"):
         part = getattr(manip, part_attr, None)
         if part is None:
@@ -1725,14 +1751,12 @@ def _collect_gripper_body_ids(arm: Any) -> set:
             if b is not None:
                 ids.add(id(b))
 
-    # HumanoidGripper: fingers list + thumb
     for f in getattr(manip, "fingers", []):
         for body_attr in ("root", "tip"):
             b = getattr(f, body_attr, None)
             if b is not None:
                 ids.add(id(b))
 
-    # Sweep all bodies reachable via manipulator joint_states connections
     for js in getattr(manip, "joint_states", []):
         for conn in getattr(js, "connections", []):
             for body_attr in ("parent", "child"):
@@ -1742,17 +1766,12 @@ def _collect_gripper_body_ids(arm: Any) -> set:
 
     return ids
 
+
 # ---------------------------------------------------------------------------
 # Segment 6 — Collision, Free Space & Placement
 # ---------------------------------------------------------------------------
 
-# ---------------------------------------------------------------------------
-# Tool: CheckSceneCollisions
-# ---------------------------------------------------------------------------
-
 class SceneCollisionsInput(BaseModel):
-    """Input schema for CheckSceneCollisionsTool (no parameters required)."""
-
     pass
 
 class CheckSceneCollisionsTool(AgenticTool):
@@ -1766,7 +1785,7 @@ class CheckSceneCollisionsTool(AgenticTool):
     )
     args_schema: Type[BaseModel] = SceneCollisionsInput
 
-    def _run(self) -> str:
+    def _run(self):
         try:
             logger.debug("[SDT Tool] Checking scene collisions...")
             world, _ = get_active_world()
@@ -1774,28 +1793,31 @@ class CheckSceneCollisionsTool(AgenticTool):
             result = world.collision_manager.compute_collisions()
 
             if not result.any():
-                return "No collisions detected in the current scene."
+                artifact = SceneCollisionsArtifact(any_collision=False, contacts=[])
+                return "No collisions detected in the current scene.", artifact
 
             lines = [f"Collisions detected ({len(result.contacts)} contact(s)):"]
+            contacts = []
             for contact in result.contacts:
                 name_a = _extract_body_name(contact.body_a)
                 name_b = _extract_body_name(contact.body_b)
                 dist = round(float(contact.distance), 5)
                 status = "PENETRATING" if dist < 0 else "touching"
                 lines.append(f"  {name_a}  <-->  {name_b}  distance={dist}m  [{status}]")
-            return "\n".join(lines)
+                contacts.append({"body_a": name_a, "body_b": name_b, "distance_m": dist})
+
+            artifact = SceneCollisionsArtifact(any_collision=True, contacts=contacts)
+            return "\n".join(lines), artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
 
-# ---------------------------------------------------------------------------
+
 # ---------------------------------------------------------------------------
 # Tool: GetFreePlacementSpots
 # ---------------------------------------------------------------------------
 
 class FreePlacementSpotsInput(BaseModel):
-    """Input schema for GetFreePlacementSpotsTool."""
-
     surface_name: str = Field(
         description="Semantic type name or body_name of the surface (e.g., 'Table', 'Shelf')."
     )
@@ -1816,12 +1838,10 @@ class FreePlacementSpotsInput(BaseModel):
     )
 
 def _find_surface_annotation(query: str) -> Optional[Any]:
-    """Find an annotation that has a supporting_surface by name or type."""
     return _find_annotation_by_query(query, get_annotations(), require_attr="supporting_surface")
 
 
 def _compute_surface_geometry(root_body: Any) -> Tuple[float, float, float, float, float]:
-    """Return (cx, cy, z_top, half_x, half_y) from a surface root body's pose and mesh extents."""
     surface_pose = root_body.global_pose
     cx, cy, cz = float(surface_pose.x), float(surface_pose.y), float(surface_pose.z)
     mesh = getattr(root_body, "combined_mesh", None)
@@ -1834,17 +1854,16 @@ def _compute_surface_geometry(root_body: Any) -> Tuple[float, float, float, floa
 def _build_placement_grid(
     cx: float, cy: float, z_top: float, half_x: float, half_y: float, count: int
 ) -> List[Tuple[float, float, float]]:
-    """Generate a dense regular grid of candidate placement positions on a surface."""
+    import numpy as _np
     grid_n = max(4, int((count * 4) ** 0.5) + 1)
-    xs = np.linspace(cx - half_x, cx + half_x, grid_n)
-    ys = np.linspace(cy - half_y, cy + half_y, grid_n)
+    xs = _np.linspace(cx - half_x, cx + half_x, grid_n)
+    ys = _np.linspace(cy - half_y, cy + half_y, grid_n)
     return [(float(x), float(y), z_top) for x in xs for y in ys]
 
 
 def _collect_occupied_footprints(
     surface_ann: Any, z_top: float
 ) -> List[Tuple[float, float, float, float]]:
-    """Return (ox, oy, half_width, half_depth) for every non-robot object near the surface top."""
     occupied = []
     for ann in get_annotations():
         if _is_robot_annotation(ann) or ann is surface_ann:
@@ -1867,7 +1886,6 @@ def _filter_free_spots(
     occupied: List[Tuple[float, float, float, float]],
     clearance: float,
 ) -> List[Tuple[float, float, float]]:
-    """Remove candidates whose AABB overlaps any occupied footprint."""
     free = []
     for cx_c, cy_c, cz_c in candidates:
         blocked = any(
@@ -1898,18 +1916,18 @@ class GetFreePlacementSpotsTool(AgenticTool):
         count: int = 5,
         check_occupancy: bool = True,
         object_footprint_m: float = 0.1,
-    ) -> str:
+    ):
         try:
             logger.debug(f"[SDT Tool] Sampling placement spots on: {surface_name}")
 
             query = surface_name.strip().lower()
             surface_ann = _find_surface_annotation(query)
             if surface_ann is None:
-                return f"No annotation named '{surface_name}' with placement support exists in this scene."
+                return f"No annotation named '{surface_name}' with placement support exists in this scene.", None
 
             root_body = getattr(surface_ann, "root", None)
             if root_body is None:
-                return f"Surface '{surface_name}' has no root body."
+                return f"Surface '{surface_name}' has no root body.", None
 
             cx, cy, z_top, half_x, half_y = _compute_surface_geometry(root_body)
             candidates = _build_placement_grid(cx, cy, z_top, half_x, half_y, count)
@@ -1924,26 +1942,34 @@ class GetFreePlacementSpotsTool(AgenticTool):
                     f"No free placement spots found on [{surface_ann.__class__.__name__}] "
                     f"with footprint clearance {object_footprint_m:.2f} m. "
                     "Try a smaller object_footprint_m or check_occupancy=False."
-                )
+                ), None
 
             filtered_note = " (occupancy-filtered)" if check_occupancy else " (raw grid)"
             lines = [
                 f"Candidate placement positions on [{surface_ann.__class__.__name__}]{filtered_note}:"
             ]
+            spots = []
             for i, (x, y, z) in enumerate(selected, 1):
                 lines.append(f"  {i}. position: ({x:.3f}, {y:.3f}, {z:.3f})")
-            return "\n".join(lines)
+                spots.append({"x": round(x, 3), "y": round(y, 3), "z": round(z, 3)})
+
+            artifact = FreeSpotsArtifact(
+                surface_name=surface_name,
+                cls_name=surface_ann.__class__.__name__,
+                spots=spots,
+                occupancy_filtered=check_occupancy,
+            )
+            return "\n".join(lines), artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
+
 
 # ---------------------------------------------------------------------------
 # Tool: WouldCollideAtPose
 # ---------------------------------------------------------------------------
 
 class WouldCollideAtPoseInput(BaseModel):
-    """Input schema for WouldCollideAtPoseTool."""
-
     object_name: str = Field(
         description="Semantic type name or body_name of the object to test (e.g., 'Milk', 'milk.stl')."
     )
@@ -1979,29 +2005,25 @@ class WouldCollideAtPoseTool(AgenticTool):
         y: float,
         z: float,
         clearance_m: float = 0.02,
-    ) -> str:
+    ):
         try:
             logger.debug(f"[SDT Tool] Checking hypothetical placement of '{object_name}' at ({x:.3f},{y:.3f},{z:.3f})")
 
-            # Resolve the object being placed
             obj_body = find_body_by_name(object_name)
             if obj_body is None:
-                # Try annotation class-name match
                 for ann in get_annotations():
                     if object_name.strip().lower() in ann.__class__.__name__.lower():
                         obj_body = getattr(ann, "root", None) or (getattr(ann, "bodies", [None])[0])
                         break
             if obj_body is None:
-                return f"Object '{object_name}' not found in the scene."
+                return f"Object '{object_name}' not found in the scene.", None
 
-            # Get the object's half-extents at the target pose
             dims = symbol_bounding_box(obj_body)
             if dims:
-                obj_hd = dims[0] / 2.0 + clearance_m   # depth half-extent
-                obj_hw = dims[1] / 2.0 + clearance_m   # width half-extent
-                obj_hh = dims[2] / 2.0 + clearance_m   # height half-extent
+                obj_hd = dims[0] / 2.0 + clearance_m
+                obj_hw = dims[1] / 2.0 + clearance_m
+                obj_hh = dims[2] / 2.0 + clearance_m
             else:
-                # Fall back to collision geometry extents
                 mesh = getattr(obj_body, "combined_mesh", None)
                 if mesh is not None:
                     ex, ey, ez = [float(v) / 2.0 + clearance_m for v in mesh.extents]
@@ -2009,7 +2031,6 @@ class WouldCollideAtPoseTool(AgenticTool):
                 else:
                     obj_hd = obj_hw = obj_hh = 0.1 + clearance_m
 
-            # Find the annotation that owns obj_body so we can skip it in the loop
             obj_ann_id = None
             for ann in get_annotations():
                 bodies = getattr(ann, "bodies", [])
@@ -2018,7 +2039,7 @@ class WouldCollideAtPoseTool(AgenticTool):
                     obj_ann_id = id(ann)
                     break
 
-            conflicts: list[str] = []
+            conflicts_list: List[str] = []
 
             for ann in get_annotations():
                 if id(ann) == obj_ann_id:
@@ -2032,7 +2053,6 @@ class WouldCollideAtPoseTool(AgenticTool):
                 if other_pos is None:
                     continue
 
-                # Get other object's half-extents (world-frame AABB approximation)
                 other_dims = symbol_bounding_box(ref)
                 if other_dims:
                     other_hd = other_dims[0] / 2.0
@@ -2045,7 +2065,6 @@ class WouldCollideAtPoseTool(AgenticTool):
                     else:
                         other_hd = other_hw = other_hh = 0.05
 
-                # AABB overlap test in world frame
                 ox, oy, oz = float(other_pos[0]), float(other_pos[1]), float(other_pos[2])
                 overlap_x = abs(x - ox) < (obj_hd + other_hd)
                 overlap_y = abs(y - oy) < (obj_hw + other_hw)
@@ -2053,37 +2072,38 @@ class WouldCollideAtPoseTool(AgenticTool):
 
                 if overlap_x and overlap_y and overlap_z:
                     bname = _extract_body_name(ref)
-                    conflicts.append(f"[{ann.__class__.__name__}] body={bname}")
+                    conflicts_list.append(f"[{ann.__class__.__name__}] body={bname}")
 
-            if not conflicts:
+            artifact = WouldCollideArtifact(
+                object_name=object_name,
+                x=x, y=y, z=z,
+                collides=len(conflicts_list) > 0,
+                conflicts=conflicts_list,
+            )
+
+            if not conflicts_list:
                 return (
                     f"No collision: '{object_name}' can be placed at ({x:.3f}, {y:.3f}, {z:.3f}) "
                     f"without overlapping any scene object (clearance={clearance_m:.3f} m)."
-                )
+                ), artifact
 
             lines = [
                 f"COLLISION: '{object_name}' at ({x:.3f}, {y:.3f}, {z:.3f}) "
-                f"would overlap {len(conflicts)} object(s):"
+                f"would overlap {len(conflicts_list)} object(s):"
             ]
-            for c in conflicts:
+            for c in conflicts_list:
                 lines.append(f"  • {c}")
-            return "\n".join(lines)
+            return "\n".join(lines), artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
 
 
 # ---------------------------------------------------------------------------
 # Segment 7 — Accessibility & Preconditions
 # ---------------------------------------------------------------------------
 
-# ---------------------------------------------------------------------------
-# Tool: IsAccessible
-# ---------------------------------------------------------------------------
-
 class IsAccessibleInput(BaseModel):
-    """Input schema for IsAccessibleTool."""
-
     object_name: str = Field(
         description="Semantic type name or body_name of the object to check (e.g., 'Milk', 'milk.stl')."
     )
@@ -2098,28 +2118,24 @@ class IsAccessibleTool(AgenticTool):
         "Performs two checks in sequence: "
         "(1) containment — is the object inside a closed container (drawer, fridge, cabinet)? "
         "(2) stacking — is another object sitting on top of it, preventing a top-down grasp? "
-        "Returns True/False and, when blocked, names the blocker and explains why. "
-        "Use this before planning a PickUpAction to determine whether precondition steps "
-        "(OpenAction, PlaceAction) are needed first."
+        "Returns True/False and, when blocked, names the blocker and explains why "
+        "(e.g. a closed container or an object stacked on top must be cleared first)."
     )
     args_schema: Type[BaseModel] = IsAccessibleInput
 
-    def _run(self, object_name: str) -> str:
+    def _run(self, object_name: str):
         try:
             logger.debug(f"[SDT Tool] Checking accessibility of: {object_name}")
 
-            # ── Resolve target annotation ────────────────────────────────────
             query = object_name.strip().lower()
             target_ann = _find_annotation_by_query(query, get_annotations())
             if target_ann is None:
-                return f"Object '{object_name}' not found in semantic annotations."
+                return f"Object '{object_name}' not found in semantic annotations.", None
 
             target_root = getattr(target_ann, "root", None)
             target_pos = _get_body_position(target_root) if target_root else None
 
-            # ── Check 1: Containment + joint state ──────────────────────────
-            # Annotations with HasStorageSpace expose .objects (semantic stored-items list).
-            # If target_ann is registered there, check whether the container's joints are closed.
+            # Check 1: Containment + joint state
             for container_ann in get_annotations():
                 if container_ann is target_ann:
                     continue
@@ -2131,7 +2147,6 @@ class IsAccessibleTool(AgenticTool):
                 if target_ann not in stored_objects:
                     continue
 
-                # Target is inside this container — check if any controllable joint is closed
                 container_bodies = list(getattr(container_ann, "bodies", []))
                 for body in container_bodies:
                     conn = getattr(body, "parent_connection", None)
@@ -2147,10 +2162,16 @@ class IsAccessibleTool(AgenticTool):
                             lims = dof.limits
                             lo = float(lims.lower.position) if lims.lower is not None else None
 
-                        # Joint is "closed" when at or very near its lower limit
                         if lo is not None and pos_val <= lo + 0.05:
                             name_obj = getattr(conn, "name", None)
                             jname = str(name_obj.name) if hasattr(name_obj, "name") else str(name_obj)
+                            artifact = IsAccessibleArtifact(
+                                object_name=object_name,
+                                accessible=False,
+                                blocker=container_ann.__class__.__name__,
+                                reason="container_closed",
+                                fix=f"open [{container_ann.__class__.__name__}] first",
+                            )
                             return (
                                 f"'{object_name}' is accessible: False\n"
                                 f"Blocked by: [{container_ann.__class__.__name__}]  "
@@ -2158,27 +2179,27 @@ class IsAccessibleTool(AgenticTool):
                                 f"joint='{jname}'  position={pos_val:.3f}  "
                                 f"(closed_limit={lo:.3f})\n"
                                 f"Fix: open [{container_ann.__class__.__name__}] first."
-                            )
+                            ), artifact
                     except Exception:
                         continue
 
-                # Container found but all joints are open — still reachable
+                artifact = IsAccessibleArtifact(object_name=object_name, accessible=True)
                 return (
                     f"'{object_name}' is accessible: True\n"
                     f"Note: object is inside [{container_ann.__class__.__name__}], "
                     f"but its access point is currently open."
-                )
+                ), artifact
 
-            # ── Check 2: Stacking — is something resting on top of the target? ─
+            # Check 2: Stacking
             if target_pos is not None and target_root is not None:
                 tx, ty, tz = float(target_pos[0]), float(target_pos[1]), float(target_pos[2])
-                t_dims = symbol_bounding_box(target_root)   # (depth, width, height)
+                t_dims = symbol_bounding_box(target_root)
                 t_hd = (t_dims[0] / 2.0) if t_dims else 0.1
                 t_hw = (t_dims[1] / 2.0) if t_dims else 0.1
                 t_hh = (t_dims[2] / 2.0) if t_dims else 0.1
                 t_top_z = tz + t_hh
 
-                xy_margin = 0.05  # 5 cm lateral tolerance
+                xy_margin = 0.05
 
                 for other_ann in get_annotations():
                     if other_ann is target_ann:
@@ -2199,6 +2220,13 @@ class IsAccessibleTool(AgenticTool):
 
                     if within_x and within_y and above_top:
                         other_bname = _extract_body_name(other_root)
+                        artifact = IsAccessibleArtifact(
+                            object_name=object_name,
+                            accessible=False,
+                            blocker=other_ann.__class__.__name__,
+                            reason="object_on_top",
+                            fix=f"move [{other_ann.__class__.__name__}] off the target first",
+                        )
                         return (
                             f"'{object_name}' is accessible: False\n"
                             f"Blocked by: [{other_ann.__class__.__name__}]  "
@@ -2206,25 +2234,20 @@ class IsAccessibleTool(AgenticTool):
                             f"reason=object_on_top  "
                             f"pos={_fmt_pos((ox, oy, oz))}\n"
                             f"Fix: move [{other_ann.__class__.__name__}] off the target first."
-                        )
+                        ), artifact
 
-            return f"'{object_name}' is accessible: True"
+            artifact = IsAccessibleArtifact(object_name=object_name, accessible=True)
+            return f"'{object_name}' is accessible: True", artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
 
 
 # ---------------------------------------------------------------------------
 # Segment 8 — Causal & Consequence Reasoning
 # ---------------------------------------------------------------------------
 
-# ---------------------------------------------------------------------------
-# Tool: GetSupportingObject
-# ---------------------------------------------------------------------------
-
 class GetSupportingObjectInput(BaseModel):
-    """Input schema for GetSupportingObjectTool."""
-
     object_name: str = Field(
         description="Semantic type name or body_name of the object whose support to find "
                     "(e.g., 'Milk', 'milk.stl')."
@@ -2243,29 +2266,28 @@ class GetSupportingObjectTool(AgenticTool):
     )
     args_schema: Type[BaseModel] = GetSupportingObjectInput
 
-    def _run(self, object_name: str) -> str:
+    def _run(self, object_name: str):
         try:
             logger.debug(f"[SDT Tool] Finding supporting object for: {object_name}")
 
-            # ── Resolve target ───────────────────────────────────────────────
             query = object_name.strip().lower()
             target_ann = _find_annotation_by_query(query, get_annotations())
             if target_ann is None:
-                return f"Object '{object_name}' not found in semantic annotations."
+                return f"Object '{object_name}' not found in semantic annotations.", None
 
             target_root = getattr(target_ann, "root", None)
             target_pos = _get_body_position(target_root) if target_root else None
             if target_pos is None:
-                return f"Could not retrieve world position for '{object_name}'."
+                return f"Could not retrieve world position for '{object_name}'.", None
 
             tx, ty, tz = float(target_pos[0]), float(target_pos[1]), float(target_pos[2])
             t_dims = symbol_bounding_box(target_root) if target_root else None
-            t_hd = (t_dims[0] / 2.0) if t_dims else 0.1   # depth half-extent
-            t_hw = (t_dims[1] / 2.0) if t_dims else 0.1   # width half-extent
-            t_hh = (t_dims[2] / 2.0) if t_dims else 0.1   # height half-extent
-            t_bottom_z = tz - t_hh                          # z of target's bottom face
+            t_hd = (t_dims[0] / 2.0) if t_dims else 0.1
+            t_hw = (t_dims[1] / 2.0) if t_dims else 0.1
+            t_hh = (t_dims[2] / 2.0) if t_dims else 0.1
+            t_bottom_z = tz - t_hh
 
-            z_tol = 0.06    # ± 6 cm contact tolerance
+            z_tol = 0.06
             xy_margin = 0.06
 
             best_supporter = None
@@ -2290,13 +2312,11 @@ class GetSupportingObjectTool(AgenticTool):
                 other_hh = (other_dims[2] / 2.0) if other_dims else 0.1
                 other_top_z = oz + other_hh
 
-                # Contact condition: target's bottom face rests on other's top face
                 z_contact = abs(t_bottom_z - other_top_z) <= z_tol
                 within_x = abs(tx - ox) <= other_hd + t_hd + xy_margin
                 within_y = abs(ty - oy) <= other_hw + t_hw + xy_margin
 
                 if z_contact and within_x and within_y:
-                    # Prefer the object whose top face is closest to target's bottom
                     if best_supporter is None or abs(t_bottom_z - other_top_z) < abs(
                         t_bottom_z - (best_supporter_pos[2] + 0.0)
                     ):
@@ -2306,22 +2326,39 @@ class GetSupportingObjectTool(AgenticTool):
             if best_supporter is not None:
                 bname = _extract_body_name(getattr(best_supporter, "root", None))
                 ox, oy, oz = best_supporter_pos
+                artifact = SupportingObjectArtifact(
+                    object_name=object_name,
+                    supported_by=best_supporter.__class__.__name__,
+                    supporter_body=bname,
+                    supporter_position=[round(ox, 3), round(oy, 3), round(oz, 3)],
+                )
                 return (
                     f"'{object_name}' is supported by: [{best_supporter.__class__.__name__}]  "
                     f"body={bname}  pos={_fmt_pos((ox, oy, oz))}"
-                )
+                ), artifact
 
-            # No supporter found — check whether the object is near floor level
             if t_bottom_z <= 0.08:
-                return f"'{object_name}' is resting on the floor/ground (bottom_z={t_bottom_z:.3f} m)."
+                artifact = SupportingObjectArtifact(
+                    object_name=object_name,
+                    supported_by="floor",
+                    supporter_body=None,
+                    supporter_position=None,
+                )
+                return f"'{object_name}' is resting on the floor/ground (bottom_z={t_bottom_z:.3f} m).", artifact
 
+            artifact = SupportingObjectArtifact(
+                object_name=object_name,
+                supported_by=None,
+                supporter_body=None,
+                supporter_position=None,
+            )
             return (
                 f"'{object_name}' has no detected supporter "
                 f"(bottom_z={t_bottom_z:.3f} m, no object found within contact tolerance)."
-            )
+            ), artifact
 
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
 
 
 # ---------------------------------------------------------------------------
@@ -2329,8 +2366,6 @@ class GetSupportingObjectTool(AgenticTool):
 # ---------------------------------------------------------------------------
 
 class GetObjectsSupportedByInput(BaseModel):
-    """Input schema for GetObjectsSupportedByTool."""
-
     object_name: str = Field(
         description="Semantic type name or body_name of the object acting as a support "
                     "(e.g., 'CuttingBoard', 'cutting_board.stl', 'Tray')."
@@ -2349,20 +2384,19 @@ class GetObjectsSupportedByTool(AgenticTool):
     )
     args_schema: Type[BaseModel] = GetObjectsSupportedByInput
 
-    def _run(self, object_name: str) -> str:
+    def _run(self, object_name: str):
         try:
             logger.debug(f"[SDT Tool] Finding objects resting on: {object_name}")
 
-            # ── Resolve target ───────────────────────────────────────────────
             query = object_name.strip().lower()
             target_ann = _find_annotation_by_query(query, get_annotations())
             if target_ann is None:
-                return f"Object '{object_name}' not found in semantic annotations."
+                return f"Object '{object_name}' not found in semantic annotations.", None
 
             target_root = getattr(target_ann, "root", None)
             target_pos = _get_body_position(target_root) if target_root else None
             if target_pos is None:
-                return f"Could not retrieve world position for '{object_name}'."
+                return f"Could not retrieve world position for '{object_name}'.", None
 
             tx, ty, tz = float(target_pos[0]), float(target_pos[1]), float(target_pos[2])
             t_dims = symbol_bounding_box(target_root) if target_root else None
@@ -2371,10 +2405,10 @@ class GetObjectsSupportedByTool(AgenticTool):
             t_hh = (t_dims[2] / 2.0) if t_dims else 0.05
             t_top_z = tz + t_hh
 
-            z_tol = 0.06    # ± 6 cm contact tolerance
+            z_tol = 0.06
             xy_margin = 0.06
 
-            resting: list[tuple] = []
+            resting = []
 
             for other_ann in get_annotations():
                 if other_ann is target_ann:
@@ -2393,7 +2427,6 @@ class GetObjectsSupportedByTool(AgenticTool):
                 other_hh = (other_dims[2] / 2.0) if other_dims else 0.05
                 other_bottom_z = oz - other_hh
 
-                # Contact condition: other's bottom face rests on target's top face
                 z_contact = abs(other_bottom_z - t_top_z) <= z_tol
                 within_x = abs(ox - tx) <= t_hd + xy_margin
                 within_y = abs(oy - ty) <= t_hw + xy_margin
@@ -2403,20 +2436,19 @@ class GetObjectsSupportedByTool(AgenticTool):
                     resting.append((other_ann.__class__.__name__, bname, ox, oy, oz))
 
             if not resting:
-                return f"No objects found resting on '{object_name}'."
+                artifact = SupportedByArtifact(object_name=object_name, resting_objects=[])
+                return f"No objects found resting on '{object_name}'.", artifact
 
-            lines = [
-                f"Objects supported by '{object_name}' ({len(resting)} found):"
-            ]
+            lines = [f"Objects supported by '{object_name}' ({len(resting)} found):"]
+            resting_list = []
             for cls_name, bname, ox, oy, oz in resting:
-                lines.append(
-                    f"  [{cls_name}]  body={bname}  pos={_fmt_pos((ox, oy, oz))}"
-                )
-            lines.append(
-                f"Caution: these objects would be displaced if '{object_name}' is moved."
-            )
-            return "\n".join(lines)
+                lines.append(f"  [{cls_name}]  body={bname}  pos={_fmt_pos((ox, oy, oz))}")
+                resting_list.append({"cls_name": cls_name, "body_name": bname,
+                                     "position": [round(ox, 3), round(oy, 3), round(oz, 3)]})
+            lines.append(f"Caution: these objects would be displaced if '{object_name}' is moved.")
+
+            artifact = SupportedByArtifact(object_name=object_name, resting_objects=resting_list)
+            return "\n".join(lines), artifact
 
         except Exception as e:
-            return self._handle_error(e)
-
+            return self._handle_error(e), None

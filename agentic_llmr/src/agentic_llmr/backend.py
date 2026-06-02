@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
-import json
 import logging
-import re
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, Iterable, Optional, TYPE_CHECKING
@@ -13,7 +11,7 @@ from typing import Any, Dict, Iterable, Optional, TYPE_CHECKING
 from krrood.entity_query_language.backends import GenerativeBackend
 from krrood.entity_query_language.utils import T
 
-from agentic_llmr.core.orchestrator import ReActAgent
+from agentic_llmr.core.orchestrator import ReActAgent, extract_json_payload
 from agentic_llmr.platform.type_bridge import (
     ActionTemplate,
     bind_parameter,
@@ -122,11 +120,8 @@ def _action_has_manipulator_field(action_cls: type) -> bool:
 
 
 def _parse_json_response(agent_response: str) -> Any:
-    """Extract and parse JSON from an agent response string."""
-    json_match = re.search(r"```json\s*(.*?)\s*```", agent_response, re.DOTALL)
-    if json_match:
-        return json.loads(json_match.group(1))
-    return json.loads(agent_response)
+    """Extract and parse JSON from an agent response string (shared with orchestrator)."""
+    return extract_json_payload(agent_response)
 
 
 def _lookup(parameters: Dict[str, Any], prompt_name: str) -> Any:

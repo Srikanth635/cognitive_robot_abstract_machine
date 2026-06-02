@@ -26,15 +26,18 @@ class WriteScratchpadTool(AgenticTool):
     args_schema: Type[BaseModel] = WriteScratchpadInput
     scratchpad_path: str = "agent_scratchpad.md"
 
-    def _run(self, content: str, mode: str = "append") -> str:
+    def _run(self, content: str, mode: str = "append"):
         try:
             logger.debug(f"[Memory Tool] Writing to {self.scratchpad_path} (mode: {mode})...")
+            parent = os.path.dirname(self.scratchpad_path)
+            if parent:
+                os.makedirs(parent, exist_ok=True)
             file_mode = "a" if mode == "append" else "w"
             with open(self.scratchpad_path, file_mode, encoding="utf-8") as f:
                 f.write(content + "\n")
-            return f"Successfully wrote to {self.scratchpad_path}."
+            return f"Successfully wrote to {self.scratchpad_path}.", None
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None
 
 
 class ReadScratchpadInput(BaseModel):
@@ -47,13 +50,13 @@ class ReadScratchpadTool(AgenticTool):
     args_schema: Type[BaseModel] = ReadScratchpadInput
     scratchpad_path: str = "agent_scratchpad.md"
 
-    def _run(self) -> str:
+    def _run(self):
         try:
             logger.debug(f"[Memory Tool] Reading {self.scratchpad_path}...")
             if not os.path.exists(self.scratchpad_path):
-                return "The scratchpad is currently empty (file does not exist)."
+                return "The scratchpad is currently empty (file does not exist).", None
             with open(self.scratchpad_path, "r", encoding="utf-8") as f:
                 content = f.read()
-            return content if content else "The scratchpad is empty."
+            return (content if content else "The scratchpad is empty."), None
         except Exception as e:
-            return self._handle_error(e)
+            return self._handle_error(e), None

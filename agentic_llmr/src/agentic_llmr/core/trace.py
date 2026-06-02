@@ -15,7 +15,10 @@ logger = logging.getLogger(__name__)
 # Node model
 # ---------------------------------------------------------------------------
 
-_SUB_AGENT_TOOLS = {"query_scene_perception", "query_kinematics", "query_action_schema"}
+# Names of the supervisor's specialist subgraph nodes. In the StateGraph
+# architecture each specialist is a graph node (not a tool), identified at runtime
+# by LangGraph's "langgraph_node" run metadata.
+_SUB_AGENT_NODES = {"scene_perception", "kinematics", "planning"}
 
 _NODE_STYLES = {
     "orchestrator": {"color": "#4472C4", "shape": "box",     "font_color": "#ffffff", "size": 28},
@@ -68,15 +71,12 @@ class TraceCollector(BaseCallbackHandler):
 
     # -- helpers --
 
-    def _node_type(self, name: str) -> str:
-        return "sub_agent" if name in _SUB_AGENT_TOOLS else "tool"
-
     def _track(self, run_id: uuid.UUID, parent_run_id: Optional[uuid.UUID]) -> None:
         if parent_run_id is not None:
             self._run_parent[str(run_id)] = str(parent_run_id)
 
     def _parent_node(self, parent_run_id: Optional[uuid.UUID]) -> TraceNode:
-        """Walk up the run-parent chain until we reach a known tool/agent node."""
+        """Walk up the run-parent chain until we reach a known sub-agent/tool node."""
         if parent_run_id is None:
             return self.root
         current = str(parent_run_id)
@@ -102,10 +102,37 @@ class TraceCollector(BaseCallbackHandler):
         *,
         run_id: uuid.UUID,
         parent_run_id: Optional[uuid.UUID] = None,
+        metadata: Optional[Dict[str, Any]] = None,
         **kwargs: Any,
     ) -> None:
-        """Track this run's parent so tool events can walk up to a known node."""
+        """Track this run's parent, and register specialist subgraph nodes.
+
+        Sub-agents are LangGraph nodes, not tools. LangGraph tags each node run
+        with metadata["langgraph_node"]; the outermost run carrying a specialist
+        name becomes a sub_agent node so its internal tool calls nest under it.
+        """
         self._track(run_id, parent_run_id)
+
+        node_name = (metadata or {}).get("langgraph_node")
+        if node_name is None:
+            node_name = kwargs.get("name") or (serialized or {}).get("name")
+        if node_name not in _SUB_AGENT_NODES:
+            return
+
+        # Register only the outermost run of this invocation: if the nearest
+        # already-known ancestor is itself a sub_agent, we are nested inside one.
+        parent = self._parent_node(parent_run_id)
+        if parent.node_type == "sub_agent":
+            return
+        node = TraceNode(
+            run_id=str(run_id),
+            name=node_name,
+            node_type="sub_agent",
+            parent_run_id=str(parent_run_id) if parent_run_id else None,
+            input_summary=self._truncate(str(inputs.get("current_task", "")) if isinstance(inputs, dict) else ""),
+        )
+        parent.children.append(node)
+        self._nodes[str(run_id)] = node
 
     def on_llm_start(
         self,
@@ -137,7 +164,7 @@ class TraceCollector(BaseCallbackHandler):
         node = TraceNode(
             run_id=str(run_id),
             name=name,
-            node_type=self._node_type(name),
+            node_type="tool",
             parent_run_id=str(parent_run_id) if parent_run_id else None,
             input_summary=self._truncate(input_str),
         )

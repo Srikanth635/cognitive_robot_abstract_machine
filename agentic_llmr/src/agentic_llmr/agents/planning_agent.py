@@ -1,25 +1,34 @@
 """Planning Agent — specialist for action schema discovery and physics simulation."""
 
 import logging
-from typing import Any, Literal
-from langgraph.prebuilt import create_react_agent
-from langgraph.types import Command
-from langchain_core.messages import HumanMessage
+from typing import Any, Dict, TYPE_CHECKING
+from typing_extensions import TypedDict, Annotated
+from langchain_core.messages import BaseMessage
+from langgraph.graph import StateGraph, START, END
+from langgraph.graph.message import add_messages
 
-from agentic_llmr.core.state import RobotAgentState
+if TYPE_CHECKING:
+    from langchain_core.language_models import BaseChatModel
+
+from agentic_llmr.core.state import _merge_dicts
+from agentic_llmr.core.interfaces import (
+    ExecuteToolsNode, make_prepare_query, make_call_model, tools_condition,
+)
 
 logger = logging.getLogger(__name__)
+
 from agentic_llmr.tools.scratchpad import WriteScratchpadTool, ReadScratchpadTool
-from agentic_llmr.tools.planning import ListAvailableActionsTool, GetActionDocumentationTool
-from agentic_llmr.tools.planning import SimulateActionTool
+from agentic_llmr.tools.planning import ListAvailableActionsTool, GetActionDocumentationTool, SimulateActionTool
 
 _SCRATCHPAD = "pycram_scratchpad.md"
 
-SYSTEM_PROMPT = """You are the PyCRAM Agent — a specialist in action schemas and physics simulation.
+SYSTEM_PROMPT = """You are the PyCRAM Planning specialist. You turn a physical command into
+an executable action, working in two modes:
+1. Schema discovery — identify the correct PyCRAM action class and describe its parameters.
+2. Simulation — execute a proposed action in the physics engine to validate it.
 
-You have two responsibilities:
-1. Schema discovery: identify the correct PyCRAM action class and its required parameters.
-2. Simulation: execute a proposed action in the physics engine to validate it.
+Reason first about which mode the task needs, then choose your tools accordingly. The tool
+list below describes capabilities, not a fixed order.
 
 ━━━ SCRATCHPAD USAGE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -29,66 +38,72 @@ work. Use it to:
 2. Log the action class name and parameter schema once discovered.
 3. Document simulation results (success, errors, parameter values used).
 
-Your scratchpad is private to the orchestrator. Update it as you work.
-
-━━━ TOOLS AVAILABLE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━ TOOLS AVAILABLE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Tools available:
 - list_available_actions  : lists all registered PyCRAM action classes.
 - get_action_documentation: returns the full parameter spec for a named action class.
 - simulate_action         : executes an action with given parameters in the physics model.
 
-Rules:
-- For schema queries: call list_available_actions first if unsure of the class name.
-  Return the action class name and a clear description of every parameter (name, type, meaning).
-  Do not guess parameter values — only describe the schema.
-- For simulation requests: run the action exactly as instructed. Report success or the exact
-  error message. Do not retry unless explicitly asked.
+━━━ HOW TO WORK ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- When you are unsure which action class applies, discover it before describing it; when you
+  know it, go straight to its schema.
+- For a schema task: report the action class name and every parameter (name, type, meaning).
+  Describe the schema — do not invent parameter values that were not provided.
+- For a simulation task: run the action as specified and report the outcome honestly —
+  success, or the exact error. Do not silently retry or paper over a failure.
+- GROUND IN GIVEN VALUES. Object poses, the chosen arm, and other concrete facts come from the
+  task; use them as given rather than assuming.
 """
 
 
-class PlanningAgent:
-    """Action schema and simulation specialist."""
+# ---------------------------------------------------------------------------
+# Subgraph state
+# ---------------------------------------------------------------------------
 
-    def __init__(self, llm: Any):
+class PlanningAgentState(TypedDict):
+    """State for the planning subgraph. Shared keys are passed from/to parent."""
+    messages:         Annotated[list[BaseMessage], add_messages]
+    kinematic_facts:  Annotated[Dict[str, Any], _merge_dicts]   # READ from parent
+    action_schema:    Dict[str, Any]                             # WRITE to parent
+    instruction:      str
+    current_task:     str
+    template_context: str
+
+
+# ---------------------------------------------------------------------------
+# PlanningAgent
+# ---------------------------------------------------------------------------
+
+class PlanningAgent:
+    """Action schema and simulation specialist with a custom LangGraph subgraph."""
+
+    def __init__(self, llm: "BaseChatModel", scratchpad_path: str = _SCRATCHPAD):
         self.llm = llm
+        self.scratchpad_path = scratchpad_path
         self.tools = [
-            WriteScratchpadTool(scratchpad_path=_SCRATCHPAD),
-            ReadScratchpadTool(scratchpad_path=_SCRATCHPAD),
+            WriteScratchpadTool(scratchpad_path=scratchpad_path),
+            ReadScratchpadTool(scratchpad_path=scratchpad_path),
             ListAvailableActionsTool(),
             GetActionDocumentationTool(),
             SimulateActionTool(),
         ]
-        self._agent = create_react_agent(
-            model=self.llm,
-            tools=self.tools,
-            prompt=SYSTEM_PROMPT,
-            name="planning",
-        )
 
+        llm_with_tools = llm.bind_tools(self.tools)
 
-def _build_query(state: RobotAgentState) -> str:
-    """Construct the task string from the original instruction and template context."""
-    ctx = state.get("template_context", "")
-    return f"Instruction: {state['instruction']}\nContext: {ctx}" if ctx else state["instruction"]
+        builder = StateGraph(PlanningAgentState)
+        builder.add_node("prepare_query", make_prepare_query([
+            ("kinematic_facts", "Known kinematic facts (do NOT re-query these)"),
+        ]))
+        builder.add_node("call_model", make_call_model(llm_with_tools, SYSTEM_PROMPT))
+        builder.add_node("execute_tools", ExecuteToolsNode(self.tools, "action_schema", merge=False))
 
+        builder.add_edge(START, "prepare_query")
+        builder.add_edge("prepare_query", "call_model")
+        builder.add_conditional_edges("call_model", tools_condition,
+                                      {"execute_tools": "execute_tools", END: END})
+        builder.add_edge("execute_tools", "call_model")
 
-def planning_node(
-    state: RobotAgentState,
-    agent: "PlanningAgent",
-) -> Command[Literal["supervisor"]]:
-    """LangGraph node: invoke the PyCRAM planning react agent."""
-    base_query = _build_query(state)
-    kin_ctx = ""
-    if state.get("kinematic_facts"):
-        facts_str = "\n".join(f"  {k}: {v}" for k, v in state["kinematic_facts"].items())
-        kin_ctx = f"\n\nKnown kinematic facts (do NOT re-query these):\n{facts_str}"
-    enriched = base_query + kin_ctx
-    logger.debug("  ► [PyCRAM Agent] %s", enriched[:120])
-    result = agent._agent.invoke({"messages": [HumanMessage(content=enriched)]})
-    last_msg = result["messages"][-1]
-    logger.debug("  ◄ [PyCRAM Agent] Done.")
-    return Command(
-        goto="supervisor",
-        update={"messages": [last_msg]},
-    )
+        self.subgraph = builder.compile()
+        logger.debug("[PlanningAgent] Subgraph compiled with %d tools.", len(self.tools))

@@ -6,10 +6,20 @@ import concurrent.futures
 from typing import Any, Dict, List, Optional, Type
 from pydantic import BaseModel, Field
 from agentic_llmr.core.interfaces import AgenticTool
+from agentic_llmr.tools.artifacts import (
+    ReachabilityArtifact,
+    ArmSuitabilityArtifact,
+    GraspPosesArtifact,
+    ForwardKinematicsArtifact,
+    IKSolutionArtifact,
+    JointLimitsDetailedArtifact,
+    SelfCollisionCheckArtifact,
+)
 from agentic_llmr.platform.world import (
     get_active_world,
-    compute_grasp_descriptions, get_bodies, get_arm_label,
-    get_robot_base_body, symbol_display_name,
+    compute_grasp_descriptions, compute_ik_bridge,
+    get_bodies, get_arm_label,
+    get_robot_base_body, symbol_display_name, find_body_by_name,
 )
 import numpy as np
 from scipy.spatial.transform import Rotation as R
@@ -96,56 +106,65 @@ class CheckReachabilityTool(AgenticTool):
         "Binary reachability check for a target 3D pose. "
         "Reports Reachable/Unreachable, shoulder-to-target distance, and signed lateral offset "
         "(positive = target is to the arm's outer side) for each arm. "
-        "Call this first before any pick/place action to gate on whether each arm can reach at all. "
-        "If both arms are Reachable, follow up with compare_arm_suitability to select the better one."
+        "Answers whether a given world-frame target lies within an arm's workspace."
     )
     args_schema: Type[BaseModel] = ReachabilityInput
 
-    def _run(self, target_pose: Dict[str, Any]) -> str:
-        try:
-            logger.debug(f"[Giskard Tool] Checking reachability for pose: {target_pose}")
+    def _query(self, target_pose: Dict[str, Any]) -> ReachabilityArtifact:
+        logger.debug(f"[Giskard Tool] Checking reachability for pose: {target_pose}")
 
-            pos = target_pose.get("position", {})
-            tx, ty, tz = float(pos.get("x", 0)), float(pos.get("y", 0)), float(pos.get("z", 0))
+        pos = target_pose.get("position", {})
+        tx, ty, tz = float(pos.get("x", 0)), float(pos.get("y", 0)), float(pos.get("z", 0))
 
-            world, robot_view = get_active_world()
-            T_base_inv = _get_base_inv(world, robot_view)
-            target_rf = _to_robot_frame(np.array([tx, ty, tz]), T_base_inv)
+        world, robot_view = get_active_world()
+        T_base_inv = _get_base_inv(world, robot_view)
+        target_rf = _to_robot_frame(np.array([tx, ty, tz]), T_base_inv)
 
-            arms = getattr(robot_view, "arms", [])
-            if not arms:
-                return "No arms found on robot."
+        arms = getattr(robot_view, "arms", [])
+        if not arms:
+            raise RuntimeError("No arms found on robot.")
 
-            results = []
-            for arm in arms:
-                label = get_arm_label(arm, robot_view).upper()
-                try:
-                    T_sh = world.compute_forward_kinematics_np(world.root, arm.root)
-                    shoulder_rf = _to_robot_frame(
-                        np.array([T_sh[0, 3], T_sh[1, 3], T_sh[2, 3]]), T_base_inv
-                    )
-                except Exception:
-                    results.append(f"{label}: could not read shoulder position")
-                    continue
-
-                delta = target_rf - shoulder_rf
-                d = float(np.linalg.norm(delta))
-                max_reach = _compute_arm_reach(arm, world)
-                in_front = target_rf[0] > -0.2
-                reachable = d <= max_reach and in_front
-                status = "Reachable" if reachable else "Unreachable"
-                # Signed lateral offset: positive → target is to the outer side of this arm
-                lat = delta[1]
-                results.append(
-                    f"{label}: {status} "
-                    f"(distance: {d:.3f}m / {max_reach:.3f}m, "
-                    f"lateral offset: {lat:+.3f}m)"
+        results = []
+        for arm in arms:
+            label = get_arm_label(arm, robot_view).upper()
+            try:
+                T_sh = world.compute_forward_kinematics_np(world.root, arm.root)
+                shoulder_rf = _to_robot_frame(
+                    np.array([T_sh[0, 3], T_sh[1, 3], T_sh[2, 3]]), T_base_inv
                 )
+            except Exception:
+                results.append({"arm": label, "status": "error", "distance_m": None,
+                                 "max_reach_m": None, "lateral_offset_m": None})
+                continue
 
-            return " | ".join(results)
+            delta = target_rf - shoulder_rf
+            d = float(np.linalg.norm(delta))
+            max_reach = _compute_arm_reach(arm, world)
+            in_front = target_rf[0] > -0.2
+            reachable = d <= max_reach and in_front
+            results.append({
+                "arm": label,
+                "status": "Reachable" if reachable else "Unreachable",
+                "distance_m": round(d, 3),
+                "max_reach_m": round(max_reach, 3),
+                "lateral_offset_m": round(float(delta[1]), 3),
+            })
 
-        except Exception as e:
-            return self._handle_error(e)
+        return ReachabilityArtifact(results=results)
+
+    def _format(self, artifact: ReachabilityArtifact) -> str:
+        parts = []
+        for r in artifact.results:
+            arm = r["arm"]
+            if r["status"] == "error":
+                parts.append(f"{arm}: could not read shoulder position")
+            else:
+                parts.append(
+                    f"{arm}: {r['status']} "
+                    f"(distance: {r['distance_m']:.3f}m / {r['max_reach_m']:.3f}m, "
+                    f"lateral offset: {r['lateral_offset_m']:+.3f}m)"
+                )
+        return " | ".join(parts)
 
 
 # ── CompareArmSuitabilityTool helpers ─────────────────────────────────────────
@@ -299,81 +318,93 @@ class CompareArmSuitabilityTool(AgenticTool):
         "  3. Obstacle clearance — minimum distance from each arm's straight-line "
         "shoulder→target path to each named obstacle body.\n"
         "Returns per-criterion scores, a composite score, and a final recommendation. "
-        "Call this after check_kinematic_reachability confirms both arms are Reachable — "
-        "do not skip the reachability gate."
+        "Use it to choose between arms that can reach a target."
     )
     args_schema: Type[BaseModel] = ArmSuitabilityInput
 
-    def _run(self, target_pose: Dict[str, Any], nearby_obstacles: List[str] = []) -> str:
-        try:
-            world, robot_view = get_active_world()
-            arms = getattr(robot_view, "arms", [])
-            if not arms:
-                return "No arms found on robot."
+    def _query(self, target_pose: Dict[str, Any], nearby_obstacles: List[str] = []) -> ArmSuitabilityArtifact:
+        world, robot_view = get_active_world()
+        arms = getattr(robot_view, "arms", [])
+        if not arms:
+            raise RuntimeError("No arms found on robot.")
 
-            pos = target_pose.get("position", {})
-            tx, ty, tz = float(pos.get("x", 0)), float(pos.get("y", 0)), float(pos.get("z", 0))
-            T_base_inv = _get_base_inv(world, robot_view)
-            target_rf = _to_robot_frame(np.array([tx, ty, tz]), T_base_inv)
+        pos = target_pose.get("position", {})
+        tx, ty, tz = float(pos.get("x", 0)), float(pos.get("y", 0)), float(pos.get("z", 0))
+        T_base_inv = _get_base_inv(world, robot_view)
+        target_rf = _to_robot_frame(np.array([tx, ty, tz]), T_base_inv)
 
-            robot_body_names = _collect_robot_body_names(robot_view, arms)
-            obstacle_positions = _resolve_obstacle_positions(
-                nearby_obstacles, robot_body_names, world, T_base_inv
+        robot_body_names = _collect_robot_body_names(robot_view, arms)
+        obstacle_positions = _resolve_obstacle_positions(
+            nearby_obstacles, robot_body_names, world, T_base_inv
+        )
+
+        arm_results = []
+        for arm in arms:
+            label = get_arm_label(arm, robot_view).upper()
+            try:
+                T_sh = world.compute_forward_kinematics_np(world.root, arm.root)
+                shoulder_rf = _to_robot_frame(
+                    np.array([T_sh[0, 3], T_sh[1, 3], T_sh[2, 3]]), T_base_inv
+                )
+            except Exception:
+                arm_results.append((label, None, "Could not read shoulder position."))
+                continue
+
+            max_reach = _compute_arm_reach(arm, world)
+            delta = target_rf - shoulder_rf
+            d = float(np.linalg.norm(delta))
+
+            if not (d <= max_reach and target_rf[0] > -0.2):
+                arm_results.append(
+                    (label, None, f"Unreachable (d={d:.3f}m, max={max_reach:.3f}m)")
+                )
+                continue
+
+            lateral_score, lat_signed = _score_lateral_alignment(delta, max_reach)
+            joint_score, pan_angle, elev_angle = _score_joint_limit_margin(delta)
+            clearance_score, min_clearance = _score_obstacle_clearance(
+                shoulder_rf, target_rf, obstacle_positions
             )
 
-            arm_results = []
-            for arm in arms:
-                label = get_arm_label(arm, robot_view).upper()
-                try:
-                    T_sh = world.compute_forward_kinematics_np(world.root, arm.root)
-                    shoulder_rf = _to_robot_frame(
-                        np.array([T_sh[0, 3], T_sh[1, 3], T_sh[2, 3]]), T_base_inv
-                    )
-                except Exception:
-                    arm_results.append((label, None, "Could not read shoulder position."))
-                    continue
+            if obstacle_positions:
+                w_lat, w_jnt, w_clr = 0.35, 0.35, 0.30
+            else:
+                w_lat, w_jnt, w_clr = 0.50, 0.50, 0.00
 
-                max_reach = _compute_arm_reach(arm, world)
-                delta = target_rf - shoulder_rf
-                d = float(np.linalg.norm(delta))
+            total = w_lat * lateral_score + w_jnt * joint_score + w_clr * clearance_score
+            clearance_str = (
+                f"{min_clearance:.3f}m" if min_clearance is not None else "N/A (no obstacles)"
+            )
+            arm_results.append((label, total, {
+                "lateral":      f"{lateral_score:.2f}  (y-offset {lat_signed:+.3f}m)",
+                "joint_margin": (
+                    f"{joint_score:.2f}  "
+                    f"(pan {math.degrees(pan_angle):+.1f}°, "
+                    f"elev {math.degrees(elev_angle):+.1f}°)"
+                ),
+                "clearance":    f"{clearance_score:.2f}  (min dist {clearance_str})",
+                "total":        f"{total:.2f}",
+            }))
 
-                if not (d <= max_reach and target_rf[0] > -0.2):
-                    arm_results.append(
-                        (label, None, f"Unreachable (d={d:.3f}m, max={max_reach:.3f}m)")
-                    )
-                    continue
+        arm_results.sort(key=lambda x: (x[1] is None, -(x[1] or 0.0)))
 
-                lateral_score, lat_signed = _score_lateral_alignment(delta, max_reach)
-                joint_score, pan_angle, elev_angle = _score_joint_limit_margin(delta)
-                clearance_score, min_clearance = _score_obstacle_clearance(
-                    shoulder_rf, target_rf, obstacle_positions
-                )
+        best_feasible = next(
+            ((lbl, sc) for lbl, sc, _ in arm_results if sc is not None), None
+        )
+        recommendation = f"{best_feasible[0]} arm" if best_feasible else None
 
-                if obstacle_positions:
-                    w_lat, w_jnt, w_clr = 0.35, 0.35, 0.30
-                else:
-                    w_lat, w_jnt, w_clr = 0.50, 0.50, 0.00
+        ranked = []
+        for label, score, detail in arm_results:
+            ranked.append({"arm": label, "score": score, "criteria": detail})
 
-                total = w_lat * lateral_score + w_jnt * joint_score + w_clr * clearance_score
-                clearance_str = (
-                    f"{min_clearance:.3f}m" if min_clearance is not None else "N/A (no obstacles)"
-                )
-                arm_results.append((label, total, {
-                    "lateral":      f"{lateral_score:.2f}  (y-offset {lat_signed:+.3f}m)",
-                    "joint_margin": (
-                        f"{joint_score:.2f}  "
-                        f"(pan {math.degrees(pan_angle):+.1f}°, "
-                        f"elev {math.degrees(elev_angle):+.1f}°)"
-                    ),
-                    "clearance":    f"{clearance_score:.2f}  (min dist {clearance_str})",
-                    "total":        f"{total:.2f}",
-                }))
+        return ArmSuitabilityArtifact(ranked=ranked, recommendation=recommendation)
 
-            arm_results.sort(key=lambda x: (x[1] is None, -(x[1] or 0.0)))
-            return _format_suitability_report(arm_results)
-
-        except Exception as e:
-            return self._handle_error(e)
+    def _format(self, artifact: ArmSuitabilityArtifact) -> str:
+        # Rebuild the arm_results tuple list for the existing formatter
+        arm_results = []
+        for entry in artifact.ranked:
+            arm_results.append((entry["arm"], entry["score"], entry["criteria"]))
+        return _format_suitability_report(arm_results)
 
 
 # ── GetGraspPosesTool ──────────────────────────────────────────────────────────
@@ -398,67 +429,419 @@ class GetGraspPosesTool(AgenticTool):
         "Get valid grasp approach direction labels for an object: TOP, FRONT, LEFT, RIGHT, BACK. "
         "Returns discrete direction labels and vertical alignment (NoAlignment/TOP/BOTTOM) — "
         "not full 6-DOF poses. "
-        "Call this after get_object_orientation to select the most suitable approach. "
         "Requires the exact body_name (e.g., 'milk.stl') not a semantic class name."
     )
     args_schema: Type[BaseModel] = GraspPosesInput
 
-    def _run(self, object_name: str) -> List[str]:
-        try:
-            logger.debug(f"[Giskard Tool] Getting grasp poses for: {object_name}")
-            world, robot_view = get_active_world()
+    def _query(self, object_name: str) -> GraspPosesArtifact:
+        logger.debug(f"[Giskard Tool] Getting grasp poses for: {object_name}")
+        world, robot_view = get_active_world()
 
-            target_body = None
-            for body in get_bodies():
-                if symbol_display_name(body) == object_name:
-                    target_body = body
-                    break
+        target_body = None
+        for body in get_bodies():
+            if symbol_display_name(body) == object_name:
+                target_body = body
+                break
 
-            if not target_body:
-                return [f"Error: Object '{object_name}' not found in the active world."]
+        if not target_body:
+            raise ValueError(f"Object '{object_name}' not found in the active world.")
 
-            arms = getattr(robot_view, "arms", [])
-            if not arms:
-                return ["Error: No arms found on robot."]
-            manipulator = getattr(arms[0], "manipulator", None)
-            if manipulator is None:
-                return ["Error: No manipulator found on robot arm."]
+        arms = getattr(robot_view, "arms", [])
+        if not arms:
+            raise RuntimeError("No arms found on robot.")
+        manipulator = getattr(arms[0], "manipulator", None)
+        if manipulator is None:
+            raise RuntimeError("No manipulator found on robot arm.")
 
-            T = world.compute_forward_kinematics_np(world.root, target_body)
-            x, y, z = T[:3, 3]
-            quat = R.from_matrix(T[:3, :3]).as_quat()
+        T = world.compute_forward_kinematics_np(world.root, target_body)
+        x, y, z = T[:3, 3]
+        quat = R.from_matrix(T[:3, :3]).as_quat()
 
-            def _compute():
-                return compute_grasp_descriptions(
-                    manipulator,
-                    (float(x), float(y), float(z)),
-                    (float(quat[0]), float(quat[1]), float(quat[2]), float(quat[3])),
-                    world.root,
-                )
+        def _compute():
+            return compute_grasp_descriptions(
+                manipulator,
+                (float(x), float(y), float(z)),
+                (float(quat[0]), float(quat[1]), float(quat[2]), float(quat[3])),
+                world.root,
+            )
 
-            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
-                future = ex.submit(_compute)
-                try:
-                    grasps = future.result(timeout=_GRASP_TIMEOUT)
-                except concurrent.futures.TimeoutError:
-                    grasps = None
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
+            future = ex.submit(_compute)
+            try:
+                grasps = future.result(timeout=_GRASP_TIMEOUT)
+            except concurrent.futures.TimeoutError:
+                grasps = None
 
-            if grasps is None:
-                return [
-                    "approach_direction: TOP,   vertical_alignment: NoAlignment",
-                    "approach_direction: FRONT, vertical_alignment: NoAlignment",
-                    "approach_direction: LEFT,  vertical_alignment: NoAlignment",
-                    "approach_direction: RIGHT, vertical_alignment: NoAlignment",
-                    "approach_direction: BACK,  vertical_alignment: NoAlignment",
-                ]
-
-            return [
-                f"approach_direction: {g.approach_direction.name}, "
-                f"vertical_alignment: {g.vertical_alignment.name}"
+        if grasps is None:
+            approaches = [
+                {"approach_direction": "TOP",   "vertical_alignment": "NoAlignment"},
+                {"approach_direction": "FRONT", "vertical_alignment": "NoAlignment"},
+                {"approach_direction": "LEFT",  "vertical_alignment": "NoAlignment"},
+                {"approach_direction": "RIGHT", "vertical_alignment": "NoAlignment"},
+                {"approach_direction": "BACK",  "vertical_alignment": "NoAlignment"},
+            ]
+        else:
+            approaches = [
+                {
+                    "approach_direction": g.approach_direction.name,
+                    "vertical_alignment": g.vertical_alignment.name,
+                }
                 for g in grasps
             ]
 
+        return GraspPosesArtifact(body_name=object_name, approaches=approaches)
+
+    def _format(self, artifact: GraspPosesArtifact) -> str:
+        return "\n".join(
+            f"approach_direction: {a['approach_direction']}, "
+            f"vertical_alignment: {a['vertical_alignment']}"
+            for a in artifact.approaches
+        )
+
+
+# ── Shared helpers for new tools ───────────────────────────────────────────────
+
+
+def _find_arm_by_label(robot_view: Any, label: str) -> Optional[Any]:
+    """Return the arm annotation whose label matches 'left' or 'right' (case-insensitive)."""
+    arms = getattr(robot_view, "arms", [])
+    for arm in arms:
+        if get_arm_label(arm, robot_view).lower() == label.lower():
+            return arm
+    return None
+
+
+def _extract_body_name(body: Any) -> str:
+    """Return display name for a body, tolerating various name wrapper types."""
+    return symbol_display_name(body) or repr(body)
+
+
+def _iter_arm_controlled_connections(arm_annotation: Any):
+    """Yield (conn, dof, joint_name) for every controlled connection in an arm."""
+    seen = set()
+    for js in getattr(arm_annotation, "joint_states", []):
+        for conn in getattr(js, "connections", []):
+            conn_id = id(conn)
+            if conn_id in seen:
+                continue
+            seen.add(conn_id)
+            if not getattr(conn, "is_controlled", False):
+                continue
+            if not (hasattr(conn, "position") and hasattr(conn, "dof")):
+                continue
+            name_obj = getattr(conn, "name", None)
+            jname = str(name_obj.name) if hasattr(name_obj, "name") else str(name_obj)
+            yield conn, conn.dof, jname
+
+
+# ── ComputeForwardKinematicsTool ───────────────────────────────────────────────
+
+
+class FKInput(BaseModel):
+    link_name: str = Field(
+        description=(
+            "Exact name of the robot kinematic-tree link to compute FK for, e.g. "
+            "'r_gripper_tool_frame' (hand), 'r_wrist_roll_link' (wrist), "
+            "'r_elbow_flex_link' (elbow), 'r_forearm_link', 'r_upper_arm_link'. "
+            "Left-arm links use the 'l_' prefix."
+        )
+    )
+
+
+class ComputeForwardKinematicsTool(AgenticTool):
+    """Compute the current world-frame pose of any named link in the kinematic tree."""
+
+    name: str = "compute_forward_kinematics"
+    description: str = (
+        "Compute the current world-frame position and orientation of a named robot link. "
+        "Returns the 6-DoF pose (position + quaternion) of the requested body in world coordinates. "
+        "Use this to confirm where a specific wrist, elbow, or tool-frame link actually is right now. "
+        "Requires the exact body_name (not a semantic class name)."
+    )
+    args_schema: Type[BaseModel] = FKInput
+
+    def _run(self, link_name: str):
+        try:
+            world, _ = get_active_world()
+            body = find_body_by_name(link_name)
+            if body is None:
+                return f"Link '{link_name}' not found in the world.", None
+            T = world.compute_forward_kinematics_np(world.root, body)
+            pos = {
+                "x": round(float(T[0, 3]), 5),
+                "y": round(float(T[1, 3]), 5),
+                "z": round(float(T[2, 3]), 5),
+            }
+            quat = R.from_matrix(T[:3, :3]).as_quat()  # xyzw
+            ori = {
+                "x": round(float(quat[0]), 5),
+                "y": round(float(quat[1]), 5),
+                "z": round(float(quat[2]), 5),
+                "w": round(float(quat[3]), 5),
+            }
+            artifact = ForwardKinematicsArtifact(link_name=link_name, position=pos, orientation=ori)
+            content = (
+                f"FK of '{link_name}':\n"
+                f"  position:    ({pos['x']:.4f}, {pos['y']:.4f}, {pos['z']:.4f})\n"
+                f"  orientation (xyzw): ({ori['x']:.4f}, {ori['y']:.4f}, {ori['z']:.4f}, {ori['w']:.4f})"
+            )
+            return content, artifact
         except Exception as e:
-            import traceback
-            traceback.print_exc()
-            return [self._handle_error(e)]
+            return self._handle_error(e), None
+
+
+# ── SolveInverseKinematicsTool ─────────────────────────────────────────────────
+
+
+class IKInput(BaseModel):
+    arm: str = Field(description="Arm to solve IK for: 'left' or 'right'.")
+    target_pose: Dict[str, Any] = Field(
+        description=(
+            "Target 6-DoF pose in world frame. "
+            "Dict with 'position' ({x, y, z}) and 'orientation' ({x, y, z, w})."
+        )
+    )
+
+
+class SolveInverseKinematicsTool(AgenticTool):
+    """Compute a joint configuration that places an arm's tool frame at a target pose."""
+
+    name: str = "solve_inverse_kinematics"
+    description: str = (
+        "Compute the joint configuration that places the arm's tool frame at the given "
+        "world-frame 6-DoF pose. Returns the joint positions (in radians) if a solution exists. "
+        "Distinct from check_kinematic_reachability (binary yes/no): this returns the actual joint "
+        "values needed to verify joint-limit feasibility or pre-validate a motion before executing it. "
+        "Follow up with check_self_collision_at_config to confirm the solution is collision-free."
+    )
+    args_schema: Type[BaseModel] = IKInput
+
+    def _run(self, arm: str, target_pose: Dict[str, Any]):
+        try:
+            world, robot_view = get_active_world()
+            arm_annotation = _find_arm_by_label(robot_view, arm)
+            if arm_annotation is None:
+                return f"Arm '{arm}' not found on robot.", None
+
+            root_body = getattr(arm_annotation, "root", None)
+            manipulator = getattr(arm_annotation, "manipulator", None)
+            tip_body = (
+                getattr(manipulator, "tool_frame", None)
+                or getattr(arm_annotation, "tip", None)
+            )
+            if root_body is None or tip_body is None:
+                return (
+                    f"Could not resolve root/tip bodies for arm '{arm}'. "
+                    "Check that the robot model has a manipulator with a tool_frame.", None
+                )
+
+            pos = target_pose.get("position", {})
+            ori = target_pose.get("orientation", {})
+            x, y, z = float(pos.get("x", 0)), float(pos.get("y", 0)), float(pos.get("z", 0))
+            qx = float(ori.get("x", 0))
+            qy = float(ori.get("y", 0))
+            qz = float(ori.get("z", 0))
+            qw = float(ori.get("w", 1))
+
+            joint_positions = compute_ik_bridge(world, root_body, tip_body, x, y, z, qx, qy, qz, qw)
+
+            artifact = IKSolutionArtifact(arm=arm, feasible=True, joint_positions=joint_positions)
+            lines = [f"IK solution for '{arm}' arm (tool frame → target pose):"]
+            for jname, jpos in joint_positions.items():
+                lines.append(f"  {jname}: {jpos:.4f} rad")
+            return "\n".join(lines), artifact
+
+        except Exception as e:
+            msg = str(e)
+            artifact = IKSolutionArtifact(arm=arm, feasible=False, joint_positions={}, error_message=msg)
+            return f"IK failed for '{arm}' arm: {msg}", artifact
+
+
+# ── GetJointLimitsDetailedTool ─────────────────────────────────────────────────
+
+
+class JointLimitsInput(BaseModel):
+    arm: str = Field(description="Arm to query: 'left' or 'right'.")
+
+
+class GetJointLimitsDetailedTool(AgenticTool):
+    """Return position, velocity, and acceleration limits for every joint in an arm."""
+
+    name: str = "get_joint_limits_detailed"
+    description: str = (
+        "Get position, velocity, and acceleration limits for each controllable joint in the "
+        "specified arm. Returns per-joint: position range [min, max] in radians, velocity limit "
+        "(rad/s), and acceleration limit (rad/s²) where defined in the robot model. "
+        "Use this to validate whether a planned joint configuration or motion profile is within "
+        "hardware constraints. It also reports the exact joint names for an arm."
+    )
+    args_schema: Type[BaseModel] = JointLimitsInput
+
+    def _run(self, arm: str):
+        try:
+            _, robot_view = get_active_world()
+            arm_annotation = _find_arm_by_label(robot_view, arm)
+            if arm_annotation is None:
+                return f"Arm '{arm}' not found on robot.", None
+
+            joints = []
+            rows = []
+
+            def _safe_float(limits_map, attr: str) -> Optional[float]:
+                try:
+                    v = getattr(limits_map, attr, None)
+                    return round(float(v), 5) if v is not None else None
+                except Exception:
+                    return None
+
+            for conn, dof, jname in _iter_arm_controlled_connections(arm_annotation):
+                lims = dof.limits
+                lo = lims.lower if lims else None
+                hi = lims.upper if lims else None
+
+                pos_lo = _safe_float(lo, "position")
+                pos_hi = _safe_float(hi, "position")
+                vel_lo = _safe_float(lo, "velocity")
+                vel_hi = _safe_float(hi, "velocity")
+                acc_lo = _safe_float(lo, "acceleration")
+                acc_hi = _safe_float(hi, "acceleration")
+
+                joints.append({
+                    "name": jname,
+                    "position_limits": [pos_lo, pos_hi],
+                    "velocity_limits": [vel_lo, vel_hi],
+                    "acceleration_limits": [acc_lo, acc_hi],
+                })
+
+                pos_str = (
+                    f"[{pos_lo:.3f}, {pos_hi:.3f}] rad"
+                    if (pos_lo is not None and pos_hi is not None) else "unlimited"
+                )
+                vel_str = f"±{vel_hi:.3f} rad/s" if vel_hi is not None else "N/A"
+                acc_str = f"±{acc_hi:.3f} rad/s²" if acc_hi is not None else "N/A"
+                rows.append(f"  {jname}:  pos={pos_str}  vel={vel_str}  acc={acc_str}")
+
+            if not joints:
+                return f"No controllable joints found for arm '{arm}'.", None
+
+            artifact = JointLimitsDetailedArtifact(arm=arm, joints=joints)
+            content = f"Joint limits for '{arm}' arm ({len(joints)} joints):\n" + "\n".join(rows)
+            return content, artifact
+
+        except Exception as e:
+            return self._handle_error(e), None
+
+
+# ── CheckSelfCollisionAtConfigTool ─────────────────────────────────────────────
+
+
+class SelfCollisionInput(BaseModel):
+    joint_positions: Dict[str, float] = Field(
+        description=(
+            "Joint name → target position in radians. "
+            "Joint names must exactly match those reported by get_joint_limits_detailed "
+            "(e.g. {'r_shoulder_pan_joint': 1.2, 'r_elbow_flex_joint': -0.5}). "
+            "Only the joints you specify are moved; the rest stay at their current positions."
+        )
+    )
+
+
+class CheckSelfCollisionAtConfigTool(AgenticTool):
+    """Check whether the robot self-collides at a given joint configuration."""
+
+    name: str = "check_self_collision_at_config"
+    description: str = (
+        "Temporarily move the robot to a specified joint configuration in simulation, "
+        "check for robot body-to-body (self) collisions, then restore the original state. "
+        "Returns which robot body pairs intersect and by how much. "
+        "Only robot-to-robot contacts are reported — scene-object contacts are excluded. "
+        "Answers whether a given joint configuration is self-collision-free."
+    )
+    args_schema: Type[BaseModel] = SelfCollisionInput
+
+    def _run(self, joint_positions: Dict[str, float]):
+        try:
+            world, robot_view = get_active_world()
+
+            arms = getattr(robot_view, "arms", [])
+            robot_body_names = _collect_robot_body_names(robot_view, arms)
+
+            # Resolve joint names → (dof_id, target_position)
+            dof_updates: Dict = {}  # dof.id → float
+            unmatched = []
+
+            parts = []
+            for attr in ("arms", "neck", "torso", "base", "drive"):
+                val = getattr(robot_view, attr, None)
+                if val is None:
+                    continue
+                parts.extend(val if isinstance(val, list) else [val])
+
+            for jname, jpos in joint_positions.items():
+                matched = False
+                for part in parts:
+                    for conn, dof, cname in _iter_arm_controlled_connections(part):
+                        if cname == jname:
+                            dof_updates[dof.id] = float(jpos)
+                            matched = True
+                            break
+                    if matched:
+                        break
+                if not matched:
+                    unmatched.append(jname)
+
+            if unmatched:
+                return (
+                    f"Joint(s) not found: {unmatched}. "
+                    "Call get_joint_limits_detailed for the arm to get its exact joint names, "
+                    "then retry with those.", None
+                )
+
+            # Snapshot, apply config, check, restore
+            saved = world.state._data.copy()
+            contacts = []
+            any_self_collision = False
+            try:
+                for dof_id, pos in dof_updates.items():
+                    world.state[dof_id].position = pos
+                world.notify_state_change()
+
+                result = world.collision_manager.compute_collisions()
+                if hasattr(result, "contacts") and result.contacts:
+                    for contact in result.contacts:
+                        name_a = _extract_body_name(contact.body_a)
+                        name_b = _extract_body_name(contact.body_b)
+                        if name_a in robot_body_names and name_b in robot_body_names:
+                            any_self_collision = True
+                            contacts.append({
+                                "body_a": name_a,
+                                "body_b": name_b,
+                                "distance_m": round(float(contact.distance), 5),
+                            })
+            finally:
+                world.state._data[:] = saved
+                world.notify_state_change()
+
+            artifact = SelfCollisionCheckArtifact(
+                any_self_collision=any_self_collision,
+                contacts=contacts,
+                config_tested=joint_positions,
+            )
+
+            if any_self_collision:
+                lines = [f"Self-collision detected ({len(contacts)} contact(s)):"]
+                for c in contacts:
+                    lines.append(
+                        f"  {c['body_a']} ↔ {c['body_b']}  "
+                        f"(penetration: {c['distance_m']:.4f} m)"
+                    )
+                return "\n".join(lines), artifact
+
+            return (
+                f"No self-collision at the given config "
+                f"({len(joint_positions)} joint(s) tested). Config is safe.",
+                artifact,
+            )
+
+        except Exception as e:
+            return self._handle_error(e), None

@@ -1,15 +1,22 @@
 """Scene Query Agent — specialist for querying the semantic scene graph."""
 
-import json
 import logging
-from typing import Any, Dict, Literal
-from langgraph.prebuilt import create_react_agent
-from langgraph.types import Command
-from langchain_core.messages import HumanMessage
+from typing import Any, Dict, TYPE_CHECKING
+from typing_extensions import TypedDict, Annotated
+from langchain_core.messages import BaseMessage
+from langgraph.graph import StateGraph, START, END
+from langgraph.graph.message import add_messages
 
-from agentic_llmr.core.state import RobotAgentState
+if TYPE_CHECKING:
+    from langchain_core.language_models import BaseChatModel
+
+from agentic_llmr.core.state import _merge_dicts
+from agentic_llmr.core.interfaces import (
+    ExecuteToolsNode, make_prepare_query, make_call_model, tools_condition,
+)
 
 logger = logging.getLogger(__name__)
+
 from agentic_llmr.tools.scratchpad import WriteScratchpadTool, ReadScratchpadTool
 from agentic_llmr.tools.scene_query import (
     # Segment 1 — World Inventory & Taxonomy
@@ -52,10 +59,9 @@ from agentic_llmr.tools.scene_query import (
 
 _SCRATCHPAD = "sdt_scratchpad.md"
 
-SYSTEM_PROMPT = """You are the Scene Perception Agent — a specialist in reading the robot's semantic world model.
-
-Your only job is to answer queries about the current scene by calling your perception tools.
-Return a concise, factual summary of what the tools report.
+SYSTEM_PROMPT = """You are the Scene Perception specialist. You answer questions about the
+world and the robot's current state by observing them through your tools, then reasoning
+over what you observe. Return a concise, factual summary grounded entirely in tool results.
 
 ━━━ SCRATCHPAD USAGE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -72,9 +78,9 @@ safe to clear it when starting fresh.
 ━━━ TOOL REFERENCE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 WORLD INVENTORY
-  list_all_objects          First call for any scene overview. Returns body_name, semantic
-                            type, and position of every task-relevant object. Use the
-                            body_name values returned here as input to all other tools.
+  list_all_objects          Body_name, semantic type, and position of every task-relevant
+                            object — a broad starting point for an overview. The body_name
+                            values it returns are the keys other tools expect.
   list_object_types         Type catalog. Use only to discover valid class names when a
                             type search returns no match.
   find_objects_by_type      Convert a semantic name (e.g. 'Milk', 'Table') to exact
@@ -112,13 +118,11 @@ STRUCTURAL & TOPOLOGICAL RELATIONS
                                   geometric containment otherwise.
 
 FUNCTIONAL STATE  [stubs — not yet implemented]
-  get_object_state          Returns a not-implemented message. Will expose temperature,
-                            fill level, power state once SDT models dynamic attributes.
-  get_object_affordances    Returns a not-implemented message. Will expose what actions
-                            can be performed on an object once SDT models affordances.
+  get_object_state          Returns a not-implemented message.
+  get_object_affordances    Returns a not-implemented message.
 
 ROBOT & INTERACTION STATE
-  get_joint_states          All robot arm joint positions and limits (not furniture joints).
+  get_joint_states          Current robot arm joint positions (not furniture joints; no limits).
   get_robot_pose            Robot base 6-DoF pose in world frame.
   get_end_effector_pose     Current gripper tool-frame pose for a given arm ('left'/'right').
   get_gripper_state         Gripper opening width and open/closed/partial status for a
@@ -145,65 +149,57 @@ CAUSAL & CONSEQUENCE REASONING
   get_objects_supported_by  All objects that would be displaced if a given object were
                             moved. Works for any object, not only surface-typed ones.
 
-━━━ SYNTHESIS PRINCIPLES ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━ HOW TO WORK ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-The tools return raw world-state data. Many questions are answered by reasoning
-over that data — not by calling additional tools.
+The tool list above describes capabilities, not an order. Decide for yourself which tools
+the question needs and call them as you see fit. Let these principles guide that reasoning:
 
-1. DERIVE, DON'T RE-CALL
-   If a tool already returned the facts you need, reason over them directly.
-   — A count is the length of the returned list.
-   — Volume is already in get_object_dimensions output; do not call again.
-   — A boolean relation (above, next_to, close_to) is a threshold on the
-     offset vector from get_spatial_relation; there is no separate boolean tool.
-
-2. DECOMPOSE, THEN COMPOSE
-   Break a complex query into the minimum set of world-state facts needed.
-   Call exactly the tools that retrieve those facts, then synthesize the answer
-   yourself from the combined results.
-
-3. SELECTION IS REASONING
-   'Best', 'closest', 'largest', 'most suitable' are not tool operations — they
-   are your reasoning over a retrieved set. Fetch the candidates and their
-   properties, then select by comparing values. No dedicated 'best X' tool exists.
-
-4. SINGLE RESPONSIBILITY
-   Each tool has one job. Do not chain tools to re-derive data you already hold.
-   If list_all_objects already returned positions, do not call get_object_pose
-   again for the same objects.
-
-5. MINIMAL CALL SET
-   Prefer fewer, broader calls over many narrow ones. list_all_objects gives a
-   full scene overview in one call; use it before making targeted follow-up calls.
-
-━━━ OPERATING RULES ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-- Always resolve semantic names to body_names via find_objects_by_type before
-  passing them to any tool that requires an exact body_name.
-- If a tool returns an error or empty result, report it clearly and do not retry
-  with the same arguments.
-- Return only facts derived from tool output. Do not plan actions, recommend
-  navigation, or suggest next steps unless explicitly asked.
-- For stub tools (get_object_state, get_object_affordances), report the
-  not-implemented status directly and do not attempt to work around it.
+- GROUND IN OBSERVATION. Every fact you report must come from a tool result. Never guess a
+  pose, type, dimension, or relationship.
+- RESOLVE NAMES FIRST. Tools that act on a specific object need its exact body_name. When the
+  query refers to an object by semantic type ('the milk', 'a cup'), resolve it to a
+  body_name before asking about its properties.
+- REASON, DON'T RE-CALL. Once a tool returns the data, derive the answer yourself.
+  'Closest', 'largest', 'which surface', 'is it upright' are conclusions you reach over the
+  facts you already hold — not extra tool calls. Prefer the fewest, broadest calls that
+  gather what you need.
+- REPORT HONESTLY. If a tool errors or returns nothing, say so plainly and do not retry the
+  same call. Report only what your observations support; do not plan actions or recommend
+  next steps unless the query asks for them.
 """
 
 
-class SceneQueryAgent:
-    """Scene perception specialist. Holds all scene query tools and its own scratchpad."""
+# ---------------------------------------------------------------------------
+# Subgraph state
+# ---------------------------------------------------------------------------
 
-    def __init__(self, llm: Any):
+class SceneAgentState(TypedDict):
+    """State for the scene perception subgraph. Keys matching RobotAgentState are shared."""
+    messages:         Annotated[list[BaseMessage], add_messages]
+    scene_facts:      Annotated[Dict[str, Any], _merge_dicts]
+    instruction:      str
+    current_task:     str
+    template_context: str
+
+
+# ---------------------------------------------------------------------------
+# SceneQueryAgent
+# ---------------------------------------------------------------------------
+
+class SceneQueryAgent:
+    """Scene perception specialist with a custom LangGraph subgraph."""
+
+    def __init__(self, llm: "BaseChatModel", scratchpad_path: str = _SCRATCHPAD):
         self.llm = llm
+        self.scratchpad_path = scratchpad_path
         self.tools = [
-            WriteScratchpadTool(scratchpad_path=_SCRATCHPAD),
-            ReadScratchpadTool(scratchpad_path=_SCRATCHPAD),
-            # Segment 1 — World Inventory & Taxonomy
+            WriteScratchpadTool(scratchpad_path=scratchpad_path),
+            ReadScratchpadTool(scratchpad_path=scratchpad_path),
             GetSceneObjectsTool(),
             GetSemanticAnnotationsTool(),
             FindObjectsByTypeTool(),
             GetObjectTypeTool(),
             ClassifyObjectsByRoleTool(),
-            # Segment 2 — Geometric & Spatial Properties
             GetObjectPoseTool(),
             GetObjectDimensionsTool(),
             GetObjectOrientationTool(),
@@ -212,104 +208,37 @@ class SceneQueryAgent:
             GetNearestObjectsTool(),
             GetObjectsOnSurfaceTool(),
             SortObjectsBySizeTool(),
-            # Segment 3 — Structural & Topological Relations
             GetArticulatedObjectJointsTool(),
             GetContainedItemsTool(),
-            # Segment 4 — Functional State & Affordances (stubs)
             GetObjectStateTool(),
             GetObjectAffordancesTool(),
-            # Segment 5 — Robot & Interaction State
             GetJointStatesTool(),
             GetRobotPoseTool(),
             GetEndEffectorPoseTool(),
             GetGripperStateTool(),
             GetHeldObjectTool(),
-            # Segment 6 — Collision, Free Space & Placement
             CheckSceneCollisionsTool(),
             GetFreePlacementSpotsTool(),
             WouldCollideAtPoseTool(),
-            # Segment 7 — Accessibility & Preconditions
             IsAccessibleTool(),
-            # Segment 8 — Causal & Consequence Reasoning
             GetSupportingObjectTool(),
             GetObjectsSupportedByTool(),
         ]
-        self._agent = create_react_agent(
-            model=self.llm,
-            tools=self.tools,
-            prompt=SYSTEM_PROMPT,
-            name="scene_perception",
-        )
 
+        llm_with_tools = llm.bind_tools(self.tools)
 
-def _extract_scene_facts(messages: list) -> Dict[str, Any]:
-    """Parse ToolMessage results from the scene agent into a structured fact dict.
+        builder = StateGraph(SceneAgentState)
+        builder.add_node("prepare_query", make_prepare_query([
+            ("scene_facts", "Already known (do NOT re-query)"),
+        ]))
+        builder.add_node("call_model", make_call_model(llm_with_tools, SYSTEM_PROMPT))
+        builder.add_node("execute_tools", ExecuteToolsNode(self.tools, "scene_facts"))
 
-    Builds an AIMessage tool-call lookup (call_id → name + args), then matches
-    each ToolMessage by call_id and stores the parsed result under a semantic key.
-    """
-    tool_calls_by_id: Dict[str, tuple] = {}
-    for msg in messages:
-        if hasattr(msg, "tool_calls") and msg.tool_calls:
-            for tc in msg.tool_calls:
-                tool_calls_by_id[tc["id"]] = (tc["name"], tc["args"])
+        builder.add_edge(START, "prepare_query")
+        builder.add_edge("prepare_query", "call_model")
+        builder.add_conditional_edges("call_model", tools_condition,
+                                      {"execute_tools": "execute_tools", END: END})
+        builder.add_edge("execute_tools", "call_model")
 
-    facts: Dict[str, Any] = {}
-    for msg in messages:
-        call_id = getattr(msg, "tool_call_id", None)
-        if call_id is None or call_id not in tool_calls_by_id:
-            continue
-        tool_name, tool_args = tool_calls_by_id[call_id]
-        try:
-            content = json.loads(msg.content) if isinstance(msg.content, str) else msg.content
-        except (json.JSONDecodeError, TypeError):
-            content = msg.content
-
-        if tool_name == "get_object_pose":
-            body = tool_args.get("body_name", "unknown")
-            facts.setdefault(body, {})["pose"] = content
-        elif tool_name == "find_objects_by_type":
-            type_name = tool_args.get("type_name", "unknown")
-            facts[f"type:{type_name}"] = {"matches": content}
-        elif tool_name == "get_object_dimensions":
-            body = tool_args.get("body_name", "unknown")
-            facts.setdefault(body, {})["dimensions"] = content
-        elif tool_name == "get_object_orientation":
-            body = tool_args.get("body_name", "unknown")
-            facts.setdefault(body, {})["orientation"] = content
-        elif tool_name == "get_nearest_objects":
-            ref = tool_args.get("reference_body_name", "scene")
-            facts[f"nearest_to:{ref}"] = content
-        elif tool_name == "get_objects_on_surface":
-            surface = tool_args.get("surface_name", "surface")
-            facts[f"on_surface:{surface}"] = content
-        elif tool_name == "get_object_color":
-            body = tool_args.get("body_name", "unknown")
-            facts.setdefault(body, {})["color"] = content
-        elif tool_name == "list_all_objects":
-            facts["scene:all_objects"] = content
-
-    return facts
-
-
-def _build_query(state: RobotAgentState) -> str:
-    """Construct the task string from the original instruction and template context."""
-    ctx = state.get("template_context", "")
-    return f"Instruction: {state['instruction']}\nContext: {ctx}" if ctx else state["instruction"]
-
-
-def scene_query_node(
-    state: RobotAgentState,
-    agent: "SceneQueryAgent",
-) -> Command[Literal["supervisor"]]:
-    """LangGraph node: invoke the scene perception react agent and forward its response."""
-    query = _build_query(state)
-    logger.debug("  ► [Scene Agent] %s", query[:120])
-    result = agent._agent.invoke({"messages": [HumanMessage(content=query)]})
-    last_msg = result["messages"][-1]
-    scene_facts = _extract_scene_facts(result["messages"])
-    logger.debug("  ◄ [Scene Agent] Done. Extracted %d scene fact entries.", len(scene_facts))
-    return Command(
-        goto="supervisor",
-        update={"messages": [last_msg], "scene_facts": scene_facts},
-    )
+        self.subgraph = builder.compile()
+        logger.debug("[SceneQueryAgent] Subgraph compiled with %d tools.", len(self.tools))

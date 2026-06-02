@@ -19,9 +19,12 @@ Data access strategy:
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Callable, List, Optional, Tuple
 
 from krrood.symbol_graph.symbol_graph import SymbolGraph
+
+logger = logging.getLogger(__name__)
 
 
 # ── Active-world state ─────────────────────────────────────────────────────────
@@ -33,10 +36,25 @@ _ACTIVE_ROBOT_VIEW: Any = None
 # All are invoked by set_active_world() so stale caches never outlive a world switch.
 _WORLD_CACHE_CLEARERS: List[Callable[[], None]] = []
 
+# Per-world entity caches. The SymbolGraph scan is O(N) over all wrapped
+# instances; without caching, every find_body_by_name / get_bodies call repeats
+# it. These are populated lazily and cleared on every set_active_world().
+_BODIES_CACHE: Optional[List[Any]] = None
+_ANNOTATIONS_CACHE: Optional[List[Any]] = None
+_BODY_BY_NAME_CACHE: Optional[dict] = None
+
 
 def register_world_cache(clear_fn: Callable[[], None]) -> None:
     """Register a cache-clear callable to be called on every set_active_world()."""
     _WORLD_CACHE_CLEARERS.append(clear_fn)
+
+
+def _clear_entity_caches() -> None:
+    """Drop the cached body/annotation enumerations (called on world switch)."""
+    global _BODIES_CACHE, _ANNOTATIONS_CACHE, _BODY_BY_NAME_CACHE
+    _BODIES_CACHE = None
+    _ANNOTATIONS_CACHE = None
+    _BODY_BY_NAME_CACHE = None
 
 
 def set_active_world(world: Any, robot_view: Any) -> None:
@@ -44,11 +62,12 @@ def set_active_world(world: Any, robot_view: Any) -> None:
     global _ACTIVE_WORLD, _ACTIVE_ROBOT_VIEW
     _ACTIVE_WORLD = world
     _ACTIVE_ROBOT_VIEW = robot_view
+    _clear_entity_caches()
     for clear_fn in _WORLD_CACHE_CLEARERS:
         try:
             clear_fn()
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("world cache clearer failed: %s", exc)
 
 
 def get_active_world() -> Tuple[Any, Any]:
@@ -161,9 +180,13 @@ def get_annotations() -> List[Any]:
     _is_robot_annotation() to separate the two groups.
     SDT types are not imported; discrimination is MRO-name-based.
     """
+    global _ANNOTATIONS_CACHE
+    if _ANNOTATIONS_CACHE is not None:
+        return _ANNOTATIONS_CACHE
     try:
         graph = SymbolGraph()
-    except Exception:
+    except Exception as exc:
+        logger.debug("get_annotations: SymbolGraph unavailable: %s", exc)
         return []
     result: List[Any] = []
     seen: set = set()
@@ -175,17 +198,22 @@ def get_annotations() -> List[Any]:
         mro_names = {cls.__name__ for cls in type(inst).__mro__}
         if hasattr(inst, "bodies") or (mro_names & _SEMANTIC_ANNOTATION_TYPE_NAMES):
             result.append(inst)
+    _ANNOTATIONS_CACHE = result
     return result
 
 
 def get_bodies() -> List[Any]:
-    """Return all Body instances from the SymbolGraph.
+    """Return all Body instances from the SymbolGraph (cached per active world).
 
     Discriminates by MRO class name "Body" — no SDT import needed.
     """
+    global _BODIES_CACHE
+    if _BODIES_CACHE is not None:
+        return _BODIES_CACHE
     try:
         graph = SymbolGraph()
-    except Exception:
+    except Exception as exc:
+        logger.debug("get_bodies: SymbolGraph unavailable: %s", exc)
         return []
     result: List[Any] = []
     seen: set = set()
@@ -196,6 +224,7 @@ def get_bodies() -> List[Any]:
         seen.add(id(inst))
         if "Body" in {cls.__name__ for cls in type(inst).__mro__}:
             result.append(inst)
+    _BODIES_CACHE = result
     return result
 
 
@@ -222,6 +251,31 @@ def compute_grasp_descriptions(
         reference_frame=world_root,
     )
     return GraspDescription.calculate_grasp_descriptions(manipulator, pose)
+
+
+def compute_ik_bridge(
+    world: Any,
+    root_body: Any,
+    tip_body: Any,
+    x: float, y: float, z: float,
+    qx: float, qy: float, qz: float, qw: float,
+) -> "Dict[str, float]":
+    """Compute IK for root→tip chain toward (x,y,z, qx,qy,qz,qw) in world frame.
+
+    Imports SDT spatial types internally to avoid top-level SDT import.
+    Returns {joint_name: position_rad}. Raises on failure (UnreachableException or MaxIterationsException).
+    """
+    from semantic_digital_twin.spatial_types.spatial_types import HomogeneousTransformationMatrix
+    target = HomogeneousTransformationMatrix.from_xyz_quaternion(
+        pos_x=x, pos_y=y, pos_z=z,
+        quat_x=qx, quat_y=qy, quat_z=qz, quat_w=qw,
+        reference_frame=world.root,
+    )
+    result = world.compute_inverse_kinematics(root=root_body, tip=tip_body, target=target)
+    return {
+        (str(dof.name.name) if hasattr(dof.name, "name") else str(dof.name)): float(pos)
+        for dof, pos in result.items()
+    }
 
 
 def sort_by_volume(annotations: List[Any], largest_first: bool = True) -> List[Any]:
@@ -267,14 +321,14 @@ def get_arm_label(arm: Any, robot_view: Any) -> str:
 def find_body_by_name(name: str) -> Optional[Any]:
     """Return the Body whose display name matches *name*, or None if not found.
 
-    Iterates the SymbolGraph-sourced body list and compares via symbol_display_name()
-    (which extracts the plain string from PrefixedName).  No SDT import or World
-    access needed — SymbolGraph is the authoritative source for entity lookup.
+    Backed by a per-world name→body map (built once from get_bodies()) so repeated
+    lookups within a query are O(1) instead of a linear scan each time. The map is
+    cleared on every set_active_world().
     """
-    for body in get_bodies():
-        if symbol_display_name(body) == name:
-            return body
-    return None
+    global _BODY_BY_NAME_CACHE
+    if _BODY_BY_NAME_CACHE is None:
+        _BODY_BY_NAME_CACHE = {symbol_display_name(b): b for b in get_bodies()}
+    return _BODY_BY_NAME_CACHE.get(name)
 
 
 def get_robot_base_body(robot_view: Any) -> Optional[Any]:

@@ -2,6 +2,10 @@
 .env
 **/.env
 
+# Per-run agent scratchpads (agentic_llmr)
+**/.agentic_scratchpads/
+**/*_scratchpad.md
+
 tmp/
 *.mypy_cache/
 build/
