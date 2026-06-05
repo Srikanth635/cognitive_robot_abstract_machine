@@ -44,6 +44,7 @@ from semantic_digital_twin.world_description.connections import (
     ActiveConnection1DOF,
     FixedConnection,
     Connection6DoF,
+    OmniDrive,
 )
 from semantic_digital_twin.world_description.geometry import (
     Box,
@@ -66,6 +67,7 @@ from semantic_digital_twin.world_description.world_modification import (
     AddKinematicStructureEntityModification,
     AddActuatorModification,
     AddConnectionModification,
+    RemoveConnectionModification,
 )
 
 logger = logging.getLogger(__name__)
@@ -1564,7 +1566,14 @@ class MujocoBuilder(MultiSimBuilder):
             parent_connection = body.parent_connection
             if isinstance(parent_connection, FixedConnection) or parent_connection is None:
                 continue
-            qpos += [self.world.state[dof.id].position for dof in parent_connection.active_dofs + parent_connection.passive_dofs]
+            if isinstance(parent_connection, OmniDrive):
+                qpos += [
+                    self.world.state[parent_connection.x.id].position,
+                    self.world.state[parent_connection.y.id].position,
+                    self.world.state[parent_connection.yaw.id].position,
+                ]
+            else:
+                qpos += [self.world.state[dof.id].position for dof in parent_connection.active_dofs + parent_connection.passive_dofs]
         key_element.set("qpos", " ".join(map(str, qpos)))
         tree.write(file_path, encoding="utf-8", xml_declaration=True)
 
@@ -1697,6 +1706,33 @@ class MujocoBuilder(MultiSimBuilder):
 
     def _build_connection(self, connection: Connection):
         if isinstance(connection, FixedConnection):
+            return
+        if isinstance(connection, OmniDrive):
+            child_body_spec = self._find_entity(
+                entity_type=mujoco.mjtObj.mjOBJ_BODY,
+                entity_name=connection.child.name.name,
+            )
+            if child_body_spec is None:
+                raise MujocoEntityNotFoundError(
+                    entity_name=connection.child.name.name,
+                    entity_type=mujoco.mjtObj.mjOBJ_BODY,
+                )
+            joint_prefix = connection.name.name
+            child_body_spec.add_joint(
+                name=f"{joint_prefix}_x",
+                type=mujoco.mjtJoint.mjJNT_SLIDE,
+                axis=[1, 0, 0],
+            )
+            child_body_spec.add_joint(
+                name=f"{joint_prefix}_y",
+                type=mujoco.mjtJoint.mjJNT_SLIDE,
+                axis=[0, 1, 0],
+            )
+            child_body_spec.add_joint(
+                name=f"{joint_prefix}_yaw",
+                type=mujoco.mjtJoint.mjJNT_HINGE,
+                axis=[0, 0, 1],
+            )
             return
         joint_props = MujocoJointConverter.convert(connection)
         if "equality_joint" in joint_props:
@@ -2490,6 +2526,99 @@ class MujocoSynchronizer(MultiSimSynchronizer):
 
     _last_sync_time: float = field(init=False, default=0.0, repr=False)
 
+    @staticmethod
+    def _model_change_succeeded(result: SimulatorCallbackResult) -> bool:
+        return result.type in {
+            SimulatorCallbackResult.ResultType.SUCCESS_WITHOUT_EXECUTION,
+            SimulatorCallbackResult.ResultType.SUCCESS_AFTER_EXECUTION_ON_MODEL,
+        }
+
+    def _refresh_after_model_recompile(self) -> None:
+        self._last_sync_time = 0.0
+        self._state_callback.update_previous_world_state()
+
+    def _run_model_change(self, operation):
+        was_running = self.simulator.state == SimulatorState.RUNNING
+        if was_running:
+            self.simulator.pause()
+        try:
+            return operation()
+        finally:
+            if was_running:
+                self.simulator.unpause()
+
+    def _attach_body(self, connection: FixedConnection) -> None:
+        parent_T_child = self._world.compute_forward_kinematics(
+            connection.parent, connection.child
+        )
+        pose = cas_pose_to_list(parent_T_child)
+        result = self._run_model_change(
+            lambda: self.simulator.attach(
+                body_1_name=connection.child.name.name,
+                body_2_name=connection.parent.name.name,
+                relative_position=[float(value) for value in pose[:3]],
+                relative_quaternion=[float(value) for value in pose[3:]],
+            )
+        )
+        if not self._model_change_succeeded(result):
+            raise MultiSimError(result.info)
+        self._refresh_after_model_recompile()
+
+    def _detach_body(self, connection: Connection6DoF) -> None:
+        world_T_child = self._world.compute_forward_kinematics(
+            self._world.root, connection.child
+        )
+        pose = cas_pose_to_list(world_T_child)
+        result = self._run_model_change(
+            lambda: self.simulator.detach(
+                body_name=connection.child.name.name,
+                add_freejoint=True,
+                freejoint_name=connection.name.name,
+                absolute_position=[float(value) for value in pose[:3]],
+                absolute_quaternion=[float(value) for value in pose[3:]],
+            )
+        )
+        if not self._model_change_succeeded(result):
+            raise MultiSimError(result.info)
+        self._refresh_after_model_recompile()
+
+    def _notify(self, **kwargs):
+        modifications = self._world._model_manager.model_modification_blocks[-1]
+        removed_child_ids = {
+            modification.child_id
+            for modification in modifications
+            if isinstance(modification, RemoveConnectionModification)
+        }
+        replacement_connections = {
+            modification.connection.child.id: modification.connection
+            for modification in modifications
+            if isinstance(modification, AddConnectionModification)
+            and modification.connection.child.id in removed_child_ids
+        }
+
+        handled_connection_ids = set()
+        for child_id, connection in replacement_connections.items():
+            if isinstance(connection, FixedConnection):
+                self._attach_body(connection)
+                handled_connection_ids.add(child_id)
+            elif isinstance(connection, Connection6DoF):
+                self._detach_body(connection)
+                handled_connection_ids.add(child_id)
+
+        for modification in modifications:
+            if isinstance(modification, AddKinematicStructureEntityModification):
+                entity = modification.kinematic_structure_entity
+                self.entity_spawner.spawn(simulator=self.simulator, entity=entity)
+            elif isinstance(modification, AddConnectionModification):
+                connection = modification.connection
+                if connection.child.id not in handled_connection_ids:
+                    self.entity_spawner.spawn(
+                        simulator=self.simulator, entity=connection
+                    )
+            elif isinstance(modification, AddActuatorModification):
+                entity = modification.actuator
+                self.entity_spawner.spawn(simulator=self.simulator, entity=entity)
+
     def __post_init__(self):
         super().__post_init__()
         self.simulator.read_data_from_simulator = self._sim_to_world
@@ -2506,6 +2635,22 @@ class MujocoSynchronizer(MultiSimSynchronizer):
         if joint_id == -1:
             return None
         return mj_model.jnt_qposadr[joint_id]
+
+    def _resolve_omni_qpos_adrs(
+        self, connection: OmniDrive
+    ) -> Optional[tuple[int, int, int]]:
+        """Resolve the x, y, and yaw qpos slots backing an OmniDrive."""
+        addresses = []
+        for suffix in ("x", "y", "yaw"):
+            joint_id = mujoco.mj_name2id(
+                self.simulator._mj_model,
+                mujoco.mjtObj.mjOBJ_JOINT,
+                f"{connection.name.name}_{suffix}",
+            )
+            if joint_id == -1:
+                return None
+            addresses.append(int(self.simulator._mj_model.jnt_qposadr[joint_id]))
+        return tuple(addresses)
 
     @staticmethod
     def _make_pose_matrix(
@@ -2592,6 +2737,22 @@ class MujocoSynchronizer(MultiSimSynchronizer):
 
         for connection in self._world.connections:
             if isinstance(connection, FixedConnection):
+                continue
+            if isinstance(connection, OmniDrive):
+                qpos_adrs = self._resolve_omni_qpos_adrs(connection)
+                if qpos_adrs is None:
+                    continue
+                state = self._world.state
+                state[connection.x.id].position = float(
+                    self.simulator._mj_data.qpos[qpos_adrs[0]]
+                )
+                state[connection.y.id].position = float(
+                    self.simulator._mj_data.qpos[qpos_adrs[1]]
+                )
+                state[connection.yaw.id].position = float(
+                    self.simulator._mj_data.qpos[qpos_adrs[2]]
+                )
+                changed = True
                 continue
             qpos_adr = self._resolve_qpos_adr(connection)
             if qpos_adr is None:
@@ -2703,6 +2864,17 @@ class MujocoSynchronizer(MultiSimSynchronizer):
 
         for connection in self._world.connections:
             if isinstance(connection, FixedConnection):
+                continue
+            if isinstance(connection, OmniDrive):
+                qpos_adrs = self._resolve_omni_qpos_adrs(connection)
+                if qpos_adrs is None:
+                    continue
+                state_index = self._world.state._index
+                dof_ids = (connection.x.id, connection.y.id, connection.yaw.id)
+                for qpos_adr, dof_id in zip(qpos_adrs, dof_ids):
+                    idx = state_index[dof_id]
+                    if positions[idx] != previous_positions[idx]:
+                        self.simulator._mj_data.qpos[qpos_adr] = positions[idx]
                 continue
             qpos_adr = self._resolve_qpos_adr(connection)
             if qpos_adr is None:

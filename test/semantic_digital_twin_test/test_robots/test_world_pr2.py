@@ -426,6 +426,8 @@ def test_pr2_semantic_annotation(pr2_world_state_reset):
     assert list(pr2.sensor_chains)[0].sensors == pr2.sensors
     assert pr2.left_arm and pr2.right_arm
     assert pr2.left_arm != pr2.right_arm
+    assert pr2.drive is not None
+    assert pr2.drive.has_hardware_interface
 
 
 def test_specifies_left_right_arm_mixin(pr2_world_state_reset):

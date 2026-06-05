@@ -813,7 +813,12 @@ class MujocoSimulator(BaseSimulator):
 
     @BaseSimulator.simulator_callback
     def detach(
-        self, body_name: str, add_freejoint: bool = True
+        self,
+        body_name: str,
+        add_freejoint: bool = True,
+        freejoint_name: Optional[str] = None,
+        absolute_position: Optional[numpy.ndarray] = None,
+        absolute_quaternion: Optional[numpy.ndarray] = None,
     ) -> SimulatorCallbackResult:
         """
         Detach a body from its parent body and attach it to the world with the same absolute position and quaternion.
@@ -827,6 +832,9 @@ class MujocoSimulator(BaseSimulator):
 
         :param body_name: The name of the body to detach
         :param add_freejoint: Whether to add a free joint between the body and the world after detaching
+        :param freejoint_name: Optional name for the newly created free joint.
+        :param absolute_position: Optional world position to use after detaching.
+        :param absolute_quaternion: Optional world quaternion in wxyz order to use after detaching.
         :return: A SimulatorCallbackResult indicating the success or failure of the operation
         """
         body_id = mujoco.mj_name2id(
@@ -845,8 +853,10 @@ class MujocoSimulator(BaseSimulator):
                 info=f"Body {body_name} is already detached",
             )
 
-        absolute_position = self._mj_data.body(body_id).xpos
-        absolute_quaternion = self._mj_data.body(body_id).xquat
+        if absolute_position is None:
+            absolute_position = self._mj_data.body(body_id).xpos.copy()
+        if absolute_quaternion is None:
+            absolute_quaternion = self._mj_data.body(body_id).xquat.copy()
         parent_body_name = self._mj_model.body(parent_body_id).name
         if mujoco.mj_version() >= 330:
             body_spec = self._mj_spec.body(body_name)
@@ -878,7 +888,7 @@ class MujocoSimulator(BaseSimulator):
         # for site_child in body_1_spec_copy.sites:
         #     body_1_spec.add_site(site_child)
         if add_freejoint:
-            body_spec_new.add_freejoint()
+            body_spec_new.add_freejoint(name=freejoint_name or "")
         if mujoco.mj_version() < 335:
             self._mj_spec.detach_body(body_spec)
         else:

@@ -375,3 +375,6 @@ class PR2(AbstractRobot, SpecifiesLeftRightArm, HasNeck):
                 joint_name
             )
             connection.has_hardware_interface = True
+
+        if self.drive is not None:
+            self.drive.has_hardware_interface = True

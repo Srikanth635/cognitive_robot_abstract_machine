@@ -17,6 +17,7 @@ from semantic_digital_twin.spatial_types.spatial_types import (
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connections import (
     Connection6DoF,
+    OmniDrive,
     FixedConnection,
     RevoluteConnection,
 )
@@ -568,3 +569,165 @@ def test_world_sim_state_sync():
         )
     finally:
         stop_multisim_if_running(multi_sim)
+
+
+def test_mujoco_omnidrive_state_sync():
+    world = World()
+    root = Body(name=PrefixedName("world"))
+    base = Body(name=PrefixedName("base_footprint"))
+
+    with world.modify_world():
+        world.add_body(root)
+        world.add_body(base)
+        drive = OmniDrive.create_with_dofs(
+            world=world,
+            parent=root,
+            child=base,
+            name=PrefixedName("odom_combined_T_base_footprint"),
+        )
+        world.add_connection(drive)
+
+    multi_sim = MujocoSim(world=world, headless=True)
+    try:
+        target = HomogeneousTransformationMatrix.from_xyz_rpy(
+            x=2.0, y=1.0, yaw=-0.4, reference_frame=root
+        )
+        drive.origin = target
+
+        joint_names = [
+            f"{drive.name.name}_{suffix}" for suffix in ("x", "y", "yaw")
+        ]
+        qpos = []
+        for joint_name in joint_names:
+            joint_id = mujoco.mj_name2id(
+                multi_sim.simulator._mj_model,
+                mujoco.mjtObj.mjOBJ_JOINT,
+                joint_name,
+            )
+            assert joint_id != -1
+            qpos.append(
+                multi_sim.simulator._mj_data.qpos[
+                    multi_sim.simulator._mj_model.jnt_qposadr[joint_id]
+                ]
+            )
+
+        assert numpy.allclose(qpos, [2.0, 1.0, -0.4])
+    finally:
+        multi_sim.synchronizer.stop()
+
+
+def test_mujoco_pick_and_place_connection_sync():
+    world = World()
+    root = Body(name=PrefixedName("world"))
+    gripper = Body(name=PrefixedName("gripper"))
+    grasped_object = Body(name=PrefixedName("grasped_object"))
+
+    gripper.collision = ShapeCollection(
+        [
+            Box(
+                scale=Scale(0.1, 0.1, 0.1),
+                color=Color(0.0, 0.0, 1.0, 1.0),
+            )
+        ],
+        reference_frame=gripper,
+    )
+    grasped_object.collision = ShapeCollection(
+        [
+            Box(
+                scale=Scale(0.05, 0.05, 0.05),
+                color=Color(1.0, 0.0, 0.0, 1.0),
+            )
+        ],
+        reference_frame=grasped_object,
+    )
+
+    with world.modify_world():
+        world.add_body(root)
+        gripper_connection = Connection6DoF.create_with_dofs(
+            world=world,
+            parent=root,
+            child=gripper,
+            name=PrefixedName("world_T_gripper"),
+        )
+        world.add_connection(gripper_connection)
+        object_connection = Connection6DoF.create_with_dofs(
+            world=world,
+            parent=root,
+            child=grasped_object,
+            name=PrefixedName("world_T_grasped_object"),
+        )
+        world.add_connection(object_connection)
+
+    gripper_connection.origin = HomogeneousTransformationMatrix.from_xyz_rpy(
+        x=0.5, y=0.0, z=0.5, reference_frame=root
+    )
+    object_connection.origin = HomogeneousTransformationMatrix.from_xyz_rpy(
+        x=0.55, y=0.0, z=0.5, reference_frame=root
+    )
+    world.notify_state_change()
+
+    multi_sim = MujocoSim(world=world, headless=True)
+    try:
+        with world.modify_world():
+            world.move_branch_with_fixed_connection(grasped_object, gripper)
+
+        object_id = mujoco.mj_name2id(
+            multi_sim.simulator._mj_model,
+            mujoco.mjtObj.mjOBJ_BODY,
+            grasped_object.name.name,
+        )
+        gripper_id = mujoco.mj_name2id(
+            multi_sim.simulator._mj_model,
+            mujoco.mjtObj.mjOBJ_BODY,
+            gripper.name.name,
+        )
+        assert multi_sim.simulator._mj_model.body(object_id).parentid[0] == gripper_id
+
+        gripper_connection.origin = HomogeneousTransformationMatrix.from_xyz_rpy(
+            x=1.0, y=0.2, z=0.8, reference_frame=root
+        )
+        world.notify_state_change()
+        mujoco.mj_forward(
+            multi_sim.simulator._mj_model, multi_sim.simulator._mj_data
+        )
+        attached_position = multi_sim.simulator._mj_data.body(object_id).xpos.copy()
+        assert numpy.allclose(attached_position, [1.05, 0.2, 0.8], atol=1e-6)
+
+        placed_pose = HomogeneousTransformationMatrix.from_xyz_rpy(
+            x=0.2, y=-0.4, z=0.3, reference_frame=root
+        )
+        with world.modify_world():
+            world.remove_connection(grasped_object.parent_connection)
+            placed_connection = Connection6DoF.create_with_dofs(
+                world=world,
+                parent=root,
+                child=grasped_object,
+                name=PrefixedName("placed_object_free_joint"),
+            )
+            world.add_connection(placed_connection)
+            placed_connection.origin = placed_pose
+
+        free_joint_id = mujoco.mj_name2id(
+            multi_sim.simulator._mj_model,
+            mujoco.mjtObj.mjOBJ_JOINT,
+            placed_connection.name.name,
+        )
+        assert free_joint_id != -1
+        object_id = mujoco.mj_name2id(
+            multi_sim.simulator._mj_model,
+            mujoco.mjtObj.mjOBJ_BODY,
+            grasped_object.name.name,
+        )
+        assert multi_sim.simulator._mj_model.body(object_id).parentid[0] == 0
+
+        gripper_connection.origin = HomogeneousTransformationMatrix.from_xyz_rpy(
+            x=1.5, y=0.5, z=1.0, reference_frame=root
+        )
+        world.notify_state_change()
+        mujoco.mj_forward(
+            multi_sim.simulator._mj_model, multi_sim.simulator._mj_data
+        )
+        placed_position = multi_sim.simulator._mj_data.body(object_id).xpos.copy()
+        assert numpy.allclose(placed_position, [0.2, -0.4, 0.3], atol=1e-6)
+    finally:
+        multi_sim.synchronizer.stop()
