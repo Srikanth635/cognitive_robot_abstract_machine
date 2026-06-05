@@ -142,3 +142,7 @@ doc/doc_out
 /.ijwb/
 /.aswb/
 /.clwb/
+
+# Required MuJoCo model assets
+!semantic_digital_twin/resources/mujoco_resources/**/*.obj
+!semantic_digital_twin/resources/mujoco_resources/**/*.png
