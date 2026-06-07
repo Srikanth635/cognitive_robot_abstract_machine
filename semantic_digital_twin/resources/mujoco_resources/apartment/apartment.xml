@@ -214,6 +214,17 @@
   </asset>
 
   <worldbody>
+    <body name="apartment_room_shell">
+      <geom name="apartment_floor" type="box" pos="1.5 2.65 -0.05" size="2.05 2 0.05"
+            rgba="0.72 0.70 0.66 1" contype="1" conaffinity="1" condim="3"
+            friction="0.9 0.005 0.0001"/>
+      <geom name="apartment_left_wall" type="box" pos="-0.5 2.65 1.35" size="0.05 2 1.35"
+            rgba="0.82 0.81 0.78 1" contype="1" conaffinity="1"/>
+      <geom name="apartment_right_wall" type="box" pos="3.5 2.65 1.35" size="0.05 2 1.35"
+            rgba="0.82 0.81 0.78 1" contype="1" conaffinity="1"/>
+      <geom name="apartment_back_wall" type="box" pos="1.5 4.6 1.35" size="2.05 0.05 1.35"
+            rgba="0.82 0.81 0.78 1" contype="1" conaffinity="1"/>
+    </body>
     <body gravcomp="1" name="apartment_root" childclass="apartment">
       <body gravcomp="1" name="kitchen_root">
         <body gravcomp="1" name="kitchen2_root" pos="0.1 0 0">

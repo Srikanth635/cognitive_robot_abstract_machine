@@ -20,3 +20,7 @@ uses paths relative to `apartment.xml`:
 
 When regenerating the PR2 model, write the output to `pr2/pr2.xml`. The
 generator defaults to creating the required `pr2_meshes` directory beside it.
+
+The apartment MJCF also contains a finite floor and three room walls. The
+front is intentionally open so the default MuJoCo viewer camera can see the
+kitchen and robot.

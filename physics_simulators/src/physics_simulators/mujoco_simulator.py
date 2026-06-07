@@ -1013,7 +1013,7 @@ class MujocoSimulator(BaseSimulator):
 
         :param body_names: list of names of bodies
         :param including_children: whether to include children or not
-        :param contact_style: contact style. Only `SimulatorCallbackResult.OutputType.PYBULLET` is currently supported, which returns contact points in a PyBullet\-compatible format.
+        :param contact_style: contact style. Only `SimulatorCallbackResult.OutputType.PYBULLET` is currently supported, which returns contact points in a PyBullet-compatible format.
         :return: A SimulatorCallbackResult indicating the success or failure of the operation. On success, the result contains a list of contact points in the specified format.
         """
         if isinstance(contact_style, str):
@@ -1123,12 +1123,12 @@ class MujocoSimulator(BaseSimulator):
         ] = SimulatorCallbackResult.OutputType.PYBULLET,
     ) -> SimulatorCallbackResult:
         """
-        Cast a ray in the scene and return intersections in a PyBullet\-style format.
+        Cast a ray in the scene and return intersections in a PyBullet-style format.
 
-        :param ray_from_position: Start position of the ray as a list \[x, y, z\].
-        :param ray_to_position: End position of the ray as a list \[x, y, z\].
+        :param ray_from_position: Start position of the ray as a list [x, y, z].
+        :param ray_to_position: End position of the ray as a list [x, y, z].
         :param ray_style: Output style. Only `SimulatorCallbackResult.OutputType.PYBULLET` is currently supported.
-        :return: A `SimulatorCallbackResult` indicating success or failure. On success, the result contains a list of hit records in PyBullet\-compatible format.
+        :return: A `SimulatorCallbackResult` indicating success or failure. On success, the result contains a list of hit records in PyBullet-compatible format.
         """
         if isinstance(ray_style, str):
             ray_style = SimulatorCallbackResult.OutputType(ray_style)
@@ -1198,12 +1198,12 @@ class MujocoSimulator(BaseSimulator):
         """
         Cast a batch of rays from a single origin to multiple end positions.
 
-        :param ray_from_position: A list \[x, y, z\] representing the ray origin in world coordinates.
-        :param ray_to_positions: A list of \[x, y, z\] lists representing ray end points in world coordinates.
+        :param ray_from_position: A list [x, y, z] representing the ray origin in world coordinates.
+        :param ray_to_positions: A list of [x, y, z] lists representing ray end points in world coordinates.
         :param parent_link_name: Optional name of a link the rays are conceptually attached to (for compatibility).
         :param ray_style: Output style, must be `SimulatorCallbackResult.OutputType.PYBULLET`.
 
-        :return: A SimulatorCallbackResult whose `result` is a list of hit results in PyBullet\-style dicts.
+        :return: A SimulatorCallbackResult whose `result` is a list of hit results in PyBullet-style dicts.
         """
         if isinstance(ray_style, str):
             ray_style = SimulatorCallbackResult.OutputType(ray_style)
