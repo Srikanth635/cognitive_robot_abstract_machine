@@ -1,0 +1,22 @@
+<mujoco model="cereal_box">
+    <compiler angle="radian" meshdir="./cereal_box/meshes" texturedir="./cereal_box/textures" autolimits="true" />
+    <default>
+        <default class="cereal_box_collision">
+            <geom rgba="0.9 0.9 0.9 1.0" />
+        </default>
+    </default>
+    <asset>
+        <texture name="cereal_box_texture" type="2d" file="T_CerealBox.png" />
+        <material name="cereal_box_material" texture="cereal_box_texture" specular="0.2" shininess="0.1" />
+        <mesh name="CerealBox" file="obj/CerealBox.obj" />
+    </asset>
+
+    <worldbody>
+        <body name="cereal_box" >
+            <freejoint />
+            <inertial mass="1.7608798742294312" pos="0.0 -9.62056443935285e-19 0.0" quat="1.0 0.0 0.0 0.0" diaginertia="0.00989673100411892 0.0075958482921123505 0.0032881496008485556"/>
+            <geom name="CerealBox_visual" type="mesh" mesh="CerealBox" material="cereal_box_material" contype="0" conaffinity="0" group="2"/>
+            <geom name="cereal_box_collision" type="box" size="0.029 0.069 0.11" class="cereal_box_collision" group="3" friction="1 0.005 0.0001"/>
+        </body>
+    </worldbody>
+</mujoco>
