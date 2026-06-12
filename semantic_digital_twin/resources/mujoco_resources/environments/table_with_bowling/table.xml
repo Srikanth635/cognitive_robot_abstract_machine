@@ -1,0 +1,12 @@
+<mujoco model="table">
+    <worldbody>
+        <body name="table">
+            <freejoint />
+            <geom type="box" size=".5 .5 .05" rgba="0 0 .9 1" mass="6" />
+            <geom type="box" pos=".45 .45 -.25" size=".05 .05 .25" rgba="0 0 .9 1" mass="1" />
+            <geom type="box" pos=".45 -.45 -.25" size=".05 .05 .25" rgba="0 0 .9 1" mass="1" />
+            <geom type="box" pos="-.45 .45 -.25" size=".05 .05 .25" rgba="0 0 .9 1" mass="1" />
+            <geom type="box" pos="-.45 -.45 -.25" size=".05 .05 .25" rgba="0 0 .9 1" mass="1" />
+        </body>
+    </worldbody>
+</mujoco>
