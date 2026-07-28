@@ -26,6 +26,7 @@ dependencies = [
   "experiments>=26.10.0",
   "segmind>=26.10.0",
   "krrood_spatial_math>=26.10.0",
+  "cram_viz",
   "ipykernel>=7.2.0",
   "lark-parser>=0.12.0",
   "tqdm"
@@ -95,7 +96,8 @@ members = [
   "robokudo",
   "experiments",
   "segmind",
-  "domain_models/krrood_spatial_math"
+  "domain_models/krrood_spatial_math",
+  "cram_viz"
 ]
 
 [tool.uv.sources]
@@ -111,6 +113,7 @@ physics_simulators    = { workspace = true }
 segmind               = { workspace = true }
 experiments           = { workspace = true }
 krrood_spatial_math   = { workspace = true }
+cram_viz              = { workspace = true }
 
 [tool.poetry]
 package-mode = false
