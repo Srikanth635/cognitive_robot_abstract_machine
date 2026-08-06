@@ -181,7 +181,10 @@
       physics: (hier || cached) ? false : {
         // fewer settle iterations; physics is switched OFF once stable (below)
         stabilization: { iterations: bigGraph ? 120 : 200, updateInterval: 25 },
-        barnesHut: { gravitationalConstant: -7000, springLength: 120, springConstant: 0.03, damping: 0.5, avoidOverlap: 0 },
+        // low centralGravity + strong repulsion + avoidOverlap keep a dense graph
+        // (e.g. the Domain Knowledge tab, where shared nodes pull in edges from
+        // several owners) from bunching into an unreadable clump at the centre
+        barnesHut: { gravitationalConstant: -12000, centralGravity: 0.1, springLength: 180, springConstant: 0.03, damping: 0.5, avoidOverlap: 0.6 },
       },
       interaction: { hover: !bigGraph, tooltipDelay: 150, navigationButtons: false, dragNodes: true },
       layout: layout,

@@ -35,7 +35,7 @@ from pathlib import Path
 from typing_extensions import Any, Callable, Dict, List, Optional
 from urllib.parse import parse_qs, urlparse
 
-from cram_viz import paths
+from cram_viz import configure_console_logging, paths
 
 logger = logging.getLogger(__name__)
 
@@ -200,7 +200,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     """
     ``cram-viz`` — serve the viewer, the scenes and the JSON API.
     """
-    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    configure_console_logging()
     argv = sys.argv[1:] if argv is None else argv
     port = int(argv[0]) if argv else DEFAULT_PORT
     if kb_module is not None:  # build the KB once, before the first query
@@ -212,7 +212,8 @@ def main(argv: Optional[List[str]] = None) -> None:
             else "EQL unavailable — static only"
         )
         scenes = paths.scenes_dir()
-        logger.info("cram_viz running at http://localhost:%d/ (%s)", port, eql)
+        bound_port = httpd.server_address[1]
+        logger.info("cram_viz running at http://localhost:%d/ (%s)", bound_port, eql)
         logger.info(
             "scene bundles: %s%s",
             scenes,

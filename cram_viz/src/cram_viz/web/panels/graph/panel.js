@@ -23,6 +23,7 @@ Panels.define('graph', function (root, bus) {
     '<div class="graph-wrap">' +
     '  <div class="graph-tabs" id="graph-tabs">' +
     '    <button data-view="knowledge" class="active" title="the entity graph (EQL / knowledge base)">Knowledge</button>' +
+    '    <button data-view="domain" title="the static, hand-authored ontology of action verbs and entities — independent of any recorded scene">Domain Knowledge</button>' +
     '    <button data-view="kinematics" title="the robot\'s kinematic structure — URDF links &amp; joints">Kinematics</button>' +
     '    <button data-view="plan" title="the plan tree, with the execution status of every node">Plan</button>' +
     '    <button data-view="chart" title="the giskardpy motion statechart of the running motion group">Statechart</button>' +
@@ -49,6 +50,7 @@ Panels.define('graph', function (root, bus) {
   // ---- tabs -------------------------------------------------------------------
   const TABS = {
     knowledge:  { url: '/api/kb' },
+    domain:     { url: '/api/kb/view?name=domain' },
     kinematics: { url: '/api/kb/view?name=kinematics' },
     plan:       { url: '/api/kb/view?name=plan' },
     chart:      { url: '/api/kb/view?name=chart' },

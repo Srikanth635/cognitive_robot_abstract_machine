@@ -13,6 +13,7 @@ from pathlib import Path
 
 from typing_extensions import Optional, TYPE_CHECKING
 
+from cram_viz import configure_console_logging
 from cram_viz.live import hooks
 from cram_viz.live.bridge import BRIDGE
 from cram_viz.live.http import DEFAULT_PORT, serve
@@ -59,7 +60,7 @@ def main() -> None:
     helper modules, exactly as if it were started directly. After the demo finishes the
     bridge stays up for inspection until Ctrl-C.
     """
-    logging.basicConfig(level=logging.INFO)
+    configure_console_logging()
     if len(sys.argv) < 2:
         sys.exit("usage: cram-viz-live path/to/demo.py")
     demo = Path(sys.argv[1]).resolve()

@@ -49,7 +49,7 @@ body{
 /* panel slots: config.js mounts panels into these; several ids stack vertically */
 .slot{display:flex;flex-direction:column;gap:16px;min-height:0;min-width:0}
 .slot>.panel{flex:1;min-height:0}
-.slot>.panel-eql{flex:0 1 auto;min-height:150px}
+.slot>.panel-eql{flex:1 1 0;min-height:150px}
 .slot>.panel-graph{flex:1 1 0}
 .panel-error{margin:auto;color:var(--danger);font-size:13px;padding:20px;text-align:center}
 .panel{
@@ -189,7 +189,7 @@ body{
   font-weight:700;font-size:13px;padding:0 20px;border-radius:4px;cursor:pointer
 }
 #query-run:active{transform:translateY(1px)}
-.presets{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+.presets{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px;max-height:92px;overflow-y:auto}
 .preset{
   font-size:12px;color:var(--muted);background:var(--bg2);border:1px solid var(--line2);
   padding:6px 11px;border-radius:4px;cursor:pointer;transition:.15s
@@ -197,7 +197,7 @@ body{
 .preset:hover{border-color:var(--accent);color:var(--ink)}
 
 /* ---------------------------------------------------------- answer --- */
-.answer{padding:14px 16px;max-height:34%;overflow:auto;border-bottom:1px solid var(--line)}
+.answer{padding:14px 16px;flex:1;min-height:0;overflow:auto;border-bottom:1px solid var(--line)}
 .answer-empty{color:var(--faint);font-size:13px;font-style:italic}
 .answer .goal{font-family:var(--mono);font-size:12px;color:var(--accent);margin-bottom:8px;word-break:break-all}
 .answer .headline{font-size:13.5px;color:var(--ink);margin:0 0 10px;line-height:1.5}
