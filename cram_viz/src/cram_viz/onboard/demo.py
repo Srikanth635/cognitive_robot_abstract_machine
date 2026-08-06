@@ -39,7 +39,7 @@ import sys
 import time
 from typing_extensions import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
 
-from cram_viz import paths
+from cram_viz import configure_console_logging, paths
 from cram_viz.onboard.bundle_urdf import bundle_urdf
 
 if TYPE_CHECKING:
@@ -64,7 +64,8 @@ def log(*parts: object) -> None:
 
 # %% recorder --------------------------------------------------------------------
 class Recorder:
-    """Records one demo run: assets, per-tick motion and the executed plan.
+    """
+    Records one demo run: assets, per-tick motion and the executed plan.
 
     .. note:: The CRAM-stack imports inside the ``install_*`` hook methods are
        intentionally local: the onboarder stubs out ``rclpy`` *before* the demo
@@ -91,7 +92,9 @@ class Recorder:
 
     # ---- asset hooks ---------------------------------------------------------
     def install_asset_hooks(self) -> None:
-        """Record every asset resolution so the bundler can copy the files."""
+        """
+        Record every asset resolution so the bundler can copy the files.
+        """
         from semantic_digital_twin.adapters.mesh import STLParser
         from semantic_digital_twin.adapters.package_resolver import PackageUriResolver
         from semantic_digital_twin.adapters.urdf import URDFParser
@@ -156,8 +159,8 @@ class Recorder:
 
     def _lazy_bind(self, executor: Executor) -> None:
         """
-        Bind to the executor's world and locate the robot + recordable objects
-        the first time a tick fires (the world doesn't exist any earlier).
+        Bind to the executor's world and locate the robot + recordable objects the first
+        time a tick fires (the world doesn't exist any earlier).
         """
         self.world = executor.context.world
         try:
@@ -206,8 +209,8 @@ class Recorder:
 
     def _snap(self, executor: Executor) -> None:
         """
-        Append one frame: every movable connection's position, the robot base
-        pose and every tracked object's pose.
+        Append one frame: every movable connection's position, the robot base pose and
+        every tracked object's pose.
         """
         if self._conns is None:
             self._lazy_bind(executor)
@@ -243,8 +246,8 @@ class Recorder:
     # recorded data (object attach/detach + first base motion).
     def _target_of(self, desig: Any) -> Optional[str]:
         """
-        The recorded object a designator refers to, by matching any of its
-        attributes' names against the demo's known mesh basenames.
+        The recorded object a designator refers to, by matching any of its attributes'
+        names against the demo's known mesh basenames.
         """
         basenames = {os.path.basename(f) for f in self.stl_sources}
         for v in vars(desig).values():
@@ -259,8 +262,8 @@ class Recorder:
 
     def install_segment_hook(self) -> None:
         """
-        Wrap ActionNode.parse to record each action's class, arm and target as
-        it is parsed (in plan order).
+        Wrap ActionNode.parse to record each action's class, arm and target as it is
+        parsed (in plan order).
         """
         from coraplex.plans.plan_node import ActionNode
 
@@ -294,8 +297,8 @@ class Recorder:
     # ---- the executed plan tree, serialized from the real PlanNode graph ------
     def serialize_plans(self, max_nodes: int = 400) -> List[Dict[str, Any]]:
         """
-        The executed plan tree(s) (deduped by root), as nested dicts capped at
-        max_nodes total.
+        The executed plan tree(s) (deduped by root), as nested dicts capped at max_nodes
+        total.
         """
         roots, seen = [], set()
         for n in self.plan_nodes:
@@ -474,8 +477,8 @@ def link_set(part: Any) -> List[str]:
 
 def build_scene(rec: Recorder, name: str, out_dir: str, step: int) -> Dict[str, Any]:
     """
-    Downsample the recording to every step-th frame (always keeping the last)
-    and assemble scene.json + trajectory.json from it.
+    Downsample the recording to every step-th frame (always keeping the last) and
+    assemble scene.json + trajectory.json from it.
     """
     n = len(rec.frames)
     idx = list(range(0, n, step))
@@ -647,7 +650,7 @@ def main() -> None:
     """
     ``cram-viz-onboard`` — record one demo run into a scene bundle.
     """
-    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    configure_console_logging()
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )

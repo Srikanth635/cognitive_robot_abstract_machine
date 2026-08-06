@@ -51,7 +51,9 @@
   });
 
   // ---- maximize button on the knowledge panel ------------------------------
-  const head = right.querySelector('.panel-head');
+  // Looked up by panel class, not by which slot ('left'/'right') the panel
+  // landed in — config.js is free to put the eql/graph column on either side.
+  const head = document.querySelector('.panel-eql .panel-head');
   if (head) {
     const btn = document.createElement('button');
     btn.className = 'kg-max-btn';
@@ -73,10 +75,10 @@
   }
 
   // ---- true fullscreen for the graph itself --------------------------------
-  // The panel-maximize above only widens the right column; the query box and
-  // answer panel still eat space. This makes just the graph cover the whole
-  // window so it gets every pixel.
-  const graphWrap = right.querySelector('.graph-wrap');
+  // The panel-maximize above only widens the eql/graph column; the query box
+  // and answer panel still eat space. This makes just the graph cover the
+  // whole window so it gets every pixel.
+  const graphWrap = document.querySelector('.graph-wrap');
   if (graphWrap) {
     const gbtn = document.createElement('button');
     gbtn.className = 'graph-max-btn';

@@ -8,7 +8,7 @@
  * ==========================================================================*/
 window.CRAM_VIZ_CONFIG = {
   layout: {
-    left: ['robot-scene'],
-    right: ['eql', 'graph'],
+    left: ['graph'],
+    right: ['eql', 'robot-scene'],
   },
 };

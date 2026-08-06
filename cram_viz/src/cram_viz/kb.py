@@ -8,11 +8,16 @@ motion — as plain dataclasses and exposes:
 fresh_namespace()  -> dict for evaluating one EQL query (fresh variables)
 run_query(code)    -> execute an EQL query string, return JSON-able result
 graph_payload()    -> nodes/edges/details/presets for the UI knowledge graph
-view_payload(name) -> one of the graph-panel tabs (knowledge / kinematics /
-plan / chart)
+view_payload(name) -> one of the graph-panel tabs (knowledge / kinematics / plan /
+chart)
 
 krrood is imported lazily: without it the static viewer still works, only the EQL panel
 is unavailable. Scene bundles are read from paths.scenes_dir().
+
+The knowledge graph also merges in :mod:`cram_viz.action_knowledge` and
+:mod:`cram_viz.entity_knowledge`, static, hand-authored ontologies (keyed by action verb
+and by BenchObject name respectively) that attach to every matching ActionEpisode or
+object via ``has_knowledge`` edges -- see :func:`graph_payload`.
 """
 
 from __future__ import annotations
@@ -25,11 +30,16 @@ import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass, fields, is_dataclass
 
-from typing_extensions import Any, Dict, List, Optional, Tuple
+from typing_extensions import Any, Callable, Dict, List, Optional, Tuple
 
 from krrood.entity_query_language import factories as eql_factories
 
-from cram_viz import paths
+from cram_viz import (
+    action_knowledge,
+    configure_console_logging,
+    entity_knowledge,
+    paths,
+)
 
 
 def scene_name() -> Optional[str]:
@@ -162,6 +172,7 @@ class Gripper:
     """
     Maximum opening width in metres (Robotiq 2F-85 default).
     """
+
 
 @dataclass(unsafe_hash=True)
 class Arm:
@@ -683,8 +694,8 @@ class KB:
 
     def __init__(self) -> None:
         """
-        Build every entity list from the active scene bundle and a static
-        scan of the CRAM architecture.
+        Build every entity list from the active scene bundle and a static scan of the
+        CRAM architecture.
         """
         scene, trajectory = load_scene()
         frames_per_second = scene.get("fps", 30)
@@ -719,6 +730,88 @@ class KB:
         ]
         self.package_deps = dependency_edges
         self.subpackages = self._build_subpackages(self.classes)
+
+        self.action_phase_sequences = list(
+            action_knowledge.ACTION_PHASE_KNOWLEDGE.values()
+        )
+        self.action_phases = [
+            phase
+            for sequence in self.action_phase_sequences
+            for phase in sequence.phases
+        ]
+        self.concepts = self._build_concepts(self.action_phases)
+
+        self.action_knowledge_entries = list(action_knowledge.ACTION_KNOWLEDGE.values())
+        self.entity_knowledge_entries = list(entity_knowledge.ENTITY_KNOWLEDGE.values())
+        self.ontology_classes = self._build_ontology_classes(
+            self.action_knowledge_entries, self.entity_knowledge_entries
+        )
+        self.roles = [
+            role for entry in self.action_knowledge_entries for role in entry.roles
+        ]
+        self.parameters = [
+            parameter
+            for entry in self.action_knowledge_entries
+            for parameter in entry.parameters
+        ]
+        self.preconditions = [
+            precondition
+            for entry in self.action_knowledge_entries
+            for precondition in entry.preconditions
+        ]
+        self.goals = [
+            goal for entry in self.action_knowledge_entries for goal in entry.goals
+        ]
+        self.properties = [
+            property_
+            for entry in self.entity_knowledge_entries
+            for property_ in entry.properties
+        ]
+        self.qualities = [
+            quality
+            for entry in self.entity_knowledge_entries
+            for quality in entry.qualities
+        ]
+        self.affordances = [
+            affordance
+            for entry in self.entity_knowledge_entries
+            for affordance in entry.affordances
+        ]
+        self.entity_relations = [
+            relation
+            for entry in self.entity_knowledge_entries
+            for relation in entry.relations
+        ]
+
+    @staticmethod
+    def _build_concepts(
+        phases: List[action_knowledge.ActionPhase],
+    ) -> List[action_knowledge.Concept]:
+        """
+        Every distinct Concept referenced by any phase's ``maintains``/``targets``.
+        """
+        by_name: Dict[str, action_knowledge.Concept] = {}
+        for phase in phases:
+            for concept in (*phase.maintains, *phase.targets):
+                by_name.setdefault(concept.name, concept)
+        return list(by_name.values())
+
+    @staticmethod
+    def _build_ontology_classes(
+        action_entries: List[action_knowledge.ActionKnowledge],
+        entity_entries: List[entity_knowledge.EntityKnowledge],
+    ) -> List[action_knowledge.OntologyClass]:
+        """
+        Every distinct OntologyClass referenced by any action or entity knowledge entry.
+
+        Classes are shared graph nodes (see :func:`action_knowledge.class_node_id`), so
+        the same class referenced from two entries is one entity here too.
+        """
+        by_name: Dict[str, action_knowledge.OntologyClass] = {}
+        for entry in (*action_entries, *entity_entries):
+            for ontology_class in entry.classes:
+                by_name.setdefault(ontology_class.name, ontology_class)
+        return list(by_name.values())
 
     @staticmethod
     def _build_objects(scene: Dict[str, Any]) -> List[BenchObject]:
@@ -801,8 +894,8 @@ class KB:
 
         def arm_for(segment: Dict[str, Any]) -> Optional[Arm]:
             """
-            The arm matching the segment's recorded side hint, falling back to
-            the first arm if the segment picks something but names no side.
+            The arm matching the segment's recorded side hint, falling back to the first
+            arm if the segment picks something but names no side.
             """
             hint = (segment.get("arm") or "").lower()
             for arm in self.arms:
@@ -850,8 +943,8 @@ class KB:
 
         def side_of(key: str) -> str:
             """
-            Which arm side a prefixed joint key belongs to, or "environment"/
-            "body" when it isn't part of an arm.
+            Which arm side a prefixed joint key belongs to, or "environment"/ "body"
+            when it isn't part of an arm.
             """
             prefix, _, joint_name = key.partition("/")
             if "/" not in key:
@@ -982,6 +1075,20 @@ def fresh_namespace() -> Dict[str, Any]:
         Package=Package,
         SubPackage=SubPackage,
         PythonClass=PythonClass,
+        Concept=action_knowledge.Concept,
+        ActionPhase=action_knowledge.ActionPhase,
+        ActionPhaseSequence=action_knowledge.ActionPhaseSequence,
+        OntologyClass=action_knowledge.OntologyClass,
+        Role=action_knowledge.Role,
+        Parameter=action_knowledge.Parameter,
+        Precondition=action_knowledge.Precondition,
+        Goal=action_knowledge.Goal,
+        ActionKnowledge=action_knowledge.ActionKnowledge,
+        Property=entity_knowledge.Property,
+        Quality=entity_knowledge.Quality,
+        Affordance=entity_knowledge.Affordance,
+        EntityRelation=entity_knowledge.EntityRelation,
+        EntityKnowledge=entity_knowledge.EntityKnowledge,
         objects=kb.objects,
         episodes=kb.episodes,
         arms=kb.arms,
@@ -991,6 +1098,20 @@ def fresh_namespace() -> Dict[str, Any]:
         packages=kb.packages,
         subpackages=kb.subpackages,
         classes=kb.classes,
+        concepts=kb.concepts,
+        phases=kb.action_phases,
+        phase_sequences=kb.action_phase_sequences,
+        ontology_classes=kb.ontology_classes,
+        roles=kb.roles,
+        parameters=kb.parameters,
+        preconditions=kb.preconditions,
+        goals=kb.goals,
+        action_knowledge_entries=kb.action_knowledge_entries,
+        properties=kb.properties,
+        qualities=kb.qualities,
+        affordances=kb.affordances,
+        entity_relations=kb.entity_relations,
+        entity_knowledge_entries=kb.entity_knowledge_entries,
     )
     # ready-made query variables so one-liners stay short
     namespace["obj"] = eql_factories.variable(BenchObject, domain=kb.objects)
@@ -1001,6 +1122,38 @@ def fresh_namespace() -> Dict[str, Any]:
     namespace["pkg"] = eql_factories.variable(Package, domain=kb.packages)
     namespace["sub"] = eql_factories.variable(SubPackage, domain=kb.subpackages)
     namespace["cls"] = eql_factories.variable(PythonClass, domain=kb.classes)
+    namespace["concept"] = eql_factories.variable(
+        action_knowledge.Concept, domain=kb.concepts
+    )
+    namespace["phase"] = eql_factories.variable(
+        action_knowledge.ActionPhase, domain=kb.action_phases
+    )
+    namespace["phase_sequence"] = eql_factories.variable(
+        action_knowledge.ActionPhaseSequence, domain=kb.action_phase_sequences
+    )
+    namespace["oclass"] = eql_factories.variable(
+        action_knowledge.OntologyClass, domain=kb.ontology_classes
+    )
+    namespace["role"] = eql_factories.variable(action_knowledge.Role, domain=kb.roles)
+    namespace["parameter"] = eql_factories.variable(
+        action_knowledge.Parameter, domain=kb.parameters
+    )
+    namespace["precondition"] = eql_factories.variable(
+        action_knowledge.Precondition, domain=kb.preconditions
+    )
+    namespace["goal"] = eql_factories.variable(action_knowledge.Goal, domain=kb.goals)
+    namespace["property"] = eql_factories.variable(
+        entity_knowledge.Property, domain=kb.properties
+    )
+    namespace["quality"] = eql_factories.variable(
+        entity_knowledge.Quality, domain=kb.qualities
+    )
+    namespace["affordance"] = eql_factories.variable(
+        entity_knowledge.Affordance, domain=kb.affordances
+    )
+    namespace["relation"] = eql_factories.variable(
+        entity_knowledge.EntityRelation, domain=kb.entity_relations
+    )
     return namespace
 
 
@@ -1090,6 +1243,35 @@ def _result_rows(
     return rows, highlight, False
 
 
+#: item type -> (its knowledge-category key, the field holding its owner's name), for
+#: every entity registered under an owner (an action verb or a BenchObject name) but
+#: drawn as a graph node shared globally by name across every owner that has one — see
+#: :func:`_append_owned_highlight`
+_OWNED_HIGHLIGHT_CATEGORY: Dict[type, Tuple[str, str]] = {
+    action_knowledge.ActionPhase: ("phase", "action_verb"),
+    action_knowledge.Role: ("roles", "action_verb"),
+    action_knowledge.Parameter: ("parameters", "action_verb"),
+    action_knowledge.Precondition: ("preconditions", "action_verb"),
+    action_knowledge.Goal: ("goals", "action_verb"),
+    entity_knowledge.Property: ("properties", "entity_name"),
+    entity_knowledge.Quality: ("qualities", "entity_name"),
+    entity_knowledge.Affordance: ("affordances", "entity_name"),
+    entity_knowledge.EntityRelation: ("relations", "entity_name"),
+}
+
+
+def _append_owned_highlight(
+    highlight: List[str], category: str, owner_field: str, item: Any
+) -> None:
+    """
+    Append the real, globally shared graph node id for one owned knowledge item, if it
+    was actually registered under some owner (auto-stamped by the owning
+    ActionKnowledge/EntityKnowledge's ``__post_init__``).
+    """
+    if getattr(item, owner_field):
+        highlight.append(action_knowledge.member_node_id(category, item.name))
+
+
 def _entity_row(item: Any, highlight: List[str]) -> Dict[str, Any]:
     """
     One entity as an answer row; collects the ids to highlight.
@@ -1097,10 +1279,26 @@ def _entity_row(item: Any, highlight: List[str]) -> Dict[str, Any]:
     name = _entity_name(item)
     if name:
         highlight.append(name)
+    owned_category = _OWNED_HIGHLIGHT_CATEGORY.get(type(item))
     if isinstance(item, PythonClass):
         # classes aren't graph nodes — light up their subpackage + package instead
         highlight.append(item.subpackage)
         highlight.append(item.package)
+    elif isinstance(item, action_knowledge.Concept):
+        # concept nodes are id-prefixed (globally shared across phases) — the bare
+        # name above never matches a graph node, so highlight the real node too
+        highlight.append(action_knowledge.concept_node_id(item))
+    elif isinstance(item, action_knowledge.OntologyClass):
+        # ontology classes are globally shared graph nodes too
+        highlight.append(action_knowledge.class_node_id(item))
+    elif isinstance(item, action_knowledge.ActionPhaseSequence):
+        # the sequence itself has no dedicated hub node any more (each of its
+        # phases links directly to its verb) -- the verb's own bare node is its
+        # anchor in the domain view
+        highlight.append(item.name)
+    elif owned_category:
+        category, owner_field = owned_category
+        _append_owned_highlight(highlight, category, owner_field, item)
     row = {"__entity__": name or repr(item), "__type__": type(item).__name__}
     for entity_field in fields(item):
         if entity_field.name != "name":
@@ -1128,7 +1326,151 @@ def _item_row(item: Any, highlight: List[str]) -> Dict[str, Any]:
     return {"value": _jsonable(item)}
 
 
+# %% static action-phase knowledge --------------------------------------------
+def _edge_payload(edge: action_knowledge.KnowledgeGraphEdge) -> Dict[str, Any]:
+    """
+    The graph-payload dict shape of one
+    :class:`~cram_viz.action_knowledge.KnowledgeGraphEdge`.
+    """
+    return {
+        "from": edge.source,
+        "to": edge.target,
+        "kind": edge.kind,
+        "label": edge.relation.value,
+    }
+
+
+def _merge_knowledge_fragment(
+    add: Callable[[str, str, str, List[str]], None],
+    edges: List[Dict[str, Any]],
+    details: Dict[str, Any],
+    anchor_name: str,
+    fragment: Any,
+) -> None:
+    """
+    Render one GraphFragment's own nodes/edges (guarded per-node, since a phase,
+    role, ... shared by several owners must still be added only once) and its direct
+    anchor edges to ``anchor_name``.
+    """
+    nodes, fragment_edges = fragment.nodes_and_edges()
+    for node in nodes:
+        if node.identifier not in details:
+            add(node.identifier, node.label, node.group, list(node.lines))
+    for edge in fragment_edges:
+        edges.append(_edge_payload(edge))
+    for edge in fragment.anchor_edges(anchor_name):
+        edges.append(_edge_payload(edge))
+
+
+def _merge_action_phase_knowledge(
+    add: Callable[[str, str, str, List[str]], None],
+    edges: List[Dict[str, Any]],
+    details: Dict[str, Any],
+    episode_name: str,
+    sequences: List[action_knowledge.ActionPhaseSequence],
+) -> None:
+    """
+    Attach any registered phase knowledge whose action verb matches this episode.
+
+    Every phase is a node shared globally by name across every sequence that
+    includes it, so it is added the first time any matching sequence renders it;
+    :meth:`~cram_viz.action_knowledge.ActionPhaseGraphFragment.anchor_edges` links
+    this episode straight to every one of its own phases.
+    """
+    for sequence in sequences:
+        if sequence.matches(episode_name):
+            _merge_knowledge_fragment(
+                add,
+                edges,
+                details,
+                episode_name,
+                action_knowledge.ActionPhaseGraphFragment(sequence),
+            )
+
+
+def _merge_action_knowledge(
+    add: Callable[[str, str, str, List[str]], None],
+    edges: List[Dict[str, Any]],
+    details: Dict[str, Any],
+    episode_name: str,
+    entries: List[action_knowledge.ActionKnowledge],
+) -> None:
+    """
+    Attach any registered action knowledge (classification, roles, parameters,
+    preconditions, goals) whose verb matches this episode.
+
+    A role/parameter/precondition/goal is a node shared globally by name across
+    every verb that has one with that name; this episode links directly to every
+    one of its own.
+    """
+    for entry in entries:
+        if entry.matches(episode_name):
+            _merge_knowledge_fragment(
+                add,
+                edges,
+                details,
+                episode_name,
+                action_knowledge.ActionKnowledgeGraphFragment(entry),
+            )
+
+
+def _merge_entity_knowledge(
+    add: Callable[[str, str, str, List[str]], None],
+    edges: List[Dict[str, Any]],
+    details: Dict[str, Any],
+    object_name: str,
+    entries: List[entity_knowledge.EntityKnowledge],
+) -> None:
+    """
+    Attach any registered entity knowledge (classification, properties, qualities,
+    affordances, relations) registered for this object.
+
+    A property/quality/affordance/relation is a node shared globally by name across
+    every entity that has one with that name; this object links directly to every
+    one of its own.
+    """
+    for entry in entries:
+        if entry.matches(object_name):
+            _merge_knowledge_fragment(
+                add,
+                edges,
+                details,
+                object_name,
+                entity_knowledge.EntityKnowledgeGraphFragment(entry),
+            )
+
+
 # %% the UI graph -----------------------------------------------------------------
+def _bench_object_detail_lines(bench_object: BenchObject) -> List[str]:
+    """
+    Detail-panel lines for one scene object's own node, shared by the Knowledge tab
+    and the Domain Knowledge tab (see :func:`_domain_knowledge_view`), so an object
+    anchored in both looks like the same real thing, not two different stand-ins.
+    """
+    return [
+        "a BenchObject",
+        "kind: " + bench_object.kind,
+        "position: " + repr(bench_object.position),
+        "height: %.2f m" % bench_object.height_m,
+    ]
+
+
+def _episode_detail_lines(episode: ActionEpisode) -> List[str]:
+    """
+    Detail-panel lines for one recorded episode's own node, shared by the Knowledge
+    tab and the Domain Knowledge tab (see :func:`_domain_knowledge_view`).
+    """
+    return (
+        [
+            "an ActionEpisode",
+            "frames %d–%d" % (episode.start_frame, episode.end_frame),
+            "duration: %.1f s" % episode.duration_s,
+        ]
+        + (["picks: " + episode.picks.name] if episode.picks else [])
+        + (["places at: " + episode.places_at.name] if episode.places_at else [])
+    )
+
+
 def graph_payload() -> Dict[str, Any]:
     """
     The knowledge-graph overview: nodes, edges, details and presets.
@@ -1193,28 +1535,12 @@ def graph_payload() -> Dict[str, Any]:
             bench_object.name,
             bench_object.label,
             "object",
-            [
-                "a BenchObject",
-                "kind: " + bench_object.kind,
-                "position: " + repr(bench_object.position),
-                "height: %.2f m" % bench_object.height_m,
-            ],
+            _bench_object_detail_lines(bench_object),
         )
 
     previous = None
     for episode in kb.episodes:
-        add(
-            episode.name,
-            episode.name,
-            "event",
-            [
-                "an ActionEpisode",
-                "frames %d–%d" % (episode.start_frame, episode.end_frame),
-                "duration: %.1f s" % episode.duration_s,
-            ]
-            + (["picks: " + episode.picks.name] if episode.picks else [])
-            + (["places at: " + episode.places_at.name] if episode.places_at else []),
-        )
+        add(episode.name, episode.name, "event", _episode_detail_lines(episode))
         if previous:
             edges.append(
                 {
@@ -1421,7 +1747,75 @@ def view_payload(name: str) -> Dict[str, Any]:
         return _plan_view(kb)
     if name == "chart":
         return _chart_view(kb)
+    if name == "domain":
+        return _domain_knowledge_view(kb)
     return {"ok": False, "error": "unknown view: %s" % name}
+
+
+def _domain_knowledge_view(kb: KB) -> Dict[str, Any]:
+    """
+    The static domain-knowledge ontology, anchored on the same real scene entities the
+    Knowledge tab shows wherever one exists: every action verb's phases,
+    classification, roles, parameters, preconditions and goals attach directly to its
+    matching recorded episode(s), and every registered entity's classification,
+    properties, qualities, affordances and relations attach to its matching
+    :class:`BenchObject`.
+
+    This still shows the whole :data:`~cram_viz.action_knowledge.ACTION_PHASE_KNOWLEDGE`
+    / :data:`~cram_viz.action_knowledge.ACTION_KNOWLEDGE` /
+    :data:`~cram_viz.entity_knowledge.ENTITY_KNOWLEDGE` registries regardless of what
+    was actually recorded -- a verb or entity with no match in the current scene falls
+    back to its own bare name, exactly as before -- but a match makes this tab an
+    extension of the same scene graph rather than an unconnected, parallel one.
+    """
+    nodes, edges, details, add = _view()
+    verbs = sorted(
+        {sequence.name for sequence in kb.action_phase_sequences}
+        | {entry.name for entry in kb.action_knowledge_entries}
+    )
+    for verb in verbs:
+        matching_episodes = [
+            episode
+            for episode in kb.episodes
+            if action_knowledge.verb_matches_episode(verb, episode.name)
+        ]
+        anchors = [episode.name for episode in matching_episodes] or [verb]
+        for episode in matching_episodes:
+            add(episode.name, episode.name, "event", _episode_detail_lines(episode))
+        if not matching_episodes:
+            add(verb, verb, "event", ["a registered action verb"])
+        for anchor in anchors:
+            _merge_action_phase_knowledge(
+                add, edges, details, anchor, kb.action_phase_sequences
+            )
+            _merge_action_knowledge(
+                add, edges, details, anchor, kb.action_knowledge_entries
+            )
+    for entry in kb.entity_knowledge_entries:
+        match = next(
+            (
+                bench_object
+                for bench_object in kb.objects
+                if entry.matches(bench_object.name)
+            ),
+            None,
+        )
+        if match:
+            add(match.name, match.label, "object", _bench_object_detail_lines(match))
+        else:
+            add(entry.name, entry.name, "object", ["a registered entity"])
+        anchor = match.name if match else entry.name
+        _merge_entity_knowledge(
+            add, edges, details, anchor, kb.entity_knowledge_entries
+        )
+    return {
+        "ok": True,
+        "crumb": "domain knowledge",
+        "nodes": nodes,
+        "edges": edges,
+        "details": details,
+        "empty": "No action or entity knowledge registered yet.",
+    }
 
 
 def _chart_view(kb: KB) -> Dict[str, Any]:
@@ -1931,12 +2325,180 @@ def get_presets() -> List[Dict[str, str]]:
                     % manipulation.name,
                 }
             )
+    presets += _scene_verb_presets(kb)
+    presets += _domain_knowledge_presets(kb)
     return presets + ARCH_PRESETS
+
+
+def _example_action_verb(kb: KB) -> Optional[str]:
+    """
+    A representative registered action verb, preferring one with full ActionKnowledge
+    (roles/parameters/preconditions/goals) over one with only phase knowledge.
+    """
+    if kb.action_knowledge_entries:
+        return kb.action_knowledge_entries[0].name
+    if kb.action_phase_sequences:
+        return kb.action_phase_sequences[0].name
+    return None
+
+
+def _domain_knowledge_presets(kb: KB) -> List[Dict[str, str]]:
+    """
+    Ready-made queries over the static action/entity knowledge (the Domain Knowledge
+    tab), generated from whichever verbs and entities are actually registered -- like
+    the scene presets above, these stay valid for any registry content.
+    """
+    presets: List[Dict[str, str]] = []
+    example_verb = _example_action_verb(kb)
+    example_action_knowledge = (
+        kb.action_knowledge_entries[0] if kb.action_knowledge_entries else None
+    )
+    if example_action_knowledge:
+        presets.append(
+            {
+                "text": "who/what is involved in '%s'?" % example_verb,
+                "code": "an(entity(role).where(role.action_verb == '%s'))"
+                % example_verb,
+            }
+        )
+        presets.append(
+            {
+                "text": "what must be true before '%s' can start?" % example_verb,
+                "code": (
+                    "an(entity(precondition).where(precondition.action_verb == '%s'))"
+                    % example_verb
+                ),
+            }
+        )
+        presets.append(
+            {
+                "text": "what does '%s' achieve?" % example_verb,
+                "code": "an(entity(goal).where(goal.action_verb == '%s'))"
+                % example_verb,
+            }
+        )
+        if example_action_knowledge.parameters:
+            presets.append(
+                {
+                    "text": "how is '%s' typically parameterized?" % example_verb,
+                    "code": (
+                        "an(entity(parameter).where(parameter.action_verb == '%s'))"
+                        % example_verb
+                    ),
+                }
+            )
+        if any(
+            role.name.startswith("agent:") for role in example_action_knowledge.roles
+        ):
+            presets.append(
+                {
+                    "text": "who is the agent that carries out '%s'?" % example_verb,
+                    "code": (
+                        "the(entity(role).where(role.action_verb == '%s')"
+                        ".where(role.name.startswith('agent:')))"
+                    )
+                    % example_verb,
+                }
+            )
+        if example_action_knowledge.classes:
+            presets.append(
+                {
+                    "text": "what kind of action is '%s'?" % example_verb,
+                    "code": "the(entity(oclass).where(oclass.name == '%s'))"
+                    % example_action_knowledge.classes[-1].name,
+                }
+            )
+    if example_verb and any(
+        sequence.name == example_verb and sequence.phases
+        for sequence in kb.action_phase_sequences
+    ):
+        presets.append(
+            {
+                "text": "what phases does '%s' go through?" % example_verb,
+                "code": (
+                    "an(entity(phase).where(phase.action_verb == '%s'))"
+                    ".ordered_by(phase.order)"
+                )
+                % example_verb,
+            }
+        )
+    pickup_knowledge = next(
+        (entry for entry in kb.action_knowledge_entries if entry.name == "pickup"),
+        None,
+    )
+    place_knowledge = next(
+        (entry for entry in kb.action_knowledge_entries if entry.name == "place"),
+        None,
+    )
+    if pickup_knowledge and place_knowledge:
+        shared_facts = {goal.name for goal in pickup_knowledge.goals} & {
+            precondition.name for precondition in place_knowledge.preconditions
+        }
+        if shared_facts:
+            presets.append(
+                {
+                    "text": "what does 'pickup' leave true for 'place' to rely on?",
+                    "code": (
+                        "set_of(goal.name, precondition.name)"
+                        ".where(goal.action_verb == 'pickup')"
+                        ".where(precondition.action_verb == 'place')"
+                        ".where(goal.name == precondition.name)"
+                    ),
+                }
+            )
+    example_entity = (
+        kb.entity_knowledge_entries[0] if kb.entity_knowledge_entries else None
+    )
+    if example_entity:
+        presets.append(
+            {
+                "text": "what can the %s be used for?" % example_entity.name,
+                "code": (
+                    "an(entity(affordance).where(affordance.entity_name == '%s'))"
+                    % example_entity.name
+                ),
+            }
+        )
+    return presets
+
+
+def _scene_verb_presets(kb: KB) -> List[Dict[str, str]]:
+    """
+    Ready-made queries that connect the recorded episodes of this demo to their
+    action verb's identity -- e.g. every ``transport_*`` episode side by side, not
+    just the single representative episode the plain scene presets above use.
+    """
+    presets: List[Dict[str, str]] = []
+    verb = _example_action_verb(kb)
+    if not verb:
+        return presets
+    matching_episodes = [
+        episode for episode in kb.episodes if episode.name.startswith(verb + "_")
+    ]
+    if len(matching_episodes) < 2:
+        return presets
+    presets.append(
+        {
+            "text": "every '%s' action in this demo" % verb,
+            "code": "an(entity(ep).where(ep.name.startswith('%s_')))" % verb,
+        }
+    )
+    presets.append(
+        {
+            "text": "what does each '%s' move, and for how long?" % verb,
+            "code": (
+                "set_of(ep.name, ep.picks, ep.duration_s)"
+                ".where(ep.name.startswith('%s_'))"
+            )
+            % verb,
+        }
+    )
+    return presets
 
 
 if __name__ == "__main__":
     # smoke test: run every preset against the active scene
-    logging.basicConfig(level=logging.INFO)
+    configure_console_logging()
     for preset in get_presets():
         try:
             result = run_query(preset["code"])
