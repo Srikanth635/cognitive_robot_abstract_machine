@@ -1,0 +1,76 @@
+"""Ontological declarations and validation for structured knowledge models."""
+
+from llm_reasoner.knowledge.ontological.constraints import (
+  Closure,
+  Constraint,
+  ConstraintSuite,
+  ConstraintViolation,
+  Distinct,
+  DistinctAcross,
+  Disjoint,
+  FlagOnPath,
+  Forbidden,
+  GraphShape,
+  Grounded,
+  Inclusion,
+  NonEmptyString,
+  NotAmong,
+  Ordered,
+  SharedValue,
+  resolve,
+)
+from llm_reasoner.knowledge.ontological.decorators import (
+  ClassMeta,
+  ConceptReference,
+  KnowledgeEntity,
+  OntologyRegistry,
+  PropertyMeta,
+  REGISTRY,
+  ontological,
+  prop,
+  property_meta,
+  value_partition,
+)
+from llm_reasoner.knowledge.ontological.rigidity import ConceptLevel, Rigidity
+from llm_reasoner.knowledge.ontological.validation import (
+  Violation,
+  report,
+  validate,
+)
+
+# %% public API
+
+__all__ = [
+  "ClassMeta",
+  "Closure",
+  "ConceptLevel",
+  "ConceptReference",
+  "Constraint",
+  "ConstraintSuite",
+  "ConstraintViolation",
+  "Distinct",
+  "DistinctAcross",
+  "Disjoint",
+  "FlagOnPath",
+  "Forbidden",
+  "GraphShape",
+  "Grounded",
+  "Inclusion",
+  "KnowledgeEntity",
+  "NonEmptyString",
+  "NotAmong",
+  "OntologyRegistry",
+  "Ordered",
+  "PropertyMeta",
+  "REGISTRY",
+  "Rigidity",
+  "SharedValue",
+  "Violation",
+  "ontological",
+  "prop",
+  "property_meta",
+  "report",
+  "resolve",
+  "validate",
+  "value_partition",
+]
