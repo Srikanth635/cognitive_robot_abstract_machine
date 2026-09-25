@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llm_reasoner"
+description = "A language model generative backend for krrood's entity query language."
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+keywords = ["robotics", "knowledge representation", "language models"]
+dynamic = ["version", "dependencies"]
+license = "LGPL-3.0-only"
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.40"]
+openai = ["openai>=2.31.0,<3.0.0"]
+dev = [
+    "openai>=2.31.0,<3.0.0",
+    "pytest>=7.0.0,<8.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["llm_reasoner*"]
+
+[tool.setuptools.package-data]
+llm_reasoner = ["knowledge/hypothesis/templates/*.jinja"]
+
+[tool.setuptools.dynamic]
+version = { attr = "llm_reasoner._version.__version__" }
+dependencies = { file = "requirements.txt" }
