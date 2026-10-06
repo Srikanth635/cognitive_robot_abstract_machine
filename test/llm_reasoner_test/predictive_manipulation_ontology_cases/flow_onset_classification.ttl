@@ -1,0 +1,9 @@
+@prefix case:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/case#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix pour:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#> .
+@prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
+
+# An event observed during an execution, classified by a generated flow-onset event type.
+
+case:onset_type a pour:FlowOnset ;
+    aicor:classifies case:observed_efflux .

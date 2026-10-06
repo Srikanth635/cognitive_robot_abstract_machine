@@ -1,0 +1,12 @@
+@prefix core: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix dyn:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# A core property whose values come from an enumeration the object-dynamics module declares.
+
+core:phaseCoordinateFrame a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:domain core:ActionPhase ;
+    rdfs:range dyn:CoordinateFrame ;
+    rdfs:label "phase coordinate frame"@en ;
+    rdfs:comment "The coordinate frame a phase is controlled in."@en .

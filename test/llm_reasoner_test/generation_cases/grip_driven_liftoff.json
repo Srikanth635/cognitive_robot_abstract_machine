@@ -1,0 +1,10 @@
+{"fragments": [
+  {"id": "pour", "type": "ActionPhaseStructure", "decomposes_task": "aicor:Pouring", "defines_phase": ["tilt", "regulate"], "defines_transition": ["tilt_to_regulate"], "defines_event_type": ["liftoff"], "defines_force_opposition": ["opposition"]},
+  {"id": "tilt", "type": "TiltToFlowPhase"},
+  {"id": "regulate", "type": "FlowRegulationPhase"},
+  {"id": "tilt_to_regulate", "type": "PhaseTransition", "from_phase": "tilt", "to_phase": "regulate"},
+  {"id": "liftoff", "type": "Liftoff", "resolves_opposition": "opposition"},
+  {"id": "opposition", "type": "ForceOpposition", "has_driving_force": "squeeze", "has_resisting_force": "weight"},
+  {"id": "squeeze", "type": "ForceComponent", "has_force_kind": "GRIP_FORCE"},
+  {"id": "weight", "type": "ForceComponent", "has_force_kind": "WEIGHT"}
+]}

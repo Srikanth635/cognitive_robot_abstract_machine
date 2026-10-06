@@ -1,0 +1,4 @@
+{"fragments": [
+  {"id": "pour", "type": "ActionPhaseStructure", "defines_phase": ["stir"]},
+  {"id": "stir", "type": "StirringPhase"}
+]}

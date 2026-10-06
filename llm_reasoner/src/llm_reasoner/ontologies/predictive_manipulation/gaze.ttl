@@ -1,0 +1,98 @@
+@prefix :      <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
+@prefix dul:   <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze> a owl:Ontology ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze/0.2.0> ;
+    owl:versionInfo "0.2.0" ;
+    owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> ;
+    rdfs:label "Predictive manipulation: gaze"@en ;
+    rdfs:comment """Gaze in manipulation: fixations of contact and avoidance landmarks, held until the phase goal, and visual control points."""@en .
+
+# %% landmarks
+
+:Obstacle a owl:Class ;
+    rdfs:subClassOf core:ManipulationRole ;
+    rdfs:label "obstacle"@en ;
+    rdfs:comment "An object or region that the effector or the held object must pass without contact."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:JF09-10 .
+
+:ClosestApproach a owl:Class ;
+    rdfs:subClassOf aicor:EventType , dul:EventType ,
+        [ a owl:Restriction ; owl:onProperty aicor:betweenRoleFillers ; owl:someValuesFrom :Obstacle ] ;
+    rdfs:label "closest approach"@en ;
+    rdfs:comment "The moment a moving effector or held object passes closest to an obstacle, monitored visually."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:JF09-10 , core:JF09-11 .
+
+# %% fixations
+
+:GazeFixation a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Task ,
+        [ a owl:Restriction ; owl:onProperty :fixatesRole ; owl:someValuesFrom core:ManipulationRole ] ,
+        [ a owl:Restriction ; owl:onProperty :servesPhase ; owl:someValuesFrom core:ActionPhase ] ,
+        [ a owl:Restriction ; owl:onProperty :hasLandmarkPurpose ; owl:someValuesFrom :LandmarkPurpose ] ,
+        [ a owl:Restriction ; owl:onProperty :hasGazeMode ; owl:someValuesFrom :GazeMode ] ,
+        [ a owl:Restriction ; owl:onProperty :maintainedUntil ; owl:someValuesFrom core:PhaseBoundaryEventType ] ;
+    rdfs:label "gaze fixation"@en ;
+    rdfs:comment "A fixation of a contact or avoidance landmark during a phase, held until a given event."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-014 , core:JF09-10 .
+
+:fixatesRole a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range core:ManipulationRole ;
+    rdfs:label "fixates role"@en ; rdfs:comment "The participant whose location is the landmark."@en .
+:servesPhase a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range core:ActionPhase ;
+    rdfs:label "serves phase"@en ; rdfs:comment "The phase whose goal the fixation supports."@en .
+:hasLandmarkPurpose a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :LandmarkPurpose ;
+    rdfs:label "has landmark purpose"@en ; rdfs:comment "Whether contact is to be made or avoided at the landmark."@en .
+:hasGazeMode a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :GazeMode ;
+    rdfs:label "has gaze mode"@en ; rdfs:comment "Whether gaze leads the hand to the landmark or follows the moving hand or object."@en .
+:maintainedUntil a owl:ObjectProperty ; rdfs:range core:PhaseBoundaryEventType ;
+    rdfs:label "maintained until"@en ; rdfs:comment "The event at whose predicted time gaze leaves the landmark."@en .
+
+:VisualControlPoint a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( core:SensorimotorControlPoint
+        [ a owl:Restriction ; owl:onProperty core:hasPrediction ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasModality ; owl:hasValue core:Visual ] ] ) ] ;
+    rdfs:label "visual control point"@en ;
+    rdfs:comment "A control point at which a contact event is also predicted and monitored in the visual modality."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-015 , core:JF09-10 .
+
+# %% value partitions
+
+:LandmarkPurpose a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :ContactLandmark :AvoidanceLandmark ) ] ;
+    rdfs:label "landmark purpose"@en ;
+    rdfs:comment "Why a location is fixated during manipulation."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:JF09-10 .
+:ContactLandmark a owl:NamedIndividual , :LandmarkPurpose ; rdfs:label "contact landmark"@en ;
+    rdfs:comment "A location where contact is to be made: the goal of the current phase."@en .
+:AvoidanceLandmark a owl:NamedIndividual , :LandmarkPurpose ; rdfs:label "avoidance landmark"@en ;
+    rdfs:comment "A location where contact must be avoided, such as an obstacle to circumnavigate."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :ContactLandmark :AvoidanceLandmark ) ] .
+
+:GazeMode a owl:Class ;
+    rdfs:subClassOf aicor:dul_Region , dul:Region ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Proactive :Reactive ) ] ;
+    rdfs:label "gaze mode"@en ;
+    rdfs:comment "Whether gaze predicts or follows the manipulation."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-014 , core:FJ-020 .
+:Proactive a owl:NamedIndividual , :GazeMode ; rdfs:label "proactive"@en ;
+    rdfs:comment "Gaze arrives at the landmark before the hand or the held object, as in skilled, familiar tasks."@en .
+:Reactive a owl:NamedIndividual , :GazeMode ; rdfs:label "reactive"@en ;
+    rdfs:comment "Gaze follows the hand or the moving object, as while a novel task is still being learned."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Proactive :Reactive ) ] .
+
+# %% structure
+
+:definesGazeFixation a owl:ObjectProperty ; rdfs:domain core:ActionPhaseStructure ; rdfs:subPropertyOf core:definesComponent ; rdfs:range :GazeFixation ;
+    rdfs:label "defines gaze fixation"@en ; rdfs:comment "A gaze fixation that supports one of the structure's phases."@en .

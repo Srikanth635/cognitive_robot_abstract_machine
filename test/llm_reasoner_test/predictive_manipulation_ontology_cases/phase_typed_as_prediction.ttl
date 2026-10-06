@@ -1,0 +1,6 @@
+@prefix case:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/case#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+
+# One individual is declared both as a phase of the task and as an expectation about it.
+
+case:muddle a core:ActionPhase , core:SensoryEventPrediction .

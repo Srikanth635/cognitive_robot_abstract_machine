@@ -1,0 +1,4 @@
+{"fragments": [
+  {"id": "pour", "type": "ActionPhaseStructure", "defines_transition": ["step"]},
+  {"id": "step", "type": "PhaseTransition", "from_phase": "missing_phase"}
+]}

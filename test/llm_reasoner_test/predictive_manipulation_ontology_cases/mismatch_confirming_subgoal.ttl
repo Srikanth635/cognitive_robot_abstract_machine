@@ -1,0 +1,10 @@
+@prefix case:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/case#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+
+# The observation disagrees with the prediction, yet the comparison claims the subgoal.
+
+case:comparison a core:PredictionComparison ;
+    core:hasComparisonOutcome core:Mismatch ;
+    core:confirmsSubgoal case:subgoal .
+
+case:subgoal a core:Subgoal .

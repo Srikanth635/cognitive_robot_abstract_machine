@@ -1,0 +1,374 @@
+@prefix :      <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix dyn:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#> .
+@prefix pre:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#> .
+@prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
+@prefix dul:   <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring> a owl:Ontology ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring/0.3.0> ;
+    owl:versionInfo "0.3.0" ;
+    owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension> ;
+    rdfs:label "Predictive manipulation: pouring"@en ;
+    rdfs:comment """Substance transfer as an engineering extension, tied to CRAM-AICOR's pouring model: aicor:Pouring, the roles of aicor:PouringIntention, the states of aicor:PouringTemplate and aicor:EffluxOnsetEvent."""@en .
+
+# %% roles
+
+:SourceContainer a owl:Class ;
+    rdfs:subClassOf pre:PrehensileManipulandum , aicor:SourceRole ;
+    rdfs:label "source container"@en ;
+    rdfs:comment "The vessel that is grasped and tilted, from which the substance flows."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:SourceContainerBinding a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( aicor:RoleBinding [ a owl:Restriction ; owl:onProperty aicor:bindsSlot ; owl:someValuesFrom :SourceContainer ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty aicor:bindsFiller ; owl:allValuesFrom aicor:Container ] ;
+    rdfs:label "source container binding"@en ;
+    rdfs:comment "An execution-time binding of the source container slot, whose filler is a CRAM-AICOR container."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:TargetReceptacle a owl:Class ;
+    rdfs:subClassOf core:ManipulationRole , aicor:GoalRole ;
+    rdfs:label "target receptacle"@en ;
+    rdfs:comment "The vessel or surface receiving the substance."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:PouredSubstance a owl:Class ;
+    rdfs:subClassOf core:ManipulationRole , aicor:SubstanceRole ;
+    rdfs:label "poured substance"@en ;
+    rdfs:comment "The substance transferred, as distinct from the container that is manipulated."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:PouredSubstanceBinding a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( aicor:RoleBinding [ a owl:Restriction ; owl:onProperty aicor:bindsSlot ; owl:someValuesFrom :PouredSubstance ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty aicor:bindsFiller ; owl:allValuesFrom aicor:Substance ] ;
+    rdfs:label "poured substance binding"@en ;
+    rdfs:comment "An execution-time binding of the poured substance slot, whose filler is a CRAM-AICOR substance."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:PouringLip a owl:Class ;
+    rdfs:subClassOf core:ManipulationRole ;
+    rdfs:label "pouring lip"@en ;
+    rdfs:comment "The edge of the source container over which the substance leaves it."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+[ a owl:AllDisjointClasses ; owl:members ( core:Actor core:Manipulandum pre:GraspingEffector pre:GraspSite pre:InitialSupport pre:FinalSupport :TargetReceptacle :PouredSubstance :PouringLip ) ] .
+
+# %% conditions
+
+:LipOverReceptacle a owl:Class ;
+    rdfs:subClassOf core:PhaseConditionType ;
+    rdfs:label "lip over receptacle"@en ;
+    rdfs:comment "The pouring lip is positioned over the opening of the target receptacle."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:SubstanceContainedInSource a owl:Class ;
+    rdfs:subClassOf core:PhaseConditionType , aicor:ContainedState ;
+    rdfs:label "substance contained in source"@en ;
+    rdfs:comment "Transferable substance remains inside the source container."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:SubstanceFlowing a owl:Class ;
+    rdfs:subClassOf core:PhaseConditionType , aicor:FlowingState ;
+    rdfs:label "substance flowing"@en ;
+    rdfs:comment "Substance is crossing the pouring lip toward the target."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:SubstanceAccumulatedInTarget a owl:Class ;
+    rdfs:subClassOf core:PhaseConditionType , aicor:AccumulatedState ;
+    rdfs:label "substance accumulated in target"@en ;
+    rdfs:comment "Transferred substance has accumulated in the target receptacle."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:SourceUpright a owl:Class ;
+    rdfs:subClassOf core:PhaseConditionType ;
+    rdfs:label "source upright"@en ;
+    rdfs:comment "The source container stands in a stable upright orientation."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+# %% events
+
+:FlowEventType a owl:Class ;
+    rdfs:subClassOf core:MechanicalEventType ;
+    rdfs:label "flow event type"@en ;
+    rdfs:comment "A mechanical event constituted by a change in substance motion."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:FlowOnset a owl:Class ;
+    rdfs:subClassOf :FlowEventType , core:ThresholdCrossingEventType ,
+        [ a owl:Restriction ; owl:onProperty core:crossesThreshold ; owl:someValuesFrom :FlowOnsetThreshold ] ,
+        [ a owl:Restriction ; owl:onProperty aicor:initiatesStateType ; owl:someValuesFrom :SubstanceFlowing ] ,
+        [ a owl:Restriction ; owl:onProperty aicor:classifies ; owl:allValuesFrom aicor:EffluxOnsetEvent ] ,
+        [ a owl:Restriction ; owl:onProperty core:resolvesOpposition ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( core:ForceOpposition
+            [ a owl:Restriction ; owl:onProperty core:hasDrivingForce ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasForceKind ; owl:hasValue core:Weight ] ]
+            [ a owl:Restriction ; owl:onProperty core:hasResistingForce ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasForceKind ; owl:hasValue core:Containment ] ] ) ] ] ;
+    rdfs:label "flow onset"@en ;
+    rdfs:comment "Substance first crosses the lip once the onset threshold is crossed: its weight overcomes the containment by the source."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:FlowCessation a owl:Class ;
+    rdfs:subClassOf :FlowEventType ,
+        [ a owl:Restriction ; owl:onProperty core:terminatesStateType ; owl:someValuesFrom :SubstanceFlowing ] ;
+    rdfs:label "flow cessation"@en ;
+    rdfs:comment "Substance stops crossing the pouring lip."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:SpillEvent a owl:Class ;
+    rdfs:subClassOf :FlowEventType , core:ThresholdCrossingEventType , core:FailureEventType ,
+        [ a owl:Restriction ; owl:onProperty core:crossesThreshold ; owl:someValuesFrom :SpillThreshold ] ;
+    rdfs:label "spill event"@en ;
+    rdfs:comment "Substance leaves the intended flow path outside the target receptacle."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:SourceEmpty a owl:Class ;
+    rdfs:subClassOf core:PhaseBoundaryEventType ,
+        [ a owl:Restriction ; owl:onProperty core:terminatesStateType ; owl:someValuesFrom :SubstanceContainedInSource ] ;
+    rdfs:label "source empty"@en ;
+    rdfs:comment "The transferable quantity remaining in the source reaches zero."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:TargetQuantityReached a owl:Class ;
+    rdfs:subClassOf core:SetpointAttainmentEventType ,
+        [ a owl:Restriction ; owl:onProperty core:attainsSetpoint ; owl:someValuesFrom :TransferredQuantitySetpoint ] ;
+    rdfs:label "target quantity reached"@en ;
+    rdfs:comment "The transferred mass or volume meets the requested task quantity."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:LipAligned a owl:Class ;
+    rdfs:subClassOf core:PoseAttainmentEventType ,
+        [ a owl:Restriction ; owl:onProperty core:attainsSetpoint ; owl:someValuesFrom :LipAlignmentSetpoint ] ,
+        [ a owl:Restriction ; owl:onProperty aicor:initiatesStateType ; owl:someValuesFrom :LipOverReceptacle ] ;
+    rdfs:label "lip aligned"@en ;
+    rdfs:comment "The commanded pose placing the lip over the receptacle opening has been reached."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:UprightRestored a owl:Class ;
+    rdfs:subClassOf core:PoseAttainmentEventType ,
+        [ a owl:Restriction ; owl:onProperty core:attainsSetpoint ; owl:someValuesFrom :UprightAngleSetpoint ] ,
+        [ a owl:Restriction ; owl:onProperty aicor:initiatesStateType ; owl:someValuesFrom :SourceUpright ] ;
+    rdfs:label "upright restored"@en ;
+    rdfs:comment "The source container has been returned to a stable orientation."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+# %% parameters
+
+:DynamicViscosityEstimate a owl:Class ;
+    rdfs:subClassOf core:ObjectPropertyEstimate , core:DynamicViscosityParameter ;
+    rdfs:label "dynamic viscosity estimate"@en ;
+    rdfs:comment "The anticipated dynamic viscosity of a liquid or cohesive substance. Not applicable to granular material."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:RemainingSourceQuantityEstimate a owl:Class ;
+    rdfs:subClassOf core:ObjectStateEstimate ,
+        [ a owl:Class ; owl:unionOf ( core:MassParameter core:VolumeParameter ) ] ;
+    rdfs:label "remaining source quantity estimate"@en ;
+    rdfs:comment "The anticipated mass or volume remaining in the source."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:TargetFillStateEstimate a owl:Class ;
+    rdfs:subClassOf core:ObjectStateEstimate , core:DimensionlessParameter ;
+    rdfs:label "target fill state estimate"@en ;
+    rdfs:comment "The anticipated filled fraction of the target receptacle."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:AlignmentErrorEstimate a owl:Class ;
+    rdfs:subClassOf core:ObjectStateEstimate , core:AngleParameter ;
+    rdfs:label "alignment error estimate"@en ;
+    rdfs:comment "The angular deviation between the pouring lip and the receptacle opening."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:SloshDynamicsEstimate a owl:Class ;
+    rdfs:subClassOf core:DynamicsEstimate , core:CategoricalParameter ;
+    rdfs:label "slosh dynamics estimate"@en ;
+    rdfs:comment "A categorical model of internal liquid motion under acceleration."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:GranularFlowDynamicsEstimate a owl:Class ;
+    rdfs:subClassOf core:DynamicsEstimate , core:CategoricalParameter ;
+    rdfs:label "granular flow dynamics estimate"@en ;
+    rdfs:comment "A categorical model of particle flow, jamming and avalanching."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:CohesiveFlowDynamicsEstimate a owl:Class ;
+    rdfs:subClassOf core:DynamicsEstimate , core:CategoricalParameter ;
+    rdfs:label "cohesive flow dynamics estimate"@en ;
+    rdfs:comment "A categorical model of delayed or intermittent cohesive flow."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:CenterOfMassShiftEstimate a owl:Class ;
+    rdfs:subClassOf core:DynamicsEstimate , core:LengthParameter ;
+    rdfs:label "centre of mass shift estimate"@en ;
+    rdfs:comment "The predicted displacement of the centre of mass as substance leaves the source."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:TiltAngleSetpoint a owl:Class ;
+    rdfs:subClassOf core:MotorSetpoint , core:AngleParameter ;
+    rdfs:label "tilt angle setpoint"@en ;
+    rdfs:comment "The commanded orientation of the source container about its pouring axis."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:TiltRateSetpoint a owl:Class ;
+    rdfs:subClassOf core:MotorSetpoint , core:AngularRateParameter ;
+    rdfs:label "tilt rate setpoint"@en ;
+    rdfs:comment "The commanded angular velocity of tilting the source container."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:TorqueSetpoint a owl:Class ;
+    rdfs:subClassOf core:MotorSetpoint , core:TorqueParameter ;
+    rdfs:label "torque setpoint"@en ;
+    rdfs:comment "The commanded moment about the grasp."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:PourPoseSetpoint a owl:Class ;
+    rdfs:subClassOf core:MotorSetpoint , core:CategoricalParameter ;
+    rdfs:label "pour pose setpoint"@en ;
+    rdfs:comment "A categorical reference to the desired pouring pose."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:LipAlignmentSetpoint a owl:Class ;
+    rdfs:subClassOf core:MotorSetpoint , core:AngleParameter ;
+    rdfs:label "lip alignment setpoint"@en ;
+    rdfs:comment "The commanded angular alignment of the pouring lip with the receptacle."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:UprightAngleSetpoint a owl:Class ;
+    rdfs:subClassOf core:MotorSetpoint , core:AngleParameter ;
+    rdfs:label "upright angle setpoint"@en ;
+    rdfs:comment "The commanded upright orientation of the source container."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:FlowRateSetpoint a owl:Class ;
+    rdfs:subClassOf core:TaskSetpoint ,
+        [ a owl:Class ; owl:unionOf ( core:MassFlowRateParameter core:VolumetricFlowRateParameter ) ] ;
+    rdfs:label "flow rate setpoint"@en ;
+    rdfs:comment "The desired mass or volume transferred per unit time, a task target and not a motor command."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:TransferredQuantitySetpoint a owl:Class ;
+    rdfs:subClassOf core:TaskSetpoint ,
+        [ a owl:Class ; owl:unionOf ( core:MassParameter core:VolumeParameter ) ] ;
+    rdfs:label "transferred quantity setpoint"@en ;
+    rdfs:comment "The desired mass or volume of substance to transfer, a task target and not a motor command."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:FlowOnsetThreshold a owl:Class ;
+    rdfs:subClassOf core:MechanicalThreshold , core:AngleParameter ;
+    rdfs:label "flow onset threshold"@en ;
+    rdfs:comment "The tilt angle at which the substance begins crossing the lip."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:SpillThreshold a owl:Class ;
+    rdfs:subClassOf core:MechanicalThreshold ,
+        [ a owl:Class ; owl:unionOf ( core:MassFlowRateParameter core:VolumetricFlowRateParameter ) ] ;
+    rdfs:label "spill threshold"@en ;
+    rdfs:comment "The flow rate beyond which the substance is no longer contained by the target."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+# %% phases
+
+:AlignmentPhase a owl:Class ;
+    rdfs:subClassOf core:ActionPhase ,
+        [ a owl:Restriction ; owl:onProperty core:hasCouplingRegime ; owl:hasValue core:Coupled ] ;
+    rdfs:label "alignment phase"@en ;
+    rdfs:comment "Positioning of the lip over the receptacle before tilting. Optional when the source already starts aligned."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:TiltToFlowPhase a owl:Class ;
+    rdfs:subClassOf core:ActionPhase , aicor:PouringPhase ,
+        [ a owl:Restriction ; owl:onProperty core:hasCouplingRegime ; owl:hasValue core:Coupled ] ,
+        [ a owl:Restriction ; owl:onProperty core:realizesActionCategory ; owl:hasValue aicor:Tilting ] ;
+    rdfs:label "tilt-to-flow phase"@en ;
+    rdfs:comment "Rotation of the source container until flow begins."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:FlowRegulationPhase a owl:Class ;
+    rdfs:subClassOf core:ActionPhase ,
+        [ a owl:Restriction ; owl:onProperty core:hasCouplingRegime ; owl:hasValue core:Coupled ] ,
+        [ a owl:Restriction ; owl:onProperty core:controlledBy ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( core:FeedbackRegulatedController
+            [ a owl:Restriction ; owl:onProperty core:hasContinuousPrediction ; owl:someValuesFrom core:ContinuousSignalPrediction ] ) ] ] ;
+    rdfs:label "flow regulation phase"@en ;
+    rdfs:comment "Continuous modulation of tilt and grip while substance flows, against the quantity reaching the target."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:FlowTerminationPhase a owl:Class ;
+    rdfs:subClassOf core:ActionPhase ,
+        [ a owl:Restriction ; owl:onProperty core:hasCouplingRegime ; owl:hasValue core:Coupled ] ;
+    rdfs:label "flow termination phase"@en ;
+    rdfs:comment "Counter-rotation that brings the substance back below the lip. Ends at flow cessation."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:ReturnUprightPhase a owl:Class ;
+    rdfs:subClassOf core:ActionPhase ,
+        [ a owl:Restriction ; owl:onProperty core:hasCouplingRegime ; owl:hasValue core:Coupled ] ;
+    rdfs:label "return upright phase"@en ;
+    rdfs:comment "Restoration of the container to a stable orientation after the flow has stopped. Optional."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+[ a owl:AllDisjointClasses ; owl:members ( :AlignmentPhase :TiltToFlowPhase :FlowRegulationPhase :FlowTerminationPhase :ReturnUprightPhase
+    pre:ReachPhase pre:ContactEstablishmentPhase pre:ForceLoadingPhase pre:LiftPhase pre:HoldPhase pre:TransportPhase pre:ReplacePhase pre:UnloadPhase pre:ContactReleasePhase pre:WithdrawPhase ) ] .
+
+# %% corrective programmes
+
+:SpillCorrection a owl:Class ;
+    rdfs:subClassOf core:CorrectiveAction ,
+        [ a owl:Restriction ; owl:onProperty core:targetsSetpoint ; owl:allValuesFrom [ a owl:Class ; owl:unionOf ( :TiltAngleSetpoint :TiltRateSetpoint ) ] ] ,
+        [ a owl:Restriction ; owl:onProperty core:hasCorrectionDirection ; owl:hasValue core:ReverseChange ] ;
+    rdfs:label "spill correction"@en ;
+    rdfs:comment "Reversing the tilt to bring the substance back below the lip after a spill or overly fast flow."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+# %% structure
+
+:PouringPhaseStructure a owl:Class ;
+    rdfs:subClassOf pre:PrehensionPhaseStructure ,
+        [ a owl:Restriction ; owl:onProperty core:decomposesTask ; owl:hasValue aicor:Pouring ] ,
+        [ a owl:Restriction ; owl:onProperty core:definesRole ; owl:someValuesFrom :SourceContainer ] ,
+        [ a owl:Restriction ; owl:onProperty core:definesRole ; owl:someValuesFrom :TargetReceptacle ] ,
+        [ a owl:Restriction ; owl:onProperty core:definesRole ; owl:someValuesFrom :PouredSubstance ] ,
+        [ a owl:Restriction ; owl:onProperty core:definesPhase ; owl:someValuesFrom :FlowRegulationPhase ] ,
+        [ a owl:Restriction ; owl:onProperty :hasMaterialRegime ; owl:someValuesFrom :MaterialRegime ] ,
+        [ a owl:Restriction ; owl:onProperty :hasTerminationReason ; owl:someValuesFrom :TransferTerminationReason ] ;
+    rdfs:label "pouring phase structure"@en ;
+    rdfs:comment "A substance-transfer phase structure composed with prehension."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:hasMaterialRegime a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :MaterialRegime ;
+    rdfs:label "has material regime"@en ; rdfs:comment "The flow behaviour of the transferred substance."@en .
+:hasTerminationReason a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :TransferTerminationReason ;
+    rdfs:label "has termination reason"@en ; rdfs:comment "The condition that ends the transfer in this task variant."@en .
+
+# %% value partitions
+
+:MaterialRegime a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Liquid :Granular :Cohesive ) ] ;
+    rdfs:label "material regime"@en ;
+    rdfs:comment "The physical flow behaviour of a transferred substance."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+:Liquid a owl:NamedIndividual , :MaterialRegime ; rdfs:label "liquid"@en ;
+    rdfs:comment "A low-shear material that flows freely and may slosh."@en .
+:Granular a owl:NamedIndividual , :MaterialRegime ; rdfs:label "granular"@en ;
+    rdfs:comment "Discrete particles whose bulk flow is not characterised by viscosity."@en .
+:Cohesive a owl:NamedIndividual , :MaterialRegime ; rdfs:label "cohesive"@en ;
+    rdfs:comment "A highly viscous or cohesive material with delayed flow."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Liquid :Granular :Cohesive ) ] .
+
+:TransferTerminationReason a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :TargetQuantityAttained :SourceExhausted :InstructedStop :TransferFailure ) ] ;
+    rdfs:label "transfer termination reason"@en ;
+    rdfs:comment "The condition that intentionally or exceptionally ends the transfer."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+:TargetQuantityAttained a owl:NamedIndividual , :TransferTerminationReason ; rdfs:label "target quantity attained"@en ;
+    rdfs:comment "The requested transferred quantity has been reached."@en .
+:SourceExhausted a owl:NamedIndividual , :TransferTerminationReason ; rdfs:label "source exhausted"@en ;
+    rdfs:comment "No transferable material remains in the source."@en .
+:InstructedStop a owl:NamedIndividual , :TransferTerminationReason ; rdfs:label "instructed stop"@en ;
+    rdfs:comment "An external instruction requests that the transfer stop."@en .
+:TransferFailure a owl:NamedIndividual , :TransferTerminationReason ; rdfs:label "transfer failure"@en ;
+    rdfs:comment "A spill or another failure forces the transfer to stop."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :TargetQuantityAttained :SourceExhausted :InstructedStop :TransferFailure ) ] .

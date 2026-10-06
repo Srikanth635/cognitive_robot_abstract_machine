@@ -1,0 +1,11 @@
+@prefix core: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# A property whose descriptor class would take the name of the class ActionPhase.
+
+core:actionPhase a owl:ObjectProperty ;
+    rdfs:domain core:ActionPhaseStructure ;
+    rdfs:range core:ActionPhase ;
+    rdfs:label "action phase"@en ;
+    rdfs:comment "A phase of the structure."@en .

@@ -1,0 +1,14 @@
+@prefix case:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/case#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix pre:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+# The lift-off threshold is a weight force, but its range is given in kilograms.
+
+case:liftoff_threshold a pre:LiftoffThreshold ;
+    core:hasParameterRange case:mass_range .
+
+case:mass_range a core:MagnitudeRange ;
+    core:lowerBound "0.2"^^xsd:double ;
+    core:upperBound "0.4"^^xsd:double ;
+    core:hasUnit core:Kilogram .

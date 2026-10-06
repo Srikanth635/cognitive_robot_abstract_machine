@@ -1,0 +1,12 @@
+@prefix case:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/case#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix pre:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#> .
+@prefix pour:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#> .
+
+# A touch prediction is said to be caused by the hand reaching its target pose, which touch cannot sense.
+
+case:prediction a core:SensoryEventPrediction ;
+    core:hasModality core:Tactile ;
+    core:causedByEvent case:reach_done .
+
+case:reach_done a pre:ReachTargetReached .

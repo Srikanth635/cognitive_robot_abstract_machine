@@ -1,0 +1,542 @@
+@prefix :      <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix dyn:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#> .
+@prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
+@prefix dul:   <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension> a owl:Ontology ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension/0.4.0> ;
+    owl:versionInfo "0.4.0" ;
+    owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics> ;
+    rdfs:label "Predictive manipulation: prehension"@en ;
+    rdfs:comment """Prehensile manipulation: reach, load, lift, hold, transport, replace, unload and release, with their contact events, grip and load forces and corrective programmes."""@en .
+
+# %% roles
+
+:GraspingEffector a owl:Class ;
+    rdfs:subClassOf core:ManipulationRole , aicor:InstrumentRole ;
+    rdfs:label "grasping effector"@en ;
+    rdfs:comment "The hand, gripper or other effector establishing the grasp."@en ;
+    core:evidenceStatus core:EmpiricalFinding .
+
+:GraspingEffectorBinding a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( aicor:RoleBinding [ a owl:Restriction ; owl:onProperty aicor:bindsSlot ; owl:someValuesFrom :GraspingEffector ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty aicor:bindsFiller ; owl:allValuesFrom aicor:EndEffector ] ;
+    rdfs:label "grasping effector binding"@en ;
+    rdfs:comment "An execution-time binding of the grasping effector slot, whose filler is a robot end effector."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:GraspSite a owl:Class ;
+    rdfs:subClassOf core:ManipulationRole ;
+    rdfs:label "grasp site"@en ;
+    rdfs:comment "The region of the manipulandum where the effector makes contact."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:JF09-12 .
+:graspSiteSuitedFor a owl:ObjectProperty ; rdfs:domain :GraspSite ;
+    rdfs:label "grasp site suited for"@en ;
+    rdfs:comment "An action the grasp site is chosen for, as the IRI of a CRAM-AICOR action category."@en .
+
+:PrehensileManipulandum a owl:Class ;
+    rdfs:subClassOf core:Manipulandum ;
+    rdfs:label "prehensile manipulandum"@en ;
+    rdfs:comment "The object coupled to an effector by a prehensile grasp."@en ;
+    core:evidenceStatus core:EmpiricalFinding .
+
+:InitialSupport a owl:Class ;
+    rdfs:subClassOf core:ManipulationRole ;
+    rdfs:label "initial support"@en ;
+    rdfs:comment "The surface bearing the manipulandum before lift-off."@en ;
+    core:evidenceStatus core:EmpiricalFinding .
+
+:FinalSupport a owl:Class ;
+    rdfs:subClassOf core:ManipulationRole ;
+    rdfs:label "final support"@en ;
+    rdfs:comment "The surface bearing the manipulandum after touchdown."@en ;
+    core:evidenceStatus core:EmpiricalFinding .
+
+[ a owl:AllDisjointClasses ; owl:members ( core:Actor core:Manipulandum :GraspingEffector :GraspSite :InitialSupport :FinalSupport ) ] .
+
+# %% conditions
+
+:EffectorObjectContact a owl:Class ;
+    rdfs:subClassOf core:ContactCondition ;
+    rdfs:label "effector-object contact"@en ;
+    rdfs:comment "The effector is mechanically in contact with the manipulandum."@en ;
+    core:evidenceStatus core:EmpiricalFinding .
+
+:ObjectSupportContact a owl:Class ;
+    rdfs:subClassOf core:ContactCondition ;
+    rdfs:label "object-support contact"@en ;
+    rdfs:comment "The manipulandum is mechanically in contact with a support."@en ;
+    core:evidenceStatus core:EmpiricalFinding .
+
+:GraspStability a owl:Class ;
+    rdfs:subClassOf core:PhaseConditionType , aicor:GraspedState ;
+    rdfs:label "grasp stability"@en ;
+    rdfs:comment "The manipulandum is held with grip force above the slip limit and below damaging it."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-025 , core:JF09-06 , core:JF09-07 .
+
+:ObjectIntact a owl:Class ;
+    rdfs:subClassOf core:PhaseConditionType ;
+    rdfs:label "object intact"@en ;
+    rdfs:comment "The manipulandum has not been damaged by the forces applied to it."@en ;
+    core:evidenceStatus core:SupportedInterpretation ;
+    core:representsClaim core:JF09-07 .
+
+:ObjectClearOfSupport a owl:Class ;
+    rdfs:subClassOf core:PhaseConditionType ;
+    rdfs:label "object clear of support"@en ;
+    rdfs:comment "No support bears the manipulandum's weight."@en ;
+    core:evidenceStatus core:EmpiricalFinding .
+
+:EffectorPositioned a owl:Class ;
+    rdfs:subClassOf core:PhaseConditionType ;
+    rdfs:label "effector positioned"@en ;
+    rdfs:comment "The effector is positioned for establishing contact at the grasp site."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:SafeContactForce a owl:Class ;
+    rdfs:subClassOf core:PhaseConditionType ;
+    rdfs:label "safe contact force"@en ;
+    rdfs:comment "Contact force stays within the limit beyond which a protective response is needed."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+# %% events
+
+:ReachTargetReached a owl:Class ;
+    rdfs:subClassOf core:PoseAttainmentEventType ,
+        [ a owl:Restriction ; owl:onProperty core:attainsSetpoint ; owl:someValuesFrom :ReachPoseSetpoint ] ,
+        [ a owl:Restriction ; owl:onProperty aicor:initiatesStateType ; owl:someValuesFrom :EffectorPositioned ] ;
+    rdfs:label "reach target reached"@en ;
+    rdfs:comment "The effector reaches the commanded pre-contact pose."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:GraspContact a owl:Class ;
+    rdfs:subClassOf core:ContactEventType ,
+        [ a owl:Restriction ; owl:onProperty aicor:initiatesStateType ; owl:someValuesFrom :EffectorObjectContact ] ,
+        [ a owl:Restriction ; owl:onProperty aicor:classifies ; owl:allValuesFrom aicor:GraspEvent ] ,
+        [ a owl:Restriction ; owl:onProperty core:startsForce ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasForceKind ; owl:hasValue core:GripForce ] ] ;
+    rdfs:label "grasp contact"@en ;
+    rdfs:comment "The effector first contacts the manipulandum; the goal of the reach phase."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-003 , core:FJ-004 , core:JF09-12 .
+
+:GraspRelease a owl:Class ;
+    rdfs:subClassOf core:ContactEventType ,
+        [ a owl:Restriction ; owl:onProperty core:terminatesStateType ; owl:someValuesFrom :EffectorObjectContact ] ,
+        [ a owl:Restriction ; owl:onProperty core:endsForce ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasForceKind ; owl:hasValue core:GripForce ] ] ;
+    rdfs:label "grasp release"@en ;
+    rdfs:comment "The effector's contact surfaces break contact with the manipulandum: the sensory goal of the unload phase."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-003 .
+
+:Liftoff a owl:Class ;
+    rdfs:subClassOf core:ContactEventType , core:ThresholdCrossingEventType ,
+        [ a owl:Restriction ; owl:onProperty core:crossesThreshold ; owl:someValuesFrom :LiftoffThreshold ] ,
+        [ a owl:Restriction ; owl:onProperty core:terminatesStateType ; owl:someValuesFrom :ObjectSupportContact ] ,
+        [ a owl:Restriction ; owl:onProperty aicor:initiatesStateType ; owl:someValuesFrom :ObjectClearOfSupport ] ,
+        [ a owl:Restriction ; owl:onProperty core:resolvesOpposition ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( core:ForceOpposition
+            [ a owl:Restriction ; owl:onProperty core:hasDrivingForce ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasForceKind ; owl:hasValue core:LoadForce ] ]
+            [ a owl:Restriction ; owl:onProperty core:hasResistingForce ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasForceKind ; owl:hasValue core:Weight ] ] ) ] ] ,
+        [ a owl:Restriction ; owl:onProperty core:endsForce ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasForceKind ; owl:hasValue core:SupportReaction ] ] ;
+    rdfs:label "lift-off"@en ;
+    rdfs:comment "Load force exceeds the weight and the manipulandum leaves its support; the goal of the load phase."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-003 , core:FJ-010 .
+
+:Touchdown a owl:Class ;
+    rdfs:subClassOf core:ContactEventType , core:ThresholdCrossingEventType ,
+        [ a owl:Restriction ; owl:onProperty core:crossesThreshold ; owl:someValuesFrom :TouchdownThreshold ] ,
+        [ a owl:Restriction ; owl:onProperty aicor:initiatesStateType ; owl:someValuesFrom :ObjectSupportContact ] ,
+        [ a owl:Restriction ; owl:onProperty core:terminatesStateType ; owl:someValuesFrom :ObjectClearOfSupport ] ,
+        [ a owl:Restriction ; owl:onProperty core:startsForce ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasForceKind ; owl:hasValue core:SupportReaction ] ] ;
+    rdfs:label "touchdown"@en ;
+    rdfs:comment "The manipulandum contacts its destination support; the goal of the replace phase."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-003 .
+
+:SlipEvent a owl:Class ;
+    rdfs:subClassOf core:ThresholdCrossingEventType , core:FailureEventType , aicor:SlipEventType ,
+        [ a owl:Restriction ; owl:onProperty core:crossesThreshold ; owl:someValuesFrom :SlipThreshold ] ,
+        [ a owl:Restriction ; owl:onProperty core:terminatesStateType ; owl:someValuesFrom :GraspStability ] ,
+        [ a owl:Restriction ; owl:onProperty core:resolvesOpposition ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( core:ForceOpposition
+            [ a owl:Restriction ; owl:onProperty core:hasDrivingForce ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasForceKind ; owl:hasValue core:LoadForce ] ]
+            [ a owl:Restriction ; owl:onProperty core:hasResistingForce ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasForceKind ; owl:hasValue core:Friction ] ] ) ] ] ;
+    rdfs:label "slip event"@en ;
+    rdfs:comment "Tangential load exceeds the frictional capacity of the grasp."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-012 , core:FJ-025 , core:JF09-03 .
+
+:ObjectCrush a owl:Class ;
+    rdfs:subClassOf core:ThresholdCrossingEventType , core:FailureEventType , aicor:RuptureEventType ,
+        [ a owl:Restriction ; owl:onProperty core:crossesThreshold ; owl:someValuesFrom :CrushThreshold ] ,
+        [ a owl:Restriction ; owl:onProperty core:terminatesStateType ; owl:someValuesFrom :ObjectIntact ] ,
+        [ a owl:Restriction ; owl:onProperty aicor:classifies ; owl:allValuesFrom aicor:FractureEvent ] ,
+        [ a owl:Restriction ; owl:onProperty core:resolvesOpposition ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( core:ForceOpposition
+            [ a owl:Restriction ; owl:onProperty core:hasDrivingForce ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasForceKind ; owl:hasValue core:GripForce ] ]
+            [ a owl:Restriction ; owl:onProperty core:hasResistingForce ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasForceKind ; owl:hasValue core:MaterialStrength ] ] ) ] ] ;
+    rdfs:label "object crush"@en ;
+    rdfs:comment "Grip force exceeds what the manipulandum can bear and damages it."@en ;
+    core:evidenceStatus core:SupportedInterpretation ;
+    core:representsClaim core:JF09-07 .
+
+:LiftClearanceReached a owl:Class ;
+    rdfs:subClassOf core:PoseAttainmentEventType ,
+        [ a owl:Restriction ; owl:onProperty core:attainsSetpoint ; owl:someValuesFrom :LiftClearanceSetpoint ] ;
+    rdfs:label "lift clearance reached"@en ;
+    rdfs:comment "The manipulandum reaches its commanded clearance above the support."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:StableHoldReached a owl:Class ;
+    rdfs:subClassOf core:SetpointAttainmentEventType ,
+        [ a owl:Restriction ; owl:onProperty aicor:initiatesStateType ; owl:someValuesFrom :GraspStability ] ;
+    rdfs:label "stable hold reached"@en ;
+    rdfs:comment "The requested stable holding state has been reached. An optional, task-specific boundary."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:TransportTargetReached a owl:Class ;
+    rdfs:subClassOf core:PoseAttainmentEventType ,
+        [ a owl:Restriction ; owl:onProperty core:attainsSetpoint ; owl:someValuesFrom :TransportPoseSetpoint ] ;
+    rdfs:label "transport target reached"@en ;
+    rdfs:comment "The held manipulandum reaches its commanded transport destination."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:ForcesUnloaded a owl:Class ;
+    rdfs:subClassOf core:SetpointAttainmentEventType , core:MechanicalEventType ,
+        [ a owl:Restriction ; owl:onProperty :weightSupportedBy ; owl:someValuesFrom :FinalSupport ] ,
+        [ a owl:Restriction ; owl:onProperty core:endsForce ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasForceKind ; owl:hasValue core:LoadForce ] ] ;
+    rdfs:label "forces unloaded"@en ;
+    rdfs:comment "Grip and load forces reach their low targets and the weight passes from the grasp to the support."@en ;
+    core:evidenceStatus core:EmpiricalFinding .
+:weightSupportedBy a owl:ObjectProperty ; rdfs:range core:ManipulationRole ;
+    rdfs:label "weight supported by"@en ; rdfs:comment "A support role bearing the manipulandum's weight once forces are unloaded."@en .
+
+:WithdrawalComplete a owl:Class ;
+    rdfs:subClassOf core:PoseAttainmentEventType ,
+        [ a owl:Restriction ; owl:onProperty core:attainsSetpoint ; owl:someValuesFrom :WithdrawalDistanceSetpoint ] ;
+    rdfs:label "withdrawal complete"@en ;
+    rdfs:comment "The effector reaches its post-release withdrawal target."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+# %% parameters
+
+:ReachPoseSetpoint a owl:Class ;
+    rdfs:subClassOf core:MotorSetpoint , core:CategoricalParameter ;
+    rdfs:label "reach pose setpoint"@en ;
+    rdfs:comment "A categorical target for the pre-contact effector pose."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:GripForceSetpoint a owl:Class ;
+    rdfs:subClassOf core:MotorSetpoint , core:ForceParameter ;
+    rdfs:label "grip force setpoint"@en ;
+    rdfs:comment "The target of the force applied normal to the grasp surfaces, which creates the friction that holds the load."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-025 .
+
+:LoadForceSetpoint a owl:Class ;
+    rdfs:subClassOf core:MotorSetpoint , core:ForceParameter ;
+    rdfs:label "load force setpoint"@en ;
+    rdfs:comment "The target of the force applied tangentially to the grasp surfaces to move the manipulandum."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-025 .
+
+:LoadForceRateSetpoint a owl:Class ;
+    rdfs:subClassOf core:ForceRateSetpoint ,
+        [ a owl:Restriction ; owl:onProperty core:rateOf ; owl:someValuesFrom :LoadForceSetpoint ] ;
+    rdfs:label "load force rate setpoint"@en ;
+    rdfs:comment "The commanded rate of load-force increase during loading, scaled in advance to the predicted weight."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-009 .
+
+:GripToLoadRatioSetpoint a owl:Class ;
+    rdfs:subClassOf core:MotorSetpoint , core:DimensionlessParameter ;
+    rdfs:label "grip-to-load ratio setpoint"@en ;
+    rdfs:comment "The commanded ratio of grip to load force, adapted to friction and surface shape."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:JF09-06 .
+
+:LiftClearanceSetpoint a owl:Class ;
+    rdfs:subClassOf core:MotorSetpoint , core:LengthParameter ;
+    rdfs:label "lift clearance setpoint"@en ;
+    rdfs:comment "The commanded clearance above the initial support."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:TransportPoseSetpoint a owl:Class ;
+    rdfs:subClassOf core:MotorSetpoint , core:CategoricalParameter ;
+    rdfs:label "transport pose setpoint"@en ;
+    rdfs:comment "A categorical target for the transported manipulandum's pose."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:WithdrawalDistanceSetpoint a owl:Class ;
+    rdfs:subClassOf core:MotorSetpoint , core:LengthParameter ;
+    rdfs:label "withdrawal distance setpoint"@en ;
+    rdfs:comment "The commanded effector withdrawal distance after release."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:SlipThreshold a owl:Class ;
+    rdfs:subClassOf core:MechanicalThreshold , core:ForceParameter ;
+    rdfs:label "slip threshold"@en ;
+    rdfs:comment "The minimum grip force that holds the predicted tangential load, given the friction of the grasp interface."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-025 .
+
+:CrushThreshold a owl:Class ;
+    rdfs:subClassOf core:MechanicalThreshold , core:ForceParameter ;
+    rdfs:label "crush threshold"@en ;
+    rdfs:comment "The grip force beyond which the manipulandum is damaged, relevant for fragile objects."@en ;
+    core:evidenceStatus core:SupportedInterpretation ;
+    core:representsClaim core:JF09-07 .
+
+:LiftoffThreshold a owl:Class ;
+    rdfs:subClassOf core:MechanicalThreshold , core:ForceParameter ;
+    rdfs:label "lift-off threshold"@en ;
+    rdfs:comment "The load force corresponding to the manipulandum's weight, a force and not a mass."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-010 .
+
+:TouchdownThreshold a owl:Class ;
+    rdfs:subClassOf core:MechanicalThreshold , core:ForceParameter ;
+    rdfs:label "touchdown threshold"@en ;
+    rdfs:comment "The support-reaction force that registers touchdown."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:ExpectedMass a owl:Class ;
+    rdfs:subClassOf core:ObjectPropertyEstimate , core:MassParameter ;
+    rdfs:label "expected mass"@en ;
+    rdfs:comment "The anticipated mass of the manipulandum, from which its weight force is predicted."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-009 , core:FJ-010 , core:JF09-08 .
+
+:ExpectedFrictionCoefficient a owl:Class ;
+    rdfs:subClassOf core:ContactPropertyEstimate , core:DimensionlessParameter ,
+        [ a owl:Restriction ; owl:onProperty core:predictedFrom ; owl:allValuesFrom [ a owl:Class ; owl:oneOf ( core:RecentHapticExperience core:TactileContactResponse ) ] ] ;
+    rdfs:label "expected friction coefficient"@en ;
+    rdfs:comment "The anticipated friction of the grasp interface, predicted from haptic experience, not from vision."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-012 , core:JF09-08 .
+
+:ExpectedCenterOfMassPosition a owl:Class ;
+    rdfs:subClassOf core:ObjectStateEstimate , core:LengthParameter ;
+    rdfs:label "expected centre of mass position"@en ;
+    rdfs:comment "The anticipated centre of mass position in the object frame."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-009 .
+
+:ExpectedShape a owl:Class ;
+    rdfs:subClassOf core:ObjectPropertyEstimate , core:CategoricalParameter ;
+    rdfs:label "expected shape"@en ;
+    rdfs:comment "The anticipated geometry of the grasp surfaces."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-009 , core:JF09-08 .
+
+:GripForceCorridor a owl:Class ;
+    rdfs:subClassOf aicor:ForceCorridor , dul:Region ,
+        [ a owl:Restriction ; owl:onProperty aicor:lowerEdge ; owl:someValuesFrom :SlipEvent ] ,
+        [ a owl:Restriction ; owl:onProperty aicor:upperEdge ; owl:someValuesFrom :ObjectCrush ] ,
+        [ a owl:Restriction ; owl:onProperty :boundsSetpoint ; owl:someValuesFrom :GripForceSetpoint ] ;
+    rdfs:label "grip force corridor"@en ;
+    rdfs:comment "The admissible grip-force range, between slipping and crushing the manipulandum."@en ;
+    core:evidenceStatus core:SupportedInterpretation ;
+    core:representsClaim core:JF09-06 , core:JF09-07 .
+:boundsSetpoint a owl:ObjectProperty ; rdfs:range core:MotorSetpoint ;
+    rdfs:label "bounds setpoint"@en ; rdfs:comment "A motor setpoint whose admissible values the corridor bounds."@en .
+
+# %% phases
+
+:ReachPhase a owl:Class ;
+    rdfs:subClassOf core:ActionPhase ,
+        [ a owl:Restriction ; owl:onProperty core:hasCouplingRegime ; owl:hasValue core:Uncoupled ] ,
+        [ a owl:Restriction ; owl:onProperty core:realizesActionCategory ; owl:hasValue aicor:Reaching ] ;
+    rdfs:label "reach phase"@en ;
+    rdfs:comment "Transport of the uncoupled effector to the grasp site; its goal is marked by grasp contact."@en ;
+    core:evidenceStatus core:EmpiricalFinding .
+
+:ContactEstablishmentPhase a owl:Class ;
+    rdfs:subClassOf core:ActionPhase ,
+        [ a owl:Restriction ; owl:onProperty core:realizesActionCategory ; owl:hasValue aicor:Grasping ] ;
+    rdfs:label "contact establishment phase"@en ;
+    rdfs:comment "Closing the effector on the manipulandum, for grippers closed separately from the reach."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:ForceLoadingPhase a owl:Class ;
+    rdfs:subClassOf core:ActionPhase ,
+        [ a owl:Restriction ; owl:onProperty core:hasCouplingRegime ; owl:hasValue core:Transitional ] ,
+        [ a owl:Restriction ; owl:onProperty core:realizesActionCategory ; owl:hasValue aicor:Grasping ] ;
+    rdfs:label "force loading phase"@en ;
+    rdfs:comment "Grip and load forces increase in parallel, at a rate scaled to the predicted weight, until lift-off."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-009 , core:FJ-025 .
+
+:LiftPhase a owl:Class ;
+    rdfs:subClassOf core:ActionPhase ,
+        [ a owl:Restriction ; owl:onProperty core:hasCouplingRegime ; owl:hasValue core:Coupled ] ,
+        [ a owl:Restriction ; owl:onProperty core:realizesActionCategory ; owl:hasValue aicor:Lifting ] ;
+    rdfs:label "lift phase"@en ;
+    rdfs:comment "Vertical transport of the manipulandum away from its initial support."@en ;
+    core:evidenceStatus core:EmpiricalFinding .
+
+:HoldPhase a owl:Class ;
+    rdfs:subClassOf core:ActionPhase ,
+        [ a owl:Restriction ; owl:onProperty core:hasCouplingRegime ; owl:hasValue core:Coupled ] ;
+    rdfs:label "hold phase"@en ;
+    rdfs:comment "Holding the manipulandum aloft with a stable grasp. Optional."@en ;
+    core:evidenceStatus core:EmpiricalFinding .
+
+:TransportPhase a owl:Class ;
+    rdfs:subClassOf core:ActionPhase ,
+        [ a owl:Restriction ; owl:onProperty core:hasCouplingRegime ; owl:hasValue core:Coupled ] ,
+        [ a owl:Restriction ; owl:onProperty core:realizesActionCategory ; owl:hasValue aicor:Transporting ] ;
+    rdfs:label "transport phase"@en ;
+    rdfs:comment "Moving the held manipulandum to a destination."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-008 .
+
+:ReplacePhase a owl:Class ;
+    rdfs:subClassOf core:ActionPhase ,
+        [ a owl:Restriction ; owl:onProperty core:hasCouplingRegime ; owl:hasValue core:Coupled ] ;
+    rdfs:label "replace phase"@en ;
+    rdfs:comment "Lowering of the still-coupled manipulandum until touchdown."@en ;
+    core:evidenceStatus core:EmpiricalFinding .
+
+:UnloadPhase a owl:Class ;
+    rdfs:subClassOf core:ActionPhase ;
+    rdfs:label "unload phase"@en ;
+    rdfs:comment "Grip and load forces decrease in parallel as the support takes the weight."@en ;
+    core:evidenceStatus core:EmpiricalFinding .
+
+:ContactReleasePhase a owl:Class ;
+    rdfs:subClassOf core:ActionPhase ;
+    rdfs:label "contact release phase"@en ;
+    rdfs:comment "Opening of the grasp once the forces are unloaded, ending at grasp release."@en ;
+    core:evidenceStatus core:EmpiricalFinding .
+
+:WithdrawPhase a owl:Class ;
+    rdfs:subClassOf core:ActionPhase ,
+        [ a owl:Restriction ; owl:onProperty core:hasCouplingRegime ; owl:hasValue core:Uncoupled ] ;
+    rdfs:label "withdraw phase"@en ;
+    rdfs:comment "Optional withdrawal of the effector after release."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+[ a owl:AllDisjointClasses ; owl:members ( :ReachPhase :ContactEstablishmentPhase :ForceLoadingPhase :LiftPhase :HoldPhase :TransportPhase :ReplacePhase :UnloadPhase :ContactReleasePhase :WithdrawPhase ) ] .
+
+# %% corrective programmes
+
+:CorrectiveGripResponse a owl:Class ;
+    rdfs:subClassOf core:CorrectiveAction ,
+        [ a owl:Restriction ; owl:onProperty core:targetsSetpoint ; owl:allValuesFrom :GripForceSetpoint ] ;
+    rdfs:label "corrective grip response"@en ;
+    rdfs:comment "A correction that changes the grip force target, such as raising grip after a slip while holding."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-010 , core:FJ-012 , core:JF09-05 .
+
+:LoadRateReduction a owl:Class ;
+    rdfs:subClassOf core:CorrectiveAction ,
+        [ a owl:Restriction ; owl:onProperty core:targetsSetpoint ; owl:allValuesFrom :LoadForceRateSetpoint ] ,
+        [ a owl:Restriction ; owl:onProperty core:hasCorrectionDirection ; owl:hasValue core:LowerSetpoint ] ;
+    rdfs:label "load rate reduction"@en ;
+    rdfs:comment "A correction that slows the load-force increase after a slip during loading."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:JF09-05 .
+
+:ProbingForceIncrease a owl:Class ;
+    rdfs:subClassOf core:CorrectiveAction ,
+        [ a owl:Restriction ; owl:onProperty core:triggeredByError ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasErrorKind ; owl:hasValue core:AbsentEvent ] ] ,
+        [ a owl:Restriction ; owl:onProperty core:targetsSetpoint ; owl:someValuesFrom :LoadForceSetpoint ] ,
+        [ a owl:Restriction ; owl:onProperty core:hasCorrectionDirection ; owl:hasValue core:RaiseSetpoint ] ,
+        [ a owl:Restriction ; owl:onProperty core:correctionTerminatedBy ; owl:someValuesFrom :Liftoff ] ;
+    rdfs:label "probing force increase"@en ;
+    rdfs:comment "For an object heavier than predicted: forces increase slowly until the missing lift-off is sensed."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-010 , core:JF09-04 .
+
+:EarlyLiftoffCorrection a owl:Class ;
+    rdfs:subClassOf core:CorrectiveAction ,
+        [ a owl:Restriction ; owl:onProperty core:triggeredByError ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasErrorKind ; owl:hasValue core:EarlyEvent ] ] ,
+        [ a owl:Restriction ; owl:onProperty core:hasRecoveryMode ; owl:hasValue core:AbortAndCorrect ] ;
+    rdfs:label "early lift-off correction"@en ;
+    rdfs:comment "For an object lighter than predicted: the load controller is aborted and the object brought back to the intended position."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-010 , core:JF09-04 .
+
+# %% grip control
+
+:AnticipatoryGripAdjustment a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Task ,
+        [ a owl:Restriction ; owl:onProperty :triggeredByPrediction ; owl:someValuesFrom core:SensoryEventPrediction ] ,
+        [ a owl:Restriction ; owl:onProperty :adjustsGripForce ; owl:someValuesFrom :GripForceSetpoint ] ,
+        [ a owl:Restriction ; owl:onProperty :hasAdjustmentDirection ; owl:someValuesFrom core:CorrectionDirection ] ,
+        [ a owl:Restriction ; owl:onProperty :adjustmentActiveIn ; owl:someValuesFrom core:ActionPhase ] ;
+    rdfs:label "anticipatory grip adjustment"@en ;
+    rdfs:comment "A feedforward grip change scheduled from a predicted event."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-009 , core:FJ-025 .
+:triggeredByPrediction a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range core:SensoryEventPrediction ;
+    rdfs:label "triggered by prediction"@en ; rdfs:comment "The predicted event consequence that schedules the adjustment."@en .
+:adjustsGripForce a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :GripForceSetpoint ;
+    rdfs:label "adjusts grip force"@en ; rdfs:comment "The grip-force target changed before the predicted event."@en .
+:hasAdjustmentDirection a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range core:CorrectionDirection ;
+    rdfs:label "has adjustment direction"@en ; rdfs:comment "The direction in which grip force changes."@en .
+:adjustmentActiveIn a owl:ObjectProperty ; rdfs:range core:ActionPhase ;
+    rdfs:label "adjustment active in"@en ; rdfs:comment "A phase during which the anticipatory change is active."@en .
+
+:GripLoadCoupling a owl:Class ;
+    rdfs:subClassOf aicor:dul_Relation , dul:Relation ,
+        [ a owl:Restriction ; owl:onProperty :predictedLoad ; owl:someValuesFrom dyn:LoadForceEstimate ] ,
+        [ a owl:Restriction ; owl:onProperty :frictionEstimate ; owl:someValuesFrom :ExpectedFrictionCoefficient ] ,
+        [ a owl:Restriction ; owl:onProperty :hasSafetyMargin ; owl:someValuesFrom core:SafetyMargin ] ,
+        [ a owl:Restriction ; owl:onProperty :gripForceResponse ; owl:someValuesFrom :GripForceSetpoint ] ,
+        [ a owl:Restriction ; owl:onProperty :temporalCoupling ; owl:someValuesFrom core:TemporalWindow ] ,
+        [ a owl:Restriction ; owl:onProperty :hasLoadOrigin ; owl:someValuesFrom :LoadOrigin ] ;
+    rdfs:label "grip-load coupling"@en ;
+    rdfs:comment "The relation setting grip force from the predicted load, friction and safety margin, coupled in time."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-008 , core:FJ-025 , core:JF09-06 , core:WF01-01 .
+:predictedLoad a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range dyn:LoadForceEstimate ;
+    rdfs:label "predicted load"@en ; rdfs:comment "The represented tangential load for which grip force is scaled."@en .
+:frictionEstimate a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :ExpectedFrictionCoefficient ;
+    rdfs:label "friction estimate"@en ; rdfs:comment "The estimated friction of the grasp interface that limits tangential force."@en .
+:hasSafetyMargin a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range core:SafetyMargin ;
+    rdfs:label "has safety margin"@en ; rdfs:comment "The additional grip force kept above the slip threshold."@en .
+:gripForceResponse a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :GripForceSetpoint ;
+    rdfs:label "grip force response"@en ; rdfs:comment "The grip-force target the relation produces."@en .
+:temporalCoupling a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range core:TemporalWindow ;
+    rdfs:label "temporal coupling"@en ; rdfs:comment "The admissible timing between the load and the grip response."@en .
+:hasLoadOrigin a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :LoadOrigin ;
+    rdfs:label "has load origin"@en ; rdfs:comment "Whether the load is generated by the actor's own movement or imposed from outside."@en .
+:followsLoadPrediction a owl:ObjectProperty ; rdfs:domain :GripLoadCoupling ; rdfs:range core:ContinuousSignalPrediction ;
+    rdfs:label "follows load prediction"@en ; rdfs:comment "A predicted load trajectory the grip force follows while the load changes, as when substance flows out of a held container."@en .
+:couplingActiveIn a owl:ObjectProperty ; rdfs:domain :GripLoadCoupling ; rdfs:range core:ActionPhase ;
+    rdfs:label "coupling active in"@en ; rdfs:comment "A phase in which grip and load stay functionally coupled."@en .
+
+:LoadOrigin a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :SelfGeneratedLoad :ExternallyGeneratedLoad ) ] ;
+    rdfs:label "load origin"@en ;
+    rdfs:comment "Whether a load on the grasp can be predicted from the actor's own motor commands."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:WF01-01 .
+:SelfGeneratedLoad a owl:NamedIndividual , :LoadOrigin ; rdfs:label "self-generated load"@en ;
+    rdfs:comment "A load from the actor's own movement: grip changes in parallel with it."@en .
+:ExternallyGeneratedLoad a owl:NamedIndividual , :LoadOrigin ; rdfs:label "externally generated load"@en ;
+    rdfs:comment "A load imposed from outside: grip follows it with a delay and a raised baseline."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :SelfGeneratedLoad :ExternallyGeneratedLoad ) ] .
+
+# %% structure
+
+:PrehensionPhaseStructure a owl:Class ;
+    rdfs:subClassOf dyn:ObjectDynamicsPhaseStructure ;
+    rdfs:label "prehension phase structure"@en ;
+    rdfs:comment "A phase structure with explicit prehensile force-control relations."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:definesForceCoupling a owl:ObjectProperty ; rdfs:domain :PrehensionPhaseStructure ; rdfs:subPropertyOf core:definesComponent ; rdfs:range :GripLoadCoupling ;
+    rdfs:label "defines force coupling"@en ; rdfs:comment "A functional grip-load relation declared by the structure."@en .
+:definesAnticipatoryGripAdjustment a owl:ObjectProperty ; rdfs:domain :PrehensionPhaseStructure ; rdfs:subPropertyOf core:definesComponent ; rdfs:range :AnticipatoryGripAdjustment ;
+    rdfs:label "defines anticipatory grip adjustment"@en ; rdfs:comment "A prediction-triggered grip adjustment declared by the structure."@en .
+:definesGripForceCorridor a owl:ObjectProperty ; rdfs:domain :PrehensionPhaseStructure ; rdfs:subPropertyOf dul:hasRegion ; rdfs:range :GripForceCorridor ;
+    rdfs:label "defines grip force corridor"@en ; rdfs:comment "The admissible grip-force range declared by the structure."@en .

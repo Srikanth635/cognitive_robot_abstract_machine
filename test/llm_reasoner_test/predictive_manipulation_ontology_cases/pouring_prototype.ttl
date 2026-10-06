@@ -1,0 +1,263 @@
+@prefix case:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/case#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix dyn:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#> .
+@prefix pre:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#> .
+@prefix pour:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#> .
+@prefix gaze:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#> .
+@prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+# A generic pouring structure for a liquid, starting from an already grasped source
+# container and ending once the requested volume has been transferred. Every individual
+# is description-level: a phase concept, a controller, an event type, a role slot.
+
+case:pouring_structure a pour:PouringPhaseStructure , aicor:FoundationModelOutput ;
+    core:decomposesTask aicor:Pouring ;
+    pour:hasMaterialRegime pour:Liquid ;
+    pour:hasTerminationReason pour:TargetQuantityAttained ;
+    core:definesRole case:actor , case:effector , case:source , case:lip , case:target , case:substance ;
+    core:definesPhase case:tilt , case:regulate , case:terminate , case:upright ;
+    core:definesController case:tilt_controller , case:regulate_controller , case:terminate_controller , case:upright_controller ;
+    core:definesSubgoal case:reach_flow , case:reach_volume , case:stop_flow , case:restore_upright ;
+    core:definesConditionType case:flowing , case:accumulated , case:upright_state ;
+    core:definesEventType case:flow_onset , case:volume_reached , case:flow_cessation , case:upright_restored ;
+    core:definesTransition case:tilt_to_regulate , case:regulate_to_terminate , case:terminate_to_upright ;
+    core:definesParameter case:tilt_angle , case:onset_angle , case:target_volume , case:flow_rate , case:upright_angle ;
+    core:definesInternalModel case:forward_model ;
+    core:definesSensoryFeature case:lip_flow_sound , case:fill_level ;
+    core:definesPrediction case:onset_sound_prediction ;
+    core:definesObservationType case:onset_sound_observation , case:fill_level_observation ;
+    core:definesContinuousPrediction case:fill_level_prediction ;
+    core:definesComparison case:onset_comparison ;
+    core:definesControlPoint case:onset_control_point ;
+    core:definesCorrection case:spill_correction ;
+    gaze:definesGazeFixation case:watch_target .
+
+# %% roles
+
+case:actor a core:Actor .
+case:effector a pre:GraspingEffector .
+case:source a pour:SourceContainer .
+case:lip a pour:PouringLip .
+case:target a pour:TargetReceptacle .
+case:substance a pour:PouredSubstance .
+
+# %% conditions and subgoals
+
+case:flowing a pour:SubstanceFlowing ; core:conditionOnRole case:substance , case:lip .
+case:accumulated a pour:SubstanceAccumulatedInTarget ; core:conditionOnRole case:substance , case:target .
+case:upright_state a pour:SourceUpright ; core:conditionOnRole case:source .
+
+case:reach_flow a core:Subgoal ; core:targetsCondition case:flowing ; core:attainmentSignalledBy case:flow_onset .
+case:reach_volume a core:Subgoal ; core:targetsCondition case:accumulated ; core:attainmentSignalledBy case:volume_reached .
+case:stop_flow a core:Subgoal ; core:targetsCondition case:accumulated ; core:attainmentSignalledBy case:flow_cessation .
+case:restore_upright a core:Subgoal ; core:targetsCondition case:upright_state ; core:attainmentSignalledBy case:upright_restored .
+
+# %% phases and their controllers
+
+case:tilt a pour:TiltToFlowPhase ;
+    core:aimsFor case:reach_flow ;
+    core:hasCouplingRegime core:Coupled ;
+    core:terminatedBy case:flow_onset ;
+    core:involvesRole case:effector , case:source , case:lip ;
+    core:hasActiveParameter case:tilt_angle , case:onset_angle ;
+    core:realizesActionCategory aicor:Tilting ;
+    core:controlledBy case:tilt_controller .
+
+case:tilt_controller a core:ActionPhaseController ;
+    core:hasRegulationMode core:Feedforward ;
+    core:governedBy case:forward_model ;
+    core:predictsSensoryEvent case:onset_sound_prediction .
+
+case:regulate a pour:FlowRegulationPhase ;
+    core:aimsFor case:reach_volume ;
+    core:hasCouplingRegime core:Coupled ;
+    core:initiatedBy case:flow_onset ;
+    core:terminatedBy case:volume_reached ;
+    core:involvesRole case:source , case:substance , case:target ;
+    core:hasActiveParameter case:flow_rate , case:target_volume ;
+    core:controlledBy case:regulate_controller .
+
+case:regulate_controller a core:ActionPhaseController ;
+    core:hasRegulationMode core:ContinuousFeedback ;
+    core:monitorsModality core:Visual ;
+    core:governedBy case:forward_model ;
+    core:hasContinuousPrediction case:fill_level_prediction ;
+    core:hasCorrectiveProgram case:spill_correction .
+
+case:terminate a pour:FlowTerminationPhase ;
+    core:aimsFor case:stop_flow ;
+    core:hasCouplingRegime core:Coupled ;
+    core:initiatedBy case:volume_reached ;
+    core:terminatedBy case:flow_cessation ;
+    core:involvesRole case:source , case:lip ;
+    core:controlledBy case:terminate_controller .
+
+case:terminate_controller a core:ActionPhaseController ;
+    core:hasRegulationMode core:Feedforward .
+
+case:upright a pour:ReturnUprightPhase ;
+    core:aimsFor case:restore_upright ;
+    core:hasCouplingRegime core:Coupled ;
+    core:isOptional true ;
+    core:initiatedBy case:flow_cessation ;
+    core:terminatedBy case:upright_restored ;
+    core:involvesRole case:source ;
+    core:hasActiveParameter case:upright_angle ;
+    core:controlledBy case:upright_controller .
+
+case:upright_controller a core:ActionPhaseController ;
+    core:hasRegulationMode core:Feedforward .
+
+# %% boundary events
+
+case:flow_onset a pour:FlowOnset ;
+    aicor:betweenRoleFillers case:substance , case:lip ;
+    aicor:initiatesStateType case:flowing ;
+    core:crossesThreshold case:onset_angle .
+
+case:volume_reached a pour:TargetQuantityReached ;
+    aicor:betweenRoleFillers case:substance , case:target ;
+    core:attainsSetpoint case:target_volume .
+
+case:flow_cessation a pour:FlowCessation ;
+    aicor:betweenRoleFillers case:substance , case:lip ;
+    core:terminatesStateType case:flowing .
+
+case:upright_restored a pour:UprightRestored ;
+    aicor:betweenRoleFillers case:source ;
+    core:attainsSetpoint case:upright_angle ;
+    aicor:initiatesStateType case:upright_state .
+
+# %% transitions
+
+case:tilt_to_regulate a core:PhaseTransition ;
+    core:fromPhase case:tilt ; core:toPhase case:regulate ;
+    core:gatedBy case:flow_onset ; core:permittedBy case:onset_comparison .
+
+case:regulate_to_terminate a core:PhaseTransition ;
+    core:fromPhase case:regulate ; core:toPhase case:terminate ;
+    core:gatedBy case:volume_reached .
+
+case:terminate_to_upright a core:PhaseTransition ;
+    core:fromPhase case:terminate ; core:toPhase case:upright ;
+    core:gatedBy case:flow_cessation .
+
+# %% parameters
+
+case:tilt_angle a pour:TiltAngleSetpoint ;
+    core:hasValueForm core:Quantitative ;
+    core:hasPhysicalDimension core:Angle ;
+    core:hasParameterRange case:tilt_angle_range ;
+    core:parameterOnRole case:source .
+case:tilt_angle_range a core:MagnitudeRange ;
+    core:lowerBound "40.0"^^xsd:double ; core:upperBound "90.0"^^xsd:double ; core:hasUnit core:Degree .
+
+case:onset_angle a pour:FlowOnsetThreshold ;
+    core:hasValueForm core:Quantitative ;
+    core:hasPhysicalDimension core:Angle ;
+    core:hasParameterRange case:onset_angle_range ;
+    core:parameterOnRole case:source , case:substance .
+case:onset_angle_range a core:MagnitudeRange ;
+    core:lowerBound "30.0"^^xsd:double ; core:upperBound "60.0"^^xsd:double ; core:hasUnit core:Degree .
+
+case:target_volume a pour:TransferredQuantitySetpoint ;
+    core:hasValueForm core:Quantitative ;
+    core:hasPhysicalDimension core:Volume ;
+    core:hasParameterRange case:target_volume_range ;
+    core:parameterOnRole case:substance , case:target .
+case:target_volume_range a core:MagnitudeRange ;
+    core:lowerBound "180.0"^^xsd:double ; core:upperBound "220.0"^^xsd:double ; core:hasUnit core:Millilitre .
+
+case:flow_rate a pour:FlowRateSetpoint ;
+    core:hasValueForm core:Quantitative ;
+    core:hasPhysicalDimension core:VolumetricFlowRate ;
+    core:hasParameterRange case:flow_rate_range ;
+    core:parameterOnRole case:substance .
+case:flow_rate_range a core:MagnitudeRange ;
+    core:lowerBound "20.0"^^xsd:double ; core:upperBound "60.0"^^xsd:double ; core:hasUnit core:MillilitrePerSecond .
+
+case:upright_angle a pour:UprightAngleSetpoint ;
+    core:hasValueForm core:Quantitative ;
+    core:hasPhysicalDimension core:Angle ;
+    core:hasParameterRange case:upright_angle_range ;
+    core:parameterOnRole case:source .
+case:upright_angle_range a core:MagnitudeRange ;
+    core:lowerBound "0.0"^^xsd:double ; core:upperBound "5.0"^^xsd:double ; core:hasUnit core:Degree .
+
+# %% prediction and comparison
+
+case:forward_model a core:ForwardModel .
+
+case:lip_flow_sound a core:SensoryFeature .
+case:fill_level a core:SensoryFeature .
+
+case:onset_window a core:TemporalWindow ;
+    core:earliestOffset "0.0"^^xsd:double ; core:latestOffset "300.0"^^xsd:double ; core:hasUnit core:Millisecond .
+
+case:onset_sound_prediction a core:SensoryEventPrediction ;
+    core:hasModality core:Auditory ;
+    core:predictsFeature case:lip_flow_sound ;
+    core:causedByEvent case:flow_onset ;
+    core:hasExpectedTiming case:onset_window ;
+    core:expectedOnRole case:lip ;
+    core:signalsSubgoal case:reach_flow ;
+    aicor:generatedBy case:forward_model .
+
+case:onset_sound_observation a core:SensoryObservationType ;
+    core:hasModality core:Auditory ;
+    core:observesFeature case:lip_flow_sound ;
+    core:observedAt case:onset_window ;
+    core:observedOnRole case:lip .
+
+case:onset_comparison a core:PredictionComparison ;
+    core:comparesPrediction case:onset_sound_prediction ;
+    core:comparesObservation case:onset_sound_observation ;
+    core:hasComparisonOutcome core:Match ;
+    core:confirmsSubgoal case:reach_flow .
+
+case:onset_control_point a core:SensorimotorControlPoint ;
+    core:atEventType case:flow_onset ;
+    core:hasPrediction case:onset_sound_prediction ;
+    core:hasComparison case:onset_comparison .
+
+case:fill_level_trajectory a core:SignalTrajectory ;
+    core:hasSignalFeature case:fill_level ;
+    core:hasTrend core:Increasing ;
+    core:hasExpectedRange case:target_volume_range .
+
+case:fill_level_tolerance a core:MagnitudeRange ;
+    core:lowerBound "0.0"^^xsd:double ; core:upperBound "10.0"^^xsd:double ; core:hasUnit core:Millilitre .
+
+case:fill_level_observation a core:SensoryObservationType ;
+    core:hasModality core:Visual ;
+    core:observesFeature case:fill_level ;
+    core:observedAt case:onset_window ;
+    core:observedOnRole case:target .
+
+case:fill_level_prediction a core:ContinuousSignalPrediction ;
+    core:hasModality core:Visual ;
+    core:predictsTrajectory case:fill_level_trajectory ;
+    core:hasTolerance case:fill_level_tolerance ;
+    aicor:generatedBy case:forward_model ;
+    core:comparedWith case:fill_level_observation ;
+    core:controlsSetpoint case:flow_rate .
+
+# %% correction and gaze
+
+case:correction_latency a core:TemporalWindow ;
+    core:earliestOffset "200.0"^^xsd:double ; core:latestOffset "300.0"^^xsd:double ; core:hasUnit core:Millisecond .
+
+case:spill_correction a pour:SpillCorrection ;
+    core:targetsSetpoint case:tilt_angle ;
+    core:hasCorrectionDirection core:ReverseChange ;
+    core:intendedEffect case:accumulated ;
+    core:hasRecoveryMode core:ContinuePhase ;
+    core:hasResponseLatency case:correction_latency .
+
+case:watch_target a gaze:GazeFixation ;
+    gaze:fixatesRole case:target ;
+    gaze:servesPhase case:regulate ;
+    gaze:hasLandmarkPurpose gaze:ContactLandmark ;
+    gaze:hasGazeMode gaze:Proactive ;
+    gaze:maintainedUntil case:volume_reached .

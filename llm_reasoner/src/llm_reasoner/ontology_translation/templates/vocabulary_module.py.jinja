@@ -1,0 +1,139 @@
+"""
+{{ module.comment | docstring }}
+
+Generated from ``{{ module.source_file }}`` by ``python -m llm_reasoner.ontology_translation``. Regenerate rather than edit.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+{% if module.value_partitions %}
+from enum import StrEnum
+{% endif %}
+
+{% if module.has_symmetric_descriptor %}
+from krrood.ontomatic.property_descriptor.mixins import HasInverseProperty
+{% endif %}
+{% if module.descriptors %}
+from krrood.ontomatic.property_descriptor.property_descriptor import PropertyDescriptor
+{% endif %}
+from typing_extensions import ClassVar, List, Optional
+
+{% for referenced in module.referenced_modules %}
+from llm_reasoner.ontologies.predictive_manipulation import {{ referenced }}
+{% endfor %}
+from llm_reasoner.ontologies.terms import (
+    ClassTerm,
+    ComplementOf,
+    ConceptReference,
+    DescriptionEntity,
+    EnumeratedClass,
+    IntersectionOf,
+    NamedClass,
+    PropertyRestriction,
+    PropertyTerm,
+    Quantifier,
+    UnionOf,
+)
+{% if module.value_partitions %}
+
+# %% value partitions
+{% for partition in module.value_partitions %}
+
+
+class {{ partition.python_name.name }}(StrEnum):
+    """
+    {{ partition.comment | docstring }}
+    """
+{% for member in partition.members %}
+
+    {{ member.name }} = {{ member.iri | python_string }}
+    """
+    {{ member.comment | docstring }}
+    """
+{% endfor %}
+{% for member_property in partition.member_properties %}
+
+    @property
+    def {{ member_property.name }}(self) -> {{ reference(member_property.value_type) }}:
+        """
+        {{ member_property.comment | docstring }}
+        """
+        return {
+{% for value in member_property.values %}
+            {{ partition.python_name.name }}.{{ value.member }}: {{ reference(value.value) }},
+{% endfor %}
+        }[self]
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% if module.classes %}
+
+# %% classes
+{% for cls in module.classes %}
+
+
+@dataclass(eq=False)
+class {{ cls.python_name.name }}({{ bases(cls) }}):
+    """
+    {{ cls.comment | docstring }}
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri={{ cls.iri | python_string }},
+        linked_terms={{ cls.linked_terms | python_tuple }},
+        evidence_status={{ cls.evidence_status | python_string }},
+        claims={{ cls.claims | python_tuple }},
+        restrictions={{ cls.restrictions | expression_tuple }},
+        definition={{ cls.definition | optional_expression }},
+    )
+    """
+    The ontology class this class stands for.
+    """
+{% for declared in cls.fields %}
+
+    {{ declared.name }}: {{ annotation(declared) }} = field(
+        {{ default(declared) }},
+        metadata=PropertyTerm(
+            iri={{ declared.property_iri | python_string }},
+            functional={{ declared.functional }},
+        ).as_dict(),
+    )
+    """
+    {{ declared.comment | docstring }}
+    """
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% if module.descriptors %}
+
+# %% property descriptors
+{% for descriptor in module.descriptors %}
+
+
+@dataclass
+class {{ descriptor.python_name.name }}({{ super_descriptors(descriptor) }}):
+    """
+    {{ descriptor.comment | docstring }}
+    """
+{% if descriptor.symmetric %}
+
+    @classmethod
+    def get_inverse(cls) -> type[PropertyDescriptor]:
+        """
+        The property is symmetric, so it is its own inverse.
+        """
+        return cls
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if module.attachments %}
+
+# %% descriptor attachments
+
+{% for attachment in module.attachments %}
+{{ reference(attachment.host) }}.{{ attachment.field_name }} = {{ reference(attachment.descriptor) }}(
+    {{ reference(attachment.host) }}, {{ attachment.field_name | python_string }}
+)
+{% endfor %}
+{% endif %}

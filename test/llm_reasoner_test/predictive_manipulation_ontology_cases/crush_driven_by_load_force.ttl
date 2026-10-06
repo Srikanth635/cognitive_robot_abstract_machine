@@ -1,0 +1,13 @@
+@prefix case:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/case#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix pre:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#> .
+@prefix pour:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#> .
+
+# Crushing is said to be caused by the load force, instead of the grip force exceeding the material strength.
+
+case:crush a pre:ObjectCrush ;
+    core:resolvesOpposition case:opposition .
+
+case:opposition core:hasDrivingForce case:lifting .
+
+case:lifting core:hasForceKind core:LoadForce .
