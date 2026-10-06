@@ -1,154 +1,142 @@
-# Integrating `llm_reasoner` into the monorepo
+# `llm_reasoner`
 
-This tree mirrors the repository layout. Copy each path to the matching location in
-`cognitive_robot_abstract_machine` and apply the two patches.
+`llm_reasoner` resolves underspecified requests and maintains reusable,
+description-level knowledge that can guide later resolutions. Its knowledge layer is
+deliberately independent of a particular robot, world, or episode: a hypothesis says
+what a kind of action normally requires, while the resolver binds that description to
+the current world.
 
-```
-llm_reasoner/                                     → workspace member, sibling of krrood/
-coraplex/src/coraplex/querying/language_model.py  → new module
-coraplex/doc/language_model_backend.ipynb         → new notebook
-test/llm_reasoner_test/                           → new test package
-test/coraplex_test/test_language_model_backend.py → new test module
-root_pyproject.patch                              → apply to ./pyproject.toml
-coraplex_requirements.patch                       → apply to ./coraplex/requirements.txt
-```
+## Package architecture
 
-Every path under `llm_reasoner/` replaces the file you already have at the same path, except
-`requirements.txt`, `_version.py` and `doc/` which are new. `doc/language_model_backend.ipynb`
-is your kitchen notebook, relocated from `notebooks/` and updated for the renamed
-`Exchange.raw_response` field.
+The main responsibilities are kept separate:
 
----
+| Area | Responsibility |
+|---|---|
+| `clients` | Language-model client interfaces and recorded exchanges |
+| `resolver` | Reflection, prompting, decoding, and request resolution |
+| `knowledge/generation` | Capability-selected generation, schema derivation, repair, and admission |
+| `knowledge/hypothesis` | Provenance, status, storage, cache migration, and graph scope |
+| `knowledge/ontological` | Registration, metadata, and reusable validation primitives |
+| `knowledge/microworlds` | Versioned domain vocabularies and their acceptance constraints |
+| `knowledge/query.py` | Read-only, provenance-carrying questions over admitted hypotheses |
 
-## Dependency direction
+Dependencies point from applications toward these abstractions. A microworld does not
+import viewer or world-model packages, and the generic generation and hypothesis layers
+do not contain action-specific concepts.
 
-```
-krrood  ←  llm_reasoner  ←  coraplex.querying.language_model  →  semantic_digital_twin
-```
+## The Flanagan microworld
 
-`llm_reasoner` imports **only** `krrood`, `typing_extensions` and the standard library, which
-keeps it usable by anything in the workspace and testable without a world. Everything that knows
-what a robot is lives in `coraplex.querying.language_model` — the same package that already holds
-`querying/predicates.py`, which is the existing precedent for coraplex-owned krrood extensions.
+`knowledge/microworlds/flanagan` represents the predictive organization of object
+manipulation described by Flanagan, Bowman, and Johansson. The scientific authority,
+claim statuses, semantic distinctions, and claim-by-claim coverage are recorded in
+[`doc/flanagan_scientific_contract.md`](doc/flanagan_scientific_contract.md).
 
-The direction matters more than the location. Putting the world-aware seams inside `llm_reasoner`
-would make every consumer of a language model backend depend on `semantic_digital_twin`, which is
-the coupling the design exists to avoid.
+The modules have distinct owners and one-way dependencies:
 
----
+| Module | Owned vocabulary |
+|---|---|
+| `core.py` | Generic phases, roles, quantities, sensory predictions and observations, comparisons, errors, corrections, and transitions |
+| `object_dynamics.py` | Object and limb models, efference copies, coordinate frames, memories, transfer, and representation purpose |
+| `prehension.py` | Contact, lift, transport, replacement, release, and grip-load control |
+| `pouring.py` | Source/target roles, flow phases, material regimes, and transfer variables |
+| `gaze.py` | Proactive/reactive gaze, targets, fixation, and multimodal alignment |
+| `observation.py` | Actor-observer evidence, visibility conditions, and prediction matching |
+| `learning.py` | Exploration, acquisition, refinement, and sensorimotor-map updates |
+| `perception.py` | Predicted self-contact attenuation and its unresolved relationship to control |
+| `*_constraints.py` | Acceptance rules owned by the corresponding vocabulary module |
+| `constraints.py` | Aggregate suite plus action-neutral constraints |
+| `canonical.py` | Complete cereal and water pouring reference structures |
+| `namespaces.py` | The stable project namespace family |
 
-## What each piece contributes
+The dependency spine is `core -> object_dynamics -> prehension -> pouring`. Gaze,
+observation, learning, and perception are optional capabilities selected through
+`knowledge/microworlds/registry.py`; none introduces a reverse dependency into the
+spine. Generic predictive-control types stay in `core.py` because every scientific
+capability uses them.
 
-| module | what it represents | what it enables |
-|---|---|---|
-| `llm_reasoner.reflection` | a match as flat, typed, path-named slots, each classified by *what kind of knowledge is missing* | deciding what may be generated versus only selected |
-| `llm_reasoner.prompts` | schema, constraints, situation as three separable layers | swapping the world-aware layer without touching the rest |
-| `llm_reasoner.backend` | the resolution procedure | generation, decoding, write-back, enforcement, provenance |
-| `llm_reasoner.context` | the two injection seams | world knowledge without world imports |
-| `coraplex.querying.language_model` | world state as prompt text and candidates as descriptions | choosing between alternatives the schema cannot distinguish |
+## Scientific meaning
 
-### Slot kinds encode an epistemic distinction
+Every source-backed assertion distinguishes its epistemic status:
 
-| kind | what is missing | what is allowed |
-|---|---|---|
-| `VALUE` | a self-identifying value | generation |
-| `REFERENT` | an individual | selection from an extension, never invention |
-| `BOUND` | nothing | context for the other slots |
+- `EMPIRICAL_FINDING`: an experimental result reported by the reviewed work.
+- `SUPPORTED_INTERPRETATION`: a control organization inferred from converging results.
+- `AUTHOR_HYPOTHESIS`: a mechanism proposed but not established.
+- `OPEN_QUESTION`: a relationship the paper leaves unresolved.
+- `ENGINEERING_EXTENSION`: useful robotic structure not attributed to the paper.
 
-A model can produce the string `"the left gripper"`; it cannot produce an `EndEffector` with a
-tool frame and a place in the kinematic structure. `end_effector=...` therefore raises
-`ReferentSlotHasNoDomain`, and the fix is `variable(EndEffector, world.semantic_annotations)`.
+The model also keeps physical events separate from sensory evidence, predictions from
+observations, phase boundaries from continuous regulation, immediate corrections from
+model updates, and sensorimotor representations from perceptual judgments. Quantities
+carry physical dimensions, and cached knowledge is generic rather than occurrence-level.
 
----
+The following are explicit engineering extensions: role slots, condition requirements,
+condition polarity, graph-closed phase transitions, numeric ranges and controller
+setpoints, recovery policies, and the pouring-specific flow model. They operationalize
+the scientific framework without being presented as findings from the review.
 
-## Verification status
+## Namespace and version contract
 
-Be clear about what was and was not executed.
+All Flanagan IRIs use the project-owned root
+`http://www.ease-crc.org/ont/llm_reasoner/flanagan/`. Each functional module has a
+distinct suffix and can evolve independently. The certified module versions are
+`1.0.0`, and the certified generation prompt is `generation/v3`.
 
-**Ran, 20 tests passing.** `test/llm_reasoner_test` against a real `krrood` install: reflection
-including nested designators, symbol-graph extensions, prompt assembly, enum and token decoding,
-token-to-individual round trip, single-completion batching, constraint enforcement, repair loop,
-budget exhaustion, both referent refusals, provenance log.
+Records generated with the former placeholder namespaces, earlier module versions, or
+an older prompt are retained for provenance but classified as stale. They are never
+served as current knowledge and are not deleted, so old citations remain explainable.
+`CachingGenerator` supplies the prompt version automatically; a read-oriented
+`KnowledgeService` should be configured with `prompt_version="generation/v3"` when it
+must enforce the certified generation contract.
 
-**Not run: `test/coraplex_test/test_language_model_backend.py`.** `semantic_digital_twin` and
-`coraplex` are not installable in the environment this was written in. The module is
-syntax-checked and every SDT and coraplex symbol it uses was verified against the repository
-source (`World.get_semantic_annotations_by_type`, `HasRootBody.root`, `WorldEntity.name`,
-`KinematicStructureEntity.global_pose`, `GripperIsFree`, `NaturalLanguageWithTypeDescription`,
-`GraspDescription`). It binds to the existing `pr2_world_copy` fixture in `test/conftest.py`.
-Expect fixture-level adjustment on first run — particularly whether that world carries
-`NaturalLanguageWithTypeDescription` annotations, which only the SAGE-10k and RoboCasa loaders
-populate.
-
-The notebook has a `world = ...` placeholder for the same reason; wire it to your usual setup.
-
----
-
-## Conventions applied
-
-Rebuilt against `AGENTS.md`: no `try`/`except` outside the JSON parsing boundary (where a
-`JSONDecodeError` is converted into `ModelResponseUnparseable`), no `getattr`, absolute global
-imports, `from __future__ import annotations`, `# %%` section headers, dataclasses throughout,
-RST docstrings with every field documented below it, no abbreviations in identifiers, guard
-clauses over nesting, custom exceptions rather than illegal states.
-
-Test mimics follow the krrood convention: `ManipulatorMimic` and `GraspMimic` are named after the
-pattern they exercise, not after `EndEffector` and `GraspDescription`, and they import nothing
-outside `krrood`.
-
-Run `scripts/format_docstrings.py` on the new files before committing.
-
----
-
-## Two things to fix upstream
-
-**1. `Match.where` bound through `.expression` silently matches nothing.**
+## Using the canonical knowledge
 
 ```python
-match.where(match.variable.manipulation_offset > 0.0)    # 40 results
-match.where(match.expression.manipulation_offset > 0.0)  #  0 results
+from llm_reasoner.knowledge.hypothesis import HypothesisRecord, Provenance
+from llm_reasoner.knowledge.microworlds.flanagan.canonical import (
+    build_pouring_phase_structure,
+)
+from llm_reasoner.knowledge.microworlds.flanagan.constraints import SUITE
+from llm_reasoner.knowledge.microworlds.registry import current_versions
+from llm_reasoner.knowledge.query import HypothesisView
+
+structure = build_pouring_phase_structure()
+record = HypothesisRecord.from_root(
+    structure,
+    action_type=structure.decomposes_task,
+    provenance=Provenance(
+        generator="hand-authored-reference",
+        prompt_version="generation/v3",
+        module_versions=current_versions(),
+    ),
+)
+assert SUITE.evaluate(record.scope.fragments) == []
+
+view = HypothesisView(record)
+phases = view.phases()
+first_phase_boundaries = view.boundaries_of(phases[0])
 ```
 
-Measured with the shipped `EntityQueryLanguageGenerativeBackend`, so this is not specific to this
-package. No exception, no warning; the condition verbalizes correctly and returns an empty set.
-`Match.where` on generative matches appears unexercised anywhere in the workspace. Worth a failing
-test in `krrood` before a fix.
+`HypothesisView` supplies typed, cited questions for central control concepts, including
+expected events, comparisons, prediction errors, corrections, model updates, next
+phases, dynamics models, grip-load coupling, continuous predictions, gaze targets, and
+representation purpose. `domain(Type)` and the cited, read-only `follow()` operation are
+available for less common scientific constructs.
 
-**2. `krrood.entity_query_language.backends` drags in `probabilistic_model`.**
+Generation uses task profiles rather than a hardcoded pouring root. A task selects the
+capabilities and most-specific structure it needs; schema derivation exposes only those
+registered types, and the complete scientific constraint suite must accept the result
+before it is served.
 
-`backends.py` imports `krrood.parametrization.model_registries`, which imports
-`probabilistic_model.probabilistic_circuit.relational.rspn`. Consequences:
+## Validation
 
-- `GenerativeBackend` cannot be imported without a probabilistic-circuit stack, so a language
-  model backend needs a dependency it never uses.
-- `rspn` exists in no released `probabilistic_model`, so `krrood` is not installable from
-  published dependencies at all.
+Use the active project interpreter:
 
-Importing `rspn` lazily inside `RelationalCircuitRegistry`, or moving `ProbabilisticBackend` into
-`krrood.parametrization`, would fix both.
+```text
+python -m pytest test/llm_reasoner_test
+scripts/format_docstrings.py <modified Python files>
+```
 
-Related version constraint, since it cost some time: `random_events_lib.reals` first appears in
-`random_events` 4.1.2, but `krrood` needs `compatible_types` from `random_events.variable`, which
-only exists from 5.0.1 — and published `probabilistic_model` 7.1.1 cannot work with 5.x because it
-imports `SubclassJSONSerializer` from `random_events.utils`, which 5.x dropped.
-
-**Minor:** `prompts.py` and `reflection.py` use `_attribute_docstrings` from
-`krrood.entity_query_language.verbalization.rendering.source_documentation`, which is private.
-Promoting it to public API would remove the only private-symbol dependency here.
-
----
-
-## Next
-
-Phase 2 is the referent pipeline: replace `ReferentSlotHasNoDomain` with describe → ground →
-select. The model proposes a sortal description, that description is compiled into EQL conditions
-and evaluated against the world by a selective backend, and only the survivors are offered for
-selection. The model supplies the intensional half of anchoring; EQL supplies the extensional
-half.
-
-After that, composition. A `ParameterResolver` seam of shape `Match → Match` would let this
-backend resolve the referent and hand the geometry to `ProbabilisticBackend`, which treats the
-chosen object as conditioning evidence via `to_dao` and `FeatureExtractor`. The phases inside
-`_evaluate` are already split along that line. Note that the rewrite primitive needs care:
-`copy.deepcopy` on a `Match` drops `_where_conditions_`, `_quantifier_type_`, `domain` and
-`_limit_`, and `Variable` has no `__deepcopy__`, so a domain of live world objects would be cloned.
+The final certification tests cover stable namespaces, package ownership of canonical
+structures, removal of the unused Turtle loader, module and prompt versions, and stale
+cache behavior. The canonical cereal and water structures are both required to produce
+zero acceptance diagnostics.

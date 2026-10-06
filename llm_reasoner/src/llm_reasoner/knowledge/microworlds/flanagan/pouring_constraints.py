@@ -6,6 +6,8 @@ from __future__ import annotations
 
 from llm_reasoner.knowledge.microworlds.flanagan.core import (
     ExternalTerminationEventType,
+    RegulationMode,
+    Setpoint,
 )
 from llm_reasoner.knowledge.microworlds.flanagan.pouring import (
     AlignmentPhase,
@@ -22,6 +24,7 @@ from llm_reasoner.knowledge.microworlds.flanagan.pouring import (
     TargetQuantityReached,
     TiltToFlowPhase,
     TransferTerminationReason,
+    continuous_control_contract_description,
 )
 from llm_reasoner.knowledge.microworlds.flanagan.prehension import (
     ContactEstablishmentPhase,
@@ -36,6 +39,7 @@ from llm_reasoner.knowledge.microworlds.flanagan.prehension import (
     WithdrawPhase,
 )
 from llm_reasoner.knowledge.ontological.constraints import (
+    Closure,
     Forbidden,
     MostSpecificTypes,
     TypeCoverage,
@@ -93,26 +97,51 @@ def structure_has_mismatched_termination_event(
     return False
 
 
+def structure_lacks_continuous_control_contract(
+    structure: PouringPhaseStructure,
+) -> bool:
+    """
+    Return whether a continuously regulated phase lacks its control contract.
+    """
+    continuous_modes = (RegulationMode.CONTINUOUS_FEEDBACK, RegulationMode.HYBRID)
+    for phase in structure.defines_phase:
+        if phase.regulation_mode not in continuous_modes:
+            continue
+        predictions = (
+            prediction
+            for prediction in structure.has_continuous_prediction
+            if phase in prediction.predicted_for_phase
+        )
+        if not any(
+            prediction.signal in phase.monitors_signal
+            and prediction.predicted_trajectory is not None
+            and isinstance(prediction.controlled_variable, Setpoint)
+            for prediction in predictions
+        ):
+            return True
+    return False
+
+
 # %% pouring constraints
 
 
 POURING_CONSTRAINTS = [
     MostSpecificTypes(
-        id="C30a",
+        id="POUR-C30a",
         applies_to=PouringPhaseStructure,
         collection="defines_phase",
         rationale="A pouring phase classified only as ActionPhase discards the "
         "action-specific ontology concept needed for querying and display.",
     ),
     MostSpecificTypes(
-        id="C30b",
+        id="POUR-C30b",
         applies_to=PouringPhaseStructure,
         collection="defines_event_type",
         rationale="A boundary event should use the most specific available pouring "
         "or manipulation event class.",
     ),
     TypeCoverage(
-        id="C31",
+        id="POUR-C31",
         applies_to=PouringPhaseStructure,
         severity="warning",
         collection="defines_phase",
@@ -125,7 +154,7 @@ POURING_CONSTRAINTS = [
         "termination; prehension, alignment, transport, and return remain optional.",
     ),
     TypeOrder(
-        id="C32",
+        id="POUR-C32",
         applies_to=PouringPhaseStructure,
         severity="warning",
         edges="has_transition",
@@ -152,7 +181,7 @@ POURING_CONSTRAINTS = [
         "optional omitted phases do not create coverage failures.",
     ),
     Forbidden(
-        id="C57",
+        id="POUR-C57",
         applies_to=PouringPhaseStructure,
         when=structure_has_incompatible_material_dynamics,
         message="material regime is incompatible with the declared flow dynamics",
@@ -160,14 +189,53 @@ POURING_CONSTRAINTS = [
         "dynamics.",
     ),
     Forbidden(
-        id="C58",
+        id="POUR-C58",
         applies_to=PouringPhaseStructure,
         when=structure_has_mismatched_termination_event,
         message="termination reason has no corresponding declared boundary event",
         rationale="A transfer stop reason must identify an event the structure can "
         "predict and detect.",
     ),
+    Forbidden(
+        id="POUR-C66",
+        applies_to=PouringPhaseStructure,
+        when=structure_lacks_continuous_control_contract,
+        message=continuous_control_contract_description(),
+        rationale="A continuously controlled phase must bind its monitored signal to "
+        "a predicted trajectory and controlled setpoint.",
+    ),
+    Closure(
+        id="POUR-C13a",
+        applies_to=PouringPhaseStructure,
+        container="defines_phase",
+        reached_via=("has_continuous_prediction.predicted_for_phase",),
+        rationale="Every continuously predicted phase must be declared by its "
+        "structure.",
+    ),
+    Closure(
+        id="POUR-C13d",
+        applies_to=PouringPhaseStructure,
+        container="defines_parameter",
+        reached_via=("has_continuous_prediction.controlled_variable",),
+        rationale="Every continuously controlled setpoint must be declared by its "
+        "structure.",
+    ),
+    Closure(
+        id="POUR-C13f",
+        applies_to=PouringPhaseStructure,
+        container="defines_observation",
+        reached_via=("has_continuous_prediction.comparison_target",),
+        rationale="Every continuous comparison target must be declared by its "
+        "structure.",
+    ),
+    Closure(
+        id="POUR-C13l",
+        applies_to=PouringPhaseStructure,
+        container="defines_internal_model",
+        reached_via=("has_continuous_prediction.generated_by",),
+        rationale="Every model generating a continuous prediction must be declared "
+        "by its structure.",
+    ),
 ]
-
 
 __all__ = ["POURING_CONSTRAINTS"]

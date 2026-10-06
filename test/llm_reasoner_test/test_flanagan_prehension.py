@@ -179,7 +179,7 @@ class TestGripLoadCoupling:
 
         violations = SUITE.evaluate((coupling, coupling.safety_margin, unrelated_force))
 
-        assert any(violation.check == "C59" for violation in violations)
+        assert any(violation.check == "PRE-C59" for violation in violations)
 
 
 # %% grip responses
@@ -225,4 +225,4 @@ class TestReplacePhaseCoupling:
 
         violations = SUITE.evaluate((phase, *phase.terminated_by))
 
-        assert any(violation.check == "C60" for violation in violations)
+        assert any(violation.check == "PRE-C60" for violation in violations)

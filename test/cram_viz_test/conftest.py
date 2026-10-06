@@ -133,6 +133,25 @@ ARCH_FILES = {
 
 
 @pytest.fixture()
+def sample_hypothesis_knowledge():
+    """
+    Activate the hand-authored pouring sample as the viewer's knowledge.
+
+    Nothing is active until an instruction is generated, so any test exercising the
+    projection, its overlays or the ``pouring_*`` EQL variables has to say which
+    structure it means.
+    """
+    from cram_viz import hypothesis_knowledge, kb
+
+    previous = hypothesis_knowledge.active()
+    knowledge = hypothesis_knowledge.activate_sample()
+    kb.reset_kb()
+    yield knowledge
+    hypothesis_knowledge.activate(previous)
+    kb.reset_kb()
+
+
+@pytest.fixture()
 def fixture_scene(tmp_path, monkeypatch):
     """
     A complete miniature scene bundle + architecture; returns the data dir.

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing_extensions import Any
+from typing import Any
 
 from coraplex.plans.executables import GiskardExecutable
 from coraplex.plans.plan import Plan
@@ -78,7 +78,9 @@ def install_plan_hooks() -> None:
         """
         BRIDGE._plan = self
         BRIDGE.snapshot_plan()
-        return original_perform(self, *args, **kwargs)
+        result = original_perform(self, *args, **kwargs)
+        BRIDGE.snapshot_plan()
+        return result
 
     Plan.perform = perform
 

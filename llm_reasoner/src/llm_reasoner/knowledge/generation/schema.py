@@ -128,6 +128,11 @@ class GenerationSchema:
     classes: tuple[ClassSchema, ...]
     modules: tuple[str, ...] = ()
 
+    unreachable_modules: tuple[str, ...] = ()
+    """
+    The requested modules none of whose classes can appear under the root.
+    """
+
     _by_name: dict[str, ClassSchema] = field(default_factory=dict, repr=False)
 
     def __post_init__(self) -> None:
@@ -373,10 +378,19 @@ def derive_schema(
                 parent=parent,
             )
         )
+    reachable = _reachable_from(root, classes)
+    reachable_names = {class_schema.name for class_schema in reachable}
     return GenerationSchema(
         root=root,
-        classes=_reachable_from(root, classes),
+        classes=reachable,
         modules=tuple(modules),
+        unreachable_modules=tuple(
+            module
+            for module in modules
+            if not any(
+                meta.local_name in reachable_names for meta in registry.module(module)
+            )
+        ),
     )
 
 

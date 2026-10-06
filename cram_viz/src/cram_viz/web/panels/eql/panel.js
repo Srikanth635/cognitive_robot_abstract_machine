@@ -19,6 +19,11 @@ Panels.define('eql', function (root, bus) {
     '  <span id="kb-status" class="kb-status">loading knowledge base…</span>' +
     '</div>' +
     '<div class="query-box">' +
+    '  <div class="nl-row">' +
+    '    <input id="nl-input" spellcheck="false" placeholder="Enter the instruction">' +
+    '    <button id="nl-run" title="Generate a hypothesis for this instruction and show it in the Hypothesis Graph tab">Generate</button>' +
+    '    <button id="nl-execute" title="Launch the demo under the live bridge — hardcoded for now, independent of the instruction above">Execute</button>' +
+    '  </div>' +
     '  <div class="query-row">' +
     '    <textarea id="query-input" rows="2" spellcheck="false" placeholder="the(entity(obj).where(obj.name == \'milk\'))   —  vars: obj, ep, arm, j, rob"></textarea>' +
     '    <button id="query-run">Run</button>' +
@@ -32,11 +37,16 @@ Panels.define('eql', function (root, bus) {
   const input = root.querySelector('#query-input');
   const runBtn = root.querySelector('#query-run');
   const presetsEl = root.querySelector('#presets');
+  const nlInput = root.querySelector('#nl-input');
+  const nlRunBtn = root.querySelector('#nl-run');
+  const nlExecuteBtn = root.querySelector('#nl-execute');
 
   let kb = null;   // /api/kb overview (presets + entity details)
 
   // ---- boot -----------------------------------------------------------------
-  fetch('/api/kb').then(function (r) { return r.json(); }).then(boot).catch(function (err) {
+  fetch(SceneSelection.apiUrl('/api/kb', window.location.search)).then(function (r) {
+    return r.json();
+  }).then(boot).catch(function (err) {
     kbStatus.textContent = 'KB error';
     answerEl.innerHTML = '<div class="qerr">Failed to reach the EQL server:\n' + esc(String(err)) + '</div>';
   });
@@ -116,6 +126,104 @@ Panels.define('eql', function (root, bus) {
     });
   }
 
+  // ---- generate knowledge from a natural-language instruction ------------------
+  // The instruction goes to llm_reasoner, which produces a Flanagan structure; the
+  // server projects it with the action-frame and image-schema representations and
+  // returns the refreshed graph. Generation replaces what every EQL variable ranges
+  // over, so the presets are reloaded alongside it.
+  let generating = false;
+  async function generate(instruction) {
+    instruction = (instruction || '').trim();
+    if (!instruction || generating) return;
+    generating = true;
+    nlRunBtn.textContent = '…';
+    nlRunBtn.disabled = true;
+    answerEl.innerHTML =
+      '<div class="goal">generating · ' + esc(instruction) + '</div>' +
+      '<p class="hint-txt">Asking the model for the stereotypical structure of this ' +
+      'action. A repeated instruction is served from the store instead.</p>';
+    try {
+      const response = await fetch('/api/hypothesis/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ instruction: instruction }),
+      });
+      const payload = await response.json();
+      if (!payload.ok) {
+        answerEl.innerHTML =
+          '<div class="goal">generation failed</div>' +
+          '<div class="qerr">' + esc(payload.error || 'generation failed') + '</div>';
+      } else {
+        bus.emit('hypothesis:generated', payload);
+        answerEl.innerHTML =
+          '<div class="goal">generated · ' + esc(instruction) + '</div>' +
+          '<p class="headline"><b>' + (payload.nodes || []).length + '</b> nodes across ' +
+          'the phase structure, action frame and image-schema profile.</p>' +
+          '<p class="hint-txt">Shown in the Hypothesis Graph tab. Every pouring_* EQL ' +
+          'variable now ranges over this structure.</p>';
+        await reloadKnowledgeBase();
+      }
+    } catch (err) {
+      answerEl.innerHTML =
+        '<div class="goal">generation failed</div>' +
+        '<div class="qerr">' + esc(String(err)) + '</div>';
+    }
+    generating = false;
+    nlRunBtn.textContent = 'Generate';
+    nlRunBtn.disabled = false;
+  }
+
+  async function reloadKnowledgeBase() {
+    const response = await fetch(SceneSelection.apiUrl('/api/kb', window.location.search));
+    const payload = await response.json();
+    if (!payload.ok) return;
+    kb = payload;
+    buildPresets(payload.presets || []);
+    bus.emit('kb:ready', { payload: payload });
+  }
+
+  nlRunBtn.addEventListener('click', function () { generate(nlInput.value); });
+  nlInput.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter') { event.preventDefault(); generate(nlInput.value); }
+  });
+
+  // ---- execute the hardcoded demo under the live bridge -------------------------
+  // Independent of the instruction/generated hypothesis above -- for now this
+  // always launches the same fixed demo script. Nothing further is wired here to
+  // show it running: the 3D scene panel already polls the live bridge's /info
+  // endpoint every few seconds and shows its own "Live" button the moment one
+  // answers, exactly as if the demo had been started from a terminal.
+  let executing = false;
+  async function execute() {
+    if (executing) return;
+    executing = true;
+    nlExecuteBtn.textContent = '…';
+    nlExecuteBtn.disabled = true;
+    try {
+      const response = await fetch('/api/execute', { method: 'POST' });
+      const payload = await response.json();
+      if (!payload.ok) {
+        answerEl.innerHTML =
+          '<div class="goal">execution failed</div>' +
+          '<div class="qerr">' + esc(payload.error || 'execution failed') + '</div>';
+      } else {
+        answerEl.innerHTML =
+          '<div class="goal">demo launched</div>' +
+          '<p class="hint-txt">Starting under the live bridge. Once it comes up, ' +
+          'the 3D scene\'s own Live button will appear — click it to attach.</p>';
+      }
+    } catch (err) {
+      answerEl.innerHTML =
+        '<div class="goal">execution failed</div>' +
+        '<div class="qerr">' + esc(String(err)) + '</div>';
+    }
+    executing = false;
+    nlExecuteBtn.textContent = 'Execute';
+    nlExecuteBtn.disabled = false;
+  }
+
+  nlExecuteBtn.addEventListener('click', execute);
+
   // ---- run an EQL query --------------------------------------------------------
   let running = false;
   async function runQuery(code) {
@@ -126,7 +234,10 @@ Panels.define('eql', function (root, bus) {
       const r = await fetch('/api/eql', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: code }),
+        body: JSON.stringify({
+          code: code,
+          scene: SceneSelection.nameFromSearch(window.location.search),
+        }),
       });
       render(code, await r.json());
     } catch (err) {

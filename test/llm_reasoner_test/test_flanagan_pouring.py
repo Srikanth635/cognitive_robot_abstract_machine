@@ -150,7 +150,7 @@ class TestMaterialRegime:
 
         violations = SUITE.evaluate((structure, viscosity, slosh))
 
-        assert any(violation.check == "C57" for violation in violations)
+        assert any(violation.check == "POUR-C57" for violation in violations)
 
     def test_liquid_transfer_rejects_granular_dynamics(self) -> None:
         granular_dynamics = GranularFlowDynamicsEstimate(label="Granular dynamics")
@@ -162,7 +162,7 @@ class TestMaterialRegime:
 
         violations = SUITE.evaluate((structure, granular_dynamics))
 
-        assert any(violation.check == "C57" for violation in violations)
+        assert any(violation.check == "POUR-C57" for violation in violations)
 
 
 # %% controlled variables
@@ -238,7 +238,7 @@ class TestPouringVariants:
 
         violations = SUITE.evaluate((structure, target_reached))
 
-        assert any(violation.check == "C58" for violation in violations)
+        assert any(violation.check == "POUR-C58" for violation in violations)
 
     def test_stop_reason_accepts_its_declared_boundary_event(self) -> None:
         source_empty = SourceEmpty(label="Source empty")
@@ -251,4 +251,4 @@ class TestPouringVariants:
 
         violations = SUITE.evaluate((structure, source_empty))
 
-        assert not any(violation.check == "C58" for violation in violations)
+        assert not any(violation.check == "POUR-C58" for violation in violations)

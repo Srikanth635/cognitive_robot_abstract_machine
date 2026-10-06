@@ -46,12 +46,16 @@
 <!-- core: event bus, panel registry, layout config -->
 <script src="core/bus.js"></script>
 <script src="core/registry.js"></script>
+<script src="core/scene-selection.js"></script>
 <script src="config.js"></script>
 
 <!-- panels — each defines itself in the registry; config.js decides mounting -->
 <script src="panels/robot_scene/panel.js"></script>
 <script src="panels/eql/panel.js"></script>
 <script src="panels/graph/graph.js"></script>
+<script src="panels/graph/live-knowledge.js"></script>
+<script src="panels/graph/hypothesis-graph.js"></script>
+<script src="panels/graph/designator.js"></script>
 <script src="panels/graph/panel.js"></script>
 
 <script>Panels.boot();</script>

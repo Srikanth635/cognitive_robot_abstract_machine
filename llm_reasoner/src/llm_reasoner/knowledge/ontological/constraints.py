@@ -34,9 +34,16 @@ chosen to be query shapes rather than arbitrary code.
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from dataclasses import field as dc_field
 from typing import Any, Callable, Iterable, Optional, Sequence
+
+from llm_reasoner.exceptions import LLMReasonerError
+from llm_reasoner.knowledge.ontological.paths import (
+    FieldPathResolver,
+    PathReference,
+)
 
 from .decorators import (
     REGISTRY,
@@ -46,6 +53,42 @@ from .decorators import (
 )
 
 Severity = str  # "error" | "warning"
+
+
+@dataclass
+class ConstraintPathError(LLMReasonerError):
+    """
+    A constraint names a path that its subject type cannot follow.
+
+    Reported when the suite is built, because a path that resolves to nothing reads as
+    an absent value and therefore never reports a violation.
+    """
+
+    constraint_id: str
+    """
+    Identifier of the constraint that declares the path.
+    """
+
+    path: str
+    """
+    The declared path, in full.
+    """
+
+    unknown_step: str
+    """
+    The first step no candidate type declares as a field.
+    """
+
+    subject_type: type
+    """
+    The type the constraint applies to.
+    """
+
+    def __str__(self) -> str:
+        return (
+            f"constraint {self.constraint_id}: '{self.path}' has no field "
+            f"'{self.unknown_step}' reachable from {self.subject_type.__name__}"
+        )
 
 
 @dataclass(frozen=True)
@@ -112,7 +155,7 @@ def name_of(obj: Any) -> str:
 
 
 @dataclass(frozen=True)
-class Constraint:
+class Constraint(ABC):
     """
     Base for every declarable check.
     """
@@ -131,6 +174,15 @@ class Constraint:
     ) -> Iterable[ConstraintViolation]:
         raise NotImplementedError
 
+    @abstractmethod
+    def referenced_paths(self) -> tuple[PathReference, ...]:
+        """
+        Return every field path this constraint follows.
+
+        Declared so that the suite can check each path against the fields of the type the
+        constraint applies to.
+        """
+
     def _violation(self, obj: Any, message: str) -> ConstraintViolation:
         return ConstraintViolation(self.id, self.severity, name_of(obj), message)
 
@@ -147,6 +199,12 @@ class Inclusion(Constraint):
     source: str = ""
     target: str = ""
     note: str = ""
+
+    def referenced_paths(self) -> tuple[PathReference, ...]:
+        """
+        Return every field path this constraint follows.
+        """
+        return (PathReference(self.source), PathReference(self.target))
 
     def check(self, obj, ctx):
         allowed = resolve(obj, self.target)
@@ -169,6 +227,12 @@ class Disjoint(Constraint):
     right: str = ""
     note: str = ""
 
+    def referenced_paths(self) -> tuple[PathReference, ...]:
+        """
+        Return every field path this constraint follows.
+        """
+        return (PathReference(self.left), PathReference(self.right))
+
     def check(self, obj, ctx):
         rights = resolve(obj, self.right)
         for value in resolve(obj, self.left):
@@ -189,6 +253,12 @@ class Distinct(Constraint):
     left: str = ""
     right: str = ""
     note: str = ""
+
+    def referenced_paths(self) -> tuple[PathReference, ...]:
+        """
+        Return every field path this constraint follows.
+        """
+        return (PathReference(self.left), PathReference(self.right))
 
     def check(self, obj, ctx):
         left, right = resolve(obj, self.left), resolve(obj, self.right)
@@ -213,6 +283,15 @@ class FlagOnPath(Constraint):
     expected: Any = True
     note: str = ""
 
+    def referenced_paths(self) -> tuple[PathReference, ...]:
+        """
+        Return every field path this constraint follows.
+        """
+        return (
+            PathReference(self.path),
+            PathReference(self.flag, relative_to=self.path),
+        )
+
     def check(self, obj, ctx):
         for value in resolve(obj, self.path):
             if getattr(value, self.flag, None) != self.expected:
@@ -236,6 +315,12 @@ class Ordered(Constraint):
     lower: str = ""
     upper: str = ""
 
+    def referenced_paths(self) -> tuple[PathReference, ...]:
+        """
+        Return every field path this constraint follows.
+        """
+        return (PathReference(self.lower), PathReference(self.upper))
+
     def check(self, obj, ctx):
         lo, hi = getattr(obj, self.lower, None), getattr(obj, self.upper, None)
         if lo is not None and hi is not None and lo > hi:
@@ -250,6 +335,12 @@ class NonEmptyString(Constraint):
 
     field_name: str = ""
     note: str = ""
+
+    def referenced_paths(self) -> tuple[PathReference, ...]:
+        """
+        Return every field path this constraint follows.
+        """
+        return (PathReference(self.field_name),)
 
     def check(self, obj, ctx):
         if not str(getattr(obj, self.field_name, "") or "").strip():
@@ -270,6 +361,12 @@ class ExactlyOne(Constraint):
     """
     Paths whose populated values are mutually exclusive and collectively required.
     """
+
+    def referenced_paths(self) -> tuple[PathReference, ...]:
+        """
+        Return every field path this constraint follows.
+        """
+        return tuple(PathReference(name) for name in self.fields)
 
     def check(
         self,
@@ -306,6 +403,12 @@ class Forbidden(Constraint):
 
     message: str = ""
 
+    def referenced_paths(self) -> tuple[PathReference, ...]:
+        """
+        Return every field path this constraint follows.
+        """
+        return ()
+
     def check(self, obj, ctx):
         yield self._violation(obj, self.message)
 
@@ -324,6 +427,15 @@ class Closure(Constraint):
     container: str = ""
     reached_via: tuple[str, ...] = ()
     note: str = ""
+
+    def referenced_paths(self) -> tuple[PathReference, ...]:
+        """
+        Return every field path this constraint follows.
+        """
+        return (
+            PathReference(self.container),
+            *(PathReference(path) for path in self.reached_via),
+        )
 
     def check(self, obj, ctx):
         declared = resolve(obj, self.container)
@@ -347,6 +459,12 @@ class NotAmong(Constraint):
     value_path: str = ""
     collection: str = ""
     note: str = ""
+
+    def referenced_paths(self) -> tuple[PathReference, ...]:
+        """
+        Return every field path this constraint follows.
+        """
+        return (PathReference(self.value_path), PathReference(self.collection))
 
     def check(self, obj, ctx):
         members = resolve(obj, self.collection)
@@ -372,6 +490,12 @@ class SharedValue(Constraint):
     left: str = ""
     right: str = ""
     note: str = ""
+
+    def referenced_paths(self) -> tuple[PathReference, ...]:
+        """
+        Return every field path this constraint follows.
+        """
+        return (PathReference(self.left), PathReference(self.right))
 
     def check(self, obj, ctx):
         lefts, rights = resolve(obj, self.left), resolve(obj, self.right)
@@ -399,6 +523,15 @@ class DistinctAcross(Constraint):
     collection: str = ""
     key_path: str = ""
     note: str = ""
+
+    def referenced_paths(self) -> tuple[PathReference, ...]:
+        """
+        Return every field path this constraint follows.
+        """
+        return (
+            PathReference(self.collection),
+            PathReference(self.key_path, relative_to=self.collection),
+        )
 
     def check(self, obj, ctx):
         members = resolve(obj, self.collection)
@@ -430,6 +563,17 @@ class GraphShape(Constraint):
     edges: str = ""
     tail: str = "from_phase"
     head: str = "to_phase"
+
+    def referenced_paths(self) -> tuple[PathReference, ...]:
+        """
+        Return every field path this constraint follows.
+        """
+        return (
+            PathReference(self.container),
+            PathReference(self.edges),
+            PathReference(self.tail, relative_to=self.edges),
+            PathReference(self.head, relative_to=self.edges),
+        )
 
     def check(self, obj, ctx):
         members = resolve(obj, self.container)
@@ -483,6 +627,16 @@ class Grounded(Constraint):
     excused_when: Optional[Callable[[Any], bool]] = None
     note: str = ""
 
+    def referenced_paths(self) -> tuple[PathReference, ...]:
+        """
+        Return every field path this constraint follows.
+        """
+        return (
+            PathReference(self.container),
+            PathReference(self.needs, relative_to=self.container),
+            *(PathReference(path) for path in self.supplies),
+        )
+
     def check(self, obj, ctx):
         supplied: set[int] = set()
         for path in self.supplies:
@@ -517,6 +671,12 @@ class MostSpecificTypes(Constraint):
     """
     Path to the members whose ontology classifications are checked.
     """
+
+    def referenced_paths(self) -> tuple[PathReference, ...]:
+        """
+        Return every field path this constraint follows.
+        """
+        return (PathReference(self.collection),)
 
     def check(
         self, subject: Any, context: "EvaluationContext"
@@ -559,6 +719,12 @@ class ConceptReferenceType(Constraint):
     Ontology class whose concrete descendants are allowed.
     """
 
+    def referenced_paths(self) -> tuple[PathReference, ...]:
+        """
+        Return every field path this constraint follows.
+        """
+        return (PathReference(self.path),)
+
     def check(
         self, subject: Any, context: "EvaluationContext"
     ) -> Iterable[ConstraintViolation]:
@@ -600,6 +766,12 @@ class TypeCoverage(Constraint):
     Ontology types expected at least once in the collection.
     """
 
+    def referenced_paths(self) -> tuple[PathReference, ...]:
+        """
+        Return every field path this constraint follows.
+        """
+        return (PathReference(self.collection),)
+
     def check(
         self, subject: Any, context: "EvaluationContext"
     ) -> Iterable[ConstraintViolation]:
@@ -640,6 +812,16 @@ class TypeOrder(Constraint):
     """
     Ontology types in their permitted forward order.
     """
+
+    def referenced_paths(self) -> tuple[PathReference, ...]:
+        """
+        Return every field path this constraint follows.
+        """
+        return (
+            PathReference(self.edges),
+            PathReference(self.tail, relative_to=self.edges),
+            PathReference(self.head, relative_to=self.edges),
+        )
 
     def check(
         self, subject: Any, context: "EvaluationContext"
@@ -787,6 +969,36 @@ class ConstraintSuite:
     name: str
     constraints: Sequence[Constraint]
     registry: OntologyRegistry = REGISTRY
+
+    def __post_init__(self) -> None:
+        """
+        Reject any constraint whose paths its subject type cannot follow.
+
+        :raises ConstraintPathError: for the first path with a step no field declares.
+        """
+        resolver = FieldPathResolver(self.registry)
+        for constraint in self.constraints:
+            self._check_paths(constraint, resolver)
+
+    @staticmethod
+    def _check_paths(constraint: Constraint, resolver: FieldPathResolver) -> None:
+        """
+        Check every path one constraint follows against the fields of its subject type.
+        """
+        for reference in constraint.referenced_paths():
+            origin = (constraint.applies_to,)
+            if reference.relative_to:
+                origin = resolver.resolve(origin, reference.relative_to).types
+            if not origin:
+                continue
+            resolution = resolver.resolve(origin, reference.path)
+            if resolution.unknown_step is not None:
+                raise ConstraintPathError(
+                    constraint_id=constraint.id,
+                    path=reference.path,
+                    unknown_step=resolution.unknown_step,
+                    subject_type=constraint.applies_to,
+                )
 
     def evaluate(self, instances: Iterable[Any]) -> list[ConstraintViolation]:
         pool = list(instances)

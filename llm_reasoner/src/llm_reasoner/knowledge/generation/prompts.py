@@ -61,8 +61,7 @@ How to answer:
 - Omit an optional field rather than filling it with null or a guess.
 
 On quantities:
-- Give ranges, not measurements. What a vessel weighs in general is 0.2 to 0.5
-  kg; asserting 0.34 kg claims an observation you have not made.
+- Give ranges that express uncertainty, not unobserved point measurements.
 - Always state a unit. An unlabelled number cannot be used.
 
 On honesty:
@@ -116,7 +115,9 @@ def hint_for(field: FieldSchema) -> str:
 
 
 def _render_default(value: Any) -> str:
-    """Render a field's default the way the model is asked to write values."""
+    """
+    Render a field's default the way the model is asked to write values.
+    """
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, Enum):
@@ -189,6 +190,17 @@ class GenerationPromptBuilder:
             f"Describe what is involved in: {action_label}",
             f"Produce exactly one fragment of type {schema.root}, plus every "
             "fragment it refers to, directly or indirectly.",
+            "## Scientific scope\n\n"
+            "- For every fragment with a `scientific_status` field, set it "
+            "explicitly.\n"
+            "- Use `EMPIRICAL_FINDING` only for paper-backed results directly "
+            "reported by the reviewed experiments.\n"
+            "- Use `SUPPORTED_INTERPRETATION` or `AUTHOR_HYPOTHESIS` for "
+            "interpretations and proposed mechanisms at their stated strength.\n"
+            "- Use `OPEN_QUESTION` where the reviewed work leaves the relation "
+            "unresolved.\n"
+            "- Mark application knowledge beyond the reviewed claims as an "
+            "`ENGINEERING_EXTENSION` (engineering extension).",
             "## Ontology classification\n\n"
             "- Select the most specific available type for every fragment.\n"
             "- The fragment `type` states what the fragment is. `label` does "

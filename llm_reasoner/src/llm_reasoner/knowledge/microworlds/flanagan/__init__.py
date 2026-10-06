@@ -4,7 +4,11 @@ Flanagan–Johansson action-phase domain model.
 
 from llm_reasoner.knowledge.microworlds.flanagan import (
     core,
+    gaze,
+    learning,
     object_dynamics,
+    observation,
+    perception,
     pouring,
     prehension,
 )
@@ -23,7 +27,11 @@ __all__ = [
     "MODULE_SCOPE",
     "SUITE",
     "core",
+    "gaze",
+    "learning",
     "object_dynamics",
+    "observation",
+    "perception",
     "pouring",
     "prehension",
 ]

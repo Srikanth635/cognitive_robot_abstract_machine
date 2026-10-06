@@ -24,6 +24,13 @@ from pathlib import Path
 #: the packaged frontend: index.html, panels, vendored libraries
 WEB_ROOT = Path(__file__).resolve().parent / "web"
 
+#: the packaged static resources: currently just the hypothesis knowledge graph
+RESOURCES_ROOT = Path(__file__).resolve().parent / "resources"
+
+#: the notebook-exported cereal-pouring knowledge graph, kept as a reference snapshot
+#: of the graph the Hypothesis Graph tab now builds live
+HYPOTHESIS_KNOWLEDGE_GRAPH_PATH = RESOURCES_ROOT / "hypothesis_knowledge_graph.json"
+
 
 def data_dir() -> Path:
     """
@@ -33,6 +40,19 @@ def data_dir() -> Path:
     if env:
         return Path(env).expanduser()
     return Path.home() / ".cram_viz"
+
+
+def hypothesis_store_dir() -> Path:
+    """
+    Where generated hypothesis records are cached.
+
+    Persisting these across restarts is what makes re-running an instruction free:
+    the store answers instead of the model.
+    """
+    env = os.environ.get("CRAM_VIZ_HYPOTHESIS_STORE")
+    if env:
+        return Path(env).expanduser()
+    return data_dir() / "hypotheses"
 
 
 #: the optional cram-scenes submodule checkout (``<member dir>/scenes``)
@@ -70,3 +90,21 @@ def architecture_root() -> Path:
         if (parent / "coraplex").is_dir() and (parent / "krrood").is_dir():
             return parent
     return Path.home() / "cognitive_robot_abstract_machine"
+
+
+def default_live_demo() -> Path:
+    """
+    The demo the viewer's "Execute" button launches under the live bridge.
+
+    Hardcoded to one illustrative demo until picking a demo becomes part of the
+    UI, same as the hand-authored :mod:`cram_viz.hypothesis_knowledge` content it
+    currently has nothing to do with.
+    """
+    return (
+        architecture_root()
+        / "coraplex"
+        / "demos"
+        / "coraplex_gcs_demo"
+        / "cram_viz"
+        / "kitchen_counter_pouring.py"
+    )

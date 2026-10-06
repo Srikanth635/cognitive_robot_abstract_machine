@@ -12,7 +12,6 @@ import subprocess
 from pathlib import Path
 
 import pytest
-
 from cram_viz.paths import WEB_ROOT
 
 JS_DIR = Path(__file__).parent / "js"
@@ -54,6 +53,40 @@ class TestAssetConsistency:
         for panel_js in WEB_ROOT.glob("panels/*/panel.js"):
             assert "'static/" not in panel_js.read_text(), panel_js.name
 
+    def test_live_knowledge_is_wired_to_the_graph_panel(self) -> None:
+        """
+        Ensure the live semantic projection is loaded and polled.
+        """
+        html = read("index.html")
+        panel = read("panels/graph/panel.js")
+
+        assert "panels/graph/live-knowledge.js" in html
+        assert "LiveKnowledgeGraph" in panel
+        assert "/info" in panel
+        assert 'data-view="live-knowledge"' in panel
+        assert "'live-knowledge'" in panel
+        assert "if (tab === 'knowledge') return 'knowledge';" not in panel
+        assert "spacing: payload.spacing" in panel
+        assert "applyLiveKnowledgeHighlight(payload, true)" in panel
+        assert "const LIVE_STATUS_INTERVAL_MILLISECONDS = 100;" in panel
+
+    def test_hypothesis_graph_is_wired_to_the_graph_panel(self) -> None:
+        """
+        Ensure the Hypothesis Graph tab is loaded and overlays cram_viz's EQL
+        answer panel / highlight loop onto its own dedicated renderer.
+        """
+        html = read("index.html")
+        panel = read("panels/graph/panel.js")
+
+        assert "panels/graph/hypothesis-graph.js" in html
+        assert 'data-view="hypothesis"' in panel
+        assert "HypothesisGraph.build(p)" in panel
+        assert "HypothesisGraph.onSelect(hypothesisSelect)" in panel
+        # EQL query results reveal the root-to-node path before spotlighting, since a
+        # hit can be buried in a collapsed branch; a plain node click only spotlights
+        # in place, since the clicked node is already on screen.
+        assert "HypothesisGraph.revealAndHighlight(hypothesisHi)" in panel
+
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")
 class TestJsUnits:
@@ -61,6 +94,7 @@ class TestJsUnits:
         result = subprocess.run(
             ["node", "--test", str(JS_DIR / name)],
             capture_output=True,
+            check=False,
             text=True,
             timeout=120,
         )
@@ -71,3 +105,36 @@ class TestJsUnits:
 
     def test_graph_status_rendering(self):
         self.run_node("test_graph_status.js")
+
+    def test_live_knowledge_rendering(self) -> None:
+        """
+        Run the live semantic-projection JavaScript tests.
+        """
+        self.run_node("test_live_knowledge.js")
+
+    def test_live_knowledge_panel_separation(self) -> None:
+        """
+        Run the static-versus-live Knowledge tab routing tests.
+        """
+        self.run_node("test_graph_panel_live_knowledge.js")
+
+    def test_scene_selection(self):
+        self.run_node("test_scene_selection.js")
+
+    def test_hypothesis_graph_rendering(self) -> None:
+        """
+        Run the Hypothesis Graph tab's dedicated vis-network engine tests.
+        """
+        self.run_node("test_hypothesis_graph.js")
+
+    def test_hypothesis_graph_panel_wiring(self) -> None:
+        """
+        Run the graph panel's Hypothesis Graph tab routing tests.
+        """
+        self.run_node("test_graph_panel_hypothesis_graph.js")
+
+    def test_eql_panel_generation_bar(self) -> None:
+        """
+        Run the EQL panel's natural-language generation bar tests.
+        """
+        self.run_node("test_eql_panel_generation.js")

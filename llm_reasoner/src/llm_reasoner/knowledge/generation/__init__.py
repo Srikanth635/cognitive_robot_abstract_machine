@@ -62,10 +62,12 @@ single malformed bracket invalidate everything.
 from llm_reasoner.knowledge.generation.assumptions import extract_assumptions
 from llm_reasoner.knowledge.generation.backend import (
     GenerationFailure,
+    GenerationPromptVersion,
     GenerationResult,
     HypothesisGenerator,
     RepairBudgetExhausted,
     ResponseUnusable,
+    UnreachableModules,
 )
 from llm_reasoner.knowledge.generation.cached import CachedResult, CachingGenerator
 from llm_reasoner.knowledge.generation.prompts import (
@@ -99,6 +101,7 @@ __all__ = [
     "FragmentDeclaration",
     "FragmentField",
     "GenerationFailure",
+    "GenerationPromptVersion",
     "GenerationPromptBuilder",
     "GenerationResult",
     "GenerationSchema",
@@ -108,6 +111,7 @@ __all__ = [
     "RepairBudgetExhausted",
     "ResponseUnusable",
     "SYSTEM_PROMPT",
+    "UnreachableModules",
     "WireFormatError",
     "derive_schema",
     "extract_assumptions",

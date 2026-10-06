@@ -34,3 +34,17 @@ class TestScenesDir:
     def test_data_dir_env_override(self, monkeypatch, tmp_path):
         monkeypatch.setenv("CRAM_VIZ_DATA", str(tmp_path / "d"))
         assert paths.data_dir() == tmp_path / "d"
+
+
+class TestDefaultLiveDemo:
+    def test_resolves_under_the_architecture_root(self, monkeypatch, tmp_path):
+        monkeypatch.setattr(paths, "architecture_root", lambda: tmp_path)
+
+        assert paths.default_live_demo() == (
+            tmp_path
+            / "coraplex"
+            / "demos"
+            / "coraplex_gcs_demo"
+            / "cram_viz"
+            / "kitchen_counter_pouring.py"
+        )

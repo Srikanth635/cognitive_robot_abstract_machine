@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from llm_reasoner.knowledge.microworlds.flanagan.constraints import SUITE
 from llm_reasoner.knowledge.microworlds.flanagan.core import (
+    FLAN,
     EstimateUpdateDirection,
     ForwardModel,
     InverseModel,
@@ -42,7 +43,7 @@ def make_role() -> RoleSlot:
     return RoleSlot(
         label="manipulated object",
         binds_as=ConceptReference(
-            iri="http://example.org/ontology/flanagan-core#Manipulandum",
+            iri=FLAN + "Manipulandum",
             label="Manipulandum",
         ),
     )
@@ -166,8 +167,8 @@ class TestInternalModelComposition:
         violations = SUITE.evaluate((composition,))
 
         assert [
-            violation.check for violation in violations if violation.check == "C51"
-        ] == ["C51"]
+            violation.check for violation in violations if violation.check == "OD-C51"
+        ] == ["OD-C51"]
 
 
 # %% representation context
@@ -232,8 +233,33 @@ class TestRepresentationOwnership:
         violations = SUITE.evaluate((structure, estimate))
 
         assert [
-            violation.check for violation in violations if violation.check == "C52"
-        ] == ["C52"]
+            violation.check for violation in violations if violation.check == "OD-C52"
+        ] == ["OD-C52"]
+
+    def test_unowned_estimate_rejection_names_the_ownership_links(self) -> None:
+        estimate = make_estimate("unowned estimate")
+        structure = ObjectDynamicsPhaseStructure(
+            label="incomplete dynamics structure",
+            defines_parameter=[estimate],
+        )
+
+        violation = next(
+            violation
+            for violation in SUITE.evaluate((structure, estimate))
+            if violation.check == "OD-C52"
+        )
+
+        assert all(
+            field_name in violation.message
+            for field_name in (
+                "defines_parameter",
+                "holds_estimate",
+                "defines_internal_model",
+                "represents_role",
+                "parameter_on_role",
+                "purpose",
+            )
+        )
 
     def test_one_estimate_cannot_cross_control_and_perceptual_purposes(self) -> None:
         estimate = make_estimate("shared estimate")
@@ -254,8 +280,8 @@ class TestRepresentationOwnership:
         violations = SUITE.evaluate((structure, estimate, object_model, perceptual))
 
         assert [
-            violation.check for violation in violations if violation.check == "C53"
-        ] == ["C53"]
+            violation.check for violation in violations if violation.check == "OD-C53"
+        ] == ["OD-C53"]
 
 
 # %% memory and representation updates
@@ -341,7 +367,9 @@ class TestRepresentationDissociation:
         assert (
             dissociation.sensorimotor_estimate is not dissociation.perceptual_estimate
         )
-        assert not [violation for violation in violations if violation.check == "C54"]
+        assert not [
+            violation for violation in violations if violation.check == "OD-C54"
+        ]
 
 
 # %% dynamics contradictions
@@ -377,8 +405,8 @@ class TestDynamicsContradictions:
         violations = SUITE.evaluate((source, target, transfer))
 
         assert [
-            violation.check for violation in violations if violation.check == "C56"
-        ] == ["C56"]
+            violation.check for violation in violations if violation.check == "OD-C56"
+        ] == ["OD-C56"]
 
     def test_object_dynamics_cannot_use_a_perceptual_purpose(self) -> None:
         model = make_object_model(
@@ -389,8 +417,8 @@ class TestDynamicsContradictions:
         violations = SUITE.evaluate((model,))
 
         assert [
-            violation.check for violation in violations if violation.check == "C57"
-        ] == ["C57"]
+            violation.check for violation in violations if violation.check == "OD-C57"
+        ] == ["OD-C57"]
 
     def test_representation_must_cover_each_estimated_role(self) -> None:
         estimate = make_estimate("object load")
@@ -400,8 +428,8 @@ class TestDynamicsContradictions:
         violations = SUITE.evaluate((model, estimate))
 
         assert [
-            violation.check for violation in violations if violation.check == "C58"
-        ] == ["C58"]
+            violation.check for violation in violations if violation.check == "OD-C58"
+        ] == ["OD-C58"]
 
     def test_representation_estimate_must_be_declared_by_the_root(self) -> None:
         estimate = make_estimate("undeclared represented estimate")
@@ -414,8 +442,8 @@ class TestDynamicsContradictions:
         violations = SUITE.evaluate((structure, model, estimate))
 
         assert [
-            violation.check for violation in violations if violation.check == "C13r"
-        ] == ["C13r"]
+            violation.check for violation in violations if violation.check == "OD-C13r"
+        ] == ["OD-C13r"]
 
     def test_update_memory_must_store_the_updated_representation(self) -> None:
         estimate = make_estimate("updated load")
@@ -437,5 +465,5 @@ class TestDynamicsContradictions:
         violations = SUITE.evaluate((model, other_model, memory, update))
 
         assert [
-            violation.check for violation in violations if violation.check == "C55"
-        ] == ["C55"]
+            violation.check for violation in violations if violation.check == "OD-C55"
+        ] == ["OD-C55"]

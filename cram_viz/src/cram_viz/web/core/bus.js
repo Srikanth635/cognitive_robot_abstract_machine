@@ -15,6 +15,7 @@
  *   entity:highlight     {ids, focus?}                  eql → robot-scene, graph
  *   entity:select        {id, detail, relations}        graph → eql
  *   kb:ready             {payload}                      eql → anyone
+ *   hypothesis:generated {ok, nodes, edges, details,…}  eql → graph
  *
  * A new panel is free to define further events; document them in its header.
  * ==========================================================================*/

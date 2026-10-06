@@ -2,10 +2,10 @@
 
 ## Progress
 
-- Completed: Phase 0, Phase 1, Phase 2, Phase 3, Phase 4, Phase 5, and Phase 6
-- Current: Phase 7 pending
-- Overall: 7 of 11 phases complete
-- Last validated: 2026-09-25
+- Completed: Phase 0 through Phase 10
+- Current: Plan complete
+- Overall: 11 of 11 phases complete
+- Last validated: 2026-09-27
 
 ## Objective
 
@@ -614,6 +614,35 @@ mechanism.
 - Empirical findings, author hypotheses, and open questions remain distinct.
 - Optional modules are loaded only for tasks or questions that need them.
 
+### Implementation record (2026-09-25)
+
+- Added separate `gaze.py`, `observation.py`, `learning.py`, and `perception.py`
+  modules so each scientific topic retains one clear responsibility.
+- Added shared scientific-status vocabulary distinguishing empirical findings,
+  supported interpretations, author hypotheses, open questions, and engineering
+  extensions.
+- Represented proactive and reactive gaze, contact targets, gaze lead,
+  subgoal-bound fixation, contact monitoring, and multimodal alignment.
+- Represented distinct actor and observer roles, hand visibility, future-contact
+  predictions, available observer modalities, hidden-property inference, and the
+  hypothesis status of actor-observer prediction matching.
+- Represented exploration, acquisition, and refinement; reactive-to-proactive
+  gaze development; novel-rule discovery versus mapping adaptation; and
+  sensorimotor-map updates.
+- Represented self-generated versus external events, predicted contact,
+  attenuation windows and responses, while keeping the proposed relationship to
+  action control explicitly open.
+- Added local constraint groups C59--C65 and composed them through the aggregate
+  Flanagan constraint registry.
+- Registered the four topics as optional knowledge modules with dependency-aware
+  capability selection. Existing pouring selection does not load them, while an
+  explicit action-observation request loads only its gaze dependency.
+- Exposed each new root type independently to generation-schema discovery and
+  advanced the core vocabulary module to version `0.4.0`.
+- Verified 145 isolated `llm_reasoner` tests and 56 relevant integration tests.
+  Python compilation, targeted Ruff checks, and repository docstring formatting
+  also pass for the Phase 7 files.
+
 ## Phase 8: Strengthen constraints
 
 ### Objective
@@ -646,6 +675,43 @@ Test contradictory combinations rather than only missing required fields.
 - Canonical fixtures have zero errors and zero unexplained warnings.
 - Deliberately malformed fixtures exercise every constraint.
 - A schema-valid but scientifically contradictory hypothesis is rejected.
+
+### Implementation record (2026-09-25)
+
+- Added explicit boundary-control exemptions and constraint `C66`, so each
+  successful phase boundary now has a sensorimotor control point or a typed,
+  justified exemption. Constraint `C69` rejects unused and failure-boundary
+  exemptions.
+- Added evidence-compatibility constraint `C67`, which requires matching
+  modality and participant roles and matching event or feature identity while
+  preserving explicitly classified unexpected-event mismatches.
+- Added the abstract `ScientificAssertion` contract and typed
+  `ScientificProvenance`; engineering extensions without provenance are now
+  rejected by `C68` without forcing paper-backed claims to invent sources.
+- Made each parameter's active phase required and added module-local closure
+  checks for continuous predictions, controlled setpoints, comparison targets,
+  and generating models.
+- Added `POUR-C66`, requiring every continuous-feedback or hybrid phase to bind
+  a monitored signal, predicted trajectory, and controlled setpoint.
+- Added `PRE-C66`, rejecting contact-establishment and touchdown events that
+  break contact, and contact-break and liftoff events that establish it.
+- Qualified extension-owned constraint identifiers by module, eliminating
+  ambiguous diagnostics while retaining the legacy check number.
+- Completed the cereal and water reference fixtures with continuous grip,
+  transport, flow-cessation, and release contracts plus explicit fixture-scope
+  boundary exemptions. Both canonical structures now validate without
+  diagnostics.
+- Advanced changed module versions so cached generated hypotheses cannot reuse
+  the pre-hardening schema or constraint contract.
+
+Verification:
+
+- The isolated `llm_reasoner` suite reports 158 passed.
+- The relevant Flanagan and hypothesis-knowledge integration suite reports 117
+  passed and 1 skipped.
+- Python compilation and targeted Ruff import/error checks pass for every
+  modified Phase 8 Python file.
+- `scripts/format_docstrings.py` completed on every modified Python file.
 
 ## Phase 9: Improve language-model generation and querying
 
@@ -696,6 +762,40 @@ approved credentials are unavailable.
 - Prompt and schema tests prevent unsupported concepts and fields.
 - Generated hypotheses pass the scientific constraint suite before admission.
 
+### Completed implementation
+
+- Added task-profile generation roots for action-neutral, prehension, and
+  pouring hypotheses while preserving capability-based module closure. The
+  generator now derives its root from the selected profile unless a specialized
+  caller supplies an explicit override.
+- Removed the viewer's pouring-root constant and the generic prompt's numeric
+  mass example. Added explicit prompt guidance for the paper-backed,
+  interpretation, author-hypothesis, open-question, and engineering-extension
+  statuses while retaining the most-specific-type requirement.
+- Added typed, cited queries for control-point events and comparisons,
+  prediction errors, corrections, model updates, successful next phases,
+  phase dynamics, grip-load coupling, continuous predictions, and gaze targets.
+  The existing representation-purpose query and generic path-following escape
+  hatch remain available.
+- Added offline model payload tests for normal decoding, task-profile variants,
+  structural repair, and scientific-constraint repair. Admission is asserted
+  only after the scientific suite accepts the repaired graph.
+- Confirmed that schema derivation exposes only the first semantic paragraph of
+  class documentation, so implementation history is not prompt-facing.
+
+Verification:
+
+- The isolated `llm_reasoner` suite reports 163 passed.
+- The Flanagan query and hypothesis-knowledge regression subset reports 58
+  passed.
+- The viewer generation regression suite reports 20 passed and 1 skipped; the
+  skipped test requires an approved live model credential.
+- Targeted Ruff import/error checks and Python compilation pass for every
+  modified Phase 9 Python file.
+- The required formatter script was invoked, but the active environment lacks
+  its `docformatter` executable. The same repository-configured `docformatter`
+  and active-environment Black steps were run directly and completed.
+
 ## Phase 10: Migration and certification
 
 ### Objective
@@ -717,8 +817,9 @@ Finish with one coherent, versioned, documented, and fully tested microworld.
 
 ### Final definition of done
 
-- Every paper claim is traceable from source to construct, constraint, query, and
-  test.
+- Every in-scope paper claim is traceable from source to construct, constraint,
+  query, and test; every deliberate exclusion is traceable to the documented
+  scope boundary.
 - Every engineering addition is explicitly identified.
 - Every canonical structure has zero validation violations.
 - No unit, event, phase, control, or representation contradiction remains.
@@ -727,13 +828,44 @@ Finish with one coherent, versioned, documented, and fully tested microworld.
 - Core prediction, object dynamics, prehension, pouring, gaze, learning,
   observation, and perception remain functionally separate modules.
 
-## Recommended first implementation increment
+### Completed implementation
 
-Implement Phases 0 through 2 first:
+- Replaced all Flanagan placeholder IRIs with the project-owned namespace root
+  `http://www.ease-crc.org/ont/llm_reasoner/flanagan/` and distinct module
+  suffixes defined in one namespace module.
+- Certified all eight microworld modules at version `1.0.0` and the generation
+  contract at `generation/v3`. Cache lookup now considers both module and prompt
+  versions, retains incompatible history, and reports it as stale.
+- Moved the cereal and water reference builders into the Flanagan package. The
+  former viewer path is a compatibility import only, preserving existing
+  consumers without making the microworld depend on the viewer.
+- Removed the unused Turtle fixture loader after verifying that neither its
+  documented fixtures nor a supported caller remained.
+- Replaced the obsolete integration README with the current architecture,
+  vocabulary ownership, scientific-status rules, explicit engineering
+  extensions, migration behavior, query surface, and a validated example.
+- Updated the scientific contract with final functional dependencies and a
+  traceability row for every FJ claim. FJ-013 is explicitly excluded because
+  afferent first-spike coding is outside the declared task-level reasoning scope.
+- Added final certification tests for namespaces, fixture ownership and
+  acceptance, obsolete-loader removal, version migration, and prompt-aware
+  handling of stale and refuted records through both cache entry points.
 
-1. Establish the scientific claim and competency matrix.
-2. Add whole-structure validation tests that expose the current failures.
-3. Correct event characteristics, control dimensions, parameter categories, and
-   physical quantities.
+Verification:
 
-All later work depends on those semantics being stable.
+- The isolated `llm_reasoner` suite reports 173 passed.
+- The Flanagan and hypothesis-knowledge integration suite reports 122 passed and
+  1 skipped; the skipped test requires an approved live model credential.
+- Both package-owned canonical structures produce zero acceptance diagnostics.
+- Targeted Ruff import/error checks, Python compilation, and diff whitespace
+  checks pass for the modified Phase 10 files.
+- The required formatter script was invoked, but the active environment lacks
+  its `docformatter` executable. The repository-configured `docformatter` and
+  active-environment Black commands were run directly on all modified Python
+  files.
+
+## Plan completion
+
+All planned phases are implemented. Further work should begin as a separately
+scoped scientific extension or defect fix so the certified namespace, module
+versions, and traceability contract change deliberately.

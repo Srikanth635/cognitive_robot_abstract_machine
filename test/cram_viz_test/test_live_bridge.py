@@ -12,8 +12,10 @@ colour only" from "rebuild".
 import types
 
 import pytest
-
-from cram_viz.live.bridge import Bridge
+from coraplex.plans.executables import GiskardExecutable
+from coraplex.plans.plan import Plan
+from cram_viz.live import hooks
+from cram_viz.live.bridge import BRIDGE, Bridge
 
 
 class _Status:
@@ -138,6 +140,31 @@ class TestFreezeSemantics:
         nodes = by_kind(bridge)
         assert nodes["MotionNode"]["status"] == "SUCCEEDED"
         assert nodes["ConditionNode"]["status"] == "SUCCEEDED"
+
+
+# %% Plan hook snapshots
+class TestPlanHookSnapshots:
+    def test_completed_plan_publishes_its_final_status(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """
+        Ensure the browser receives a snapshot after plan execution completes.
+        """
+        snapshots: list[str] = []
+        plan = object.__new__(Plan)
+        monkeypatch.setattr(Plan, "perform", lambda self: "completed")
+        monkeypatch.setattr(GiskardExecutable, "execute", lambda self: None)
+        monkeypatch.setattr(BRIDGE, "_plan", None)
+        monkeypatch.setattr(
+            BRIDGE,
+            "snapshot_plan",
+            lambda: snapshots.append("snapshot"),
+        )
+
+        hooks.install_plan_hooks()
+
+        assert plan.perform() == "completed"
+        assert snapshots == ["snapshot", "snapshot"]
 
 
 # ---- statechart -------------------------------------------------------------

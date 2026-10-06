@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from cram_viz.hypothesis_knowledge import build_hypothesis_record
 from cram_viz.hypothesis_knowledge.pouring_structure import (
     build_pouring_phase_structure,
     build_water_pouring_phase_structure,
 )
+from llm_reasoner.knowledge.microworlds.flanagan.constraints import SUITE
 from llm_reasoner.knowledge.microworlds.flanagan.core import PhysicalDimension
 from llm_reasoner.knowledge.microworlds.flanagan.pouring import (
     DynamicViscosityEstimate,
@@ -77,6 +79,13 @@ class TestMaterialSpecificReferenceStructures:
 
         assert quantity.parameter_range is not None
         assert quantity.parameter_range.physical_dimension is PhysicalDimension.VOLUME
+
+    def test_water_structure_has_no_acceptance_violations(self) -> None:
+        structure = build_water_pouring_phase_structure()
+
+        record = build_hypothesis_record(structure)
+
+        assert SUITE.evaluate(record.scope.fragments) == []
 
 
 # %% continuous comparison fixtures

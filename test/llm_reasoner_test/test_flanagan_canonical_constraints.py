@@ -53,7 +53,7 @@ class TestCanonicalPhaseClassification:
 
         violations = SUITE.evaluate((structure, generic_phase))
 
-        assert any(violation.check == "C30a" for violation in violations)
+        assert any(violation.check == "POUR-C30a" for violation in violations)
 
 
 class TestCanonicalRoleReference:
@@ -85,7 +85,9 @@ class TestPouringPhaseCoverage:
         )
 
         violations = SUITE.evaluate((structure, reach))
-        coverage = [violation for violation in violations if violation.check == "C31"]
+        coverage = [
+            violation for violation in violations if violation.check == "POUR-C31"
+        ]
 
         assert coverage
         assert all(violation.severity == "warning" for violation in coverage)
@@ -111,7 +113,9 @@ class TestPouringPhaseOrder:
         )
 
         violations = SUITE.evaluate((structure, reach, load, transition))
-        ordering = [violation for violation in violations if violation.check == "C32"]
+        ordering = [
+            violation for violation in violations if violation.check == "POUR-C32"
+        ]
 
         assert ordering
         assert all(violation.severity == "warning" for violation in ordering)
