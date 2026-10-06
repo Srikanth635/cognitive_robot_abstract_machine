@@ -1,0 +1,11 @@
+@prefix case:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/case#> .
+@prefix pour:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#> .
+@prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
+
+# During execution a world object is bound to the source container slot of a pouring structure.
+
+case:source a pour:SourceContainer .
+
+case:binding a aicor:RoleBinding ;
+    aicor:bindsSlot case:source ;
+    aicor:bindsFiller case:kitchen_jug .

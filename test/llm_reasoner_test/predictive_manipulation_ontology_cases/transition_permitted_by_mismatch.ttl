@@ -1,0 +1,10 @@
+@prefix case:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/case#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+
+# A transition is said to be permitted by a comparison whose observation disagreed.
+
+case:transition a core:PhaseTransition ;
+    core:permittedBy case:comparison .
+
+case:comparison a core:PredictionComparison ;
+    core:hasComparisonOutcome core:Mismatch .

@@ -1,0 +1,13 @@
+@prefix case:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/case#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix pre:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#> .
+@prefix pour:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#> .
+
+# Flow onset is said to overcome friction, instead of the containment by the source walls.
+
+case:flow_onset a pour:FlowOnset ;
+    core:resolvesOpposition case:opposition .
+
+case:opposition core:hasResistingForce case:resistance .
+
+case:resistance core:hasForceKind core:Friction .

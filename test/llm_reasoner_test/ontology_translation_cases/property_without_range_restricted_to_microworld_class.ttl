@@ -1,0 +1,12 @@
+@prefix core: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# A property with no range whose restriction shows its values are phases of the microworld.
+
+core:followsPhase a owl:ObjectProperty ;
+    rdfs:domain core:ActionPhase ;
+    rdfs:label "follows phase"@en ;
+    rdfs:comment "A phase this phase comes after."@en .
+
+core:ActionPhase rdfs:subClassOf [ a owl:Restriction ; owl:onProperty core:followsPhase ; owl:allValuesFrom core:ActionPhase ] .

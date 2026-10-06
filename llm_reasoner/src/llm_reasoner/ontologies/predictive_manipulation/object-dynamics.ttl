@@ -1,0 +1,308 @@
+@prefix :      <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
+@prefix dul:   <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics> a owl:Ontology ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics/0.3.0> ;
+    owl:versionInfo "0.3.0" ;
+    owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> ;
+    rdfs:label "Predictive manipulation: object dynamics"@en ;
+    rdfs:comment """Represented object and limb dynamics: efference copies, dynamics models, prediction sources, sensorimotor memory and transfer between perturbation contexts."""@en .
+
+# %% commands and efference copies
+
+:DesiredState a owl:Class ;
+    rdfs:subClassOf aicor:Goal , dul:Goal ,
+        [ a owl:Restriction ; owl:onProperty :desiredCondition ; owl:someValuesFrom core:PhaseConditionType ] ;
+    rdfs:label "desired state"@en ;
+    rdfs:comment "A state an inverse model seeks to establish."@en ;
+    core:evidenceStatus core:SupportedInterpretation ;
+    core:representsClaim core:FJ-002 .
+:desiredCondition a owl:ObjectProperty ; rdfs:range core:PhaseConditionType ;
+    rdfs:label "desired condition"@en ; rdfs:comment "A condition whose establishment defines the desired state."@en .
+
+:MotorCommand a owl:Class ;
+    rdfs:subClassOf aicor:ActuatorInput , dul:InformationObject ,
+        [ a owl:Restriction ; owl:onProperty :pursuesState ; owl:someValuesFrom :DesiredState ] ,
+        [ a owl:Restriction ; owl:onProperty aicor:generatedBy ; owl:someValuesFrom core:InverseModel ] ,
+        [ a owl:Restriction ; owl:onProperty :commandsSetpoint ; owl:someValuesFrom core:MotorSetpoint ] ;
+    rdfs:label "motor command"@en ;
+    rdfs:comment "A command an inverse model selects for a desired state, specifying motor setpoints."@en ;
+    core:evidenceStatus core:SupportedInterpretation ;
+    core:representsClaim core:FJ-002 .
+:pursuesState a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :DesiredState ;
+    rdfs:label "pursues state"@en ; rdfs:comment "The desired state the command is intended to establish."@en .
+:commandsSetpoint a owl:ObjectProperty ; rdfs:range core:MotorSetpoint ;
+    rdfs:label "commands setpoint"@en ; rdfs:comment "A motor setpoint the command specifies."@en .
+
+:EfferenceCopy a owl:Class ;
+    rdfs:subClassOf aicor:dul_InformationObject , dul:InformationObject ,
+        [ a owl:Restriction ; owl:onProperty :copiesCommand ; owl:someValuesFrom :MotorCommand ] ;
+    rdfs:label "efference copy"@en ;
+    rdfs:comment "An internal copy of an outgoing motor command, used to predict its consequences."@en ;
+    core:evidenceStatus core:SupportedInterpretation ;
+    core:representsClaim core:FJ-008 .
+:copiesCommand a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :MotorCommand ;
+    rdfs:label "copies command"@en ; rdfs:comment "The outgoing command the copy represents."@en .
+
+# %% contextual representations
+
+:ContextualRepresentation a owl:Class ;
+    rdfs:subClassOf core:EstimateRepresentation ,
+        [ a owl:Restriction ; owl:onProperty core:holdsEstimate ; owl:someValuesFrom core:Estimate ] ,
+        [ a owl:Restriction ; owl:onProperty :hasCoordinateFrame ; owl:someValuesFrom :CoordinateFrame ] ,
+        [ a owl:Restriction ; owl:onProperty :hasPurpose ; owl:someValuesFrom :RepresentationPurpose ] ,
+        [ a owl:Restriction ; owl:onProperty :representsRole ; owl:someValuesFrom core:ManipulationRole ] ;
+    rdfs:label "contextual representation"@en ;
+    rdfs:comment "Represented estimates with an explicit coordinate frame, purpose and set of participants."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+:hasCoordinateFrame a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :CoordinateFrame ;
+    rdfs:label "has coordinate frame"@en ; rdfs:comment "The frame in which the represented content or the perturbation is expressed."@en .
+:hasPurpose a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :RepresentationPurpose ;
+    rdfs:label "has purpose"@en ; rdfs:comment "The function for which the represented content is recruited."@en .
+:representsRole a owl:ObjectProperty ; rdfs:range core:ManipulationRole ;
+    rdfs:label "represents role"@en ; rdfs:comment "A participant role whose properties or dynamics are represented."@en .
+
+:DynamicsModel a owl:Class ;
+    rdfs:subClassOf :ContextualRepresentation ,
+        [ a owl:Restriction ; owl:onProperty :hasPurpose ; owl:hasValue :SensorimotorControl ] ,
+        [ a owl:Restriction ; owl:onProperty :usesEfferenceCopy ; owl:someValuesFrom :EfferenceCopy ] ;
+    rdfs:label "dynamics model"@en ;
+    rdfs:comment "A represented mapping from command-related input to mechanical change, recruited for sensorimotor control."@en ;
+    core:evidenceStatus core:SupportedInterpretation ;
+    core:representsClaim core:FJ-008 , core:FJ-025 .
+:usesEfferenceCopy a owl:ObjectProperty ; rdfs:range :EfferenceCopy ;
+    rdfs:label "uses efference copy"@en ; rdfs:comment "An outgoing command copy used to predict the load the command will meet."@en .
+
+:ObjectDynamicsModel a owl:Class ;
+    rdfs:subClassOf :DynamicsModel , core:ObjectRepresentation ;
+    rdfs:label "object dynamics model"@en ;
+    rdfs:comment "A dynamics model of a manipulated object, recruited with grasp and released with release."@en ;
+    core:evidenceStatus core:SupportedInterpretation ;
+    core:representsClaim core:FJ-008 , core:FJ-025 , core:FJ-027 .
+
+:LimbDynamicsModel a owl:Class ;
+    rdfs:subClassOf :DynamicsModel , aicor:DynamicModel ;
+    owl:disjointWith :ObjectDynamicsModel ;
+    rdfs:label "limb dynamics model"@en ;
+    rdfs:comment "A dynamics model of the actor's own limb, separate from object dynamics."@en ;
+    core:evidenceStatus core:SupportedInterpretation ;
+    core:representsClaim core:FJ-026 , core:FJ-027 .
+
+:PerceptualRepresentation a owl:Class ;
+    rdfs:subClassOf :ContextualRepresentation ,
+        [ a owl:Restriction ; owl:onProperty :hasPurpose ; owl:hasValue :PerceptualJudgment ] ;
+    rdfs:label "perceptual representation"@en ;
+    rdfs:comment "Represented content used for conscious judgments of object properties."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-031 .
+
+:LoadForceEstimate a owl:Class ;
+    rdfs:subClassOf core:DynamicsEstimate , core:ForceParameter ;
+    rdfs:label "load force estimate"@en ;
+    rdfs:comment "An estimate of the force arising from object or limb dynamics."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-008 , core:FJ-025 .
+
+# %% composition of command and prediction
+
+:InternalModelComposition a owl:Class ;
+    rdfs:subClassOf aicor:dul_Description , dul:Description ,
+        [ a owl:Restriction ; owl:onProperty :usesEfferenceCopy ; owl:someValuesFrom :EfferenceCopy ] ,
+        [ a owl:Restriction ; owl:onProperty :usesDynamicsModel ; owl:someValuesFrom :DynamicsModel ] ,
+        [ a owl:Restriction ; owl:onProperty :usesForwardModel ; owl:someValuesFrom core:ForwardModel ] ,
+        [ a owl:Restriction ; owl:onProperty :predictsMechanicalConsequence ; owl:someValuesFrom core:MechanicalEventType ] ,
+        [ a owl:Restriction ; owl:onProperty :predictsSensoryConsequence ; owl:someValuesFrom core:SensoryEventPrediction ] ;
+    rdfs:label "internal model composition"@en ;
+    rdfs:comment "How a command copy, interpreted by a dynamics model, becomes predicted mechanical and sensory consequences."@en ;
+    core:evidenceStatus core:SupportedInterpretation ;
+    core:representsClaim core:FJ-002 , core:FJ-008 .
+:usesDynamicsModel a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :DynamicsModel ;
+    rdfs:label "uses dynamics model"@en ; rdfs:comment "The object or limb dynamics used to interpret the command copy."@en .
+:usesForwardModel a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range core:ForwardModel ;
+    rdfs:label "uses forward model"@en ; rdfs:comment "The model that generates the predicted consequences."@en .
+:predictsMechanicalConsequence a owl:ObjectProperty ; rdfs:range core:MechanicalEventType ;
+    rdfs:label "predicts mechanical consequence"@en ; rdfs:comment "A mechanical event the composition predicts."@en .
+:predictsSensoryConsequence a owl:ObjectProperty ; rdfs:range core:SensoryEventPrediction ;
+    rdfs:label "predicts sensory consequence"@en ; rdfs:comment "A sensory consequence the forward model generates."@en .
+
+# %% memory
+
+:SensorimotorMemory a owl:Class ;
+    rdfs:subClassOf dul:Collection ,
+        [ a owl:Restriction ; owl:onProperty :storesRepresentation ; owl:someValuesFrom :ContextualRepresentation ] ,
+        [ a owl:Restriction ; owl:onProperty :hasMemoryPersistence ; owl:someValuesFrom :MemoryPersistence ] ;
+    rdfs:label "sensorimotor memory"@en ;
+    rdfs:comment "A store of sensorimotor representations retained across manipulations."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-009 , core:FJ-028 .
+:storesRepresentation a owl:ObjectProperty ; rdfs:range :ContextualRepresentation ;
+    rdfs:label "stores representation"@en ; rdfs:comment "A representation the memory retains."@en .
+:hasMemoryPersistence a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :MemoryPersistence ;
+    rdfs:label "has memory persistence"@en ; rdfs:comment "Whether recruitment ends when the object is released."@en .
+
+:RetainedModelUpdate a owl:Class ;
+    rdfs:subClassOf core:ModelUpdate ,
+        [ a owl:Restriction ; owl:onProperty :persistsIn ; owl:someValuesFrom :SensorimotorMemory ] ;
+    rdfs:label "retained model update"@en ;
+    rdfs:comment "A revision of represented estimates that a sensorimotor memory retains for later manipulations."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-011 .
+:persistsIn a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :SensorimotorMemory ;
+    rdfs:label "persists in"@en ; rdfs:comment "The memory in which the revised representation is retained."@en .
+
+# %% perturbation and transfer
+
+:DynamicsPerturbation a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:EventType ,
+        [ a owl:Restriction ; owl:onProperty :hasPerturbationKind ; owl:someValuesFrom :PerturbationKind ] ,
+        [ a owl:Restriction ; owl:onProperty :affectsModel ; owl:someValuesFrom :DynamicsModel ] ,
+        [ a owl:Restriction ; owl:onProperty :hasCoordinateFrame ; owl:someValuesFrom :CoordinateFrame ] ,
+        [ a owl:Restriction ; owl:onProperty :matchedWith ; owl:allValuesFrom :DynamicsPerturbation ] ;
+    rdfs:label "dynamics perturbation"@en ;
+    rdfs:comment "A type of load or rotation applied to one represented dynamics system, such as the held object or the arm."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-026 , core:FJ-030 .
+:hasPerturbationKind a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :PerturbationKind ;
+    rdfs:label "has perturbation kind"@en ; rdfs:comment "The physical transformation used to assess dynamics transfer."@en .
+:affectsModel a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :DynamicsModel ;
+    rdfs:label "affects model"@en ; rdfs:comment "The object or limb dynamics subjected to the perturbation."@en .
+:matchedWith a owl:ObjectProperty , owl:SymmetricProperty ; rdfs:domain :DynamicsPerturbation ; rdfs:range :DynamicsPerturbation ;
+    rdfs:label "matched with"@en ; rdfs:comment "A perturbation matched physically with this one for a transfer comparison."@en .
+
+:DynamicsTransfer a owl:Class ;
+    rdfs:subClassOf aicor:dul_Relation , dul:Relation ,
+        [ a owl:Restriction ; owl:onProperty :fromPerturbation ; owl:someValuesFrom :DynamicsPerturbation ] ,
+        [ a owl:Restriction ; owl:onProperty :toPerturbation ; owl:someValuesFrom :DynamicsPerturbation ] ,
+        [ a owl:Restriction ; owl:onProperty :hasTransferOutcome ; owl:someValuesFrom :TransferOutcome ] ;
+    rdfs:label "dynamics transfer"@en ;
+    rdfs:comment "Whether adaptation acquired in one perturbation context holds in another."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-030 .
+:fromPerturbation a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :DynamicsPerturbation ;
+    rdfs:label "from perturbation"@en ; rdfs:comment "The context in which adaptation was acquired."@en .
+:toPerturbation a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :DynamicsPerturbation ;
+    rdfs:label "to perturbation"@en ; rdfs:comment "The context in which transfer was assessed."@en .
+:hasTransferOutcome a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :TransferOutcome ;
+    rdfs:label "has transfer outcome"@en ; rdfs:comment "Whether adaptation generalised across the contexts."@en .
+
+:RepresentationDissociation a owl:Class ;
+    rdfs:subClassOf aicor:dul_Relation , dul:Relation ,
+        [ a owl:Restriction ; owl:onProperty :hasSensorimotorRepresentation ; owl:someValuesFrom :DynamicsModel ] ,
+        [ a owl:Restriction ; owl:onProperty :hasPerceptualRepresentation ; owl:someValuesFrom :PerceptualRepresentation ] ,
+        [ a owl:Restriction ; owl:onProperty :sensorimotorEstimate ; owl:someValuesFrom core:Estimate ] ,
+        [ a owl:Restriction ; owl:onProperty :perceptualEstimate ; owl:someValuesFrom core:Estimate ] ;
+    rdfs:label "representation dissociation"@en ;
+    rdfs:comment "A sensorimotor estimate that stays accurate while a perceptual judgment of the same property stays biased."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-031 .
+:hasSensorimotorRepresentation a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :DynamicsModel ;
+    rdfs:label "has sensorimotor representation"@en ; rdfs:comment "The representation used for motor prediction and scaling."@en .
+:hasPerceptualRepresentation a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :PerceptualRepresentation ;
+    rdfs:label "has perceptual representation"@en ; rdfs:comment "The representation used for conscious judgment."@en .
+:sensorimotorEstimate a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range core:Estimate ;
+    rdfs:label "sensorimotor estimate"@en ; rdfs:comment "The accurate estimate held by the sensorimotor representation."@en .
+:perceptualEstimate a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range core:Estimate ;
+    rdfs:label "perceptual estimate"@en ; rdfs:comment "The biased estimate held by the perceptual representation."@en .
+
+# %% structure
+
+:ObjectDynamicsPhaseStructure a owl:Class ;
+    rdfs:subClassOf core:ActionPhaseStructure ,
+        [ a owl:Restriction ; owl:onProperty core:definesInternalModel ; owl:someValuesFrom core:InternalModel ] ;
+    rdfs:label "object dynamics phase structure"@en ;
+    rdfs:comment "A phase structure with explicit internal models and the command-to-prediction pathways that use them."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:definesDesiredState a owl:ObjectProperty ; rdfs:domain :ObjectDynamicsPhaseStructure ; rdfs:subPropertyOf core:definesComponent ; rdfs:range :DesiredState ;
+    rdfs:label "defines desired state"@en ; rdfs:comment "A desired state supplied to inverse models."@en .
+:definesMotorCommand a owl:ObjectProperty ; rdfs:domain :ObjectDynamicsPhaseStructure ; rdfs:subPropertyOf core:definesComponent ; rdfs:range :MotorCommand ;
+    rdfs:label "defines motor command"@en ; rdfs:comment "An outgoing motor command declared by the structure."@en .
+:definesEfferenceCopy a owl:ObjectProperty ; rdfs:domain :ObjectDynamicsPhaseStructure ; rdfs:subPropertyOf core:definesComponent ; rdfs:range :EfferenceCopy ;
+    rdfs:label "defines efference copy"@en ; rdfs:comment "A command copy available to dynamics models."@en .
+:definesInternalModelComposition a owl:ObjectProperty ; rdfs:domain :ObjectDynamicsPhaseStructure ; rdfs:subPropertyOf core:definesComponent ; rdfs:range :InternalModelComposition ;
+    rdfs:label "defines internal model composition"@en ; rdfs:comment "A command-to-prediction pathway declared by the structure."@en .
+:definesSensorimotorMemory a owl:ObjectProperty ; rdfs:domain :ObjectDynamicsPhaseStructure ; rdfs:subPropertyOf core:definesComponent ; rdfs:range :SensorimotorMemory ;
+    rdfs:label "defines sensorimotor memory"@en ; rdfs:comment "A memory retaining sensorimotor representations."@en .
+:definesDynamicsPerturbation a owl:ObjectProperty ; rdfs:domain :ObjectDynamicsPhaseStructure ; rdfs:subPropertyOf core:definesComponent ; rdfs:range :DynamicsPerturbation ;
+    rdfs:label "defines dynamics perturbation"@en ; rdfs:comment "A load or rotation context used to assess transfer."@en .
+:definesDynamicsTransfer a owl:ObjectProperty ; rdfs:domain :ObjectDynamicsPhaseStructure ; rdfs:subPropertyOf core:definesComponent ; rdfs:range :DynamicsTransfer ;
+    rdfs:label "defines dynamics transfer"@en ; rdfs:comment "A transfer result declared by the structure."@en .
+:definesRepresentationDissociation a owl:ObjectProperty ; rdfs:domain :ObjectDynamicsPhaseStructure ; rdfs:subPropertyOf core:definesComponent ; rdfs:range :RepresentationDissociation ;
+    rdfs:label "defines representation dissociation"@en ; rdfs:comment "A sensorimotor-perceptual dissociation declared by the structure."@en .
+
+# %% value partitions
+
+:CoordinateFrame a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :ObjectCentered :ArmCentered :HandCentered :GazeCentered ) ] ;
+    rdfs:label "coordinate frame"@en ;
+    rdfs:comment "The reference frame in which represented dynamics are encoded."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-029 .
+:ObjectCentered a owl:NamedIndividual , :CoordinateFrame ; rdfs:label "object-centred"@en ;
+    rdfs:comment "Coordinates fixed to the manipulated object."@en .
+:ArmCentered a owl:NamedIndividual , :CoordinateFrame ; rdfs:label "arm-centred"@en ;
+    rdfs:comment "Intrinsic or extrinsic coordinates associated with the arm."@en .
+:HandCentered a owl:NamedIndividual , :CoordinateFrame ; rdfs:label "hand-centred"@en ;
+    rdfs:comment "Coordinates fixed to the hand or end effector."@en .
+:GazeCentered a owl:NamedIndividual , :CoordinateFrame ; rdfs:label "gaze-centred"@en ;
+    rdfs:comment "Coordinates organised relative to the current gaze."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :ObjectCentered :ArmCentered :HandCentered :GazeCentered ) ] .
+
+:RepresentationPurpose a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :SensorimotorControl :PerceptualJudgment ) ] ;
+    rdfs:label "representation purpose"@en ;
+    rdfs:comment "The function for which represented content is recruited."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-031 .
+:SensorimotorControl a owl:NamedIndividual , :RepresentationPurpose ; rdfs:label "sensorimotor control"@en ;
+    rdfs:comment "Content used to predict and scale motor commands."@en .
+:PerceptualJudgment a owl:NamedIndividual , :RepresentationPurpose ; rdfs:label "perceptual judgment"@en ;
+    rdfs:comment "Content used for conscious property judgments."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :SensorimotorControl :PerceptualJudgment ) ] .
+
+:MemoryPersistence a owl:Class ;
+    rdfs:subClassOf aicor:dul_Region , dul:Region ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :WhileObjectCoupled :AfterRelease ) ] ;
+    rdfs:label "memory persistence"@en ;
+    rdfs:comment "How long a sensorimotor memory remains recruited."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-011 , core:FJ-027 .
+:WhileObjectCoupled a owl:NamedIndividual , :MemoryPersistence ; rdfs:label "while object coupled"@en ;
+    rdfs:comment "The memory is recruited only while its object remains coupled to the effector."@en .
+:AfterRelease a owl:NamedIndividual , :MemoryPersistence ; rdfs:label "after release"@en ;
+    rdfs:comment "The memory remains available after the object is released."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :WhileObjectCoupled :AfterRelease ) ] .
+
+:PerturbationKind a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :LoadPerturbation :RotationPerturbation ) ] ;
+    rdfs:label "perturbation kind"@en ;
+    rdfs:comment "The manipulation applied when dynamics transfer is assessed."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-026 , core:FJ-030 .
+:LoadPerturbation a owl:NamedIndividual , :PerturbationKind ; rdfs:label "load perturbation"@en ;
+    rdfs:comment "An external force or load is applied."@en .
+:RotationPerturbation a owl:NamedIndividual , :PerturbationKind ; rdfs:label "rotation perturbation"@en ;
+    rdfs:comment "The object, hand or arm orientation is changed."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :LoadPerturbation :RotationPerturbation ) ] .
+
+:TransferOutcome a owl:Class ;
+    rdfs:subClassOf aicor:dul_Region , dul:Region ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Generalizes :DoesNotGeneralize ) ] ;
+    rdfs:label "transfer outcome"@en ;
+    rdfs:comment "Whether adaptation acquired in one context carries over to another."@en ;
+    core:evidenceStatus core:EmpiricalFinding ;
+    core:representsClaim core:FJ-030 .
+:Generalizes a owl:NamedIndividual , :TransferOutcome ; rdfs:label "generalises"@en ;
+    rdfs:comment "Adaptation acquired in the first context also holds in the second."@en .
+:DoesNotGeneralize a owl:NamedIndividual , :TransferOutcome ; rdfs:label "does not generalise"@en ;
+    rdfs:comment "Adaptation acquired in the first context does not hold in the second."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Generalizes :DoesNotGeneralize ) ] .

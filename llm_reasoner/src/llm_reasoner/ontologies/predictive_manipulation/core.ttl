@@ -1,0 +1,1431 @@
+@prefix :      <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
+@prefix dul:   <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> a owl:Ontology ;
+    owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.4.0> ;
+    owl:versionInfo "0.4.0" ;
+    owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
+    rdfs:label "Predictive manipulation: core"@en ;
+    rdfs:comment """The action-neutral core of a microworld for predictive object manipulation, drawn from "Control strategies in object manipulation tasks" (2006), "Coding and use of tactile signals from the fingertips in object manipulation tasks" (2009), "Sensory control of object manipulation" (2009) and "Motor prediction" (2001).
+
+A task is a sensory plan: a sequence of subgoals, each signalled by predicted sensory events. Action-phase controllers execute the phases; at control points predicted and actual signals are compared, and a mismatch launches a corrective programme and updates the represented object properties.
+
+Classes classify description-level individuals, the knowledge a language model generates; executions are described with CRAM-AICOR occurrences, occasions and role bindings. Each concept is linked to CRAM-AICOR and to DUL in the same DUL category, and CRAM-AICOR's dul_* copies are never equated with DUL. Axioms are read under the open-world assumption."""@en .
+
+# %% provenance vocabulary
+
+:evidenceStatus a owl:AnnotationProperty ;
+    rdfs:label "evidence status"@en ;
+    rdfs:comment "How well the sources support a concept or claim; not confidence in a generated individual."@en .
+
+:representsClaim a owl:AnnotationProperty ;
+    rdfs:label "represents claim"@en ;
+    rdfs:comment "A source claim that the concept represents."@en .
+
+:claimedIn a owl:AnnotationProperty ;
+    rdfs:label "claimed in"@en ;
+    rdfs:comment "The source document that makes a claim."@en .
+
+:sourceLocation a owl:AnnotationProperty ;
+    rdfs:label "source location"@en ;
+    rdfs:comment "The section and pages of the source where a claim is made."@en .
+
+:EvidenceStatus a owl:Class ;
+    rdfs:subClassOf aicor:EpistemicStatus , dul:Concept ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :EmpiricalFinding :SupportedInterpretation :AuthorHypothesis :OpenQuestion :EngineeringExtension ) ] ;
+    rdfs:label "evidence status"@en ;
+    rdfs:comment "The degree to which the sources support a represented claim."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:EmpiricalFinding a owl:NamedIndividual , :EvidenceStatus ;
+    rdfs:label "empirical finding"@en ;
+    rdfs:comment "The reviewed experiments directly report the behaviour or dissociation."@en .
+
+:SupportedInterpretation a owl:NamedIndividual , :EvidenceStatus ;
+    rdfs:label "supported interpretation"@en ;
+    rdfs:comment "The authors infer a control organisation or representation from converging findings."@en .
+
+:AuthorHypothesis a owl:NamedIndividual , :EvidenceStatus ;
+    rdfs:label "author hypothesis"@en ;
+    rdfs:comment "The authors propose a mechanism or functional role that is not yet established."@en .
+
+:OpenQuestion a owl:NamedIndividual , :EvidenceStatus ;
+    rdfs:label "open question"@en ;
+    rdfs:comment "The source states that the mechanism, representation or relationship remains unresolved."@en .
+
+:EngineeringExtension a owl:NamedIndividual , :EvidenceStatus ;
+    rdfs:label "engineering extension"@en ;
+    rdfs:comment "Added for robotic knowledge or a task extension; the sources do not make this claim."@en .
+
+[ a owl:AllDifferent ; owl:distinctMembers ( :EmpiricalFinding :SupportedInterpretation :AuthorHypothesis :OpenQuestion :EngineeringExtension ) ] .
+
+:SourceDocument a owl:Class ;
+    rdfs:subClassOf aicor:dul_InformationObject , dul:InformationObject ;
+    rdfs:label "source document"@en ;
+    rdfs:comment "A publication whose claims the microworld represents."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:ControlStrategiesReview2006 a owl:NamedIndividual , :SourceDocument ;
+    rdfs:label "Control strategies in object manipulation tasks (2006)"@en ;
+    rdfs:comment "J. R. Flanagan, M. C. Bowman and R. S. Johansson, Control strategies in object manipulation tasks, Current Opinion in Neurobiology 16:650-659, 2006, doi:10.1016/j.conb.2006.10.005."@en .
+
+:TactileSignalsReview2009 a owl:NamedIndividual , :SourceDocument ;
+    rdfs:label "Coding and use of tactile signals from the fingertips in object manipulation tasks (2009)"@en ;
+    rdfs:comment "R. S. Johansson and J. R. Flanagan, Coding and use of tactile signals from the fingertips in object manipulation tasks, Nature Reviews Neuroscience 10:345-359, 2009, doi:10.1038/nrn2621."@en .
+
+:SensoryControlChapter2009 a owl:NamedIndividual , :SourceDocument ;
+    rdfs:label "Sensory control of object manipulation (2009)"@en ;
+    rdfs:comment "R. S. Johansson and J. R. Flanagan, Sensory control of object manipulation, in Sensorimotor Control of Grasping: Physiology and Pathophysiology, Cambridge University Press, 2009."@en .
+
+:MotorPredictionPrimer2001 a owl:NamedIndividual , :SourceDocument ;
+    rdfs:label "Motor prediction (2001)"@en ;
+    rdfs:comment "D. M. Wolpert and J. R. Flanagan, Motor prediction, Current Biology 11:R729-R732, 2001."@en .
+
+:SourceClaim a owl:Class ;
+    rdfs:subClassOf aicor:dul_InformationObject , dul:InformationObject ;
+    rdfs:label "source claim"@en ;
+    rdfs:comment "A statement made by a source document, identified so that concepts can cite it and carry its evidence status."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+# %% claims of the 2006 review
+
+:FJ-001 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-001"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Skilled manipulation depends centrally on organisation and prediction rather than on unusually fast effectors or on feedback alone."@en ;
+    :sourceLocation "Abstract and introduction, pages 650-651" ; :evidenceStatus :SupportedInterpretation .
+:FJ-002 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-002"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Successful manipulation predicts both the required motor commands and their sensory consequences."@en ;
+    :sourceLocation "Abstract, page 650" ; :evidenceStatus :SupportedInterpretation .
+:FJ-003 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-003"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Manipulation is organised into action phases, usually bounded by task-relevant mechanical contact events that serve as subgoals."@en ;
+    :sourceLocation "Sensorimotor control points, pages 650-651" ; :evidenceStatus :AuthorHypothesis .
+:FJ-004 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-004"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Contact events produce distinct tactile, proprioceptive, visual and auditory sensory events."@en ;
+    :sourceLocation "Sensorimotor control points, pages 650-651" ; :evidenceStatus :EmpiricalFinding .
+:FJ-005 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-005"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Comparing predicted and actual sensory events monitors task progress and supports corrective action."@en ;
+    :sourceLocation "Sensorimotor control points, page 651" ; :evidenceStatus :SupportedInterpretation .
+:FJ-006 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-006"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Control points may monitor multimodal error patterns, align modalities for learning and uphold sensorimotor correlations."@en ;
+    :sourceLocation "Sensorimotor control points, pages 651-652" ; :evidenceStatus :AuthorHypothesis .
+:FJ-007 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-007"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Predicted sensory consequences can provide initial state information for the next phase."@en ;
+    :sourceLocation "Sensorimotor control points, pages 651-652" ; :evidenceStatus :AuthorHypothesis .
+:FJ-008 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-008"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Within a phase, an object model combined with an efference copy predicts the load, so that grip force can be adjusted."@en ;
+    :sourceLocation "Figure 1 and object transport discussion, pages 651 and 655" ; :evidenceStatus :SupportedInterpretation .
+:FJ-009 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-009"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Visual and haptic cues of size, shape and identity, together with memory, predict weight, mass distribution and stable fingertip forces."@en ;
+    :sourceLocation "Prediction and rapid updating, page 652" ; :evidenceStatus :EmpiricalFinding .
+:FJ-010 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-010"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "An early or absent expected lift-off produces learned force corrections and updates the represented weight."@en ;
+    :sourceLocation "Prediction and rapid updating, page 652" ; :evidenceStatus :EmpiricalFinding .
+:FJ-011 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-011"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Common loads may update in one trial, while misleading cues or unusual dynamics can require repeated trials."@en ;
+    :sourceLocation "Prediction and rapid updating, page 652" ; :evidenceStatus :EmpiricalFinding .
+:FJ-012 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-012"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Tactile ensembles rapidly encode friction, contact shape and force direction, and begin influencing force output after about 70 ms."@en ;
+    :sourceLocation "Prediction and rapid updating, page 652" ; :evidenceStatus :EmpiricalFinding .
+:FJ-013 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-013"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Relative first-spike timing provides a rapid distributed temporal code for contact information. Deliberately not modelled: it concerns afferent neural coding, outside the task-level scope."@en ;
+    :sourceLocation "Prediction and rapid updating, page 652" ; :evidenceStatus :EmpiricalFinding .
+:FJ-014 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-014"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Gaze moves proactively to successive contact locations and usually remains there until the current phase goal is completed."@en ;
+    :sourceLocation "Control of gaze, pages 652-653" ; :evidenceStatus :EmpiricalFinding .
+:FJ-015 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-015"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Gaze may capture visual contact events, monitor progress, and align them with tactile, auditory and proprioceptive events."@en ;
+    :sourceLocation "Control of gaze, page 653" ; :evidenceStatus :AuthorHypothesis .
+:FJ-016 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-016"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Observers of familiar manipulation show proactive, actor-like gaze to forthcoming contact sites."@en ;
+    :sourceLocation "Action observation, pages 653-654" ; :evidenceStatus :EmpiricalFinding .
+:FJ-017 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-017"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Observer gaze becomes reactive when the actor's hand is hidden, and proactive once an ambiguous target is identified."@en ;
+    :sourceLocation "Action observation, pages 653-654" ; :evidenceStatus :EmpiricalFinding .
+:FJ-018 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-018"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Actors and observers may be linked through common sensory predictions and covertly matching action plans."@en ;
+    :sourceLocation "Action observation, page 653" ; :evidenceStatus :AuthorHypothesis .
+:FJ-019 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-019"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Learning a novel action-to-cursor mapping can show exploration, skill acquisition and skill refinement stages."@en ;
+    :sourceLocation "Visuomotor learning, pages 653-654" ; :evidenceStatus :EmpiricalFinding .
+:FJ-020 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-020"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Gaze changes from reactive cursor chasing to proactive, target-directed control as skill develops."@en ;
+    :sourceLocation "Visuomotor learning, page 654" ; :evidenceStatus :EmpiricalFinding .
+:FJ-021 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-021"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Reactive gaze during exploration may help construct gaze-centred sensorimotor mappings."@en ;
+    :sourceLocation "Visuomotor learning, page 654" ; :evidenceStatus :AuthorHypothesis .
+:FJ-022 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-022"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Discovering a novel mapping rule differs from adapting an already acquired mapping."@en ;
+    :sourceLocation "Visuomotor learning, page 654" ; :evidenceStatus :SupportedInterpretation .
+:FJ-023 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-023"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Perceptual attenuation is centred on a predicted self-generated contact event and is not caused by movement alone."@en ;
+    :sourceLocation "Sensory cancellation, pages 654-655" ; :evidenceStatus :EmpiricalFinding .
+:FJ-024 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-024"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Whether sensory attenuation and action-control prediction use the same neural mechanism is unknown."@en ;
+    :sourceLocation "Sensory cancellation, page 655" ; :evidenceStatus :OpenQuestion .
+:FJ-025 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-025"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Grip force is scaled to expected weight and coupled to movement-dependent loads across elastic, viscous and inertial dynamics."@en ;
+    :sourceLocation "Object dynamics, pages 655-656" ; :evidenceStatus :EmpiricalFinding .
+:FJ-026 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-026"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Grip force responds to loads applied to the held object, but not identically to equivalent loads applied directly to the arm."@en ;
+    :sourceLocation "Object dynamics, page 655" ; :evidenceStatus :EmpiricalFinding .
+:FJ-027 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-027"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Object-dynamics models can be recruited and de-recruited with grasp and release, separately from limb-dynamics control."@en ;
+    :sourceLocation "Object dynamics, pages 655-656" ; :evidenceStatus :SupportedInterpretation .
+:FJ-028 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-028"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Prior fingertip actions may alter later grip force without altering load force, so grip memory is not pure evidence of an updated object-dynamics model."@en ;
+    :sourceLocation "Object dynamics, page 656" ; :evidenceStatus :EmpiricalFinding .
+:FJ-029 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-029"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Novel dynamics can initially be encoded in intrinsic or arm-centred coordinates; whether one object-centred model is formed remains open."@en ;
+    :sourceLocation "Object dynamics, pages 656-657" ; :evidenceStatus :EmpiricalFinding , :OpenQuestion .
+:FJ-030 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-030"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Transfer of adaptation differs when the object is rotated from when the hand orientation changes."@en ;
+    :sourceLocation "Object dynamics, page 656" ; :evidenceStatus :EmpiricalFinding .
+:FJ-031 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-031"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Sensorimotor weight control can adapt accurately while the size-weight perceptual illusion persists."@en ;
+    :sourceLocation "Object dynamics, page 657" ; :evidenceStatus :EmpiricalFinding .
+:FJ-032 a owl:NamedIndividual , :SourceClaim ; rdfs:label "FJ-032"@en ; :claimedIn :ControlStrategiesReview2006 ;
+    rdfs:comment "Sensorimotor control points and the representation of object properties require further empirical and modelling elaboration."@en ;
+    :sourceLocation "Conclusion, page 657" ; :evidenceStatus :OpenQuestion .
+
+# %% claims of the 2009 review and chapter and the 2001 primer
+
+:JF09-01 a owl:NamedIndividual , :SourceClaim ; rdfs:label "JF09-01"@en ; :claimedIn :TactileSignalsReview2009 , :SensoryControlChapter2009 ;
+    rdfs:comment "An action-phase controller is a learned control policy that uses specific sensory information and sensory predictions to generate motor commands that attain a sensory goal; a task is performed by selecting and executing a sequence of them."@en ;
+    :sourceLocation "Review, page 346 and glossary; chapter, pages 4-5" ; :evidenceStatus :SupportedInterpretation .
+:JF09-02 a owl:NamedIndividual , :SourceClaim ; rdfs:label "JF09-02"@en ; :claimedIn :SensoryControlChapter2009 ;
+    rdfs:comment "A manipulation task can be represented as a sensory plan in which a sequence of sensory goals is specified in one or more modalities; the plan is a scaffold for selecting and shaping the controllers."@en ;
+    :sourceLocation "Chapter, pages 4 and 15" ; :evidenceStatus :AuthorHypothesis .
+:JF09-03 a owl:NamedIndividual , :SourceClaim ; rdfs:label "JF09-03"@en ; :claimedIn :TactileSignalsReview2009 , :SensoryControlChapter2009 ;
+    rdfs:comment "Tactile signals need about 100 ms to change fingertip actions, slip-triggered corrections begin after 70-90 ms, and visual events need more than 200 ms."@en ;
+    :sourceLocation "Review, page 346; chapter, pages 5-6 and 10" ; :evidenceStatus :EmpiricalFinding .
+:JF09-04 a owl:NamedIndividual , :SourceClaim ; rdfs:label "JF09-04"@en ; :claimedIn :TactileSignalsReview2009 , :SensoryControlChapter2009 ;
+    rdfs:comment "Several corrective action programmes are associated with a controller and the one executed depends on the mismatch: an early lift-off aborts the running controller and launches a programme that brings the object back to the intended position; an absent lift-off launches slow, probing force increases that end when lift-off is sensed."@en ;
+    :sourceLocation "Review, page 352 and figure 2; chapter, pages 11-12" ; :evidenceStatus :EmpiricalFinding .
+:JF09-05 a owl:NamedIndividual , :SourceClaim ; rdfs:label "JF09-05"@en ; :claimedIn :SensoryControlChapter2009 ;
+    rdfs:comment "Corrective reflexes are phase-specific: a slip during the hold phase raises grip force, while a slip during the load phase slows the subsequent increase of load force."@en ;
+    :sourceLocation "Chapter, pages 10-11" ; :evidenceStatus :EmpiricalFinding .
+:JF09-06 a owl:NamedIndividual , :SourceClaim ; rdfs:label "JF09-06"@en ; :claimedIn :TactileSignalsReview2009 , :SensoryControlChapter2009 ;
+    rdfs:comment "Grip force changes in phase with and in proportion to the tangential load, its ratio to load is adapted to friction and surface shape, locally at each digit, and it exceeds the minimum preventing slip by a safety margin of 10-40 percent."@en ;
+    :sourceLocation "Review, page 347; chapter, pages 7-8" ; :evidenceStatus :EmpiricalFinding .
+:JF09-07 a owl:NamedIndividual , :SourceClaim ; rdfs:label "JF09-07"@en ; :claimedIn :TactileSignalsReview2009 , :SensoryControlChapter2009 ;
+    rdfs:comment "Grasp stability means grip forces adequate to prevent accidental slips but not so large that they damage the object or the hand; people with impaired touch drop or crush objects."@en ;
+    :sourceLocation "Review, glossary on page 347; chapter, page 3" ; :evidenceStatus :SupportedInterpretation .
+:JF09-08 a owl:NamedIndividual , :SourceClaim ; rdfs:label "JF09-08"@en ; :claimedIn :TactileSignalsReview2009 , :SensoryControlChapter2009 ;
+    rdfs:comment "Weight is predicted from memory of the object, from size-weight associations of object categories and from learned arbitrary cues; visual geometry predicts mass distribution and shape; friction cannot be predicted visually and is predicted from recent haptic experience; tactile shape information after contact overrides visual predictions."@en ;
+    :sourceLocation "Review, pages 347 and 351; chapter, pages 9 and 11" ; :evidenceStatus :EmpiricalFinding .
+:JF09-09 a owl:NamedIndividual , :SourceClaim ; rdfs:label "JF09-09"@en ; :claimedIn :SensoryControlChapter2009 ;
+    rdfs:comment "A mismatch updates the represented object properties for later phases and later tasks with the same object; a single lift usually suffices for natural objects, while misleading cues or unfamiliar objects need repeated lifts."@en ;
+    :sourceLocation "Chapter, pages 5 and 12" ; :evidenceStatus :EmpiricalFinding .
+:JF09-10 a owl:NamedIndividual , :SourceClaim ; rdfs:label "JF09-10"@en ; :claimedIn :TactileSignalsReview2009 , :SensoryControlChapter2009 ;
+    rdfs:comment "Gaze is directed to the contact location of the current phase, and to places where contact must be avoided, before the hand arrives; it stays until about the time of goal completion and shifts to the next goal at the predicted completion time."@en ;
+    :sourceLocation "Review, pages 353-354 and figure 4; chapter, pages 12-13" ; :evidenceStatus :EmpiricalFinding .
+:JF09-11 a owl:NamedIndividual , :SourceClaim ; rdfs:label "JF09-11"@en ; :claimedIn :SensoryControlChapter2009 ;
+    rdfs:comment "Some control points give rise to no tactile event and are monitored only through vision or audition, as when a dropped ball lands."@en ;
+    :sourceLocation "Chapter, page 14" ; :evidenceStatus :SupportedInterpretation .
+:JF09-12 a owl:NamedIndividual , :SourceClaim ; rdfs:label "JF09-12"@en ; :claimedIn :SensoryControlChapter2009 ;
+    rdfs:comment "Grasp sites are chosen for the action to be performed with the object, and the digits should make contact at about the same time with force vectors summing to zero."@en ;
+    :sourceLocation "Chapter, pages 2 and 6" ; :evidenceStatus :EmpiricalFinding .
+:WF01-01 a owl:NamedIndividual , :SourceClaim ; rdfs:label "WF01-01"@en ; :claimedIn :MotorPredictionPrimer2001 ;
+    rdfs:comment "Grip force rises in parallel with a self-generated load without delay, by prediction from an efference copy, but lags an externally generated load, with a raised baseline grip to prevent slip."@en ;
+    :sourceLocation "Page R730 and figure 1" ; :evidenceStatus :EmpiricalFinding .
+
+# %% task structure
+
+:ActionPhaseStructure a owl:Class ;
+    rdfs:subClassOf aicor:ForceDynamicSchema , dul:Workflow ,
+        [ a owl:Restriction ; owl:onProperty :decomposesTask ; owl:cardinality "1"^^xsd:nonNegativeInteger ] ,
+        [ a owl:Restriction ; owl:onProperty :definesRole ; owl:someValuesFrom :ManipulationRole ] ,
+        [ a owl:Restriction ; owl:onProperty :definesPhase ; owl:someValuesFrom :ActionPhase ] ,
+        [ a owl:Restriction ; owl:onProperty :definesSubgoal ; owl:someValuesFrom :Subgoal ] ,
+        [ a owl:Restriction ; owl:onProperty :definesEventType ; owl:someValuesFrom :PhaseBoundaryEventType ] ,
+        [ a owl:Restriction ; owl:onProperty :definesTransition ; owl:someValuesFrom :PhaseTransition ] ;
+    rdfs:label "action phase structure"@en ;
+    rdfs:comment "One hypothesis of how a kind of manipulation task is organised: its roles, phases, controllers, subgoals, boundary events, predictions and comparisons. The task's sensory plan and the unit a language model generates."@en ;
+    :evidenceStatus :EngineeringExtension ;
+    :representsClaim :FJ-001 , :FJ-003 , :JF09-02 .
+
+:decomposesTask a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:label "decomposes task"@en ;
+    rdfs:comment "The task divided into phases, as the IRI of a CRAM-AICOR action category, such as aicor:Pouring."@en .
+
+:definesComponent a owl:ObjectProperty ; rdfs:domain :ActionPhaseStructure ;
+    rdfs:subPropertyOf aicor:hasPart , dul:hasComponent ;
+    rdfs:label "defines component"@en ;
+    rdfs:comment "A fragment the structure declares; a structure refers only to fragments it declares."@en .
+
+:definesPhase a owl:ObjectProperty ; rdfs:subPropertyOf :definesComponent , aicor:hasPhase , dul:definesTask ; rdfs:range :ActionPhase ;
+    rdfs:label "defines phase"@en ; rdfs:comment "A phase the task is divided into."@en .
+:definesRole a owl:ObjectProperty ; rdfs:subPropertyOf :definesComponent , aicor:hasRoleSlot , dul:definesRole ; rdfs:range :ManipulationRole ;
+    rdfs:label "defines role"@en ; rdfs:comment "A participant slot of the task."@en .
+:definesController a owl:ObjectProperty ; rdfs:domain :ActionPhaseStructure ; rdfs:subPropertyOf :definesComponent ; rdfs:range :ActionPhaseController ;
+    rdfs:label "defines controller"@en ; rdfs:comment "An action-phase controller that executes one of the structure's phases."@en .
+:definesSubgoal a owl:ObjectProperty ; rdfs:subPropertyOf :definesComponent ; rdfs:range :Subgoal ;
+    rdfs:label "defines subgoal"@en ; rdfs:comment "A subgoal one of the structure's phases pursues."@en .
+:definesEventType a owl:ObjectProperty ; rdfs:subPropertyOf :definesComponent , dul:defines ; rdfs:range :PhaseBoundaryEventType ;
+    rdfs:label "defines event type"@en ; rdfs:comment "A boundary event type that begins, ends or gates the structure's phases."@en .
+:definesConditionType a owl:ObjectProperty ; rdfs:domain :ActionPhaseStructure ; rdfs:subPropertyOf :definesComponent , dul:defines ; rdfs:range :PhaseConditionType ;
+    rdfs:label "defines condition type"@en ; rdfs:comment "A world-state type the structure's phases demand, bring about or protect."@en .
+:definesParameter a owl:ObjectProperty ; rdfs:domain :ActionPhaseStructure ; rdfs:subPropertyOf :definesComponent , dul:defines ; rdfs:range :Parameter ;
+    rdfs:label "defines parameter"@en ; rdfs:comment "An estimate, setpoint, threshold or margin the phases are parameterised by."@en .
+:definesSensoryFeature a owl:ObjectProperty ; rdfs:domain :ActionPhaseStructure ; rdfs:subPropertyOf :definesComponent , dul:defines ; rdfs:range :SensoryFeature ;
+    rdfs:label "defines sensory feature"@en ; rdfs:comment "A sensory feature the structure's predictions and observations refer to."@en .
+:definesTransition a owl:ObjectProperty ; rdfs:subPropertyOf :definesComponent ; rdfs:range :PhaseTransition ;
+    rdfs:label "defines transition"@en ; rdfs:comment "A directed transition between two of the structure's phases."@en .
+:definesInternalModel a owl:ObjectProperty ; rdfs:subPropertyOf :definesComponent ; rdfs:range :InternalModel ;
+    rdfs:label "defines internal model"@en ; rdfs:comment "An internal model or represented content that governs the controllers."@en .
+:definesPrediction a owl:ObjectProperty ; rdfs:domain :ActionPhaseStructure ; rdfs:subPropertyOf :definesComponent ; rdfs:range :SensoryEventPrediction ;
+    rdfs:label "defines prediction"@en ; rdfs:comment "A sensory prediction expected at a mechanical event."@en .
+:definesObservationType a owl:ObjectProperty ; rdfs:domain :ActionPhaseStructure ; rdfs:subPropertyOf :definesComponent ; rdfs:range :SensoryObservationType ;
+    rdfs:label "defines observation type"@en ; rdfs:comment "A sensory observation type available for comparison."@en .
+:definesContinuousPrediction a owl:ObjectProperty ; rdfs:domain :ActionPhaseStructure ; rdfs:subPropertyOf :definesComponent ; rdfs:range :ContinuousSignalPrediction ;
+    rdfs:label "defines continuous prediction"@en ; rdfs:comment "A continuous prediction compared throughout a phase."@en .
+:definesComparison a owl:ObjectProperty ; rdfs:domain :ActionPhaseStructure ; rdfs:subPropertyOf :definesComponent ; rdfs:range :PredictionComparison ;
+    rdfs:label "defines comparison"@en ; rdfs:comment "A comparison between a prediction and an observation."@en .
+:definesPredictionError a owl:ObjectProperty ; rdfs:domain :ActionPhaseStructure ; rdfs:subPropertyOf :definesComponent ; rdfs:range :PredictionError ;
+    rdfs:label "defines prediction error"@en ; rdfs:comment "A prediction error a mismatch can be classified as."@en .
+:definesCorrection a owl:ObjectProperty ; rdfs:domain :ActionPhaseStructure ; rdfs:subPropertyOf :definesComponent ; rdfs:range :CorrectiveAction ;
+    rdfs:label "defines correction"@en ; rdfs:comment "A corrective action programme of one of the controllers."@en .
+:definesModelUpdate a owl:ObjectProperty ; rdfs:domain :ActionPhaseStructure ; rdfs:subPropertyOf :definesComponent ; rdfs:range :ModelUpdate ;
+    rdfs:label "defines model update"@en ; rdfs:comment "A revision of represented estimates driven by prediction errors."@en .
+:definesInitialStateEstimate a owl:ObjectProperty ; rdfs:domain :ActionPhaseStructure ; rdfs:subPropertyOf :definesComponent ; rdfs:range :InitialStateEstimate ;
+    rdfs:label "defines initial state estimate"@en ; rdfs:comment "A next-phase state supplied by a successful comparison."@en .
+:definesControlPoint a owl:ObjectProperty ; rdfs:domain :ActionPhaseStructure ; rdfs:subPropertyOf :definesComponent ; rdfs:range :SensorimotorControlPoint ;
+    rdfs:label "defines control point"@en ; rdfs:comment "A sensorimotor checkpoint at a mechanical event."@en .
+:definesControlPointExemption a owl:ObjectProperty ; rdfs:domain :ActionPhaseStructure ; rdfs:subPropertyOf :definesComponent ; rdfs:range :BoundaryControlExemption ;
+    rdfs:label "defines control point exemption"@en ; rdfs:comment "A boundary that is justified in having no sensorimotor checkpoint."@en .
+:definesForceOpposition a owl:ObjectProperty ; rdfs:domain :ActionPhaseStructure ; rdfs:subPropertyOf :definesComponent ; rdfs:range :ForceOpposition ;
+    rdfs:label "defines force opposition"@en ; rdfs:comment "A force opposition resolved at one of the structure's events."@en .
+
+# %% roles
+
+:ManipulationRole a owl:Class ;
+    rdfs:subClassOf aicor:RoleSlot , aicor:ParticipantRole , dul:Role ,
+        [ a owl:Restriction ; owl:onProperty :minimumFillerCount ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label "manipulation role"@en ;
+    rdfs:comment "A participant slot of a phase structure. At execution an aicor:RoleBinding binds a world object to it."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:minimumFillerCount a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:range xsd:positiveInteger ;
+    rdfs:label "minimum filler count"@en ;
+    rdfs:comment "How many world entities must fill the slot; one when not stated."@en .
+
+:Manipulandum a owl:Class ;
+    rdfs:subClassOf :ManipulationRole , aicor:PatientRole ;
+    rdfs:label "manipulandum"@en ;
+    rdfs:comment "The object whose state the manipulation is about."@en ;
+    :evidenceStatus :SupportedInterpretation .
+
+:Actor a owl:Class ;
+    rdfs:subClassOf :ManipulationRole , aicor:AgentRole ;
+    owl:disjointWith :Manipulandum ;
+    rdfs:label "actor"@en ;
+    rdfs:comment "The agent performing the manipulation. Distinct from the effector it controls."@en ;
+    :evidenceStatus :EmpiricalFinding .
+
+# %% phases and controllers
+
+:ActionPhase a owl:Class ;
+    rdfs:subClassOf aicor:Phase , aicor:ManipulationPhase , dul:Task ,
+        [ a owl:Restriction ; owl:onProperty :aimsFor ; owl:someValuesFrom :Subgoal ] ,
+        [ a owl:Restriction ; owl:onProperty :hasCouplingRegime ; owl:someValuesFrom :CouplingRegime ] ,
+        [ a owl:Restriction ; owl:onProperty :terminatedBy ; owl:someValuesFrom :PhaseBoundaryEventType ] ,
+        [ a owl:Restriction ; owl:onProperty :involvesRole ; owl:someValuesFrom :ManipulationRole ] ,
+        [ a owl:Restriction ; owl:onProperty :controlledBy ; owl:someValuesFrom :ActionPhaseController ] ;
+    rdfs:label "action phase"@en ;
+    rdfs:comment "A building block of a manipulation task: it pursues one subgoal, ends at boundary events and is executed by one controller."@en ;
+    :evidenceStatus :AuthorHypothesis ;
+    :representsClaim :FJ-003 .
+
+:aimsFor a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :Subgoal ;
+    rdfs:label "aims for"@en ; rdfs:comment "The single subgoal that individuates the phase."@en .
+:hasCouplingRegime a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :CouplingRegime ;
+    rdfs:label "has coupling regime"@en ; rdfs:comment "Whether the effector and the manipulandum move as one unit during the phase."@en .
+:initiatedBy a owl:ObjectProperty ; rdfs:domain :ActionPhase ; rdfs:range :PhaseBoundaryEventType ;
+    rdfs:label "initiated by"@en ; rdfs:comment "An event that begins the phase. The first phase of a structure has none."@en .
+:terminatedBy a owl:ObjectProperty ; rdfs:range :PhaseBoundaryEventType ;
+    rdfs:label "terminated by"@en ; rdfs:comment "An event that ends the phase. A phase without a boundary is not a phase."@en .
+:involvesRole a owl:ObjectProperty ; rdfs:subPropertyOf dul:isTaskOf ; rdfs:range :ManipulationRole ;
+    rdfs:label "involves role"@en ; rdfs:comment "A participant role taking part in the phase."@en .
+:hasConditionRequirement a owl:ObjectProperty ; rdfs:domain :ActionPhase ; rdfs:range :ConditionRequirement ;
+    rdfs:label "has condition requirement"@en ; rdfs:comment "What the phase demands of the world at entry, throughout or at exit."@en .
+:hasActiveParameter a owl:ObjectProperty ; rdfs:domain :ActionPhase ; rdfs:subPropertyOf dul:hasParameter ; rdfs:range :Parameter ;
+    rdfs:label "has active parameter"@en ; rdfs:comment "A parameter in force during the phase, which its controller is parameterised by in advance."@en .
+:realizesActionCategory a owl:ObjectProperty ;
+    rdfs:label "realizes action category"@en ;
+    rdfs:comment "A CRAM-AICOR action category the phase carries out, as its IRI, such as aicor:Tilting."@en .
+:isOptional a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:domain :ActionPhase ; rdfs:range xsd:boolean ;
+    rdfs:label "is optional"@en ; rdfs:comment "Whether the phase is skipped when the initial or desired state already satisfies its subgoal."@en .
+:controlledBy a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :ActionPhaseController ;
+    rdfs:label "controlled by"@en ; rdfs:comment "The action-phase controller that executes the phase."@en .
+
+:ActionPhaseController a owl:Class ;
+    rdfs:subClassOf aicor:RobotControlLaw , dul:Method ,
+        [ a owl:Restriction ; owl:onProperty :hasRegulationMode ; owl:someValuesFrom :RegulationMode ] ,
+        [ a owl:Restriction ; owl:onProperty :predictsSensoryEvent ; owl:someValuesFrom :SensoryEventPrediction ] ;
+    rdfs:label "action-phase controller"@en ;
+    rdfs:comment "A learned control policy that executes one phase: it is parameterised in advance, generates motor commands, predicts the sensory events marking its subgoal and holds corrective programmes."@en ;
+    :evidenceStatus :SupportedInterpretation ;
+    :representsClaim :JF09-01 , :JF09-04 .
+
+:FeedbackRegulatedController a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :ActionPhaseController
+        [ a owl:Restriction ; owl:onProperty :hasRegulationMode ; owl:someValuesFrom [ a owl:Class ; owl:oneOf ( :ContinuousFeedback :Hybrid ) ] ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :monitorsModality ; owl:someValuesFrom :SensoryModality ] ;
+    rdfs:label "feedback-regulated controller"@en ;
+    rdfs:comment "A controller that corrects its commands from sensory signals while its phase runs; it monitors at least one modality."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:hasRegulationMode a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :RegulationMode ;
+    rdfs:label "has regulation mode"@en ; rdfs:comment "How the controller regulates its commands within the phase, independently of how the phase ends."@en .
+:monitorsModality a owl:ObjectProperty ; rdfs:domain :ActionPhaseController ; rdfs:range :SensoryModality ;
+    rdfs:label "monitors modality"@en ; rdfs:comment "A sensory channel the controller tracks throughout its phase rather than sampling at a boundary."@en .
+:governedBy a owl:ObjectProperty ; rdfs:domain :ActionPhaseController ; rdfs:range :InternalModel ;
+    rdfs:label "governed by"@en ; rdfs:comment "An internal model the controller uses to predict and to generate commands."@en .
+:predictsSensoryEvent a owl:ObjectProperty ; rdfs:range :SensoryEventPrediction ;
+    rdfs:label "predicts sensory event"@en ; rdfs:comment "A sensory event the controller predicts, in particular those that signify attainment of its subgoal."@en .
+:hasContinuousPrediction a owl:ObjectProperty ; rdfs:domain :ActionPhaseController ; rdfs:range :ContinuousSignalPrediction ;
+    rdfs:label "has continuous prediction"@en ; rdfs:comment "A continuous sensory prediction the controller compares throughout its phase."@en .
+:hasCorrectiveProgram a owl:ObjectProperty ; rdfs:domain :ActionPhaseController ; rdfs:range :CorrectiveAction ;
+    rdfs:label "has corrective program"@en ; rdfs:comment "A corrective programme the controller runs when a matching mismatch is detected."@en .
+
+# %% subgoals and conditions
+
+:Subgoal a owl:Class ;
+    rdfs:subClassOf aicor:Goal , dul:Goal ,
+        [ a owl:Restriction ; owl:onProperty :targetsCondition ; owl:someValuesFrom :PhaseConditionType ] ,
+        [ a owl:Restriction ; owl:onProperty :attainmentSignalledBy ; owl:someValuesFrom :PhaseBoundaryEventType ] ;
+    rdfs:label "subgoal"@en ;
+    rdfs:comment "The world condition a phase exists to bring about. Its attainment event is evidence, not the condition itself."@en ;
+    :evidenceStatus :AuthorHypothesis ;
+    :representsClaim :FJ-003 .
+
+:targetsCondition a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :PhaseConditionType ;
+    rdfs:label "targets condition"@en ; rdfs:comment "The condition the phase is meant to bring about."@en .
+:attainmentSignalledBy a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :PhaseBoundaryEventType ;
+    rdfs:label "attainment signalled by"@en ; rdfs:comment "The event whose registration is evidence that the subgoal is reached."@en .
+
+:PhaseConditionType a owl:Class ;
+    rdfs:subClassOf aicor:FluentType , dul:EventType ,
+        [ a owl:Restriction ; owl:onProperty :conditionOnRole ; owl:someValuesFrom :ManipulationRole ] ;
+    rdfs:label "phase condition type"@en ;
+    rdfs:comment "A type of world state relevant to a phase, about one or more participant roles."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:ContactCondition a owl:Class ;
+    rdfs:subClassOf :PhaseConditionType ;
+    rdfs:label "contact condition"@en ;
+    rdfs:comment "The condition that two participants are mechanically in contact. Contact events establish or break it."@en ;
+    :evidenceStatus :EmpiricalFinding ;
+    :representsClaim :FJ-003 .
+
+:conditionOnRole a owl:ObjectProperty ; rdfs:range :ManipulationRole ;
+    rdfs:label "condition on role"@en ; rdfs:comment "A role the condition is about. Without it the condition cannot be bound to the world."@en .
+:violationSignalledBy a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :ConditionRequirement ; rdfs:range :FailureEventType ;
+    rdfs:label "violation signalled by"@en ; rdfs:comment "The failure event that registers the condition ceasing to hold."@en .
+
+:ConditionRequirement a owl:Class ;
+    rdfs:subClassOf aicor:dul_Relation , dul:Relation ,
+        [ a owl:Restriction ; owl:onProperty aicor:hasConditionType ; owl:someValuesFrom :PhaseConditionType ] ,
+        [ a owl:Restriction ; owl:onProperty :hasConditionMode ; owl:someValuesFrom :ConditionMode ] ,
+        [ a owl:Restriction ; owl:onProperty :hasConditionPolarity ; owl:someValuesFrom :ConditionPolarity ] ;
+    rdfs:label "condition requirement"@en ;
+    rdfs:comment "A phase's demand on a condition: when it applies, whether it must hold or be absent, and whether it is presupposed."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:EntryRequirement a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :ConditionRequirement [ a owl:Restriction ; owl:onProperty :hasConditionMode ; owl:hasValue :AtEntry ] ) ] ;
+    rdfs:label "entry requirement"@en ;
+    rdfs:comment "A condition demanded for the phase to begin: the classical precondition."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:ExitRequirement a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :ConditionRequirement [ a owl:Restriction ; owl:onProperty :hasConditionMode ; owl:hasValue :AtExit ] ) ] ;
+    rdfs:label "exit requirement"@en ;
+    rdfs:comment "A condition brought about by completing the phase: the classical postcondition."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:InvariantRequirement a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :ConditionRequirement
+        [ a owl:Restriction ; owl:onProperty :hasConditionMode ; owl:hasValue :Throughout ]
+        [ a owl:Restriction ; owl:onProperty :hasConditionPolarity ; owl:hasValue :MustHold ] ) ] ;
+    rdfs:subClassOf aicor:MaintenanceGoal , dul:Goal ;
+    rdfs:label "invariant requirement"@en ;
+    rdfs:comment "A condition that must hold throughout the phase."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:ProhibitionRequirement a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :ConditionRequirement
+        [ a owl:Restriction ; owl:onProperty :hasConditionMode ; owl:hasValue :Throughout ]
+        [ a owl:Restriction ; owl:onProperty :hasConditionPolarity ; owl:hasValue :MustNotHold ] ) ] ;
+    rdfs:subClassOf aicor:PreventionGoal , dul:Goal ;
+    rdfs:label "prohibition requirement"@en ;
+    rdfs:comment "A condition that must be absent throughout the phase."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:WorldAssumption a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :ConditionRequirement [ a owl:Restriction ; owl:onProperty :isWorldAssumption ; owl:hasValue true ] ) ] ;
+    rdfs:label "world assumption"@en ;
+    rdfs:comment "A demanded condition that no phase establishes, so it is presupposed of the world."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:hasConditionMode a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :ConditionMode ;
+    rdfs:label "has condition mode"@en ; rdfs:comment "When, relative to the phase, the condition is demanded."@en .
+:hasConditionPolarity a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :ConditionPolarity ;
+    rdfs:label "has condition polarity"@en ; rdfs:comment "Whether the condition is demanded to hold or to be absent."@en .
+:isWorldAssumption a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:domain :ConditionRequirement ; rdfs:range xsd:boolean ;
+    rdfs:label "is world assumption"@en ; rdfs:comment "Whether no phase establishes the condition, so that it is presupposed of the world."@en .
+
+# %% boundary events
+
+:PhaseBoundaryEventType a owl:Class ;
+    rdfs:subClassOf aicor:EventType , dul:EventType ;
+    rdfs:label "phase boundary event type"@en ;
+    rdfs:comment "A type of discrete transition that can begin, end or gate a phase."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:FailureEventType a owl:Class ;
+    rdfs:subClassOf :PhaseBoundaryEventType ;
+    rdfs:label "failure event type"@en ;
+    rdfs:comment "A boundary event that marks failure rather than intended completion."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:MechanicalEventType a owl:Class ;
+    rdfs:subClassOf :PhaseBoundaryEventType , aicor:ForceDynamicEventType ,
+        [ a owl:Restriction ; owl:onProperty aicor:betweenRoleFillers ; owl:someValuesFrom :ManipulationRole ] ,
+        [ a owl:Restriction ; owl:onProperty aicor:classifies ; owl:allValuesFrom aicor:ForceDynamicEvent ] ;
+    rdfs:label "mechanical event type"@en ;
+    rdfs:comment "A type of physical transition between participants that the controller can predict and detect. Contact change and threshold crossing may coincide."@en ;
+    :evidenceStatus :AuthorHypothesis ;
+    :representsClaim :FJ-003 , :FJ-004 .
+
+:ContactEventType a owl:Class ;
+    rdfs:subClassOf :MechanicalEventType ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :MechanicalEventType
+        [ a owl:Class ; owl:unionOf (
+            [ a owl:Restriction ; owl:onProperty aicor:initiatesStateType ; owl:someValuesFrom :ContactCondition ]
+            [ a owl:Restriction ; owl:onProperty :terminatesStateType ; owl:someValuesFrom :ContactCondition ] ) ] ) ] ;
+    rdfs:label "contact event type"@en ;
+    rdfs:comment "A mechanical event that makes or breaks contact."@en ;
+    :evidenceStatus :EmpiricalFinding ;
+    :representsClaim :FJ-003 , :FJ-004 .
+
+:ThresholdCrossingEventType a owl:Class ;
+    rdfs:subClassOf :MechanicalEventType ,
+        [ a owl:Restriction ; owl:onProperty :crossesThreshold ; owl:someValuesFrom :MechanicalThreshold ] ;
+    rdfs:label "threshold crossing event type"@en ;
+    rdfs:comment "A mechanical event that occurs when a mechanical quantity crosses a threshold."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:SetpointAttainmentEventType a owl:Class ;
+    rdfs:subClassOf :PhaseBoundaryEventType ,
+        [ a owl:Restriction ; owl:onProperty :attainsSetpoint ; owl:someValuesFrom :Setpoint ] ,
+        [ a owl:Restriction ; owl:onProperty aicor:betweenRoleFillers ; owl:someValuesFrom :ManipulationRole ] ;
+    rdfs:label "setpoint attainment event type"@en ;
+    rdfs:comment "A commanded pose, force or task quantity has been reached. Not necessarily a mechanical transition."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:PoseAttainmentEventType a owl:Class ;
+    rdfs:subClassOf :SetpointAttainmentEventType ;
+    owl:disjointWith :MechanicalEventType ;
+    rdfs:label "pose attainment event type"@en ;
+    rdfs:comment "A commanded pose has been reached: a change of position, not of contact or force."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:ExternalTerminationEventType a owl:Class ;
+    rdfs:subClassOf :PhaseBoundaryEventType ,
+        [ a owl:Restriction ; owl:onProperty :triggeredBy ; owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
+    owl:disjointWith :MechanicalEventType ;
+    rdfs:label "external termination event type"@en ;
+    rdfs:comment "A phase boundary imposed from outside, such as an instruction or a safety condition."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:terminatesStateType a owl:ObjectProperty ; rdfs:range :PhaseConditionType ;
+    rdfs:label "terminates state type"@en ;
+    rdfs:comment "A condition that stops holding when an event of this type occurs. The counterpart of aicor:initiatesStateType."@en .
+:crossesThreshold a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :MechanicalThreshold ;
+    rdfs:label "crosses threshold"@en ; rdfs:comment "The threshold crossed at the event."@en .
+:attainsSetpoint a owl:ObjectProperty ; rdfs:range :Setpoint ;
+    rdfs:label "attains setpoint"@en ; rdfs:comment "A setpoint whose attainment constitutes the event."@en .
+:triggeredBy a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:label "triggered by"@en ; rdfs:comment "The external request, policy or safety condition that ends the phase."@en .
+
+# %% forces
+
+:ForceComponent a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Concept ,
+        [ a owl:Restriction ; owl:onProperty :hasForceKind ; owl:someValuesFrom :ForceKind ] ,
+        [ a owl:Restriction ; owl:onProperty :actsOnRole ; owl:someValuesFrom :ManipulationRole ] ,
+        [ a owl:Restriction ; owl:onProperty aicor:classifies ; owl:allValuesFrom aicor:Force ] ;
+    rdfs:label "force component"@en ;
+    rdfs:comment "A force of one kind acting on a participant, classifying the physical forces of an execution."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:ForceOpposition a owl:Class ;
+    rdfs:subClassOf aicor:dul_Relation , dul:Relation ,
+        [ a owl:Restriction ; owl:onProperty :hasDrivingForce ; owl:someValuesFrom :ForceComponent ] ,
+        [ a owl:Restriction ; owl:onProperty :hasResistingForce ; owl:someValuesFrom :ForceComponent ] ;
+    rdfs:label "force opposition"@en ;
+    rdfs:comment "Two forces acting against each other; the event resolving it occurs once the driving force overcomes the resisting one."@en ;
+    :evidenceStatus :SupportedInterpretation ;
+    :representsClaim :JF09-06 , :JF09-07 .
+
+:hasForceKind a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :ForceKind ;
+    rdfs:label "has force kind"@en ; rdfs:comment "The kind of force, such as weight, grip force or friction."@en .
+:actsOnRole a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :ManipulationRole ;
+    rdfs:label "acts on role"@en ; rdfs:comment "The participant the force acts on."@en .
+:exertedByRole a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :ForceComponent ; rdfs:range :ManipulationRole ;
+    rdfs:label "exerted by role"@en ; rdfs:comment "The participant exerting the force; absent for weight and inertia."@en .
+:hasDrivingForce a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:subPropertyOf dul:defines ; rdfs:range :ForceComponent ;
+    rdfs:label "has driving force"@en ; rdfs:comment "The force that prevails once the event has occurred."@en .
+:hasResistingForce a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:subPropertyOf dul:defines ; rdfs:range :ForceComponent ;
+    rdfs:label "has resisting force"@en ; rdfs:comment "The force that prevails until the event; the event's threshold is its limit."@en .
+:resolvesOpposition a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :MechanicalEventType ; rdfs:range :ForceOpposition ;
+    rdfs:label "resolves opposition"@en ; rdfs:comment "The force opposition whose driving force overcomes its resisting force at the event."@en .
+:startsForce a owl:ObjectProperty ; rdfs:domain :MechanicalEventType ; rdfs:range :ForceComponent ;
+    rdfs:label "starts force"@en ; rdfs:comment "A force that begins to act at the event, such as the support reaction at touchdown."@en .
+:endsForce a owl:ObjectProperty ; rdfs:domain :MechanicalEventType ; rdfs:range :ForceComponent ;
+    rdfs:label "ends force"@en ; rdfs:comment "A force that stops acting at the event, such as the grip force at release."@en .
+
+# %% value partitions
+
+:CouplingRegime a owl:Class ;
+    rdfs:subClassOf aicor:dul_Region , dul:Region ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Uncoupled :Transitional :Coupled ) ] ;
+    rdfs:label "coupling regime"@en ;
+    rdfs:comment "Whether the effector and the manipulandum form a single kinematic unit."@en ;
+    :evidenceStatus :EngineeringExtension .
+:Uncoupled a owl:NamedIndividual , :CouplingRegime ; rdfs:label "uncoupled"@en ;
+    rdfs:comment "The effector moves without being mechanically bound to the object."@en .
+:Transitional a owl:NamedIndividual , :CouplingRegime ; rdfs:label "transitional"@en ;
+    rdfs:comment "Contact or force conditions are changing but the object does not translate."@en .
+:Coupled a owl:NamedIndividual , :CouplingRegime ; rdfs:label "coupled"@en ;
+    rdfs:comment "The effector and the object move together as one kinematic unit."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Uncoupled :Transitional :Coupled ) ] .
+
+:RegulationMode a owl:Class ;
+    rdfs:subClassOf aicor:dul_Region , dul:Region ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Feedforward :ContinuousFeedback :Hybrid ) ] ;
+    rdfs:label "regulation mode"@en ;
+    rdfs:comment "How a controller regulates its commands within a phase."@en ;
+    :evidenceStatus :EngineeringExtension .
+:Feedforward a owl:NamedIndividual , :RegulationMode ; rdfs:label "feedforward"@en ;
+    rdfs:comment "Commands are selected from predictions before sensory correction."@en .
+:ContinuousFeedback a owl:NamedIndividual , :RegulationMode ; rdfs:label "continuous feedback"@en ;
+    rdfs:comment "Commands are continuously corrected from monitored sensory signals."@en .
+:Hybrid a owl:NamedIndividual , :RegulationMode ; rdfs:label "hybrid"@en ;
+    rdfs:comment "Feedforward predictions and continuous sensory correction cooperate."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Feedforward :ContinuousFeedback :Hybrid ) ] .
+
+:ConditionMode a owl:Class ;
+    rdfs:subClassOf aicor:dul_Region , dul:Region ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :AtEntry :Throughout :AtExit ) ] ;
+    rdfs:label "condition mode"@en ;
+    rdfs:comment "When, relative to a phase, a condition is demanded."@en ;
+    :evidenceStatus :EngineeringExtension .
+:AtEntry a owl:NamedIndividual , :ConditionMode ; rdfs:label "at entry"@en ;
+    rdfs:comment "Must hold for the phase to begin."@en .
+:Throughout a owl:NamedIndividual , :ConditionMode ; rdfs:label "throughout"@en ;
+    rdfs:comment "Must hold at every instant of the phase."@en .
+:AtExit a owl:NamedIndividual , :ConditionMode ; rdfs:label "at exit"@en ;
+    rdfs:comment "Is brought about by completing the phase."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :AtEntry :Throughout :AtExit ) ] .
+
+:ConditionPolarity a owl:Class ;
+    rdfs:subClassOf aicor:dul_Region , dul:Region ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :MustHold :MustNotHold ) ] ;
+    rdfs:label "condition polarity"@en ;
+    rdfs:comment "Whether a condition is demanded to hold or to be absent."@en ;
+    :evidenceStatus :EngineeringExtension .
+:MustHold a owl:NamedIndividual , :ConditionPolarity ; rdfs:label "must hold"@en ;
+    rdfs:comment "The condition is demanded to be true."@en .
+:MustNotHold a owl:NamedIndividual , :ConditionPolarity ; rdfs:label "must not hold"@en ;
+    rdfs:comment "The condition is demanded to be false."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :MustHold :MustNotHold ) ] .
+
+:SensoryModality a owl:Class ;
+    rdfs:subClassOf aicor:Modality , dul:Concept ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Tactile :Proprioceptive :Visual :Auditory ) ] ;
+    rdfs:label "sensory modality"@en ;
+    rdfs:comment "The sensory channel carrying evidence of an event."@en ;
+    :evidenceStatus :EmpiricalFinding ;
+    :representsClaim :FJ-004 .
+:Tactile a owl:NamedIndividual , :SensoryModality ; rdfs:label "tactile"@en ;
+    rdfs:comment "Signals from the contact surfaces of the effector, the primary channel for contact events."@en .
+:Proprioceptive a owl:NamedIndividual , :SensoryModality ; rdfs:label "proprioceptive"@en ;
+    rdfs:comment "Signals of limb configuration and effort."@en .
+:Visual a owl:NamedIndividual , :SensoryModality ; rdfs:label "visual"@en ;
+    rdfs:comment "Exteroceptive visual signals, also used to anticipate contact before it occurs."@en .
+:Auditory a owl:NamedIndividual , :SensoryModality ; rdfs:label "auditory"@en ;
+    rdfs:comment "Acoustic evidence of an event or of a continuously changing state."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Tactile :Proprioceptive :Visual :Auditory ) ] .
+
+:TrajectoryTrend a owl:Class ;
+    rdfs:subClassOf aicor:dul_Region , dul:Region ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Increasing :Decreasing :Stable ) ] ;
+    rdfs:label "trajectory trend"@en ;
+    rdfs:comment "The direction of change expected across a signal trajectory."@en ;
+    :evidenceStatus :EngineeringExtension .
+:Increasing a owl:NamedIndividual , :TrajectoryTrend ; rdfs:label "increasing"@en ;
+    rdfs:comment "The signal magnitude rises over the prediction interval."@en .
+:Decreasing a owl:NamedIndividual , :TrajectoryTrend ; rdfs:label "decreasing"@en ;
+    rdfs:comment "The signal magnitude falls over the prediction interval."@en .
+:Stable a owl:NamedIndividual , :TrajectoryTrend ; rdfs:label "stable"@en ;
+    rdfs:comment "The signal remains within a bounded steady range."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Increasing :Decreasing :Stable ) ] .
+
+:ComparisonOutcome a owl:Class ;
+    rdfs:subClassOf aicor:dul_Region , dul:Region ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Match :Mismatch ) ] ;
+    rdfs:label "comparison outcome"@en ;
+    rdfs:comment "Whether an observation agrees with its sensory prediction."@en ;
+    :evidenceStatus :SupportedInterpretation ;
+    :representsClaim :FJ-005 .
+:Match a owl:NamedIndividual , :ComparisonOutcome ; rdfs:label "match"@en ;
+    rdfs:comment "The observation supports the prediction within its tolerances."@en .
+:Mismatch a owl:NamedIndividual , :ComparisonOutcome ; rdfs:label "mismatch"@en ;
+    rdfs:comment "The observation differs from the prediction in a classified way."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Match :Mismatch ) ] .
+
+:PredictionErrorKind a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :AbsentEvent :UnexpectedEvent :EarlyEvent :LateEvent :MagnitudeMismatch :DirectionMismatch :SpatialMismatch ) ] ;
+    rdfs:label "prediction error kind"@en ;
+    rdfs:comment "The dimension along which an observation violates a prediction."@en ;
+    :evidenceStatus :EmpiricalFinding ;
+    :representsClaim :FJ-010 , :JF09-04 .
+:AbsentEvent a owl:NamedIndividual , :PredictionErrorKind ; rdfs:label "absent event"@en ;
+    rdfs:comment "The predicted event or feature was not observed."@en .
+:UnexpectedEvent a owl:NamedIndividual , :PredictionErrorKind ; rdfs:label "unexpected event"@en ;
+    rdfs:comment "An event or feature outside the prediction was observed."@en .
+:EarlyEvent a owl:NamedIndividual , :PredictionErrorKind ; rdfs:label "early event"@en ;
+    rdfs:comment "The predicted event or feature occurred before its timing window."@en .
+:LateEvent a owl:NamedIndividual , :PredictionErrorKind ; rdfs:label "late event"@en ;
+    rdfs:comment "The predicted event or feature occurred after its timing window."@en .
+:MagnitudeMismatch a owl:NamedIndividual , :PredictionErrorKind ; rdfs:label "magnitude mismatch"@en ;
+    rdfs:comment "The observed magnitude fell outside the prediction and its tolerance."@en .
+:DirectionMismatch a owl:NamedIndividual , :PredictionErrorKind ; rdfs:label "direction mismatch"@en ;
+    rdfs:comment "The observed change proceeded in the opposite direction."@en .
+:SpatialMismatch a owl:NamedIndividual , :PredictionErrorKind ; rdfs:label "spatial mismatch"@en ;
+    rdfs:comment "The observation involved a different location or participant."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :AbsentEvent :UnexpectedEvent :EarlyEvent :LateEvent :MagnitudeMismatch :DirectionMismatch :SpatialMismatch ) ] .
+
+:CorrectionDirection a owl:Class ;
+    rdfs:subClassOf aicor:dul_Region , dul:Region ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :RaiseSetpoint :LowerSetpoint :HoldSetpoint :ReverseChange :StopChange ) ] ;
+    rdfs:label "correction direction"@en ;
+    rdfs:comment "How a corrective response changes its target setpoint."@en ;
+    :evidenceStatus :EmpiricalFinding .
+:RaiseSetpoint a owl:NamedIndividual , :CorrectionDirection ; rdfs:label "raise setpoint"@en ;
+    rdfs:comment "Raise the target setpoint."@en .
+:LowerSetpoint a owl:NamedIndividual , :CorrectionDirection ; rdfs:label "lower setpoint"@en ;
+    rdfs:comment "Lower the target setpoint, or slow its rate of increase."@en .
+:HoldSetpoint a owl:NamedIndividual , :CorrectionDirection ; rdfs:label "hold setpoint"@en ;
+    rdfs:comment "Keep the target at its present value."@en .
+:ReverseChange a owl:NamedIndividual , :CorrectionDirection ; rdfs:label "reverse change"@en ;
+    rdfs:comment "Command a change opposite to the current direction."@en .
+:StopChange a owl:NamedIndividual , :CorrectionDirection ; rdfs:label "stop change"@en ;
+    rdfs:comment "Bring the commanded change to rest."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :RaiseSetpoint :LowerSetpoint :HoldSetpoint :ReverseChange :StopChange ) ] .
+
+:RecoveryMode a owl:Class ;
+    rdfs:subClassOf aicor:dul_Region , dul:Region ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :ContinuePhase :AbortAndCorrect :RepeatPhase :Replan :Abort ) ] ;
+    rdfs:label "recovery mode"@en ;
+    rdfs:comment "How execution proceeds when a corrective response is released."@en ;
+    :evidenceStatus :EngineeringExtension .
+:ContinuePhase a owl:NamedIndividual , :RecoveryMode ; rdfs:label "continue phase"@en ;
+    rdfs:comment "Apply the correction while the running controller continues."@en .
+:AbortAndCorrect a owl:NamedIndividual , :RecoveryMode ; rdfs:label "abort and correct"@en ;
+    rdfs:comment "Abort the running controller and execute the corrective programme in its place before the task proceeds."@en .
+:RepeatPhase a owl:NamedIndividual , :RecoveryMode ; rdfs:label "repeat phase"@en ;
+    rdfs:comment "Restart the current phase with corrected parameters."@en .
+:Replan a owl:NamedIndividual , :RecoveryMode ; rdfs:label "replan"@en ;
+    rdfs:comment "Select a new phase sequence from the updated state."@en .
+:Abort a owl:NamedIndividual , :RecoveryMode ; rdfs:label "abort"@en ;
+    rdfs:comment "Terminate the manipulation safely."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :ContinuePhase :AbortAndCorrect :RepeatPhase :Replan :Abort ) ] .
+
+:EstimateUpdateDirection a owl:Class ;
+    rdfs:subClassOf aicor:dul_Region , dul:Region ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :RaiseEstimate :LowerEstimate :ReplaceEstimate ) ] ;
+    rdfs:label "estimate update direction"@en ;
+    rdfs:comment "How evidence changes a represented estimate."@en ;
+    :evidenceStatus :EmpiricalFinding ;
+    :representsClaim :FJ-010 .
+:RaiseEstimate a owl:NamedIndividual , :EstimateUpdateDirection ; rdfs:label "raise estimate"@en ;
+    rdfs:comment "Revise the estimate upward."@en .
+:LowerEstimate a owl:NamedIndividual , :EstimateUpdateDirection ; rdfs:label "lower estimate"@en ;
+    rdfs:comment "Revise the estimate downward."@en .
+:ReplaceEstimate a owl:NamedIndividual , :EstimateUpdateDirection ; rdfs:label "replace estimate"@en ;
+    rdfs:comment "Change an unordered estimate or replace its current value."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :RaiseEstimate :LowerEstimate :ReplaceEstimate ) ] .
+
+:UpdateTimescale a owl:Class ;
+    rdfs:subClassOf aicor:dul_Region , dul:Region ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :SingleTrial :RepeatedTrials ) ] ;
+    rdfs:label "update timescale"@en ;
+    rdfs:comment "How many interactions an update of represented object properties needs."@en ;
+    :evidenceStatus :EmpiricalFinding ;
+    :representsClaim :FJ-011 , :JF09-09 .
+:SingleTrial a owl:NamedIndividual , :UpdateTimescale ; rdfs:label "single trial"@en ;
+    rdfs:comment "One interaction suffices, as for natural objects with common loads."@en .
+:RepeatedTrials a owl:NamedIndividual , :UpdateTimescale ; rdfs:label "repeated trials"@en ;
+    rdfs:comment "Several interactions are needed, as with misleading cues, unfamiliar objects or unusual dynamics."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :SingleTrial :RepeatedTrials ) ] .
+
+:ParameterValueForm a owl:Class ;
+    rdfs:subClassOf aicor:dul_Region , dul:Region ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Quantitative :Categorical ) ] ;
+    rdfs:label "parameter value form"@en ;
+    rdfs:comment "Whether a parameter holds a magnitude or a named category."@en ;
+    :evidenceStatus :EngineeringExtension .
+:Quantitative a owl:NamedIndividual , :ParameterValueForm ; rdfs:label "quantitative"@en ;
+    rdfs:comment "The parameter holds a magnitude range with a unit."@en .
+:Categorical a owl:NamedIndividual , :ParameterValueForm ; rdfs:label "categorical"@en ;
+    rdfs:comment "The parameter holds a categorical value."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Quantitative :Categorical ) ] .
+
+:ForceKind a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Weight :Inertia :LoadForce :GripForce :Friction :SupportReaction :Containment :MaterialStrength ) ] ;
+    rdfs:label "force kind"@en ;
+    rdfs:comment "The physical kind of a force acting in a manipulation."@en ;
+    :evidenceStatus :EngineeringExtension .
+:Weight a owl:NamedIndividual , :ForceKind ; rdfs:label "weight"@en ;
+    rdfs:comment "Gravity acting on a participant's mass."@en .
+:Inertia a owl:NamedIndividual , :ForceKind ; rdfs:label "inertia"@en ;
+    rdfs:comment "Resistance of a participant's mass to acceleration."@en .
+:LoadForce a owl:NamedIndividual , :ForceKind ; rdfs:label "load force"@en ;
+    rdfs:comment "The force tangential to the grasp surfaces that lifts, carries or moves the object."@en .
+:GripForce a owl:NamedIndividual , :ForceKind ; rdfs:label "grip force"@en ;
+    rdfs:comment "The force normal to the grasp surfaces that the digits apply."@en .
+:Friction a owl:NamedIndividual , :ForceKind ; rdfs:label "friction"@en ;
+    rdfs:comment "Tangential resistance at a contact, at most the grip force times the friction coefficient."@en .
+:SupportReaction a owl:NamedIndividual , :ForceKind ; rdfs:label "support reaction"@en ;
+    rdfs:comment "The force with which a supporting surface bears a weight."@en .
+:Containment a owl:NamedIndividual , :ForceKind ; rdfs:label "containment"@en ;
+    rdfs:comment "The force with which container walls hold a substance in."@en .
+:MaterialStrength a owl:NamedIndividual , :ForceKind ; rdfs:label "material strength"@en ;
+    rdfs:comment "The internal resistance of an object to deformation or rupture."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Weight :Inertia :LoadForce :GripForce :Friction :SupportReaction :Containment :MaterialStrength ) ] .
+
+# %% sources of predictions
+
+:PredictionSource a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :ObjectSpecificMemory :CategorySizeWeightAssociation :VisualIdentityCue :VisualGeometricCue :LearnedArbitraryCue :RecentHapticExperience :TactileContactResponse ) ] ;
+    rdfs:label "prediction source"@en ;
+    rdfs:comment "Where an estimate used to parameterise a controller in advance comes from."@en ;
+    :evidenceStatus :EmpiricalFinding ;
+    :representsClaim :FJ-009 , :JF09-08 .
+:ObjectSpecificMemory a owl:NamedIndividual , :PredictionSource ; rdfs:label "object-specific memory"@en ;
+    rdfs:comment "Sensorimotor memory of earlier interactions with this particular object."@en .
+:CategorySizeWeightAssociation a owl:NamedIndividual , :PredictionSource ; rdfs:label "category size-weight association"@en ;
+    rdfs:comment "A learned size-weight relation within a category of familiar objects."@en .
+:VisualIdentityCue a owl:NamedIndividual , :PredictionSource ; rdfs:label "visual identity cue"@en ;
+    rdfs:comment "Visual recognition of a familiar object, used to retrieve its remembered properties."@en .
+:VisualGeometricCue a owl:NamedIndividual , :PredictionSource ; rdfs:label "visual geometric cue"@en ;
+    rdfs:comment "Visually seen size and shape, used to predict mass distribution, stable grasp sites and force directions."@en .
+:LearnedArbitraryCue a owl:NamedIndividual , :PredictionSource ; rdfs:label "learned arbitrary cue"@en ;
+    rdfs:comment "A visual or auditory cue, such as a colour, learned to signal a mechanical property."@en .
+:RecentHapticExperience a owl:NamedIndividual , :PredictionSource ; rdfs:label "recent haptic experience"@en ;
+    rdfs:comment "Memory of recent contacts with the same or similar surfaces, the only advance source for friction."@en .
+:TactileContactResponse a owl:NamedIndividual , :PredictionSource ; rdfs:label "tactile contact response"@en ;
+    rdfs:comment "Tactile signals at initial contact, which reveal friction and override visual shape predictions."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :ObjectSpecificMemory :CategorySizeWeightAssociation :VisualIdentityCue :VisualGeometricCue :LearnedArbitraryCue :RecentHapticExperience :TactileContactResponse ) ] .
+
+:predictedFrom a owl:ObjectProperty ; rdfs:domain :Estimate ; rdfs:range :PredictionSource ;
+    rdfs:label "predicted from"@en ; rdfs:comment "A source from which the estimate is predicted before or at contact."@en .
+
+# %% physical dimensions and units
+
+:PhysicalDimension a owl:Class ;
+    rdfs:subClassOf aicor:dul_Region , dul:Region ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Mass :MassFlowRate :Force :ForceRate :Torque :Length :Angle :AngularRate :Volume :VolumetricFlowRate :DynamicViscosity :Frequency :Time :Dimensionless ) ] ;
+    rdfs:label "physical dimension"@en ;
+    rdfs:comment "A dimensional space of physical quantities, which in DUL is a maximal region."@en ;
+    :evidenceStatus :EngineeringExtension .
+:Mass a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "mass"@en ; rdfs:comment "Quantity of matter. Distinct from weight, which is a force."@en .
+:MassFlowRate a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "mass flow rate"@en ; rdfs:comment "Mass transferred per unit time."@en .
+:Force a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "force"@en ; rdfs:comment "Mechanical force, including weight force."@en .
+:ForceRate a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "force rate"@en ; rdfs:comment "Rate of force change."@en .
+:Torque a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "torque"@en ; rdfs:comment "Moment of force."@en .
+:Length a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "length"@en ; rdfs:comment "Spatial distance or position component."@en .
+:Angle a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "angle"@en ; rdfs:comment "Planar or rotational angle."@en .
+:AngularRate a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "angular rate"@en ; rdfs:comment "Rate of angular change."@en .
+:Volume a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "volume"@en ; rdfs:comment "Three-dimensional capacity."@en .
+:VolumetricFlowRate a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "volumetric flow rate"@en ; rdfs:comment "Volume transferred per unit time."@en .
+:DynamicViscosity a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "dynamic viscosity"@en ; rdfs:comment "Resistance of a fluid to shear flow."@en .
+:Frequency a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "frequency"@en ; rdfs:comment "Repetitions of a periodic signal per unit time."@en .
+:Time a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "time"@en ; rdfs:comment "Temporal duration or offset."@en .
+:Dimensionless a owl:NamedIndividual , :PhysicalDimension ; rdfs:label "dimensionless"@en ; rdfs:comment "A ratio or fraction without a physical unit."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Mass :MassFlowRate :Force :ForceRate :Torque :Length :Angle :AngularRate :Volume :VolumetricFlowRate :DynamicViscosity :Frequency :Time :Dimensionless ) ] .
+
+:MeasurementUnit a owl:Class ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:someValuesFrom :PhysicalDimension ] ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Kilogram :KilogramPerSecond :Newton :NewtonPerSecond :NewtonMetre :Metre :Degree :DegreePerSecond :Millilitre :MillilitrePerSecond :Centipoise :Hertz :Second :Millisecond :Ratio ) ] ;
+    rdfs:label "measurement unit"@en ;
+    rdfs:comment "A unit measuring exactly one physical dimension. Neither CRAM-AICOR nor DUL defines units."@en ;
+    :evidenceStatus :EngineeringExtension .
+:measuresDimension a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :PhysicalDimension ;
+    rdfs:label "measures dimension"@en ; rdfs:comment "The single physical dimension a unit measures."@en .
+:Kilogram a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Mass ; rdfs:label "kilogram"@en ; rdfs:comment "Kilogram, a unit of mass."@en .
+:KilogramPerSecond a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :MassFlowRate ; rdfs:label "kilogram per second"@en ; rdfs:comment "Kilogram per second, a unit of mass flow rate."@en .
+:Newton a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Force ; rdfs:label "newton"@en ; rdfs:comment "Newton, a unit of force."@en .
+:NewtonPerSecond a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :ForceRate ; rdfs:label "newton per second"@en ; rdfs:comment "Newton per second, a unit of force rate."@en .
+:NewtonMetre a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Torque ; rdfs:label "newton metre"@en ; rdfs:comment "Newton metre, a unit of torque."@en .
+:Metre a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Length ; rdfs:label "metre"@en ; rdfs:comment "Metre, a unit of length."@en .
+:Degree a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Angle ; rdfs:label "degree"@en ; rdfs:comment "Degree, a unit of angle."@en .
+:DegreePerSecond a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :AngularRate ; rdfs:label "degree per second"@en ; rdfs:comment "Degree per second, a unit of angular rate."@en .
+:Millilitre a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Volume ; rdfs:label "millilitre"@en ; rdfs:comment "Millilitre, a unit of volume."@en .
+:MillilitrePerSecond a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :VolumetricFlowRate ; rdfs:label "millilitre per second"@en ; rdfs:comment "Millilitre per second, a unit of volumetric flow rate."@en .
+:Centipoise a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :DynamicViscosity ; rdfs:label "centipoise"@en ; rdfs:comment "Centipoise, a unit of dynamic viscosity."@en .
+:Hertz a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Frequency ; rdfs:label "hertz"@en ; rdfs:comment "Hertz, a unit of frequency."@en .
+:Second a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Time ; rdfs:label "second"@en ; rdfs:comment "Second, a unit of time."@en .
+:Millisecond a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Time ; rdfs:label "millisecond"@en ; rdfs:comment "Millisecond, a unit of time."@en .
+:Ratio a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Dimensionless ; rdfs:label "ratio"@en ; rdfs:comment "Unit marker for dimensionless ratios and bounded fractions."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Kilogram :KilogramPerSecond :Newton :NewtonPerSecond :NewtonMetre :Metre :Degree :DegreePerSecond :Millilitre :MillilitrePerSecond :Centipoise :Hertz :Second :Millisecond :Ratio ) ] .
+
+# %% quantities
+
+:MagnitudeRange a owl:Class ;
+    rdfs:subClassOf aicor:ParameterInterval , dul:Amount ,
+        [ a owl:Restriction ; owl:onProperty :lowerBound ; owl:someValuesFrom xsd:double ] ,
+        [ a owl:Restriction ; owl:onProperty :upperBound ; owl:someValuesFrom xsd:double ] ,
+        [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:someValuesFrom :MeasurementUnit ] ;
+    rdfs:label "magnitude range"@en ;
+    rdfs:comment "An interval of a quantity with its unit; the lower bound does not exceed the upper bound."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:TemporalWindow a owl:Class ;
+    rdfs:subClassOf aicor:dul_Region , dul:TimeInterval ,
+        [ a owl:Restriction ; owl:onProperty :earliestOffset ; owl:someValuesFrom xsd:double ] ,
+        [ a owl:Restriction ; owl:onProperty :latestOffset ; owl:someValuesFrom xsd:double ] ,
+        [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:someValuesFrom :MeasurementUnit ] ,
+        [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :Time ] ] ;
+    rdfs:label "temporal window"@en ;
+    rdfs:comment "A time interval relative to a reference event, in a time unit."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:CategoricalValue a owl:Class ;
+    rdfs:subClassOf aicor:dul_Region , dul:Region ,
+        [ a owl:Restriction ; owl:onProperty :hasCategory ; owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label "categorical value"@en ;
+    rdfs:comment "A value that names a category instead of giving a number."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:lowerBound a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:range xsd:double ;
+    rdfs:label "lower bound"@en ; rdfs:comment "The inclusive lower bound of the range."@en .
+:upperBound a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:range xsd:double ;
+    rdfs:label "upper bound"@en ; rdfs:comment "The inclusive upper bound of the range."@en .
+:earliestOffset a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:range xsd:double ;
+    rdfs:label "earliest offset"@en ; rdfs:comment "The inclusive beginning of the window, relative to its reference event."@en .
+:latestOffset a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:range xsd:double ;
+    rdfs:label "latest offset"@en ; rdfs:comment "The inclusive end of the window, relative to its reference event."@en .
+:hasUnit a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :MeasurementUnit ;
+    rdfs:label "has unit"@en ; rdfs:comment "The measurement unit shared by both bounds."@en .
+:hasCategory a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:label "has category"@en ; rdfs:comment "The term identifying the category, given as the IRI of a concept."@en .
+
+# %% parameters
+
+:Parameter a owl:Class ;
+    rdfs:subClassOf aicor:Parameter , dul:Parameter ,
+        [ a owl:Restriction ; owl:onProperty :hasValueForm ; owl:someValuesFrom :ParameterValueForm ] ,
+        [ a owl:Restriction ; owl:onProperty :parameterOnRole ; owl:someValuesFrom :ManipulationRole ] ;
+    rdfs:label "parameter"@en ;
+    rdfs:comment "A quantitative or categorical slot in a phase structure, applying to participant roles."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:QuantitativeParameter a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :Parameter [ a owl:Restriction ; owl:onProperty :hasValueForm ; owl:hasValue :Quantitative ] ) ] ;
+    rdfs:subClassOf
+        [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:someValuesFrom :MagnitudeRange ] ,
+        [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:someValuesFrom :PhysicalDimension ] ,
+        [ a owl:Class ; owl:complementOf [ a owl:Restriction ; owl:onProperty :hasCategoricalValue ; owl:someValuesFrom owl:Thing ] ] ;
+    rdfs:label "quantitative parameter"@en ;
+    rdfs:comment "A parameter holding a magnitude range in a physical dimension, and never a categorical value."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:CategoricalParameter a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :Parameter [ a owl:Restriction ; owl:onProperty :hasValueForm ; owl:hasValue :Categorical ] ) ] ;
+    rdfs:subClassOf
+        [ a owl:Restriction ; owl:onProperty :hasCategoricalValue ; owl:someValuesFrom :CategoricalValue ] ,
+        [ a owl:Class ; owl:complementOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:someValuesFrom owl:Thing ] ] ;
+    rdfs:label "categorical parameter"@en ;
+    rdfs:comment "A parameter holding a categorical value, and never a fabricated numerical range."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:hasValueForm a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :ParameterValueForm ;
+    rdfs:label "has value form"@en ; rdfs:comment "Whether the parameter holds a magnitude range or a categorical value."@en .
+:hasPhysicalDimension a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :Parameter ; rdfs:range :PhysicalDimension ;
+    rdfs:label "has physical dimension"@en ; rdfs:comment "The physical dimension of a quantitative parameter, which the unit of its range must measure."@en .
+:hasParameterRange a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :Parameter ; rdfs:subPropertyOf dul:parametrizes ; rdfs:range :MagnitudeRange ;
+    rdfs:label "has parameter range"@en ; rdfs:comment "The value of a quantitative parameter."@en .
+:hasCategoricalValue a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :Parameter ; rdfs:subPropertyOf dul:parametrizes ; rdfs:range :CategoricalValue ;
+    rdfs:label "has categorical value"@en ; rdfs:comment "The value of a categorical parameter."@en .
+:parameterOnRole a owl:ObjectProperty ; rdfs:range :ManipulationRole ;
+    rdfs:label "parameter on role"@en ; rdfs:comment "A participant role to which the parameter applies."@en .
+
+:MassParameter a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :Mass ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :Mass ] ] ] ;
+    rdfs:label "mass parameter"@en ; rdfs:comment "A quantitative parameter whose values are masses, measured in a unit of mass."@en ;
+    :evidenceStatus :EngineeringExtension .
+:MassFlowRateParameter a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :MassFlowRate ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :MassFlowRate ] ] ] ;
+    rdfs:label "mass flow rate parameter"@en ; rdfs:comment "A quantitative parameter whose values are mass flow rates, measured in a unit of mass flow rate."@en ;
+    :evidenceStatus :EngineeringExtension .
+:ForceParameter a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :Force ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :Force ] ] ] ;
+    rdfs:label "force parameter"@en ; rdfs:comment "A quantitative parameter whose values are forces, measured in a unit of force."@en ;
+    :evidenceStatus :EngineeringExtension .
+:ForceRateParameter a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :ForceRate ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :ForceRate ] ] ] ;
+    rdfs:label "force rate parameter"@en ; rdfs:comment "A quantitative parameter whose values are rates of force change, measured in a unit of force rate."@en ;
+    :evidenceStatus :EngineeringExtension .
+:TorqueParameter a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :Torque ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :Torque ] ] ] ;
+    rdfs:label "torque parameter"@en ; rdfs:comment "A quantitative parameter whose values are torques, measured in a unit of torque."@en ;
+    :evidenceStatus :EngineeringExtension .
+:LengthParameter a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :Length ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :Length ] ] ] ;
+    rdfs:label "length parameter"@en ; rdfs:comment "A quantitative parameter whose values are lengths, measured in a unit of length."@en ;
+    :evidenceStatus :EngineeringExtension .
+:AngleParameter a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :Angle ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :Angle ] ] ] ;
+    rdfs:label "angle parameter"@en ; rdfs:comment "A quantitative parameter whose values are angles, measured in a unit of angle."@en ;
+    :evidenceStatus :EngineeringExtension .
+:AngularRateParameter a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :AngularRate ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :AngularRate ] ] ] ;
+    rdfs:label "angular rate parameter"@en ; rdfs:comment "A quantitative parameter whose values are angular rates, measured in a unit of angular rate."@en ;
+    :evidenceStatus :EngineeringExtension .
+:VolumeParameter a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :Volume ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :Volume ] ] ] ;
+    rdfs:label "volume parameter"@en ; rdfs:comment "A quantitative parameter whose values are volumes, measured in a unit of volume."@en ;
+    :evidenceStatus :EngineeringExtension .
+:VolumetricFlowRateParameter a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :VolumetricFlowRate ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :VolumetricFlowRate ] ] ] ;
+    rdfs:label "volumetric flow rate parameter"@en ; rdfs:comment "A quantitative parameter whose values are volumetric flow rates, measured in a unit of volumetric flow rate."@en ;
+    :evidenceStatus :EngineeringExtension .
+:DynamicViscosityParameter a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :DynamicViscosity ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :DynamicViscosity ] ] ] ;
+    rdfs:label "dynamic viscosity parameter"@en ; rdfs:comment "A quantitative parameter whose values are dynamic viscosities, measured in a unit of dynamic viscosity."@en ;
+    :evidenceStatus :EngineeringExtension .
+:DimensionlessParameter a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :QuantitativeParameter [ a owl:Restriction ; owl:onProperty :hasPhysicalDimension ; owl:hasValue :Dimensionless ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasParameterRange ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:hasValue :Dimensionless ] ] ] ;
+    rdfs:label "dimensionless parameter"@en ; rdfs:comment "A quantitative parameter whose values are ratios or fractions without a physical unit."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:Estimate a owl:Class ;
+    rdfs:subClassOf :Parameter ;
+    rdfs:label "estimate"@en ;
+    rdfs:comment "A belief used to predict or to scale manipulation control."@en ;
+    :evidenceStatus :EmpiricalFinding ;
+    :representsClaim :FJ-009 .
+:scalesSetpoint a owl:ObjectProperty ; rdfs:domain :Estimate ; rdfs:range :MotorSetpoint ;
+    rdfs:label "scales setpoint"@en ; rdfs:comment "A motor setpoint the estimate scales feedforward, before any sensory confirmation is available."@en .
+
+:ObjectPropertyEstimate a owl:Class ; rdfs:subClassOf :Estimate ;
+    rdfs:label "object property estimate"@en ; rdfs:comment "A belief about a comparatively stable property of an object, such as its mass or shape."@en ;
+    :evidenceStatus :EmpiricalFinding ; :representsClaim :FJ-009 .
+:ContactPropertyEstimate a owl:Class ; rdfs:subClassOf :Estimate ;
+    rdfs:label "contact property estimate"@en ; rdfs:comment "A belief about a property of an effector-object contact interface, such as its friction."@en ;
+    :evidenceStatus :EmpiricalFinding ; :representsClaim :FJ-012 .
+:ObjectStateEstimate a owl:Class ; rdfs:subClassOf :Estimate ;
+    rdfs:label "object state estimate"@en ; rdfs:comment "A belief about a changeable state of an object, such as its fill level."@en ;
+    :evidenceStatus :EngineeringExtension .
+:DynamicsEstimate a owl:Class ; rdfs:subClassOf :Estimate ;
+    rdfs:label "dynamics estimate"@en ; rdfs:comment "A belief about how an object state evolves under action."@en ;
+    :evidenceStatus :EmpiricalFinding ; :representsClaim :FJ-025 .
+[ a owl:AllDisjointClasses ; owl:members ( :ObjectPropertyEstimate :ContactPropertyEstimate :ObjectStateEstimate :DynamicsEstimate ) ] .
+
+:Setpoint a owl:Class ;
+    rdfs:subClassOf :Parameter ;
+    rdfs:label "setpoint"@en ;
+    rdfs:comment "A desired value whose attainment can constitute a control event."@en ;
+    :evidenceStatus :EngineeringExtension .
+:MotorSetpoint a owl:Class ; rdfs:subClassOf :Setpoint ;
+    rdfs:label "motor setpoint"@en ; rdfs:comment "A target the motor controller commands directly, such as a grip force or a tilt rate."@en ;
+    :evidenceStatus :SupportedInterpretation .
+:TaskSetpoint a owl:Class ; rdfs:subClassOf :Setpoint ; owl:disjointWith :MotorSetpoint ;
+    rdfs:label "task setpoint"@en ; rdfs:comment "A desired task outcome, such as a transferred volume, rather than a motor command."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:ForceRateSetpoint a owl:Class ;
+    rdfs:subClassOf :MotorSetpoint , :ForceRateParameter ,
+        [ a owl:Restriction ; owl:onProperty :rateOf ; owl:someValuesFrom :MotorSetpoint ] ;
+    rdfs:label "force rate setpoint"@en ;
+    rdfs:comment "A commanded rate of force change, scaled in advance to the predicted load."@en ;
+    :evidenceStatus :EmpiricalFinding ;
+    :representsClaim :FJ-025 .
+:rateOf a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :MotorSetpoint ;
+    rdfs:label "rate of"@en ; rdfs:comment "The force setpoint whose rate of change is commanded."@en .
+
+:MechanicalThreshold a owl:Class ;
+    rdfs:subClassOf :Parameter ;
+    rdfs:label "mechanical threshold"@en ;
+    rdfs:comment "A boundary value whose crossing constitutes a mechanical event."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:SafetyMargin a owl:Class ;
+    rdfs:subClassOf :QuantitativeParameter ,
+        [ a owl:Restriction ; owl:onProperty :marginOn ; owl:someValuesFrom :MotorSetpoint ] ,
+        [ a owl:Restriction ; owl:onProperty :marginOver ; owl:someValuesFrom :MechanicalThreshold ] ;
+    rdfs:label "safety margin"@en ;
+    rdfs:comment "The excess of a motor setpoint over a threshold it must stay clear of, typically 10-40 percent for grip force."@en ;
+    :evidenceStatus :EmpiricalFinding ;
+    :representsClaim :FJ-025 , :JF09-06 .
+:marginOn a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :MotorSetpoint ;
+    rdfs:label "margin on"@en ; rdfs:comment "The motor setpoint carrying the safety margin."@en .
+:marginOver a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :MechanicalThreshold ;
+    rdfs:label "margin over"@en ; rdfs:comment "The threshold below the setpoint."@en .
+
+[ a owl:AllDisjointClasses ; owl:members ( :Estimate :Setpoint :MechanicalThreshold :SafetyMargin ) ] .
+
+# %% internal models
+
+:InternalModel a owl:Class ;
+    rdfs:subClassOf aicor:dul_Description , dul:Description ;
+    rdfs:label "internal model"@en ;
+    rdfs:comment "The controller's own representation of body and environment, used to predict and to invert."@en ;
+    :evidenceStatus :SupportedInterpretation ;
+    :representsClaim :FJ-002 .
+:ForwardModel a owl:Class ; rdfs:subClassOf :InternalModel ;
+    rdfs:label "forward model"@en ; rdfs:comment "Maps motor commands, through an efference copy, to their expected sensory consequences."@en ;
+    :evidenceStatus :SupportedInterpretation ; :representsClaim :FJ-002 .
+:InverseModel a owl:Class ; rdfs:subClassOf :InternalModel ; owl:disjointWith :ForwardModel ;
+    rdfs:label "inverse model"@en ; rdfs:comment "Turns a desired state into the motor command required to reach it."@en ;
+    :evidenceStatus :SupportedInterpretation ; :representsClaim :FJ-002 .
+:EstimateRepresentation a owl:Class ;
+    rdfs:subClassOf :InternalModel ;
+    rdfs:label "estimate representation"@en ;
+    rdfs:comment "Represented content that holds one or more estimates. Not presumed disjoint from the models that use it."@en ;
+    :evidenceStatus :SupportedInterpretation .
+:ObjectRepresentation a owl:Class ; rdfs:subClassOf :EstimateRepresentation ;
+    rdfs:label "object representation"@en ; rdfs:comment "Stored beliefs about an object's physical properties, accumulated over prior manipulations."@en ;
+    :evidenceStatus :SupportedInterpretation ; :representsClaim :FJ-009 .
+:holdsEstimate a owl:ObjectProperty ; rdfs:domain :EstimateRepresentation ; rdfs:range :Estimate ;
+    rdfs:label "holds estimate"@en ; rdfs:comment "An estimate stored as content of the representation."@en .
+
+# %% predictions and observations
+
+:SensoryFeature a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Concept ;
+    rdfs:label "sensory feature"@en ;
+    rdfs:comment "A detectable property of a sensory signal, such as contact timing, force direction, friction or a sound."@en ;
+    :evidenceStatus :EmpiricalFinding ;
+    :representsClaim :FJ-004 , :FJ-012 .
+
+:SensoryEventPrediction a owl:Class ;
+    rdfs:subClassOf aicor:Prediction , aicor:Expectation , dul:Description ,
+        [ a owl:Restriction ; owl:onProperty :hasModality ; owl:someValuesFrom :SensoryModality ] ,
+        [ a owl:Restriction ; owl:onProperty :causedByEvent ; owl:someValuesFrom :PhaseBoundaryEventType ] ,
+        [ a owl:Restriction ; owl:onProperty :hasExpectedTiming ; owl:someValuesFrom :TemporalWindow ] ,
+        [ a owl:Restriction ; owl:onProperty :expectedOnRole ; owl:someValuesFrom :ManipulationRole ] ,
+        [ a owl:Restriction ; owl:onProperty aicor:generatedBy ; owl:someValuesFrom :ForwardModel ] ,
+        [ a owl:Class ; owl:unionOf (
+            [ a owl:Restriction ; owl:onProperty :predictsEvent ; owl:someValuesFrom :PhaseBoundaryEventType ]
+            [ a owl:Restriction ; owl:onProperty :predictsFeature ; owl:someValuesFrom :SensoryFeature ] ) ] ,
+        [ a owl:Class ; owl:complementOf [ a owl:Class ; owl:intersectionOf (
+            [ a owl:Restriction ; owl:onProperty :predictsEvent ; owl:someValuesFrom owl:Thing ]
+            [ a owl:Restriction ; owl:onProperty :predictsFeature ; owl:someValuesFrom owl:Thing ] ) ] ] ;
+    owl:disjointWith :SensoryObservationType ;
+    rdfs:label "sensory event prediction"@en ;
+    rdfs:comment "A sensory event a forward model expects at a phase boundary event, predicting an event or a feature but not both."@en ;
+    :evidenceStatus :SupportedInterpretation ;
+    :representsClaim :FJ-002 , :FJ-004 , :JF09-02 .
+
+:TactilePrediction a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :SensoryEventPrediction [ a owl:Restriction ; owl:onProperty :hasModality ; owl:hasValue :Tactile ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :causedByEvent ; owl:allValuesFrom :MechanicalEventType ] ;
+    rdfs:label "tactile prediction"@en ;
+    rdfs:comment "A predicted touch signal, which only a mechanical event can cause."@en ;
+    :evidenceStatus :SupportedInterpretation ;
+    :representsClaim :FJ-004 , :FJ-012 .
+
+:SensoryGoal a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :SensoryEventPrediction [ a owl:Restriction ; owl:onProperty :signalsSubgoal ; owl:someValuesFrom :Subgoal ] ) ] ;
+    rdfs:label "sensory goal"@en ;
+    rdfs:comment "A predicted sensory event that signifies a subgoal has been attained."@en ;
+    :evidenceStatus :AuthorHypothesis ;
+    :representsClaim :JF09-02 .
+:signalsSubgoal a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :SensoryEventPrediction ; rdfs:range :Subgoal ;
+    rdfs:label "signals subgoal"@en ; rdfs:comment "The subgoal whose attainment the predicted sensory event signifies."@en .
+
+:SensoryObservationType a owl:Class ;
+    rdfs:subClassOf aicor:ObservationEvent , dul:EventType ,
+        [ a owl:Restriction ; owl:onProperty :hasModality ; owl:someValuesFrom :SensoryModality ] ,
+        [ a owl:Restriction ; owl:onProperty :observedAt ; owl:someValuesFrom :TemporalWindow ] ,
+        [ a owl:Restriction ; owl:onProperty :observedOnRole ; owl:someValuesFrom :ManipulationRole ] ,
+        [ a owl:Class ; owl:unionOf (
+            [ a owl:Restriction ; owl:onProperty :observesEvent ; owl:someValuesFrom :PhaseBoundaryEventType ]
+            [ a owl:Restriction ; owl:onProperty :observesFeature ; owl:someValuesFrom :SensoryFeature ] ) ] ,
+        [ a owl:Class ; owl:complementOf [ a owl:Class ; owl:intersectionOf (
+            [ a owl:Restriction ; owl:onProperty :observesEvent ; owl:someValuesFrom owl:Thing ]
+            [ a owl:Restriction ; owl:onProperty :observesFeature ; owl:someValuesFrom owl:Thing ] ) ] ] ;
+    rdfs:label "sensory observation type"@en ;
+    rdfs:comment "A sensory result compared with a prediction, observing an event or a feature but not both."@en ;
+    :evidenceStatus :EmpiricalFinding ;
+    :representsClaim :FJ-004 .
+
+:TactileObservation a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :SensoryObservationType [ a owl:Restriction ; owl:onProperty :hasModality ; owl:hasValue :Tactile ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :observesEvent ; owl:allValuesFrom :MechanicalEventType ] ;
+    rdfs:label "tactile observation"@en ;
+    rdfs:comment "A sensed touch signal, which can only register a mechanical event."@en ;
+    :evidenceStatus :SupportedInterpretation ;
+    :representsClaim :FJ-004 , :FJ-012 .
+
+:SignalTrajectory a owl:Class ;
+    rdfs:subClassOf aicor:dul_Description , dul:Description ,
+        [ a owl:Restriction ; owl:onProperty :hasSignalFeature ; owl:someValuesFrom :SensoryFeature ] ,
+        [ a owl:Restriction ; owl:onProperty :hasTrend ; owl:someValuesFrom :TrajectoryTrend ] ,
+        [ a owl:Restriction ; owl:onProperty :hasExpectedRange ; owl:someValuesFrom :MagnitudeRange ] ;
+    rdfs:label "signal trajectory"@en ;
+    rdfs:comment "A structured change in one sensory feature over a time interval."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:ContinuousSignalPrediction a owl:Class ;
+    rdfs:subClassOf aicor:Prediction , aicor:Expectation , dul:Description ,
+        [ a owl:Restriction ; owl:onProperty :hasModality ; owl:someValuesFrom :SensoryModality ] ,
+        [ a owl:Restriction ; owl:onProperty :predictsTrajectory ; owl:someValuesFrom :SignalTrajectory ] ,
+        [ a owl:Restriction ; owl:onProperty :hasTolerance ; owl:someValuesFrom :MagnitudeRange ] ,
+        [ a owl:Restriction ; owl:onProperty aicor:generatedBy ; owl:someValuesFrom :ForwardModel ] ,
+        [ a owl:Restriction ; owl:onProperty :comparedWith ; owl:someValuesFrom :SensoryObservationType ] ,
+        [ a owl:Restriction ; owl:onProperty :controlsSetpoint ; owl:someValuesFrom :Setpoint ] ;
+    owl:disjointWith :SensoryObservationType ;
+    rdfs:label "continuous signal prediction"@en ;
+    rdfs:comment "A predicted sensory trajectory compared with observation throughout a phase to adjust a setpoint."@en ;
+    :evidenceStatus :SupportedInterpretation ;
+    :representsClaim :FJ-008 .
+
+:hasModality a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :SensoryModality ;
+    rdfs:label "has modality"@en ; rdfs:comment "The sensory channel in which the prediction or observation is carried."@en .
+:predictsEvent a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :SensoryEventPrediction ; rdfs:range :PhaseBoundaryEventType ;
+    rdfs:label "predicts event"@en ; rdfs:comment "The expected event."@en .
+:predictsFeature a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :SensoryEventPrediction ; rdfs:range :SensoryFeature ;
+    rdfs:label "predicts feature"@en ; rdfs:comment "The expected signal feature."@en .
+:causedByEvent a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :PhaseBoundaryEventType ;
+    rdfs:label "caused by event"@en ; rdfs:comment "The event expected to produce the sensory consequence."@en .
+:hasExpectedTiming a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :TemporalWindow ;
+    rdfs:label "has expected timing"@en ; rdfs:comment "The interval in which the consequence or trajectory is expected."@en .
+:expectedOnRole a owl:ObjectProperty ; rdfs:range :ManipulationRole ;
+    rdfs:label "expected on role"@en ; rdfs:comment "A participant role at which the consequence is expected."@en .
+:hasExpectedMagnitude a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :SensoryEventPrediction ; rdfs:range :MagnitudeRange ;
+    rdfs:label "has expected magnitude"@en ; rdfs:comment "The expected magnitude, when the prediction is quantitative."@en .
+:hasTolerance a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :MagnitudeRange ;
+    rdfs:label "has tolerance"@en ; rdfs:comment "The admissible deviation from the predicted magnitude or trajectory."@en .
+:observesEvent a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :SensoryObservationType ; rdfs:range :PhaseBoundaryEventType ;
+    rdfs:label "observes event"@en ; rdfs:comment "The observed event."@en .
+:observesFeature a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :SensoryObservationType ; rdfs:range :SensoryFeature ;
+    rdfs:label "observes feature"@en ; rdfs:comment "The observed feature."@en .
+:observedAt a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :TemporalWindow ;
+    rdfs:label "observed at"@en ; rdfs:comment "The interval in which the observation occurs."@en .
+:observedOnRole a owl:ObjectProperty ; rdfs:range :ManipulationRole ;
+    rdfs:label "observed on role"@en ; rdfs:comment "A participant role involved in the observation."@en .
+:hasObservedMagnitude a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :SensoryObservationType ; rdfs:range :MagnitudeRange ;
+    rdfs:label "has observed magnitude"@en ; rdfs:comment "The observed magnitude, when the observation is quantitative."@en .
+:hasSignalFeature a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :SensoryFeature ;
+    rdfs:label "has signal feature"@en ; rdfs:comment "The sensory feature whose evolution is described."@en .
+:hasTrend a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :TrajectoryTrend ;
+    rdfs:label "has trend"@en ; rdfs:comment "The expected direction of the feature's change."@en .
+:hasExpectedRange a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :MagnitudeRange ;
+    rdfs:label "has expected range"@en ; rdfs:comment "The range the feature traverses or stays within."@en .
+:predictsTrajectory a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :SignalTrajectory ;
+    rdfs:label "predicts trajectory"@en ; rdfs:comment "The structured feature change expected during the phase."@en .
+:comparedWith a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :SensoryObservationType ;
+    rdfs:label "compared with"@en ; rdfs:comment "The observation type continuously compared with the prediction."@en .
+:controlsSetpoint a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :Setpoint ;
+    rdfs:label "controls setpoint"@en ; rdfs:comment "The setpoint adjusted from the comparison error."@en .
+
+# %% comparison and control
+
+:PredictionComparison a owl:Class ;
+    rdfs:subClassOf aicor:dul_Description , dul:Diagnosis ,
+        [ a owl:Restriction ; owl:onProperty :comparesPrediction ; owl:someValuesFrom :SensoryEventPrediction ] ,
+        [ a owl:Restriction ; owl:onProperty :hasComparisonOutcome ; owl:someValuesFrom :ComparisonOutcome ] ;
+    rdfs:label "prediction comparison"@en ;
+    rdfs:comment "The comparison of one prediction with its observation at a control point."@en ;
+    :evidenceStatus :SupportedInterpretation ;
+    :representsClaim :FJ-005 .
+
+:MatchingComparison a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PredictionComparison [ a owl:Restriction ; owl:onProperty :hasComparisonOutcome ; owl:hasValue :Match ] ) ] ;
+    rdfs:subClassOf
+        [ a owl:Class ; owl:complementOf [ a owl:Restriction ; owl:onProperty :hasPredictionError ; owl:someValuesFrom owl:Thing ] ] ,
+        [ a owl:Class ; owl:unionOf (
+            [ a owl:Restriction ; owl:onProperty :confirmsSubgoal ; owl:someValuesFrom :Subgoal ]
+            [ a owl:Restriction ; owl:onProperty :suppliesStateEstimate ; owl:someValuesFrom :InitialStateEstimate ] ) ] ;
+    rdfs:label "matching comparison"@en ;
+    rdfs:comment "A comparison that agrees with the prediction: no error, and it confirms a subgoal or supplies the next initial state."@en ;
+    :evidenceStatus :SupportedInterpretation ;
+    :representsClaim :FJ-005 , :FJ-007 .
+
+:MismatchingComparison a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PredictionComparison [ a owl:Restriction ; owl:onProperty :hasComparisonOutcome ; owl:hasValue :Mismatch ] ) ] ;
+    rdfs:subClassOf
+        [ a owl:Restriction ; owl:onProperty :hasPredictionError ; owl:someValuesFrom :PredictionError ] ,
+        [ a owl:Class ; owl:complementOf [ a owl:Restriction ; owl:onProperty :confirmsSubgoal ; owl:someValuesFrom owl:Thing ] ] ,
+        [ a owl:Class ; owl:complementOf [ a owl:Restriction ; owl:onProperty :suppliesStateEstimate ; owl:someValuesFrom owl:Thing ] ] ,
+        [ a owl:Class ; owl:unionOf (
+            [ a owl:Restriction ; owl:onProperty :invokesCorrection ; owl:someValuesFrom :CorrectiveAction ]
+            [ a owl:Restriction ; owl:onProperty :producesModelUpdate ; owl:someValuesFrom :ModelUpdate ] ) ] ;
+    rdfs:label "mismatching comparison"@en ;
+    rdfs:comment "A comparison that disagrees with the prediction: it classifies an error, confirms no subgoal, and releases a correction or model update."@en ;
+    :evidenceStatus :SupportedInterpretation ;
+    :representsClaim :FJ-005 , :FJ-010 .
+
+:comparesPrediction a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :SensoryEventPrediction ;
+    rdfs:label "compares prediction"@en ; rdfs:comment "The sensory prediction being evaluated."@en .
+:comparesObservation a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :PredictionComparison ; rdfs:range :SensoryObservationType ;
+    rdfs:label "compares observation"@en ; rdfs:comment "The received observation, absent only when the error is an absent event."@en .
+:hasComparisonOutcome a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :ComparisonOutcome ;
+    rdfs:label "has comparison outcome"@en ; rdfs:comment "Whether the observation matches the prediction."@en .
+:confirmsSubgoal a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :PredictionComparison ; rdfs:range :Subgoal ;
+    rdfs:label "confirms subgoal"@en ; rdfs:comment "The subgoal a successful comparison confirms."@en .
+:suppliesStateEstimate a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :PredictionComparison ; rdfs:range :InitialStateEstimate ;
+    rdfs:label "supplies state estimate"@en ; rdfs:comment "The next phase's initial state supplied by a successful comparison."@en .
+:hasPredictionError a owl:ObjectProperty ; rdfs:domain :PredictionComparison ; rdfs:range :PredictionError ;
+    rdfs:label "has prediction error"@en ; rdfs:comment "An error a mismatching comparison is classified as."@en .
+:invokesCorrection a owl:ObjectProperty ; rdfs:domain :PredictionComparison ; rdfs:range :CorrectiveAction ;
+    rdfs:label "invokes correction"@en ; rdfs:comment "A corrective response a mismatch releases."@en .
+:producesModelUpdate a owl:ObjectProperty ; rdfs:domain :PredictionComparison ; rdfs:range :ModelUpdate ;
+    rdfs:label "produces model update"@en ; rdfs:comment "A representation update a mismatch supports."@en .
+
+:PredictionError a owl:Class ;
+    rdfs:subClassOf aicor:dul_Description , dul:Diagnosis ,
+        [ a owl:Restriction ; owl:onProperty :hasErrorKind ; owl:someValuesFrom :PredictionErrorKind ] ;
+    rdfs:label "prediction error"@en ;
+    rdfs:comment "A classified discrepancy between a prediction and an observation."@en ;
+    :evidenceStatus :SupportedInterpretation ;
+    :representsClaim :FJ-005 , :FJ-010 .
+:hasErrorKind a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :PredictionErrorKind ;
+    rdfs:label "has error kind"@en ; rdfs:comment "The dimension along which the prediction failed."@en .
+:hasDiscrepancy a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :PredictionError ; rdfs:range :MagnitudeRange ;
+    rdfs:label "has discrepancy"@en ; rdfs:comment "The size of the discrepancy, when the error is quantitative."@en .
+
+:CorrectiveAction a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:Task ,
+        [ a owl:Restriction ; owl:onProperty :triggeredByError ; owl:someValuesFrom :PredictionError ] ,
+        [ a owl:Restriction ; owl:onProperty :targetsSetpoint ; owl:someValuesFrom :MotorSetpoint ] ,
+        [ a owl:Restriction ; owl:onProperty :hasCorrectionDirection ; owl:someValuesFrom :CorrectionDirection ] ,
+        [ a owl:Restriction ; owl:onProperty :intendedEffect ; owl:someValuesFrom :PhaseConditionType ] ,
+        [ a owl:Restriction ; owl:onProperty :hasRecoveryMode ; owl:someValuesFrom :RecoveryMode ] ;
+    rdfs:label "corrective action"@en ;
+    rdfs:comment "A corrective programme specific to its controller and the kind of mismatch, protecting or completing the current action."@en ;
+    :evidenceStatus :EmpiricalFinding ;
+    :representsClaim :FJ-005 , :FJ-010 , :JF09-03 , :JF09-04 .
+:triggeredByError a owl:ObjectProperty ; rdfs:range :PredictionError ;
+    rdfs:label "triggered by error"@en ; rdfs:comment "A prediction error that releases the response or supplies evidence for the update."@en .
+:targetsSetpoint a owl:ObjectProperty ; rdfs:range :MotorSetpoint ;
+    rdfs:label "targets setpoint"@en ; rdfs:comment "A motor setpoint the response changes."@en .
+:hasCorrectionDirection a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :CorrectionDirection ;
+    rdfs:label "has correction direction"@en ; rdfs:comment "How the targeted setpoints are changed."@en .
+:intendedEffect a owl:ObjectProperty ; rdfs:range :PhaseConditionType ;
+    rdfs:label "intended effect"@en ; rdfs:comment "A condition the correction is meant to establish or preserve."@en .
+:hasRecoveryMode a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :RecoveryMode ;
+    rdfs:label "has recovery mode"@en ; rdfs:comment "How execution proceeds when the response is released."@en .
+:hasResponseLatency a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :CorrectiveAction ; rdfs:range :TemporalWindow ;
+    rdfs:label "has response latency"@en ; rdfs:comment "The delay before the response changes the motor output: about 100 ms for tactile, over 200 ms for visual triggers in humans."@en .
+:correctionTerminatedBy a owl:ObjectProperty ; rdfs:domain :CorrectiveAction ; rdfs:range :PhaseBoundaryEventType ;
+    rdfs:label "correction terminated by"@en ; rdfs:comment "An event that ends a corrective programme, such as lift-off ending probing force increases."@en .
+
+:ModelUpdate a owl:Class ;
+    rdfs:subClassOf aicor:dul_Concept , dul:EventType ,
+        [ a owl:Restriction ; owl:onProperty :triggeredByError ; owl:someValuesFrom :PredictionError ] ,
+        [ a owl:Restriction ; owl:onProperty :updatesEstimate ; owl:someValuesFrom :Estimate ] ,
+        [ a owl:Restriction ; owl:onProperty :updatesRepresentation ; owl:someValuesFrom :EstimateRepresentation ] ,
+        [ a owl:Restriction ; owl:onProperty :hasUpdateDirection ; owl:someValuesFrom :EstimateUpdateDirection ] ;
+    owl:disjointWith :CorrectiveAction ;
+    rdfs:label "model update"@en ;
+    rdfs:comment "A revision of represented estimates that changes later predictions with the same object."@en ;
+    :evidenceStatus :EmpiricalFinding ;
+    :representsClaim :FJ-010 , :JF09-09 .
+:updatesEstimate a owl:ObjectProperty ; rdfs:range :Estimate ;
+    rdfs:label "updates estimate"@en ; rdfs:comment "An estimate the revision changes."@en .
+:updatesRepresentation a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :EstimateRepresentation ;
+    rdfs:label "updates representation"@en ; rdfs:comment "The representation in which the content is changed."@en .
+:hasUpdateDirection a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :EstimateUpdateDirection ;
+    rdfs:label "has update direction"@en ; rdfs:comment "How the represented estimates change."@en .
+:hasUpdateTimescale a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain :ModelUpdate ; rdfs:range :UpdateTimescale ;
+    rdfs:label "has update timescale"@en ; rdfs:comment "Whether one interaction suffices for the update or several are needed."@en .
+
+:InitialStateEstimate a owl:Class ;
+    rdfs:subClassOf aicor:dul_Description , dul:Description ,
+        [ a owl:Restriction ; owl:onProperty :forPhase ; owl:someValuesFrom :ActionPhase ] ,
+        [ a owl:Restriction ; owl:onProperty :basedOnObservation ; owl:someValuesFrom :SensoryObservationType ] ,
+        [ a owl:Restriction ; owl:onProperty :estimatesCondition ; owl:someValuesFrom :PhaseConditionType ] ;
+    rdfs:label "initial state estimate"@en ;
+    rdfs:comment "The state predicted at the end of one phase, supplied as the initial state of the next phase's controller."@en ;
+    :evidenceStatus :AuthorHypothesis ;
+    :representsClaim :FJ-007 .
+:forPhase a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :ActionPhase ;
+    rdfs:label "for phase"@en ; rdfs:comment "The phase whose initial state is estimated."@en .
+:basedOnObservation a owl:ObjectProperty ; rdfs:range :SensoryObservationType ;
+    rdfs:label "based on observation"@en ; rdfs:comment "An observation supporting the state estimate."@en .
+:estimatesCondition a owl:ObjectProperty ; rdfs:range :PhaseConditionType ;
+    rdfs:label "estimates condition"@en ; rdfs:comment "A condition estimated to hold at phase entry."@en .
+
+:SensorimotorControlPoint a owl:Class ;
+    rdfs:subClassOf aicor:ProcessMonitor , dul:Description ,
+        [ a owl:Restriction ; owl:onProperty :atEventType ; owl:someValuesFrom :MechanicalEventType ] ,
+        [ a owl:Restriction ; owl:onProperty :hasPrediction ; owl:someValuesFrom :SensoryEventPrediction ] ,
+        [ a owl:Restriction ; owl:onProperty :hasComparison ; owl:someValuesFrom :PredictionComparison ] ;
+    rdfs:label "sensorimotor control point"@en ;
+    rdfs:comment "A planned event at which predicted and actual sensory signals are compared to monitor progress and detect errors."@en ;
+    :evidenceStatus :AuthorHypothesis ;
+    :representsClaim :FJ-001 , :FJ-005 , :JF09-01 .
+:atEventType a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :MechanicalEventType ;
+    rdfs:label "at event type"@en ; rdfs:comment "The mechanical event at which comparisons are performed."@en .
+:hasPrediction a owl:ObjectProperty ; rdfs:subPropertyOf aicor:operationalizes ; rdfs:range :SensoryEventPrediction ;
+    rdfs:label "has prediction"@en ; rdfs:comment "A sensory consequence expected at the event, which the control point checks."@en .
+:hasComparison a owl:ObjectProperty ; rdfs:range :PredictionComparison ;
+    rdfs:label "has comparison"@en ; rdfs:comment "A possible match or mismatch outcome at the control point."@en .
+
+:PhaseTransition a owl:Class ;
+    rdfs:subClassOf aicor:dul_Relation , dul:Relation ,
+        [ a owl:Restriction ; owl:onProperty :fromPhase ; owl:someValuesFrom :ActionPhase ] ,
+        [ a owl:Restriction ; owl:onProperty :toPhase ; owl:someValuesFrom :ActionPhase ] ,
+        [ a owl:Restriction ; owl:onProperty :gatedBy ; owl:someValuesFrom :PhaseBoundaryEventType ] ,
+        [ a owl:Restriction ; owl:onProperty :permittedBy ; owl:allValuesFrom :MatchingComparison ] ;
+    rdfs:label "phase transition"@en ;
+    rdfs:comment "A gated edge of the phase sequence. Where comparisons permit it, only matching comparisons do."@en ;
+    :evidenceStatus :EngineeringExtension ;
+    :representsClaim :FJ-003 .
+:fromPhase a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :ActionPhase ;
+    rdfs:label "from phase"@en ; rdfs:comment "The phase control leaves."@en .
+:toPhase a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :ActionPhase ;
+    rdfs:label "to phase"@en ; rdfs:comment "The phase control enters."@en .
+:gatedBy a owl:ObjectProperty ; rdfs:range :PhaseBoundaryEventType ;
+    rdfs:label "gated by"@en ; rdfs:comment "A boundary event that releases the transition."@en .
+:permittedBy a owl:ObjectProperty ; rdfs:range :PredictionComparison ;
+    rdfs:label "permitted by"@en ; rdfs:comment "A successful comparison required in addition to the event gates."@en .
+
+:BoundaryControlExemption a owl:Class ;
+    rdfs:subClassOf aicor:dul_Description , dul:Description ,
+        [ a owl:Restriction ; owl:onProperty :exemptsEvent ; owl:someValuesFrom :PhaseBoundaryEventType ] ,
+        [ a owl:Restriction ; owl:onProperty :hasJustification ; owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label "boundary control exemption"@en ;
+    rdfs:comment "An explicit reason why a phase boundary has no sensorimotor control point."@en ;
+    :evidenceStatus :EngineeringExtension .
+:exemptsEvent a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :PhaseBoundaryEventType ;
+    rdfs:label "exempts event"@en ; rdfs:comment "The phase boundary intentionally represented without a control point."@en .
+:hasJustification a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:label "has justification"@en ; rdfs:comment "The policy, instruction or scope decision justifying the exemption, given as the IRI of a concept."@en .

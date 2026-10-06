@@ -1,0 +1,6 @@
+@prefix case:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/case#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+
+# One individual is declared both as what is expected and as what is sensed.
+
+case:signal a core:SensoryEventPrediction , core:SensoryObservationType .

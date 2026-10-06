@@ -1,0 +1,6 @@
+{"fragments": [
+  {"id": "pour", "type": "ActionPhaseStructure", "decomposes_task": "aicor:Pouring", "defines_phase": ["tilt", "regulate"], "defines_transition": ["tilt_to_regulate"]},
+  {"id": "tilt", "type": "TiltToFlowPhase", "has_coupling_regime": "COUPLED"},
+  {"id": "regulate", "type": "FlowRegulationPhase"},
+  {"id": "tilt_to_regulate", "type": "PhaseTransition", "from_phase": "tilt", "to_phase": "regulate"}
+]}

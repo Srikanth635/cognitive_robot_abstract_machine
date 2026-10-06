@@ -1,0 +1,9 @@
+@prefix case:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/case#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix dyn:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#> .
+@prefix pre:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#> .
+
+# The friction of the grasp interface is said to be predicted from what the object looks like.
+
+case:friction a pre:ExpectedFrictionCoefficient ;
+    core:predictedFrom core:VisualGeometricCue .

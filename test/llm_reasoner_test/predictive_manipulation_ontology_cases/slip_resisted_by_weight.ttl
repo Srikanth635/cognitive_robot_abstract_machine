@@ -1,0 +1,13 @@
+@prefix case:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/case#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix pre:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#> .
+@prefix pour:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#> .
+
+# A slip is said to happen when the load overcomes the weight, instead of the friction at the grasp.
+
+case:slip a pre:SlipEvent ;
+    core:resolvesOpposition case:opposition .
+
+case:opposition core:hasResistingForce case:resistance .
+
+case:resistance core:hasForceKind core:Weight .

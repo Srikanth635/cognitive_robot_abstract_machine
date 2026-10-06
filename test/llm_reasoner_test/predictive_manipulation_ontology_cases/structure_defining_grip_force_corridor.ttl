@@ -1,0 +1,7 @@
+@prefix case:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/case#> .
+@prefix pre:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#> .
+
+# A prehension structure declares the admissible grip-force range of its grasp.
+
+case:structure a pre:PrehensionPhaseStructure ;
+    pre:definesGripForceCorridor case:corridor .

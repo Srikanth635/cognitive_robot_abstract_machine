@@ -1,0 +1,5 @@
+{"fragments": [
+  {"id": "pour", "type": "ActionPhaseStructure", "defines_transition": ["step"]},
+  {"id": "goal", "type": "Subgoal"},
+  {"id": "step", "type": "PhaseTransition", "from_phase": "goal"}
+]}
