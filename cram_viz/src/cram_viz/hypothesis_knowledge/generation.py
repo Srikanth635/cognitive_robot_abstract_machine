@@ -56,8 +56,6 @@ POURING_TASK_ANCESTORS = frozenset(
     {SOMA + "Pouring", SOMA + "Actuating", SOMA + "PhysicalTask"}
 )
 
-#: the structure class the model is asked to produce
-ROOT_CLASS = "PouringPhaseStructure"
 
 #: how many times a rejected generation may be fed its own violations and retried
 MAX_REPAIRS = 4
@@ -68,11 +66,15 @@ ANTHROPIC_API_KEY_NAME = "ANTHROPIC_API_KEY"
 
 
 class HypothesisGenerationError(RuntimeError):
-    """Raised when an instruction could not be turned into a usable hypothesis."""
+    """
+    Raised when an instruction could not be turned into a usable hypothesis.
+    """
 
 
 class MissingCredentialsError(HypothesisGenerationError):
-    """Raised when no API key is available to authenticate the generation client."""
+    """
+    Raised when no API key is available to authenticate the generation client.
+    """
 
     def __init__(self, variable_name: str, searched: Optional[Path]) -> None:
         location = f" or in {searched}" if searched else ""
@@ -85,8 +87,8 @@ class MissingCredentialsError(HypothesisGenerationError):
 # %% credentials
 def _find_environment_file() -> Optional[Path]:
     """
-    The nearest ``.env``, searched from the working directory and then from this
-    package upwards, so the viewer finds the workspace's file wherever it is started.
+    The nearest ``.env``, searched from the working directory and then from this package
+    upwards, so the viewer finds the workspace's file wherever it is started.
     """
     working_directory = Path.cwd().resolve()
     package_directory = Path(__file__).resolve()
@@ -106,8 +108,8 @@ def _load_environment_file(environment_file: Path) -> None:
     Read ``KEY=value`` lines into the environment without overriding what is set.
 
     ``python-dotenv`` is used when available so behaviour matches the notebooks;
-    otherwise the same simple format is parsed directly, since :mod:`cram_viz` keeps
-    its own dependencies to the standard library.
+    otherwise the same simple format is parsed directly, since :mod:`cram_viz` keeps its
+    own dependencies to the standard library.
     """
     try:
         from dotenv import load_dotenv
@@ -124,27 +126,39 @@ def _load_environment_file(environment_file: Path) -> None:
 
 # %% sources
 class HypothesisSource(ABC):
-    """Something that can produce a hypothesis record for an instruction."""
+    """
+    Something that can produce a hypothesis record for an instruction.
+    """
 
     @abstractmethod
     def record_for(self, instruction: str) -> HypothesisRecord:
-        """The record describing what the instruction's action is generally like."""
+        """
+        The record describing what the instruction's action is generally like.
+        """
 
 
 @dataclass
 class ModelHypothesisSource(HypothesisSource):
-    """Produces records with a language model, consulting a store first."""
+    """
+    Produces records with a language model, consulting a store first.
+    """
 
     store_directory: Optional[Path] = None
-    """Where generated records are cached; :func:`~cram_viz.paths.hypothesis_store_dir`
-    when unset."""
+    """
+    Where generated records are cached; :func:`~cram_viz.paths.hypothesis_store_dir`
+    when unset.
+    """
 
     client: Optional[LanguageModelClient] = None
-    """The model client; an :class:`AnthropicClient` is built on demand when unset."""
+    """
+    The model client; an :class:`AnthropicClient` is built on demand when unset.
+    """
 
     environment_file: Optional[Path] = None
-    """The ``.env`` to read credentials from; searched for from the working directory
-    upwards when unset."""
+    """
+    The ``.env`` to read credentials from; searched for from the working directory
+    upwards when unset.
+    """
 
     _generator: Optional[CachingGenerator] = field(default=None, init=False)
 
@@ -152,9 +166,9 @@ class ModelHypothesisSource(HypothesisSource):
         """
         Make the API key visible to the client.
 
-        The viewer is normally started from a shell that never sourced ``.env``, so
-        the file the notebooks rely on is read here too. Values already exported win,
-        and an injected client is assumed to carry its own credentials.
+        The viewer is normally started from a shell that never sourced ``.env``, so the
+        file the notebooks rely on is read here too. Values already exported win, and an
+        injected client is assumed to carry its own credentials.
 
         :raises MissingCredentialsError: if no key is available.
         """
@@ -204,13 +218,14 @@ class ModelHypothesisSource(HypothesisSource):
         return result.record
 
     def _caching_generator(self) -> CachingGenerator:
-        """Build the generator on first use, so importing costs no credentials."""
+        """
+        Build the generator on first use, so importing costs no credentials.
+        """
         self.load_credentials()
         if self._generator is None:
             generator = HypothesisGenerator(
                 client=self.client or AnthropicClient(),
                 suite=flanagan.SUITE,
-                root_class=ROOT_CLASS,
                 max_repairs=MAX_REPAIRS,
             )
             self._generator = CachingGenerator(
@@ -225,20 +240,24 @@ class ModelHypothesisSource(HypothesisSource):
 # %% service
 @dataclass
 class HypothesisGenerationService:
-    """Makes a generated hypothesis the knowledge the viewer shows and queries."""
+    """
+    Makes a generated hypothesis the knowledge the viewer shows and queries.
+    """
 
     source: HypothesisSource
-    """Where records come from."""
+    """
+    Where records come from.
+    """
 
     def generate(self, instruction: str) -> HypothesisKnowledge:
         """
         Generate knowledge for an instruction and make it active.
 
-        Falls back to the checked-in, hand-authored pouring sample when the
-        source cannot produce an admissible structure, so the viewer always has
-        a clean, EQL-queryable demo to show rather than an empty or broken one.
-        The fallback is reported through :attr:`HypothesisKnowledge.generated`
-        being ``False``, so a caller can still tell the two apart.
+        Falls back to the checked-in, hand-authored pouring sample when the source
+        cannot produce an admissible structure, so the viewer always has a clean, EQL-
+        queryable demo to show rather than an empty or broken one. The fallback is
+        reported through :attr:`HypothesisKnowledge.generated` being ``False``, so a
+        caller can still tell the two apart.
         """
         try:
             record = self.source.record_for(instruction)

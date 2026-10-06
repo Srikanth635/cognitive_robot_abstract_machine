@@ -37,14 +37,28 @@ from llm_reasoner.knowledge.microworlds.flanagan.core import (
     RegulationMode,
     RoleSlot,
     SafetyMargin,
+    ScientificAssertion,
+    ScientificStatus,
     SensorimotorControlPoint,
     SensoryEventPrediction,
     SensoryObservationType,
     Subgoal,
     TemporalWindow,
 )
+from llm_reasoner.knowledge.microworlds.flanagan.gaze_constraints import (
+    GAZE_CONSTRAINTS,
+)
+from llm_reasoner.knowledge.microworlds.flanagan.learning_constraints import (
+    LEARNING_CONSTRAINTS,
+)
 from llm_reasoner.knowledge.microworlds.flanagan.object_dynamics_constraints import (
     OBJECT_DYNAMICS_CONSTRAINTS,
+)
+from llm_reasoner.knowledge.microworlds.flanagan.observation_constraints import (
+    OBSERVATION_CONSTRAINTS,
+)
+from llm_reasoner.knowledge.microworlds.flanagan.perception_constraints import (
+    PERCEPTION_CONSTRAINTS,
 )
 from llm_reasoner.knowledge.microworlds.flanagan.pouring_constraints import (
     POURING_CONSTRAINTS,
@@ -316,11 +330,126 @@ def control_point_lacks_comparison_outcome(
     }.issubset(outcomes)
 
 
+def structure_has_uncontrolled_normal_boundary(
+    structure: ActionPhaseStructure,
+) -> bool:
+    """
+    Return whether a normal phase boundary lacks control coverage.
+    """
+    control_events = [
+        control_point.at_event_type for control_point in structure.has_control_point
+    ]
+    exempted_events = [
+        exemption.exempts_event for exemption in structure.has_control_point_exemption
+    ]
+    return any(
+        not event.is_failure_event
+        and event not in control_events
+        and event not in exempted_events
+        for phase in structure.defines_phase
+        for event in phase.terminated_by
+    )
+
+
+def comparison_has_incompatible_evidence(
+    comparison: PredictionComparison,
+) -> bool:
+    """
+    Return whether predicted and observed evidence describe different signals.
+    """
+    prediction = comparison.compares_prediction
+    observation = comparison.compares_observation
+    if prediction is None or observation is None:
+        return False
+    if type(prediction.modality) is not type(observation.modality):
+        return True
+    if {id(role) for role in prediction.expected_on_role} != {
+        id(role) for role in observation.observed_on_role
+    }:
+        return True
+    if comparison.outcome is ComparisonOutcome.MISMATCH and any(
+        error.kind is PredictionErrorKind.UNEXPECTED for error in comparison.has_error
+    ):
+        return False
+    if prediction.predicts_event is not None:
+        return observation.observes_event is not prediction.predicts_event
+    if prediction.predicts_feature is not None:
+        return observation.observes_feature != prediction.predicts_feature
+    return True
+
+
+def engineering_extension_lacks_provenance(
+    assertion: ScientificAssertion,
+) -> bool:
+    """
+    Return whether an engineering extension omits its source.
+    """
+    return (
+        assertion.scientific_status is ScientificStatus.ENGINEERING_EXTENSION
+        and assertion.scientific_provenance is None
+    )
+
+
+def structure_has_invalid_control_exemption(
+    structure: ActionPhaseStructure,
+) -> bool:
+    """
+    Return whether an exemption does not name a normal phase boundary.
+    """
+    boundaries = [
+        event for phase in structure.defines_phase for event in phase.terminated_by
+    ]
+    return any(
+        exemption.exempts_event not in boundaries
+        or exemption.exempts_event is None
+        or exemption.exempts_event.is_failure_event
+        for exemption in structure.has_control_point_exemption
+    )
+
+
 # %% Acceptance suite
 
 CONSTRAINTS = [
+    *GAZE_CONSTRAINTS,
+    *OBSERVATION_CONSTRAINTS,
+    *LEARNING_CONSTRAINTS,
+    *PERCEPTION_CONSTRAINTS,
     *OBJECT_DYNAMICS_CONSTRAINTS,
     *PREHENSION_CONSTRAINTS,
+    # %% Phase 8 semantic hardening
+    Forbidden(
+        id="C66",
+        applies_to=ActionPhaseStructure,
+        when=structure_has_uncontrolled_normal_boundary,
+        message="normal phase boundary lacks a control point or explicit exemption",
+        rationale="Every successful boundary must either compare predicted with "
+        "observed evidence or state why that comparison is intentionally omitted.",
+    ),
+    Forbidden(
+        id="C67",
+        applies_to=PredictionComparison,
+        when=comparison_has_incompatible_evidence,
+        message="prediction and observation describe incompatible sensory evidence",
+        rationale="A comparison requires consistent modality and participant roles. "
+        "Event or feature identity may differ only for an explicitly classified "
+        "unexpected observation.",
+    ),
+    Forbidden(
+        id="C68",
+        applies_to=ScientificAssertion,
+        when=engineering_extension_lacks_provenance,
+        message="engineering extension has no explicit provenance",
+        rationale="Application-specific additions must remain distinguishable from "
+        "claims supported by the reviewed research.",
+    ),
+    Forbidden(
+        id="C69",
+        applies_to=ActionPhaseStructure,
+        when=structure_has_invalid_control_exemption,
+        message="control-point exemption does not name a normal phase boundary",
+        rationale="An exemption may justify an omitted comparison only for a boundary "
+        "that the represented phase structure actually uses.",
+    ),
     *POURING_CONSTRAINTS,
     # %% numeric sanity
     Ordered(
@@ -601,6 +730,7 @@ CONSTRAINTS = [
             "has_control_point.at_event_type",
             "defines_prediction.predicts_event",
             "defines_prediction.caused_by_event",
+            "has_control_point_exemption.exempts_event",
             "defines_observation.observes_event",
         ),
         rationale="Every event a structure gates or bounds on must be one it "

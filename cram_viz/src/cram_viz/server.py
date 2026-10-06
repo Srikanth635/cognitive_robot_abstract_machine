@@ -11,6 +11,8 @@ Serves three things from one port (default 8711):
       GET  /api/kb/view?name=   one graph tab (knowledge/kinematics/plan/chart)
       GET  /api/kb/expand?node= drill-down subgraph for one node
       POST /api/eql             run an EQL query string
+      POST /api/hypothesis/generate  generate a hypothesis for an instruction
+      POST /api/execute         launch the hardcoded demo under the live bridge
 
 The API needs krrood (EQL). Without it the server still serves the viewer and
 answers API calls with ``{"ok": false, "error": ...}`` so the frontend can say
@@ -31,6 +33,7 @@ import socketserver
 import sys
 import threading
 import traceback
+from functools import cache
 from pathlib import Path
 from typing_extensions import Any, Callable, Dict, List, Optional
 from urllib.parse import parse_qs, urlparse
@@ -103,6 +106,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         """
         return parse_qs(urlparse(self.path).query)
 
+    def _selected_scene(self) -> Optional[str]:
+        """
+        Return the scene selected by the current browser request.
+        """
+        return (self._query().get("scene") or [None])[0]
+
     def _guarded(self, fn: Callable[[], Any]) -> None:
         """
         Run an API handler; report exceptions as a JSON error payload.
@@ -149,18 +158,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if route.startswith("/scenes/"):
             return self._serve_scene_file(route)
         if route == "/api/kb":
-            return self._guarded(lambda: kb_module.graph_payload())
+            selected_scene = self._selected_scene()
+            return self._guarded(lambda: kb_module.graph_payload(selected_scene))
         if route == "/api/kb/view":
             name = (self._query().get("name") or ["knowledge"])[0]
-            return self._guarded(lambda: kb_module.view_payload(name))
+            selected_scene = self._selected_scene()
+            return self._guarded(lambda: kb_module.view_payload(name, selected_scene))
         if route == "/api/kb/expand":
             node = (self._query().get("node") or [""])[0]
+            selected_scene = self._selected_scene()
 
             def expand() -> Dict[str, Any]:
                 """
                 The node's subgraph, or a "not drillable" error if it has none.
                 """
-                payload = kb_module.expand_node(node)
+                payload = kb_module.expand_node(node, selected_scene)
                 return payload if payload else {"ok": False, "error": "not drillable"}
 
             return self._guarded(expand)
@@ -168,9 +180,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_POST(self) -> None:
         """
-        Execute an EQL query (the only write-ish endpoint).
+        Run an EQL query, generate hypothesis knowledge, or launch the demo.
         """
-        if self.path.split("?")[0] != "/api/eql":
+        route = self.path.split("?")[0]
+        if route == "/api/hypothesis/generate":
+            return self._generate_hypothesis()
+        if route == "/api/execute":
+            return self._execute_demo()
+        if route != "/api/eql":
             return self._json({"ok": False, "error": "unknown endpoint"}, 404)
         if kb_module is None:
             return self._json(_no_eql_error())
@@ -181,13 +198,86 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if not code:
                 return self._json({"ok": False, "error": "empty query"})
             with _EQL_LOCK:
-                return self._json(kb_module.run_query(code))
+                return self._json(
+                    kb_module.run_query(code, selected_scene=req.get("scene"))
+                )
         except SyntaxError as ex:
             return self._json({"ok": False, "error": "SyntaxError: %s" % ex})
         except Exception as ex:
             return self._json(
                 {"ok": False, "error": "%s: %s" % (type(ex).__name__, ex)}
             )
+
+    def _generate_hypothesis(self) -> None:
+        """
+        Generate knowledge for an instruction and return the refreshed graph.
+
+        The whole generation is serialised behind the EQL lock: it swaps the knowledge
+        every query and view reads from, so it must not overlap one.
+        """
+        if kb_module is None:
+            return self._json(_no_eql_error())
+        length = int(self.headers.get("Content-Length") or 0)
+        request = json.loads(self.rfile.read(length) or b"{}")
+        instruction = (request.get("instruction") or "").strip()
+        if not instruction:
+            return self._json({"ok": False, "error": "empty instruction"})
+        try:
+            with _EQL_LOCK:
+                _hypothesis_generation_service().generate(instruction)
+                kb_module.reset_kb()
+                payload = kb_module.view_payload("hypothesis")
+        except Exception as ex:
+            logger.exception("hypothesis generation failed")
+            return self._json(
+                {"ok": False, "error": "%s: %s" % (type(ex).__name__, ex)}
+            )
+        payload["instruction"] = instruction
+        return self._json(payload)
+
+    def _execute_demo(self) -> None:
+        """
+        Launch the viewer's hardcoded demo under the live bridge, in the
+        background, restarting it if it was already running. Independent of any
+        generated hypothesis and of EQL/krrood.
+        """
+        try:
+            _live_demo_launcher().launch(paths.default_live_demo())
+        except FileNotFoundError as ex:
+            return self._json({"ok": False, "error": "demo not found: %s" % ex})
+        except OSError as ex:
+            logger.exception("demo launch failed")
+            return self._json(
+                {"ok": False, "error": "%s: %s" % (type(ex).__name__, ex)}
+            )
+        return self._json({"ok": True})
+
+
+@cache
+def _hypothesis_generation_service():
+    """
+    The shared generation service.
+
+    Built once and on first use, so starting the viewer never needs credentials and
+    the record store is indexed a single time.
+    """
+    from cram_viz.hypothesis_knowledge.generation import (
+        HypothesisGenerationService,
+        ModelHypothesisSource,
+    )
+
+    return HypothesisGenerationService(source=ModelHypothesisSource())
+
+
+@cache
+def _live_demo_launcher():
+    """
+    The shared demo launcher, so a second "Execute" click while a launched demo
+    is still running stops it first instead of racing it for the bridge's port.
+    """
+    from cram_viz.live.launcher import LiveDemoLauncher
+
+    return LiveDemoLauncher()
 
 
 def make_server(port: int = 0) -> socketserver.ThreadingTCPServer:

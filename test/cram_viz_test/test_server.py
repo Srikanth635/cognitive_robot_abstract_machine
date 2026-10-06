@@ -114,6 +114,62 @@ class TestApi:
             payload = json.loads(response.read())
         assert payload["ok"] is False and "error" in payload
 
+    def test_hypothesis_generation_rejects_an_empty_instruction(self, server):
+        # validation happens before any model client is built, so this needs no
+        # credentials and is safe to run in CI
+        request = urllib.request.Request(
+            server + "/api/hypothesis/generate",
+            data=json.dumps({"instruction": "   "}).encode(),
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(request, timeout=30) as response:
+            payload = json.loads(response.read())
+        assert payload["ok"] is False
+        assert "instruction" in payload["error"]
+
+    def test_execute_launches_the_hardcoded_demo(self, server, monkeypatch):
+        # the real launcher is replaced so this never starts a real subprocess or
+        # binds the live bridge's port
+        from cram_viz import server as server_module
+
+        launched = []
+
+        class FakeLauncher:
+            def launch(self, demo):
+                launched.append(demo)
+
+        monkeypatch.setattr(server_module, "_live_demo_launcher", FakeLauncher)
+        request = urllib.request.Request(server + "/api/execute", data=b"{}")
+
+        with urllib.request.urlopen(request, timeout=10) as response:
+            payload = json.loads(response.read())
+
+        assert payload["ok"] is True
+        assert launched == [server_module.paths.default_live_demo()]
+
+    def test_execute_relaunches_over_a_still_running_demo(self, server, monkeypatch):
+        # the real launcher already restarts instead of refusing (see
+        # test_live_demo_launcher.py); this just confirms the route reports the
+        # relaunch as a success rather than translating it into an error
+        from cram_viz import server as server_module
+
+        launched = []
+
+        class RelaunchingLauncher:
+            def launch(self, demo):
+                launched.append(demo)
+
+        monkeypatch.setattr(server_module, "_live_demo_launcher", RelaunchingLauncher)
+        request = urllib.request.Request(server + "/api/execute", data=b"{}")
+
+        with urllib.request.urlopen(request, timeout=10) as response:
+            first_payload = json.loads(response.read())
+        with urllib.request.urlopen(request, timeout=10) as response:
+            second_payload = json.loads(response.read())
+
+        assert first_payload["ok"] is True and second_payload["ok"] is True
+        assert launched == [server_module.paths.default_live_demo()] * 2
+
     def test_unknown_post_endpoint_is_json_404(self, server):
         request = urllib.request.Request(server + "/api/nope", data=b"{}")
         try:
@@ -123,3 +179,39 @@ class TestApi:
             status, body = err.code, err.read()
         assert status == 404
         assert json.loads(body)["ok"] is False
+
+
+# %% Scene-scoped knowledge
+class TestSceneScopedKnowledge:
+    def test_requested_scene_determines_the_knowledge_episodes(
+        self, server, fixture_scene
+    ):
+        """
+        Ensure the knowledge graph follows the scene selected by the browser.
+        """
+        source_directory = fixture_scene / "scenes" / "fixture"
+        pouring_directory = fixture_scene / "scenes" / "pouring"
+        pouring_directory.mkdir()
+        scene = json.loads((source_directory / "scene.json").read_text())
+        scene["name"] = "pouring"
+        scene["segments"] = [
+            {
+                "step": "pouring_bowl",
+                "action": "PouringAction",
+                "arm": "left",
+                "start": 0,
+                "end": 3,
+            }
+        ]
+        scene["planTrees"] = []
+        (pouring_directory / "scene.json").write_text(json.dumps(scene))
+        for filename in ("trajectory.json", "robot.urdf"):
+            (pouring_directory / filename).write_bytes(
+                (source_directory / filename).read_bytes()
+            )
+
+        payload = get_json(server + "/api/kb?scene=pouring")
+        node_ids = {node["id"] for node in payload["nodes"]}
+
+        assert "pouring_bowl" in node_ids
+        assert "transport_milk" not in node_ids

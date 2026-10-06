@@ -281,6 +281,7 @@ class Recorder:
                     "action": type(d).__name__,
                     "arm": str(arm) if arm is not None else None,
                     "target": rec._target_of(d),
+                    "frame": len(rec.frames),
                 }
             )
             rec.plan_nodes.append(node)
@@ -391,6 +392,45 @@ def first_base_motion(rec: Recorder, before: int) -> int:
     return before
 
 
+def timed_target_action_segments(
+    recorder: Recorder, frame_count: int
+) -> List[Dict[str, Any]]:
+    """
+    Build timed episodes for targeted actions recorded after the initial plan.
+    """
+    actions_by_frame: Dict[int, Dict[str, Any]] = {}
+    for action in recorder.actions:
+        action_frame = int(action.get("frame", 0))
+        if action_frame <= 0 or action_frame >= frame_count - 1:
+            continue
+        if not action.get("target"):
+            continue
+        actions_by_frame.setdefault(action_frame, action)
+
+    action_frames = sorted(actions_by_frame)
+    segments = []
+    for index, action_frame in enumerate(action_frames):
+        action = actions_by_frame[action_frame]
+        target = os.path.splitext(action["target"])[0]
+        verb = action["action"].replace("Action", "").lower()
+        end_frame = (
+            action_frames[index + 1]
+            if index + 1 < len(action_frames)
+            else frame_count - 1
+        )
+        segments.append(
+            {
+                "step": "%s_%s" % (verb, target),
+                "action": action["action"],
+                "arm": action["arm"],
+                "start": action_frame,
+                "end": end_frame,
+                "target": target,
+            }
+        )
+    return segments
+
+
 def derive_segments(rec: Recorder) -> List[Dict[str, Any]]:
     """Segments = data-driven windows, labelled from the parsed action list."""
     n = len(rec.frames)
@@ -449,6 +489,14 @@ def derive_segments(rec: Recorder) -> List[Dict[str, Any]]:
             }
         )
         prev = end
+    later_segments = timed_target_action_segments(rec, n)
+    for later_segment in later_segments:
+        for segment in segments:
+            if segment["start"] < later_segment["start"] < segment["end"]:
+                segment["end"] = later_segment["start"]
+        segments.append(later_segment)
+    segments = [segment for segment in segments if segment["start"] < segment["end"]]
+    segments.sort(key=lambda segment: segment["start"])
     if not segments:
         label = (
             rec.actions[0]["action"].replace("Action", "").lower()

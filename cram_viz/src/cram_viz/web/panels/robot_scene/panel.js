@@ -303,16 +303,11 @@ Panels.define('robot-scene', function (root, bus) {
     return loader;
   }
 
-  function sceneNameFromUrl() {
-    const m = /[?&]scene=([\w-]+)/.exec(window.location.search);
-    return m ? m[1] : null;
-  }
-
   fetch(SCENES + 'index.json')
     .then(function (r) { return r.ok ? r.json() : { default: null, scenes: [] }; })
     .catch(function () { return { default: null, scenes: [] }; })
     .then(function (index) {
-      const name = sceneNameFromUrl() || index.default;
+      const name = SceneSelection.nameFromSearch(window.location.search) || index.default;
       // header dropdown: switch between all onboarded scenes
       const sel = $('scene-select');
       if (sel && index.scenes && index.scenes.length > 1) {

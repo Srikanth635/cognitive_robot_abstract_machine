@@ -29,7 +29,7 @@ from llm_reasoner.knowledge.microworlds.flanagan.core import (
     TactileSignal,
     TemporalWindow,
 )
-from llm_reasoner.knowledge.microworlds.flanagan.pouring import SourceContainer
+from llm_reasoner.knowledge.microworlds.flanagan.pouring import POUR, SourceContainer
 from llm_reasoner.knowledge.microworlds.flanagan.prehension import (
     ExpectedMass,
     Liftoff,
@@ -50,7 +50,7 @@ def make_source_role() -> RoleSlot:
     return RoleSlot(
         label="source container",
         binds_as=ConceptReference(
-            iri="http://example.org/ontology/flanagan-pouring#SourceContainer",
+            iri=POUR + "SourceContainer",
             label=SourceContainer.__name__,
         ),
     )

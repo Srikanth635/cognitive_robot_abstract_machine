@@ -90,6 +90,7 @@
       // let the layout settle, then let vis re-fit to the new size
       window.dispatchEvent(new Event('resize'));
       if (window.Graph && Graph.resize) Graph.resize();
+      if (window.HypothesisGraph && HypothesisGraph.resize) HypothesisGraph.resize();
     }
 
     function toggleGraphFull() {

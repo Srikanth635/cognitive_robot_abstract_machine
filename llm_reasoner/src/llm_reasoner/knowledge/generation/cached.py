@@ -1,4 +1,5 @@
-"""Generating only when the store cannot answer.
+"""
+Generating only when the store cannot answer.
 
 WHY THIS IS A WRAPPER AND NOT A FLAG ON THE GENERATOR
 ------------------------------------------------------
@@ -18,7 +19,7 @@ to zero. That is the return on having kept world state out of generation.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 
 from llm_reasoner.knowledge.generation.backend import (
@@ -36,14 +37,18 @@ from llm_reasoner.knowledge.ontological.decorators import ConceptReference
 
 @dataclass(frozen=True)
 class CachedResult:
-    """A hypothesis, and how it was obtained."""
+    """
+    A hypothesis, and how it was obtained.
+    """
 
     record: HypothesisRecord
     selection: ModuleSelection
     from_cache: bool
     lookup: Lookup
-    """The full lookup, so a caller can see what was passed over: a stale record
-    the ontology outran, or a refuted one that failed the same way before."""
+    """
+    The full lookup, so a caller can see what was passed over: a stale record the
+    ontology outran, or a refuted one that failed the same way before.
+    """
 
     generation: Optional[GenerationResult] = None
 
@@ -54,19 +59,22 @@ class CachedResult:
 
 @dataclass
 class CachingGenerator:
-    """Answers from the store when it can, generates when it cannot."""
+    """
+    Answers from the store when it can, generates when it cannot.
+    """
 
     generator: HypothesisGenerator
     store: HypothesisStore
 
     regenerate_refuted: bool = False
-    """Whether to try again for an action whose previous attempts were refuted.
+    """
+    Whether to try again for an action whose previous attempts were refuted.
 
-    Off by default. A hypothesis refuted because it kept violating the same
-    constraint will usually be refuted again by the same model under the same
-    prompt, and spending the calls to rediscover that is waste. Turning it on is
-    the right move after the ontology or the prompt changes -- which is exactly
-    when the cache key has moved anyway.
+    Off by default. A hypothesis refuted because it kept violating the same constraint
+    will usually be refuted again by the same model under the same prompt, and spending
+    the calls to rediscover that is waste. Turning it on is the right move after the
+    ontology or the prompt changes -- which is exactly when the cache key has moved
+    anyway.
     """
 
     def get(
@@ -76,14 +84,19 @@ class CachingGenerator:
         selection: Optional[ModuleSelection] = None,
         force: bool = False,
     ) -> CachedResult:
-        """Obtain a hypothesis for an action.
+        """
+        Obtain a hypothesis for an action.
 
-        :param force: Generate even on a hit. For deliberately producing a
-            second opinion, not for routine use.
+        :param force: Generate even on a hit. For deliberately producing a second
+            opinion, not for routine use.
         """
         selection = selection or select_modules(task)
         versions = dict(selection.module_versions)
-        lookup = self.store.lookup(task.iri, versions)
+        lookup = self.store.lookup(
+            task.iri,
+            versions,
+            prompt_version=self.generator.prompt_version,
+        )
 
         if lookup.hit and not force:
             return CachedResult(

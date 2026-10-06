@@ -93,6 +93,43 @@ class TestObjectDynamicsGenerationSchema:
             "uses_efference_copy",
         } == {field.name for field in representation.required_fields}
 
+    def test_dynamics_schema_replaces_the_generic_object_representation(self) -> None:
+        structure = object_dynamics_schema().get("PouringPhaseStructure")
+        assert structure is not None
+        internal_models = next(
+            field
+            for field in structure.fields
+            if field.name == "defines_internal_model"
+        )
+
+        assert "ObjectDynamicsModel" in internal_models.options
+        assert "ObjectRepresentation" not in internal_models.options
+
+    def test_dynamics_root_requires_and_explains_representation_ownership(
+        self,
+    ) -> None:
+        structure = object_dynamics_schema().get("PouringPhaseStructure")
+        assert structure is not None
+        internal_models = next(
+            field
+            for field in structure.fields
+            if field.name == "defines_internal_model"
+        )
+
+        assert internal_models.required == 1
+        assert internal_models.docstring is not None
+        assert all(
+            field_name in internal_models.docstring
+            for field_name in (
+                "defines_parameter",
+                "holds_estimate",
+                "defines_internal_model",
+                "represents_role",
+                "parameter_on_role",
+                "purpose",
+            )
+        )
+
     def test_composition_requires_each_command_and_prediction_stage(self) -> None:
         composition = object_dynamics_schema().get("InternalModelComposition")
         assert composition is not None

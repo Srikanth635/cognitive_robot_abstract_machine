@@ -1,0 +1,5150 @@
+{
+  "root": "0",
+  "nodes": [
+    {
+      "id": "0",
+      "label": "Pour cereal from the cereal box into the bowl",
+      "details": [
+        "kind: instruction",
+        "type: Instruction",
+        "identifier: instruction:c0a85608fca1"
+      ],
+      "kind": "instruction"
+    },
+    {
+      "id": "1",
+      "label": "ActionPhases",
+      "details": [
+        "description: PouringPhaseStructure",
+        "kind: root",
+        "type: PouringPhaseStructure",
+        "identifier: pouring-phase-structure"
+      ],
+      "kind": "root"
+    },
+    {
+      "id": "2",
+      "label": "ContinuousSignalPrediction",
+      "details": [
+        "kind: fragment",
+        "type: ContinuousSignalPrediction",
+        "identifier: continuous-signal-prediction-2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "3",
+      "label": "Pour",
+      "details": [
+        "description: Continuous modulation of tilt angle and grip/load force while substance leaves container",
+        "kind: fragment",
+        "type: FlowRegulationPhase",
+        "identifier: flow-regulation-phase"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "4",
+      "label": "ObjectRepresentation",
+      "details": [
+        "kind: fragment",
+        "type: ObjectRepresentation",
+        "identifier: object-representation"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "5",
+      "label": "ExpectedShape",
+      "details": [
+        "kind: fragment",
+        "type: ExpectedShape",
+        "identifier: expected-shape"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "6",
+      "label": "GripForceSetpoint",
+      "details": [
+        "kind: fragment",
+        "type: GripForceSetpoint",
+        "identifier: grip-force-setpoint"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "7",
+      "label": "ExpectedCenterOfMassShift",
+      "details": [
+        "kind: fragment",
+        "type: ExpectedCenterOfMassShift",
+        "identifier: expected-center-of-mass-shift"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "8",
+      "label": "TorqueSetpoint",
+      "details": [
+        "kind: fragment",
+        "type: TorqueSetpoint",
+        "identifier: torque-setpoint"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "9",
+      "label": "ExpectedCenterOfMass",
+      "details": [
+        "kind: fragment",
+        "type: ExpectedCenterOfMass",
+        "identifier: expected-center-of-mass"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "10",
+      "label": "Lift",
+      "details": [
+        "description: Vertical transport of source container away from initial support",
+        "kind: fragment",
+        "type: LiftPhase",
+        "identifier: lift-phase"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "11",
+      "label": "InverseModel",
+      "details": [
+        "kind: fragment",
+        "type: InverseModel",
+        "identifier: inverse-model"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "12",
+      "label": "ForwardModel",
+      "details": [
+        "kind: fragment",
+        "type: ForwardModel",
+        "identifier: forward-model"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "13",
+      "label": "ProprioceptiveSignal",
+      "details": [
+        "kind: fragment",
+        "type: ProprioceptiveSignal",
+        "identifier: proprioceptive-signal"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "14",
+      "label": "ObjectClearOfSupportInvariant",
+      "details": [
+        "description: ConditionRequirement",
+        "kind: fragment",
+        "type: ConditionRequirement",
+        "identifier: condition-requirement-2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "15",
+      "label": "ObjectClearOfSupport",
+      "details": [
+        "kind: fragment",
+        "type: ObjectClearOfSupport",
+        "identifier: object-clear-of-support"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "16",
+      "label": "Touchdown",
+      "details": [
+        "kind: fragment",
+        "type: Touchdown",
+        "identifier: touchdown"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "17",
+      "label": "InitialSupport",
+      "details": [
+        "description: RoleSlot",
+        "kind: fragment",
+        "type: RoleSlot",
+        "identifier: role-slot-7"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "18",
+      "label": "SourceContainer",
+      "details": [
+        "description: RoleSlot",
+        "kind: fragment",
+        "type: RoleSlot",
+        "identifier: role-slot-3"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "19",
+      "label": "Effector",
+      "details": [
+        "description: RoleSlot",
+        "kind: fragment",
+        "type: RoleSlot",
+        "identifier: role-slot-2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "20",
+      "label": "LiftClearanceReached",
+      "details": [
+        "kind: fragment",
+        "type: LiftClearanceReached",
+        "identifier: lift-clearance-reached"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "21",
+      "label": "Liftoff",
+      "details": [
+        "kind: fragment",
+        "type: Liftoff",
+        "identifier: liftoff"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "22",
+      "label": "LiftClearanceReachedGoal",
+      "details": [
+        "description: Subgoal",
+        "kind: fragment",
+        "type: Subgoal",
+        "identifier: subgoal-3"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "23",
+      "label": "Grasp",
+      "details": [
+        "description: Parallel increase of grip and load force after contact until liftoff",
+        "kind: fragment",
+        "type: LoadPhase",
+        "identifier: load-phase"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "24",
+      "label": "TactileSignal",
+      "details": [
+        "kind: fragment",
+        "type: TactileSignal",
+        "identifier: tactile-signal"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "25",
+      "label": "GraspStabilityInvariant",
+      "details": [
+        "description: ConditionRequirement",
+        "kind: fragment",
+        "type: ConditionRequirement",
+        "identifier: condition-requirement"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "26",
+      "label": "GraspStability",
+      "details": [
+        "kind: fragment",
+        "type: GraspStability",
+        "identifier: grasp-stability"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "27",
+      "label": "ContactBreak",
+      "details": [
+        "kind: fragment",
+        "type: ContactBreak",
+        "identifier: contact-break"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "28",
+      "label": "ContactEstablishment",
+      "details": [
+        "kind: fragment",
+        "type: ContactEstablishment",
+        "identifier: contact-establishment"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "29",
+      "label": "LiftoffGoal",
+      "details": [
+        "description: Subgoal",
+        "kind: fragment",
+        "type: Subgoal",
+        "identifier: subgoal-2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "30",
+      "label": "MagnitudeRange",
+      "details": [
+        "kind: fragment",
+        "type: MagnitudeRange",
+        "identifier: magnitude-range-10"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "31",
+      "label": "StopFlow",
+      "details": [
+        "description: Counter-rotation to bring substance back below lip",
+        "kind: fragment",
+        "type: FlowTerminationPhase",
+        "identifier: flow-termination-phase"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "32",
+      "label": "VisualSignal",
+      "details": [
+        "kind: fragment",
+        "type: VisualSignal",
+        "identifier: visual-signal"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "33",
+      "label": "EffectorObjectContactInvariant",
+      "details": [
+        "description: ConditionRequirement",
+        "kind: fragment",
+        "type: ConditionRequirement",
+        "identifier: condition-requirement-4"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "34",
+      "label": "EffectorObjectContact",
+      "details": [
+        "kind: fragment",
+        "type: EffectorObjectContact",
+        "identifier: effector-object-contact"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "35",
+      "label": "Substance",
+      "details": [
+        "description: RoleSlot",
+        "kind: fragment",
+        "type: RoleSlot",
+        "identifier: role-slot-4"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "36",
+      "label": "FlowCessation",
+      "details": [
+        "kind: fragment",
+        "type: FlowCessation",
+        "identifier: flow-cessation"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "37",
+      "label": "PouringLip",
+      "details": [
+        "description: RoleSlot",
+        "kind: fragment",
+        "type: RoleSlot",
+        "identifier: role-slot-5"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "38",
+      "label": "TargetVolumeReached",
+      "details": [
+        "kind: fragment",
+        "type: TargetVolumeReached",
+        "identifier: target-volume-reached"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "39",
+      "label": "DestinationContainer",
+      "details": [
+        "description: RoleSlot",
+        "kind: fragment",
+        "type: RoleSlot",
+        "identifier: role-slot-6"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "40",
+      "label": "FlowCessationGoal",
+      "details": [
+        "description: Subgoal",
+        "kind: fragment",
+        "type: Subgoal",
+        "identifier: subgoal-8"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "41",
+      "label": "Tilt",
+      "details": [
+        "description: Rotation of source container until substance reaches lip and flow begins",
+        "kind: fragment",
+        "type: TiltToFlowPhase",
+        "identifier: tilt-to-flow-phase"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "42",
+      "label": "FlowOnset",
+      "details": [
+        "kind: fragment",
+        "type: FlowOnset",
+        "identifier: flow-onset"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "43",
+      "label": "LipAligned",
+      "details": [
+        "kind: fragment",
+        "type: LipAligned",
+        "identifier: lip-aligned"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "44",
+      "label": "FlowOnsetGoal",
+      "details": [
+        "description: Subgoal",
+        "kind: fragment",
+        "type: Subgoal",
+        "identifier: subgoal-6"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "45",
+      "label": "Transport",
+      "details": [
+        "description: Translation of coupled effector-container unit toward target receptacle",
+        "kind: fragment",
+        "type: TransportPhase",
+        "identifier: transport-phase"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "46",
+      "label": "PourPoseReached",
+      "details": [
+        "kind: fragment",
+        "type: PourPoseReached",
+        "identifier: pour-pose-reached"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "47",
+      "label": "PourPoseReachedGoal",
+      "details": [
+        "description: Subgoal",
+        "kind: fragment",
+        "type: Subgoal",
+        "identifier: subgoal-4"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "48",
+      "label": "MagnitudeRange",
+      "details": [
+        "kind: fragment",
+        "type: MagnitudeRange",
+        "identifier: magnitude-range-14"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "49",
+      "label": "MagnitudeRange",
+      "details": [
+        "kind: fragment",
+        "type: MagnitudeRange",
+        "identifier: magnitude-range-11"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "50",
+      "label": "ExpectedFriction",
+      "details": [
+        "kind: fragment",
+        "type: ExpectedFriction",
+        "identifier: expected-friction"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "51",
+      "label": "Reach",
+      "details": [
+        "description: Transport of grasping effector toward source container",
+        "kind: fragment",
+        "type: ReachPhase",
+        "identifier: reach-phase"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "52",
+      "label": "ContactEstablishmentGoal",
+      "details": [
+        "description: Subgoal",
+        "kind: fragment",
+        "type: Subgoal",
+        "identifier: subgoal"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "53",
+      "label": "MagnitudeRange",
+      "details": [
+        "kind: fragment",
+        "type: MagnitudeRange",
+        "identifier: magnitude-range-7"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "54",
+      "label": "ExpectedWeight",
+      "details": [
+        "kind: fragment",
+        "type: ExpectedWeight",
+        "identifier: expected-weight"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "55",
+      "label": "LoadForceSetpoint",
+      "details": [
+        "kind: fragment",
+        "type: LoadForceSetpoint",
+        "identifier: load-force-setpoint"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "56",
+      "label": "Release",
+      "details": [
+        "description: Decrease of grip and load force to zero after touchdown",
+        "kind: fragment",
+        "type: UnloadPhase",
+        "identifier: unload-phase"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "57",
+      "label": "ObjectSupportContactPrecondition",
+      "details": [
+        "description: ConditionRequirement",
+        "kind: fragment",
+        "type: ConditionRequirement",
+        "identifier: condition-requirement-3"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "58",
+      "label": "ObjectSupportContact",
+      "details": [
+        "kind: fragment",
+        "type: ObjectSupportContact",
+        "identifier: object-support-contact"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "59",
+      "label": "ContactBreakGoal",
+      "details": [
+        "description: Subgoal",
+        "kind: fragment",
+        "type: Subgoal",
+        "identifier: subgoal-11"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "60",
+      "label": "Lower",
+      "details": [
+        "description: Lowering of source container toward initial support",
+        "kind: fragment",
+        "type: ReplacePhase",
+        "identifier: replace-phase"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "61",
+      "label": "UprightRestored",
+      "details": [
+        "kind: fragment",
+        "type: UprightRestored",
+        "identifier: upright-restored"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "62",
+      "label": "TouchdownGoal",
+      "details": [
+        "description: Subgoal",
+        "kind: fragment",
+        "type: Subgoal",
+        "identifier: subgoal-10"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "63",
+      "label": "Upright",
+      "details": [
+        "description: Restoration of source container to stable orientation after flow stops",
+        "kind: fragment",
+        "type: ReturnUprightPhase",
+        "identifier: return-upright-phase"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "64",
+      "label": "UprightRestoredGoal",
+      "details": [
+        "description: Subgoal",
+        "kind: fragment",
+        "type: Subgoal",
+        "identifier: subgoal-9"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "65",
+      "label": "Align",
+      "details": [
+        "description: Positioning of pouring lip over target receptacle opening",
+        "kind: fragment",
+        "type: AlignmentPhase",
+        "identifier: alignment-phase"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "66",
+      "label": "LipAlignedGoal",
+      "details": [
+        "description: Subgoal",
+        "kind: fragment",
+        "type: Subgoal",
+        "identifier: subgoal-5"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "67",
+      "label": "MagnitudeRange",
+      "details": [
+        "kind: fragment",
+        "type: MagnitudeRange",
+        "identifier: magnitude-range-2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "68",
+      "label": "MagnitudeRange",
+      "details": [
+        "kind: fragment",
+        "type: MagnitudeRange",
+        "identifier: magnitude-range-6"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "69",
+      "label": "MagnitudeRange",
+      "details": [
+        "kind: fragment",
+        "type: MagnitudeRange",
+        "identifier: magnitude-range"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "70",
+      "label": "MagnitudeRange",
+      "details": [
+        "kind: fragment",
+        "type: MagnitudeRange",
+        "identifier: magnitude-range-12"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "71",
+      "label": "ExpectedViscosity",
+      "details": [
+        "kind: fragment",
+        "type: ExpectedViscosity",
+        "identifier: expected-viscosity"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "72",
+      "label": "TiltRateSetpoint",
+      "details": [
+        "kind: fragment",
+        "type: TiltRateSetpoint",
+        "identifier: tilt-rate-setpoint"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "73",
+      "label": "ExpectedFillLevel",
+      "details": [
+        "kind: fragment",
+        "type: ExpectedFillLevel",
+        "identifier: expected-fill-level"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "74",
+      "label": "TiltAngleSetpoint",
+      "details": [
+        "kind: fragment",
+        "type: TiltAngleSetpoint",
+        "identifier: tilt-angle-setpoint"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "75",
+      "label": "MagnitudeRange",
+      "details": [
+        "kind: fragment",
+        "type: MagnitudeRange",
+        "identifier: magnitude-range-3"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "76",
+      "label": "MagnitudeRange",
+      "details": [
+        "kind: fragment",
+        "type: MagnitudeRange",
+        "identifier: magnitude-range-8"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "77",
+      "label": "MagnitudeRange",
+      "details": [
+        "kind: fragment",
+        "type: MagnitudeRange",
+        "identifier: magnitude-range-4"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "78",
+      "label": "MagnitudeRange",
+      "details": [
+        "kind: fragment",
+        "type: MagnitudeRange",
+        "identifier: magnitude-range-9"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "79",
+      "label": "AuditorySignal",
+      "details": [
+        "kind: fragment",
+        "type: AuditorySignal",
+        "identifier: auditory-signal"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "80",
+      "label": "TargetVolumeReachedGoal",
+      "details": [
+        "description: Subgoal",
+        "kind: fragment",
+        "type: Subgoal",
+        "identifier: subgoal-7"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "81",
+      "label": "ContinuousSignalPrediction",
+      "details": [
+        "kind: fragment",
+        "type: ContinuousSignalPrediction",
+        "identifier: continuous-signal-prediction"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "82",
+      "label": "GripLoadCoupling",
+      "details": [
+        "kind: fragment",
+        "type: GripLoadCoupling",
+        "identifier: grip-load-coupling"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "83",
+      "label": "MagnitudeRange",
+      "details": [
+        "kind: fragment",
+        "type: MagnitudeRange",
+        "identifier: magnitude-range-19"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "84",
+      "label": "FlowCessationControlPoint",
+      "details": [
+        "description: SensorimotorControlPoint",
+        "kind: fragment",
+        "type: SensorimotorControlPoint",
+        "identifier: sensorimotor-control-point-7"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "85",
+      "label": "TargetVolumeReachedControlPoint",
+      "details": [
+        "description: SensorimotorControlPoint",
+        "kind: fragment",
+        "type: SensorimotorControlPoint",
+        "identifier: sensorimotor-control-point-6"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "86",
+      "label": "FlowOnsetControlPoint",
+      "details": [
+        "description: SensorimotorControlPoint",
+        "kind: fragment",
+        "type: SensorimotorControlPoint",
+        "identifier: sensorimotor-control-point-5"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "87",
+      "label": "LipAlignedControlPoint",
+      "details": [
+        "description: SensorimotorControlPoint",
+        "kind: fragment",
+        "type: SensorimotorControlPoint",
+        "identifier: sensorimotor-control-point-4"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "88",
+      "label": "PourPoseReachedControlPoint",
+      "details": [
+        "description: SensorimotorControlPoint",
+        "kind: fragment",
+        "type: SensorimotorControlPoint",
+        "identifier: sensorimotor-control-point-3"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "89",
+      "label": "LiftoffControlPoint",
+      "details": [
+        "description: SensorimotorControlPoint",
+        "kind: fragment",
+        "type: SensorimotorControlPoint",
+        "identifier: sensorimotor-control-point-2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "90",
+      "label": "ContactEstablishmentControlPoint",
+      "details": [
+        "description: SensorimotorControlPoint",
+        "kind: fragment",
+        "type: SensorimotorControlPoint",
+        "identifier: sensorimotor-control-point"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "91",
+      "label": "ReleaseToWithdraw",
+      "details": [
+        "description: PhaseTransition",
+        "kind: fragment",
+        "type: PhaseTransition",
+        "identifier: phase-transition-11"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "92",
+      "label": "Withdraw",
+      "details": [
+        "description: Breaking of effector-object contact and withdrawal",
+        "kind: fragment",
+        "type: ReleasePhase",
+        "identifier: release-phase"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "93",
+      "label": "ContactBreakGoal",
+      "details": [
+        "description: Subgoal",
+        "kind: fragment",
+        "type: Subgoal",
+        "identifier: subgoal-12"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "94",
+      "label": "LowerToRelease",
+      "details": [
+        "description: PhaseTransition",
+        "kind: fragment",
+        "type: PhaseTransition",
+        "identifier: phase-transition-10"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "95",
+      "label": "UprightToLower",
+      "details": [
+        "description: PhaseTransition",
+        "kind: fragment",
+        "type: PhaseTransition",
+        "identifier: phase-transition-9"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "96",
+      "label": "StopFlowToUpright",
+      "details": [
+        "description: PhaseTransition",
+        "kind: fragment",
+        "type: PhaseTransition",
+        "identifier: phase-transition-8"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "97",
+      "label": "PourToStopFlow",
+      "details": [
+        "description: PhaseTransition",
+        "kind: fragment",
+        "type: PhaseTransition",
+        "identifier: phase-transition-7"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "98",
+      "label": "TiltToPour",
+      "details": [
+        "description: PhaseTransition",
+        "kind: fragment",
+        "type: PhaseTransition",
+        "identifier: phase-transition-6"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "99",
+      "label": "AlignToTilt",
+      "details": [
+        "description: PhaseTransition",
+        "kind: fragment",
+        "type: PhaseTransition",
+        "identifier: phase-transition-5"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "100",
+      "label": "TransportToAlign",
+      "details": [
+        "description: PhaseTransition",
+        "kind: fragment",
+        "type: PhaseTransition",
+        "identifier: phase-transition-4"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "101",
+      "label": "LiftToTransport",
+      "details": [
+        "description: PhaseTransition",
+        "kind: fragment",
+        "type: PhaseTransition",
+        "identifier: phase-transition-3"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "102",
+      "label": "GraspToLift",
+      "details": [
+        "description: PhaseTransition",
+        "kind: fragment",
+        "type: PhaseTransition",
+        "identifier: phase-transition-2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "103",
+      "label": "ReachToGrasp",
+      "details": [
+        "description: PhaseTransition",
+        "kind: fragment",
+        "type: PhaseTransition",
+        "identifier: phase-transition"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "104",
+      "label": "FinalSupport",
+      "details": [
+        "description: RoleSlot",
+        "kind: fragment",
+        "type: RoleSlot",
+        "identifier: role-slot-8"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "105",
+      "label": "Agent",
+      "details": [
+        "description: RoleSlot",
+        "kind: fragment",
+        "type: RoleSlot",
+        "identifier: role-slot"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "106",
+      "label": "Phases",
+      "details": [
+        "description: Phases (12)",
+        "kind: group",
+        "type: RelationshipGroup",
+        "identifier: group:pouring-phase-structure:defines_phase"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "107",
+      "label": "Roles",
+      "details": [
+        "description: Roles (8)",
+        "kind: group",
+        "type: RelationshipGroup",
+        "identifier: group:pouring-phase-structure:defines_role"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "108",
+      "label": "EventTypes",
+      "details": [
+        "description: Event Types (10)",
+        "kind: group",
+        "type: RelationshipGroup",
+        "identifier: group:pouring-phase-structure:defines_event_type"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "109",
+      "label": "Transitions",
+      "details": [
+        "description: Transitions (11)",
+        "kind: group",
+        "type: RelationshipGroup",
+        "identifier: group:pouring-phase-structure:has_transition"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "110",
+      "label": "ControlPoints",
+      "details": [
+        "description: Control Points (7)",
+        "kind: group",
+        "type: RelationshipGroup",
+        "identifier: group:pouring-phase-structure:has_control_point"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "111",
+      "label": "ForceCouplings",
+      "details": [
+        "description: Force Couplings (1)",
+        "kind: group",
+        "type: RelationshipGroup",
+        "identifier: group:pouring-phase-structure:has_force_coupling"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "112",
+      "label": "ContinuousPredictions",
+      "details": [
+        "description: Continuous Predictions (2)",
+        "kind: group",
+        "type: RelationshipGroup",
+        "identifier: group:pouring-phase-structure:has_continuous_prediction"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "113",
+      "label": "ActionFrame",
+      "details": [
+        "description: Cereal-Pouring Action Frame",
+        "kind: root",
+        "type: MinskyActionFrame",
+        "identifier: minsky-frame:instruction:c0a85608fca1"
+      ],
+      "kind": "root"
+    },
+    {
+      "id": "114",
+      "label": "Action",
+      "details": [
+        "description: Action (1)",
+        "kind: group",
+        "type: MinskyActionSlot",
+        "identifier: minsky-slot:instruction:c0a85608fca1:action"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "115",
+      "label": "Pouring",
+      "details": [
+        "kind: fragment",
+        "type: ActionFrameValue",
+        "identifier: minsky-action:instruction:c0a85608fca1"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "116",
+      "label": "Entities",
+      "details": [
+        "description: Entities (4)",
+        "kind: group",
+        "type: MinskyActionSlot",
+        "identifier: minsky-slot:instruction:c0a85608fca1:entities"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "117",
+      "label": "AgentEffector",
+      "details": [
+        "description: Agent / Effector",
+        "kind: fragment",
+        "type: EntityFrame",
+        "identifier: minsky-entity:instruction:c0a85608fca1:0"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "118",
+      "label": "Affordances",
+      "details": [
+        "description: Affordances (3)",
+        "kind: group",
+        "type: EntityPropertyGroup",
+        "identifier: minsky-property-group:instruction:c0a85608fca1:0:0"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "119",
+      "label": "BoxManipulation",
+      "details": [
+        "description: Reach and grasp the cereal box",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:0:0:0"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "120",
+      "label": "BoxPoseControl",
+      "details": [
+        "description: Lift and orient the cereal box",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:0:0:1"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "121",
+      "label": "FlowRegulation",
+      "details": [
+        "description: Regulate cereal release",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:0:0:2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "122",
+      "label": "Dispositions",
+      "details": [
+        "description: Dispositions (2)",
+        "kind: group",
+        "type: EntityPropertyGroup",
+        "identifier: minsky-property-group:instruction:c0a85608fca1:0:1"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "123",
+      "label": "IntentionalMotion",
+      "details": [
+        "description: Moves under intentional control",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:0:1:0"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "124",
+      "label": "GripLoadAdaptation",
+      "details": [
+        "description: Adjusts grip to the changing box load",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:0:1:1"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "125",
+      "label": "VisualProperties",
+      "details": [
+        "description: Visual Properties (3)",
+        "kind: group",
+        "type: EntityPropertyGroup",
+        "identifier: minsky-property-group:instruction:c0a85608fca1:0:2"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "126",
+      "label": "EffectorPose",
+      "details": [
+        "description: Effector pose",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:0:2:0"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "127",
+      "label": "ContactConfiguration",
+      "details": [
+        "description: Contact configuration",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:0:2:1"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "128",
+      "label": "VisibilityOfTheGrasp",
+      "details": [
+        "description: Visibility of the grasp",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:0:2:2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "129",
+      "label": "GeometricProperties",
+      "details": [
+        "description: Geometric Properties (3)",
+        "kind: group",
+        "type: EntityPropertyGroup",
+        "identifier: minsky-property-group:instruction:c0a85608fca1:0:3"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "130",
+      "label": "ReachableWorkspace",
+      "details": [
+        "description: Reachable workspace",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:0:3:0"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "131",
+      "label": "GraspSpan",
+      "details": [
+        "description: Grasp span",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:0:3:1"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "132",
+      "label": "ApproachDirection",
+      "details": [
+        "description: Approach direction",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:0:3:2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "133",
+      "label": "CerealBox",
+      "details": [
+        "description: Cereal Box",
+        "kind: fragment",
+        "type: EntityFrame",
+        "identifier: minsky-entity:instruction:c0a85608fca1:1"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "134",
+      "label": "Affordances",
+      "details": [
+        "description: Affordances (4)",
+        "kind: group",
+        "type: EntityPropertyGroup",
+        "identifier: minsky-property-group:instruction:c0a85608fca1:1:0"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "135",
+      "label": "Graspable",
+      "details": [
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:1:0:0"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "136",
+      "label": "Liftable",
+      "details": [
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:1:0:1"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "137",
+      "label": "Tiltable",
+      "details": [
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:1:0:2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "138",
+      "label": "ControlledPouring",
+      "details": [
+        "description: Supports controlled cereal pouring",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:1:0:3"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "139",
+      "label": "Dispositions",
+      "details": [
+        "description: Dispositions (3)",
+        "kind: group",
+        "type: EntityPropertyGroup",
+        "identifier: minsky-property-group:instruction:c0a85608fca1:1:1"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "140",
+      "label": "CerealRetention",
+      "details": [
+        "description: Retains cereal while upright or closed",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:1:1:0"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "141",
+      "label": "TiltInducedRelease",
+      "details": [
+        "description: Releases cereal through its opening when tilted",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:1:1:1"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "142",
+      "label": "MisalignmentSpillRisk",
+      "details": [
+        "description: May scatter cereal when misaligned",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:1:1:2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "143",
+      "label": "VisualProperties",
+      "details": [
+        "description: Visual Properties (3)",
+        "kind: group",
+        "type: EntityPropertyGroup",
+        "identifier: minsky-property-group:instruction:c0a85608fca1:1:2"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "144",
+      "label": "VisibleOpening",
+      "details": [
+        "description: Visible package opening or top flaps",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:1:2:0"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "145",
+      "label": "RectangularSurface",
+      "details": [
+        "description: Printed rectangular package surfaces",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:1:2:1"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "146",
+      "label": "GraspRegion",
+      "details": [
+        "description: Observable grasp region on the box panels",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:1:2:2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "147",
+      "label": "GeometricProperties",
+      "details": [
+        "description: Geometric Properties (4)",
+        "kind: group",
+        "type: EntityPropertyGroup",
+        "identifier: minsky-property-group:instruction:c0a85608fca1:1:3"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "148",
+      "label": "CuboidPackageDimensions",
+      "details": [
+        "description: Cuboid package dimensions",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:1:3:0"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "149",
+      "label": "OpeningSize",
+      "details": [
+        "description: Opening size",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:1:3:1"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "150",
+      "label": "InteriorCapacity",
+      "details": [
+        "description: Interior capacity",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:1:3:2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "151",
+      "label": "CenterOfMass",
+      "details": [
+        "description: Center of mass",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:1:3:3"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "152",
+      "label": "Cereal",
+      "details": [
+        "kind: fragment",
+        "type: EntityFrame",
+        "identifier: minsky-entity:instruction:c0a85608fca1:2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "153",
+      "label": "Affordances",
+      "details": [
+        "description: Affordances (2)",
+        "kind: group",
+        "type: EntityPropertyGroup",
+        "identifier: minsky-property-group:instruction:c0a85608fca1:2:0"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "154",
+      "label": "Transferable",
+      "details": [
+        "description: Transferable between containers",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:2:0:0"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "155",
+      "label": "Pourable",
+      "details": [
+        "description: Pourable through the box opening",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:2:0:1"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "156",
+      "label": "Dispositions",
+      "details": [
+        "description: Dispositions (3)",
+        "kind: group",
+        "type: EntityPropertyGroup",
+        "identifier: minsky-property-group:instruction:c0a85608fca1:2:1"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "157",
+      "label": "GravityDrivenFlow",
+      "details": [
+        "description: Flows as a granular collective under gravity",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:2:1:0"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "158",
+      "label": "PileFormation",
+      "details": [
+        "description: Forms a pile in the bowl",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:2:1:1"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "159",
+      "label": "SpillScattering",
+      "details": [
+        "description: Scatters when spilled",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:2:1:2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "160",
+      "label": "VisualProperties",
+      "details": [
+        "description: Visual Properties (3)",
+        "kind: group",
+        "type: EntityPropertyGroup",
+        "identifier: minsky-property-group:instruction:c0a85608fca1:2:2"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "161",
+      "label": "DiscretePieces",
+      "details": [
+        "description: Discrete pieces are visible",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:2:2:0"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "162",
+      "label": "PieceAppearance",
+      "details": [
+        "description: Piece color and shape are observable",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:2:2:1"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "163",
+      "label": "VisibleFlow",
+      "details": [
+        "description: A cereal stream is visible during transfer",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:2:2:2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "164",
+      "label": "GeometricProperties",
+      "details": [
+        "description: Geometric Properties (4)",
+        "kind: group",
+        "type: EntityPropertyGroup",
+        "identifier: minsky-property-group:instruction:c0a85608fca1:2:3"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "165",
+      "label": "BulkVolume",
+      "details": [
+        "description: Bulk volume",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:2:3:0"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "166",
+      "label": "PieceSizeAndShape",
+      "details": [
+        "description: Piece size and shape",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:2:3:1"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "167",
+      "label": "PileFootprint",
+      "details": [
+        "description: Pile footprint",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:2:3:2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "168",
+      "label": "VariableBulkShape",
+      "details": [
+        "description: No fixed bulk shape",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:2:3:3"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "169",
+      "label": "Bowl",
+      "details": [
+        "kind: fragment",
+        "type: EntityFrame",
+        "identifier: minsky-entity:instruction:c0a85608fca1:3"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "170",
+      "label": "Affordances",
+      "details": [
+        "description: Affordances (3)",
+        "kind: group",
+        "type: EntityPropertyGroup",
+        "identifier: minsky-property-group:instruction:c0a85608fca1:3:0"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "171",
+      "label": "Receivable",
+      "details": [
+        "description: Receives cereal",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:3:0:0"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "172",
+      "label": "Containment",
+      "details": [
+        "description: Contains transferred cereal",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:3:0:1"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "173",
+      "label": "PortionObservable",
+      "details": [
+        "description: Supports portion observation",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:3:0:2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "174",
+      "label": "Dispositions",
+      "details": [
+        "description: Dispositions (3)",
+        "kind: group",
+        "type: EntityPropertyGroup",
+        "identifier: minsky-property-group:instruction:c0a85608fca1:3:1"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "175",
+      "label": "StableRetention",
+      "details": [
+        "description: Retains cereal when stable",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:3:1:0"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "176",
+      "label": "FillResponse",
+      "details": [
+        "description: Fills as cereal enters",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:3:1:1"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "177",
+      "label": "OverflowRisk",
+      "details": [
+        "description: May overflow when overfilled",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:3:1:2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "178",
+      "label": "VisualProperties",
+      "details": [
+        "description: Visual Properties (3)",
+        "kind: group",
+        "type: EntityPropertyGroup",
+        "identifier: minsky-property-group:instruction:c0a85608fca1:3:2"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "179",
+      "label": "VisibleRim",
+      "details": [
+        "description: Visible open rim",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:3:2:0"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "180",
+      "label": "ConcaveInterior",
+      "details": [
+        "description: Observable concave interior",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:3:2:1"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "181",
+      "label": "CerealLevel",
+      "details": [
+        "description: Observable cereal level",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:3:2:2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "182",
+      "label": "GeometricProperties",
+      "details": [
+        "description: Geometric Properties (4)",
+        "kind: group",
+        "type: EntityPropertyGroup",
+        "identifier: minsky-property-group:instruction:c0a85608fca1:3:3"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "183",
+      "label": "OpeningDiameter",
+      "details": [
+        "description: Opening diameter",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:3:3:0"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "184",
+      "label": "ConcaveInterior",
+      "details": [
+        "description: Concave interior",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:3:3:1"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "185",
+      "label": "InteriorCapacity",
+      "details": [
+        "description: Interior capacity",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:3:3:2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "186",
+      "label": "PoseAndOrientation",
+      "details": [
+        "description: Pose and orientation",
+        "kind: fragment",
+        "type: EntityProperty",
+        "identifier: minsky-property:instruction:c0a85608fca1:3:3:3"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "187",
+      "label": "ExpectedOutcomes",
+      "details": [
+        "description: Expected Outcomes (4)",
+        "kind: group",
+        "type: MinskyActionSlot",
+        "identifier: minsky-slot:instruction:c0a85608fca1:expected_outcomes"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "188",
+      "label": "CerealContained",
+      "details": [
+        "description: Cereal is contained by the bowl",
+        "kind: fragment",
+        "type: ExpectedOutcome",
+        "identifier: minsky-outcome:instruction:c0a85608fca1:0"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "189",
+      "label": "PortionTransferred",
+      "details": [
+        "description: The intended cereal portion has been transferred",
+        "kind: fragment",
+        "type: ExpectedOutcome",
+        "identifier: minsky-outcome:instruction:c0a85608fca1:1"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "190",
+      "label": "FlowStopped",
+      "details": [
+        "description: Cereal flow has stopped",
+        "kind: fragment",
+        "type: ExpectedOutcome",
+        "identifier: minsky-outcome:instruction:c0a85608fca1:2"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "191",
+      "label": "SpillAvoided",
+      "details": [
+        "description: No unintended cereal spill has occurred",
+        "kind: fragment",
+        "type: ExpectedOutcome",
+        "identifier: minsky-outcome:instruction:c0a85608fca1:3"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "192",
+      "label": "ActionImageSchema",
+      "details": [
+        "description: Cereal-Pouring Image-Schema Profile (3)",
+        "kind: root",
+        "type: ImageSchemaProfile",
+        "identifier: image-schema-profile:instruction:c0a85608fca1"
+      ],
+      "kind": "root"
+    },
+    {
+      "id": "193",
+      "label": "InitialContainment",
+      "details": [
+        "description: Initial Containment",
+        "kind: group",
+        "type: ImageSchemaInstance",
+        "identifier: image-schema-instance:instruction:c0a85608fca1:0"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "194",
+      "label": "Containment",
+      "details": [
+        "description: CONTAINMENT",
+        "kind: fragment",
+        "type: ImageSchema",
+        "identifier: image-schema-type:containment"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "195",
+      "label": "Container",
+      "details": [
+        "description: CONTAINER",
+        "kind: group",
+        "type: SpatialPrimitive",
+        "identifier: spatial-primitive:instruction:c0a85608fca1:0:0"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "196",
+      "label": "Contained",
+      "details": [
+        "description: CONTAINED",
+        "kind: group",
+        "type: SpatialPrimitive",
+        "identifier: spatial-primitive:instruction:c0a85608fca1:0:1"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "197",
+      "label": "Interior",
+      "details": [
+        "description: INTERIOR",
+        "kind: group",
+        "type: SpatialPrimitive",
+        "identifier: spatial-primitive:instruction:c0a85608fca1:0:2"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "198",
+      "label": "CerealBoxInterior",
+      "details": [
+        "description: Cereal Box Interior",
+        "kind: fragment",
+        "type: SpatialRegion",
+        "identifier: image-schema-filler:instruction:c0a85608fca1:spatial_region:cereal-box-interior"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "199",
+      "label": "Boundary",
+      "details": [
+        "description: BOUNDARY",
+        "kind: group",
+        "type: SpatialPrimitive",
+        "identifier: spatial-primitive:instruction:c0a85608fca1:0:3"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "200",
+      "label": "CerealBoxBoundary",
+      "details": [
+        "description: Cereal Box Boundary",
+        "kind: fragment",
+        "type: SpatialRegion",
+        "identifier: image-schema-filler:instruction:c0a85608fca1:spatial_region:cereal-box-boundary"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "201",
+      "label": "Exterior",
+      "details": [
+        "description: EXTERIOR",
+        "kind: group",
+        "type: SpatialPrimitive",
+        "identifier: spatial-primitive:instruction:c0a85608fca1:0:4"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "202",
+      "label": "CerealBoxExterior",
+      "details": [
+        "description: Outside Cereal Box",
+        "kind: fragment",
+        "type: SpatialRegion",
+        "identifier: image-schema-filler:instruction:c0a85608fca1:spatial_region:outside-cereal-box"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "203",
+      "label": "CerealTransfer",
+      "details": [
+        "description: Cereal Transfer",
+        "kind: group",
+        "type: ImageSchemaInstance",
+        "identifier: image-schema-instance:instruction:c0a85608fca1:1"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "204",
+      "label": "SourcePathGoal",
+      "details": [
+        "description: SOURCE-PATH-GOAL",
+        "kind: fragment",
+        "type: ImageSchema",
+        "identifier: image-schema-type:source_path_goal"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "205",
+      "label": "Trajector",
+      "details": [
+        "description: TRAJECTOR",
+        "kind: group",
+        "type: SpatialPrimitive",
+        "identifier: spatial-primitive:instruction:c0a85608fca1:1:0"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "206",
+      "label": "Source",
+      "details": [
+        "description: SOURCE",
+        "kind: group",
+        "type: SpatialPrimitive",
+        "identifier: spatial-primitive:instruction:c0a85608fca1:1:1"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "207",
+      "label": "Path",
+      "details": [
+        "description: PATH",
+        "kind: group",
+        "type: SpatialPrimitive",
+        "identifier: spatial-primitive:instruction:c0a85608fca1:1:2"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "208",
+      "label": "TransferPath",
+      "details": [
+        "description: Downward Transfer Path",
+        "kind: fragment",
+        "type: SpatialPath",
+        "identifier: image-schema-filler:instruction:c0a85608fca1:spatial_path:downward-transfer-path"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "209",
+      "label": "Goal",
+      "details": [
+        "description: GOAL",
+        "kind: group",
+        "type: SpatialPrimitive",
+        "identifier: spatial-primitive:instruction:c0a85608fca1:1:3"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "210",
+      "label": "Direction",
+      "details": [
+        "description: DIRECTION",
+        "kind: group",
+        "type: SpatialPrimitive",
+        "identifier: spatial-primitive:instruction:c0a85608fca1:1:4"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "211",
+      "label": "Downward",
+      "details": [
+        "kind: fragment",
+        "type: SpatialDirection",
+        "identifier: image-schema-filler:instruction:c0a85608fca1:spatial_direction:downward"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "212",
+      "label": "ResultContainment",
+      "details": [
+        "description: Result Containment",
+        "kind: group",
+        "type: ImageSchemaInstance",
+        "identifier: image-schema-instance:instruction:c0a85608fca1:2"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "213",
+      "label": "Container",
+      "details": [
+        "description: CONTAINER",
+        "kind: group",
+        "type: SpatialPrimitive",
+        "identifier: spatial-primitive:instruction:c0a85608fca1:2:0"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "214",
+      "label": "Contained",
+      "details": [
+        "description: CONTAINED",
+        "kind: group",
+        "type: SpatialPrimitive",
+        "identifier: spatial-primitive:instruction:c0a85608fca1:2:1"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "215",
+      "label": "Interior",
+      "details": [
+        "description: INTERIOR",
+        "kind: group",
+        "type: SpatialPrimitive",
+        "identifier: spatial-primitive:instruction:c0a85608fca1:2:2"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "216",
+      "label": "BowlInterior",
+      "details": [
+        "description: Bowl Interior",
+        "kind: fragment",
+        "type: SpatialRegion",
+        "identifier: image-schema-filler:instruction:c0a85608fca1:spatial_region:bowl-interior"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "217",
+      "label": "Boundary",
+      "details": [
+        "description: BOUNDARY",
+        "kind: group",
+        "type: SpatialPrimitive",
+        "identifier: spatial-primitive:instruction:c0a85608fca1:2:3"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "218",
+      "label": "BowlBoundary",
+      "details": [
+        "description: Bowl Boundary",
+        "kind: fragment",
+        "type: SpatialRegion",
+        "identifier: image-schema-filler:instruction:c0a85608fca1:spatial_region:bowl-boundary"
+      ],
+      "kind": "fragment"
+    },
+    {
+      "id": "219",
+      "label": "Exterior",
+      "details": [
+        "description: EXTERIOR",
+        "kind: group",
+        "type: SpatialPrimitive",
+        "identifier: spatial-primitive:instruction:c0a85608fca1:2:4"
+      ],
+      "kind": "group"
+    },
+    {
+      "id": "220",
+      "label": "BowlExterior",
+      "details": [
+        "description: Outside Bowl",
+        "kind: fragment",
+        "type: SpatialRegion",
+        "identifier: image-schema-filler:instruction:c0a85608fca1:spatial_region:outside-bowl"
+      ],
+      "kind": "fragment"
+    }
+  ],
+  "edges": [
+    {
+      "from": "0",
+      "to": "1",
+      "label": "describes"
+    },
+    {
+      "from": "1",
+      "to": "106",
+      "label": "groups"
+    },
+    {
+      "from": "106",
+      "to": "51",
+      "label": "defines_phase"
+    },
+    {
+      "from": "106",
+      "to": "23",
+      "label": "defines_phase"
+    },
+    {
+      "from": "106",
+      "to": "10",
+      "label": "defines_phase"
+    },
+    {
+      "from": "106",
+      "to": "45",
+      "label": "defines_phase"
+    },
+    {
+      "from": "106",
+      "to": "65",
+      "label": "defines_phase"
+    },
+    {
+      "from": "106",
+      "to": "41",
+      "label": "defines_phase"
+    },
+    {
+      "from": "106",
+      "to": "3",
+      "label": "defines_phase"
+    },
+    {
+      "from": "106",
+      "to": "31",
+      "label": "defines_phase"
+    },
+    {
+      "from": "106",
+      "to": "63",
+      "label": "defines_phase"
+    },
+    {
+      "from": "106",
+      "to": "60",
+      "label": "defines_phase"
+    },
+    {
+      "from": "106",
+      "to": "56",
+      "label": "defines_phase"
+    },
+    {
+      "from": "106",
+      "to": "92",
+      "label": "defines_phase"
+    },
+    {
+      "from": "1",
+      "to": "107",
+      "label": "groups"
+    },
+    {
+      "from": "107",
+      "to": "105",
+      "label": "defines_role"
+    },
+    {
+      "from": "107",
+      "to": "19",
+      "label": "defines_role"
+    },
+    {
+      "from": "107",
+      "to": "18",
+      "label": "defines_role"
+    },
+    {
+      "from": "107",
+      "to": "35",
+      "label": "defines_role"
+    },
+    {
+      "from": "107",
+      "to": "37",
+      "label": "defines_role"
+    },
+    {
+      "from": "107",
+      "to": "39",
+      "label": "defines_role"
+    },
+    {
+      "from": "107",
+      "to": "17",
+      "label": "defines_role"
+    },
+    {
+      "from": "107",
+      "to": "104",
+      "label": "defines_role"
+    },
+    {
+      "from": "1",
+      "to": "108",
+      "label": "groups"
+    },
+    {
+      "from": "108",
+      "to": "28",
+      "label": "defines_event_type"
+    },
+    {
+      "from": "108",
+      "to": "21",
+      "label": "defines_event_type"
+    },
+    {
+      "from": "108",
+      "to": "46",
+      "label": "defines_event_type"
+    },
+    {
+      "from": "108",
+      "to": "43",
+      "label": "defines_event_type"
+    },
+    {
+      "from": "108",
+      "to": "42",
+      "label": "defines_event_type"
+    },
+    {
+      "from": "108",
+      "to": "38",
+      "label": "defines_event_type"
+    },
+    {
+      "from": "108",
+      "to": "36",
+      "label": "defines_event_type"
+    },
+    {
+      "from": "108",
+      "to": "61",
+      "label": "defines_event_type"
+    },
+    {
+      "from": "108",
+      "to": "16",
+      "label": "defines_event_type"
+    },
+    {
+      "from": "108",
+      "to": "27",
+      "label": "defines_event_type"
+    },
+    {
+      "from": "1",
+      "to": "109",
+      "label": "groups"
+    },
+    {
+      "from": "109",
+      "to": "103",
+      "label": "has_transition"
+    },
+    {
+      "from": "109",
+      "to": "102",
+      "label": "has_transition"
+    },
+    {
+      "from": "109",
+      "to": "101",
+      "label": "has_transition"
+    },
+    {
+      "from": "109",
+      "to": "100",
+      "label": "has_transition"
+    },
+    {
+      "from": "109",
+      "to": "99",
+      "label": "has_transition"
+    },
+    {
+      "from": "109",
+      "to": "98",
+      "label": "has_transition"
+    },
+    {
+      "from": "109",
+      "to": "97",
+      "label": "has_transition"
+    },
+    {
+      "from": "109",
+      "to": "96",
+      "label": "has_transition"
+    },
+    {
+      "from": "109",
+      "to": "95",
+      "label": "has_transition"
+    },
+    {
+      "from": "109",
+      "to": "94",
+      "label": "has_transition"
+    },
+    {
+      "from": "109",
+      "to": "91",
+      "label": "has_transition"
+    },
+    {
+      "from": "1",
+      "to": "110",
+      "label": "groups"
+    },
+    {
+      "from": "110",
+      "to": "90",
+      "label": "has_control_point"
+    },
+    {
+      "from": "110",
+      "to": "89",
+      "label": "has_control_point"
+    },
+    {
+      "from": "110",
+      "to": "88",
+      "label": "has_control_point"
+    },
+    {
+      "from": "110",
+      "to": "87",
+      "label": "has_control_point"
+    },
+    {
+      "from": "110",
+      "to": "86",
+      "label": "has_control_point"
+    },
+    {
+      "from": "110",
+      "to": "85",
+      "label": "has_control_point"
+    },
+    {
+      "from": "110",
+      "to": "84",
+      "label": "has_control_point"
+    },
+    {
+      "from": "1",
+      "to": "111",
+      "label": "groups"
+    },
+    {
+      "from": "111",
+      "to": "82",
+      "label": "has_force_coupling"
+    },
+    {
+      "from": "1",
+      "to": "112",
+      "label": "groups"
+    },
+    {
+      "from": "112",
+      "to": "81",
+      "label": "has_continuous_prediction"
+    },
+    {
+      "from": "112",
+      "to": "2",
+      "label": "has_continuous_prediction"
+    },
+    {
+      "from": "2",
+      "to": "3",
+      "label": "predicted_for_phase"
+    },
+    {
+      "from": "3",
+      "to": "80",
+      "label": "aims_for"
+    },
+    {
+      "from": "3",
+      "to": "42",
+      "label": "initiated_by"
+    },
+    {
+      "from": "3",
+      "to": "38",
+      "label": "terminated_by"
+    },
+    {
+      "from": "3",
+      "to": "19",
+      "label": "phase_involves"
+    },
+    {
+      "from": "3",
+      "to": "18",
+      "label": "phase_involves"
+    },
+    {
+      "from": "3",
+      "to": "35",
+      "label": "phase_involves"
+    },
+    {
+      "from": "3",
+      "to": "39",
+      "label": "phase_involves"
+    },
+    {
+      "from": "3",
+      "to": "25",
+      "label": "has_condition_requirement"
+    },
+    {
+      "from": "3",
+      "to": "33",
+      "label": "has_condition_requirement"
+    },
+    {
+      "from": "3",
+      "to": "79",
+      "label": "monitors_signal"
+    },
+    {
+      "from": "3",
+      "to": "32",
+      "label": "monitors_signal"
+    },
+    {
+      "from": "3",
+      "to": "13",
+      "label": "monitors_signal"
+    },
+    {
+      "from": "3",
+      "to": "12",
+      "label": "governed_by"
+    },
+    {
+      "from": "3",
+      "to": "11",
+      "label": "governed_by"
+    },
+    {
+      "from": "3",
+      "to": "4",
+      "label": "governed_by"
+    },
+    {
+      "from": "4",
+      "to": "54",
+      "label": "holds_estimate"
+    },
+    {
+      "from": "4",
+      "to": "50",
+      "label": "holds_estimate"
+    },
+    {
+      "from": "4",
+      "to": "73",
+      "label": "holds_estimate"
+    },
+    {
+      "from": "4",
+      "to": "71",
+      "label": "holds_estimate"
+    },
+    {
+      "from": "4",
+      "to": "9",
+      "label": "holds_estimate"
+    },
+    {
+      "from": "4",
+      "to": "5",
+      "label": "holds_estimate"
+    },
+    {
+      "from": "5",
+      "to": "70",
+      "label": "parameter_range"
+    },
+    {
+      "from": "5",
+      "to": "18",
+      "label": "parameter_on_role"
+    },
+    {
+      "from": "5",
+      "to": "51",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "5",
+      "to": "6",
+      "label": "scales"
+    },
+    {
+      "from": "6",
+      "to": "69",
+      "label": "parameter_range"
+    },
+    {
+      "from": "6",
+      "to": "19",
+      "label": "parameter_on_role"
+    },
+    {
+      "from": "6",
+      "to": "23",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "6",
+      "to": "10",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "6",
+      "to": "45",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "6",
+      "to": "65",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "6",
+      "to": "41",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "6",
+      "to": "3",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "6",
+      "to": "31",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "6",
+      "to": "63",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "6",
+      "to": "60",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "6",
+      "to": "56",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "6",
+      "to": "54",
+      "label": "adapts_to"
+    },
+    {
+      "from": "6",
+      "to": "50",
+      "label": "adapts_to"
+    },
+    {
+      "from": "6",
+      "to": "7",
+      "label": "adapts_to"
+    },
+    {
+      "from": "7",
+      "to": "49",
+      "label": "parameter_range"
+    },
+    {
+      "from": "7",
+      "to": "18",
+      "label": "parameter_on_role"
+    },
+    {
+      "from": "7",
+      "to": "3",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "7",
+      "to": "31",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "7",
+      "to": "8",
+      "label": "scales"
+    },
+    {
+      "from": "7",
+      "to": "6",
+      "label": "scales"
+    },
+    {
+      "from": "8",
+      "to": "48",
+      "label": "parameter_range"
+    },
+    {
+      "from": "8",
+      "to": "19",
+      "label": "parameter_on_role"
+    },
+    {
+      "from": "8",
+      "to": "23",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "8",
+      "to": "10",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "8",
+      "to": "45",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "8",
+      "to": "41",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "8",
+      "to": "3",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "8",
+      "to": "31",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "8",
+      "to": "9",
+      "label": "adapts_to"
+    },
+    {
+      "from": "8",
+      "to": "7",
+      "label": "adapts_to"
+    },
+    {
+      "from": "9",
+      "to": "30",
+      "label": "parameter_range"
+    },
+    {
+      "from": "9",
+      "to": "18",
+      "label": "parameter_on_role"
+    },
+    {
+      "from": "9",
+      "to": "23",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "9",
+      "to": "10",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "9",
+      "to": "8",
+      "label": "scales"
+    },
+    {
+      "from": "10",
+      "to": "22",
+      "label": "aims_for"
+    },
+    {
+      "from": "10",
+      "to": "21",
+      "label": "initiated_by"
+    },
+    {
+      "from": "10",
+      "to": "20",
+      "label": "terminated_by"
+    },
+    {
+      "from": "10",
+      "to": "19",
+      "label": "phase_involves"
+    },
+    {
+      "from": "10",
+      "to": "18",
+      "label": "phase_involves"
+    },
+    {
+      "from": "10",
+      "to": "14",
+      "label": "has_condition_requirement"
+    },
+    {
+      "from": "10",
+      "to": "13",
+      "label": "monitors_signal"
+    },
+    {
+      "from": "10",
+      "to": "12",
+      "label": "governed_by"
+    },
+    {
+      "from": "10",
+      "to": "11",
+      "label": "governed_by"
+    },
+    {
+      "from": "14",
+      "to": "15",
+      "label": "on_condition"
+    },
+    {
+      "from": "15",
+      "to": "18",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "15",
+      "to": "16",
+      "label": "violation_signalled_by"
+    },
+    {
+      "from": "16",
+      "to": "18",
+      "label": "event_on_role"
+    },
+    {
+      "from": "16",
+      "to": "17",
+      "label": "event_on_role"
+    },
+    {
+      "from": "20",
+      "to": "18",
+      "label": "event_on_role"
+    },
+    {
+      "from": "21",
+      "to": "18",
+      "label": "event_on_role"
+    },
+    {
+      "from": "21",
+      "to": "17",
+      "label": "event_on_role"
+    },
+    {
+      "from": "22",
+      "to": "18",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "22",
+      "to": "16",
+      "label": "violation_signalled_by"
+    },
+    {
+      "from": "22",
+      "to": "20",
+      "label": "attainment_signalled_by"
+    },
+    {
+      "from": "23",
+      "to": "29",
+      "label": "aims_for"
+    },
+    {
+      "from": "23",
+      "to": "28",
+      "label": "initiated_by"
+    },
+    {
+      "from": "23",
+      "to": "21",
+      "label": "terminated_by"
+    },
+    {
+      "from": "23",
+      "to": "19",
+      "label": "phase_involves"
+    },
+    {
+      "from": "23",
+      "to": "18",
+      "label": "phase_involves"
+    },
+    {
+      "from": "23",
+      "to": "25",
+      "label": "has_condition_requirement"
+    },
+    {
+      "from": "23",
+      "to": "13",
+      "label": "monitors_signal"
+    },
+    {
+      "from": "23",
+      "to": "24",
+      "label": "monitors_signal"
+    },
+    {
+      "from": "23",
+      "to": "12",
+      "label": "governed_by"
+    },
+    {
+      "from": "23",
+      "to": "11",
+      "label": "governed_by"
+    },
+    {
+      "from": "23",
+      "to": "4",
+      "label": "governed_by"
+    },
+    {
+      "from": "25",
+      "to": "26",
+      "label": "on_condition"
+    },
+    {
+      "from": "26",
+      "to": "19",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "26",
+      "to": "18",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "26",
+      "to": "27",
+      "label": "violation_signalled_by"
+    },
+    {
+      "from": "27",
+      "to": "19",
+      "label": "event_on_role"
+    },
+    {
+      "from": "27",
+      "to": "18",
+      "label": "event_on_role"
+    },
+    {
+      "from": "28",
+      "to": "19",
+      "label": "event_on_role"
+    },
+    {
+      "from": "28",
+      "to": "18",
+      "label": "event_on_role"
+    },
+    {
+      "from": "29",
+      "to": "19",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "29",
+      "to": "18",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "29",
+      "to": "27",
+      "label": "violation_signalled_by"
+    },
+    {
+      "from": "29",
+      "to": "21",
+      "label": "attainment_signalled_by"
+    },
+    {
+      "from": "31",
+      "to": "40",
+      "label": "aims_for"
+    },
+    {
+      "from": "31",
+      "to": "38",
+      "label": "initiated_by"
+    },
+    {
+      "from": "31",
+      "to": "36",
+      "label": "terminated_by"
+    },
+    {
+      "from": "31",
+      "to": "19",
+      "label": "phase_involves"
+    },
+    {
+      "from": "31",
+      "to": "18",
+      "label": "phase_involves"
+    },
+    {
+      "from": "31",
+      "to": "35",
+      "label": "phase_involves"
+    },
+    {
+      "from": "31",
+      "to": "25",
+      "label": "has_condition_requirement"
+    },
+    {
+      "from": "31",
+      "to": "33",
+      "label": "has_condition_requirement"
+    },
+    {
+      "from": "31",
+      "to": "13",
+      "label": "monitors_signal"
+    },
+    {
+      "from": "31",
+      "to": "32",
+      "label": "monitors_signal"
+    },
+    {
+      "from": "31",
+      "to": "12",
+      "label": "governed_by"
+    },
+    {
+      "from": "31",
+      "to": "11",
+      "label": "governed_by"
+    },
+    {
+      "from": "33",
+      "to": "34",
+      "label": "on_condition"
+    },
+    {
+      "from": "34",
+      "to": "19",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "34",
+      "to": "18",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "34",
+      "to": "27",
+      "label": "violation_signalled_by"
+    },
+    {
+      "from": "36",
+      "to": "35",
+      "label": "event_on_role"
+    },
+    {
+      "from": "36",
+      "to": "37",
+      "label": "event_on_role"
+    },
+    {
+      "from": "38",
+      "to": "35",
+      "label": "event_on_role"
+    },
+    {
+      "from": "38",
+      "to": "39",
+      "label": "event_on_role"
+    },
+    {
+      "from": "40",
+      "to": "35",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "40",
+      "to": "37",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "40",
+      "to": "27",
+      "label": "violation_signalled_by"
+    },
+    {
+      "from": "40",
+      "to": "36",
+      "label": "attainment_signalled_by"
+    },
+    {
+      "from": "41",
+      "to": "44",
+      "label": "aims_for"
+    },
+    {
+      "from": "41",
+      "to": "43",
+      "label": "initiated_by"
+    },
+    {
+      "from": "41",
+      "to": "42",
+      "label": "terminated_by"
+    },
+    {
+      "from": "41",
+      "to": "19",
+      "label": "phase_involves"
+    },
+    {
+      "from": "41",
+      "to": "18",
+      "label": "phase_involves"
+    },
+    {
+      "from": "41",
+      "to": "35",
+      "label": "phase_involves"
+    },
+    {
+      "from": "41",
+      "to": "37",
+      "label": "phase_involves"
+    },
+    {
+      "from": "41",
+      "to": "33",
+      "label": "has_condition_requirement"
+    },
+    {
+      "from": "41",
+      "to": "13",
+      "label": "monitors_signal"
+    },
+    {
+      "from": "41",
+      "to": "32",
+      "label": "monitors_signal"
+    },
+    {
+      "from": "41",
+      "to": "12",
+      "label": "governed_by"
+    },
+    {
+      "from": "41",
+      "to": "11",
+      "label": "governed_by"
+    },
+    {
+      "from": "41",
+      "to": "4",
+      "label": "governed_by"
+    },
+    {
+      "from": "42",
+      "to": "35",
+      "label": "event_on_role"
+    },
+    {
+      "from": "42",
+      "to": "37",
+      "label": "event_on_role"
+    },
+    {
+      "from": "43",
+      "to": "37",
+      "label": "event_on_role"
+    },
+    {
+      "from": "43",
+      "to": "39",
+      "label": "event_on_role"
+    },
+    {
+      "from": "44",
+      "to": "35",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "44",
+      "to": "37",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "44",
+      "to": "27",
+      "label": "violation_signalled_by"
+    },
+    {
+      "from": "44",
+      "to": "42",
+      "label": "attainment_signalled_by"
+    },
+    {
+      "from": "45",
+      "to": "47",
+      "label": "aims_for"
+    },
+    {
+      "from": "45",
+      "to": "20",
+      "label": "initiated_by"
+    },
+    {
+      "from": "45",
+      "to": "46",
+      "label": "terminated_by"
+    },
+    {
+      "from": "45",
+      "to": "19",
+      "label": "phase_involves"
+    },
+    {
+      "from": "45",
+      "to": "18",
+      "label": "phase_involves"
+    },
+    {
+      "from": "45",
+      "to": "39",
+      "label": "phase_involves"
+    },
+    {
+      "from": "45",
+      "to": "14",
+      "label": "has_condition_requirement"
+    },
+    {
+      "from": "45",
+      "to": "13",
+      "label": "monitors_signal"
+    },
+    {
+      "from": "45",
+      "to": "32",
+      "label": "monitors_signal"
+    },
+    {
+      "from": "45",
+      "to": "12",
+      "label": "governed_by"
+    },
+    {
+      "from": "45",
+      "to": "11",
+      "label": "governed_by"
+    },
+    {
+      "from": "46",
+      "to": "18",
+      "label": "event_on_role"
+    },
+    {
+      "from": "46",
+      "to": "39",
+      "label": "event_on_role"
+    },
+    {
+      "from": "47",
+      "to": "18",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "47",
+      "to": "39",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "47",
+      "to": "27",
+      "label": "violation_signalled_by"
+    },
+    {
+      "from": "47",
+      "to": "46",
+      "label": "attainment_signalled_by"
+    },
+    {
+      "from": "50",
+      "to": "53",
+      "label": "parameter_range"
+    },
+    {
+      "from": "50",
+      "to": "19",
+      "label": "parameter_on_role"
+    },
+    {
+      "from": "50",
+      "to": "18",
+      "label": "parameter_on_role"
+    },
+    {
+      "from": "50",
+      "to": "51",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "50",
+      "to": "23",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "50",
+      "to": "6",
+      "label": "scales"
+    },
+    {
+      "from": "51",
+      "to": "52",
+      "label": "aims_for"
+    },
+    {
+      "from": "51",
+      "to": "28",
+      "label": "terminated_by"
+    },
+    {
+      "from": "51",
+      "to": "19",
+      "label": "phase_involves"
+    },
+    {
+      "from": "51",
+      "to": "18",
+      "label": "phase_involves"
+    },
+    {
+      "from": "52",
+      "to": "19",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "52",
+      "to": "18",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "52",
+      "to": "27",
+      "label": "violation_signalled_by"
+    },
+    {
+      "from": "52",
+      "to": "28",
+      "label": "attainment_signalled_by"
+    },
+    {
+      "from": "54",
+      "to": "68",
+      "label": "parameter_range"
+    },
+    {
+      "from": "54",
+      "to": "18",
+      "label": "parameter_on_role"
+    },
+    {
+      "from": "54",
+      "to": "51",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "54",
+      "to": "23",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "54",
+      "to": "10",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "54",
+      "to": "55",
+      "label": "scales"
+    },
+    {
+      "from": "54",
+      "to": "6",
+      "label": "scales"
+    },
+    {
+      "from": "55",
+      "to": "67",
+      "label": "parameter_range"
+    },
+    {
+      "from": "55",
+      "to": "18",
+      "label": "parameter_on_role"
+    },
+    {
+      "from": "55",
+      "to": "23",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "55",
+      "to": "10",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "55",
+      "to": "45",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "55",
+      "to": "65",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "55",
+      "to": "41",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "55",
+      "to": "3",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "55",
+      "to": "31",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "55",
+      "to": "63",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "55",
+      "to": "60",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "55",
+      "to": "56",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "55",
+      "to": "54",
+      "label": "adapts_to"
+    },
+    {
+      "from": "55",
+      "to": "7",
+      "label": "adapts_to"
+    },
+    {
+      "from": "56",
+      "to": "59",
+      "label": "aims_for"
+    },
+    {
+      "from": "56",
+      "to": "16",
+      "label": "initiated_by"
+    },
+    {
+      "from": "56",
+      "to": "27",
+      "label": "terminated_by"
+    },
+    {
+      "from": "56",
+      "to": "19",
+      "label": "phase_involves"
+    },
+    {
+      "from": "56",
+      "to": "18",
+      "label": "phase_involves"
+    },
+    {
+      "from": "56",
+      "to": "57",
+      "label": "has_condition_requirement"
+    },
+    {
+      "from": "56",
+      "to": "13",
+      "label": "monitors_signal"
+    },
+    {
+      "from": "56",
+      "to": "24",
+      "label": "monitors_signal"
+    },
+    {
+      "from": "56",
+      "to": "12",
+      "label": "governed_by"
+    },
+    {
+      "from": "56",
+      "to": "11",
+      "label": "governed_by"
+    },
+    {
+      "from": "57",
+      "to": "58",
+      "label": "on_condition"
+    },
+    {
+      "from": "58",
+      "to": "18",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "58",
+      "to": "17",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "58",
+      "to": "21",
+      "label": "violation_signalled_by"
+    },
+    {
+      "from": "59",
+      "to": "18",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "59",
+      "to": "17",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "59",
+      "to": "21",
+      "label": "violation_signalled_by"
+    },
+    {
+      "from": "59",
+      "to": "27",
+      "label": "attainment_signalled_by"
+    },
+    {
+      "from": "60",
+      "to": "62",
+      "label": "aims_for"
+    },
+    {
+      "from": "60",
+      "to": "61",
+      "label": "initiated_by"
+    },
+    {
+      "from": "60",
+      "to": "16",
+      "label": "terminated_by"
+    },
+    {
+      "from": "60",
+      "to": "19",
+      "label": "phase_involves"
+    },
+    {
+      "from": "60",
+      "to": "18",
+      "label": "phase_involves"
+    },
+    {
+      "from": "60",
+      "to": "17",
+      "label": "phase_involves"
+    },
+    {
+      "from": "60",
+      "to": "25",
+      "label": "has_condition_requirement"
+    },
+    {
+      "from": "60",
+      "to": "33",
+      "label": "has_condition_requirement"
+    },
+    {
+      "from": "60",
+      "to": "13",
+      "label": "monitors_signal"
+    },
+    {
+      "from": "60",
+      "to": "24",
+      "label": "monitors_signal"
+    },
+    {
+      "from": "60",
+      "to": "12",
+      "label": "governed_by"
+    },
+    {
+      "from": "60",
+      "to": "11",
+      "label": "governed_by"
+    },
+    {
+      "from": "61",
+      "to": "18",
+      "label": "event_on_role"
+    },
+    {
+      "from": "62",
+      "to": "18",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "62",
+      "to": "17",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "62",
+      "to": "27",
+      "label": "violation_signalled_by"
+    },
+    {
+      "from": "62",
+      "to": "16",
+      "label": "attainment_signalled_by"
+    },
+    {
+      "from": "63",
+      "to": "64",
+      "label": "aims_for"
+    },
+    {
+      "from": "63",
+      "to": "36",
+      "label": "initiated_by"
+    },
+    {
+      "from": "63",
+      "to": "61",
+      "label": "terminated_by"
+    },
+    {
+      "from": "63",
+      "to": "19",
+      "label": "phase_involves"
+    },
+    {
+      "from": "63",
+      "to": "18",
+      "label": "phase_involves"
+    },
+    {
+      "from": "63",
+      "to": "25",
+      "label": "has_condition_requirement"
+    },
+    {
+      "from": "63",
+      "to": "33",
+      "label": "has_condition_requirement"
+    },
+    {
+      "from": "63",
+      "to": "13",
+      "label": "monitors_signal"
+    },
+    {
+      "from": "63",
+      "to": "12",
+      "label": "governed_by"
+    },
+    {
+      "from": "63",
+      "to": "11",
+      "label": "governed_by"
+    },
+    {
+      "from": "64",
+      "to": "18",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "64",
+      "to": "27",
+      "label": "violation_signalled_by"
+    },
+    {
+      "from": "64",
+      "to": "61",
+      "label": "attainment_signalled_by"
+    },
+    {
+      "from": "65",
+      "to": "66",
+      "label": "aims_for"
+    },
+    {
+      "from": "65",
+      "to": "46",
+      "label": "initiated_by"
+    },
+    {
+      "from": "65",
+      "to": "43",
+      "label": "terminated_by"
+    },
+    {
+      "from": "65",
+      "to": "19",
+      "label": "phase_involves"
+    },
+    {
+      "from": "65",
+      "to": "18",
+      "label": "phase_involves"
+    },
+    {
+      "from": "65",
+      "to": "37",
+      "label": "phase_involves"
+    },
+    {
+      "from": "65",
+      "to": "39",
+      "label": "phase_involves"
+    },
+    {
+      "from": "65",
+      "to": "32",
+      "label": "monitors_signal"
+    },
+    {
+      "from": "65",
+      "to": "13",
+      "label": "monitors_signal"
+    },
+    {
+      "from": "65",
+      "to": "12",
+      "label": "governed_by"
+    },
+    {
+      "from": "65",
+      "to": "11",
+      "label": "governed_by"
+    },
+    {
+      "from": "66",
+      "to": "37",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "66",
+      "to": "39",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "66",
+      "to": "27",
+      "label": "violation_signalled_by"
+    },
+    {
+      "from": "66",
+      "to": "43",
+      "label": "attainment_signalled_by"
+    },
+    {
+      "from": "71",
+      "to": "78",
+      "label": "parameter_range"
+    },
+    {
+      "from": "71",
+      "to": "35",
+      "label": "parameter_on_role"
+    },
+    {
+      "from": "71",
+      "to": "41",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "71",
+      "to": "3",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "71",
+      "to": "72",
+      "label": "scales"
+    },
+    {
+      "from": "72",
+      "to": "77",
+      "label": "parameter_range"
+    },
+    {
+      "from": "72",
+      "to": "18",
+      "label": "parameter_on_role"
+    },
+    {
+      "from": "72",
+      "to": "41",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "72",
+      "to": "3",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "72",
+      "to": "31",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "72",
+      "to": "71",
+      "label": "adapts_to"
+    },
+    {
+      "from": "72",
+      "to": "73",
+      "label": "adapts_to"
+    },
+    {
+      "from": "73",
+      "to": "76",
+      "label": "parameter_range"
+    },
+    {
+      "from": "73",
+      "to": "18",
+      "label": "parameter_on_role"
+    },
+    {
+      "from": "73",
+      "to": "41",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "73",
+      "to": "3",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "73",
+      "to": "74",
+      "label": "scales"
+    },
+    {
+      "from": "74",
+      "to": "75",
+      "label": "parameter_range"
+    },
+    {
+      "from": "74",
+      "to": "18",
+      "label": "parameter_on_role"
+    },
+    {
+      "from": "74",
+      "to": "41",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "74",
+      "to": "3",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "74",
+      "to": "31",
+      "label": "parameter_in_phase"
+    },
+    {
+      "from": "74",
+      "to": "73",
+      "label": "adapts_to"
+    },
+    {
+      "from": "74",
+      "to": "71",
+      "label": "adapts_to"
+    },
+    {
+      "from": "80",
+      "to": "35",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "80",
+      "to": "39",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "80",
+      "to": "27",
+      "label": "violation_signalled_by"
+    },
+    {
+      "from": "80",
+      "to": "38",
+      "label": "attainment_signalled_by"
+    },
+    {
+      "from": "81",
+      "to": "41",
+      "label": "predicted_for_phase"
+    },
+    {
+      "from": "81",
+      "to": "3",
+      "label": "predicted_for_phase"
+    },
+    {
+      "from": "81",
+      "to": "31",
+      "label": "predicted_for_phase"
+    },
+    {
+      "from": "82",
+      "to": "6",
+      "label": "couples_grip_force"
+    },
+    {
+      "from": "82",
+      "to": "55",
+      "label": "couples_load_force"
+    },
+    {
+      "from": "82",
+      "to": "83",
+      "label": "coupling_ratio"
+    },
+    {
+      "from": "82",
+      "to": "50",
+      "label": "ratio_set_by"
+    },
+    {
+      "from": "82",
+      "to": "23",
+      "label": "coupling_active_in"
+    },
+    {
+      "from": "82",
+      "to": "10",
+      "label": "coupling_active_in"
+    },
+    {
+      "from": "82",
+      "to": "45",
+      "label": "coupling_active_in"
+    },
+    {
+      "from": "82",
+      "to": "65",
+      "label": "coupling_active_in"
+    },
+    {
+      "from": "82",
+      "to": "41",
+      "label": "coupling_active_in"
+    },
+    {
+      "from": "82",
+      "to": "3",
+      "label": "coupling_active_in"
+    },
+    {
+      "from": "82",
+      "to": "31",
+      "label": "coupling_active_in"
+    },
+    {
+      "from": "82",
+      "to": "63",
+      "label": "coupling_active_in"
+    },
+    {
+      "from": "82",
+      "to": "60",
+      "label": "coupling_active_in"
+    },
+    {
+      "from": "82",
+      "to": "56",
+      "label": "coupling_active_in"
+    },
+    {
+      "from": "84",
+      "to": "36",
+      "label": "at_event_type"
+    },
+    {
+      "from": "84",
+      "to": "32",
+      "label": "predicts_signal"
+    },
+    {
+      "from": "84",
+      "to": "13",
+      "label": "predicts_signal"
+    },
+    {
+      "from": "85",
+      "to": "38",
+      "label": "at_event_type"
+    },
+    {
+      "from": "85",
+      "to": "79",
+      "label": "predicts_signal"
+    },
+    {
+      "from": "85",
+      "to": "32",
+      "label": "predicts_signal"
+    },
+    {
+      "from": "86",
+      "to": "42",
+      "label": "at_event_type"
+    },
+    {
+      "from": "86",
+      "to": "32",
+      "label": "predicts_signal"
+    },
+    {
+      "from": "86",
+      "to": "13",
+      "label": "predicts_signal"
+    },
+    {
+      "from": "87",
+      "to": "43",
+      "label": "at_event_type"
+    },
+    {
+      "from": "87",
+      "to": "32",
+      "label": "predicts_signal"
+    },
+    {
+      "from": "87",
+      "to": "13",
+      "label": "predicts_signal"
+    },
+    {
+      "from": "88",
+      "to": "46",
+      "label": "at_event_type"
+    },
+    {
+      "from": "88",
+      "to": "13",
+      "label": "predicts_signal"
+    },
+    {
+      "from": "88",
+      "to": "32",
+      "label": "predicts_signal"
+    },
+    {
+      "from": "89",
+      "to": "21",
+      "label": "at_event_type"
+    },
+    {
+      "from": "89",
+      "to": "13",
+      "label": "predicts_signal"
+    },
+    {
+      "from": "89",
+      "to": "24",
+      "label": "predicts_signal"
+    },
+    {
+      "from": "90",
+      "to": "28",
+      "label": "at_event_type"
+    },
+    {
+      "from": "90",
+      "to": "24",
+      "label": "predicts_signal"
+    },
+    {
+      "from": "91",
+      "to": "56",
+      "label": "from_phase"
+    },
+    {
+      "from": "91",
+      "to": "92",
+      "label": "to_phase"
+    },
+    {
+      "from": "91",
+      "to": "27",
+      "label": "gated_by"
+    },
+    {
+      "from": "92",
+      "to": "93",
+      "label": "aims_for"
+    },
+    {
+      "from": "92",
+      "to": "27",
+      "label": "initiated_by"
+    },
+    {
+      "from": "92",
+      "to": "27",
+      "label": "terminated_by"
+    },
+    {
+      "from": "92",
+      "to": "19",
+      "label": "phase_involves"
+    },
+    {
+      "from": "92",
+      "to": "18",
+      "label": "phase_involves"
+    },
+    {
+      "from": "93",
+      "to": "19",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "93",
+      "to": "18",
+      "label": "condition_on_role"
+    },
+    {
+      "from": "93",
+      "to": "28",
+      "label": "violation_signalled_by"
+    },
+    {
+      "from": "93",
+      "to": "27",
+      "label": "attainment_signalled_by"
+    },
+    {
+      "from": "94",
+      "to": "60",
+      "label": "from_phase"
+    },
+    {
+      "from": "94",
+      "to": "56",
+      "label": "to_phase"
+    },
+    {
+      "from": "94",
+      "to": "16",
+      "label": "gated_by"
+    },
+    {
+      "from": "95",
+      "to": "63",
+      "label": "from_phase"
+    },
+    {
+      "from": "95",
+      "to": "60",
+      "label": "to_phase"
+    },
+    {
+      "from": "95",
+      "to": "61",
+      "label": "gated_by"
+    },
+    {
+      "from": "96",
+      "to": "31",
+      "label": "from_phase"
+    },
+    {
+      "from": "96",
+      "to": "63",
+      "label": "to_phase"
+    },
+    {
+      "from": "96",
+      "to": "36",
+      "label": "gated_by"
+    },
+    {
+      "from": "97",
+      "to": "3",
+      "label": "from_phase"
+    },
+    {
+      "from": "97",
+      "to": "31",
+      "label": "to_phase"
+    },
+    {
+      "from": "97",
+      "to": "38",
+      "label": "gated_by"
+    },
+    {
+      "from": "98",
+      "to": "41",
+      "label": "from_phase"
+    },
+    {
+      "from": "98",
+      "to": "3",
+      "label": "to_phase"
+    },
+    {
+      "from": "98",
+      "to": "42",
+      "label": "gated_by"
+    },
+    {
+      "from": "99",
+      "to": "65",
+      "label": "from_phase"
+    },
+    {
+      "from": "99",
+      "to": "41",
+      "label": "to_phase"
+    },
+    {
+      "from": "99",
+      "to": "43",
+      "label": "gated_by"
+    },
+    {
+      "from": "100",
+      "to": "45",
+      "label": "from_phase"
+    },
+    {
+      "from": "100",
+      "to": "65",
+      "label": "to_phase"
+    },
+    {
+      "from": "100",
+      "to": "46",
+      "label": "gated_by"
+    },
+    {
+      "from": "101",
+      "to": "10",
+      "label": "from_phase"
+    },
+    {
+      "from": "101",
+      "to": "45",
+      "label": "to_phase"
+    },
+    {
+      "from": "101",
+      "to": "20",
+      "label": "gated_by"
+    },
+    {
+      "from": "102",
+      "to": "23",
+      "label": "from_phase"
+    },
+    {
+      "from": "102",
+      "to": "10",
+      "label": "to_phase"
+    },
+    {
+      "from": "102",
+      "to": "21",
+      "label": "gated_by"
+    },
+    {
+      "from": "103",
+      "to": "51",
+      "label": "from_phase"
+    },
+    {
+      "from": "103",
+      "to": "23",
+      "label": "to_phase"
+    },
+    {
+      "from": "103",
+      "to": "28",
+      "label": "gated_by"
+    },
+    {
+      "from": "0",
+      "to": "113",
+      "label": "interpreted_as"
+    },
+    {
+      "from": "113",
+      "to": "114",
+      "label": "has_slot"
+    },
+    {
+      "from": "114",
+      "to": "115",
+      "label": "has_value"
+    },
+    {
+      "from": "113",
+      "to": "116",
+      "label": "has_slot"
+    },
+    {
+      "from": "116",
+      "to": "117",
+      "label": "has_entity"
+    },
+    {
+      "from": "117",
+      "to": "19",
+      "label": "participates_as"
+    },
+    {
+      "from": "117",
+      "to": "105",
+      "label": "participates_as"
+    },
+    {
+      "from": "117",
+      "to": "118",
+      "label": "described_by"
+    },
+    {
+      "from": "118",
+      "to": "119",
+      "label": "has_property"
+    },
+    {
+      "from": "118",
+      "to": "120",
+      "label": "has_property"
+    },
+    {
+      "from": "118",
+      "to": "121",
+      "label": "has_property"
+    },
+    {
+      "from": "117",
+      "to": "122",
+      "label": "described_by"
+    },
+    {
+      "from": "122",
+      "to": "123",
+      "label": "has_property"
+    },
+    {
+      "from": "122",
+      "to": "124",
+      "label": "has_property"
+    },
+    {
+      "from": "117",
+      "to": "125",
+      "label": "described_by"
+    },
+    {
+      "from": "125",
+      "to": "126",
+      "label": "has_property"
+    },
+    {
+      "from": "125",
+      "to": "127",
+      "label": "has_property"
+    },
+    {
+      "from": "125",
+      "to": "128",
+      "label": "has_property"
+    },
+    {
+      "from": "117",
+      "to": "129",
+      "label": "described_by"
+    },
+    {
+      "from": "129",
+      "to": "130",
+      "label": "has_property"
+    },
+    {
+      "from": "129",
+      "to": "131",
+      "label": "has_property"
+    },
+    {
+      "from": "129",
+      "to": "132",
+      "label": "has_property"
+    },
+    {
+      "from": "116",
+      "to": "133",
+      "label": "has_entity"
+    },
+    {
+      "from": "133",
+      "to": "18",
+      "label": "participates_as"
+    },
+    {
+      "from": "133",
+      "to": "134",
+      "label": "described_by"
+    },
+    {
+      "from": "134",
+      "to": "135",
+      "label": "has_property"
+    },
+    {
+      "from": "134",
+      "to": "136",
+      "label": "has_property"
+    },
+    {
+      "from": "134",
+      "to": "137",
+      "label": "has_property"
+    },
+    {
+      "from": "134",
+      "to": "138",
+      "label": "has_property"
+    },
+    {
+      "from": "133",
+      "to": "139",
+      "label": "described_by"
+    },
+    {
+      "from": "139",
+      "to": "140",
+      "label": "has_property"
+    },
+    {
+      "from": "139",
+      "to": "141",
+      "label": "has_property"
+    },
+    {
+      "from": "139",
+      "to": "142",
+      "label": "has_property"
+    },
+    {
+      "from": "133",
+      "to": "143",
+      "label": "described_by"
+    },
+    {
+      "from": "143",
+      "to": "144",
+      "label": "has_property"
+    },
+    {
+      "from": "143",
+      "to": "145",
+      "label": "has_property"
+    },
+    {
+      "from": "143",
+      "to": "146",
+      "label": "has_property"
+    },
+    {
+      "from": "133",
+      "to": "147",
+      "label": "described_by"
+    },
+    {
+      "from": "147",
+      "to": "148",
+      "label": "has_property"
+    },
+    {
+      "from": "147",
+      "to": "149",
+      "label": "has_property"
+    },
+    {
+      "from": "147",
+      "to": "150",
+      "label": "has_property"
+    },
+    {
+      "from": "147",
+      "to": "151",
+      "label": "has_property"
+    },
+    {
+      "from": "116",
+      "to": "152",
+      "label": "has_entity"
+    },
+    {
+      "from": "152",
+      "to": "35",
+      "label": "participates_as"
+    },
+    {
+      "from": "152",
+      "to": "153",
+      "label": "described_by"
+    },
+    {
+      "from": "153",
+      "to": "154",
+      "label": "has_property"
+    },
+    {
+      "from": "153",
+      "to": "155",
+      "label": "has_property"
+    },
+    {
+      "from": "152",
+      "to": "156",
+      "label": "described_by"
+    },
+    {
+      "from": "156",
+      "to": "157",
+      "label": "has_property"
+    },
+    {
+      "from": "156",
+      "to": "158",
+      "label": "has_property"
+    },
+    {
+      "from": "156",
+      "to": "159",
+      "label": "has_property"
+    },
+    {
+      "from": "152",
+      "to": "160",
+      "label": "described_by"
+    },
+    {
+      "from": "160",
+      "to": "161",
+      "label": "has_property"
+    },
+    {
+      "from": "160",
+      "to": "162",
+      "label": "has_property"
+    },
+    {
+      "from": "160",
+      "to": "163",
+      "label": "has_property"
+    },
+    {
+      "from": "152",
+      "to": "164",
+      "label": "described_by"
+    },
+    {
+      "from": "164",
+      "to": "165",
+      "label": "has_property"
+    },
+    {
+      "from": "164",
+      "to": "166",
+      "label": "has_property"
+    },
+    {
+      "from": "164",
+      "to": "167",
+      "label": "has_property"
+    },
+    {
+      "from": "164",
+      "to": "168",
+      "label": "has_property"
+    },
+    {
+      "from": "116",
+      "to": "169",
+      "label": "has_entity"
+    },
+    {
+      "from": "169",
+      "to": "39",
+      "label": "participates_as"
+    },
+    {
+      "from": "169",
+      "to": "170",
+      "label": "described_by"
+    },
+    {
+      "from": "170",
+      "to": "171",
+      "label": "has_property"
+    },
+    {
+      "from": "170",
+      "to": "172",
+      "label": "has_property"
+    },
+    {
+      "from": "170",
+      "to": "173",
+      "label": "has_property"
+    },
+    {
+      "from": "169",
+      "to": "174",
+      "label": "described_by"
+    },
+    {
+      "from": "174",
+      "to": "175",
+      "label": "has_property"
+    },
+    {
+      "from": "174",
+      "to": "176",
+      "label": "has_property"
+    },
+    {
+      "from": "174",
+      "to": "177",
+      "label": "has_property"
+    },
+    {
+      "from": "169",
+      "to": "178",
+      "label": "described_by"
+    },
+    {
+      "from": "178",
+      "to": "179",
+      "label": "has_property"
+    },
+    {
+      "from": "178",
+      "to": "180",
+      "label": "has_property"
+    },
+    {
+      "from": "178",
+      "to": "181",
+      "label": "has_property"
+    },
+    {
+      "from": "169",
+      "to": "182",
+      "label": "described_by"
+    },
+    {
+      "from": "182",
+      "to": "183",
+      "label": "has_property"
+    },
+    {
+      "from": "182",
+      "to": "184",
+      "label": "has_property"
+    },
+    {
+      "from": "182",
+      "to": "185",
+      "label": "has_property"
+    },
+    {
+      "from": "182",
+      "to": "186",
+      "label": "has_property"
+    },
+    {
+      "from": "113",
+      "to": "187",
+      "label": "has_slot"
+    },
+    {
+      "from": "187",
+      "to": "188",
+      "label": "has_value"
+    },
+    {
+      "from": "187",
+      "to": "189",
+      "label": "has_value"
+    },
+    {
+      "from": "187",
+      "to": "190",
+      "label": "has_value"
+    },
+    {
+      "from": "187",
+      "to": "191",
+      "label": "has_value"
+    },
+    {
+      "from": "0",
+      "to": "192",
+      "label": "has_image_schema_profile"
+    },
+    {
+      "from": "192",
+      "to": "193",
+      "label": "has_schema_instance"
+    },
+    {
+      "from": "193",
+      "to": "194",
+      "label": "instance_of"
+    },
+    {
+      "from": "193",
+      "to": "195",
+      "label": "necessary_spatial_primitive"
+    },
+    {
+      "from": "195",
+      "to": "133",
+      "label": "filled_by"
+    },
+    {
+      "from": "193",
+      "to": "196",
+      "label": "necessary_spatial_primitive"
+    },
+    {
+      "from": "196",
+      "to": "152",
+      "label": "filled_by"
+    },
+    {
+      "from": "193",
+      "to": "197",
+      "label": "necessary_spatial_primitive"
+    },
+    {
+      "from": "197",
+      "to": "198",
+      "label": "filled_by"
+    },
+    {
+      "from": "193",
+      "to": "199",
+      "label": "necessary_spatial_primitive"
+    },
+    {
+      "from": "199",
+      "to": "200",
+      "label": "filled_by"
+    },
+    {
+      "from": "193",
+      "to": "201",
+      "label": "necessary_spatial_primitive"
+    },
+    {
+      "from": "201",
+      "to": "202",
+      "label": "filled_by"
+    },
+    {
+      "from": "192",
+      "to": "203",
+      "label": "has_schema_instance"
+    },
+    {
+      "from": "203",
+      "to": "204",
+      "label": "instance_of"
+    },
+    {
+      "from": "203",
+      "to": "205",
+      "label": "necessary_spatial_primitive"
+    },
+    {
+      "from": "205",
+      "to": "152",
+      "label": "filled_by"
+    },
+    {
+      "from": "203",
+      "to": "206",
+      "label": "necessary_spatial_primitive"
+    },
+    {
+      "from": "206",
+      "to": "133",
+      "label": "filled_by"
+    },
+    {
+      "from": "203",
+      "to": "207",
+      "label": "necessary_spatial_primitive"
+    },
+    {
+      "from": "207",
+      "to": "208",
+      "label": "filled_by"
+    },
+    {
+      "from": "203",
+      "to": "209",
+      "label": "necessary_spatial_primitive"
+    },
+    {
+      "from": "209",
+      "to": "169",
+      "label": "filled_by"
+    },
+    {
+      "from": "203",
+      "to": "210",
+      "label": "necessary_spatial_primitive"
+    },
+    {
+      "from": "210",
+      "to": "211",
+      "label": "filled_by"
+    },
+    {
+      "from": "192",
+      "to": "212",
+      "label": "has_schema_instance"
+    },
+    {
+      "from": "212",
+      "to": "194",
+      "label": "instance_of"
+    },
+    {
+      "from": "212",
+      "to": "213",
+      "label": "necessary_spatial_primitive"
+    },
+    {
+      "from": "213",
+      "to": "169",
+      "label": "filled_by"
+    },
+    {
+      "from": "212",
+      "to": "214",
+      "label": "necessary_spatial_primitive"
+    },
+    {
+      "from": "214",
+      "to": "152",
+      "label": "filled_by"
+    },
+    {
+      "from": "212",
+      "to": "215",
+      "label": "necessary_spatial_primitive"
+    },
+    {
+      "from": "215",
+      "to": "216",
+      "label": "filled_by"
+    },
+    {
+      "from": "212",
+      "to": "217",
+      "label": "necessary_spatial_primitive"
+    },
+    {
+      "from": "217",
+      "to": "218",
+      "label": "filled_by"
+    },
+    {
+      "from": "212",
+      "to": "219",
+      "label": "necessary_spatial_primitive"
+    },
+    {
+      "from": "219",
+      "to": "220",
+      "label": "filled_by"
+    },
+    {
+      "from": "193",
+      "to": "203",
+      "label": "precedes"
+    },
+    {
+      "from": "203",
+      "to": "212",
+      "label": "precedes"
+    }
+  ]
+}

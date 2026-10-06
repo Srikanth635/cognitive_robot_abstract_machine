@@ -86,8 +86,7 @@ class TestPackageImportLeavesLoggingToTheEntryPoint:
             [
                 sys.executable,
                 "-c",
-                "import logging, cram_viz; "
-                "print(len(logging.getLogger().handlers))",
+                "import logging, cram_viz; " "print(len(logging.getLogger().handlers))",
             ],
             capture_output=True,
             text=True,

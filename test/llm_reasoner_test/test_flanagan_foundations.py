@@ -27,6 +27,7 @@ from llm_reasoner.knowledge.microworlds.flanagan.core import (
     TaskSetpoint,
 )
 from llm_reasoner.knowledge.microworlds.flanagan.pouring import (
+    POUR,
     CenterOfMassShiftEstimate,
     DynamicViscosityEstimate,
     RemainingSourceQuantityEstimate,
@@ -57,7 +58,7 @@ def make_source_role() -> RoleSlot:
     return RoleSlot(
         label="source container",
         binds_as=ConceptReference(
-            iri="http://example.org/ontology/flanagan-pouring#SourceContainer",
+            iri=POUR + "SourceContainer",
             label=SourceContainer.__name__,
         ),
     )

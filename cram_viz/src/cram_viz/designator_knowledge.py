@@ -1,0 +1,367 @@
+"""
+A real coraplex action designator's own fields, reflected into a static slot table --
+the Designator tab.
+
+Unlike the Hypothesis Graph tab, nothing here is generated and nothing is resolved:
+``coraplex.robot_plans.actions.composite.tool_based.PouringAction``'s directly declared
+dataclass fields are read straight off the class (no live
+:class:`~semantic_digital_twin.world_description.world.World`, no
+:class:`~llm_reasoner.resolver.backend.LanguageModelBackend` call) and classified value
+versus referent exactly as :mod:`llm_reasoner.resolver.reflection` classifies an open
+slot on a krrood ``Match`` -- but without constructing one, since every field here is
+fully open and none is bound, sortal or a live extension.
+
+A referent slot (:attr:`~llm_reasoner.resolver.reflection.SlotKind.REFERENT`) has no
+live World to draw its extension from, so it is offered illustrative stand-ins instead:
+the scene's own :class:`~cram_viz.kb.BenchObject`\\ s, which are graspable things but not
+real ``Body``/``Tool`` individuals.
+
+A referent slot's role is also tagged with the matching
+:class:`~cram_viz.hypothesis_knowledge.action_frame.FrameRoleKind`, the same
+vocabulary the Hypothesis Graph tab's Minsky action frame uses for its own
+``SourceContainer``/``DestinationContainer`` entities -- one name for the role, not
+two, even though the two tabs describe it at different layers. The tag also pulls
+that role's illustrative filler and property groups straight out of
+:func:`~cram_viz.hypothesis_knowledge.action_frame.MinskyActionFrameTemplate.
+cereal_pouring`, the same template object the Hypothesis Graph tab renders --
+nothing about the role is re-authored here, only re-displayed.
+"""
+
+from __future__ import annotations
+
+import dataclasses
+import inspect
+from dataclasses import dataclass, field
+from typing_extensions import TYPE_CHECKING, Any, List, Optional, Sequence, Tuple
+
+from krrood.entity_query_language.verbalization.rendering.source_documentation import (
+    _attribute_docstrings,
+)
+from llm_reasoner.resolver.reflection import (
+    SlotKind,
+    is_generatable,
+    module_namespace_of,
+    raw_annotation_of,
+    type_display_name,
+    union_alternatives,
+)
+
+from coraplex.robot_plans.actions.composite.tool_based import PouringAction
+
+from cram_viz.hypothesis_knowledge import DEFAULT_INSTRUCTION
+from cram_viz.hypothesis_knowledge.action_frame import (
+    EntityFrame,
+    EntityPropertyFrame,
+    FrameRoleKind,
+    MinskyActionFrameTemplate,
+)
+
+if TYPE_CHECKING:
+    from cram_viz.kb import BenchObject
+
+
+# %% slot table
+
+
+@dataclass
+class IllustrativeCandidate:
+    """One scene object offered as a stand-in for a referent slot's real domain."""
+
+    identifier: str
+    """The scene object's identifier, used as the graph node id."""
+
+    label: str
+    """Human-readable label shown on the node."""
+
+    resolved: bool = False
+    """
+    Whether this is the candidate chosen for :data:`DEFAULT_INSTRUCTION`, by
+    matching the frame role's illustrative filler name against the scene's own
+    objects. Still not a live resolver run -- just which of the same illustrative
+    stand-ins fits the one instruction the rest of the viewer already defaults to.
+    """
+
+
+@dataclass
+class DesignatorSlot:
+    """One field the designator declares, classified and described for display."""
+
+    name: str
+    """The field name on the designator."""
+
+    type_name: str
+    """Display name of the declared type."""
+
+    kind: SlotKind
+    """Whether the field is filled by generation or by selecting a real individual."""
+
+    docstring: Optional[str]
+    """The field's own docstring, written directly below it in the designator."""
+
+    default: Any
+    """The field's declared default value, when it has one."""
+
+    has_default: bool
+    """Whether the field declares a default at all."""
+
+    candidates: List[IllustrativeCandidate] = field(default_factory=list)
+    """Illustrative stand-in candidates for a referent slot; empty for a value slot."""
+
+    frame_role: Optional[FrameRoleKind] = None
+    """
+    The Minsky action-frame role this slot fills, when it fills one -- the same
+    :class:`~cram_viz.hypothesis_knowledge.action_frame.FrameRoleKind` the
+    Hypothesis Graph tab's frame overlay names its entities with.
+    """
+
+    frame_properties: Tuple[EntityPropertyFrame, ...] = ()
+    """
+    The frame role's property groups (affordances, dispositions, visual and
+    geometric properties), taken directly from the Hypothesis Graph tab's own
+    :class:`~cram_viz.hypothesis_knowledge.action_frame.EntityFrame` for this role.
+    Empty for a slot with no frame role.
+    """
+
+    @property
+    def resolved_candidate(self) -> Optional[IllustrativeCandidate]:
+        """:return: This slot's candidate chosen for :data:`DEFAULT_INSTRUCTION`, if any."""
+        return next((c for c in self.candidates if c.resolved), None)
+
+    @property
+    def lisp_keyword(self) -> str:
+        """:return: The field name as a Lisp keyword, kebab-cased."""
+        return ":" + self.name.replace("_", "-")
+
+    @property
+    def lisp_value(self) -> str:
+        """
+        :return: The slot's value rendered as Lisp -- the resolved candidate's
+            identifier if it has one, otherwise a logic variable for anything left
+            open (a referent slot, or a value slot with no default), otherwise the
+            conventional default.
+        """
+        resolved = self.resolved_candidate
+        if resolved is not None:
+            return resolved.identifier
+        if self.kind is SlotKind.REFERENT or not self.has_default:
+            return "?" + self.name.replace("_", "-")
+        return _lisp_literal(self.default)
+
+
+@dataclass
+class DesignatorKnowledge:
+    """A designator class reflected into its slot table."""
+
+    designator_name: str
+    """The reflected designator's class name."""
+
+    docstring: Optional[str]
+    """The designator class's own docstring."""
+
+    slots: List[DesignatorSlot]
+    """Every directly-declared field of the designator, in declaration order."""
+
+    resolved_for_instruction: str = DEFAULT_INSTRUCTION
+    """The instruction a slot's :attr:`~DesignatorSlot.resolved_candidate` was chosen for."""
+
+
+# %% Lisp rendering
+
+
+def _lisp_literal(value: Any) -> str:
+    """
+    :param value: A slot's default value.
+    :return: Its Lisp literal spelling.
+    """
+    if value is None:
+        return "NIL"
+    if isinstance(value, bool):
+        return "T" if value else "NIL"
+    if isinstance(value, str):
+        return '"%s"' % value
+    return str(value)
+
+
+#: PouringAction's own field names that fill a Minsky action-frame role, mapped to
+#: the shared :class:`FrameRoleKind` the Hypothesis Graph tab's frame overlay already
+#: uses for the same participant (see :func:`.action_frame.MinskyActionFrameTemplate
+#: .cereal_pouring`) -- one vocabulary for the role, named once.
+_FRAME_ROLE_BY_FIELD_NAME = {
+    "source_container": FrameRoleKind.SOURCE_CONTAINER,
+    "target_container": FrameRoleKind.DESTINATION_CONTAINER,
+}
+
+
+# %% reflection
+
+
+def _direct_field_names(designator_type: type) -> List[str]:
+    """
+    :param designator_type: The designator class to reflect.
+    :return: Names of the fields the class declares itself, excluding whatever it
+        inherits -- the base classes' fields are execution context (world, plan,
+        robot), not parameters a caller fills in.
+    """
+    return list(designator_type.__dict__.get("__annotations__", {}).keys())
+
+
+def _default_for(declared_field: dataclasses.Field) -> tuple:
+    """
+    :param declared_field: The dataclass field to read a default from.
+    :return: The default value and whether one is declared.
+    """
+    if declared_field.default is not dataclasses.MISSING:
+        return declared_field.default, True
+    if declared_field.default_factory is not dataclasses.MISSING:
+        return declared_field.default_factory(), True
+    return None, False
+
+
+def _resolved_type(owner: type, attribute_name: str) -> Any:
+    """
+    Resolve one field's annotation to a real type, without evaluating any other
+    field's annotation on the class or its bases.
+
+    ``typing.get_type_hints`` resolves every annotation reachable through
+    ``owner.__mro__``, including base-class fields this module never reflects on
+    (``ActionDescription``/``Designator``'s ``world``, ``plan``, ...) -- some of
+    those are only importable under ``TYPE_CHECKING`` and raise ``NameError`` the
+    moment anything forces them to resolve. Evaluating just this one field's
+    annotation against its own declaring module avoids that entirely.
+
+    :param owner: The class declaring the attribute.
+    :param attribute_name: The field name on the owner.
+    :return: The resolved type.
+    """
+    raw_annotation = raw_annotation_of(owner, attribute_name)
+    if not isinstance(raw_annotation, str):
+        return raw_annotation
+    return eval(raw_annotation, module_namespace_of(owner))  # noqa: S307
+
+
+def _best_matching_candidate(
+    concrete_name: str, candidates: Sequence[IllustrativeCandidate]
+) -> Optional[IllustrativeCandidate]:
+    """
+    Pick the scene object whose label reads closest to a frame role's illustrative
+    filler name (e.g. matching "Breakfast Cereal" to "Cereal Box" through the shared
+    word "cereal"), rather than naming a specific object outright -- the same match
+    would still make sense if the scene's objects changed.
+
+    :param concrete_name: A frame entity's illustrative filler name.
+    :param candidates: The referent slot's candidates.
+    :return: The best-scoring candidate, or ``None`` if none share a word with it.
+    """
+    target_words = set(concrete_name.lower().split())
+    scored = [
+        (len(target_words & set(candidate.label.lower().split())), candidate)
+        for candidate in candidates
+    ]
+    best_score, best_candidate = max(scored, key=lambda scored_item: scored_item[0])
+    return best_candidate if best_score > 0 else None
+
+
+def _candidates_for_role(
+    frame_role: Optional[FrameRoleKind],
+    frame_template: MinskyActionFrameTemplate,
+    objects: Sequence[BenchObject],
+) -> Tuple[List[IllustrativeCandidate], Tuple[EntityPropertyFrame, ...]]:
+    """
+    Build one referent slot's candidates and, when its role has a frame entity,
+    mark the candidate resolved for :data:`DEFAULT_INSTRUCTION` and carry that
+    entity's property groups along.
+
+    :param frame_role: The slot's frame role, or ``None`` for a slot with none.
+    :param frame_template: The Hypothesis Graph tab's action-frame template.
+    :param objects: The scene's bench objects.
+    :return: The slot's candidates, and the role's property groups (empty without one).
+    """
+    candidates = [
+        IllustrativeCandidate(identifier=bench_object.name, label=bench_object.label)
+        for bench_object in objects
+        if bench_object.kind == "object"
+    ]
+    entity = _entity_for_role(frame_template, frame_role)
+    if entity is None:
+        return candidates, ()
+    resolved = _best_matching_candidate(entity.concrete_name, candidates)
+    if resolved is not None:
+        resolved.resolved = True
+    return candidates, entity.property_frames
+
+
+def _entity_for_role(
+    frame_template: MinskyActionFrameTemplate, frame_role: Optional[FrameRoleKind]
+) -> Optional[EntityFrame]:
+    """
+    :param frame_template: The Hypothesis Graph tab's action-frame template.
+    :param frame_role: The role to look up, or ``None``.
+    :return: The template's entity for that role, or ``None``.
+    """
+    if frame_role is None:
+        return None
+    return next(
+        (entity for entity in frame_template.entities if entity.role is frame_role),
+        None,
+    )
+
+
+def _classify(declared_type: Any, alternatives: Optional[List[type]]) -> SlotKind:
+    """
+    :param declared_type: The field's annotated type.
+    :param alternatives: The union branches, when the annotation is a union.
+    :return: ``VALUE`` when a value of this type may be generated outright,
+        ``REFERENT`` when it must be a real individual.
+    """
+    if alternatives is not None:
+        if all(is_generatable(alternative) for alternative in alternatives):
+            return SlotKind.VALUE
+        return SlotKind.REFERENT
+    if is_generatable(declared_type):
+        return SlotKind.VALUE
+    return SlotKind.REFERENT
+
+
+def reflect_pouring_action(objects: Sequence[BenchObject]) -> DesignatorKnowledge:
+    """
+    Reflect :class:`PouringAction` into a static slot table.
+
+    :param objects: The scene's bench objects, offered as illustrative candidates for
+        referent slots.
+    :return: The reflected designator.
+    """
+    designator_type = PouringAction
+    docstrings = inspect.getdoc(designator_type)
+    fields_by_name = {f.name: f for f in dataclasses.fields(designator_type)}
+    field_docstrings = _attribute_docstrings(designator_type)
+    frame_template = MinskyActionFrameTemplate.cereal_pouring()
+    slots = []
+    for name in _direct_field_names(designator_type):
+        declared_type = _resolved_type(designator_type, name)
+        alternatives = union_alternatives(declared_type)
+        kind = _classify(declared_type, alternatives)
+        default, has_default = _default_for(fields_by_name[name])
+        frame_role = _FRAME_ROLE_BY_FIELD_NAME.get(name)
+        candidates, frame_properties = (
+            _candidates_for_role(frame_role, frame_template, objects)
+            if kind is SlotKind.REFERENT
+            else ([], ())
+        )
+        slots.append(
+            DesignatorSlot(
+                name=name,
+                type_name=type_display_name(declared_type, alternatives),
+                kind=kind,
+                docstring=field_docstrings.get(name),
+                default=default,
+                has_default=has_default,
+                candidates=candidates,
+                frame_role=frame_role,
+                frame_properties=frame_properties,
+            )
+        )
+    return DesignatorKnowledge(
+        designator_name=designator_type.__name__,
+        docstring=docstrings,
+        slots=slots,
+    )

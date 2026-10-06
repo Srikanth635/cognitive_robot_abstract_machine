@@ -4,15 +4,21 @@ Acceptance constraints for action-neutral prehensile manipulation.
 
 from __future__ import annotations
 
-from llm_reasoner.knowledge.microworlds.flanagan.core import CouplingRegime
+from llm_reasoner.knowledge.microworlds.flanagan.core import (
+    ContactEventType,
+    ContactTransition,
+    CouplingRegime,
+)
 from llm_reasoner.knowledge.microworlds.flanagan.prehension import (
     AnticipatoryGripAdjustment,
     ContactBreak,
+    ContactEstablishment,
     ContactReleasePhase,
     CorrectiveGripResponse,
     ForcesUnloaded,
     GripForceSetpoint,
     GripLoadCoupling,
+    Liftoff,
     PrehensionPhaseStructure,
     ReplacePhase,
     Touchdown,
@@ -96,12 +102,23 @@ def anticipatory_adjustment_lacks_touchdown_context(
     )
 
 
+def contact_event_has_wrong_transition(event: ContactEventType) -> bool:
+    """
+    Return whether a typed contact event declares the opposite topology change.
+    """
+    if isinstance(event, (ContactEstablishment, Touchdown)):
+        return event.contact_transition is not ContactTransition.ESTABLISHES
+    if isinstance(event, (ContactBreak, Liftoff)):
+        return event.contact_transition is not ContactTransition.BREAKS
+    return False
+
+
 # %% acceptance constraints
 
 
 PREHENSION_CONSTRAINTS = [
     Forbidden(
-        id="C59",
+        id="PRE-C59",
         applies_to=GripLoadCoupling,
         when=coupling_has_unrelated_safety_margin,
         message="grip-load safety margin constrains a different force response",
@@ -109,7 +126,7 @@ PREHENSION_CONSTRAINTS = [
         "relationship as the resulting grip-force response.",
     ),
     Forbidden(
-        id="C60",
+        id="PRE-C60",
         applies_to=ReplacePhase,
         when=replace_phase_decouples_before_touchdown,
         message="lowering is not coupled through a touchdown boundary",
@@ -117,21 +134,21 @@ PREHENSION_CONSTRAINTS = [
         "being lowered and only transfers load at touchdown.",
     ),
     Forbidden(
-        id="C61",
+        id="PRE-C61",
         applies_to=UnloadPhase,
         when=unload_phase_lacks_force_completion,
         message="unloading does not end when support transfer and low forces complete",
         rationale="Force unloading and contact release are separate control stages.",
     ),
     Forbidden(
-        id="C62",
+        id="PRE-C62",
         applies_to=ContactReleasePhase,
         when=contact_release_lacks_contact_break,
         message="contact release does not end at effector-object contact break",
         rationale="Contact release is individuated by loss of effector-object contact.",
     ),
     Forbidden(
-        id="C63",
+        id="PRE-C63",
         applies_to=WithdrawPhase,
         when=withdrawal_has_incoherent_boundaries,
         message="withdrawal is not bounded after contact break",
@@ -139,7 +156,7 @@ PREHENSION_CONSTRAINTS = [
         "of it.",
     ),
     Forbidden(
-        id="C64",
+        id="PRE-C64",
         applies_to=CorrectiveGripResponse,
         when=corrective_grip_response_targets_other_setpoints,
         message="corrective grip response targets a non-grip setpoint",
@@ -147,15 +164,25 @@ PREHENSION_CONSTRAINTS = [
         "remain generic corrective actions.",
     ),
     Forbidden(
-        id="C65",
+        id="PRE-C65",
         applies_to=AnticipatoryGripAdjustment,
         when=anticipatory_adjustment_lacks_touchdown_context,
-        message="anticipatory impact grip lacks a touchdown prediction or replace phase",
+        message=(
+            "anticipatory impact grip lacks a touchdown prediction or replace phase"
+        ),
         rationale="Impact-related grip modulation must be scheduled before the "
         "predicted touchdown while the object is being lowered.",
     ),
+    Forbidden(
+        id="PRE-C66",
+        applies_to=ContactEventType,
+        when=contact_event_has_wrong_transition,
+        message="typed contact event declares the opposite contact transition",
+        rationale="Contact establishment and touchdown create contact, while contact "
+        "break and liftoff remove it.",
+    ),
     Closure(
-        id="C13v",
+        id="PRE-C13v",
         applies_to=PrehensionPhaseStructure,
         container="defines_parameter",
         reached_via=(
@@ -169,14 +196,14 @@ PREHENSION_CONSTRAINTS = [
         "its structure.",
     ),
     Closure(
-        id="C13w",
+        id="PRE-C13w",
         applies_to=PrehensionPhaseStructure,
         container="defines_prediction",
         reached_via=("has_anticipatory_grip_adjustment.triggered_by_prediction",),
         rationale="Every prediction scheduling anticipatory grip must be declared.",
     ),
     Closure(
-        id="C13x",
+        id="PRE-C13x",
         applies_to=PrehensionPhaseStructure,
         container="defines_phase",
         reached_via=(
@@ -186,14 +213,14 @@ PREHENSION_CONSTRAINTS = [
         rationale="Every phase carrying prehensile force control must be declared.",
     ),
     Closure(
-        id="C13y",
+        id="PRE-C13y",
         applies_to=PrehensionPhaseStructure,
         container="defines_role",
         reached_via=("defines_event_type.weight_supported_by",),
         rationale="Every support receiving manipulandum weight must be declared.",
     ),
     MostSpecificTypes(
-        id="C30d",
+        id="PRE-C30d",
         applies_to=PrehensionPhaseStructure,
         collection="defines_phase",
         rationale="A prehension phase requires a specific grasping, lifting, "
