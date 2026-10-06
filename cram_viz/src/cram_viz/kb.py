@@ -29,23 +29,36 @@ import os
 import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass, fields, is_dataclass
-
-from typing_extensions import Any, Callable, Dict, List, Optional, Tuple
+from functools import cache
 
 from krrood.entity_query_language import factories as eql_factories
+from llm_reasoner.knowledge.microworlds.flanagan import core as flanagan_core
+from llm_reasoner.knowledge.microworlds.flanagan import pouring as flanagan_pouring
+from llm_reasoner.knowledge.microworlds.flanagan import (
+    prehension as flanagan_prehension,
+)
+from llm_reasoner.knowledge.ontological.decorators import KnowledgeEntity
+from llm_reasoner.resolver.reflection import SlotKind
+from typing_extensions import Any, Callable, Dict, List, Optional, Tuple
 
 from cram_viz import (
     action_knowledge,
     configure_console_logging,
+    designator_knowledge,
     entity_knowledge,
+    hypothesis_knowledge,
     paths,
 )
+from cram_viz.hypothesis_knowledge import action_frame, image_schema
+from cram_viz.hypothesis_knowledge.action_frame import UNRESOLVED_ROLE_FILLER_TYPE_NAME
 
 
-def scene_name() -> Optional[str]:
+def scene_name(selected_scene: Optional[str] = None) -> Optional[str]:
     """
-    The active scene: ``CRAM_VIZ_SCENE``, else the scenes-index default.
+    The requested scene, ``CRAM_VIZ_SCENE``, or the scenes-index default.
     """
+    if selected_scene is not None:
+        return selected_scene if re.fullmatch(r"[\w-]+", selected_scene) else None
     environment_override = os.environ.get("CRAM_VIZ_SCENE")
     if environment_override:
         return environment_override
@@ -56,19 +69,21 @@ def scene_name() -> Optional[str]:
         return None
 
 
-def scene_dir() -> Optional[str]:
+def scene_dir(selected_scene: Optional[str] = None) -> Optional[str]:
     """
     Directory of the active scene bundle, or None without one.
     """
-    name = scene_name()
+    name = scene_name(selected_scene)
     return os.path.join(str(paths.scenes_dir()), name) if name else None
 
 
-def load_scene() -> Tuple[Dict[str, Any], Dict[str, Any]]:
+def load_scene(
+    selected_scene: Optional[str] = None,
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     The active scene's (scene.json, trajectory.json), or ``({}, {})``.
     """
-    directory = scene_dir()
+    directory = scene_dir(selected_scene)
     if not directory:
         return {}, {}
     try:
@@ -84,18 +99,20 @@ def load_scene() -> Tuple[Dict[str, Any], Dict[str, Any]]:
     return scene, trajectory
 
 
-def load_urdf() -> Tuple[List[str], List[Dict[str, str]]]:
+def load_urdf(
+    selected_scene: Optional[str] = None,
+) -> Tuple[List[str], List[Dict[str, str]]]:
     """
     Parse the active scene's robot URDF into (links, joints).
 
     Used by the kinematic-tree view; a regex parse suffices because the bundled URDFs
     are flat.
     """
-    scene, _ = load_scene()
+    scene, _ = load_scene(selected_scene)
     robot_model = next(
         (model for model in scene.get("models", []) if model.get("robot")), None
     )
-    directory = scene_dir()
+    directory = scene_dir(selected_scene)
     if not robot_model or not directory:
         return [], []
     try:
@@ -692,12 +709,12 @@ class KB:
     over.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, selected_scene: Optional[str] = None) -> None:
         """
         Build every entity list from the active scene bundle and a static scan of the
         CRAM architecture.
         """
-        scene, trajectory = load_scene()
+        scene, trajectory = load_scene(selected_scene)
         frames_per_second = scene.get("fps", 30)
         parts = (scene.get("robot") or {}).get("parts") or {}
         robot_name = (scene.get("robot") or {}).get("name", "robot")
@@ -782,6 +799,54 @@ class KB:
             for entry in self.entity_knowledge_entries
             for relation in entry.relations
         ]
+
+        # empty until an instruction has been generated: the pouring variables range
+        # over whatever the model produced, and there is nothing before that
+        active_hypothesis = hypothesis_knowledge.active()
+        pouring_phase_structure = (
+            active_hypothesis.structure
+            if active_hypothesis
+            else flanagan_pouring.PouringPhaseStructure(label="")
+        )
+        self.pouring_phases = pouring_phase_structure.defines_phase
+        self.pouring_roles = pouring_phase_structure.defines_role
+        self.pouring_event_types = pouring_phase_structure.defines_event_type
+        self.pouring_force_dynamic_events = [
+            event
+            for event in self.pouring_event_types
+            if isinstance(event, flanagan_core.ForceDynamicEventType)
+        ]
+        self.pouring_transitions = pouring_phase_structure.has_transition
+        self.pouring_control_points = pouring_phase_structure.has_control_point
+        self.pouring_force_couplings = pouring_phase_structure.has_force_coupling
+        self.pouring_continuous_predictions = (
+            pouring_phase_structure.has_continuous_prediction
+        )
+        condition_requirements_by_identity = {}
+        for phase in self.pouring_phases:
+            for requirement in phase.has_condition_requirement:
+                condition_requirements_by_identity[id(requirement)] = requirement
+        self.pouring_condition_requirements = list(
+            condition_requirements_by_identity.values()
+        )
+
+        # the frame/image-schema overlays are display-only (see their own module
+        # docstrings): neither has a stored structure like pouring_phase_structure
+        # above, so their fragments are collected back from the projected graph
+        # nodes that carry them as source, the same objects the graph highlights
+        active_projection = active_hypothesis.projection if active_hypothesis else None
+        self.frame_entities = _distinct_sources(
+            active_projection, action_frame.EntityFrame
+        )
+        self.frame_properties = _distinct_sources(
+            active_projection, action_frame.EntityPropertyFrame
+        )
+        self.image_schema_instances = _distinct_sources(
+            active_projection, image_schema.ImageSchemaInstance
+        )
+        self.image_schema_bindings = _distinct_sources(
+            active_projection, image_schema.SpatialPrimitiveBinding
+        )
 
     @staticmethod
     def _build_concepts(
@@ -1004,25 +1069,19 @@ class KB:
         ]
 
 
-_kb: Optional[KB] = None
-
-
-def get_kb() -> KB:
+@cache
+def get_kb(selected_scene: Optional[str] = None) -> KB:
     """
-    The process-wide knowledge base, built on first use.
+    The requested scene's knowledge base, built on first use.
     """
-    global _kb
-    if _kb is None:
-        _kb = KB()
-    return _kb
+    return KB(selected_scene)
 
 
 def reset_kb() -> None:
     """
     Drop the cached KB (tests point CRAM_VIZ_SCENES at fixtures).
     """
-    global _kb
-    _kb = None
+    get_kb.cache_clear()
 
 
 # %% EQL session -----------------------------------------------------------------
@@ -1054,11 +1113,11 @@ _FACTORY_NAMES = [
 ]
 
 
-def fresh_namespace() -> Dict[str, Any]:
+def fresh_namespace(selected_scene: Optional[str] = None) -> Dict[str, Any]:
     """
     A namespace for evaluating one EQL query (fresh variables each time).
     """
-    kb = get_kb()
+    kb = get_kb(selected_scene)
     namespace = {
         name: getattr(eql_factories, name)
         for name in _FACTORY_NAMES
@@ -1089,6 +1148,12 @@ def fresh_namespace() -> Dict[str, Any]:
         Affordance=entity_knowledge.Affordance,
         EntityRelation=entity_knowledge.EntityRelation,
         EntityKnowledge=entity_knowledge.EntityKnowledge,
+        RegulationMode=flanagan_core.RegulationMode,
+        CouplingRegime=flanagan_core.CouplingRegime,
+        ForceDynamicEventType=flanagan_core.ForceDynamicEventType,
+        ConditionMode=flanagan_core.ConditionMode,
+        FrameRoleKind=action_frame.FrameRoleKind,
+        EntityPropertyKind=action_frame.EntityPropertyKind,
         objects=kb.objects,
         episodes=kb.episodes,
         arms=kb.arms,
@@ -1112,6 +1177,14 @@ def fresh_namespace() -> Dict[str, Any]:
         affordances=kb.affordances,
         entity_relations=kb.entity_relations,
         entity_knowledge_entries=kb.entity_knowledge_entries,
+        pouring_phases=kb.pouring_phases,
+        pouring_roles=kb.pouring_roles,
+        pouring_event_types=kb.pouring_event_types,
+        pouring_force_dynamic_events=kb.pouring_force_dynamic_events,
+        pouring_transitions=kb.pouring_transitions,
+        pouring_control_points=kb.pouring_control_points,
+        pouring_force_couplings=kb.pouring_force_couplings,
+        pouring_continuous_predictions=kb.pouring_continuous_predictions,
     )
     # ready-made query variables so one-liners stay short
     namespace["obj"] = eql_factories.variable(BenchObject, domain=kb.objects)
@@ -1154,13 +1227,90 @@ def fresh_namespace() -> Dict[str, Any]:
     namespace["relation"] = eql_factories.variable(
         entity_knowledge.EntityRelation, domain=kb.entity_relations
     )
+    namespace["pouring_phase"] = eql_factories.variable(
+        flanagan_core.ActionPhase, domain=kb.pouring_phases
+    )
+    namespace["pouring_role"] = eql_factories.variable(
+        flanagan_core.RoleSlot, domain=kb.pouring_roles
+    )
+    namespace["pouring_event_type"] = eql_factories.variable(
+        flanagan_core.MechanicalEventType, domain=kb.pouring_event_types
+    )
+    namespace["pouring_force_dynamic_event"] = eql_factories.variable(
+        flanagan_core.ForceDynamicEventType, domain=kb.pouring_force_dynamic_events
+    )
+    namespace["pouring_transition"] = eql_factories.variable(
+        flanagan_core.PhaseTransition, domain=kb.pouring_transitions
+    )
+    namespace["pouring_control_point"] = eql_factories.variable(
+        flanagan_core.SensorimotorControlPoint, domain=kb.pouring_control_points
+    )
+    namespace["pouring_coupling"] = eql_factories.variable(
+        flanagan_prehension.GripLoadCoupling, domain=kb.pouring_force_couplings
+    )
+    namespace["pouring_continuous_prediction"] = eql_factories.variable(
+        flanagan_core.ContinuousSignalPrediction,
+        domain=kb.pouring_continuous_predictions,
+    )
+    namespace["pouring_condition_requirement"] = eql_factories.variable(
+        flanagan_core.ConditionRequirement, domain=kb.pouring_condition_requirements
+    )
+    namespace["frame_entity"] = eql_factories.variable(
+        action_frame.EntityFrame, domain=kb.frame_entities
+    )
+    namespace["frame_property"] = eql_factories.variable(
+        action_frame.EntityPropertyFrame, domain=kb.frame_properties
+    )
+    namespace["schema_instance"] = eql_factories.variable(
+        image_schema.ImageSchemaInstance, domain=kb.image_schema_instances
+    )
+    namespace["schema_binding"] = eql_factories.variable(
+        image_schema.SpatialPrimitiveBinding, domain=kb.image_schema_bindings
+    )
     return namespace
+
+
+def _distinct_sources(projection: Optional[Any], source_type: type) -> List[Any]:
+    """
+    Every distinct object of ``source_type`` sourcing a node in ``projection``.
+
+    The frame/image-schema overlays keep no structure of their own to read a
+    domain list back from (see :class:`KB`'s own comment on this); the projected
+    graph nodes they added are the only record, deduplicated by identity since
+    one fragment sources more than one node (e.g. a shared entity).
+    """
+    if projection is None:
+        return []
+    seen: Dict[int, Any] = {}
+    for node in projection.nodes:
+        if isinstance(node.source, source_type) and id(node.source) not in seen:
+            seen[id(node.source)] = node.source
+    return list(seen.values())
 
 
 def _entity_name(value: Any) -> Optional[str]:
     """
     The entity's name attribute, or None for non-entities.
+
+    A :class:`~llm_reasoner.knowledge.ontological.decorators.KnowledgeEntity` (every
+    real pouring-knowledge fragment) has no ``name`` field -- its ``label`` plays the
+    same "human-readable display name" role. The four frame/image-schema fragment
+    types below are each handled explicitly instead of by a generic ``label``/``name``
+    fallback: three of them have no field that alone identifies them usefully, and a
+    generic fallback would also risk misfiring on a type such as ``BenchObject`` that
+    legitimately carries both a ``name`` (the identifier every other part of the graph
+    highlights by) and an unrelated ``label``.
     """
+    if isinstance(value, action_frame.EntityFrame):
+        return value.concrete_name
+    if isinstance(value, action_frame.EntityPropertyFrame):
+        return value.kind.value
+    if isinstance(value, image_schema.SpatialPrimitiveBinding):
+        return f"{value.primitive.value} = {value.filler_label}"
+    if isinstance(value, image_schema.ImageSchemaInstance):
+        return value.label
+    if isinstance(value, KnowledgeEntity):
+        return value.label
     return getattr(value, "name", None)
 
 
@@ -1174,10 +1324,17 @@ def _jsonable(value: Any) -> Any:
         return round(value, 4)
     if isinstance(value, (str, int, bool)) or value is None:
         return value
+    if isinstance(value, (tuple, list)):
+        # a tuple of plain strings (e.g. EntityPropertyFrame.values) is content a
+        # query answer names, not metadata to hide -- render it as a real list
+        # rather than a Python repr string, which reads as debug output
+        return [_jsonable(element) for element in value]
     return repr(value)
 
 
-def run_query(code: str, limit: int = 200) -> Dict[str, Any]:
+def run_query(
+    code: str, limit: int = 200, selected_scene: Optional[str] = None
+) -> Dict[str, Any]:
     """
     Execute an EQL query string and return a JSON-able result payload.
 
@@ -1186,8 +1343,9 @@ def run_query(code: str, limit: int = 200) -> Dict[str, Any]:
 
     :param code: The EQL query source.
     :param limit: Maximum number of result rows to return.
+    :param selected_scene: Scene whose entities form the query domain.
     """
-    namespace = fresh_namespace()
+    namespace = fresh_namespace(selected_scene)
     tree = ast.parse(code, mode="exec")
     if not tree.body:
         raise ValueError("empty query")
@@ -1272,6 +1430,27 @@ def _append_owned_highlight(
         highlight.append(action_knowledge.member_node_id(category, item.name))
 
 
+#: frame/image-schema dataclass types that source a real projected Hypothesis Graph
+#: node (see each overlay's own ``source=`` on node construction), so
+#: ``node_identifier_for`` resolves for them exactly as it does for a KnowledgeEntity
+_PROJECTED_NODE_TYPES = (
+    action_frame.EntityFrame,
+    action_frame.EntityPropertyFrame,
+    image_schema.ImageSchemaInstance,
+    image_schema.SpatialPrimitiveBinding,
+)
+
+#: of those, the ones whose other fields are relational/nested rather than the flat
+#: leaf content a query about them is actually after -- EntityPropertyFrame is
+#: deliberately excluded: its ``values`` tuple of strings *is* the answer to "what
+#: affordances does X have", not metadata to hide
+_NAME_ONLY_ROW_TYPES = (
+    action_frame.EntityFrame,
+    image_schema.ImageSchemaInstance,
+    image_schema.SpatialPrimitiveBinding,
+)
+
+
 def _entity_row(item: Any, highlight: List[str]) -> Dict[str, Any]:
     """
     One entity as an answer row; collects the ids to highlight.
@@ -1296,10 +1475,24 @@ def _entity_row(item: Any, highlight: List[str]) -> Dict[str, Any]:
         # phases links directly to its verb) -- the verb's own bare node is its
         # anchor in the domain view
         highlight.append(item.name)
+    elif isinstance(item, KnowledgeEntity) or isinstance(item, _PROJECTED_NODE_TYPES):
+        # the display name above is the human-readable label, not the graph node
+        # id -- the Hypothesis Graph tab keys its nodes by their projected identifier
+        node_identifier = hypothesis_knowledge.node_identifier_for(item)
+        if node_identifier is not None:
+            highlight.append(node_identifier)
     elif owned_category:
         category, owner_field = owned_category
         _append_owned_highlight(highlight, category, owner_field, item)
     row = {"__entity__": name or repr(item), "__type__": type(item).__name__}
+    if isinstance(item, KnowledgeEntity) or isinstance(item, _NAME_ONLY_ROW_TYPES):
+        # a real knowledge fragment's other fields are relational (a phase's own
+        # events, roles, conditions...), not flat data -- dumping them here repeats
+        # what a list-valued field already renders as an unreadable repr(), and
+        # duplicates what the Hypothesis Graph tab exists to explore by expanding
+        # the node itself. The EQL answer names the matching entities; the graph
+        # is where their structure is examined.
+        return row
     for entity_field in fields(item):
         if entity_field.name != "name":
             row[entity_field.name] = _jsonable(getattr(item, entity_field.name))
@@ -1326,7 +1519,6 @@ def _item_row(item: Any, highlight: List[str]) -> Dict[str, Any]:
     return {"value": _jsonable(item)}
 
 
-# %% static action-phase knowledge --------------------------------------------
 def _edge_payload(edge: action_knowledge.KnowledgeGraphEdge) -> Dict[str, Any]:
     """
     The graph-payload dict shape of one
@@ -1471,11 +1663,11 @@ def _episode_detail_lines(episode: ActionEpisode) -> List[str]:
     )
 
 
-def graph_payload() -> Dict[str, Any]:
+def graph_payload(selected_scene: Optional[str] = None) -> Dict[str, Any]:
     """
     The knowledge-graph overview: nodes, edges, details and presets.
     """
-    kb = get_kb()
+    kb = get_kb(selected_scene)
     nodes, edges, details = [], [], {}
 
     def add(node_id: str, label: str, group: str, lines: List[str]) -> None:
@@ -1659,7 +1851,7 @@ def graph_payload() -> Dict[str, Any]:
             link(bench_object.name, "semantic_digital_twin", "modelled in")
 
     # the executed plan tree (captured from the real PlanNode graph)
-    scene, _ = load_scene()
+    scene, _ = load_scene(selected_scene)
     if scene.get("planTrees"):
         node_count = sum(_count_plan_nodes(tree) for tree in scene["planTrees"])
         add(
@@ -1691,7 +1883,7 @@ def graph_payload() -> Dict[str, Any]:
         "nodes": nodes,
         "edges": edges,
         "details": details,
-        "presets": get_presets(),
+        "presets": get_presets(selected_scene),
     }
 
 
@@ -1730,7 +1922,7 @@ def _view() -> tuple:
 
 
 # %% the graph-panel tabs ---------------------------------------------------------
-def view_payload(name: str) -> Dict[str, Any]:
+def view_payload(name: str, selected_scene: Optional[str] = None) -> Dict[str, Any]:
     """
     One tab of the graph panel.
 
@@ -1738,17 +1930,21 @@ def view_payload(name: str) -> Dict[str, Any]:
     structural views of the same demo that the UI can overlay with live status from the
     bridge (see :mod:`cram_viz.live.http`, ``/plan`` and ``/chart``).
     """
-    kb = get_kb()
+    kb = get_kb(selected_scene)
     if name == "knowledge":
-        return graph_payload()
+        return graph_payload(selected_scene)
     if name == "kinematics":
-        return _urdf_view(kb)
+        return _urdf_view(kb, selected_scene)
     if name == "plan":
-        return _plan_view(kb)
+        return _plan_view(kb, selected_scene)
     if name == "chart":
         return _chart_view(kb)
     if name == "domain":
         return _domain_knowledge_view(kb)
+    if name == "hypothesis":
+        return _hypothesis_graph_view()
+    if name == "designator":
+        return _designator_view(kb)
     return {"ok": False, "error": "unknown view: %s" % name}
 
 
@@ -1815,6 +2011,281 @@ def _domain_knowledge_view(kb: KB) -> Dict[str, Any]:
         "edges": edges,
         "details": details,
         "empty": "No action or entity knowledge registered yet.",
+    }
+
+
+#: legend rows for the Designator tab -- overrides graph.js's default group labels
+#: with what these groups mean in this view specifically
+_DESIGNATOR_LEGEND = [
+    {"group": "root", "label": "Designator"},
+    {"group": "concept", "label": "Value slot (a model may generate this)"},
+    {"group": "goal", "label": "Referent slot (must be a real individual)"},
+    {
+        "group": "object",
+        "label": "Illustrative candidate (a scene object, not a real argument)",
+    },
+    {"group": "upper", "label": "Action-frame property group (from Hypothesis Graph)"},
+    {"group": "ind", "label": "Property value"},
+]
+
+
+def _designator_slot_lines(slot: Any, resolved_for_instruction: str) -> List[str]:
+    """
+    Detail-panel lines for one reflected designator slot.
+    """
+    lines = ["type: " + slot.type_name, "kind: " + slot.kind.name.lower()]
+    if slot.docstring:
+        lines.append(slot.docstring)
+    if slot.has_default:
+        lines.append("default: " + repr(slot.default))
+    if slot.frame_role is not None:
+        lines.append(
+            "Minsky role: %s -- see the Hypothesis Graph tab's action frame."
+            % slot.frame_role.value
+        )
+    resolved = slot.resolved_candidate
+    if resolved is not None:
+        lines.append(
+            "Resolved illustratively to %r for the instruction %r, matching the "
+            "action frame's %s filler -- still not a live resolver run."
+            % (resolved.label, resolved_for_instruction, slot.frame_role.value)
+        )
+    elif slot.kind is SlotKind.REFERENT:
+        lines.append(
+            "No live World is attached, so no real domain can be listed -- the "
+            "candidates below are the scene's own objects, offered only as "
+            "illustrative stand-ins."
+        )
+    return lines
+
+
+def _designator_candidate_lines(
+    candidate: Any, resolved_for_instruction: str
+) -> List[str]:
+    """
+    Detail-panel lines for one referent slot's illustrative candidate.
+    """
+    if candidate.resolved:
+        return ["Resolved for the instruction %r." % resolved_for_instruction]
+    return ["an illustrative stand-in -- not a real Body/Tool individual"]
+
+
+def _add_designator_frame_properties(
+    add: Callable, edges: List[Dict[str, Any]], slot: Any, slot_id: str
+) -> None:
+    """
+    Attach a referent slot's action-frame property groups as child nodes, reusing
+    the Hypothesis Graph tab's own :class:`~cram_viz.hypothesis_knowledge.
+    action_frame.EntityPropertyFrame` data rather than re-authoring it.
+    """
+    for group_index, group in enumerate(slot.frame_properties):
+        group_id = "%s::properties::%d" % (slot_id, group_index)
+        add(
+            group_id,
+            "%s (%d)" % (group.kind.value, len(group.values)),
+            "upper",
+            ["From the Hypothesis Graph tab's action frame for this role."],
+        )
+        edges.append(
+            {"from": slot_id, "to": group_id, "kind": "prop", "label": "described by"}
+        )
+        for value_index, value in enumerate(group.values):
+            value_id = "%s::%d" % (group_id, value_index)
+            add(value_id, value, "ind", [])
+            edges.append(
+                {
+                    "from": group_id,
+                    "to": value_id,
+                    "kind": "prop",
+                    "label": "has property",
+                }
+            )
+
+
+def _designator_lisp_framenet(slot: Any) -> List[Dict[str, Any]]:
+    """
+    A slot's frame-semantic property groups (see :mod:`cram_viz.hypothesis_knowledge.
+    action_frame`), reused verbatim for the Lisp pane's nested ``:framenet`` block
+    instead of only appearing on the graph side.
+    """
+    return [
+        {
+            "keyword": ":" + group.kind.value.lower().replace(" ", "-"),
+            "values": list(group.values),
+        }
+        for group in slot.frame_properties
+    ]
+
+
+def _designator_lisp(knowledge: Any) -> Dict[str, Any]:
+    """
+    The Designator tab's left pane: the reflected designator as Lisp keyword syntax,
+    one slot per line, each carrying the graph node id its value stands for so the
+    frontend can highlight and focus that node when the line is clicked. A resolved
+    referent slot also carries its ``:framenet`` property groups, nested beneath it.
+    """
+    return {
+        "head": knowledge.designator_name,
+        "slots": [
+            {
+                "nodeId": "%s.%s" % (knowledge.designator_name, slot.name),
+                "keyword": slot.lisp_keyword,
+                "value": slot.lisp_value,
+                "kind": slot.kind.name.lower(),
+                "frameRole": slot.frame_role.value if slot.frame_role else None,
+                "resolved": slot.resolved_candidate is not None,
+                "frameNet": _designator_lisp_framenet(slot),
+            }
+            for slot in knowledge.slots
+        ],
+    }
+
+
+def _designator_view(kb: KB) -> Dict[str, Any]:
+    """
+    The Designator tab: :class:`~coraplex.robot_plans.actions.composite.tool_based.
+    PouringAction`'s own declared fields, reflected directly and classified value
+    versus referent (see :mod:`cram_viz.designator_knowledge`).
+
+    Static and illustrative throughout: no live World is touched and no resolver is
+    called. A referent slot's candidates are the current scene's own bench objects
+    rather than real ``Body``/``Tool`` individuals, and the one matching the Hypothesis
+    Graph tab's action frame for :data:`~cram_viz.hypothesis_knowledge.
+    DEFAULT_INSTRUCTION` is marked resolved; that same frame's property groups are
+    attached under the slot, reused rather than repeated.
+    """
+    knowledge = designator_knowledge.reflect_pouring_action(kb.objects)
+    nodes, edges, details, add = _view()
+    add(
+        knowledge.designator_name,
+        knowledge.designator_name,
+        "root",
+        [knowledge.docstring] if knowledge.docstring else [],
+    )
+    for slot in knowledge.slots:
+        slot_id = "%s.%s" % (knowledge.designator_name, slot.name)
+        group = "goal" if slot.kind is SlotKind.REFERENT else "concept"
+        add(
+            slot_id,
+            slot.name,
+            group,
+            _designator_slot_lines(slot, knowledge.resolved_for_instruction),
+        )
+        edges.append(
+            {
+                "from": knowledge.designator_name,
+                "to": slot_id,
+                "kind": "prop",
+                "label": "slot",
+            }
+        )
+        for candidate in slot.candidates:
+            candidate_id = "%s::%s" % (slot_id, candidate.identifier)
+            add(
+                candidate_id,
+                candidate.label,
+                "object",
+                _designator_candidate_lines(
+                    candidate, knowledge.resolved_for_instruction
+                ),
+            )
+            edges.append(
+                {
+                    "from": slot_id,
+                    "to": candidate_id,
+                    "kind": "isa" if candidate.resolved else "type",
+                    "label": "resolved" if candidate.resolved else "e.g.",
+                }
+            )
+        _add_designator_frame_properties(add, edges, slot, slot_id)
+    return {
+        "ok": True,
+        "crumb": "PouringAction designator (illustrative)",
+        "nodes": nodes,
+        "edges": edges,
+        "details": details,
+        "legend": _DESIGNATOR_LEGEND,
+        "lisp": _designator_lisp(knowledge),
+    }
+
+
+def _hypothesis_node_lines(node: Any) -> List[str]:
+    """
+    Detail-panel lines for one projected node.
+
+    Every node -- the instruction, each real knowledge fragment, and each display-only
+    action-frame/image-schema node -- is a real projection node and computes its own
+    kind/type/identifier lines. An unresolved role filler gets an explanatory line
+    first, since ``type: UnresolvedRoleFiller`` alone does not say why.
+    """
+    lines = node.graph_information()
+    if node.type_name == UNRESOLVED_ROLE_FILLER_TYPE_NAME:
+        lines = ["Not named in the instruction."] + lines
+    return lines
+
+
+def _hypothesis_graph_view() -> Dict[str, Any]:
+    """
+    The Hypothesis Graph tab: a live projection of the active pouring structure
+    (real, EQL-queryable), with the display-only action-frame and image-schema
+    representations layered on top (see :mod:`cram_viz.hypothesis_knowledge`).
+
+    Every node and edge of the projection is included; the frontend (see
+    ``hypothesis-graph.js``) owns its own rendering engine and starts the view
+    collapsed to just the instruction node, progressively revealing children as the
+    user clicks through it -- see that file for why this tab does not go through the
+    shared ``graph.js``/``window.Graph`` wrapper the other tabs use.
+
+    The tab is empty until an instruction has been generated.
+    """
+    active_hypothesis = hypothesis_knowledge.active()
+    if active_hypothesis is None:
+        return {
+            "ok": True,
+            "crumb": "hypothesis graph",
+            "root": None,
+            "nodes": [],
+            "edges": [],
+            "details": {},
+            "empty": (
+                "Nothing generated yet — enter an instruction in the Generate bar "
+                "above the EQL query box."
+            ),
+        }
+    projection = active_hypothesis.projection
+    nodes = [
+        {
+            "id": node.identifier,
+            "label": node.label,
+            "kind": node.kind.value,
+            "unresolved": node.type_name == UNRESOLVED_ROLE_FILLER_TYPE_NAME,
+        }
+        for node in projection.nodes
+    ]
+    edges = [
+        {
+            "from": relation.source.identifier,
+            "to": relation.target.identifier,
+            "label": relation.predicate,
+        }
+        for relation in projection.relations
+    ]
+    details = {
+        node.identifier: {
+            "label": node.label,
+            "group": "hypothesis",
+            "lines": _hypothesis_node_lines(node),
+        }
+        for node in projection.nodes
+    }
+    return {
+        "ok": True,
+        "crumb": "hypothesis graph",
+        "nodes": nodes,
+        "edges": edges,
+        "details": details,
+        "root": projection.instruction.identifier,
+        "empty": "No hypothesis knowledge graph available.",
     }
 
 
@@ -1914,15 +2385,17 @@ def _count_plan_nodes(tree: Dict[str, Any]) -> int:
     return 1 + sum(_count_plan_nodes(child) for child in tree.get("children", []))
 
 
-def expand_node(node_id: str) -> Optional[Dict[str, Any]]:
+def expand_node(
+    node_id: str, selected_scene: Optional[str] = None
+) -> Optional[Dict[str, Any]]:
     """
     The inside view of a double-clicked node, or None if not drillable.
     """
-    kb = get_kb()
+    kb = get_kb(selected_scene)
     if node_id == kb.robot.name:  # robot → full URDF kinematic tree
-        return _urdf_view(kb)
+        return _urdf_view(kb, selected_scene)
     if node_id == "plan":  # → the executed plan tree
-        return _plan_view(kb)
+        return _plan_view(kb, selected_scene)
     package = next((entry for entry in kb.packages if entry.name == node_id), None)
     if package:
         return _package_view(kb, package)
@@ -1958,7 +2431,7 @@ PLAN_LEGEND = [
 ]
 
 
-def _plan_view(kb: KB) -> Dict[str, Any]:
+def _plan_view(kb: KB, selected_scene: Optional[str] = None) -> Dict[str, Any]:
     """
     The executed plan as a tree, one node per plan node the demo ran.
 
@@ -1969,7 +2442,7 @@ def _plan_view(kb: KB) -> Dict[str, Any]:
     real per-step progress only shows up while the live bridge is attached
     (it derives it from the statechart life cycle).
     """
-    scene, _ = load_scene()
+    scene, _ = load_scene(selected_scene)
     trees = scene.get("planTrees") or []
     nodes, edges, details, add = _view()
     counter = [0]
@@ -2017,7 +2490,7 @@ def _plan_view(kb: KB) -> Dict[str, Any]:
     }
 
 
-def _urdf_view(kb: KB) -> Dict[str, Any]:
+def _urdf_view(kb: KB, selected_scene: Optional[str] = None) -> Dict[str, Any]:
     """
     The scene robot's URDF as a kinematic tree.
 
@@ -2025,7 +2498,7 @@ def _urdf_view(kb: KB) -> Dict[str, Any]:
     edges, fixed ones dashed. Links are coloured by robot part from the recorded
     annotation.
     """
-    links, joints = load_urdf()
+    links, joints = load_urdf(selected_scene)
     nodes, edges, details, add = _view()
     if not links:
         return {
@@ -2036,7 +2509,7 @@ def _urdf_view(kb: KB) -> Dict[str, Any]:
             "details": {},
         }
 
-    scene, _ = load_scene()
+    scene, _ = load_scene(selected_scene)
     parts = (scene.get("robot") or {}).get("parts") or {}
     link_to_part = {
         link: part for part, part_links in parts.items() for link in part_links
@@ -2281,14 +2754,14 @@ ARCH_PRESETS = [
 ]
 
 
-def get_presets() -> List[Dict[str, str]]:
+def get_presets(selected_scene: Optional[str] = None) -> List[Dict[str, str]]:
     """
     Ready-made queries for the EQL panel.
 
     Scene presets are generated from the loaded scene, so they stay valid for any
     onboarded robot/environment; the architecture presets are static.
     """
-    kb = get_kb()
+    kb = get_kb(selected_scene)
     presets = [
         {"text": "which robot is this?", "code": "the(entity(rob))"},
         {"text": "which arms does it have?", "code": "an(entity(arm))"},
@@ -2327,7 +2800,7 @@ def get_presets() -> List[Dict[str, str]]:
             )
     presets += _scene_verb_presets(kb)
     presets += _domain_knowledge_presets(kb)
-    return presets + ARCH_PRESETS
+    return _hypothesis_graph_presets(kb) + presets + ARCH_PRESETS
 
 
 def _example_action_verb(kb: KB) -> Optional[str]:
@@ -2460,6 +2933,99 @@ def _domain_knowledge_presets(kb: KB) -> List[Dict[str, str]]:
             }
         )
     return presets
+
+
+def _hypothesis_graph_presets(kb: KB) -> List[Dict[str, str]]:
+    """
+    Ready-made queries over the hand-authored, real active pouring structure, plus
+    the display-only FrameModel/ImageSchemaModel overlays layered on top of it.
+
+    Each answer names only the matching entities (see :func:`_entity_row`'s
+    ``_NAME_ONLY_ROW_TYPES`` handling): the query highlights them in the Hypothesis
+    Graph tab, where their own structure is explored by expanding the node.
+
+    There are none until an instruction has been generated, since every one of them
+    would match nothing.
+    """
+    if hypothesis_knowledge.active() is None:
+        return []
+    return [
+        {
+            "text": "what are the action phases involved in the action?",
+            "code": "an(entity(pouring_phase))",
+        },
+        {
+            "text": "what are the different force dynamic events involved in the action?",
+            "code": "an(entity(pouring_force_dynamic_event))",
+        },
+        {
+            "text": "what transitions connect the phases (the state machine)?",
+            "code": "an(entity(pouring_transition))",
+        },
+        {
+            "text": "which conditions must hold throughout a phase (invariants)?",
+            "code": (
+                "an(entity(pouring_condition_requirement)"
+                ".where(pouring_condition_requirement.mode == ConditionMode.THROUGHOUT))"
+            ),
+        },
+        {
+            "text": "which phases are both force-coupled and continuously modulated?",
+            "code": (
+                "an(entity(pouring_phase)"
+                ".where(pouring_phase.regulation_mode == RegulationMode.HYBRID)"
+                ".where(pouring_phase.coupling_regime == CouplingRegime.COUPLED))"
+            ),
+        },
+        {
+            "text": "what event initiates the lift phase (its precondition)?",
+            "code": (
+                "an(entity(pouring_event_type)"
+                ".where(pouring_phase.label == 'Lift')"
+                ".where(in_(pouring_event_type, pouring_phase.initiated_by)))"
+            ),
+        },
+        {
+            "text": "what event terminates the lift phase (its postcondition)?",
+            "code": (
+                "an(entity(pouring_event_type)"
+                ".where(pouring_phase.label == 'Lift')"
+                ".where(in_(pouring_event_type, pouring_phase.terminated_by)))"
+            ),
+        },
+        {
+            "text": "which entity fills the source container role in the frame?",
+            "code": (
+                "the(entity(frame_entity)"
+                ".where(frame_entity.role == FrameRoleKind.SOURCE_CONTAINER))"
+            ),
+        },
+        {
+            "text": "what affordances does the source container entity have?",
+            "code": (
+                "an(entity(frame_property)"
+                ".where(frame_entity.role == FrameRoleKind.SOURCE_CONTAINER)"
+                ".where(in_(frame_property, frame_entity.property_frames))"
+                ".where(frame_property.kind == EntityPropertyKind.AFFORDANCES))"
+            ),
+        },
+        {
+            "text": ("what spatial roles does the initial containment schema require?"),
+            "code": (
+                "an(entity(schema_binding)"
+                ".where(schema_instance.label == 'Initial Containment')"
+                ".where(in_(schema_binding, schema_instance.primitive_bindings)))"
+            ),
+        },
+        {
+            "text": "what spatial roles does the substance transfer schema require?",
+            "code": (
+                "an(entity(schema_binding)"
+                ".where(schema_instance.label == 'Substance Transfer')"
+                ".where(in_(schema_binding, schema_instance.primitive_bindings)))"
+            ),
+        },
+    ]
 
 
 def _scene_verb_presets(kb: KB) -> List[Dict[str, str]]:

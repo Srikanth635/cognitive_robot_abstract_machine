@@ -1,4 +1,5 @@
-"""Where hypotheses live between generations.
+"""
+Where hypotheses live between generations.
 
 WHAT MAKES CACHING POSSIBLE AT ALL
 ----------------------------------
@@ -31,13 +32,11 @@ unexplainable decision is not.
 from __future__ import annotations
 
 import json
-import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, Iterator, Mapping, Optional, Sequence
 
-from llm_reasoner.knowledge.hypothesis.provenance import CacheKey
 from llm_reasoner.knowledge.hypothesis.record import HypothesisRecord
 from llm_reasoner.knowledge.hypothesis.serialization import decode, encode
 from llm_reasoner.knowledge.hypothesis.status import HypothesisStatus
@@ -46,7 +45,8 @@ from llm_reasoner.knowledge.ontological.decorators import REGISTRY, OntologyRegi
 
 @dataclass(frozen=True)
 class Lookup:
-    """The outcome of asking the store for a hypothesis.
+    """
+    The outcome of asking the store for a hypothesis.
 
     Distinguishes the three ways a lookup can come back empty, because they call
     for different responses: nothing was ever generated, something was generated
@@ -57,13 +57,19 @@ class Lookup:
 
     record: Optional[HypothesisRecord] = None
     stale: tuple[HypothesisRecord, ...] = ()
-    """Records for this action that were generated under superseded module
-    versions. Not served, but worth knowing about: regenerating one is cheaper
-    than generating from nothing if the prompt can be seeded with it."""
+    """
+    Records for this action that were generated under superseded module versions.
+
+    Not served, but worth knowing about: regenerating one is cheaper than generating
+    from nothing if the prompt can be seeded with it.
+    """
 
     refuted: tuple[HypothesisRecord, ...] = ()
-    """Records that failed validation or were defeated in use. Evidence that
-    regenerating may fail the same way."""
+    """
+    Records that failed validation or were defeated in use.
+
+    Evidence that regenerating may fail the same way.
+    """
 
     @property
     def hit(self) -> bool:
@@ -71,30 +77,42 @@ class Lookup:
 
 
 class HypothesisStore(ABC):
-    """Somewhere hypotheses are kept and found again."""
+    """
+    Somewhere hypotheses are kept and found again.
+    """
 
     @abstractmethod
     def put(self, record: HypothesisRecord) -> HypothesisRecord:
-        """Store a record, superseding any it replaces."""
+        """
+        Store a record, superseding any it replaces.
+        """
 
     @abstractmethod
     def get(self, record_id: str) -> Optional[HypothesisRecord]:
-        """Retrieve one record by its own identity, whatever its status.
+        """
+        Retrieve one record by its own identity, whatever its status.
 
-        By identity rather than by key, because this is what a citation
-        resolves against -- and a citation must keep working after the record it
-        names has been superseded.
+        By identity rather than by key, because this is what a citation resolves against
+        -- and a citation must keep working after the record it names has been
+        superseded.
         """
 
     @abstractmethod
     def lookup(
-        self, action_type: str, module_versions: Mapping[str, str]
+        self,
+        action_type: str,
+        module_versions: Mapping[str, str],
+        prompt_version: str | None = None,
     ) -> Lookup:
-        """Find a servable hypothesis for an action under current versions."""
+        """
+        Find a servable hypothesis for an action under current versions.
+        """
 
     @abstractmethod
     def records_for(self, action_type: str) -> tuple[HypothesisRecord, ...]:
-        """Every record for an action, in insertion order, whatever its status."""
+        """
+        Every record for an action, in insertion order, whatever its status.
+        """
 
     @abstractmethod
     def __len__(self) -> int: ...
@@ -105,8 +123,10 @@ class HypothesisStore(ABC):
     def _classify(
         candidates: Sequence[HypothesisRecord],
         module_versions: Mapping[str, str],
+        prompt_version: str | None = None,
     ) -> Lookup:
-        """Sort an action's records into servable, stale and refuted.
+        """
+        Sort an action's records into servable, stale and refuted.
 
         Ordering matters: the freshest servable record wins, and the check for
         staleness comes before the check for servability, so a validated record
@@ -116,25 +136,25 @@ class HypothesisStore(ABC):
         stale: list[HypothesisRecord] = []
         refuted: list[HypothesisRecord] = []
         for record in candidates:
-            if record.status is HypothesisStatus.REFUTED:
-                refuted.append(record)
-            elif record.status is HypothesisStatus.SUPERSEDED:
+            if record.status is HypothesisStatus.SUPERSEDED:
                 continue
-            elif record.is_stale(module_versions):
+            elif record.is_stale(module_versions, prompt_version):
                 stale.append(record)
+            elif record.status is HypothesisStatus.REFUTED:
+                refuted.append(record)
             elif record.servable:
                 servable.append(record)
-        best = max(
-            servable, key=lambda r: r.provenance.generated_at, default=None
-        )
-        return Lookup(
-            record=best, stale=tuple(stale), refuted=tuple(refuted)
-        )
+        best = max(servable, key=lambda r: r.provenance.generated_at, default=None)
+        return Lookup(record=best, stale=tuple(stale), refuted=tuple(refuted))
 
 
 @dataclass
 class InMemoryStore(HypothesisStore):
-    """A store for one process. Loses everything on exit."""
+    """
+    A store for one process.
+
+    Loses everything on exit.
+    """
 
     _by_id: dict[str, HypothesisRecord] = field(default_factory=dict, repr=False)
     _by_action: dict[str, list[str]] = field(default_factory=dict, repr=False)
@@ -160,14 +180,20 @@ class InMemoryStore(HypothesisStore):
 
     def records_for(self, action_type: str) -> tuple[HypothesisRecord, ...]:
         return tuple(
-            self._by_id[i] for i in self._by_action.get(action_type, ())
+            self._by_id[i]
+            for i in self._by_action.get(action_type, ())
             if i in self._by_id
         )
 
     def lookup(
-        self, action_type: str, module_versions: Mapping[str, str]
+        self,
+        action_type: str,
+        module_versions: Mapping[str, str],
+        prompt_version: str | None = None,
     ) -> Lookup:
-        return self._classify(self.records_for(action_type), module_versions)
+        return self._classify(
+            self.records_for(action_type), module_versions, prompt_version
+        )
 
     def __len__(self) -> int:
         return len(self._by_id)
@@ -178,7 +204,8 @@ class InMemoryStore(HypothesisStore):
 
 @dataclass
 class FileStore(HypothesisStore):
-    """A store backed by one JSON file per record.
+    """
+    A store backed by one JSON file per record.
 
     One file per record rather than a single document, so that a record written
     under a model this process no longer has does not make the whole store
@@ -189,11 +216,15 @@ class FileStore(HypothesisStore):
     directory: Path
     registry: OntologyRegistry = REGISTRY
     _index: dict[str, str] = field(default_factory=dict, repr=False)
-    """Record id to action IRI, so an action's records can be found without
-    decoding every file."""
+    """
+    Record id to action IRI, so an action's records can be found without decoding every
+    file.
+    """
 
     unreadable: list[str] = field(default_factory=list)
-    """Files that could not be decoded, named rather than silently ignored."""
+    """
+    Files that could not be decoded, named rather than silently ignored.
+    """
 
     def __post_init__(self) -> None:
         self.directory = Path(self.directory)
@@ -228,9 +259,7 @@ class FileStore(HypothesisStore):
         return record
 
     def _write(self, record: HypothesisRecord) -> None:
-        self._path(record.record_id).write_text(
-            json.dumps(encode(record), indent=1)
-        )
+        self._path(record.record_id).write_text(json.dumps(encode(record), indent=1))
 
     def get(self, record_id: str) -> Optional[HypothesisRecord]:
         path = self._path(record_id)
@@ -254,9 +283,14 @@ class FileStore(HypothesisStore):
         return tuple(out)
 
     def lookup(
-        self, action_type: str, module_versions: Mapping[str, str]
+        self,
+        action_type: str,
+        module_versions: Mapping[str, str],
+        prompt_version: str | None = None,
     ) -> Lookup:
-        return self._classify(self.records_for(action_type), module_versions)
+        return self._classify(
+            self.records_for(action_type), module_versions, prompt_version
+        )
 
     def __len__(self) -> int:
         return len(self._index)
@@ -266,18 +300,20 @@ def mark_stale(
     store: HypothesisStore,
     action_types: Iterable[str],
     module_versions: Mapping[str, str],
+    prompt_version: str | None = None,
 ) -> tuple[HypothesisRecord, ...]:
-    """Report which records the current module versions have left behind.
+    """
+    Report which records the current module versions have left behind.
 
-    Reports rather than mutates. A stale record has not been replaced, and
-    marking it before a replacement exists would lose the difference between
-    knowledge that was regenerated and knowledge that was merely noticed to be
-    out of date -- which is exactly the question asked when a resolution made
-    under an old ontology has to be explained.
+    Reports rather than mutates. A stale record has not been replaced, and marking it
+    before a replacement exists would lose the difference between knowledge that was
+    regenerated and knowledge that was merely noticed to be out of date -- which is
+    exactly the question asked when a resolution made under an old ontology has to be
+    explained.
     """
     out: list[HypothesisRecord] = []
     for action in action_types:
-        out.extend(store.lookup(action, module_versions).stale)
+        out.extend(store.lookup(action, module_versions, prompt_version).stale)
     return tuple(out)
 
 

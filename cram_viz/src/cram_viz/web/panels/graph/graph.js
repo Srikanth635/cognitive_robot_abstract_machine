@@ -34,13 +34,13 @@
   // (CREATED/RUNNING/SUCCEEDED/FAILED/INTERRUPTED/PAUSE) and giskardpy
   // LifeCycleValues on statechart nodes (NOT_STARTED/RUNNING/PAUSED/DONE/FAILED).
   const STATUS_STYLE = {
-    RUNNING:     { c: '#ffb648', w: 20, text: 'running', legend: 'running' },
-    SUCCEEDED:   { c: '#4bd38a', w: 16, text: 'succeeded', legend: 'succeeded / done' },
-    DONE:        { c: '#4bd38a', w: 16, text: 'done', legend: 'succeeded / done' },
-    FAILED:      { c: '#ff6b8b', w: 20, text: 'failed', legend: 'failed' },
-    INTERRUPTED: { c: '#ff9d6b', w: 16, d: [9, 7], text: 'interrupted', legend: 'interrupted' },
-    PAUSE:       { c: '#5b8cff', w: 16, d: [9, 7], text: 'paused', legend: 'paused' },
-    PAUSED:      { c: '#5b8cff', w: 16, d: [9, 7], text: 'paused', legend: 'paused' },
+    RUNNING:     { c: '#ffb648', w: 20, legend: 'running' },
+    SUCCEEDED:   { c: '#4bd38a', w: 16, legend: 'succeeded / done' },
+    DONE:        { c: '#4bd38a', w: 16, legend: 'succeeded / done' },
+    FAILED:      { c: '#ff6b8b', w: 20, legend: 'failed' },
+    INTERRUPTED: { c: '#ff9d6b', w: 16, d: [9, 7], legend: 'interrupted' },
+    PAUSE:       { c: '#5b8cff', w: 16, d: [9, 7], legend: 'paused' },
+    PAUSED:      { c: '#5b8cff', w: 16, d: [9, 7], legend: 'paused' },
     CREATED:     { c: '#46557a', w: 7, d: [4, 5], legend: 'not started' },
     NOT_STARTED: { c: '#46557a', w: 7, d: [4, 5], legend: 'not started' },
   };
@@ -62,7 +62,7 @@
       patch.shapeProperties = { borderDashes: false };
       return patch;
     }
-    patch.label = st.text ? baseLabel + '\n' + st.text : baseLabel;
+    patch.label = baseLabel;
     patch.borderWidth = st.w;
     patch.borderWidthSelected = st.w;   // vis would otherwise thin the ring to 2 on click
     patch.color = { background: gs.color, border: st.c,
@@ -89,7 +89,7 @@
   let selectCb = function () {};
   let dblCb = function () {};
   let freezeTimer = null;   // re-freeze physics a moment after a node drag ends
-  let baseLabels = {};      // node id -> label without the status line
+  let baseLabels = {};      // node id -> stable label retained across status updates
   let baseGroups = {};      // node id -> group (statusPatch needs its fill colour)
   const POS = {};           // view key -> settled node positions (instant re-open)
   let viewKey = null;
@@ -143,6 +143,7 @@
     edges = new vis.DataSet(visEdges);
     allNodeIds = visNodes.map(function (n) { return n.id; });
     const bigGraph = visNodes.length > 170;
+    const wideSpacing = data.spacing === 'wide';
 
     // a status ring only reads as a ring if the dot underneath it is big enough,
     // so status views draw larger nodes (and labels) — and need more room between them
@@ -184,7 +185,14 @@
         // low centralGravity + strong repulsion + avoidOverlap keep a dense graph
         // (e.g. the Domain Knowledge tab, where shared nodes pull in edges from
         // several owners) from bunching into an unreadable clump at the centre
-        barnesHut: { gravitationalConstant: -12000, centralGravity: 0.1, springLength: 180, springConstant: 0.03, damping: 0.5, avoidOverlap: 0.6 },
+        barnesHut: {
+          gravitationalConstant: wideSpacing ? -18000 : -12000,
+          centralGravity: wideSpacing ? 0.04 : 0.1,
+          springLength: wideSpacing ? 290 : 180,
+          springConstant: 0.03,
+          damping: 0.5,
+          avoidOverlap: wideSpacing ? 1.0 : 0.6,
+        },
       },
       interaction: { hover: !bigGraph, tooltipDelay: 150, navigationButtons: false, dragNodes: true },
       layout: layout,

@@ -17,6 +17,7 @@ from llm_reasoner.knowledge.microworlds.flanagan.object_dynamics import (
     RepresentationDissociation,
     RepresentationPurpose,
     RepresentationUpdate,
+    representation_ownership_contract_description,
 )
 from llm_reasoner.knowledge.ontological.constraints import Closure, Forbidden
 
@@ -185,7 +186,7 @@ def representation_lacks_estimated_role(representation: Representation) -> bool:
 
 OBJECT_DYNAMICS_CONSTRAINTS = [
     Forbidden(
-        id="C51",
+        id="OD-C51",
         applies_to=InternalModelComposition,
         when=composition_is_incoherent,
         message="internal-model composition breaks the command-to-prediction chain",
@@ -194,15 +195,15 @@ OBJECT_DYNAMICS_CONSTRAINTS = [
         "identity-preserving control pathway.",
     ),
     Forbidden(
-        id="C52",
+        id="OD-C52",
         applies_to=ObjectDynamicsPhaseStructure,
         when=structure_has_unowned_estimate,
-        message="declared estimate belongs to no representation",
+        message=representation_ownership_contract_description(),
         rationale="Every estimate needs an explicit coordinate frame and functional "
         "purpose supplied by its owning representation.",
     ),
     Forbidden(
-        id="C53",
+        id="OD-C53",
         applies_to=ObjectDynamicsPhaseStructure,
         when=structure_reuses_estimate_across_purposes,
         message="one estimate is reused for sensorimotor and perceptual purposes",
@@ -210,7 +211,7 @@ OBJECT_DYNAMICS_CONSTRAINTS = [
         "for motor scaling.",
     ),
     Forbidden(
-        id="C54",
+        id="OD-C54",
         applies_to=RepresentationDissociation,
         when=dissociation_is_incoherent,
         message="representation dissociation has incompatible purposes or estimates",
@@ -218,7 +219,7 @@ OBJECT_DYNAMICS_CONSTRAINTS = [
         "purposed representations.",
     ),
     Forbidden(
-        id="C55",
+        id="OD-C55",
         applies_to=RepresentationUpdate,
         when=representation_update_is_incoherent,
         message="representation update changes content outside its declared memory",
@@ -226,7 +227,7 @@ OBJECT_DYNAMICS_CONSTRAINTS = [
         "in the named sensorimotor memory.",
     ),
     Forbidden(
-        id="C56",
+        id="OD-C56",
         applies_to=DynamicsTransfer,
         when=transfer_is_incoherent,
         message="dynamics transfer compares non-equivalent perturbation contexts",
@@ -234,7 +235,7 @@ OBJECT_DYNAMICS_CONSTRAINTS = [
         "the same perturbation kind.",
     ),
     Forbidden(
-        id="C57",
+        id="OD-C57",
         applies_to=Representation,
         when=representation_has_incompatible_purpose,
         message="representation type is incompatible with its declared purpose",
@@ -242,7 +243,7 @@ OBJECT_DYNAMICS_CONSTRAINTS = [
         "representations support perceptual judgment.",
     ),
     Forbidden(
-        id="C58",
+        id="OD-C58",
         applies_to=Representation,
         when=representation_lacks_estimated_role,
         message="representation omits a role named by one of its estimates",
@@ -250,7 +251,7 @@ OBJECT_DYNAMICS_CONSTRAINTS = [
         "properties or dynamics its estimates describe.",
     ),
     Closure(
-        id="C13l",
+        id="OD-C13l",
         applies_to=ObjectDynamicsPhaseStructure,
         container="defines_internal_model",
         reached_via=(
@@ -270,7 +271,7 @@ OBJECT_DYNAMICS_CONSTRAINTS = [
         "must be explicitly declared.",
     ),
     Closure(
-        id="C13m",
+        id="OD-C13m",
         applies_to=ObjectDynamicsPhaseStructure,
         container="defines_desired_state",
         reached_via=(
@@ -280,7 +281,7 @@ OBJECT_DYNAMICS_CONSTRAINTS = [
         rationale="Every desired state used by a command must be declared.",
     ),
     Closure(
-        id="C13n",
+        id="OD-C13n",
         applies_to=ObjectDynamicsPhaseStructure,
         container="defines_motor_command",
         reached_via=(
@@ -290,7 +291,7 @@ OBJECT_DYNAMICS_CONSTRAINTS = [
         rationale="Every copied or composed motor command must be declared.",
     ),
     Closure(
-        id="C13o",
+        id="OD-C13o",
         applies_to=ObjectDynamicsPhaseStructure,
         container="defines_efference_copy",
         reached_via=(
@@ -300,7 +301,7 @@ OBJECT_DYNAMICS_CONSTRAINTS = [
         rationale="Every efference copy used by represented dynamics must be declared.",
     ),
     Closure(
-        id="C13p",
+        id="OD-C13p",
         applies_to=ObjectDynamicsPhaseStructure,
         container="defines_dynamics_perturbation",
         reached_via=(
@@ -311,14 +312,14 @@ OBJECT_DYNAMICS_CONSTRAINTS = [
         rationale="Every compared dynamics perturbation must be declared.",
     ),
     Closure(
-        id="C13q",
+        id="OD-C13q",
         applies_to=ObjectDynamicsPhaseStructure,
         container="has_sensorimotor_memory",
         reached_via=("has_representation_update.persists_in",),
         rationale="Every memory receiving an update must be declared.",
     ),
     Closure(
-        id="C13r",
+        id="OD-C13r",
         applies_to=ObjectDynamicsPhaseStructure,
         container="defines_parameter",
         reached_via=(
@@ -332,14 +333,14 @@ OBJECT_DYNAMICS_CONSTRAINTS = [
         "declared by the structure.",
     ),
     Closure(
-        id="C13s",
+        id="OD-C13s",
         applies_to=ObjectDynamicsPhaseStructure,
         container="defines_role",
         reached_via=("defines_internal_model.represents_role",),
         rationale="Every role represented by a dynamics model must be declared.",
     ),
     Closure(
-        id="C13t",
+        id="OD-C13t",
         applies_to=ObjectDynamicsPhaseStructure,
         container="defines_event_type",
         reached_via=(
@@ -348,7 +349,7 @@ OBJECT_DYNAMICS_CONSTRAINTS = [
         rationale="Every mechanically predicted consequence must be declared.",
     ),
     Closure(
-        id="C13u",
+        id="OD-C13u",
         applies_to=ObjectDynamicsPhaseStructure,
         container="defines_prediction",
         reached_via=("has_internal_model_composition.predicted_sensory_consequence",),

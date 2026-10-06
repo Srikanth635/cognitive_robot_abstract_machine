@@ -1,4 +1,5 @@
-"""The generation loop.
+"""
+The generation loop.
 
     underspecified action
       -> module selection        which microworlds does this action need
@@ -35,7 +36,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any, Mapping, Optional, Sequence
 
 from llm_reasoner.clients.base import Exchange, LanguageModelClient
@@ -73,20 +74,24 @@ from llm_reasoner.knowledge.ontological.decorators import (
 )
 
 JSON_OBJECT = re.compile(r"\{.*}", re.DOTALL)
-"""Locates the JSON object in a response that may carry surrounding text.
+"""
+Locates the JSON object in a response that may carry surrounding text.
 
-A fallback for clients without constrained decoding. Greedy across newlines, so
-it is only sound when the response is a single object -- which the system prompt
-demands, and which a client supporting a typed output schema guarantees outright.
+A fallback for clients without constrained decoding. Greedy across newlines, so it is
+only sound when the response is a single object -- which the system prompt demands, and
+which a client supporting a typed output schema guarantees outright.
 """
 
 
 class GenerationFailure(LLMReasonerError):
-    """Base for failures of the generation loop."""
+    """
+    Base for failures of the generation loop.
+    """
 
 
 class ResponseUnusable(GenerationFailure):
-    """The response could not be turned into a fragment graph.
+    """
+    The response could not be turned into a fragment graph.
 
     Retryable: the repair prompt states the reason, and a model that emitted
     prose around its JSON or misnamed a type can usually correct it.
@@ -94,12 +99,13 @@ class ResponseUnusable(GenerationFailure):
 
 
 class RepairBudgetExhausted(GenerationFailure):
-    """Repair ran out of attempts without producing a usable graph.
+    """
+    Repair ran out of attempts without producing a usable graph.
 
-    Carries every exchange that was tried, not just a message. Without them the
-    raw responses that actually failed are gone at the exact moment someone
-    needs to look at one -- the caller is left staring at a JSON decode error
-    with no way to see the JSON.
+    Carries every exchange that was tried, not just a message. Without them the raw
+    responses that actually failed are gone at the exact moment someone needs to look at
+    one -- the caller is left staring at a JSON decode error with no way to see the
+    JSON.
     """
 
     def __init__(self, message: str, exchanges: Sequence[Exchange] = ()) -> None:
@@ -108,8 +114,67 @@ class RepairBudgetExhausted(GenerationFailure):
 
 
 @dataclass
+class UnreachableModules(GenerationFailure):
+    """
+    A selected module contributes nothing that the generation root can reach.
+
+    Generating anyway would ask for a hypothesis without the module's vocabulary while
+    still recording the module in the hypothesis's provenance and cache key.
+    """
+
+    modules: tuple[str, ...]
+    """
+    The selected modules none of whose classes can appear under the root.
+    """
+
+    root: str
+    """
+    The top-level class the hypothesis is rooted at.
+    """
+
+    def __str__(self) -> str:
+        return (
+            f"{self.root} cannot reach any class of "
+            + ", ".join(self.modules)
+            + "; select the module's own root or drop the module"
+        )
+
+
+# %% prompt versions
+
+
+class GenerationPromptVersion(StrEnum):
+    """
+    Identify persisted generation contracts for cache invalidation.
+    """
+
+    PRE_CERTIFICATION = "generation/v2"
+    """
+    Generation contract before scientific certification.
+    """
+
+    CERTIFIED = "generation/v3"
+    """
+    First scientifically certified generation contract.
+    """
+
+    CONTINUOUS_CONTROL = "generation/v4"
+    """
+    Contract with explicit continuous-control cross-link guidance.
+    """
+
+    REPRESENTATION_OWNERSHIP = "generation/v5"
+    """Contract with unambiguous estimate-representation ownership."""
+
+
+# %% generation results
+
+
+@dataclass
 class GenerationResult:
-    """What one generation attempt produced, admissible or not."""
+    """
+    What one generation attempt produced, admissible or not.
+    """
 
     record: HypothesisRecord
     selection: ModuleSelection
@@ -122,18 +187,25 @@ class GenerationResult:
 
 @dataclass
 class HypothesisGenerator:
-    """Produces stereotypical hypotheses for a kind of action."""
+    """
+    Produces stereotypical hypotheses for a kind of action.
+    """
 
     client: LanguageModelClient
     suite: ConstraintSuite
-    """The acceptance constraints of the microworld being generated for. Owned
-    by the microworld, not by this loop, which is what lets a second microworld
-    plug in without touching anything here."""
+    """
+    The acceptance constraints of the microworld being generated for.
 
-    root_class: str
-    """Class of the top-level fragment, e.g. ``PouringPhaseStructure``."""
+    Owned by the microworld, not by this loop, which is what lets a second microworld
+    plug in without touching anything here.
+    """
 
-    prompt_version: str = "generation/v2"
+    root_class: str | None = None
+    """
+    Optional top-level class override for specialized generation calls.
+    """
+
+    prompt_version: str = GenerationPromptVersion.REPRESENTATION_OWNERSHIP.value
     max_repairs: int = 2
     registry: OntologyRegistry = REGISTRY
     prompt_builder: GenerationPromptBuilder = field(
@@ -142,12 +214,14 @@ class HypothesisGenerator:
     notes: tuple[str, ...] = ()
 
     log: list[Exchange] = field(default_factory=list, init=False)
-    """Every exchange from the most recent call to :meth:`generate`, in order.
+    """
+    Every exchange from the most recent call to :meth:`generate`, in order.
 
-    Mirrors ``resolver.LanguageModelBackend.log``: kept on the object rather
-    than only inside the call, so a raw response can be inspected after a
-    failure without having to catch the exception first. Reset at the start of
-    each ``generate`` call, so it always reflects the most recent attempt."""
+    Mirrors ``resolver.LanguageModelBackend.log``: kept on the object rather than only
+    inside the call, so a raw response can be inspected after a failure without having
+    to catch the exception first. Reset at the start of each ``generate`` call, so it
+    always reflects the most recent attempt.
+    """
 
     # -- entry point -------------------------------------------------------
 
@@ -157,21 +231,18 @@ class HypothesisGenerator:
         action_label: Optional[str] = None,
         selection: Optional[ModuleSelection] = None,
     ) -> GenerationResult:
-        """Generate one hypothesis for a kind of action.
+        """
+        Generate one hypothesis for a kind of action.
 
-        :param task: The action, as a reference with its ancestors materialised
-            so the capability registry can place it.
-        :param action_label: Plain-language name used in the prompt; the task's
-            own label when omitted.
-        :param selection: Pre-resolved modules, when the caller has already
-            selected them.
+        :param task: The action, as a reference with its ancestors materialised so the
+            capability registry can place it.
+        :param action_label: Plain-language name used in the prompt; the task's own
+            label when omitted.
+        :param selection: Pre-resolved modules, when the caller has already selected
+            them.
         """
         selection = selection or select_modules(task)
-        schema = derive_schema(
-            [m.name for m in selection.modules],
-            root=self.root_class,
-            registry=self.registry,
-        )
+        schema = self._schema_for(selection)
         prompt = self.prompt_builder.build(
             schema=schema,
             action_label=action_label or str(task),
@@ -184,18 +255,18 @@ class HypothesisGenerator:
         exchanges: list[Exchange] = self.log
         last_decode_error: Optional[str] = None
         last_success: Optional[tuple[Any, Sequence[Any]]] = None
-        """The most recent (root, violations) pair from an attempt that decoded,
-        whether or not it went on to pass validation.
+        """
+        The most recent (root, violations) pair from an attempt that decoded, whether or
+        not it went on to pass validation.
 
-        Bundled together deliberately, not tracked as two separate variables.
-        A later attempt can fail to DECODE after an earlier one already failed
-        VALIDATION, and if the two kinds of failure are tracked independently
-        the loop can end holding one attempt's root next to a different
-        attempt's violations -- or worse, next to an empty violations list from
-        the decode failure, which used to make a perfectly good earlier result
-        look like it had nothing to report. Keeping them as one pair makes that
-        mismatch structurally impossible."""
-
+        Bundled together deliberately, not tracked as two separate variables. A later
+        attempt can fail to DECODE after an earlier one already failed VALIDATION, and
+        if the two kinds of failure are tracked independently the loop can end holding
+        one attempt's root next to a different attempt's violations -- or worse, next to
+        an empty violations list from the decode failure, which used to make a perfectly
+        good earlier result look like it had nothing to report. Keeping them as one pair
+        makes that mismatch structurally impossible.
+        """
         for attempt in range(self.max_repairs + 1):
             # constrained where the client supports it, free text where not --
             # the schema removes invented type names and misspelled fields
@@ -234,12 +305,13 @@ class HypothesisGenerator:
     # -- decoding ----------------------------------------------------------
 
     def _build(self, raw: str, schema: GenerationSchema) -> tuple[Any, list[Any]]:
-        """Turn a response into a wired graph of instances.
+        """
+        Turn a response into a wired graph of instances.
 
-        Two passes, the same shape the Turtle codec uses: everything is
-        instantiated by type first, then references are resolved. One pass cannot
-        work, because fragments legitimately refer to each other in both
-        directions and neither can be built first.
+        Two passes, the same shape the Turtle codec uses: everything is instantiated by
+        type first, then references are resolved. One pass cannot work, because
+        fragments legitimately refer to each other in both directions and neither can be
+        built first.
         """
         payload = self._parse(raw)
         declaration = GenerationWireDecoder(
@@ -376,7 +448,9 @@ class HypothesisGenerator:
     def _concept_reference(
         self, field_schema: FieldSchema, item: str, owner_id: str
     ) -> ConceptReference:
-        """Normalize a selected ontology concept to its registered IRI."""
+        """
+        Normalize a selected ontology concept to its registered IRI.
+        """
         if not field_schema.options:
             return ConceptReference(iri=item, label=item.rsplit("#", 1)[-1])
         concept_metadata = self.registry.by_name(item)
@@ -464,8 +538,8 @@ class HypothesisGenerator:
         last_success: Optional[tuple[Any, Sequence[Any]]],
         decode_error: Optional[str],
     ) -> GenerationResult:
-        """Return a refuted record rather than raising, when there is one to
-        return.
+        """
+        Return a refuted record rather than raising, when there is one to return.
 
         A hypothesis that failed its constraints is worth keeping: it says which
         constraint a competent model could not satisfy, which is as often a fact
@@ -519,13 +593,11 @@ class HypothesisGenerator:
         action_label: Optional[str] = None,
         selection: Optional[ModuleSelection] = None,
     ) -> str:
-        """Assemble the prompt without calling a model."""
+        """
+        Assemble the prompt without calling a model.
+        """
         selection = selection or select_modules(task)
-        schema = derive_schema(
-            [m.name for m in selection.modules],
-            root=self.root_class,
-            registry=self.registry,
-        )
+        schema = self._schema_for(selection)
         return self.prompt_builder.build(
             schema=schema,
             action_label=action_label or str(task),
@@ -533,9 +605,31 @@ class HypothesisGenerator:
             notes=self.notes,
         )
 
+    def _schema_for(self, selection: ModuleSelection) -> GenerationSchema:
+        """
+        Derive the output shape for a selection.
+
+        :raises UnreachableModules: when a selected module contributes no class the root
+            can reach.
+        """
+        root = self._root_class_for(selection)
+        schema = derive_schema(
+            [m.name for m in selection.modules],
+            root=root,
+            registry=self.registry,
+        )
+        if schema.unreachable_modules:
+            raise UnreachableModules(modules=schema.unreachable_modules, root=root)
+        return schema
+
+    def _root_class_for(self, selection: ModuleSelection) -> str:
+        """:return: The explicit override or task profile's generation root."""
+        return self.root_class or selection.root_class
+
 
 __all__ = [
     "GenerationFailure",
+    "GenerationPromptVersion",
     "GenerationResult",
     "HypothesisGenerator",
     "RepairBudgetExhausted",

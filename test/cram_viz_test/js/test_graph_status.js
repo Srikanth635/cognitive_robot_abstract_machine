@@ -90,11 +90,11 @@ function planFixture(Graph) {
 const node = (id) => lastData.nodes.get(id);
 
 // ---- status rings ------------------------------------------------------------
-test('status renders as a coloured ring + status word', function () {
+test('status renders as a coloured ring without changing the node label', function () {
   const Graph = loadGraphJs();
   planFixture(Graph);
   assert.strictEqual(node('p1').color.border, '#ffb648');            // running: amber
-  assert.strictEqual(node('p1').label, 'Transport\nrunning');
+  assert.strictEqual(node('p1').label, 'Transport');
   assert.strictEqual(node('p0').color.border, '#4bd38a');            // succeeded: green
   assert.strictEqual(node('p3').color.border, '#ff6b8b');            // failed: red
   assert.ok(node('p1').borderWidth > node('p2').borderWidth);        // active > created
@@ -110,12 +110,12 @@ test('group fill survives the status ring patch', function () {
 });
 
 // ---- live patching -------------------------------------------------------------
-test('setStatuses re-colours in place and rebuilds labels from the base', function () {
+test('setStatuses re-colours in place without adding status words', function () {
   const Graph = loadGraphJs();
   planFixture(Graph);
   assert.strictEqual(Graph.setStatuses({ p2: 'RUNNING', p1: 'SUCCEEDED' }), true);
-  assert.strictEqual(node('p2').label, 'MoveTCP\nrunning');
-  assert.strictEqual(node('p1').label, 'Transport\nsucceeded');      // not appended twice
+  assert.strictEqual(node('p2').label, 'MoveTCP');
+  assert.strictEqual(node('p1').label, 'Transport');
 });
 
 test('setStatuses reports unknown ids so the caller rebuilds', function () {
@@ -136,6 +136,18 @@ test('trees are hierarchical with physics off; entity graphs keep the force layo
   assert.strictEqual(lastOptions.layout.improvedLayout, true);
   assert.strictEqual(typeof lastOptions.physics, 'object');
   assert.strictEqual(lastOptions.edges.arrows.to.enabled, false);
+});
+
+test('wide entity graphs use more separation and overlap avoidance', function () {
+  const Graph = loadGraphJs();
+  Graph.build({
+    key: 'knowledge', spacing: 'wide',
+    nodes: [{ id: 'k', label: 'k', group: 'robot' }], edges: [],
+  });
+
+  assert.ok(lastOptions.physics.barnesHut.springLength >= 260);
+  assert.ok(lastOptions.physics.barnesHut.avoidOverlap >= 0.9);
+  assert.ok(lastOptions.physics.barnesHut.centralGravity <= 0.05);
 });
 
 test('status views scale nodes, labels and spacing up so rings stay readable', function () {

@@ -10,9 +10,18 @@ import pytest
 
 krrood = pytest.importorskip("krrood", reason="EQL requires krrood")
 
+from llm_reasoner.knowledge.microworlds.flanagan import (
+    core as flanagan_core,
+)  # noqa: E402
+
 from cram_viz import kb  # noqa: E402  (importable once krrood is present)
 from cram_viz import action_knowledge  # noqa: E402
 from cram_viz import entity_knowledge  # noqa: E402
+from cram_viz import hypothesis_knowledge  # noqa: E402
+from cram_viz.hypothesis_knowledge.action_frame import (  # noqa: E402
+    ROLE_FILLER_TYPE_NAME,
+    UNRESOLVED_ROLE_FILLER_TYPE_NAME,
+)
 
 
 @pytest.fixture()
@@ -723,3 +732,716 @@ class TestOwnedHighlight:
         highlight = []
         kb._entity_row(role, highlight)
         assert not any(h.startswith("roles:") for h in highlight)
+
+
+# %% a KnowledgeEntity's row names only the entity -- its relational fields belong
+# to the Hypothesis Graph tab, not a flat EQL answer
+@pytest.mark.usefixtures("sample_hypothesis_knowledge")
+class TestKnowledgeEntityRowIsNameOnly:
+    def test_the_row_carries_only_the_entity_and_type_keys(self):
+        phase = hypothesis_knowledge.active().structure.defines_phase[0]
+        row = kb._entity_row(phase, [])
+        assert set(row) == {"__entity__", "__type__"}
+
+    def test_the_row_names_the_entitys_own_label(self):
+        phase = next(
+            p
+            for p in hypothesis_knowledge.active().structure.defines_phase
+            if p.label == "Pour"
+        )
+        row = kb._entity_row(phase, [])
+        assert row["__entity__"] == "Pour"
+        assert row["__type__"] == "FlowRegulationPhase"
+
+
+# %% a tuple field (e.g. EntityPropertyFrame.values) is content a query answer
+# names, not metadata -- it renders as a real list, not a Python repr string
+class TestJsonableTupleRendering:
+    def test_a_tuple_of_strings_renders_as_a_list(self):
+        assert kb._jsonable(("Graspable", "Liftable")) == ["Graspable", "Liftable"]
+
+    def test_a_list_of_strings_renders_as_a_list(self):
+        assert kb._jsonable(["Graspable", "Liftable"]) == ["Graspable", "Liftable"]
+
+    def test_an_empty_tuple_renders_as_an_empty_list(self):
+        assert kb._jsonable(()) == []
+
+
+# %% two frame/image-schema fragments with identical fields are still distinct
+# occurrences -- eq=False is what keeps an EQL in_() membership check from
+# treating one as interchangeable with the other
+class TestFrameAndImageSchemaFragmentIdentity:
+    def test_two_entity_property_frames_with_equal_fields_are_not_equal(self):
+        from cram_viz.hypothesis_knowledge.action_frame import (
+            EntityPropertyFrame,
+            EntityPropertyKind,
+        )
+
+        first = EntityPropertyFrame(EntityPropertyKind.AFFORDANCES, ("Graspable",))
+        second = EntityPropertyFrame(EntityPropertyKind.AFFORDANCES, ("Graspable",))
+        assert first != second
+
+    def test_two_spatial_primitive_bindings_with_equal_fields_are_not_equal(self):
+        from cram_viz.hypothesis_knowledge.image_schema import (
+            ImageSchemaFillerKind,
+            SpatialPrimitiveBinding,
+            SpatialPrimitiveKind,
+        )
+
+        first = SpatialPrimitiveBinding(
+            SpatialPrimitiveKind.CONTAINED, "Substance", ImageSchemaFillerKind.ENTITY
+        )
+        second = SpatialPrimitiveBinding(
+            SpatialPrimitiveKind.CONTAINED, "Substance", ImageSchemaFillerKind.ENTITY
+        )
+        assert first != second
+
+
+# %% the Hypothesis Graph tab (a live projection of a real, hand-authored
+# PouringPhaseStructure, with the notebook's informal ActionFrame/ImageSchema
+# overlay layered on top for visual parity only)
+@pytest.mark.usefixtures("sample_hypothesis_knowledge")
+class TestHypothesisGraphView:
+    def test_payload_is_ok_with_the_hypothesis_graph_crumb(self, fixture_scene):
+        kb.reset_kb()
+        payload = kb.view_payload("hypothesis")
+        assert payload["ok"]
+        assert payload["crumb"] == "hypothesis graph"
+
+    def test_contains_every_node_and_relation_of_the_projection(self, fixture_scene):
+        kb.reset_kb()
+        payload = kb.view_payload("hypothesis")
+        projection = hypothesis_knowledge.active().projection
+        assert len(payload["nodes"]) == len(projection.nodes)
+        assert len(payload["edges"]) == len(projection.relations)
+        assert {n["id"] for n in payload["nodes"]} == {
+            node.identifier for node in projection.nodes
+        }
+
+    def test_root_field_matches_the_instruction_nodes_identifier(self, fixture_scene):
+        kb.reset_kb()
+        payload = kb.view_payload("hypothesis")
+        assert (
+            payload["root"]
+            == hypothesis_knowledge.active().projection.instruction.identifier
+        )
+
+    def test_edges_carry_their_relations_endpoints_and_label(self, fixture_scene):
+        kb.reset_kb()
+        payload = kb.view_payload("hypothesis")
+        relation = hypothesis_knowledge.active().projection.relations[0]
+        assert {
+            "from": relation.source.identifier,
+            "to": relation.target.identifier,
+            "label": relation.predicate,
+        } in payload["edges"]
+
+    def test_details_carry_the_instruction_nodes_label_and_lines(self, fixture_scene):
+        kb.reset_kb()
+        payload = kb.view_payload("hypothesis")
+        instruction = hypothesis_knowledge.active().projection.instruction
+        assert payload["details"][instruction.identifier]["label"] == instruction.label
+        assert payload["details"][instruction.identifier]["lines"] == list(
+            instruction.graph_information()
+        )
+
+    def test_real_fragment_details_use_its_own_generic_lines(self, fixture_scene):
+        kb.reset_kb()
+        payload = kb.view_payload("hypothesis")
+        real_node = next(
+            node
+            for node in hypothesis_knowledge.active().projection.nodes
+            if node.source is not None
+        )
+        assert payload["details"][real_node.identifier]["lines"] == list(
+            real_node.graph_information()
+        )
+
+    def test_display_only_overlay_node_details_use_its_own_generic_lines(
+        self, fixture_scene
+    ):
+        # action-frame / image-schema nodes are real projection nodes too, so they
+        # compute their own lines rather than replaying a saved export
+        kb.reset_kb()
+        payload = kb.view_payload("hypothesis")
+        overlay_node = next(
+            node
+            for node in hypothesis_knowledge.active().projection.nodes
+            if node.type_name == "EntityFrame"
+        )
+        assert payload["details"][overlay_node.identifier]["lines"] == list(
+            overlay_node.graph_information()
+        )
+
+    def test_grounded_role_filler_is_not_flagged_unresolved(self, fixture_scene):
+        kb.reset_kb()
+        payload = kb.view_payload("hypothesis")
+        filler_node = next(
+            node
+            for node in hypothesis_knowledge.active().projection.nodes
+            if node.type_name == ROLE_FILLER_TYPE_NAME
+        )
+        assert (
+            next(n for n in payload["nodes"] if n["id"] == filler_node.identifier)[
+                "unresolved"
+            ]
+            is False
+        )
+
+    def test_ungrounded_role_filler_is_flagged_unresolved(self, fixture_scene):
+        kb.reset_kb()
+        payload = kb.view_payload("hypothesis")
+        filler_node = next(
+            node
+            for node in hypothesis_knowledge.active().projection.nodes
+            if node.type_name == UNRESOLVED_ROLE_FILLER_TYPE_NAME
+        )
+        assert (
+            next(n for n in payload["nodes"] if n["id"] == filler_node.identifier)[
+                "unresolved"
+            ]
+            is True
+        )
+
+
+@pytest.mark.usefixtures("sample_hypothesis_knowledge")
+class TestHypothesisKnowledgeQueries:
+    def test_pouring_phase_entities_are_queryable(self, fixture_scene):
+        kb.reset_kb()
+        result = kb.run_query("an(entity(pouring_phase))")
+        assert result["ok"]
+        assert result["count"] == len(
+            hypothesis_knowledge.active().structure.defines_phase
+        )
+
+    def test_pouring_phase_query_can_be_filtered_by_regulation_mode(
+        self, fixture_scene
+    ):
+        # the row itself no longer carries regulation_mode (see _entity_row's
+        # KnowledgeEntity handling: only the entity's own name is shown), so the
+        # filter is checked against the real structure instead
+        kb.reset_kb()
+        expected_labels = {
+            phase.label
+            for phase in hypothesis_knowledge.active().structure.defines_phase
+            if phase.regulation_mode is flanagan_core.RegulationMode.CONTINUOUS_FEEDBACK
+        }
+        result = kb.run_query(
+            "an(entity(pouring_phase)"
+            ".where(pouring_phase.regulation_mode == RegulationMode.CONTINUOUS_FEEDBACK))"
+        )
+        assert result["ok"] and result["count"]
+        assert {row["__entity__"] for row in result["rows"]} == expected_labels
+
+    def test_pouring_phase_query_can_be_filtered_by_coupling_regime(
+        self, fixture_scene
+    ):
+        kb.reset_kb()
+        expected_labels = {
+            phase.label
+            for phase in hypothesis_knowledge.active().structure.defines_phase
+            if phase.coupling_regime is flanagan_core.CouplingRegime.COUPLED
+        }
+        result = kb.run_query(
+            "an(entity(pouring_phase)"
+            ".where(pouring_phase.coupling_regime == CouplingRegime.COUPLED))"
+        )
+        assert result["ok"] and result["count"]
+        assert {row["__entity__"] for row in result["rows"]} == expected_labels
+
+    def test_pouring_role_entities_are_queryable(self, fixture_scene):
+        kb.reset_kb()
+        result = kb.run_query("an(entity(pouring_role))")
+        assert result["ok"]
+        assert result["count"] == len(
+            hypothesis_knowledge.active().structure.defines_role
+        )
+
+    def test_pouring_event_type_entities_are_queryable(self, fixture_scene):
+        kb.reset_kb()
+        result = kb.run_query("an(entity(pouring_event_type))")
+        assert result["ok"]
+        assert result["count"] == len(
+            hypothesis_knowledge.active().structure.defines_event_type
+        )
+
+    def test_pouring_event_type_query_can_be_filtered_by_failure_flag(
+        self, fixture_scene
+    ):
+        kb.reset_kb()
+        expected_labels = {
+            event.label
+            for event in hypothesis_knowledge.active().structure.defines_event_type
+            if event.is_failure_event
+        }
+        result = kb.run_query(
+            "an(entity(pouring_event_type)"
+            ".where(pouring_event_type.is_failure_event == True))"
+        )
+        assert result["ok"] and result["count"]
+        assert {row["__entity__"] for row in result["rows"]} == expected_labels
+
+    def test_pouring_condition_requirement_entities_are_queryable(self, fixture_scene):
+        kb.reset_kb()
+        seen = {}
+        for phase in hypothesis_knowledge.active().structure.defines_phase:
+            for requirement in phase.has_condition_requirement:
+                seen[id(requirement)] = requirement
+        result = kb.run_query("an(entity(pouring_condition_requirement))")
+        assert result["ok"]
+        assert result["count"] == len(seen)
+
+    def test_pouring_condition_requirement_query_can_be_filtered_by_phase(
+        self, fixture_scene
+    ):
+        kb.reset_kb()
+        lift_phase = next(
+            phase
+            for phase in hypothesis_knowledge.active().structure.defines_phase
+            if phase.label == "Lift"
+        )
+        expected_labels = {
+            requirement.label for requirement in lift_phase.has_condition_requirement
+        }
+        result = kb.run_query(
+            "an(entity(pouring_condition_requirement)"
+            ".where(pouring_phase.label == 'Lift')"
+            ".where(in_(pouring_condition_requirement,"
+            " pouring_phase.has_condition_requirement)))"
+        )
+        assert result["ok"], result.get("error")
+        assert result["count"] == len(expected_labels)
+        assert {row["__entity__"] for row in result["rows"]} == expected_labels
+
+    def test_pouring_force_dynamic_event_entities_are_queryable(self, fixture_scene):
+        kb.reset_kb()
+        expected_labels = {
+            event.label
+            for event in hypothesis_knowledge.active().structure.defines_event_type
+            if isinstance(event, flanagan_core.ForceDynamicEventType)
+        }
+        result = kb.run_query("an(entity(pouring_force_dynamic_event))")
+        assert result["ok"]
+        assert result["count"] == len(expected_labels)
+        assert {row["__entity__"] for row in result["rows"]} == expected_labels
+
+    def test_pouring_force_dynamic_event_excludes_other_event_kinds(
+        self, fixture_scene
+    ):
+        # a contact/flow/control event must not slip through the force-dynamic
+        # domain just because it shares the MechanicalEventType base
+        kb.reset_kb()
+        non_force_dynamic_labels = {
+            event.label
+            for event in hypothesis_knowledge.active().structure.defines_event_type
+            if not isinstance(event, flanagan_core.ForceDynamicEventType)
+        }
+        assert non_force_dynamic_labels  # the sample has some, or this proves nothing
+        result = kb.run_query("an(entity(pouring_force_dynamic_event))")
+        assert result["ok"]
+        assert {row["__entity__"] for row in result["rows"]}.isdisjoint(
+            non_force_dynamic_labels
+        )
+
+    def test_pouring_force_dynamic_event_highlight_matches_a_real_hypothesis_graph_node(
+        self, fixture_scene
+    ):
+        kb.reset_kb()
+        result = kb.run_query("an(entity(pouring_force_dynamic_event))")
+        graph_node_ids = {node["id"] for node in kb.view_payload("hypothesis")["nodes"]}
+        assert set(result["highlight"]) & graph_node_ids
+
+    def test_pouring_phase_query_highlights_the_real_projected_node(
+        self, fixture_scene
+    ):
+        # the mapping from a query result to its rendered graph node is now exact
+        # (object identity, not a best-effort label match), so the highlight list is
+        # fully predictable: the real node identifier, plus the generic bare-label
+        # entry _entity_row always adds (same convention as Concept/OntologyClass)
+        kb.reset_kb()
+        result = kb.run_query(
+            "the(entity(pouring_phase).where(pouring_phase.label == 'Pour'))"
+        )
+        pour_phase = next(
+            phase
+            for phase in hypothesis_knowledge.active().structure.defines_phase
+            if phase.label == "Pour"
+        )
+        expected_identifier = hypothesis_knowledge.node_identifier_for(pour_phase)
+        assert expected_identifier is not None
+        assert result["highlight"] == sorted({expected_identifier, "Pour"})
+
+    def test_pouring_phase_highlight_matches_a_real_hypothesis_graph_node(
+        self, fixture_scene
+    ):
+        kb.reset_kb()
+        result = kb.run_query("an(entity(pouring_phase))")
+        graph_node_ids = {node["id"] for node in kb.view_payload("hypothesis")["nodes"]}
+        assert set(result["highlight"]) & graph_node_ids
+
+    # %% state machine: every transition connecting the phases
+    def test_pouring_transition_query_returns_every_real_transition(
+        self, fixture_scene
+    ):
+        kb.reset_kb()
+        expected_labels = {
+            transition.label
+            for transition in hypothesis_knowledge.active().structure.has_transition
+        }
+        result = kb.run_query("an(entity(pouring_transition))")
+        assert result["ok"]
+        assert result["count"] == len(expected_labels)
+        assert {row["__entity__"] for row in result["rows"]} == expected_labels
+
+    def test_pouring_transition_highlight_matches_real_hypothesis_graph_nodes(
+        self, fixture_scene
+    ):
+        kb.reset_kb()
+        result = kb.run_query("an(entity(pouring_transition))")
+        graph_node_ids = {node["id"] for node in kb.view_payload("hypothesis")["nodes"]}
+        assert set(result["highlight"]) & graph_node_ids
+
+    # %% guarding structure: conditions required throughout a phase (invariants)
+    def test_pouring_condition_requirement_query_can_be_filtered_by_mode(
+        self, fixture_scene
+    ):
+        kb.reset_kb()
+        expected_labels = {
+            requirement.label
+            for phase in hypothesis_knowledge.active().structure.defines_phase
+            for requirement in phase.has_condition_requirement
+            if requirement.mode is flanagan_core.ConditionMode.THROUGHOUT
+        }
+        result = kb.run_query(
+            "an(entity(pouring_condition_requirement)"
+            ".where(pouring_condition_requirement.mode == ConditionMode.THROUGHOUT))"
+        )
+        assert result["ok"] and result["count"]
+        assert {row["__entity__"] for row in result["rows"]} == expected_labels
+
+    def test_pouring_condition_requirement_highlight_matches_real_hypothesis_graph_nodes(
+        self, fixture_scene
+    ):
+        kb.reset_kb()
+        result = kb.run_query(
+            "an(entity(pouring_condition_requirement)"
+            ".where(pouring_condition_requirement.mode == ConditionMode.THROUGHOUT))"
+        )
+        graph_node_ids = {node["id"] for node in kb.view_payload("hypothesis")["nodes"]}
+        assert set(result["highlight"]) & graph_node_ids
+
+    # %% phase character: coupled and continuously modulated at once
+    def test_pouring_phase_query_can_be_filtered_by_regime_combination(
+        self, fixture_scene
+    ):
+        kb.reset_kb()
+        expected_labels = {
+            phase.label
+            for phase in hypothesis_knowledge.active().structure.defines_phase
+            if phase.regulation_mode is flanagan_core.RegulationMode.HYBRID
+            and phase.coupling_regime is flanagan_core.CouplingRegime.COUPLED
+        }
+        result = kb.run_query(
+            "an(entity(pouring_phase)"
+            ".where(pouring_phase.regulation_mode == RegulationMode.HYBRID)"
+            ".where(pouring_phase.coupling_regime == CouplingRegime.COUPLED))"
+        )
+        assert result["ok"] and result["count"]
+        assert {row["__entity__"] for row in result["rows"]} == expected_labels
+
+    # %% a named phase's own boundary events (precondition-/postcondition-like)
+    def test_named_phase_initiated_by_query_matches_the_real_event(self, fixture_scene):
+        kb.reset_kb()
+        lift_phase = next(
+            phase
+            for phase in hypothesis_knowledge.active().structure.defines_phase
+            if phase.label == "Lift"
+        )
+        expected_labels = {event.label for event in lift_phase.initiated_by}
+        result = kb.run_query(
+            "an(entity(pouring_event_type)"
+            ".where(pouring_phase.label == 'Lift')"
+            ".where(in_(pouring_event_type, pouring_phase.initiated_by)))"
+        )
+        assert result["ok"] and result["count"]
+        assert {row["__entity__"] for row in result["rows"]} == expected_labels
+
+    def test_named_phase_terminated_by_query_matches_the_real_event(
+        self, fixture_scene
+    ):
+        kb.reset_kb()
+        lift_phase = next(
+            phase
+            for phase in hypothesis_knowledge.active().structure.defines_phase
+            if phase.label == "Lift"
+        )
+        expected_labels = {event.label for event in lift_phase.terminated_by}
+        result = kb.run_query(
+            "an(entity(pouring_event_type)"
+            ".where(pouring_phase.label == 'Lift')"
+            ".where(in_(pouring_event_type, pouring_phase.terminated_by)))"
+        )
+        assert result["ok"] and result["count"]
+        assert {row["__entity__"] for row in result["rows"]} == expected_labels
+
+    def test_a_phase_with_no_initiating_event_returns_nothing_rather_than_erroring(
+        self, fixture_scene
+    ):
+        # Reach is the first phase, so it has no initiated_by at all
+        kb.reset_kb()
+        result = kb.run_query(
+            "an(entity(pouring_event_type)"
+            ".where(pouring_phase.label == 'Reach')"
+            ".where(in_(pouring_event_type, pouring_phase.initiated_by)))"
+        )
+        assert result["ok"]
+        assert result["count"] == 0
+
+
+# %% FrameModel/ImageSchemaModel: display-only overlays, queried by their own
+# EQL domains rather than through the real, EQL-queryable pouring structure
+@pytest.mark.usefixtures("sample_hypothesis_knowledge")
+class TestFrameAndImageSchemaQueries:
+    def test_entity_filling_a_specific_frame_role_is_queryable(self, fixture_scene):
+        kb.reset_kb()
+        result = kb.run_query(
+            "the(entity(frame_entity)"
+            ".where(frame_entity.role == FrameRoleKind.SOURCE_CONTAINER))"
+        )
+        assert result["ok"] and result["count"] == 1
+        assert result["rows"][0] == {
+            "__entity__": "Cereal Box",
+            "__type__": "EntityFrame",
+        }
+
+    def test_entity_filling_a_frame_role_highlights_a_real_hypothesis_graph_node(
+        self, fixture_scene
+    ):
+        kb.reset_kb()
+        result = kb.run_query(
+            "the(entity(frame_entity)"
+            ".where(frame_entity.role == FrameRoleKind.SOURCE_CONTAINER))"
+        )
+        graph_node_ids = {node["id"] for node in kb.view_payload("hypothesis")["nodes"]}
+        assert set(result["highlight"]) & graph_node_ids
+
+    def test_affordances_of_a_specific_frame_entity_are_queryable(self, fixture_scene):
+        kb.reset_kb()
+        result = kb.run_query(
+            "an(entity(frame_property)"
+            ".where(frame_entity.role == FrameRoleKind.SOURCE_CONTAINER)"
+            ".where(in_(frame_property, frame_entity.property_frames))"
+            ".where(frame_property.kind == EntityPropertyKind.AFFORDANCES))"
+        )
+        assert result["ok"] and result["count"] == 1
+        assert result["rows"][0]["__entity__"] == "Affordances"
+        assert result["rows"][0]["values"] == [
+            "Graspable",
+            "Liftable",
+            "Tiltable",
+            "Supports controlled cereal pouring",
+        ]
+
+    def test_a_spatial_primitive_binding_names_its_role_and_filler_only(
+        self, fixture_scene
+    ):
+        kb.reset_kb()
+        result = kb.run_query(
+            "an(entity(schema_binding)"
+            ".where(schema_instance.label == 'Initial Containment')"
+            ".where(in_(schema_binding, schema_instance.primitive_bindings)))"
+        )
+        assert result["ok"] and result["count"] == 5
+        assert {row["__entity__"] for row in result["rows"]} == {
+            "CONTAINER = SourceContainer",
+            "CONTAINED = Substance",
+            "INTERIOR = SourceContainer Interior",
+            "BOUNDARY = SourceContainer Boundary",
+            "EXTERIOR = Outside SourceContainer",
+        }
+        assert all(set(row) == {"__entity__", "__type__"} for row in result["rows"])
+
+    def test_spatial_primitive_bindings_do_not_leak_across_schema_instances(
+        self, fixture_scene
+    ):
+        # Initial Containment and Result Containment both bind CONTAINED to
+        # Substance -- a value-equal SpatialPrimitiveBinding from one instance
+        # must not be treated as interchangeable with the other's
+        kb.reset_kb()
+        result = kb.run_query(
+            "an(entity(schema_binding)"
+            ".where(schema_instance.label == 'Result Containment')"
+            ".where(in_(schema_binding, schema_instance.primitive_bindings)))"
+        )
+        assert result["ok"] and result["count"] == 5
+        assert {row["__entity__"] for row in result["rows"]} == {
+            "CONTAINER = DestinationContainer",
+            "CONTAINED = Substance",
+            "INTERIOR = DestinationContainer Interior",
+            "BOUNDARY = DestinationContainer Boundary",
+            "EXTERIOR = Outside DestinationContainer",
+        }
+
+    def test_a_different_schema_kind_returns_its_own_spatial_roles(self, fixture_scene):
+        # Substance Transfer is a SOURCE-PATH-GOAL schema, distinct in shape from
+        # the CONTAINMENT schemas the other tests exercise
+        kb.reset_kb()
+        result = kb.run_query(
+            "an(entity(schema_binding)"
+            ".where(schema_instance.label == 'Substance Transfer')"
+            ".where(in_(schema_binding, schema_instance.primitive_bindings)))"
+        )
+        assert result["ok"] and result["count"] == 5
+        assert {row["__entity__"] for row in result["rows"]} == {
+            "TRAJECTOR = Substance",
+            "SOURCE = SourceContainer",
+            "PATH = Downward Transfer Path",
+            "GOAL = DestinationContainer",
+            "DIRECTION = Downward",
+        }
+
+    def test_schema_binding_highlights_a_real_hypothesis_graph_node(
+        self, fixture_scene
+    ):
+        kb.reset_kb()
+        result = kb.run_query(
+            "an(entity(schema_binding)"
+            ".where(schema_instance.label == 'Initial Containment')"
+            ".where(in_(schema_binding, schema_instance.primitive_bindings)))"
+        )
+        graph_node_ids = {node["id"] for node in kb.view_payload("hypothesis")["nodes"]}
+        assert set(result["highlight"]) & graph_node_ids
+
+    def test_hypothesis_graph_presets_are_exactly_the_eleven_offered(
+        self, fixture_scene
+    ):
+        kb.reset_kb()
+        assert kb._hypothesis_graph_presets(kb.get_kb()) == [
+            {
+                "text": "what are the action phases involved in the action?",
+                "code": "an(entity(pouring_phase))",
+            },
+            {
+                "text": (
+                    "what are the different force dynamic events involved in "
+                    "the action?"
+                ),
+                "code": "an(entity(pouring_force_dynamic_event))",
+            },
+            {
+                "text": "what transitions connect the phases (the state machine)?",
+                "code": "an(entity(pouring_transition))",
+            },
+            {
+                "text": ("which conditions must hold throughout a phase (invariants)?"),
+                "code": (
+                    "an(entity(pouring_condition_requirement)"
+                    ".where(pouring_condition_requirement.mode =="
+                    " ConditionMode.THROUGHOUT))"
+                ),
+            },
+            {
+                "text": (
+                    "which phases are both force-coupled and continuously" " modulated?"
+                ),
+                "code": (
+                    "an(entity(pouring_phase)"
+                    ".where(pouring_phase.regulation_mode == RegulationMode.HYBRID)"
+                    ".where(pouring_phase.coupling_regime == CouplingRegime.COUPLED))"
+                ),
+            },
+            {
+                "text": "what event initiates the lift phase (its precondition)?",
+                "code": (
+                    "an(entity(pouring_event_type)"
+                    ".where(pouring_phase.label == 'Lift')"
+                    ".where(in_(pouring_event_type, pouring_phase.initiated_by)))"
+                ),
+            },
+            {
+                "text": "what event terminates the lift phase (its postcondition)?",
+                "code": (
+                    "an(entity(pouring_event_type)"
+                    ".where(pouring_phase.label == 'Lift')"
+                    ".where(in_(pouring_event_type, pouring_phase.terminated_by)))"
+                ),
+            },
+            {
+                "text": "which entity fills the source container role in the frame?",
+                "code": (
+                    "the(entity(frame_entity)"
+                    ".where(frame_entity.role == FrameRoleKind.SOURCE_CONTAINER))"
+                ),
+            },
+            {
+                "text": "what affordances does the source container entity have?",
+                "code": (
+                    "an(entity(frame_property)"
+                    ".where(frame_entity.role == FrameRoleKind.SOURCE_CONTAINER)"
+                    ".where(in_(frame_property, frame_entity.property_frames))"
+                    ".where(frame_property.kind == EntityPropertyKind.AFFORDANCES))"
+                ),
+            },
+            {
+                "text": (
+                    "what spatial roles does the initial containment schema" " require?"
+                ),
+                "code": (
+                    "an(entity(schema_binding)"
+                    ".where(schema_instance.label == 'Initial Containment')"
+                    ".where(in_(schema_binding, schema_instance.primitive_bindings)))"
+                ),
+            },
+            {
+                "text": (
+                    "what spatial roles does the substance transfer schema" " require?"
+                ),
+                "code": (
+                    "an(entity(schema_binding)"
+                    ".where(schema_instance.label == 'Substance Transfer')"
+                    ".where(in_(schema_binding, schema_instance.primitive_bindings)))"
+                ),
+            },
+        ]
+
+    def test_hypothesis_graph_presets_return_real_content(self, fixture_scene):
+        kb.reset_kb()
+        for preset in kb._hypothesis_graph_presets(kb.get_kb()):
+            result = kb.run_query(preset["code"])
+            assert result["ok"], "%s -> %s" % (preset["text"], result.get("error"))
+            assert result["count"], "%s -> 0 rows (likely a broken field access)" % (
+                preset["text"]
+            )
+
+    def test_hypothesis_graph_presets_are_included_in_get_presets(self, fixture_scene):
+        kb.reset_kb()
+        preset_codes = {preset["code"] for preset in kb.get_presets()}
+        hypothesis_preset_codes = {
+            preset["code"] for preset in kb._hypothesis_graph_presets(kb.get_kb())
+        }
+        assert hypothesis_preset_codes <= preset_codes
+
+
+class TestHypothesisTabBeforeGenerating:
+    def test_the_view_is_empty_but_valid(self, fixture_scene):
+        kb.reset_kb()
+        payload = kb.view_payload("hypothesis")
+        assert payload["ok"]
+        assert payload["nodes"] == []
+        assert payload["edges"] == []
+        assert "Generate" in payload["empty"]
+
+    def test_pouring_queries_return_nothing_rather_than_failing(self, fixture_scene):
+        kb.reset_kb()
+        result = kb.run_query("an(entity(pouring_phase))")
+        assert result["ok"]
+        assert result["count"] == 0
+
+    def test_no_pouring_presets_are_offered(self, fixture_scene):
+        kb.reset_kb()
+        assert kb._hypothesis_graph_presets(kb.get_kb()) == []
+
+    def test_pouring_presets_appear_once_knowledge_is_active(
+        self, fixture_scene, sample_hypothesis_knowledge
+    ):
+        assert kb._hypothesis_graph_presets(kb.get_kb())

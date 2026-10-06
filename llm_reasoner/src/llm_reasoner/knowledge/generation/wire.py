@@ -174,7 +174,7 @@ class GenerationWireDecoder:
 
         class_schema = self.schema.get(type_name)
         if class_schema is None:
-            raise WireFormatError(
+            raise self.error_type(
                 f"Unknown type {type_name!r}. Use only the listed types."
             )
         description = entry.get("label", "")

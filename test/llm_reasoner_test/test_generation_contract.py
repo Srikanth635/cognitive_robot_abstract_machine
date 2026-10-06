@@ -5,10 +5,15 @@ import json
 import pytest
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.knowledge.generation.backend import (
+    GenerationPromptVersion,
     HypothesisGenerator,
     ResponseUnusable,
 )
-from llm_reasoner.knowledge.generation.prompts import GenerationPromptBuilder, hint_for
+from llm_reasoner.knowledge.generation.prompts import (
+    SYSTEM_PROMPT,
+    GenerationPromptBuilder,
+    hint_for,
+)
 from llm_reasoner.knowledge.generation.schema import (
     ClassSchema,
     FieldKind,
@@ -25,6 +30,7 @@ from llm_reasoner.knowledge.generation.wire import (
 from llm_reasoner.knowledge.hypothesis.provenance import Provenance
 from llm_reasoner.knowledge.hypothesis.record import HypothesisRecord
 from llm_reasoner.knowledge.hypothesis.serialization import dumps, loads
+from llm_reasoner.knowledge.microworlds.flanagan.constraints import SUITE
 from llm_reasoner.knowledge.microworlds.flanagan.core import (
     ActionPhaseStructure,
     MagnitudeRange,
@@ -36,11 +42,19 @@ from llm_reasoner.knowledge.microworlds.flanagan.prehension import Liftoff
 from llm_reasoner.knowledge.microworlds.registry import (
     DEFAULT_PROFILE,
     FLANAGAN_CORE,
+    FLANAGAN_GAZE,
+    FLANAGAN_LEARNING,
     FLANAGAN_OBJECT_DYNAMICS,
+    FLANAGAN_OBSERVATION,
+    FLANAGAN_PERCEPTION,
     FLANAGAN_POURING,
     FLANAGAN_PREHENSION,
+    GRASPING_PROFILE,
+    POURING_PROFILE,
     ModuleSelection,
     current_versions,
+    select_modules,
+    task_reference,
 )
 from llm_reasoner.knowledge.ontological.constraints import ConstraintSuite
 from llm_reasoner.knowledge.ontological.decorators import ConceptReference
@@ -102,6 +116,25 @@ class TestMostSpecificFragmentChoices:
         assert "FlowRegulationPhase" in phase_field.options
         assert "ActionPhase" not in phase_field.options
 
+    def test_continuous_control_field_explains_required_cross_links(self) -> None:
+        continuous_control_field = fragment_field(
+            pouring_schema(),
+            "PouringPhaseStructure",
+            "has_continuous_prediction",
+        )
+
+        assert continuous_control_field.docstring is not None
+        assert all(
+            field_name in continuous_control_field.docstring
+            for field_name in (
+                "predicted_for_phase",
+                "monitors_signal",
+                "predicted_trajectory",
+                "controlled_variable",
+                "defines_parameter",
+            )
+        )
+
     def test_event_references_exclude_intermediate_event_categories(self) -> None:
         event_field = fragment_field(
             pouring_schema(),
@@ -155,6 +188,20 @@ class TestGenerationPromptContract:
         assert "Select the most specific available type" in prompt
         assert '"label" is only a human-readable description' in prompt
         assert "Do not encode a new concept only in a label" in prompt
+
+    def test_generic_prompt_does_not_supply_quantitative_priors(self) -> None:
+        assert "0.2 to 0.5" not in SYSTEM_PROMPT
+        assert "0.34 kg" not in SYSTEM_PROMPT
+
+    def test_prompt_distinguishes_evidence_from_engineering_extensions(self) -> None:
+        prompt = GenerationPromptBuilder().build(
+            schema=pouring_schema(),
+            action_label="pouring cereal into a bowl",
+        )
+
+        assert "paper-backed" in prompt
+        assert "engineering extension" in prompt
+        assert "scientific_status" in prompt
 
 
 class TestFieldDefaultsSurfacedToTheModel:
@@ -304,6 +351,30 @@ class TestBackwardCompatibleGenerationFlow:
 
         assert phase_field.options == ("ActionPhase",)
 
+    def test_task_profile_selects_the_generation_root(self) -> None:
+        pouring = select_modules(POURING_PROFILE.task)
+        grasping = select_modules(GRASPING_PROFILE.task)
+        unknown = select_modules(
+            task_reference(
+                "urn:test:unknown-task",
+                ancestors=(DEFAULT_PROFILE.task.iri,),
+            )
+        )
+
+        assert pouring.root_class == "PouringPhaseStructure"
+        assert grasping.root_class == "PrehensionPhaseStructure"
+        assert unknown.root_class == "ActionPhaseStructure"
+
+    def test_generator_uses_the_profile_root_when_no_override_is_given(self) -> None:
+        generator = HypothesisGenerator(
+            client=ScriptedClient(),
+            suite=ConstraintSuite(name="construction", constraints=()),
+        )
+
+        description = generator.describe(POURING_PROFILE.task)
+
+        assert "exactly one fragment of type PouringPhaseStructure" in description
+
     def test_wire_rejection_uses_the_existing_repair_loop(self) -> None:
         task = ConceptReference(iri="soma:PhysicalTask", label="PhysicalTask")
         client = ScriptedClient(
@@ -343,6 +414,58 @@ class TestBackwardCompatibleGenerationFlow:
         assert result.record.root.local_id == "magnitude-range"
         assert len(client.calls) == 2
         assert 'Expected a non-empty "fragments" array' in client.calls[1][1]
+
+    def test_scientific_validation_precedes_admission_and_drives_repair(self) -> None:
+        task = ConceptReference(iri="soma:PhysicalTask", label="PhysicalTask")
+        client = ScriptedClient(
+            responses=[
+                json.dumps(
+                    {
+                        "fragments": [
+                            {
+                                "id": "invalid-range",
+                                "type": MagnitudeRange.__name__,
+                                "lower_bound": 0.5,
+                                "upper_bound": 0.2,
+                                "unit": "kg",
+                                "physical_dimension": "MASS",
+                            }
+                        ]
+                    }
+                ),
+                json.dumps(
+                    {
+                        "fragments": [
+                            {
+                                "id": "valid-range",
+                                "type": MagnitudeRange.__name__,
+                                "lower_bound": 0.2,
+                                "upper_bound": 0.5,
+                                "unit": "kg",
+                                "physical_dimension": "MASS",
+                            }
+                        ]
+                    }
+                ),
+            ]
+        )
+        generator = HypothesisGenerator(
+            client=client,
+            suite=SUITE,
+            root_class=MagnitudeRange.__name__,
+            max_repairs=1,
+        )
+        selection = ModuleSelection(
+            task=task,
+            profile=DEFAULT_PROFILE,
+            modules=(FLANAGAN_CORE,),
+        )
+
+        result = generator.generate(task, selection=selection)
+
+        assert result.admitted is True
+        assert len(client.calls) == 2
+        assert "C06" in client.calls[1][1]
 
 
 # %% Typed wire validation
@@ -569,7 +692,7 @@ class TestPersistentFragmentIdentity:
             action_type=task,
             provenance=Provenance(
                 generator="test",
-                prompt_version="generation/v2",
+                prompt_version=GenerationPromptVersion.PRE_CERTIFICATION.value,
             ),
         )
 
@@ -587,8 +710,14 @@ class TestKnowledgeVersioning:
     def test_generator_and_microworld_versions_are_incremented(self) -> None:
         generator = generator_for("PouringPhaseStructure")
 
-        assert generator.prompt_version == "generation/v2"
-        assert current_versions()[FLANAGAN_CORE.name] == "0.3.0"
-        assert current_versions()[FLANAGAN_PREHENSION.name] == "0.1.0"
-        assert current_versions()[FLANAGAN_POURING.name] == "0.4.0"
-        assert current_versions()[FLANAGAN_OBJECT_DYNAMICS.name] == "0.1.0"
+        assert generator.prompt_version == (
+            GenerationPromptVersion.REPRESENTATION_OWNERSHIP.value
+        )
+        assert current_versions()[FLANAGAN_CORE.name] == "1.0.0"
+        assert current_versions()[FLANAGAN_PREHENSION.name] == "1.0.0"
+        assert current_versions()[FLANAGAN_POURING.name] == "1.0.0"
+        assert current_versions()[FLANAGAN_OBJECT_DYNAMICS.name] == "1.0.0"
+        assert current_versions()[FLANAGAN_GAZE.name] == "1.0.0"
+        assert current_versions()[FLANAGAN_OBSERVATION.name] == "1.0.0"
+        assert current_versions()[FLANAGAN_LEARNING.name] == "1.0.0"
+        assert current_versions()[FLANAGAN_PERCEPTION.name] == "1.0.0"

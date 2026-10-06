@@ -112,15 +112,14 @@ never import an action-specific module.
 
 | Module | Owns | May depend on | Must not own |
 |---|---|---|---|
-| core.py | Generic roles, role slots, phases, subgoals, world conditions, physical events, phase boundaries, and task structures | Ontological infrastructure only | Grip forces, pouring, gaze, observer behavior, or task-specific phases |
-| prediction.py | Sensory predictions, observations, comparisons, prediction errors, corrections, state estimates, and generic predictive models | core.py | Object-specific physics, grasp-specific control, or pouring |
-| object_dynamics.py | Object and limb dynamics models, efference copy use, coordinate frames, representation purpose, memories, and updates | core.py and prediction.py | Grasp phase taxonomies or pouring flow phases |
-| prehension.py | Effector and support roles, grasp/contact phases, lift-off, touchdown, slip, grip/load forces, safety margins, and coupling | core.py, prediction.py, and object_dynamics.py | Source/target vessels, flow, gaze, or perception experiments |
-| gaze.py | Gaze targets, fixation, proactive/reactive gaze, and visual monitoring of contact locations | core.py and prediction.py | Actor-observer matching or general skill-stage models |
-| observation.py | Actor/observer relations, observer-accessible modalities, observed-hand conditions, and action-understanding predictions | core.py, prediction.py, and gaze.py | Execution-specific force control |
-| learning.py | Exploration, acquisition, refinement, mapping discovery, adaptation, and representation updates across trials | core.py, prediction.py, and object_dynamics.py where needed | Pouring-specific flow laws |
-| perception.py | Sensory attenuation, self-generated contact prediction, perceptual representations, and unresolved links to action control | core.py and prediction.py | Normal phase-transition control |
-| pouring.py | Source, target, substance, lip, flow, alignment, transferred quantity, material regime, and spill-specific knowledge | core.py, prediction.py, object_dynamics.py, and prehension.py | Generic prehension, generic auditory signals, or generic continuous prediction |
+| core.py | Generic roles, phases, conditions, physical events, quantities, predictions, observations, comparisons, errors, corrections, state estimates, and task structures | Ontological infrastructure only | Grip forces, pouring, gaze, observer behavior, or task-specific phases |
+| object_dynamics.py | Object and limb dynamics models, efference copy use, coordinate frames, representation purpose, memories, and updates | core.py | Grasp phase taxonomies or pouring flow phases |
+| prehension.py | Effector and support roles, grasp/contact phases, lift-off, touchdown, slip, grip/load forces, safety margins, and coupling | core.py and object_dynamics.py | Source/target vessels, flow, gaze, or perception experiments |
+| gaze.py | Gaze targets, fixation, proactive/reactive gaze, and visual monitoring of contact locations | core.py | Actor-observer matching or general skill-stage models |
+| observation.py | Actor/observer relations, observer-accessible modalities, observed-hand conditions, and action-understanding predictions | core.py and gaze.py | Execution-specific force control |
+| learning.py | Exploration, acquisition, refinement, mapping discovery, adaptation, and representation updates across trials | core.py, gaze.py, and object_dynamics.py where needed | Pouring-specific flow laws |
+| perception.py | Sensory attenuation, self-generated contact prediction, perceptual representations, and unresolved links to action control | core.py | Normal phase-transition control |
+| pouring.py | Source, target, substance, lip, flow, alignment, transferred quantity, material regime, and spill-specific knowledge | core.py, object_dynamics.py, and prehension.py | Generic prehension, generic auditory signals, or generic continuous prediction |
 | registry.py | Capability-to-module selection and versioned dependency closure | Module metadata | Domain classes or task execution logic |
 
 Constraint ownership must follow the same separation. The final acceptance suite
@@ -131,9 +130,6 @@ testable.
 Dependency direction:
 
     core
-      |
-      v
-    prediction
       |
       v
     object_dynamics
@@ -186,6 +182,54 @@ Coverage values describe the current package before Phase 1.
 | FJ-030 | Object dynamics, page 656 | Transfer differs when the object is rotated versus when the hand orientation changes. | EMPIRICAL_FINDING | Transformation context and transfer result | Missing | object_dynamics, learning |
 | FJ-031 | Object dynamics, page 657 | Sensorimotor weight control can adapt accurately while the size-weight perceptual illusion persists. | EMPIRICAL_FINDING | Separate sensorimotor and perceptual representations | Missing | object_dynamics, perception |
 | FJ-032 | Conclusion, page 657 | Sensorimotor control points and the representation of object properties require further empirical and modeling elaboration. | OPEN_QUESTION | Explicit scope limitation and provenance | Missing | all scientific modules |
+
+## Certified implementation traceability
+
+The source and epistemic status for each identifier are defined in the claim matrix
+above. This table records the final implementation route. A query written as
+`domain(Type)` uses `HypothesisView.domain`; it is a typed query, not a free-text
+label search. Constraint identifiers name rules in the aggregate Flanagan acceptance
+suite.
+
+| Claim | Implemented construct | Acceptance constraint | Query | Primary regression test |
+|---|---|---|---|---|
+| FJ-001 | `ActionPhaseStructure`, `SensorimotorControlPoint` | C16, C66 | `phases()` | `TestCanonicalConstraintFixture` |
+| FJ-002 | `InternalModelComposition`, `SensoryEventPrediction` | OD-C51, C37 | `expected_events_at()`, `domain(InternalModelComposition)` | `TestInternalModelComposition` |
+| FJ-003 | `ActionPhase`, `Subgoal`, `PhaseTransition` | C07, C21 | `phases()`, `subgoal_of()`, `boundaries_of()` | `TestCanonicalPhaseOrder` |
+| FJ-004 | `MechanicalEventType`, modality-specific `SensorySignalType` subclasses | C37, C46 | `expected_events_at()` | `TestPredictionSpecification` |
+| FJ-005 | `PredictionComparison`, `PredictionError`, `CorrectiveAction` | C41-C50 | `comparison_at()`, `corrections_for()` | `TestMatchedPredictionComparison`, `TestMismatchedPredictionComparison` |
+| FJ-006 | `MultimodalAlignment` | GAZE-C59b, GAZE-C59d | `domain(MultimodalAlignment)` | `TestGazeControlCoverage` |
+| FJ-007 | `InitialStateEstimate`, comparison-permitted transition | C41, C44 | `next_phase_after()` | `TestMatchedPredictionComparison` |
+| FJ-008 | `EfferenceCopy`, `ObjectDynamicsModel`, `GripLoadCoupling` | OD-C51, PRE-C59 | `dynamics_model_for()`, `force_coupling_for()` | `TestInternalModelComposition`, `TestGripLoadCoupling` |
+| FJ-009 | property estimates, `SensorimotorMemory`, anticipatory force adjustment | OD-C52, OD-C55, PRE-C13v | `representation_for()`, `anticipatory_grip_adjustments()` | `TestSensorimotorMemory`, `TestGripResponses` |
+| FJ-010 | timing/absence errors, force correction, `ModelUpdate` | C42-C45, C48-C49 | `prediction_errors_for()`, `corrections_for()`, `model_updates_for()` | `TestMismatchedPredictionComparison` |
+| FJ-011 | `RepresentationUpdate`, `MemoryPersistence` | OD-C55 | `domain(RepresentationUpdate)` | `TestSensorimotorMemory` |
+| FJ-012 | `ExpectedFrictionCoefficient`, contact roles, tactile observations | C35, OD-C58, PRE-C13v | `parameters_for()`, `domain(SensoryObservationType)` | `TestGripLoadCoupling` |
+| FJ-013 | Source claim retained as an intentionally unmodeled afferent-code detail | Scope boundary: no neural-code simulation | Not exposed | Phase 0 scope review |
+| FJ-014 | `GazeTarget`, `GazeEpisode`, proactive mode and fixation condition | GAZE-C59a, GAZE-C59c | `gaze_target_for()`, `domain(GazeEpisode)` | `TestGazeControlCoverage` |
+| FJ-015 | `MultimodalAlignment` and monitored contact | GAZE-C59b, GAZE-C59d | `domain(MultimodalAlignment)` | `TestGazeControlCoverage` |
+| FJ-016 | `ObservedActionPrediction`, observer gaze and predicted contact | OBS-C61 | `domain(ObservedActionPrediction)` | `TestActionObservationCoverage` |
+| FJ-017 | `HandVisibility`, reactive/proactive observer gaze | OBS-C61 | `domain(ObservedActionPrediction)` | `TestActionObservationCoverage` |
+| FJ-018 | `ActorObserverPredictionMatch` | OBS-C60 | `domain(ActorObserverPredictionMatch)` | `TestActionObservationCoverage` |
+| FJ-019 | `LearningStage`, ordered `VisuomotorLearningProfile` | LEARN-C63 | `domain(VisuomotorLearningEpisode)` | `TestVisuomotorLearningCoverage` |
+| FJ-020 | stage-dependent `GazeMode` | LEARN-C62a, LEARN-C62b | `domain(VisuomotorLearningEpisode)` | `TestVisuomotorLearningCoverage` |
+| FJ-021 | `SensorimotorMap`, gaze-centered input frame | LEARN-C62b | `domain(SensorimotorMap)` | `TestVisuomotorLearningCoverage` |
+| FJ-022 | `LearningProcessKind` | LEARN-C63 | `domain(VisuomotorLearningEpisode)` | `TestVisuomotorLearningCoverage` |
+| FJ-023 | `SensoryAttenuation`, self-generated origin and timing window | PERCEPTION-C65a, PERCEPTION-C65b | `domain(SensoryAttenuation)` | `TestSensoryAttenuationCoverage` |
+| FJ-024 | `AttenuationControlRelationship` | PERCEPTION-C64 | `domain(AttenuationControlRelationship)` | `TestSensoryAttenuationCoverage` |
+| FJ-025 | `GripLoadCoupling`, elastic/viscous/inertial dynamics | PRE-C59, OD-C51 | `force_coupling_for()`, `dynamics_model_for()` | `TestGripLoadCoupling`, `TestInternalModelComposition` |
+| FJ-026 | object/limb `DynamicsPerturbation` and transfer | OD-C56 | `object_dynamics()`, `limb_dynamics()` | `TestDynamicsContradictions` |
+| FJ-027 | distinct `ObjectDynamicsModel` and `LimbDynamicsModel` activation | OD-C51, OD-C57 | `object_dynamics()`, `limb_dynamics()` | `TestRepresentationOwnership` |
+| FJ-028 | `SensorimotorMemory` and separately represented grip/load estimates | OD-C53-OD-C55 | `representation_for()`, `force_couplings()` | `TestSensorimotorMemory`, `TestRepresentationDissociation` |
+| FJ-029 | `CoordinateFrame`, unresolved object-centered consolidation status | OD-C52, OD-C57 | `domain(Representation)` | `TestRepresentationContext` |
+| FJ-030 | reciprocal `DynamicsTransfer` contexts and outcomes | OD-C56 | `domain(DynamicsTransfer)` | `TestDynamicsContradictions` |
+| FJ-031 | `RepresentationDissociation`, sensorimotor/perceptual purposes | OD-C53, OD-C54, OD-C57 | `representation_for()` | `TestRepresentationDissociation` |
+| FJ-032 | `ScientificStatus.OPEN_QUESTION`, `ScientificProvenance` | C68 and module-specific status rules | `domain(ScientificAssertion)` | `TestEngineeringExtensionProvenance`, optional-module coverage tests |
+
+FJ-013 is the sole deliberate non-implementation: the review's relative
+first-spike timing result belongs to afferent neural coding, while this microworld's
+declared scope is task-level sensorimotor knowledge. Its omission is explicit rather
+than silently represented by a generic tactile label.
 
 ## Current core vocabulary classification
 

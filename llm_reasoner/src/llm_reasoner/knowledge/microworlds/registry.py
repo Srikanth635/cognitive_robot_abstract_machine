@@ -1,4 +1,5 @@
-"""Which microworld modules an action needs.
+"""
+Which microworld modules an action needs.
 
 WHY THIS IS KNOWLEDGE AND NOT CONFIGURATION
 -------------------------------------------
@@ -45,8 +46,9 @@ SOMA = "http://www.ease-crc.org/ont/SOMA.owl#"
 
 
 class Capability(StrEnum):
-    """A kind of sensorimotor competence an action presupposes and a module
-    supplies vocabulary for.
+    """
+    A kind of sensorimotor competence an action presupposes and a module supplies
+    vocabulary for.
 
     Deliberately coarse. Capabilities are a handful of families, not one per
     action, because their purpose is to let unseen actions reuse existing
@@ -54,61 +56,133 @@ class Capability(StrEnum):
     """
 
     PHASE_STRUCTURING = "phase_structuring"
-    """The action-neutral apparatus: phases, subgoals, condition requirements,
-    control points, internal models, the parameter trichotomy. Required by every
-    action without exception."""
+    """
+    The action-neutral apparatus: phases, subgoals, condition requirements, control
+    points, internal models, the parameter trichotomy.
+
+    Required by every action without exception.
+    """
 
     OBJECT_DYNAMICS = "object_dynamics"
-    """Object and limb dynamics, efference-copy prediction, coordinate frames,
-    sensorimotor memories, and representation-purpose separation."""
+    """
+    Object and limb dynamics, efference-copy prediction, coordinate frames, sensorimotor
+    memories, and representation-purpose separation.
+    """
 
     PREHENSILE_MANIPULATION = "prehensile_manipulation"
-    """Grasping and holding an object against gravity: contact and
-    force-dynamic events, grip-load coupling, slip and liftoff thresholds,
-    grasp roles."""
+    """
+    Grasping and holding an object against gravity: contact and force-dynamic events,
+    grip-load coupling, slip and liftoff thresholds, grasp roles.
+    """
 
     SUBSTANCE_TRANSFER = "substance_transfer"
     """Moving a substance between vessels or surfaces under continuous flow
     regulation: flow events, source and target roles, tilt and volume
     parameters, viscosity and fill-level estimates."""
 
+    GAZE_CONTROL = "gaze_control"
+    """
+    Proactive and reactive gaze targeting, fixation, and multimodal alignment.
+    """
+
+    ACTION_OBSERVATION = "action_observation"
+    """
+    Observer evidence, predicted actor contact, and matching hypotheses.
+    """
+
+    VISUOMOTOR_LEARNING = "visuomotor_learning"
+    """
+    Exploration, acquisition, refinement, and sensorimotor-map updates.
+    """
+
+    SENSORY_ATTENUATION = "sensory_attenuation"
+    """
+    Perceptual attenuation around predicted self-generated contact.
+    """
+
+
+class GenerationRoot(StrEnum):
+    """
+    A top-level structure selected for hypothesis generation.
+    """
+
+    ACTION_PHASE_STRUCTURE = "ActionPhaseStructure"
+    """
+    The action-neutral phase structure used by the fallback profile.
+    """
+
+    PREHENSION_PHASE_STRUCTURE = "PrehensionPhaseStructure"
+    """
+    The phase structure for grasping and object manipulation.
+    """
+
+    POURING_PHASE_STRUCTURE = "PouringPhaseStructure"
+    """
+    The phase structure for substance-transfer tasks.
+    """
+
 
 @dataclass(frozen=True)
 class MicroworldModule:
-    """A loadable microworld, described by what it provides and depends on."""
+    """
+    A loadable microworld, described by what it provides and depends on.
+    """
 
     name: str
-    """Import path of the package, which is what the loader resolves and what
-    ``validate`` scopes by."""
+    """
+    Import path of the package, which is what the loader resolves and what ``validate``
+    scopes by.
+    """
 
     version: str
-    """Feeds the hypothesis cache key: a bump on any selected module marks
-    hypotheses generated under it stale."""
+    """
+    Feeds the hypothesis cache key: a bump on any selected module marks hypotheses
+    generated under it stale.
+    """
 
     provides: frozenset[Capability]
     depends_on: frozenset[str] = frozenset()
     mandatory: bool = False
-    """Loaded regardless of the resolved profile. The fallback path depends on
-    this: an action with no matching profile still gets the mandatory set."""
+    """
+    Loaded regardless of the resolved profile.
+
+    The fallback path depends on
+    this: an action with no matching profile still gets the mandatory set.
+    """
 
     note: str = ""
 
 
 @dataclass(frozen=True)
 class TaskProfile:
-    """The claim that a kind of task presupposes a set of capabilities.
+    """
+    The claim that a kind of task presupposes a set of capabilities.
 
-    A defeasible claim about what an action involves, not a definition -- which
-    is why it is a separate object that can be revised, rather than an attribute
-    of the task itself.
+    A defeasible claim about what an action involves, not a definition -- which is why
+    it is a separate object that can be revised, rather than an attribute of the task
+    itself.
     """
 
     task: ConceptReference
-    """Stated at the most general level that holds, so specialisations are
-    covered by subsumption and need no entry of their own."""
+    """
+    Stated at the most general level that holds, so specialisations are covered by
+    subsumption and need no entry of their own.
+    """
 
     requires: frozenset[Capability]
+    """
+    The capabilities required to describe this kind of task.
+    """
+
+    root_class: GenerationRoot = GenerationRoot.ACTION_PHASE_STRUCTURE
+    """
+    The most-specific top-level structure available for this task.
+    """
+
     is_fallback: bool = False
+    """
+    Whether this profile supplies only action-neutral vocabulary.
+    """
 
     @property
     def specificity(self) -> int:
@@ -123,11 +197,29 @@ class TaskProfile:
 
 @dataclass(frozen=True)
 class ModuleSelection:
-    """The outcome of selecting modules for one action."""
+    """
+    The outcome of selecting modules for one action.
+    """
 
     task: ConceptReference
+    """
+    The task for which modules were selected.
+    """
+
     profile: TaskProfile
+    """
+    The most-specific task profile that matched the task.
+    """
+
     modules: tuple[MicroworldModule, ...]
+    """
+    The capability modules closed over their dependencies.
+    """
+
+    @property
+    def root_class(self) -> str:
+        """:return: The selected top-level generation class name."""
+        return self.profile.root_class.value
 
     @property
     def degraded(self) -> bool:
@@ -157,7 +249,8 @@ class ModuleSelection:
 
 
 class AmbiguousProfile(LLMReasonerError):
-    """Two profiles match a task equally specifically.
+    """
+    Two profiles match a task equally specifically.
 
     An authoring error rather than something to break silently: whichever way a
     tie is resolved, one of the two profiles is wrong about the action.
@@ -168,7 +261,7 @@ class AmbiguousProfile(LLMReasonerError):
 
 FLANAGAN_CORE = MicroworldModule(
     name="llm_reasoner.knowledge.microworlds.flanagan.core",
-    version="0.3.0",
+    version="1.0.0",
     provides=frozenset({Capability.PHASE_STRUCTURING}),
     mandatory=True,
     note="Action-neutral. Mandatory, so it is loaded even under the fallback "
@@ -177,7 +270,7 @@ FLANAGAN_CORE = MicroworldModule(
 
 FLANAGAN_OBJECT_DYNAMICS = MicroworldModule(
     name="llm_reasoner.knowledge.microworlds.flanagan.object_dynamics",
-    version="0.1.0",
+    version="1.0.0",
     provides=frozenset({Capability.OBJECT_DYNAMICS}),
     depends_on=frozenset({FLANAGAN_CORE.name}),
     note="Action-neutral represented dynamics used by prehensile manipulation.",
@@ -186,7 +279,7 @@ FLANAGAN_OBJECT_DYNAMICS = MicroworldModule(
 
 FLANAGAN_PREHENSION = MicroworldModule(
     name="llm_reasoner.knowledge.microworlds.flanagan.prehension",
-    version="0.1.0",
+    version="1.0.0",
     provides=frozenset({Capability.PREHENSILE_MANIPULATION}),
     depends_on=frozenset({FLANAGAN_OBJECT_DYNAMICS.name}),
     note="Action-neutral contact, grasp, lifting, replacement, and release control.",
@@ -195,10 +288,42 @@ FLANAGAN_PREHENSION = MicroworldModule(
 
 FLANAGAN_POURING = MicroworldModule(
     name="llm_reasoner.knowledge.microworlds.flanagan.pouring",
-    version="0.4.0",
+    version="1.0.0",
     provides=frozenset({Capability.SUBSTANCE_TRANSFER}),
     depends_on=frozenset({FLANAGAN_PREHENSION.name}),
     note="Substance-transfer extension composed with prehensile manipulation.",
+)
+
+FLANAGAN_GAZE = MicroworldModule(
+    name="llm_reasoner.knowledge.microworlds.flanagan.gaze",
+    version="1.0.0",
+    provides=frozenset({Capability.GAZE_CONTROL}),
+    depends_on=frozenset({FLANAGAN_CORE.name}),
+    note="Gaze targeting, timing, fixation, and multimodal alignment.",
+)
+
+FLANAGAN_OBSERVATION = MicroworldModule(
+    name="llm_reasoner.knowledge.microworlds.flanagan.observation",
+    version="1.0.0",
+    provides=frozenset({Capability.ACTION_OBSERVATION}),
+    depends_on=frozenset({FLANAGAN_GAZE.name}),
+    note="Actor-observer conditions and action-understanding predictions.",
+)
+
+FLANAGAN_LEARNING = MicroworldModule(
+    name="llm_reasoner.knowledge.microworlds.flanagan.learning",
+    version="1.0.0",
+    provides=frozenset({Capability.VISUOMOTOR_LEARNING}),
+    depends_on=frozenset({FLANAGAN_GAZE.name, FLANAGAN_OBJECT_DYNAMICS.name}),
+    note="Practice stages, mapping processes, and sensorimotor-map updates.",
+)
+
+FLANAGAN_PERCEPTION = MicroworldModule(
+    name="llm_reasoner.knowledge.microworlds.flanagan.perception",
+    version="1.0.0",
+    provides=frozenset({Capability.SENSORY_ATTENUATION}),
+    depends_on=frozenset({FLANAGAN_CORE.name}),
+    note="Sensory attenuation and its unresolved relation to action control.",
 )
 
 MODULES: tuple[MicroworldModule, ...] = (
@@ -206,9 +331,14 @@ MODULES: tuple[MicroworldModule, ...] = (
     FLANAGAN_OBJECT_DYNAMICS,
     FLANAGAN_PREHENSION,
     FLANAGAN_POURING,
+    FLANAGAN_GAZE,
+    FLANAGAN_OBSERVATION,
+    FLANAGAN_LEARNING,
+    FLANAGAN_PERCEPTION,
 )
 
 POURING_PROFILE = TaskProfile(
+    root_class=GenerationRoot.POURING_PHASE_STRUCTURE,
     task=ConceptReference(
         iri=SOMA + "Pouring",
         label="Pouring",
@@ -225,6 +355,7 @@ POURING_PROFILE = TaskProfile(
 )
 
 GRASPING_PROFILE = TaskProfile(
+    root_class=GenerationRoot.PREHENSION_PHASE_STRUCTURE,
     task=ConceptReference(
         iri=SOMA + "Grasping",
         label="Grasping",
@@ -266,11 +397,11 @@ def matching_profiles(
 def resolve_profile(
     task: ConceptReference, profiles: Sequence[TaskProfile] = PROFILES
 ) -> TaskProfile:
-    """Choose the profile that speaks for a task.
+    """
+    Choose the profile that speaks for a task.
 
-    :raises AmbiguousProfile: when two equally specific non-fallback profiles
-        match, which is an authoring error rather than something to resolve
-        arbitrarily.
+    :raises AmbiguousProfile: when two equally specific non-fallback profiles match,
+        which is an authoring error rather than something to resolve arbitrarily.
     """
     matched = matching_profiles(task, profiles)
     if not matched:
@@ -295,8 +426,10 @@ def select_modules(
     task: ConceptReference,
     profiles: Sequence[TaskProfile] = PROFILES,
     modules: Sequence[MicroworldModule] = MODULES,
+    additional_capabilities: frozenset[Capability] = frozenset(),
 ) -> ModuleSelection:
-    """Work out which microworld modules an action needs.
+    """
+    Work out which microworld modules an action needs.
 
     The procedure, stated so it is auditable rather than only executable:
 
@@ -314,8 +447,11 @@ def select_modules(
     profile = resolve_profile(task, profiles)
     by_name = {m.name: m for m in modules}
 
+    required_capabilities = profile.requires | additional_capabilities
     selected: dict[str, MicroworldModule] = {
-        m.name: m for m in modules if m.mandatory or (m.provides & profile.requires)
+        m.name: m
+        for m in modules
+        if m.mandatory or (m.provides & required_capabilities)
     }
 
     frontier = list(selected.values())
@@ -341,7 +477,8 @@ def current_versions(
 def task_reference(
     iri: str, ancestors: Iterable[str] = (), label: Optional[str] = None
 ) -> ConceptReference:
-    """Build a task reference with its ancestors materialised.
+    """
+    Build a task reference with its ancestors materialised.
 
     Convenience for declaring an action the catalogue has never seen: place it
     under an existing task and it inherits that task's profile without any new
@@ -359,6 +496,11 @@ __all__ = [
     "Capability",
     "DEFAULT_PROFILE",
     "FLANAGAN_CORE",
+    "FLANAGAN_GAZE",
+    "GenerationRoot",
+    "FLANAGAN_LEARNING",
+    "FLANAGAN_OBSERVATION",
+    "FLANAGAN_PERCEPTION",
     "FLANAGAN_POURING",
     "FLANAGAN_OBJECT_DYNAMICS",
     "FLANAGAN_PREHENSION",

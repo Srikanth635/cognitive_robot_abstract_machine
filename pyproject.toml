@@ -25,6 +25,7 @@ dependencies = [
   "experiments",
   "segmind",
   "cram_viz",
+  "llm_reasoner",
   "ipykernel>=7.2.0",
   "lark-parser>=0.12.0",
   "tqdm"
@@ -90,7 +91,8 @@ members = [
   "robokudo",
   "experiments",
   "segmind",
-  "cram_viz"
+  "cram_viz",
+  "llm_reasoner"
 ]
 
 [tool.uv.sources]
@@ -105,6 +107,7 @@ physics_simulators    = { workspace = true }
 segmind               = { workspace = true }
 experiments           = { workspace = true }
 cram_viz              = { workspace = true }
+llm_reasoner           = { workspace = true }
 
 [tool.poetry]
 package-mode = false
