@@ -1,12 +1,13 @@
 /* ============================================================================
- * panels/graph/panel.js — the graph view with seven tabs.
+ * panels/graph/panel.js — the graph view with eight tabs.
  *
  *   Knowledge        the scene-backed entity graph + CRAM architecture
  *   Live Knowledge   semantic entities projected from the attached live execution
- *   Domain Knowledge the static ontology of action verbs and entities
  *   Hypothesis Graph llm_reasoner's cereal-pouring knowledge graph, rendered by its
  *                    own dedicated engine (see hypothesis-graph.js) instead of
  *                    graph.js's shared window.Graph
+ *   Ontology Graph   the same graph with the ontology class of every node and the
+ *                    ontology property of every link beneath their labels
  *   Designator       a real coraplex action designator's own fields, reflected and
  *                    classified value vs referent -- static and illustrative, no
  *                    live World, no resolver call (see cram_viz.designator_knowledge)
@@ -36,7 +37,6 @@ Panels.define('graph', function (root, bus) {
     '  <div class="graph-tabs" id="graph-tabs">' +
     '    <button data-view="knowledge" class="active" title="the entity graph (EQL / knowledge base)">Knowledge</button>' +
     '    <button data-view="live-knowledge" title="semantic entities and actions projected from the attached live demo">Live Knowledge</button>' +
-    '    <button data-view="domain" title="the static, hand-authored ontology of action verbs and entities — independent of any recorded scene">Domain Knowledge</button>' +
     '    <button data-view="hypothesis" title="llm_reasoner\'s cereal-pouring knowledge graph — click a node to expand it, double-click to collapse its branch">Hypothesis Graph</button>' +
     '    <button data-view="ontology" title="the Hypothesis Graph with the ontology class of every node and the ontology property of every link beneath their labels — click a node for the terms backing its values">Ontology Graph</button>' +
     '    <button data-view="designator" title="a real coraplex action designator\'s own fields, reflected and classified value vs referent — illustrative only, no live World">Designator</button>' +
@@ -81,7 +81,6 @@ Panels.define('graph', function (root, bus) {
   const TABS = {
     knowledge:  { url: '/api/kb' },
     'live-knowledge': { live: 'knowledge' },
-    domain:     { url: '/api/kb/view?name=domain' },
     hypothesis: { url: '/api/kb/view?name=hypothesis' },
     ontology:   { url: '/api/kb/view?name=ontology' },
     designator: { url: '/api/kb/view?name=designator' },

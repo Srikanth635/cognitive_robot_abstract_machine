@@ -81,13 +81,12 @@ between the built-in panels:
 | ------------- | ------------------------------------------------------------ |
 | `robot-scene` | three.js scene: environment, robot, draggable objects, playback + live controls |
 | `eql`         | EQL query console + entity answer panel                      |
-| `graph`       | five tabs: Knowledge / Domain Knowledge / Kinematics / Plan / Statechart |
+| `graph`       | tabs: Knowledge / Live Knowledge / Hypothesis Graph / Ontology Graph / Designator / Kinematics / Plan / Statechart |
 
-The Domain Knowledge tab shows the static, hand-authored ontology of action
-verbs (`cram_viz/action_knowledge.py`) and entities (`cram_viz/entity_knowledge.py`)
-— classes, roles, parameters, preconditions, phases and goals per action;
-classes, properties, qualities, affordances and relations per entity. It is
-independent of any recorded scene, unlike the Knowledge tab.
+The Hypothesis Graph tab shows the knowledge `llm_reasoner` generated for the
+instruction entered in the Generate bar; the Ontology Graph tab shows the same
+graph with the ontology class of every node and the ontology property of every
+link beneath their labels.
 
 On the Plan and Statechart tabs the node border is its execution status —
 running (amber), succeeded/done (green), failed (red), paused (blue),
