@@ -70,7 +70,6 @@ def predictive_manipulation_suite() -> AcceptanceSuite:
             prehension.WithdrawalFollowsRelease(),
             prehension.PrehensionPhasesSpecific(),
             pouring.PouringEventsSpecific(),
-            pouring.PouringPhasesCovered(),
             pouring.PouringPhasesOrdered(),
             pouring.MaterialFitsFlowDynamics(),
             pouring.TerminationReasonHasEvent(),

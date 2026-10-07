@@ -230,6 +230,13 @@ class TestGenerationSchema:
         assert structure.field_named("defines_phase") is None
         assert structure.field_named("defines_gaze_fixation") is None
 
+    def test_type_is_shown_with_what_it_requires(self):
+        rendered = rendered_type(type_schema_for(pouring.PouringPhaseStructure))
+        assert all(
+            described(restriction, False) in rendered
+            for restriction in pouring.PouringPhaseStructure.term.restrictions
+        )
+
     def test_defined_type_is_shown_with_its_definition(self):
         rendered = rendered_type(type_schema_for(core.ForceRateParameter))
         assert described(core.ForceRateParameter.term.definition, False) in rendered

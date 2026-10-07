@@ -88,7 +88,8 @@ def field_hint(field_schema: FieldSchema) -> str:
 
 def rendered_type(type_schema: TypeSchema) -> str:
     """
-    :return: A fragment type, its meaning and the fields it adds to its bases.
+    :return: A fragment type, its meaning, what the ontology requires of it beyond its
+        bases, and the fields it adds to them.
     """
     bases = [
         base.__name__
@@ -103,6 +104,10 @@ def rendered_type(type_schema: TypeSchema) -> str:
     definition = type_schema.python_type.term.definition
     if definition is not None:
         lines.append(f"Defined: {described(definition, False)}.")
+    lines.extend(
+        f"Requires: {described(restriction, False)}."
+        for restriction in type_schema.python_type.term.restrictions
+    )
     lines.extend(
         f"- {field_schema.name}: {field_hint(field_schema)}. {field_schema.description}"
         for field_schema in type_schema.fields

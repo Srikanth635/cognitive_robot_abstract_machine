@@ -26,12 +26,6 @@ class PouringRule(StrEnum):
     event type discards what the vocabulary says about flow, contact and support.
     """
 
-    POURING_PHASES_COVERED = "pouring_phases_covered"
-    """
-    A pouring structure tilts until flow begins, regulates the flow and terminates it;
-    grasping, transport, alignment and returning are optional.
-    """
-
     POURING_PHASES_ORDERED = "pouring_phases_ordered"
     """
     Every transition of a pouring structure follows the sensorimotor order of pouring;
@@ -89,14 +83,6 @@ The order of the phases of pouring. Transport appears twice: carrying the source
 the target, and carrying it back.
 """
 
-REQUIRED_PHASES: tuple[type, ...] = (
-    pouring.TiltToFlowPhase,
-    pouring.FlowRegulationPhase,
-    pouring.FlowTerminationPhase,
-)
-"""
-The phases every pouring structure has.
-"""
 
 EXCLUDED_DYNAMICS: dict[pouring.MaterialRegime, tuple[type, ...]] = {
     pouring.MaterialRegime.LIQUID: (
@@ -165,31 +151,6 @@ class PouringEventsSpecific(StructureRule[pouring.PouringPhaseStructure]):
 
     def is_violated_by(self, fragment: pouring.PouringPhaseStructure) -> bool:
         return bool(self.involved(fragment))
-
-
-class PouringPhasesCovered(StructureRule[pouring.PouringPhaseStructure]):
-    """
-    A pouring structure has a tilt-to-flow, a flow regulation and a flow termination
-    phase.
-    """
-
-    @property
-    def name(self) -> StrEnum:
-        return PouringRule.POURING_PHASES_COVERED
-
-    @property
-    def severity(self) -> Severity:
-        return Severity.WARNING
-
-    @property
-    def reason(self) -> str:
-        return "the tilt-to-flow, flow regulation or flow termination phase is missing"
-
-    def is_violated_by(self, fragment: pouring.PouringPhaseStructure) -> bool:
-        return not all(
-            any(isinstance(phase, required) for phase in fragment.defines_phase)
-            for required in REQUIRED_PHASES
-        )
 
 
 class PouringPhasesOrdered(StructureRule[pouring.PouringPhaseStructure]):
