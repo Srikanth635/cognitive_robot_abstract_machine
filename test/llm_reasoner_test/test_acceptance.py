@@ -549,6 +549,18 @@ class TestCoreRules:
             ungrounded
         ]
 
+    def test_ungrounded_requirement_is_named_by_the_violation(self):
+        requirement = core.ConditionRequirement(
+            has_condition_type=[core.PhaseConditionType()],
+            has_condition_mode=core.ConditionMode.THROUGHOUT,
+            has_condition_polarity=core.ConditionPolarity.MUST_HOLD,
+        )
+        structure = core.ActionPhaseStructure(
+            defines_phase=[core.ActionPhase(has_condition_requirement=[requirement])]
+        )
+        (violation,) = PreconditionsGrounded().violations([structure])
+        assert violation.involved == (requirement,)
+
 
 # %% comparisons and control points
 

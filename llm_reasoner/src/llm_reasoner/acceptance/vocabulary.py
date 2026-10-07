@@ -11,6 +11,7 @@ from functools import cached_property
 from operator import attrgetter
 from types import ModuleType
 
+from krrood.class_diagrams.class_diagram import WrappedClass
 from typing_extensions import Any, Optional
 
 from llm_reasoner.ontologies import PredictiveManipulationOntologyFile
@@ -139,6 +140,31 @@ class Vocabulary:
                 if name in names:
                     entailed.setdefault(name, self.value_of(expression.value))
         return entailed
+
+    def fill_entailed_values(self, instance: DescriptionEntity) -> None:
+        """
+        Give a fragment the enumeration members, concepts and literals its classes
+        entail, where nothing else is stated; values that would be fragments are left
+        to be stated.
+        """
+        wrapped_fields = {
+            wrapped.field.name: wrapped
+            for wrapped in WrappedClass(type(instance)).fields
+        }
+        for name, value in self.entailed_values(type(instance)).items():
+            value_type = self.value_type_of(
+                type(instance), name, wrapped_fields[name].type_endpoint
+            )
+            if isinstance(value_type, type) and issubclass(
+                value_type, DescriptionEntity
+            ):
+                continue
+            stated = attrgetter(name)(instance)
+            if PropertyTerm.of_field(type(instance), name).functional:
+                if stated is None:
+                    setattr(instance, name, value)
+            elif value not in stated:
+                setattr(instance, name, [*stated, value])
 
     @cached_property
     def members(self) -> dict[str, StrEnum]:

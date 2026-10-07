@@ -179,6 +179,20 @@ class TestGraphReader:
         ]
         assert tilt.label == written_tilt.label
 
+    def test_values_the_class_entails_are_read_although_not_stated(self):
+        graph = Graph()
+        graph.add(
+            (
+                URIRef(HYPOTHESIS_NAMESPACE + "contact"),
+                RDF.type,
+                URIRef(prehension.ContactEstablishmentPhase.term.iri),
+            )
+        )
+        (contact,) = GraphReader().read(graph).fragments
+        assert contact.realizes_action_category == [
+            ConceptReference(iri=CRAM_AICOR_NAMESPACE + "Grasping")
+        ]
+
 
 # %% locating contradictions
 

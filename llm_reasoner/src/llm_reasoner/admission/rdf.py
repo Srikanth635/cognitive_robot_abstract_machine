@@ -235,6 +235,7 @@ class GraphReader:
         unread: list[Statement] = []
         for subject, instance in instances.items():
             unread.extend(self.fill(graph, subject, instance, instances))
+            self.vocabulary.fill_entailed_values(instance)
         return ReadHypothesis(
             fragments=list(instances.values()),
             identifiers={

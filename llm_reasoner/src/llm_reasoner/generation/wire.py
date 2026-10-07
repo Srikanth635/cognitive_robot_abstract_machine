@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import json
 import re
-from operator import attrgetter
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -152,7 +151,7 @@ class FragmentDecoder:
             )
             return DecodingResult(problems=problems)
         for instance in instances.values():
-            self.fill_entailed_values(instance)
+            self.vocabulary.fill_entailed_values(instance)
         self.declare_components(roots[0], list(instances.values()))
         hypothesis = DecodedHypothesis(
             root=roots[0],
@@ -281,22 +280,6 @@ class FragmentDecoder:
                 continue
             setattr(instance, name, converted if field_schema.many else converted[0])
         return problems
-
-    def fill_entailed_values(self, instance: DescriptionEntity) -> None:
-        """
-        Give a fragment the enumeration members and literals its classes entail, where
-        the answer states nothing else.
-        """
-        type_schema = self.schema.get(type(instance).__name__)
-        for name, value in self.vocabulary.entailed_values(type(instance)).items():
-            field_schema = type_schema.field_named(name)
-            if field_schema is None or field_schema.kind == FieldKind.FRAGMENT:
-                continue
-            stated = attrgetter(name)(instance)
-            if not field_schema.many and stated is None:
-                setattr(instance, name, value)
-            elif field_schema.many and value not in stated:
-                setattr(instance, name, [*stated, value])
 
     def declare_components(
         self, root: DescriptionEntity, fragments: list[DescriptionEntity]
