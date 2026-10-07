@@ -8,7 +8,7 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> a owl:Ontology ;
     owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.4.0> ;
-    owl:versionInfo "0.4.3" ;
+    owl:versionInfo "0.4.4" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
     rdfs:label "Predictive manipulation: core"@en ;
     rdfs:comment """The action-neutral core of a microworld for predictive object manipulation, drawn from "Control strategies in object manipulation tasks" (2006), "Coding and use of tactile signals from the fingertips in object manipulation tasks" (2009), "Sensory control of object manipulation" (2009) and "Motor prediction" (2001).
@@ -375,9 +375,10 @@ Classes classify description-level individuals, the knowledge a language model g
 :FeedbackRegulatedController a owl:Class ;
     owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :ActionPhaseController
         [ a owl:Restriction ; owl:onProperty :hasRegulationMode ; owl:someValuesFrom [ a owl:Class ; owl:oneOf ( :ContinuousFeedback :Hybrid ) ] ] ) ] ;
-    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :monitorsModality ; owl:someValuesFrom :SensoryModality ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :monitorsModality ; owl:someValuesFrom :SensoryModality ] ,
+        [ a owl:Restriction ; owl:onProperty :hasContinuousPrediction ; owl:someValuesFrom :ContinuousSignalPrediction ] ;
     rdfs:label "feedback-regulated controller"@en ;
-    rdfs:comment "A controller that corrects its commands from sensory signals while its phase runs; it monitors at least one modality."@en ;
+    rdfs:comment "A controller that corrects its commands from sensory signals while its phase runs; it monitors at least one modality and compares a continuous prediction there, which is its control law."@en ;
     :evidenceStatus :EngineeringExtension .
 
 :hasRegulationMode a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :RegulationMode ;
@@ -454,9 +455,10 @@ Classes classify description-level individuals, the knowledge a language model g
     owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :ConditionRequirement
         [ a owl:Restriction ; owl:onProperty :hasConditionMode ; owl:hasValue :Throughout ]
         [ a owl:Restriction ; owl:onProperty :hasConditionPolarity ; owl:hasValue :MustHold ] ) ] ;
-    rdfs:subClassOf aicor:MaintenanceGoal , dul:Goal ;
+    rdfs:subClassOf aicor:MaintenanceGoal , dul:Goal ,
+        [ a owl:Restriction ; owl:onProperty :violationSignalledBy ; owl:someValuesFrom :FailureEventType ] ;
     rdfs:label "invariant requirement"@en ;
-    rdfs:comment "A condition that must hold throughout the phase."@en ;
+    rdfs:comment "A condition that must hold throughout the phase, guarded by the failure event that registers its violation."@en ;
     :evidenceStatus :EngineeringExtension .
 
 :ProhibitionRequirement a owl:Class ;
@@ -1275,11 +1277,12 @@ Classes classify description-level individuals, the knowledge a language model g
     owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PredictionComparison [ a owl:Restriction ; owl:onProperty :hasComparisonOutcome ; owl:hasValue :Match ] ) ] ;
     rdfs:subClassOf
         [ a owl:Class ; owl:complementOf [ a owl:Restriction ; owl:onProperty :hasPredictionError ; owl:someValuesFrom owl:Thing ] ] ,
+        [ a owl:Restriction ; owl:onProperty :comparesObservation ; owl:someValuesFrom :SensoryObservationType ] ,
         [ a owl:Class ; owl:unionOf (
             [ a owl:Restriction ; owl:onProperty :confirmsSubgoal ; owl:someValuesFrom :Subgoal ]
             [ a owl:Restriction ; owl:onProperty :suppliesStateEstimate ; owl:someValuesFrom :InitialStateEstimate ] ) ] ;
     rdfs:label "matching comparison"@en ;
-    rdfs:comment "A comparison that agrees with the prediction: no error, and it confirms a subgoal or supplies the next initial state."@en ;
+    rdfs:comment "A comparison that agrees with the prediction: it names what was observed, finds no error, and confirms a subgoal or supplies the next initial state."@en ;
     :evidenceStatus :SupportedInterpretation ;
     :representsClaim :FJ-005 , :FJ-007 .
 
@@ -1392,9 +1395,10 @@ Classes classify description-level individuals, the knowledge a language model g
     rdfs:subClassOf aicor:ProcessMonitor , dul:Description ,
         [ a owl:Restriction ; owl:onProperty :atEventType ; owl:someValuesFrom :MechanicalEventType ] ,
         [ a owl:Restriction ; owl:onProperty :hasPrediction ; owl:someValuesFrom :SensoryEventPrediction ] ,
-        [ a owl:Restriction ; owl:onProperty :hasComparison ; owl:someValuesFrom :PredictionComparison ] ;
+        [ a owl:Restriction ; owl:onProperty :hasComparison ; owl:someValuesFrom :MatchingComparison ] ,
+        [ a owl:Restriction ; owl:onProperty :hasComparison ; owl:someValuesFrom :MismatchingComparison ] ;
     rdfs:label "sensorimotor control point"@en ;
-    rdfs:comment "A planned mechanical event, such as a contact or a lift-off, at which predicted and actual sensory signals are compared to monitor progress and detect errors. An event that is not mechanical, such as an attained pose or quantity, is checked by a comparison the structure declares without a control point."@en ;
+    rdfs:comment "A planned mechanical event, such as a contact or a lift-off, at which predicted and actual sensory signals are compared to monitor progress and detect errors: it states what follows a match and what follows a mismatch, where the controller's corrections live. An event that is not mechanical, such as an attained pose or quantity, is checked by a comparison the structure declares without a control point."@en ;
     :evidenceStatus :AuthorHypothesis ;
     :representsClaim :FJ-001 , :FJ-005 , :JF09-01 .
 :atEventType a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :MechanicalEventType ;
