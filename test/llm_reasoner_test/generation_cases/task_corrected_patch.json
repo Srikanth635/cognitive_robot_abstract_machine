@@ -1,0 +1,3 @@
+{"fragments": [
+  {"id": "cut", "type": "ActionPhaseStructure", "decomposes_task": "aicor:Pouring"}
+]}

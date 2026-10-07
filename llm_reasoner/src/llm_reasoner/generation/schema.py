@@ -24,6 +24,35 @@ from llm_reasoner.ontologies.terms import (
     PropertyTerm,
 )
 
+# %% answer keys
+
+
+class AnswerKey(StrEnum):
+    """
+    The keys of an answer and of its fragments.
+    """
+
+    FRAGMENTS = "fragments"
+    """
+    The answer's list of fragments; in a repair, the fragments added or changed.
+    """
+
+    REMOVE = "remove"
+    """
+    In a repair, the identifiers of the fragments to delete.
+    """
+
+    IDENTIFIER = "id"
+    """
+    A fragment's identifier.
+    """
+
+    TYPE = "type"
+    """
+    A fragment's type.
+    """
+
+
 # %% field kinds
 
 
@@ -213,20 +242,24 @@ class GenerationSchema:
         """
         return {
             "type": "object",
-            "required": ["fragments"],
+            "required": [AnswerKey.FRAGMENTS],
             "additionalProperties": False,
             "properties": {
-                "fragments": {
+                AnswerKey.FRAGMENTS: {
                     "type": "array",
                     "items": {
                         "type": "object",
-                        "required": ["id", "type"],
+                        "required": [AnswerKey.IDENTIFIER, AnswerKey.TYPE],
                         "properties": {
-                            "id": {"type": "string"},
-                            "type": {"type": "string", "enum": sorted(self.types)},
+                            AnswerKey.IDENTIFIER: {"type": "string"},
+                            AnswerKey.TYPE: {
+                                "type": "string",
+                                "enum": sorted(self.types),
+                            },
                         },
                     },
-                }
+                },
+                AnswerKey.REMOVE: {"type": "array", "items": {"type": "string"}},
             },
         }
 

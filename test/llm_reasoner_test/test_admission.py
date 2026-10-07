@@ -321,7 +321,7 @@ class TestHermitCheck:
             client=ScriptedClient(
                 responses=[
                     GenerationCase.GRIP_DRIVEN_LIFTOFF.text,
-                    GenerationCase.CHAINED_STRUCTURE.text,
+                    GenerationCase.LIFTOFF_DRIVEN_BY_LOAD_PATCH.text,
                 ]
             ),
             suite=AcceptanceSuite(rules=[]),
