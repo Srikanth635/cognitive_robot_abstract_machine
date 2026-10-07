@@ -222,7 +222,7 @@ class TestAnthropicCompletionContract:
 
 
 class TestAnthropicStructuredCompletionContract:
-    """Structured completions force a tool call and send no removed parameters."""
+    """Structured completions ask for one tool call and send no removed parameters."""
 
     def test_structured_completion_sends_no_removed_sampling_parameters(
         self, monkeypatch: pytest.MonkeyPatch
@@ -247,8 +247,7 @@ class TestAnthropicStructuredCompletionContract:
         request = harness.service.messages.requests[0]
         assert "temperature" not in request
         assert request["model"] == "claude-sonnet-5"
-        assert request["system"] == "system"
-        assert request["tool_choice"] == {"type": "tool", "name": "emit_hypothesis"}
+        assert request["system"].startswith("system")
         assert request["tools"][0]["input_schema"] == schema
 
     @pytest.mark.parametrize(
@@ -274,6 +273,40 @@ class TestAnthropicStructuredCompletionContract:
         harness.client.complete_structured("system", "user", {})
 
         assert harness.service.messages.requests[0]["max_tokens"] == ceiling
+
+    def test_structured_completion_asks_for_its_one_tool_call_without_forcing_it(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        harness = build_client_harness(
+            monkeypatch,
+            AnthropicResponseMimic(
+                [ToolUseBlockMimic("emit_hypothesis", {"answer": "yes"})]
+            ),
+            model="claude-sonnet-5-5",
+        )
+
+        harness.client.complete_structured("system", "user", {})
+
+        request = harness.service.messages.requests[0]
+        assert request["tool_choice"] == {
+            "type": "auto",
+            "disable_parallel_tool_use": True,
+        }
+        assert "emit_hypothesis" in request["system"]
+
+    def test_structured_answer_written_as_text_is_returned(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        harness = build_client_harness(
+            monkeypatch,
+            AnthropicResponseMimic([TextBlockMimic('{"fragments": []}')]),
+            model="claude-sonnet-5-5",
+        )
+
+        assert (
+            harness.client.complete_structured("system", "user", {})
+            == '{"fragments": []}'
+        )
 
     def test_truncated_structured_response_is_rejected(
         self, monkeypatch: pytest.MonkeyPatch

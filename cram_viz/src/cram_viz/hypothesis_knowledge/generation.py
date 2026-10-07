@@ -53,7 +53,7 @@ MAX_REPAIRS = 4
 How many times a rejected answer may be fed its own problems and retried.
 """
 
-GENERATION_MODEL = "claude-sonnet-4-5"
+GENERATION_MODEL = "claude-sonnet-5-5"
 """
 The model generating hypotheses when no client is given: answers describe a few hundred
 linked fragments, which smaller models type inconsistently.
