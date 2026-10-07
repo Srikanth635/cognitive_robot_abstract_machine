@@ -11,12 +11,18 @@ from llm_reasoner.clients.base import LanguageModelClient
 # %% anthropic client
 
 _STRUCTURED_TOOL_NAME = "emit_hypothesis"
-"""Name of the synthetic tool used to force schema-conformant JSON.
+"""Name of the synthetic tool the model answers through.
 
-Not a real tool: it exists only so ``tool_choice`` can force the model to
-respond through it, which is Anthropic's actual mechanism for constrained JSON
-output. Nothing calls it and nothing reads its name except this client.
+Not a real tool: it exists only so the answer arrives as the tool's input, checked
+against the tool's input schema. Nothing calls it and nothing reads its name except
+this client.
 """
+
+_STRUCTURED_TOOL_INSTRUCTION = (
+    "Answer by calling the {tool} tool exactly once, with the whole answer as its "
+    "input."
+)
+"""Appended to the system prompt, since the call is asked for rather than forced."""
 
 
 @dataclass
@@ -65,12 +71,14 @@ class AnthropicClient(LanguageModelClient):
         self, system: str, user: str, json_schema: Mapping[str, Any]
     ) -> str:
         """
-        Force the response through ``json_schema`` using tool use.
+        Ask for the response as the input of one tool call checked against
+        ``json_schema``.
 
-        A forced tool call is Anthropic's actual constrained-decoding path: the
-        model's output is checked against the tool's input schema before it
-        ever reaches this client, so a malformed field or an invented type name
-        is rejected earlier than a JSON parse of free text ever could catch it.
+        The call is asked for in the system prompt rather than forced through
+        ``tool_choice``, because the newest models reject forced tool use; with only
+        one tool on offer and parallel calls disabled, the model makes that one
+        call. An answer written as text instead is returned as text, for the
+        decoder to read or reject.
 
         The token budget is sized from the model's real ceiling rather than a
         fixed constant, because a hypothesis's length scales with how many
@@ -90,7 +98,8 @@ class AnthropicClient(LanguageModelClient):
         with self._client.messages.stream(
             model=self.model,
             max_tokens=self._structured_token_budget(json_schema),
-            system=system,
+            system=f"{system}\n\n"
+            + _STRUCTURED_TOOL_INSTRUCTION.format(tool=_STRUCTURED_TOOL_NAME),
             messages=[{"role": "user", "content": user}],
             tools=[
                 {
@@ -99,7 +108,7 @@ class AnthropicClient(LanguageModelClient):
                     "input_schema": dict(json_schema),
                 }
             ],
-            tool_choice={"type": "tool", "name": _STRUCTURED_TOOL_NAME},
+            tool_choice={"type": "auto", "disable_parallel_tool_use": True},
         ) as stream:
             response = stream.get_final_message()
         self._check_truncation(response)
@@ -204,11 +213,7 @@ class AnthropicClient(LanguageModelClient):
         for block in response.content:
             if block.type == "tool_use" and block.name == _STRUCTURED_TOOL_NAME:
                 return json.dumps(block.input)
-        raise RuntimeError(
-            "Anthropic response contained no call to the forced tool "
-            f"{_STRUCTURED_TOOL_NAME!r}; got stop_reason="
-            f"{getattr(response, 'stop_reason', None)!r}"
-        )
+        return AnthropicClient._extract_text(response)
 
     @property
     def identity(self) -> str:
