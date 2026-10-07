@@ -1060,6 +1060,10 @@ class TestHypothesisKnowledgeQueries:
                 preset["text"]
             )
 
+    def test_there_are_at_most_ten_hypothesis_graph_presets(self, fixture_scene):
+        kb.reset_kb()
+        assert len(kb._hypothesis_graph_presets(kb.get_kb())) <= 10
+
     def test_hypothesis_graph_presets_answer_in_readable_values(self, fixture_scene):
         kb.reset_kb()
         for preset in kb._hypothesis_graph_presets(kb.get_kb()):

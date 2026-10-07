@@ -2913,9 +2913,10 @@ def _domain_knowledge_presets(kb: KB) -> List[Dict[str, str]]:
 
 def _hypothesis_graph_presets(kb: KB) -> List[Dict[str, str]]:
     """
-    Ready-made queries over the active pouring structure, asking in turn about its
-    phase sequence, the roles taking part, the conditions it requires, how each phase
-    is controlled, what the robot predicts, and how it recovers from failures.
+    Ready-made questions over the active pouring structure: its phases, the events
+    changing its forces, the things taking part in it, how its phases follow each
+    other, what must hold during it, what the robot expects to sense, and what can go
+    wrong.
 
     Each answer names the fragments it involves and highlights them in the Hypothesis
     Graph tab, where their own structure is explored by expanding the node.
@@ -2927,143 +2928,67 @@ def _hypothesis_graph_presets(kb: KB) -> List[Dict[str, str]]:
         return []
     return [
         {
-            "text": "in what order do the phases of the action run?",
+            "text": "what are the different action phases involved in the action?",
             "code": "an(entity(pouring_phase))",
         },
         {
-            "text": "which phase follows which, and which event triggers each step?",
+            "text": "what are the force dynamic events involved in the action?",
+            "code": "an(entity(pouring_force_dynamic_event))",
+        },
+        {
+            "text": "what is the source container the substance is poured from?",
+            "code": (
+                "an(entity(pouring_role)"
+                ".where(HasType(pouring_role, pouring.SourceContainer)))"
+            ),
+        },
+        {
+            "text": "what is the destination the substance is poured into?",
+            "code": (
+                "an(entity(pouring_role)"
+                ".where(HasType(pouring_role, pouring.TargetReceptacle)))"
+            ),
+        },
+        {
+            "text": "what substance is poured?",
+            "code": (
+                "an(entity(pouring_role)"
+                ".where(HasType(pouring_role, pouring.PouredSubstance)))"
+            ),
+        },
+        {
+            "text": "which effector grasps and moves the source container?",
+            "code": (
+                "an(entity(pouring_role)"
+                ".where(HasType(pouring_role, prehension.GraspingEffector)))"
+            ),
+        },
+        {
+            "text": "how do the phases follow each other, and which event triggers each step?",
             "code": (
                 "set_of(pouring_transition.from_phase, pouring_transition.to_phase,"
                 " pouring_transition.gated_by)"
             ),
         },
         {
-            "text": "which events start and end each phase?",
-            "code": (
-                "set_of(pouring_phase, pouring_phase.initiated_by,"
-                " pouring_phase.terminated_by)"
-            ),
-        },
-        {
-            "text": "what does each phase aim for, and which event confirms it?",
-            "code": (
-                "set_of(pouring_phase, pouring_phase.aims_for.targets_condition,"
-                " pouring_phase.aims_for.attainment_signalled_by)"
-            ),
-        },
-        {
-            "text": "which objects and effectors take part in each phase?",
-            "code": "set_of(pouring_phase, pouring_phase.involves_role)",
-        },
-        {
-            "text": (
-                "which conditions must hold throughout a phase, and which failure "
-                "signals a breach?"
-            ),
-            "code": (
-                "set_of(pouring_phase, pouring_condition_requirement.has_condition_type,"
-                " pouring_condition_requirement.violation_signalled_by)"
-                ".where(in_(pouring_condition_requirement,"
-                " pouring_phase.has_condition_requirement),"
-                " pouring_condition_requirement.has_condition_mode"
-                " == ConditionMode.THROUGHOUT)"
-            ),
-        },
-        {
-            "text": "what does the action assume about the world before it starts?",
+            "text": "what conditions must hold during the action?",
             "code": (
                 "set_of(pouring_condition_requirement.has_condition_type,"
-                " pouring_condition_requirement.has_condition_polarity)"
-                ".where(pouring_condition_requirement.is_world_assumption == True)"
+                " pouring_condition_requirement.has_condition_mode)"
             ),
         },
         {
-            "text": (
-                "is each phase run feedforward or by feedback, and are grip and load "
-                "coupled in it?"
-            ),
-            "code": (
-                "set_of(pouring_phase, pouring_phase.controlled_by.has_regulation_mode,"
-                " pouring_phase.has_coupling_regime)"
-            ),
-        },
-        {
-            "text": "which quantities does each phase set, and in what range?",
-            "code": (
-                "set_of(pouring_phase, pouring_parameter,"
-                " pouring_parameter.has_parameter_range.lower_bound,"
-                " pouring_parameter.has_parameter_range.upper_bound,"
-                " pouring_parameter.has_parameter_range.has_unit)"
-                ".where(in_(pouring_parameter, pouring_phase.has_active_parameter))"
-            ),
-        },
-        {
-            "text": "which categorical choices, such as a target pose, does each phase make?",
-            "code": (
-                "set_of(pouring_phase, pouring_parameter,"
-                " pouring_parameter.has_categorical_value.has_category)"
-                ".where(in_(pouring_parameter, pouring_phase.has_active_parameter))"
-            ),
-        },
-        {
-            "text": "in which phases must grip force follow the load, and with what margin?",
-            "code": (
-                "set_of(pouring_coupling.coupling_active_in,"
-                " pouring_coupling.has_load_origin,"
-                " pouring_coupling.has_safety_margin.has_parameter_range.lower_bound,"
-                " pouring_coupling.has_safety_margin.has_parameter_range.has_unit)"
-            ),
-        },
-        {
-            "text": "which sensory events does the robot predict, by which sense, and when?",
+            "text": "what sensory events does the robot expect during the action?",
             "code": (
                 "set_of(pouring_sensory_prediction.predicts_event,"
-                " pouring_sensory_prediction.has_modality,"
-                " pouring_sensory_prediction.has_expected_timing.earliest_offset,"
-                " pouring_sensory_prediction.has_expected_timing.latest_offset,"
-                " pouring_sensory_prediction.has_expected_timing.has_unit)"
+                " pouring_sensory_prediction.has_modality)"
             ),
-        },
-        {
-            "text": "where does the robot look in each phase, and until when?",
-            "code": (
-                "set_of(pouring_gaze_fixation.serves_phase,"
-                " pouring_gaze_fixation.fixates_role,"
-                " pouring_gaze_fixation.has_gaze_mode,"
-                " pouring_gaze_fixation.maintained_until)"
-            ),
-        },
-        {
-            "text": "which events change the forces acting in the action?",
-            "code": "an(entity(pouring_force_dynamic_event))",
         },
         {
             "text": "which failures can occur during the action?",
             "code": (
                 "an(entity(pouring_event_type)"
                 ".where(HasType(pouring_event_type, core.FailureEventType)))"
-            ),
-        },
-        {
-            "text": (
-                "at which events does a mismatch with the prediction trigger a "
-                "correction, and which?"
-            ),
-            "code": (
-                "set_of(pouring_control_point.at_event_type,"
-                " pouring_comparison.invokes_correction)"
-                ".where(in_(pouring_comparison, pouring_control_point.has_comparison),"
-                " pouring_comparison.has_comparison_outcome"
-                " == ComparisonOutcome.MISMATCH)"
-            ),
-        },
-        {
-            "text": "how does each correction respond, and which setpoint does it change?",
-            "code": (
-                "set_of(pouring_correction,"
-                " pouring_correction.has_correction_direction,"
-                " pouring_correction.has_recovery_mode,"
-                " pouring_correction.targets_setpoint)"
             ),
         },
     ]
