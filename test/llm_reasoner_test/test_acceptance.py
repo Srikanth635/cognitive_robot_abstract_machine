@@ -14,31 +14,8 @@ from krrood.utils import recursive_subclasses
 from llm_reasoner.acceptance.core import (
     AbsentEventHasNoObservation,
     ComponentsDeclared,
-    ContinuousPredictionComparesItsModality,
-    ControlledSetpointIsActive,
-    ControlPointComparesItsPredictions,
-    ControlPointPredictsItsEvent,
-    CorrectionAnswersClassifiedError,
     ErrorHasObservation,
-    EvidenceCompatible,
-    ExemptionNamesNormalBoundary,
-    ContinuousPredictionInMonitoredModality,
     MatchHasNoResponse,
-    MismatchInvokesCorrection,
-    ModelUpdateAnswersClassifiedError,
-    PermissionFitsTransition,
-    ToleranceMatchesTrajectory,
-    UpdatedEstimateIsHeld,
-    PhaseEndingsDistinct,
-    PhaseHasExtent,
-    PreconditionsGrounded,
-    RangeBoundsOrdered,
-    SafetyMarginOnOneParticipant,
-    SubgoalSignalledByPhaseEnd,
-    TransitionGateEndsSource,
-    TransitionGateStartsTarget,
-    TransitionIsNotALoop,
-    WindowBoundsOrdered,
 )
 from llm_reasoner.acceptance.derived import (
     DerivedRule,
@@ -46,29 +23,11 @@ from llm_reasoner.acceptance.derived import (
     RestrictionsHold,
     described,
 )
-from llm_reasoner.acceptance.gaze import (
-    FixationHeldUntilPhaseGoal,
-    FixationOnPhaseParticipant,
-)
 from llm_reasoner.acceptance.pouring import (
     MaterialFitsFlowDynamics,
     PouringEventsSpecific,
     PouringPhasesOrdered,
     TerminationReasonHasEvent,
-)
-from llm_reasoner.acceptance.prehension import (
-    AdjustmentPrecedesPredictedEvent,
-    PrehensionPhasesSpecific,
-    SafetyMarginOnCouplingResponse,
-)
-from llm_reasoner.acceptance.object_dynamics import (
-    CompositionDynamicsUsesItsCopy,
-    CompositionPredictsWithItsForwardModel,
-    DissociationCoherent,
-    EstimateServesOnePurpose,
-    RepresentationCoversEstimatedRoles,
-    RetainedUpdateInItsMemory,
-    TransferComparesMatchedPerturbations,
 )
 from llm_reasoner.acceptance.rules import AcceptanceRule, Severity
 from llm_reasoner.acceptance.shapes import ShapesHold, StructureShapes
@@ -132,6 +91,18 @@ def violated(fragments: list[DescriptionEntity]) -> set[tuple[int, ClassExpressi
 CORE_SHAPES = Namespace(PredictiveManipulationOntologyFile.CORE.shapes_namespace)
 """
 The namespace of the core module's structural rules.
+"""
+
+PREHENSION_SHAPES = Namespace(
+    PredictiveManipulationOntologyFile.PREHENSION.shapes_namespace
+)
+"""
+The namespace of the prehension module's structural rules.
+"""
+
+GAZE_SHAPES = Namespace(PredictiveManipulationOntologyFile.GAZE.shapes_namespace)
+"""
+The namespace of the gaze module's structural rules.
 """
 
 OBJECT_DYNAMICS_SHAPES = Namespace(
@@ -381,17 +352,21 @@ class TestCoreRules:
     """
 
     def test_rule_is_about_the_type_it_binds(self):
-        assert TransitionGateEndsSource().subject_type is core.PhaseTransition
+        assert ComponentsDeclared().subject_type is core.ActionPhaseStructure
 
     def test_inverted_magnitude_range_is_reported(self):
         inverted = core.MagnitudeRange(lower_bound=5.0, upper_bound=1.0)
         ordered = core.MagnitudeRange(lower_bound=1.0, upper_bound=5.0)
-        assert violators(RangeBoundsOrdered(), [inverted, ordered]) == [inverted]
+        assert shape_violators(CORE_SHAPES.RangeBoundsOrdered, [inverted, ordered]) == [
+            inverted
+        ]
 
     def test_inverted_temporal_window_is_reported(self):
         inverted = core.TemporalWindow(earliest_offset=300.0, latest_offset=100.0)
         ordered = core.TemporalWindow(earliest_offset=100.0, latest_offset=300.0)
-        assert violators(WindowBoundsOrdered(), [inverted, ordered]) == [inverted]
+        assert shape_violators(
+            CORE_SHAPES.WindowBoundsOrdered, [inverted, ordered]
+        ) == [inverted]
 
     def test_transition_gated_by_an_event_not_ending_its_source_is_reported(self):
         liftoff, contact = prehension.Liftoff(), prehension.GraspContact()
@@ -403,8 +378,8 @@ class TestCoreRules:
         gated_wrongly = core.PhaseTransition(
             from_phase=load, to_phase=lift, gated_by=[contact]
         )
-        assert violators(
-            TransitionGateEndsSource(), [gated_correctly, gated_wrongly]
+        assert shape_violators(
+            CORE_SHAPES.TransitionGateEndsSource, [gated_correctly, gated_wrongly]
         ) == [gated_wrongly]
 
     def test_transition_gated_by_an_event_not_starting_its_target_is_reported(self):
@@ -412,8 +387,8 @@ class TestCoreRules:
         lift = prehension.LiftPhase(initiated_by=[liftoff])
         gated_correctly = core.PhaseTransition(to_phase=lift, gated_by=[liftoff])
         gated_wrongly = core.PhaseTransition(to_phase=lift, gated_by=[clearance])
-        assert violators(
-            TransitionGateStartsTarget(), [gated_correctly, gated_wrongly]
+        assert shape_violators(
+            CORE_SHAPES.TransitionGateStartsTarget, [gated_correctly, gated_wrongly]
         ) == [gated_wrongly]
 
     def test_phase_started_and_ended_by_the_same_event_is_reported(self):
@@ -422,13 +397,13 @@ class TestCoreRules:
         extended = core.ActionPhase(
             initiated_by=[event], terminated_by=[core.PhaseBoundaryEventType()]
         )
-        assert violators(PhaseHasExtent(), [empty, extended]) == [empty]
+        assert shape_violators(CORE_SHAPES.PhaseHasExtent, [empty, extended]) == [empty]
 
     def test_transition_from_a_phase_to_itself_is_reported(self):
         phase, other = core.ActionPhase(), core.ActionPhase()
         loop = core.PhaseTransition(from_phase=phase, to_phase=phase)
         step = core.PhaseTransition(from_phase=phase, to_phase=other)
-        assert violators(TransitionIsNotALoop(), [loop, step]) == [loop]
+        assert shape_violators(CORE_SHAPES.TransitionIsNotALoop, [loop, step]) == [loop]
 
     def test_subgoal_signalled_by_an_event_not_ending_its_phase_is_reported(self):
         liftoff = prehension.Liftoff()
@@ -440,8 +415,9 @@ class TestCoreRules:
             aims_for=core.Subgoal(attainment_signalled_by=liftoff),
             terminated_by=[liftoff],
         )
-        assert violators(
-            SubgoalSignalledByPhaseEnd(), [signalled_elsewhere, signalled_at_end]
+        assert shape_violators(
+            CORE_SHAPES.SubgoalSignalledByPhaseEnd,
+            [signalled_elsewhere, signalled_at_end],
         ) == [signalled_elsewhere]
 
     def test_invariant_without_a_violation_event_is_reported(self):
@@ -481,9 +457,9 @@ class TestCoreRules:
             margin_on=prehension.GripForceSetpoint(parameter_on_role=[gripper]),
             margin_over=prehension.SlipThreshold(parameter_on_role=[gripper]),
         )
-        assert violators(SafetyMarginOnOneParticipant(), [mismatched, matched]) == [
-            mismatched
-        ]
+        assert shape_violators(
+            CORE_SHAPES.SafetyMarginOnOneParticipant, [mismatched, matched]
+        ) == [mismatched]
 
     def test_phase_realizing_the_task_it_belongs_to_is_reported(self):
         pouring_task = ConceptReference(
@@ -554,7 +530,9 @@ class TestCoreRules:
                 core.ActionPhase(terminated_by=[prehension.Touchdown()]),
             ]
         )
-        assert violators(PhaseEndingsDistinct(), [indistinct, distinct]) == [indistinct]
+        assert shape_violators(
+            CORE_SHAPES.PhaseEndingsDistinct, [indistinct, distinct]
+        ) == [indistinct]
 
     def test_precondition_no_phase_establishes_is_reported(self):
         carton_held = core.PhaseConditionType()
@@ -585,9 +563,9 @@ class TestCoreRules:
                 ),
             ]
         )
-        assert violators(PreconditionsGrounded(), [ungrounded, grounded]) == [
-            ungrounded
-        ]
+        assert shape_violators(
+            CORE_SHAPES.PreconditionsGrounded, [ungrounded, grounded]
+        ) == [ungrounded]
 
     def test_ungrounded_requirement_is_named_by_the_violation(self):
         requirement = core.ConditionRequirement(
@@ -598,7 +576,9 @@ class TestCoreRules:
         structure = core.ActionPhaseStructure(
             defines_phase=[core.ActionPhase(has_condition_requirement=[requirement])]
         )
-        (violation,) = PreconditionsGrounded().violations([structure])
+        (violation,) = ShapesHold(
+            checked_shapes=frozenset({CORE_SHAPES.PreconditionsGrounded})
+        ).violations([structure])
         assert violation.involved == (requirement,)
 
 
@@ -750,7 +730,9 @@ class TestComparisonRules:
             from_phase=source,
             permitted_by=[matching_comparison(confirms_subgoal=subgoal)],
         )
-        assert violators(PermissionFitsTransition(), [wrong, right]) == [wrong]
+        assert shape_violators(
+            CORE_SHAPES.PermissionFitsTransition, [wrong, right]
+        ) == [wrong]
 
     def test_permission_supplying_another_phases_state_is_reported(self):
         target = core.ActionPhase()
@@ -772,7 +754,9 @@ class TestComparisonRules:
                 )
             ],
         )
-        assert violators(PermissionFitsTransition(), [wrong, right]) == [wrong]
+        assert shape_violators(
+            CORE_SHAPES.PermissionFitsTransition, [wrong, right]
+        ) == [wrong]
 
     def test_update_of_an_estimate_its_representation_does_not_hold_is_reported(self):
         mass, friction = (
@@ -784,7 +768,9 @@ class TestComparisonRules:
             updates_representation=model, updates_estimate=[friction]
         )
         held = core.ModelUpdate(updates_representation=model, updates_estimate=[mass])
-        assert violators(UpdatedEstimateIsHeld(), [foreign, held]) == [foreign]
+        assert shape_violators(CORE_SHAPES.UpdatedEstimateIsHeld, [foreign, held]) == [
+            foreign
+        ]
 
     def test_control_point_prediction_caused_elsewhere_is_reported(self):
         liftoff = prehension.Liftoff()
@@ -798,9 +784,9 @@ class TestComparisonRules:
             at_event_type=liftoff,
             has_prediction=[core.SensoryEventPrediction(caused_by_event=liftoff)],
         )
-        assert violators(ControlPointPredictsItsEvent(), [elsewhere, here]) == [
-            elsewhere
-        ]
+        assert shape_violators(
+            CORE_SHAPES.ControlPointPredictsItsEvent, [elsewhere, here]
+        ) == [elsewhere]
 
     def test_control_point_comparing_an_undeclared_prediction_is_reported(self):
         declared = core.SensoryEventPrediction()
@@ -814,9 +800,9 @@ class TestComparisonRules:
             has_prediction=[declared],
             has_comparison=[matching_comparison(compares_prediction=declared)],
         )
-        assert violators(ControlPointComparesItsPredictions(), [foreign, own]) == [
-            foreign
-        ]
+        assert shape_violators(
+            CORE_SHAPES.ControlPointComparesItsPredictions, [foreign, own]
+        ) == [foreign]
 
     def test_correction_for_an_unclassified_error_is_reported(self):
         error = prediction_error(core.PredictionErrorKind.EARLY_EVENT)
@@ -834,9 +820,9 @@ class TestComparisonRules:
             has_prediction_error=[error],
             invokes_correction=[core.CorrectiveAction(triggered_by_error=[error])],
         )
-        assert violators(CorrectionAnswersClassifiedError(), [foreign, own]) == [
-            foreign
-        ]
+        assert shape_violators(
+            CORE_SHAPES.CorrectionAnswersClassifiedError, [foreign, own]
+        ) == [foreign]
 
     def test_model_update_for_an_unclassified_error_is_reported(self):
         error = prediction_error(core.PredictionErrorKind.EARLY_EVENT)
@@ -854,9 +840,9 @@ class TestComparisonRules:
             has_prediction_error=[error],
             produces_model_update=[core.ModelUpdate(triggered_by_error=[error])],
         )
-        assert violators(ModelUpdateAnswersClassifiedError(), [foreign, own]) == [
-            foreign
-        ]
+        assert shape_violators(
+            CORE_SHAPES.ModelUpdateAnswersClassifiedError, [foreign, own]
+        ) == [foreign]
 
     def test_control_point_without_mismatch_handling_is_reported(self):
         match_only = core.SensorimotorControlPoint(
@@ -900,9 +886,9 @@ class TestComparisonRules:
                 mismatching_comparison(invokes_correction=[core.CorrectiveAction()])
             ]
         )
-        assert violators(MismatchInvokesCorrection(), [uncorrected, corrected]) == [
-            uncorrected
-        ]
+        assert shape_violators(
+            CORE_SHAPES.MismatchInvokesCorrection, [uncorrected, corrected]
+        ) == [uncorrected]
 
     def test_comparison_of_different_modalities_is_reported(self):
         lip = core.ManipulationRole()
@@ -927,9 +913,9 @@ class TestComparisonRules:
                 observes_feature=feature,
             ),
         )
-        assert violators(EvidenceCompatible(), [incompatible, compatible]) == [
-            incompatible
-        ]
+        assert shape_violators(
+            CORE_SHAPES.EvidenceCompatible, [incompatible, compatible]
+        ) == [incompatible]
 
 
 class TestContinuousPredictionRules:
@@ -950,8 +936,8 @@ class TestContinuousPredictionRules:
                 has_modality=core.SensoryModality.VISUAL
             ),
         )
-        assert violators(
-            ContinuousPredictionComparesItsModality(), [mismatched, matched]
+        assert shape_violators(
+            CORE_SHAPES.ContinuousPredictionComparesItsModality, [mismatched, matched]
         ) == [mismatched]
 
     def test_tolerance_in_another_dimension_than_the_trajectory_is_reported(self):
@@ -966,9 +952,9 @@ class TestContinuousPredictionRules:
             predicts_trajectory=trajectory,
             has_tolerance=core.MagnitudeRange(has_unit=core.MeasurementUnit.NEWTON),
         )
-        assert violators(ToleranceMatchesTrajectory(), [mismatched, matched]) == [
-            mismatched
-        ]
+        assert shape_violators(
+            CORE_SHAPES.ToleranceMatchesTrajectory, [mismatched, matched]
+        ) == [mismatched]
 
     def test_phase_whose_controller_regulates_an_inactive_setpoint_is_reported(self):
         flow_rate = pouring.FlowRateSetpoint()
@@ -981,7 +967,9 @@ class TestContinuousPredictionRules:
         active = core.ActionPhase(
             controlled_by=controller, has_active_parameter=[flow_rate]
         )
-        assert violators(ControlledSetpointIsActive(), [inactive, active]) == [inactive]
+        assert shape_violators(
+            CORE_SHAPES.ControlledSetpointIsActive, [inactive, active]
+        ) == [inactive]
 
 
 class TestStructureControlRules:
@@ -1039,9 +1027,9 @@ class TestStructureControlRules:
                 core.BoundaryControlExemption(exempts_event=liftoff)
             ],
         )
-        assert violators(ExemptionNamesNormalBoundary(), [misplaced, placed]) == [
-            misplaced
-        ]
+        assert shape_violators(
+            CORE_SHAPES.ExemptionNamesNormalBoundary, [misplaced, placed]
+        ) == [misplaced]
 
     def test_fragment_reachable_but_not_declared_is_reported(self):
         subgoal = core.Subgoal()
@@ -1085,9 +1073,10 @@ class TestObjectDynamicsRules:
                 core.SensoryEventPrediction(generated_by=[forward_model])
             ],
         )
-        assert violators(CompositionPredictsWithItsForwardModel(), [foreign, own]) == [
-            foreign
-        ]
+        assert shape_violators(
+            OBJECT_DYNAMICS_SHAPES.CompositionPredictsWithItsForwardModel,
+            [foreign, own],
+        ) == [foreign]
 
     def test_composition_whose_dynamics_ignores_its_copy_is_reported(self):
         copy = object_dynamics.EfferenceCopy()
@@ -1101,9 +1090,9 @@ class TestObjectDynamicsRules:
                 uses_efference_copy=[copy]
             ),
         )
-        assert violators(CompositionDynamicsUsesItsCopy(), [ignoring, using]) == [
-            ignoring
-        ]
+        assert shape_violators(
+            OBJECT_DYNAMICS_SHAPES.CompositionDynamicsUsesItsCopy, [ignoring, using]
+        ) == [ignoring]
 
     def test_estimate_no_representation_holds_is_reported(self):
         mass = prehension.ExpectedMass()
@@ -1147,7 +1136,9 @@ class TestObjectDynamicsRules:
                 ),
             ]
         )
-        assert violators(EstimateServesOnePurpose(), [shared, separate]) == [shared]
+        assert shape_violators(
+            OBJECT_DYNAMICS_SHAPES.EstimateServesOnePurpose, [shared, separate]
+        ) == [shared]
 
     def test_dissociation_of_one_estimate_with_itself_is_reported(self):
         mass = prehension.ExpectedMass()
@@ -1168,7 +1159,9 @@ class TestObjectDynamicsRules:
             sensorimotor_estimate=mass,
             perceptual_estimate=perceived,
         )
-        assert violators(DissociationCoherent(), [same, distinct]) == [same]
+        assert shape_violators(
+            OBJECT_DYNAMICS_SHAPES.DissociationCoherent, [same, distinct]
+        ) == [same]
 
     def test_retained_update_outside_its_memory_is_reported(self):
         model = object_dynamics.ObjectDynamicsModel()
@@ -1182,7 +1175,9 @@ class TestObjectDynamicsRules:
                 stores_representation=[model]
             ),
         )
-        assert violators(RetainedUpdateInItsMemory(), [outside, inside]) == [outside]
+        assert shape_violators(
+            OBJECT_DYNAMICS_SHAPES.RetainedUpdateInItsMemory, [outside, inside]
+        ) == [outside]
 
     def test_transfer_between_unmatched_perturbations_is_reported(self):
         load = object_dynamics.PerturbationKind.LOAD_PERTURBATION
@@ -1196,8 +1191,9 @@ class TestObjectDynamicsRules:
         matched = object_dynamics.DynamicsTransfer(
             from_perturbation=second, to_perturbation=first
         )
-        assert violators(
-            TransferComparesMatchedPerturbations(), [unmatched, matched]
+        assert shape_violators(
+            OBJECT_DYNAMICS_SHAPES.TransferComparesMatchedPerturbations,
+            [unmatched, matched],
         ) == [unmatched]
 
     def test_representation_missing_a_role_its_estimates_concern_is_reported(self):
@@ -1207,8 +1203,9 @@ class TestObjectDynamicsRules:
         covered = object_dynamics.ObjectDynamicsModel(
             holds_estimate=[estimate], represents_role=[carton]
         )
-        assert violators(
-            RepresentationCoversEstimatedRoles(), [uncovered, covered]
+        assert shape_violators(
+            OBJECT_DYNAMICS_SHAPES.RepresentationCoversEstimatedRoles,
+            [uncovered, covered],
         ) == [uncovered]
 
 
@@ -1232,9 +1229,9 @@ class TestPrehensionRules:
             grip_force_response=grip,
             has_safety_margin=core.SafetyMargin(margin_on=grip),
         )
-        assert violators(SafetyMarginOnCouplingResponse(), [unrelated, related]) == [
-            unrelated
-        ]
+        assert shape_violators(
+            PREHENSION_SHAPES.SafetyMarginOnCouplingResponse, [unrelated, related]
+        ) == [unrelated]
 
     def test_adjustment_active_after_the_predicted_event_is_reported(self):
         flow_onset = pouring.FlowOnset()
@@ -1247,9 +1244,9 @@ class TestPrehensionRules:
         anticipatory = prehension.AnticipatoryGripAdjustment(
             triggered_by_prediction=prediction, adjustment_active_in=[tilt]
         )
-        assert violators(AdjustmentPrecedesPredictedEvent(), [late, anticipatory]) == [
-            late
-        ]
+        assert shape_violators(
+            PREHENSION_SHAPES.AdjustmentPrecedesPredictedEvent, [late, anticipatory]
+        ) == [late]
 
     def test_prehension_structure_with_a_generic_phase_is_reported(self):
         generic = prehension.PrehensionPhaseStructure(
@@ -1258,7 +1255,9 @@ class TestPrehensionRules:
         specific = prehension.PrehensionPhaseStructure(
             defines_phase=[prehension.LiftPhase()]
         )
-        assert violators(PrehensionPhasesSpecific(), [generic, specific]) == [generic]
+        assert shape_violators(
+            PREHENSION_SHAPES.PrehensionPhasesSpecific, [generic, specific]
+        ) == [generic]
 
 
 class TestPuttingDownBoundariesInTheOntology:
@@ -1504,7 +1503,10 @@ class TestFeedbackControlRule:
             monitors_modality=[core.SensoryModality.VISUAL],
         )
         assert (
-            violators(ContinuousPredictionInMonitoredModality(), [unpredicting]) == []
+            shape_violators(
+                CORE_SHAPES.ContinuousPredictionInMonitoredModality, [unpredicting]
+            )
+            == []
         )
 
     def test_feedback_controller_without_a_monitored_prediction_is_reported(self):
@@ -1526,8 +1528,8 @@ class TestFeedbackControlRule:
         feedforward = core.ActionPhaseController(
             has_regulation_mode=core.RegulationMode.FEEDFORWARD
         )
-        assert violators(
-            ContinuousPredictionInMonitoredModality(),
+        assert shape_violators(
+            CORE_SHAPES.ContinuousPredictionInMonitoredModality,
             [unmonitored, monitored, feedforward],
         ) == [unmonitored]
 
@@ -1549,7 +1551,9 @@ class TestGazeRules:
         held = gaze.GazeFixation(
             serves_phase=regulate, maintained_until=[volume_reached]
         )
-        assert violators(FixationHeldUntilPhaseGoal(), [early, held]) == [early]
+        assert shape_violators(
+            GAZE_SHAPES.FixationHeldUntilPhaseGoal, [early, held]
+        ) == [early]
 
     def test_fixation_on_a_participant_outside_its_phase_is_reported(self):
         bowl = core.ManipulationRole()
@@ -1558,9 +1562,9 @@ class TestGazeRules:
             serves_phase=regulate, fixates_role=core.ManipulationRole()
         )
         on_target = gaze.GazeFixation(serves_phase=regulate, fixates_role=bowl)
-        assert violators(FixationOnPhaseParticipant(), [elsewhere, on_target]) == [
-            elsewhere
-        ]
+        assert shape_violators(
+            GAZE_SHAPES.FixationOnPhaseParticipant, [elsewhere, on_target]
+        ) == [elsewhere]
 
 
 # %% structural rules

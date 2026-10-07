@@ -1,0 +1,67 @@
+@prefix :      <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/prehension#> .
+@prefix pre:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:    <http://www.w3.org/ns/shacl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+# Structural rules of the prehension module that relate several fragments to one
+# another, which OWL restrictions cannot state.
+
+<http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/prehension> a owl:Ontology ;
+    owl:versionInfo "0.1.0" ;
+    rdfs:comment "Closed-world structural rules of the prehension module."@en ;
+    sh:declare
+        [ sh:prefix "core" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#"^^xsd:anyURI ] ,
+        [ sh:prefix "pre" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#"^^xsd:anyURI ] ,
+        [ sh:prefix "rdf" ; sh:namespace "http://www.w3.org/1999/02/22-rdf-syntax-ns#"^^xsd:anyURI ] .
+
+# %% grip and load
+
+:SafetyMarginOnCouplingResponse a sh:NodeShape ;
+    sh:targetClass pre:GripLoadCoupling ;
+    rdfs:comment "A coupling's safety margin is kept on the coupling's grip-force response."@en ;
+    sh:sparql [
+        sh:message "has_safety_margin is kept on another grip force than grip_force_response" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/prehension> ;
+        sh:select """
+            SELECT $this WHERE {
+                $this pre:hasSafetyMargin ?margin ;
+                    pre:gripForceResponse ?grip .
+                FILTER NOT EXISTS { ?margin core:marginOn ?grip }
+            }
+        """ ;
+    ] .
+
+:AdjustmentPrecedesPredictedEvent a sh:NodeShape ;
+    sh:targetClass pre:AnticipatoryGripAdjustment ;
+    rdfs:comment "An anticipatory adjustment is active in a phase ending at the event its triggering prediction concerns."@en ;
+    sh:sparql [
+        sh:message "adjustment_active_in names no phase ending at the predicted event" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/prehension> ;
+        sh:select """
+            SELECT $this WHERE {
+                $this pre:triggeredByPrediction/core:causedByEvent ?event .
+                FILTER NOT EXISTS {
+                    $this pre:adjustmentActiveIn ?phase .
+                    ?phase core:terminatedBy ?event .
+                }
+            }
+        """ ;
+    ] .
+
+# %% classification
+
+:PrehensionPhasesSpecific a sh:NodeShape ;
+    sh:targetClass pre:PrehensionPhaseStructure ;
+    rdfs:comment "Every phase of a prehension structure is of a kind more specific than a plain phase. A prehension structure classifies every phase by its most specific kind; a plain phase discards what the prehension vocabulary says about grasping, lifting, transporting, replacing or releasing."@en ;
+    sh:sparql [
+        sh:message "a phase is a plain ActionPhase rather than a specific kind of phase" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/prehension> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this core:definesPhase ?value .
+                ?value rdf:type core:ActionPhase .
+            }
+        """ ;
+    ] .

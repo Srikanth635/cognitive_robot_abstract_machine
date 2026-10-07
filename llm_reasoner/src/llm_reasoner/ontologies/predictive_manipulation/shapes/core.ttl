@@ -3,25 +3,138 @@
 @prefix owl:   <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh:    <http://www.w3.org/ns/shacl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 
 # Structural rules of the core module that relate several fragments to one another, which
 # OWL restrictions cannot state. Each shape's comment is shown to the language model; its
-# message states what is wrong with the fragment at fault; the fragment it concerns is
+# message states what is wrong with the fragment at fault, and the fragment it concerns is
 # reported beside it.
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> a owl:Ontology ;
-    owl:versionInfo "0.1.0" ;
-    rdfs:comment "Closed-world structural rules of the core predictive manipulation module."@en .
+    owl:versionInfo "0.2.0" ;
+    rdfs:comment "Closed-world structural rules of the core predictive manipulation module."@en ;
+    sh:declare
+        [ sh:prefix "core" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#"^^xsd:anyURI ] ,
+        [ sh:prefix "aicor" ; sh:namespace "http://aicor.knowledge/l2-ontology.owl#"^^xsd:anyURI ] ,
+        [ sh:prefix "rdf" ; sh:namespace "http://www.w3.org/1999/02/22-rdf-syntax-ns#"^^xsd:anyURI ] ,
+        [ sh:prefix "rdfs" ; sh:namespace "http://www.w3.org/2000/01/rdf-schema#"^^xsd:anyURI ] .
+
+# %% quantities
+
+:RangeBoundsOrdered a sh:NodeShape ;
+    sh:targetClass core:MagnitudeRange ;
+    rdfs:comment "The lower bound of a magnitude range does not exceed its upper bound. An inverted interval is not a range. OWL cannot compare two data values, so only a rule can catch it."@en ;
+    sh:sparql [
+        sh:message "lower_bound exceeds upper_bound" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT $this WHERE {
+                $this core:lowerBound ?lower ;
+                    core:upperBound ?upper .
+                FILTER (?lower > ?upper)
+            }
+        """ ;
+    ] .
+
+:WindowBoundsOrdered a sh:NodeShape ;
+    sh:targetClass core:TemporalWindow ;
+    rdfs:comment "The earliest offset of a temporal window does not exceed its latest offset. A timing window cannot finish before it begins."@en ;
+    sh:sparql [
+        sh:message "earliest_offset exceeds latest_offset" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT $this WHERE {
+                $this core:earliestOffset ?earliest ;
+                    core:latestOffset ?latest .
+                FILTER (?earliest > ?latest)
+            }
+        """ ;
+    ] .
+
+# %% transitions
+
+:TransitionGateEndsSource a sh:NodeShape ;
+    sh:targetClass core:PhaseTransition ;
+    rdfs:comment "Every event gating a transition terminates the phase the transition leaves. A transition must fire on an event that ends the phase it leaves; otherwise the controller would switch phases while the current one is still running."@en ;
+    sh:sparql [
+        sh:message "gated_by names an event that does not terminate from_phase" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this core:fromPhase ?source ;
+                    core:gatedBy ?value .
+                FILTER NOT EXISTS { ?source core:terminatedBy ?value }
+            }
+        """ ;
+    ] .
+
+:TransitionGateStartsTarget a sh:NodeShape ;
+    sh:targetClass core:PhaseTransition ;
+    rdfs:comment "Every event gating a transition initiates the phase it enters, when that phase names its initiating events. A transition into a phase that names its initiating events must fire on one of them."@en ;
+    sh:sparql [
+        sh:message "gated_by names an event that does not initiate to_phase" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this core:toPhase ?target ;
+                    core:gatedBy ?value .
+                FILTER EXISTS { ?target core:initiatedBy ?initiating }
+                FILTER NOT EXISTS { ?target core:initiatedBy ?value }
+            }
+        """ ;
+    ] .
+
+:TransitionIsNotALoop a sh:NodeShape ;
+    sh:targetClass core:PhaseTransition ;
+    rdfs:comment "A transition leaves a phase other than the one it enters. A transition from a phase to itself does not move the task on."@en ;
+    sh:sparql [
+        sh:message "from_phase and to_phase are the same phase" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this core:fromPhase ?value ;
+                    core:toPhase ?value .
+            }
+        """ ;
+    ] .
 
 # %% phase sequence
+
+:PhaseHasExtent a sh:NodeShape ;
+    sh:targetClass core:ActionPhase ;
+    rdfs:comment "No event both initiates and terminates the same phase. A phase begun and ended by the same event has no extent."@en ;
+    sh:sparql [
+        sh:message "an event both initiates and terminates the phase" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this core:initiatedBy ?value ;
+                    core:terminatedBy ?value .
+            }
+        """ ;
+    ] .
+
+:SubgoalSignalledByPhaseEnd a sh:NodeShape ;
+    sh:targetClass core:ActionPhase ;
+    rdfs:comment "The event signalling a phase's subgoal is one of the phase's terminating events. A phase's subgoal must be signalled by one of the phase's own terminating events; that is what makes a boundary event a control point."@en ;
+    sh:sparql [
+        sh:message "aims_for is signalled by an event that does not terminate the phase" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this core:aimsFor/core:attainmentSignalledBy ?value .
+                FILTER NOT EXISTS { $this core:terminatedBy ?value }
+            }
+        """ ;
+    ] .
 
 :TaskIsNotItsOwnPhase a sh:NodeShape ;
     sh:targetClass core:ActionPhaseStructure ;
     rdfs:comment "No phase of a structure realizes the task the structure decomposes: a phase is a part of the task, not the task itself."@en ;
     sh:sparql [
         sh:message "a phase realizes the task the structure decomposes" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
         sh:select """
-            PREFIX core: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#>
             SELECT $this ?value WHERE {
                 $this core:decomposesTask ?task ;
                     core:definesPhase ?value .
@@ -35,8 +148,8 @@
     rdfs:comment "Exactly one phase of a structure has no transition of the structure leading into it: the phase the action starts with. Two entry phases would leave the controller unable to tell where to begin."@en ;
     sh:sparql [
         sh:message "has no entry phase: a transition leads into every phase" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
         sh:select """
-            PREFIX core: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#>
             SELECT $this WHERE {
                 FILTER NOT EXISTS {
                     $this core:definesPhase ?entry .
@@ -51,8 +164,8 @@
         """ ;
     ] , [
         sh:message "has several entry phases: no transition leads into this one or into another" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
         sh:select """
-            PREFIX core: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#>
             SELECT $this ?value WHERE {
                 $this core:definesPhase ?value , ?other .
                 FILTER (?value != ?other)
@@ -77,8 +190,8 @@
     rdfs:comment "The transitions of a structure connect all its phases: every phase is reached from, or leads to, the others. An unconnected phase is never reached."@en ;
     sh:sparql [
         sh:message "a phase is not connected to the other phases by transitions" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
         sh:select """
-            PREFIX core: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#>
             SELECT $this ?value WHERE {
                 $this core:definesPhase ?anchor , ?value .
                 FILTER NOT EXISTS {
@@ -93,17 +206,263 @@
         """ ;
     ] .
 
-# %% control
+:PhaseEndingsDistinct a sh:NodeShape ;
+    sh:targetClass core:ActionPhaseStructure ;
+    sh:severity sh:Warning ;
+    rdfs:comment "No two phases of a structure end at the same events. Two phases ending at the same events cannot be told apart by the controller, which usually means one of them was duplicated."@en ;
+    sh:sparql [
+        sh:message "two phases end at the same events" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this core:definesPhase ?value , ?other .
+                FILTER (?value != ?other)
+                FILTER EXISTS { ?value core:terminatedBy ?ending }
+                FILTER NOT EXISTS {
+                    ?value core:terminatedBy ?event .
+                    FILTER NOT EXISTS { ?other core:terminatedBy ?event }
+                }
+                FILTER NOT EXISTS {
+                    ?other core:terminatedBy ?event .
+                    FILTER NOT EXISTS { ?value core:terminatedBy ?event }
+                }
+            }
+        """ ;
+    ] .
+
+:PreconditionsGrounded a sh:NodeShape ;
+    sh:targetClass core:ActionPhaseStructure ;
+    sh:severity sh:Warning ;
+    rdfs:comment "Every condition a phase requires at entry or throughout is established within the structure, or declared an assumption about the world."@en ;
+    sh:sparql [
+        sh:message "a required condition is neither established by a phase nor assumed" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT DISTINCT $this ?value WHERE {
+                $this core:definesPhase ?requiring .
+                ?requiring core:hasConditionRequirement ?value .
+                ?value core:hasConditionMode ?mode ;
+                    core:hasConditionPolarity core:MustHold .
+                FILTER (?mode IN (core:AtEntry, core:Throughout))
+                FILTER NOT EXISTS { ?value core:isWorldAssumption true }
+                FILTER NOT EXISTS {
+                    ?value aicor:hasConditionType ?condition .
+                    $this core:definesPhase ?establishing .
+                    {
+                        ?establishing core:aimsFor/core:targetsCondition ?condition .
+                    } UNION {
+                        ?establishing core:initiatedBy|core:terminatedBy ?event .
+                        ?event aicor:initiatesStateType ?condition .
+                    } UNION {
+                        ?establishing core:hasConditionRequirement ?exit .
+                        ?exit core:hasConditionMode core:AtExit ;
+                            core:hasConditionPolarity core:MustHold ;
+                            aicor:hasConditionType ?condition .
+                    }
+                }
+            }
+        """ ;
+    ] .
+
+:SafetyMarginOnOneParticipant a sh:NodeShape ;
+    sh:targetClass core:SafetyMargin ;
+    sh:severity sh:Warning ;
+    rdfs:comment "The setpoint and the threshold a safety margin relates concern a common participant. A safety margin relates a setpoint to a threshold of the same participant; one relating different participants is not a margin."@en ;
+    sh:sparql [
+        sh:message "margin_on and margin_over concern different participants" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT $this WHERE {
+                $this core:marginOn ?setpoint ;
+                    core:marginOver ?threshold .
+                FILTER NOT EXISTS {
+                    ?setpoint core:parameterOnRole ?role .
+                    ?threshold core:parameterOnRole ?role .
+                }
+            }
+        """ ;
+    ] .
+
+# %% comparisons
+
+:PermissionFitsTransition a sh:NodeShape ;
+    sh:targetClass core:PhaseTransition ;
+    rdfs:comment "A comparison permitting a transition confirms only the source phase's subgoal and supplies only the target phase's initial state."@en ;
+    sh:sparql [
+        sh:message "permitted_by confirms another phase's subgoal" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this core:fromPhase ?source ;
+                    core:permittedBy ?value .
+                ?value core:confirmsSubgoal ?subgoal .
+                FILTER NOT EXISTS { ?source core:aimsFor ?subgoal }
+            }
+        """ ;
+    ] , [
+        sh:message "permitted_by supplies another phase's initial state" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this core:permittedBy ?value .
+                ?value core:suppliesStateEstimate ?estimate .
+                FILTER (EXISTS { ?estimate core:forPhase ?any } || EXISTS { $this core:toPhase ?target })
+                FILTER NOT EXISTS {
+                    ?estimate core:forPhase ?entered .
+                    $this core:toPhase ?entered .
+                }
+            }
+        """ ;
+    ] .
+
+:CorrectionAnswersClassifiedError a sh:NodeShape ;
+    sh:targetClass core:PredictionComparison ;
+    rdfs:comment "The corrections a comparison invokes are triggered by errors it classifies."@en ;
+    sh:sparql [
+        sh:message "invokes a correction triggered by an error the comparison does not classify" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT DISTINCT $this ?value WHERE {
+                $this core:invokesCorrection ?value .
+                ?value core:triggeredByError ?error .
+                FILTER NOT EXISTS { $this core:hasPredictionError ?error }
+            }
+        """ ;
+    ] .
+
+:ModelUpdateAnswersClassifiedError a sh:NodeShape ;
+    sh:targetClass core:PredictionComparison ;
+    rdfs:comment "The model updates a comparison produces are triggered by errors it classifies."@en ;
+    sh:sparql [
+        sh:message "produces a model update triggered by an error the comparison does not classify" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT DISTINCT $this ?value WHERE {
+                $this core:producesModelUpdate ?value .
+                ?value core:triggeredByError ?error .
+                FILTER NOT EXISTS { $this core:hasPredictionError ?error }
+            }
+        """ ;
+    ] .
+
+:EvidenceCompatible a sh:NodeShape ;
+    sh:targetClass core:PredictionComparison ;
+    rdfs:comment "A comparison's prediction and observation share modality, participants and the event or feature they concern, unless the error is an unexpected event."@en ;
+    sh:sparql [
+        sh:message "compares a prediction and an observation of different evidence" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT DISTINCT $this WHERE {
+                $this core:comparesPrediction ?prediction ;
+                    core:comparesObservation ?observation .
+                OPTIONAL { ?prediction core:hasModality ?predicted }
+                OPTIONAL { ?observation core:hasModality ?observed }
+                FILTER (
+                    BOUND(?predicted) != BOUND(?observed)
+                    || (BOUND(?predicted) && ?predicted != ?observed)
+                    || EXISTS {
+                        ?prediction core:expectedOnRole ?role .
+                        FILTER NOT EXISTS { ?observation core:observedOnRole ?role }
+                    }
+                    || EXISTS {
+                        ?observation core:observedOnRole ?observedRole .
+                        FILTER NOT EXISTS { ?prediction core:expectedOnRole ?observedRole }
+                    }
+                    || (
+                        NOT EXISTS { $this core:hasPredictionError/core:hasErrorKind core:UnexpectedEvent }
+                        && (
+                            EXISTS {
+                                ?prediction core:predictsEvent ?event .
+                                FILTER NOT EXISTS { ?observation core:observesEvent ?event }
+                            }
+                            || (
+                                NOT EXISTS { ?prediction core:predictsEvent ?anyEvent }
+                                && EXISTS {
+                                    ?prediction core:predictsFeature ?feature .
+                                    FILTER NOT EXISTS { ?observation core:observesFeature ?feature }
+                                }
+                            )
+                        )
+                    )
+                )
+            }
+        """ ;
+    ] .
+
+:UpdatedEstimateIsHeld a sh:NodeShape ;
+    sh:targetClass core:ModelUpdate ;
+    rdfs:comment "A model update changes only estimates its representation holds."@en ;
+    sh:sparql [
+        sh:message "updates_estimate names an estimate updates_representation does not hold" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this core:updatesRepresentation ?representation ;
+                    core:updatesEstimate ?value .
+                FILTER NOT EXISTS { ?representation core:holdsEstimate ?value }
+            }
+        """ ;
+    ] .
+
+# %% control points
+
+:ControlPointPredictsItsEvent a sh:NodeShape ;
+    sh:targetClass core:SensorimotorControlPoint ;
+    rdfs:comment "Every prediction of a control point is caused by the event it sits at."@en ;
+    sh:sparql [
+        sh:message "has_prediction names a prediction caused by another event than at_event_type" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this core:atEventType ?event ;
+                    core:hasPrediction ?value .
+                ?value core:causedByEvent ?cause .
+                FILTER (?cause != ?event)
+            }
+        """ ;
+    ] .
+
+:ControlPointComparesItsPredictions a sh:NodeShape ;
+    sh:targetClass core:SensorimotorControlPoint ;
+    rdfs:comment "Every comparison of a control point compares one of the control point's predictions. A control point compares only predictions it declares."@en ;
+    sh:sparql [
+        sh:message "has_comparison compares a prediction the control point does not declare" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this core:hasComparison ?value .
+                ?value core:comparesPrediction ?prediction .
+                FILTER NOT EXISTS { $this core:hasPrediction ?prediction }
+            }
+        """ ;
+    ] .
+
+:MismatchInvokesCorrection a sh:NodeShape ;
+    sh:targetClass core:SensorimotorControlPoint ;
+    sh:severity sh:Warning ;
+    rdfs:comment "A control point handling mismatches invokes a correction for at least one of them. A control point's mismatch handling should name a corrective response, not only a model update."@en ;
+    sh:sparql [
+        sh:message "mismatch handling names no corrective response" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT $this WHERE {
+                FILTER EXISTS { $this core:hasComparison/core:hasComparisonOutcome core:Mismatch }
+                FILTER NOT EXISTS {
+                    $this core:hasComparison ?comparison .
+                    ?comparison core:hasComparisonOutcome core:Mismatch ;
+                        core:invokesCorrection ?correction .
+                }
+            }
+        """ ;
+    ] .
 
 :MechanicalBoundaryMonitored a sh:NodeShape ;
     sh:targetClass core:ActionPhaseStructure ;
     rdfs:comment "Every mechanical event ending a phase, other than a failure, has a control point of the structure at it or an exemption naming it: mechanical boundaries are where predicted and actual signals are compared."@en ;
     sh:sparql [
         sh:message "an event ending a phase has neither a control point nor an exemption" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
         sh:select """
-            PREFIX core: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#>
-            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             SELECT DISTINCT $this ?value WHERE {
                 $this core:definesPhase ?phase .
                 ?phase core:terminatedBy ?value .
@@ -116,6 +475,94 @@
                 FILTER NOT EXISTS {
                     $this core:definesControlPointExemption ?exemption .
                     ?exemption core:exemptsEvent ?value .
+                }
+            }
+        """ ;
+    ] .
+
+:ExemptionNamesNormalBoundary a sh:NodeShape ;
+    sh:targetClass core:ActionPhaseStructure ;
+    rdfs:comment "Every control point exemption names an event ending one of the structure's phases that is not a failure."@en ;
+    sh:sparql [
+        sh:message "an exemption names an event that is not a normal phase boundary" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this core:definesControlPointExemption ?value .
+                FILTER NOT EXISTS {
+                    ?value core:exemptsEvent ?event .
+                    $this core:definesPhase ?phase .
+                    ?phase core:terminatedBy ?event .
+                    FILTER NOT EXISTS { ?event rdf:type/rdfs:subClassOf* core:FailureEventType }
+                }
+            }
+        """ ;
+    ] .
+
+# %% continuous control
+
+:ContinuousPredictionComparesItsModality a sh:NodeShape ;
+    sh:targetClass core:ContinuousSignalPrediction ;
+    rdfs:comment "A continuous prediction is compared with an observation in its own modality."@en ;
+    sh:sparql [
+        sh:message "compared_with is an observation in another modality" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this core:comparedWith ?value ;
+                    core:hasModality ?modality .
+                OPTIONAL { ?value core:hasModality ?observed }
+                FILTER (!BOUND(?observed) || ?observed != ?modality)
+            }
+        """ ;
+    ] .
+
+:ToleranceMatchesTrajectory a sh:NodeShape ;
+    sh:targetClass core:ContinuousSignalPrediction ;
+    rdfs:comment "A continuous prediction's tolerance is measured in the dimension of its trajectory's range. A tolerance bounds a trajectory only in the trajectory's own physical dimension."@en ;
+    sh:sparql [
+        sh:message "has_tolerance is measured in another dimension than the trajectory" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT $this WHERE {
+                $this core:predictsTrajectory/core:hasExpectedRange/core:hasUnit ?rangeUnit ;
+                    core:hasTolerance/core:hasUnit ?toleranceUnit .
+                ?rangeUnit core:measuresDimension ?rangeDimension .
+                ?toleranceUnit core:measuresDimension ?toleranceDimension .
+                FILTER (?rangeDimension != ?toleranceDimension)
+            }
+        """ ;
+    ] .
+
+:ControlledSetpointIsActive a sh:NodeShape ;
+    sh:targetClass core:ActionPhase ;
+    rdfs:comment "A setpoint regulated by a continuous prediction of a phase's controller is active in that phase."@en ;
+    sh:sparql [
+        sh:message "the controller regulates a setpoint that is not an active parameter" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT DISTINCT $this ?value WHERE {
+                $this core:controlledBy/core:hasContinuousPrediction/core:controlsSetpoint ?value .
+                FILTER NOT EXISTS { $this core:hasActiveParameter ?value }
+            }
+        """ ;
+    ] .
+
+:ContinuousPredictionInMonitoredModality a sh:NodeShape ;
+    sh:targetClass core:ActionPhaseController ;
+    rdfs:comment "A feedback-regulated controller with continuous predictions has one in a modality it monitors. A controller regulating from sensory feedback compares a continuous prediction in a modality it monitors; otherwise it has no control law. Having a continuous prediction at all is required by the ontology."@en ;
+    sh:sparql [
+        sh:message "has no continuous prediction in a modality it monitors" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> ;
+        sh:select """
+            SELECT $this WHERE {
+                $this core:hasRegulationMode ?mode .
+                FILTER (?mode IN (core:ContinuousFeedback, core:Hybrid))
+                FILTER EXISTS { $this core:hasContinuousPrediction ?prediction }
+                FILTER NOT EXISTS {
+                    $this core:hasContinuousPrediction ?monitored ;
+                        core:monitorsModality ?modality .
+                    ?monitored core:hasModality ?modality .
                 }
             }
         """ ;
