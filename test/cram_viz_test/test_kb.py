@@ -23,6 +23,8 @@ from cram_viz import hypothesis_knowledge  # noqa: E402
 from cram_viz.hypothesis_knowledge.ontology_backing import (  # noqa: E402
     OntologyBacking,
 )
+from llm_reasoner.ontologies import CRAM_AICOR_NAMESPACE  # noqa: E402
+from llm_reasoner.ontologies.terms import ConceptReference  # noqa: E402
 
 
 @pytest.fixture()
@@ -1058,6 +1060,18 @@ class TestHypothesisKnowledgeQueries:
                 preset["text"]
             )
 
+    def test_hypothesis_graph_presets_answer_in_readable_values(self, fixture_scene):
+        kb.reset_kb()
+        for preset in kb._hypothesis_graph_presets(kb.get_kb()):
+            cells = [
+                str(value)
+                for row in kb.run_query(preset["code"])["rows"]
+                for value in row.values()
+            ]
+            assert not [
+                cell for cell in cells if "MonitoredList(" in cell or "://" in cell
+            ], preset["text"]
+
     def test_hypothesis_graph_presets_are_included_in_get_presets(self, fixture_scene):
         kb.reset_kb()
         preset_codes = {preset["code"] for preset in kb.get_presets()}
@@ -1065,6 +1079,65 @@ class TestHypothesisKnowledgeQueries:
             preset["code"] for preset in kb._hypothesis_graph_presets(kb.get_kb())
         }
         assert hypothesis_preset_codes <= preset_codes
+
+
+@pytest.mark.usefixtures("sample_hypothesis_knowledge")
+class TestHypothesisAnswerRendering:
+    def test_a_list_of_fragments_renders_their_names(self, fixture_scene):
+        events = next(
+            phase.initiated_by
+            for phase in structure().defines_phase
+            if phase.initiated_by
+        )
+        assert kb._jsonable(events) == [kb._entity_name(event) for event in events]
+
+    def test_an_enumerated_value_renders_as_its_prefixed_term(self):
+        member = core.CouplingRegime.COUPLED
+        assert kb._jsonable(member) == OntologyBacking().prefixed(member.value)
+
+    def test_a_concept_renders_as_its_prefixed_term(self):
+        concept = ConceptReference(iri=CRAM_AICOR_NAMESPACE + "Pouring")
+        assert kb._jsonable(concept) == OntologyBacking().prefixed(concept.iri)
+
+    def test_fragments_in_a_combined_answer_highlight_their_graph_nodes(
+        self, fixture_scene
+    ):
+        kb.reset_kb()
+        result = kb.run_query(
+            "set_of(pouring_transition.from_phase, pouring_transition.to_phase)"
+        )
+        assert {
+            hypothesis_knowledge.node_identifier_for(phase)
+            for transition in structure().defines_transition
+            for phase in (transition.from_phase, transition.to_phase)
+        } <= set(result["highlight"])
+
+
+@pytest.mark.usefixtures("sample_hypothesis_knowledge")
+class TestHypothesisQueryVariables:
+    def test_phases_are_answered_in_the_order_they_run(self, fixture_scene):
+        kb.reset_kb()
+        result = kb.run_query("an(entity(pouring_phase))")
+        assert [row["__entity__"] for row in result["rows"]] == [
+            kb._entity_name(phase)
+            for phase in hypothesis_knowledge.active().view.phases()
+        ]
+
+    @pytest.mark.parametrize(
+        "variable, fragments",
+        [
+            ("pouring_parameter", lambda root: root.defines_parameter),
+            ("pouring_sensory_prediction", lambda root: root.defines_prediction),
+            ("pouring_comparison", lambda root: root.defines_comparison),
+            ("pouring_correction", lambda root: root.defines_correction),
+            ("pouring_gaze_fixation", lambda root: root.defines_gaze_fixation),
+        ],
+    )
+    def test_structure_knowledge_is_queryable(self, fixture_scene, variable, fragments):
+        kb.reset_kb()
+        result = kb.run_query("an(entity(%s))" % variable)
+        assert result["ok"] and fragments(structure())
+        assert row_names(result) == entity_names(fragments(structure()))
 
 
 # %% the Designator tab
