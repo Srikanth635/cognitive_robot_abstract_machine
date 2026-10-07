@@ -19,7 +19,7 @@ from llm_reasoner.generation.schema import (
     GenerationSchema,
     TypeSchema,
 )
-from llm_reasoner.generation.wire import CONCEPT_PREFIXES
+from llm_reasoner.generation.wire import prefixed_name
 from llm_reasoner.ontologies.terms import ConceptReference
 
 SYSTEM_PROMPT = """\
@@ -44,8 +44,10 @@ How to answer:
 - A type marked "Defined" is met by its fields: a fragment of another type that states
   what the definition requires belongs to it as well. An estimate whose physical
   dimension is a force rate is therefore also a force rate parameter.
-- Enumeration fields take the member name. Concept fields take a prefixed term such as
-  aicor:Pouring.
+- Enumeration fields take the member name. Concept fields take a prefixed term:
+  aicor:<Name> or dul:<Name> for a term CRAM-AICOR or DUL declares, such as
+  aicor:Pouring, and hypothesis:<Name> for a concept they lack, such as a category of
+  grasp. Never invent an aicor: or dul: term.
 - Leave out a field you cannot fill rather than writing null.
 
 Answer with the JSON object only, without prose or code fences.
@@ -60,10 +62,7 @@ def written_value(value: Any) -> str:
     :return: A fixed value as the model writes it.
     """
     if isinstance(value, ConceptReference):
-        for prefix, namespace in CONCEPT_PREFIXES.items():
-            if value.iri.startswith(namespace):
-                return f"{prefix}:{value.iri[len(namespace):]}"
-        return value.iri
+        return prefixed_name(value.iri)
     if isinstance(value, Enum):
         return value.name
     if isinstance(value, (list, tuple)):
@@ -80,7 +79,10 @@ def field_hint(field_schema: FieldSchema) -> str:
     elif field_schema.kind == FieldKind.ENUMERATION:
         hint = "one of " + " | ".join(field_schema.options)
     elif field_schema.kind == FieldKind.CONCEPT:
-        hint = "a prefixed term such as aicor:Pouring"
+        hint = (
+            "a prefixed term: aicor:<Name> or dul:<Name> that CRAM-AICOR or DUL "
+            "declares, or hypothesis:<Name> for a concept they lack"
+        )
     else:
         hint = f"a {field_schema.kind}"
     return f"list of {hint}" if field_schema.many else hint

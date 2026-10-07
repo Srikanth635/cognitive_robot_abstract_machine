@@ -20,7 +20,7 @@ from llm_reasoner.admission.hermit import HermitCheck
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.generation.backend import HypothesisRejected
 from llm_reasoner.hypotheses.view import HypothesisView
-from llm_reasoner.ontologies import LinkedOntologyVariable
+from llm_reasoner.ontologies import CRAM_AICOR_NAMESPACE, LinkedOntologyVariable
 from llm_reasoner.ontologies.predictive_manipulation import pouring
 
 from cram_viz import hypothesis_knowledge
@@ -35,6 +35,14 @@ from cram_viz.hypothesis_knowledge.generation import (
 INSTRUCTION = "pour milk from the carton into the bowl"
 """
 The instruction the tests generate for.
+"""
+
+LINKED_EXCERPTS = [
+    Path(__file__).parents[1] / "llm_reasoner_test" / "linked_ontology_cases" / name
+    for name in ("cram_aicor_excerpt.ttl", "dul_excerpt.owl")
+]
+"""
+Excerpts of CRAM-AICOR and DUL declaring a few terms.
 """
 
 SCRIPTED_ANSWER = (
@@ -146,15 +154,20 @@ class TestModelHypothesisSource:
     def test_open_world_check_is_configured_from_the_environment(
         self, monkeypatch, tmp_path
     ):
-        for variable in LinkedOntologyVariable:
-            monkeypatch.setenv(variable, str(tmp_path / variable.lower()))
+        for variable, path in zip(LinkedOntologyVariable, LINKED_EXCERPTS):
+            monkeypatch.setenv(variable, str(path))
         source = ModelHypothesisSource(
             store_directory=tmp_path, client=ScriptedClient()
         )
         assert isinstance(source.consistency, HermitCheck)
 
-
-# %% credentials
+    def test_linked_terms_are_read_from_the_environment(self, monkeypatch, tmp_path):
+        for variable, path in zip(LinkedOntologyVariable, LINKED_EXCERPTS):
+            monkeypatch.setenv(variable, str(path))
+        source = ModelHypothesisSource(
+            store_directory=tmp_path, client=ScriptedClient(), consistency=None
+        )
+        assert source.linked_terms.declares(CRAM_AICOR_NAMESPACE + "Grasping")
 
 
 class TestModelHypothesisSourceCredentials:

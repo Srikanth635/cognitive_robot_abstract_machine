@@ -8,7 +8,6 @@ run through its command line, which reports an inconsistent ontology by name.
 from __future__ import annotations
 
 import importlib.util
-import os
 import subprocess
 import tempfile
 from dataclasses import dataclass
@@ -21,10 +20,8 @@ from typing_extensions import Optional, Sequence
 
 from llm_reasoner.admission.consistency import ConsistencyCheck
 from llm_reasoner.exceptions import LLMReasonerError
-from llm_reasoner.ontologies import (
-    LinkedOntologyVariable,
-    PredictiveManipulationOntologyFile,
-)
+from llm_reasoner.ontologies import PredictiveManipulationOntologyFile
+from llm_reasoner.ontologies.linked import OntologyFiles
 
 # %% constants
 
@@ -64,12 +61,6 @@ HERMIT_SUBDIRECTORY = "hermit"
 """
 The directory of HermiT inside that package.
 """
-
-RDF_XML_SUFFIXES = (".owl", ".rdf", ".xml")
-"""
-The file suffixes of ontologies written in RDF/XML rather than Turtle.
-"""
-
 
 # %% exceptions
 
@@ -126,8 +117,8 @@ class HermitCheck(ConsistencyCheck):
         :return: A check against the microworld and the linked ontologies the
             environment names, or ``None`` when it does not name all of them.
         """
-        linked = [os.environ.get(variable) for variable in LinkedOntologyVariable]
-        if not all(linked):
+        linked = OntologyFiles.linked_from_environment()
+        if linked is None:
             return None
         return cls(
             background_files=[
@@ -135,7 +126,7 @@ class HermitCheck(ConsistencyCheck):
                     module_file.path
                     for module_file in PredictiveManipulationOntologyFile
                 ),
-                *(Path(location) for location in linked),
+                *linked.paths,
             ]
         )
 
@@ -156,11 +147,7 @@ class HermitCheck(ConsistencyCheck):
         Every background file in one graph, without its imports, which are resolved
         by listing the imported files themselves.
         """
-        graph = Graph()
-        for path in self.background_files:
-            graph.parse(
-                path, format="xml" if path.suffix in RDF_XML_SUFFIXES else "turtle"
-            )
+        graph = OntologyFiles(paths=self.background_files).graph()
         graph.remove((None, OWL.imports, None))
         return graph
 

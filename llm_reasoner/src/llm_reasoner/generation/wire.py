@@ -24,7 +24,12 @@ from llm_reasoner.generation.schema import (
     FieldSchema,
     GenerationSchema,
 )
-from llm_reasoner.ontologies import CRAM_AICOR_NAMESPACE, DUL_NAMESPACE
+from llm_reasoner.ontologies import (
+    CRAM_AICOR_NAMESPACE,
+    DUL_NAMESPACE,
+    HYPOTHESIS_CONCEPT_NAMESPACE,
+)
+from llm_reasoner.ontologies.linked import LinkedOntologyTerms
 from llm_reasoner.ontologies.terms import ConceptReference, DescriptionEntity
 
 JSON_OBJECT = re.compile(r"\{.*}", re.DOTALL)
@@ -35,10 +40,22 @@ Locates the JSON object inside a response that may carry surrounding text.
 CONCEPT_PREFIXES: Mapping[str, str] = {
     "aicor": CRAM_AICOR_NAMESPACE,
     "dul": DUL_NAMESPACE,
+    "hypothesis": HYPOTHESIS_CONCEPT_NAMESPACE,
 }
 """
 The namespace each prefix a model may write in a concept stands for.
 """
+
+
+def prefixed_name(iri: str) -> str:
+    """
+    :return: A concept's IRI as a model writes it: with a prefix where one stands for
+        its namespace, in full otherwise.
+    """
+    for prefix, namespace in CONCEPT_PREFIXES.items():
+        if iri.startswith(namespace):
+            return f"{prefix}:{iri[len(namespace):]}"
+    return iri
 
 
 # %% results
@@ -114,6 +131,12 @@ class FragmentDecoder:
     """
     The generated vocabulary, read for the components a structure declares and the
     values classes entail.
+    """
+
+    linked_terms: Optional[LinkedOntologyTerms] = None
+    """
+    The terms CRAM-AICOR and DUL declare, which a concept named in their namespaces
+    must be among; without them such concepts are not checked.
     """
 
     def decode(self, raw_response: str) -> DecodingResult:
@@ -410,22 +433,38 @@ class FragmentDecoder:
             + ", ".join(candidate.name for candidate in enumeration)
         )
 
-    @staticmethod
-    def concept(written: Any) -> Any:
+    def concept(self, written: Any) -> Any:
         """
         :return: The concept reference a prefixed name or IRI stands for, or the
-            problem.
+            problem; a concept in the namespace of CRAM-AICOR or DUL must be one they
+            declare.
         """
         if isinstance(written, str) and written.startswith(("http://", "https://")):
-            return ConceptReference(iri=written)
-        prefix, _, local = (
-            written.partition(":") if isinstance(written, str) else ("", "", "")
-        )
-        if prefix in CONCEPT_PREFIXES and local:
-            return ConceptReference(iri=CONCEPT_PREFIXES[prefix] + local)
-        return Problem(
-            f"{written!r} is not a prefixed term such as aicor:Pouring or an IRI"
-        )
+            iri = written
+        else:
+            prefix, _, local = (
+                written.partition(":") if isinstance(written, str) else ("", "", "")
+            )
+            if prefix not in CONCEPT_PREFIXES or not local:
+                return Problem(
+                    f"{written!r} is not a prefixed term such as aicor:Pouring or an "
+                    "IRI"
+                )
+            iri = CONCEPT_PREFIXES[prefix] + local
+        if (
+            self.linked_terms is not None
+            and self.linked_terms.concerns(iri)
+            and not self.linked_terms.declares(iri)
+        ):
+            closest = ", ".join(
+                prefixed_name(term) for term in self.linked_terms.closest(iri)
+            )
+            return Problem(
+                f"{written!r} is not a term CRAM-AICOR or DUL declares"
+                + (f"; the closest they declare: {closest}" if closest else "")
+                + "; write hypothesis:<Name> for a concept they lack"
+            )
+        return ConceptReference(iri=iri)
 
 
 @dataclass(frozen=True)

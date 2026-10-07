@@ -45,6 +45,14 @@ DUL_NAMESPACE = DUL_ONTOLOGY_IRI + "#"
 The namespace of the DOLCE+DnS Ultralite terms the microworld links its concepts to.
 """
 
+HYPOTHESIS_CONCEPT_NAMESPACE = (
+    "http://www.ease-crc.org/ont/llm_reasoner/hypothesis/concept#"
+)
+"""
+The namespace of the concepts hypotheses introduce because no linked ontology declares
+them, such as a category of grasp; kept apart so they never pass for linked terms.
+"""
+
 
 class LinkedOntologyVariable(StrEnum):
     """

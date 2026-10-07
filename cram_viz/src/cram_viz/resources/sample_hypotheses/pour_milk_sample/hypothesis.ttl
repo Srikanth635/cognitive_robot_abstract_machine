@@ -256,7 +256,7 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_value> a ns1:CategoricalValue,
         owl:NamedIndividual ;
-    ns1:hasCategory <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/example/pour-milk#SpoutBesideBowlRim> .
+    ns1:hasCategory <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/concept#SpoutBesideBowlRim> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_window> a ns1:TemporalWindow,
         owl:NamedIndividual ;
@@ -266,7 +266,7 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_counter_value> a ns1:CategoricalValue,
         owl:NamedIndividual ;
-    ns1:hasCategory <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/example/pour-milk#AboveOriginalSpot> .
+    ns1:hasCategory <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/concept#AboveOriginalSpot> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#align_to_tilt> a ns1:PhaseTransition,
         owl:NamedIndividual ;
@@ -622,11 +622,11 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#shape_value> a ns1:CategoricalValue,
         owl:NamedIndividual ;
-    ns1:hasCategory <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/example/pour-milk#RectangularPrismWithGableTop> .
+    ns1:hasCategory <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/concept#RectangularPrismWithGableTop> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#side_grasp_value> a ns1:CategoricalValue,
         owl:NamedIndividual ;
-    ns1:hasCategory <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/example/pour-milk#SideGraspAtMidHeight> .
+    ns1:hasCategory <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/concept#SideGraspAtMidHeight> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_threshold_range> a ns1:MagnitudeRange,
         owl:NamedIndividual ;
@@ -636,7 +636,7 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slosh_value> a ns1:CategoricalValue,
         owl:NamedIndividual ;
-    ns1:hasCategory <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/example/pour-milk#ModerateSloshWhenPartlyFull> .
+    ns1:hasCategory <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/concept#ModerateSloshWhenPartlyFull> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spill> a ns6:SpillEvent,
         owl:NamedIndividual ;
