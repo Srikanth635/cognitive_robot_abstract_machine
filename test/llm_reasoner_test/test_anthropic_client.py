@@ -247,7 +247,7 @@ class TestAnthropicStructuredCompletionContract:
         request = harness.service.messages.requests[0]
         assert "temperature" not in request
         assert request["model"] == "claude-sonnet-5"
-        assert request["system"].startswith("system")
+        assert request["system"][0]["text"].startswith("system")
         assert request["tools"][0]["input_schema"] == schema
 
     @pytest.mark.parametrize(
@@ -292,7 +292,25 @@ class TestAnthropicStructuredCompletionContract:
             "type": "auto",
             "disable_parallel_tool_use": True,
         }
-        assert "emit_hypothesis" in request["system"]
+        assert "emit_hypothesis" in request["system"][0]["text"]
+
+    def test_structured_system_prompt_is_cached(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        harness = build_client_harness(
+            monkeypatch,
+            AnthropicResponseMimic(
+                [ToolUseBlockMimic("emit_hypothesis", {"answer": "yes"})]
+            ),
+            model="claude-sonnet-5-5",
+        )
+
+        harness.client.complete_structured("system", "user", {})
+
+        (block,) = harness.service.messages.requests[0]["system"]
+        assert block["type"] == "text"
+        assert block["text"].startswith("system")
+        assert block["cache_control"] == {"type": "ephemeral"}
 
     def test_structured_answer_written_as_text_is_returned(
         self, monkeypatch: pytest.MonkeyPatch

@@ -42,7 +42,6 @@ from llm_reasoner.acceptance.suite import predictive_manipulation_suite
 from llm_reasoner.clients.base import Exchange, LanguageModelClient
 from llm_reasoner.exceptions import LLMReasonerError
 from llm_reasoner.generation.prompts import (
-    SYSTEM_PROMPT,
     GenerationPrompt,
     described_violation,
     written_value,
@@ -249,17 +248,18 @@ class HypothesisBackend(GenerativeBackend):
             return
         schema = GenerationSchema.for_root(expression.type)
         decoder = FragmentDecoder(schema)
+        system_prompt = self.prompt.system(schema)
         initial_prompt = self.prompt.initial(schema, instruction, fixed)
         prompt = initial_prompt
         self.log = []
         under_repair: Optional[AnswerUnderRepair] = None
         for attempt in range(self.max_repairs + 1):
             raw_response = self.client.complete_structured(
-                SYSTEM_PROMPT, prompt, schema.json_schema()
+                system_prompt, prompt, schema.json_schema()
             )
             self.log.append(
                 Exchange(
-                    system=SYSTEM_PROMPT,
+                    system=system_prompt,
                     user=prompt,
                     raw_response=raw_response,
                     client_identity=self.client.identity,

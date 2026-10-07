@@ -80,6 +80,9 @@ class AnthropicClient(LanguageModelClient):
         call. An answer written as text instead is returned as text, for the
         decoder to read or reject.
 
+        The system prompt, which a caller keeps the same across the attempts of a
+        request, is cached together with the tool definition ahead of it.
+
         The token budget is sized from the model's real ceiling rather than a
         fixed constant, because a hypothesis's length scales with how many
         fragment types the schema offers and a constant ceiling silently
@@ -98,8 +101,14 @@ class AnthropicClient(LanguageModelClient):
         with self._client.messages.stream(
             model=self.model,
             max_tokens=self._structured_token_budget(json_schema),
-            system=f"{system}\n\n"
-            + _STRUCTURED_TOOL_INSTRUCTION.format(tool=_STRUCTURED_TOOL_NAME),
+            system=[
+                {
+                    "type": "text",
+                    "text": f"{system}\n\n"
+                    + _STRUCTURED_TOOL_INSTRUCTION.format(tool=_STRUCTURED_TOOL_NAME),
+                    "cache_control": {"type": "ephemeral"},
+                }
+            ],
             messages=[{"role": "user", "content": user}],
             tools=[
                 {
