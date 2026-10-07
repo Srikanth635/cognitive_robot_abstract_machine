@@ -29,6 +29,8 @@ from krrood.entity_query_language.factories import the
 from krrood.entity_query_language.query.match import Match
 from llm_reasoner.acceptance.rules import AcceptanceSuite
 from llm_reasoner.acceptance.suite import predictive_manipulation_suite
+from llm_reasoner.admission.consistency import ConsistencyCheck
+from llm_reasoner.admission.hermit import HermitCheck
 from llm_reasoner.admission.store import HypothesisStore
 from llm_reasoner.clients import AnthropicClient
 from llm_reasoner.clients.base import LanguageModelClient
@@ -173,6 +175,14 @@ class ModelHypothesisSource(HypothesisSource):
     The acceptance rules a generated hypothesis must meet.
     """
 
+    consistency: Optional[ConsistencyCheck] = field(
+        default_factory=HermitCheck.from_environment
+    )
+    """
+    The open-world check against the ontology, CRAM-AICOR and DUL; configured from the
+    environment variables naming the linked ontologies, and skipped without them.
+    """
+
     _service: Optional[KnowledgeService] = field(default=None, init=False)
     """
     The knowledge service, built on first use.
@@ -216,6 +226,7 @@ class ModelHypothesisSource(HypothesisSource):
                     client=self.client_for_generation(),
                     suite=self.suite,
                     max_repairs=MAX_REPAIRS,
+                    consistency=self.consistency,
                     store=HypothesisStore(
                         directory=self.store_directory or paths.hypothesis_store_dir()
                     ),
