@@ -76,6 +76,7 @@ function loadGraphPanel() {
     '#gnav-path': element(),
     '#graph-tabs': tabs,
     '#gt-live': element(),
+    '.graph-wrap': element(),
     '#graph': element(),
     '#hypothesis-graph': element(),
     '#hypothesis-toolbar': element(),
@@ -92,6 +93,7 @@ function loadGraphPanel() {
     emit(event, payload) { if (handlers[event]) handlers[event](payload); },
   };
   const builds = [];
+  global.DesignatorLisp = { build() {}, highlight() {}, onSelect() {} };
   global.Graph = {
     build(payload) { builds.push(payload); },
     onSelect() {},

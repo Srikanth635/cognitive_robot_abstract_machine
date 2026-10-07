@@ -72,8 +72,8 @@ class TestAssetConsistency:
 
     def test_hypothesis_graph_is_wired_to_the_graph_panel(self) -> None:
         """
-        Ensure the Hypothesis Graph tab is loaded and overlays cram_viz's EQL
-        answer panel / highlight loop onto its own dedicated renderer.
+        Ensure the Hypothesis Graph tab is loaded and overlays cram_viz's EQL answer
+        panel / highlight loop onto its own dedicated renderer.
         """
         html = read("index.html")
         panel = read("panels/graph/panel.js")
@@ -86,6 +86,15 @@ class TestAssetConsistency:
         # hit can be buried in a collapsed branch; a plain node click only spotlights
         # in place, since the clicked node is already on screen.
         assert "HypothesisGraph.revealAndHighlight(hypothesisHi)" in panel
+
+    def test_ontology_graph_tab_is_in_the_graph_panel(self) -> None:
+        """
+        Ensure the Ontology Graph tab has a button and loads the ontology view.
+        """
+        panel = read("panels/graph/panel.js")
+
+        assert 'data-view="ontology"' in panel
+        assert "/api/kb/view?name=ontology" in panel
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")

@@ -20,6 +20,9 @@ from cram_viz import kb  # noqa: E402  (importable once krrood is present)
 from cram_viz import action_knowledge  # noqa: E402
 from cram_viz import entity_knowledge  # noqa: E402
 from cram_viz import hypothesis_knowledge  # noqa: E402
+from cram_viz.hypothesis_knowledge.ontology_backing import (  # noqa: E402
+    OntologyBacking,
+)
 
 
 @pytest.fixture()
@@ -838,6 +841,53 @@ class TestHypothesisGraphView:
                 "group": "hypothesis",
                 "lines": kb._hypothesis_node_lines(node),
             }
+
+
+# %% the Ontology Graph tab
+@pytest.mark.usefixtures("sample_hypothesis_knowledge")
+class TestOntologyGraphView:
+    def test_payload_is_ok_with_the_ontology_graph_crumb(self, fixture_scene):
+        kb.reset_kb()
+        payload = kb.view_payload("ontology")
+        assert payload["ok"]
+        assert payload["crumb"] == "ontology graph"
+
+    def test_shows_the_same_nodes_and_root_as_the_hypothesis_graph(self, fixture_scene):
+        kb.reset_kb()
+        ontology = kb.view_payload("ontology")
+        hypothesis = kb.view_payload("hypothesis")
+        assert [node["id"] for node in ontology["nodes"]] == [
+            node["id"] for node in hypothesis["nodes"]
+        ]
+        assert ontology["root"] == hypothesis["root"]
+
+    def test_nodes_show_their_ontology_class(self, fixture_scene):
+        kb.reset_kb()
+        payload = kb.view_payload("ontology")
+        backing = OntologyBacking()
+        labels = {node["id"]: node["label"] for node in payload["nodes"]}
+        for node in hypothesis_knowledge.active().projection.nodes:
+            assert labels[node.identifier] == backing.node_label(node)
+
+    def test_edges_show_their_ontology_property(self, fixture_scene):
+        kb.reset_kb()
+        payload = kb.view_payload("ontology")
+        backing = OntologyBacking()
+        for relation in hypothesis_knowledge.active().projection.relations:
+            assert {
+                "from": relation.source.identifier,
+                "to": relation.target.identifier,
+                "label": backing.relation_label(relation),
+            } in payload["edges"]
+
+    def test_details_carry_each_nodes_ontology_backing(self, fixture_scene):
+        kb.reset_kb()
+        payload = kb.view_payload("ontology")
+        backing = OntologyBacking()
+        for node in hypothesis_knowledge.active().projection.nodes:
+            assert payload["details"][node.identifier]["lines"] == (
+                backing.node_lines(node)
+            )
 
 
 @pytest.mark.usefixtures("sample_hypothesis_knowledge")

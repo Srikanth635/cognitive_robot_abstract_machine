@@ -59,6 +59,15 @@ function hypothesisPayload() {
   };
 }
 
+function ontologyPayload() {
+  const payload = hypothesisPayload();
+  payload.crumb = 'ontology graph';
+  payload.nodes[1].label = 'Child\npouring:PouringPhaseStructure';
+  payload.edges[0].label = 'describes\n(drawn by the viewer)';
+  payload.details.h1.lines = ['class: pouring:PouringPhaseStructure'];
+  return payload;
+}
+
 function loadGraphPanel(options) {
   const settings = options || {};
   const viewNames = [
@@ -66,6 +75,7 @@ function loadGraphPanel(options) {
     'live-knowledge',
     'domain',
     'hypothesis',
+    'ontology',
     'kinematics',
     'plan',
     'chart',
@@ -87,6 +97,7 @@ function loadGraphPanel(options) {
     '#gnav-path': element(),
     '#graph-tabs': tabs,
     '#gt-live': element(),
+    '.graph-wrap': element(),
     '#graph': element(),
     '#hypothesis-graph': element(),
     '#hypothesis-toolbar': element(),
@@ -103,6 +114,7 @@ function loadGraphPanel(options) {
     emit(event, payload) { if (handlers[event]) handlers[event](payload); },
   };
   const builds = [];
+  global.DesignatorLisp = { build() {}, highlight() {}, onSelect() {} };
   global.Graph = {
     build(payload) { builds.push(payload); },
     onSelect() {},
@@ -144,6 +156,12 @@ function loadGraphPanel(options) {
       return {
         status: 200,
         json: async function () { return settings.hypothesis || hypothesisPayload(); },
+      };
+    }
+    if (url === '/api/kb/view?name=ontology') {
+      return {
+        status: 200,
+        json: async function () { return settings.ontology || ontologyPayload(); },
       };
     }
     throw new Error('Unexpected fetch: ' + url);
@@ -460,4 +478,68 @@ test('clicking "collapse all" calls HypothesisGraph.collapseAll', async function
   panel.hgCollapseAllBtn.listeners.click();
 
   assert.strictEqual(panel.hypothesisCollapseAllCallCount(), 1);
+});
+
+// %% Ontology Graph tab
+function fetchCount(panel, url) {
+  return panel.fetchCalls.filter(function (called) { return called === url; }).length;
+}
+
+test('opening the Ontology Graph tab builds HypothesisGraph from the ontology view', async function () {
+  const panel = loadGraphPanel();
+  await settle();
+
+  tabButton(panel, 'ontology').listeners.click();
+  await settle();
+
+  assert.strictEqual(fetchCount(panel, '/api/kb/view?name=ontology'), 1);
+  assert.strictEqual(panel.hypothesisBuilds.at(-1).crumb, 'ontology graph');
+  assert.notStrictEqual(panel.elements['#hypothesis-graph'].style.display, 'none');
+  assert.strictEqual(panel.elements['#graph'].style.display, 'none');
+  assert.notStrictEqual(panel.elements['#hypothesis-toolbar'].style.display, 'none');
+});
+
+test('switching between the two graph tabs rebuilds each from its own cached view', async function () {
+  const panel = loadGraphPanel();
+  await settle();
+  tabButton(panel, 'hypothesis').listeners.click();
+  await settle();
+  tabButton(panel, 'ontology').listeners.click();
+  await settle();
+
+  tabButton(panel, 'hypothesis').listeners.click();
+  await settle();
+
+  assert.strictEqual(panel.hypothesisBuilds.at(-1).crumb, 'hypothesis graph');
+  assert.strictEqual(fetchCount(panel, '/api/kb/view?name=hypothesis'), 1);
+  assert.strictEqual(fetchCount(panel, '/api/kb/view?name=ontology'), 1);
+});
+
+test('a selection on the Ontology Graph tab carries the ontology view\'s detail and labels', async function () {
+  const panel = loadGraphPanel();
+  await settle();
+  tabButton(panel, 'ontology').listeners.click();
+  await settle();
+
+  let received = null;
+  panel.bus.on('entity:select', function (payload) { received = payload; });
+  panel.fireHypothesisSelect('h1');
+
+  assert.deepStrictEqual(received.detail, ontologyPayload().details.h1);
+  assert.deepStrictEqual(received.relations, [
+    { s: 'Root', p: ontologyPayload().edges[0].label, o: 'Child' },
+  ]);
+});
+
+test('a generated hypothesis refetches the Ontology Graph while that tab is open', async function () {
+  const panel = loadGraphPanel();
+  await settle();
+  tabButton(panel, 'ontology').listeners.click();
+  await settle();
+
+  panel.bus.emit('hypothesis:generated', regeneratedPayload());
+  await settle();
+
+  assert.strictEqual(fetchCount(panel, '/api/kb/view?name=ontology'), 2);
+  assert.strictEqual(panel.hypothesisBuilds.at(-1).crumb, 'ontology graph');
 });

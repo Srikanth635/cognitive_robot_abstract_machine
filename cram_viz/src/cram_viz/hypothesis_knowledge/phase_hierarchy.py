@@ -30,8 +30,8 @@ from llm_reasoner.hypotheses.graph import (
 )
 from llm_reasoner.hypotheses.view import HypothesisView
 from llm_reasoner.ontologies.predictive_manipulation import core
-from llm_reasoner.ontologies.terms import DescriptionEntity
-from typing_extensions import Callable
+from llm_reasoner.ontologies.terms import DescriptionEntity, PropertyTerm
+from typing_extensions import Callable, Optional
 
 ROOT_LABEL = "Phase Structure"
 """
@@ -178,7 +178,13 @@ class PhaseHierarchyOverlay:
             ("controlled_by", phase.controlled_by),
         ):
             if target is not None and id(target) in indices:
-                self.connect(projection, phase_index, field_name, indices[id(target)])
+                self.connect(
+                    projection,
+                    phase_index,
+                    field_name,
+                    indices[id(target)],
+                    self.property_of(phase, field_name),
+                )
         boundaries = [*phase.initiated_by, *phase.terminated_by]
         groups: list[tuple[PhaseGroup, str, list[DescriptionEntity]]] = [
             (PhaseGroup.ROLE_TAKERS, "involves_role", phase.involves_role),
@@ -323,6 +329,9 @@ class PhaseHierarchyOverlay:
     ) -> None:
         """
         Add one labelled group under a node, or nothing when it has no members.
+
+        The group's links keep the ontology property the predicate names on the node's
+        fragment, if any.
         """
         member_indices = list(
             dict.fromkeys(
@@ -331,6 +340,9 @@ class PhaseHierarchyOverlay:
         )
         if not member_indices:
             return
+        property_iri = self.property_of(
+            projection.graph[parent_index].source, predicate
+        )
         group_index = projection.graph.add_node(
             HypothesisGraphNode(
                 identifier=(
@@ -346,7 +358,18 @@ class PhaseHierarchyOverlay:
             projection, parent_index, SyntheticHypothesisRelation.GROUPS, group_index
         )
         for member_index in member_indices:
-            self.connect(projection, group_index, predicate, member_index)
+            self.connect(projection, group_index, predicate, member_index, property_iri)
+
+    @staticmethod
+    def property_of(owner: Optional[DescriptionEntity], predicate: str) -> str:
+        """
+        :return: The IRI of the ontology property a field of the owner states, or an
+            empty string when the predicate is no such field.
+        """
+        term = None if owner is None else PropertyTerm.of_field(type(owner), predicate)
+        if term is None:
+            return ""
+        return term.iri
 
     @staticmethod
     def connect(
@@ -354,9 +377,11 @@ class PhaseHierarchyOverlay:
         source_index: int,
         predicate: str,
         target_index: int,
+        property_iri: str = "",
     ) -> None:
         """
-        Add one link between two nodes.
+        Add one link between two nodes, stated by the given ontology property or,
+        without one, drawn by this presentation.
         """
         projection.graph.add_edge(
             source_index,
@@ -365,5 +390,6 @@ class PhaseHierarchyOverlay:
                 source=projection.graph[source_index],
                 predicate=predicate,
                 target=projection.graph[target_index],
+                property_iri=property_iri,
             ),
         )

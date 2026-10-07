@@ -35,7 +35,11 @@ from llm_reasoner.ontologies.predictive_manipulation import (
     pouring,
     prehension,
 )
-from llm_reasoner.ontologies.terms import ConceptReference, DescriptionEntity
+from llm_reasoner.ontologies.terms import (
+    ConceptReference,
+    DescriptionEntity,
+    PropertyTerm,
+)
 
 from .test_generation import GenerationCase
 
@@ -293,6 +297,30 @@ class TestHypothesisGraphProjector:
             if (relation.source.identifier, relation.target.identifier)
             == (lift_to_tilt, tilt)
         } == {"to_phase"}
+
+    def test_fragment_node_names_its_ontology_class(self, view):
+        graph = projected(view)
+        assert graph.root.ontology_class == type(view.root).term.iri
+        assert graph.instruction.ontology_class == ""
+
+    def test_link_names_its_ontology_property(self, view):
+        graph = projected(view)
+        (to_phase,) = [
+            relation
+            for relation in graph.relations
+            if relation.predicate == "to_phase"
+            and relation.source.identifier
+            == view.citation_of(fragment_named(view, "lift_to_tilt")).iri
+        ]
+        assert to_phase.property_iri == (
+            PropertyTerm.of_field(core.PhaseTransition, "to_phase").iri
+        )
+        (describes,) = [
+            relation
+            for relation in graph.relations
+            if relation.predicate == SyntheticHypothesisRelation.DESCRIBES
+        ]
+        assert describes.property_iri == ""
 
     def test_inferred_super_property_is_not_drawn(self, view):
         inferred = {

@@ -20,17 +20,19 @@ from cram_viz.hypothesis_knowledge.phase_hierarchy import (  # noqa: E402
     ROOT_LABEL,
     PhaseGroup,
     PhaseHierarchyOverlay,
+    PhaseHierarchyRelation,
 )
+from llm_reasoner.ontologies.terms import PropertyTerm  # noqa: E402
 
 # %% helpers
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def view():
     return hypothesis_knowledge.sample_view()
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def projection(view):
     return PhaseHierarchyOverlay().apply(
         HypothesisGraphProjector().project(view, HypothesisGraphPresentation.COMPLETE),
@@ -128,6 +130,42 @@ class TestPhaseFields:
                 assert direct["aims_for"] is phase.aims_for
             if phase.controlled_by is not None:
                 assert direct["controlled_by"] is phase.controlled_by
+
+
+class TestOntologyProperties:
+    def test_regrouped_field_links_keep_their_ontology_property(self, projection, view):
+        phase = view.root.defines_phase[0]
+        (group_index,) = [
+            target
+            for predicate, target in children(projection, index_of(projection, phase))
+            if projection.graph[target].label.startswith(PhaseGroup.ROLE_TAKERS.value)
+        ]
+        properties = {
+            relation.property_iri
+            for _, _, relation in projection.graph.out_edges(group_index)
+        }
+        assert properties == {PropertyTerm.of_field(type(phase), "involves_role").iri}
+
+    def test_root_phase_group_links_keep_the_structures_property(
+        self, projection, view
+    ):
+        (group_index,) = [
+            target
+            for predicate, target in children(projection, projection.root_index)
+            if projection.graph[target].label.startswith(PhaseGroup.PHASES.value)
+        ]
+        assert {
+            relation.property_iri
+            for _, _, relation in projection.graph.out_edges(group_index)
+        } == {PropertyTerm.of_field(type(view.root), "defines_phase").iri}
+
+    def test_links_only_the_presentation_draws_name_no_property(self, projection):
+        drawn = [
+            relation
+            for relation in projection.relations
+            if relation.predicate == PhaseHierarchyRelation.HAS_TRANSITION
+        ]
+        assert drawn and {relation.property_iri for relation in drawn} == {""}
 
 
 # %% fragments pointing at a phase
