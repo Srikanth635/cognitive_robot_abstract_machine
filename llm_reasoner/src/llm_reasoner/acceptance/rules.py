@@ -47,9 +47,10 @@ class Violation:
     One fragment failing one acceptance rule.
     """
 
-    rule: StrEnum
+    rule: str
     """
-    The rule the fragment fails.
+    The name of the rule the fragment fails: a rule's enumeration member, or the name
+    of the shape stating it.
     """
 
     fragment: Any

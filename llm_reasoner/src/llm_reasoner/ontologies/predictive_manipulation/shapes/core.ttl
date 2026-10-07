@@ -1,0 +1,122 @@
+@prefix :      <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:    <http://www.w3.org/ns/shacl#> .
+
+# Structural rules of the core module that relate several fragments to one another, which
+# OWL restrictions cannot state. Each shape's comment is shown to the language model; its
+# message states what is wrong with the fragment at fault; the fragment it concerns is
+# reported beside it.
+
+<http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/core> a owl:Ontology ;
+    owl:versionInfo "0.1.0" ;
+    rdfs:comment "Closed-world structural rules of the core predictive manipulation module."@en .
+
+# %% phase sequence
+
+:TaskIsNotItsOwnPhase a sh:NodeShape ;
+    sh:targetClass core:ActionPhaseStructure ;
+    rdfs:comment "No phase of a structure realizes the task the structure decomposes: a phase is a part of the task, not the task itself."@en ;
+    sh:sparql [
+        sh:message "a phase realizes the task the structure decomposes" ;
+        sh:select """
+            PREFIX core: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#>
+            SELECT $this ?value WHERE {
+                $this core:decomposesTask ?task ;
+                    core:definesPhase ?value .
+                ?value core:realizesActionCategory ?task .
+            }
+        """ ;
+    ] .
+
+:OneEntryPhase a sh:NodeShape ;
+    sh:targetClass core:ActionPhaseStructure ;
+    rdfs:comment "Exactly one phase of a structure has no transition of the structure leading into it: the phase the action starts with. Two entry phases would leave the controller unable to tell where to begin."@en ;
+    sh:sparql [
+        sh:message "has no entry phase: a transition leads into every phase" ;
+        sh:select """
+            PREFIX core: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#>
+            SELECT $this WHERE {
+                FILTER NOT EXISTS {
+                    $this core:definesPhase ?entry .
+                    FILTER NOT EXISTS {
+                        $this core:definesTransition ?transition .
+                        ?transition core:toPhase ?entry ;
+                            core:fromPhase ?source .
+                        $this core:definesPhase ?source .
+                    }
+                }
+            }
+        """ ;
+    ] , [
+        sh:message "has several entry phases: no transition leads into this one or into another" ;
+        sh:select """
+            PREFIX core: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#>
+            SELECT $this ?value WHERE {
+                $this core:definesPhase ?value , ?other .
+                FILTER (?value != ?other)
+                FILTER NOT EXISTS {
+                    $this core:definesTransition ?transition .
+                    ?transition core:toPhase ?value ;
+                        core:fromPhase ?source .
+                    $this core:definesPhase ?source .
+                }
+                FILTER NOT EXISTS {
+                    $this core:definesTransition ?transition .
+                    ?transition core:toPhase ?other ;
+                        core:fromPhase ?source .
+                    $this core:definesPhase ?source .
+                }
+            }
+        """ ;
+    ] .
+
+:NoOrphanPhase a sh:NodeShape ;
+    sh:targetClass core:ActionPhaseStructure ;
+    rdfs:comment "The transitions of a structure connect all its phases: every phase is reached from, or leads to, the others. An unconnected phase is never reached."@en ;
+    sh:sparql [
+        sh:message "a phase is not connected to the other phases by transitions" ;
+        sh:select """
+            PREFIX core: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#>
+            SELECT $this ?value WHERE {
+                $this core:definesPhase ?anchor , ?value .
+                FILTER NOT EXISTS {
+                    $this core:definesPhase ?earlier .
+                    FILTER (STR(?earlier) < STR(?anchor))
+                }
+                FILTER (?value != ?anchor)
+                FILTER NOT EXISTS {
+                    ?anchor (^core:fromPhase/core:toPhase|^core:toPhase/core:fromPhase)* ?value .
+                }
+            }
+        """ ;
+    ] .
+
+# %% control
+
+:MechanicalBoundaryMonitored a sh:NodeShape ;
+    sh:targetClass core:ActionPhaseStructure ;
+    rdfs:comment "Every mechanical event ending a phase, other than a failure, has a control point of the structure at it or an exemption naming it: mechanical boundaries are where predicted and actual signals are compared."@en ;
+    sh:sparql [
+        sh:message "an event ending a phase has neither a control point nor an exemption" ;
+        sh:select """
+            PREFIX core: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#>
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            SELECT DISTINCT $this ?value WHERE {
+                $this core:definesPhase ?phase .
+                ?phase core:terminatedBy ?value .
+                ?value rdf:type/rdfs:subClassOf* core:MechanicalEventType .
+                FILTER NOT EXISTS { ?value rdf:type/rdfs:subClassOf* core:FailureEventType }
+                FILTER NOT EXISTS {
+                    $this core:definesControlPoint ?point .
+                    ?point core:atEventType ?value .
+                }
+                FILTER NOT EXISTS {
+                    $this core:definesControlPointExemption ?exemption .
+                    ?exemption core:exemptsEvent ?value .
+                }
+            }
+        """ ;
+    ] .

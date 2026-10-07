@@ -25,6 +25,20 @@ PREDICTIVE_MANIPULATION_NAMESPACE_ROOT = (
 The IRI prefix shared by the namespaces of every predictive manipulation module.
 """
 
+PREDICTIVE_MANIPULATION_SHAPES_DIRECTORY = (
+    PREDICTIVE_MANIPULATION_ONTOLOGY_DIRECTORY / "shapes"
+)
+"""
+The directory holding the SHACL shapes of the modules that state structural rules.
+"""
+
+PREDICTIVE_MANIPULATION_SHAPES_NAMESPACE_ROOT = (
+    PREDICTIVE_MANIPULATION_NAMESPACE_ROOT + "shapes/"
+)
+"""
+The IRI prefix shared by the namespaces of every module's shapes.
+"""
+
 CRAM_AICOR_ONTOLOGY_IRI = "http://aicor.knowledge/l2-ontology.owl"
 """
 The IRI of the CRAM-AICOR ontology, which the core module imports.
@@ -117,6 +131,23 @@ class PredictiveManipulationOntologyFile(StrEnum):
         The namespace the module declares its terms in.
         """
         return PREDICTIVE_MANIPULATION_NAMESPACE_ROOT + Path(self.value).stem + "#"
+
+    @property
+    def shapes_path(self) -> Path:
+        """
+        The location of the SHACL shapes stating the module's structural rules; a module
+        without such rules has no file there.
+        """
+        return PREDICTIVE_MANIPULATION_SHAPES_DIRECTORY / self.value
+
+    @property
+    def shapes_namespace(self) -> str:
+        """
+        The namespace the module's shapes are named in.
+        """
+        return (
+            PREDICTIVE_MANIPULATION_SHAPES_NAMESPACE_ROOT + Path(self.value).stem + "#"
+        )
 
     @property
     def vocabulary_module_name(self) -> str:

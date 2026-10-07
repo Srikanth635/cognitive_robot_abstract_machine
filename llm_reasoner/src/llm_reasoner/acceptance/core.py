@@ -10,7 +10,6 @@ from enum import StrEnum
 from functools import cached_property
 from operator import attrgetter
 
-import rustworkx
 from krrood.entity_query_language.factories import (
     and_,
     contains,
@@ -84,23 +83,6 @@ class CoreRule(StrEnum):
     """
     A safety margin relates a setpoint to a threshold of the same participant; one
     relating different participants is not a margin.
-    """
-
-    TASK_IS_NOT_ITS_OWN_PHASE = "task_is_not_its_own_phase"
-    """
-    No phase may carry out the very task the structure divides into phases.
-    """
-
-    ONE_ENTRY_PHASE = "one_entry_phase"
-    """
-    A structure has exactly one phase no transition leads into; two would leave the
-    controller unable to tell where to begin.
-    """
-
-    NO_ORPHAN_PHASE = "no_orphan_phase"
-    """
-    Every phase is connected to the others by transitions; an unconnected phase is
-    never reached.
     """
 
     PHASE_ENDINGS_DISTINCT = "phase_endings_distinct"
@@ -191,13 +173,6 @@ class CoreRule(StrEnum):
     """
     A continuous prediction of a phase's controller regulates a setpoint active in that
     phase.
-    """
-
-    MECHANICAL_BOUNDARY_MONITORED = "mechanical_boundary_monitored"
-    """
-    Every mechanical event ending a phase, other than a failure, has a control point or
-    an explicit exemption; mechanical boundaries are where the controller checks its
-    predictions.
     """
 
     EXEMPTION_NAMES_NORMAL_BOUNDARY = "exemption_names_normal_boundary"
@@ -405,77 +380,6 @@ class SafetyMarginOnOneParticipant(RequirementRule[core.SafetyMargin]):
 
 
 # %% structures
-
-
-class TaskIsNotItsOwnPhase(FragmentRule[core.ActionPhaseStructure]):
-    """
-    No phase of a structure carries out the task the structure divides.
-    """
-
-    @property
-    def name(self) -> StrEnum:
-        return CoreRule.TASK_IS_NOT_ITS_OWN_PHASE
-
-    @property
-    def reason(self) -> str:
-        return "a phase realizes the task the structure decomposes"
-
-    def violating(self, subject: Any) -> Any:
-        phase = flat_variable(subject.defines_phase)
-        return and_(
-            subject.decomposes_task != None,
-            contains(phase.realizes_action_category, subject.decomposes_task),
-        )
-
-
-def phase_graph(structure: core.ActionPhaseStructure) -> rustworkx.PyDiGraph:
-    """
-    :return: The structure's phases as nodes and its transitions between them as edges.
-    """
-    graph = rustworkx.PyDiGraph()
-    nodes = {id(phase): graph.add_node(phase) for phase in structure.defines_phase}
-    for transition in structure.defines_transition:
-        source, target = id(transition.from_phase), id(transition.to_phase)
-        if source in nodes and target in nodes:
-            graph.add_edge(nodes[source], nodes[target], transition)
-    return graph
-
-
-class OneEntryPhase(StructureRule[core.ActionPhaseStructure]):
-    """
-    Exactly one phase of a structure has no transition leading into it.
-    """
-
-    @property
-    def name(self) -> StrEnum:
-        return CoreRule.ONE_ENTRY_PHASE
-
-    @property
-    def reason(self) -> str:
-        return "the structure does not have exactly one entry phase"
-
-    def is_violated_by(self, fragment: core.ActionPhaseStructure) -> bool:
-        graph = phase_graph(fragment)
-        entries = [node for node in graph.node_indices() if graph.in_degree(node) == 0]
-        return len(entries) != 1
-
-
-class NoOrphanPhase(StructureRule[core.ActionPhaseStructure]):
-    """
-    The transitions of a structure connect all its phases.
-    """
-
-    @property
-    def name(self) -> StrEnum:
-        return CoreRule.NO_ORPHAN_PHASE
-
-    @property
-    def reason(self) -> str:
-        return "a phase is not connected to the others by transitions"
-
-    def is_violated_by(self, fragment: core.ActionPhaseStructure) -> bool:
-        graph = phase_graph(fragment)
-        return graph.num_nodes() > 1 and not rustworkx.is_weakly_connected(graph)
 
 
 class PhaseEndingsDistinct(StructureRule[core.ActionPhaseStructure]):
@@ -980,46 +884,6 @@ def normal_boundaries(structure: core.ActionPhaseStructure) -> list[Any]:
         for event in phase.terminated_by
         if not isinstance(event, core.FailureEventType)
     ]
-
-
-class MechanicalBoundaryMonitored(StructureRule[core.ActionPhaseStructure]):
-    """
-    Every mechanical event ending a phase, other than a failure, has a control point or
-    an exemption.
-    """
-
-    @property
-    def name(self) -> StrEnum:
-        return CoreRule.MECHANICAL_BOUNDARY_MONITORED
-
-    @property
-    def reason(self) -> str:
-        return (
-            "a mechanical phase boundary has neither a control point nor an exemption"
-        )
-
-    def involved(
-        self, fragment: core.ActionPhaseStructure
-    ) -> list[core.MechanicalEventType]:
-        """
-        :return: The mechanical phase boundaries with neither a control point nor an
-            exemption.
-        """
-        covered = {
-            id(control_point.at_event_type)
-            for control_point in fragment.defines_control_point
-        } | {
-            id(exemption.exempts_event)
-            for exemption in fragment.defines_control_point_exemption
-        }
-        return [
-            event
-            for event in normal_boundaries(fragment)
-            if isinstance(event, core.MechanicalEventType) and id(event) not in covered
-        ]
-
-    def is_violated_by(self, fragment: core.ActionPhaseStructure) -> bool:
-        return bool(self.involved(fragment))
 
 
 class ExemptionNamesNormalBoundary(StructureRule[core.ActionPhaseStructure]):

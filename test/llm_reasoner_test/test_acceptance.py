@@ -8,6 +8,7 @@ from __future__ import annotations
 import inspect
 
 import pytest
+from rdflib import Namespace, URIRef
 from krrood.utils import recursive_subclasses
 
 from llm_reasoner.acceptance.core import (
@@ -23,21 +24,17 @@ from llm_reasoner.acceptance.core import (
     ExemptionNamesNormalBoundary,
     ContinuousPredictionInMonitoredModality,
     MatchHasNoResponse,
-    MechanicalBoundaryMonitored,
     MismatchInvokesCorrection,
     ModelUpdateAnswersClassifiedError,
     PermissionFitsTransition,
     ToleranceMatchesTrajectory,
     UpdatedEstimateIsHeld,
-    NoOrphanPhase,
-    OneEntryPhase,
     PhaseEndingsDistinct,
     PhaseHasExtent,
     PreconditionsGrounded,
     RangeBoundsOrdered,
     SafetyMarginOnOneParticipant,
     SubgoalSignalledByPhaseEnd,
-    TaskIsNotItsOwnPhase,
     TransitionGateEndsSource,
     TransitionGateStartsTarget,
     TransitionIsNotALoop,
@@ -68,14 +65,15 @@ from llm_reasoner.acceptance.object_dynamics import (
     CompositionDynamicsUsesItsCopy,
     CompositionPredictsWithItsForwardModel,
     DissociationCoherent,
-    EstimateHeldByARepresentation,
     EstimateServesOnePurpose,
     RepresentationCoversEstimatedRoles,
     RetainedUpdateInItsMemory,
     TransferComparesMatchedPerturbations,
 )
-from llm_reasoner.acceptance.rules import AcceptanceRule
+from llm_reasoner.acceptance.rules import AcceptanceRule, Severity
+from llm_reasoner.acceptance.shapes import ShapesHold, StructureShapes
 from llm_reasoner.acceptance.suite import predictive_manipulation_suite
+from llm_reasoner.ontologies import PredictiveManipulationOntologyFile
 from llm_reasoner.ontologies.predictive_manipulation import (
     core,
     gaze,
@@ -129,6 +127,31 @@ def violated(fragments: list[DescriptionEntity]) -> set[tuple[int, ClassExpressi
         (id(violation.fragment), violation.expression)
         for violation in RestrictionsHold().violations(fragments)
     }
+
+
+CORE_SHAPES = Namespace(PredictiveManipulationOntologyFile.CORE.shapes_namespace)
+"""
+The namespace of the core module's structural rules.
+"""
+
+OBJECT_DYNAMICS_SHAPES = Namespace(
+    PredictiveManipulationOntologyFile.OBJECT_DYNAMICS.shapes_namespace
+)
+"""
+The namespace of the object dynamics module's structural rules.
+"""
+
+
+def shape_violators(shape: URIRef, fragments: list[DescriptionEntity]) -> list[object]:
+    """
+    Return the fragments violating one structural rule, in the order given.
+    """
+    found = {
+        id(violation.fragment)
+        for violation in ShapesHold().violations(fragments)
+        if violation.shape == shape
+    }
+    return [fragment for fragment in fragments if id(fragment) in found]
 
 
 def requirement(
@@ -473,7 +496,9 @@ class TestCoreRules:
         proper = core.ActionPhaseStructure(
             decomposes_task=pouring_task, defines_phase=[core.ActionPhase()]
         )
-        assert violators(TaskIsNotItsOwnPhase(), [circular, proper]) == [circular]
+        assert shape_violators(
+            CORE_SHAPES.TaskIsNotItsOwnPhase, [circular, proper]
+        ) == [circular]
 
     def test_structure_with_two_entry_phases_is_reported(self):
         first, second, third = (
@@ -495,7 +520,9 @@ class TestCoreRules:
                 core.PhaseTransition(from_phase=second, to_phase=third),
             ],
         )
-        assert violators(OneEntryPhase(), [branching_in, chained]) == [branching_in]
+        assert shape_violators(CORE_SHAPES.OneEntryPhase, [branching_in, chained]) == [
+            branching_in
+        ]
 
     def test_structure_with_an_unconnected_phase_is_reported(self):
         first, second, orphan = (
@@ -509,7 +536,9 @@ class TestCoreRules:
                 core.PhaseTransition(from_phase=first, to_phase=second)
             ],
         )
-        assert violators(NoOrphanPhase(), [with_orphan]) == [with_orphan]
+        assert shape_violators(CORE_SHAPES.NoOrphanPhase, [with_orphan]) == [
+            with_orphan
+        ]
 
     def test_two_phases_ending_at_the_same_events_are_reported(self):
         liftoff = prehension.Liftoff()
@@ -977,8 +1006,8 @@ class TestStructureControlRules:
                 core.BoundaryControlExemption(exempts_event=liftoff)
             ],
         )
-        assert violators(
-            MechanicalBoundaryMonitored(), [unmonitored, monitored, exempted]
+        assert shape_violators(
+            CORE_SHAPES.MechanicalBoundaryMonitored, [unmonitored, monitored, exempted]
         ) == [unmonitored]
 
     def test_unmonitored_boundary_event_is_named_by_the_violation(self):
@@ -989,7 +1018,11 @@ class TestStructureControlRules:
                 core.SensorimotorControlPoint(at_event_type=touchdown)
             ],
         )
-        (violation,) = MechanicalBoundaryMonitored().violations([structure])
+        (violation,) = [
+            violation
+            for violation in ShapesHold().violations([structure])
+            if violation.shape == CORE_SHAPES.MechanicalBoundaryMonitored
+        ]
         assert violation.involved == (liftoff,)
 
     def test_exemption_of_an_event_that_is_no_boundary_is_reported(self):
@@ -1084,7 +1117,9 @@ class TestObjectDynamicsRules:
                 object_dynamics.ObjectDynamicsModel(holds_estimate=[mass])
             ],
         )
-        assert violators(EstimateHeldByARepresentation(), [unowned, owned]) == [unowned]
+        assert shape_violators(
+            OBJECT_DYNAMICS_SHAPES.EstimateHeldByARepresentation, [unowned, owned]
+        ) == [unowned]
 
     def test_estimate_serving_control_and_judgment_is_reported(self):
         mass = prehension.ExpectedMass()
@@ -1526,6 +1561,72 @@ class TestGazeRules:
         assert violators(FixationOnPhaseParticipant(), [elsewhere, on_target]) == [
             elsewhere
         ]
+
+
+# %% structural rules
+
+
+class TestShapesHold:
+    """
+    The structural rules of the shapes files are checked closed-world, and each
+    violation names the rule, the fragment at fault and the fragment it concerns.
+    """
+
+    @staticmethod
+    def two_entry_structure() -> (
+        tuple[core.ActionPhaseStructure, list[core.ActionPhase]]
+    ):
+        phases = [core.ActionPhase(), core.ActionPhase(), core.ActionPhase()]
+        structure = core.ActionPhaseStructure(
+            defines_phase=phases,
+            defines_transition=[
+                core.PhaseTransition(from_phase=phases[0], to_phase=phases[2]),
+                core.PhaseTransition(from_phase=phases[1], to_phase=phases[2]),
+            ],
+        )
+        return structure, phases
+
+    def test_violation_names_its_shape_as_its_rule(self):
+        structure, _ = self.two_entry_structure()
+        violations = [
+            violation
+            for violation in ShapesHold().violations([structure])
+            if violation.shape == CORE_SHAPES.OneEntryPhase
+        ]
+        assert violations
+        assert {violation.rule for violation in violations} == {
+            StructureShapes.shipped().named(CORE_SHAPES.OneEntryPhase).name
+        }
+
+    def test_violation_concerns_each_offending_fragment(self):
+        structure, phases = self.two_entry_structure()
+        involved = {
+            violation.involved
+            for violation in ShapesHold().violations([structure])
+            if violation.shape == CORE_SHAPES.OneEntryPhase
+        }
+        assert involved == {(phases[0],), (phases[1],)}
+
+    def test_only_the_given_fragments_are_reported(self):
+        structure, phases = self.two_entry_structure()
+        assert ShapesHold().violations(phases) == []
+
+    def test_violation_is_an_error(self):
+        structure, _ = self.two_entry_structure()
+        assert {
+            violation.severity for violation in ShapesHold().violations([structure])
+        } == {Severity.ERROR}
+
+    def test_shape_applies_to_its_target_and_more_specific_classes_only(self):
+        shapes = StructureShapes.shipped()
+        estimate_rule = shapes.named(
+            OBJECT_DYNAMICS_SHAPES.EstimateHeldByARepresentation
+        )
+        assert estimate_rule in shapes.applicable_to([pouring.PouringPhaseStructure])
+        assert estimate_rule not in shapes.applicable_to([core.ActionPhaseStructure])
+
+    def test_every_shape_explains_itself(self):
+        assert all(shape.description for shape in StructureShapes.shipped().shapes)
 
 
 # %% suite

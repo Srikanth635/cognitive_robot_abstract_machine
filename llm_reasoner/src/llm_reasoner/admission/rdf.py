@@ -15,7 +15,7 @@ from operator import attrgetter
 
 from rdflib import OWL, RDF, RDFS, XSD, Graph, Literal, URIRef
 from rdflib.term import Node
-from typing_extensions import Any, Optional
+from typing_extensions import Any, Optional, Sequence
 
 from llm_reasoner.acceptance.vocabulary import Vocabulary
 from llm_reasoner.exceptions import LLMReasonerError
@@ -108,7 +108,6 @@ class GraphWriter:
             property values, leaving out properties the ontology infers from
             sub-properties.
         """
-        graph = Graph()
         names = {
             id(fragment): URIRef(
                 self.namespace
@@ -116,7 +115,21 @@ class GraphWriter:
             )
             for position, fragment in enumerate(hypothesis.fragments)
         }
-        for fragment in hypothesis.fragments:
+        return self.write_fragments(hypothesis.fragments, names)
+
+    def write_fragments(
+        self, fragments: Sequence[DescriptionEntity], names: dict[int, URIRef]
+    ) -> Graph:
+        """
+        :param fragments: The fragments to write.
+        :param names: The IRI of every fragment, keyed by its identity; a value naming a
+            fragment without one is left out.
+        :return: Every fragment as an individual of its ontology class, with its
+            property values, leaving out properties the ontology infers from
+            sub-properties.
+        """
+        graph = Graph()
+        for fragment in fragments:
             subject = names[id(fragment)]
             graph.add((subject, RDF.type, OWL.NamedIndividual))
             graph.add((subject, RDF.type, URIRef(type(fragment).term.iri)))
