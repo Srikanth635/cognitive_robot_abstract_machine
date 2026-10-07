@@ -1,0 +1,4 @@
+{"fragments": [
+  {"id": "pour", "type": "ActionPhaseStructure", "decomposes_task": "aicor:Pouring"},
+  {"id": "tilt", "type": "TiltToFlowPhase", "has_regulation_mode": "HYBRID"}
+]}

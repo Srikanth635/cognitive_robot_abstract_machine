@@ -1,0 +1,5 @@
+{"fragments": [
+  {"id": "pour", "type": "PouringPhaseStructure", "decomposes_task": "aicor:Pouring"},
+  {"id": "align", "type": "AlignmentPhase"},
+  {"id": "contact_felt", "type": "TactilePrediction"}
+]}

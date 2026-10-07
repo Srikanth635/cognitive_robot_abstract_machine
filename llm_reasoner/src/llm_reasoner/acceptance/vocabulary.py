@@ -4,6 +4,7 @@ Finding the generated Python counterparts of the IRIs a class expression names.
 
 from __future__ import annotations
 
+import inspect
 from dataclasses import dataclass, field, fields
 from enum import StrEnum
 from functools import cached_property
@@ -21,9 +22,13 @@ from llm_reasoner.ontologies.predictive_manipulation import (
     prehension,
 )
 from llm_reasoner.ontologies.terms import (
+    ClassExpression,
     ConceptReference,
     DescriptionEntity,
+    IntersectionOf,
+    PropertyRestriction,
     PropertyTerm,
+    Quantifier,
     local_name,
     python_attribute_name,
 )
@@ -73,6 +78,67 @@ class Vocabulary:
         if module is None:
             return None
         return vars(module)[local_name(iri)]
+
+    def value_type_of(
+        self, owner: type[DescriptionEntity], name: str, annotated: type
+    ) -> type:
+        """
+        :return: The class a field's values belong to: the range its ontology property
+            records, which is more specific than the field's annotation when the class
+            is generated in a later module, or else the annotated type.
+        """
+        term = PropertyTerm.of_field(owner, name)
+        if term is None or not term.range:
+            return annotated
+        return self.definition_named(term.range)
+
+    def component_fields(
+        self, structure_type: type[DescriptionEntity]
+    ) -> dict[str, type[DescriptionEntity]]:
+        """
+        :return: The fields through which a structure declares its components, each with
+            the class of component it declares; the field holding every component,
+            which the others specialise, is left out.
+        """
+        return {
+            declared.name: self.value_type_of(
+                structure_type, declared.name, descriptor.range
+            )
+            for declared in fields(structure_type)
+            for descriptor in [
+                inspect.getattr_static(structure_type, declared.name, None)
+            ]
+            if isinstance(descriptor, core.DefinesComponent)
+            and type(descriptor) is not core.DefinesComponent
+        }
+
+    def entailed_values(self, python_type: type[DescriptionEntity]) -> dict[str, Any]:
+        """
+        :return: The values every instance of a class has because its classes say so,
+            through value restrictions they state or are defined by, by field name.
+            A more specific class decides a field before a more general one.
+        """
+        names = {declared.name for declared in fields(python_type)}
+        entailed: dict[str, Any] = {}
+        for owner in python_type.__mro__:
+            if "term" not in vars(owner):
+                continue
+            definition = owner.term.definition
+            expressions: list[ClassExpression] = list(owner.term.restrictions)
+            if isinstance(definition, IntersectionOf):
+                expressions.extend(definition.operands)
+            elif definition is not None:
+                expressions.append(definition)
+            for expression in expressions:
+                if not (
+                    isinstance(expression, PropertyRestriction)
+                    and expression.quantifier == Quantifier.VALUE
+                ):
+                    continue
+                name = python_attribute_name(expression.property_iri)
+                if name in names:
+                    entailed.setdefault(name, self.value_of(expression.value))
+        return entailed
 
     @cached_property
     def members(self) -> dict[str, StrEnum]:

@@ -410,34 +410,12 @@ test('revealAndHighlight ignores ids that are not real nodes when computing path
   assert.deepStrictEqual(visibleIds(), ['root']);
 });
 
-// %% unresolved role fillers (grounded-vs-not leaves in FrameModel/ImageSchemaModel)
-test('a node flagged unresolved renders red regardless of its kind', function () {
-  const { HypothesisGraph } = loadHypothesisGraph();
-  HypothesisGraph.build({
-    ok: true,
-    crumb: 'hypothesis graph',
-    root: 'root',
-    nodes: [
-      { id: 'root', label: 'Root', kind: 'instruction' },
-      { id: 'filler', label: '?', kind: 'fragment', unresolved: true },
-    ],
-    edges: [{ from: 'root', to: 'filler', label: 'has_name' }],
-    details: { root: { label: 'Root', lines: [] }, filler: { label: '?', lines: [] } },
-  });
-
-  HypothesisGraph.expandAll();
-
-  assert.strictEqual(lastData.nodes.get('filler').color.background, '#e63946');
-});
-
 // %% legend
-// updated from four to five: the palette gained an 'unresolved' entry for leaves the
-// instruction doesn't name (see hypothesis-graph.js's NODE_COLOR)
-test('showLegend populates the legend element with the five node kinds', function () {
+test('showLegend populates the legend element with the four node kinds', function () {
   const { HypothesisGraph, legendEl } = loadHypothesisGraph();
   HypothesisGraph.build(fixturePayload());
 
   HypothesisGraph.showLegend();
 
-  assert.strictEqual(legendEl.children.length, 5);
+  assert.strictEqual(legendEl.children.length, 4);
 });

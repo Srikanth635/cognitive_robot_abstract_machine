@@ -97,6 +97,9 @@ class {{ cls.python_name.name }}({{ bases(cls) }}):
         metadata=PropertyTerm(
             iri={{ declared.property_iri | python_string }},
             functional={{ declared.functional }},
+{% if declared.range_iri %}
+            range={{ declared.range_iri | python_string }},
+{% endif %}
         ).as_dict(),
     )
     """

@@ -67,6 +67,12 @@ class Violation:
     How the violation bears on admitting the hypothesis.
     """
 
+    involved: tuple[Any, ...] = ()
+    """
+    The other fragments the violation concerns, such as the events a structure leaves
+    unmonitored.
+    """
+
     def __str__(self) -> str:
         label = self.fragment.label or type(self.fragment).__name__
         return f"[{self.rule}] {label}: {self.reason}"
@@ -127,8 +133,10 @@ class TypedRule(AcceptanceRule, Generic[T], SubClassSafeGeneric, ABC):
             if isinstance(fragment, self.subject_type)
         ]
 
-    def violation(self, fragment: T) -> Violation:
+    def violation(self, fragment: T, involved: Sequence[Any] = ()) -> Violation:
         """
+        :param fragment: The fragment at fault.
+        :param involved: The other fragments the violation concerns.
         :return: The violation of the rule by a fragment.
         """
         return Violation(
@@ -136,6 +144,7 @@ class TypedRule(AcceptanceRule, Generic[T], SubClassSafeGeneric, ABC):
             fragment=fragment,
             reason=self.reason,
             severity=self.severity,
+            involved=tuple(involved),
         )
 
 
@@ -219,9 +228,16 @@ class StructureRule(TypedRule[T], ABC):
         :return: Whether the fragment violates the rule.
         """
 
+    def involved(self, fragment: T) -> list[DescriptionEntity]:
+        """
+        :return: The parts of a violating fragment the violation concerns; none, unless
+            the rule names them.
+        """
+        return []
+
     def violations(self, fragments: Sequence[DescriptionEntity]) -> list[Violation]:
         return [
-            self.violation(fragment)
+            self.violation(fragment, self.involved(fragment))
             for fragment in self.subjects(fragments)
             if self.is_violated_by(fragment)
         ]

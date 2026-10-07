@@ -9,7 +9,7 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze> a owl:Ontology ;
     owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze/0.2.0> ;
-    owl:versionInfo "0.2.0" ;
+    owl:versionInfo "0.2.1" ;
     owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> ;
     rdfs:label "Predictive manipulation: gaze"@en ;
     rdfs:comment """Gaze in manipulation: fixations of contact and avoidance landmarks, held until the phase goal, and visual control points."""@en .
@@ -60,7 +60,7 @@
     owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( core:SensorimotorControlPoint
         [ a owl:Restriction ; owl:onProperty core:hasPrediction ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasModality ; owl:hasValue core:Visual ] ] ) ] ;
     rdfs:label "visual control point"@en ;
-    rdfs:comment "A control point at which a contact event is also predicted and monitored in the visual modality."@en ;
+    rdfs:comment "A control point at which a contact event is also predicted and monitored in the visual modality. A pose confirmed by vision alone, such as a lip aligned over a receptacle, is checked by a comparison without a control point."@en ;
     core:evidenceStatus core:EmpiricalFinding ;
     core:representsClaim core:FJ-015 , core:JF09-10 .
 

@@ -8,8 +8,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
-from typing_extensions import Any, Mapping, Sequence
+from typing_extensions import Any, Callable, Mapping, Sequence
 
+from llm_reasoner.acceptance.derived import described
+from llm_reasoner.acceptance.rules import Violation
 from llm_reasoner.generation.schema import (
     FieldKind,
     FieldSchema,
@@ -38,6 +40,9 @@ How to answer:
   these ids, never by nesting.
 - Use only the types and fields listed. A field holding many values takes a list.
 - Choose the most specific type that fits; a label never replaces a type.
+- A type marked "Defined" is met by its fields: a fragment of another type that states
+  what the definition requires belongs to it as well. An estimate whose physical
+  dimension is a force rate is therefore also a force rate parameter.
 - Enumeration fields take the member name. Concept fields take a prefixed term such as
   aicor:Pouring.
 - Leave out a field you cannot fill rather than writing null.
@@ -94,6 +99,9 @@ def rendered_type(type_schema: TypeSchema) -> str:
     )
     own = vars(type_schema.python_type).get("__annotations__", {})
     lines = [heading, type_schema.description]
+    definition = type_schema.python_type.term.definition
+    if definition is not None:
+        lines.append(f"Defined: {described(definition, False)}.")
     lines.extend(
         f"- {field_schema.name}: {field_hint(field_schema)}. {field_schema.description}"
         for field_schema in type_schema.fields
@@ -126,8 +134,9 @@ class GenerationPrompt:
         root = schema.root.__name__
         sections = [
             f"Describe the organisation of this action: {instruction}",
-            f"Produce exactly one fragment of type {root}, together with every "
-            "fragment it refers to, directly or indirectly.",
+            f"Produce exactly one fragment of type {root}, together with the "
+            "fragments that make it up. Every fragment you write is part of the "
+            f"{root}, so it does not list them.",
         ]
         if fixed_values:
             sections.append(
@@ -150,17 +159,19 @@ class GenerationPrompt:
         return "\n\n".join(sections)
 
     @staticmethod
-    def repair(previous_prompt: str, raw_response: str, problems: Sequence[str]) -> str:
+    def repair(initial_prompt: str, raw_response: str, problems: Sequence[str]) -> str:
         """
-        :param previous_prompt: The prompt the rejected answer responded to.
-        :param raw_response: The rejected answer, in full, since the model keeps no
-            memory of it.
-        :param problems: What is wrong, each naming the fragment at fault.
-        :return: The prompt asking the model to correct its answer.
+        :param initial_prompt: The first prompt of the request, which earlier repairs
+            are not added to.
+        :param raw_response: The latest rejected answer, in full, since the model keeps
+            no memory of it.
+        :param problems: What is wrong with that answer, each naming the fragment at
+            fault.
+        :return: The prompt asking the model to correct its latest answer.
         """
         return "\n\n".join(
             [
-                previous_prompt,
+                initial_prompt,
                 "## Your previous answer was rejected\n\n" + raw_response,
                 "These problems were found:\n"
                 + "\n".join(f"- {problem}" for problem in problems),
@@ -170,12 +181,27 @@ class GenerationPrompt:
         )
 
 
-def described_violation(violation: Any, identifier: str) -> str:
+def described_violation(
+    violation: Violation, identifier_of: Callable[[Any], str]
+) -> str:
     """
-    :return: A rule violation as the model is told it, naming the fragment's id.
+    :param violation: The violation.
+    :param identifier_of: The answer's identifier of a fragment.
+    :return: A rule violation as the model is told it, naming the ids of the fragment
+        at fault and of the fragments the violation concerns.
     """
     fragment = violation.fragment
+    described = (
+        f"[{violation.rule}] {type(fragment).__name__} "
+        f"'{identifier_of(fragment)}': {violation.reason}"
+    )
+    if not violation.involved:
+        return described
     return (
-        f"[{violation.rule}] {type(fragment).__name__} '{identifier}': "
-        f"{violation.reason}"
+        described
+        + "; concerns "
+        + ", ".join(
+            f"{type(involved).__name__} '{identifier_of(involved)}'"
+            for involved in violation.involved
+        )
     )

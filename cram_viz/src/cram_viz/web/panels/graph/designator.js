@@ -31,49 +31,15 @@
     );
     value.textContent = slot.value;
     line.appendChild(value);
-    // the same FrameRoleKind name the Hypothesis Graph tab's action frame uses for
-    // this participant -- one shared vocabulary, shown as a trailing Lisp comment
-    // rather than a second, differently-worded label
-    if (slot.frameRole) {
+    // the ontology role class the slot fills, shown as a trailing Lisp comment
+    if (slot.role) {
       const role = document.createElement('span');
       role.className = 'designator-lisp-role';
-      role.textContent = '  ; ' + slot.frameRole;
+      role.textContent = '  ; ' + slot.role;
       line.appendChild(role);
     }
     line.addEventListener('click', function () { selectCb(slot.nodeId); });
     return line;
-  }
-
-  // the slot's frame-semantic property groups, nested under it as a :framenet
-  // block -- the same data the graph half already shows as child nodes, reused
-  // here rather than left graph-only
-  function frameNetLines(slot) {
-    if (!slot.frameNet || !slot.frameNet.length) return [];
-    const lines = [];
-    const header = document.createElement('div');
-    header.className = 'designator-lisp-line designator-lisp-nested';
-    header.dataset.nodeId = slot.nodeId;
-    header.textContent = ':framenet';
-    header.addEventListener('click', function () { selectCb(slot.nodeId); });
-    lines.push(header);
-    slot.frameNet.forEach(function (group) {
-      const line = document.createElement('div');
-      line.className = 'designator-lisp-line designator-lisp-nested designator-lisp-nested-2';
-      line.dataset.nodeId = slot.nodeId;
-      const keyword = document.createElement('span');
-      keyword.className = 'designator-lisp-keyword';
-      keyword.textContent = group.keyword;
-      line.appendChild(keyword);
-      line.appendChild(document.createTextNode(' ('));
-      const values = document.createElement('span');
-      values.className = 'designator-lisp-framenet-value';
-      values.textContent = group.values.map(function (v) { return '"' + v + '"'; }).join(' ');
-      line.appendChild(values);
-      line.appendChild(document.createTextNode(')'));
-      line.addEventListener('click', function () { selectCb(slot.nodeId); });
-      lines.push(line);
-    });
-    return lines;
   }
 
   function build(payload) {
@@ -87,7 +53,6 @@
     el.appendChild(head);
     lisp.slots.forEach(function (slot) {
       el.appendChild(slotLine(slot));
-      frameNetLines(slot).forEach(function (line) { el.appendChild(line); });
     });
     const tail = document.createElement('div');
     tail.className = 'designator-lisp-line designator-lisp-static';

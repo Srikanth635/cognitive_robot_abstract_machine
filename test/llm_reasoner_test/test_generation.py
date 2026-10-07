@@ -14,17 +14,29 @@ import pytest
 from krrood.entity_query_language.factories import the
 from rdflib import Graph
 
-from llm_reasoner.acceptance.core import CoreRule, TransitionIsNotALoop
+from llm_reasoner.acceptance.core import (
+    CoreRule,
+    MechanicalBoundaryMonitored,
+    TransitionIsNotALoop,
+)
+from llm_reasoner.acceptance.derived import described
+from llm_reasoner.acceptance.rules import AcceptanceSuite
+from llm_reasoner.acceptance.vocabulary import Vocabulary
 from llm_reasoner.admission.consistency import ConsistencyCheck, OpenWorldCheck
 from llm_reasoner.admission.record import ConsistencyVerdict
 from llm_reasoner.admission.store import HypothesisStore
-from llm_reasoner.acceptance.rules import AcceptanceSuite
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.generation.backend import HypothesisBackend, HypothesisRejected
-from llm_reasoner.generation.schema import FieldKind, GenerationSchema
+from llm_reasoner.generation.prompts import described_violation, rendered_type
+from llm_reasoner.generation.schema import FieldKind, GenerationSchema, type_schema_for
 from llm_reasoner.generation.wire import FragmentDecoder
 from llm_reasoner.ontologies import CRAM_AICOR_NAMESPACE
-from llm_reasoner.ontologies.predictive_manipulation import core, pouring
+from llm_reasoner.ontologies.predictive_manipulation import (
+    core,
+    gaze,
+    pouring,
+    prehension,
+)
 from llm_reasoner.ontologies.terms import ConceptReference
 
 POURING = ConceptReference(iri=CRAM_AICOR_NAMESPACE + "Pouring")
@@ -71,6 +83,36 @@ class GenerationCase(StrEnum):
     GRIP_DRIVEN_LIFTOFF = "grip_driven_liftoff.json"
     """
     A pouring structure claiming lift-off occurs when grip force overcomes the weight.
+    """
+
+    STRINGIFIED_FRAGMENTS = "stringified_fragments.json"
+    """
+    The chained pouring structure with its fragment list written as one JSON string
+    followed by a stray closing brace, as a model answering through a forced tool call
+    sometimes writes it.
+    """
+
+    UNDECLARED_COMPONENTS = "undeclared_components.json"
+    """
+    A structure listing only some of its components, one of them never written, with a
+    comparison and a continuous prediction whose tolerance is a magnitude range.
+    """
+
+    CLASS_ENTAILED_VALUES = "class_entailed_values.json"
+    """
+    An alignment phase and a tactile prediction stating none of the values their classes
+    entail.
+    """
+
+    LOOPING_WITH_DANGLING_REFERENCE = "looping_with_dangling_reference.json"
+    """
+    A structure whose one transition loops back to its phase and whose other leads to a
+    phase no fragment is.
+    """
+
+    FIELD_OF_ANOTHER_TYPE = "field_of_another_type.json"
+    """
+    A phase stating the regulation mode, a field of the phase's controller.
     """
 
     LIFT_AND_POUR = "lift_and_pour.json"
@@ -132,14 +174,29 @@ class TestGenerationSchema:
 
     def test_fragment_field_accepts_every_specialisation_of_its_type(self):
         schema = GenerationSchema.for_root(core.ActionPhaseStructure)
-        defines_phase = schema.get("ActionPhaseStructure").field_named("defines_phase")
-        assert (defines_phase.kind, defines_phase.many) == (FieldKind.FRAGMENT, True)
-        assert pouring.TiltToFlowPhase.__name__ in defines_phase.accepted_types
+        to_phase = schema.get("PhaseTransition").field_named("to_phase")
+        assert (to_phase.kind, to_phase.many) == (FieldKind.FRAGMENT, False)
+        assert pouring.TiltToFlowPhase.__name__ in to_phase.accepted_types
 
     def test_enumeration_field_offers_its_members(self):
         schema = GenerationSchema.for_root(core.ActionPhaseStructure)
         regime = schema.get("ActionPhase").field_named("has_coupling_regime")
         assert regime.options == tuple(member.name for member in core.CouplingRegime)
+
+    def test_component_field_typed_by_an_earlier_superclass_declares_its_range(self):
+        component_fields = Vocabulary().component_fields(core.ActionPhaseStructure)
+        assert component_fields["defines_gaze_fixation"] is gaze.GazeFixation
+
+    def test_component_lists_of_the_structure_are_not_asked_for(self):
+        structure = GenerationSchema.for_root(core.ActionPhaseStructure).get(
+            "ActionPhaseStructure"
+        )
+        assert structure.field_named("defines_phase") is None
+        assert structure.field_named("defines_gaze_fixation") is None
+
+    def test_defined_type_is_shown_with_its_definition(self):
+        rendered = rendered_type(type_schema_for(core.ForceRateParameter))
+        assert described(core.ForceRateParameter.term.definition, False) in rendered
 
     def test_inferred_super_property_is_not_asked_for(self):
         schema = GenerationSchema.for_root(core.ActionPhaseStructure)
@@ -187,6 +244,109 @@ class TestFragmentDecoder:
         )
         assert hypothesis.identifier_of(hypothesis.root) == "pour"
 
+    def test_fragment_list_written_as_a_string_is_read(self):
+        hypothesis = (
+            structure_decoder()
+            .decode(GenerationCase.STRINGIFIED_FRAGMENTS.text)
+            .hypothesis
+        )
+        (transition,) = hypothesis.root.defines_transition
+        assert isinstance(transition.from_phase, pouring.TiltToFlowPhase)
+        assert hypothesis.identifier_of(hypothesis.root) == "pour"
+
+    def test_every_component_written_is_declared_by_the_structure(self):
+        hypothesis = (
+            structure_decoder()
+            .decode(GenerationCase.UNDECLARED_COMPONENTS.text)
+            .hypothesis
+        )
+        root = hypothesis.root
+        assert sorted(map(hypothesis.identifier_of, root.defines_phase)) == [
+            "regulate",
+            "tilt",
+        ]
+        assert list(map(hypothesis.identifier_of, root.defines_transition)) == [
+            "tilt_to_regulate"
+        ]
+        assert list(map(hypothesis.identifier_of, root.defines_comparison)) == [
+            "mismatch"
+        ]
+        assert list(
+            map(hypothesis.identifier_of, root.defines_continuous_prediction)
+        ) == ["flow_rate"]
+
+    def test_value_no_component_field_accepts_is_not_declared(self):
+        hypothesis = (
+            structure_decoder()
+            .decode(GenerationCase.UNDECLARED_COMPONENTS.text)
+            .hypothesis
+        )
+        (tolerance,) = [
+            fragment
+            for fragment in hypothesis.fragments
+            if isinstance(fragment, core.MagnitudeRange)
+        ]
+        assert not any(
+            tolerance is component for component in hypothesis.root.defines_component
+        )
+
+    def test_values_the_class_entails_are_filled_in(self):
+        decoder = FragmentDecoder(
+            GenerationSchema.for_root(pouring.PouringPhaseStructure)
+        )
+        hypothesis = decoder.decode(
+            GenerationCase.CLASS_ENTAILED_VALUES.text
+        ).hypothesis
+        (alignment,) = [
+            fragment
+            for fragment in hypothesis.fragments
+            if isinstance(fragment, pouring.AlignmentPhase)
+        ]
+        (contact,) = [
+            fragment
+            for fragment in hypothesis.fragments
+            if isinstance(fragment, core.TactilePrediction)
+        ]
+        assert alignment.has_coupling_regime is core.CouplingRegime.COUPLED
+        assert contact.has_modality is core.SensoryModality.TACTILE
+
+    def test_undecodable_answer_keeps_what_could_be_linked(self):
+        decoded = structure_decoder().decode(GenerationCase.DANGLING_REFERENCE.text)
+        assert decoded.hypothesis is None
+        (transition,) = decoded.partial.root.defines_transition
+        assert decoded.partial.identifier_of(transition) == "step"
+        assert transition.from_phase is None
+
+    def test_field_of_another_type_names_the_types_declaring_it(self):
+        (problem,) = (
+            structure_decoder()
+            .decode(GenerationCase.FIELD_OF_ANOTHER_TYPE.text)
+            .problems
+        )
+        assert core.ActionPhaseController.__name__ in problem
+
+    def test_reference_of_wrong_type_repeats_the_fields_meaning(self):
+        decoder = structure_decoder()
+        description = (
+            decoder.schema.get("PhaseTransition").field_named("from_phase").description
+        )
+        (problem,) = decoder.decode(
+            GenerationCase.REFERENCE_OF_WRONG_TYPE.text
+        ).problems
+        assert description in problem
+
+    def test_reference_of_wrong_type_names_the_accepted_types(self):
+        decoder = structure_decoder()
+        accepted = (
+            decoder.schema.get("PhaseTransition")
+            .field_named("from_phase")
+            .accepted_types
+        )
+        (problem,) = decoder.decode(
+            GenerationCase.REFERENCE_OF_WRONG_TYPE.text
+        ).problems
+        assert all(type_name in problem for type_name in accepted)
+
     @pytest.mark.parametrize(
         "case, named",
         [
@@ -224,6 +384,40 @@ class TestHypothesisBackend:
         assert str(CoreRule.TRANSITION_IS_NOT_A_LOOP) in repair_prompt
         assert "'back_to_tilt'" in repair_prompt
         assert len(structure.defines_phase) == 2
+
+    def test_undecodable_answer_is_also_checked_against_the_rules(self):
+        backend = backend_answering(
+            GenerationCase.LOOPING_WITH_DANGLING_REFERENCE,
+            GenerationCase.CHAINED_STRUCTURE,
+        )
+        list(pouring_query().evaluate(backend=backend))
+        repair_prompt = backend.log[1].user
+        assert "missing_phase" in repair_prompt
+        assert str(CoreRule.TRANSITION_IS_NOT_A_LOOP) in repair_prompt
+
+    def test_violation_names_the_fragments_it_concerns(self):
+        liftoff = prehension.Liftoff()
+        structure = core.ActionPhaseStructure(
+            defines_phase=[core.ActionPhase(terminated_by=[liftoff])]
+        )
+        (violation,) = MechanicalBoundaryMonitored().violations([structure])
+        identifiers = {id(structure): "pour", id(liftoff): "lift_off"}
+        described = described_violation(
+            violation, lambda fragment: identifiers[id(fragment)]
+        )
+        assert "'pour'" in described and "'lift_off'" in described
+
+    def test_repair_shows_the_last_answer_only(self):
+        backend = backend_answering(
+            GenerationCase.LOOPING_STRUCTURE,
+            GenerationCase.DANGLING_REFERENCE,
+            GenerationCase.CHAINED_STRUCTURE,
+        )
+        list(pouring_query().evaluate(backend=backend))
+        initial, _, last = [user for _, user in backend.client.calls]
+        assert last.startswith(initial)
+        assert GenerationCase.DANGLING_REFERENCE.text in last
+        assert GenerationCase.LOOPING_STRUCTURE.text not in last
 
     def test_answer_contradicting_a_fixed_value_is_repaired(self):
         backend = backend_answering(

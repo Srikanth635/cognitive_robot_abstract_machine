@@ -126,6 +126,8 @@ class AnthropicClient(LanguageModelClient):
         ("haiku-3-5", 8_192),
         ("3-5-haiku", 8_192),
         ("haiku-4", 64_000),
+        ("sonnet-4-5", 64_000),
+        ("opus-4-5", 64_000),
         ("sonnet", 128_000),
         ("opus", 128_000),
         ("fable", 128_000),

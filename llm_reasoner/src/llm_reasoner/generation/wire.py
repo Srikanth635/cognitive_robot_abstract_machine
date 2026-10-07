@@ -12,11 +12,13 @@ from __future__ import annotations
 
 import json
 import re
+from operator import attrgetter
 from dataclasses import dataclass, field
 from enum import Enum
 
 from typing_extensions import Any, Mapping, Optional
 
+from llm_reasoner.acceptance.vocabulary import Vocabulary
 from llm_reasoner.generation.schema import FieldKind, FieldSchema, GenerationSchema
 from llm_reasoner.ontologies import CRAM_AICOR_NAMESPACE, DUL_NAMESPACE
 from llm_reasoner.ontologies.terms import ConceptReference, DescriptionEntity
@@ -98,6 +100,12 @@ class DecodingResult:
     What is wrong with the answer, each naming the fragment and field at fault.
     """
 
+    partial: Optional[DecodedHypothesis] = None
+    """
+    The fragments of an answer with problems, linked wherever their values could be
+    read, when the answer has its one root fragment; it is checked but never admitted.
+    """
+
 
 # %% decoder
 
@@ -113,18 +121,24 @@ class FragmentDecoder:
     The fragment types the answer may use.
     """
 
+    vocabulary: Vocabulary = field(default_factory=Vocabulary)
+    """
+    The generated vocabulary, read for the components a structure declares and the
+    values classes entail.
+    """
+
     def decode(self, raw_response: str) -> DecodingResult:
         """
-        :return: The hypothesis the answer describes, or the problems preventing one.
+        :return: The hypothesis the answer describes, or the problems preventing one
+            together with what of the answer could be linked.
         """
         entries, problems = self.entries(raw_response)
-        if problems:
-            return DecodingResult(problems=problems)
+        usable = self.usable_entries(entries)
         instances = {
             entry[IDENTIFIER_KEY]: self.schema.get(entry[TYPE_KEY]).python_type()
-            for entry in entries
+            for entry in usable
         }
-        for entry in entries:
+        for entry in usable:
             problems.extend(self.link(entry, instances))
         roots = [
             instance
@@ -136,29 +150,38 @@ class FragmentDecoder:
                 f"the answer has {len(roots)} fragments of type "
                 f"{self.schema.root.__name__}, but must have exactly one"
             )
-        if problems:
             return DecodingResult(problems=problems)
-        return DecodingResult(
-            hypothesis=DecodedHypothesis(
-                root=roots[0],
-                fragments=list(instances.values()),
-                identifiers={
-                    id(instance): identifier
-                    for identifier, instance in instances.items()
-                },
-            )
+        for instance in instances.values():
+            self.fill_entailed_values(instance)
+        self.declare_components(roots[0], list(instances.values()))
+        hypothesis = DecodedHypothesis(
+            root=roots[0],
+            fragments=list(instances.values()),
+            identifiers={
+                id(instance): identifier for identifier, instance in instances.items()
+            },
         )
+        if problems:
+            return DecodingResult(problems=problems, partial=hypothesis)
+        return DecodingResult(hypothesis=hypothesis)
 
     def entries(self, raw_response: str) -> tuple[list[dict[str, Any]], list[str]]:
         """
         :return: The answer's fragment entries, and the problems with their identifiers
             and types.
+
+        .. note::
+            A fragment list written as one JSON string, as a model answering through a
+            forced tool call sometimes writes it, is read as the list the string begins
+            with; anything the model wrote after that list is ignored.
         """
         located = JSON_OBJECT.search(raw_response)
         if located is None:
             return [], ["the answer contains no JSON object"]
         payload = json.loads(located.group(0))
         entries = payload.get(FRAGMENTS_KEY) if isinstance(payload, dict) else None
+        if isinstance(entries, str):
+            entries, _ = json.JSONDecoder().raw_decode(entries.lstrip())
         if not isinstance(entries, list):
             return [], [f'the answer has no "{FRAGMENTS_KEY}" list']
         problems = []
@@ -177,6 +200,44 @@ class FragmentDecoder:
                 )
         return entries, problems
 
+    def declaring_types(self, name: str) -> str:
+        """
+        :return: Where a field an answer put on the wrong type belongs, in words, or
+            nothing when no type of the schema declares it.
+        """
+        declaring = sorted(
+            type_schema.name
+            for type_schema in self.schema.types.values()
+            if type_schema.field_named(name) is not None
+            and name in vars(type_schema.python_type).get("__annotations__", {})
+        )
+        if not declaring:
+            return ""
+        return f"; it is a field of {', '.join(declaring)}"
+
+    def usable_entries(self, entries: list[Any]) -> list[dict[str, Any]]:
+        """
+        :return: The entries with an identifier not used before and a known type, which
+            become fragments even when the answer has problems.
+        """
+        seen: set[str] = set()
+        usable = []
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            identifier, type_name = entry.get(IDENTIFIER_KEY), entry.get(TYPE_KEY)
+            if (
+                not isinstance(identifier, str)
+                or not identifier
+                or identifier in seen
+                or not isinstance(type_name, str)
+                or self.schema.get(type_name) is None
+            ):
+                continue
+            seen.add(identifier)
+            usable.append(entry)
+        return usable
+
     def link(
         self, entry: dict[str, Any], instances: dict[str, DescriptionEntity]
     ) -> list[str]:
@@ -193,10 +254,14 @@ class FragmentDecoder:
             if name in (IDENTIFIER_KEY, TYPE_KEY):
                 continue
             field_schema = type_schema.field_named(name)
+            if field_schema is None and name in self.vocabulary.component_fields(
+                type(instance)
+            ):
+                continue
             if field_schema is None:
                 problems.append(
                     f"fragment '{identifier}' of type {type_schema.name} has no field "
-                    f"'{name}'"
+                    f"'{name}'" + self.declaring_types(name)
                 )
                 continue
             values = written if isinstance(written, list) else [written]
@@ -217,6 +282,53 @@ class FragmentDecoder:
             setattr(instance, name, converted if field_schema.many else converted[0])
         return problems
 
+    def fill_entailed_values(self, instance: DescriptionEntity) -> None:
+        """
+        Give a fragment the enumeration members and literals its classes entail, where
+        the answer states nothing else.
+        """
+        type_schema = self.schema.get(type(instance).__name__)
+        for name, value in self.vocabulary.entailed_values(type(instance)).items():
+            field_schema = type_schema.field_named(name)
+            if field_schema is None or field_schema.kind == FieldKind.FRAGMENT:
+                continue
+            stated = attrgetter(name)(instance)
+            if not field_schema.many and stated is None:
+                setattr(instance, name, value)
+            elif field_schema.many and value not in stated:
+                setattr(instance, name, [*stated, value])
+
+    def declare_components(
+        self, root: DescriptionEntity, fragments: list[DescriptionEntity]
+    ) -> None:
+        """
+        Declare every fragment of the answer as a component of the root, through the
+        most specific of the root's component fields accepting it; a fragment no
+        component field accepts, such as a magnitude range, is a value and stays
+        undeclared.
+        """
+        component_fields = self.vocabulary.component_fields(type(root))
+        declared: dict[str, list[DescriptionEntity]] = {
+            name: [] for name in component_fields
+        }
+        for fragment in fragments:
+            if fragment is root:
+                continue
+            accepting = {
+                name: component_type
+                for name, component_type in component_fields.items()
+                if isinstance(fragment, component_type)
+            }
+            for name, component_type in accepting.items():
+                if not any(
+                    other is not component_type and issubclass(other, component_type)
+                    for other in accepting.values()
+                ):
+                    declared[name].append(fragment)
+        for name, components in declared.items():
+            if components:
+                setattr(root, name, components)
+
     def value(
         self,
         field_schema: FieldSchema,
@@ -233,7 +345,9 @@ class FragmentDecoder:
             if type(referenced).__name__ not in field_schema.accepted_types:
                 return Problem(
                     f"'{written}' is a {type(referenced).__name__}, not a "
-                    f"{field_schema.value_type.__name__}"
+                    f"{field_schema.value_type.__name__}; the field accepts only "
+                    + ", ".join(field_schema.accepted_types)
+                    + f". {field_schema.name}: {field_schema.description}"
                 )
             return referenced
         if field_schema.kind == FieldKind.ENUMERATION:

@@ -1,0 +1,9 @@
+{"fragments": [
+  {"id": "pour", "type": "ActionPhaseStructure", "decomposes_task": "aicor:Pouring", "defines_phase": ["tilt", "phase_never_written"]},
+  {"id": "tilt", "type": "TiltToFlowPhase", "has_coupling_regime": "COUPLED"},
+  {"id": "regulate", "type": "FlowRegulationPhase"},
+  {"id": "tilt_to_regulate", "type": "PhaseTransition", "from_phase": "tilt", "to_phase": "regulate"},
+  {"id": "mismatch", "type": "MismatchingComparison"},
+  {"id": "flow_rate", "type": "ContinuousSignalPrediction", "has_tolerance": "tolerance"},
+  {"id": "tolerance", "type": "MagnitudeRange", "lower_bound": 0.0, "upper_bound": 1.0}
+]}

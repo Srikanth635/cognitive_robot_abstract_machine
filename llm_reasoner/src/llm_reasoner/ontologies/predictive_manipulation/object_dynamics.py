@@ -198,6 +198,7 @@ class ContextualRepresentation(core.EstimateRepresentation):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#representsRole",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ManipulationRole",
         ).as_dict(),
     )
     """
@@ -241,6 +242,7 @@ class DesiredState(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#desiredCondition",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseConditionType",
         ).as_dict(),
     )
     """
@@ -287,6 +289,7 @@ class DynamicsModel(ContextualRepresentation):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#usesEfferenceCopy",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#EfferenceCopy",
         ).as_dict(),
     )
     """
@@ -352,6 +355,7 @@ class DynamicsPerturbation(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#affectsModel",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#DynamicsModel",
         ).as_dict(),
     )
     """
@@ -385,6 +389,7 @@ class DynamicsPerturbation(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#matchedWith",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#DynamicsPerturbation",
         ).as_dict(),
     )
     """
@@ -442,6 +447,7 @@ class DynamicsTransfer(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#fromPerturbation",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#DynamicsPerturbation",
         ).as_dict(),
     )
     """
@@ -464,6 +470,7 @@ class DynamicsTransfer(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#toPerturbation",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#DynamicsPerturbation",
         ).as_dict(),
     )
     """
@@ -507,6 +514,7 @@ class EfferenceCopy(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#copiesCommand",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#MotorCommand",
         ).as_dict(),
     )
     """
@@ -579,6 +587,7 @@ class InternalModelComposition(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#predictsMechanicalConsequence",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MechanicalEventType",
         ).as_dict(),
     )
     """
@@ -590,6 +599,7 @@ class InternalModelComposition(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#predictsSensoryConsequence",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryEventPrediction",
         ).as_dict(),
     )
     """
@@ -601,6 +611,7 @@ class InternalModelComposition(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#usesDynamicsModel",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#DynamicsModel",
         ).as_dict(),
     )
     """
@@ -612,6 +623,7 @@ class InternalModelComposition(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#usesEfferenceCopy",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#EfferenceCopy",
         ).as_dict(),
     )
     """
@@ -623,6 +635,7 @@ class InternalModelComposition(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#usesForwardModel",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ForwardModel",
         ).as_dict(),
     )
     """
@@ -724,6 +737,7 @@ class MotorCommand(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#commandsSetpoint",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MotorSetpoint",
         ).as_dict(),
     )
     """
@@ -735,6 +749,7 @@ class MotorCommand(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#pursuesState",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#DesiredState",
         ).as_dict(),
     )
     """
@@ -746,6 +761,7 @@ class MotorCommand(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://aicor.knowledge/l2-ontology.owl#generatedBy",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#InternalModel",
         ).as_dict(),
     )
     """
@@ -807,6 +823,7 @@ class ObjectDynamicsPhaseStructure(core.ActionPhaseStructure):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesInternalModel",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#InternalModel",
         ).as_dict(),
     )
     """
@@ -818,6 +835,7 @@ class ObjectDynamicsPhaseStructure(core.ActionPhaseStructure):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#definesDesiredState",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#DesiredState",
         ).as_dict(),
     )
     """
@@ -829,6 +847,7 @@ class ObjectDynamicsPhaseStructure(core.ActionPhaseStructure):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#definesDynamicsPerturbation",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#DynamicsPerturbation",
         ).as_dict(),
     )
     """
@@ -840,6 +859,7 @@ class ObjectDynamicsPhaseStructure(core.ActionPhaseStructure):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#definesDynamicsTransfer",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#DynamicsTransfer",
         ).as_dict(),
     )
     """
@@ -851,6 +871,7 @@ class ObjectDynamicsPhaseStructure(core.ActionPhaseStructure):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#definesEfferenceCopy",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#EfferenceCopy",
         ).as_dict(),
     )
     """
@@ -862,6 +883,7 @@ class ObjectDynamicsPhaseStructure(core.ActionPhaseStructure):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#definesInternalModelComposition",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#InternalModelComposition",
         ).as_dict(),
     )
     """
@@ -873,6 +895,7 @@ class ObjectDynamicsPhaseStructure(core.ActionPhaseStructure):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#definesMotorCommand",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#MotorCommand",
         ).as_dict(),
     )
     """
@@ -884,6 +907,7 @@ class ObjectDynamicsPhaseStructure(core.ActionPhaseStructure):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#definesRepresentationDissociation",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#RepresentationDissociation",
         ).as_dict(),
     )
     """
@@ -895,6 +919,7 @@ class ObjectDynamicsPhaseStructure(core.ActionPhaseStructure):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#definesSensorimotorMemory",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#SensorimotorMemory",
         ).as_dict(),
     )
     """
@@ -986,6 +1011,7 @@ class RepresentationDissociation(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#hasPerceptualRepresentation",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#PerceptualRepresentation",
         ).as_dict(),
     )
     """
@@ -997,6 +1023,7 @@ class RepresentationDissociation(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#hasSensorimotorRepresentation",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#DynamicsModel",
         ).as_dict(),
     )
     """
@@ -1008,6 +1035,7 @@ class RepresentationDissociation(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#perceptualEstimate",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Estimate",
         ).as_dict(),
     )
     """
@@ -1019,6 +1047,7 @@ class RepresentationDissociation(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#sensorimotorEstimate",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Estimate",
         ).as_dict(),
     )
     """
@@ -1059,6 +1088,7 @@ class RetainedModelUpdate(core.ModelUpdate):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#persistsIn",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#SensorimotorMemory",
         ).as_dict(),
     )
     """
@@ -1120,6 +1150,7 @@ class SensorimotorMemory(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#storesRepresentation",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#ContextualRepresentation",
         ).as_dict(),
     )
     """

@@ -256,6 +256,13 @@ class FieldDeclaration:
     The Python type of a literal value, such as ``float``.
     """
 
+    range_iri: str = ""
+    """
+    The IRI of the class the values belong to, when they are fragments of a class of
+    the microworld; ``value_type`` names a superclass of it when the class is generated
+    in a later module.
+    """
+
 
 @dataclass(frozen=True)
 class AttachmentDeclaration:

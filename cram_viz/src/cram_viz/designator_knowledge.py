@@ -16,15 +16,9 @@ live World to draw its extension from, so it is offered illustrative stand-ins i
 the scene's own :class:`~cram_viz.kb.BenchObject`\\ s, which are graspable things but not
 real ``Body``/``Tool`` individuals.
 
-A referent slot's role is also tagged with the matching
-:class:`~cram_viz.hypothesis_knowledge.action_frame.FrameRoleKind`, the same
-vocabulary the Hypothesis Graph tab's Minsky action frame uses for its own
-``SourceContainer``/``DestinationContainer`` entities -- one name for the role, not
-two, even though the two tabs describe it at different layers. The tag also pulls
-that role's illustrative filler and property groups straight out of
-:func:`~cram_viz.hypothesis_knowledge.action_frame.MinskyActionFrameTemplate.
-cereal_pouring`, the same template object the Hypothesis Graph tab renders --
-nothing about the role is re-authored here, only re-displayed.
+A referent slot that fills a role of the pouring ontology is tagged with the role's
+class, and resolved illustratively to the scene object whose label reads closest to the
+active hypothesis's filler of that role -- still not a live resolver run.
 """
 
 from __future__ import annotations
@@ -32,7 +26,7 @@ from __future__ import annotations
 import dataclasses
 import inspect
 from dataclasses import dataclass, field
-from typing_extensions import TYPE_CHECKING, Any, List, Optional, Sequence, Tuple
+from typing_extensions import TYPE_CHECKING, Any, List, Optional, Sequence
 
 from krrood.entity_query_language.verbalization.rendering.source_documentation import (
     _attribute_docstrings,
@@ -47,14 +41,8 @@ from llm_reasoner.resolver.reflection import (
 )
 
 from coraplex.robot_plans.actions.composite.tool_based import PouringAction
-
-from cram_viz.hypothesis_knowledge import DEFAULT_INSTRUCTION
-from cram_viz.hypothesis_knowledge.action_frame import (
-    EntityFrame,
-    EntityPropertyFrame,
-    FrameRoleKind,
-    MinskyActionFrameTemplate,
-)
+from llm_reasoner.hypotheses.view import HypothesisView
+from llm_reasoner.ontologies.predictive_manipulation import core, pouring
 
 if TYPE_CHECKING:
     from cram_viz.kb import BenchObject
@@ -75,10 +63,9 @@ class IllustrativeCandidate:
 
     resolved: bool = False
     """
-    Whether this is the candidate chosen for :data:`DEFAULT_INSTRUCTION`, by
-    matching the frame role's illustrative filler name against the scene's own
-    objects. Still not a live resolver run -- just which of the same illustrative
-    stand-ins fits the one instruction the rest of the viewer already defaults to.
+    Whether this is the candidate the active hypothesis names for the slot's role.
+    Still not a live resolver run -- just which of the illustrative stand-ins reads
+    like the role's filler.
     """
 
 
@@ -107,24 +94,14 @@ class DesignatorSlot:
     candidates: List[IllustrativeCandidate] = field(default_factory=list)
     """Illustrative stand-in candidates for a referent slot; empty for a value slot."""
 
-    frame_role: Optional[FrameRoleKind] = None
+    role: Optional[type[core.ManipulationRole]] = None
     """
-    The Minsky action-frame role this slot fills, when it fills one -- the same
-    :class:`~cram_viz.hypothesis_knowledge.action_frame.FrameRoleKind` the
-    Hypothesis Graph tab's frame overlay names its entities with.
-    """
-
-    frame_properties: Tuple[EntityPropertyFrame, ...] = ()
-    """
-    The frame role's property groups (affordances, dispositions, visual and
-    geometric properties), taken directly from the Hypothesis Graph tab's own
-    :class:`~cram_viz.hypothesis_knowledge.action_frame.EntityFrame` for this role.
-    Empty for a slot with no frame role.
+    The ontology role this slot fills, when it fills one.
     """
 
     @property
     def resolved_candidate(self) -> Optional[IllustrativeCandidate]:
-        """:return: This slot's candidate chosen for :data:`DEFAULT_INSTRUCTION`, if any."""
+        """:return: This slot's candidate resolved for the active hypothesis, if any."""
         return next((c for c in self.candidates if c.resolved), None)
 
     @property
@@ -161,8 +138,11 @@ class DesignatorKnowledge:
     slots: List[DesignatorSlot]
     """Every directly-declared field of the designator, in declaration order."""
 
-    resolved_for_instruction: str = DEFAULT_INSTRUCTION
-    """The instruction a slot's :attr:`~DesignatorSlot.resolved_candidate` was chosen for."""
+    resolved_for_instruction: Optional[str] = None
+    """
+    The instruction of the hypothesis a slot's :attr:`~DesignatorSlot.resolved_candidate`
+    was chosen for, or ``None`` when there was none.
+    """
 
 
 # %% Lisp rendering
@@ -182,13 +162,10 @@ def _lisp_literal(value: Any) -> str:
     return str(value)
 
 
-#: PouringAction's own field names that fill a Minsky action-frame role, mapped to
-#: the shared :class:`FrameRoleKind` the Hypothesis Graph tab's frame overlay already
-#: uses for the same participant (see :func:`.action_frame.MinskyActionFrameTemplate
-#: .cereal_pouring`) -- one vocabulary for the role, named once.
-_FRAME_ROLE_BY_FIELD_NAME = {
-    "source_container": FrameRoleKind.SOURCE_CONTAINER,
-    "target_container": FrameRoleKind.DESTINATION_CONTAINER,
+#: PouringAction's own field names that fill a role of the pouring ontology
+_ROLE_BY_FIELD_NAME = {
+    "source_container": pouring.SourceContainer,
+    "target_container": pouring.TargetReceptacle,
 }
 
 
@@ -243,12 +220,12 @@ def _best_matching_candidate(
     concrete_name: str, candidates: Sequence[IllustrativeCandidate]
 ) -> Optional[IllustrativeCandidate]:
     """
-    Pick the scene object whose label reads closest to a frame role's illustrative
+    Pick the scene object whose label reads closest to a role filler's
     filler name (e.g. matching "Breakfast Cereal" to "Cereal Box" through the shared
     word "cereal"), rather than naming a specific object outright -- the same match
     would still make sense if the scene's objects changed.
 
-    :param concrete_name: A frame entity's illustrative filler name.
+    :param concrete_name: The label of the role's filler.
     :param candidates: The referent slot's candidates.
     :return: The best-scoring candidate, or ``None`` if none share a word with it.
     """
@@ -262,48 +239,33 @@ def _best_matching_candidate(
 
 
 def _candidates_for_role(
-    frame_role: Optional[FrameRoleKind],
-    frame_template: MinskyActionFrameTemplate,
+    role: Optional[type[core.ManipulationRole]],
+    view: Optional[HypothesisView],
     objects: Sequence[BenchObject],
-) -> Tuple[List[IllustrativeCandidate], Tuple[EntityPropertyFrame, ...]]:
+) -> List[IllustrativeCandidate]:
     """
-    Build one referent slot's candidates and, when its role has a frame entity,
-    mark the candidate resolved for :data:`DEFAULT_INSTRUCTION` and carry that
-    entity's property groups along.
+    Build one referent slot's candidates, marking resolved the one reading like the
+    active hypothesis's filler of the slot's role.
 
-    :param frame_role: The slot's frame role, or ``None`` for a slot with none.
-    :param frame_template: The Hypothesis Graph tab's action-frame template.
+    :param role: The slot's role, or ``None`` for a slot with none.
+    :param view: The active hypothesis, or ``None`` when there is none.
     :param objects: The scene's bench objects.
-    :return: The slot's candidates, and the role's property groups (empty without one).
+    :return: The slot's candidates.
     """
     candidates = [
         IllustrativeCandidate(identifier=bench_object.name, label=bench_object.label)
         for bench_object in objects
         if bench_object.kind == "object"
     ]
-    entity = _entity_for_role(frame_template, frame_role)
-    if entity is None:
-        return candidates, ()
-    resolved = _best_matching_candidate(entity.concrete_name, candidates)
+    if role is None or view is None:
+        return candidates
+    fillers = [filler for filler in view.root.defines_role if type(filler) is role]
+    if not fillers or not fillers[0].label:
+        return candidates
+    resolved = _best_matching_candidate(fillers[0].label, candidates)
     if resolved is not None:
         resolved.resolved = True
-    return candidates, entity.property_frames
-
-
-def _entity_for_role(
-    frame_template: MinskyActionFrameTemplate, frame_role: Optional[FrameRoleKind]
-) -> Optional[EntityFrame]:
-    """
-    :param frame_template: The Hypothesis Graph tab's action-frame template.
-    :param frame_role: The role to look up, or ``None``.
-    :return: The template's entity for that role, or ``None``.
-    """
-    if frame_role is None:
-        return None
-    return next(
-        (entity for entity in frame_template.entities if entity.role is frame_role),
-        None,
-    )
+    return candidates
 
 
 def _classify(declared_type: Any, alternatives: Optional[List[type]]) -> SlotKind:
@@ -322,30 +284,33 @@ def _classify(declared_type: Any, alternatives: Optional[List[type]]) -> SlotKin
     return SlotKind.REFERENT
 
 
-def reflect_pouring_action(objects: Sequence[BenchObject]) -> DesignatorKnowledge:
+def reflect_pouring_action(
+    objects: Sequence[BenchObject], view: Optional[HypothesisView]
+) -> DesignatorKnowledge:
     """
     Reflect :class:`PouringAction` into a static slot table.
 
     :param objects: The scene's bench objects, offered as illustrative candidates for
         referent slots.
+    :param view: The active hypothesis, whose role fillers resolve the referent
+        slots, or ``None`` when there is none.
     :return: The reflected designator.
     """
     designator_type = PouringAction
     docstrings = inspect.getdoc(designator_type)
     fields_by_name = {f.name: f for f in dataclasses.fields(designator_type)}
     field_docstrings = _attribute_docstrings(designator_type)
-    frame_template = MinskyActionFrameTemplate.cereal_pouring()
     slots = []
     for name in _direct_field_names(designator_type):
         declared_type = _resolved_type(designator_type, name)
         alternatives = union_alternatives(declared_type)
         kind = _classify(declared_type, alternatives)
         default, has_default = _default_for(fields_by_name[name])
-        frame_role = _FRAME_ROLE_BY_FIELD_NAME.get(name)
-        candidates, frame_properties = (
-            _candidates_for_role(frame_role, frame_template, objects)
+        role = _ROLE_BY_FIELD_NAME.get(name)
+        candidates = (
+            _candidates_for_role(role, view, objects)
             if kind is SlotKind.REFERENT
-            else ([], ())
+            else []
         )
         slots.append(
             DesignatorSlot(
@@ -356,12 +321,12 @@ def reflect_pouring_action(objects: Sequence[BenchObject]) -> DesignatorKnowledg
                 default=default,
                 has_default=has_default,
                 candidates=candidates,
-                frame_role=frame_role,
-                frame_properties=frame_properties,
+                role=role,
             )
         )
     return DesignatorKnowledge(
         designator_name=designator_type.__name__,
         docstring=docstrings,
         slots=slots,
+        resolved_for_instruction=view.record.instruction if view is not None else None,
     )

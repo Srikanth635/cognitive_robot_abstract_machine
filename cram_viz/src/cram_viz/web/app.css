@@ -261,10 +261,6 @@ body{
 .designator-lisp-value.referent{color:var(--warn)}
 .designator-lisp-value.resolved{color:var(--accent)}
 .designator-lisp-role{color:var(--faint);font-style:italic}
-.designator-lisp-nested{padding-left:24px;opacity:.78;font-size:11px}
-.designator-lisp-nested-2{padding-left:38px}
-.designator-lisp-nested .designator-lisp-keyword{color:#8c9bbd}
-.designator-lisp-framenet-value{color:var(--muted)}
 
 /* view tabs: knowledge graph / kinematics / plan / motion statechart */
 .graph-tabs{

@@ -5,7 +5,6 @@ transitions, conditions and quantities that a restriction on one class cannot st
 
 from __future__ import annotations
 
-import inspect
 from dataclasses import fields
 from enum import StrEnum
 from functools import cached_property
@@ -30,6 +29,7 @@ from llm_reasoner.acceptance.rules import (
     TypedRule,
     Violation,
 )
+from llm_reasoner.acceptance.vocabulary import Vocabulary
 from llm_reasoner.ontologies.predictive_manipulation import core
 from llm_reasoner.ontologies.terms import DescriptionEntity, PropertyTerm
 
@@ -1119,7 +1119,13 @@ class MechanicalBoundaryMonitored(StructureRule[core.ActionPhaseStructure]):
             "a mechanical phase boundary has neither a control point nor an exemption"
         )
 
-    def is_violated_by(self, fragment: core.ActionPhaseStructure) -> bool:
+    def involved(
+        self, fragment: core.ActionPhaseStructure
+    ) -> list[core.MechanicalEventType]:
+        """
+        :return: The mechanical phase boundaries with neither a control point nor an
+            exemption.
+        """
         covered = {
             id(control_point.at_event_type)
             for control_point in fragment.defines_control_point
@@ -1127,11 +1133,14 @@ class MechanicalBoundaryMonitored(StructureRule[core.ActionPhaseStructure]):
             id(exemption.exempts_event)
             for exemption in fragment.defines_control_point_exemption
         }
-        return any(
-            id(event) not in covered
+        return [
+            event
             for event in normal_boundaries(fragment)
-            if isinstance(event, core.MechanicalEventType)
-        )
+            if isinstance(event, core.MechanicalEventType) and id(event) not in covered
+        ]
+
+    def is_violated_by(self, fragment: core.ActionPhaseStructure) -> bool:
+        return bool(self.involved(fragment))
 
 
 class ExemptionNamesNormalBoundary(StructureRule[core.ActionPhaseStructure]):
@@ -1176,30 +1185,12 @@ class ComponentsDeclared(TypedRule[core.ActionPhaseStructure]):
     @staticmethod
     def component_fields(
         structure: core.ActionPhaseStructure,
-    ) -> list[core.DefinesComponent]:
+    ) -> dict[str, type[DescriptionEntity]]:
         """
-        :return: The descriptors of the structure's fields that declare components.
+        :return: The structure's fields declaring components, with the class each
+            declares.
         """
-        return [
-            descriptor
-            for declared in fields(structure)
-            for descriptor in [
-                inspect.getattr_static(type(structure), declared.name, None)
-            ]
-            if isinstance(descriptor, core.DefinesComponent)
-        ]
-
-    def declarable_types(
-        self, structure: core.ActionPhaseStructure
-    ) -> tuple[type, ...]:
-        """
-        :return: The kinds of fragment the structure can declare as components.
-        """
-        return tuple(
-            descriptor.range
-            for descriptor in self.component_fields(structure)
-            if type(descriptor) is not core.DefinesComponent
-        )
+        return Vocabulary().component_fields(type(structure))
 
     def declared(self, structure: core.ActionPhaseStructure) -> set[int]:
         """
@@ -1207,8 +1198,8 @@ class ComponentsDeclared(TypedRule[core.ActionPhaseStructure]):
         """
         return {
             id(component)
-            for descriptor in self.component_fields(structure)
-            for component in attrgetter(descriptor.field_name)(structure)
+            for name in self.component_fields(structure)
+            for component in attrgetter(name)(structure)
         }
 
     @staticmethod
@@ -1235,7 +1226,7 @@ class ComponentsDeclared(TypedRule[core.ActionPhaseStructure]):
         violations: list[Violation] = []
         for structure in self.subjects(fragments):
             declarable, declared = (
-                self.declarable_types(structure),
+                tuple(self.component_fields(structure).values()),
                 self.declared(structure),
             )
             violations.extend(

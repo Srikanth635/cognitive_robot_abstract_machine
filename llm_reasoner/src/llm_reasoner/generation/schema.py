@@ -17,6 +17,7 @@ from krrood.ontomatic.property_descriptor.property_descriptor import PropertyDes
 from krrood.utils import recursive_subclasses
 from typing_extensions import Any
 
+from llm_reasoner.acceptance.vocabulary import Vocabulary
 from llm_reasoner.ontologies.terms import (
     ConceptReference,
     DescriptionEntity,
@@ -178,8 +179,10 @@ class GenerationSchema:
     def for_root(cls, root: type[DescriptionEntity]) -> GenerationSchema:
         """
         :return: The schema of every type reachable from the root through fields,
-            together with every subclass of those types.
+            including the component fields a model does not fill, together with every
+            subclass of those types.
         """
+        vocabulary = Vocabulary()
         schema = cls(root=root)
         frontier = [root]
         while frontier:
@@ -194,6 +197,7 @@ class GenerationSchema:
                     for field_schema in type_schema.fields
                     if field_schema.kind == FieldKind.FRAGMENT
                 )
+                frontier.extend(vocabulary.component_fields(candidate).values())
         return schema
 
     def get(self, name: str) -> TypeSchema | None:
@@ -238,16 +242,24 @@ def type_schema_for(python_type: type[DescriptionEntity]) -> TypeSchema:
     for owner in reversed(python_type.__mro__):
         if isinstance(owner, type) and issubclass(owner, DescriptionEntity):
             docstrings.update(_attribute_docstrings(owner))
+    vocabulary = Vocabulary()
     fields = []
     for wrapped in WrappedClass(python_type).fields:
         name = wrapped.field.name
         term = PropertyTerm.of_field(python_type, name)
-        if name != LABEL_FIELD and (term is None or is_inferred(python_type, name)):
+        if name != LABEL_FIELD and (
+            term is None
+            or is_inferred(python_type, name)
+            or name in vocabulary.component_fields(python_type)
+        ):
             continue
         many = term is not None and not term.functional
         fields.append(
             field_schema_for(
-                name, docstrings.get(name, ""), wrapped.type_endpoint, many
+                name,
+                docstrings.get(name, ""),
+                vocabulary.value_type_of(python_type, name, wrapped.type_endpoint),
+                many,
             )
         )
     return TypeSchema(

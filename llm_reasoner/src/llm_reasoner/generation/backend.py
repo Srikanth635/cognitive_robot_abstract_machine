@@ -232,7 +232,8 @@ class HypothesisBackend(GenerativeBackend):
             return
         schema = GenerationSchema.for_root(expression.type)
         decoder = FragmentDecoder(schema)
-        prompt = self.prompt.initial(schema, instruction, fixed)
+        initial_prompt = self.prompt.initial(schema, instruction, fixed)
+        prompt = initial_prompt
         self.log = []
         problems: list[str] = []
         for attempt in range(self.max_repairs + 1):
@@ -261,7 +262,7 @@ class HypothesisBackend(GenerativeBackend):
                 yield assessment.hypothesis.root
                 return
             problems = assessment.problems
-            prompt = self.prompt.repair(prompt, raw_response, problems)
+            prompt = self.prompt.repair(initial_prompt, raw_response, problems)
         raise HypothesisRejected(problems=problems, exchanges=list(self.log))
 
     @staticmethod
@@ -284,7 +285,7 @@ class HypothesisBackend(GenerativeBackend):
             wrong with it.
         """
         if decoded.hypothesis is None:
-            return Assessment(problems=decoded.problems)
+            return Assessment(problems=decoded.problems + self.rule_problems(decoded))
         hypothesis = decoded.hypothesis
         problems = [
             f"the root fragment '{hypothesis.identifier_of(hypothesis.root)}' must have "
@@ -294,7 +295,7 @@ class HypothesisBackend(GenerativeBackend):
         ]
         violations = self.suite.violations(hypothesis.fragments)
         problems.extend(
-            described_violation(violation, hypothesis.identifier_of(violation.fragment))
+            described_violation(violation, hypothesis.identifier_of)
             for violation in violations
             if violation.severity == Severity.ERROR
         )
@@ -321,6 +322,21 @@ class HypothesisBackend(GenerativeBackend):
                 if violation.severity == Severity.WARNING
             ],
         )
+
+    def rule_problems(self, decoded: DecodingResult) -> list[str]:
+        """
+        :return: The rule errors of what could be linked of an answer with problems,
+            so a repair corrects both at once; none when not even the root could be
+            linked.
+        """
+        partial = decoded.partial
+        if partial is None:
+            return []
+        return [
+            described_violation(violation, partial.identifier_of)
+            for violation in self.suite.violations(partial.fragments)
+            if violation.severity == Severity.ERROR
+        ]
 
     @staticmethod
     def agrees(stated: Any, fixed: Any) -> bool:
@@ -349,7 +365,7 @@ class HypothesisBackend(GenerativeBackend):
             client_identity=self.client.identity,
             exchanges=outcome.exchanges,
             warnings=[
-                described_violation(warning, hypothesis.identifier_of(warning.fragment))
+                described_violation(warning, hypothesis.identifier_of)
                 for warning in outcome.warnings
             ],
             consistency=(

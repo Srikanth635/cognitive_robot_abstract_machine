@@ -32,7 +32,6 @@
     root: { background: '#e9c46a', label: 'Knowledge root' },
     group: { background: '#457b9d', label: 'Knowledge group' },
     fragment: { background: '#2a9d8f', label: 'Knowledge detail' },
-    unresolved: { background: '#e63946', label: 'Not stated in instruction' },
   };
   const NODE_BORDER_COLOR = '#888888';
   const EDGE_COLOR = '#9aa0a6';
@@ -75,7 +74,7 @@
   let pendingClickTimeout = null;
 
   function visNode(node, position) {
-    const color = node.unresolved ? NODE_COLOR.unresolved : (NODE_COLOR[node.kind] || NODE_COLOR.fragment);
+    const color = NODE_COLOR[node.kind] || NODE_COLOR.fragment;
     const rendered = {
       id: node.id,
       label: node.label,

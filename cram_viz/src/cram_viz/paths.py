@@ -24,12 +24,15 @@ from pathlib import Path
 #: the packaged frontend: index.html, panels, vendored libraries
 WEB_ROOT = Path(__file__).resolve().parent / "web"
 
-#: the packaged static resources: currently just the hypothesis knowledge graph
+#: the packaged static resources
 RESOURCES_ROOT = Path(__file__).resolve().parent / "resources"
 
 #: the notebook-exported cereal-pouring knowledge graph, kept as a reference snapshot
 #: of the graph the Hypothesis Graph tab now builds live
 HYPOTHESIS_KNOWLEDGE_GRAPH_PATH = RESOURCES_ROOT / "hypothesis_knowledge_graph.json"
+
+#: the store holding the checked-in sample hypothesis
+SAMPLE_HYPOTHESES_PATH = RESOURCES_ROOT / "sample_hypotheses"
 
 
 def data_dir() -> Path:
@@ -96,9 +99,9 @@ def default_live_demo() -> Path:
     """
     The demo the viewer's "Execute" button launches under the live bridge.
 
-    Hardcoded to one illustrative demo until picking a demo becomes part of the
-    UI, same as the hand-authored :mod:`cram_viz.hypothesis_knowledge` content it
-    currently has nothing to do with.
+    Hardcoded to one illustrative demo until picking a demo becomes part of the UI, same
+    as the hand-authored :mod:`cram_viz.hypothesis_knowledge` content it currently has
+    nothing to do with.
     """
     return (
         architecture_root()

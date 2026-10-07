@@ -263,6 +263,10 @@ class TestProperties:
     Every ontology property is a field, holding one value when it is functional.
     """
 
+    def test_field_typed_by_an_earlier_superclass_records_its_range(self):
+        term = PropertyTerm.of_field(core.ActionPhaseStructure, "defines_gaze_fixation")
+        assert term.range == gaze.GazeFixation.term.iri
+
     def test_every_microworld_property_is_a_field(self, ontology):
         properties = {
             prop
@@ -291,6 +295,23 @@ class TestProperties:
         assert (
             core.MeasurementUnit.KILOGRAM.measures_dimension
             == core.PhysicalDimension.MASS
+        )
+
+    @pytest.mark.parametrize(
+        "unit, dimension",
+        [
+            ("MILLIMETRE", "LENGTH"),
+            ("CENTIMETRE", "LENGTH"),
+            ("GRAM", "MASS"),
+            ("LITRE", "VOLUME"),
+        ],
+    )
+    def test_unit_at_the_scale_of_manipulation_measures_its_dimension(
+        self, unit, dimension
+    ):
+        assert (
+            core.MeasurementUnit[unit].measures_dimension
+            == core.PhysicalDimension[dimension]
         )
 
     def test_no_field_is_declared_only_on_a_defined_class(self):
