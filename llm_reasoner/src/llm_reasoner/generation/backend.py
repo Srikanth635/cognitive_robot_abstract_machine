@@ -47,6 +47,7 @@ from llm_reasoner.generation.prompts import (
     written_value,
 )
 from llm_reasoner.generation.schema import GenerationSchema
+from llm_reasoner.ontologies.linked import LinkedOntologyTerms
 from llm_reasoner.generation.wire import (
     DecodedHypothesis,
     DecodingResult,
@@ -212,6 +213,12 @@ class HypothesisBackend(GenerativeBackend):
     passes the acceptance rules; no open-world check when absent.
     """
 
+    linked_terms: Optional[LinkedOntologyTerms] = field(kw_only=True, default=None)
+    """
+    The terms CRAM-AICOR and DUL declare, which concepts named in their namespaces
+    must be among; without them such concepts are not checked.
+    """
+
     store: Optional[HypothesisStore] = field(kw_only=True, default=None)
     """
     Where admitted hypotheses are stored and looked up before asking the model; no
@@ -247,7 +254,7 @@ class HypothesisBackend(GenerativeBackend):
             yield GraphReader().read(stored.graph).root_of(expression.type)
             return
         schema = GenerationSchema.for_root(expression.type)
-        decoder = FragmentDecoder(schema)
+        decoder = FragmentDecoder(schema, linked_terms=self.linked_terms)
         system_prompt = self.prompt.system(schema)
         initial_prompt = self.prompt.initial(schema, instruction, fixed)
         prompt = initial_prompt

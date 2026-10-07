@@ -1,0 +1,6 @@
+{"fragments": [
+  {"id": "pour", "type": "ActionPhaseStructure", "decomposes_task": "aicor:Pouring"},
+  {"id": "grasp_category", "type": "CategoricalValue", "has_category": "aicor:EffectorAtGraspSite"},
+  {"id": "side_category", "type": "CategoricalValue", "has_category": "hypothesis:SideGraspAtMidHeight"},
+  {"id": "misspelt_category", "type": "CategoricalValue", "has_category": "aicor:Graspin"}
+]}

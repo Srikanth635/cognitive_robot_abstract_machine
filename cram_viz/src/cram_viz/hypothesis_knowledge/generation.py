@@ -38,6 +38,7 @@ from llm_reasoner.generation.backend import HypothesisBackend
 from llm_reasoner.hypotheses.service import KnowledgeService
 from llm_reasoner.hypotheses.view import HypothesisView
 from llm_reasoner.ontologies import CRAM_AICOR_NAMESPACE
+from llm_reasoner.ontologies.linked import LinkedOntologyTerms
 from llm_reasoner.ontologies.predictive_manipulation import pouring
 from llm_reasoner.ontologies.terms import ConceptReference
 from typing_extensions import Optional
@@ -183,6 +184,15 @@ class ModelHypothesisSource(HypothesisSource):
     environment variables naming the linked ontologies, and skipped without them.
     """
 
+    linked_terms: Optional[LinkedOntologyTerms] = field(
+        default_factory=LinkedOntologyTerms.from_environment
+    )
+    """
+    The terms CRAM-AICOR and DUL declare, which the concepts of an answer named in their
+    namespaces must be among; read from the environment variables naming the linked
+    ontologies, and unchecked without them.
+    """
+
     _service: Optional[KnowledgeService] = field(default=None, init=False)
     """
     The knowledge service, built on first use.
@@ -227,6 +237,7 @@ class ModelHypothesisSource(HypothesisSource):
                     suite=self.suite,
                     max_repairs=MAX_REPAIRS,
                     consistency=self.consistency,
+                    linked_terms=self.linked_terms,
                     store=HypothesisStore(
                         directory=self.store_directory or paths.hypothesis_store_dir()
                     ),

@@ -27,10 +27,15 @@ from llm_reasoner.admission.record import ConsistencyVerdict
 from llm_reasoner.admission.store import HypothesisStore
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.generation.backend import HypothesisBackend, HypothesisRejected
-from llm_reasoner.generation.prompts import described_violation, rendered_type
+from llm_reasoner.generation.prompts import (
+    described_violation,
+    field_hint,
+    rendered_type,
+)
 from llm_reasoner.generation.schema import FieldKind, GenerationSchema, type_schema_for
 from llm_reasoner.generation.wire import FragmentDecoder
-from llm_reasoner.ontologies import CRAM_AICOR_NAMESPACE
+from llm_reasoner.ontologies import CRAM_AICOR_NAMESPACE, HYPOTHESIS_CONCEPT_NAMESPACE
+from llm_reasoner.ontologies.linked import LinkedOntologyTerms, OntologyFiles
 from llm_reasoner.ontologies.predictive_manipulation import (
     core,
     gaze,
@@ -38,6 +43,16 @@ from llm_reasoner.ontologies.predictive_manipulation import (
     prehension,
 )
 from llm_reasoner.ontologies.terms import ConceptReference
+
+LINKED_EXCERPTS = OntologyFiles(
+    paths=[
+        Path(__file__).parent / "linked_ontology_cases" / "cram_aicor_excerpt.ttl",
+        Path(__file__).parent / "linked_ontology_cases" / "dul_excerpt.owl",
+    ]
+)
+"""
+Excerpts of CRAM-AICOR and DUL declaring a few terms.
+"""
 
 POURING = ConceptReference(iri=CRAM_AICOR_NAMESPACE + "Pouring")
 """
@@ -141,6 +156,12 @@ class GenerationCase(StrEnum):
     LIFTOFF_DRIVEN_BY_LOAD_PATCH = "liftoff_driven_by_load_patch.json"
     """
     A repair of the grip-driven lift-off making the driving force the load force.
+    """
+
+    CONCEPTS_LINKED_AND_LOCAL = "concepts_linked_and_local.json"
+    """
+    Categorical values naming a CRAM-AICOR term that does not exist, a concept of the
+    hypothesis itself, and a misspelt CRAM-AICOR term.
     """
 
     LIFT_AND_POUR = "lift_and_pour.json"
@@ -392,6 +413,41 @@ class TestFragmentDecoder:
         ).problems
         assert description in problem
 
+    def test_linked_concept_the_ontologies_lack_is_a_problem(self):
+        decoder = FragmentDecoder(
+            GenerationSchema.for_root(core.ActionPhaseStructure),
+            linked_terms=LinkedOntologyTerms.from_files(LINKED_EXCERPTS),
+        )
+        problems = decoder.decode(
+            GenerationCase.CONCEPTS_LINKED_AND_LOCAL.text
+        ).problems
+        assert [problem for problem in problems if "EffectorAtGraspSite" in problem]
+        assert [problem for problem in problems if "aicor:Grasping" in problem]
+        assert not [
+            problem for problem in problems if "SideGraspAtMidHeight" in problem
+        ]
+
+    def test_concept_of_the_hypothesis_is_read_into_its_own_namespace(self):
+        decoder = FragmentDecoder(
+            GenerationSchema.for_root(core.ActionPhaseStructure),
+            linked_terms=LinkedOntologyTerms.from_files(LINKED_EXCERPTS),
+        )
+        partial = decoder.decode(GenerationCase.CONCEPTS_LINKED_AND_LOCAL.text).partial
+        (side,) = [
+            fragment
+            for fragment in partial.fragments
+            if partial.identifier_of(fragment) == "side_category"
+        ]
+        assert side.has_category == ConceptReference(
+            iri=HYPOTHESIS_CONCEPT_NAMESPACE + "SideGraspAtMidHeight"
+        )
+
+    def test_linked_concepts_are_not_checked_without_the_ontologies(self):
+        decoded = structure_decoder().decode(
+            GenerationCase.CONCEPTS_LINKED_AND_LOCAL.text
+        )
+        assert decoded.problems == []
+
     def test_reference_of_wrong_type_names_the_accepted_types(self):
         decoder = structure_decoder()
         accepted = (
@@ -517,6 +573,23 @@ class TestHypothesisBackend:
         prompt = backend.log[0].user
         assert backend.instruction in prompt
         assert "decomposes_task = aicor:Pouring" in prompt
+
+    def test_concept_the_linked_ontologies_lack_is_returned_to_repair(self):
+        backend = backend_answering(GenerationCase.CONCEPTS_LINKED_AND_LOCAL)
+        backend.linked_terms = LinkedOntologyTerms.from_files(LINKED_EXCERPTS)
+        backend.max_repairs = 0
+        with pytest.raises(HypothesisRejected) as refusal:
+            list(pouring_query().evaluate(backend=backend))
+        assert [
+            problem
+            for problem in refusal.value.problems
+            if "aicor:EffectorAtGraspSite" in problem
+        ]
+
+    def test_concept_fields_offer_concepts_of_the_hypothesis(self):
+        schema = GenerationSchema.for_root(core.ActionPhaseStructure)
+        category = schema.get("CategoricalValue").field_named("has_category")
+        assert "hypothesis:" in field_hint(category)
 
     def test_no_admissible_answer_within_the_budget_is_refused(self):
         backend = backend_answering(*[GenerationCase.LOOPING_STRUCTURE] * 3)

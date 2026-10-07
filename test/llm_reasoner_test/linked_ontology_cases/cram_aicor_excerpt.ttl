@@ -1,0 +1,6 @@
+@prefix : <http://aicor.knowledge/l2-ontology.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+:Grasping a owl:Class .
+:Pouring a owl:Class .
+:hasConditionType a owl:ObjectProperty .
