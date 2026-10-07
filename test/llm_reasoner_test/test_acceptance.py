@@ -61,7 +61,6 @@ from llm_reasoner.acceptance.gaze import (
 from llm_reasoner.acceptance.pouring import (
     MaterialFitsFlowDynamics,
     PouringEventsSpecific,
-    PouringPhasesCovered,
     PouringPhasesOrdered,
     TerminationReasonHasEvent,
 )
@@ -97,6 +96,7 @@ from llm_reasoner.ontologies.terms import (
     ClassExpression,
     ConceptReference,
     DescriptionEntity,
+    NamedClass,
     PropertyRestriction,
     PropertyTerm,
     Quantifier,
@@ -1186,6 +1186,41 @@ def pouring_structure(**fields: object) -> pouring.PouringPhaseStructure:
     return pouring.PouringPhaseStructure(**defaults)
 
 
+class TestPouringPhaseRequirements:
+    """
+    A pouring structure covers the whole sequence of acquiring, pouring from and putting
+    back its source.
+    """
+
+    @pytest.mark.parametrize(
+        "phase_type",
+        [
+            prehension.ReachPhase,
+            prehension.ContactEstablishmentPhase,
+            prehension.ForceLoadingPhase,
+            prehension.LiftPhase,
+            prehension.TransportPhase,
+            pouring.AlignmentPhase,
+            pouring.TiltToFlowPhase,
+            pouring.FlowRegulationPhase,
+            pouring.FlowTerminationPhase,
+            pouring.ReturnUprightPhase,
+            prehension.ReplacePhase,
+            prehension.ContactReleasePhase,
+        ],
+    )
+    def test_pouring_structure_without_the_phase_violates_its_requirement(
+        self, phase_type
+    ):
+        structure = pouring_structure()
+        required = PropertyRestriction(
+            property_iri=property_iri(pouring.PouringPhaseStructure, "defines_phase"),
+            quantifier=Quantifier.SOME,
+            filler=NamedClass(iri=phase_type.term.iri),
+        )
+        assert (id(structure), required) in violated([structure])
+
+
 class TestPouringRules:
     """
     What a pouring structure must contain, in what order, and for which material.
@@ -1203,19 +1238,6 @@ class TestPouringRules:
         )
         (violation,) = PouringEventsSpecific().violations([structure])
         assert violation.involved == (generic_event,)
-
-    def test_pouring_without_flow_regulation_is_reported(self):
-        partial = pouring_structure(
-            defines_phase=[pouring.TiltToFlowPhase(), pouring.FlowTerminationPhase()]
-        )
-        complete = pouring_structure(
-            defines_phase=[
-                pouring.TiltToFlowPhase(),
-                pouring.FlowRegulationPhase(),
-                pouring.FlowTerminationPhase(),
-            ]
-        )
-        assert violators(PouringPhasesCovered(), [partial, complete]) == [partial]
 
     def test_transition_against_the_pouring_order_is_reported(self):
         tilt, regulate = pouring.TiltToFlowPhase(), pouring.FlowRegulationPhase()

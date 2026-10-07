@@ -11,7 +11,7 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring> a owl:Ontology ;
     owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring/0.3.0> ;
-    owl:versionInfo "0.3.0" ;
+    owl:versionInfo "0.4.0" ;
     owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension> ;
     rdfs:label "Predictive manipulation: pouring"@en ;
     rdfs:comment """Substance transfer as an engineering extension, tied to CRAM-AICOR's pouring model: aicor:Pouring, the roles of aicor:PouringIntention, the states of aicor:PouringTemplate and aicor:EffluxOnsetEvent."""@en .
@@ -329,11 +329,22 @@
         [ a owl:Restriction ; owl:onProperty core:definesRole ; owl:someValuesFrom :SourceContainer ] ,
         [ a owl:Restriction ; owl:onProperty core:definesRole ; owl:someValuesFrom :TargetReceptacle ] ,
         [ a owl:Restriction ; owl:onProperty core:definesRole ; owl:someValuesFrom :PouredSubstance ] ,
+        [ a owl:Restriction ; owl:onProperty core:definesPhase ; owl:someValuesFrom pre:ReachPhase ] ,
+        [ a owl:Restriction ; owl:onProperty core:definesPhase ; owl:someValuesFrom pre:ContactEstablishmentPhase ] ,
+        [ a owl:Restriction ; owl:onProperty core:definesPhase ; owl:someValuesFrom pre:ForceLoadingPhase ] ,
+        [ a owl:Restriction ; owl:onProperty core:definesPhase ; owl:someValuesFrom pre:LiftPhase ] ,
+        [ a owl:Restriction ; owl:onProperty core:definesPhase ; owl:someValuesFrom pre:TransportPhase ] ,
+        [ a owl:Restriction ; owl:onProperty core:definesPhase ; owl:someValuesFrom :AlignmentPhase ] ,
+        [ a owl:Restriction ; owl:onProperty core:definesPhase ; owl:someValuesFrom :TiltToFlowPhase ] ,
         [ a owl:Restriction ; owl:onProperty core:definesPhase ; owl:someValuesFrom :FlowRegulationPhase ] ,
+        [ a owl:Restriction ; owl:onProperty core:definesPhase ; owl:someValuesFrom :FlowTerminationPhase ] ,
+        [ a owl:Restriction ; owl:onProperty core:definesPhase ; owl:someValuesFrom :ReturnUprightPhase ] ,
+        [ a owl:Restriction ; owl:onProperty core:definesPhase ; owl:someValuesFrom pre:ReplacePhase ] ,
+        [ a owl:Restriction ; owl:onProperty core:definesPhase ; owl:someValuesFrom pre:ContactReleasePhase ] ,
         [ a owl:Restriction ; owl:onProperty :hasMaterialRegime ; owl:someValuesFrom :MaterialRegime ] ,
         [ a owl:Restriction ; owl:onProperty :hasTerminationReason ; owl:someValuesFrom :TransferTerminationReason ] ;
     rdfs:label "pouring phase structure"@en ;
-    rdfs:comment "A substance-transfer phase structure composed with prehension."@en ;
+    rdfs:comment "A substance-transfer phase structure composed with prehension: the source is reached, grasped, loaded, lifted and transported, aligned and tilted until the substance flows, regulated and stopped, returned upright, put back and released. Unloading and withdrawing the hand are optional."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :hasMaterialRegime a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :MaterialRegime ;
