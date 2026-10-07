@@ -251,6 +251,29 @@ class TestContradictionLocaliser:
 # %% HermiT
 
 
+class TestHermitCheckFromEnvironment:
+    """
+    The open-world check is configured by the environment variables naming the linked
+    ontologies.
+    """
+
+    def test_no_check_without_the_linked_ontologies(self, monkeypatch):
+        for variable in LinkedOntologyVariable:
+            monkeypatch.delenv(variable, raising=False)
+        assert HermitCheck.from_environment() is None
+
+    def test_check_covers_the_microworld_and_the_linked_ontologies(
+        self, monkeypatch, tmp_path
+    ):
+        for variable in LinkedOntologyVariable:
+            monkeypatch.setenv(variable, str(tmp_path / variable.lower()))
+        check = HermitCheck.from_environment()
+        assert list(check.background_files) == [
+            *MICROWORLD_FILES,
+            *(tmp_path / variable.lower() for variable in LinkedOntologyVariable),
+        ]
+
+
 def configured_path(variable: LinkedOntologyVariable) -> Path:
     """
     Return the ontology file an environment variable names, or skip when it names none.

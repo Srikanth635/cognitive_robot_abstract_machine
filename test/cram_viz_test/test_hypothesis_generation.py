@@ -16,9 +16,11 @@ from pathlib import Path
 import pytest
 
 from llm_reasoner.acceptance.rules import AcceptanceSuite
+from llm_reasoner.admission.hermit import HermitCheck
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.generation.backend import HypothesisRejected
 from llm_reasoner.hypotheses.view import HypothesisView
+from llm_reasoner.ontologies import LinkedOntologyVariable
 from llm_reasoner.ontologies.predictive_manipulation import pouring
 
 from cram_viz import hypothesis_knowledge
@@ -84,12 +86,14 @@ def restore_active_knowledge():
 
 def scripted_source(tmp_path: Path) -> ModelHypothesisSource:
     """
-    Return a source whose model gives one scripted answer, admitted without rules.
+    Return a source whose model gives one scripted answer, admitted without rules or an
+    open-world check.
     """
     return ModelHypothesisSource(
         store_directory=tmp_path,
         client=ScriptedClient(responses=[SCRIPTED_ANSWER.read_text()]),
         suite=AcceptanceSuite(rules=[]),
+        consistency=None,
     )
 
 
@@ -138,6 +142,16 @@ class TestModelHypothesisSource:
         monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
         source = ModelHypothesisSource(store_directory=tmp_path)
         assert source.client_for_generation().model == GENERATION_MODEL
+
+    def test_open_world_check_is_configured_from_the_environment(
+        self, monkeypatch, tmp_path
+    ):
+        for variable in LinkedOntologyVariable:
+            monkeypatch.setenv(variable, str(tmp_path / variable.lower()))
+        source = ModelHypothesisSource(
+            store_directory=tmp_path, client=ScriptedClient()
+        )
+        assert isinstance(source.consistency, HermitCheck)
 
 
 # %% credentials
