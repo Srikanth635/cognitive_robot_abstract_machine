@@ -28,18 +28,24 @@ import logging
 import os
 import re
 from collections import Counter, defaultdict
+from enum import StrEnum
 from dataclasses import dataclass, fields, is_dataclass
 from functools import cache
 
 from krrood.entity_query_language import factories as eql_factories
 from krrood.entity_query_language.predicate import HasType
 from krrood.symbol_graph.symbol_graph import SymbolGraph
-from llm_reasoner.ontologies.predictive_manipulation import core, pouring, prehension
+from llm_reasoner.ontologies.predictive_manipulation import (
+    core,
+    gaze,
+    pouring,
+    prehension,
+)
 from llm_reasoner.hypotheses.graph import (
     HypothesisGraphNode,
     HypothesisGraphRelation,
 )
-from llm_reasoner.ontologies.terms import DescriptionEntity
+from llm_reasoner.ontologies.terms import ConceptReference, DescriptionEntity
 from llm_reasoner.resolver.reflection import SlotKind
 from typing_extensions import Any, Callable, Dict, List, Optional, Tuple
 
@@ -820,7 +826,9 @@ class KB:
         active_hypothesis = hypothesis_knowledge.active()
         view = active_hypothesis.view if active_hypothesis else None
         structure = view.root if view else None
-        self.pouring_phases = list(structure.defines_phase) if structure else []
+        # in the order the phases run, so an answer listing phases reads as the
+        # sequence of the action
+        self.pouring_phases = view.phases() if view else []
         self.pouring_roles = list(structure.defines_role) if structure else []
         self.pouring_event_types = (
             list(structure.defines_event_type) if structure else []
@@ -841,6 +849,19 @@ class KB:
         )
         self.pouring_continuous_predictions = (
             list(structure.defines_continuous_prediction) if structure else []
+        )
+        self.pouring_parameters = list(structure.defines_parameter) if structure else []
+        self.pouring_sensory_predictions = (
+            list(structure.defines_prediction) if structure else []
+        )
+        self.pouring_comparisons = (
+            list(structure.defines_comparison) if structure else []
+        )
+        self.pouring_corrections = (
+            list(structure.defines_correction) if structure else []
+        )
+        self.pouring_gaze_fixations = (
+            list(structure.defines_gaze_fixation) if structure else []
         )
         condition_requirements_by_identity = {}
         for phase in self.pouring_phases:
@@ -1153,11 +1174,13 @@ def fresh_namespace(selected_scene: Optional[str] = None) -> Dict[str, Any]:
         RegulationMode=core.RegulationMode,
         CouplingRegime=core.CouplingRegime,
         ConditionMode=core.ConditionMode,
+        ComparisonOutcome=core.ComparisonOutcome,
         ForceKind=core.ForceKind,
         HasType=HasType,
         core=core,
         prehension=prehension,
         pouring=pouring,
+        gaze=gaze,
         objects=kb.objects,
         episodes=kb.episodes,
         arms=kb.arms,
@@ -1259,6 +1282,21 @@ def fresh_namespace(selected_scene: Optional[str] = None) -> Dict[str, Any]:
     namespace["pouring_condition_requirement"] = eql_factories.variable(
         core.ConditionRequirement, domain=kb.pouring_condition_requirements
     )
+    namespace["pouring_parameter"] = eql_factories.variable(
+        core.Parameter, domain=kb.pouring_parameters
+    )
+    namespace["pouring_sensory_prediction"] = eql_factories.variable(
+        core.SensoryEventPrediction, domain=kb.pouring_sensory_predictions
+    )
+    namespace["pouring_comparison"] = eql_factories.variable(
+        core.PredictionComparison, domain=kb.pouring_comparisons
+    )
+    namespace["pouring_correction"] = eql_factories.variable(
+        core.CorrectiveAction, domain=kb.pouring_corrections
+    )
+    namespace["pouring_gaze_fixation"] = eql_factories.variable(
+        gaze.GazeFixation, domain=kb.pouring_gaze_fixations
+    )
     return namespace
 
 
@@ -1281,18 +1319,27 @@ def _entity_name(value: Any) -> Optional[str]:
 def _jsonable(value: Any) -> Any:
     """
     A JSON-serializable rendering of one query result value.
+
+    An ontology term -- an enumerated individual or a concept a fragment cites -- is
+    written with its namespace's prefix, such as ``core:Coupled``.
     """
+    if isinstance(value, (tuple, list)):
+        # a tuple of plain strings is content a
+        # query answer names, not metadata to hide -- render it as a real list
+        # rather than a Python repr string, which reads as debug output. Checked
+        # before the dataclass case: a fragment's list field is a list that is also
+        # a dataclass, whose repr would hide its members.
+        return [_jsonable(element) for element in value]
+    if isinstance(value, StrEnum):
+        return OntologyBacking().prefixed(value.value)
+    if isinstance(value, ConceptReference):
+        return OntologyBacking().prefixed(value.iri)
     if is_dataclass(value) and not isinstance(value, type):
         return _entity_name(value) or repr(value)
     if isinstance(value, float):
         return round(value, 4)
     if isinstance(value, (str, int, bool)) or value is None:
         return value
-    if isinstance(value, (tuple, list)):
-        # a tuple of plain strings is content a
-        # query answer names, not metadata to hide -- render it as a real list
-        # rather than a Python repr string, which reads as debug output
-        return [_jsonable(element) for element in value]
     return repr(value)
 
 
@@ -1399,6 +1446,27 @@ def _entity_row(item: Any, highlight: List[str]) -> Dict[str, Any]:
     One entity as an answer row; collects the ids to highlight.
     """
     name = _entity_name(item)
+    _append_highlight(item, highlight)
+    row = {"__entity__": name or repr(item), "__type__": type(item).__name__}
+    if isinstance(item, DescriptionEntity):
+        # a real knowledge fragment's other fields are relational (a phase's own
+        # events, roles, conditions...), not flat data -- dumping them here repeats
+        # what a list-valued field already renders as an unreadable repr(), and
+        # duplicates what the Hypothesis Graph tab exists to explore by expanding
+        # the node itself. The EQL answer names the matching entities; the graph
+        # is where their structure is examined.
+        return row
+    for entity_field in fields(item):
+        if entity_field.name != "name":
+            row[entity_field.name] = _jsonable(getattr(item, entity_field.name))
+    return row
+
+
+def _append_highlight(item: Any, highlight: List[str]) -> None:
+    """
+    Collect the ids of the graph nodes standing for one answered entity.
+    """
+    name = _entity_name(item)
     if name:
         highlight.append(name)
     owned_category = _OWNED_HIGHLIGHT_CATEGORY.get(type(item))
@@ -1427,19 +1495,6 @@ def _entity_row(item: Any, highlight: List[str]) -> Dict[str, Any]:
     elif owned_category:
         category, owner_field = owned_category
         _append_owned_highlight(highlight, category, owner_field, item)
-    row = {"__entity__": name or repr(item), "__type__": type(item).__name__}
-    if isinstance(item, DescriptionEntity):
-        # a real knowledge fragment's other fields are relational (a phase's own
-        # events, roles, conditions...), not flat data -- dumping them here repeats
-        # what a list-valued field already renders as an unreadable repr(), and
-        # duplicates what the Hypothesis Graph tab exists to explore by expanding
-        # the node itself. The EQL answer names the matching entities; the graph
-        # is where their structure is examined.
-        return row
-    for entity_field in fields(item):
-        if entity_field.name != "name":
-            row[entity_field.name] = _jsonable(getattr(item, entity_field.name))
-    return row
 
 
 def _item_row(item: Any, highlight: List[str]) -> Dict[str, Any]:
@@ -1451,12 +1506,9 @@ def _item_row(item: Any, highlight: List[str]) -> Dict[str, Any]:
     if hasattr(item, "items"):  # UnificationDict from set_of()
         row = {}
         for key, value in item.items():
-            if (
-                is_dataclass(value)
-                and not isinstance(value, type)
-                and _entity_name(value)
-            ):
-                highlight.append(_entity_name(value))
+            for answered in value if isinstance(value, list) else [value]:
+                if is_dataclass(answered) and not isinstance(answered, type):
+                    _append_highlight(answered, highlight)
             row[str(key)] = _jsonable(value)
         return row
     return {"value": _jsonable(item)}
@@ -2861,11 +2913,12 @@ def _domain_knowledge_presets(kb: KB) -> List[Dict[str, str]]:
 
 def _hypothesis_graph_presets(kb: KB) -> List[Dict[str, str]]:
     """
-    Ready-made queries over the active pouring structure.
+    Ready-made queries over the active pouring structure, asking in turn about its
+    phase sequence, the roles taking part, the conditions it requires, how each phase
+    is controlled, what the robot predicts, and how it recovers from failures.
 
-    Each answer names only the matching fragments (see :func:`_entity_row`): the query
-    highlights them in the Hypothesis Graph tab, where their own structure is explored
-    by expanding the node.
+    Each answer names the fragments it involves and highlights them in the Hypothesis
+    Graph tab, where their own structure is explored by expanding the node.
 
     There are none until an instruction has been generated, since every one of them
     would match nothing.
@@ -2874,55 +2927,115 @@ def _hypothesis_graph_presets(kb: KB) -> List[Dict[str, str]]:
         return []
     return [
         {
-            "text": "what are the action phases involved in the action?",
+            "text": "in what order do the phases of the action run?",
             "code": "an(entity(pouring_phase))",
+        },
+        {
+            "text": "which phase follows which, and which event triggers each step?",
+            "code": (
+                "set_of(pouring_transition.from_phase, pouring_transition.to_phase,"
+                " pouring_transition.gated_by)"
+            ),
+        },
+        {
+            "text": "which events start and end each phase?",
+            "code": (
+                "set_of(pouring_phase, pouring_phase.initiated_by,"
+                " pouring_phase.terminated_by)"
+            ),
+        },
+        {
+            "text": "what does each phase aim for, and which event confirms it?",
+            "code": (
+                "set_of(pouring_phase, pouring_phase.aims_for.targets_condition,"
+                " pouring_phase.aims_for.attainment_signalled_by)"
+            ),
+        },
+        {
+            "text": "which objects and effectors take part in each phase?",
+            "code": "set_of(pouring_phase, pouring_phase.involves_role)",
+        },
+        {
+            "text": (
+                "which conditions must hold throughout a phase, and which failure "
+                "signals a breach?"
+            ),
+            "code": (
+                "set_of(pouring_phase, pouring_condition_requirement.has_condition_type,"
+                " pouring_condition_requirement.violation_signalled_by)"
+                ".where(in_(pouring_condition_requirement,"
+                " pouring_phase.has_condition_requirement),"
+                " pouring_condition_requirement.has_condition_mode"
+                " == ConditionMode.THROUGHOUT)"
+            ),
+        },
+        {
+            "text": "what does the action assume about the world before it starts?",
+            "code": (
+                "set_of(pouring_condition_requirement.has_condition_type,"
+                " pouring_condition_requirement.has_condition_polarity)"
+                ".where(pouring_condition_requirement.is_world_assumption == True)"
+            ),
+        },
+        {
+            "text": (
+                "is each phase run feedforward or by feedback, and are grip and load "
+                "coupled in it?"
+            ),
+            "code": (
+                "set_of(pouring_phase, pouring_phase.controlled_by.has_regulation_mode,"
+                " pouring_phase.has_coupling_regime)"
+            ),
+        },
+        {
+            "text": "which quantities does each phase set, and in what range?",
+            "code": (
+                "set_of(pouring_phase, pouring_parameter,"
+                " pouring_parameter.has_parameter_range.lower_bound,"
+                " pouring_parameter.has_parameter_range.upper_bound,"
+                " pouring_parameter.has_parameter_range.has_unit)"
+                ".where(in_(pouring_parameter, pouring_phase.has_active_parameter))"
+            ),
+        },
+        {
+            "text": "which categorical choices, such as a target pose, does each phase make?",
+            "code": (
+                "set_of(pouring_phase, pouring_parameter,"
+                " pouring_parameter.has_categorical_value.has_category)"
+                ".where(in_(pouring_parameter, pouring_phase.has_active_parameter))"
+            ),
+        },
+        {
+            "text": "in which phases must grip force follow the load, and with what margin?",
+            "code": (
+                "set_of(pouring_coupling.coupling_active_in,"
+                " pouring_coupling.has_load_origin,"
+                " pouring_coupling.has_safety_margin.has_parameter_range.lower_bound,"
+                " pouring_coupling.has_safety_margin.has_parameter_range.has_unit)"
+            ),
+        },
+        {
+            "text": "which sensory events does the robot predict, by which sense, and when?",
+            "code": (
+                "set_of(pouring_sensory_prediction.predicts_event,"
+                " pouring_sensory_prediction.has_modality,"
+                " pouring_sensory_prediction.has_expected_timing.earliest_offset,"
+                " pouring_sensory_prediction.has_expected_timing.latest_offset,"
+                " pouring_sensory_prediction.has_expected_timing.has_unit)"
+            ),
+        },
+        {
+            "text": "where does the robot look in each phase, and until when?",
+            "code": (
+                "set_of(pouring_gaze_fixation.serves_phase,"
+                " pouring_gaze_fixation.fixates_role,"
+                " pouring_gaze_fixation.has_gaze_mode,"
+                " pouring_gaze_fixation.maintained_until)"
+            ),
         },
         {
             "text": "which events change the forces acting in the action?",
             "code": "an(entity(pouring_force_dynamic_event))",
-        },
-        {
-            "text": "what transitions connect the phases (the state machine)?",
-            "code": "an(entity(pouring_transition))",
-        },
-        {
-            "text": "which conditions must hold throughout a phase (invariants)?",
-            "code": (
-                "an(entity(pouring_condition_requirement)"
-                ".where(pouring_condition_requirement.has_condition_mode"
-                " == ConditionMode.THROUGHOUT))"
-            ),
-        },
-        {
-            "text": "which phases keep grip and load force coupled?",
-            "code": (
-                "an(entity(pouring_phase)"
-                ".where(pouring_phase.has_coupling_regime == CouplingRegime.COUPLED))"
-            ),
-        },
-        {
-            "text": "which phases are regulated by continuous feedback?",
-            "code": (
-                "an(entity(pouring_phase)"
-                ".where(pouring_phase.controlled_by.has_regulation_mode"
-                " == RegulationMode.CONTINUOUS_FEEDBACK))"
-            ),
-        },
-        {
-            "text": "what event initiates the lift phase (its precondition)?",
-            "code": (
-                "an(entity(pouring_event_type)"
-                ".where(HasType(pouring_phase, prehension.LiftPhase))"
-                ".where(in_(pouring_event_type, pouring_phase.initiated_by)))"
-            ),
-        },
-        {
-            "text": "what event terminates the lift phase (its postcondition)?",
-            "code": (
-                "an(entity(pouring_event_type)"
-                ".where(HasType(pouring_phase, prehension.LiftPhase))"
-                ".where(in_(pouring_event_type, pouring_phase.terminated_by)))"
-            ),
         },
         {
             "text": "which failures can occur during the action?",
@@ -2932,8 +3045,26 @@ def _hypothesis_graph_presets(kb: KB) -> List[Dict[str, str]]:
             ),
         },
         {
-            "text": "where does the action compare predictions with observations?",
-            "code": "an(entity(pouring_control_point))",
+            "text": (
+                "at which events does a mismatch with the prediction trigger a "
+                "correction, and which?"
+            ),
+            "code": (
+                "set_of(pouring_control_point.at_event_type,"
+                " pouring_comparison.invokes_correction)"
+                ".where(in_(pouring_comparison, pouring_control_point.has_comparison),"
+                " pouring_comparison.has_comparison_outcome"
+                " == ComparisonOutcome.MISMATCH)"
+            ),
+        },
+        {
+            "text": "how does each correction respond, and which setpoint does it change?",
+            "code": (
+                "set_of(pouring_correction,"
+                " pouring_correction.has_correction_direction,"
+                " pouring_correction.has_recovery_mode,"
+                " pouring_correction.targets_setpoint)"
+            ),
         },
     ]
 
