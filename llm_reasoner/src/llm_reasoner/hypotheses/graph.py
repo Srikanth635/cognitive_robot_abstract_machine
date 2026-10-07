@@ -159,6 +159,20 @@ class HypothesisGraph:
     """
 
     @property
+    def instruction(self) -> HypothesisGraphNode:
+        """
+        The instruction node.
+        """
+        return self.graph[self.instruction_index]
+
+    @property
+    def root(self) -> HypothesisGraphNode:
+        """
+        The root's node.
+        """
+        return self.graph[self.root_index]
+
+    @property
     def nodes(self) -> list[HypothesisGraphNode]:
         """
         Every node.

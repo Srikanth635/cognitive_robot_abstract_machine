@@ -8,7 +8,7 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> a owl:Ontology ;
     owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.4.0> ;
-    owl:versionInfo "0.4.0" ;
+    owl:versionInfo "0.4.2" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
     rdfs:label "Predictive manipulation: core"@en ;
     rdfs:comment """The action-neutral core of a microworld for predictive object manipulation, drawn from "Control strategies in object manipulation tasks" (2006), "Coding and use of tactile signals from the fingertips in object manipulation tasks" (2009), "Sensory control of object manipulation" (2009) and "Motor prediction" (2001).
@@ -868,20 +868,24 @@ Classes classify description-level individuals, the knowledge a language model g
 
 :MeasurementUnit a owl:Class ;
     rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :measuresDimension ; owl:someValuesFrom :PhysicalDimension ] ;
-    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Kilogram :KilogramPerSecond :Newton :NewtonPerSecond :NewtonMetre :Metre :Degree :DegreePerSecond :Millilitre :MillilitrePerSecond :Centipoise :Hertz :Second :Millisecond :Ratio ) ] ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Kilogram :Gram :KilogramPerSecond :Newton :NewtonPerSecond :NewtonMetre :Metre :Centimetre :Millimetre :Degree :DegreePerSecond :Litre :Millilitre :MillilitrePerSecond :Centipoise :Hertz :Second :Millisecond :Ratio ) ] ;
     rdfs:label "measurement unit"@en ;
     rdfs:comment "A unit measuring exactly one physical dimension. Neither CRAM-AICOR nor DUL defines units."@en ;
     :evidenceStatus :EngineeringExtension .
 :measuresDimension a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :PhysicalDimension ;
     rdfs:label "measures dimension"@en ; rdfs:comment "The single physical dimension a unit measures."@en .
 :Kilogram a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Mass ; rdfs:label "kilogram"@en ; rdfs:comment "Kilogram, a unit of mass."@en .
+:Gram a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Mass ; rdfs:label "gram"@en ; rdfs:comment "Gram, a unit of mass."@en .
 :KilogramPerSecond a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :MassFlowRate ; rdfs:label "kilogram per second"@en ; rdfs:comment "Kilogram per second, a unit of mass flow rate."@en .
 :Newton a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Force ; rdfs:label "newton"@en ; rdfs:comment "Newton, a unit of force."@en .
 :NewtonPerSecond a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :ForceRate ; rdfs:label "newton per second"@en ; rdfs:comment "Newton per second, a unit of force rate."@en .
 :NewtonMetre a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Torque ; rdfs:label "newton metre"@en ; rdfs:comment "Newton metre, a unit of torque."@en .
 :Metre a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Length ; rdfs:label "metre"@en ; rdfs:comment "Metre, a unit of length."@en .
+:Centimetre a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Length ; rdfs:label "centimetre"@en ; rdfs:comment "Centimetre, a unit of length."@en .
+:Millimetre a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Length ; rdfs:label "millimetre"@en ; rdfs:comment "Millimetre, a unit of length."@en .
 :Degree a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Angle ; rdfs:label "degree"@en ; rdfs:comment "Degree, a unit of angle."@en .
 :DegreePerSecond a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :AngularRate ; rdfs:label "degree per second"@en ; rdfs:comment "Degree per second, a unit of angular rate."@en .
+:Litre a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Volume ; rdfs:label "litre"@en ; rdfs:comment "Litre, a unit of volume."@en .
 :Millilitre a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Volume ; rdfs:label "millilitre"@en ; rdfs:comment "Millilitre, a unit of volume."@en .
 :MillilitrePerSecond a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :VolumetricFlowRate ; rdfs:label "millilitre per second"@en ; rdfs:comment "Millilitre per second, a unit of volumetric flow rate."@en .
 :Centipoise a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :DynamicViscosity ; rdfs:label "centipoise"@en ; rdfs:comment "Centipoise, a unit of dynamic viscosity."@en .
@@ -889,7 +893,7 @@ Classes classify description-level individuals, the knowledge a language model g
 :Second a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Time ; rdfs:label "second"@en ; rdfs:comment "Second, a unit of time."@en .
 :Millisecond a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Time ; rdfs:label "millisecond"@en ; rdfs:comment "Millisecond, a unit of time."@en .
 :Ratio a owl:NamedIndividual , :MeasurementUnit ; :measuresDimension :Dimensionless ; rdfs:label "ratio"@en ; rdfs:comment "Unit marker for dimensionless ratios and bounded fractions."@en .
-[ a owl:AllDifferent ; owl:distinctMembers ( :Kilogram :KilogramPerSecond :Newton :NewtonPerSecond :NewtonMetre :Metre :Degree :DegreePerSecond :Millilitre :MillilitrePerSecond :Centipoise :Hertz :Second :Millisecond :Ratio ) ] .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Kilogram :Gram :KilogramPerSecond :Newton :NewtonPerSecond :NewtonMetre :Metre :Centimetre :Millimetre :Degree :DegreePerSecond :Litre :Millilitre :MillilitrePerSecond :Centipoise :Hertz :Second :Millisecond :Ratio ) ] .
 
 # %% quantities
 
@@ -1262,7 +1266,7 @@ Classes classify description-level individuals, the knowledge a language model g
         [ a owl:Restriction ; owl:onProperty :comparesPrediction ; owl:someValuesFrom :SensoryEventPrediction ] ,
         [ a owl:Restriction ; owl:onProperty :hasComparisonOutcome ; owl:someValuesFrom :ComparisonOutcome ] ;
     rdfs:label "prediction comparison"@en ;
-    rdfs:comment "The comparison of one prediction with its observation at a control point."@en ;
+    rdfs:comment "The comparison of one prediction with its observation, grouped under a control point when the event is mechanical."@en ;
     :evidenceStatus :SupportedInterpretation ;
     :representsClaim :FJ-005 .
 
@@ -1389,11 +1393,11 @@ Classes classify description-level individuals, the knowledge a language model g
         [ a owl:Restriction ; owl:onProperty :hasPrediction ; owl:someValuesFrom :SensoryEventPrediction ] ,
         [ a owl:Restriction ; owl:onProperty :hasComparison ; owl:someValuesFrom :PredictionComparison ] ;
     rdfs:label "sensorimotor control point"@en ;
-    rdfs:comment "A planned event at which predicted and actual sensory signals are compared to monitor progress and detect errors."@en ;
+    rdfs:comment "A planned mechanical event, such as a contact or a lift-off, at which predicted and actual sensory signals are compared to monitor progress and detect errors. An event that is not mechanical, such as an attained pose or quantity, is checked by a comparison the structure declares without a control point."@en ;
     :evidenceStatus :AuthorHypothesis ;
     :representsClaim :FJ-001 , :FJ-005 , :JF09-01 .
 :atEventType a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :MechanicalEventType ;
-    rdfs:label "at event type"@en ; rdfs:comment "The mechanical event at which comparisons are performed."@en .
+    rdfs:label "at event type"@en ; rdfs:comment "The mechanical event at which comparisons are performed; never a pose, setpoint or external event."@en .
 :hasPrediction a owl:ObjectProperty ; rdfs:subPropertyOf aicor:operationalizes ; rdfs:range :SensoryEventPrediction ;
     rdfs:label "has prediction"@en ; rdfs:comment "A sensory consequence expected at the event, which the control point checks."@en .
 :hasComparison a owl:ObjectProperty ; rdfs:range :PredictionComparison ;

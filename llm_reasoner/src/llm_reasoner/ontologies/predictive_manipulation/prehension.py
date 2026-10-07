@@ -108,6 +108,7 @@ class AnticipatoryGripAdjustment(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#adjustmentActiveIn",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ActionPhase",
         ).as_dict(),
     )
     """
@@ -119,6 +120,7 @@ class AnticipatoryGripAdjustment(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#adjustsGripForce",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GripForceSetpoint",
         ).as_dict(),
     )
     """
@@ -141,6 +143,7 @@ class AnticipatoryGripAdjustment(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#triggeredByPrediction",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryEventPrediction",
         ).as_dict(),
     )
     """
@@ -512,6 +515,7 @@ class ForcesUnloaded(core.MechanicalEventType, core.SetpointAttainmentEventType)
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#weightSupportedBy",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ManipulationRole",
         ).as_dict(),
     )
     """
@@ -767,6 +771,7 @@ class GripForceCorridor(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#boundsSetpoint",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MotorSetpoint",
         ).as_dict(),
     )
     """
@@ -778,6 +783,7 @@ class GripForceCorridor(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://aicor.knowledge/l2-ontology.owl#lowerEdge",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#SlipEvent",
         ).as_dict(),
     )
     """
@@ -789,6 +795,7 @@ class GripForceCorridor(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://aicor.knowledge/l2-ontology.owl#upperEdge",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#ObjectCrush",
         ).as_dict(),
     )
     """
@@ -891,6 +898,7 @@ class GripLoadCoupling(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#couplingActiveIn",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ActionPhase",
         ).as_dict(),
     )
     """
@@ -902,6 +910,7 @@ class GripLoadCoupling(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#followsLoadPrediction",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ContinuousSignalPrediction",
         ).as_dict(),
     )
     """
@@ -913,6 +922,7 @@ class GripLoadCoupling(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#frictionEstimate",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#ExpectedFrictionCoefficient",
         ).as_dict(),
     )
     """
@@ -924,6 +934,7 @@ class GripLoadCoupling(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#gripForceResponse",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GripForceSetpoint",
         ).as_dict(),
     )
     """
@@ -946,6 +957,7 @@ class GripLoadCoupling(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#hasSafetyMargin",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SafetyMargin",
         ).as_dict(),
     )
     """
@@ -957,6 +969,7 @@ class GripLoadCoupling(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#predictedLoad",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#LoadForceEstimate",
         ).as_dict(),
     )
     """
@@ -968,6 +981,7 @@ class GripLoadCoupling(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#temporalCoupling",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#TemporalWindow",
         ).as_dict(),
     )
     """
@@ -1476,6 +1490,7 @@ class PrehensionPhaseStructure(object_dynamics.ObjectDynamicsPhaseStructure):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#definesAnticipatoryGripAdjustment",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#AnticipatoryGripAdjustment",
         ).as_dict(),
     )
     """
@@ -1487,6 +1502,7 @@ class PrehensionPhaseStructure(object_dynamics.ObjectDynamicsPhaseStructure):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#definesForceCoupling",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GripLoadCoupling",
         ).as_dict(),
     )
     """
@@ -1498,6 +1514,7 @@ class PrehensionPhaseStructure(object_dynamics.ObjectDynamicsPhaseStructure):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#definesGripForceCorridor",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GripForceCorridor",
         ).as_dict(),
     )
     """

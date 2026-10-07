@@ -237,9 +237,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def _execute_demo(self) -> None:
         """
-        Launch the viewer's hardcoded demo under the live bridge, in the
-        background, restarting it if it was already running. Independent of any
-        generated hypothesis and of EQL/krrood.
+        Launch the viewer's hardcoded demo under the live bridge, in the background,
+        restarting it if it was already running.
+
+        Independent of any generated hypothesis and of EQL/krrood.
         """
         try:
             _live_demo_launcher().launch(paths.default_live_demo())
@@ -258,8 +259,8 @@ def _hypothesis_generation_service():
     """
     The shared generation service.
 
-    Built once and on first use, so starting the viewer never needs credentials and
-    the record store is indexed a single time.
+    Built once and on first use, so starting the viewer never needs credentials and the
+    record store is indexed a single time.
     """
     from cram_viz.hypothesis_knowledge.generation import (
         HypothesisGenerationService,
@@ -272,8 +273,8 @@ def _hypothesis_generation_service():
 @cache
 def _live_demo_launcher():
     """
-    The shared demo launcher, so a second "Execute" click while a launched demo
-    is still running stops it first instead of racing it for the bridge's port.
+    The shared demo launcher, so a second "Execute" click while a launched demo is still
+    running stops it first instead of racing it for the bridge's port.
     """
     from cram_viz.live.launcher import LiveDemoLauncher
 
@@ -294,6 +295,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     argv = sys.argv[1:] if argv is None else argv
     port = int(argv[0]) if argv else DEFAULT_PORT
     if kb_module is not None:  # build the KB once, before the first query
+        kb_module.build_symbol_graph()
         kb_module.get_kb()
     with make_server(port) as httpd:
         eql = (

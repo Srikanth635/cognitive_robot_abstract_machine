@@ -1,77 +1,79 @@
 """
 Turning a natural-language instruction into displayed, queryable knowledge.
 
-An instruction is minted into a task the microworld registry can profile, handed to
-``llm_reasoner``'s caching generator, and the resulting record becomes the viewer's
-active knowledge -- projected, overlaid, and exposed as EQL domains exactly like the
-checked-in sample. An instruction the model cannot yet render admissibly falls back to
-that same checked-in sample, so the viewer always has a clean, EQL-queryable structure
-to show; see :meth:`HypothesisGenerationService.generate`.
+An instruction is answered by ``llm_reasoner``'s
+:class:`~llm_reasoner.hypotheses.service.KnowledgeService`: a stored hypothesis for the
+same instruction is reused, and otherwise a model generates one, which is checked
+against the acceptance rules, repaired when it breaks them, and stored. The resulting
+view becomes the viewer's active knowledge -- projected and exposed as EQL domains
+exactly like the checked-in sample.
 
-Generation is cache-first: a repeated instruction is served from the store without a
-model call, so re-running one from the viewer costs nothing.
+A generation that is never admitted raises
+:class:`~llm_reasoner.generation.backend.HypothesisRejected`, naming the problems of the
+last answer, and the previously active knowledge stays displayed.
 
 .. note::
-   The task is pinned to SOMA's *PouringInto* profile. The instruction text steers the
-   model through ``action_label``, but choosing a different microworld from arbitrary
-   English is a separate problem this does not attempt.
+   Every instruction is answered with a phase structure decomposing CRAM-AICOR's
+   *Pouring* task. The instruction text steers the model, but choosing a different task
+   from arbitrary English is a separate problem this does not attempt.
 """
 
 from __future__ import annotations
 
-import hashlib
-import logging
 import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from krrood.entity_query_language.factories import the
+from krrood.entity_query_language.query.match import Match
+from llm_reasoner.acceptance.rules import AcceptanceSuite
+from llm_reasoner.acceptance.suite import predictive_manipulation_suite
+from llm_reasoner.admission.store import HypothesisStore
 from llm_reasoner.clients import AnthropicClient
 from llm_reasoner.clients.base import LanguageModelClient
-from llm_reasoner.knowledge.generation import CachingGenerator, HypothesisGenerator
-from llm_reasoner.knowledge.hypothesis.record import HypothesisRecord
-from llm_reasoner.knowledge.hypothesis.store import FileStore
-from llm_reasoner.knowledge.microworlds import flanagan
-from llm_reasoner.knowledge.microworlds.registry import select_modules, task_reference
-from llm_reasoner.knowledge.ontological.decorators import ConceptReference
+from llm_reasoner.generation.backend import HypothesisBackend
+from llm_reasoner.hypotheses.service import KnowledgeService
+from llm_reasoner.hypotheses.view import HypothesisView
+from llm_reasoner.ontologies import CRAM_AICOR_NAMESPACE
+from llm_reasoner.ontologies.predictive_manipulation import pouring
+from llm_reasoner.ontologies.terms import ConceptReference
 from typing_extensions import Optional
 
 from cram_viz import paths
-from cram_viz.hypothesis_knowledge import (
-    HypothesisKnowledge,
-    activate,
-    build_hypothesis_record,
-)
-from cram_viz.hypothesis_knowledge.pouring_structure import (
-    build_pouring_phase_structure,
-)
+from cram_viz.hypothesis_knowledge import HypothesisKnowledge, activate
 
-logger = logging.getLogger(__name__)
+POURING_TASK = ConceptReference(iri=CRAM_AICOR_NAMESPACE + "Pouring")
+"""
+The CRAM-AICOR task every generated structure decomposes.
+"""
 
-SOMA = "http://www.ease-crc.org/ont/SOMA.owl#"
-
-#: the profiled task every generated instruction is placed under, so it inherits the
-#: pouring microworld's vocabulary
-POURING_TASK_ANCESTORS = frozenset(
-    {SOMA + "Pouring", SOMA + "Actuating", SOMA + "PhysicalTask"}
-)
-
-
-#: how many times a rejected generation may be fed its own violations and retried
 MAX_REPAIRS = 4
+"""
+How many times a rejected answer may be fed its own problems and retried.
+"""
 
+GENERATION_MODEL = "claude-sonnet-4-5"
+"""
+The model generating hypotheses when no client is given: answers describe a few hundred
+linked fragments, which smaller models type inconsistently.
+"""
 
-#: environment variable holding the key the generation client authenticates with
 ANTHROPIC_API_KEY_NAME = "ANTHROPIC_API_KEY"
+"""
+The environment variable holding the key the default client authenticates with.
+"""
 
 
-class HypothesisGenerationError(RuntimeError):
+def pouring_query() -> Match:
     """
-    Raised when an instruction could not be turned into a usable hypothesis.
+    :return: A query for one pouring phase structure decomposing the pouring task, all
+        else open.
     """
+    return the(pouring.PouringPhaseStructure)(decomposes_task=POURING_TASK)
 
 
-class MissingCredentialsError(HypothesisGenerationError):
+class MissingCredentialsError(RuntimeError):
     """
     Raised when no API key is available to authenticate the generation client.
     """
@@ -127,25 +129,26 @@ def _load_environment_file(environment_file: Path) -> None:
 # %% sources
 class HypothesisSource(ABC):
     """
-    Something that can produce a hypothesis record for an instruction.
+    Something that answers an instruction with a stored hypothesis.
     """
 
     @abstractmethod
-    def record_for(self, instruction: str) -> HypothesisRecord:
+    def view_for(self, instruction: str) -> HypothesisView:
         """
-        The record describing what the instruction's action is generally like.
+        :return: The stored hypothesis describing what the instruction's action is
+            generally like.
         """
 
 
 @dataclass
 class ModelHypothesisSource(HypothesisSource):
     """
-    Produces records with a language model, consulting a store first.
+    Answers instructions with a language model, consulting the store first.
     """
 
     store_directory: Optional[Path] = None
     """
-    Where generated records are cached; :func:`~cram_viz.paths.hypothesis_store_dir`
+    Where admitted hypotheses are stored; :func:`~cram_viz.paths.hypothesis_store_dir`
     when unset.
     """
 
@@ -160,7 +163,20 @@ class ModelHypothesisSource(HypothesisSource):
     upwards when unset.
     """
 
-    _generator: Optional[CachingGenerator] = field(default=None, init=False)
+    model: str = GENERATION_MODEL
+    """
+    The model the default client generates with.
+    """
+
+    suite: AcceptanceSuite = field(default_factory=predictive_manipulation_suite)
+    """
+    The acceptance rules a generated hypothesis must meet.
+    """
+
+    _service: Optional[KnowledgeService] = field(default=None, init=False)
+    """
+    The knowledge service, built on first use.
+    """
 
     def load_credentials(self) -> None:
         """
@@ -180,61 +196,32 @@ class ModelHypothesisSource(HypothesisSource):
         if not os.environ.get(ANTHROPIC_API_KEY_NAME):
             raise MissingCredentialsError(ANTHROPIC_API_KEY_NAME, environment_file)
 
-    @staticmethod
-    def task_for(instruction: str) -> ConceptReference:
-        """
-        Mint a task for one instruction.
+    def view_for(self, instruction: str) -> HypothesisView:
+        return self._knowledge_service().view_for(instruction, pouring_query())
 
-        The IRI is derived from the instruction so two different instructions get
-        separate cache entries, while the inherited ancestors keep the registry
-        selecting the pouring microworld.
+    def client_for_generation(self) -> LanguageModelClient:
         """
-        digest = hashlib.sha256(instruction.strip().lower().encode()).hexdigest()[:16]
-        return task_reference(
-            f"urn:cram_viz:instruction:{digest}",
-            POURING_TASK_ANCESTORS,
-            label=instruction,
-        )
-
-    def record_for(self, instruction: str) -> HypothesisRecord:
-        task = self.task_for(instruction)
-        result = self._caching_generator().get(
-            task, action_label=instruction, selection=select_modules(task)
-        )
-        if result.record.root is None:
-            raise HypothesisGenerationError(
-                f"Generation for {instruction!r} produced no usable structure "
-                f"(status: {result.record.status})."
-            )
-        if not result.servable:
-            # CachingGenerator.get deliberately returns a refuted record instead
-            # of silently retrying (see its own docstring), so a refuted result
-            # must be reported here rather than displayed as if it were valid.
-            errors = "; ".join(result.record.validation.errors)
-            raise HypothesisGenerationError(
-                f"Generation for {instruction!r} was refuted "
-                f"(status: {result.record.status}): {errors}"
-            )
-        return result.record
-
-    def _caching_generator(self) -> CachingGenerator:
+        :return: The given client, or an Anthropic client for the generation model.
         """
-        Build the generator on first use, so importing costs no credentials.
+        return self.client or AnthropicClient(model=self.model)
+
+    def _knowledge_service(self) -> KnowledgeService:
+        """
+        Build the service on first use, so importing costs no credentials.
         """
         self.load_credentials()
-        if self._generator is None:
-            generator = HypothesisGenerator(
-                client=self.client or AnthropicClient(),
-                suite=flanagan.SUITE,
-                max_repairs=MAX_REPAIRS,
+        if self._service is None:
+            self._service = KnowledgeService(
+                backend=HypothesisBackend(
+                    client=self.client_for_generation(),
+                    suite=self.suite,
+                    max_repairs=MAX_REPAIRS,
+                    store=HypothesisStore(
+                        directory=self.store_directory or paths.hypothesis_store_dir()
+                    ),
+                )
             )
-            self._generator = CachingGenerator(
-                generator=generator,
-                store=FileStore(
-                    directory=self.store_directory or paths.hypothesis_store_dir()
-                ),
-            )
-        return self._generator
+        return self._service
 
 
 # %% service
@@ -246,36 +233,18 @@ class HypothesisGenerationService:
 
     source: HypothesisSource
     """
-    Where records come from.
+    Where hypotheses come from.
     """
 
     def generate(self, instruction: str) -> HypothesisKnowledge:
         """
-        Generate knowledge for an instruction and make it active.
+        Answer an instruction and make the answer the active knowledge.
 
-        Falls back to the checked-in, hand-authored pouring sample when the source
-        cannot produce an admissible structure, so the viewer always has a clean, EQL-
-        queryable demo to show rather than an empty or broken one. The fallback is
-        reported through :attr:`HypothesisKnowledge.generated` being ``False``, so a
-        caller can still tell the two apart.
+        :raises HypothesisRejected: If no generated answer is admitted; the active
+            knowledge is then left unchanged.
         """
-        try:
-            record = self.source.record_for(instruction)
-            generated = True
-        except HypothesisGenerationError as error:
-            logger.warning(
-                "generation for %r produced no admissible structure (%s); "
-                "falling back to the checked-in pouring sample",
-                instruction,
-                error,
-            )
-            record = build_hypothesis_record(build_pouring_phase_structure())
-            generated = False
         return activate(
-            HypothesisKnowledge.from_structure(
-                record.root,
-                instruction=instruction,
-                generated=generated,
-                record=record,
+            HypothesisKnowledge.from_view(
+                self.source.view_for(instruction), generated=True
             )
         )

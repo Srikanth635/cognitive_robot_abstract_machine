@@ -581,11 +581,7 @@ class OntologyReader:
         host_position = modules.index(self.module_of(host).vocabulary_module_name)
         if value_type.module in ("", *modules[: host_position + 1]):
             return value_type
-        (value_class,) = [
-            cls
-            for cls in self.description_classes
-            if self.python_name(cls) == value_type
-        ]
+        value_class = self.class_named(value_type)
         visible = [
             ancestor
             for ancestor in self.ancestors[value_class]
@@ -598,6 +594,18 @@ class OntologyReader:
             if most_specific is not None
             else DESCRIPTION_ENTITY
         )
+
+    def class_named(self, value_type: PythonName) -> Optional[URIRef]:
+        """
+        :return: The microworld class a generated class name stands for, or ``None``
+            for the vocabulary's base class.
+        """
+        named = [
+            cls
+            for cls in self.description_classes
+            if self.python_name(cls) == value_type
+        ]
+        return named[0] if named else None
 
     def is_visible(self, value_type: PythonName, host: URIRef) -> bool:
         """
@@ -631,6 +639,9 @@ class OntologyReader:
             for _, restricted, filler in self.restrictions
         ):
             raise MissingPropertyRange(str(prop))
+        range_class = (
+            self.class_named(value_type) if kind == ValueKind.DESCRIPTION else None
+        )
         if kind == ValueKind.DESCRIPTION:
             value_type = self.visible_type(value_type, host)
         if kind == ValueKind.ENUMERATION and not self.is_visible(value_type, host):
@@ -644,6 +655,7 @@ class OntologyReader:
             value_kind=kind,
             value_type=value_type,
             literal_type=literal_type,
+            range_iri=str(range_class) if range_class is not None else "",
         )
 
     def descriptor_declaration(self, prop: URIRef) -> DescriptorDeclaration:

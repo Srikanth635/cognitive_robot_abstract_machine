@@ -18,6 +18,7 @@ from typing_extensions import Any, Sequence
 
 from llm_reasoner.acceptance.restrictions import ClosedWorldMembership
 from llm_reasoner.acceptance.rules import AcceptanceRule, Violation
+from llm_reasoner.acceptance.vocabulary import Vocabulary
 from llm_reasoner.ontologies.terms import (
     ClassExpression,
     ComplementOf,
@@ -89,27 +90,44 @@ class RangeViolation(Violation):
     """
 
 
-def described(expression: ClassExpression) -> str:
+def described(expression: ClassExpression, explains_definitions: bool = True) -> str:
     """
+    :param expression: The class expression.
+    :param explains_definitions: Whether a defined class is followed by its definition,
+        which says what a fragment must state to belong to it. Definitions inside a
+        definition are not explained again.
     :return: The class expression in words, naming properties by their field names.
     """
+    explains = explains_definitions
     if isinstance(expression, NamedClass):
-        return local_name(expression.iri)
+        named = Vocabulary().definition_named(expression.iri)
+        definition = (
+            named.term.definition
+            if isinstance(named, type) and issubclass(named, DescriptionEntity)
+            else None
+        )
+        if not explains or definition is None:
+            return local_name(expression.iri)
+        return f"{local_name(expression.iri)}, that is: {described(definition, False)}"
     if isinstance(expression, EnumeratedClass):
         return "one of " + ", ".join(
             local_name(member) for member in expression.members
         )
     if isinstance(expression, IntersectionOf):
         return " and ".join(
-            f"({described(operand)})" for operand in expression.operands
+            f"({described(operand, explains)})" for operand in expression.operands
         )
     if isinstance(expression, UnionOf):
-        return " or ".join(f"({described(operand)})" for operand in expression.operands)
+        return " or ".join(
+            f"({described(operand, explains)})" for operand in expression.operands
+        )
     if isinstance(expression, ComplementOf):
-        return f"not ({described(expression.operand)})"
+        return f"not ({described(expression.operand, explains)})"
     name = python_attribute_name(expression.property_iri)
     filler = (
-        described(expression.filler) if expression.filler is not None else "anything"
+        described(expression.filler, explains)
+        if expression.filler is not None
+        else "anything"
     )
     if expression.quantifier == Quantifier.SOME:
         return f"{name} has a {filler}"
@@ -209,6 +227,7 @@ class RangesHold(AcceptanceRule):
         return isinstance(value, allowed)
 
     def violations(self, fragments: Sequence[DescriptionEntity]) -> list[Violation]:
+        vocabulary = Vocabulary()
         violations: list[Violation] = []
         for fragment in fragments:
             for wrapped in WrappedClass(type(fragment)).fields:
@@ -216,7 +235,9 @@ class RangesHold(AcceptanceRule):
                     continue
                 value = attrgetter(wrapped.field.name)(fragment)
                 values = value if isinstance(value, list) else [value]
-                allowed = wrapped.type_endpoint
+                allowed = vocabulary.value_type_of(
+                    type(fragment), wrapped.field.name, wrapped.type_endpoint
+                )
                 violations.extend(
                     RangeViolation(
                         rule=self.name,

@@ -253,6 +253,11 @@ class TestHypothesisGraphProjector:
             == SyntheticHypothesisRelation.DESCRIBES
         )
 
+    def test_graph_names_its_instruction_and_root_nodes(self, view):
+        graph = projected(view)
+        assert graph.instruction is graph.graph[graph.instruction_index]
+        assert graph.root.source is view.root
+
     def test_fragment_node_is_identified_by_its_citation(self, view):
         graph = projected(view)
         assert (

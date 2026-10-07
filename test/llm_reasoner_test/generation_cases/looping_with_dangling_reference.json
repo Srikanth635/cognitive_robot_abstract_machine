@@ -1,0 +1,6 @@
+{"fragments": [
+  {"id": "pour", "type": "ActionPhaseStructure", "decomposes_task": "aicor:Pouring"},
+  {"id": "tilt", "type": "TiltToFlowPhase", "label": "tilt the source"},
+  {"id": "back_to_tilt", "type": "PhaseTransition", "from_phase": "tilt", "to_phase": "tilt"},
+  {"id": "onwards", "type": "PhaseTransition", "from_phase": "tilt", "to_phase": "missing_phase"}
+]}

@@ -1,130 +1,96 @@
 """
 Real, EQL-queryable pouring knowledge for the Hypothesis Graph tab.
 
-A :class:`~llm_reasoner.knowledge.microworlds.flanagan.pouring.PouringPhaseStructure`
-is projected live through ``llm_reasoner``'s own
-:class:`~llm_reasoner.knowledge.hypothesis.graph.HypothesisGraphProjector`, then two
-display-only representations are layered on top: the Minsky action frame
-(:mod:`.action_frame`) and the image-schema profile (:mod:`.image_schema`).
+A stored hypothesis is read through ``llm_reasoner``'s
+:class:`~llm_reasoner.hypotheses.view.HypothesisView`, projected through its
+:class:`~llm_reasoner.hypotheses.graph.HypothesisGraphProjector`, and presented phase
+first by :class:`.phase_hierarchy.PhaseHierarchyOverlay`.
 
-The structure comes either from :mod:`.pouring_structure` (the checked-in hand-authored
-sample, used at startup) or from a model generation (:mod:`.generation`). Both take the
-same path from here on, so the tab, its EQL variables and its highlighting behave
-identically whichever produced the structure.
+The hypothesis comes either from the checked-in sample store (:func:`sample_view`) or
+from a model generation (:mod:`.generation`). Both take the same path from here on, so
+the tab, its EQL variables and its highlighting behave identically whichever produced
+the hypothesis.
 
 :func:`active` is the single source of truth for what is currently displayed and
-queryable; :func:`activate` swaps in a newly generated structure.
+queryable; :func:`activate` swaps in another hypothesis.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from llm_reasoner.knowledge.hypothesis.graph import (
+from llm_reasoner.admission.store import HypothesisStore
+from llm_reasoner.hypotheses.graph import (
     HypothesisGraph,
     HypothesisGraphPresentation,
     HypothesisGraphProjector,
 )
-from llm_reasoner.knowledge.hypothesis.provenance import Provenance
-from llm_reasoner.knowledge.hypothesis.record import HypothesisRecord
-from llm_reasoner.knowledge.microworlds.flanagan.pouring import PouringPhaseStructure
-from llm_reasoner.knowledge.ontological.decorators import ConceptReference
+from llm_reasoner.hypotheses.view import HypothesisView
 from typing_extensions import Any, Dict, Optional
 
-from cram_viz.hypothesis_knowledge.action_frame import (
-    MinskyActionFrameOverlay,
-    MinskyActionFrameTemplate,
-)
-from cram_viz.hypothesis_knowledge.image_schema import (
-    ImageSchemaProfile,
-    ImageSchemaProfileOverlay,
-)
+from cram_viz import paths
 from cram_viz.hypothesis_knowledge.phase_hierarchy import PhaseHierarchyOverlay
-from cram_viz.hypothesis_knowledge.pouring_structure import (
-    build_pouring_phase_structure,
-)
 
-#: the instruction text shown at the center of the Hypothesis Graph tab when no
-#: generated instruction has replaced it
-DEFAULT_INSTRUCTION = "Pour cereal from the cereal box into the bowl"
+SAMPLE_RECORD_ID = "pour_milk_sample"
+"""
+The record identifier of the checked-in sample hypothesis.
+"""
 
 
-def build_hypothesis_record(
-    structure: PouringPhaseStructure,
-    instruction: str = DEFAULT_INSTRUCTION,
-) -> HypothesisRecord:
+def sample_view() -> HypothesisView:
     """
-    Wrap a hand-authored structure in a :class:`HypothesisRecord`, admitting every
-    real fragment reachable from it into a fresh knowledge scope.
-
-    A model-generated structure arrives inside a record already and does not need
-    this.
+    :return: The checked-in sample hypothesis, a hand-authored structure for pouring
+        milk from a carton into a bowl.
     """
-    return HypothesisRecord.from_root(
-        structure,
-        action_type=ConceptReference(
-            iri="urn:cram_viz:PouringIntoBowl", label=instruction
-        ),
-        provenance=Provenance(generator="hand-authored", prompt_version="n/a"),
+    return HypothesisView.of(
+        HypothesisStore(directory=paths.SAMPLE_HYPOTHESES_PATH).get(SAMPLE_RECORD_ID)
     )
 
 
-def build_projection(
-    record: HypothesisRecord,
-    instruction: str = DEFAULT_INSTRUCTION,
-    apply_overlays: bool = True,
-) -> HypothesisGraph:
+def build_projection(view: HypothesisView) -> HypothesisGraph:
     """
-    Project a record's real knowledge fragments, optionally layering the two
-    display-only representations on top.
-
-    The phase-structure branch is projected fully flat (``COMPLETE``): the phase
-    hierarchy overlay owns the entire grouping decision itself rather than un-doing
-    the projector's own default root grouping. The action frame is applied next; the
-    image-schema profile last, so it can ground its entity-valued primitives in the
-    frame's own entity nodes.
+    :return: The hypothesis projected with every link drawn directly, then regrouped
+        phase first.
     """
     projection = HypothesisGraphProjector().project(
-        record,
-        instruction=instruction,
-        presentation=HypothesisGraphPresentation.COMPLETE,
+        view, HypothesisGraphPresentation.COMPLETE
     )
-    if not apply_overlays:
-        return projection
-    PhaseHierarchyOverlay().apply(projection)
-    MinskyActionFrameOverlay(template=MinskyActionFrameTemplate.cereal_pouring()).apply(
-        projection
-    )
-    ImageSchemaProfileOverlay(profile=ImageSchemaProfile.cereal_pouring()).apply(
-        projection
-    )
-    return projection
+    return PhaseHierarchyOverlay().apply(projection, view)
 
 
 # %% active knowledge
+
+
 @dataclass
 class HypothesisKnowledge:
     """
-    One pouring structure and everything the viewer derives from it.
+    One stored hypothesis and everything the viewer derives from it.
 
-    Bundling these together keeps the graph payload, the EQL domains and the
-    query-result-to-node mapping from ever describing different structures.
+    Bundling these together keeps the graph payload, the EQL domains and the query-
+    result-to-node mapping from ever describing different hypotheses.
     """
 
-    structure: PouringPhaseStructure
-    """The real, EQL-queryable structure this knowledge is built from."""
+    view: HypothesisView
+    """
+    The stored hypothesis, as instances of the generated vocabulary.
+    """
 
     projection: HypothesisGraph
-    """The rendered graph: the structure's fragments plus the display-only overlays."""
-
-    instruction: str
-    """The natural-language instruction shown at the centre of the graph."""
+    """
+    The rendered graph of the hypothesis.
+    """
 
     generated: bool = False
-    """Whether a model produced this structure, as opposed to the checked-in sample."""
+    """
+    Whether a model produced this hypothesis, as opposed to the checked-in sample.
+    """
 
-    node_identifier_by_object_id: Dict[int, str] = field(default_factory=dict)
-    """Fragment object identity -> its rendered node identifier, for exact highlighting."""
+    node_identifier_by_object_id: Dict[int, str] = field(
+        default_factory=dict, init=False
+    )
+    """
+    The rendered node identifier of each fragment, keyed by the fragment's identity.
+    """
 
     def __post_init__(self) -> None:
         self.node_identifier_by_object_id = {
@@ -134,26 +100,18 @@ class HypothesisKnowledge:
         }
 
     @classmethod
-    def from_structure(
-        cls,
-        structure: PouringPhaseStructure,
-        instruction: str = DEFAULT_INSTRUCTION,
-        generated: bool = False,
-        record: Optional[HypothesisRecord] = None,
+    def from_view(
+        cls, view: HypothesisView, generated: bool = False
     ) -> HypothesisKnowledge:
-        """Project a structure and bundle it with everything derived from it."""
-        record = record or build_hypothesis_record(structure, instruction)
-        return cls(
-            structure=structure,
-            projection=build_projection(record, instruction=instruction),
-            instruction=instruction,
-            generated=generated,
-        )
+        """
+        :return: The knowledge of a stored hypothesis, projected for display.
+        """
+        return cls(view=view, projection=build_projection(view), generated=generated)
 
     def node_identifier_for(self, fragment: Any) -> Optional[str]:
         """
-        The rendered node identifier for a knowledge fragment, or ``None`` if it is
-        not part of this projection.
+        :return: The rendered node identifier of a fragment, or ``None`` if it is not
+            part of this hypothesis.
         """
         return self.node_identifier_by_object_id.get(id(fragment))
 
@@ -163,8 +121,8 @@ _active: Optional[HypothesisKnowledge] = None
 
 def active() -> Optional[HypothesisKnowledge]:
     """
-    The knowledge currently displayed and queried, or ``None`` before anything has
-    been generated.
+    The knowledge currently displayed and queried, or ``None`` before anything has been
+    generated.
 
     Nothing is active at startup: the tab shows what a model produced for an
     instruction, so an empty tab is the honest state until one has been asked for.
@@ -179,7 +137,7 @@ def activate(
     Replace what the viewer displays and queries; ``None`` clears it.
 
     The caller is responsible for resetting :mod:`cram_viz.kb` afterwards, so the EQL
-    domains are rebuilt against the new structure.
+    domains are rebuilt against the new hypothesis.
     """
     global _active
     _active = knowledge
@@ -188,14 +146,16 @@ def activate(
 
 def activate_sample() -> HypothesisKnowledge:
     """
-    Activate the checked-in hand-authored structure.
+    Activate the checked-in sample hypothesis.
 
     Useful for exercising the projection without spending a generation.
     """
-    return activate(HypothesisKnowledge.from_structure(build_pouring_phase_structure()))
+    return activate(HypothesisKnowledge.from_view(sample_view()))
 
 
 def node_identifier_for(fragment: Any) -> Optional[str]:
-    """The active projection's node identifier for a knowledge fragment."""
+    """
+    The active projection's node identifier for a knowledge fragment.
+    """
     knowledge = active()
     return knowledge.node_identifier_for(fragment) if knowledge else None

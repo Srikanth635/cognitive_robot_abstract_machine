@@ -151,10 +151,20 @@ class PouringEventsSpecific(StructureRule[pouring.PouringPhaseStructure]):
     def reason(self) -> str:
         return "an event is of a generic event type rather than a specific one"
 
+    def involved(
+        self, fragment: pouring.PouringPhaseStructure
+    ) -> list[core.PhaseBoundaryEventType]:
+        """
+        :return: The events of a generic event type.
+        """
+        return [
+            event
+            for event in fragment.defines_event_type
+            if type(event) in GENERIC_EVENT_TYPES
+        ]
+
     def is_violated_by(self, fragment: pouring.PouringPhaseStructure) -> bool:
-        return any(
-            type(event) in GENERIC_EVENT_TYPES for event in fragment.defines_event_type
-        )
+        return bool(self.involved(fragment))
 
 
 class PouringPhasesCovered(StructureRule[pouring.PouringPhaseStructure]):

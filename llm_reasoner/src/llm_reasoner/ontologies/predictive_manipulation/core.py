@@ -266,6 +266,11 @@ class MeasurementUnit(StrEnum):
     Kilogram, a unit of mass.
     """
 
+    GRAM = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Gram"
+    """
+    Gram, a unit of mass.
+    """
+
     KILOGRAM_PER_SECOND = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#KilogramPerSecond"
     """
     Kilogram per second, a unit of mass flow rate.
@@ -295,6 +300,16 @@ class MeasurementUnit(StrEnum):
     Metre, a unit of length.
     """
 
+    CENTIMETRE = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Centimetre"
+    """
+    Centimetre, a unit of length.
+    """
+
+    MILLIMETRE = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Millimetre"
+    """
+    Millimetre, a unit of length.
+    """
+
     DEGREE = (
         "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Degree"
     )
@@ -305,6 +320,13 @@ class MeasurementUnit(StrEnum):
     DEGREE_PER_SECOND = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#DegreePerSecond"
     """
     Degree per second, a unit of angular rate.
+    """
+
+    LITRE = (
+        "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Litre"
+    )
+    """
+    Litre, a unit of volume.
     """
 
     MILLILITRE = "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Millilitre"
@@ -355,13 +377,17 @@ class MeasurementUnit(StrEnum):
         """
         return {
             MeasurementUnit.KILOGRAM: PhysicalDimension.MASS,
+            MeasurementUnit.GRAM: PhysicalDimension.MASS,
             MeasurementUnit.KILOGRAM_PER_SECOND: PhysicalDimension.MASS_FLOW_RATE,
             MeasurementUnit.NEWTON: PhysicalDimension.FORCE,
             MeasurementUnit.NEWTON_PER_SECOND: PhysicalDimension.FORCE_RATE,
             MeasurementUnit.NEWTON_METRE: PhysicalDimension.TORQUE,
             MeasurementUnit.METRE: PhysicalDimension.LENGTH,
+            MeasurementUnit.CENTIMETRE: PhysicalDimension.LENGTH,
+            MeasurementUnit.MILLIMETRE: PhysicalDimension.LENGTH,
             MeasurementUnit.DEGREE: PhysicalDimension.ANGLE,
             MeasurementUnit.DEGREE_PER_SECOND: PhysicalDimension.ANGULAR_RATE,
+            MeasurementUnit.LITRE: PhysicalDimension.VOLUME,
             MeasurementUnit.MILLILITRE: PhysicalDimension.VOLUME,
             MeasurementUnit.MILLILITRE_PER_SECOND: PhysicalDimension.VOLUMETRIC_FLOW_RATE,
             MeasurementUnit.CENTIPOISE: PhysicalDimension.DYNAMIC_VISCOSITY,
@@ -753,6 +779,7 @@ class ActionPhase(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#aimsFor",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Subgoal",
         ).as_dict(),
     )
     """
@@ -764,6 +791,7 @@ class ActionPhase(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#controlledBy",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ActionPhaseController",
         ).as_dict(),
     )
     """
@@ -775,6 +803,7 @@ class ActionPhase(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasActiveParameter",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Parameter",
         ).as_dict(),
     )
     """
@@ -786,6 +815,7 @@ class ActionPhase(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasConditionRequirement",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ConditionRequirement",
         ).as_dict(),
     )
     """
@@ -808,6 +838,7 @@ class ActionPhase(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#initiatedBy",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseBoundaryEventType",
         ).as_dict(),
     )
     """
@@ -819,6 +850,7 @@ class ActionPhase(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#involvesRole",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ManipulationRole",
         ).as_dict(),
     )
     """
@@ -852,6 +884,7 @@ class ActionPhase(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#terminatedBy",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseBoundaryEventType",
         ).as_dict(),
     )
     """
@@ -903,6 +936,7 @@ class ActionPhaseController(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#governedBy",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#InternalModel",
         ).as_dict(),
     )
     """
@@ -914,6 +948,7 @@ class ActionPhaseController(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasContinuousPrediction",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ContinuousSignalPrediction",
         ).as_dict(),
     )
     """
@@ -925,6 +960,7 @@ class ActionPhaseController(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasCorrectiveProgram",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#CorrectiveAction",
         ).as_dict(),
     )
     """
@@ -958,6 +994,7 @@ class ActionPhaseController(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#predictsSensoryEvent",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryEventPrediction",
         ).as_dict(),
     )
     """
@@ -1047,6 +1084,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesComparison",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PredictionComparison",
         ).as_dict(),
     )
     """
@@ -1069,6 +1107,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesConditionType",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseConditionType",
         ).as_dict(),
     )
     """
@@ -1080,6 +1119,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesContinuousPrediction",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ContinuousSignalPrediction",
         ).as_dict(),
     )
     """
@@ -1091,6 +1131,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesControlPoint",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensorimotorControlPoint",
         ).as_dict(),
     )
     """
@@ -1102,6 +1143,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesControlPointExemption",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#BoundaryControlExemption",
         ).as_dict(),
     )
     """
@@ -1113,6 +1155,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesController",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ActionPhaseController",
         ).as_dict(),
     )
     """
@@ -1124,6 +1167,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesCorrection",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#CorrectiveAction",
         ).as_dict(),
     )
     """
@@ -1135,6 +1179,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesEventType",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseBoundaryEventType",
         ).as_dict(),
     )
     """
@@ -1146,6 +1191,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesForceOpposition",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ForceOpposition",
         ).as_dict(),
     )
     """
@@ -1157,6 +1203,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesInitialStateEstimate",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#InitialStateEstimate",
         ).as_dict(),
     )
     """
@@ -1168,6 +1215,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesModelUpdate",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ModelUpdate",
         ).as_dict(),
     )
     """
@@ -1179,6 +1227,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesObservationType",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryObservationType",
         ).as_dict(),
     )
     """
@@ -1190,6 +1239,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesParameter",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Parameter",
         ).as_dict(),
     )
     """
@@ -1201,6 +1251,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ActionPhase",
         ).as_dict(),
     )
     """
@@ -1212,6 +1263,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPrediction",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryEventPrediction",
         ).as_dict(),
     )
     """
@@ -1223,6 +1275,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPredictionError",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PredictionError",
         ).as_dict(),
     )
     """
@@ -1234,6 +1287,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesRole",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ManipulationRole",
         ).as_dict(),
     )
     """
@@ -1245,6 +1299,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesSensoryFeature",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryFeature",
         ).as_dict(),
     )
     """
@@ -1256,6 +1311,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesSubgoal",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Subgoal",
         ).as_dict(),
     )
     """
@@ -1267,6 +1323,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesTransition",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseTransition",
         ).as_dict(),
     )
     """
@@ -1278,6 +1335,7 @@ class ActionPhaseStructure(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#definesGazeFixation",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#GazeFixation",
         ).as_dict(),
     )
     """
@@ -1385,6 +1443,7 @@ class Parameter(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasCategoricalValue",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#CategoricalValue",
         ).as_dict(),
     )
     """
@@ -1396,6 +1455,7 @@ class Parameter(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasParameterRange",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MagnitudeRange",
         ).as_dict(),
     )
     """
@@ -1429,6 +1489,7 @@ class Parameter(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#parameterOnRole",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ManipulationRole",
         ).as_dict(),
     )
     """
@@ -1615,6 +1676,7 @@ class BoundaryControlExemption(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#exemptsEvent",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseBoundaryEventType",
         ).as_dict(),
     )
     """
@@ -1798,6 +1860,7 @@ class ConditionRequirement(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#violationSignalledBy",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#FailureEventType",
         ).as_dict(),
     )
     """
@@ -1809,6 +1872,7 @@ class ConditionRequirement(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://aicor.knowledge/l2-ontology.owl#hasConditionType",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseConditionType",
         ).as_dict(),
     )
     """
@@ -1850,6 +1914,7 @@ class PhaseConditionType(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#conditionOnRole",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ManipulationRole",
         ).as_dict(),
     )
     """
@@ -1904,6 +1969,7 @@ class PhaseBoundaryEventType(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#terminatesStateType",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseConditionType",
         ).as_dict(),
     )
     """
@@ -1915,6 +1981,7 @@ class PhaseBoundaryEventType(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://aicor.knowledge/l2-ontology.owl#initiatesStateType",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseConditionType",
         ).as_dict(),
     )
     """
@@ -1963,6 +2030,7 @@ class MechanicalEventType(PhaseBoundaryEventType):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#endsForce",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ForceComponent",
         ).as_dict(),
     )
     """
@@ -1974,6 +2042,7 @@ class MechanicalEventType(PhaseBoundaryEventType):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#resolvesOpposition",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ForceOpposition",
         ).as_dict(),
     )
     """
@@ -1985,6 +2054,7 @@ class MechanicalEventType(PhaseBoundaryEventType):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#startsForce",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ForceComponent",
         ).as_dict(),
     )
     """
@@ -1996,6 +2066,7 @@ class MechanicalEventType(PhaseBoundaryEventType):
         metadata=PropertyTerm(
             iri="http://aicor.knowledge/l2-ontology.owl#betweenRoleFillers",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ManipulationRole",
         ).as_dict(),
     )
     """
@@ -2085,6 +2156,7 @@ class Estimate(Parameter):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#scalesSetpoint",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MotorSetpoint",
         ).as_dict(),
     )
     """
@@ -2185,6 +2257,7 @@ class ContinuousSignalPrediction(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#comparedWith",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryObservationType",
         ).as_dict(),
     )
     """
@@ -2196,6 +2269,7 @@ class ContinuousSignalPrediction(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#controlsSetpoint",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Setpoint",
         ).as_dict(),
     )
     """
@@ -2218,6 +2292,7 @@ class ContinuousSignalPrediction(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasTolerance",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MagnitudeRange",
         ).as_dict(),
     )
     """
@@ -2229,6 +2304,7 @@ class ContinuousSignalPrediction(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#predictsTrajectory",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SignalTrajectory",
         ).as_dict(),
     )
     """
@@ -2240,6 +2316,7 @@ class ContinuousSignalPrediction(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://aicor.knowledge/l2-ontology.owl#generatedBy",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#InternalModel",
         ).as_dict(),
     )
     """
@@ -2314,6 +2391,7 @@ class CorrectiveAction(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#correctionTerminatedBy",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseBoundaryEventType",
         ).as_dict(),
     )
     """
@@ -2347,6 +2425,7 @@ class CorrectiveAction(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasResponseLatency",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#TemporalWindow",
         ).as_dict(),
     )
     """
@@ -2358,6 +2437,7 @@ class CorrectiveAction(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#intendedEffect",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseConditionType",
         ).as_dict(),
     )
     """
@@ -2369,6 +2449,7 @@ class CorrectiveAction(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#targetsSetpoint",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MotorSetpoint",
         ).as_dict(),
     )
     """
@@ -2380,6 +2461,7 @@ class CorrectiveAction(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#triggeredByError",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PredictionError",
         ).as_dict(),
     )
     """
@@ -2573,6 +2655,7 @@ class EstimateRepresentation(InternalModel):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#holdsEstimate",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Estimate",
         ).as_dict(),
     )
     """
@@ -2754,6 +2837,7 @@ class ForceComponent(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#actsOnRole",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ManipulationRole",
         ).as_dict(),
     )
     """
@@ -2765,6 +2849,7 @@ class ForceComponent(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#exertedByRole",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ManipulationRole",
         ).as_dict(),
     )
     """
@@ -2827,6 +2912,7 @@ class ForceOpposition(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasDrivingForce",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ForceComponent",
         ).as_dict(),
     )
     """
@@ -2838,6 +2924,7 @@ class ForceOpposition(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasResistingForce",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ForceComponent",
         ).as_dict(),
     )
     """
@@ -3004,6 +3091,7 @@ class ForceRateSetpoint(ForceRateParameter, MotorSetpoint):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#rateOf",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MotorSetpoint",
         ).as_dict(),
     )
     """
@@ -3082,6 +3170,7 @@ class InitialStateEstimate(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#basedOnObservation",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryObservationType",
         ).as_dict(),
     )
     """
@@ -3093,6 +3182,7 @@ class InitialStateEstimate(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#estimatesCondition",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseConditionType",
         ).as_dict(),
     )
     """
@@ -3104,6 +3194,7 @@ class InitialStateEstimate(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#forPhase",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ActionPhase",
         ).as_dict(),
     )
     """
@@ -3397,7 +3488,7 @@ class MassParameter(QuantitativeParameter):
 @dataclass(eq=False)
 class PredictionComparison(DescriptionEntity):
     """
-    The comparison of one prediction with its observation at a control point.
+    The comparison of one prediction with its observation, grouped under a control point when the event is mechanical.
     """
 
     term: ClassVar[ClassTerm] = ClassTerm(
@@ -3437,6 +3528,7 @@ class PredictionComparison(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#comparesObservation",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryObservationType",
         ).as_dict(),
     )
     """
@@ -3448,6 +3540,7 @@ class PredictionComparison(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#comparesPrediction",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryEventPrediction",
         ).as_dict(),
     )
     """
@@ -3459,6 +3552,7 @@ class PredictionComparison(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#confirmsSubgoal",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Subgoal",
         ).as_dict(),
     )
     """
@@ -3481,6 +3575,7 @@ class PredictionComparison(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPredictionError",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PredictionError",
         ).as_dict(),
     )
     """
@@ -3492,6 +3587,7 @@ class PredictionComparison(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#invokesCorrection",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#CorrectiveAction",
         ).as_dict(),
     )
     """
@@ -3503,6 +3599,7 @@ class PredictionComparison(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#producesModelUpdate",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ModelUpdate",
         ).as_dict(),
     )
     """
@@ -3514,6 +3611,7 @@ class PredictionComparison(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#suppliesStateEstimate",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#InitialStateEstimate",
         ).as_dict(),
     )
     """
@@ -3752,6 +3850,7 @@ class ModelUpdate(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#triggeredByError",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PredictionError",
         ).as_dict(),
     )
     """
@@ -3763,6 +3862,7 @@ class ModelUpdate(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#updatesEstimate",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Estimate",
         ).as_dict(),
     )
     """
@@ -3774,6 +3874,7 @@ class ModelUpdate(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#updatesRepresentation",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EstimateRepresentation",
         ).as_dict(),
     )
     """
@@ -3899,6 +4000,7 @@ class PhaseTransition(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#fromPhase",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ActionPhase",
         ).as_dict(),
     )
     """
@@ -3910,6 +4012,7 @@ class PhaseTransition(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#gatedBy",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseBoundaryEventType",
         ).as_dict(),
     )
     """
@@ -3921,6 +4024,7 @@ class PhaseTransition(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#permittedBy",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PredictionComparison",
         ).as_dict(),
     )
     """
@@ -3932,6 +4036,7 @@ class PhaseTransition(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#toPhase",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ActionPhase",
         ).as_dict(),
     )
     """
@@ -3977,6 +4082,7 @@ class SetpointAttainmentEventType(PhaseBoundaryEventType):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#attainsSetpoint",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Setpoint",
         ).as_dict(),
     )
     """
@@ -3988,6 +4094,7 @@ class SetpointAttainmentEventType(PhaseBoundaryEventType):
         metadata=PropertyTerm(
             iri="http://aicor.knowledge/l2-ontology.owl#betweenRoleFillers",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ManipulationRole",
         ).as_dict(),
     )
     """
@@ -4051,6 +4158,7 @@ class PredictionError(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasDiscrepancy",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MagnitudeRange",
         ).as_dict(),
     )
     """
@@ -4148,6 +4256,7 @@ class SafetyMargin(QuantitativeParameter):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#marginOn",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MotorSetpoint",
         ).as_dict(),
     )
     """
@@ -4159,6 +4268,7 @@ class SafetyMargin(QuantitativeParameter):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#marginOver",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MechanicalThreshold",
         ).as_dict(),
     )
     """
@@ -4169,7 +4279,7 @@ class SafetyMargin(QuantitativeParameter):
 @dataclass(eq=False)
 class SensorimotorControlPoint(DescriptionEntity):
     """
-    A planned event at which predicted and actual sensory signals are compared to monitor progress and detect errors.
+    A planned mechanical event, such as a contact or a lift-off, at which predicted and actual sensory signals are compared to monitor progress and detect errors. An event that is not mechanical, such as an attained pose or quantity, is checked by a comparison the structure declares without a control point.
     """
 
     term: ClassVar[ClassTerm] = ClassTerm(
@@ -4218,10 +4328,11 @@ class SensorimotorControlPoint(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#atEventType",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MechanicalEventType",
         ).as_dict(),
     )
     """
-    The mechanical event at which comparisons are performed.
+    The mechanical event at which comparisons are performed; never a pose, setpoint or external event.
     """
 
     has_comparison: List[PredictionComparison] = field(
@@ -4229,6 +4340,7 @@ class SensorimotorControlPoint(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasComparison",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PredictionComparison",
         ).as_dict(),
     )
     """
@@ -4240,6 +4352,7 @@ class SensorimotorControlPoint(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPrediction",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryEventPrediction",
         ).as_dict(),
     )
     """
@@ -4352,6 +4465,7 @@ class SensoryEventPrediction(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#causedByEvent",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseBoundaryEventType",
         ).as_dict(),
     )
     """
@@ -4363,6 +4477,7 @@ class SensoryEventPrediction(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#expectedOnRole",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ManipulationRole",
         ).as_dict(),
     )
     """
@@ -4374,6 +4489,7 @@ class SensoryEventPrediction(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasExpectedMagnitude",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MagnitudeRange",
         ).as_dict(),
     )
     """
@@ -4385,6 +4501,7 @@ class SensoryEventPrediction(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasExpectedTiming",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#TemporalWindow",
         ).as_dict(),
     )
     """
@@ -4407,6 +4524,7 @@ class SensoryEventPrediction(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#predictsEvent",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseBoundaryEventType",
         ).as_dict(),
     )
     """
@@ -4418,6 +4536,7 @@ class SensoryEventPrediction(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#predictsFeature",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryFeature",
         ).as_dict(),
     )
     """
@@ -4429,6 +4548,7 @@ class SensoryEventPrediction(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#signalsSubgoal",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Subgoal",
         ).as_dict(),
     )
     """
@@ -4440,6 +4560,7 @@ class SensoryEventPrediction(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://aicor.knowledge/l2-ontology.owl#generatedBy",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#InternalModel",
         ).as_dict(),
     )
     """
@@ -4605,6 +4726,7 @@ class SensoryObservationType(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasObservedMagnitude",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MagnitudeRange",
         ).as_dict(),
     )
     """
@@ -4616,6 +4738,7 @@ class SensoryObservationType(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#observedAt",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#TemporalWindow",
         ).as_dict(),
     )
     """
@@ -4627,6 +4750,7 @@ class SensoryObservationType(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#observedOnRole",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ManipulationRole",
         ).as_dict(),
     )
     """
@@ -4638,6 +4762,7 @@ class SensoryObservationType(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#observesEvent",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseBoundaryEventType",
         ).as_dict(),
     )
     """
@@ -4649,6 +4774,7 @@ class SensoryObservationType(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#observesFeature",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryFeature",
         ).as_dict(),
     )
     """
@@ -4704,6 +4830,7 @@ class SignalTrajectory(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasExpectedRange",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MagnitudeRange",
         ).as_dict(),
     )
     """
@@ -4715,6 +4842,7 @@ class SignalTrajectory(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasSignalFeature",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryFeature",
         ).as_dict(),
     )
     """
@@ -4820,6 +4948,7 @@ class Subgoal(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#attainmentSignalledBy",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseBoundaryEventType",
         ).as_dict(),
     )
     """
@@ -4831,6 +4960,7 @@ class Subgoal(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#targetsCondition",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseConditionType",
         ).as_dict(),
     )
     """
@@ -5052,6 +5182,7 @@ class ThresholdCrossingEventType(MechanicalEventType):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#crossesThreshold",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MechanicalThreshold",
         ).as_dict(),
     )
     """
@@ -5241,7 +5372,7 @@ class AimsFor(PropertyDescriptor):
 @dataclass
 class AtEventType(PropertyDescriptor):
     """
-    The mechanical event at which comparisons are performed.
+    The mechanical event at which comparisons are performed; never a pose, setpoint or external event.
     """
 
 

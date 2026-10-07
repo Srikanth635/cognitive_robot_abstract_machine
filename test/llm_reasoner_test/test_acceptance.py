@@ -48,7 +48,12 @@ from llm_reasoner.acceptance.core import (
     TransitionIsNotALoop,
     WindowBoundsOrdered,
 )
-from llm_reasoner.acceptance.derived import DerivedRule, RangesHold, RestrictionsHold
+from llm_reasoner.acceptance.derived import (
+    DerivedRule,
+    RangesHold,
+    RestrictionsHold,
+    described,
+)
 from llm_reasoner.acceptance.gaze import (
     FixationHeldUntilPhaseGoal,
     FixationOnPhaseParticipant,
@@ -279,6 +284,16 @@ class TestRestrictionsHold:
     def test_rule_names_itself(self):
         assert RestrictionsHold().name == DerivedRule.RESTRICTIONS_HOLD
 
+    def test_defined_class_in_a_requirement_is_explained_by_its_definition(self):
+        setpoint = pouring.TransferredQuantitySetpoint(
+            has_value_form=core.ParameterValueForm.QUANTITATIVE
+        )
+        reasons = [
+            violation.reason for violation in RestrictionsHold().violations([setpoint])
+        ]
+        definition = described(core.VolumeParameter.term.definition, False)
+        assert any(definition in reason for reason in reasons)
+
 
 # %% ranges
 
@@ -296,6 +311,12 @@ class TestRangesHold:
             (violation.fragment, violation.field_name)
             for violation in RangesHold().violations([requirement])
         ] == [(requirement, "violation_signalled_by")]
+
+    def test_value_outside_a_range_generated_in_a_later_module_is_reported(self):
+        structure = core.ActionPhaseStructure(defines_gaze_fixation=[core.Subgoal()])
+        assert [
+            violation.field_name for violation in RangesHold().violations([structure])
+        ] == ["defines_gaze_fixation"]
 
     def test_values_of_the_allowed_type_violate_nothing(self):
         requirement = core.ConditionRequirement(
@@ -855,6 +876,17 @@ class TestStructureControlRules:
             MechanicalBoundaryMonitored(), [unmonitored, monitored, exempted]
         ) == [unmonitored]
 
+    def test_unmonitored_boundary_event_is_named_by_the_violation(self):
+        liftoff, touchdown = prehension.Liftoff(), prehension.Touchdown()
+        structure = core.ActionPhaseStructure(
+            defines_phase=[core.ActionPhase(terminated_by=[liftoff, touchdown])],
+            defines_control_point=[
+                core.SensorimotorControlPoint(at_event_type=touchdown)
+            ],
+        )
+        (violation,) = MechanicalBoundaryMonitored().violations([structure])
+        assert violation.involved == (liftoff,)
+
     def test_exemption_of_an_event_that_is_no_boundary_is_reported(self):
         liftoff = prehension.Liftoff()
         misplaced = core.ActionPhaseStructure(
@@ -882,6 +914,15 @@ class TestStructureControlRules:
         )
         reported = violators(ComponentsDeclared(), [structure])
         assert undeclared_phase in reported and subgoal not in reported
+
+    def test_fragment_no_field_can_declare_is_not_reported(self):
+        tolerance = core.MagnitudeRange()
+        structure = core.ActionPhaseStructure(
+            defines_continuous_prediction=[
+                core.ContinuousSignalPrediction(has_tolerance=tolerance)
+            ],
+        )
+        assert tolerance not in violators(ComponentsDeclared(), [structure])
 
 
 # %% object dynamics
@@ -1142,6 +1183,14 @@ class TestPouringRules:
         generic = pouring_structure(defines_event_type=[core.MechanicalEventType()])
         specific = pouring_structure(defines_event_type=[pouring.FlowOnset()])
         assert violators(PouringEventsSpecific(), [generic, specific]) == [generic]
+
+    def test_generic_event_is_named_by_the_violation(self):
+        generic_event = core.MechanicalEventType()
+        structure = pouring_structure(
+            defines_event_type=[generic_event, pouring.FlowOnset()]
+        )
+        (violation,) = PouringEventsSpecific().violations([structure])
+        assert violation.involved == (generic_event,)
 
     def test_pouring_without_flow_regulation_is_reported(self):
         partial = pouring_structure(

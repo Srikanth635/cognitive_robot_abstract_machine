@@ -237,6 +237,13 @@ class PropertyTerm(FieldMetadata):
     Whether the property takes at most one value, so the field holds one value.
     """
 
+    range: str = ""
+    """
+    The IRI of the vocabulary class the property's values belong to, when they are
+    fragments. The field's annotation names a superclass of it when the class is
+    generated in a later module than the field.
+    """
+
 
 @dataclass(frozen=True)
 class ConceptReference:

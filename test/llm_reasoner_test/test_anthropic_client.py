@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
+import anthropic
 import pytest
 
+from llm_reasoner.clients.anthropic_client import AnthropicClient
 from llm_reasoner.clients.base import LanguageModelClient
-
-if TYPE_CHECKING:
-    from llm_reasoner.clients.anthropic_client import AnthropicClient
 
 # %% Anthropic service mimics
 
@@ -150,20 +149,7 @@ def build_client_harness(
 ) -> AnthropicClientHarness:
     """
     Build a client backed by a deterministic Anthropic service mimic.
-
-    Imports the vendor SDK and :class:`AnthropicClient` here, at call time,
-    rather than at module scope: importing ``anthropic`` before pytest
-    collects ``llm_reasoner.knowledge.microworlds.flanagan`` corrupts that
-    module's dataclass field annotations (a vendor-SDK import side effect,
-    order-dependent on collection order, not something this package causes or
-    can fix). Deferring the import until a test actually runs avoids the
-    ordering entirely, since collection finishes importing every test module
-    before any test body executes.
     """
-    import anthropic
-
-    from llm_reasoner.clients.anthropic_client import AnthropicClient
-
     service = AnthropicServiceMimic(response)
     factory = AnthropicServiceFactoryRecorder(service)
     monkeypatch.setattr(anthropic, "Anthropic", factory)
@@ -264,6 +250,30 @@ class TestAnthropicStructuredCompletionContract:
         assert request["system"] == "system"
         assert request["tool_choice"] == {"type": "tool", "name": "emit_hypothesis"}
         assert request["tools"][0]["input_schema"] == schema
+
+    @pytest.mark.parametrize(
+        "model, ceiling",
+        [
+            ("claude-sonnet-4-5", 64_000),
+            ("claude-opus-4-5", 64_000),
+            ("claude-sonnet-5-5", 128_000),
+            ("claude-haiku-4-5", 64_000),
+        ],
+    )
+    def test_structured_completion_requests_the_models_output_ceiling(
+        self, monkeypatch: pytest.MonkeyPatch, model: str, ceiling: int
+    ) -> None:
+        harness = build_client_harness(
+            monkeypatch,
+            AnthropicResponseMimic(
+                [ToolUseBlockMimic("emit_hypothesis", {"answer": "yes"})]
+            ),
+            model=model,
+        )
+
+        harness.client.complete_structured("system", "user", {})
+
+        assert harness.service.messages.requests[0]["max_tokens"] == ceiling
 
     def test_truncated_structured_response_is_rejected(
         self, monkeypatch: pytest.MonkeyPatch

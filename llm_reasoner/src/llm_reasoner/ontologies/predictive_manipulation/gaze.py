@@ -104,6 +104,7 @@ class ClosestApproach(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://aicor.knowledge/l2-ontology.owl#betweenRoleFillers",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ManipulationRole",
         ).as_dict(),
     )
     """
@@ -176,6 +177,7 @@ class GazeFixation(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#fixatesRole",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ManipulationRole",
         ).as_dict(),
     )
     """
@@ -209,6 +211,7 @@ class GazeFixation(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#maintainedUntil",
             functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PhaseBoundaryEventType",
         ).as_dict(),
     )
     """
@@ -220,6 +223,7 @@ class GazeFixation(DescriptionEntity):
         metadata=PropertyTerm(
             iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#servesPhase",
             functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ActionPhase",
         ).as_dict(),
     )
     """
@@ -251,7 +255,7 @@ class Obstacle(core.ManipulationRole):
 @dataclass(eq=False)
 class VisualControlPoint(core.SensorimotorControlPoint):
     """
-    A control point at which a contact event is also predicted and monitored in the visual modality.
+    A control point at which a contact event is also predicted and monitored in the visual modality. A pose confirmed by vision alone, such as a lip aligned over a receptacle, is checked by a comparison without a control point.
     """
 
     term: ClassVar[ClassTerm] = ClassTerm(
