@@ -8,7 +8,6 @@ from __future__ import annotations
 from enum import StrEnum
 
 from krrood.entity_query_language.factories import and_, contains, flat_variable
-from krrood.entity_query_language.predicate import HasType
 from typing_extensions import Any
 
 from llm_reasoner.acceptance.rules import FragmentRule, RequirementRule, StructureRule
@@ -26,29 +25,6 @@ class PrehensionRule(StrEnum):
     """
     A grip-load coupling's safety margin is kept on the grip force the coupling
     produces, not on another one.
-    """
-
-    REPLACE_ENDS_AT_TOUCHDOWN = "replace_ends_at_touchdown"
-    """
-    Lowering an object ends when it touches its support, where its load starts to pass
-    to the support.
-    """
-
-    UNLOAD_ENDS_WHEN_FORCES_UNLOADED = "unload_ends_when_forces_unloaded"
-    """
-    Unloading ends once grip and load forces are low and the support bears the weight;
-    releasing contact is a separate stage.
-    """
-
-    RELEASE_ENDS_AT_GRASP_RELEASE = "release_ends_at_grasp_release"
-    """
-    Releasing an object ends when the effector loses contact with it.
-    """
-
-    WITHDRAWAL_FOLLOWS_RELEASE = "withdrawal_follows_release"
-    """
-    Withdrawing the effector begins at release and ends at its withdrawal target; it
-    follows releasing rather than being part of it.
     """
 
     ADJUSTMENT_PRECEDES_PREDICTED_EVENT = "adjustment_precedes_predicted_event"
@@ -121,92 +97,6 @@ class AdjustmentPrecedesPredictedEvent(
 
 
 # %% phase boundaries
-
-
-class ReplaceEndsAtTouchdown(RequirementRule[prehension.ReplacePhase]):
-    """
-    A replace phase is terminated by a touchdown.
-    """
-
-    @property
-    def name(self) -> StrEnum:
-        return PrehensionRule.REPLACE_ENDS_AT_TOUCHDOWN
-
-    @property
-    def reason(self) -> str:
-        return "terminated_by names no touchdown"
-
-    def applies(self, subject: Any) -> Any:
-        return HasType(subject, prehension.ReplacePhase)
-
-    def meets(self, subject: Any) -> Any:
-        return HasType(flat_variable(subject.terminated_by), prehension.Touchdown)
-
-
-class UnloadEndsWhenForcesUnloaded(RequirementRule[prehension.UnloadPhase]):
-    """
-    An unload phase is terminated when forces are unloaded.
-    """
-
-    @property
-    def name(self) -> StrEnum:
-        return PrehensionRule.UNLOAD_ENDS_WHEN_FORCES_UNLOADED
-
-    @property
-    def reason(self) -> str:
-        return "terminated_by names no forces-unloaded event"
-
-    def applies(self, subject: Any) -> Any:
-        return HasType(subject, prehension.UnloadPhase)
-
-    def meets(self, subject: Any) -> Any:
-        return HasType(flat_variable(subject.terminated_by), prehension.ForcesUnloaded)
-
-
-class ReleaseEndsAtGraspRelease(RequirementRule[prehension.ContactReleasePhase]):
-    """
-    A contact release phase is terminated by a grasp release.
-    """
-
-    @property
-    def name(self) -> StrEnum:
-        return PrehensionRule.RELEASE_ENDS_AT_GRASP_RELEASE
-
-    @property
-    def reason(self) -> str:
-        return "terminated_by names no grasp release"
-
-    def applies(self, subject: Any) -> Any:
-        return HasType(subject, prehension.ContactReleasePhase)
-
-    def meets(self, subject: Any) -> Any:
-        return HasType(flat_variable(subject.terminated_by), prehension.GraspRelease)
-
-
-class WithdrawalFollowsRelease(RequirementRule[prehension.WithdrawPhase]):
-    """
-    A withdraw phase is initiated by a grasp release and terminated by reaching its
-    withdrawal target.
-    """
-
-    @property
-    def name(self) -> StrEnum:
-        return PrehensionRule.WITHDRAWAL_FOLLOWS_RELEASE
-
-    @property
-    def reason(self) -> str:
-        return "not initiated by a grasp release or not ending at the withdrawal target"
-
-    def applies(self, subject: Any) -> Any:
-        return HasType(subject, prehension.WithdrawPhase)
-
-    def meets(self, subject: Any) -> Any:
-        return and_(
-            HasType(flat_variable(subject.initiated_by), prehension.GraspRelease),
-            HasType(
-                flat_variable(subject.terminated_by), prehension.WithdrawalComplete
-            ),
-        )
 
 
 # %% classification

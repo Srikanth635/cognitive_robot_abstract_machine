@@ -3946,7 +3946,7 @@ class ObjectStateEstimate(Estimate):
 @dataclass(eq=False)
 class PhaseTransition(DescriptionEntity):
     """
-    A gated edge of the phase sequence. Where comparisons permit it, only matching comparisons do.
+    A gated edge of the phase sequence, never gated by a failure. Where comparisons permit it, only matching comparisons do.
     """
 
     term: ClassVar[ClassTerm] = ClassTerm(
@@ -3965,6 +3965,15 @@ class PhaseTransition(DescriptionEntity):
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ActionPhase"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#gatedBy",
+                quantifier=Quantifier.ONLY,
+                filler=ComplementOf(
+                    operand=NamedClass(
+                        iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#FailureEventType"
+                    )
                 ),
             ),
             PropertyRestriction(
@@ -4922,6 +4931,15 @@ class Subgoal(DescriptionEntity):
             "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#FJ-003",
         ),
         restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#attainmentSignalledBy",
+                quantifier=Quantifier.ONLY,
+                filler=ComplementOf(
+                    operand=NamedClass(
+                        iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#FailureEventType"
+                    )
+                ),
+            ),
             PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#attainmentSignalledBy",
                 quantifier=Quantifier.SOME,

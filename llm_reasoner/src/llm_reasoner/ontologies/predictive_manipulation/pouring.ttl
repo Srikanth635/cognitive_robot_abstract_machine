@@ -2,6 +2,7 @@
 @prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
 @prefix dyn:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#> .
 @prefix pre:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#> .
+@prefix gaze:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#> .
 @prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
 @prefix dul:   <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
 @prefix owl:   <http://www.w3.org/2002/07/owl#> .
@@ -11,8 +12,9 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring> a owl:Ontology ;
     owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring/0.3.0> ;
-    owl:versionInfo "0.4.0" ;
-    owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension> ;
+    owl:versionInfo "0.5.0" ;
+    owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension> ,
+        <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze> ;
     rdfs:label "Predictive manipulation: pouring"@en ;
     rdfs:comment """Substance transfer as an engineering extension, tied to CRAM-AICOR's pouring model: aicor:Pouring, the roles of aicor:PouringIntention, the states of aicor:PouringTemplate and aicor:EffluxOnsetEvent."""@en .
 
@@ -342,9 +344,12 @@
         [ a owl:Restriction ; owl:onProperty core:definesPhase ; owl:someValuesFrom pre:ReplacePhase ] ,
         [ a owl:Restriction ; owl:onProperty core:definesPhase ; owl:someValuesFrom pre:ContactReleasePhase ] ,
         [ a owl:Restriction ; owl:onProperty :hasMaterialRegime ; owl:someValuesFrom :MaterialRegime ] ,
-        [ a owl:Restriction ; owl:onProperty :hasTerminationReason ; owl:someValuesFrom :TransferTerminationReason ] ;
+        [ a owl:Restriction ; owl:onProperty :hasTerminationReason ; owl:someValuesFrom :TransferTerminationReason ] ,
+        [ a owl:Restriction ; owl:onProperty pre:definesForceCoupling ; owl:someValuesFrom pre:GripLoadCoupling ] ,
+        [ a owl:Restriction ; owl:onProperty gaze:definesGazeFixation ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( gaze:GazeFixation [ a owl:Restriction ; owl:onProperty gaze:servesPhase ; owl:someValuesFrom :AlignmentPhase ] ) ] ] ,
+        [ a owl:Restriction ; owl:onProperty gaze:definesGazeFixation ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( gaze:GazeFixation [ a owl:Restriction ; owl:onProperty gaze:servesPhase ; owl:someValuesFrom :FlowRegulationPhase ] ) ] ] ;
     rdfs:label "pouring phase structure"@en ;
-    rdfs:comment "A substance-transfer phase structure composed with prehension: the source is reached, grasped, loaded, lifted and transported, aligned and tilted until the substance flows, regulated and stopped, returned upright, put back and released. Unloading and withdrawing the hand are optional."@en ;
+    rdfs:comment "A substance-transfer phase structure composed with prehension: the source is reached, grasped, loaded, lifted and transported, aligned and tilted until the substance flows, regulated and stopped, returned upright, put back and released. Unloading and withdrawing the hand are optional. Grip force is coupled to the load, and gaze is fixed while aligning the lip and while regulating the flow."@en ;
     core:evidenceStatus core:EngineeringExtension .
 
 :hasMaterialRegime a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :MaterialRegime ;
