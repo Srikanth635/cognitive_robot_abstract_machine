@@ -493,6 +493,17 @@ class TestHypothesisBackend:
         assert "decomposes_task = aicor:Pouring" in backend.log[1].user
         assert structure.decomposes_task == POURING
 
+    def test_type_catalogue_is_in_the_system_prompt_shared_by_every_attempt(self):
+        backend = backend_answering(
+            GenerationCase.LOOPING_STRUCTURE, GenerationCase.LOOP_REPLACED_PATCH
+        )
+        list(pouring_query().evaluate(backend=backend))
+        (first_system, first_user), (repair_system, _) = backend.client.calls
+        catalogue_entry = rendered_type(type_schema_for(pouring.TiltToFlowPhase))
+        assert first_system == repair_system
+        assert catalogue_entry in first_system
+        assert catalogue_entry not in first_user
+
     def test_fixed_values_and_instruction_are_stated(self):
         backend = backend_answering(GenerationCase.CHAINED_STRUCTURE)
         list(pouring_query().evaluate(backend=backend))

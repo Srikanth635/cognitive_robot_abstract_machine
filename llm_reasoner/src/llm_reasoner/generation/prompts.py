@@ -120,6 +120,28 @@ class GenerationPrompt:
     Builds the prompts of one generation.
     """
 
+    def system(self, schema: GenerationSchema) -> str:
+        """
+        :param schema: The fragment types the answer may use.
+        :return: The system prompt, which depends only on the type generated, so it
+            stays the same for every attempt and every instruction and can be cached.
+        """
+        root = schema.root.__name__
+        return "\n\n".join(
+            [
+                SYSTEM_PROMPT,
+                f"Produce exactly one fragment of type {root}, together with the "
+                "fragments that make it up. Every fragment you write is part of the "
+                f"{root}, so it does not list them.",
+                "## Types you may use\n\n"
+                + "\n\n".join(
+                    rendered_type(type_schema)
+                    for _, type_schema in sorted(schema.types.items())
+                ),
+                '## Output\n\n{"fragments": [{"id": "...", "type": "...", ...}, ...]}',
+            ]
+        )
+
     def initial(
         self,
         schema: GenerationSchema,
@@ -130,15 +152,10 @@ class GenerationPrompt:
         :param schema: The fragment types the answer may use.
         :param instruction: The action to describe, in plain words.
         :param fixed_values: Values the root fragment must have, by field name.
-        :return: The prompt asking for a hypothesis.
+        :return: The prompt asking for a hypothesis of the instruction.
         """
         root = schema.root.__name__
-        sections = [
-            f"Describe the organisation of this action: {instruction}",
-            f"Produce exactly one fragment of type {root}, together with the "
-            "fragments that make it up. Every fragment you write is part of the "
-            f"{root}, so it does not list them.",
-        ]
+        sections = [f"Describe the organisation of this action: {instruction}"]
         if fixed_values:
             sections.append(
                 f"## Fixed values\n\nThe {root} fragment must have:\n"
@@ -147,16 +164,6 @@ class GenerationPrompt:
                     for name, value in fixed_values.items()
                 )
             )
-        sections.append(
-            "## Types you may use\n\n"
-            + "\n\n".join(
-                rendered_type(type_schema)
-                for _, type_schema in sorted(schema.types.items())
-            )
-        )
-        sections.append(
-            '## Output\n\n{"fragments": [{"id": "...", "type": "...", ...}, ...]}'
-        )
         return "\n\n".join(sections)
 
     @staticmethod
