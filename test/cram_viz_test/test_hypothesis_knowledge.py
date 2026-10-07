@@ -7,6 +7,8 @@ import pytest
 
 krrood = pytest.importorskip("krrood", reason="EQL requires krrood")
 
+from llm_reasoner.acceptance.rules import Severity  # noqa: E402
+from llm_reasoner.acceptance.suite import predictive_manipulation_suite  # noqa: E402
 from llm_reasoner.admission.rdf import GraphReader  # noqa: E402
 from llm_reasoner.admission.store import HypothesisStore  # noqa: E402
 from llm_reasoner.hypotheses.graph import HypothesisGraphNodeKind  # noqa: E402
@@ -27,6 +29,16 @@ class TestSampleHypothesis:
             hypothesis_knowledge.SAMPLE_RECORD_ID
         )
         assert GraphReader().read(stored.graph).unread_statements == []
+
+    def test_sample_meets_every_acceptance_rule(self):
+        errors = [
+            violation
+            for violation in predictive_manipulation_suite().violations(
+                hypothesis_knowledge.sample_view().fragments
+            )
+            if violation.severity is Severity.ERROR
+        ]
+        assert errors == []
 
     def test_sample_root_is_a_pouring_structure(self):
         assert type(hypothesis_knowledge.sample_view().root) is (

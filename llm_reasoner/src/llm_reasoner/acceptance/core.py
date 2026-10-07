@@ -636,20 +636,34 @@ class PreconditionsGrounded(StructureRule[core.ActionPhaseStructure]):
         }
         return conditions
 
-    def is_violated_by(self, fragment: core.ActionPhaseStructure) -> bool:
+    def involved(
+        self, fragment: core.ActionPhaseStructure
+    ) -> list[core.ConditionRequirement]:
+        """
+        :return: The requirements on entry or throughout whose conditions no phase
+            establishes and that are not assumed of the world.
+        """
         established = self.established(fragment)
-        return any(
-            not any(
-                id(condition) in established
-                for condition in requirement.has_condition_type
-            )
-            for phase in fragment.defines_phase
-            for requirement in phase.has_condition_requirement
-            if requirement.has_condition_mode
-            in (core.ConditionMode.AT_ENTRY, core.ConditionMode.THROUGHOUT)
-            and requirement.has_condition_polarity == core.ConditionPolarity.MUST_HOLD
-            and not requirement.is_world_assumption
-        )
+        ungrounded: list[core.ConditionRequirement] = []
+        for phase in fragment.defines_phase:
+            for requirement in phase.has_condition_requirement:
+                if (
+                    requirement.has_condition_mode
+                    in (core.ConditionMode.AT_ENTRY, core.ConditionMode.THROUGHOUT)
+                    and requirement.has_condition_polarity
+                    == core.ConditionPolarity.MUST_HOLD
+                    and not requirement.is_world_assumption
+                    and not any(
+                        id(condition) in established
+                        for condition in requirement.has_condition_type
+                    )
+                    and not any(requirement is seen for seen in ungrounded)
+                ):
+                    ungrounded.append(requirement)
+        return ungrounded
+
+    def is_violated_by(self, fragment: core.ActionPhaseStructure) -> bool:
+        return bool(self.involved(fragment))
 
 
 # %% comparisons
