@@ -38,6 +38,7 @@ Panels.define('graph', function (root, bus) {
     '    <button data-view="live-knowledge" title="semantic entities and actions projected from the attached live demo">Live Knowledge</button>' +
     '    <button data-view="domain" title="the static, hand-authored ontology of action verbs and entities — independent of any recorded scene">Domain Knowledge</button>' +
     '    <button data-view="hypothesis" title="llm_reasoner\'s cereal-pouring knowledge graph — click a node to expand it, double-click to collapse its branch">Hypothesis Graph</button>' +
+    '    <button data-view="ontology" title="the Hypothesis Graph with the ontology class of every node and the ontology property of every link beneath their labels — click a node for the terms backing its values">Ontology Graph</button>' +
     '    <button data-view="designator" title="a real coraplex action designator\'s own fields, reflected and classified value vs referent — illustrative only, no live World">Designator</button>' +
     '    <button data-view="kinematics" title="the robot\'s kinematic structure — URDF links &amp; joints">Kinematics</button>' +
     '    <button data-view="plan" title="the plan tree, with the execution status of every node">Plan</button>' +
@@ -82,6 +83,7 @@ Panels.define('graph', function (root, bus) {
     'live-knowledge': { live: 'knowledge' },
     domain:     { url: '/api/kb/view?name=domain' },
     hypothesis: { url: '/api/kb/view?name=hypothesis' },
+    ontology:   { url: '/api/kb/view?name=ontology' },
     designator: { url: '/api/kb/view?name=designator' },
     kinematics: { url: '/api/kb/view?name=kinematics' },
     plan:       { url: '/api/kb/view?name=plan' },
@@ -94,6 +96,18 @@ Panels.define('graph', function (root, bus) {
   const stacks = {};          // tab -> parent payloads for the back button
   Object.keys(TABS).forEach(function (t) { stacks[t] = []; });
   let inGraphSet = {};
+
+  // The Hypothesis and Ontology Graph tabs draw the same projection with different
+  // labels, so they share one HypothesisGraph renderer and container; it is rebuilt
+  // whenever the other of the two was drawn last.
+  const PROJECTION_TABS = ['hypothesis', 'ontology'];
+  function isProjectionTab(name) { return PROJECTION_TABS.includes(name); }
+  let drawnProjectionTab = null;
+  function drawProjection(name) {
+    if (drawnProjectionTab === name) return;
+    drawnProjectionTab = name;
+    HypothesisGraph.build(base[name]);
+  }
 
   function setView(payload) {
     view = payload;
@@ -158,14 +172,17 @@ Panels.define('graph', function (root, bus) {
     tabsEl.querySelectorAll('button').forEach(function (b) {
       b.classList.toggle('active', b.dataset.view === name);
     });
-    graphEl.style.display = name === 'hypothesis' ? 'none' : '';
-    hypothesisGraphEl.style.display = name === 'hypothesis' ? '' : 'none';
-    hypothesisToolbarEl.style.display = name === 'hypothesis' ? '' : 'none';
+    graphEl.style.display = isProjectionTab(name) ? 'none' : '';
+    hypothesisGraphEl.style.display = isProjectionTab(name) ? '' : 'none';
+    hypothesisToolbarEl.style.display = isProjectionTab(name) ? '' : 'none';
     graphWrapEl.classList.toggle('split', name === 'designator');
-    if (name === 'hypothesis') {
+    if (isProjectionTab(name)) {
       navEl.style.display = 'none';
       emptyEl.style.display = 'none';
-      if (base[name]) showHypothesisEmptyState(base[name]);
+      if (base[name]) {
+        showHypothesisEmptyState(base[name]);
+        drawProjection(name);
+      }
       if (!base[name]) {
         try {
           const r = await fetch(SceneSelection.apiUrl(
@@ -180,6 +197,7 @@ Panels.define('graph', function (root, bus) {
           }
           base[name] = p;
           showHypothesisEmptyState(p);
+          drawnProjectionTab = name;
           HypothesisGraph.build(p);
         } catch (err) {
           emptyEl.style.display = '';
@@ -258,7 +276,7 @@ Panels.define('graph', function (root, bus) {
       .map(function (e) { return e.from === focusId ? e.to : e.from; });
   }
   function hypothesisSelect(id) {
-    const payload = base['hypothesis'];
+    const payload = base[drawnProjectionTab];
     if (!payload || !payload.details || !payload.details[id]) return;
     const relations = (payload.edges || [])
       .filter(function (e) { return e.from === id || e.to === id; })
@@ -280,8 +298,8 @@ Panels.define('graph', function (root, bus) {
   // ---- highlights (from EQL results or our own selection) ----------------------
   function spotlight(p) {
     const ids = (p && p.ids) || [];
-    if (tab === 'hypothesis') {
-      const payload = base['hypothesis'];
+    if (isProjectionTab(tab)) {
+      const payload = base[tab];
       let hypothesisHi = ids.slice();
       if (payload && p && p.focus) {
         hypothesisHi = hypothesisHi.concat(hypothesisNeighbourIds(payload, p.focus));
@@ -322,9 +340,9 @@ Panels.define('graph', function (root, bus) {
   bus.on('hypothesis:generated', function (payload) {
     if (!payload || !payload.ok) return;
     base['hypothesis'] = payload;
-    HypothesisGraph.build(payload);
-    showTab('hypothesis');
-    showHypothesisEmptyState(payload);
+    delete base['ontology'];
+    drawnProjectionTab = null;
+    showTab(tab === 'ontology' ? 'ontology' : 'hypothesis');
   });
 
   bus.on('scene:step', function (p) {

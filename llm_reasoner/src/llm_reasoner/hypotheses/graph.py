@@ -114,6 +114,12 @@ class HypothesisGraphNode:
     The fragment the node stands for, or ``None`` for the instruction and the groups.
     """
 
+    ontology_class: str = ""
+    """
+    The IRI of the ontology class of the fragment the node stands for; empty for the
+    instruction and the groups.
+    """
+
 
 @dataclass(frozen=True)
 class HypothesisGraphRelation:
@@ -134,6 +140,12 @@ class HypothesisGraphRelation:
     target: HypothesisGraphNode
     """
     The node the link ends at.
+    """
+
+    property_iri: str = ""
+    """
+    The IRI of the ontology property stating the link; empty for a link the
+    presentation draws.
     """
 
 
@@ -233,7 +245,13 @@ class HypothesisGraphProjector:
                 continue
             for name, targets in links.items():
                 for target_index in targets:
-                    self.link(graph, indices[id(fragment)], name, target_index)
+                    self.link(
+                        graph,
+                        indices[id(fragment)],
+                        name,
+                        target_index,
+                        PropertyTerm.of_field(type(fragment), name).iri,
+                    )
         return HypothesisGraph(
             graph=graph, instruction_index=instruction_index, root_index=root_index
         )
@@ -255,6 +273,7 @@ class HypothesisGraphProjector:
                 else HypothesisGraphNodeKind.FRAGMENT
             ),
             source=fragment,
+            ontology_class=type(fragment).term.iri,
         )
 
     @staticmethod
@@ -302,7 +321,13 @@ class HypothesisGraphProjector:
                 graph, root_index, SyntheticHypothesisRelation.GROUPS, group_index
             )
             for target_index in targets:
-                self.link(graph, group_index, name, target_index)
+                self.link(
+                    graph,
+                    group_index,
+                    name,
+                    target_index,
+                    PropertyTerm.of_field(type(root.source), name).iri,
+                )
 
     @staticmethod
     def group_label(field_name: str, member_count: int) -> str:
@@ -318,10 +343,15 @@ class HypothesisGraphProjector:
 
     @staticmethod
     def link(
-        graph: rx.PyDiGraph, source_index: int, predicate: str, target_index: int
+        graph: rx.PyDiGraph,
+        source_index: int,
+        predicate: str,
+        target_index: int,
+        property_iri: str = "",
     ) -> None:
         """
-        Add a link between two nodes of the graph.
+        Add a link between two nodes of the graph, stated by the given ontology
+        property or, without one, drawn by the presentation.
         """
         graph.add_edge(
             source_index,
@@ -330,5 +360,6 @@ class HypothesisGraphProjector:
                 source=graph[source_index],
                 predicate=predicate,
                 target=graph[target_index],
+                property_iri=property_iri,
             ),
         )

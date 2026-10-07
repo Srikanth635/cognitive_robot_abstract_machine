@@ -35,11 +35,15 @@ from krrood.entity_query_language import factories as eql_factories
 from krrood.entity_query_language.predicate import HasType
 from krrood.symbol_graph.symbol_graph import SymbolGraph
 from llm_reasoner.ontologies.predictive_manipulation import core, pouring, prehension
-from llm_reasoner.hypotheses.graph import HypothesisGraphNode
+from llm_reasoner.hypotheses.graph import (
+    HypothesisGraphNode,
+    HypothesisGraphRelation,
+)
 from llm_reasoner.ontologies.terms import DescriptionEntity
 from llm_reasoner.resolver.reflection import SlotKind
 from typing_extensions import Any, Callable, Dict, List, Optional, Tuple
 
+from cram_viz.hypothesis_knowledge.ontology_backing import OntologyBacking
 from cram_viz import (
     action_knowledge,
     configure_console_logging,
@@ -1882,6 +1886,8 @@ def view_payload(name: str, selected_scene: Optional[str] = None) -> Dict[str, A
         return _domain_knowledge_view(kb)
     if name == "hypothesis":
         return _hypothesis_graph_view()
+    if name == "ontology":
+        return _ontology_graph_view()
     if name == "designator":
         return _designator_view(kb)
     return {"ok": False, "error": "unknown view: %s" % name}
@@ -2122,11 +2128,46 @@ def _hypothesis_graph_view() -> Dict[str, Any]:
 
     The tab is empty until an instruction has been generated.
     """
+    return _projection_view(
+        crumb="hypothesis graph",
+        node_label=lambda node: node.label,
+        relation_label=lambda relation: relation.predicate,
+        node_lines=_hypothesis_node_lines,
+    )
+
+
+def _ontology_graph_view() -> Dict[str, Any]:
+    """
+    The Ontology Graph tab: the Hypothesis Graph with the ontology class of each
+    fragment beneath its label and the ontology property stating each link beneath its
+    field; links only the viewer draws say so. A node's details name its class, the
+    CRAM-AICOR and DUL terms the class specialises, and the ontology every value comes
+    from (see :mod:`cram_viz.hypothesis_knowledge.ontology_backing`).
+    """
+    backing = OntologyBacking()
+    return _projection_view(
+        crumb="ontology graph",
+        node_label=backing.node_label,
+        relation_label=backing.relation_label,
+        node_lines=backing.node_lines,
+    )
+
+
+def _projection_view(
+    crumb: str,
+    node_label: Callable[[HypothesisGraphNode], str],
+    relation_label: Callable[[HypothesisGraphRelation], str],
+    node_lines: Callable[[HypothesisGraphNode], List[str]],
+) -> Dict[str, Any]:
+    """
+    A tab drawing the active hypothesis's projection, with the given node labels, link
+    labels and detail lines; empty until an instruction has been generated.
+    """
     active_hypothesis = hypothesis_knowledge.active()
     if active_hypothesis is None:
         return {
             "ok": True,
-            "crumb": "hypothesis graph",
+            "crumb": crumb,
             "root": None,
             "nodes": [],
             "edges": [],
@@ -2140,7 +2181,7 @@ def _hypothesis_graph_view() -> Dict[str, Any]:
     nodes = [
         {
             "id": node.identifier,
-            "label": node.label,
+            "label": node_label(node),
             "kind": node.kind.value,
         }
         for node in projection.nodes
@@ -2149,7 +2190,7 @@ def _hypothesis_graph_view() -> Dict[str, Any]:
         {
             "from": relation.source.identifier,
             "to": relation.target.identifier,
-            "label": relation.predicate,
+            "label": relation_label(relation),
         }
         for relation in projection.relations
     ]
@@ -2157,13 +2198,13 @@ def _hypothesis_graph_view() -> Dict[str, Any]:
         node.identifier: {
             "label": node.label,
             "group": "hypothesis",
-            "lines": _hypothesis_node_lines(node),
+            "lines": node_lines(node),
         }
         for node in projection.nodes
     }
     return {
         "ok": True,
-        "crumb": "hypothesis graph",
+        "crumb": crumb,
         "nodes": nodes,
         "edges": edges,
         "details": details,
