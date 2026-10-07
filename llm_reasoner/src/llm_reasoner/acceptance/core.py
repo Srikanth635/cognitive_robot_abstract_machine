@@ -80,12 +80,6 @@ class CoreRule(StrEnum):
     that is what makes a boundary event a control point.
     """
 
-    INVARIANT_HAS_VIOLATION_EVENT = "invariant_has_violation_event"
-    """
-    A condition required throughout a phase needs an event that registers its
-    violation; without one it is not a guard but a hope.
-    """
-
     SAFETY_MARGIN_ON_ONE_PARTICIPANT = "safety_margin_on_one_participant"
     """
     A safety margin relates a setpoint to a threshold of the same participant; one
@@ -119,12 +113,6 @@ class CoreRule(StrEnum):
     """
     A condition a phase requires should be established by some phase of the structure,
     or be declared an assumption about the world.
-    """
-
-    MATCH_HAS_OBSERVATION = "match_has_observation"
-    """
-    A comparison that found agreement must say what was observed; agreement with
-    nothing is not a comparison.
     """
 
     MATCH_HAS_NO_RESPONSE = "match_has_no_response"
@@ -175,12 +163,6 @@ class CoreRule(StrEnum):
     A comparison produces model updates only from errors it has classified.
     """
 
-    CONTROL_POINT_HANDLES_BOTH_OUTCOMES = "control_point_handles_both_outcomes"
-    """
-    A control point states what follows a match and what follows a mismatch; the
-    mismatch branch is where the corrective action programmes of the controller live.
-    """
-
     MISMATCH_INVOKES_CORRECTION = "mismatch_invokes_correction"
     """
     A control point's mismatch handling should name a corrective response, not only a
@@ -224,13 +206,13 @@ class CoreRule(StrEnum):
     and is not a failure.
     """
 
-    FEEDBACK_CONTROL_HAS_CONTINUOUS_PREDICTION = (
-        "feedback_control_has_continuous_prediction"
+    CONTINUOUS_PREDICTION_IN_MONITORED_MODALITY = (
+        "continuous_prediction_in_monitored_modality"
     )
     """
     A controller regulating from sensory feedback compares a continuous prediction in a
-    modality it monitors, with a predicted trajectory and the setpoint it adjusts;
-    otherwise it has no control law.
+    modality it monitors; otherwise it has no control law. Having a continuous prediction
+    at all is required by the ontology.
     """
 
     COMPONENTS_DECLARED = "components_declared"
@@ -391,28 +373,6 @@ class SubgoalSignalledByPhaseEnd(FragmentRule[core.ActionPhase]):
                     subject.terminated_by, subject.aims_for.attainment_signalled_by
                 )
             ),
-        )
-
-
-class InvariantHasViolationEvent(FragmentRule[core.ConditionRequirement]):
-    """
-    A condition required to hold throughout a phase names the event registering its
-    violation.
-    """
-
-    @property
-    def name(self) -> StrEnum:
-        return CoreRule.INVARIANT_HAS_VIOLATION_EVENT
-
-    @property
-    def reason(self) -> str:
-        return "required throughout a phase but violation_signalled_by is missing"
-
-    def violating(self, subject: Any) -> Any:
-        return and_(
-            subject.has_condition_mode == core.ConditionMode.THROUGHOUT,
-            subject.has_condition_polarity == core.ConditionPolarity.MUST_HOLD,
-            subject.violation_signalled_by == None,
         )
 
 
@@ -620,26 +580,6 @@ class PreconditionsGrounded(StructureRule[core.ActionPhaseStructure]):
 
 
 # %% comparisons
-
-
-class MatchHasObservation(RequirementRule[core.PredictionComparison]):
-    """
-    A matching comparison names the observation it compared.
-    """
-
-    @property
-    def name(self) -> StrEnum:
-        return CoreRule.MATCH_HAS_OBSERVATION
-
-    @property
-    def reason(self) -> str:
-        return "a match without compares_observation"
-
-    def applies(self, subject: Any) -> Any:
-        return subject.has_comparison_outcome == core.ComparisonOutcome.MATCH
-
-    def meets(self, subject: Any) -> Any:
-        return subject.compares_observation != None
 
 
 class MatchHasNoResponse(FragmentRule[core.PredictionComparison]):
@@ -889,33 +829,6 @@ class ControlPointComparesItsPredictions(FragmentRule[core.SensorimotorControlPo
         )
 
 
-class ControlPointHandlesBothOutcomes(RequirementRule[core.SensorimotorControlPoint]):
-    """
-    A control point has a matching and a mismatching comparison.
-    """
-
-    @property
-    def name(self) -> StrEnum:
-        return CoreRule.CONTROL_POINT_HANDLES_BOTH_OUTCOMES
-
-    @property
-    def reason(self) -> str:
-        return "has_comparison does not cover both a match and a mismatch"
-
-    def applies(self, subject: Any) -> Any:
-        return HasType(subject, core.SensorimotorControlPoint)
-
-    def meets(self, subject: Any) -> Any:
-        match, mismatch = (
-            flat_variable(subject.has_comparison),
-            flat_variable(subject.has_comparison),
-        )
-        return and_(
-            match.has_comparison_outcome == core.ComparisonOutcome.MATCH,
-            mismatch.has_comparison_outcome == core.ComparisonOutcome.MISMATCH,
-        )
-
-
 class MismatchInvokesCorrection(RequirementRule[core.SensorimotorControlPoint]):
     """
     A control point handling mismatches invokes a correction for at least one of them.
@@ -1021,38 +934,37 @@ class ControlledSetpointIsActive(FragmentRule[core.ActionPhase]):
         )
 
 
-class FeedbackControlHasContinuousPrediction(
+class ContinuousPredictionInMonitoredModality(
     RequirementRule[core.ActionPhaseController]
 ):
     """
-    A feedback-regulated controller has a continuous prediction in a monitored
-    modality that predicts a trajectory and controls a setpoint.
+    A feedback-regulated controller with continuous predictions has one in a modality it
+    monitors.
     """
 
     @property
     def name(self) -> StrEnum:
-        return CoreRule.FEEDBACK_CONTROL_HAS_CONTINUOUS_PREDICTION
+        return CoreRule.CONTINUOUS_PREDICTION_IN_MONITORED_MODALITY
 
     @property
     def reason(self) -> str:
-        return (
-            "regulates from feedback without a continuous prediction in a monitored "
-            "modality that predicts a trajectory and controls a setpoint"
-        )
+        return "has no continuous prediction in a modality it monitors"
 
     def applies(self, subject: Any) -> Any:
-        return or_(
-            subject.has_regulation_mode == core.RegulationMode.CONTINUOUS_FEEDBACK,
-            subject.has_regulation_mode == core.RegulationMode.HYBRID,
+        return and_(
+            or_(
+                subject.has_regulation_mode == core.RegulationMode.CONTINUOUS_FEEDBACK,
+                subject.has_regulation_mode == core.RegulationMode.HYBRID,
+            ),
+            HasType(
+                flat_variable(subject.has_continuous_prediction),
+                core.ContinuousSignalPrediction,
+            ),
         )
 
     def meets(self, subject: Any) -> Any:
         prediction = flat_variable(subject.has_continuous_prediction)
-        return and_(
-            contains(subject.monitors_modality, prediction.has_modality),
-            prediction.predicts_trajectory != None,
-            prediction.controls_setpoint != None,
-        )
+        return contains(subject.monitors_modality, prediction.has_modality)
 
 
 # %% structure-wide control

@@ -2751,7 +2751,7 @@ class FailureEventType(PhaseBoundaryEventType):
 @dataclass(eq=False)
 class FeedbackRegulatedController(ActionPhaseController):
     """
-    A controller that corrects its commands from sensory signals while its phase runs; it monitors at least one modality.
+    A controller that corrects its commands from sensory signals while its phase runs; it monitors at least one modality and compares a continuous prediction there, which is its control law.
     """
 
     term: ClassVar[ClassTerm] = ClassTerm(
@@ -2760,6 +2760,13 @@ class FeedbackRegulatedController(ActionPhaseController):
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
         restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasContinuousPrediction",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ContinuousSignalPrediction"
+                ),
+            ),
             PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#monitorsModality",
                 quantifier=Quantifier.SOME,
@@ -3205,7 +3212,7 @@ class InitialStateEstimate(DescriptionEntity):
 @dataclass(eq=False)
 class InvariantRequirement(ConditionRequirement):
     """
-    A condition that must hold throughout the phase.
+    A condition that must hold throughout the phase, guarded by the failure event that registers its violation.
     """
 
     term: ClassVar[ClassTerm] = ClassTerm(
@@ -3216,7 +3223,15 @@ class InvariantRequirement(ConditionRequirement):
         ),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#violationSignalledBy",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#FailureEventType"
+                ),
+            ),
+        ),
         definition=IntersectionOf(
             operands=(
                 NamedClass(
@@ -3622,7 +3637,7 @@ class PredictionComparison(DescriptionEntity):
 @dataclass(eq=False)
 class MatchingComparison(PredictionComparison):
     """
-    A comparison that agrees with the prediction: no error, and it confirms a subgoal or supplies the next initial state.
+    A comparison that agrees with the prediction: it names what was observed, finds no error, and confirms a subgoal or supplies the next initial state.
     """
 
     term: ClassVar[ClassTerm] = ClassTerm(
@@ -3640,6 +3655,13 @@ class MatchingComparison(PredictionComparison):
                     quantifier=Quantifier.SOME,
                     filler=NamedClass(iri="http://www.w3.org/2002/07/owl#Thing"),
                 )
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#comparesObservation",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryObservationType"
+                ),
             ),
             UnionOf(
                 operands=(
@@ -4288,7 +4310,7 @@ class SafetyMargin(QuantitativeParameter):
 @dataclass(eq=False)
 class SensorimotorControlPoint(DescriptionEntity):
     """
-    A planned mechanical event, such as a contact or a lift-off, at which predicted and actual sensory signals are compared to monitor progress and detect errors. An event that is not mechanical, such as an attained pose or quantity, is checked by a comparison the structure declares without a control point.
+    A planned mechanical event, such as a contact or a lift-off, at which predicted and actual sensory signals are compared to monitor progress and detect errors: it states what follows a match and what follows a mismatch, where the controller's corrections live. An event that is not mechanical, such as an attained pose or quantity, is checked by a comparison the structure declares without a control point.
     """
 
     term: ClassVar[ClassTerm] = ClassTerm(
@@ -4315,7 +4337,14 @@ class SensorimotorControlPoint(DescriptionEntity):
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasComparison",
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PredictionComparison"
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MatchingComparison"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasComparison",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#MismatchingComparison"
                 ),
             ),
             PropertyRestriction(

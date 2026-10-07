@@ -16,22 +16,19 @@ from llm_reasoner.acceptance.core import (
     ContinuousPredictionComparesItsModality,
     ControlledSetpointIsActive,
     ControlPointComparesItsPredictions,
-    ControlPointHandlesBothOutcomes,
     ControlPointPredictsItsEvent,
     CorrectionAnswersClassifiedError,
     ErrorHasObservation,
     EvidenceCompatible,
     ExemptionNamesNormalBoundary,
-    FeedbackControlHasContinuousPrediction,
+    ContinuousPredictionInMonitoredModality,
     MatchHasNoResponse,
-    MatchHasObservation,
     MechanicalBoundaryMonitored,
     MismatchInvokesCorrection,
     ModelUpdateAnswersClassifiedError,
     PermissionFitsTransition,
     ToleranceMatchesTrajectory,
     UpdatedEstimateIsHeld,
-    InvariantHasViolationEvent,
     NoOrphanPhase,
     OneEntryPhase,
     PhaseEndingsDistinct,
@@ -438,9 +435,18 @@ class TestCoreRules:
             has_condition_mode=core.ConditionMode.AT_ENTRY,
             has_condition_polarity=core.ConditionPolarity.MUST_HOLD,
         )
-        assert violators(
-            InvariantHasViolationEvent(), [unguarded, guarded, precondition]
-        ) == [unguarded]
+        required = requirement(
+            core.InvariantRequirement,
+            "violation_signalled_by",
+            Quantifier.SOME,
+            named(core.FailureEventType),
+        )
+        found = violated([unguarded, guarded, precondition])
+        assert [
+            requirement_
+            for requirement_ in (unguarded, guarded, precondition)
+            if (id(requirement_), required) in found
+        ] == [unguarded]
 
     def test_safety_margin_relating_different_participants_is_reported(self):
         gripper, carton = core.ManipulationRole(), core.ManipulationRole()
@@ -659,7 +665,15 @@ class TestComparisonRules:
         observed = matching_comparison(
             compares_observation=core.SensoryObservationType()
         )
-        assert violators(MatchHasObservation(), [unobserved, observed]) == [unobserved]
+        required = requirement(
+            core.MatchingComparison,
+            "compares_observation",
+            Quantifier.SOME,
+            named(core.SensoryObservationType),
+        )
+        found = violated([unobserved, observed])
+        assert (id(unobserved), required) in found
+        assert (id(observed), required) not in found
 
     def test_match_with_a_correction_is_reported(self):
         correcting = matching_comparison(invokes_correction=[core.CorrectiveAction()])
@@ -822,9 +836,29 @@ class TestComparisonRules:
         both = core.SensorimotorControlPoint(
             has_comparison=[matching_comparison(), mismatching_comparison()]
         )
-        assert violators(ControlPointHandlesBothOutcomes(), [match_only, both]) == [
-            match_only
-        ]
+        required = requirement(
+            core.SensorimotorControlPoint,
+            "has_comparison",
+            Quantifier.SOME,
+            named(core.MismatchingComparison),
+        )
+        found = violated([match_only, both])
+        assert (id(match_only), required) in found
+        assert (id(both), required) not in found
+
+    def test_control_point_without_match_handling_is_reported(self):
+        mismatch_only = core.SensorimotorControlPoint(
+            has_comparison=[mismatching_comparison()]
+        )
+        assert (
+            id(mismatch_only),
+            requirement(
+                core.SensorimotorControlPoint,
+                "has_comparison",
+                Quantifier.SOME,
+                named(core.MatchingComparison),
+            ),
+        ) in violated([mismatch_only])
 
     def test_mismatch_handling_without_a_correction_is_reported(self):
         uncorrected = core.SensorimotorControlPoint(
@@ -1407,8 +1441,36 @@ class TestPouringRules:
 
 class TestFeedbackControlRule:
     """
-    A feedback-regulated controller compares a continuous prediction it monitors.
+    A feedback-regulated controller compares a continuous prediction in a modality it
+    monitors.
     """
+
+    def test_feedback_controller_without_a_continuous_prediction_is_reported(self):
+        feedback = core.ActionPhaseController(
+            has_regulation_mode=core.RegulationMode.CONTINUOUS_FEEDBACK,
+            monitors_modality=[core.SensoryModality.VISUAL],
+        )
+        feedforward = core.ActionPhaseController(
+            has_regulation_mode=core.RegulationMode.FEEDFORWARD
+        )
+        required = requirement(
+            core.FeedbackRegulatedController,
+            "has_continuous_prediction",
+            Quantifier.SOME,
+            named(core.ContinuousSignalPrediction),
+        )
+        found = violated([feedback, feedforward])
+        assert (id(feedback), required) in found
+        assert (id(feedforward), required) not in found
+
+    def test_feedback_controller_without_predictions_is_left_to_the_ontology(self):
+        unpredicting = core.ActionPhaseController(
+            has_regulation_mode=core.RegulationMode.CONTINUOUS_FEEDBACK,
+            monitors_modality=[core.SensoryModality.VISUAL],
+        )
+        assert (
+            violators(ContinuousPredictionInMonitoredModality(), [unpredicting]) == []
+        )
 
     def test_feedback_controller_without_a_monitored_prediction_is_reported(self):
         prediction = core.ContinuousSignalPrediction(
@@ -1430,7 +1492,7 @@ class TestFeedbackControlRule:
             has_regulation_mode=core.RegulationMode.FEEDFORWARD
         )
         assert violators(
-            FeedbackControlHasContinuousPrediction(),
+            ContinuousPredictionInMonitoredModality(),
             [unmonitored, monitored, feedforward],
         ) == [unmonitored]
 
