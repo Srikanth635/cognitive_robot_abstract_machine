@@ -7,6 +7,7 @@ from __future__ import annotations
 from llm_reasoner.acceptance import core, gaze, object_dynamics, pouring, prehension
 from llm_reasoner.acceptance.derived import RangesHold, RestrictionsHold
 from llm_reasoner.acceptance.rules import AcceptanceSuite
+from llm_reasoner.acceptance.shapes import ShapesHold
 
 
 def predictive_manipulation_suite() -> AcceptanceSuite:
@@ -18,6 +19,7 @@ def predictive_manipulation_suite() -> AcceptanceSuite:
         rules=[
             RestrictionsHold(),
             RangesHold(),
+            ShapesHold(),
             core.RangeBoundsOrdered(),
             core.WindowBoundsOrdered(),
             core.TransitionGateEndsSource(),
@@ -26,9 +28,6 @@ def predictive_manipulation_suite() -> AcceptanceSuite:
             core.PhaseHasExtent(),
             core.SubgoalSignalledByPhaseEnd(),
             core.SafetyMarginOnOneParticipant(),
-            core.TaskIsNotItsOwnPhase(),
-            core.OneEntryPhase(),
-            core.NoOrphanPhase(),
             core.PhaseEndingsDistinct(),
             core.PreconditionsGrounded(),
             core.MatchHasNoResponse(),
@@ -46,12 +45,10 @@ def predictive_manipulation_suite() -> AcceptanceSuite:
             core.ToleranceMatchesTrajectory(),
             core.ControlledSetpointIsActive(),
             core.ContinuousPredictionInMonitoredModality(),
-            core.MechanicalBoundaryMonitored(),
             core.ExemptionNamesNormalBoundary(),
             core.ComponentsDeclared(),
             object_dynamics.CompositionPredictsWithItsForwardModel(),
             object_dynamics.CompositionDynamicsUsesItsCopy(),
-            object_dynamics.EstimateHeldByARepresentation(),
             object_dynamics.EstimateServesOnePurpose(),
             object_dynamics.DissociationCoherent(),
             object_dynamics.RetainedUpdateInItsMemory(),

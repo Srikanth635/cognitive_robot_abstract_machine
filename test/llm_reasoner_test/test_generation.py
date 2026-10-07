@@ -16,11 +16,11 @@ from rdflib import Graph
 
 from llm_reasoner.acceptance.core import (
     CoreRule,
-    MechanicalBoundaryMonitored,
     TransitionIsNotALoop,
 )
 from llm_reasoner.acceptance.derived import described
 from llm_reasoner.acceptance.rules import AcceptanceSuite
+from llm_reasoner.acceptance.shapes import ShapesHold, StructureShapes
 from llm_reasoner.acceptance.vocabulary import Vocabulary
 from llm_reasoner.admission.consistency import ConsistencyCheck, OpenWorldCheck
 from llm_reasoner.admission.record import ConsistencyVerdict
@@ -28,8 +28,10 @@ from llm_reasoner.admission.store import HypothesisStore
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.generation.backend import HypothesisBackend, HypothesisRejected
 from llm_reasoner.generation.prompts import (
+    GenerationPrompt,
     described_violation,
     field_hint,
+    rendered_shape,
     rendered_type,
 )
 from llm_reasoner.generation.schema import FieldKind, GenerationSchema, type_schema_for
@@ -261,6 +263,15 @@ class TestGenerationSchema:
     def test_defined_type_is_shown_with_its_definition(self):
         rendered = rendered_type(type_schema_for(core.ForceRateParameter))
         assert described(core.ForceRateParameter.term.definition, False) in rendered
+
+    def test_structural_rules_of_the_generated_types_are_in_the_system_prompt(self):
+        system = GenerationPrompt().system(
+            GenerationSchema.for_root(pouring.PouringPhaseStructure)
+        )
+        assert all(
+            rendered_shape(shape) in system
+            for shape in StructureShapes.shipped().shapes
+        )
 
     def test_inferred_super_property_is_not_asked_for(self):
         schema = GenerationSchema.for_root(core.ActionPhaseStructure)
@@ -513,7 +524,7 @@ class TestHypothesisBackend:
         structure = core.ActionPhaseStructure(
             defines_phase=[core.ActionPhase(terminated_by=[liftoff])]
         )
-        (violation,) = MechanicalBoundaryMonitored().violations([structure])
+        (violation,) = ShapesHold().violations([structure])
         identifiers = {id(structure): "pour", id(liftoff): "lift_off"}
         described = described_violation(
             violation, lambda fragment: identifiers[id(fragment)]

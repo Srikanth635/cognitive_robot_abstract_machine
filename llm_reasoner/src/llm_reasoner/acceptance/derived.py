@@ -49,6 +49,13 @@ class DerivedRule(StrEnum):
     linking a field to a fragment of the wrong kind.
     """
 
+    SHAPES_HOLD = "shapes_hold"
+    """
+    Every fragment meets the structural rules the SHACL shapes beside the ontology
+    state, such as the transitions of a structure connecting all its phases: rules
+    relating several fragments, which no restriction on one class expresses.
+    """
+
     RESTRICTIONS_HOLD = "restrictions_hold"
     """
     Every fragment meets the restrictions its classes state, including the classes its

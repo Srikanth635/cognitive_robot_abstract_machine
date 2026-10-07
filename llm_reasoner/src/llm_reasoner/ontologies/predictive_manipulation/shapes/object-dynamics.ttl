@@ -1,0 +1,35 @@
+@prefix :      <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/object-dynamics#> .
+@prefix dyn:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:    <http://www.w3.org/ns/shacl#> .
+
+# Structural rules of the object dynamics module that relate several fragments to one
+# another, which OWL restrictions cannot state.
+
+<http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/object-dynamics> a owl:Ontology ;
+    owl:versionInfo "0.1.0" ;
+    rdfs:comment "Closed-world structural rules of the object dynamics module."@en .
+
+# %% estimates
+
+:EstimateHeldByARepresentation a sh:NodeShape ;
+    sh:targetClass dyn:ObjectDynamicsPhaseStructure ;
+    rdfs:comment "Every estimate a structure declares as a parameter is held by one of the structure's estimate representations, which supplies its coordinate frame and purpose."@en ;
+    sh:sparql [
+        sh:message "a declared estimate is held by none of the structure's representations" ;
+        sh:select """
+            PREFIX core: <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#>
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            SELECT $this ?value WHERE {
+                $this core:definesParameter ?value .
+                ?value rdf:type/rdfs:subClassOf* core:Estimate .
+                FILTER NOT EXISTS {
+                    $this core:definesInternalModel ?representation .
+                    ?representation rdf:type/rdfs:subClassOf* core:EstimateRepresentation ;
+                        core:holdsEstimate ?value .
+                }
+            }
+        """ ;
+    ] .

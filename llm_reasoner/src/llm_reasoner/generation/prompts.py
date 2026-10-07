@@ -5,13 +5,14 @@ correct one.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 from typing_extensions import Any, Callable, Mapping, Sequence
 
 from llm_reasoner.acceptance.derived import described
 from llm_reasoner.acceptance.rules import Violation
+from llm_reasoner.acceptance.shapes import StructureShape, StructureShapes
 from llm_reasoner.generation.schema import (
     AnswerKey,
     FieldKind,
@@ -118,6 +119,14 @@ def rendered_type(type_schema: TypeSchema) -> str:
     return "\n".join(line for line in lines if line)
 
 
+def rendered_shape(shape: StructureShape) -> str:
+    """
+    :return: A structural rule as the model reads it: the type it constrains and what it
+        requires.
+    """
+    return f"- {shape.target.__name__}: {shape.description}"
+
+
 # %% prompts
 
 
@@ -125,6 +134,11 @@ def rendered_type(type_schema: TypeSchema) -> str:
 class GenerationPrompt:
     """
     Builds the prompts of one generation.
+    """
+
+    shapes: StructureShapes = field(default_factory=StructureShapes.shipped)
+    """
+    The structural rules stated to the model beside the types they constrain.
     """
 
     def system(self, schema: GenerationSchema) -> str:
@@ -144,6 +158,15 @@ class GenerationPrompt:
                 + "\n\n".join(
                     rendered_type(type_schema)
                     for _, type_schema in sorted(schema.types.items())
+                ),
+                "## Rules across fragments\n\n"
+                "Each rule relates several fragments, so it is stated here rather "
+                "than with one type.\n\n"
+                + "\n".join(
+                    rendered_shape(shape)
+                    for shape in self.shapes.applicable_to(
+                        type_schema.python_type for type_schema in schema.types.values()
+                    )
                 ),
                 '## Output\n\n{"fragments": [{"id": "...", "type": "...", ...}, ...]}',
             ]

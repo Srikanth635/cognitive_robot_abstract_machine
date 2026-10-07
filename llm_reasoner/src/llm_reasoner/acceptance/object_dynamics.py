@@ -41,12 +41,6 @@ class ObjectDynamicsRule(StrEnum):
     what lets it predict the load the command will produce.
     """
 
-    ESTIMATE_HELD_BY_A_REPRESENTATION = "estimate_held_by_a_representation"
-    """
-    Every estimate a structure declares belongs to one of its representations, which
-    supplies its coordinate frame and purpose.
-    """
-
     ESTIMATE_SERVES_ONE_PURPOSE = "estimate_serves_one_purpose"
     """
     A perceptual judgment must not silently become the estimate used for motor
@@ -141,36 +135,6 @@ def representations(
         for model in structure.defines_internal_model
         if isinstance(model, core.EstimateRepresentation)
     ]
-
-
-class EstimateHeldByARepresentation(
-    StructureRule[object_dynamics.ObjectDynamicsPhaseStructure]
-):
-    """
-    Every estimate a structure declares is held by one of its representations.
-    """
-
-    @property
-    def name(self) -> StrEnum:
-        return ObjectDynamicsRule.ESTIMATE_HELD_BY_A_REPRESENTATION
-
-    @property
-    def reason(self) -> str:
-        return "a declared estimate belongs to no representation"
-
-    def is_violated_by(
-        self, fragment: object_dynamics.ObjectDynamicsPhaseStructure
-    ) -> bool:
-        held = {
-            id(estimate)
-            for representation in representations(fragment)
-            for estimate in representation.holds_estimate
-        }
-        return any(
-            id(parameter) not in held
-            for parameter in fragment.defines_parameter
-            if isinstance(parameter, core.Estimate)
-        )
 
 
 class EstimateServesOnePurpose(
