@@ -11,23 +11,12 @@ import pytest
 from rdflib import Namespace, URIRef
 from krrood.utils import recursive_subclasses
 
-from llm_reasoner.acceptance.core import (
-    AbsentEventHasNoObservation,
-    ComponentsDeclared,
-    ErrorHasObservation,
-    MatchHasNoResponse,
-)
+from llm_reasoner.acceptance.core import ComponentsDeclared
 from llm_reasoner.acceptance.derived import (
     DerivedRule,
     RangesHold,
     RestrictionsHold,
     described,
-)
-from llm_reasoner.acceptance.pouring import (
-    MaterialFitsFlowDynamics,
-    PouringEventsSpecific,
-    PouringPhasesOrdered,
-    TerminationReasonHasEvent,
 )
 from llm_reasoner.acceptance.rules import AcceptanceRule, Severity
 from llm_reasoner.acceptance.shapes import ShapesHold, StructureShapes
@@ -105,6 +94,11 @@ GAZE_SHAPES = Namespace(PredictiveManipulationOntologyFile.GAZE.shapes_namespace
 The namespace of the gaze module's structural rules.
 """
 
+POURING_SHAPES = Namespace(PredictiveManipulationOntologyFile.POURING.shapes_namespace)
+"""
+The namespace of the pouring module's structural rules.
+"""
+
 OBJECT_DYNAMICS_SHAPES = Namespace(
     PredictiveManipulationOntologyFile.OBJECT_DYNAMICS.shapes_namespace
 )
@@ -123,6 +117,35 @@ def shape_violators(shape: URIRef, fragments: list[DescriptionEntity]) -> list[o
         if violation.shape == shape
     }
     return [fragment for fragment in fragments if id(fragment) in found]
+
+
+def mentions(expression: ClassExpression, property_iri: str) -> bool:
+    """
+    Return whether a class expression restricts the given property anywhere within it.
+    """
+    if isinstance(expression, PropertyRestriction):
+        return expression.property_iri == property_iri or (
+            expression.filler is not None and mentions(expression.filler, property_iri)
+        )
+    if isinstance(expression, ComplementOf):
+        return mentions(expression.operand, property_iri)
+    if isinstance(expression, IntersectionOf):
+        return any(mentions(operand, property_iri) for operand in expression.operands)
+    return False
+
+
+def restriction_mentioning(
+    cls: type[DescriptionEntity], field_name: str
+) -> ClassExpression:
+    """
+    Return the one restriction a class states that concerns the property of a field.
+    """
+    (restriction,) = [
+        restriction
+        for restriction in cls.term.restrictions
+        if mentions(restriction, property_iri(cls, field_name))
+    ]
+    return restriction
 
 
 def requirement(
@@ -687,7 +710,12 @@ class TestComparisonRules:
     def test_match_with_a_correction_is_reported(self):
         correcting = matching_comparison(invokes_correction=[core.CorrectiveAction()])
         plain = matching_comparison()
-        assert violators(MatchHasNoResponse(), [correcting, plain]) == [correcting]
+        no_correction = restriction_mentioning(
+            core.MatchingComparison, "invokes_correction"
+        )
+        found = violated([correcting, plain])
+        assert (id(correcting), no_correction) in found
+        assert (id(plain), no_correction) not in found
 
     def test_absent_event_with_an_observation_is_reported(self):
         contradictory = mismatching_comparison(
@@ -701,9 +729,12 @@ class TestComparisonRules:
                 prediction_error(core.PredictionErrorKind.ABSENT_EVENT)
             ]
         )
-        assert violators(AbsentEventHasNoObservation(), [contradictory, coherent]) == [
-            contradictory
-        ]
+        no_observation = restriction_mentioning(
+            core.AbsentEventComparison, "compares_observation"
+        )
+        found = violated([contradictory, coherent])
+        assert (id(contradictory), no_observation) in found
+        assert (id(coherent), no_observation) not in found
 
     def test_error_other_than_absence_without_an_observation_is_reported(self):
         unobserved = mismatching_comparison(
@@ -717,7 +748,12 @@ class TestComparisonRules:
                 prediction_error(core.PredictionErrorKind.EARLY_EVENT)
             ],
         )
-        assert violators(ErrorHasObservation(), [unobserved, observed]) == [unobserved]
+        observation_named = restriction_mentioning(
+            core.ObservedErrorComparison, "compares_observation"
+        )
+        found = violated([unobserved, observed])
+        assert (id(unobserved), observation_named) in found
+        assert (id(observed), observation_named) not in found
 
     def test_permission_confirming_another_subgoal_is_reported(self):
         subgoal = core.Subgoal()
@@ -1426,14 +1462,18 @@ class TestPouringRules:
     def test_pouring_with_a_generic_event_is_reported(self):
         generic = pouring_structure(defines_event_type=[core.MechanicalEventType()])
         specific = pouring_structure(defines_event_type=[pouring.FlowOnset()])
-        assert violators(PouringEventsSpecific(), [generic, specific]) == [generic]
+        assert shape_violators(
+            POURING_SHAPES.PouringEventsSpecific, [generic, specific]
+        ) == [generic]
 
     def test_generic_event_is_named_by_the_violation(self):
         generic_event = core.MechanicalEventType()
         structure = pouring_structure(
             defines_event_type=[generic_event, pouring.FlowOnset()]
         )
-        (violation,) = PouringEventsSpecific().violations([structure])
+        (violation,) = ShapesHold(
+            checked_shapes=frozenset({POURING_SHAPES.PouringEventsSpecific})
+        ).violations([structure])
         assert violation.involved == (generic_event,)
 
     def test_transition_against_the_pouring_order_is_reported(self):
@@ -1450,7 +1490,9 @@ class TestPouringRules:
                 core.PhaseTransition(from_phase=tilt, to_phase=regulate)
             ],
         )
-        assert violators(PouringPhasesOrdered(), [backwards, forwards]) == [backwards]
+        assert shape_violators(
+            POURING_SHAPES.PouringPhasesOrdered, [backwards, forwards]
+        ) == [backwards]
 
     def test_liquid_with_granular_flow_dynamics_is_reported(self):
         granular_liquid = pouring_structure(
@@ -1459,18 +1501,24 @@ class TestPouringRules:
         sloshing_liquid = pouring_structure(
             defines_parameter=[pouring.SloshDynamicsEstimate()]
         )
-        assert violators(
-            MaterialFitsFlowDynamics(), [granular_liquid, sloshing_liquid]
-        ) == [granular_liquid]
+        excluded = restriction_mentioning(
+            pouring.LiquidPouringStructure, "defines_parameter"
+        )
+        found = violated([granular_liquid, sloshing_liquid])
+        assert (id(granular_liquid), excluded) in found
+        assert (id(sloshing_liquid), excluded) not in found
 
     def test_termination_reason_without_its_event_is_reported(self):
         unsupported = pouring_structure(defines_event_type=[pouring.FlowOnset()])
         supported = pouring_structure(
             defines_event_type=[pouring.TargetQuantityReached()]
         )
-        assert violators(TerminationReasonHasEvent(), [unsupported, supported]) == [
-            unsupported
-        ]
+        detected = restriction_mentioning(
+            pouring.TargetQuantityAttainedPouringStructure, "defines_event_type"
+        )
+        found = violated([unsupported, supported])
+        assert (id(unsupported), detected) in found
+        assert (id(supported), detected) not in found
 
 
 class TestFeedbackControlRule:

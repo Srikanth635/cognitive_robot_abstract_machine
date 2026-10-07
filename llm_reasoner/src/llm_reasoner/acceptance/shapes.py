@@ -98,8 +98,9 @@ class StructureShapes:
     ontology: Graph
     """
     What the shapes read of the ontology modules: which named classes and properties
-    specialise which, and what is stated about the individuals the vocabulary
-    enumerates, such as the dimension each unit measures.
+    specialise which, what is stated about the individuals the vocabulary enumerates,
+    such as the dimension each unit measures, and the annotations of classes, such as a
+    phase's position in the order of pouring.
     """
 
     vocabulary: Vocabulary = field(default_factory=Vocabulary)
@@ -131,6 +132,9 @@ class StructureShapes:
             for _, predicate, value in modules.triples((individual, None, None)):
                 if isinstance(value, URIRef):
                     ontology.add((individual, predicate, value))
+        for annotation in modules.subjects(RDF.type, OWL.AnnotationProperty):
+            for statement in modules.triples((None, annotation, None)):
+                ontology.add(statement)
         return cls(graph=graph, ontology=ontology)
 
     @cached_property
@@ -247,9 +251,9 @@ class ShapesHold(AcceptanceRule):
         fragment_named = {names[id(fragment)]: fragment for fragment in written}
         checked = {id(fragment) for fragment in fragments}
         _, results, _ = pyshacl.validate(
-            GraphWriter(namespace=CHECKED_NAMESPACE).write_fragments(written, names),
+            GraphWriter(namespace=CHECKED_NAMESPACE).write_fragments(written, names)
+            + self.shapes.ontology,
             shacl_graph=self.shapes.graph,
-            ont_graph=self.shapes.ontology,
             advanced=True,
             allow_warnings=True,
         )

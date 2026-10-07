@@ -8,7 +8,7 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> a owl:Ontology ;
     owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.4.0> ;
-    owl:versionInfo "0.4.4" ;
+    owl:versionInfo "0.4.5" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
     rdfs:label "Predictive manipulation: core"@en ;
     rdfs:comment """The action-neutral core of a microworld for predictive object manipulation, drawn from "Control strategies in object manipulation tasks" (2006), "Coding and use of tactile signals from the fingertips in object manipulation tasks" (2009), "Sensory control of object manipulation" (2009) and "Motor prediction" (2001).
@@ -1277,12 +1277,14 @@ Classes classify description-level individuals, the knowledge a language model g
     owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PredictionComparison [ a owl:Restriction ; owl:onProperty :hasComparisonOutcome ; owl:hasValue :Match ] ) ] ;
     rdfs:subClassOf
         [ a owl:Class ; owl:complementOf [ a owl:Restriction ; owl:onProperty :hasPredictionError ; owl:someValuesFrom owl:Thing ] ] ,
+        [ a owl:Class ; owl:complementOf [ a owl:Restriction ; owl:onProperty :invokesCorrection ; owl:someValuesFrom owl:Thing ] ] ,
+        [ a owl:Class ; owl:complementOf [ a owl:Restriction ; owl:onProperty :producesModelUpdate ; owl:someValuesFrom owl:Thing ] ] ,
         [ a owl:Restriction ; owl:onProperty :comparesObservation ; owl:someValuesFrom :SensoryObservationType ] ,
         [ a owl:Class ; owl:unionOf (
             [ a owl:Restriction ; owl:onProperty :confirmsSubgoal ; owl:someValuesFrom :Subgoal ]
             [ a owl:Restriction ; owl:onProperty :suppliesStateEstimate ; owl:someValuesFrom :InitialStateEstimate ] ) ] ;
     rdfs:label "matching comparison"@en ;
-    rdfs:comment "A comparison that agrees with the prediction: it names what was observed, finds no error, and confirms a subgoal or supplies the next initial state."@en ;
+    rdfs:comment "A comparison that agrees with the prediction: it names what was observed, finds no error, and confirms a subgoal or supplies the next initial state. Corrections and model updates answer mismatches, so a match invokes neither."@en ;
     :evidenceStatus :SupportedInterpretation ;
     :representsClaim :FJ-005 , :FJ-007 .
 
@@ -1299,6 +1301,23 @@ Classes classify description-level individuals, the knowledge a language model g
     rdfs:comment "A comparison that disagrees with the prediction: it classifies an error, confirms no subgoal, and releases a correction or model update."@en ;
     :evidenceStatus :SupportedInterpretation ;
     :representsClaim :FJ-005 , :FJ-010 .
+
+:AbsentEventComparison a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PredictionComparison
+        [ a owl:Restriction ; owl:onProperty :hasPredictionError ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty :hasErrorKind ; owl:hasValue :AbsentEvent ] ] ) ] ;
+    rdfs:subClassOf [ a owl:Class ; owl:complementOf [ a owl:Restriction ; owl:onProperty :comparesObservation ; owl:someValuesFrom owl:Thing ] ] ;
+    rdfs:label "absent event comparison"@en ;
+    rdfs:comment "A comparison classifying a predicted event as absent. It names no observation: an error classifying a predicted event as absent contradicts an observation of it."@en ;
+    :evidenceStatus :EngineeringExtension .
+
+:ObservedErrorComparison a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :PredictionComparison
+        [ a owl:Restriction ; owl:onProperty :hasPredictionError ; owl:someValuesFrom owl:Thing ]
+        [ a owl:Restriction ; owl:onProperty :hasPredictionError ; owl:allValuesFrom [ a owl:Class ; owl:complementOf [ a owl:Restriction ; owl:onProperty :hasErrorKind ; owl:hasValue :AbsentEvent ] ] ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :comparesObservation ; owl:someValuesFrom :SensoryObservationType ] ;
+    rdfs:label "observed error comparison"@en ;
+    rdfs:comment "A comparison classifying errors none of which is an absent event. It names the observation: an error other than an absent event classifies an observation."@en ;
+    :evidenceStatus :EngineeringExtension .
 
 :comparesPrediction a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :SensoryEventPrediction ;
     rdfs:label "compares prediction"@en ; rdfs:comment "The sensory prediction being evaluated."@en .

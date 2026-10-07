@@ -715,6 +715,182 @@ class UpdateTimescale(StrEnum):
 
 
 @dataclass(eq=False)
+class PredictionComparison(DescriptionEntity):
+    """
+    The comparison of one prediction with its observation, grouped under a control point when the event is mechanical.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PredictionComparison",
+        linked_terms=(
+            "http://aicor.knowledge/l2-ontology.owl#dul_Description",
+            "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Diagnosis",
+        ),
+        evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SupportedInterpretation",
+        claims=(
+            "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#FJ-005",
+        ),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#comparesPrediction",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryEventPrediction"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasComparisonOutcome",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ComparisonOutcome"
+                ),
+            ),
+        ),
+        definition=None,
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+    compares_observation: Optional[SensoryObservationType] = field(
+        default=None,
+        metadata=PropertyTerm(
+            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#comparesObservation",
+            functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryObservationType",
+        ).as_dict(),
+    )
+    """
+    The received observation, absent only when the error is an absent event.
+    """
+
+    compares_prediction: Optional[SensoryEventPrediction] = field(
+        default=None,
+        metadata=PropertyTerm(
+            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#comparesPrediction",
+            functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryEventPrediction",
+        ).as_dict(),
+    )
+    """
+    The sensory prediction being evaluated.
+    """
+
+    confirms_subgoal: Optional[Subgoal] = field(
+        default=None,
+        metadata=PropertyTerm(
+            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#confirmsSubgoal",
+            functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Subgoal",
+        ).as_dict(),
+    )
+    """
+    The subgoal a successful comparison confirms.
+    """
+
+    has_comparison_outcome: Optional[ComparisonOutcome] = field(
+        default=None,
+        metadata=PropertyTerm(
+            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasComparisonOutcome",
+            functional=True,
+        ).as_dict(),
+    )
+    """
+    Whether the observation matches the prediction.
+    """
+
+    has_prediction_error: List[PredictionError] = field(
+        default_factory=list,
+        metadata=PropertyTerm(
+            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPredictionError",
+            functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PredictionError",
+        ).as_dict(),
+    )
+    """
+    An error a mismatching comparison is classified as.
+    """
+
+    invokes_correction: List[CorrectiveAction] = field(
+        default_factory=list,
+        metadata=PropertyTerm(
+            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#invokesCorrection",
+            functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#CorrectiveAction",
+        ).as_dict(),
+    )
+    """
+    A corrective response a mismatch releases.
+    """
+
+    produces_model_update: List[ModelUpdate] = field(
+        default_factory=list,
+        metadata=PropertyTerm(
+            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#producesModelUpdate",
+            functional=False,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ModelUpdate",
+        ).as_dict(),
+    )
+    """
+    A representation update a mismatch supports.
+    """
+
+    supplies_state_estimate: Optional[InitialStateEstimate] = field(
+        default=None,
+        metadata=PropertyTerm(
+            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#suppliesStateEstimate",
+            functional=True,
+            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#InitialStateEstimate",
+        ).as_dict(),
+    )
+    """
+    The next phase's initial state supplied by a successful comparison.
+    """
+
+
+@dataclass(eq=False)
+class AbsentEventComparison(PredictionComparison):
+    """
+    A comparison classifying a predicted event as absent. It names no observation: an error classifying a predicted event as absent contradicts an observation of it.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#AbsentEventComparison",
+        linked_terms=(),
+        evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
+        claims=(),
+        restrictions=(
+            ComplementOf(
+                operand=PropertyRestriction(
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#comparesObservation",
+                    quantifier=Quantifier.SOME,
+                    filler=NamedClass(iri="http://www.w3.org/2002/07/owl#Thing"),
+                )
+            ),
+        ),
+        definition=IntersectionOf(
+            operands=(
+                NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PredictionComparison"
+                ),
+                PropertyRestriction(
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPredictionError",
+                    quantifier=Quantifier.SOME,
+                    filler=PropertyRestriction(
+                        property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasErrorKind",
+                        quantifier=Quantifier.VALUE,
+                        value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#AbsentEvent",
+                    ),
+                ),
+            )
+        ),
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+
+@dataclass(eq=False)
 class ActionPhase(DescriptionEntity):
     """
     A building block of a manipulation task: it pursues one subgoal, ends at boundary events and is executed by one controller.
@@ -3501,143 +3677,9 @@ class MassParameter(QuantitativeParameter):
 
 
 @dataclass(eq=False)
-class PredictionComparison(DescriptionEntity):
-    """
-    The comparison of one prediction with its observation, grouped under a control point when the event is mechanical.
-    """
-
-    term: ClassVar[ClassTerm] = ClassTerm(
-        iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PredictionComparison",
-        linked_terms=(
-            "http://aicor.knowledge/l2-ontology.owl#dul_Description",
-            "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Diagnosis",
-        ),
-        evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SupportedInterpretation",
-        claims=(
-            "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#FJ-005",
-        ),
-        restrictions=(
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#comparesPrediction",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryEventPrediction"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasComparisonOutcome",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ComparisonOutcome"
-                ),
-            ),
-        ),
-        definition=None,
-    )
-    """
-    The ontology class this class stands for.
-    """
-
-    compares_observation: Optional[SensoryObservationType] = field(
-        default=None,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#comparesObservation",
-            functional=True,
-            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryObservationType",
-        ).as_dict(),
-    )
-    """
-    The received observation, absent only when the error is an absent event.
-    """
-
-    compares_prediction: Optional[SensoryEventPrediction] = field(
-        default=None,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#comparesPrediction",
-            functional=True,
-            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryEventPrediction",
-        ).as_dict(),
-    )
-    """
-    The sensory prediction being evaluated.
-    """
-
-    confirms_subgoal: Optional[Subgoal] = field(
-        default=None,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#confirmsSubgoal",
-            functional=True,
-            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Subgoal",
-        ).as_dict(),
-    )
-    """
-    The subgoal a successful comparison confirms.
-    """
-
-    has_comparison_outcome: Optional[ComparisonOutcome] = field(
-        default=None,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasComparisonOutcome",
-            functional=True,
-        ).as_dict(),
-    )
-    """
-    Whether the observation matches the prediction.
-    """
-
-    has_prediction_error: List[PredictionError] = field(
-        default_factory=list,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPredictionError",
-            functional=False,
-            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PredictionError",
-        ).as_dict(),
-    )
-    """
-    An error a mismatching comparison is classified as.
-    """
-
-    invokes_correction: List[CorrectiveAction] = field(
-        default_factory=list,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#invokesCorrection",
-            functional=False,
-            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#CorrectiveAction",
-        ).as_dict(),
-    )
-    """
-    A corrective response a mismatch releases.
-    """
-
-    produces_model_update: List[ModelUpdate] = field(
-        default_factory=list,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#producesModelUpdate",
-            functional=False,
-            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ModelUpdate",
-        ).as_dict(),
-    )
-    """
-    A representation update a mismatch supports.
-    """
-
-    supplies_state_estimate: Optional[InitialStateEstimate] = field(
-        default=None,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#suppliesStateEstimate",
-            functional=True,
-            range="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#InitialStateEstimate",
-        ).as_dict(),
-    )
-    """
-    The next phase's initial state supplied by a successful comparison.
-    """
-
-
-@dataclass(eq=False)
 class MatchingComparison(PredictionComparison):
     """
-    A comparison that agrees with the prediction: it names what was observed, finds no error, and confirms a subgoal or supplies the next initial state.
+    A comparison that agrees with the prediction: it names what was observed, finds no error, and confirms a subgoal or supplies the next initial state. Corrections and model updates answer mismatches, so a match invokes neither.
     """
 
     term: ClassVar[ClassTerm] = ClassTerm(
@@ -3652,6 +3694,20 @@ class MatchingComparison(PredictionComparison):
             ComplementOf(
                 operand=PropertyRestriction(
                     property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPredictionError",
+                    quantifier=Quantifier.SOME,
+                    filler=NamedClass(iri="http://www.w3.org/2002/07/owl#Thing"),
+                )
+            ),
+            ComplementOf(
+                operand=PropertyRestriction(
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#invokesCorrection",
+                    quantifier=Quantifier.SOME,
+                    filler=NamedClass(iri="http://www.w3.org/2002/07/owl#Thing"),
+                )
+            ),
+            ComplementOf(
+                operand=PropertyRestriction(
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#producesModelUpdate",
                     quantifier=Quantifier.SOME,
                     filler=NamedClass(iri="http://www.w3.org/2002/07/owl#Thing"),
                 )
@@ -3959,6 +4015,55 @@ class ObjectStateEstimate(Estimate):
         claims=(),
         restrictions=(),
         definition=None,
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+
+@dataclass(eq=False)
+class ObservedErrorComparison(PredictionComparison):
+    """
+    A comparison classifying errors none of which is an absent event. It names the observation: an error other than an absent event classifies an observation.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ObservedErrorComparison",
+        linked_terms=(),
+        evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
+        claims=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#comparesObservation",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SensoryObservationType"
+                ),
+            ),
+        ),
+        definition=IntersectionOf(
+            operands=(
+                NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#PredictionComparison"
+                ),
+                PropertyRestriction(
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPredictionError",
+                    quantifier=Quantifier.SOME,
+                    filler=NamedClass(iri="http://www.w3.org/2002/07/owl#Thing"),
+                ),
+                PropertyRestriction(
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasPredictionError",
+                    quantifier=Quantifier.ONLY,
+                    filler=ComplementOf(
+                        operand=PropertyRestriction(
+                            property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasErrorKind",
+                            quantifier=Quantifier.VALUE,
+                            value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#AbsentEvent",
+                        )
+                    ),
+                ),
+            )
+        ),
     )
     """
     The ontology class this class stands for.
