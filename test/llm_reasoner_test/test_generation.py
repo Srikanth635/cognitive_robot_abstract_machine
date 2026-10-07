@@ -12,12 +12,8 @@ from pathlib import Path
 
 import pytest
 from krrood.entity_query_language.factories import the
-from rdflib import Graph
+from rdflib import Graph, Namespace
 
-from llm_reasoner.acceptance.core import (
-    CoreRule,
-    TransitionIsNotALoop,
-)
 from llm_reasoner.acceptance.derived import described
 from llm_reasoner.acceptance.rules import AcceptanceSuite
 from llm_reasoner.acceptance.shapes import ShapesHold, StructureShapes
@@ -36,7 +32,11 @@ from llm_reasoner.generation.prompts import (
 )
 from llm_reasoner.generation.schema import FieldKind, GenerationSchema, type_schema_for
 from llm_reasoner.generation.wire import FragmentDecoder
-from llm_reasoner.ontologies import CRAM_AICOR_NAMESPACE, HYPOTHESIS_CONCEPT_NAMESPACE
+from llm_reasoner.ontologies import (
+    CRAM_AICOR_NAMESPACE,
+    HYPOTHESIS_CONCEPT_NAMESPACE,
+    PredictiveManipulationOntologyFile,
+)
 from llm_reasoner.ontologies.linked import LinkedOntologyTerms, OntologyFiles
 from llm_reasoner.ontologies.predictive_manipulation import (
     core,
@@ -182,6 +182,11 @@ class GenerationCase(StrEnum):
 
 # %% helpers
 
+CORE_SHAPES = Namespace(PredictiveManipulationOntologyFile.CORE.shapes_namespace)
+"""
+The namespace of the core module's structural rules.
+"""
+
 
 def structure_decoder() -> FragmentDecoder:
     """
@@ -198,7 +203,11 @@ def backend_answering(*cases: GenerationCase) -> HypothesisBackend:
     return HypothesisBackend(
         client=ScriptedClient(responses=[case.text for case in cases]),
         instruction="pour milk from the carton into the bowl",
-        suite=AcceptanceSuite(rules=[TransitionIsNotALoop()]),
+        suite=AcceptanceSuite(
+            rules=[
+                ShapesHold(checked_shapes=frozenset({CORE_SHAPES.TransitionIsNotALoop}))
+            ]
+        ),
     )
 
 
@@ -505,7 +514,10 @@ class TestHypothesisBackend:
         )
         (structure,) = pouring_query().evaluate(backend=backend)
         repair_prompt = backend.log[1].user
-        assert str(CoreRule.TRANSITION_IS_NOT_A_LOOP) in repair_prompt
+        assert (
+            StructureShapes.shipped().named(CORE_SHAPES.TransitionIsNotALoop).name
+            in repair_prompt
+        )
         assert "'back_to_tilt'" in repair_prompt
         assert len(structure.defines_phase) == 2
 
@@ -517,7 +529,10 @@ class TestHypothesisBackend:
         list(pouring_query().evaluate(backend=backend))
         repair_prompt = backend.log[1].user
         assert "missing_phase" in repair_prompt
-        assert str(CoreRule.TRANSITION_IS_NOT_A_LOOP) in repair_prompt
+        assert (
+            StructureShapes.shipped().named(CORE_SHAPES.TransitionIsNotALoop).name
+            in repair_prompt
+        )
 
     def test_violation_names_the_fragments_it_concerns(self):
         liftoff = prehension.Liftoff()
@@ -556,7 +571,10 @@ class TestHypothesisBackend:
         initial, _, last = [user for _, user in backend.client.calls]
         assert last.startswith(initial)
         assert "missing_phase" not in last
-        assert str(CoreRule.TRANSITION_IS_NOT_A_LOOP) in last
+        assert (
+            StructureShapes.shipped().named(CORE_SHAPES.TransitionIsNotALoop).name
+            in last
+        )
 
     def test_answer_contradicting_a_fixed_value_is_repaired(self):
         backend = backend_answering(

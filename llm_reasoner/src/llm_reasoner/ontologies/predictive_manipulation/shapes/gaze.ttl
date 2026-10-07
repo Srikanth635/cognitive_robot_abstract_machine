@@ -1,0 +1,48 @@
+@prefix :      <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/gaze#> .
+@prefix gaze:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:    <http://www.w3.org/ns/shacl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+# Structural rules of the gaze module that relate several fragments to one another, which
+# OWL restrictions cannot state.
+
+<http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/gaze> a owl:Ontology ;
+    owl:versionInfo "0.1.0" ;
+    rdfs:comment "Closed-world structural rules of the gaze module."@en ;
+    sh:declare
+        [ sh:prefix "core" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#"^^xsd:anyURI ] ,
+        [ sh:prefix "gaze" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#"^^xsd:anyURI ] .
+
+# %% fixations
+
+:FixationHeldUntilPhaseGoal a sh:NodeShape ;
+    sh:targetClass gaze:GazeFixation ;
+    rdfs:comment "Every event a fixation is held until ends the phase the fixation serves. Gaze stays at a landmark until about the time the goal of the phase it serves is reached, so a fixation is released at an event ending that phase."@en ;
+    sh:sparql [
+        sh:message "maintained_until names an event that does not end serves_phase" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/gaze> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this gaze:servesPhase ?phase ;
+                    gaze:maintainedUntil ?value .
+                FILTER NOT EXISTS { ?phase core:terminatedBy ?value }
+            }
+        """ ;
+    ] .
+
+:FixationOnPhaseParticipant a sh:NodeShape ;
+    sh:targetClass gaze:GazeFixation ;
+    rdfs:comment "The participant a fixation rests on takes part in the phase the fixation serves."@en ;
+    sh:sparql [
+        sh:message "fixates_role is not a participant of serves_phase" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/gaze> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this gaze:servesPhase ?phase ;
+                    gaze:fixatesRole ?value .
+                FILTER NOT EXISTS { ?phase core:involvesRole ?value }
+            }
+        """ ;
+    ] .

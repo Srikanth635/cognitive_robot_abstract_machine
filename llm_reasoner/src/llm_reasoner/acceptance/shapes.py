@@ -3,9 +3,9 @@ The structural rules the SHACL shapes beside the ontology state: relationships b
 several fragments, such as the transitions of a structure connecting all its phases,
 which an OWL restriction on one class cannot express.
 
-A hypothesis is written as RDF together with the class and property hierarchy of the
-ontology and validated against the shapes closed-world. Each result names the shape it
-comes from, the fragment at fault and the fragment it concerns.
+A hypothesis is written as RDF together with the ontology modules and validated against
+the shapes closed-world. Each result names the shape it comes from, the fragment at
+fault and the fragment it concerns.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from functools import cache, cached_property
 from operator import attrgetter
 
 import pyshacl
-from rdflib import RDF, RDFS, SH, Graph, URIRef
+from rdflib import OWL, RDF, RDFS, SH, Graph, URIRef
 from rdflib.term import Node
 from typing_extensions import Any, Iterable, Optional, Sequence
 
@@ -38,8 +38,8 @@ The namespace the fragments being checked are named in while they are validated.
 
 HIERARCHY_PROPERTIES = (RDFS.subClassOf, RDFS.subPropertyOf)
 """
-The ontology statements the shapes rely on: which classes and properties specialise
-which, so that a shape about a class covers its subclasses.
+The ontology statements saying which classes and properties specialise which, so that a
+shape about a class covers its subclasses.
 """
 
 SEVERITY_OF_RESULT = {
@@ -86,8 +86,8 @@ class StructureShape:
 @dataclass
 class StructureShapes:
     """
-    The SHACL shapes of every module that states structural rules, with the class and
-    property hierarchy of the ontology they are checked against.
+    The SHACL shapes of every module that states structural rules, with the ontology
+    modules they are checked against.
     """
 
     graph: Graph
@@ -95,9 +95,11 @@ class StructureShapes:
     Every shape.
     """
 
-    hierarchy: Graph
+    ontology: Graph
     """
-    Which ontology classes and properties specialise which.
+    What the shapes read of the ontology modules: which named classes and properties
+    specialise which, and what is stated about the individuals the vocabulary
+    enumerates, such as the dimension each unit measures.
     """
 
     vocabulary: Vocabulary = field(default_factory=Vocabulary)
@@ -115,17 +117,21 @@ class StructureShapes:
         for module_file in PredictiveManipulationOntologyFile:
             if module_file.shapes_path.exists():
                 graph.parse(module_file.shapes_path, format="turtle")
-        ontology = OntologyFiles(
+        modules = OntologyFiles(
             paths=[
                 module_file.path for module_file in PredictiveManipulationOntologyFile
             ]
         ).graph()
-        hierarchy = Graph()
+        ontology = Graph()
         for statement in HIERARCHY_PROPERTIES:
-            for subject, _, superior in ontology.triples((None, statement, None)):
+            for subject, _, superior in modules.triples((None, statement, None)):
                 if isinstance(superior, URIRef):
-                    hierarchy.add((subject, statement, superior))
-        return cls(graph=graph, hierarchy=hierarchy)
+                    ontology.add((subject, statement, superior))
+        for individual in modules.subjects(RDF.type, OWL.NamedIndividual):
+            for _, predicate, value in modules.triples((individual, None, None)):
+                if isinstance(value, URIRef):
+                    ontology.add((individual, predicate, value))
+        return cls(graph=graph, ontology=ontology)
 
     @cached_property
     def shapes(self) -> list[StructureShape]:
@@ -187,7 +193,12 @@ class ShapesHold(AcceptanceRule):
 
     shapes: StructureShapes = field(default_factory=StructureShapes.shipped)
     """
-    The shapes checked.
+    The shapes the fragments are validated against.
+    """
+
+    checked_shapes: Optional[frozenset[URIRef]] = None
+    """
+    The shapes whose violations are reported, or ``None`` for every shape.
     """
 
     @property
@@ -218,6 +229,15 @@ class ShapesHold(AcceptanceRule):
                 )
         return list(seen.values())
 
+    def reports(self, violation: ShapeViolation, checked: set[int]) -> bool:
+        """
+        :return: Whether a violation concerns one of the fragments checked and comes
+            from a shape whose violations are reported.
+        """
+        return id(violation.fragment) in checked and (
+            self.checked_shapes is None or violation.shape in self.checked_shapes
+        )
+
     def violations(self, fragments: Sequence[DescriptionEntity]) -> list[Violation]:
         written = self.reachable(fragments)
         names = {
@@ -229,7 +249,7 @@ class ShapesHold(AcceptanceRule):
         _, results, _ = pyshacl.validate(
             GraphWriter(namespace=CHECKED_NAMESPACE).write_fragments(written, names),
             shacl_graph=self.shapes.graph,
-            ont_graph=self.shapes.hierarchy,
+            ont_graph=self.shapes.ontology,
             advanced=True,
             allow_warnings=True,
         )
@@ -239,11 +259,7 @@ class ShapesHold(AcceptanceRule):
         ]
         position = {identity: index for index, identity in enumerate(names)}
         return sorted(
-            (
-                violation
-                for violation in violations
-                if id(violation.fragment) in checked
-            ),
+            (violation for violation in violations if self.reports(violation, checked)),
             key=lambda violation: (
                 violation.rule,
                 position[id(violation.fragment)],
@@ -259,12 +275,17 @@ class ShapesHold(AcceptanceRule):
         :return: The violation one validation result reports.
         """
         shape = URIRef(results.value(result, SH.sourceShape))
+        focus = results.value(result, SH.focusNode)
         value: Optional[Node] = results.value(result, SH.value)
         return ShapeViolation(
             rule=shape.split("#")[-1],
-            fragment=fragment_named[results.value(result, SH.focusNode)],
+            fragment=fragment_named[focus],
             reason=str(results.value(result, SH.resultMessage)),
             severity=SEVERITY_OF_RESULT[results.value(result, SH.resultSeverity)],
-            involved=(fragment_named[value],) if value in fragment_named else (),
+            involved=(
+                (fragment_named[value],)
+                if value in fragment_named and value != focus
+                else ()
+            ),
             shape=shape,
         )
