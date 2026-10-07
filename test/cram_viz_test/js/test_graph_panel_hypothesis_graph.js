@@ -73,7 +73,6 @@ function loadGraphPanel(options) {
   const viewNames = [
     'knowledge',
     'live-knowledge',
-    'domain',
     'hypothesis',
     'ontology',
     'kinematics',

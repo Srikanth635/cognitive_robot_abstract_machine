@@ -56,7 +56,6 @@ function loadGraphPanel() {
   const viewNames = [
     'knowledge',
     'live-knowledge',
-    'domain',
     'kinematics',
     'plan',
     'chart',
