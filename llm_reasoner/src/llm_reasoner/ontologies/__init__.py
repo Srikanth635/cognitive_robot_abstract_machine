@@ -94,14 +94,14 @@ class PredictiveManipulationOntologyFile(StrEnum):
     Contact, lift, transport, replacement, release, grip-load control and corrections.
     """
 
-    POURING = "pouring.ttl"
-    """
-    Source and target roles, flow, material regimes and transfer variables.
-    """
-
     GAZE = "gaze.ttl"
     """
     Gaze fixations on contact and avoidance landmarks, and visual control points.
+    """
+
+    POURING = "pouring.ttl"
+    """
+    Source and target roles, flow, material regimes and transfer variables.
     """
 
     @property

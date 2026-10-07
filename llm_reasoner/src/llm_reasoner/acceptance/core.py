@@ -74,23 +74,10 @@ class CoreRule(StrEnum):
     A transition from a phase to itself does not move the task on.
     """
 
-    NORMAL_TRANSITION_IS_NOT_GATED_BY_FAILURE = (
-        "normal_transition_is_not_gated_by_failure"
-    )
-    """
-    A failure is what the controller guards against, so it must not gate an ordinary
-    transition.
-    """
-
     SUBGOAL_SIGNALLED_BY_PHASE_END = "subgoal_signalled_by_phase_end"
     """
     A phase's subgoal must be signalled by one of the phase's own terminating events;
     that is what makes a boundary event a control point.
-    """
-
-    SUCCESS_IS_NOT_SIGNALLED_BY_FAILURE = "success_is_not_signalled_by_failure"
-    """
-    Attaining a subgoal cannot be signalled by a failure event.
     """
 
     INVARIANT_HAS_VIOLATION_EVENT = "invariant_has_violation_event"
@@ -362,23 +349,6 @@ class TransitionIsNotALoop(FragmentRule[core.PhaseTransition]):
         return and_(subject.from_phase != None, subject.from_phase == subject.to_phase)
 
 
-class NormalTransitionIsNotGatedByFailure(FragmentRule[core.PhaseTransition]):
-    """
-    No transition is gated by a failure event.
-    """
-
-    @property
-    def name(self) -> StrEnum:
-        return CoreRule.NORMAL_TRANSITION_IS_NOT_GATED_BY_FAILURE
-
-    @property
-    def reason(self) -> str:
-        return "gated_by names a failure event"
-
-    def violating(self, subject: Any) -> Any:
-        return HasType(flat_variable(subject.gated_by), core.FailureEventType)
-
-
 # %% phases, subgoals and conditions
 
 
@@ -422,23 +392,6 @@ class SubgoalSignalledByPhaseEnd(FragmentRule[core.ActionPhase]):
                 )
             ),
         )
-
-
-class SuccessIsNotSignalledByFailure(FragmentRule[core.Subgoal]):
-    """
-    No subgoal is signalled by a failure event.
-    """
-
-    @property
-    def name(self) -> StrEnum:
-        return CoreRule.SUCCESS_IS_NOT_SIGNALLED_BY_FAILURE
-
-    @property
-    def reason(self) -> str:
-        return "attainment_signalled_by names a failure event"
-
-    def violating(self, subject: Any) -> Any:
-        return HasType(subject.attainment_signalled_by, core.FailureEventType)
 
 
 class InvariantHasViolationEvent(FragmentRule[core.ConditionRequirement]):

@@ -187,7 +187,15 @@ class ContactReleasePhase(core.ActionPhase):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EmpiricalFinding",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#terminatedBy",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GraspRelease"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -1673,6 +1681,13 @@ class ReplacePhase(core.ActionPhase):
                 quantifier=Quantifier.VALUE,
                 value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Coupled",
             ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#terminatedBy",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#Touchdown"
+                ),
+            ),
         ),
         definition=None,
     )
@@ -1975,7 +1990,15 @@ class UnloadPhase(core.ActionPhase):
         linked_terms=(),
         evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EmpiricalFinding",
         claims=(),
-        restrictions=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#terminatedBy",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#ForcesUnloaded"
+                ),
+            ),
+        ),
         definition=None,
     )
     """
@@ -1999,6 +2022,20 @@ class WithdrawPhase(core.ActionPhase):
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasCouplingRegime",
                 quantifier=Quantifier.VALUE,
                 value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Uncoupled",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#initiatedBy",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GraspRelease"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#terminatedBy",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#WithdrawalComplete"
+                ),
             ),
         ),
         definition=None,

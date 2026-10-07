@@ -8,7 +8,7 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> a owl:Ontology ;
     owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.4.0> ;
-    owl:versionInfo "0.4.2" ;
+    owl:versionInfo "0.4.3" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
     rdfs:label "Predictive manipulation: core"@en ;
     rdfs:comment """The action-neutral core of a microworld for predictive object manipulation, drawn from "Control strategies in object manipulation tasks" (2006), "Coding and use of tactile signals from the fingertips in object manipulation tasks" (2009), "Sensory control of object manipulation" (2009) and "Motor prediction" (2001).
@@ -398,7 +398,8 @@ Classes classify description-level individuals, the knowledge a language model g
 :Subgoal a owl:Class ;
     rdfs:subClassOf aicor:Goal , dul:Goal ,
         [ a owl:Restriction ; owl:onProperty :targetsCondition ; owl:someValuesFrom :PhaseConditionType ] ,
-        [ a owl:Restriction ; owl:onProperty :attainmentSignalledBy ; owl:someValuesFrom :PhaseBoundaryEventType ] ;
+        [ a owl:Restriction ; owl:onProperty :attainmentSignalledBy ; owl:someValuesFrom :PhaseBoundaryEventType ] ,
+        [ a owl:Restriction ; owl:onProperty :attainmentSignalledBy ; owl:allValuesFrom [ a owl:Class ; owl:complementOf :FailureEventType ] ] ;
     rdfs:label "subgoal"@en ;
     rdfs:comment "The world condition a phase exists to bring about. Its attainment event is evidence, not the condition itself."@en ;
     :evidenceStatus :AuthorHypothesis ;
@@ -1408,9 +1409,10 @@ Classes classify description-level individuals, the knowledge a language model g
         [ a owl:Restriction ; owl:onProperty :fromPhase ; owl:someValuesFrom :ActionPhase ] ,
         [ a owl:Restriction ; owl:onProperty :toPhase ; owl:someValuesFrom :ActionPhase ] ,
         [ a owl:Restriction ; owl:onProperty :gatedBy ; owl:someValuesFrom :PhaseBoundaryEventType ] ,
-        [ a owl:Restriction ; owl:onProperty :permittedBy ; owl:allValuesFrom :MatchingComparison ] ;
+        [ a owl:Restriction ; owl:onProperty :permittedBy ; owl:allValuesFrom :MatchingComparison ] ,
+        [ a owl:Restriction ; owl:onProperty :gatedBy ; owl:allValuesFrom [ a owl:Class ; owl:complementOf :FailureEventType ] ] ;
     rdfs:label "phase transition"@en ;
-    rdfs:comment "A gated edge of the phase sequence. Where comparisons permit it, only matching comparisons do."@en ;
+    rdfs:comment "A gated edge of the phase sequence, never gated by a failure. Where comparisons permit it, only matching comparisons do."@en ;
     :evidenceStatus :EngineeringExtension ;
     :representsClaim :FJ-003 .
 :fromPhase a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:range :ActionPhase ;

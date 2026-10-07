@@ -605,7 +605,7 @@ class PouringLip(core.ManipulationRole):
 @dataclass(eq=False)
 class PouringPhaseStructure(prehension.PrehensionPhaseStructure):
     """
-    A substance-transfer phase structure composed with prehension: the source is reached, grasped, loaded, lifted and transported, aligned and tilted until the substance flows, regulated and stopped, returned upright, put back and released. Unloading and withdrawing the hand are optional.
+    A substance-transfer phase structure composed with prehension: the source is reached, grasped, loaded, lifted and transported, aligned and tilted until the substance flows, regulated and stopped, returned upright, put back and released. Unloading and withdrawing the hand are optional. Grip force is coupled to the load, and gaze is fixed while aligning the lip and while regulating the flow.
     """
 
     term: ClassVar[ClassTerm] = ClassTerm(
@@ -725,6 +725,42 @@ class PouringPhaseStructure(prehension.PrehensionPhaseStructure):
                 ),
             ),
             PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#definesGazeFixation",
+                quantifier=Quantifier.SOME,
+                filler=IntersectionOf(
+                    operands=(
+                        NamedClass(
+                            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#GazeFixation"
+                        ),
+                        PropertyRestriction(
+                            property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#servesPhase",
+                            quantifier=Quantifier.SOME,
+                            filler=NamedClass(
+                                iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#AlignmentPhase"
+                            ),
+                        ),
+                    )
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#definesGazeFixation",
+                quantifier=Quantifier.SOME,
+                filler=IntersectionOf(
+                    operands=(
+                        NamedClass(
+                            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#GazeFixation"
+                        ),
+                        PropertyRestriction(
+                            property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#servesPhase",
+                            quantifier=Quantifier.SOME,
+                            filler=NamedClass(
+                                iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#FlowRegulationPhase"
+                            ),
+                        ),
+                    )
+                ),
+            ),
+            PropertyRestriction(
                 property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#hasMaterialRegime",
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
@@ -736,6 +772,13 @@ class PouringPhaseStructure(prehension.PrehensionPhaseStructure):
                 quantifier=Quantifier.SOME,
                 filler=NamedClass(
                     iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#TransferTerminationReason"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#definesForceCoupling",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GripLoadCoupling"
                 ),
             ),
         ),

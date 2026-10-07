@@ -10,7 +10,7 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension> a owl:Ontology ;
     owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension/0.4.0> ;
-    owl:versionInfo "0.4.0" ;
+    owl:versionInfo "0.4.1" ;
     owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics> ;
     rdfs:label "Predictive manipulation: prehension"@en ;
     rdfs:comment """Prehensile manipulation: reach, load, lift, hold, transport, replace, unload and release, with their contact events, grip and load forces and corrective programmes."""@en .
@@ -398,26 +398,31 @@
 
 :ReplacePhase a owl:Class ;
     rdfs:subClassOf core:ActionPhase ,
-        [ a owl:Restriction ; owl:onProperty core:hasCouplingRegime ; owl:hasValue core:Coupled ] ;
+        [ a owl:Restriction ; owl:onProperty core:hasCouplingRegime ; owl:hasValue core:Coupled ] ,
+        [ a owl:Restriction ; owl:onProperty core:terminatedBy ; owl:someValuesFrom :Touchdown ] ;
     rdfs:label "replace phase"@en ;
     rdfs:comment "Lowering of the still-coupled manipulandum until touchdown."@en ;
     core:evidenceStatus core:EmpiricalFinding .
 
 :UnloadPhase a owl:Class ;
-    rdfs:subClassOf core:ActionPhase ;
+    rdfs:subClassOf core:ActionPhase ,
+        [ a owl:Restriction ; owl:onProperty core:terminatedBy ; owl:someValuesFrom :ForcesUnloaded ] ;
     rdfs:label "unload phase"@en ;
     rdfs:comment "Grip and load forces decrease in parallel as the support takes the weight."@en ;
     core:evidenceStatus core:EmpiricalFinding .
 
 :ContactReleasePhase a owl:Class ;
-    rdfs:subClassOf core:ActionPhase ;
+    rdfs:subClassOf core:ActionPhase ,
+        [ a owl:Restriction ; owl:onProperty core:terminatedBy ; owl:someValuesFrom :GraspRelease ] ;
     rdfs:label "contact release phase"@en ;
     rdfs:comment "Opening of the grasp once the forces are unloaded, ending at grasp release."@en ;
     core:evidenceStatus core:EmpiricalFinding .
 
 :WithdrawPhase a owl:Class ;
     rdfs:subClassOf core:ActionPhase ,
-        [ a owl:Restriction ; owl:onProperty core:hasCouplingRegime ; owl:hasValue core:Uncoupled ] ;
+        [ a owl:Restriction ; owl:onProperty core:hasCouplingRegime ; owl:hasValue core:Uncoupled ] ,
+        [ a owl:Restriction ; owl:onProperty core:initiatedBy ; owl:someValuesFrom :GraspRelease ] ,
+        [ a owl:Restriction ; owl:onProperty core:terminatedBy ; owl:someValuesFrom :WithdrawalComplete ] ;
     rdfs:label "withdraw phase"@en ;
     rdfs:comment "Optional withdrawal of the effector after release."@en ;
     core:evidenceStatus core:EngineeringExtension .

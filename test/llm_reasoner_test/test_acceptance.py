@@ -32,7 +32,6 @@ from llm_reasoner.acceptance.core import (
     ToleranceMatchesTrajectory,
     UpdatedEstimateIsHeld,
     InvariantHasViolationEvent,
-    NormalTransitionIsNotGatedByFailure,
     NoOrphanPhase,
     OneEntryPhase,
     PhaseEndingsDistinct,
@@ -41,7 +40,6 @@ from llm_reasoner.acceptance.core import (
     RangeBoundsOrdered,
     SafetyMarginOnOneParticipant,
     SubgoalSignalledByPhaseEnd,
-    SuccessIsNotSignalledByFailure,
     TaskIsNotItsOwnPhase,
     TransitionGateEndsSource,
     TransitionGateStartsTarget,
@@ -67,11 +65,7 @@ from llm_reasoner.acceptance.pouring import (
 from llm_reasoner.acceptance.prehension import (
     AdjustmentPrecedesPredictedEvent,
     PrehensionPhasesSpecific,
-    ReleaseEndsAtGraspRelease,
-    ReplaceEndsAtTouchdown,
     SafetyMarginOnCouplingResponse,
-    UnloadEndsWhenForcesUnloaded,
-    WithdrawalFollowsRelease,
 )
 from llm_reasoner.acceptance.object_dynamics import (
     CompositionDynamicsUsesItsCopy,
@@ -94,8 +88,10 @@ from llm_reasoner.ontologies.predictive_manipulation import (
 )
 from llm_reasoner.ontologies.terms import (
     ClassExpression,
+    ComplementOf,
     ConceptReference,
     DescriptionEntity,
+    IntersectionOf,
     NamedClass,
     PropertyRestriction,
     PropertyTerm,
@@ -136,6 +132,29 @@ def violated(fragments: list[DescriptionEntity]) -> set[tuple[int, ClassExpressi
         (id(violation.fragment), violation.expression)
         for violation in RestrictionsHold().violations(fragments)
     }
+
+
+def requirement(
+    owner: type[DescriptionEntity],
+    field_name: str,
+    quantifier: Quantifier,
+    filler: ClassExpression,
+) -> PropertyRestriction:
+    """
+    Return the restriction an owner states on the property of one of its fields.
+    """
+    return PropertyRestriction(
+        property_iri=property_iri(owner, field_name),
+        quantifier=quantifier,
+        filler=filler,
+    )
+
+
+def named(cls: type[DescriptionEntity]) -> NamedClass:
+    """
+    Return the named class a generated class stands for.
+    """
+    return NamedClass(iri=cls.term.iri)
 
 
 def complete_phase() -> core.ActionPhase:
@@ -391,13 +410,6 @@ class TestCoreRules:
         step = core.PhaseTransition(from_phase=phase, to_phase=other)
         assert violators(TransitionIsNotALoop(), [loop, step]) == [loop]
 
-    def test_transition_gated_by_a_failure_is_reported(self):
-        failing = core.PhaseTransition(gated_by=[prehension.SlipEvent()])
-        normal = core.PhaseTransition(gated_by=[prehension.Liftoff()])
-        assert violators(NormalTransitionIsNotGatedByFailure(), [failing, normal]) == [
-            failing
-        ]
-
     def test_subgoal_signalled_by_an_event_not_ending_its_phase_is_reported(self):
         liftoff = prehension.Liftoff()
         signalled_elsewhere = core.ActionPhase(
@@ -411,13 +423,6 @@ class TestCoreRules:
         assert violators(
             SubgoalSignalledByPhaseEnd(), [signalled_elsewhere, signalled_at_end]
         ) == [signalled_elsewhere]
-
-    def test_subgoal_signalled_by_a_failure_is_reported(self):
-        failing = core.Subgoal(attainment_signalled_by=prehension.ObjectCrush())
-        normal = core.Subgoal(attainment_signalled_by=prehension.Liftoff())
-        assert violators(SuccessIsNotSignalledByFailure(), [failing, normal]) == [
-            failing
-        ]
 
     def test_invariant_without_a_violation_event_is_reported(self):
         unguarded = core.ConditionRequirement(
@@ -560,6 +565,60 @@ class TestCoreRules:
         )
         (violation,) = PreconditionsGrounded().violations([structure])
         assert violation.involved == (requirement,)
+
+
+class TestFailureEventsInTheOntology:
+    """
+    The ontology itself rules out failures gating a transition or signalling success.
+    """
+
+    def test_transition_gated_by_a_failure_violates_its_requirement(self):
+        transition = core.PhaseTransition(gated_by=[core.FailureEventType()])
+        assert (
+            id(transition),
+            requirement(
+                core.PhaseTransition,
+                "gated_by",
+                Quantifier.ONLY,
+                ComplementOf(operand=named(core.FailureEventType)),
+            ),
+        ) in violated([transition])
+
+    def test_subgoal_signalled_by_a_failure_violates_its_requirement(self):
+        subgoal = core.Subgoal(attainment_signalled_by=core.FailureEventType())
+        assert (
+            id(subgoal),
+            requirement(
+                core.Subgoal,
+                "attainment_signalled_by",
+                Quantifier.ONLY,
+                ComplementOf(operand=named(core.FailureEventType)),
+            ),
+        ) in violated([subgoal])
+
+    def test_transition_gated_by_a_boundary_event_meets_its_requirement(self):
+        transition = core.PhaseTransition(gated_by=[prehension.Liftoff()])
+        assert (
+            id(transition),
+            requirement(
+                core.PhaseTransition,
+                "gated_by",
+                Quantifier.ONLY,
+                ComplementOf(operand=named(core.FailureEventType)),
+            ),
+        ) not in violated([transition])
+
+    def test_subgoal_signalled_by_a_boundary_event_meets_its_requirement(self):
+        subgoal = core.Subgoal(attainment_signalled_by=prehension.Liftoff())
+        assert (
+            id(subgoal),
+            requirement(
+                core.Subgoal,
+                "attainment_signalled_by",
+                Quantifier.ONLY,
+                ComplementOf(operand=named(core.FailureEventType)),
+            ),
+        ) not in violated([subgoal])
 
 
 # %% comparisons and control points
@@ -1108,44 +1167,6 @@ class TestPrehensionRules:
             unrelated
         ]
 
-    def test_replace_phase_not_ending_at_touchdown_is_reported(self):
-        not_touching = prehension.ReplacePhase(
-            terminated_by=[prehension.TransportTargetReached()]
-        )
-        touching = prehension.ReplacePhase(terminated_by=[prehension.Touchdown()])
-        assert violators(ReplaceEndsAtTouchdown(), [not_touching, touching]) == [
-            not_touching
-        ]
-
-    def test_unload_phase_not_ending_when_forces_are_unloaded_is_reported(self):
-        early = prehension.UnloadPhase(terminated_by=[prehension.GraspRelease()])
-        complete = prehension.UnloadPhase(terminated_by=[prehension.ForcesUnloaded()])
-        assert violators(UnloadEndsWhenForcesUnloaded(), [early, complete]) == [early]
-
-    def test_release_phase_not_ending_at_release_is_reported(self):
-        unreleased = prehension.ContactReleasePhase(
-            terminated_by=[prehension.ForcesUnloaded()]
-        )
-        released = prehension.ContactReleasePhase(
-            terminated_by=[prehension.GraspRelease()]
-        )
-        assert violators(ReleaseEndsAtGraspRelease(), [unreleased, released]) == [
-            unreleased
-        ]
-
-    def test_withdrawal_not_following_release_is_reported(self):
-        premature = prehension.WithdrawPhase(
-            initiated_by=[prehension.ForcesUnloaded()],
-            terminated_by=[prehension.WithdrawalComplete()],
-        )
-        following = prehension.WithdrawPhase(
-            initiated_by=[prehension.GraspRelease()],
-            terminated_by=[prehension.WithdrawalComplete()],
-        )
-        assert violators(WithdrawalFollowsRelease(), [premature, following]) == [
-            premature
-        ]
-
     def test_adjustment_active_after_the_predicted_event_is_reported(self):
         flow_onset = pouring.FlowOnset()
         tilt = pouring.TiltToFlowPhase(terminated_by=[flow_onset])
@@ -1169,6 +1190,43 @@ class TestPrehensionRules:
             defines_phase=[prehension.LiftPhase()]
         )
         assert violators(PrehensionPhasesSpecific(), [generic, specific]) == [generic]
+
+
+class TestPuttingDownBoundariesInTheOntology:
+    """
+    The ontology itself states the event each putting-down phase starts or ends at.
+    """
+
+    @pytest.mark.parametrize(
+        "phase_type, field_name, event_type",
+        [
+            (prehension.ReplacePhase, "terminated_by", prehension.Touchdown),
+            (prehension.UnloadPhase, "terminated_by", prehension.ForcesUnloaded),
+            (prehension.ContactReleasePhase, "terminated_by", prehension.GraspRelease),
+            (prehension.WithdrawPhase, "initiated_by", prehension.GraspRelease),
+            (prehension.WithdrawPhase, "terminated_by", prehension.WithdrawalComplete),
+        ],
+    )
+    def test_phase_without_its_boundary_event_violates_its_requirement(
+        self, phase_type, field_name, event_type
+    ):
+        phase = phase_type()
+        assert (
+            id(phase),
+            requirement(phase_type, field_name, Quantifier.SOME, named(event_type)),
+        ) in violated([phase])
+
+    def test_phase_with_its_boundary_event_meets_its_requirement(self):
+        phase = prehension.ReplacePhase(terminated_by=[prehension.Touchdown()])
+        assert (
+            id(phase),
+            requirement(
+                prehension.ReplacePhase,
+                "terminated_by",
+                Quantifier.SOME,
+                named(prehension.Touchdown),
+            ),
+        ) not in violated([phase])
 
 
 # %% pouring
@@ -1219,6 +1277,77 @@ class TestPouringPhaseRequirements:
             filler=NamedClass(iri=phase_type.term.iri),
         )
         assert (id(structure), required) in violated([structure])
+
+
+class TestPouringCouplingAndGazeRequirements:
+    """
+    A pouring structure couples grip to load, and fixes its gaze while aligning and
+    while regulating the flow.
+    """
+
+    @staticmethod
+    def gaze_serving(phase_type: type[DescriptionEntity]) -> PropertyRestriction:
+        return requirement(
+            pouring.PouringPhaseStructure,
+            "defines_gaze_fixation",
+            Quantifier.SOME,
+            IntersectionOf(
+                operands=(
+                    named(gaze.GazeFixation),
+                    requirement(
+                        gaze.GazeFixation,
+                        "serves_phase",
+                        Quantifier.SOME,
+                        named(phase_type),
+                    ),
+                )
+            ),
+        )
+
+    def test_structure_without_a_coupling_violates_its_requirement(self):
+        structure = pouring_structure()
+        assert (
+            id(structure),
+            requirement(
+                pouring.PouringPhaseStructure,
+                "defines_force_coupling",
+                Quantifier.SOME,
+                named(prehension.GripLoadCoupling),
+            ),
+        ) in violated([structure])
+
+    @pytest.mark.parametrize(
+        "phase_type", [pouring.AlignmentPhase, pouring.FlowRegulationPhase]
+    )
+    def test_structure_without_gaze_on_the_phase_violates_its_requirement(
+        self, phase_type
+    ):
+        structure = pouring_structure(
+            defines_gaze_fixation=[
+                gaze.GazeFixation(serves_phase=prehension.LiftPhase())
+            ]
+        )
+        assert (id(structure), self.gaze_serving(phase_type)) in violated([structure])
+
+    def test_structure_with_coupling_and_gaze_meets_those_requirements(self):
+        structure = pouring_structure(
+            defines_force_coupling=[prehension.GripLoadCoupling()],
+            defines_gaze_fixation=[
+                gaze.GazeFixation(serves_phase=pouring.AlignmentPhase()),
+                gaze.GazeFixation(serves_phase=pouring.FlowRegulationPhase()),
+            ],
+        )
+        expressions = {expression for _, expression in violated([structure])}
+        assert not expressions & {
+            self.gaze_serving(pouring.AlignmentPhase),
+            self.gaze_serving(pouring.FlowRegulationPhase),
+            requirement(
+                pouring.PouringPhaseStructure,
+                "defines_force_coupling",
+                Quantifier.SOME,
+                named(prehension.GripLoadCoupling),
+            ),
+        }
 
 
 class TestPouringRules:
