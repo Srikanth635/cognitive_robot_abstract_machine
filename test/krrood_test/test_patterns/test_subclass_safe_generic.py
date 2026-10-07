@@ -25,6 +25,9 @@ from typing_extensions import (
 from krrood.entity_query_language.factories import variable_from
 from krrood.patterns.subclass_safe_generic import SubClassSafeGeneric
 from krrood.utils import get_generic_type_parameters
+from ..dataset.generic_under_annotation_holding_metaclass import (
+    GenericUnderAnnotationHoldingMetaclass,
+)
 from ..dataset.classes_with_generic import (
     FirstGeneric,
     SubClassGenericThatUpdatesGenericTypeToBuiltInType,
@@ -723,3 +726,11 @@ def test_typevartuple_multiple_usage_in_fields():
     fields_by_name = {field.name: field for field in fields(Final)}
     assert fields_by_name["first"].type == Tuple[int, str]
     assert fields_by_name["second"].type == List[Tuple[int, str]]
+
+
+def test_subclass_declaring_no_annotations_is_bound_under_a_metaclass_holding_annotations():
+    @dataclass
+    class BoundToInt(GenericUnderAnnotationHoldingMetaclass[int]): ...
+
+    (value_field,) = fields(BoundToInt)
+    assert value_field.type is int

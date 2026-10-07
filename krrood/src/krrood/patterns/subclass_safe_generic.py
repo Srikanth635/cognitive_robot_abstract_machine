@@ -180,7 +180,24 @@ class SubClassSafeGeneric(ABC):
             resolved_type = existing_field.type
         else:
             resolved_type = Any
-        cls.__annotations__[name] = resolved_type
+        cls._own_annotations()[name] = resolved_type
+
+    @classmethod
+    def _own_annotations(cls) -> Dict[str, Any]:
+        """
+        :return: The annotations dictionary in the class's own namespace, created when
+            the class declares none.
+
+        ..note::
+            ``cls.__annotations__`` can return a base class's dictionary instead, once a
+            metaclass holds an ``__annotations__`` of its own, as ``abc.ABCMeta`` does
+            after some library has read its annotations.
+        """
+        annotations = cls.__dict__.get("__annotations__")
+        if annotations is None:
+            annotations = {}
+            setattr(cls, "__annotations__", annotations)
+        return annotations
 
     @classmethod
     def _get_generic_type_substitutions(cls) -> Dict[Any, ResolvableType]:
