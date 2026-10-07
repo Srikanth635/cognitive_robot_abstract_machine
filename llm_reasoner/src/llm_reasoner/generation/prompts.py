@@ -13,6 +13,7 @@ from typing_extensions import Any, Callable, Mapping, Sequence
 from llm_reasoner.acceptance.derived import described
 from llm_reasoner.acceptance.rules import Violation
 from llm_reasoner.generation.schema import (
+    AnswerKey,
     FieldKind,
     FieldSchema,
     GenerationSchema,
@@ -159,24 +160,27 @@ class GenerationPrompt:
         return "\n\n".join(sections)
 
     @staticmethod
-    def repair(initial_prompt: str, raw_response: str, problems: Sequence[str]) -> str:
+    def repair(initial_prompt: str, answer: str, problems: Sequence[str]) -> str:
         """
         :param initial_prompt: The first prompt of the request, which earlier repairs
             are not added to.
-        :param raw_response: The latest rejected answer, in full, since the model keeps
-            no memory of it.
+        :param answer: The answer being repaired, in full, since the model keeps no
+            memory of it.
         :param problems: What is wrong with that answer, each naming the fragment at
             fault.
-        :return: The prompt asking the model to correct its latest answer.
+        :return: The prompt asking the model for a patch correcting the answer.
         """
         return "\n\n".join(
             [
                 initial_prompt,
-                "## Your previous answer was rejected\n\n" + raw_response,
+                "## Your answer so far\n\n" + answer,
                 "These problems were found:\n"
                 + "\n".join(f"- {problem}" for problem in problems),
-                "Answer again, correcting these problems and keeping everything "
-                "else. JSON object only.",
+                "Correct them with a patch rather than a new answer: a JSON object "
+                f'whose "{AnswerKey.FRAGMENTS}" list holds only the fragments you add '
+                "or change, each written in full with all its fields, and whose "
+                f'"{AnswerKey.REMOVE}" list holds the ids of the fragments to delete. '
+                "Every fragment you do not mention stays as it is. JSON object only.",
             ]
         )
 

@@ -1,0 +1,4 @@
+{"fragments": [
+  {"id": "regulate", "type": "FlowRegulationPhase"},
+  {"id": "onwards", "type": "PhaseTransition", "from_phase": "tilt", "to_phase": "regulate"}
+], "remove": ["back_to_tilt"]}

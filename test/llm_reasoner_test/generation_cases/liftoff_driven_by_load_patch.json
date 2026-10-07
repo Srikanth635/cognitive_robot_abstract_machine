@@ -1,0 +1,3 @@
+{"fragments": [
+  {"id": "squeeze", "type": "ForceComponent", "has_force_kind": "LOAD_FORCE"}
+]}

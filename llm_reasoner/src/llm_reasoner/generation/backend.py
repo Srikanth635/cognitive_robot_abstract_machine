@@ -133,6 +133,23 @@ class GenerationOutcome:
 
 
 @dataclass
+class AnswerUnderRepair:
+    """
+    The answer repairs are applied to: the one with the fewest problems so far.
+    """
+
+    answer: str
+    """
+    The answer, in full, with every repair applied to it.
+    """
+
+    problems: list[str]
+    """
+    What is wrong with it.
+    """
+
+
+@dataclass
 class Assessment:
     """
     The judgement of one answer: admitted with its warnings, or rejected for its
@@ -235,7 +252,7 @@ class HypothesisBackend(GenerativeBackend):
         initial_prompt = self.prompt.initial(schema, instruction, fixed)
         prompt = initial_prompt
         self.log = []
-        problems: list[str] = []
+        under_repair: Optional[AnswerUnderRepair] = None
         for attempt in range(self.max_repairs + 1):
             raw_response = self.client.complete_structured(
                 SYSTEM_PROMPT, prompt, schema.json_schema()
@@ -249,7 +266,12 @@ class HypothesisBackend(GenerativeBackend):
                     attempt=attempt,
                 )
             )
-            assessment = self.assess(decoder.decode(raw_response), fixed)
+            answer = (
+                raw_response
+                if under_repair is None
+                else decoder.merged(under_repair.answer, raw_response)
+            )
+            assessment = self.assess(decoder.decode(answer), fixed)
             if assessment.hypothesis is not None:
                 self.last_outcome = GenerationOutcome(
                     hypothesis=assessment.hypothesis,
@@ -261,9 +283,18 @@ class HypothesisBackend(GenerativeBackend):
                 )
                 yield assessment.hypothesis.root
                 return
-            problems = assessment.problems
-            prompt = self.prompt.repair(initial_prompt, raw_response, problems)
-        raise HypothesisRejected(problems=problems, exchanges=list(self.log))
+            if under_repair is None or len(assessment.problems) <= len(
+                under_repair.problems
+            ):
+                under_repair = AnswerUnderRepair(
+                    answer=answer, problems=assessment.problems
+                )
+            prompt = self.prompt.repair(
+                initial_prompt, under_repair.answer, under_repair.problems
+            )
+        raise HypothesisRejected(
+            problems=under_repair.problems, exchanges=list(self.log)
+        )
 
     @staticmethod
     def fixed_values(expression: Match[T]) -> dict[str, Any]:

@@ -1,0 +1,4 @@
+{"fragments": [
+  {"id": "regulate", "type": "FlowRegulationPhase", "label": "regulate the flow"},
+  {"id": "stop", "type": "FlowTerminationPhase"}
+], "remove": ["tilt_to_regulate"]}

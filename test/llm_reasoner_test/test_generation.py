@@ -115,6 +115,34 @@ class GenerationCase(StrEnum):
     A phase stating the regulation mode, a field of the phase's controller.
     """
 
+    LOOP_REPLACED_PATCH = "loop_replaced_patch.json"
+    """
+    A repair of the looping structure removing its looping transition and leading from
+    tilting to a new flow regulation phase instead.
+    """
+
+    LOOP_AND_REFERENCE_REPAIRED_PATCH = "loop_and_reference_repaired_patch.json"
+    """
+    A repair of the looping structure with a dangling reference, removing the loop and
+    leading its other transition to a new phase.
+    """
+
+    TASK_CORRECTED_PATCH = "task_corrected_patch.json"
+    """
+    A repair of the structure of another task, setting the pouring task.
+    """
+
+    RELABELLED_AND_EXTENDED_PATCH = "relabelled_and_extended_patch.json"
+    """
+    A patch of the chained structure relabelling a phase, adding one and removing the
+    transition.
+    """
+
+    LIFTOFF_DRIVEN_BY_LOAD_PATCH = "liftoff_driven_by_load_patch.json"
+    """
+    A repair of the grip-driven lift-off making the driving force the load force.
+    """
+
     LIFT_AND_POUR = "lift_and_pour.json"
     """
     A pouring structure that loads, lifts and tilts a carton, with the forces at lift-
@@ -186,6 +214,14 @@ class TestGenerationSchema:
     def test_component_field_typed_by_an_earlier_superclass_declares_its_range(self):
         component_fields = Vocabulary().component_fields(core.ActionPhaseStructure)
         assert component_fields["defines_gaze_fixation"] is gaze.GazeFixation
+
+    def test_answer_may_name_fragments_to_remove(self):
+        schema = GenerationSchema.for_root(core.ActionPhaseStructure).json_schema()
+        assert schema["properties"]["remove"] == {
+            "type": "array",
+            "items": {"type": "string"},
+        }
+        assert "remove" not in schema["required"]
 
     def test_component_lists_of_the_structure_are_not_asked_for(self):
         structure = GenerationSchema.for_root(core.ActionPhaseStructure).get(
@@ -310,6 +346,20 @@ class TestFragmentDecoder:
         assert alignment.has_coupling_regime is core.CouplingRegime.COUPLED
         assert contact.has_modality is core.SensoryModality.TACTILE
 
+    def test_patch_replaces_adds_and_removes_fragments_by_identifier(self):
+        decoder = structure_decoder()
+        merged = decoder.merged(
+            GenerationCase.CHAINED_STRUCTURE.text,
+            GenerationCase.RELABELLED_AND_EXTENDED_PATCH.text,
+        )
+        hypothesis = decoder.decode(merged).hypothesis
+        labels = {
+            hypothesis.identifier_of(phase): phase.label
+            for phase in hypothesis.root.defines_phase
+        }
+        assert labels == {"tilt": "", "regulate": "regulate the flow", "stop": ""}
+        assert hypothesis.root.defines_transition == []
+
     def test_undecodable_answer_keeps_what_could_be_linked(self):
         decoded = structure_decoder().decode(GenerationCase.DANGLING_REFERENCE.text)
         assert decoded.hypothesis is None
@@ -377,7 +427,7 @@ class TestHypothesisBackend:
 
     def test_rejected_answer_is_returned_with_the_violation_to_repair(self):
         backend = backend_answering(
-            GenerationCase.LOOPING_STRUCTURE, GenerationCase.CHAINED_STRUCTURE
+            GenerationCase.LOOPING_STRUCTURE, GenerationCase.LOOP_REPLACED_PATCH
         )
         (structure,) = pouring_query().evaluate(backend=backend)
         repair_prompt = backend.log[1].user
@@ -388,7 +438,7 @@ class TestHypothesisBackend:
     def test_undecodable_answer_is_also_checked_against_the_rules(self):
         backend = backend_answering(
             GenerationCase.LOOPING_WITH_DANGLING_REFERENCE,
-            GenerationCase.CHAINED_STRUCTURE,
+            GenerationCase.LOOP_AND_REFERENCE_REPAIRED_PATCH,
         )
         list(pouring_query().evaluate(backend=backend))
         repair_prompt = backend.log[1].user
@@ -407,21 +457,37 @@ class TestHypothesisBackend:
         )
         assert "'pour'" in described and "'lift_off'" in described
 
-    def test_repair_shows_the_last_answer_only(self):
+    def test_repair_patches_the_answer(self):
+        backend = backend_answering(
+            GenerationCase.LOOPING_STRUCTURE, GenerationCase.LOOP_REPLACED_PATCH
+        )
+        (structure,) = pouring_query().evaluate(backend=backend)
+        assert sorted(map(type, structure.defines_phase), key=str) == sorted(
+            [pouring.TiltToFlowPhase, pouring.FlowRegulationPhase], key=str
+        )
+        assert (
+            backend.last_outcome.hypothesis.identifier_of(
+                structure.defines_transition[0]
+            )
+            == "tilt_to_regulate"
+        )
+
+    def test_repair_builds_on_the_answer_with_fewest_problems(self):
         backend = backend_answering(
             GenerationCase.LOOPING_STRUCTURE,
             GenerationCase.DANGLING_REFERENCE,
-            GenerationCase.CHAINED_STRUCTURE,
+            GenerationCase.LOOP_REPLACED_PATCH,
         )
         list(pouring_query().evaluate(backend=backend))
         initial, _, last = [user for _, user in backend.client.calls]
         assert last.startswith(initial)
-        assert GenerationCase.DANGLING_REFERENCE.text in last
-        assert GenerationCase.LOOPING_STRUCTURE.text not in last
+        assert "missing_phase" not in last
+        assert str(CoreRule.TRANSITION_IS_NOT_A_LOOP) in last
 
     def test_answer_contradicting_a_fixed_value_is_repaired(self):
         backend = backend_answering(
-            GenerationCase.STRUCTURE_OF_ANOTHER_TASK, GenerationCase.CHAINED_STRUCTURE
+            GenerationCase.STRUCTURE_OF_ANOTHER_TASK,
+            GenerationCase.TASK_CORRECTED_PATCH,
         )
         (structure,) = pouring_query().evaluate(backend=backend)
         assert "decomposes_task = aicor:Pouring" in backend.log[1].user
@@ -469,7 +535,7 @@ class TestAdmission:
 
     def test_open_world_contradiction_is_returned_with_its_fragments(self):
         backend = backend_answering(
-            GenerationCase.LOOPING_STRUCTURE, GenerationCase.CHAINED_STRUCTURE
+            GenerationCase.LOOPING_STRUCTURE, GenerationCase.LOOP_REPLACED_PATCH
         )
         backend.suite = AcceptanceSuite(rules=[])
         backend.consistency = ConflictWith(identifier="back_to_tilt")

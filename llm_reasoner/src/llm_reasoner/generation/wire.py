@@ -18,7 +18,12 @@ from enum import Enum
 from typing_extensions import Any, Mapping, Optional
 
 from llm_reasoner.acceptance.vocabulary import Vocabulary
-from llm_reasoner.generation.schema import FieldKind, FieldSchema, GenerationSchema
+from llm_reasoner.generation.schema import (
+    AnswerKey,
+    FieldKind,
+    FieldSchema,
+    GenerationSchema,
+)
 from llm_reasoner.ontologies import CRAM_AICOR_NAMESPACE, DUL_NAMESPACE
 from llm_reasoner.ontologies.terms import ConceptReference, DescriptionEntity
 
@@ -33,21 +38,6 @@ CONCEPT_PREFIXES: Mapping[str, str] = {
 }
 """
 The namespace each prefix a model may write in a concept stands for.
-"""
-
-IDENTIFIER_KEY = "id"
-"""
-The key of a fragment's identifier.
-"""
-
-TYPE_KEY = "type"
-"""
-The key of a fragment's type.
-"""
-
-FRAGMENTS_KEY = "fragments"
-"""
-The key of the answer's list of fragments.
 """
 
 
@@ -134,7 +124,9 @@ class FragmentDecoder:
         entries, problems = self.entries(raw_response)
         usable = self.usable_entries(entries)
         instances = {
-            entry[IDENTIFIER_KEY]: self.schema.get(entry[TYPE_KEY]).python_type()
+            entry[AnswerKey.IDENTIFIER]: self.schema.get(
+                entry[AnswerKey.TYPE]
+            ).python_type()
             for entry in usable
         }
         for entry in usable:
@@ -178,24 +170,28 @@ class FragmentDecoder:
         if located is None:
             return [], ["the answer contains no JSON object"]
         payload = json.loads(located.group(0))
-        entries = payload.get(FRAGMENTS_KEY) if isinstance(payload, dict) else None
+        entries = (
+            payload.get(AnswerKey.FRAGMENTS) if isinstance(payload, dict) else None
+        )
         if isinstance(entries, str):
             entries, _ = json.JSONDecoder().raw_decode(entries.lstrip())
         if not isinstance(entries, list):
-            return [], [f'the answer has no "{FRAGMENTS_KEY}" list']
+            return [], [f'the answer has no "{AnswerKey.FRAGMENTS}" list']
         problems = []
         seen: set[str] = set()
         for position, entry in enumerate(entries):
-            identifier = entry.get(IDENTIFIER_KEY) if isinstance(entry, dict) else None
+            identifier = (
+                entry.get(AnswerKey.IDENTIFIER) if isinstance(entry, dict) else None
+            )
             if not isinstance(identifier, str) or not identifier:
                 problems.append(f"fragment {position} has no string identifier")
                 continue
             if identifier in seen:
                 problems.append(f"identifier '{identifier}' is used twice")
             seen.add(identifier)
-            if self.schema.get(entry.get(TYPE_KEY, "")) is None:
+            if self.schema.get(entry.get(AnswerKey.TYPE, "")) is None:
                 problems.append(
-                    f"fragment '{identifier}' has unknown type '{entry.get(TYPE_KEY)}'"
+                    f"fragment '{identifier}' has unknown type '{entry.get(AnswerKey.TYPE)}'"
                 )
         return entries, problems
 
@@ -214,6 +210,54 @@ class FragmentDecoder:
             return ""
         return f"; it is a field of {', '.join(declaring)}"
 
+    def merged(self, answer: str, patch: str) -> str:
+        """
+        :param answer: An answer, in full.
+        :param patch: A repair of it: the fragments to add or replace, each written in
+            full, and the identifiers of the fragments to delete.
+        :return: The answer with the patch applied, in full; a fragment of the patch
+            replaces the fragment of the same identifier where it was, and a new one
+            is added at the end.
+        """
+        entries, _ = self.entries(answer)
+        changes, _ = self.entries(patch)
+        located = JSON_OBJECT.search(patch)
+        payload = json.loads(located.group(0)) if located is not None else None
+        listed = payload.get(AnswerKey.REMOVE) if isinstance(payload, dict) else None
+        removed = {
+            identifier
+            for identifier in (listed if isinstance(listed, list) else [])
+            if isinstance(identifier, str)
+        }
+        changed = {
+            self.identifier_of_entry(change): change
+            for change in changes
+            if self.identifier_of_entry(change) is not None
+        }
+        kept = [
+            changed.pop(self.identifier_of_entry(entry), entry)
+            for entry in entries
+            if self.identifier_of_entry(entry) not in removed
+        ]
+        added = [
+            change
+            for change in changes
+            if self.identifier_of_entry(change) is None
+            or self.identifier_of_entry(change) in changed
+        ]
+        return json.dumps({AnswerKey.FRAGMENTS: [*kept, *added]})
+
+    @staticmethod
+    def identifier_of_entry(entry: Any) -> Optional[str]:
+        """
+        :return: The identifier an entry of an answer states, or ``None`` when it
+            states none.
+        """
+        if not isinstance(entry, dict):
+            return None
+        identifier = entry.get(AnswerKey.IDENTIFIER)
+        return identifier if isinstance(identifier, str) else None
+
     def usable_entries(self, entries: list[Any]) -> list[dict[str, Any]]:
         """
         :return: The entries with an identifier not used before and a known type, which
@@ -224,7 +268,9 @@ class FragmentDecoder:
         for entry in entries:
             if not isinstance(entry, dict):
                 continue
-            identifier, type_name = entry.get(IDENTIFIER_KEY), entry.get(TYPE_KEY)
+            identifier, type_name = entry.get(AnswerKey.IDENTIFIER), entry.get(
+                AnswerKey.TYPE
+            )
             if (
                 not isinstance(identifier, str)
                 or not identifier
@@ -245,12 +291,12 @@ class FragmentDecoder:
 
         :return: The problems with the entry's fields.
         """
-        identifier = entry[IDENTIFIER_KEY]
-        type_schema = self.schema.get(entry[TYPE_KEY])
+        identifier = entry[AnswerKey.IDENTIFIER]
+        type_schema = self.schema.get(entry[AnswerKey.TYPE])
         instance = instances[identifier]
         problems = []
         for name, written in entry.items():
-            if name in (IDENTIFIER_KEY, TYPE_KEY):
+            if name in (AnswerKey.IDENTIFIER, AnswerKey.TYPE):
                 continue
             field_schema = type_schema.field_named(name)
             if field_schema is None and name in self.vocabulary.component_fields(
