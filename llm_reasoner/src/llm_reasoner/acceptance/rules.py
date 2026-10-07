@@ -13,7 +13,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import StrEnum
 
-from krrood.entity_query_language.factories import an, entity, variable
 from krrood.patterns.subclass_safe_generic import SubClassSafeGeneric
 from typing_extensions import Any, Generic, Sequence, TypeVar
 
@@ -147,101 +146,6 @@ class TypedRule(AcceptanceRule, Generic[T], SubClassSafeGeneric, ABC):
             severity=self.severity,
             involved=tuple(involved),
         )
-
-
-class FragmentRule(TypedRule[T], ABC):
-    """
-    A rule whose violators an EQL query finds among the fragments of one type.
-    """
-
-    @abstractmethod
-    def violating(self, subject: T) -> Any:
-        """
-        :param subject: The EQL variable ranging over the rule's fragments.
-        :return: The EQL condition a fragment meets when it violates the rule.
-        """
-
-    def matching(self, condition: Any, candidates: Sequence[T]) -> set[int]:
-        """
-        :return: The identities of the candidates an EQL condition holds for.
-        """
-        if not candidates:
-            return set()
-        subject = variable(self.subject_type, domain=list(candidates))
-        return {
-            id(fragment)
-            for fragment in an(entity(subject).where(condition(subject))).evaluate()
-        }
-
-    def violations(self, fragments: Sequence[DescriptionEntity]) -> list[Violation]:
-        subjects = self.subjects(fragments)
-        found = self.matching(self.violating, subjects)
-        return [
-            self.violation(fragment) for fragment in subjects if id(fragment) in found
-        ]
-
-
-class RequirementRule(FragmentRule[T], ABC):
-    """
-    A rule requiring something of the fragments it applies to. The fragments meeting the
-    requirement are found by an EQL query and the violators are the remaining ones, so a
-    fragment with an empty collection counts as failing rather than being skipped.
-    """
-
-    @abstractmethod
-    def applies(self, subject: T) -> Any:
-        """
-        :param subject: The EQL variable ranging over the rule's fragments.
-        :return: The EQL condition a fragment meets when the requirement applies to it.
-        """
-
-    @abstractmethod
-    def meets(self, subject: T) -> Any:
-        """
-        :param subject: The EQL variable ranging over the rule's fragments.
-        :return: The EQL condition a fragment meets when it fulfils the requirement.
-        """
-
-    def violating(self, subject: T) -> Any:
-        return self.applies(subject)
-
-    def violations(self, fragments: Sequence[DescriptionEntity]) -> list[Violation]:
-        subjects = self.subjects(fragments)
-        applying = self.matching(self.applies, subjects)
-        candidates = [fragment for fragment in subjects if id(fragment) in applying]
-        meeting = self.matching(self.meets, candidates)
-        return [
-            self.violation(fragment)
-            for fragment in candidates
-            if id(fragment) not in meeting
-        ]
-
-
-class StructureRule(TypedRule[T], ABC):
-    """
-    A rule comparing the parts of one fragment with one another, such as the shape of a
-    structure's phases as a graph, which no single query over fragments expresses.
-    """
-
-    @abstractmethod
-    def is_violated_by(self, fragment: T) -> bool:
-        """
-        :return: Whether the fragment violates the rule.
-        """
-
-    def involved(self, fragment: T) -> list[DescriptionEntity]:
-        """
-        :return: The parts of a violating fragment the violation concerns; none, unless
-            the rule names them.
-        """
-        return []
-
-    def violations(self, fragments: Sequence[DescriptionEntity]) -> list[Violation]:
-        return [
-            self.violation(fragment, self.involved(fragment))
-            for fragment in self.subjects(fragments)
-            if self.is_violated_by(fragment)
-        ]
 
 
 @dataclass

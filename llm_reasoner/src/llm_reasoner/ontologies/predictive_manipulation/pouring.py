@@ -163,6 +163,262 @@ class CohesiveFlowDynamicsEstimate(core.CategoricalParameter, core.DynamicsEstim
 
 
 @dataclass(eq=False)
+class PouringPhaseStructure(prehension.PrehensionPhaseStructure):
+    """
+    A substance-transfer phase structure composed with prehension: the source is reached, grasped, loaded, lifted and transported, aligned and tilted until the substance flows, regulated and stopped, returned upright, put back and released. Unloading and withdrawing the hand are optional. Grip force is coupled to the load, and gaze is fixed while aligning the lip and while regulating the flow.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringPhaseStructure",
+        linked_terms=(),
+        evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
+        claims=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#decomposesTask",
+                quantifier=Quantifier.VALUE,
+                value="http://aicor.knowledge/l2-ontology.owl#Pouring",
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#AlignmentPhase"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#FlowRegulationPhase"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#FlowTerminationPhase"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#ReturnUprightPhase"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#TiltToFlowPhase"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#ContactEstablishmentPhase"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#ContactReleasePhase"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#ForceLoadingPhase"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#LiftPhase"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#ReachPhase"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#ReplacePhase"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#TransportPhase"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesRole",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouredSubstance"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesRole",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#SourceContainer"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesRole",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#TargetReceptacle"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#definesGazeFixation",
+                quantifier=Quantifier.SOME,
+                filler=IntersectionOf(
+                    operands=(
+                        NamedClass(
+                            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#GazeFixation"
+                        ),
+                        PropertyRestriction(
+                            property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#servesPhase",
+                            quantifier=Quantifier.SOME,
+                            filler=NamedClass(
+                                iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#AlignmentPhase"
+                            ),
+                        ),
+                    )
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#definesGazeFixation",
+                quantifier=Quantifier.SOME,
+                filler=IntersectionOf(
+                    operands=(
+                        NamedClass(
+                            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#GazeFixation"
+                        ),
+                        PropertyRestriction(
+                            property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#servesPhase",
+                            quantifier=Quantifier.SOME,
+                            filler=NamedClass(
+                                iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#FlowRegulationPhase"
+                            ),
+                        ),
+                    )
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#hasMaterialRegime",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#MaterialRegime"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#hasTerminationReason",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#TransferTerminationReason"
+                ),
+            ),
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#definesForceCoupling",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GripLoadCoupling"
+                ),
+            ),
+        ),
+        definition=None,
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+    has_material_regime: Optional[MaterialRegime] = field(
+        default=None,
+        metadata=PropertyTerm(
+            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#hasMaterialRegime",
+            functional=True,
+        ).as_dict(),
+    )
+    """
+    The flow behaviour of the transferred substance.
+    """
+
+    has_termination_reason: Optional[TransferTerminationReason] = field(
+        default=None,
+        metadata=PropertyTerm(
+            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#hasTerminationReason",
+            functional=True,
+        ).as_dict(),
+    )
+    """
+    The condition that ends the transfer in this task variant.
+    """
+
+
+@dataclass(eq=False)
+class CohesivePouringStructure(PouringPhaseStructure):
+    """
+    A pouring structure transferring a cohesive material; it declares no slosh or granular flow dynamics.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#CohesivePouringStructure",
+        linked_terms=(),
+        evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
+        claims=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesParameter",
+                quantifier=Quantifier.ONLY,
+                filler=ComplementOf(
+                    operand=UnionOf(
+                        operands=(
+                            NamedClass(
+                                iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#SloshDynamicsEstimate"
+                            ),
+                            NamedClass(
+                                iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#GranularFlowDynamicsEstimate"
+                            ),
+                        )
+                    )
+                ),
+            ),
+        ),
+        definition=IntersectionOf(
+            operands=(
+                NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringPhaseStructure"
+                ),
+                PropertyRestriction(
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#hasMaterialRegime",
+                    quantifier=Quantifier.VALUE,
+                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#Cohesive",
+                ),
+            )
+        ),
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+
+@dataclass(eq=False)
 class DynamicViscosityEstimate(
     core.DynamicViscosityParameter, core.ObjectPropertyEstimate
 ):
@@ -436,6 +692,94 @@ class GranularFlowDynamicsEstimate(core.CategoricalParameter, core.DynamicsEstim
 
 
 @dataclass(eq=False)
+class GranularPouringStructure(PouringPhaseStructure):
+    """
+    A pouring structure transferring a granular material; it declares no viscosity, slosh or cohesive flow dynamics.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#GranularPouringStructure",
+        linked_terms=(),
+        evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
+        claims=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesParameter",
+                quantifier=Quantifier.ONLY,
+                filler=ComplementOf(
+                    operand=UnionOf(
+                        operands=(
+                            NamedClass(
+                                iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#DynamicViscosityEstimate"
+                            ),
+                            NamedClass(
+                                iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#SloshDynamicsEstimate"
+                            ),
+                            NamedClass(
+                                iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#CohesiveFlowDynamicsEstimate"
+                            ),
+                        )
+                    )
+                ),
+            ),
+        ),
+        definition=IntersectionOf(
+            operands=(
+                NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringPhaseStructure"
+                ),
+                PropertyRestriction(
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#hasMaterialRegime",
+                    quantifier=Quantifier.VALUE,
+                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#Granular",
+                ),
+            )
+        ),
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+
+@dataclass(eq=False)
+class InstructedStopPouringStructure(PouringPhaseStructure):
+    """
+    A pouring structure whose transfer stops on an instruction; it declares the external event that ends it.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#InstructedStopPouringStructure",
+        linked_terms=(),
+        evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
+        claims=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesEventType",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ExternalTerminationEventType"
+                ),
+            ),
+        ),
+        definition=IntersectionOf(
+            operands=(
+                NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringPhaseStructure"
+                ),
+                PropertyRestriction(
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#hasTerminationReason",
+                    quantifier=Quantifier.VALUE,
+                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#InstructedStop",
+                ),
+            )
+        ),
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+
+@dataclass(eq=False)
 class LipAligned(core.PoseAttainmentEventType):
     """
     The commanded pose placing the lip over the receptacle opening has been reached.
@@ -501,6 +845,53 @@ class LipOverReceptacle(core.PhaseConditionType):
         claims=(),
         restrictions=(),
         definition=None,
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+
+@dataclass(eq=False)
+class LiquidPouringStructure(PouringPhaseStructure):
+    """
+    A pouring structure transferring a liquid; it declares no granular or cohesive flow dynamics.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#LiquidPouringStructure",
+        linked_terms=(),
+        evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
+        claims=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesParameter",
+                quantifier=Quantifier.ONLY,
+                filler=ComplementOf(
+                    operand=UnionOf(
+                        operands=(
+                            NamedClass(
+                                iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#GranularFlowDynamicsEstimate"
+                            ),
+                            NamedClass(
+                                iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#CohesiveFlowDynamicsEstimate"
+                            ),
+                        )
+                    )
+                ),
+            ),
+        ),
+        definition=IntersectionOf(
+            operands=(
+                NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringPhaseStructure"
+                ),
+                PropertyRestriction(
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#hasMaterialRegime",
+                    quantifier=Quantifier.VALUE,
+                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#Liquid",
+                ),
+            )
+        ),
     )
     """
     The ontology class this class stands for.
@@ -599,215 +990,6 @@ class PouringLip(core.ManipulationRole):
     )
     """
     The ontology class this class stands for.
-    """
-
-
-@dataclass(eq=False)
-class PouringPhaseStructure(prehension.PrehensionPhaseStructure):
-    """
-    A substance-transfer phase structure composed with prehension: the source is reached, grasped, loaded, lifted and transported, aligned and tilted until the substance flows, regulated and stopped, returned upright, put back and released. Unloading and withdrawing the hand are optional. Grip force is coupled to the load, and gaze is fixed while aligning the lip and while regulating the flow.
-    """
-
-    term: ClassVar[ClassTerm] = ClassTerm(
-        iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringPhaseStructure",
-        linked_terms=(),
-        evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
-        claims=(),
-        restrictions=(
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#decomposesTask",
-                quantifier=Quantifier.VALUE,
-                value="http://aicor.knowledge/l2-ontology.owl#Pouring",
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#AlignmentPhase"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#FlowRegulationPhase"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#FlowTerminationPhase"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#ReturnUprightPhase"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#TiltToFlowPhase"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#ContactEstablishmentPhase"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#ContactReleasePhase"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#ForceLoadingPhase"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#LiftPhase"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#ReachPhase"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#ReplacePhase"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesPhase",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#TransportPhase"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesRole",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouredSubstance"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesRole",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#SourceContainer"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesRole",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#TargetReceptacle"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#definesGazeFixation",
-                quantifier=Quantifier.SOME,
-                filler=IntersectionOf(
-                    operands=(
-                        NamedClass(
-                            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#GazeFixation"
-                        ),
-                        PropertyRestriction(
-                            property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#servesPhase",
-                            quantifier=Quantifier.SOME,
-                            filler=NamedClass(
-                                iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#AlignmentPhase"
-                            ),
-                        ),
-                    )
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#definesGazeFixation",
-                quantifier=Quantifier.SOME,
-                filler=IntersectionOf(
-                    operands=(
-                        NamedClass(
-                            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#GazeFixation"
-                        ),
-                        PropertyRestriction(
-                            property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/gaze#servesPhase",
-                            quantifier=Quantifier.SOME,
-                            filler=NamedClass(
-                                iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#FlowRegulationPhase"
-                            ),
-                        ),
-                    )
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#hasMaterialRegime",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#MaterialRegime"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#hasTerminationReason",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#TransferTerminationReason"
-                ),
-            ),
-            PropertyRestriction(
-                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#definesForceCoupling",
-                quantifier=Quantifier.SOME,
-                filler=NamedClass(
-                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#GripLoadCoupling"
-                ),
-            ),
-        ),
-        definition=None,
-    )
-    """
-    The ontology class this class stands for.
-    """
-
-    has_material_regime: Optional[MaterialRegime] = field(
-        default=None,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#hasMaterialRegime",
-            functional=True,
-        ).as_dict(),
-    )
-    """
-    The flow behaviour of the transferred substance.
-    """
-
-    has_termination_reason: Optional[TransferTerminationReason] = field(
-        default=None,
-        metadata=PropertyTerm(
-            iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#hasTerminationReason",
-            functional=True,
-        ).as_dict(),
-    )
-    """
-    The condition that ends the transfer in this task variant.
     """
 
 
@@ -963,6 +1145,44 @@ class SourceEmpty(core.PhaseBoundaryEventType):
             ),
         ),
         definition=None,
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+
+@dataclass(eq=False)
+class SourceExhaustedPouringStructure(PouringPhaseStructure):
+    """
+    A pouring structure whose transfer stops once the source is empty; it declares the event detecting that.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#SourceExhaustedPouringStructure",
+        linked_terms=(),
+        evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
+        claims=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesEventType",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#SourceEmpty"
+                ),
+            ),
+        ),
+        definition=IntersectionOf(
+            operands=(
+                NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringPhaseStructure"
+                ),
+                PropertyRestriction(
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#hasTerminationReason",
+                    quantifier=Quantifier.VALUE,
+                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#SourceExhausted",
+                ),
+            )
+        ),
     )
     """
     The ontology class this class stands for.
@@ -1161,6 +1381,44 @@ class TargetFillStateEstimate(core.DimensionlessParameter, core.ObjectStateEstim
 
 
 @dataclass(eq=False)
+class TargetQuantityAttainedPouringStructure(PouringPhaseStructure):
+    """
+    A pouring structure whose transfer stops once the target quantity is reached; it declares the event detecting that.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#TargetQuantityAttainedPouringStructure",
+        linked_terms=(),
+        evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
+        claims=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesEventType",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#TargetQuantityReached"
+                ),
+            ),
+        ),
+        definition=IntersectionOf(
+            operands=(
+                NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringPhaseStructure"
+                ),
+                PropertyRestriction(
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#hasTerminationReason",
+                    quantifier=Quantifier.VALUE,
+                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#TargetQuantityAttained",
+                ),
+            )
+        ),
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+
+@dataclass(eq=False)
 class TargetQuantityReached(core.SetpointAttainmentEventType):
     """
     The transferred mass or volume meets the requested task quantity.
@@ -1287,6 +1545,44 @@ class TorqueSetpoint(core.MotorSetpoint, core.TorqueParameter):
         claims=(),
         restrictions=(),
         definition=None,
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+
+@dataclass(eq=False)
+class TransferFailurePouringStructure(PouringPhaseStructure):
+    """
+    A pouring structure whose transfer stops because it fails; it declares the failure event that ends it.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#TransferFailurePouringStructure",
+        linked_terms=(),
+        evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#EngineeringExtension",
+        claims=(),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#definesEventType",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#FailureEventType"
+                ),
+            ),
+        ),
+        definition=IntersectionOf(
+            operands=(
+                NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#PouringPhaseStructure"
+                ),
+                PropertyRestriction(
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#hasTerminationReason",
+                    quantifier=Quantifier.VALUE,
+                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#TransferFailure",
+                ),
+            )
+        ),
     )
     """
     The ontology class this class stands for.

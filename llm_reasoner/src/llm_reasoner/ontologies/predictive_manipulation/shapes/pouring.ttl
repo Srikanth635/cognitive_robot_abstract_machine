@@ -1,0 +1,70 @@
+@prefix :      <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/pouring#> .
+@prefix pour:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:    <http://www.w3.org/ns/shacl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+# Structural rules of the pouring module that relate several fragments to one another, or
+# compare a fragment's exact type, which OWL restrictions cannot state.
+
+<http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/pouring> a owl:Ontology ;
+    owl:versionInfo "0.1.0" ;
+    rdfs:comment "Closed-world structural rules of the pouring module."@en ;
+    sh:declare
+        [ sh:prefix "core" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#"^^xsd:anyURI ] ,
+        [ sh:prefix "pour" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#"^^xsd:anyURI ] ,
+        [ sh:prefix "rdf" ; sh:namespace "http://www.w3.org/1999/02/22-rdf-syntax-ns#"^^xsd:anyURI ] ,
+        [ sh:prefix "rdfs" ; sh:namespace "http://www.w3.org/2000/01/rdf-schema#"^^xsd:anyURI ] .
+
+# %% classification
+
+:PouringEventsSpecific a sh:NodeShape ;
+    sh:targetClass pour:PouringPhaseStructure ;
+    rdfs:comment "No event of a pouring structure is of a generic event type, one that only names a family of events: every event is classified by its most specific kind, since a generic type discards what the vocabulary says about flow, contact and support."@en ;
+    sh:sparql [
+        sh:message "an event is of a generic event type rather than a specific one" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/pouring> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this core:definesEventType ?value .
+                ?value rdf:type ?family .
+                FILTER (?family IN (
+                    core:PhaseBoundaryEventType,
+                    core:MechanicalEventType,
+                    core:ContactEventType,
+                    core:ThresholdCrossingEventType,
+                    core:SetpointAttainmentEventType,
+                    core:PoseAttainmentEventType,
+                    core:FailureEventType
+                ))
+            }
+        """ ;
+    ] .
+
+# %% order
+
+:PouringPhasesOrdered a sh:NodeShape ;
+    sh:targetClass pour:PouringPhaseStructure ;
+    sh:severity sh:Warning ;
+    rdfs:comment "Every transition of a pouring structure leads to a phase that can follow its source in the sensorimotor order of pouring: omitted phases are allowed, reversed ones are not."@en ;
+    sh:sparql [
+        sh:message "a transition leads back against the order of pouring" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/pouring> ;
+        sh:select """
+            SELECT DISTINCT $this ?value WHERE {
+                $this core:definesTransition ?value .
+                ?value core:fromPhase ?source ;
+                    core:toPhase ?target .
+                FILTER EXISTS { ?source rdf:type/rdfs:subClassOf* ?sourceKind . ?sourceKind pour:positionInPouring ?any }
+                FILTER EXISTS { ?target rdf:type/rdfs:subClassOf* ?targetKind . ?targetKind pour:positionInPouring ?other }
+                FILTER NOT EXISTS {
+                    ?source rdf:type/rdfs:subClassOf* ?earlierKind .
+                    ?earlierKind pour:positionInPouring ?earlier .
+                    ?target rdf:type/rdfs:subClassOf* ?laterKind .
+                    ?laterKind pour:positionInPouring ?later .
+                    FILTER (?earlier < ?later)
+                }
+            }
+        """ ;
+    ] .
