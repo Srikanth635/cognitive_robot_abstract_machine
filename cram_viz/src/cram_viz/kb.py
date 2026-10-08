@@ -38,13 +38,13 @@ from llm_reasoner.ontologies.predictive_manipulation import (
 )
 from llm_reasoner.hypotheses.graph import (
     HypothesisGraphNode,
-    HypothesisGraphRelation,
 )
 from llm_reasoner.ontologies.terms import ConceptReference, DescriptionEntity
 from llm_reasoner.resolver.reflection import SlotKind
-from typing_extensions import Any, Callable, Dict, List, Optional, Tuple
+from typing_extensions import Any, Dict, List, Optional, Tuple
 
 from cram_viz.hypothesis_knowledge.ontology_backing import OntologyBacking
+from cram_viz.hypothesis_knowledge.ontology_class_graph import OntologyClassGraph
 from cram_viz import (
     configure_console_logging,
     designator_knowledge,
@@ -1788,6 +1788,15 @@ def _hypothesis_node_lines(node: HypothesisGraphNode) -> List[str]:
     ]
 
 
+NOTHING_GENERATED = (
+    "Nothing generated yet — enter an instruction in the Generate bar above the EQL "
+    "query box."
+)
+"""
+What the knowledge tabs say before an instruction has been generated.
+"""
+
+
 def _hypothesis_graph_view() -> Dict[str, Any]:
     """
     The Hypothesis Graph tab: a live projection of the active pouring structure
@@ -1802,88 +1811,119 @@ def _hypothesis_graph_view() -> Dict[str, Any]:
 
     The tab is empty until an instruction has been generated.
     """
-    return _projection_view(
-        crumb="hypothesis graph",
-        node_label=lambda node: node.label,
-        relation_label=lambda relation: relation.predicate,
-        node_lines=_hypothesis_node_lines,
-    )
+    active_hypothesis = hypothesis_knowledge.active()
+    if active_hypothesis is None:
+        return {
+            "ok": True,
+            "crumb": "hypothesis graph",
+            "root": None,
+            "nodes": [],
+            "edges": [],
+            "details": {},
+            "empty": NOTHING_GENERATED,
+        }
+    projection = active_hypothesis.projection
+    return {
+        "ok": True,
+        "crumb": "hypothesis graph",
+        "nodes": [
+            {"id": node.identifier, "label": node.label, "kind": node.kind.value}
+            for node in projection.nodes
+        ],
+        "edges": [
+            {
+                "from": relation.source.identifier,
+                "to": relation.target.identifier,
+                "label": relation.predicate,
+            }
+            for relation in projection.relations
+        ],
+        "details": {
+            node.identifier: {
+                "label": node.label,
+                "group": "hypothesis",
+                "lines": _hypothesis_node_lines(node),
+            }
+            for node in projection.nodes
+        },
+        "root": projection.instruction.identifier,
+        "empty": "No hypothesis knowledge graph available.",
+    }
 
 
 def _ontology_graph_view() -> Dict[str, Any]:
     """
-    The Ontology Graph tab: the Hypothesis Graph with the ontology class of each
-    fragment beneath its label and the ontology property stating each link beneath its
-    field; links only the viewer draws say so. A node's details name its class, the
-    CRAM-AICOR and DUL terms the class specialises, and the ontology every value comes
-    from (see :mod:`cram_viz.hypothesis_knowledge.ontology_backing`).
-    """
-    backing = OntologyBacking()
-    return _projection_view(
-        crumb="ontology graph",
-        node_label=backing.node_label,
-        relation_label=backing.relation_label,
-        node_lines=backing.node_lines,
-    )
+    The Ontology Graph tab: the ontology behind the active hypothesis at the level of
+    classes -- the microworld classes it instantiates, the classes they specialise up
+    to CRAM-AICOR and DUL, the concepts it cites, and its links between them (see
+    :mod:`cram_viz.hypothesis_knowledge.ontology_class_graph`). The frontend
+    (``ontology-graph.js``) draws it with its own force layout, legend and class
+    panel.
 
-
-def _projection_view(
-    crumb: str,
-    node_label: Callable[[HypothesisGraphNode], str],
-    relation_label: Callable[[HypothesisGraphRelation], str],
-    node_lines: Callable[[HypothesisGraphNode], List[str]],
-) -> Dict[str, Any]:
-    """
-    A tab drawing the active hypothesis's projection, with the given node labels, link
-    labels and detail lines; empty until an instruction has been generated.
+    The tab is empty until an instruction has been generated.
     """
     active_hypothesis = hypothesis_knowledge.active()
     if active_hypothesis is None:
         return {
             "ok": True,
-            "crumb": crumb,
-            "root": None,
+            "crumb": "ontology graph",
             "nodes": [],
             "edges": [],
             "details": {},
-            "empty": (
-                "Nothing generated yet — enter an instruction in the Generate bar "
-                "above the EQL query box."
-            ),
+            "empty": NOTHING_GENERATED,
         }
-    projection = active_hypothesis.projection
-    nodes = [
-        {
-            "id": node.identifier,
-            "label": node_label(node),
-            "kind": node.kind.value,
-        }
-        for node in projection.nodes
-    ]
-    edges = [
-        {
-            "from": relation.source.identifier,
-            "to": relation.target.identifier,
-            "label": relation_label(relation),
-        }
-        for relation in projection.relations
-    ]
-    details = {
-        node.identifier: {
-            "label": node.label,
-            "group": "hypothesis",
-            "lines": node_lines(node),
-        }
-        for node in projection.nodes
-    }
+    graph = OntologyClassGraph.of(active_hypothesis.view)
+    backing = OntologyBacking()
     return {
         "ok": True,
-        "crumb": crumb,
-        "nodes": nodes,
-        "edges": edges,
-        "details": details,
-        "root": projection.instruction.identifier,
-        "empty": "No hypothesis knowledge graph available.",
+        "crumb": "ontology graph",
+        "instruction": active_hypothesis.view.record.instruction,
+        "nodes": [
+            {
+                "id": node.iri,
+                "label": node.label,
+                "category": node.category.value,
+                "count": node.instance_count,
+            }
+            for node in graph.nodes
+        ],
+        "edges": [
+            {
+                "source": edge.source,
+                "target": edge.target,
+                "kind": edge.kind.value,
+                "label": (
+                    backing.prefixed(edge.property_iri) if edge.property_iri else ""
+                ),
+                "count": edge.count,
+            }
+            for edge in graph.edges
+        ],
+        "details": {
+            node.iri: {
+                "label": node.label,
+                "iri": node.iri,
+                "prefixed": backing.prefixed(node.iri),
+                "category": node.category.value,
+                "source": node.source.value,
+                "description": node.description,
+                "evidence": node.evidence_status,
+                "claims": [
+                    {
+                        "id": backing.prefixed(claim.iri),
+                        "text": claim.text,
+                        "evidence": claim.evidence_status,
+                    }
+                    for claim in node.claims
+                ],
+                "requirements": list(node.requirements),
+                "definition": node.definition,
+                "instances": list(node.instances),
+                "count": node.instance_count,
+            }
+            for node in graph.nodes
+        },
+        "empty": "No classes behind this hypothesis.",
     }
 
 
