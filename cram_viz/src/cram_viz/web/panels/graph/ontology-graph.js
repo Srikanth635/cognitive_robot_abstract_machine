@@ -118,9 +118,12 @@
       .sort((a, b) => rank.indexOf(a.category) - rank.indexOf(b.category));
   };
 
-  OntologyGraphModel.prototype.neighbours = function (id) {
+  // a class and the classes its drawn links reach; links switched off in the legend,
+  // or to classes the level hides, highlight nothing
+  OntologyGraphModel.prototype.connected = function (id) {
     const found = new Set([id]);
     this.edges.forEach((edge) => {
+      if (!this.isEdgeVisible(edge)) return;
       if (edge.source === id) found.add(edge.target);
       if (edge.target === id) found.add(edge.source);
     });
@@ -150,6 +153,11 @@
       + (detail.source ? ' · ' + escapeHtml(detail.source) : '')
       + (detail.evidence ? ' · ' + escapeHtml(detail.evidence) : '') + '</p>';
     if (detail.description) html += '<p class="desc">' + escapeHtml(detail.description) + '</p>';
+    const undrawn = this.edges.filter((edge) =>
+      (edge.source === id || edge.target === id) && !this.isEdgeVisible(edge)).length;
+    if (undrawn) {
+      html += '<p class="sub">' + undrawn + ' of its links are not drawn: switch their kind on in the legend, or show more classes. They are all listed below.</p>';
+    }
     if (detail.definition) html += group('defined as', [escapeHtml(detail.definition)]);
     html += group('requires', (detail.requirements || []).map(escapeHtml));
     html += group('literature', (detail.claims || []).map((claim) =>
@@ -381,14 +389,14 @@
       applyViewBox();
     }
     function select(id) {
-      const keep = model.neighbours(id);
+      const keep = model.connected(id);
       nodeViews.forEach(({ group }) => group.classList.remove('match'));
       nodeViews.forEach(({ node, group }) => {
         group.classList.toggle('dim', !keep.has(node.id));
         group.classList.toggle('hi', node.id === id);
       });
       edgeViews.forEach(({ edge, line, label }) => {
-        const touching = edge.source === id || edge.target === id;
+        const touching = (edge.source === id || edge.target === id) && model.isEdgeVisible(edge);
         line.style.opacity = touching ? 1 : 0.08;
         if (label) label.style.opacity = touching ? 1 : 0.08;
       });
@@ -400,6 +408,8 @@
       if (!target) return;
       event.preventDefault();
       const id = target.dataset.select;
+      // matches the level hides were shown for the search; only the chosen one stays
+      applyVisibility();
       nodeViews.forEach(({ node, group }) => { if (node.id === id) group.style.display = ''; });
       select(id);
       centre(id);

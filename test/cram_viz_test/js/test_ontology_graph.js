@@ -129,6 +129,31 @@ test('an empty search matches nothing', function () {
   assert.deepStrictEqual(new OntologyGraphModel(fixturePayload()).matching('  '), []);
 });
 
+// %% selection
+test('selecting a class highlights only the classes linked to it by drawn links', function () {
+  const { OntologyGraphModel } = loadOntologyGraph();
+  const model = new OntologyGraphModel(fixturePayload());
+  assert.deepStrictEqual(
+    [...model.connected('pre:LiftPhase')].sort(),
+    ['core:ActionPhase', 'core:CoupledPhase', 'pre:LiftPhase'],
+  );
+});
+
+test('switching a kind of link on adds the classes it links to the highlight', function () {
+  const { OntologyGraphModel } = loadOntologyGraph();
+  const model = new OntologyGraphModel(fixturePayload());
+  model.toggleKind('relation');
+  assert.ok(model.connected('pre:LiftPhase').has('pour:SourceContainer'));
+});
+
+test("the panel says how many of the class's links are not drawn", function () {
+  const { OntologyGraphModel } = loadOntologyGraph();
+  const model = new OntologyGraphModel(fixturePayload());
+  const hidden = model.edges.filter((edge) =>
+    (edge.source === 'pre:LiftPhase' || edge.target === 'pre:LiftPhase') && !model.isEdgeVisible(edge)).length;
+  assert.ok(model.panelHtml('pre:LiftPhase').includes(hidden + ' of its links are not drawn'));
+});
+
 // %% labels
 test('a used class shows its instance count and a link its count', function () {
   const { OntologyGraphModel } = loadOntologyGraph();
