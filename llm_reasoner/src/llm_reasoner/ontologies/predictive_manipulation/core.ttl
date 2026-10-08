@@ -8,7 +8,7 @@
 
 <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core> a owl:Ontology ;
     owl:versionIRI <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core/0.4.0> ;
-    owl:versionInfo "0.4.5" ;
+    owl:versionInfo "0.4.6" ;
     owl:imports <http://aicor.knowledge/l2-ontology.owl> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
     rdfs:label "Predictive manipulation: core"@en ;
     rdfs:comment """The action-neutral core of a microworld for predictive object manipulation, drawn from "Control strategies in object manipulation tasks" (2006), "Coding and use of tactile signals from the fingertips in object manipulation tasks" (2009), "Sensory control of object manipulation" (2009) and "Motor prediction" (2001).
@@ -469,6 +469,14 @@ Classes classify description-level individuals, the knowledge a language model g
     rdfs:label "prohibition requirement"@en ;
     rdfs:comment "A condition that must be absent throughout the phase."@en ;
     :evidenceStatus :EngineeringExtension .
+
+:CoupledPhase a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :ActionPhase [ a owl:Restriction ; owl:onProperty :hasCouplingRegime ; owl:hasValue :Coupled ] ) ] ;
+    rdfs:subClassOf [ a owl:Restriction ; owl:onProperty :hasConditionRequirement ; owl:someValuesFrom :InvariantRequirement ] ;
+    rdfs:label "coupled phase"@en ;
+    rdfs:comment "A phase in which grip force is coupled to the load of the held object. Holding requires the grasp to stay stable throughout, neither slipping nor crushing the object, so the phase requires a condition to hold throughout it, whose violation a failure event registers."@en ;
+    :evidenceStatus :SupportedInterpretation ;
+    :representsClaim :JF09-05 , :JF09-07 .
 
 :WorldAssumption a owl:Class ;
     owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( :ConditionRequirement [ a owl:Restriction ; owl:onProperty :isWorldAssumption ; owl:hasValue true ] ) ] ;

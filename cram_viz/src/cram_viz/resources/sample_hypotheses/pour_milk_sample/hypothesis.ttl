@@ -411,6 +411,12 @@
     ns1:exertedByRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
     ns1:hasForceKind ns1:Friction .
 
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable_after_loading> a ns1:ConditionRequirement,
+        owl:NamedIndividual ;
+    ns2:hasConditionType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable> ;
+    ns1:hasConditionMode ns1:AtExit ;
+    ns1:hasConditionPolarity ns1:MustHold .
+
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_corridor> a ns3:GripForceCorridor,
         owl:NamedIndividual ;
     ns2:lowerEdge <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip> ;
@@ -1227,14 +1233,6 @@
     ns1:parameterOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
         <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
 
-<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip> a ns3:SlipEvent,
-        owl:NamedIndividual ;
-    ns2:betweenRoleFillers <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
-        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
-    ns1:crossesThreshold <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_threshold> ;
-    ns1:resolvesOpposition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_opposition> ;
-    ns1:terminatesStateType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable> .
-
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_load_rate_reduction> a ns3:LoadRateReduction,
         owl:NamedIndividual ;
     ns1:hasCorrectionDirection ns1:LowerSetpoint ;
@@ -1719,6 +1717,14 @@
         <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> ;
     ns1:predictedFrom ns1:ObjectSpecificMemory .
 
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip> a ns3:SlipEvent,
+        owl:NamedIndividual ;
+    ns2:betweenRoleFillers <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> ;
+    ns1:crossesThreshold <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_threshold> ;
+    ns1:resolvesOpposition <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_opposition> ;
+    ns1:terminatesStateType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable> .
+
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_threshold> a ns3:SlipThreshold,
         owl:NamedIndividual ;
     ns1:hasParameterRange <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip_threshold_range> ;
@@ -1967,6 +1973,7 @@
     ns1:aimsFor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#stop_goal> ;
     ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#terminate_controller> ;
     ns1:hasActiveParameter <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_angle> ;
+    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_must_stay_stable> ;
     ns1:hasCouplingRegime ns1:Coupled ;
     ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#volume_reached> ;
     ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
@@ -1980,7 +1987,8 @@
     ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#transport_controller> ;
     ns1:hasActiveParameter <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_pose>,
         <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force> ;
-    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_must_stay_intact> ;
+    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_must_stay_intact>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_must_stay_stable> ;
     ns1:hasCouplingRegime ns1:Coupled ;
     ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clearance_reached> ;
     ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
@@ -1995,6 +2003,7 @@
     ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#transport_controller> ;
     ns1:hasActiveParameter <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_counter_pose>,
         <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force> ;
+    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_must_stay_stable> ;
     ns1:hasCouplingRegime ns1:Coupled ;
     ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_restored> ;
     ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
@@ -2022,6 +2031,7 @@
     ns1:aimsFor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_goal> ;
     ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_controller> ;
     ns1:hasActiveParameter <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#upright_angle> ;
+    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_must_stay_stable> ;
     ns1:hasCouplingRegime ns1:Coupled ;
     ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation> ;
     ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton> ;
@@ -2039,7 +2049,8 @@
     ns1:aimsFor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#aligned_goal> ;
     ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#align_controller> ;
     ns1:hasActiveParameter <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_alignment> ;
-    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_must_stay_intact> ;
+    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_must_stay_intact>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_must_stay_stable> ;
     ns1:hasCouplingRegime ns1:Coupled ;
     ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_bowl_reached> ;
     ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
@@ -2074,18 +2085,14 @@
     ns1:hasUnit ns1:Millisecond ;
     ns1:latestOffset 2e+03 .
 
-<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable> a ns3:GraspStability,
-        owl:NamedIndividual ;
-    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
-        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
-
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift> a ns3:LiftPhase,
         owl:NamedIndividual ;
     ns1:aimsFor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#clearance_goal> ;
     ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_controller> ;
     ns1:hasActiveParameter <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force>,
         <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_clearance> ;
-    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_must_stay_intact> ;
+    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_must_stay_intact>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_must_stay_stable> ;
     ns1:hasCouplingRegime ns1:Coupled ;
     ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff> ;
     ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
@@ -2103,7 +2110,8 @@
         <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_force>,
         <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#load_force_rate> ;
     ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_must_stay_intact>,
-        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_before_loading> ;
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#contact_before_loading>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable_after_loading> ;
     ns1:hasCouplingRegime ns1:Transitional ;
     ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_contact> ;
     ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
@@ -2129,7 +2137,8 @@
         <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grip_force>,
         <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#target_volume>,
         <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_angle> ;
-    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_must_stay_intact> ;
+    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_must_stay_intact>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_must_stay_stable> ;
     ns1:hasCouplingRegime ns1:Coupled ;
     ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_onset> ;
     ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
@@ -2152,6 +2161,7 @@
     ns1:aimsFor <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#on_counter_goal> ;
     ns1:controlledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#replace_controller> ;
     ns1:hasActiveParameter <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#touchdown_threshold> ;
+    ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_must_stay_stable> ;
     ns1:hasCouplingRegime ns1:Coupled ;
     ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#above_counter_reached> ;
     ns1:involvesRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
@@ -2177,6 +2187,7 @@
         <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#tilt_rate> ;
     ns1:hasConditionRequirement <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_holds_milk>,
         <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_must_stay_intact>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_must_stay_stable>,
         <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_over_bowl_before_tilting> ;
     ns1:hasCouplingRegime ns1:Coupled ;
     ns1:initiatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#spout_aligned> ;
@@ -2274,6 +2285,11 @@
     ns2:initiatesStateType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton_at_clearance> ;
     ns1:attainsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#lift_clearance> .
 
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable> a ns3:GraspStability,
+        owl:NamedIndividual ;
+    ns1:conditionOnRole <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#carton>,
+        <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#gripper> .
+
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#liftoff_prediction> a ns1:SensoryEventPrediction,
         owl:NamedIndividual ;
     ns2:generatedBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#forward_model> ;
@@ -2315,6 +2331,13 @@
     ns2:betweenRoleFillers <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#bowl>,
         <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#milk> ;
     ns1:attainsSetpoint <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#target_volume> .
+
+<http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_must_stay_stable> a ns1:ConditionRequirement,
+        owl:NamedIndividual ;
+    ns2:hasConditionType <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#grasp_stable> ;
+    ns1:hasConditionMode ns1:Throughout ;
+    ns1:hasConditionPolarity ns1:MustHold ;
+    ns1:violationSignalledBy <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#slip> .
 
 <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/pour_milk_sample#flow_cessation> a ns6:FlowCessation,
         owl:NamedIndividual ;
