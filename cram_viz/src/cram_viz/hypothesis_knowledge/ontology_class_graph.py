@@ -14,6 +14,7 @@ from functools import cache
 from operator import attrgetter
 
 from llm_reasoner.acceptance.derived import described
+from llm_reasoner.acceptance.restrictions import ClosedWorldMembership
 from llm_reasoner.acceptance.vocabulary import Vocabulary
 from llm_reasoner.generation.schema import is_inferred
 from llm_reasoner.hypotheses.view import HypothesisView
@@ -58,7 +59,8 @@ class OntologyNodeCategory(StrEnum):
 
     MICROWORLD = "microworld"
     """
-    A microworld class a used class specialises, without instances of its own.
+    A microworld class without instances of its own: one a used class specialises, or a
+    defined class whose definition instances meet.
     """
 
     LINKED = "linked"
@@ -103,6 +105,12 @@ class OntologyEdgeKind(StrEnum):
     DISJOINT = "disjoint"
     """
     The ontology states that nothing belongs to both classes.
+    """
+
+    CLASSIFIED_AS = "classified_as"
+    """
+    Instances of the source class meet the definition of the target defined class, so
+    its requirements apply to them.
     """
 
 
@@ -219,7 +227,8 @@ class OntologyClassEdge:
 
     count: int = 1
     """
-    How many links of the hypothesis the edge stands for.
+    How many links of the hypothesis the edge stands for, or how many instances a
+    definition classifies.
     """
 
 
@@ -366,6 +375,12 @@ class OntologyClassGraphBuilder:
         for edge in edges:
             if edge.target not in nodes:
                 nodes[edge.target] = self.term_node(edge.target)
+        for edge in self.classification_edges(instances):
+            if edge.target not in nodes:
+                nodes[edge.target] = self.class_node(
+                    self.vocabulary.definition_named(edge.target), []
+                )
+            edges.append(edge)
         edges += self.disjoint_edges(set(nodes))
         return OntologyClassGraph(nodes=list(nodes.values()), edges=edges)
 
@@ -516,6 +531,29 @@ class OntologyClassGraphBuilder:
         if isinstance(value, ConceptReference):
             return OntologyEdgeKind.CITES, value.iri
         return None, ""
+
+    def classification_edges(
+        self, instances: dict[type[DescriptionEntity], list[DescriptionEntity]]
+    ) -> list[OntologyClassEdge]:
+        """
+        :return: A link from every instantiated class to each defined class whose
+            definition some of its instances meet, counting them, unless the class
+            already specialises the defined class.
+        """
+        membership = ClosedWorldMembership(vocabulary=self.vocabulary)
+        return [
+            OntologyClassEdge(
+                source=instantiated.term.iri,
+                target=defined.term.iri,
+                kind=OntologyEdgeKind.CLASSIFIED_AS,
+                count=len(members),
+            )
+            for defined in self.vocabulary.defined_classes
+            for instantiated, fragments in instances.items()
+            if not issubclass(instantiated, defined)
+            for members in [membership.members(defined.term.definition, fragments)]
+            if members
+        ]
 
     def disjoint_edges(self, iris: set[str]) -> list[OntologyClassEdge]:
         """

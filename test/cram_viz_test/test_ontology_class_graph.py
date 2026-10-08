@@ -11,6 +11,7 @@ import pytest
 krrood = pytest.importorskip("krrood", reason="EQL requires krrood")
 
 from llm_reasoner.acceptance.derived import described  # noqa: E402
+from llm_reasoner.acceptance.vocabulary import Vocabulary  # noqa: E402
 from llm_reasoner.ontologies import CRAM_AICOR_NAMESPACE  # noqa: E402
 from llm_reasoner.ontologies.predictive_manipulation import (  # noqa: E402
     core,
@@ -51,6 +52,15 @@ def node(graph, iri):
 
 def edges(graph, kind):
     return [edge for edge in graph.edges if edge.kind is kind]
+
+
+def classes_of(graph):
+    vocabulary = Vocabulary()
+    return [
+        vocabulary.definition_named(node.iri)
+        for node in graph.nodes
+        if vocabulary.definition_named(node.iri) is not None
+    ]
 
 
 # %% classes
@@ -185,6 +195,43 @@ class TestLinks:
             {edge.source, edge.target}
             == {prehension.LiftPhase.term.iri, prehension.TransportPhase.term.iri}
             for edge in edges(graph, OntologyEdgeKind.DISJOINT)
+        )
+
+    def test_class_whose_instances_meet_a_definition_is_classified_by_it(
+        self, graph, view
+    ):
+        lifts = [
+            phase
+            for phase in view.root.defines_phase
+            if type(phase) is prehension.LiftPhase
+        ]
+        (classified,) = [
+            edge
+            for edge in edges(graph, OntologyEdgeKind.CLASSIFIED_AS)
+            if edge.source == prehension.LiftPhase.term.iri
+            and edge.target == core.CoupledPhase.term.iri
+        ]
+        assert classified.count == len(lifts)
+        assert node(graph, core.CoupledPhase.term.iri).definition == described(
+            core.CoupledPhase.term.definition, False
+        )
+
+    def test_class_whose_instances_miss_a_definition_is_not_classified_by_it(
+        self, graph
+    ):
+        assert not any(
+            edge.source == prehension.ReachPhase.term.iri
+            and edge.target == core.CoupledPhase.term.iri
+            for edge in edges(graph, OntologyEdgeKind.CLASSIFIED_AS)
+        )
+
+    def test_subclass_of_a_defined_class_is_linked_by_is_a_only(self, graph):
+        assert not any(
+            issubclass(
+                next(cls for cls in classes_of(graph) if cls.term.iri == edge.source),
+                next(cls for cls in classes_of(graph) if cls.term.iri == edge.target),
+            )
+            for edge in edges(graph, OntologyEdgeKind.CLASSIFIED_AS)
         )
 
     def test_every_link_joins_two_nodes_of_the_graph(self, graph):
