@@ -229,6 +229,8 @@ def _best_matching_candidate(
     :param candidates: The referent slot's candidates.
     :return: The best-scoring candidate, or ``None`` if none share a word with it.
     """
+    if not candidates:
+        return None
     target_words = set(concrete_name.lower().split())
     scored = [
         (len(target_words & set(candidate.label.lower().split())), candidate)

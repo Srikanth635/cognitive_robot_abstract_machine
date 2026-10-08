@@ -75,10 +75,10 @@ function loadGraphPanel() {
     '#gnav-path': element(),
     '#graph-tabs': tabs,
     '#gt-live': element(),
-    '.graph-wrap': element(),
     '#graph': element(),
     '#hypothesis-graph': element(),
     '#ontology-graph': element(),
+    '#designator-view': element(),
     '#legend': element(),
     '#hypothesis-toolbar': element(),
     '#hg-expand-all': element(),
@@ -94,7 +94,7 @@ function loadGraphPanel() {
     emit(event, payload) { if (handlers[event]) handlers[event](payload); },
   };
   const builds = [];
-  global.DesignatorLisp = { build() {}, highlight() {}, onSelect() {} };
+  global.DesignatorView = { build() {} };
   global.Graph = {
     build(payload) { builds.push(payload); },
     onSelect() {},
