@@ -5,7 +5,8 @@
  * Nodes are the microworld classes the hypothesis instantiates, the classes they
  * specialise up to CRAM-AICOR and DUL, and the concepts the hypothesis cites; edges
  * are is-a links, the structure's components, the relations the hypothesis states,
- * cited concepts and disjointness. The layout follows the L2 ontology graph: an SVG
+ * cited concepts, disjointness, and the defined classes whose definition instances
+ * meet, which is where their requirements come from. The layout follows the L2 ontology graph: an SVG
  * force layout that cools and settles, a legend whose entries toggle categories and
  * edge kinds, three levels of detail, a search box and a panel describing the
  * selected class.
@@ -18,7 +19,7 @@
 
   const CATEGORY = {
     used: { color: '#155ea8', text: 'class the hypothesis instantiates', radius: 11 },
-    microworld: { color: '#3b7dd8', text: 'microworld superclass', radius: 8 },
+    microworld: { color: '#3b7dd8', text: 'microworld class without instances', radius: 8 },
     linked: { color: '#7a869a', text: 'CRAM-AICOR / DUL', radius: 8 },
     introduced: { color: '#c0392b', text: 'concept the hypothesis introduced', radius: 6, dashed: true },
   };
@@ -28,6 +29,7 @@
     relation: { color: '#2e8b7a', text: 'relation the hypothesis states', arrow: true },
     cites: { color: '#b7791f', text: 'concept cited', arrow: true },
     disjoint: { color: '#c0392b', text: 'disjoint-with', dashed: true },
+    classified_as: { color: '#7c3aed', text: 'classified by a definition', arrow: true, dashed: true },
   };
   // level of detail: the categories each level leaves out
   const LEVELS = [
@@ -143,6 +145,12 @@
       '<b>' + escapeHtml(claim.id) + '</b> ' + escapeHtml(claim.text)
       + (claim.evidence ? ' <span class="muted">(' + escapeHtml(claim.evidence) + ')</span>' : '')));
     html += group('is-a', outgoing('is_a').map((edge) => '▸ ' + link(edge.target)));
+    const classified = (edge) => edge.count + ' of ' + this.byId[edge.source].count + ' instances';
+    html += group('classified as', outgoing('classified_as').map((edge) =>
+      '▸ ' + link(edge.target) + ' <span class="muted">(' + classified(edge) + ')</span>'));
+    html += group('classifies', this.edges
+      .filter((edge) => edge.target === id && edge.kind === 'classified_as')
+      .map((edge) => '◂ ' + link(edge.source) + ' <span class="muted">(' + classified(edge) + ')</span>'));
     html += group('components', outgoing('component').map((edge) =>
       '<b>' + escapeHtml(this.edgeLabel(edge)) + '</b> ' + link(edge.target)));
     html += group('relations', outgoing('relation').map((edge) =>
@@ -157,7 +165,7 @@
     html += group('in this hypothesis', instances.map(escapeHtml)
       .concat(more > 0 ? ['… and ' + more + ' more'] : []));
     html += group('referenced by', this.edges
-      .filter((edge) => edge.target === id && edge.kind !== 'disjoint')
+      .filter((edge) => edge.target === id && edge.kind !== 'disjoint' && edge.kind !== 'classified_as')
       .map((edge) => '← ' + link(edge.source) + ' <span class="muted">('
         + escapeHtml(this.edgeLabel(edge) || KIND[edge.kind].text) + ')</span>'));
     return html;

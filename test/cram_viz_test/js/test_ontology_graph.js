@@ -27,6 +27,7 @@ function fixturePayload() {
       { id: 'aicor:Motion', label: 'aicor:Motion', category: 'linked', count: 0 },
       { id: 'hypothesis:Gentle', label: 'hypothesis:Gentle', category: 'introduced', count: 0 },
       { id: 'pour:SourceContainer', label: 'SourceContainer', category: 'used', count: 1 },
+      { id: 'core:CoupledPhase', label: 'CoupledPhase', category: 'microworld', count: 0 },
     ],
     edges: [
       { source: 'pre:LiftPhase', target: 'core:ActionPhase', kind: 'is_a', label: '', count: 1 },
@@ -34,6 +35,7 @@ function fixturePayload() {
       { source: 'pre:LiftPhase', target: 'hypothesis:Gentle', kind: 'cites', label: 'core:hasCategory', count: 1 },
       { source: 'pre:LiftPhase', target: 'pour:SourceContainer', kind: 'relation', label: 'core:involvesRole', count: 3 },
       { source: 'pre:LiftPhase', target: 'pre:TransportPhase', kind: 'disjoint', label: '', count: 1 },
+      { source: 'pre:LiftPhase', target: 'core:CoupledPhase', kind: 'classified_as', label: '', count: 1 },
     ],
     details: {
       'pre:LiftPhase': {
@@ -123,6 +125,21 @@ test('a used class shows its instance count and a link its count', function () {
 });
 
 // %% class panel
+test('the panel names the defined classes the instances meet, and how many do', function () {
+  const { OntologyGraphModel } = loadOntologyGraph();
+  const html = new OntologyGraphModel(fixturePayload()).panelHtml('pre:LiftPhase');
+  assert.ok(html.includes('classified as'));
+  assert.ok(html.includes('data-select="core:CoupledPhase"'));
+  assert.ok(html.includes('1 of 2 instances'));
+});
+
+test('a defined class lists the classes whose instances it classifies', function () {
+  const { OntologyGraphModel } = loadOntologyGraph();
+  const html = new OntologyGraphModel(fixturePayload()).panelHtml('core:CoupledPhase');
+  assert.ok(html.includes('classifies'));
+  assert.ok(html.includes('data-select="pre:LiftPhase"'));
+});
+
 test('the panel says what the ontology states and how the hypothesis uses the class', function () {
   const { OntologyGraphModel } = loadOntologyGraph();
   const model = new OntologyGraphModel(fixturePayload());
