@@ -114,6 +114,21 @@ test('search matches a class by name, prefixed name or description', function ()
   assert.ok(!model.matches(lift, 'pouring'));
 });
 
+test('matches are listed with the classes the hypothesis uses first, hidden ones included', function () {
+  const { OntologyGraphModel } = loadOntologyGraph();
+  const model = new OntologyGraphModel(fixturePayload());
+  model.setLevel(0);
+  assert.deepStrictEqual(
+    model.matching('phase').map((node) => node.id),
+    ['pre:LiftPhase', 'pre:TransportPhase', 'core:ActionPhase', 'core:CoupledPhase'],
+  );
+});
+
+test('an empty search matches nothing', function () {
+  const { OntologyGraphModel } = loadOntologyGraph();
+  assert.deepStrictEqual(new OntologyGraphModel(fixturePayload()).matching('  '), []);
+});
+
 // %% labels
 test('a used class shows its instance count and a link its count', function () {
   const { OntologyGraphModel } = loadOntologyGraph();

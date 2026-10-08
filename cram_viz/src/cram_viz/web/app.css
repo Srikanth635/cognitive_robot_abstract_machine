@@ -273,6 +273,12 @@ body{
 #ontology-graph .og-panel .muted{color:#8a94a6}
 #ontology-graph .og-panel a{color:#155ea8}
 #ontology-graph .dim{opacity:.12}
+#ontology-graph .og-node.match circle{stroke:#f59e0b;stroke-width:3px}
+#ontology-graph .og-node.match text{font-weight:700}
+#ontology-graph .og-matches{display:flex;flex-direction:column;gap:2px;margin:4px 0 8px;max-height:180px;overflow:auto}
+#ontology-graph .og-matches a{color:#155ea8;font-size:.78rem;text-decoration:none}
+#ontology-graph .og-matches a:hover{text-decoration:underline}
+#ontology-graph .og-matches .muted{color:#8a94a6;font-size:.75rem}
 #ontology-graph .hi text{font-weight:700}
 
 /* ---- Designator tab: Lisp-syntax pane on the left, graph.js pane on the right --- */

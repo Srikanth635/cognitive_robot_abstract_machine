@@ -39,6 +39,8 @@
   ];
   // edge kinds too numerous to draw by default; the legend switches them on
   const HIDDEN_KINDS = ['relation', 'disjoint'];
+  // how many matches the search lists by name; the rest are only counted
+  const MATCHES_LISTED = 30;
   const INITIAL_LEVEL = 1;
 
   // force layout with cooling, as in the L2 ontology graph
@@ -105,6 +107,15 @@
     const detail = this.details[node.id] || {};
     return [node.label, detail.prefixed, detail.description]
       .some((part) => (part || '').toLowerCase().includes(text));
+  };
+
+  // the classes a search finds, those the hypothesis uses first, whatever is hidden
+  OntologyGraphModel.prototype.matching = function (query) {
+    if (!query.trim()) return [];
+    const rank = Object.keys(CATEGORY);
+    return this.nodes
+      .filter((node) => this.matches(node, query))
+      .sort((a, b) => rank.indexOf(a.category) - rank.indexOf(b.category));
   };
 
   OntologyGraphModel.prototype.neighbours = function (id) {
@@ -363,8 +374,15 @@
       applyViewBox();
     }, { passive: false });
 
+    function centre(id) {
+      const p = positions[id];
+      viewBox.x = p.x - viewBox.w / 2;
+      viewBox.y = p.y - viewBox.h / 2;
+      applyViewBox();
+    }
     function select(id) {
       const keep = model.neighbours(id);
+      nodeViews.forEach(({ group }) => group.classList.remove('match'));
       nodeViews.forEach(({ node, group }) => {
         group.classList.toggle('dim', !keep.has(node.id));
         group.classList.toggle('hi', node.id === id);
@@ -376,12 +394,18 @@
       });
       panel.innerHTML = model.panelHtml(id);
     }
-    panel.addEventListener('click', (event) => {
+    // a class named in the panel or in the search results is selected and centred
+    function onSelectLink(event) {
       const target = event.target.closest('[data-select]');
       if (!target) return;
       event.preventDefault();
-      select(target.dataset.select);
-    });
+      const id = target.dataset.select;
+      nodeViews.forEach(({ node, group }) => { if (node.id === id) group.style.display = ''; });
+      select(id);
+      centre(id);
+    }
+    panel.addEventListener('click', onSelectLink);
+    hits.addEventListener('click', onSelectLink);
     svg.addEventListener('click', () => {
       nodeViews.forEach(({ group }) => group.classList.remove('dim', 'hi'));
       edgeViews.forEach(({ line, label }) => { line.style.opacity = 1; if (label) label.style.opacity = 1; });
@@ -414,19 +438,38 @@
     levelButtons.forEach((button, index) => button.addEventListener('click', () => {
       model.setLevel(index); applyVisibility(); reheat(0.9);
     }));
+    function clearSearch() {
+      nodeViews.forEach(({ group }) => group.classList.remove('dim', 'match'));
+      edgeViews.forEach(({ line, label }) => { line.style.opacity = 1; if (label) label.style.opacity = 1; });
+      applyVisibility();
+      hits.innerHTML = '';
+    }
     search.addEventListener('input', () => {
-      const query = search.value;
-      let found = 0;
+      const found = model.matching(search.value);
+      if (!search.value.trim()) { clearSearch(); return; }
+      const ids = new Set(found.map((node) => node.id));
       nodeViews.forEach(({ node, group }) => {
-        const matching = model.matches(node, query);
+        const matching = ids.has(node.id);
         group.classList.toggle('dim', !matching);
-        if (query.trim() && matching) {
-          found += 1;
-          group.style.display = '';
-        }
+        group.classList.toggle('match', matching);
+        if (matching) group.style.display = '';
       });
-      if (!query.trim()) applyVisibility();
-      hits.textContent = query.trim() ? found + ' match' + (found === 1 ? '' : 'es') : '';
+      edgeViews.forEach(({ edge, line, label }) => {
+        const between = ids.has(edge.source) && ids.has(edge.target);
+        line.style.opacity = between ? 1 : 0.05;
+        if (label) label.style.opacity = between ? 1 : 0.05;
+      });
+      hits.innerHTML = found.length + ' match' + (found.length === 1 ? '' : 'es') +
+        (found.length ? '<div class="og-matches">' + found.slice(0, MATCHES_LISTED).map((node) =>
+          '<a href="#" data-select="' + escapeHtml(node.id) + '"><span class="swatch" style="background:' +
+          CATEGORY[node.category].color + '"></span>' + escapeHtml(model.nodeLabel(node)) + '</a>').join('') +
+          (found.length > MATCHES_LISTED ? '<span class="muted">… and ' + (found.length - MATCHES_LISTED) + ' more</span>' : '') +
+          '</div>' : '');
+    });
+    search.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') return;
+      const first = hits.querySelector('[data-select]');
+      if (first) first.click();
     });
 
     function resize() {
