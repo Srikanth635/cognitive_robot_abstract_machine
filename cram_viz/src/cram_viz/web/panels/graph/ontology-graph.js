@@ -82,11 +82,17 @@
     else this.hiddenKinds.add(kind);
   };
 
-  OntologyGraphModel.prototype.isNodeVisible = function (node) {
-    return !this.hiddenCategories.has(node.category);
+  // the legend and the level decide what the graph draws, except that a selected
+  // class is drawn with all its links and the classes they reach
+  OntologyGraphModel.prototype.isNodeVisible = function (node, selected) {
+    return !this.hiddenCategories.has(node.category)
+      || (selected !== undefined && selected !== null && this.connected(selected).has(node.id));
   };
 
-  OntologyGraphModel.prototype.isEdgeVisible = function (edge) {
+  OntologyGraphModel.prototype.isEdgeVisible = function (edge, selected) {
+    if (selected !== undefined && selected !== null && (edge.source === selected || edge.target === selected)) {
+      return true;
+    }
     return !this.hiddenKinds.has(edge.kind)
       && this.isNodeVisible(this.byId[edge.source])
       && this.isNodeVisible(this.byId[edge.target]);
@@ -118,12 +124,10 @@
       .sort((a, b) => rank.indexOf(a.category) - rank.indexOf(b.category));
   };
 
-  // a class and the classes its drawn links reach; links switched off in the legend,
-  // or to classes the level hides, highlight nothing
+  // a class and every class one of its links reaches
   OntologyGraphModel.prototype.connected = function (id) {
     const found = new Set([id]);
     this.edges.forEach((edge) => {
-      if (!this.isEdgeVisible(edge)) return;
       if (edge.source === id) found.add(edge.target);
       if (edge.target === id) found.add(edge.source);
     });
@@ -153,11 +157,7 @@
       + (detail.source ? ' · ' + escapeHtml(detail.source) : '')
       + (detail.evidence ? ' · ' + escapeHtml(detail.evidence) : '') + '</p>';
     if (detail.description) html += '<p class="desc">' + escapeHtml(detail.description) + '</p>';
-    const undrawn = this.edges.filter((edge) =>
-      (edge.source === id || edge.target === id) && !this.isEdgeVisible(edge)).length;
-    if (undrawn) {
-      html += '<p class="sub">' + undrawn + ' of its links are not drawn: switch their kind on in the legend, or show more classes. They are all listed below.</p>';
-    }
+
     if (detail.definition) html += group('defined as', [escapeHtml(detail.definition)]);
     html += group('requires', (detail.requirements || []).map(escapeHtml));
     html += group('literature', (detail.claims || []).map((claim) =>
@@ -276,8 +276,8 @@
     });
 
     // %% layout
-    let alpha = 0, frame = null, dragged = null, dragOffset = null;
-    function visibleNodes() { return model.nodes.filter((node) => model.isNodeVisible(node)); }
+    let alpha = 0, frame = null, dragged = null, dragOffset = null, selected = null;
+    function visibleNodes() { return model.nodes.filter((node) => model.isNodeVisible(node, selected)); }
     function tick() {
       const live = visibleNodes();
       for (let i = 0; i < live.length; i++) {
@@ -292,7 +292,7 @@
         }
       }
       model.edges.forEach((edge) => {
-        if (!model.isEdgeVisible(edge)) return;
+        if (!model.isEdgeVisible(edge, selected)) return;
         const a = positions[edge.source], b = positions[edge.target];
         let dx = b.x - a.x, dy = b.y - a.y;
         const distance = Math.sqrt(dx * dx + dy * dy) || 1, force = (distance - LINK_LENGTH) * SPRING * alpha;
@@ -389,18 +389,21 @@
       applyViewBox();
     }
     function select(id) {
+      selected = id;
       const keep = model.connected(id);
-      nodeViews.forEach(({ group }) => group.classList.remove('match'));
+      applyVisibility();
       nodeViews.forEach(({ node, group }) => {
+        group.classList.remove('match');
         group.classList.toggle('dim', !keep.has(node.id));
         group.classList.toggle('hi', node.id === id);
       });
       edgeViews.forEach(({ edge, line, label }) => {
-        const touching = (edge.source === id || edge.target === id) && model.isEdgeVisible(edge);
+        const touching = edge.source === id || edge.target === id;
         line.style.opacity = touching ? 1 : 0.08;
         if (label) label.style.opacity = touching ? 1 : 0.08;
       });
       panel.innerHTML = model.panelHtml(id);
+      reheat(0.3);
     }
     // a class named in the panel or in the search results is selected and centred
     function onSelectLink(event) {
@@ -408,23 +411,23 @@
       if (!target) return;
       event.preventDefault();
       const id = target.dataset.select;
-      // matches the level hides were shown for the search; only the chosen one stays
-      applyVisibility();
-      nodeViews.forEach(({ node, group }) => { if (node.id === id) group.style.display = ''; });
       select(id);
       centre(id);
     }
     panel.addEventListener('click', onSelectLink);
     hits.addEventListener('click', onSelectLink);
     svg.addEventListener('click', () => {
+      selected = null;
       nodeViews.forEach(({ group }) => group.classList.remove('dim', 'hi'));
       edgeViews.forEach(({ line, label }) => { line.style.opacity = 1; if (label) label.style.opacity = 1; });
+      applyVisibility();
+      reheat(0.3);
     });
 
     function applyVisibility() {
-      nodeViews.forEach(({ node, group }) => { group.style.display = model.isNodeVisible(node) ? '' : 'none'; });
+      nodeViews.forEach(({ node, group }) => { group.style.display = model.isNodeVisible(node, selected) ? '' : 'none'; });
       edgeViews.forEach(({ edge, line, label }) => {
-        const shown = model.isEdgeVisible(edge);
+        const shown = model.isEdgeVisible(edge, selected);
         line.style.display = shown ? '' : 'none';
         if (label) label.style.display = shown ? '' : 'none';
       });
