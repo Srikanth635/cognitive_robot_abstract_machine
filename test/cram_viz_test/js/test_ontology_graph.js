@@ -130,28 +130,22 @@ test('an empty search matches nothing', function () {
 });
 
 // %% selection
-test('selecting a class highlights only the classes linked to it by drawn links', function () {
+test('selecting a class reaches every class it is linked to, whatever the legend hides', function () {
   const { OntologyGraphModel } = loadOntologyGraph();
   const model = new OntologyGraphModel(fixturePayload());
   assert.deepStrictEqual(
     [...model.connected('pre:LiftPhase')].sort(),
-    ['core:ActionPhase', 'core:CoupledPhase', 'pre:LiftPhase'],
+    ['core:ActionPhase', 'core:CoupledPhase', 'hypothesis:Gentle', 'pour:SourceContainer', 'pre:LiftPhase', 'pre:TransportPhase'],
   );
 });
 
-test('switching a kind of link on adds the classes it links to the highlight', function () {
+test('the links of a selected class are drawn even when their kind is switched off', function () {
   const { OntologyGraphModel } = loadOntologyGraph();
   const model = new OntologyGraphModel(fixturePayload());
-  model.toggleKind('relation');
-  assert.ok(model.connected('pre:LiftPhase').has('pour:SourceContainer'));
-});
-
-test("the panel says how many of the class's links are not drawn", function () {
-  const { OntologyGraphModel } = loadOntologyGraph();
-  const model = new OntologyGraphModel(fixturePayload());
-  const hidden = model.edges.filter((edge) =>
-    (edge.source === 'pre:LiftPhase' || edge.target === 'pre:LiftPhase') && !model.isEdgeVisible(edge)).length;
-  assert.ok(model.panelHtml('pre:LiftPhase').includes(hidden + ' of its links are not drawn'));
+  const relation = model.edges.find((edge) => edge.kind === 'relation');
+  assert.strictEqual(model.isEdgeVisible(relation), false);
+  assert.strictEqual(model.isEdgeVisible(relation, 'pre:LiftPhase'), true);
+  assert.strictEqual(model.isEdgeVisible(relation, 'core:ActionPhase'), false);
 });
 
 // %% labels
