@@ -2646,6 +2646,47 @@ class CorrectiveAction(DescriptionEntity):
 
 
 @dataclass(eq=False)
+class CoupledPhase(ActionPhase):
+    """
+    A phase in which grip force is coupled to the load of the held object. Holding requires the grasp to stay stable throughout, neither slipping nor crushing the object, so the phase requires a condition to hold throughout it, whose violation a failure event registers.
+    """
+
+    term: ClassVar[ClassTerm] = ClassTerm(
+        iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#CoupledPhase",
+        linked_terms=(),
+        evidence_status="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#SupportedInterpretation",
+        claims=(
+            "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#JF09-05",
+            "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#JF09-07",
+        ),
+        restrictions=(
+            PropertyRestriction(
+                property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasConditionRequirement",
+                quantifier=Quantifier.SOME,
+                filler=NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#InvariantRequirement"
+                ),
+            ),
+        ),
+        definition=IntersectionOf(
+            operands=(
+                NamedClass(
+                    iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#ActionPhase"
+                ),
+                PropertyRestriction(
+                    property_iri="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#hasCouplingRegime",
+                    quantifier=Quantifier.VALUE,
+                    value="http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#Coupled",
+                ),
+            )
+        ),
+    )
+    """
+    The ontology class this class stands for.
+    """
+
+
+@dataclass(eq=False)
 class DimensionlessParameter(QuantitativeParameter):
     """
     A quantitative parameter whose values are ratios or fractions without a physical unit.

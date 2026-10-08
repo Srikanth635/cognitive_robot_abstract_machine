@@ -182,6 +182,12 @@ def complete_phase() -> core.ActionPhase:
         terminated_by=[core.PhaseBoundaryEventType()],
         involves_role=[core.ManipulationRole()],
         controlled_by=core.ActionPhaseController(),
+        has_condition_requirement=[
+            core.ConditionRequirement(
+                has_condition_mode=core.ConditionMode.THROUGHOUT,
+                has_condition_polarity=core.ConditionPolarity.MUST_HOLD,
+            )
+        ],
     )
 
 
@@ -603,6 +609,40 @@ class TestCoreRules:
             checked_shapes=frozenset({CORE_SHAPES.PreconditionsGrounded})
         ).violations([structure])
         assert violation.involved == (requirement,)
+
+
+class TestCoupledPhasesInTheOntology:
+    """
+    A phase holding the object guards its grasp with an invariant, whose violation a
+    failure event registers.
+    """
+
+    @staticmethod
+    def invariant() -> core.ConditionRequirement:
+        return core.ConditionRequirement(
+            has_condition_mode=core.ConditionMode.THROUGHOUT,
+            has_condition_polarity=core.ConditionPolarity.MUST_HOLD,
+        )
+
+    def test_coupled_phase_without_an_invariant_violates_its_requirement(self):
+        coupled = core.ActionPhase(has_coupling_regime=core.CouplingRegime.COUPLED)
+        guarded = core.ActionPhase(
+            has_coupling_regime=core.CouplingRegime.COUPLED,
+            has_condition_requirement=[self.invariant()],
+        )
+        invariant_required = restriction_mentioning(
+            core.CoupledPhase, "has_condition_requirement"
+        )
+        found = violated([coupled, guarded])
+        assert (id(coupled), invariant_required) in found
+        assert (id(guarded), invariant_required) not in found
+
+    def test_uncoupled_phase_needs_no_invariant(self):
+        uncoupled = core.ActionPhase(has_coupling_regime=core.CouplingRegime.UNCOUPLED)
+        assert (
+            id(uncoupled),
+            restriction_mentioning(core.CoupledPhase, "has_condition_requirement"),
+        ) not in violated([uncoupled])
 
 
 class TestFailureEventsInTheOntology:
