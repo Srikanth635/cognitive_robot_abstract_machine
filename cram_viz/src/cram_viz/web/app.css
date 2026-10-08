@@ -281,26 +281,34 @@ body{
 #ontology-graph .og-matches .muted{color:#8a94a6;font-size:.75rem}
 #ontology-graph .hi text{font-weight:700}
 
-/* ---- Designator tab: Lisp-syntax pane on the left, graph.js pane on the right --- */
-#designator-lisp{
-  display:none;position:absolute;left:0;top:34px;bottom:0;width:46%;overflow:auto;
-  box-sizing:border-box;padding:48px 16px 18px;border-right:1px solid var(--line2);
-  background:var(--panel);font-family:var(--mono);font-size:12px;line-height:2.1
+/* ---- Designator tab: the action designator as collapsible Lisp or JSON --------- */
+#designator-view{
+  position:absolute;inset:34px 0 0;display:flex;flex-direction:column;
+  background:#f7f8fa;color:#1f2933;font-family:system-ui,sans-serif
 }
-.graph-wrap.split #designator-lisp{display:block}
-.graph-wrap.split #graph{left:46%}
-.designator-lisp-line{padding:1px 6px;border-radius:3px;cursor:pointer;transition:.12s;white-space:nowrap}
-.designator-lisp-line:hover{background:rgba(91,140,255,.12)}
-.designator-lisp-line.active{background:rgba(91,140,255,.22)}
-.designator-lisp-static{cursor:default}
-.designator-lisp-static:hover{background:none}
-.designator-lisp-head{color:var(--ink);font-weight:700}
-.designator-lisp-keyword{color:var(--accent2)}
-.designator-lisp-value{margin-left:2px}
-.designator-lisp-value.value-slot{color:#4bd38a}
-.designator-lisp-value.referent{color:var(--warn)}
-.designator-lisp-value.resolved{color:var(--accent)}
-.designator-lisp-role{color:var(--faint);font-style:italic}
+#designator-view .dz-toolbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 12px 8px 56px;border-bottom:1px solid #dde2ea}
+#designator-view .dz-toolbar button{
+  font:inherit;font-size:.78rem;padding:4px 10px;border:1px solid #c9d1dd;border-radius:4px;background:#fff;color:#1f2933;cursor:pointer
+}
+#designator-view .dz-toolbar button:hover{border-color:#155ea8}
+#designator-view .dz-toolbar button.on{background:#155ea8;border-color:#155ea8;color:#fff}
+#designator-view .dz-gap{flex:1}
+#designator-view .dz-tree{flex:1;min-height:0;overflow:auto;padding:12px 16px 24px;font-family:var(--mono);font-size:12.5px;line-height:1.75}
+#designator-view .dz-row{white-space:pre;border-radius:3px;transition:background .6s}
+#designator-view .dz-row.dz-flash{background:#fde68a;transition:none}
+#designator-view .dz-toggle{display:inline-block;width:1.4ch;margin-left:-1.4ch;color:#8a94a6;cursor:pointer;user-select:none}
+#designator-view .dz-toggle:hover{color:#155ea8}
+#designator-view .dz-punct{color:#5b6573}
+#designator-view .dz-kind{color:#7c3aed;font-weight:600}
+#designator-view .dz-type{color:#155ea8;font-weight:600}
+#designator-view .dz-key{color:#b45309}
+#designator-view .dz-literal{color:#047857}
+#designator-view .dz-variable{color:#be185d;font-style:italic}
+#designator-view .dz-object{color:#0e7490;font-weight:600}
+#designator-view .dz-term{color:#1d4ed8}
+#designator-view .dz-reference{color:#155ea8;text-decoration:underline dotted;cursor:pointer}
+#designator-view [data-ref]{cursor:pointer}
+#designator-view .dz-comment{color:#8a94a6;font-style:italic}
 
 /* view tabs: knowledge graph / kinematics / plan / motion statechart */
 .graph-tabs{

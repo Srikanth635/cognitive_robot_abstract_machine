@@ -147,6 +147,12 @@ class TestJsUnits:
         """
         self.run_node("test_ontology_graph.js")
 
+    def test_designator_rendering(self) -> None:
+        """
+        Run the Designator tab's Lisp and JSON spelling tests.
+        """
+        self.run_node("test_designator_view.js")
+
     def test_hypothesis_graph_panel_wiring(self) -> None:
         """
         Run the graph panel's Hypothesis Graph tab routing tests.

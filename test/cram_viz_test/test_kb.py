@@ -10,12 +10,13 @@ krrood = pytest.importorskip("krrood", reason="EQL requires krrood")
 
 from llm_reasoner.ontologies.predictive_manipulation import (  # noqa: E402
     core,
-    pouring,
     prehension,
 )
 
 from cram_viz import kb  # noqa: E402  (importable once krrood is present)
+from cram_viz import designator_knowledge  # noqa: E402
 from cram_viz import hypothesis_knowledge  # noqa: E402
+from cram_viz.designator_description import DesignatorDescriber  # noqa: E402
 from cram_viz.hypothesis_knowledge.ontology_backing import (  # noqa: E402
     OntologyBacking,
 )
@@ -589,14 +590,21 @@ class TestHypothesisQueryVariables:
 # %% the Designator tab
 @pytest.mark.usefixtures("sample_hypothesis_knowledge")
 class TestDesignatorView:
-    def test_lisp_slot_names_the_role_it_fills(self, fixture_scene):
+    def test_designator_is_the_described_action(self, fixture_scene):
         kb.reset_kb()
-        slots = {
-            slot["keyword"]: slot
-            for slot in kb.view_payload("designator")["lisp"]["slots"]
-        }
-        assert slots[":source-container"]["role"] == pouring.SourceContainer.__name__
-        assert slots[":tilt-angle"]["role"] is None
+        view = hypothesis_knowledge.active().view
+        expected = DesignatorDescriber(view=view).describe(
+            designator_knowledge.reflect_pouring_action(kb.get_kb().objects, view)
+        )
+        payload = kb.view_payload("designator")
+        assert payload["ok"]
+        assert payload["designator"] == expected.payload()
+
+    def test_without_a_hypothesis_the_action_slots_are_shown(self, fixture_scene):
+        hypothesis_knowledge.activate(None)
+        kb.reset_kb()
+        properties = kb.view_payload("designator")["designator"]["properties"]
+        assert "hypothesis" not in [entry["key"] for entry in properties]
 
 
 class TestHypothesisTabBeforeGenerating:

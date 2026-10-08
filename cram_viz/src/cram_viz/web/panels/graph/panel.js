@@ -8,9 +8,9 @@
  *                    graph.js's shared window.Graph
  *   Ontology Graph   the ontology behind the hypothesis at the level of classes, up to
  *                    CRAM-AICOR and DUL, drawn by its own engine (see ontology-graph.js)
- *   Designator       a real coraplex action designator's own fields, reflected and
- *                    classified value vs referent -- static and illustrative, no
- *                    live World, no resolver call (see cram_viz.designator_knowledge)
+ *   Designator       the action designator: coraplex's equivalent action's slots, then
+ *                    the generated hypothesis, as collapsible Lisp or JSON (see
+ *                    designator.js and cram_viz.designator_description)
  *   Kinematics       the robot's URDF tree (links as nodes, joints as edges)
  *   Plan             the executed plan tree, node border = execution status
  *   Statechart       the giskardpy motion statechart of the running motion group
@@ -39,16 +39,16 @@ Panels.define('graph', function (root, bus) {
     '    <button data-view="live-knowledge" title="semantic entities and actions projected from the attached live demo">Live Knowledge</button>' +
     '    <button data-view="hypothesis" title="llm_reasoner\'s cereal-pouring knowledge graph — click a node to expand it, double-click to collapse its branch">Hypothesis Graph</button>' +
     '    <button data-view="ontology" title="the ontology behind the hypothesis: the classes it instantiates, what they specialise up to CRAM-AICOR and DUL, and how the hypothesis links them — click a class for its definition">Ontology Graph</button>' +
-    '    <button data-view="designator" title="a real coraplex action designator\'s own fields, reflected and classified value vs referent — illustrative only, no live World">Designator</button>' +
+    '    <button data-view="designator" title="the action designator: coraplex\'s action slots followed by the generated hypothesis, as Lisp or JSON — click ▸ to unfold a description, #id to jump to it">Designator</button>' +
     '    <button data-view="kinematics" title="the robot\'s kinematic structure — URDF links &amp; joints">Kinematics</button>' +
     '    <button data-view="plan" title="the plan tree, with the execution status of every node">Plan</button>' +
     '    <button data-view="chart" title="the giskardpy motion statechart of the running motion group">Statechart</button>' +
     '    <span class="gt-live" id="gt-live" title="node status is streaming from the running demo">◉ live status</span>' +
     '  </div>' +
-    '  <div id="designator-lisp" class="designator-lisp"></div>' +
     '  <div id="graph"></div>' +
     '  <div id="hypothesis-graph" style="display:none"></div>' +
     '  <div id="ontology-graph" style="display:none"></div>' +
+    '  <div id="designator-view" style="display:none"></div>' +
     '  <div id="graph-empty" class="graph-empty" style="display:none"></div>' +
     '  <div id="graph-nav" class="graph-nav" style="display:none">' +
     '    <button id="gnav-home" title="back to the overview">⌂</button>' +
@@ -69,10 +69,10 @@ Panels.define('graph', function (root, bus) {
   const navPath = root.querySelector('#gnav-path');
   const tabsEl = root.querySelector('#graph-tabs');
   const liveBadge = root.querySelector('#gt-live');
-  const graphWrapEl = root.querySelector('.graph-wrap');
   const graphEl = root.querySelector('#graph');
   const hypothesisGraphEl = root.querySelector('#hypothesis-graph');
   const ontologyGraphEl = root.querySelector('#ontology-graph');
+  const designatorEl = root.querySelector('#designator-view');
   const legendEl = root.querySelector('#legend');
   const hypothesisToolbarEl = root.querySelector('#hypothesis-toolbar');
   const hgExpandAllBtn = root.querySelector('#hg-expand-all');
@@ -99,10 +99,24 @@ Panels.define('graph', function (root, bus) {
   Object.keys(TABS).forEach(function (t) { stacks[t] = []; });
   let inGraphSet = {};
 
-  // The Hypothesis and Ontology Graph tabs each draw with their own engine in their
-  // own container, not through graph.js. A freshly generated hypothesis is drawn when
-  // its tab is next shown.
-  const OWN_ENGINE_TABS = ['hypothesis', 'ontology'];
+  // The Hypothesis Graph, Ontology Graph and Designator tabs each draw with their own
+  // engine in their own container, not through graph.js. A freshly generated hypothesis
+  // is drawn when its tab is next shown.
+  const OWN_ENGINE_TABS = ['hypothesis', 'ontology', 'designator'];
+  // the own-engine tabs drawn once per loaded payload; the Ontology Graph has nothing
+  // to draw before a hypothesis is generated, the Designator still shows the slots
+  const DRAWN_ONCE = {
+    ontology: {
+      element: ontologyGraphEl,
+      draw: function (p) { OntologyGraph.build(ontologyGraphEl, p); },
+      emptyWithoutHypothesis: true,
+    },
+    designator: {
+      element: designatorEl,
+      draw: function (p) { DesignatorView.build(designatorEl, p); },
+      emptyWithoutHypothesis: false,
+    },
+  };
   let hypothesisDrawn = false;
   function drawHypothesis() {
     if (hypothesisDrawn) return;
@@ -175,15 +189,17 @@ Panels.define('graph', function (root, bus) {
     });
     graphEl.style.display = OWN_ENGINE_TABS.includes(name) ? 'none' : '';
     hypothesisGraphEl.style.display = name === 'hypothesis' ? '' : 'none';
-    ontologyGraphEl.style.display = name === 'ontology' ? '' : 'none';
+    Object.keys(DRAWN_ONCE).forEach(function (t) {
+      DRAWN_ONCE[t].element.style.display = t === name ? '' : 'none';
+    });
     hypothesisToolbarEl.style.display = name === 'hypothesis' ? '' : 'none';
-    legendEl.style.display = name === 'ontology' ? 'none' : '';
-    graphWrapEl.classList.toggle('split', name === 'designator');
-    if (name === 'ontology') {
+    legendEl.style.display = DRAWN_ONCE[name] ? 'none' : '';
+    if (DRAWN_ONCE[name]) {
+      const own = DRAWN_ONCE[name];
       navEl.style.display = 'none';
       emptyEl.style.display = 'none';
       if (base[name]) {
-        showHypothesisEmptyState(base[name]);
+        if (own.emptyWithoutHypothesis) showHypothesisEmptyState(base[name]);
         return;
       }
       try {
@@ -195,8 +211,8 @@ Panels.define('graph', function (root, bus) {
           return;
         }
         base[name] = p;
-        showHypothesisEmptyState(p);
-        OntologyGraph.build(ontologyGraphEl, p);
+        if (own.emptyWithoutHypothesis) showHypothesisEmptyState(p);
+        own.draw(p);
       } catch (err) {
         emptyEl.style.display = '';
         emptyEl.textContent = 'Could not load this view: ' + ((err && err.message) || err);
@@ -260,7 +276,6 @@ Panels.define('graph', function (root, bus) {
       }
     }
     setView(shown[name] || base[name]);
-    if (name === 'designator') DesignatorLisp.build(shown[name] || base[name]);
     liveRefresh(true);            // a live tab picks the bridge status up at once
   }
   tabsEl.querySelectorAll('button').forEach(function (b) {
@@ -277,13 +292,11 @@ Panels.define('graph', function (root, bus) {
         return { s: labelOf(e.from), p: e.label || e.kind, o: labelOf(e.to) };
       });
     bus.emit('entity:select', { id: id, detail: d, relations: relations });
-    if (tab === 'designator') DesignatorLisp.highlight(id);
     spotlight({ ids: [id], focus: id });
   }
   function labelOf(id) { return (view.details[id] && view.details[id].label) || id; }
   Graph.onSelect(select);
   Graph.onDoubleSelect(drill);
-  DesignatorLisp.onSelect(select);
 
   // ---- Hypothesis Graph tab: same entity:select overlay, its own click source ----
   // Nothing is generated at startup, so the tab explains how to fill it rather than
@@ -370,8 +383,8 @@ Panels.define('graph', function (root, bus) {
     if (!payload || !payload.ok) return;
     base['hypothesis'] = payload;
     hypothesisDrawn = false;
-    delete base['ontology'];
-    showTab(tab === 'ontology' ? 'ontology' : 'hypothesis');
+    Object.keys(DRAWN_ONCE).forEach(function (t) { delete base[t]; });
+    showTab(DRAWN_ONCE[tab] ? tab : 'hypothesis');
   });
 
   bus.on('scene:step', function (p) {

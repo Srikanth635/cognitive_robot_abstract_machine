@@ -40,9 +40,9 @@ from llm_reasoner.hypotheses.graph import (
     HypothesisGraphNode,
 )
 from llm_reasoner.ontologies.terms import ConceptReference, DescriptionEntity
-from llm_reasoner.resolver.reflection import SlotKind
 from typing_extensions import Any, Dict, List, Optional, Tuple
 
+from cram_viz.designator_description import DesignatorDescriber
 from cram_viz.hypothesis_knowledge.ontology_backing import OntologyBacking
 from cram_viz.hypothesis_knowledge.ontology_class_graph import OntologyClassGraph
 from cram_viz import (
@@ -1633,147 +1633,25 @@ def view_payload(name: str, selected_scene: Optional[str] = None) -> Dict[str, A
     return {"ok": False, "error": "unknown view: %s" % name}
 
 
-#: legend rows for the Designator tab -- overrides graph.js's default group labels
-#: with what these groups mean in this view specifically
-_DESIGNATOR_LEGEND = [
-    {"group": "root", "label": "Designator"},
-    {"group": "concept", "label": "Value slot (a model may generate this)"},
-    {"group": "goal", "label": "Referent slot (must be a real individual)"},
-    {
-        "group": "object",
-        "label": "Illustrative candidate (a scene object, not a real argument)",
-    },
-    {"group": "upper", "label": "Action-frame property group (from Hypothesis Graph)"},
-    {"group": "ind", "label": "Property value"},
-]
-
-
-def _designator_slot_lines(slot: Any, resolved_for_instruction: str) -> List[str]:
-    """
-    Detail-panel lines for one reflected designator slot.
-    """
-    lines = ["type: " + slot.type_name, "kind: " + slot.kind.name.lower()]
-    if slot.docstring:
-        lines.append(slot.docstring)
-    if slot.has_default:
-        lines.append("default: " + repr(slot.default))
-    if slot.role is not None:
-        lines.append("fills the role: " + slot.role.__name__)
-    resolved = slot.resolved_candidate
-    if resolved is not None:
-        lines.append(
-            "Resolved illustratively to %r for the instruction %r, matching the "
-            "hypothesis's %s filler -- still not a live resolver run."
-            % (resolved.label, resolved_for_instruction, slot.role.__name__)
-        )
-    elif slot.kind is SlotKind.REFERENT:
-        lines.append(
-            "No live World is attached, so no real domain can be listed -- the "
-            "candidates below are the scene's own objects, offered only as "
-            "illustrative stand-ins."
-        )
-    return lines
-
-
-def _designator_candidate_lines(
-    candidate: Any, resolved_for_instruction: str
-) -> List[str]:
-    """
-    Detail-panel lines for one referent slot's illustrative candidate.
-    """
-    if candidate.resolved:
-        return ["Resolved for the instruction %r." % resolved_for_instruction]
-    return ["an illustrative stand-in -- not a real Body/Tool individual"]
-
-
-def _designator_lisp(knowledge: Any) -> Dict[str, Any]:
-    """
-    The Designator tab's left pane: the reflected designator as Lisp keyword syntax,
-    one slot per line, each carrying the graph node id its value stands for so the
-    frontend can highlight and focus that node when the line is clicked, and the
-    ontology role it fills.
-    """
-    return {
-        "head": knowledge.designator_name,
-        "slots": [
-            {
-                "nodeId": "%s.%s" % (knowledge.designator_name, slot.name),
-                "keyword": slot.lisp_keyword,
-                "value": slot.lisp_value,
-                "kind": slot.kind.name.lower(),
-                "role": slot.role.__name__ if slot.role else None,
-                "resolved": slot.resolved_candidate is not None,
-            }
-            for slot in knowledge.slots
-        ],
-    }
-
-
 def _designator_view(kb: KB) -> Dict[str, Any]:
     """
-    The Designator tab: :class:`~coraplex.robot_plans.actions.composite.tool_based.
-    PouringAction`'s own declared fields, reflected directly and classified value
-    versus referent (see :mod:`cram_viz.designator_knowledge`).
+    The Designator tab: the action designator for the active instruction -- the slots of
+    coraplex's :class:`~coraplex.robot_plans.actions.composite.tool_based.PouringAction`,
+    reflected off the class, followed by the generated hypothesis described along its
+    ontology properties (see :mod:`cram_viz.designator_description`). The frontend
+    (``designator.js``) shows it as Lisp or as JSON, collapsible.
 
-    Static and illustrative throughout: no live World is touched and no resolver is
-    called. A referent slot's candidates are the current scene's own bench objects
-    rather than real ``Body``/``Tool`` individuals, and the one reading like the active
-    hypothesis's filler of the slot's role is marked resolved.
+    Static and illustrative: no live World is touched and no resolver is called; a
+    container slot names the scene object reading like the hypothesis's filler of its
+    role.
     """
     active_hypothesis = hypothesis_knowledge.active()
-    knowledge = designator_knowledge.reflect_pouring_action(
-        kb.objects, active_hypothesis.view if active_hypothesis else None
-    )
-    nodes, edges, details, add = _view()
-    add(
-        knowledge.designator_name,
-        knowledge.designator_name,
-        "root",
-        [knowledge.docstring] if knowledge.docstring else [],
-    )
-    for slot in knowledge.slots:
-        slot_id = "%s.%s" % (knowledge.designator_name, slot.name)
-        group = "goal" if slot.kind is SlotKind.REFERENT else "concept"
-        add(
-            slot_id,
-            slot.name,
-            group,
-            _designator_slot_lines(slot, knowledge.resolved_for_instruction),
-        )
-        edges.append(
-            {
-                "from": knowledge.designator_name,
-                "to": slot_id,
-                "kind": "prop",
-                "label": "slot",
-            }
-        )
-        for candidate in slot.candidates:
-            candidate_id = "%s::%s" % (slot_id, candidate.identifier)
-            add(
-                candidate_id,
-                candidate.label,
-                "object",
-                _designator_candidate_lines(
-                    candidate, knowledge.resolved_for_instruction
-                ),
-            )
-            edges.append(
-                {
-                    "from": slot_id,
-                    "to": candidate_id,
-                    "kind": "isa" if candidate.resolved else "type",
-                    "label": "resolved" if candidate.resolved else "e.g.",
-                }
-            )
+    view = active_hypothesis.view if active_hypothesis else None
+    knowledge = designator_knowledge.reflect_pouring_action(kb.objects, view)
     return {
         "ok": True,
-        "crumb": "PouringAction designator (illustrative)",
-        "nodes": nodes,
-        "edges": edges,
-        "details": details,
-        "legend": _DESIGNATOR_LEGEND,
-        "lisp": _designator_lisp(knowledge),
+        "crumb": "%s designator" % knowledge.designator_name,
+        "designator": DesignatorDescriber(view=view).describe(knowledge).payload(),
     }
 
 

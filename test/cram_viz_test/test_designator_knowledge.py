@@ -83,3 +83,8 @@ class TestResolution:
             knowledge, "target_container"
         ).resolved_candidate.identifier == ("bowl")
         assert knowledge.resolved_for_instruction == view.record.instruction
+
+    @pytest.mark.usefixtures("sample_hypothesis_knowledge")
+    def test_a_scene_without_objects_resolves_nothing(self):
+        knowledge = reflect_pouring_action([], hypothesis_knowledge.active().view)
+        assert slot_named(knowledge, "source_container").resolved_candidate is None
