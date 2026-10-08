@@ -1,18 +1,15 @@
 """
-The ontology terms behind a projected hypothesis: the class of every fragment, the
-property stating every link, and where every value a fragment holds comes from.
+Naming ontology terms for display: the prefix each known namespace is written with, and
+the ontology each term comes from.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, field
 from enum import StrEnum
-from operator import attrgetter
 from pathlib import Path
 
-from llm_reasoner.generation.schema import is_inferred
 from llm_reasoner.generation.wire import CONCEPT_PREFIXES
-from llm_reasoner.hypotheses.graph import HypothesisGraphNode, HypothesisGraphRelation
 from llm_reasoner.ontologies import (
     CRAM_AICOR_NAMESPACE,
     DUL_NAMESPACE,
@@ -20,17 +17,7 @@ from llm_reasoner.ontologies import (
     PREDICTIVE_MANIPULATION_NAMESPACE_ROOT,
     PredictiveManipulationOntologyFile,
 )
-from llm_reasoner.ontologies.terms import (
-    ConceptReference,
-    DescriptionEntity,
-    PropertyTerm,
-)
-from typing_extensions import Any, Optional
-
-DRAWN_LINK_NOTE = "(drawn by the viewer)"
-"""
-The note shown in place of an ontology term on what only the viewer draws.
-"""
+from typing_extensions import Optional
 
 # %% namespaces
 
@@ -58,11 +45,6 @@ class TermSource(StrEnum):
     HYPOTHESIS = "introduced by the hypothesis"
     """
     A concept the hypothesis introduced because no linked ontology declares it.
-    """
-
-    LITERAL = "literal"
-    """
-    A data value, such as a number.
     """
 
     UNKNOWN = "outside the known ontologies"
@@ -127,23 +109,6 @@ def known_namespaces() -> tuple[TermNamespace, ...]:
 
 
 @dataclass(frozen=True)
-class BackedValue:
-    """
-    A value a fragment holds, written for display, with the ontology it comes from.
-    """
-
-    text: str
-    """
-    The value as displayed.
-    """
-
-    source: TermSource
-    """
-    The ontology the value comes from.
-    """
-
-
-@dataclass(frozen=True)
 class OntologyBacking:
     """
     Names the ontology terms behind the nodes and links of a projected hypothesis.
@@ -184,88 +149,3 @@ class OntologyBacking:
         if namespace is None:
             return TermSource.UNKNOWN
         return namespace.source
-
-    def node_label(self, node: HypothesisGraphNode) -> str:
-        """
-        :return: The node's label with the ontology class of its fragment beneath it.
-        """
-        if not node.ontology_class:
-            return node.label
-        return f"{node.label}\n{self.prefixed(node.ontology_class)}"
-
-    def relation_label(self, relation: HypothesisGraphRelation) -> str:
-        """
-        :return: The link's field with the ontology property stating it beneath it, or
-            a note that the viewer drew the link.
-        """
-        if not relation.property_iri:
-            return f"{relation.predicate}\n{DRAWN_LINK_NOTE}"
-        return f"{relation.predicate}\n{self.prefixed(relation.property_iri)}"
-
-    def backed_value(self, value: Any) -> BackedValue:
-        """
-        :return: A value a fragment holds, with the ontology it comes from: a fragment
-            by its class, a concept or an enumerated individual by its own term.
-        """
-        if isinstance(value, DescriptionEntity):
-            iri = type(value).term.iri
-            return BackedValue(
-                text=f"{value.label or type(value).__name__} "
-                f"[{self.prefixed(iri)}]",
-                source=self.source_of(iri),
-            )
-        if isinstance(value, ConceptReference):
-            return BackedValue(
-                text=self.prefixed(value.iri), source=self.source_of(value.iri)
-            )
-        if isinstance(value, StrEnum):
-            return BackedValue(
-                text=self.prefixed(value.value), source=self.source_of(value.value)
-            )
-        return BackedValue(text=repr(value), source=TermSource.LITERAL)
-
-    def node_lines(self, node: HypothesisGraphNode) -> list[str]:
-        """
-        :return: Detail lines naming the node's ontology class, the linked terms it
-            specialises, its evidence status and claims, and every value its fragment
-            states with the property stating it and the value's ontology.
-        """
-        fragment = node.source
-        if fragment is None:
-            return [f"kind: {node.kind.value}", f"no ontology class {DRAWN_LINK_NOTE}"]
-        term = type(fragment).term
-        lines = [
-            f"class: {self.prefixed(term.iri)} ({self.source_of(term.iri).value})",
-            f"iri: {term.iri}",
-            *(
-                f"specialises: {self.prefixed(linked)} "
-                f"({self.source_of(linked).value})"
-                for linked in term.linked_terms
-            ),
-        ]
-        if term.evidence_status:
-            lines.append(f"evidence: {self.prefixed(term.evidence_status)}")
-        lines.extend(f"claim: {self.prefixed(claim)}" for claim in term.claims)
-        lines.extend(self.value_lines(fragment))
-        return lines
-
-    def value_lines(self, fragment: DescriptionEntity) -> list[str]:
-        """
-        :return: One line per value the fragment states, leaving out properties the
-            ontology infers from sub-properties.
-        """
-        lines = []
-        for declared in fields(fragment):
-            property_term = PropertyTerm.of_field(type(fragment), declared.name)
-            if property_term is None or is_inferred(type(fragment), declared.name):
-                continue
-            held: Any = attrgetter(declared.name)(fragment)
-            for value in held if isinstance(held, list) else [held]:
-                if value is None:
-                    continue
-                backed = self.backed_value(value)
-                lines.append(
-                    f"{declared.name} · {self.prefixed(property_term.iri)}: "
-                    f"{backed.text} ({backed.source.value})"
-                )
-        return lines

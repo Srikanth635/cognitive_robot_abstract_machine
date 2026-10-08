@@ -78,6 +78,8 @@ function loadGraphPanel() {
     '.graph-wrap': element(),
     '#graph': element(),
     '#hypothesis-graph': element(),
+    '#ontology-graph': element(),
+    '#legend': element(),
     '#hypothesis-toolbar': element(),
     '#hg-expand-all': element(),
     '#hg-collapse-all': element(),
@@ -120,6 +122,7 @@ function loadGraphPanel() {
   global.LiveKnowledgeGraph = class {
     build() { return livePayload; }
   };
+  global.OntologyGraph = { build() {} };
   global.HypothesisGraph = {
     build() {},
     highlight() {},

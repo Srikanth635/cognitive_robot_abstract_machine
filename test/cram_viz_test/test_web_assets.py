@@ -89,9 +89,14 @@ class TestAssetConsistency:
 
     def test_ontology_graph_tab_is_in_the_graph_panel(self) -> None:
         """
-        Ensure the Ontology Graph tab has a button and loads the ontology view.
+        Ensure the Ontology Graph tab has a button, loads the ontology view and is drawn
+        by its own engine.
         """
+        html = read("index.html")
         panel = read("panels/graph/panel.js")
+
+        assert "panels/graph/ontology-graph.js" in html
+        assert "OntologyGraph.build(ontologyGraphEl, p)" in panel
 
         assert 'data-view="ontology"' in panel
         assert "/api/kb/view?name=ontology" in panel
@@ -135,6 +140,12 @@ class TestJsUnits:
         Run the Hypothesis Graph tab's dedicated vis-network engine tests.
         """
         self.run_node("test_hypothesis_graph.js")
+
+    def test_ontology_graph_rendering(self) -> None:
+        """
+        Run the Ontology Graph tab's class-graph model tests.
+        """
+        self.run_node("test_ontology_graph.js")
 
     def test_hypothesis_graph_panel_wiring(self) -> None:
         """

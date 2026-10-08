@@ -2,8 +2,6 @@
 Tests for the scene-driven knowledge base and its graph-panel payloads.
 """
 
-import copy
-from dataclasses import replace
 from types import SimpleNamespace
 
 import pytest
@@ -20,6 +18,9 @@ from cram_viz import kb  # noqa: E402  (importable once krrood is present)
 from cram_viz import hypothesis_knowledge  # noqa: E402
 from cram_viz.hypothesis_knowledge.ontology_backing import (  # noqa: E402
     OntologyBacking,
+)
+from cram_viz.hypothesis_knowledge.ontology_class_graph import (  # noqa: E402
+    OntologyClassGraph,
 )
 from llm_reasoner.ontologies import CRAM_AICOR_NAMESPACE  # noqa: E402
 from llm_reasoner.ontologies.terms import ConceptReference  # noqa: E402
@@ -279,48 +280,58 @@ class TestHypothesisGraphView:
 # %% the Ontology Graph tab
 @pytest.mark.usefixtures("sample_hypothesis_knowledge")
 class TestOntologyGraphView:
+    @staticmethod
+    def class_graph():
+        return OntologyClassGraph.of(hypothesis_knowledge.active().view)
+
     def test_payload_is_ok_with_the_ontology_graph_crumb(self, fixture_scene):
         kb.reset_kb()
         payload = kb.view_payload("ontology")
         assert payload["ok"]
         assert payload["crumb"] == "ontology graph"
 
-    def test_shows_the_same_nodes_and_root_as_the_hypothesis_graph(self, fixture_scene):
+    def test_nodes_are_the_classes_behind_the_hypothesis(self, fixture_scene):
         kb.reset_kb()
-        ontology = kb.view_payload("ontology")
-        hypothesis = kb.view_payload("hypothesis")
-        assert [node["id"] for node in ontology["nodes"]] == [
-            node["id"] for node in hypothesis["nodes"]
+        payload = kb.view_payload("ontology")
+        assert payload["nodes"] == [
+            {
+                "id": node.iri,
+                "label": node.label,
+                "category": node.category.value,
+                "count": node.instance_count,
+            }
+            for node in self.class_graph().nodes
         ]
-        assert ontology["root"] == hypothesis["root"]
 
-    def test_nodes_show_their_ontology_class(self, fixture_scene):
+    def test_edges_name_the_property_stating_them(self, fixture_scene):
         kb.reset_kb()
         payload = kb.view_payload("ontology")
         backing = OntologyBacking()
-        labels = {node["id"]: node["label"] for node in payload["nodes"]}
-        for node in hypothesis_knowledge.active().projection.nodes:
-            assert labels[node.identifier] == backing.node_label(node)
+        assert payload["edges"] == [
+            {
+                "source": edge.source,
+                "target": edge.target,
+                "kind": edge.kind.value,
+                "label": (
+                    backing.prefixed(edge.property_iri) if edge.property_iri else ""
+                ),
+                "count": edge.count,
+            }
+            for edge in self.class_graph().edges
+        ]
 
-    def test_edges_show_their_ontology_property(self, fixture_scene):
+    def test_details_describe_each_class(self, fixture_scene):
         kb.reset_kb()
-        payload = kb.view_payload("ontology")
-        backing = OntologyBacking()
-        for relation in hypothesis_knowledge.active().projection.relations:
-            assert {
-                "from": relation.source.identifier,
-                "to": relation.target.identifier,
-                "label": backing.relation_label(relation),
-            } in payload["edges"]
-
-    def test_details_carry_each_nodes_ontology_backing(self, fixture_scene):
-        kb.reset_kb()
-        payload = kb.view_payload("ontology")
-        backing = OntologyBacking()
-        for node in hypothesis_knowledge.active().projection.nodes:
-            assert payload["details"][node.identifier]["lines"] == (
-                backing.node_lines(node)
-            )
+        details = kb.view_payload("ontology")["details"]
+        for node in self.class_graph().nodes:
+            detail = details[node.iri]
+            assert detail["iri"] == node.iri
+            assert detail["description"] == node.description
+            assert detail["requirements"] == list(node.requirements)
+            assert detail["instances"] == list(node.instances)
+            assert [claim["text"] for claim in detail["claims"]] == [
+                claim.text for claim in node.claims
+            ]
 
 
 @pytest.mark.usefixtures("sample_hypothesis_knowledge")
@@ -592,6 +603,14 @@ class TestHypothesisTabBeforeGenerating:
     def test_the_view_is_empty_but_valid(self, fixture_scene):
         kb.reset_kb()
         payload = kb.view_payload("hypothesis")
+        assert payload["ok"]
+        assert payload["nodes"] == []
+        assert payload["edges"] == []
+        assert "Generate" in payload["empty"]
+
+    def test_the_ontology_view_is_empty_but_valid(self, fixture_scene):
+        kb.reset_kb()
+        payload = kb.view_payload("ontology")
         assert payload["ok"]
         assert payload["nodes"] == []
         assert payload["edges"] == []

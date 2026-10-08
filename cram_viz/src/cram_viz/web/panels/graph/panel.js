@@ -6,8 +6,8 @@
  *   Hypothesis Graph llm_reasoner's cereal-pouring knowledge graph, rendered by its
  *                    own dedicated engine (see hypothesis-graph.js) instead of
  *                    graph.js's shared window.Graph
- *   Ontology Graph   the same graph with the ontology class of every node and the
- *                    ontology property of every link beneath their labels
+ *   Ontology Graph   the ontology behind the hypothesis at the level of classes, up to
+ *                    CRAM-AICOR and DUL, drawn by its own engine (see ontology-graph.js)
  *   Designator       a real coraplex action designator's own fields, reflected and
  *                    classified value vs referent -- static and illustrative, no
  *                    live World, no resolver call (see cram_viz.designator_knowledge)
@@ -38,7 +38,7 @@ Panels.define('graph', function (root, bus) {
     '    <button data-view="knowledge" class="active" title="the entity graph (EQL / knowledge base)">Knowledge</button>' +
     '    <button data-view="live-knowledge" title="semantic entities and actions projected from the attached live demo">Live Knowledge</button>' +
     '    <button data-view="hypothesis" title="llm_reasoner\'s cereal-pouring knowledge graph — click a node to expand it, double-click to collapse its branch">Hypothesis Graph</button>' +
-    '    <button data-view="ontology" title="the Hypothesis Graph with the ontology class of every node and the ontology property of every link beneath their labels — click a node for the terms backing its values">Ontology Graph</button>' +
+    '    <button data-view="ontology" title="the ontology behind the hypothesis: the classes it instantiates, what they specialise up to CRAM-AICOR and DUL, and how the hypothesis links them — click a class for its definition">Ontology Graph</button>' +
     '    <button data-view="designator" title="a real coraplex action designator\'s own fields, reflected and classified value vs referent — illustrative only, no live World">Designator</button>' +
     '    <button data-view="kinematics" title="the robot\'s kinematic structure — URDF links &amp; joints">Kinematics</button>' +
     '    <button data-view="plan" title="the plan tree, with the execution status of every node">Plan</button>' +
@@ -48,6 +48,7 @@ Panels.define('graph', function (root, bus) {
     '  <div id="designator-lisp" class="designator-lisp"></div>' +
     '  <div id="graph"></div>' +
     '  <div id="hypothesis-graph" style="display:none"></div>' +
+    '  <div id="ontology-graph" style="display:none"></div>' +
     '  <div id="graph-empty" class="graph-empty" style="display:none"></div>' +
     '  <div id="graph-nav" class="graph-nav" style="display:none">' +
     '    <button id="gnav-home" title="back to the overview">⌂</button>' +
@@ -71,6 +72,8 @@ Panels.define('graph', function (root, bus) {
   const graphWrapEl = root.querySelector('.graph-wrap');
   const graphEl = root.querySelector('#graph');
   const hypothesisGraphEl = root.querySelector('#hypothesis-graph');
+  const ontologyGraphEl = root.querySelector('#ontology-graph');
+  const legendEl = root.querySelector('#legend');
   const hypothesisToolbarEl = root.querySelector('#hypothesis-toolbar');
   const hgExpandAllBtn = root.querySelector('#hg-expand-all');
   const hgCollapseAllBtn = root.querySelector('#hg-collapse-all');
@@ -96,16 +99,15 @@ Panels.define('graph', function (root, bus) {
   Object.keys(TABS).forEach(function (t) { stacks[t] = []; });
   let inGraphSet = {};
 
-  // The Hypothesis and Ontology Graph tabs draw the same projection with different
-  // labels, so they share one HypothesisGraph renderer and container; it is rebuilt
-  // whenever the other of the two was drawn last.
-  const PROJECTION_TABS = ['hypothesis', 'ontology'];
-  function isProjectionTab(name) { return PROJECTION_TABS.includes(name); }
-  let drawnProjectionTab = null;
-  function drawProjection(name) {
-    if (drawnProjectionTab === name) return;
-    drawnProjectionTab = name;
-    HypothesisGraph.build(base[name]);
+  // The Hypothesis and Ontology Graph tabs each draw with their own engine in their
+  // own container, not through graph.js. A freshly generated hypothesis is drawn when
+  // its tab is next shown.
+  const OWN_ENGINE_TABS = ['hypothesis', 'ontology'];
+  let hypothesisDrawn = false;
+  function drawHypothesis() {
+    if (hypothesisDrawn) return;
+    hypothesisDrawn = true;
+    HypothesisGraph.build(base['hypothesis']);
   }
 
   function setView(payload) {
@@ -171,16 +173,42 @@ Panels.define('graph', function (root, bus) {
     tabsEl.querySelectorAll('button').forEach(function (b) {
       b.classList.toggle('active', b.dataset.view === name);
     });
-    graphEl.style.display = isProjectionTab(name) ? 'none' : '';
-    hypothesisGraphEl.style.display = isProjectionTab(name) ? '' : 'none';
-    hypothesisToolbarEl.style.display = isProjectionTab(name) ? '' : 'none';
+    graphEl.style.display = OWN_ENGINE_TABS.includes(name) ? 'none' : '';
+    hypothesisGraphEl.style.display = name === 'hypothesis' ? '' : 'none';
+    ontologyGraphEl.style.display = name === 'ontology' ? '' : 'none';
+    hypothesisToolbarEl.style.display = name === 'hypothesis' ? '' : 'none';
+    legendEl.style.display = name === 'ontology' ? 'none' : '';
     graphWrapEl.classList.toggle('split', name === 'designator');
-    if (isProjectionTab(name)) {
+    if (name === 'ontology') {
       navEl.style.display = 'none';
       emptyEl.style.display = 'none';
       if (base[name]) {
         showHypothesisEmptyState(base[name]);
-        drawProjection(name);
+        return;
+      }
+      try {
+        const r = await fetch(SceneSelection.apiUrl(TABS[name].url, window.location.search));
+        const p = await r.json();
+        if (!p.ok) {
+          emptyEl.style.display = '';
+          emptyEl.textContent = p.error || 'view unavailable';
+          return;
+        }
+        base[name] = p;
+        showHypothesisEmptyState(p);
+        OntologyGraph.build(ontologyGraphEl, p);
+      } catch (err) {
+        emptyEl.style.display = '';
+        emptyEl.textContent = 'Could not load this view: ' + ((err && err.message) || err);
+      }
+      return;
+    }
+    if (name === 'hypothesis') {
+      navEl.style.display = 'none';
+      emptyEl.style.display = 'none';
+      if (base[name]) {
+        showHypothesisEmptyState(base[name]);
+        drawHypothesis();
       }
       if (!base[name]) {
         try {
@@ -196,7 +224,7 @@ Panels.define('graph', function (root, bus) {
           }
           base[name] = p;
           showHypothesisEmptyState(p);
-          drawnProjectionTab = name;
+          hypothesisDrawn = true;
           HypothesisGraph.build(p);
         } catch (err) {
           emptyEl.style.display = '';
@@ -275,7 +303,7 @@ Panels.define('graph', function (root, bus) {
       .map(function (e) { return e.from === focusId ? e.to : e.from; });
   }
   function hypothesisSelect(id) {
-    const payload = base[drawnProjectionTab];
+    const payload = base['hypothesis'];
     if (!payload || !payload.details || !payload.details[id]) return;
     const relations = (payload.edges || [])
       .filter(function (e) { return e.from === id || e.to === id; })
@@ -297,8 +325,10 @@ Panels.define('graph', function (root, bus) {
   // ---- highlights (from EQL results or our own selection) ----------------------
   function spotlight(p) {
     const ids = (p && p.ids) || [];
-    if (isProjectionTab(tab)) {
-      const payload = base[tab];
+    // EQL answers name fragments of the hypothesis, while the ontology tab draws classes
+    if (tab === 'ontology') return;
+    if (tab === 'hypothesis') {
+      const payload = base['hypothesis'];
       let hypothesisHi = ids.slice();
       if (payload && p && p.focus) {
         hypothesisHi = hypothesisHi.concat(hypothesisNeighbourIds(payload, p.focus));
@@ -339,8 +369,8 @@ Panels.define('graph', function (root, bus) {
   bus.on('hypothesis:generated', function (payload) {
     if (!payload || !payload.ok) return;
     base['hypothesis'] = payload;
+    hypothesisDrawn = false;
     delete base['ontology'];
-    drawnProjectionTab = null;
     showTab(tab === 'ontology' ? 'ontology' : 'hypothesis');
   });
 

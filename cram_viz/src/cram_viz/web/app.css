@@ -240,6 +240,40 @@ body{
 #graph{position:absolute;inset:34px 0 0}
 /* matches the source page's own white canvas — its label/edge colours assume it */
 #hypothesis-graph{position:absolute;inset:34px 0 0;background:#ffffff}
+/* the Ontology Graph tab: a class graph laid out like the L2 ontology graph */
+#ontology-graph{position:absolute;inset:34px 0 0;container-type:size;background:#f7f8fa;color:#1f2933;font-family:system-ui,sans-serif}
+#ontology-graph .og-layout{display:grid;grid-template-columns:1fr 300px;width:100%;height:100%}
+/* a narrow panel puts the class details under the graph instead of beside it */
+@container (max-width: 760px){
+  #ontology-graph .og-layout{grid-template-columns:1fr;grid-template-rows:1fr 42%}
+  #ontology-graph .og-side{border-left:0;border-top:1px solid #d9dee7}
+}
+#ontology-graph .og-canvas{width:100%;height:100%;background:#f7f8fa;cursor:grab}
+#ontology-graph .og-side{border-left:1px solid #d9dee7;padding:12px;overflow:auto;background:#fff}
+#ontology-graph h1{font-size:1rem;margin:0 0 2px}
+#ontology-graph h2{font-size:.95rem;margin:6px 0}
+#ontology-graph .sub{color:#52606d;font-size:.78rem;margin:0 0 8px}
+#ontology-graph .og-search{width:100%;box-sizing:border-box;padding:6px;border:1px solid #b9c1d0;border-radius:4px;margin-bottom:6px}
+#ontology-graph .og-hits{color:#155ea8}
+#ontology-graph .reveal{display:flex;gap:4px;margin-bottom:10px}
+#ontology-graph .reveal button{flex:1;font-size:.72rem;padding:5px 4px;border:1px solid #b9c1d0;border-radius:4px;background:#fff;color:#1f2933;cursor:pointer}
+#ontology-graph .reveal button.on{background:#155ea8;color:#fff;border-color:#155ea8}
+#ontology-graph .og-legend div{font-size:.78rem;margin:2px 0;cursor:pointer;user-select:none}
+#ontology-graph .og-legend .lg-title{font-weight:600;margin-top:6px;cursor:default}
+#ontology-graph .swatch{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:middle}
+#ontology-graph .off{opacity:.35}
+#ontology-graph .og-node text{font-size:10px;pointer-events:none;fill:#1f2933}
+#ontology-graph .og-node circle{cursor:pointer;stroke-width:2px}
+#ontology-graph .og-edge{stroke-width:1.3px;fill:none}
+#ontology-graph .og-elabel{font-size:8px;fill:#5b6472;pointer-events:none}
+#ontology-graph .og-panel code{background:#eef2f7;padding:1px 4px;border-radius:3px}
+#ontology-graph .og-panel .desc{font-size:.82rem;margin:4px 0 6px;line-height:1.35}
+#ontology-graph .og-panel .rel{font-size:.8rem;margin:3px 0;line-height:1.3}
+#ontology-graph .og-panel .grp{font-weight:700;font-size:.68rem;text-transform:uppercase;letter-spacing:.03em;color:#52606d;margin:9px 0 2px;border-bottom:1px solid #eef2f7}
+#ontology-graph .og-panel .muted{color:#8a94a6}
+#ontology-graph .og-panel a{color:#155ea8}
+#ontology-graph .dim{opacity:.12}
+#ontology-graph .hi text{font-weight:700}
 
 /* ---- Designator tab: Lisp-syntax pane on the left, graph.js pane on the right --- */
 #designator-lisp{
