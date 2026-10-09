@@ -1,0 +1,35 @@
+{
+  "name": "evaluate_predicate",
+  "description": "Evaluate a predicate or value function the world model declares, as the world model itself computes it. Pass each argument by name, an individual as {\"handle\": ...} and a plain value as {\"value\": ...}.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "predicate": {
+        "type": "string",
+        "description": "The predicate's identifier, or its plain name when nothing else shares it."
+      },
+      "arguments": {
+        "type": "object",
+        "description": "The arguments by name.",
+        "additionalProperties": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {"handle": {"type": "string"}},
+              "required": ["handle"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {"value": {}},
+              "required": ["value"],
+              "additionalProperties": false
+            }
+          ]
+        }
+      }
+    },
+    "required": ["predicate", "arguments"],
+    "additionalProperties": false
+  }
+}

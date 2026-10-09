@@ -2,11 +2,65 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
+from enum import StrEnum
 
 import anthropic
-from typing_extensions import Any, Mapping, Optional
+from typing_extensions import Any, Dict, List, Mapping, Optional, Sequence
 
 from llm_reasoner.clients.base import LanguageModelClient
+from llm_reasoner.clients.tools import (
+    Tool,
+    ToolBox,
+    ToolCall,
+    ToolConversation,
+    ToolTurnsExhausted,
+    ToolUsingClient,
+)
+
+# %% messages
+
+
+class StopReason(StrEnum):
+    """
+    Why the model stopped writing a response.
+    """
+
+    TOOL_USE = "tool_use"
+    """
+    It is waiting for the results of the tools it called.
+    """
+
+
+class ContentBlockType(StrEnum):
+    """
+    The kinds of content block a conversation is made of.
+    """
+
+    TEXT = "text"
+    TOOL_USE = "tool_use"
+    TOOL_RESULT = "tool_result"
+
+
+class MessageKey(StrEnum):
+    """
+    The keys of the messages and tool results a conversation is sent as.
+    """
+
+    ROLE = "role"
+    CONTENT = "content"
+    TYPE = "type"
+    TOOL_USE_ID = "tool_use_id"
+    IS_ERROR = "is_error"
+
+
+class MessageRole(StrEnum):
+    """
+    Who a message of a conversation is from.
+    """
+
+    USER = "user"
+    ASSISTANT = "assistant"
+
 
 # %% anthropic client
 
@@ -26,7 +80,7 @@ _STRUCTURED_TOOL_INSTRUCTION = (
 
 
 @dataclass
-class AnthropicClient(LanguageModelClient):
+class AnthropicClient(LanguageModelClient, ToolUsingClient):
     """Completes prompts with an Anthropic model."""
 
     model: str = "claude-haiku-4-5"
@@ -46,6 +100,12 @@ class AnthropicClient(LanguageModelClient):
     api_key: Optional[str] = None
     """The API key, falling back to the ``ANTHROPIC_API_KEY`` environment variable."""
 
+    max_tool_turns: int = 10
+    """
+    How many turns of tool calls a completion with tools may take before it is given
+    up, so a model that keeps asking cannot run on without end.
+    """
+
     _client: anthropic.Anthropic = field(default=None, init=False, repr=False)
     """The underlying vendor client."""
 
@@ -61,7 +121,7 @@ class AnthropicClient(LanguageModelClient):
             model=self.model,
             max_tokens=self.max_tokens,
             system=system,
-            messages=[{"role": "user", "content": user}],
+            messages=[{MessageKey.ROLE: MessageRole.USER, MessageKey.CONTENT: user}],
         )
         return self._extract_text(response)
 
@@ -109,7 +169,7 @@ class AnthropicClient(LanguageModelClient):
                     "cache_control": {"type": "ephemeral"},
                 }
             ],
-            messages=[{"role": "user", "content": user}],
+            messages=[{MessageKey.ROLE: MessageRole.USER, MessageKey.CONTENT: user}],
             tools=[
                 {
                     "name": _STRUCTURED_TOOL_NAME,
@@ -223,6 +283,64 @@ class AnthropicClient(LanguageModelClient):
             if block.type == "tool_use" and block.name == _STRUCTURED_TOOL_NAME:
                 return json.dumps(block.input)
         return AnthropicClient._extract_text(response)
+
+    # -- with tools -----------------------------------------------------
+
+    def complete_with_tools(
+        self, system: str, user: str, tools: Sequence[Tool]
+    ) -> ToolConversation:
+        """
+        Let the model call tools, running each call and sending its result back, until
+        it writes its answer.
+
+        The loop is written out rather than left to the SDK's tool runner, because the
+        tools are vendor-neutral objects that scripted clients run as well, and every
+        call is recorded with what it returned.
+        """
+        toolbox = ToolBox(tools=tools)
+        messages: List[Dict[str, Any]] = [
+            {MessageKey.ROLE: MessageRole.USER, MessageKey.CONTENT: user}
+        ]
+        calls: List[ToolCall] = []
+        for _ in range(self.max_tool_turns):
+            response = self._client.messages.create(
+                model=self.model,
+                max_tokens=self.max_tokens,
+                system=system,
+                messages=list(messages),
+                tools=toolbox.definitions(),
+            )
+            if response.stop_reason != StopReason.TOOL_USE:
+                self._check_truncation(response)
+                return ToolConversation(
+                    answer=self._extract_text(response), calls=calls
+                )
+            results = []
+            for block in response.content:
+                if block.type != ContentBlockType.TOOL_USE:
+                    continue
+                outcome = toolbox.call(block.name, block.input)
+                calls.append(
+                    ToolCall(name=block.name, arguments=block.input, outcome=outcome)
+                )
+                results.append(
+                    {
+                        MessageKey.TYPE: ContentBlockType.TOOL_RESULT,
+                        MessageKey.TOOL_USE_ID: block.id,
+                        MessageKey.CONTENT: outcome.content,
+                        MessageKey.IS_ERROR: outcome.is_error,
+                    }
+                )
+            messages.append(
+                {
+                    MessageKey.ROLE: MessageRole.ASSISTANT,
+                    MessageKey.CONTENT: response.content,
+                }
+            )
+            messages.append(
+                {MessageKey.ROLE: MessageRole.USER, MessageKey.CONTENT: results}
+            )
+        raise ToolTurnsExhausted(turns=self.max_tool_turns)
 
     @property
     def identity(self) -> str:

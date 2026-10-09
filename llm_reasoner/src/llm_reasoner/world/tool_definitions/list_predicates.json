@@ -1,0 +1,14 @@
+{
+  "name": "list_predicates",
+  "description": "List the predicates (yes-or-no checks) and value functions the world model declares, each with its identifier, summary and the arguments it takes. Narrow the list with 'about' to those taking an individual of a kind.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "about": {
+        "type": "string",
+        "description": "A kind's identifier, or its plain name when no other kind shares it."
+      }
+    },
+    "additionalProperties": false
+  }
+}

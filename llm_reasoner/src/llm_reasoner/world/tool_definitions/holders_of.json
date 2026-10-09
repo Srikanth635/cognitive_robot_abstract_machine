@@ -1,0 +1,15 @@
+{
+  "name": "holders_of",
+  "description": "Name the individuals holding an individual in one of their fields, with the field and a summary of the holder's kind. An individual's meaning often lives in what holds it: a bare body may be the root of a Cup.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "handle": {
+        "type": "string",
+        "description": "The individual's handle, such as 'Body#3'."
+      }
+    },
+    "required": ["handle"],
+    "additionalProperties": false
+  }
+}

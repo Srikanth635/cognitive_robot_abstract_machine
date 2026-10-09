@@ -1,1 +1,2 @@
 pyshacl>=0.40
+jsonschema>=4

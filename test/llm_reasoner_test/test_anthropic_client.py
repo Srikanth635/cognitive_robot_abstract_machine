@@ -3,11 +3,24 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from pathlib import Path
+
 import anthropic
 import pytest
 
 from llm_reasoner.clients.anthropic_client import AnthropicClient
 from llm_reasoner.clients.base import LanguageModelClient
+from llm_reasoner.clients.tools import (
+    Tool,
+    ToolDefinition,
+    ToolOutcome,
+    ToolTurnsExhausted,
+)
+
+TOOL_CASES = Path(__file__).parent / "tool_cases"
+"""
+The tool definitions the tool-loop tests offer.
+"""
 
 # %% Anthropic service mimics
 
@@ -32,6 +45,9 @@ class ToolUseBlockMimic:
 
     input: dict[str, Any]
     """The arguments the model supplied to the forced tool."""
+
+    id: str = "toolu_mimic"
+    """The identifier a tool result answering this call must cite."""
 
     type: str = "tool_use"
     """The content block's discriminator, fixed to the client's expectation."""
@@ -340,3 +356,123 @@ class TestAnthropicStructuredCompletionContract:
 
         with pytest.raises(RuntimeError, match="truncated"):
             harness.client.complete_structured("system", "user", {})
+
+
+# %% Tool loop contract
+
+
+@dataclass
+class SequencedMessagesEndpoint:
+    """Answer successive requests with successive responses, recording each request."""
+
+    responses: list[AnthropicResponseMimic]
+    """The responses, returned in order."""
+
+    requests: list[dict[str, Any]] = field(default_factory=list)
+    """The keyword arguments received by the endpoint, one entry per call."""
+
+    def create(self, **request: Any) -> AnthropicResponseMimic:
+        """Record one request and answer it with the next response."""
+        self.requests.append(request)
+        return self.responses[len(self.requests) - 1]
+
+
+@dataclass
+class SequencedServiceMimic:
+    """Expose a Messages endpoint answering with a sequence of responses."""
+
+    messages: SequencedMessagesEndpoint
+    """The endpoint the client talks to."""
+
+
+@dataclass
+class EchoTool(Tool):
+    """A tool repeating its text, or failing when told to."""
+
+    fails: bool = False
+    """Whether every call is answered as an error."""
+
+    @property
+    def definition(self) -> ToolDefinition:
+        return ToolDefinition.from_file(TOOL_CASES / "echo.json")
+
+    def run(self, arguments: dict[str, Any]) -> ToolOutcome:
+        return ToolOutcome(content=arguments["text"], is_error=self.fails)
+
+
+def build_tool_loop_client(
+    monkeypatch: pytest.MonkeyPatch,
+    responses: list[AnthropicResponseMimic],
+    **configuration: Any,
+) -> tuple[AnthropicClient, SequencedMessagesEndpoint]:
+    """
+    Build a client whose service answers successive requests with the given responses.
+    """
+    endpoint = SequencedMessagesEndpoint(responses)
+    monkeypatch.setattr(
+        anthropic, "Anthropic", lambda *, api_key: SequencedServiceMimic(endpoint)
+    )
+    return AnthropicClient(**configuration), endpoint
+
+
+def tool_results_of(request: dict[str, Any]) -> list[dict[str, Any]]:
+    """The tool results the last message of a request carries."""
+    return request["messages"][-1]["content"]
+
+
+class TestAnthropicToolLoop:
+    """Tool calls are run and answered until the model writes its answer."""
+
+    def test_a_tool_call_is_run_and_its_result_sent_back(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        call = ToolUseBlockMimic("echo", {"text": "the jug"}, id="toolu_1")
+        client, endpoint = build_tool_loop_client(
+            monkeypatch,
+            [
+                AnthropicResponseMimic([call], stop_reason="tool_use"),
+                AnthropicResponseMimic([TextBlockMimic("done")]),
+            ],
+        )
+
+        conversation = client.complete_with_tools("system", "user", [EchoTool()])
+
+        assert conversation.answer == "done"
+        assert [recorded.arguments for recorded in conversation.calls] == [call.input]
+        (result,) = tool_results_of(endpoint.requests[1])
+        assert result["tool_use_id"] == call.id
+        assert result["content"] == call.input["text"]
+        assert endpoint.requests[0]["tools"] == [EchoTool().definition.as_request()]
+
+    def test_a_failing_tool_is_reported_to_the_model_as_an_error(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        client, endpoint = build_tool_loop_client(
+            monkeypatch,
+            [
+                AnthropicResponseMimic(
+                    [ToolUseBlockMimic("echo", {"text": "x"})], stop_reason="tool_use"
+                ),
+                AnthropicResponseMimic([TextBlockMimic("done")]),
+            ],
+        )
+
+        client.complete_with_tools("system", "user", [EchoTool(fails=True)])
+
+        (result,) = tool_results_of(endpoint.requests[1])
+        assert result["is_error"] is True
+
+    def test_the_loop_stops_at_its_turn_budget(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        budget = 2
+        calling = AnthropicResponseMimic(
+            [ToolUseBlockMimic("echo", {"text": "again"})], stop_reason="tool_use"
+        )
+        client, endpoint = build_tool_loop_client(
+            monkeypatch, [calling] * (budget + 1), max_tool_turns=budget
+        )
+
+        with pytest.raises(ToolTurnsExhausted):
+            client.complete_with_tools("system", "user", [EchoTool()])
+        assert len(endpoint.requests) == budget

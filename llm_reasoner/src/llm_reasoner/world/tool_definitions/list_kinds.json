@@ -1,0 +1,18 @@
+{
+  "name": "list_kinds",
+  "description": "List the kinds of thing the world model declares, each with its identifier, a one-line summary and how many live individuals it has (its specialisations included). Start here to learn the world model's vocabulary. Narrow the list with 'within' to a kind and its specialisations, and with 'present_only' to kinds that have individuals right now.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "within": {
+        "type": "string",
+        "description": "A kind's identifier, or its plain name when no other kind shares it; only that kind and its specialisations are listed."
+      },
+      "present_only": {
+        "type": "boolean",
+        "description": "List only kinds with live individuals."
+      }
+    },
+    "additionalProperties": false
+  }
+}
