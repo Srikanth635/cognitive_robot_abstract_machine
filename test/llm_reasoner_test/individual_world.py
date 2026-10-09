@@ -99,11 +99,14 @@ class SymbolFillingFieldsLater(Symbol):
 
 
 @dataclass(eq=False)
-class ActionWithBodySlot(Symbol):
-    """Pour from one body."""
+class ActionWithBodyAndValueSlots(Symbol):
+    """Tilt one body to pour from it."""
 
     source: WorldBody
     """The body poured from."""
+
+    angle: float = 0.5
+    """The angle to tilt the body to, in radians."""
 
 
 def body_with_geometry() -> WorldBody:
