@@ -11,6 +11,12 @@ from krrood.symbol_graph.symbol_graph import Symbol, SymbolGraph
 from krrood.utils import recursive_subclasses
 from typing_extensions import Any, List
 
+FOUNDATION_PACKAGE = "krrood"
+"""
+The package of the symbol graph, whose own classes are its machinery rather than kinds
+of any world.
+"""
+
 
 class WorldSource(ABC):
     """
@@ -39,12 +45,16 @@ class WorldSource(ABC):
 @dataclass(frozen=True)
 class SymbolGraphSource(WorldSource):
     """
-    The world as krrood's symbol graph holds it: every loaded symbol class is a kind,
-    and every live symbol an individual.
+    The world as krrood's symbol graph holds it: every loaded symbol class declared
+    outside krrood is a kind, and every live symbol an individual.
     """
 
     def kinds(self) -> List[type]:
-        return list(dict.fromkeys([Symbol, *recursive_subclasses(Symbol)]))
+        return [
+            kind
+            for kind in dict.fromkeys(recursive_subclasses(Symbol))
+            if kind.__module__.split(".")[0] != FOUNDATION_PACKAGE
+        ]
 
     def individuals(self) -> List[Any]:
         return [

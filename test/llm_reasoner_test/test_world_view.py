@@ -11,6 +11,7 @@ from dataclasses import fields
 
 import pytest
 
+from krrood.entity_query_language.predicate import HasType, Symbol
 from krrood.entity_query_language.verbalization.pipeline import verbalize_expression
 from krrood.entity_query_language.verbalization.rendering.source_documentation import (
     _attribute_docstrings,
@@ -27,6 +28,7 @@ from llm_reasoner.world.exceptions import (
     UnknownKind,
 )
 from llm_reasoner.world.finding import Comparison, Condition
+from llm_reasoner.world.kinds import KindListing
 from llm_reasoner.world.predicates import IndividualArgument, PlainArgument
 from llm_reasoner.world.values import (
     IndividualReference,
@@ -83,11 +85,28 @@ class TestKinds:
 
     def test_present_kinds_are_those_with_live_individuals(self, view):
         annotation = VesselAnnotation(body=body_with_geometry())
-        present = view.kinds(within=identifier_of(BodyAnnotation), present_only=True)
+        present = view.kinds(
+            within=identifier_of(BodyAnnotation), listing=KindListing.PRESENT
+        )
         assert {kind.name for kind in present} == {
             BodyAnnotation.__name__,
             type(annotation).__name__,
         }
+
+    def test_instantiated_kinds_are_those_with_individuals_of_their_own(self, view):
+        annotation = VesselAnnotation(body=body_with_geometry())
+        (instantiated,) = view.kinds(
+            within=identifier_of(BodyAnnotation), listing=KindListing.INSTANTIATED
+        )
+        assert instantiated.name == type(annotation).__name__
+        assert instantiated.own_individual_count == 1
+
+    def test_the_classes_of_krrood_itself_are_not_kinds_of_the_world(self, view):
+        listed = {kind.identifier for kind in view.kinds()}
+        predicates = {predicate.identifier for predicate in view.predicates()}
+        assert identifier_of(Symbol) not in listed
+        assert identifier_of(HasType) not in predicates
+        assert identifier_of(IsHeavierThan) in predicates
 
     def test_a_kind_is_described_by_its_fields(self, view):
         description = view.describe_kind(identifier_of(InertialProperties))

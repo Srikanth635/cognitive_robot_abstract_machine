@@ -18,6 +18,7 @@ from llm_reasoner.clients.tools import Tool, ToolDefinition, ToolOutcome
 from llm_reasoner.world.encoding import AnswerEncoder
 from llm_reasoner.world.exceptions import WorldQuestionError
 from llm_reasoner.world.finding import Comparison, Condition
+from llm_reasoner.world.kinds import KindListing
 from llm_reasoner.world.predicates import Argument, IndividualArgument, PlainArgument
 from llm_reasoner.world.rendering import IndividualRenderer
 from llm_reasoner.world.view import FIND_LIMIT, WorldView
@@ -56,7 +57,7 @@ class WorldToolKey(StrEnum):
 
     KIND = "kind"
     WITHIN = "within"
-    PRESENT_ONLY = "present_only"
+    LISTING = "listing"
     CONDITIONS = "conditions"
     PATH = "path"
     COMPARISON = "comparison"
@@ -146,7 +147,9 @@ class ListKinds(WorldTool):
     def answer(self, arguments: Mapping[str, Any]) -> Any:
         return self.view.kinds(
             within=arguments.get(WorldToolKey.WITHIN),
-            present_only=arguments.get(WorldToolKey.PRESENT_ONLY, False),
+            listing=KindListing(
+                arguments.get(WorldToolKey.LISTING, KindListing.INSTANTIATED)
+            ),
         )
 
 

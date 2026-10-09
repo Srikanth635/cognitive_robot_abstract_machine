@@ -15,6 +15,7 @@ from pathlib import Path
 from jsonschema import Draft202012Validator
 from typing_extensions import Any, Dict, List, Mapping, Sequence, Union
 
+from llm_reasoner.clients.usage import TokenUsage
 from llm_reasoner.exceptions import LLMReasonerError
 
 
@@ -189,6 +190,11 @@ class ToolConversation:
     calls: List[ToolCall] = field(default_factory=list)
     """
     The calls it made, in order, with what each returned.
+    """
+
+    usage: TokenUsage = field(default_factory=TokenUsage)
+    """
+    The tokens the whole conversation consumed, every turn added up.
     """
 
 
