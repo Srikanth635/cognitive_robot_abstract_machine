@@ -11,6 +11,8 @@ from krrood.entity_query_language.query.match import Match
 from typing_extensions import Any, Dict, Iterable, List, Optional, Sequence, TypeVar
 
 from llm_reasoner.clients.base import Exchange, LanguageModelClient
+from llm_reasoner.clients.tools import Tool, ToolConversation, ToolUsingClient
+from llm_reasoner.resolver.completion import Completion, PlainCompletion, ToolCompletion
 from llm_reasoner.resolver.context import (
     CandidateRenderer,
     PromptContextProvider,
@@ -19,6 +21,7 @@ from llm_reasoner.resolver.context import (
     context_sections,
 )
 from llm_reasoner.resolver.exceptions import (
+    ClientCannotUseTools,
     MissingSlotInResponse,
     ModelResponseUnparseable,
     NoCandidateReferents,
@@ -29,8 +32,11 @@ from llm_reasoner.resolver.exceptions import (
     SlotValueRejected,
     UnknownSlotInResponse,
 )
-from llm_reasoner.resolver.prompts import SYSTEM_PROMPT, PromptBuilder, SourceDetail
+from llm_reasoner.resolver.prompts import PromptBuilder, SourceDetail
+from llm_reasoner.resolver.referents import IntegerTokens, ReferentNaming, WorldHandles
 from llm_reasoner.resolver.reflection import Slot, SlotKind, reflect_slots
+from llm_reasoner.world.tools import world_tools
+from llm_reasoner.world.view import WorldView
 
 T = TypeVar("T")
 
@@ -86,10 +92,65 @@ class LanguageModelBackend(GenerativeBackend):
     How much of the target type's definition is put in the prompt.
     """
 
+    tools: Sequence[Tool] = field(kw_only=True, default=())
+    """
+    The tools the model may call before it answers; none asks it in one completion.
+    """
+
+    referent_naming: ReferentNaming = field(kw_only=True, default_factory=IntegerTokens)
+    """
+    How the candidates of referent slots are named and answered.
+    """
+
+    completion: Completion = field(init=False)
+    """
+    How the model is asked, with the tools when there are any.
+    """
+
     log: List[Exchange] = field(default_factory=list, init=False)
     """
     Every exchange, in order.
     """
+
+    conversations: List[ToolConversation] = field(default_factory=list, init=False)
+    """
+    The conversation of every exchange, in the same order, with the tool calls made in
+    it and the tokens it consumed.
+    """
+
+    def __post_init__(self) -> None:
+        if not self.tools:
+            self.completion = PlainCompletion(client=self.client)
+            return
+        if not isinstance(self.client, ToolUsingClient):
+            raise ClientCannotUseTools(client_identity=self.client.identity)
+        self.completion = ToolCompletion(client=self.client, tools=self.tools)
+
+    @classmethod
+    def with_world_tools(
+        cls, client: LanguageModelClient, view: WorldView, **settings: Any
+    ) -> LanguageModelBackend:
+        """
+        :param client: A client that lets the model call tools.
+        :param view: The world the model asks about.
+        :param settings: Further settings of the backend.
+        :return: A backend whose model finds the candidates of referent slots with the
+            world tools and answers with their handles.
+        """
+        return cls(
+            client=client,
+            tools=world_tools(view),
+            referent_naming=WorldHandles(view=view),
+            **settings,
+        )
+
+    @property
+    def system_prompt(self) -> str:
+        """
+        The system prompt, its rule for referent slots matching how their candidates are
+        named.
+        """
+        return self._prompt_builder().system_prompt()
 
     # %% evaluation
 
@@ -172,13 +233,15 @@ class LanguageModelBackend(GenerativeBackend):
 
         last_error: Optional[Exception] = None
         for attempt in range(self.max_repairs + 1):
-            raw_response = self.client.complete(SYSTEM_PROMPT, prompt)
+            conversation = self.completion.complete(self.system_prompt, prompt)
+            raw_response = conversation.answer
+            self.conversations.append(conversation)
             self.log.append(
                 Exchange(
-                    system=SYSTEM_PROMPT,
+                    system=self.system_prompt,
                     user=prompt,
                     raw_response=raw_response,
-                    client_identity=self.client.identity,
+                    client_identity=self.completion.identity,
                     attempt=attempt,
                 )
             )
@@ -195,7 +258,9 @@ class LanguageModelBackend(GenerativeBackend):
     def _prompt_builder(self) -> PromptBuilder:
         """:return: A builder configured from this backend's seams."""
         return PromptBuilder(
-            renderer=self.candidate_renderer, source_detail=self.source_detail
+            renderer=self.candidate_renderer,
+            referent_naming=self.referent_naming,
+            source_detail=self.source_detail,
         )
 
     # %% decoding
@@ -269,22 +334,23 @@ class LanguageModelBackend(GenerativeBackend):
             for path, slot in slots_by_path.items()
         }
 
-    @staticmethod
-    def _decode_value(slot: Slot, value: Any) -> Any:
+    def _decode_value(self, slot: Slot, value: Any) -> Any:
         """
         Decode one JSON value into its slot's declared type.
 
-        Referents are decoded by indexing the extension, which recovers the live
-        individual the token stands for. A slot declaring a union is decoded against its
-        branches in declaration order, so the model may choose the branch that fits the
-        situation.
+        A referent is decoded by the naming its candidates were offered under, which
+        recovers the live individual the answer names; a kind by its integer token. A
+        slot declaring a union is decoded against its branches in declaration order, so
+        the model may choose the branch that fits the situation.
 
         :param slot: The slot the value was offered for.
         :param value: The offered JSON value.
         :return: The decoded value.
         """
+        if slot.kind is SlotKind.SORTAL:
+            return IntegerTokens().decode(slot, value)
         if slot.selects_from_domain:
-            return LanguageModelBackend._decode_token(slot, value)
+            return self.referent_naming.decode(slot, value)
         for candidate_type in slot.decodable_types:
             if LanguageModelBackend._json_fits(value, candidate_type):
                 return LanguageModelBackend._coerce(value, candidate_type)
@@ -332,27 +398,6 @@ class LanguageModelBackend(GenerativeBackend):
         if candidate_type is bool:
             return value
         return candidate_type(value)
-
-    @staticmethod
-    def _decode_token(slot: Slot, value: Any) -> Any:
-        """
-        :param slot: A referent slot.
-        :param value: The offered candidate token.
-        :return: The individual the token stands for.
-        """
-        if isinstance(value, bool) or not isinstance(value, int):
-            raise SlotValueRejected(
-                slot_path=slot.path,
-                value=value,
-                reason="Expected an integer candidate token.",
-            )
-        if not 0 <= value < len(slot.domain):
-            raise SlotValueRejected(
-                slot_path=slot.path,
-                value=value,
-                reason=f"Token out of range; expected 0..{len(slot.domain) - 1}.",
-            )
-        return slot.domain[value]
 
     # %% construction and validation
 

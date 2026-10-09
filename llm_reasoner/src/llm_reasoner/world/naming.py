@@ -94,6 +94,12 @@ class HandleRegistry(IndividualNaming):
         )
         return handle
 
+    def is_live(self, handle: str) -> bool:
+        """
+        :return: Whether a handle was given out to an individual that still exists.
+        """
+        return handle in self.individuals and self.individuals[handle]() is not None
+
     def individual_of(self, handle: str) -> Any:
         """
         :return: The individual a handle was given to.
