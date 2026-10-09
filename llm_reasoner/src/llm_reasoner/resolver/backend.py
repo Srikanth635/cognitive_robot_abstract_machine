@@ -147,10 +147,10 @@ class LanguageModelBackend(GenerativeBackend):
     @property
     def system_prompt(self) -> str:
         """
-        The system prompt, its rule for referent slots matching how their candidates are
-        named.
+        The system prompt, its rules matching how the candidates of referent slots are
+        named and how the model is asked.
         """
-        return self._prompt_builder().system_prompt()
+        return self._prompt_builder().system_prompt(self.completion.answer_rules)
 
     # %% evaluation
 
