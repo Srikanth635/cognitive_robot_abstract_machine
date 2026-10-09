@@ -14,7 +14,12 @@ from llm_reasoner.world.describer import IndividualDescriber, WalkLimits
 from llm_reasoner.world.description import IndividualDescription
 from llm_reasoner.world.finding import Condition, FoundIndividuals, IndividualFinder
 from llm_reasoner.world.holders import Holder, HolderIndex
-from llm_reasoner.world.kinds import KindCatalogue, KindDescription, KindSummary
+from llm_reasoner.world.kinds import (
+    KindCatalogue,
+    KindDescription,
+    KindListing,
+    KindSummary,
+)
 from llm_reasoner.world.naming import HandleRegistry
 from llm_reasoner.world.paths import FieldPath
 from llm_reasoner.world.predicates import (
@@ -77,16 +82,16 @@ class WorldView:
     # %% kinds
 
     def kinds(
-        self, within: Optional[str] = None, present_only: bool = False
+        self, within: Optional[str] = None, listing: KindListing = KindListing.ALL
     ) -> List[KindSummary]:
         """
         :param within: The name of a kind, to list only it and its specialisations.
-        :param present_only: Only kinds with live individuals.
+        :param listing: Which of those kinds to name.
         :return: The kinds the world has.
         """
         return self.catalogue.kinds(
             within=None if within is None else self.catalogue.resolve(within),
-            present_only=present_only,
+            listing=listing,
         )
 
     def describe_kind(self, kind: str) -> KindDescription:

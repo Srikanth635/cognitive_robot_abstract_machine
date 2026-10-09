@@ -8,6 +8,7 @@ import anthropic
 from typing_extensions import Any, Dict, List, Mapping, Optional, Sequence
 
 from llm_reasoner.clients.base import LanguageModelClient
+from llm_reasoner.clients.usage import TokenUsage
 from llm_reasoner.clients.tools import (
     Tool,
     ToolBox,
@@ -264,6 +265,20 @@ class AnthropicClient(LanguageModelClient, ToolUsingClient):
             )
 
     @staticmethod
+    def _usage_of(response: Any) -> TokenUsage:
+        """
+        :return: The tokens a response consumed; cache figures the service leaves out
+            count as none.
+        """
+        reported = response.usage
+        return TokenUsage(
+            input_tokens=reported.input_tokens,
+            output_tokens=reported.output_tokens,
+            cache_creation_input_tokens=reported.cache_creation_input_tokens or 0,
+            cache_read_input_tokens=reported.cache_read_input_tokens or 0,
+        )
+
+    @staticmethod
     def _extract_text(response: Any) -> str:
         return "".join(block.text for block in response.content if block.type == "text")
 
@@ -302,6 +317,7 @@ class AnthropicClient(LanguageModelClient, ToolUsingClient):
             {MessageKey.ROLE: MessageRole.USER, MessageKey.CONTENT: user}
         ]
         calls: List[ToolCall] = []
+        usage = TokenUsage()
         for _ in range(self.max_tool_turns):
             response = self._client.messages.create(
                 model=self.model,
@@ -310,10 +326,11 @@ class AnthropicClient(LanguageModelClient, ToolUsingClient):
                 messages=list(messages),
                 tools=toolbox.definitions(),
             )
+            usage = usage + self._usage_of(response)
             if response.stop_reason != StopReason.TOOL_USE:
                 self._check_truncation(response)
                 return ToolConversation(
-                    answer=self._extract_text(response), calls=calls
+                    answer=self._extract_text(response), calls=calls, usage=usage
                 )
             results = []
             for block in response.content:

@@ -1,6 +1,6 @@
 {
   "name": "find_individuals",
-  "description": "Find the live individuals of a kind (its specialisations included) whose fields meet every condition. Returns the search stated in English, how many individuals meet it, and the handles of the first ones, such as 'Cup#1'. Handles stay the same for the whole conversation; pass them to the other tools.",
+  "description": "Find the live individuals of a kind whose fields meet every condition. A search for a kind also finds its specialisations, so search the most general kind that fits once rather than each specialisation. Returns the search stated in English, how many individuals meet it, and the handles of the first ones, such as 'Cup#1', each with its kind. Handles stay the same for the whole conversation; pass them to the other tools.",
   "input_schema": {
     "type": "object",
     "properties": {
@@ -20,15 +20,31 @@
             },
             "comparison": {
               "type": "string",
-              "enum": ["equal", "not equal", "less", "less or equal", "greater", "greater or equal"],
+              "enum": [
+                "equal",
+                "not equal",
+                "less",
+                "less or equal",
+                "greater",
+                "greater or equal"
+              ],
               "description": "How the value at the path is compared with the given value."
             },
             "value": {
-              "type": ["string", "number", "boolean", "null"],
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ],
               "description": "The value compared with."
             }
           },
-          "required": ["path", "comparison", "value"],
+          "required": [
+            "path",
+            "comparison",
+            "value"
+          ],
           "additionalProperties": false
         }
       },
@@ -38,7 +54,9 @@
         "description": "How many of the individuals found to name."
       }
     },
-    "required": ["kind"],
+    "required": [
+      "kind"
+    ],
     "additionalProperties": false
   }
 }

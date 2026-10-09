@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import sys
 from dataclasses import dataclass
+from enum import StrEnum
 
 from typing_extensions import Any, List, Mapping, Optional
 
@@ -25,6 +26,28 @@ LINEAGE_LENGTH = 8
 """
 How many ancestors the description of a kind names.
 """
+
+
+class KindListing(StrEnum):
+    """
+    Which kinds a listing names.
+    """
+
+    INSTANTIATED = "instantiated"
+    """
+    The kinds with live individuals of their own: what the world contains.
+    """
+
+    PRESENT = "present"
+    """
+    The kinds with live individuals of their own or of a specialisation, which adds the
+    kinds the contained ones specialise.
+    """
+
+    ALL = "all"
+    """
+    Every loaded kind, the vocabulary of the world model.
+    """
 
 
 @dataclass(frozen=True)
@@ -51,6 +74,11 @@ class KindSummary:
     individual_count: int
     """
     How many live individuals are of the kind or of a kind specialising it.
+    """
+
+    own_individual_count: int
+    """
+    How many live individuals are of exactly this kind.
     """
 
 
@@ -103,30 +131,49 @@ class KindCatalogue:
     """
 
     def kinds(
-        self, within: Optional[type] = None, present_only: bool = False
+        self, within: Optional[type] = None, listing: KindListing = KindListing.ALL
     ) -> List[KindSummary]:
         """
         :param within: Only this kind and the kinds specialising it; every kind if
             ``None``.
-        :param present_only: Only kinds with live individuals.
+        :param listing: Which of those kinds to name.
         :return: The kinds, ordered by identifier.
         """
-        summaries = []
-        for kind in self.source.kinds():
-            if within is not None and not issubclass(kind, within):
-                continue
-            count = len(self.source.individuals_of(kind))
-            if present_only and count == 0:
-                continue
-            summaries.append(
-                KindSummary(
-                    identifier=identifier_of(kind),
-                    name=kind.__name__,
-                    summary=DocumentedClass.of(kind).summary,
-                    individual_count=count,
-                )
-            )
-        return sorted(summaries, key=lambda summary: summary.identifier)
+        summaries = [
+            self.summary_of(kind)
+            for kind in self.source.kinds()
+            if within is None or issubclass(kind, within)
+        ]
+        return sorted(
+            (summary for summary in summaries if self.is_listed(summary, listing)),
+            key=lambda summary: summary.identifier,
+        )
+
+    def summary_of(self, kind: type) -> KindSummary:
+        """
+        :return: The kind with its summary and the counts of its live individuals.
+        """
+        individuals = self.source.individuals_of(kind)
+        return KindSummary(
+            identifier=identifier_of(kind),
+            name=kind.__name__,
+            summary=DocumentedClass.of(kind).summary,
+            individual_count=len(individuals),
+            own_individual_count=sum(
+                1 for individual in individuals if type(individual) is kind
+            ),
+        )
+
+    @staticmethod
+    def is_listed(summary: KindSummary, listing: KindListing) -> bool:
+        """
+        :return: Whether a listing names the kind.
+        """
+        if listing is KindListing.INSTANTIATED:
+            return summary.own_individual_count > 0
+        if listing is KindListing.PRESENT:
+            return summary.individual_count > 0
+        return True
 
     def describe(self, kind: type) -> KindDescription:
         """

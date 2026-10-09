@@ -13,6 +13,7 @@ import pytest
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.clients.tools import ScriptedToolRequest, ToolBox
 from llm_reasoner.world.finding import Comparison
+from llm_reasoner.world.kinds import KindListing
 from llm_reasoner.world.classes import identifier_of
 from llm_reasoner.world.rendering import IndividualRenderer
 from llm_reasoner.world.tools import WorldToolName, world_tools
@@ -57,11 +58,28 @@ class TestDefinitions:
         offered = conditions["items"]["properties"]["comparison"]["enum"]
         assert offered == [comparison.value for comparison in Comparison]
 
+    def test_the_listings_offered_are_those_the_view_understands(self, view):
+        (list_kinds,) = [
+            tool
+            for tool in world_tools(view)
+            if tool.definition.name == WorldToolName.LIST_KINDS
+        ]
+        offered = list_kinds.definition.input_schema["properties"]["listing"]["enum"]
+        assert offered == [listing.value for listing in KindListing]
+
 
 # %% running
 
 
 class TestRunning:
+    def test_kinds_are_listed_by_what_has_individuals_of_its_own(self, toolbox):
+        annotation = VesselAnnotation(body=body_with_geometry())
+        result = parsed(toolbox.call(WorldToolName.LIST_KINDS, {}))
+        assert {kind["name"] for kind in result} == {
+            type(annotation).__name__,
+            type(annotation.body).__name__,
+        }
+
     def test_a_search_returns_the_handles_found(self, view, toolbox):
         body = body_with_geometry()
         result = parsed(

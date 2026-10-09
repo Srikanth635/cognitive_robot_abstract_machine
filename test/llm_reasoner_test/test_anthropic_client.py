@@ -16,6 +16,7 @@ from llm_reasoner.clients.tools import (
     ToolOutcome,
     ToolTurnsExhausted,
 )
+from llm_reasoner.clients.usage import TokenUsage
 
 TOOL_CASES = Path(__file__).parent / "tool_cases"
 """
@@ -55,10 +56,19 @@ class ToolUseBlockMimic:
 
 @dataclass
 class UsageMimic:
-    """Provide the token-usage figures consumed by truncation checks."""
+    """Provide the token-usage figures of a response."""
 
     output_tokens: int = 0
     """The number of tokens generated for this response."""
+
+    input_tokens: int = 0
+    """The number of uncached input tokens read for this response."""
+
+    cache_creation_input_tokens: int | None = None
+    """The number of input tokens written to the cache, absent when none were."""
+
+    cache_read_input_tokens: int | None = None
+    """The number of input tokens read from the cache, absent when none were."""
 
 
 @dataclass
@@ -476,3 +486,33 @@ class TestAnthropicToolLoop:
         with pytest.raises(ToolTurnsExhausted):
             client.complete_with_tools("system", "user", [EchoTool()])
         assert len(endpoint.requests) == budget
+
+    def test_the_tokens_of_every_turn_are_added_up(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        first = UsageMimic(
+            output_tokens=30, input_tokens=500, cache_creation_input_tokens=200
+        )
+        second = UsageMimic(
+            output_tokens=40, input_tokens=600, cache_read_input_tokens=200
+        )
+        client, _ = build_tool_loop_client(
+            monkeypatch,
+            [
+                AnthropicResponseMimic(
+                    [ToolUseBlockMimic("echo", {"text": "x"})],
+                    stop_reason="tool_use",
+                    usage=first,
+                ),
+                AnthropicResponseMimic([TextBlockMimic("done")], usage=second),
+            ],
+        )
+
+        conversation = client.complete_with_tools("system", "user", [EchoTool()])
+
+        assert conversation.usage == TokenUsage(
+            input_tokens=first.input_tokens + second.input_tokens,
+            output_tokens=first.output_tokens + second.output_tokens,
+            cache_creation_input_tokens=first.cache_creation_input_tokens,
+            cache_read_input_tokens=second.cache_read_input_tokens,
+        )
