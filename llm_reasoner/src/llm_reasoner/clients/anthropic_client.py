@@ -50,8 +50,22 @@ class MessageKey(StrEnum):
     ROLE = "role"
     CONTENT = "content"
     TYPE = "type"
+    TEXT = "text"
     TOOL_USE_ID = "tool_use_id"
     IS_ERROR = "is_error"
+    CACHE_CONTROL = "cache_control"
+
+
+class CacheType(StrEnum):
+    """
+    How long a cached prompt prefix is kept.
+    """
+
+    EPHEMERAL = "ephemeral"
+    """
+    Kept for minutes, refreshed by every read: long enough for the turns of one
+    conversation.
+    """
 
 
 class MessageRole(StrEnum):
@@ -311,7 +325,13 @@ class AnthropicClient(LanguageModelClient, ToolUsingClient):
         The loop is written out rather than left to the SDK's tool runner, because the
         tools are vendor-neutral objects that scripted clients run as well, and every
         call is recorded with what it returned.
+
+        Every turn resends the conversation so far, so the system prompt, which caches
+        the tools ahead of it, carries a cache breakpoint of its own, and the request
+        asks for the growing conversation to be cached up to its last block; each turn
+        then reads what the turn before wrote.
         """
+        cache = {MessageKey.TYPE: CacheType.EPHEMERAL}
         toolbox = ToolBox(tools=tools)
         messages: List[Dict[str, Any]] = [
             {MessageKey.ROLE: MessageRole.USER, MessageKey.CONTENT: user}
@@ -322,9 +342,16 @@ class AnthropicClient(LanguageModelClient, ToolUsingClient):
             response = self._client.messages.create(
                 model=self.model,
                 max_tokens=self.max_tokens,
-                system=system,
+                system=[
+                    {
+                        MessageKey.TYPE: ContentBlockType.TEXT,
+                        MessageKey.TEXT: system,
+                        MessageKey.CACHE_CONTROL: cache,
+                    }
+                ],
                 messages=list(messages),
                 tools=toolbox.definitions(),
+                cache_control=cache,
             )
             usage = usage + self._usage_of(response)
             if response.stop_reason != StopReason.TOOL_USE:

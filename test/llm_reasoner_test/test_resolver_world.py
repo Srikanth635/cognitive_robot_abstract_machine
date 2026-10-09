@@ -99,6 +99,14 @@ class TestPrompt:
         assert IntegerTokens().answer_rule in plain.system_prompt
         assert WorldHandles(view=view).answer_rule not in plain.system_prompt
 
+    def test_in_a_conversation_with_tools_the_answer_is_written_as_text(self):
+        view = WorldView()
+        with_tools = world_backend(view, [])
+        plain = LanguageModelBackend(client=ScriptedClient())
+        (rule,) = with_tools.completion.answer_rules
+        assert rule in with_tools.system_prompt
+        assert rule not in plain.system_prompt
+
 
 # %% resolution
 

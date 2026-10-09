@@ -36,7 +36,7 @@ Rules:
 - Fill every listed slot in every element. Add no other keys.
 - Enum slots take the member name as a string.
 - Kind slots take the integer token of one of the listed kinds.
-{referent_rule}
+{mode_rules}
 - A slot offering several types accepts a value of any one of them; choose the type
   that fits the situation.
 - Respect every stated constraint. When a constraint forces a slot's value, use the
@@ -282,13 +282,15 @@ class PromptBuilder:
         """
         return IntegerTokens.hanging(prefix, text)
 
-    def system_prompt(self) -> str:
+    def system_prompt(self, further_rules: Sequence[str] = ()) -> str:
         """
+        :param further_rules: Rules of how the model is asked, such as where its answer
+            goes when it may call tools.
         :return: The system prompt, its rule for referent slots matching how their
             candidates are named.
         """
         return SYSTEM_PROMPT_TEMPLATE.format(
-            referent_rule=self.referent_naming.answer_rule
+            mode_rules="\n".join([self.referent_naming.answer_rule, *further_rules])
         )
 
     @staticmethod

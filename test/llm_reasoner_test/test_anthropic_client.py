@@ -516,3 +516,24 @@ class TestAnthropicToolLoop:
             cache_creation_input_tokens=first.cache_creation_input_tokens,
             cache_read_input_tokens=second.cache_read_input_tokens,
         )
+
+    def test_the_conversation_is_cached_as_it_grows(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        client, endpoint = build_tool_loop_client(
+            monkeypatch,
+            [
+                AnthropicResponseMimic(
+                    [ToolUseBlockMimic("echo", {"text": "x"})], stop_reason="tool_use"
+                ),
+                AnthropicResponseMimic([TextBlockMimic("done")]),
+            ],
+        )
+
+        client.complete_with_tools("system", "user", [EchoTool()])
+
+        for request in endpoint.requests:
+            (system_block,) = request["system"]
+            assert system_block["text"] == "system"
+            assert system_block["cache_control"] == {"type": "ephemeral"}
+            assert request["cache_control"] == {"type": "ephemeral"}

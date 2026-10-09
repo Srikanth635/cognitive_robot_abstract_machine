@@ -8,10 +8,18 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from typing_extensions import Sequence
+from typing_extensions import Sequence, Tuple
 
 from llm_reasoner.clients.base import LanguageModelClient
 from llm_reasoner.clients.tools import Tool, ToolConversation, ToolUsingClient
+
+TEXT_ANSWER_RULE = (
+    "- Write your final answer as the text of your reply, never as a tool call; the "
+    "tools only find things out."
+)
+"""
+The rule telling a model that may call tools where its answer goes.
+"""
 
 
 class Completion(ABC):
@@ -34,6 +42,13 @@ class Completion(ABC):
         Which model answers, as its client reports it.
         """
 
+    @property
+    @abstractmethod
+    def answer_rules(self) -> Tuple[str, ...]:
+        """
+        The rules telling the model how to give its answer when asked this way.
+        """
+
 
 @dataclass(frozen=True)
 class PlainCompletion(Completion):
@@ -52,6 +67,10 @@ class PlainCompletion(Completion):
     @property
     def identity(self) -> str:
         return self.client.identity
+
+    @property
+    def answer_rules(self) -> Tuple[str, ...]:
+        return ()
 
 
 @dataclass(frozen=True)
@@ -76,3 +95,7 @@ class ToolCompletion(Completion):
     @property
     def identity(self) -> str:
         return self.client.identity
+
+    @property
+    def answer_rules(self) -> Tuple[str, ...]:
+        return (TEXT_ANSWER_RULE,)
