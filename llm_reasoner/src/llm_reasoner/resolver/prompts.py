@@ -115,9 +115,7 @@ class PromptBuilder:
         request = self.verbalize_request(expression, backend)
         if request:
             sections.append("## The request\n\n" + request)
-        sections.extend(
-            f"## {title}\n\n{text}" for title, text in context_sections
-        )
+        sections.extend(f"## {title}\n\n{text}" for title, text in context_sections)
         sections.append(
             "## Slots to fill\n\n" + self.render_slots(open_slots, expression)
         )
@@ -125,8 +123,10 @@ class PromptBuilder:
             sections.append(
                 "## Already known\n\n"
                 + "\n".join(
-                    f"{slot.path} = "
-                    f"{self.renderer.render(slot.bound_value, expression)}"
+                    self.hanging(
+                        f"{slot.path} = ",
+                        self.renderer.render(slot.bound_value, expression),
+                    )
                     for slot in bound_slots
                 )
                 + "\n\nThese are given. Let them inform your choices; do not restate "
@@ -141,9 +141,7 @@ class PromptBuilder:
         )
         return "\n\n".join(sections)
 
-    def describe_types(
-        self, target_type: type, slots: Sequence[Slot]
-    ) -> Optional[str]:
+    def describe_types(self, target_type: type, slots: Sequence[Slot]) -> Optional[str]:
         """
         Account for every type the model has to fill fields on.
 
@@ -179,9 +177,7 @@ class PromptBuilder:
         return "## What these are\n\n" + "\n\n".join(paragraphs)
 
     @staticmethod
-    def types_to_describe(
-        target_type: type, slots: Sequence[Slot]
-    ) -> List[type]:
+    def types_to_describe(target_type: type, slots: Sequence[Slot]) -> List[type]:
         """
         :param target_type: The type being constructed.
         :param slots: Every reflected slot.
@@ -249,7 +245,10 @@ class PromptBuilder:
                 else "    choose one candidate by its integer token:"
             )
             lines.extend(
-                f"      [{token}] {self.renderer.render(candidate, expression)}"
+                self.hanging(
+                    self.candidate_prefix(token),
+                    self.renderer.render(candidate, expression),
+                )
                 for token, candidate in enumerate(slot.domain)
             )
             return "\n".join(lines)
@@ -258,6 +257,25 @@ class PromptBuilder:
             hint += f"    (conventionally {slot.default!r})"
         lines.append(f"    {hint}")
         return "\n".join(lines)
+
+    @staticmethod
+    def candidate_prefix(token: int) -> str:
+        """
+        :param token: The integer token a candidate is chosen by.
+        :return: What precedes the description of that candidate.
+        """
+        return f"      [{token}] "
+
+    @staticmethod
+    def hanging(prefix: str, text: str) -> str:
+        """
+        :param prefix: What precedes the first line.
+        :param text: Text that may span several lines.
+        :return: The text after the prefix, its later lines indented to align with
+            the first.
+        """
+        first, *rest = text.splitlines() or [""]
+        return "\n".join([prefix + first] + [" " * len(prefix) + line for line in rest])
 
     @staticmethod
     def value_hint(slot: Slot) -> str:

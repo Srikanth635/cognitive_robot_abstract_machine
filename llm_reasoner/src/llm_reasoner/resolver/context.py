@@ -7,6 +7,14 @@ from dataclasses import dataclass, field
 from krrood.entity_query_language.query.match import Match
 from typing_extensions import Any, List, Tuple
 
+from llm_reasoner.individuals.describer import IndividualDescriber, is_individual
+from llm_reasoner.individuals.rendering import IndividualRenderer
+
+CANDIDATE_LINE_BUDGET = 15
+"""
+The most lines one candidate is described in, so that a slot offering many candidates
+keeps the prompt readable.
+"""
 
 # %% situational knowledge
 
@@ -53,10 +61,14 @@ class SchemaOnlyContextProvider(PromptContextProvider):
 
 @dataclass
 class StaticContextProvider(PromptContextProvider):
-    """Injects a fixed description of the situation."""
+    """
+    Injects a fixed description of the situation.
+    """
 
     text: str = ""
-    """The situation description."""
+    """
+    The situation description.
+    """
 
     def context_for(self, expression: Match) -> str:
         return self.text
@@ -77,10 +89,14 @@ class TaskContextProvider(PromptContextProvider):
     """
 
     goal: str = ""
-    """What the caller is trying to achieve, in plain language."""
+    """
+    What the caller is trying to achieve, in plain language.
+    """
 
     constraints: str = ""
-    """Any preferences or restrictions the caller wants respected."""
+    """
+    Any preferences or restrictions the caller wants respected.
+    """
 
     def context_for(self, expression: Match) -> str:
         parts = [part for part in (self.goal, self.constraints) if part.strip()]
@@ -108,12 +124,13 @@ class CompositeContextProvider(PromptContextProvider):
     """
 
     providers: List[PromptContextProvider] = field(default_factory=list)
-    """The providers consulted, in the order their sections should be read."""
+    """
+    The providers consulted, in the order their sections should be read.
+    """
 
     def context_for(self, expression: Match) -> str:
         return "\n\n".join(
-            f"## {title}\n\n{text}"
-            for title, text in self.sections_for(expression)
+            f"## {title}\n\n{text}" for title, text in self.sections_for(expression)
         )
 
     def sections_for(self, expression: Match) -> List[Tuple[str, str]]:
@@ -156,9 +173,9 @@ class CandidateRenderer(ABC):
     """
     Describes an individual to the model.
 
-    The model receives a description addressed by an integer token and never the
-    object itself, so a resolved value can be a live world individual while this
-    package stays decoupled from the world.
+    The model receives a description addressed by an integer token and never the object
+    itself, so a resolved value can be a live world individual while this package stays
+    decoupled from the world.
     """
 
     @abstractmethod
@@ -168,16 +185,20 @@ class CandidateRenderer(ABC):
         :param expression: The match being resolved, so a candidate can be described
             relative to the task rather than in isolation. What distinguishes two
             candidates is usually their fitness for *this* query.
-        :return: A single-line description.
+        :return: A description; lines after the first continue it.
         """
 
 
 @dataclass
 class ReprCandidateRenderer(CandidateRenderer):
-    """Describes an individual by its type name and representation."""
+    """
+    Describes an individual by its type name and representation.
+    """
 
     max_length: int = 160
-    """Longest description emitted before truncation."""
+    """
+    Longest description emitted before truncation.
+    """
 
     def render(self, candidate: Any, expression: Match) -> str:
         if isinstance(candidate, type):
@@ -202,3 +223,33 @@ class ReprCandidateRenderer(CandidateRenderer):
         if not docstring:
             return candidate.__name__
         return f"{candidate.__name__}  {docstring.strip().splitlines()[0]}"
+
+
+@dataclass
+class StructuralCandidateRenderer(CandidateRenderer):
+    """
+    Describes an individual by walking its fields: what kind of thing it is, what its
+    stored values mean, and which individuals hold it.
+
+    The walk reads only dataclass fields and their docstrings, so a world individual is
+    described without this package knowing its world model.
+    """
+
+    describer: IndividualDescriber = field(default_factory=IndividualDescriber)
+    """
+    Describes an individual.
+    """
+
+    individual_renderer: IndividualRenderer = field(
+        default_factory=lambda: IndividualRenderer(line_budget=CANDIDATE_LINE_BUDGET)
+    )
+    """
+    Writes a description as text.
+    """
+
+    def render(self, candidate: Any, expression: Match) -> str:
+        if isinstance(candidate, type):
+            return ReprCandidateRenderer.render_kind(candidate)
+        if not is_individual(candidate):
+            return ReprCandidateRenderer().render(candidate, expression)
+        return self.individual_renderer.render(self.describer.describe(candidate))
