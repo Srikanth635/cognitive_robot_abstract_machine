@@ -146,8 +146,8 @@ class ScriptedClient(LanguageModelClient, ToolUsingClient):
 
     tool_turns: List[ScriptedTurn] = field(default_factory=list)
     """
-    The turns of a completion with tools, in order: the tool calls of each turn, which
-    are run against the tools offered, and finally the answer.
+    The turns of completions with tools, used up in order: the tool calls of each turn,
+    which are run against the tools offered, and the answer ending each completion.
     """
 
     calls: List[Tuple[str, str]] = field(default_factory=list)
@@ -186,7 +186,8 @@ class ScriptedClient(LanguageModelClient, ToolUsingClient):
         self.calls.append((system, user))
         toolbox = ToolBox(tools=tools)
         calls: List[ToolCall] = []
-        for turn in self.tool_turns:
+        while self.tool_turns:
+            turn = self.tool_turns.pop(0)
             if isinstance(turn, str):
                 return ToolConversation(answer=turn, calls=calls)
             calls.extend(

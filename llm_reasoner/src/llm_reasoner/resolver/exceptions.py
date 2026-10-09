@@ -4,7 +4,6 @@ from dataclasses import dataclass
 
 from typing_extensions import Any, List, Optional
 
-
 # %% base
 
 
@@ -160,7 +159,9 @@ class RepairBudgetExhausted(LanguageModelBackendError):
     """The failure of the final attempt."""
 
     def __str__(self) -> str:
-        return f"Gave up after {self.attempts} attempt(s). Last error: {self.last_error}"
+        return (
+            f"Gave up after {self.attempts} attempt(s). Last error: {self.last_error}"
+        )
 
 
 @dataclass
@@ -175,3 +176,17 @@ class NoValidCandidates(LanguageModelBackendError):
             f"All {self.constructed} constructed candidate(s) failed the query's "
             f"where-conditions."
         )
+
+
+# %% configuration
+
+
+@dataclass
+class ClientCannotUseTools(LanguageModelBackendError):
+    """Raised when tools are offered through a client that cannot let a model call them."""
+
+    client_identity: str
+    """The client given."""
+
+    def __str__(self) -> str:
+        return f"The client {self.client_identity} cannot let a model call tools."

@@ -28,7 +28,11 @@ from llm_reasoner.resolver.exceptions import (
     UnresolvableSlot,
 )
 
-from llm_reasoner.resolver.prompts import SYSTEM_PROMPT, PromptBuilder, SourceDetail
+from llm_reasoner.resolver.prompts import (
+    SYSTEM_PROMPT_TEMPLATE,
+    PromptBuilder,
+    SourceDetail,
+)
 from llm_reasoner.resolver.reflection import (
     GENERATABLE_TYPES,
     Slot,
@@ -62,7 +66,7 @@ __all__ = [
     "RepairBudgetExhausted",
     "ReprCandidateRenderer",
     "RetryableModelFailure",
-    "SYSTEM_PROMPT",
+    "SYSTEM_PROMPT_TEMPLATE",
     "SchemaOnlyContextProvider",
     "Slot",
     "SlotKind",

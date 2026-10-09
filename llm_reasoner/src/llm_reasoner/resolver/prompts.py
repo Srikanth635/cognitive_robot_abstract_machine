@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import enum
 import inspect
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from krrood.entity_query_language.backends import QueryBackend
 from krrood.entity_query_language.query.match import Match
@@ -10,11 +10,16 @@ from krrood.entity_query_language.verbalization.pipeline import verbalize_expres
 from typing_extensions import List, Optional, Sequence, Tuple
 
 from llm_reasoner.resolver.context import CandidateRenderer
+from llm_reasoner.resolver.referents import (
+    SLOT_NOTE_INDENT,
+    IntegerTokens,
+    ReferentNaming,
+)
 from llm_reasoner.resolver.reflection import Slot, SlotKind
 
 # %% system prompt
 
-SYSTEM_PROMPT = """\
+SYSTEM_PROMPT_TEMPLATE = """\
 You fill in the missing parameters of a partially specified object.
 
 Reading the request:
@@ -30,7 +35,8 @@ Rules:
 - Each array element is an object whose keys are exactly the slot paths given to you.
 - Fill every listed slot in every element. Add no other keys.
 - Enum slots take the member name as a string.
-- Referent and kind slots take the integer token of one of the listed options.
+- Kind slots take the integer token of one of the listed kinds.
+{referent_rule}
 - A slot offering several types accepts a value of any one of them; choose the type
   that fits the situation.
 - Respect every stated constraint. When a constraint forces a slot's value, use the
@@ -80,6 +86,9 @@ class PromptBuilder:
 
     renderer: CandidateRenderer
     """Describes the candidates of referent slots."""
+
+    referent_naming: ReferentNaming = field(default_factory=IntegerTokens)
+    """How the candidates of referent slots are named and answered."""
 
     source_detail: SourceDetail = SourceDetail.SIGNATURE
     """How much of the target type's definition to include."""
@@ -238,18 +247,16 @@ class PromptBuilder:
         lines = [f"{slot.path}   ({slot.type_name})"]
         if slot.docstring:
             lines.append(f'    "{slot.docstring}"')
-        if slot.selects_from_domain:
-            lines.append(
-                "    choose one kind by its integer token:"
-                if slot.kind is SlotKind.SORTAL
-                else "    choose one candidate by its integer token:"
-            )
+        if slot.kind is SlotKind.SORTAL:
+            lines.append(f"{SLOT_NOTE_INDENT}choose one kind by its integer token:")
             lines.extend(
-                self.hanging(
-                    self.candidate_prefix(token),
-                    self.renderer.render(candidate, expression),
-                )
-                for token, candidate in enumerate(slot.domain)
+                IntegerTokens().candidate_lines(slot, expression, self.renderer)
+            )
+            return "\n".join(lines)
+        if slot.selects_from_domain:
+            lines.append(self.referent_naming.candidate_heading)
+            lines.extend(
+                self.referent_naming.candidate_lines(slot, expression, self.renderer)
             )
             return "\n".join(lines)
         hint = self.value_hint(slot)
@@ -264,18 +271,25 @@ class PromptBuilder:
         :param token: The integer token a candidate is chosen by.
         :return: What precedes the description of that candidate.
         """
-        return f"      [{token}] "
+        return IntegerTokens.candidate_prefix(token)
 
     @staticmethod
     def hanging(prefix: str, text: str) -> str:
         """
         :param prefix: What precedes the first line.
         :param text: Text that may span several lines.
-        :return: The text after the prefix, its later lines indented to align with
-            the first.
+        :return: The text after the prefix, its later lines aligned with the first.
         """
-        first, *rest = text.splitlines() or [""]
-        return "\n".join([prefix + first] + [" " * len(prefix) + line for line in rest])
+        return IntegerTokens.hanging(prefix, text)
+
+    def system_prompt(self) -> str:
+        """
+        :return: The system prompt, its rule for referent slots matching how their
+            candidates are named.
+        """
+        return SYSTEM_PROMPT_TEMPLATE.format(
+            referent_rule=self.referent_naming.answer_rule
+        )
 
     @staticmethod
     def value_hint(slot: Slot) -> str:
