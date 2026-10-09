@@ -28,9 +28,6 @@ from llm_reasoner.resolver.exceptions import (
     UnresolvableSlot,
 )
 
-from llm_reasoner.clients.base import Exchange
-from llm_reasoner.resolver.backend import LanguageModelBackend
-
 from llm_reasoner.resolver.prompts import SYSTEM_PROMPT, PromptBuilder, SourceDetail
 from llm_reasoner.resolver.reflection import (
     GENERATABLE_TYPES,

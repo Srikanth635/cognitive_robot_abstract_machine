@@ -7,8 +7,9 @@ from dataclasses import dataclass, field
 from krrood.entity_query_language.query.match import Match
 from typing_extensions import Any, List, Tuple
 
-from llm_reasoner.individuals.describer import IndividualDescriber, is_individual
-from llm_reasoner.individuals.rendering import IndividualRenderer
+from llm_reasoner.world.classes import is_individual
+from llm_reasoner.world.describer import IndividualDescriber
+from llm_reasoner.world.rendering import IndividualRenderer
 
 CANDIDATE_LINE_BUDGET = 15
 """
