@@ -8,8 +8,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 from krrood.entity_query_language.factories import the, variable
 from krrood.entity_query_language.verbalization.rendering.source_documentation import (
     _attribute_docstrings,
@@ -27,7 +25,7 @@ from llm_reasoner.resolver.context import (
 from llm_reasoner.resolver.prompts import PromptBuilder
 from llm_reasoner.resolver.reflection import reflect_slots
 
-from .individual_world import ActionWithBodyAndValueSlots, WorldBody, body_with_geometry
+from .world_mimics import ActionWithBodyAndValueSlots, WorldBody, body_with_geometry
 
 CASES = Path(__file__).parent / "resolver_cases"
 """

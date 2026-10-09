@@ -8,19 +8,21 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import singledispatchmethod
 
-from typing_extensions import List
+from typing_extensions import List, Tuple
 
 from llm_reasoner.exceptions import LLMReasonerError
-from llm_reasoner.individuals.description import (
-    CollectionValue,
+from llm_reasoner.world.description import (
     FieldDescription,
-    FieldValue,
     IndividualDescription,
+    Referrer,
+)
+from llm_reasoner.world.values import (
+    CollectionValue,
+    FieldValue,
+    IndividualReference,
     NestedIndividual,
     NumericValue,
     PlainValue,
-    Referrer,
-    RepeatedIndividual,
     UndescribedValue,
     WorldStateDependentValue,
 )
@@ -195,14 +197,24 @@ class IndividualRenderer:
 
     @inline.register
     def _(self, value: NumericValue) -> str:
-        return "(" + ", ".join(f"{number:g}" for number in value.values) + ")"
+        return self.numbers(value.values)
 
     @inline.register
     def _(self, value: WorldStateDependentValue) -> str:
-        return "depends on the world state: " + ", ".join(value.variables)
+        variables = "depends on the world state: " + ", ".join(value.variables)
+        if value.current is None:
+            return variables
+        return self.numbers(value.current) + f" now; {variables}"
+
+    @staticmethod
+    def numbers(values: Tuple[float, ...]) -> str:
+        """
+        :return: Numbers written compactly in parentheses.
+        """
+        return "(" + ", ".join(f"{number:g}" for number in values) + ")"
 
     @inline.register
-    def _(self, value: RepeatedIndividual) -> str:
+    def _(self, value: IndividualReference) -> str:
         return f"see {value.identifier}"
 
     @inline.register

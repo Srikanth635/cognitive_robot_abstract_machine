@@ -1,7 +1,8 @@
 """
-A small world of krrood symbols for describing individuals: a body with geometry, inertial
-properties and a pose, annotations referring to it, and an action with a slot for a body.
-It imports only krrood, as a world built on krrood would reach llm_reasoner.
+A small world of krrood symbols for the world injector: a body with geometry, inertial
+properties and a pose, annotations referring to it, a predicate about bodies, and an
+action with a slot for a body. It imports only krrood, as a world built on krrood would
+reach llm_reasoner.
 """
 
 from __future__ import annotations
@@ -9,7 +10,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 
-from krrood.entity_query_language.predicate import Symbol
+from krrood.entity_query_language.predicate import Predicate, RenderedFields, Symbol
+from krrood.entity_query_language.verbalization.vocabulary.parts_of_speech import (
+    Noun,
+    predicate_clause,
+)
 from krrood.patterns.field_metadata import JSONMetadata
 from krrood.symbolic_math.symbolic_math import FloatVariable, Vector
 from typing_extensions import List, Optional
@@ -99,6 +104,24 @@ class SymbolFillingFieldsLater(Symbol):
 
 
 @dataclass(eq=False)
+class IsHeavierThan(Predicate):
+    """Whether a body weighs more than a given mass."""
+
+    body: WorldBody
+    """The body whose mass is compared."""
+
+    mass: float
+    """The mass compared against, in kilograms."""
+
+    def __call__(self) -> bool:
+        return self.body.inertial.mass > self.mass
+
+    @classmethod
+    def _verbalization_fragment_(cls, fields: RenderedFields):
+        return predicate_clause(cls, Noun(fields["body"]), Noun(fields["mass"]))
+
+
+@dataclass(eq=False)
 class ActionWithBodyAndValueSlots(Symbol):
     """Tilt one body to pour from it."""
 
@@ -129,3 +152,13 @@ def body_moved_by_a_joint() -> WorldBody:
     return WorldBody(
         name="drawer", position=Vector([FloatVariable(name="drawer_joint"), 0.0, 0.0])
     )
+
+
+def body_moved_by_a_readable_joint(joint_position: List[float]) -> WorldBody:
+    """
+    :param joint_position: Holds the current joint position; changing its only element
+        moves the joint.
+    :return: A body whose position depends on a joint the world can read.
+    """
+    joint = FloatVariable.create_with_resolver("lid_joint", lambda: joint_position[0])
+    return WorldBody(name="lid", position=Vector([joint, 0.0, 0.0]))

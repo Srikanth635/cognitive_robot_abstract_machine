@@ -16,25 +16,24 @@ from krrood.entity_query_language.verbalization.rendering.source_documentation i
     _attribute_docstrings,
 )
 
-from llm_reasoner.individuals.describer import IndividualDescriber, WalkLimits
-from llm_reasoner.individuals.description import (
+from llm_reasoner.world.describer import IndividualDescriber, WalkLimits
+from llm_reasoner.world.description import IndividualDescription, Referrer
+from llm_reasoner.world.values import (
     CollectionValue,
-    IndividualDescription,
+    IndividualReference,
     NestedIndividual,
     NumericValue,
     PlainValue,
-    Referrer,
-    RepeatedIndividual,
     UndescribedValue,
     WorldStateDependentValue,
 )
-from llm_reasoner.individuals.rendering import IndividualRenderer
+from llm_reasoner.world.rendering import IndividualRenderer
 from llm_reasoner.resolver.backend import LanguageModelBackend
 from llm_reasoner.resolver.context import StructuralCandidateRenderer
 from llm_reasoner.resolver.prompts import PromptBuilder
 from llm_reasoner.resolver.reflection import reflect_slots
 
-from .individual_world import (
+from .world_mimics import (
     ActionWithBodyAndValueSlots,
     BodyAnnotation,
     BoxShape,
@@ -192,24 +191,26 @@ class TestWalk:
         first.attached_to = second
         description = describer.describe(first)
         assert value_of(nested(description, "attached_to"), "attached_to") == (
-            RepeatedIndividual(identifier=description.identifier)
+            IndividualReference(
+                identifier=description.identifier, type_name=type(first).__name__
+            )
         )
 
-    def test_individuals_below_the_depth_limit_are_named_by_their_type(self):
+    def test_individuals_below_the_depth_limit_are_left_as_references(self):
         description = IndividualDescriber(limits=WalkLimits(depth=0)).describe(
             body_with_geometry()
         )
-        assert value_of(description, "inertial") == UndescribedValue(
-            type_name=InertialProperties.__name__
-        )
+        reference = value_of(description, "inertial")
+        assert isinstance(reference, IndividualReference)
+        assert reference.type_name == InertialProperties.__name__
 
     def test_the_walk_stops_describing_at_the_limit_of_individuals(self):
         description = IndividualDescriber(limits=WalkLimits(individuals=1)).describe(
             body_with_geometry()
         )
-        assert value_of(description, "inertial") == UndescribedValue(
-            type_name=InertialProperties.__name__
-        )
+        reference = value_of(description, "inertial")
+        assert isinstance(reference, IndividualReference)
+        assert reference.type_name == InertialProperties.__name__
 
 
 # %% referrers
@@ -315,7 +316,7 @@ def test_describing_individuals_loads_no_world_model():
         [
             sys.executable,
             "-c",
-            "import sys, llm_reasoner.individuals.describer, llm_reasoner.resolver; "
+            "import sys, llm_reasoner.world.describer, llm_reasoner.resolver; "
             f"print({WORLD_MODEL_PACKAGE!r} in sys.modules)",
         ],
         capture_output=True,
