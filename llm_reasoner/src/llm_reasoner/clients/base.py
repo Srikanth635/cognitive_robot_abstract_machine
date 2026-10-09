@@ -3,17 +3,26 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
-from typing_extensions import Any, List, Mapping, Optional, Tuple
+from typing_extensions import Any, List, Mapping, Optional, Sequence, Tuple
 
+from llm_reasoner.clients.tools import (
+    ScriptedTurn,
+    Tool,
+    ToolBox,
+    ToolCall,
+    ToolConversation,
+    ToolUsingClient,
+)
 from llm_reasoner.exceptions import LLMReasonerError
-
 
 # %% client interface
 
 
 @dataclass
 class LanguageModelClient(ABC):
-    """A single-turn completion interface, kept minimal so vendors stay swappable."""
+    """
+    A single-turn completion interface, kept minimal so vendors stay swappable.
+    """
 
     @abstractmethod
     def complete(self, system: str, user: str) -> str:
@@ -31,18 +40,17 @@ class LanguageModelClient(ABC):
 
         Optional, and falling back to :meth:`complete` so that a client without
         constrained decoding keeps working rather than failing. Vendors able to
-        constrain the decoder override this and the schema does real work; the
-        rest degrade to instructing the model in the prompt and hoping.
+        constrain the decoder override this and the schema does real work; the rest
+        degrade to instructing the model in the prompt and hoping.
 
-        The return type is deliberately the raw text either way. Provenance
-        records what the model actually said, and a decoded object would lose the
-        thing a rejected response has to be shown to correct.
+        The return type is deliberately the raw text either way. Provenance records what
+        the model actually said, and a decoded object would lose the thing a rejected
+        response has to be shown to correct.
 
-        Worth overriding wherever possible. Recovering JSON from free text is
-        workable for a flat list of values; it does not survive a hypothesis,
-        which is a graph of a hundred interlinked fragments where one malformed
-        bracket invalidates everything and the model has no way to know which
-        fragment was at fault.
+        Worth overriding wherever possible. Recovering JSON from free text is workable
+        for a flat list of values; it does not survive a hypothesis, which is a graph of
+        a hundred interlinked fragments where one malformed bracket invalidates
+        everything and the model has no way to know which fragment was at fault.
 
         :param json_schema: JSON Schema the response must satisfy.
         :return: The raw response text.
@@ -63,10 +71,10 @@ class LanguageModelClient(ABC):
         """
         A short identifier recorded alongside every exchange.
 
-        Includes the model when the client carries one, because the identity is
-        part of a hypothesis's cache key: two different models behind a single
-        client class would otherwise report identically, and swapping the model
-        would never invalidate anything generated under the old one.
+        Includes the model when the client carries one, because the identity is part of
+        a hypothesis's cache key: two different models behind a single client class
+        would otherwise report identically, and swapping the model would never
+        invalidate anything generated under the old one.
 
         :return: The client class, and the model where one is known.
         """
@@ -94,26 +102,36 @@ class Exchange:
     """
 
     system: str
-    """The system prompt that was sent."""
+    """
+    The system prompt that was sent.
+    """
 
     user: str
-    """The user prompt that was sent."""
+    """
+    The user prompt that was sent.
+    """
 
     raw_response: str
-    """The response that came back."""
+    """
+    The response that came back.
+    """
 
     client_identity: str
-    """Which model produced the response, as reported by the client."""
+    """
+    Which model produced the response, as reported by the client.
+    """
 
     attempt: int
-    """Which attempt this was, counting repairs from zero."""
+    """
+    Which attempt this was, counting repairs from zero.
+    """
 
 
 # %% offline client
 
 
 @dataclass
-class ScriptedClient(LanguageModelClient):
+class ScriptedClient(LanguageModelClient, ToolUsingClient):
     """
     Replays a fixed list of responses without any network access.
 
@@ -122,17 +140,28 @@ class ScriptedClient(LanguageModelClient):
     """
 
     responses: List[str] = field(default_factory=list)
-    """Responses returned in order, one per completion."""
+    """
+    Responses returned in order, one per completion.
+    """
+
+    tool_turns: List[ScriptedTurn] = field(default_factory=list)
+    """
+    The turns of a completion with tools, in order: the tool calls of each turn, which
+    are run against the tools offered, and finally the answer.
+    """
 
     calls: List[Tuple[str, str]] = field(default_factory=list)
-    """The system and user prompts that were issued, in order."""
+    """
+    The system and user prompts that were issued, in order.
+    """
 
     schemas: List[Optional[Mapping[str, Any]]] = field(default_factory=list)
-    """The schema passed with each call, ``None`` where none was.
+    """
+    The schema passed with each call, ``None`` where none was.
 
-    Retained so a test can assert that a caller derived and passed the schema it
-    should have, which is otherwise invisible: the fallback path returns the same
-    text either way.
+    Retained so a test can assert that a caller derived and passed the schema it should
+    have, which is otherwise invisible: the fallback path returns the same text either
+    way.
     """
 
     def complete(self, system: str, user: str) -> str:
@@ -151,6 +180,25 @@ class ScriptedClient(LanguageModelClient):
             raise ScriptExhausted(len(self.calls))
         return self.responses.pop(0)
 
+    def complete_with_tools(
+        self, system: str, user: str, tools: Sequence[Tool]
+    ) -> ToolConversation:
+        self.calls.append((system, user))
+        toolbox = ToolBox(tools=tools)
+        calls: List[ToolCall] = []
+        for turn in self.tool_turns:
+            if isinstance(turn, str):
+                return ToolConversation(answer=turn, calls=calls)
+            calls.extend(
+                ToolCall(
+                    name=request.name,
+                    arguments=request.arguments,
+                    outcome=toolbox.call(request.name, request.arguments),
+                )
+                for request in turn
+            )
+        raise ScriptExhausted(len(self.calls))
+
     @property
     def identity(self) -> str:
         return "scripted"
@@ -158,10 +206,14 @@ class ScriptedClient(LanguageModelClient):
 
 @dataclass
 class ScriptExhausted(LLMReasonerError):
-    """Raised when a scripted client is asked for more responses than it holds."""
+    """
+    Raised when a scripted client is asked for more responses than it holds.
+    """
 
     calls: int
-    """How many completions had been requested when the script ran out."""
+    """
+    How many completions had been requested when the script ran out.
+    """
 
     def __str__(self) -> str:
         return f"Scripted client ran out of responses after {self.calls} call(s)."

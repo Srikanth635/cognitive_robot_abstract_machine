@@ -1,0 +1,20 @@
+{
+  "name": "describe_individual",
+  "description": "Describe an individual: its kind and the kinds that kind specialises, the individuals holding it (which often say what it is, such as 'held as root of a Cup'), and each of its fields with its meaning and value. Values marked '(default)' are the field's declared default rather than a measurement. Individuals beyond the description's depth appear as 'see <handle>'; describe them in turn if they matter.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "handle": {
+        "type": "string",
+        "description": "The individual's handle, such as 'Cup#1'."
+      },
+      "depth": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "How many levels of held individuals to describe."
+      }
+    },
+    "required": ["handle"],
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "describe_kind",
+  "description": "Describe a kind: its summary, the kinds it specialises, the kinds specialising it, and every field its individuals hold, with the field's declared type, its meaning (units included where documented) and its default. Use it to learn which field paths exist before searching or following them.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "kind": {
+        "type": "string",
+        "description": "A kind's identifier, or its plain name when no other kind shares it."
+      }
+    },
+    "required": ["kind"],
+    "additionalProperties": false
+  }
+}
