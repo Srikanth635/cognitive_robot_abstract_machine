@@ -59,21 +59,6 @@ class SchemaOnlyContextProvider(PromptContextProvider):
         return ""
 
 
-@dataclass
-class StaticContextProvider(PromptContextProvider):
-    """
-    Injects a fixed description of the situation.
-    """
-
-    text: str = ""
-    """
-    The situation description.
-    """
-
-    def context_for(self, expression: Match) -> str:
-        return self.text
-
-
 # %% intent
 
 

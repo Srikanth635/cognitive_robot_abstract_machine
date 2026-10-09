@@ -35,7 +35,7 @@ from llm_reasoner.resolver.prompts import PromptBuilder
 from llm_reasoner.resolver.reflection import reflect_slots
 
 from .individual_world import (
-    ActionWithBodySlot,
+    ActionWithBodyAndValueSlots,
     BodyAnnotation,
     BoxShape,
     InertialProperties,
@@ -285,7 +285,7 @@ class TestResolverPrompt:
     def test_a_candidate_is_described_by_its_structure_under_its_token(self):
         body = body_with_geometry()
         VesselAnnotation(body=body)
-        query = the(ActionWithBodySlot)(source=variable(WorldBody))
+        query = the(ActionWithBodyAndValueSlots)(source=variable(WorldBody))
         prompt = PromptBuilder(renderer=StructuralCandidateRenderer()).build(
             query, reflect_slots(query), [], number_of_candidates=1
         )
