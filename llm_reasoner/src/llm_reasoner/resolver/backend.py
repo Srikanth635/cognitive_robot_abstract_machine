@@ -14,8 +14,8 @@ from llm_reasoner.clients.base import Exchange, LanguageModelClient
 from llm_reasoner.resolver.context import (
     CandidateRenderer,
     PromptContextProvider,
-    ReprCandidateRenderer,
     SchemaOnlyContextProvider,
+    StructuralCandidateRenderer,
     context_sections,
 )
 from llm_reasoner.resolver.exceptions import (
@@ -35,9 +35,9 @@ from llm_reasoner.resolver.reflection import Slot, SlotKind, reflect_slots
 T = TypeVar("T")
 
 JSON_ARRAY = re.compile(r"\[.*]", re.DOTALL)
-"""Locates the JSON array inside a response that may carry surrounding text."""
-
-
+"""
+Locates the JSON array inside a response that may carry surrounding text.
+"""
 
 # %% backend
 
@@ -47,33 +47,49 @@ class LanguageModelBackend(GenerativeBackend):
     """
     Resolves an underspecified match by asking a language model.
 
-    Values are generated and individuals are selected from an extension, never
-    invented. Because a model is an unsound generator, the match's where-conditions
-    are stated in the prompt and also applied afterwards as a filter.
+    Values are generated and individuals are selected from an extension, never invented.
+    Because a model is an unsound generator, the match's where-conditions are stated in
+    the prompt and also applied afterwards as a filter.
     """
 
     client: LanguageModelClient
-    """The model seam."""
+    """
+    The model seam.
+    """
 
     context_provider: PromptContextProvider = field(
         default_factory=SchemaOnlyContextProvider
     )
-    """The situational-knowledge seam."""
+    """
+    The situational-knowledge seam.
+    """
 
-    candidate_renderer: CandidateRenderer = field(default_factory=ReprCandidateRenderer)
-    """Describes the candidates of referent slots."""
+    candidate_renderer: CandidateRenderer = field(
+        default_factory=StructuralCandidateRenderer
+    )
+    """
+    Describes the candidates of referent slots.
+    """
 
     number_of_candidates: int = field(kw_only=True, default=3)
-    """How many alternatives to request when the query sets no limit."""
+    """
+    How many alternatives to request when the query sets no limit.
+    """
 
     max_repairs: int = field(kw_only=True, default=1)
-    """How often an unusable response is fed back before giving up."""
+    """
+    How often an unusable response is fed back before giving up.
+    """
 
     source_detail: SourceDetail = field(kw_only=True, default=SourceDetail.SIGNATURE)
-    """How much of the target type's definition is put in the prompt."""
+    """
+    How much of the target type's definition is put in the prompt.
+    """
 
     log: List[Exchange] = field(default_factory=list, init=False)
-    """Every exchange, in order."""
+    """
+    Every exchange, in order.
+    """
 
     # %% evaluation
 
@@ -86,7 +102,9 @@ class LanguageModelBackend(GenerativeBackend):
             yield from self._validate(expression, [expression.construct_instance()])
             return
 
-        number_of_candidates = expression.expression._limit_ or self.number_of_candidates
+        number_of_candidates = (
+            expression.expression._limit_ or self.number_of_candidates
+        )
         assignments = self._ask(expression, slots, open_slots, number_of_candidates)
         constructed = [
             self._construct(expression, assignment) for assignment in assignments
@@ -257,9 +275,9 @@ class LanguageModelBackend(GenerativeBackend):
         Decode one JSON value into its slot's declared type.
 
         Referents are decoded by indexing the extension, which recovers the live
-        individual the token stands for. A slot declaring a union is decoded against
-        its branches in declaration order, so the model may choose the branch that
-        fits the situation.
+        individual the token stands for. A slot declaring a union is decoded against its
+        branches in declaration order, so the model may choose the branch that fits the
+        situation.
 
         :param slot: The slot the value was offered for.
         :param value: The offered JSON value.
