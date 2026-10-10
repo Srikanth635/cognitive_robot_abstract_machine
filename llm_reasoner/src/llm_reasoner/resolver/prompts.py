@@ -169,7 +169,7 @@ class PromptBuilder:
                 f"## Source of {described.__name__}\n\n```python\n"
                 + inspect.getsource(described).rstrip()
                 + "\n```"
-                for described in self.types_to_describe(target_type, slots)
+                for described in self.types_with_their_family(target_type, slots)
             )
         described_types = [
             (described, inspect.getdoc(described))
@@ -197,6 +197,23 @@ class PromptBuilder:
             if slot.owner not in described:
                 described.append(slot.owner)
         return described
+
+    @staticmethod
+    def types_with_their_family(target_type: type, slots: Sequence[Slot]) -> List[type]:
+        """
+        :param target_type: The type being constructed.
+        :param slots: Every reflected slot.
+        :return: The types to describe, each followed by the classes it specialises that
+            are declared in its own module, without repetition. A class declared beside
+            a type is part of its family, and may define what the type does with its
+            values; the shared foundations it rests on are declared elsewhere.
+        """
+        family: List[type] = []
+        for described in PromptBuilder.types_to_describe(target_type, slots):
+            for member in described.__mro__:
+                if member.__module__ == described.__module__ and member not in family:
+                    family.append(member)
+        return family
 
     def render_slots(self, slots: Sequence[Slot], expression: Match) -> str:
         """

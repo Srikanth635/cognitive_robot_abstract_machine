@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 
 from krrood.entity_query_language.factories import the, variable
+from krrood.entity_query_language.predicate import Symbol
 from krrood.entity_query_language.verbalization.rendering.source_documentation import (
     _attribute_docstrings,
 )
@@ -30,7 +31,13 @@ from llm_reasoner.resolver.prompts import PromptBuilder
 from llm_reasoner.resolver.reflection import reflect_slots
 from llm_reasoner.world.view import WorldView
 
-from .world_mimics import ActionWithBodyAndValueSlots, WorldBody, body_with_geometry
+from .world_mimics import (
+    ActionInheritingItsPlan,
+    ActionPlannedByItsParent,
+    ActionWithBodyAndValueSlots,
+    WorldBody,
+    body_with_geometry,
+)
 
 CASES = Path(__file__).parent / "resolver_cases"
 """
@@ -81,6 +88,13 @@ class TestPrompt:
 
 
 class TestSourceShown:
+    def test_the_source_of_a_parent_in_the_same_module_is_shown_too(self):
+        body_with_geometry()
+        query = the(ActionInheritingItsPlan)(source=variable(WorldBody))
+        prompt = LanguageModelBackend(client=ScriptedClient()).describe(query)
+        assert inspect.getsource(ActionPlannedByItsParent).rstrip() in prompt
+        assert inspect.getsource(Symbol).rstrip() not in prompt
+
     def test_the_backend_shows_the_full_source_of_the_action_by_default(self):
         body_with_geometry()
         prompt = LanguageModelBackend(client=ScriptedClient()).describe(tilt_query())
