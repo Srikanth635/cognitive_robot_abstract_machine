@@ -64,10 +64,9 @@ class SourceDetail(enum.Enum):
 
     FULL = enum.auto()
     """
-    The complete source.
-
-    Worth the tokens only when behaviour defined in methods constrains which field
-    combinations make sense.
+    The complete source of every type contributing a slot, which shows what the type does
+    with each value: a field's docstring may name the value without saying how the type
+    uses it.
     """
 
 
