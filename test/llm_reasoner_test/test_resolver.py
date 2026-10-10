@@ -8,6 +8,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from krrood.entity_query_language.factories import the, variable
 from krrood.entity_query_language.verbalization.rendering.source_documentation import (
     _attribute_docstrings,
@@ -22,8 +24,10 @@ from llm_reasoner.resolver.context import (
     TaskContextProvider,
     context_sections,
 )
+from llm_reasoner.resolver.exceptions import AmbiguousReferent, NoFittingReferent
 from llm_reasoner.resolver.prompts import PromptBuilder
 from llm_reasoner.resolver.reflection import reflect_slots
+from llm_reasoner.world.view import WorldView
 
 from .world_mimics import ActionWithBodyAndValueSlots, WorldBody, body_with_geometry
 
@@ -102,3 +106,29 @@ class TestResolution:
         (action,) = tilt_query().evaluate(backend=backend)
         assert action.source is body
         assert [exchange.attempt for exchange in backend.log] == [0, 1]
+
+    def test_a_token_answer_may_say_no_candidate_fits(self):
+        body = body_with_geometry()
+        backend = LanguageModelBackend(
+            client=ScriptedClient(
+                responses=[answer("source_has_no_fitting_candidate.json")]
+            )
+        )
+        with pytest.raises(NoFittingReferent):
+            list(tilt_query().evaluate(backend=backend))
+        view = WorldView()
+        assert view.holders(view.handles.handle_of(body)) == []
+
+    def test_a_token_answer_may_name_equally_fitting_candidates(self):
+        first, second = WorldBody(name="first"), WorldBody(name="second")
+        backend = LanguageModelBackend(
+            client=ScriptedClient(
+                responses=[answer("source_equally_fitting_by_token.json")]
+            )
+        )
+        with pytest.raises(AmbiguousReferent) as raised:
+            list(tilt_query().evaluate(backend=backend))
+        assert [
+            candidate is body
+            for candidate, body in zip(raised.value.candidates, [first, second])
+        ] == [True, True]

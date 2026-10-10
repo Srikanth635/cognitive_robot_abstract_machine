@@ -27,7 +27,7 @@ from llm_reasoner.world.exceptions import (
     UnknownHandle,
     UnknownKind,
 )
-from llm_reasoner.world.finding import Comparison, Condition
+from llm_reasoner.world.finding import Comparison, Condition, KindCount
 from llm_reasoner.world.kinds import KindListing
 from llm_reasoner.world.predicates import IndividualArgument, PlainArgument
 from llm_reasoner.world.values import (
@@ -181,6 +181,26 @@ class TestFinding:
         found = view.find(identifier_of(WorldBody), limit=1)
         assert found.total == len(bodies)
         assert len(found.individuals) == 1
+
+    def test_a_search_counts_what_it_found_by_kind(self, view):
+        vessels = [VesselAnnotation(body=body_with_geometry()) for _ in range(2)]
+        undocumented = UndocumentedAnnotation(body=body_with_geometry())
+        found = view.find(identifier_of(BodyAnnotation), limit=1)
+        assert found.kinds == [
+            KindCount(type_name=type(vessels[0]).__name__, count=len(vessels)),
+            KindCount(type_name=type(undocumented).__name__, count=1),
+        ]
+
+    def test_a_name_is_found_by_a_part_of_it(self, view):
+        jug = body_with_geometry()
+        WorldBody(name="glass")
+        condition = Condition(
+            path="name", comparison=Comparison.CONTAINS, value=jug.name[:2]
+        )
+        found = view.find(identifier_of(WorldBody), [condition])
+        assert [summary.handle for summary in found.individuals] == [
+            view.handles.handle_of(jug)
+        ]
 
     def test_the_search_is_stated_in_english(self, view):
         condition = Condition(path="name", comparison=Comparison.EQUAL, value="jug")

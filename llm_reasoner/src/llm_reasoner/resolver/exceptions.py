@@ -178,6 +178,49 @@ class NoValidCandidates(LanguageModelBackendError):
         )
 
 
+# %% verdicts
+
+
+@dataclass
+class NoFittingReferent(LanguageModelBackendError):
+    """
+    Raised when the model answers that none of a referent slot's candidates is what the
+    request asks for, rather than substituting a near miss.
+    """
+
+    slot_path: str
+    """The access path of the slot."""
+
+    reason: str
+    """Why the model found no candidate fitting."""
+
+    def __str__(self) -> str:
+        return f"No candidate fits {self.slot_path!r}: {self.reason}"
+
+
+@dataclass
+class AmbiguousReferent(LanguageModelBackendError):
+    """
+    Raised when the model answers that several candidates of a referent slot fit equally
+    and nothing in the request prefers one, so the caller can narrow the request.
+    """
+
+    slot_path: str
+    """The access path of the slot."""
+
+    candidates: List[Any]
+    """The candidates fitting equally, as the individuals themselves."""
+
+    reason: str
+    """Why the model found none of them preferred."""
+
+    def __str__(self) -> str:
+        return (
+            f"{len(self.candidates)} candidates fit {self.slot_path!r} equally: "
+            f"{self.reason}"
+        )
+
+
 # %% configuration
 
 

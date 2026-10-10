@@ -83,7 +83,10 @@ class UnknownHandle(WorldQuestionError):
     """
 
     def __post_init__(self):
-        super().__init__(f"No individual was ever given the handle {self.handle!r}")
+        super().__init__(
+            f"No individual was ever given the handle {self.handle!r}; handles are "
+            "given out only by answers that name individuals, such as a search"
+        )
 
 
 @dataclass

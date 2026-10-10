@@ -6,14 +6,17 @@
     "properties": {
       "handle": {
         "type": "string",
-        "description": "The individual's handle, such as 'Cup#1'."
+        "description": "The individual's handle, exactly as a tool's answer gave it, such as 'Cup#1'."
       },
       "path": {
         "type": "string",
         "description": "Field names separated by dots, such as 'root.inertial.mass'."
       }
     },
-    "required": ["handle", "path"],
+    "required": [
+      "handle",
+      "path"
+    ],
     "additionalProperties": false
   }
 }

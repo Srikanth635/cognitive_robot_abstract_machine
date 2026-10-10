@@ -6,7 +6,7 @@
     "properties": {
       "handle": {
         "type": "string",
-        "description": "The individual's handle, such as 'Cup#1'."
+        "description": "The individual's handle, exactly as a tool's answer gave it, such as 'Cup#1'."
       },
       "depth": {
         "type": "integer",

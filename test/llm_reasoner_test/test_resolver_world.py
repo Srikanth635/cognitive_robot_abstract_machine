@@ -7,16 +7,23 @@ naming no candidate sent back for repair.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
+
+import pytest
 
 from krrood.entity_query_language.factories import the, variable
 
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.clients.tools import ScriptedToolRequest
 from llm_reasoner.resolver.backend import LanguageModelBackend
+from llm_reasoner.resolver.exceptions import AmbiguousReferent, NoFittingReferent
 from llm_reasoner.resolver.referents import (
+    EQUALLY_FITTING_RULE,
     LISTED_CANDIDATES,
+    NO_FITTING_CANDIDATE_RULE,
     IntegerTokens,
+    ReferentAnswerKey,
     WorldHandles,
 )
 from llm_reasoner.resolver.reflection import reflect_slots
@@ -156,3 +163,69 @@ class TestResolution:
         (action,) = tilt_query().evaluate(backend=backend)
         assert action.source is body
         assert len(backend.conversations) == 2
+
+
+# %% no fitting and equally fitting candidates
+
+
+def stated_reason(name: str) -> str:
+    """
+    :return: The reason a scripted answer gives for its verdict on the source slot.
+    """
+    (element,) = json.loads(answer(name))
+    verdict = element["ActionWithBodyAndValueSlots.source"]
+    return (
+        verdict.get(ReferentAnswerKey.NO_FITTING_CANDIDATE)
+        or verdict[ReferentAnswerKey.WHY]
+    )
+
+
+class TestVerdicts:
+    def test_no_fitting_candidate_is_reported_and_nothing_is_built(self):
+        view = WorldView()
+        body = body_with_geometry()
+        backend = world_backend(view, [answer("source_has_no_fitting_candidate.json")])
+        with pytest.raises(NoFittingReferent) as raised:
+            list(tilt_query().evaluate(backend=backend))
+        assert raised.value.slot_path == "ActionWithBodyAndValueSlots.source"
+        assert raised.value.reason == stated_reason(
+            "source_has_no_fitting_candidate.json"
+        )
+        assert len(backend.log) == 1
+        assert view.holders(view.handles.handle_of(body)) == []
+
+    def test_equally_fitting_candidates_are_reported_as_individuals(self):
+        view = WorldView()
+        first, second = WorldBody(name="first"), WorldBody(name="second")
+        backend = world_backend(view, [answer("source_equally_fitting_by_handle.json")])
+        with pytest.raises(AmbiguousReferent) as raised:
+            list(tilt_query().evaluate(backend=backend))
+        assert [
+            candidate is body
+            for candidate, body in zip(raised.value.candidates, [first, second])
+        ] == [True, True]
+        assert raised.value.reason == stated_reason(
+            "source_equally_fitting_by_handle.json"
+        )
+
+    def test_an_unknown_handle_among_equally_fitting_ones_is_sent_back_for_repair(self):
+        view = WorldView()
+        body = body_with_geometry()
+        backend = world_backend(
+            view,
+            [
+                answer("source_equally_fitting_with_a_handle_never_given.json"),
+                answer("source_by_handle.json"),
+            ],
+        )
+        (action,) = tilt_query().evaluate(backend=backend)
+        assert action.source is body
+        assert [exchange.attempt for exchange in backend.log] == [0, 1]
+
+    def test_the_rules_say_how_to_report_no_fitting_or_equally_fitting_candidates(self):
+        for backend in (
+            world_backend(WorldView(), []),
+            LanguageModelBackend(client=ScriptedClient()),
+        ):
+            assert NO_FITTING_CANDIDATE_RULE in backend.system_prompt
+            assert EQUALLY_FITTING_RULE in backend.system_prompt
