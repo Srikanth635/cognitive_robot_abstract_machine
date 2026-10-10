@@ -202,6 +202,22 @@ class TestFinding:
             view.handles.handle_of(jug)
         ]
 
+    def test_a_search_may_follow_a_path_from_each_individual_found(self, view):
+        annotations = [VesselAnnotation(body=body_with_geometry()) for _ in range(2)]
+        found = view.find(identifier_of(VesselAnnotation), path="body")
+        assert [summary.reached for summary in found.individuals] == [
+            IndividualReference(
+                identifier=view.handles.handle_of(annotation.body),
+                type_name=type(annotation.body).__name__,
+            )
+            for annotation in annotations
+        ]
+
+    def test_a_search_following_a_path_a_found_individual_lacks_is_refused(self, view):
+        annotation = VesselAnnotation(body=body_with_geometry())
+        with pytest.raises(UnknownField):
+            view.find(identifier_of(type(annotation)), path="lid")
+
     def test_the_search_is_stated_in_english(self, view):
         condition = Condition(path="name", comparison=Comparison.EQUAL, value="jug")
         query = view.finder.query(WorldBody, [condition])

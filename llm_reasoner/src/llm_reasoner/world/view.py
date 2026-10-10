@@ -5,7 +5,7 @@ individuals named by handles that stay the same across questions.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from typing_extensions import List, Mapping, Optional, Sequence
 
@@ -104,15 +104,31 @@ class WorldView:
     # %% individuals
 
     def find(
-        self, kind: str, conditions: Sequence[Condition] = (), limit: int = FIND_LIMIT
+        self,
+        kind: str,
+        conditions: Sequence[Condition] = (),
+        limit: int = FIND_LIMIT,
+        path: Optional[str] = None,
     ) -> FoundIndividuals:
         """
         :param kind: The name of a kind.
         :param conditions: Conditions on fields the individuals must meet.
         :param limit: How many of the individuals found to name.
+        :param path: Field names separated by dots, followed from each individual named
+            to what it reaches, such as ``root`` for the body of each annotation.
         :return: The individuals found, with the search stated in English.
+        :raises UnknownField: When an individual named lacks a field of the path.
         """
-        return self.finder.find(self.catalogue.resolve(kind), conditions, limit)
+        found = self.finder.find(self.catalogue.resolve(kind), conditions, limit)
+        if path is None:
+            return found
+        return replace(
+            found,
+            individuals=[
+                replace(summary, reached=self.follow(summary.handle, path))
+                for summary in found.individuals
+            ],
+        )
 
     def describe(
         self, handle: str, limits: Optional[WalkLimits] = None
