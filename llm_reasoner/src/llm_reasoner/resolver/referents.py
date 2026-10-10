@@ -7,14 +7,20 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from enum import StrEnum
 
 from krrood.entity_query_language.query.match import Match
-from typing_extensions import Any, List
+from typing_extensions import Any, List, Mapping, Tuple
 
 from llm_reasoner.resolver.context import CandidateRenderer
-from llm_reasoner.resolver.exceptions import SlotValueRejected
+from llm_reasoner.resolver.exceptions import (
+    AmbiguousReferent,
+    NoFittingReferent,
+    SlotValueRejected,
+)
 from llm_reasoner.resolver.reflection import Slot
 from llm_reasoner.world.classes import identifier_of
+from llm_reasoner.world.tools import WorldToolName
 from llm_reasoner.world.view import WorldView
 
 LISTED_CANDIDATES = 10
@@ -34,11 +40,59 @@ The indentation of a note under its slot.
 """
 
 
+class ReferentAnswerKey(StrEnum):
+    """
+    The keys of the answers a referent slot takes besides a single candidate.
+    """
+
+    NO_FITTING_CANDIDATE = "no_fitting_candidate"
+    """
+    Says that no candidate is what the request asks for, and why.
+    """
+
+    EQUALLY_FITTING = "equally_fitting"
+    """
+    Names the candidates that fit equally when nothing in the request prefers one.
+    """
+
+    WHY = "why"
+    """
+    Says why none of the equally fitting candidates is preferred.
+    """
+
+
+NO_FITTING_CANDIDATE_RULE = (
+    "- When no candidate of a referent slot is what the request asks for, never "
+    "substitute a near miss: answer the slot with "
+    f'{{"{ReferentAnswerKey.NO_FITTING_CANDIDATE}": "<why none fits>"}}.'
+)
+"""
+The rule letting the model say that no candidate fits.
+"""
+
+EQUALLY_FITTING_RULE = (
+    "- When several candidates of a referent slot fit equally and nothing in the request "
+    "prefers one, do not pick: answer the slot with "
+    f'{{"{ReferentAnswerKey.EQUALLY_FITTING}": [<each of them>], '
+    f'"{ReferentAnswerKey.WHY}": "<why none is preferred>"}}.'
+)
+"""
+The rule letting the model say that several candidates fit equally.
+"""
+
+
 class ReferentNaming(ABC):
     """
-    Names the candidates of referent slots in the prompt and reads the candidate an
-    answer names.
+    Names the candidates of referent slots in the prompt and reads the answer for one:
+    a candidate, or the verdict that none fits or that several fit equally.
     """
+
+    @property
+    def rules(self) -> Tuple[str, ...]:
+        """
+        The rules telling the model how to answer a referent slot.
+        """
+        return (self.answer_rule, NO_FITTING_CANDIDATE_RULE, EQUALLY_FITTING_RULE)
 
     @property
     @abstractmethod
@@ -65,11 +119,41 @@ class ReferentNaming(ABC):
         :return: The lines presenting the slot's candidates.
         """
 
-    @abstractmethod
     def decode(self, slot: Slot, value: Any) -> Any:
         """
         :param slot: A referent slot.
         :param value: What the answer gives for it.
+        :return: The candidate it names.
+        :raises NoFittingReferent: When the answer says no candidate fits.
+        :raises AmbiguousReferent: When the answer names candidates fitting equally.
+        :raises SlotValueRejected: When it is neither a candidate nor a verdict.
+        """
+        if not isinstance(value, Mapping):
+            return self.decode_candidate(slot, value)
+        if isinstance(value.get(ReferentAnswerKey.NO_FITTING_CANDIDATE), str):
+            raise NoFittingReferent(
+                slot_path=slot.path,
+                reason=value[ReferentAnswerKey.NO_FITTING_CANDIDATE],
+            )
+        named = value.get(ReferentAnswerKey.EQUALLY_FITTING)
+        if not isinstance(named, list) or len(named) < 2:
+            raise SlotValueRejected(
+                slot_path=slot.path,
+                value=value,
+                reason="Expected a candidate, a verdict that none fits, or at least "
+                "two equally fitting candidates.",
+            )
+        raise AmbiguousReferent(
+            slot_path=slot.path,
+            candidates=[self.decode_candidate(slot, candidate) for candidate in named],
+            reason=str(value.get(ReferentAnswerKey.WHY, "")),
+        )
+
+    @abstractmethod
+    def decode_candidate(self, slot: Slot, value: Any) -> Any:
+        """
+        :param slot: A referent slot.
+        :param value: What the answer gives for one candidate.
         :return: The candidate it names.
         :raises SlotValueRejected: When it names none of the slot's candidates.
         """
@@ -121,7 +205,7 @@ class IntegerTokens(ReferentNaming):
         first, *rest = text.splitlines() or [""]
         return "\n".join([prefix + first] + [" " * len(prefix) + line for line in rest])
 
-    def decode(self, slot: Slot, value: Any) -> Any:
+    def decode_candidate(self, slot: Slot, value: Any) -> Any:
         if isinstance(value, bool) or not isinstance(value, int):
             raise SlotValueRejected(
                 slot_path=slot.path,
@@ -153,10 +237,13 @@ class WorldHandles(ReferentNaming):
     def answer_rule(self) -> str:
         return (
             "- Referent slots take the handle of one of the slot's candidates, such as "
-            '"Body#3". When the candidates are not listed, find them with the world '
-            "tools. An individual that gives a candidate its meaning, such as a Cup "
-            "giving a body its meaning, holds the candidate in one of its fields: follow "
-            "that field to the candidate's handle."
+            '"Body#3". Handles exist only once a tool has returned them, so never name '
+            "one you have not been given. When the candidates are not listed, search "
+            f"the slot's kind with {WorldToolName.FIND_INDIVIDUALS} first, and use "
+            f"{WorldToolName.LIST_KINDS} only to explore what else the world has. An "
+            "individual that gives a candidate its meaning, such as a Cup giving a body "
+            "its meaning, holds the candidate in one of its fields: follow that field to "
+            "the candidate's handle."
         )
 
     @property
@@ -195,7 +282,7 @@ class WorldHandles(ReferentNaming):
             "tools and answer with its handle."
         )
 
-    def decode(self, slot: Slot, value: Any) -> Any:
+    def decode_candidate(self, slot: Slot, value: Any) -> Any:
         if not isinstance(value, str) or not self.view.handles.is_live(value):
             raise SlotValueRejected(
                 slot_path=slot.path,

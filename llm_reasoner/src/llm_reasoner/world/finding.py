@@ -6,12 +6,13 @@ is also stated in English.
 from __future__ import annotations
 
 import operator
+from collections import Counter
 from dataclasses import dataclass
 from enum import StrEnum
 from operator import attrgetter
 
 from krrood.entity_query_language.core.base_expressions import SymbolicExpression
-from krrood.entity_query_language.factories import an, entity, variable
+from krrood.entity_query_language.factories import an, contains, entity, variable
 from krrood.entity_query_language.verbalization.pipeline import verbalize_expression
 from typing_extensions import Any, Callable, List, Sequence
 
@@ -30,6 +31,10 @@ class Comparison(StrEnum):
     LESS_OR_EQUAL = "less or equal"
     GREATER = "greater"
     GREATER_OR_EQUAL = "greater or equal"
+    CONTAINS = "contains"
+    """
+    The value at the path contains the given value, such as a name containing a word.
+    """
 
     @property
     def operation(self) -> Callable[[Any, Any], Any]:
@@ -46,6 +51,7 @@ COMPARISON_OPERATIONS = {
     Comparison.LESS_OR_EQUAL: operator.le,
     Comparison.GREATER: operator.gt,
     Comparison.GREATER_OR_EQUAL: operator.ge,
+    Comparison.CONTAINS: contains,
 }
 """
 The operation of each comparison.
@@ -92,6 +98,23 @@ class IndividualSummary:
 
 
 @dataclass(frozen=True)
+class KindCount:
+    """
+    How many individuals a search found of one kind.
+    """
+
+    type_name: str
+    """
+    The name of the kind.
+    """
+
+    count: int
+    """
+    How many were found of exactly this kind.
+    """
+
+
+@dataclass(frozen=True)
 class FoundIndividuals:
     """
     What a search found.
@@ -105,6 +128,11 @@ class FoundIndividuals:
     total: int
     """
     How many individuals meet it.
+    """
+
+    kinds: List[KindCount]
+    """
+    How many of them are of each kind, most numerous first, all of them counted.
     """
 
     individuals: List[IndividualSummary]
@@ -152,9 +180,16 @@ class IndividualFinder:
         """
         query = self.query(kind, conditions)
         individuals = list(query.evaluate())
+        counts = Counter(type(individual).__name__ for individual in individuals)
         return FoundIndividuals(
             query_in_english=verbalize_expression(query),
             total=len(individuals),
+            kinds=[
+                KindCount(type_name=type_name, count=count)
+                for type_name, count in sorted(
+                    counts.items(), key=lambda entry: (-entry[1], entry[0])
+                )
+            ],
             individuals=[
                 IndividualSummary(
                     handle=self.handles.handle_of(individual),

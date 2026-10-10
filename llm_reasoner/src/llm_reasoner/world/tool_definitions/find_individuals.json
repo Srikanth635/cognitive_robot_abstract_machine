@@ -1,6 +1,6 @@
 {
   "name": "find_individuals",
-  "description": "Find the live individuals of a kind whose fields meet every condition. A search for a kind also finds its specialisations, so search the most general kind that fits once rather than each specialisation. Returns the search stated in English, how many individuals meet it, and the handles of the first ones, such as 'Cup#1', each with its kind. Handles stay the same for the whole conversation; pass them to the other tools.",
+  "description": "Find the live individuals of a kind whose fields meet every condition. A search for a kind also finds its specialisations, so search the most general kind that fits once rather than each specialisation. Returns the search stated in English, how many individuals meet it, how many of each kind they are, and the handles of the first ones, such as 'Cup#1'. Narrow a large result with a more specific kind or a condition rather than a higher limit. Handles stay the same for the whole conversation; pass them to the other tools.",
   "input_schema": {
     "type": "object",
     "properties": {
@@ -26,9 +26,10 @@
                 "less",
                 "less or equal",
                 "greater",
-                "greater or equal"
+                "greater or equal",
+                "contains"
               ],
-              "description": "How the value at the path is compared with the given value."
+              "description": "How the value at the path is compared with the given value; 'contains' finds a name containing a word."
             },
             "value": {
               "type": [
@@ -51,7 +52,8 @@
       "limit": {
         "type": "integer",
         "minimum": 1,
-        "description": "How many of the individuals found to name."
+        "description": "How many of the individuals found to name.",
+        "maximum": 50
       }
     },
     "required": [

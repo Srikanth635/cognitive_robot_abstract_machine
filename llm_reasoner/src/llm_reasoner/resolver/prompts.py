@@ -290,7 +290,7 @@ class PromptBuilder:
             candidates are named.
         """
         return SYSTEM_PROMPT_TEMPLATE.format(
-            mode_rules="\n".join([self.referent_naming.answer_rule, *further_rules])
+            mode_rules="\n".join([*self.referent_naming.rules, *further_rules])
         )
 
     @staticmethod

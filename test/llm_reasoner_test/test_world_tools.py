@@ -122,6 +122,23 @@ class TestRunning:
 
 
 class TestUnanswerableCalls:
+    def test_a_search_naming_too_many_individuals_is_refused(self, view, toolbox):
+        (find,) = [
+            tool
+            for tool in world_tools(view)
+            if tool.definition.name == WorldToolName.FIND_INDIVIDUALS
+        ]
+        maximum = find.definition.input_schema["properties"]["limit"]["maximum"]
+        kind = identifier_of(WorldBody)
+        refused = toolbox.call(
+            WorldToolName.FIND_INDIVIDUALS, {"kind": kind, "limit": maximum + 1}
+        )
+        accepted = toolbox.call(
+            WorldToolName.FIND_INDIVIDUALS, {"kind": kind, "limit": maximum}
+        )
+        assert refused.is_error
+        assert not accepted.is_error
+
     def test_a_question_about_something_the_world_lacks_is_reported(self, toolbox):
         outcome = toolbox.call(WorldToolName.DESCRIBE_KIND, {"kind": "NoSuchKind"})
         assert outcome.is_error
