@@ -91,6 +91,19 @@ class TestRunning:
             view.handles.handle_of(body)
         ]
 
+    def test_a_search_names_what_a_path_reaches_from_each_individual(
+        self, view, toolbox
+    ):
+        annotation = VesselAnnotation(body=body_with_geometry())
+        result = parsed(
+            toolbox.call(
+                WorldToolName.FIND_INDIVIDUALS,
+                {"kind": identifier_of(VesselAnnotation), "path": "body"},
+            )
+        )
+        (found,) = result["individuals"]
+        assert found["reached"]["identifier"] == view.handles.handle_of(annotation.body)
+
     def test_a_description_is_written_for_reading(self, view, toolbox):
         annotation = VesselAnnotation(body=body_with_geometry())
         handle = view.handles.handle_of(annotation)

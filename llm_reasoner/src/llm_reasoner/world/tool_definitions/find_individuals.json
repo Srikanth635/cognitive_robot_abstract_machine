@@ -54,6 +54,10 @@
         "minimum": 1,
         "description": "How many of the individuals found to name.",
         "maximum": 50
+      },
+      "path": {
+        "type": "string",
+        "description": "Field names separated by dots, followed from each individual named to what it reaches, such as 'root' for the body of each annotation; each individual is then given with what the path reaches, an individual by its handle. One search then answers 'the X of each Y'."
       }
     },
     "required": [

@@ -190,6 +190,7 @@ class FindIndividuals(WorldTool):
             arguments[WorldToolKey.KIND],
             conditions,
             limit=arguments.get(WorldToolKey.LIMIT, FIND_LIMIT),
+            path=arguments.get(WorldToolKey.PATH),
         )
 
 

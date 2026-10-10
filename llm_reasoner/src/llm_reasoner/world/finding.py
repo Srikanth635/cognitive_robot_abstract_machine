@@ -14,10 +14,11 @@ from operator import attrgetter
 from krrood.entity_query_language.core.base_expressions import SymbolicExpression
 from krrood.entity_query_language.factories import an, contains, entity, variable
 from krrood.entity_query_language.verbalization.pipeline import verbalize_expression
-from typing_extensions import Any, Callable, List, Sequence
+from typing_extensions import Any, Callable, List, Optional, Sequence
 
 from llm_reasoner.world.naming import HandleRegistry
 from llm_reasoner.world.sources import WorldSource
+from llm_reasoner.world.values import FieldValue
 
 
 class Comparison(StrEnum):
@@ -94,6 +95,11 @@ class IndividualSummary:
     type_name: str
     """
     The name of its kind.
+    """
+
+    reached: Optional[FieldValue] = None
+    """
+    What a path followed from it reaches, when the search follows one.
     """
 
 
