@@ -5,6 +5,7 @@ built from the query, and the answer turned back into a resolved instance.
 
 from __future__ import annotations
 
+import inspect
 import json
 from pathlib import Path
 
@@ -77,6 +78,13 @@ class TestPrompt:
         assert f"## {task.title}" not in prompt_for(
             tilt_query(), SchemaOnlyContextProvider()
         )
+
+
+class TestSourceShown:
+    def test_the_backend_shows_the_full_source_of_the_action_by_default(self):
+        body_with_geometry()
+        prompt = LanguageModelBackend(client=ScriptedClient()).describe(tilt_query())
+        assert inspect.getsource(ActionWithBodyAndValueSlots).rstrip() in prompt
 
 
 # %% resolution

@@ -87,9 +87,11 @@ class LanguageModelBackend(GenerativeBackend):
     How often an unusable response is fed back before giving up.
     """
 
-    source_detail: SourceDetail = field(kw_only=True, default=SourceDetail.SIGNATURE)
+    source_detail: SourceDetail = field(kw_only=True, default=SourceDetail.FULL)
     """
-    How much of the target type's definition is put in the prompt.
+    How much of the target type's definition is put in the prompt: by default its whole
+    source, which shows what the type does with each value its docstrings may leave
+    unsaid.
     """
 
     tools: Sequence[Tool] = field(kw_only=True, default=())
