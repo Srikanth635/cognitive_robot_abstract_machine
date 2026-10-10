@@ -132,6 +132,25 @@ class ActionWithBodyAndValueSlots(Symbol):
     """The angle to tilt the body to, in radians."""
 
 
+@dataclass(eq=False)
+class ActionPlannedByItsParent(Symbol):
+    """An action whose plan its specialisations inherit."""
+
+    source: WorldBody
+    """The body acted on."""
+
+    def plan(self) -> str:
+        """
+        :return: What the action does with its body.
+        """
+        return f"grasp {self.source.name}"
+
+
+@dataclass(eq=False)
+class ActionInheritingItsPlan(ActionPlannedByItsParent):
+    """An action declaring nothing but what it inherits."""
+
+
 def body_with_geometry() -> WorldBody:
     """
     :return: A body with one box, a set mass, a constant position and a default centre of
