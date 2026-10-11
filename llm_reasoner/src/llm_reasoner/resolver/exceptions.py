@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from typing_extensions import Any, List, Optional
 
@@ -165,16 +165,20 @@ class RepairBudgetExhausted(LanguageModelBackendError):
 
 
 @dataclass
-class NoValidCandidates(LanguageModelBackendError):
+class NoValidCandidates(RetryableModelFailure):
     """Raised when every constructed candidate fails the match's where-conditions."""
 
     constructed: int
     """How many candidates were built before filtering."""
 
+    broken_conditions: List[str] = field(default_factory=list)
+    """The conditions, in English, that none of the candidates meets."""
+
     def __str__(self) -> str:
+        broken = "".join(f"\n- {condition}" for condition in self.broken_conditions)
         return (
             f"All {self.constructed} constructed candidate(s) failed the query's "
-            f"where-conditions."
+            f"where-conditions. None of them meets:{broken}"
         )
 
 
@@ -219,6 +223,20 @@ class AmbiguousReferent(LanguageModelBackendError):
             f"{len(self.candidates)} candidates fit {self.slot_path!r} equally: "
             f"{self.reason}"
         )
+
+
+@dataclass
+class UnsatisfiableRequest(LanguageModelBackendError):
+    """
+    Raised when the model answers that the query's conditions cannot all hold together,
+    rather than answering with something that breaks one of them.
+    """
+
+    reason: str
+    """Why the model found the conditions unable to hold together."""
+
+    def __str__(self) -> str:
+        return f"The query's conditions cannot all hold: {self.reason}"
 
 
 # %% configuration

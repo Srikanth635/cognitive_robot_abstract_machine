@@ -14,6 +14,7 @@ import pytest
 
 from krrood.entity_query_language.factories import the, variable
 from krrood.entity_query_language.predicate import Symbol
+from krrood.entity_query_language.verbalization.pipeline import verbalize_expression
 from krrood.entity_query_language.verbalization.rendering.source_documentation import (
     _attribute_docstrings,
 )
@@ -27,8 +28,14 @@ from llm_reasoner.resolver.context import (
     TaskContextProvider,
     context_sections,
 )
-from llm_reasoner.resolver.exceptions import AmbiguousReferent, NoFittingReferent
-from llm_reasoner.resolver.prompts import PromptBuilder
+from llm_reasoner.resolver.exceptions import (
+    AmbiguousReferent,
+    NoFittingReferent,
+    NoValidCandidates,
+    RepairBudgetExhausted,
+    UnsatisfiableRequest,
+)
+from llm_reasoner.resolver.prompts import UNSATISFIABLE_RULE, PromptBuilder
 from llm_reasoner.resolver.reflection import reflect_slots
 from llm_reasoner.world.view import WorldView
 
@@ -175,6 +182,52 @@ class TestResolution:
         assert action.source is body
         assert (action.depth, action.support) == (None, None)
         assert [exchange.attempt for exchange in backend.log] == [0]
+
+    def test_an_answer_breaking_a_condition_is_sent_back_naming_it(self):
+        body = body_with_geometry()
+        (expected,) = json.loads(answer("body_and_small_angle_chosen.json"))
+        backend = LanguageModelBackend(
+            client=ScriptedClient(
+                responses=[
+                    answer("body_and_angle_chosen.json"),
+                    answer("body_and_small_angle_chosen.json"),
+                ]
+            )
+        )
+        query = tilt_query()
+        condition = (
+            query.variable.angle < expected["ActionWithBodyAndValueSlots.angle"] + 0.1
+        )
+        query.where(condition)
+        (action,) = query.evaluate(backend=backend)
+        assert action.source is body
+        assert action.angle == expected["ActionWithBodyAndValueSlots.angle"]
+        assert verbalize_expression(condition) in backend.log[1].user
+
+    def test_answers_breaking_a_condition_every_time_end_the_resolution(self):
+        body = body_with_geometry()
+        backend = LanguageModelBackend(
+            client=ScriptedClient(responses=[answer("body_and_angle_chosen.json")] * 2)
+        )
+        query = tilt_query()
+        query.where(query.variable.angle < 0.0)
+        with pytest.raises(RepairBudgetExhausted) as raised:
+            list(query.evaluate(backend=backend))
+        assert isinstance(raised.value.last_error, NoValidCandidates)
+        assert body.name in backend.log[1].user
+
+    def test_an_answer_may_say_the_conditions_cannot_all_hold(self):
+        body = body_with_geometry()
+        backend = LanguageModelBackend(
+            client=ScriptedClient(responses=[answer("request_unsatisfiable.json")])
+        )
+        query = tilt_query()
+        query.where(query.variable.angle < 1.0, query.variable.angle > 2.0)
+        with pytest.raises(UnsatisfiableRequest):
+            list(query.evaluate(backend=backend))
+        assert [exchange.attempt for exchange in backend.log] == [0]
+        assert body.name in backend.log[0].user
+        assert UNSATISFIABLE_RULE in backend.system_prompt
 
     def test_a_token_answer_may_say_no_candidate_fits(self):
         body = body_with_geometry()
