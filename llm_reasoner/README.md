@@ -11,21 +11,12 @@ as instances of Python classes generated from that ontology, and it is admitted 
 when it meets the ontology's acceptance rules and, optionally, is consistent with the
 ontology under a reasoner.
 
-## Package architecture
+## Architecture and status
 
-| Area | Responsibility |
-|---|---|
-| `ontologies` | The predictive-manipulation ontology modules (Turtle) and the Python vocabulary generated from them |
-| `ontology_translation` | Generating the Python vocabulary from the ontology, on krrood's code generator |
-| `acceptance` | Closed-world acceptance rules over a hypothesis, written in EQL |
-| `generation` | `HypothesisBackend`, a krrood `GenerativeBackend` that has a language model answer a query and repairs answers breaking the rules |
-| `admission` | Writing hypotheses as RDF and reading them back, consistency checks with HermiT, records and the hypothesis store |
-| `hypotheses` | Views of stored hypotheses, the knowledge service and the graph projection |
-| `clients` | Language-model client interfaces and recorded exchanges |
-| `resolver` | Reflection, prompting, decoding, and request resolution |
-
-Dependencies point from applications toward these abstractions; none of them imports a
-viewer or world-model package.
+- [`doc/architecture.md`](doc/architecture.md): the components (world injector,
+  resolver, knowledge component, clients), what each is for, its inputs and outputs, and
+  how they communicate.
+- [`doc/status.md`](doc/status.md): what is done, in progress, decided and proposed.
 
 ## The predictive-manipulation ontology
 
