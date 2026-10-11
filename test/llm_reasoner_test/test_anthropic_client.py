@@ -537,3 +537,17 @@ class TestAnthropicToolLoop:
             assert system_block["text"] == "system"
             assert system_block["cache_control"] == {"type": "ephemeral"}
             assert request["cache_control"] == {"type": "ephemeral"}
+
+    def test_a_turn_stopping_for_tools_without_calling_one_is_the_answer(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        text = TextBlockMimic("done")
+        client, endpoint = build_tool_loop_client(
+            monkeypatch, [AnthropicResponseMimic([text], stop_reason="tool_use")]
+        )
+
+        conversation = client.complete_with_tools("system", "user", [EchoTool()])
+
+        assert conversation.answer == text.text
+        assert conversation.calls == []
+        assert len(endpoint.requests) == 1
