@@ -1,6 +1,11 @@
 {
   "name": "describe_kind",
-  "description": "Describe a kind: its summary, the kinds it specialises, the kinds specialising it, and every field its individuals hold, with the field's declared type, meaning (units included where documented) and default. Needed only to learn the field paths a search or a path can use; describing an individual already shows its fields and values.",
+  "description": {
+    "purpose": "Describe a kind.",
+    "returns": "Its summary, the kinds it specialises, the kinds specialising it, and every field its individuals hold, with the field's declared type, meaning (units where documented) and default.",
+    "use_when": "Learning the field paths a search or a path can use.",
+    "avoid": "Learning an individual's fields; describing the individual already shows them with their values."
+  },
   "input_schema": {
     "type": "object",
     "properties": {

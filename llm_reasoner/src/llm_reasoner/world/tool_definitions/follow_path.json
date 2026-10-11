@@ -1,6 +1,10 @@
 {
   "name": "follow_path",
-  "description": "Read the value a path of fields reaches from an individual. A plain value is given with whether it is the declared default; a value depending on the world state, with the state variables it depends on and its current numbers; an individual reached, by its handle.",
+  "description": {
+    "purpose": "Read the value a path of fields reaches from an individual.",
+    "returns": "A plain value with whether it is the declared default; a value depending on the world state with its state variables and current numbers; an individual by its handle.",
+    "use_when": "Reading one value without describing the whole individual."
+  },
   "input_schema": {
     "type": "object",
     "properties": {

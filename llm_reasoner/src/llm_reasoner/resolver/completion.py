@@ -12,10 +12,12 @@ from typing_extensions import Sequence, Tuple
 
 from llm_reasoner.clients.base import LanguageModelClient
 from llm_reasoner.clients.tools import Tool, ToolConversation, ToolUsingClient
+from llm_reasoner.resolver.prompt_format import PromptRule, RuleName
 
-TEXT_ANSWER_RULE = (
-    "- Write your final answer as the text of your reply, never as a tool call; the "
-    "tools only find things out."
+TEXT_ANSWER_RULE = PromptRule(
+    name=RuleName.TEXT_ANSWER,
+    text="write the final answer as the text of the reply, never as a tool call; the "
+    "tools only find things out.",
 )
 """
 The rule telling a model that may call tools where its answer goes.
@@ -44,7 +46,7 @@ class Completion(ABC):
 
     @property
     @abstractmethod
-    def answer_rules(self) -> Tuple[str, ...]:
+    def answer_rules(self) -> Tuple[PromptRule, ...]:
         """
         The rules telling the model how to give its answer when asked this way.
         """
@@ -69,7 +71,7 @@ class PlainCompletion(Completion):
         return self.client.identity
 
     @property
-    def answer_rules(self) -> Tuple[str, ...]:
+    def answer_rules(self) -> Tuple[PromptRule, ...]:
         return ()
 
 
@@ -97,5 +99,5 @@ class ToolCompletion(Completion):
         return self.client.identity
 
     @property
-    def answer_rules(self) -> Tuple[str, ...]:
+    def answer_rules(self) -> Tuple[PromptRule, ...]:
         return (TEXT_ANSWER_RULE,)

@@ -13,7 +13,7 @@ from enum import StrEnum
 from pathlib import Path
 
 from jsonschema import Draft202012Validator
-from typing_extensions import Any, Dict, List, Mapping, Sequence, Union
+from typing_extensions import Any, Dict, List, Mapping, Optional, Sequence, Union
 
 from llm_reasoner.clients.usage import TokenUsage
 from llm_reasoner.exceptions import LLMReasonerError
@@ -29,6 +29,85 @@ class ToolDefinitionKey(StrEnum):
     INPUT_SCHEMA = "input_schema"
 
 
+class ToolDescriptionKey(StrEnum):
+    """
+    The parts of a tool's description, each stated on a line of its own.
+    """
+
+    PURPOSE = "purpose"
+    """
+    What the tool does.
+    """
+
+    RETURNS = "returns"
+    """
+    What a call answers.
+    """
+
+    USE_WHEN = "use_when"
+    """
+    When to call the tool.
+    """
+
+    AVOID = "avoid"
+    """
+    When not to call it, and what to do instead.
+    """
+
+
+@dataclass(frozen=True)
+class ToolDescription:
+    """
+    What a model is told a tool is for, in labelled parts.
+    """
+
+    purpose: str
+    """
+    What the tool does.
+    """
+
+    returns: str
+    """
+    What a call answers.
+    """
+
+    use_when: Optional[str] = None
+    """
+    When to call the tool, if that needs saying.
+    """
+
+    avoid: Optional[str] = None
+    """
+    When not to call it, and what to do instead, if that needs saying.
+    """
+
+    @classmethod
+    def from_json(cls, stored: Mapping[str, str]) -> ToolDescription:
+        """
+        :return: The description stored as a JSON object of its parts.
+        """
+        return cls(
+            purpose=stored[ToolDescriptionKey.PURPOSE],
+            returns=stored[ToolDescriptionKey.RETURNS],
+            use_when=stored.get(ToolDescriptionKey.USE_WHEN),
+            avoid=stored.get(ToolDescriptionKey.AVOID),
+        )
+
+    def render(self) -> str:
+        """
+        :return: The description as the model reads it, one labelled part per line.
+        """
+        parts = {
+            ToolDescriptionKey.PURPOSE: self.purpose,
+            ToolDescriptionKey.RETURNS: self.returns,
+            ToolDescriptionKey.USE_WHEN: self.use_when,
+            ToolDescriptionKey.AVOID: self.avoid,
+        }
+        return "\n".join(
+            f"{key}: {part}" for key, part in parts.items() if part is not None
+        )
+
+
 @dataclass(frozen=True)
 class ToolDefinition:
     """
@@ -40,7 +119,7 @@ class ToolDefinition:
     The name the model calls the tool by.
     """
 
-    description: str
+    description: ToolDescription
     """
     What the tool does and when to call it.
     """
@@ -58,7 +137,9 @@ class ToolDefinition:
         stored = json.loads(path.read_text())
         return cls(
             name=stored[ToolDefinitionKey.NAME],
-            description=stored[ToolDefinitionKey.DESCRIPTION],
+            description=ToolDescription.from_json(
+                stored[ToolDefinitionKey.DESCRIPTION]
+            ),
             input_schema=stored[ToolDefinitionKey.INPUT_SCHEMA],
         )
 
@@ -68,9 +149,51 @@ class ToolDefinition:
         """
         return {
             ToolDefinitionKey.NAME: self.name,
-            ToolDefinitionKey.DESCRIPTION: self.description,
+            ToolDefinitionKey.DESCRIPTION: self.description.render(),
             ToolDefinitionKey.INPUT_SCHEMA: dict(self.input_schema),
         }
+
+
+class ToolErrorKey(StrEnum):
+    """
+    The keys of an error a tool call returns.
+    """
+
+    ERROR = "error"
+    """
+    What went wrong, named.
+    """
+
+    TOOL = "tool"
+    """
+    The tool called.
+    """
+
+    TOOLS = "tools"
+    """
+    The tools offered.
+    """
+
+    PROBLEMS = "problems"
+    """
+    Each way the input breaks the tool's schema.
+    """
+
+
+class ToolErrorKind(StrEnum):
+    """
+    The errors a tool box reports before any tool runs.
+    """
+
+    UNKNOWN_TOOL = "UnknownTool"
+    """
+    No offered tool has the name called.
+    """
+
+    INPUT_BREAKS_SCHEMA = "InputBreaksSchema"
+    """
+    The input does not fit the tool's schema.
+    """
 
 
 @dataclass(frozen=True)
@@ -88,6 +211,17 @@ class ToolOutcome:
     """
     Whether the call could not be answered.
     """
+
+    @classmethod
+    def error(cls, kind: str, details: Mapping[str, Any]) -> ToolOutcome:
+        """
+        :param kind: What went wrong, named.
+        :param details: What the error found.
+        :return: An error outcome stating the error and its details as JSON.
+        """
+        return cls(
+            content=json.dumps({ToolErrorKey.ERROR: kind, **details}), is_error=True
+        )
 
 
 class Tool(ABC):
@@ -157,10 +291,14 @@ class ToolBox:
         """
         tool = next((tool for tool in self.tools if tool.definition.name == name), None)
         if tool is None:
-            offered = [offered.definition.name for offered in self.tools]
-            return ToolOutcome(
-                content=f"No tool is named {name!r}; the tools are {offered}",
-                is_error=True,
+            return ToolOutcome.error(
+                ToolErrorKind.UNKNOWN_TOOL,
+                {
+                    ToolErrorKey.TOOL: name,
+                    ToolErrorKey.TOOLS: [
+                        offered.definition.name for offered in self.tools
+                    ],
+                },
             )
         problems = [
             problem.message
@@ -169,9 +307,9 @@ class ToolBox:
             ).iter_errors(arguments)
         ]
         if problems:
-            return ToolOutcome(
-                content=f"The input does not fit {name}: " + "; ".join(problems),
-                is_error=True,
+            return ToolOutcome.error(
+                ToolErrorKind.INPUT_BREAKS_SCHEMA,
+                {ToolErrorKey.TOOL: name, ToolErrorKey.PROBLEMS: problems},
             )
         return tool.run(arguments)
 

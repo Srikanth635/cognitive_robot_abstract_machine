@@ -10,13 +10,19 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from krrood.entity_query_language.query.match import Match
-from typing_extensions import Any, List, Mapping, Tuple
+from typing_extensions import Any, Dict, List, Mapping, Tuple
 
 from llm_reasoner.resolver.context import CandidateRenderer
 from llm_reasoner.resolver.exceptions import (
     AmbiguousReferent,
     NoFittingReferent,
     SlotValueRejected,
+)
+from llm_reasoner.resolver.prompt_format import (
+    AcceptedType,
+    CandidateKey,
+    PromptRule,
+    RuleName,
 )
 from llm_reasoner.resolver.reflection import Slot
 from llm_reasoner.world.classes import identifier_of
@@ -28,16 +34,6 @@ LISTED_CANDIDATES = 10
 """
 The most candidates a slot lists by handle; a slot with more states how many it has and
 leaves finding them to the world tools.
-"""
-
-CANDIDATE_INDENT = "      "
-"""
-The indentation of a candidate under its slot.
-"""
-
-SLOT_NOTE_INDENT = "    "
-"""
-The indentation of a note under its slot.
 """
 
 
@@ -62,20 +58,23 @@ class ReferentAnswerKey(StrEnum):
     """
 
 
-NO_FITTING_CANDIDATE_RULE = (
-    "- When no candidate of a referent slot is what the request asks for, or none can do "
-    "what the slot is for in this object, never substitute a near miss: answer the slot "
-    f'with {{"{ReferentAnswerKey.NO_FITTING_CANDIDATE}": "<why none fits>"}}.'
+NO_FITTING_CANDIDATE_RULE = PromptRule(
+    name=RuleName.NO_FITTING_CANDIDATE,
+    text="when no candidate of a slot is what the request asks for, or none can do what "
+    "the slot is for in this object, answer the slot with "
+    f'{{"{ReferentAnswerKey.NO_FITTING_CANDIDATE}": "<why none fits>"}} instead of a '
+    "near miss.",
 )
 """
 The rule letting the model say that no candidate fits.
 """
 
-EQUALLY_FITTING_RULE = (
-    "- When several candidates of a referent slot fit equally and nothing in the request "
-    "prefers one, do not pick: answer the slot with "
+EQUALLY_FITTING_RULE = PromptRule(
+    name=RuleName.EQUALLY_FITTING,
+    text="when several candidates of a slot fit equally and nothing in the request "
+    "prefers one, answer the slot with "
     f'{{"{ReferentAnswerKey.EQUALLY_FITTING}": [<each of them>], '
-    f'"{ReferentAnswerKey.WHY}": "<why none is preferred>"}}.'
+    f'"{ReferentAnswerKey.WHY}": "<why none is preferred>"}} instead of picking.',
 )
 """
 The rule letting the model say that several candidates fit equally.
@@ -89,35 +88,47 @@ class ReferentNaming(ABC):
     """
 
     @property
-    def rules(self) -> Tuple[str, ...]:
+    def rules(self) -> Tuple[PromptRule, ...]:
         """
         The rules telling the model how to answer a referent slot.
         """
-        return (self.answer_rule, NO_FITTING_CANDIDATE_RULE, EQUALLY_FITTING_RULE)
+        return (
+            self.answer_rule,
+            *self.finding_rules,
+            NO_FITTING_CANDIDATE_RULE,
+            EQUALLY_FITTING_RULE,
+        )
 
     @property
     @abstractmethod
-    def answer_rule(self) -> str:
+    def answer_rule(self) -> PromptRule:
         """
         The rule telling the model how to answer a referent slot.
         """
 
     @property
-    @abstractmethod
-    def candidate_heading(self) -> str:
+    def finding_rules(self) -> Tuple[PromptRule, ...]:
         """
-        The line introducing the candidates of a referent slot.
+        The rules telling the model how to find candidates the prompt does not list.
+        """
+        return ()
+
+    @property
+    @abstractmethod
+    def accepted_type(self) -> AcceptedType:
+        """
+        What a referent slot is answered with.
         """
 
     @abstractmethod
-    def candidate_lines(
+    def candidates(
         self, slot: Slot, expression: Match, renderer: CandidateRenderer
-    ) -> List[str]:
+    ) -> Dict[str, Any]:
         """
         :param slot: A referent slot.
         :param expression: The match being resolved.
         :param renderer: Describes a candidate.
-        :return: The lines presenting the slot's candidates.
+        :return: The slot's candidates, as data.
         """
 
     def decode(self, slot: Slot, value: Any) -> Any:
@@ -168,43 +179,32 @@ class IntegerTokens(ReferentNaming):
     """
 
     @property
-    def answer_rule(self) -> str:
-        return (
-            "- Referent slots take the integer token of one of the listed candidates."
+    def answer_rule(self) -> PromptRule:
+        return PromptRule(
+            name=RuleName.REFERENT_SLOT,
+            text=f'a slot accepting "{self.accepted_type}" takes the "{CandidateKey.TOKEN}" '
+            f'of one of its listed "{CandidateKey.LISTED}" candidates.',
         )
 
     @property
-    def candidate_heading(self) -> str:
-        return f"{SLOT_NOTE_INDENT}choose one candidate by its integer token:"
+    def accepted_type(self) -> AcceptedType:
+        return AcceptedType.TOKEN
 
-    def candidate_lines(
+    def candidates(
         self, slot: Slot, expression: Match, renderer: CandidateRenderer
-    ) -> List[str]:
-        return [
-            self.hanging(
-                self.candidate_prefix(token), renderer.render(candidate, expression)
-            )
-            for token, candidate in enumerate(slot.domain)
-        ]
-
-    @staticmethod
-    def candidate_prefix(token: int) -> str:
-        """
-        :param token: The integer token a candidate is chosen by.
-        :return: What precedes the description of that candidate.
-        """
-        return f"{CANDIDATE_INDENT}[{token}] "
-
-    @staticmethod
-    def hanging(prefix: str, text: str) -> str:
-        """
-        :param prefix: What precedes the first line.
-        :param text: Text that may span several lines.
-        :return: The text after the prefix, its later lines indented to align with
-            the first.
-        """
-        first, *rest = text.splitlines() or [""]
-        return "\n".join([prefix + first] + [" " * len(prefix) + line for line in rest])
+    ) -> Dict[str, Any]:
+        return {
+            CandidateKey.COUNT: len(slot.domain),
+            CandidateKey.LISTED: [
+                {
+                    CandidateKey.TOKEN: token,
+                    CandidateKey.DESCRIPTION: renderer.render(
+                        candidate, expression
+                    ).splitlines(),
+                }
+                for token, candidate in enumerate(slot.domain)
+            ],
+        }
 
     def decode_candidate(self, slot: Slot, value: Any) -> Any:
         if isinstance(value, bool) or not isinstance(value, int):
@@ -235,52 +235,65 @@ class WorldHandles(ReferentNaming):
     """
 
     @property
-    def answer_rule(self) -> str:
-        return (
-            "- Referent slots take the handle of one of the slot's candidates, written "
-            f'"<Kind>{HANDLE_SEPARATOR}<n>". Handles exist only once a tool has returned '
-            "them, so never name one you have not been given. When the candidates are "
-            f"not listed, search the slot's kind with {WorldToolName.FIND_INDIVIDUALS} "
-            f"first, and use {WorldToolName.LIST_KINDS} only to explore what else the "
-            "world has. An individual that gives a candidate its meaning holds the "
-            "candidate in one of its fields: follow that field to the candidate's handle."
+    def answer_rule(self) -> PromptRule:
+        return PromptRule(
+            name=RuleName.REFERENT_SLOT,
+            text=f'a slot accepting "{self.accepted_type}" takes the handle of one of its '
+            f'candidates, written "<Kind>{HANDLE_SEPARATOR}<n>"; a handle exists only once '
+            "a tool has returned it, so never write one you were not given.",
         )
 
     @property
-    def candidate_heading(self) -> str:
-        return f"{SLOT_NOTE_INDENT}answer with the handle of one candidate:"
+    def finding_rules(self) -> Tuple[PromptRule, ...]:
+        return (
+            PromptRule(
+                name=RuleName.FINDING_CANDIDATES,
+                text=f'when a slot\'s candidates are counted but not "{CandidateKey.LISTED}", '
+                f"search their kind with {WorldToolName.FIND_INDIVIDUALS} first; use "
+                f"{WorldToolName.LIST_KINDS} only to explore what else the world has.",
+            ),
+            PromptRule(
+                name=RuleName.MEANING_HOLDER,
+                text="an individual giving a candidate its meaning holds the candidate in "
+                "one of its fields; follow that field to the candidate's handle.",
+            ),
+        )
 
-    def candidate_lines(
+    @property
+    def accepted_type(self) -> AcceptedType:
+        return AcceptedType.HANDLE
+
+    def candidates(
         self, slot: Slot, expression: Match, renderer: CandidateRenderer
-    ) -> List[str]:
+    ) -> Dict[str, Any]:
+        counted = {
+            CandidateKey.COUNT: len(slot.domain),
+            CandidateKey.KIND: identifier_of(slot.declared_type),
+        }
         if len(slot.domain) > LISTED_CANDIDATES:
-            return [self.unlisted_line(slot)]
-        return [self.candidate_line(candidate) for candidate in slot.domain]
+            return counted
+        return {
+            **counted,
+            CandidateKey.LISTED: [
+                self.candidate_entry(candidate) for candidate in slot.domain
+            ],
+        }
 
-    def candidate_line(self, candidate: Any) -> str:
+    def candidate_entry(self, candidate: Any) -> Dict[str, Any]:
         """
-        :return: The line naming a listed candidate by its handle, with its kind and the
+        :return: A listed candidate: its handle, its kind and the fields of other
             individuals holding it.
         """
         handle = self.view.handles.handle_of(candidate)
+        entry = {
+            CandidateKey.HANDLE: handle,
+            CandidateKey.KIND: type(candidate).__name__,
+        }
         holdings = [
-            f"held as {holder.field_name} of a {holder.type_name}"
+            f"{holder.field_name} of a {holder.type_name}"
             for holder in self.view.holders(handle)
         ]
-        return f"{CANDIDATE_INDENT}{handle} ({type(candidate).__name__})" + (
-            " - " + ", ".join(holdings) if holdings else ""
-        )
-
-    @staticmethod
-    def unlisted_line(slot: Slot) -> str:
-        """
-        :return: The line stating how many candidates a slot has, too many to list.
-        """
-        return (
-            f"{SLOT_NOTE_INDENT}{len(slot.domain)} candidates of the kind "
-            f"{identifier_of(slot.declared_type)}; find the one meant with the world "
-            "tools and answer with its handle."
-        )
+        return {**entry, CandidateKey.HELD_AS: holdings} if holdings else entry
 
     def decode_candidate(self, slot: Slot, value: Any) -> Any:
         if not isinstance(value, str) or not self.view.handles.is_live(value):

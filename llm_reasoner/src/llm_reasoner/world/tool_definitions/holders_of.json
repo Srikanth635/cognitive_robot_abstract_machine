@@ -1,6 +1,11 @@
 {
   "name": "holders_of",
-  "description": "Name the individuals holding an individual in one of their fields, with the field and a summary of the holder's kind. An individual's meaning often lives in what holds it. Describing an individual already lists its holders, so use this for an individual you have not described.",
+  "description": {
+    "purpose": "Name the individuals holding an individual in one of their fields.",
+    "returns": "Each holder's handle and kind, the field holding the individual, and a summary of the holder's kind; an individual's meaning often lives in what holds it.",
+    "use_when": "Learning what an individual you have not described is.",
+    "avoid": "An individual already described; its description lists its holders."
+  },
   "input_schema": {
     "type": "object",
     "properties": {

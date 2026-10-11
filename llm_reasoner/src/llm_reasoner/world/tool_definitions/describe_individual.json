@@ -1,6 +1,11 @@
 {
   "name": "describe_individual",
-  "description": "Describe an individual in one answer: its kind and the kinds that kind specialises, the individuals holding it (which often say what it is: 'held as <field> of a <Kind>'), and each of its fields with its meaning and value, held individuals described in turn down to the depth asked. Values marked '(default)' are the field's declared default rather than a measurement. Individuals beyond the depth appear as 'see <handle>'; describe them in turn only if they matter.",
+  "description": {
+    "purpose": "Describe an individual.",
+    "returns": "Its kind and the kinds that kind specialises, the individuals holding it ('held as <field> of a <Kind>'), and each field with its meaning and value, held individuals described in turn down to the depth asked; '(default)' marks a field's declared default rather than a measurement; individuals beyond the depth appear as 'see <handle>'.",
+    "use_when": "Learning what an individual is and holds.",
+    "avoid": "Describing an individual marked 'see <handle>' unless it matters."
+  },
   "input_schema": {
     "type": "object",
     "properties": {

@@ -29,11 +29,13 @@ from llm_reasoner.resolver.referents import (
     WorldHandles,
 )
 from llm_reasoner.resolver.reflection import reflect_slots
+from llm_reasoner.resolver.prompt_format import CandidateKey, PromptSection, SlotKey
 from llm_reasoner.world.classes import identifier_of
 from llm_reasoner.world.naming import HANDLE_SEPARATOR
 from llm_reasoner.world.tools import WorldToolName
 from llm_reasoner.world.view import WorldView
 
+from .prompt_sections import bodies, slot_entry
 from .world_mimics import (
     ActionWithBodyAndValueSlots,
     VesselAnnotation,
@@ -86,8 +88,18 @@ class TestPrompt:
         body = body_with_geometry()
         annotation = VesselAnnotation(body=body)
         prompt = world_backend(view, []).describe(tilt_query())
-        assert WorldHandles(view=view).candidate_line(body) in prompt
-        assert type(annotation).__name__ in WorldHandles(view=view).candidate_line(body)
+        entry = WorldHandles(view=view).candidate_entry(body)
+        (source,) = [
+            slot
+            for slot in reflect_slots(tilt_query())
+            if slot.attribute_name == "source"
+        ]
+        candidates = slot_entry(prompt, source.path)[SlotKey.CANDIDATES]
+        assert candidates[CandidateKey.LISTED] == [entry]
+        assert any(
+            type(annotation).__name__ in holding
+            for holding in entry[CandidateKey.HELD_AS]
+        )
 
     def test_many_candidates_are_counted_rather_than_listed(self):
         view = WorldView()
@@ -97,34 +109,35 @@ class TestPrompt:
         (source,) = [
             slot for slot in reflect_slots(query) if slot.attribute_name == "source"
         ]
-        assert WorldHandles(view=view).unlisted_line(source) in prompt
+        candidates = slot_entry(prompt, source.path)[SlotKey.CANDIDATES]
+        assert candidates[CandidateKey.COUNT] == len(source.domain)
+        assert CandidateKey.LISTED not in candidates
         assert not any(view.handles.handle_of(body) in prompt for body in bodies)
 
     def test_the_rules_say_how_world_individuals_are_answered(self):
         view = WorldView()
-        assert (
-            WorldHandles(view=view).answer_rule in world_backend(view, []).system_prompt
-        )
+        assert WorldHandles(view=view).answer_rule in world_backend(view, []).rules
         plain = LanguageModelBackend(client=ScriptedClient())
-        assert IntegerTokens().answer_rule in plain.system_prompt
-        assert WorldHandles(view=view).answer_rule not in plain.system_prompt
+        assert IntegerTokens().answer_rule in plain.rules
+        assert WorldHandles(view=view).answer_rule not in plain.rules
 
     def test_the_rules_show_no_handle_a_world_could_give_out(self):
         handle = re.compile(rf"\w{re.escape(HANDLE_SEPARATOR)}\d")
         assert not handle.search(world_backend(WorldView(), []).system_prompt)
 
-    def test_the_rules_name_the_sections_the_providers_write(self):
+    def test_the_inputs_name_the_sections_the_providers_write(self):
         system_prompt = LanguageModelBackend(client=ScriptedClient()).system_prompt
+        (inputs,) = bodies(system_prompt, PromptSection.INPUTS)
         for provider in (TaskContextProvider(), SchemaOnlyContextProvider()):
-            assert f'"{provider.title}"' in system_prompt
+            assert f"<{provider.section}>" in inputs
 
     def test_in_a_conversation_with_tools_the_answer_is_written_as_text(self):
         view = WorldView()
         with_tools = world_backend(view, [])
         plain = LanguageModelBackend(client=ScriptedClient())
         (rule,) = with_tools.completion.answer_rules
-        assert rule in with_tools.system_prompt
-        assert rule not in plain.system_prompt
+        assert rule in with_tools.rules
+        assert rule not in plain.rules
 
 
 # %% resolution
@@ -239,5 +252,5 @@ class TestVerdicts:
             world_backend(WorldView(), []),
             LanguageModelBackend(client=ScriptedClient()),
         ):
-            assert NO_FITTING_CANDIDATE_RULE in backend.system_prompt
-            assert EQUALLY_FITTING_RULE in backend.system_prompt
+            assert NO_FITTING_CANDIDATE_RULE in backend.rules
+            assert EQUALLY_FITTING_RULE in backend.rules

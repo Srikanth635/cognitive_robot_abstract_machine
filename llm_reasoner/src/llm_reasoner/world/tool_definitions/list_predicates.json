@@ -1,6 +1,10 @@
 {
   "name": "list_predicates",
-  "description": "List the predicates (yes-or-no checks) and value functions the world model declares, each with its identifier, summary and the arguments it takes. Listing those about a kind includes those taking any kind it specialises, so ask once for the most specific kind you hold.",
+  "description": {
+    "purpose": "List the predicates (yes-or-no checks) and value functions the world model declares.",
+    "returns": "Each one's identifier, summary and the arguments it takes.",
+    "use_when": "Looking for a check or a computed value about individuals; asking about a kind includes those taking any kind it specialises, so ask once for the most specific kind you hold."
+  },
   "input_schema": {
     "type": "object",
     "properties": {

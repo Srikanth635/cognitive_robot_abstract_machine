@@ -30,9 +30,11 @@ from llm_reasoner.world.values import (
 from llm_reasoner.world.rendering import IndividualRenderer
 from llm_reasoner.resolver.backend import LanguageModelBackend
 from llm_reasoner.resolver.context import StructuralCandidateRenderer
+from llm_reasoner.resolver.prompt_format import CandidateKey, SlotKey
 from llm_reasoner.resolver.prompts import PromptBuilder
 from llm_reasoner.resolver.reflection import reflect_slots
 
+from .prompt_sections import slot_entry
 from .world_mimics import (
     ActionWithBodyAndValueSlots,
     BodyAnnotation,
@@ -290,14 +292,15 @@ class TestResolverPrompt:
         prompt = PromptBuilder(renderer=StructuralCandidateRenderer()).build(
             query, reflect_slots(query), [], number_of_candidates=1
         )
-        first, *rest = (
-            IndividualRenderer()
-            .render(IndividualDescriber().describe(body))
-            .splitlines()
-        )
-        token = PromptBuilder.candidate_prefix(0)
-        expected = [token + first] + [" " * len(token) + line for line in rest]
-        assert "\n".join(expected) in prompt
+        entry = slot_entry(prompt, f"{ActionWithBodyAndValueSlots.__name__}.source")
+        assert entry[SlotKey.CANDIDATES][CandidateKey.LISTED] == [
+            {
+                CandidateKey.TOKEN: 0,
+                CandidateKey.DESCRIPTION: IndividualRenderer()
+                .render(IndividualDescriber().describe(body))
+                .splitlines(),
+            }
+        ]
 
     def test_the_resolver_describes_candidates_by_their_structure_by_default(self):
         (renderer,) = [
