@@ -19,20 +19,30 @@ from typing_extensions import Any, Dict, List, Optional, Sequence
 # %% slot classification
 
 GENERATABLE_TYPES = (bool, int, float, str)
-"""Types whose values a model may invent outright."""
+"""
+Types whose values a model may invent outright.
+"""
 
 UNION_ORIGINS = (typing.Union, types.UnionType)
-"""Origins identifying a union annotation, covering both spellings of one."""
+"""
+Origins identifying a union annotation, covering both spellings of one.
+"""
 
 
 class SlotKind(enum.Enum):
-    """The kind of knowledge a slot is missing."""
+    """
+    The kind of knowledge a slot is missing.
+    """
 
     VALUE = enum.auto()
-    """A self-identifying value that does not exist yet and may be generated."""
+    """
+    A self-identifying value that does not exist yet and may be generated.
+    """
 
     REFERENT = enum.auto()
-    """An individual that must be selected from an extension, never invented."""
+    """
+    An individual that must be selected from an extension, never invented.
+    """
 
     SORTAL = enum.auto()
     """
@@ -45,15 +55,17 @@ class SlotKind(enum.Enum):
     """
 
     BOUND = enum.auto()
-    """Already supplied by the caller, and therefore context rather than a question."""
+    """
+    Already supplied by the caller, and therefore context rather than a question.
+    """
 
 
 def union_alternatives(declared_type: Any) -> Optional[List[type]]:
     """
     Split a union annotation into its branches.
 
-    Both spellings are recognised, and ``None`` is dropped because a slot's absence is
-    expressed by leaving it out rather than by filling it with null.
+    Both spellings are recognised, and ``None`` is dropped: whether a slot may be left
+    empty is told by :attr:`Slot.may_be_empty`.
 
     :param declared_type: An annotated type.
     :return: The branches, or ``None`` when the annotation is not a union.
@@ -68,7 +80,9 @@ def union_alternatives(declared_type: Any) -> Optional[List[type]]:
 
 
 SORTAL_ANNOTATION = re.compile(r"^(?:typing\.)?[Tt]ype\[\s*([\w.]+)\s*]$")
-"""Matches a string annotation of the form ``Type[X]``, capturing ``X``."""
+"""
+Matches a string annotation of the form ``Type[X]``, capturing ``X``.
+"""
 
 
 def raw_annotation_of(owner: type, attribute_name: str) -> Any:
@@ -164,49 +178,79 @@ def type_display_name(declared_type: Any, alternatives: Optional[List[type]]) ->
 
 @dataclass
 class Slot:
-    """One leaf of a match, described entirely by reflection over the query."""
+    """
+    One leaf of a match, described entirely by reflection over the query.
+    """
 
     path: str
-    """Dotted access path, which is the shared vocabulary across query and prompt."""
+    """
+    Dotted access path, which is the shared vocabulary across query and prompt.
+    """
 
     declared_type: Any
-    """The annotated type of the attribute, which may be a union."""
+    """
+    The annotated type of the attribute, which may be a union.
+    """
 
     kind: SlotKind
-    """What kind of knowledge is missing."""
+    """
+    What kind of knowledge is missing.
+    """
 
     attribute_match: AttributeMatch
-    """The krrood node this slot was derived from."""
+    """
+    The krrood node this slot was derived from.
+    """
 
     owner: type
-    """The class that declares the attribute."""
+    """
+    The class that declares the attribute.
+    """
 
     attribute_name: str
-    """The bare field name on the owner."""
+    """
+    The bare field name on the owner.
+    """
 
     docstring: Optional[str] = None
-    """The attribute's own docstring, when it has one."""
+    """
+    The attribute's own docstring, when it has one.
+    """
 
     default: Any = None
-    """The attribute's declared default, when it has one."""
+    """
+    The attribute's declared default, when it has one.
+    """
 
     has_default: bool = False
-    """Whether the attribute declares a default at all."""
+    """
+    Whether the attribute declares a default at all.
+    """
 
     alternatives: Optional[List[type]] = None
-    """The union branches, when the declared type is a union."""
+    """
+    The union branches, when the declared type is a union.
+    """
 
     sortal_base: Optional[type] = None
-    """The class a sortal slot ranges over, when the slot asks for a kind."""
+    """
+    The class a sortal slot ranges over, when the slot asks for a kind.
+    """
 
     members: Optional[List[Any]] = None
-    """The enum members, when the declared type is an enum."""
+    """
+    The enum members, when the declared type is an enum.
+    """
 
     domain: Optional[List[Any]] = None
-    """The candidate individuals, when the slot is a referent with an extension."""
+    """
+    The candidate individuals, when the slot is a referent with an extension.
+    """
 
     bound_value: Any = None
-    """The caller-supplied value, when the slot is bound."""
+    """
+    The caller-supplied value, when the slot is bound.
+    """
 
     group_path: Optional[str] = None
     """
@@ -215,14 +259,16 @@ class Slot:
     """
 
     group_type: Optional[type] = None
-    """The type of the nested description, when the slot sits inside one."""
+    """
+    The type of the nested description, when the slot sits inside one.
+    """
 
     group_docstring: Optional[str] = None
     """
     Docstring of the attribute holding the nested description.
 
-    Carried because the nesting node contributes no slot of its own, so without this
-    the sentence explaining what the nested description is *for* would be lost.
+    Carried because the nesting node contributes no slot of its own, so without this the
+    sentence explaining what the nested description is *for* would be lost.
     """
 
     @property
@@ -238,6 +284,14 @@ class Slot:
         return isinstance(self.declared_type, type) and issubclass(
             self.declared_type, enum.Enum
         )
+
+    @property
+    def may_be_empty(self) -> bool:
+        """
+        :return: Whether the slot may be answered with nothing, which its class allows by
+            defaulting the field to ``None``.
+        """
+        return self.has_default and self.default is None
 
     @property
     def selects_from_domain(self) -> bool:
@@ -260,10 +314,14 @@ class Slot:
 
 @dataclass
 class SlotReflector:
-    """Flattens a match into the slots a model has to answer for."""
+    """
+    Flattens a match into the slots a model has to answer for.
+    """
 
     docstrings_by_owner: Dict[type, Dict[str, str]] = field(default_factory=dict)
-    """Attribute docstrings, cached per declaring class."""
+    """
+    Attribute docstrings, cached per declaring class.
+    """
 
     namespaces_by_owner: Dict[type, Dict[str, Any]] = field(default_factory=dict)
     """

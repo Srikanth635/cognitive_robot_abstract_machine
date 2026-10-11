@@ -150,6 +150,12 @@ class ActionWithADefaultChoice(Symbol):
     side: Side = Side.RIGHT
     """The side of the body worked on."""
 
+    depth: Optional[float] = None
+    """How deep to work into the body, in meters; nothing for the action's own choice."""
+
+    support: Optional[WorldBody] = None
+    """The body to rest the worked body on; nothing when it needs no support."""
+
 
 @dataclass(eq=False)
 class ActionPlannedByItsParent(Symbol):
