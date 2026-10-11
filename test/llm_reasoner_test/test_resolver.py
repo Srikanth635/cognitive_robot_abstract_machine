@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from krrood.entity_query_language.factories import the, variable
+from krrood.entity_query_language.factories import an, the, variable
 from krrood.entity_query_language.predicate import Symbol
 from krrood.entity_query_language.verbalization.pipeline import verbalize_expression
 from krrood.entity_query_language.verbalization.rendering.source_documentation import (
@@ -36,6 +36,7 @@ from llm_reasoner.resolver.exceptions import (
     UnsatisfiableRequest,
 )
 from llm_reasoner.resolver.prompts import (
+    FEWER_CANDIDATES_RULE,
     UNSATISFIABLE_RULE,
     PromptBuilder,
     RequestAnswerKey,
@@ -171,6 +172,18 @@ class TestResolution:
         assert action.angle == expected["ActionWithBodyAndValueSlots.angle"]
         assert [exchange.attempt for exchange in backend.log] == [0]
         assert f'"{RequestAnswerKey.WHY}"' in backend.system_prompt
+
+    def test_an_answer_may_give_fewer_candidates_than_asked(self):
+        body = body_with_geometry()
+        backend = LanguageModelBackend(
+            client=ScriptedClient(responses=[answer("body_and_angle_chosen.json")])
+        )
+        query = an(ActionWithBodyAndValueSlots)(source=variable(WorldBody), angle=...)
+        query.expression.limit(3)
+        (action,) = query.evaluate(backend=backend)
+        assert action.source is body
+        assert [exchange.attempt for exchange in backend.log] == [0]
+        assert FEWER_CANDIDATES_RULE in backend.system_prompt
 
     def test_an_unusable_answer_is_sent_back_for_repair_once(self):
         body = body_with_geometry()
