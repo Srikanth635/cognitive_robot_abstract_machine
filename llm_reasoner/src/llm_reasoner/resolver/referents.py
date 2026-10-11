@@ -12,7 +12,7 @@ from enum import StrEnum
 from krrood.entity_query_language.query.match import Match
 from typing_extensions import Any, List, Mapping, Tuple
 
-from llm_reasoner.resolver.context import CandidateRenderer
+from llm_reasoner.resolver.context import TASK_SECTION_TITLE, CandidateRenderer
 from llm_reasoner.resolver.exceptions import (
     AmbiguousReferent,
     NoFittingReferent,
@@ -62,9 +62,10 @@ class ReferentAnswerKey(StrEnum):
 
 
 NO_FITTING_CANDIDATE_RULE = (
-    "- When no candidate of a referent slot is what the request asks for, or none can do "
-    "what the slot is for in this object, never substitute a near miss: answer the slot "
-    f'with {{"{ReferentAnswerKey.NO_FITTING_CANDIDATE}": "<why none fits>"}}.'
+    "- When no candidate of a referent slot is what the request or the section headed "
+    f'"{TASK_SECTION_TITLE}" asks for, or none can do what the slot is for in this '
+    "object, never substitute a near miss: answer the slot with "
+    f'{{"{ReferentAnswerKey.NO_FITTING_CANDIDATE}": "<why none fits>"}}.'
 )
 """
 The rule letting the model say that no candidate fits.
