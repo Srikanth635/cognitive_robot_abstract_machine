@@ -1,12 +1,12 @@
 {
   "name": "describe_individual",
-  "description": "Describe an individual in one answer: its kind and the kinds that kind specialises, the individuals holding it (which often say what it is, such as 'held as root of a Cup'), and each of its fields with its meaning and value, held individuals described in turn down to the depth asked. Values marked '(default)' are the field's declared default rather than a measurement. Individuals beyond the depth appear as 'see <handle>'; describe them in turn only if they matter.",
+  "description": "Describe an individual in one answer: its kind and the kinds that kind specialises, the individuals holding it (which often say what it is: 'held as <field> of a <Kind>'), and each of its fields with its meaning and value, held individuals described in turn down to the depth asked. Values marked '(default)' are the field's declared default rather than a measurement. Individuals beyond the depth appear as 'see <handle>'; describe them in turn only if they matter.",
   "input_schema": {
     "type": "object",
     "properties": {
       "handle": {
         "type": "string",
-        "description": "The individual's handle, exactly as a tool's answer gave it, such as 'Cup#1'."
+        "description": "The individual's handle, exactly as a tool's answer gave it, written '<Kind>#<n>'."
       },
       "depth": {
         "type": "integer",

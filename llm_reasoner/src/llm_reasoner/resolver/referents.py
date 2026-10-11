@@ -20,6 +20,7 @@ from llm_reasoner.resolver.exceptions import (
 )
 from llm_reasoner.resolver.reflection import Slot
 from llm_reasoner.world.classes import identifier_of
+from llm_reasoner.world.naming import HANDLE_SEPARATOR
 from llm_reasoner.world.tools import WorldToolName
 from llm_reasoner.world.view import WorldView
 
@@ -236,14 +237,13 @@ class WorldHandles(ReferentNaming):
     @property
     def answer_rule(self) -> str:
         return (
-            "- Referent slots take the handle of one of the slot's candidates, such as "
-            '"Body#3". Handles exist only once a tool has returned them, so never name '
-            "one you have not been given. When the candidates are not listed, search "
-            f"the slot's kind with {WorldToolName.FIND_INDIVIDUALS} first, and use "
-            f"{WorldToolName.LIST_KINDS} only to explore what else the world has. An "
-            "individual that gives a candidate its meaning, such as a Cup giving a body "
-            "its meaning, holds the candidate in one of its fields: follow that field to "
-            "the candidate's handle."
+            "- Referent slots take the handle of one of the slot's candidates, written "
+            f'"<Kind>{HANDLE_SEPARATOR}<n>". Handles exist only once a tool has returned '
+            "them, so never name one you have not been given. When the candidates are "
+            f"not listed, search the slot's kind with {WorldToolName.FIND_INDIVIDUALS} "
+            f"first, and use {WorldToolName.LIST_KINDS} only to explore what else the "
+            "world has. An individual that gives a candidate its meaning holds the "
+            "candidate in one of its fields: follow that field to the candidate's handle."
         )
 
     @property

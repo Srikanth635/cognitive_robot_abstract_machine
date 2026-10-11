@@ -3,6 +3,7 @@ from __future__ import annotations
 import inspect
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from enum import StrEnum
 
 from krrood.entity_query_language.query.match import Match
 from typing_extensions import Any, List, Tuple
@@ -16,6 +17,23 @@ CANDIDATE_LINE_BUDGET = 15
 The most lines one candidate is described in, so that a slot offering many candidates
 keeps the prompt readable.
 """
+
+
+class SectionTitle(StrEnum):
+    """
+    The headings the knowledge from outside the query appears under.
+    """
+
+    SITUATION = "Situation"
+    """
+    What is currently true.
+    """
+
+    TASK = "The task"
+    """
+    What the caller is trying to achieve.
+    """
+
 
 # %% situational knowledge
 
@@ -44,7 +62,7 @@ class PromptContextProvider(ABC):
     @property
     def title(self) -> str:
         """:return: The heading this provider's text appears under."""
-        return "Situation"
+        return SectionTitle.SITUATION
 
 
 @dataclass
@@ -90,7 +108,7 @@ class TaskContextProvider(PromptContextProvider):
 
     @property
     def title(self) -> str:
-        return "The task"
+        return SectionTitle.TASK
 
 
 # %% composition
