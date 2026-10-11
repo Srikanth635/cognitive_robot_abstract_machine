@@ -276,6 +276,10 @@ class PromptBuilder:
             lines.extend(
                 self.referent_naming.candidate_lines(slot, expression, self.renderer)
             )
+            if slot.may_be_empty:
+                lines.append(
+                    f"{SLOT_NOTE_INDENT}or {self.answer_form(None)}, leaving it empty"
+                )
             return "\n".join(lines)
         hint = self.value_hint(slot)
         if slot.has_default:
@@ -315,12 +319,16 @@ class PromptBuilder:
     def value_hint(slot: Slot) -> str:
         """
         :param slot: A slot whose value is to be generated.
-        :return: The expected JSON shape, listing every branch of a union.
+        :return: The expected JSON shape, listing every branch of a union, and nothing
+            when the slot may be left empty.
         """
-        return " or ".join(
+        shapes = [
             PromptBuilder.hint_for_type(candidate_type)
             for candidate_type in slot.decodable_types
-        )
+        ]
+        if slot.may_be_empty:
+            shapes.append(PromptBuilder.answer_form(None))
+        return " or ".join(shapes)
 
     def render_given(self, value: Any, expression: Match) -> str:
         """

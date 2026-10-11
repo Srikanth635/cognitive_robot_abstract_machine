@@ -340,15 +340,18 @@ class LanguageModelBackend(GenerativeBackend):
         """
         Decode one JSON value into its slot's declared type.
 
-        A referent is decoded by the naming its candidates were offered under, which
-        recovers the live individual the answer names; a kind by its integer token. A
-        slot declaring a union is decoded against its branches in declaration order, so
-        the model may choose the branch that fits the situation.
+        Nothing is accepted for a slot that may be left empty. A referent is decoded by
+        the naming its candidates were offered under, which recovers the live individual
+        the answer names; a kind by its integer token. A slot declaring a union is
+        decoded against its branches in declaration order, so the model may choose the
+        branch that fits the situation.
 
         :param slot: The slot the value was offered for.
         :param value: The offered JSON value.
         :return: The decoded value.
         """
+        if value is None and slot.may_be_empty:
+            return None
         if slot.kind is SlotKind.SORTAL:
             return IntegerTokens().decode(slot, value)
         if slot.selects_from_domain:

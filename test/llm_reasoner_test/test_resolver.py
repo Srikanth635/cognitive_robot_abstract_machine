@@ -110,6 +110,14 @@ class TestPrompt:
         assert json.dumps(Side.LEFT.name) in prompt
         assert repr(Side.LEFT) not in prompt
 
+    def test_a_slot_whose_field_defaults_to_nothing_offers_null(self):
+        body_with_geometry()
+        query = the(ActionWithADefaultChoice)(source=variable(WorldBody), depth=...)
+        (depth,) = [
+            slot for slot in reflect_slots(query) if slot.path.endswith("depth")
+        ]
+        assert PromptBuilder.answer_form(None) in PromptBuilder.value_hint(depth)
+
 
 class TestSourceShown:
     def test_the_source_of_a_parent_in_the_same_module_is_shown_too(self):
@@ -152,6 +160,21 @@ class TestResolution:
         (action,) = tilt_query().evaluate(backend=backend)
         assert action.source is body
         assert [exchange.attempt for exchange in backend.log] == [0, 1]
+
+    def test_slots_whose_fields_default_to_nothing_may_be_left_empty(self):
+        body = body_with_geometry()
+        backend = LanguageModelBackend(
+            client=ScriptedClient(
+                responses=[answer("depth_and_support_left_empty.json")]
+            )
+        )
+        query = the(ActionWithADefaultChoice)(
+            source=variable(WorldBody), depth=..., support=variable(WorldBody)
+        )
+        (action,) = query.evaluate(backend=backend)
+        assert action.source is body
+        assert (action.depth, action.support) == (None, None)
+        assert [exchange.attempt for exchange in backend.log] == [0]
 
     def test_a_token_answer_may_say_no_candidate_fits(self):
         body = body_with_geometry()
