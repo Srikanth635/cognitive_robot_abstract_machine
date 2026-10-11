@@ -34,6 +34,7 @@ from llm_reasoner.resolver.prompt_format import (
     AcceptKey,
     CandidateKey,
     PromptSection,
+    RuleName,
     SlotKey,
 )
 from llm_reasoner.world.classes import identifier_of
@@ -150,6 +151,10 @@ class TestPrompt:
         (inputs,) = bodies(system_prompt, PromptSection.INPUTS)
         for provider in (TaskContextProvider(), SchemaOnlyContextProvider()):
             assert f"<{provider.section}>" in inputs
+
+    def test_the_rules_ask_to_know_a_candidate_before_choosing_it(self):
+        named = [rule.name for rule in world_backend(WorldView(), []).rules]
+        assert RuleName.KNOWN_CANDIDATE in named
 
     def test_in_a_conversation_with_tools_the_answer_is_written_as_text(self):
         view = WorldView()

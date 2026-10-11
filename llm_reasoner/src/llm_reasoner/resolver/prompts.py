@@ -118,7 +118,8 @@ VALUE_SLOT_RULE = PromptRule(
     text=f'answer a slot without "{SlotKey.CANDIDATES}" with one value its '
     f'"{SlotKey.ACCEPTS}" lists: an enum member by its name, a {AcceptedType.NUMBER}, '
     f"{AcceptedType.STRING} or {AcceptedType.BOOLEAN} as JSON, and "
-    f"{AcceptedType.NULL} only where listed; never a JSON object.",
+    f"{AcceptedType.NULL} only where listed; never a JSON object. When several values "
+    f'fit equally, give one and say so in "{RequestAnswerKey.WHY}".',
 )
 """
 The rule stating how a slot taking a plain value is answered.
@@ -180,8 +181,9 @@ The rule stating how the values the query fixes are used.
 
 FEWER_CANDIDATES_RULE = PromptRule(
     name=RuleName.CANDIDATES,
-    text="make the elements genuinely different from one another, best first; when "
-    "fewer good answers exist than asked for, give only those.",
+    text="give the elements best first, each a good answer on its own; never vary a slot "
+    "only to make the elements differ, and when fewer good answers exist than asked "
+    "for, give only those.",
 )
 """
 The rule asking for distinct candidates while letting the model give fewer than asked.
