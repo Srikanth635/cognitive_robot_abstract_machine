@@ -266,6 +266,11 @@ class WorldHandles(ReferentNaming):
                 f"{WorldToolName.LIST_KINDS} only to explore what else the world has.",
             ),
             PromptRule(
+                name=RuleName.KNOWN_CANDIDATE,
+                text="choose a candidate only once you know what it is, from what holds it "
+                "or from its description; a handle alone says nothing about an individual.",
+            ),
+            PromptRule(
                 name=RuleName.MEANING_HOLDER,
                 text="an individual giving a candidate its meaning holds the candidate in "
                 "one of its fields; follow that field to the candidate's handle.",

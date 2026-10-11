@@ -38,6 +38,7 @@ from llm_reasoner.resolver.exceptions import (
 from llm_reasoner.resolver.prompts import (
     FEWER_CANDIDATES_RULE,
     UNSATISFIABLE_RULE,
+    VALUE_SLOT_RULE,
     PromptBuilder,
     RequestAnswerKey,
 )
@@ -193,6 +194,9 @@ class TestStructure:
         entry = slot_entry(prompt, f"{ActionWithBodyAndValueSlots.__name__}.source")
         assert entry[SlotKey.ACCEPTS] == [IntegerTokens().accepted]
         assert IntegerTokens().accepted[AcceptKey.TYPE] == AcceptedType.NUMBER
+
+    def test_a_tie_between_values_is_answered_with_one_and_explained(self):
+        assert f'"{RequestAnswerKey.WHY}"' in VALUE_SLOT_RULE.text
 
     def test_the_verdicts_are_offered_only_for_slots_with_candidates(self):
         for rule in (NO_FITTING_CANDIDATE_RULE, EQUALLY_FITTING_RULE):

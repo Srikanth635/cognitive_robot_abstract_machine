@@ -196,6 +196,11 @@ class RuleName(StrEnum):
     Where the meaning of a candidate is found.
     """
 
+    KNOWN_CANDIDATE = "known_candidate"
+    """
+    What must be known of a candidate before it is chosen.
+    """
+
     NO_FITTING_CANDIDATE = "no_fitting_candidate"
     """
     How to say that no candidate of a slot fits.
