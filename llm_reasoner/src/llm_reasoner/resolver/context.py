@@ -12,9 +12,7 @@ from llm_reasoner.resolver.prompt_format import (
     PromptSection,
     render_blocks,
 )
-from llm_reasoner.world.classes import is_individual
-from llm_reasoner.world.describer import IndividualDescriber
-from llm_reasoner.world.rendering import IndividualRenderer
+from llm_reasoner.world.access import is_individual, text_description
 
 CANDIDATE_LINE_BUDGET = 15
 """
@@ -224,21 +222,9 @@ class StructuralCandidateRenderer(CandidateRenderer):
     described without this package knowing its world model.
     """
 
-    describer: IndividualDescriber = field(default_factory=IndividualDescriber)
-    """
-    Describes an individual.
-    """
-
-    individual_renderer: IndividualRenderer = field(
-        default_factory=lambda: IndividualRenderer(line_budget=CANDIDATE_LINE_BUDGET)
-    )
-    """
-    Writes a description as text.
-    """
-
     def render(self, candidate: Any, expression: Match) -> str:
         if isinstance(candidate, type):
             return ReprCandidateRenderer.render_kind(candidate)
         if not is_individual(candidate):
             return ReprCandidateRenderer().render(candidate, expression)
-        return self.individual_renderer.render(self.describer.describe(candidate))
+        return text_description(candidate, line_budget=CANDIDATE_LINE_BUDGET)

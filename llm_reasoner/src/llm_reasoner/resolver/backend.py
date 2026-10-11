@@ -39,8 +39,7 @@ from llm_reasoner.resolver.prompt_format import PromptRule
 from llm_reasoner.resolver.prompts import PromptBuilder, RequestAnswerKey, SourceDetail
 from llm_reasoner.resolver.referents import IntegerTokens, ReferentNaming, WorldHandles
 from llm_reasoner.resolver.reflection import Slot, SlotKind, reflect_slots
-from llm_reasoner.world.tools import world_tools
-from llm_reasoner.world.view import WorldView
+from llm_reasoner.world.access import WorldAccess
 
 T = TypeVar("T")
 
@@ -134,19 +133,19 @@ class LanguageModelBackend(GenerativeBackend):
 
     @classmethod
     def with_world_tools(
-        cls, client: LanguageModelClient, view: WorldView, **settings: Any
+        cls, client: LanguageModelClient, world: WorldAccess, **settings: Any
     ) -> LanguageModelBackend:
         """
         :param client: A client that lets the model call tools.
-        :param view: The world the model asks about.
+        :param world: The world the model asks about.
         :param settings: Further settings of the backend.
         :return: A backend whose model finds the candidates of referent slots with the
             world tools and answers with their handles.
         """
         return cls(
             client=client,
-            tools=world_tools(view),
-            referent_naming=WorldHandles(view=view),
+            tools=world.tools(),
+            referent_naming=WorldHandles(world=world),
             **settings,
         )
 

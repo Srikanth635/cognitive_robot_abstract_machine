@@ -18,5 +18,46 @@
       "kind"
     ],
     "additionalProperties": false
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "identifier": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "summary": {
+        "type": "string"
+      },
+      "ancestors": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/ClassSummary"
+        }
+      },
+      "specialisations": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "fields": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/FieldDefinition"
+        }
+      }
+    },
+    "required": [
+      "identifier",
+      "name",
+      "summary",
+      "ancestors",
+      "specialisations",
+      "fields"
+    ],
+    "additionalProperties": false
   }
 }

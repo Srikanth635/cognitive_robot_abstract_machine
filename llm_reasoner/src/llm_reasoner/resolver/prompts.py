@@ -36,7 +36,7 @@ from llm_reasoner.resolver.prompt_format import (
 )
 from llm_reasoner.resolver.referents import IntegerTokens, ReferentNaming
 from llm_reasoner.resolver.reflection import Slot, SlotKind
-from llm_reasoner.world.classes import is_individual
+from llm_reasoner.world.access import is_individual
 
 JSON_INDENT = 2
 """

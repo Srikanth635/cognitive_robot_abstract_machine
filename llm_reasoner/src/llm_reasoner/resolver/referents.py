@@ -28,10 +28,12 @@ from llm_reasoner.resolver.prompt_format import (
     SlotKey,
 )
 from llm_reasoner.resolver.reflection import Slot
-from llm_reasoner.world.classes import identifier_of
-from llm_reasoner.world.naming import HANDLE_SEPARATOR
-from llm_reasoner.world.tools import WorldToolName
-from llm_reasoner.world.view import WorldView
+from llm_reasoner.world.access import (
+    HANDLE_SEPARATOR,
+    WorldAccess,
+    WorldToolName,
+    identifier_of,
+)
 
 LISTED_CANDIDATES = 10
 """
@@ -238,9 +240,9 @@ class WorldHandles(ReferentNaming):
     them, more are left for the model to find with the world tools.
     """
 
-    view: WorldView
+    world: WorldAccess
     """
-    The world view giving out the handles the model answers with.
+    The world giving out the handles the model answers with.
     """
 
     @property
@@ -298,26 +300,26 @@ class WorldHandles(ReferentNaming):
         :return: A listed candidate: its handle, its kind and the fields of other
             individuals holding it.
         """
-        handle = self.view.handles.handle_of(candidate)
+        handle = self.world.handle_of(candidate)
         entry = {
             CandidateKey.HANDLE: handle,
             CandidateKey.KIND: type(candidate).__name__,
         }
         holdings = [
             f"{holder.field_name} of a {holder.type_name}"
-            for holder in self.view.holders(handle)
+            for holder in self.world.holders(handle)
         ]
         return {**entry, CandidateKey.HELD_AS: holdings} if holdings else entry
 
     def decode_candidate(self, slot: Slot, value: Any) -> Any:
-        if not isinstance(value, str) or not self.view.handles.is_live(value):
+        if not isinstance(value, str) or not self.world.is_live(value):
             raise SlotValueRejected(
                 slot_path=slot.path,
                 value=value,
                 reason="Expected the handle of a live individual, as the world tools "
                 "give them out.",
             )
-        individual = self.view.handles.individual_of(value)
+        individual = self.world.individual_of(value)
         if not any(individual is candidate for candidate in slot.domain):
             raise SlotValueRejected(
                 slot_path=slot.path,

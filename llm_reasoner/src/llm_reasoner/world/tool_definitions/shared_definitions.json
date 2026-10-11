@@ -1,0 +1,320 @@
+{
+  "FieldValue": {
+    "oneOf": [
+      {
+        "$ref": "#/$defs/PlainValue"
+      },
+      {
+        "$ref": "#/$defs/NumericValue"
+      },
+      {
+        "$ref": "#/$defs/WorldStateDependentValue"
+      },
+      {
+        "$ref": "#/$defs/NestedIndividual"
+      },
+      {
+        "$ref": "#/$defs/IndividualReference"
+      },
+      {
+        "$ref": "#/$defs/CollectionValue"
+      },
+      {
+        "$ref": "#/$defs/UndescribedValue"
+      }
+    ]
+  },
+  "PlainValue": {
+    "type": "object",
+    "properties": {
+      "form": {
+        "const": "PlainValue"
+      },
+      "value": {},
+      "is_default": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "form",
+      "value",
+      "is_default"
+    ],
+    "additionalProperties": false
+  },
+  "NumericValue": {
+    "type": "object",
+    "properties": {
+      "form": {
+        "const": "NumericValue"
+      },
+      "values": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        }
+      }
+    },
+    "required": [
+      "form",
+      "values"
+    ],
+    "additionalProperties": false
+  },
+  "WorldStateDependentValue": {
+    "type": "object",
+    "properties": {
+      "form": {
+        "const": "WorldStateDependentValue"
+      },
+      "variables": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "current": {
+        "oneOf": [
+          {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "required": [
+      "form",
+      "variables",
+      "current"
+    ],
+    "additionalProperties": false
+  },
+  "NestedIndividual": {
+    "type": "object",
+    "properties": {
+      "form": {
+        "const": "NestedIndividual"
+      },
+      "description": {
+        "$ref": "#/$defs/IndividualDescription"
+      }
+    },
+    "required": [
+      "form",
+      "description"
+    ],
+    "additionalProperties": false
+  },
+  "IndividualReference": {
+    "type": "object",
+    "properties": {
+      "form": {
+        "const": "IndividualReference"
+      },
+      "identifier": {
+        "type": "string"
+      },
+      "type_name": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "form",
+      "identifier",
+      "type_name"
+    ],
+    "additionalProperties": false
+  },
+  "CollectionValue": {
+    "type": "object",
+    "properties": {
+      "form": {
+        "const": "CollectionValue"
+      },
+      "size": {
+        "type": "integer"
+      },
+      "items": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/FieldValue"
+        }
+      }
+    },
+    "required": [
+      "form",
+      "size",
+      "items"
+    ],
+    "additionalProperties": false
+  },
+  "UndescribedValue": {
+    "type": "object",
+    "properties": {
+      "form": {
+        "const": "UndescribedValue"
+      },
+      "type_name": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "form",
+      "type_name"
+    ],
+    "additionalProperties": false
+  },
+  "ClassSummary": {
+    "type": "object",
+    "properties": {
+      "identifier": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "summary": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "identifier",
+      "name",
+      "summary"
+    ],
+    "additionalProperties": false
+  },
+  "FieldDescription": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "meaning": {
+        "type": "string"
+      },
+      "value": {
+        "$ref": "#/$defs/FieldValue"
+      }
+    },
+    "required": [
+      "name",
+      "meaning",
+      "value"
+    ],
+    "additionalProperties": false
+  },
+  "Referrer": {
+    "type": "object",
+    "properties": {
+      "type_name": {
+        "type": "string"
+      },
+      "field_name": {
+        "type": "string"
+      },
+      "summary": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "type_name",
+      "field_name",
+      "summary"
+    ],
+    "additionalProperties": false
+  },
+  "IndividualDescription": {
+    "type": "object",
+    "properties": {
+      "identifier": {
+        "type": "string"
+      },
+      "lineage": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/ClassSummary"
+        }
+      },
+      "fields": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/FieldDescription"
+        }
+      },
+      "referrers": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/Referrer"
+        }
+      }
+    },
+    "required": [
+      "identifier",
+      "lineage",
+      "fields",
+      "referrers"
+    ],
+    "additionalProperties": false
+  },
+  "FieldDefinition": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "type_name": {
+        "type": "string"
+      },
+      "meaning": {
+        "type": "string"
+      },
+      "default": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "required": [
+      "name",
+      "type_name",
+      "meaning",
+      "default"
+    ],
+    "additionalProperties": false
+  },
+  "Holder": {
+    "type": "object",
+    "properties": {
+      "handle": {
+        "type": "string"
+      },
+      "type_name": {
+        "type": "string"
+      },
+      "field_name": {
+        "type": "string"
+      },
+      "summary": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "handle",
+      "type_name",
+      "field_name",
+      "summary"
+    ],
+    "additionalProperties": false
+  }
+}
