@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from collections import Counter
 from dataclasses import dataclass, field
 
-from typing_extensions import Any, Dict
+from typing_extensions import Any, Dict, Optional
 
 from llm_reasoner.world.exceptions import ExpiredHandle, UnknownHandle
 
@@ -100,6 +100,15 @@ class HandleRegistry(IndividualNaming):
         """
         return handle in self.individuals and self.individuals[handle]() is not None
 
+    @staticmethod
+    def kind_written_in(handle: str) -> Optional[str]:
+        """
+        :return: The name of the kind a handle is written for, or ``None`` when it is not
+            written as handles are.
+        """
+        kind_name, separator, _ = handle.partition(HANDLE_SEPARATOR)
+        return kind_name if separator and kind_name else None
+
     def individual_of(self, handle: str) -> Any:
         """
         :return: The individual a handle was given to.
@@ -107,7 +116,7 @@ class HandleRegistry(IndividualNaming):
         :raises ExpiredHandle: When its individual no longer exists.
         """
         if handle not in self.individuals:
-            raise UnknownHandle(handle=handle)
+            raise UnknownHandle(handle=handle, kind_name=self.kind_written_in(handle))
         individual = self.individuals[handle]()
         if individual is None:
             raise ExpiredHandle(handle=handle)

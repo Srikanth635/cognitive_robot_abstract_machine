@@ -30,6 +30,7 @@ from llm_reasoner.world.exceptions import (
 )
 from llm_reasoner.world.finding import Comparison, Condition, KindCount
 from llm_reasoner.world.kinds import KindListing
+from llm_reasoner.world.naming import HANDLE_SEPARATOR
 from llm_reasoner.world.predicates import IndividualArgument, PlainArgument
 from llm_reasoner.world.values import (
     IndividualReference,
@@ -152,6 +153,14 @@ class TestHandles:
     def test_a_handle_never_given_out_is_unknown(self, view):
         with pytest.raises(UnknownHandle):
             view.handles.individual_of("WorldBody#999")
+
+    def test_an_unknown_handle_names_the_kind_whose_search_gives_out_such_handles(
+        self, view
+    ):
+        guessed = f"{WorldBody.__name__}{HANDLE_SEPARATOR}999"
+        with pytest.raises(UnknownHandle) as raised:
+            view.handles.individual_of(guessed)
+        assert raised.value.kind_name == WorldBody.__name__
 
 
 # %% finding
