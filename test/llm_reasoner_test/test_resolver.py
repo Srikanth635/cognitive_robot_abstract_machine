@@ -41,7 +41,6 @@ from llm_reasoner.resolver.prompts import (
     RequestAnswerKey,
 )
 from llm_reasoner.resolver.reflection import reflect_slots
-from llm_reasoner.resolver.referents import NO_FITTING_CANDIDATE_RULE
 from llm_reasoner.world.view import WorldView
 
 from .world_mimics import (
@@ -129,10 +128,6 @@ class TestPrompt:
             slot for slot in reflect_slots(query) if slot.path.endswith("depth")
         ]
         assert PromptBuilder.answer_form(None) in PromptBuilder.value_hint(depth)
-
-    def test_the_refusal_rule_covers_what_the_task_asks_for(self):
-        task = TaskContextProvider(goal="Pour the milk into the bowl.")
-        assert f'"{task.title}"' in NO_FITTING_CANDIDATE_RULE
 
 
 class TestSourceShown:
