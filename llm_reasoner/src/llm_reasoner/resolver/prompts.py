@@ -43,8 +43,7 @@ Rules:
 - A slot offering several types accepts a value of any one of them; choose the type
   that fits the situation.
 - Respect every stated constraint. When a constraint forces a slot's value, use the
-  forced value rather than something merely plausible; a forced individual that cannot
-  do what its slot is for is still no fitting candidate.
+  forced value rather than something merely plausible.
 - Make the elements genuinely different from one another, best first.
 """
 
