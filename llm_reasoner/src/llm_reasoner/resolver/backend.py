@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 from krrood.entity_query_language.backends import GenerativeBackend
 from krrood.entity_query_language.factories import entity
 from krrood.entity_query_language.query.match import Match
+from krrood.entity_query_language.query.quantifiers import An
+from krrood.entity_query_language.verbalization.pipeline import verbalize_expression
 from typing_extensions import Any, Dict, Iterable, List, Optional, Sequence, TypeVar
 
 from llm_reasoner.clients.base import Exchange, LanguageModelClient
@@ -31,8 +33,9 @@ from llm_reasoner.resolver.exceptions import (
     RetryableModelFailure,
     SlotValueRejected,
     UnknownSlotInResponse,
+    UnsatisfiableRequest,
 )
-from llm_reasoner.resolver.prompts import PromptBuilder, SourceDetail
+from llm_reasoner.resolver.prompts import PromptBuilder, RequestAnswerKey, SourceDetail
 from llm_reasoner.resolver.referents import IntegerTokens, ReferentNaming, WorldHandles
 from llm_reasoner.resolver.reflection import Slot, SlotKind, reflect_slots
 from llm_reasoner.world.tools import world_tools
@@ -168,15 +171,7 @@ class LanguageModelBackend(GenerativeBackend):
         number_of_candidates = (
             expression.expression._limit_ or self.number_of_candidates
         )
-        assignments = self._ask(expression, slots, open_slots, number_of_candidates)
-        constructed = [
-            self._construct(expression, assignment) for assignment in assignments
-        ]
-
-        results = list(self._validate(expression, constructed))
-        if not results:
-            raise NoValidCandidates(len(constructed))
-        yield from results
+        yield from self._ask(expression, slots, open_slots, number_of_candidates)
 
     @staticmethod
     def _reject_unresolvable(slots: Sequence[Slot]) -> None:
@@ -212,9 +207,10 @@ class LanguageModelBackend(GenerativeBackend):
         slots: Sequence[Slot],
         open_slots: Sequence[Slot],
         number_of_candidates: int,
-    ) -> List[Dict[str, Any]]:
+    ) -> List[T]:
         """
-        Request every slot in a single completion, repairing on rejection.
+        Request every slot in a single completion, repairing on rejection, including an
+        answer whose instances break the match's where-conditions.
 
         Slots are asked about jointly because they are correlated, and per-slot
         questions would discard that structure.
@@ -223,7 +219,7 @@ class LanguageModelBackend(GenerativeBackend):
         :param slots: Every reflected slot.
         :param open_slots: The slots the model must answer for.
         :param number_of_candidates: How many alternatives to request.
-        :return: One assignment per candidate, keyed by access path.
+        :return: The instances built from the answer that meet the where-conditions.
         """
         prompt = self._prompt_builder().build(
             expression=expression,
@@ -248,7 +244,7 @@ class LanguageModelBackend(GenerativeBackend):
                 )
             )
             try:
-                return self._decode(raw_response, open_slots)
+                return self._accept(expression, raw_response, open_slots)
             except RetryableModelFailure as error:
                 last_error = error
                 prompt = PromptBuilder.build_repair(prompt, raw_response, error)
@@ -256,6 +252,22 @@ class LanguageModelBackend(GenerativeBackend):
         raise RepairBudgetExhausted(
             attempts=self.max_repairs + 1, last_error=last_error
         )
+
+    def _accept(
+        self, expression: Match[T], raw_response: str, open_slots: Sequence[Slot]
+    ) -> List[T]:
+        """
+        :param expression: The match being resolved.
+        :param raw_response: The response text.
+        :param open_slots: The slots the model was asked to fill.
+        :return: The instances built from the response that meet the where-conditions.
+        :raises NoValidCandidates: When none of them does.
+        """
+        constructed = [
+            self._construct(expression, assignment)
+            for assignment in self._decode(raw_response, open_slots)
+        ]
+        return self._validate(expression, constructed)
 
     def _prompt_builder(self) -> PromptBuilder:
         """:return: A builder configured from this backend's seams."""
@@ -323,6 +335,8 @@ class LanguageModelBackend(GenerativeBackend):
             raise ModelResponseUnparseable(
                 raw_response=raw_response, reason="Array elements must be objects."
             )
+        if set(element) == {RequestAnswerKey.UNSATISFIABLE}:
+            raise UnsatisfiableRequest(reason=element[RequestAnswerKey.UNSATISFIABLE])
         for key in element:
             if key not in slots_by_path:
                 raise UnknownSlotInResponse(
@@ -424,7 +438,7 @@ class LanguageModelBackend(GenerativeBackend):
         return expression.construct_instance()
 
     @staticmethod
-    def _validate(expression: Match[T], instances: List[T]) -> Iterable[T]:
+    def _validate(expression: Match[T], instances: List[T]) -> List[T]:
         """
         Keep only the instances satisfying the match's where-conditions.
 
@@ -434,13 +448,46 @@ class LanguageModelBackend(GenerativeBackend):
 
         :param expression: The match being resolved.
         :param instances: The constructed candidates.
-        :return: The candidates that satisfy the conditions.
+        :return: The candidates that satisfy the conditions, quantified as the match
+            asks.
+        :raises NoValidCandidates: When none of them does, naming the conditions none
+            of them meets.
+        """
+        conditions = expression._where_conditions_
+        meeting = LanguageModelBackend._meeting(expression, instances, conditions)
+        if not meeting:
+            raise NoValidCandidates(
+                constructed=len(instances),
+                broken_conditions=[
+                    verbalize_expression(condition)
+                    for condition in conditions
+                    if not LanguageModelBackend._meeting(
+                        expression, instances, [condition]
+                    )
+                ],
+            )
+        expression.variable._update_domain_(meeting)
+        return list(
+            entity(expression.variable)
+            ._quantify_(expression._quantifier_type_)
+            ._evaluate_natively_()
+        )
+
+    @staticmethod
+    def _meeting(
+        expression: Match[T], instances: List[T], conditions: Sequence[Any]
+    ) -> List[T]:
+        """
+        :param expression: The match being resolved.
+        :param instances: The constructed candidates.
+        :param conditions: Conditions bound through the match's variable.
+        :return: The candidates meeting every one of the conditions.
         """
         expression.variable._update_domain_(instances)
-        results = entity(expression.variable)._quantify_(expression._quantifier_type_)
-        if expression._where_conditions_:
-            results = results.where(*expression._where_conditions_)
-        yield from results._evaluate_natively_()
+        query = entity(expression.variable)._quantify_(An)
+        if conditions:
+            query = query.where(*conditions)
+        return list(query._evaluate_natively_())
 
     # %% introspection
 

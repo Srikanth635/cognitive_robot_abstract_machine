@@ -4,6 +4,7 @@ import enum
 import inspect
 import json
 from dataclasses import dataclass, field
+from enum import StrEnum
 
 from krrood.entity_query_language.backends import QueryBackend
 from krrood.entity_query_language.query.match import Match
@@ -42,8 +43,30 @@ Rules:
 - A slot offering several types accepts a value of any one of them; choose the type
   that fits the situation.
 - Respect every stated constraint. When a constraint forces a slot's value, use the
-  forced value rather than something merely plausible.
+  forced value rather than something merely plausible; a forced individual that cannot
+  do what its slot is for is still no fitting candidate.
 - Make the elements genuinely different from one another, best first.
+"""
+
+
+class RequestAnswerKey(StrEnum):
+    """
+    The keys of the answers that speak for the whole request rather than fill slots.
+    """
+
+    UNSATISFIABLE = "unsatisfiable"
+    """
+    Says that the request's conditions cannot all hold together, and why.
+    """
+
+
+UNSATISFIABLE_RULE = (
+    "- When the request's conditions cannot all hold together, never answer something "
+    "breaking one of them: answer with "
+    f'[{{"{RequestAnswerKey.UNSATISFIABLE}": "<why they cannot all hold>"}}].'
+)
+"""
+The rule letting the model say that the request's conditions cannot all hold.
 """
 
 
@@ -312,7 +335,9 @@ class PromptBuilder:
             candidates are named.
         """
         return SYSTEM_PROMPT_TEMPLATE.format(
-            mode_rules="\n".join([*self.referent_naming.rules, *further_rules])
+            mode_rules="\n".join(
+                [*self.referent_naming.rules, UNSATISFIABLE_RULE, *further_rules]
+            )
         )
 
     @staticmethod

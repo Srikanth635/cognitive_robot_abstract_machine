@@ -62,9 +62,10 @@ class ReferentAnswerKey(StrEnum):
 
 
 NO_FITTING_CANDIDATE_RULE = (
-    "- When no candidate of a referent slot is what the request asks for, never "
-    "substitute a near miss: answer the slot with "
-    f'{{"{ReferentAnswerKey.NO_FITTING_CANDIDATE}": "<why none fits>"}}.'
+    "- When no candidate of a referent slot is what the request asks for, or none can do "
+    "what the slot is for in this object, never substitute a near miss: answer the slot "
+    f'with {{"{ReferentAnswerKey.NO_FITTING_CANDIDATE}": "<why none fits>"}}. This '
+    "holds even when a stated constraint leaves only that candidate."
 )
 """
 The rule letting the model say that no candidate fits.
