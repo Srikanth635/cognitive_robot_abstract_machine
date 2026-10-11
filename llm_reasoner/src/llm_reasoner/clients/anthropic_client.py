@@ -326,6 +326,9 @@ class AnthropicClient(LanguageModelClient, ToolUsingClient):
         tools are vendor-neutral objects that scripted clients run as well, and every
         call is recorded with what it returned.
 
+        A turn that calls no tool ends the conversation, its text the answer, even when
+        it stopped as if to call one; there is nothing to send back for it.
+
         Every turn resends the conversation so far, so the system prompt, which caches
         the tools ahead of it, carries a cache breakpoint of its own, and the request
         asks for the growing conversation to be cached up to its last block; each turn
@@ -354,15 +357,18 @@ class AnthropicClient(LanguageModelClient, ToolUsingClient):
                 cache_control=cache,
             )
             usage = usage + self._usage_of(response)
-            if response.stop_reason != StopReason.TOOL_USE:
+            requested = [
+                block
+                for block in response.content
+                if block.type == ContentBlockType.TOOL_USE
+            ]
+            if response.stop_reason != StopReason.TOOL_USE or not requested:
                 self._check_truncation(response)
                 return ToolConversation(
                     answer=self._extract_text(response), calls=calls, usage=usage
                 )
             results = []
-            for block in response.content:
-                if block.type != ContentBlockType.TOOL_USE:
-                    continue
+            for block in requested:
                 outcome = toolbox.call(block.name, block.input)
                 calls.append(
                     ToolCall(name=block.name, arguments=block.input, outcome=outcome)
