@@ -46,7 +46,6 @@ Rules:
   that fits the situation.
 - Respect every stated constraint. When a constraint forces a slot's value, use the
   forced value rather than something merely plausible.
-- Make the elements genuinely different from one another, best first.
 """
 
 
@@ -74,6 +73,15 @@ UNSATISFIABLE_RULE = (
 )
 """
 The rule letting the model say that the request's conditions cannot all hold.
+"""
+
+FEWER_CANDIDATES_RULE = (
+    "- Make the elements genuinely different from one another, best first. When fewer "
+    "good answers exist than asked for, give only those; never add an element only to "
+    "differ."
+)
+"""
+The rule asking for distinct candidates while letting the model give fewer than asked.
 """
 
 
@@ -174,7 +182,7 @@ class PromptBuilder:
             )
         sections.append(
             "## Output\n\n"
-            f"A JSON array of {number_of_candidates} object(s). "
+            f"A JSON array of at most {number_of_candidates} object(s). "
             "Keys of each object, exactly: "
             + ", ".join(
                 [f'"{slot.path}"' for slot in open_slots]
@@ -347,7 +355,12 @@ class PromptBuilder:
         return SYSTEM_PROMPT_TEMPLATE.format(
             why=RequestAnswerKey.WHY,
             mode_rules="\n".join(
-                [*self.referent_naming.rules, UNSATISFIABLE_RULE, *further_rules]
+                [
+                    *self.referent_naming.rules,
+                    UNSATISFIABLE_RULE,
+                    FEWER_CANDIDATES_RULE,
+                    *further_rules,
+                ]
             ),
         )
 
