@@ -5,6 +5,7 @@ built from the query, and the answer turned back into a resolved instance.
 
 from __future__ import annotations
 
+import dataclasses
 import inspect
 import json
 from pathlib import Path
@@ -34,6 +35,7 @@ from llm_reasoner.world.view import WorldView
 from .world_mimics import (
     ActionInheritingItsPlan,
     ActionPlannedByItsParent,
+    ActionWithADefaultChoice,
     ActionWithBodyAndValueSlots,
     WorldBody,
     body_with_geometry,
@@ -85,6 +87,18 @@ class TestPrompt:
         assert f"## {task.title}" not in prompt_for(
             tilt_query(), SchemaOnlyContextProvider()
         )
+
+    def test_a_default_is_shown_as_an_answer_would_write_it(self):
+        body_with_geometry()
+        query = the(ActionWithADefaultChoice)(source=variable(WorldBody), side=...)
+        (side,) = [
+            declared
+            for declared in dataclasses.fields(ActionWithADefaultChoice)
+            if declared.name == "side"
+        ]
+        prompt = prompt_for(query, SchemaOnlyContextProvider())
+        assert json.dumps(side.default.name) in prompt
+        assert repr(side.default) not in prompt
 
 
 class TestSourceShown:

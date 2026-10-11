@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import enum
 import inspect
+import json
 from dataclasses import dataclass, field
 
 from krrood.entity_query_language.backends import QueryBackend
 from krrood.entity_query_language.query.match import Match
 from krrood.entity_query_language.verbalization.pipeline import verbalize_expression
-from typing_extensions import List, Optional, Sequence, Tuple
+from typing_extensions import Any, List, Optional, Sequence, Tuple
 
 from llm_reasoner.resolver.context import CandidateRenderer
 from llm_reasoner.resolver.referents import (
@@ -277,7 +278,7 @@ class PromptBuilder:
             return "\n".join(lines)
         hint = self.value_hint(slot)
         if slot.has_default:
-            hint += f"    (conventionally {slot.default!r})"
+            hint += f"    (conventionally {self.answer_form(slot.default)})"
         lines.append(f"    {hint}")
         return "\n".join(lines)
 
@@ -318,6 +319,17 @@ class PromptBuilder:
         return " or ".join(
             PromptBuilder.hint_for_type(candidate_type)
             for candidate_type in slot.decodable_types
+        )
+
+    @staticmethod
+    def answer_form(value: Any) -> str:
+        """
+        :param value: A value a slot may take, such as its default.
+        :return: The value as an answer writes it: an enum member by its name, any other
+            value as JSON.
+        """
+        return json.dumps(
+            value.name if isinstance(value, enum.Enum) else value, default=repr
         )
 
     @staticmethod
