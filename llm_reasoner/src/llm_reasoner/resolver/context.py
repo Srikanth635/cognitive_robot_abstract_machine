@@ -63,12 +63,6 @@ class SchemaOnlyContextProvider(PromptContextProvider):
 # %% intent
 
 
-TASK_SECTION_TITLE = "The task"
-"""
-The heading of the section stating what the caller is trying to achieve.
-"""
-
-
 @dataclass
 class TaskContextProvider(PromptContextProvider):
     """
@@ -96,7 +90,7 @@ class TaskContextProvider(PromptContextProvider):
 
     @property
     def title(self) -> str:
-        return TASK_SECTION_TITLE
+        return "The task"
 
 
 # %% composition
