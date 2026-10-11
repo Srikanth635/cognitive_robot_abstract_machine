@@ -35,7 +35,11 @@ from llm_reasoner.resolver.exceptions import (
     RepairBudgetExhausted,
     UnsatisfiableRequest,
 )
-from llm_reasoner.resolver.prompts import UNSATISFIABLE_RULE, PromptBuilder
+from llm_reasoner.resolver.prompts import (
+    UNSATISFIABLE_RULE,
+    PromptBuilder,
+    RequestAnswerKey,
+)
 from llm_reasoner.resolver.reflection import reflect_slots
 from llm_reasoner.resolver.referents import NO_FITTING_CANDIDATE_RULE
 from llm_reasoner.world.view import WorldView
@@ -158,6 +162,20 @@ class TestResolution:
         (action,) = tilt_query().evaluate(backend=backend)
         assert action.source is body
         assert action.angle == expected["ActionWithBodyAndValueSlots.angle"]
+
+    def test_an_answer_may_say_why_without_it_being_decoded(self):
+        body = body_with_geometry()
+        (expected,) = json.loads(answer("body_and_angle_chosen_with_why.json"))
+        backend = LanguageModelBackend(
+            client=ScriptedClient(
+                responses=[answer("body_and_angle_chosen_with_why.json")]
+            )
+        )
+        (action,) = tilt_query().evaluate(backend=backend)
+        assert action.source is body
+        assert action.angle == expected["ActionWithBodyAndValueSlots.angle"]
+        assert [exchange.attempt for exchange in backend.log] == [0]
+        assert f'"{RequestAnswerKey.WHY}"' in backend.system_prompt
 
     def test_an_unusable_answer_is_sent_back_for_repair_once(self):
         body = body_with_geometry()

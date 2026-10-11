@@ -335,10 +335,10 @@ class LanguageModelBackend(GenerativeBackend):
             raise ModelResponseUnparseable(
                 raw_response=raw_response, reason="Array elements must be objects."
             )
-        if set(element) == {RequestAnswerKey.UNSATISFIABLE}:
+        if RequestAnswerKey.UNSATISFIABLE in element:
             raise UnsatisfiableRequest(reason=element[RequestAnswerKey.UNSATISFIABLE])
         for key in element:
-            if key not in slots_by_path:
+            if key not in slots_by_path and key != RequestAnswerKey.WHY:
                 raise UnknownSlotInResponse(
                     slot_path=key, known_paths=list(slots_by_path)
                 )
