@@ -48,6 +48,11 @@ from llm_reasoner.resolver.prompt_format import (
     SlotKey,
 )
 from llm_reasoner.resolver.reflection import reflect_slots
+from llm_reasoner.resolver.referents import (
+    EQUALLY_FITTING_RULE,
+    NO_FITTING_CANDIDATE_RULE,
+    IntegerTokens,
+)
 from llm_reasoner.world.view import WorldView
 
 from .prompt_sections import bodies, slot_entry, text_outside_sections
@@ -181,6 +186,17 @@ class TestStructure:
         entry = slot_entry(prompt, f"{ActionWithBodyAndValueSlots.__name__}.angle")
         assert entry[SlotKey.DEFAULT] == angle.default
         assert entry[SlotKey.ACCEPTS] == [{AcceptKey.TYPE: AcceptedType.NUMBER}]
+
+    def test_a_token_is_accepted_as_a_json_number(self):
+        body_with_geometry()
+        prompt = prompt_for(tilt_query(), SchemaOnlyContextProvider())
+        entry = slot_entry(prompt, f"{ActionWithBodyAndValueSlots.__name__}.source")
+        assert entry[SlotKey.ACCEPTS] == [IntegerTokens().accepted]
+        assert IntegerTokens().accepted[AcceptKey.TYPE] == AcceptedType.NUMBER
+
+    def test_the_verdicts_are_offered_only_for_slots_with_candidates(self):
+        for rule in (NO_FITTING_CANDIDATE_RULE, EQUALLY_FITTING_RULE):
+            assert f'"{SlotKey.CANDIDATES}"' in rule.text
 
 
 class TestSourceShown:

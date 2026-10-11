@@ -29,7 +29,13 @@ from llm_reasoner.resolver.referents import (
     WorldHandles,
 )
 from llm_reasoner.resolver.reflection import reflect_slots
-from llm_reasoner.resolver.prompt_format import CandidateKey, PromptSection, SlotKey
+from llm_reasoner.resolver.prompt_format import (
+    AcceptedType,
+    AcceptKey,
+    CandidateKey,
+    PromptSection,
+    SlotKey,
+)
 from llm_reasoner.world.classes import identifier_of
 from llm_reasoner.world.naming import HANDLE_SEPARATOR
 from llm_reasoner.world.tools import WorldToolName
@@ -100,6 +106,20 @@ class TestPrompt:
             type(annotation).__name__ in holding
             for holding in entry[CandidateKey.HELD_AS]
         )
+
+    def test_a_handle_is_accepted_as_a_json_string(self):
+        view = WorldView()
+        body = body_with_geometry()
+        prompt = world_backend(view, []).describe(tilt_query())
+        (source,) = [
+            slot
+            for slot in reflect_slots(tilt_query())
+            if slot.attribute_name == "source"
+        ]
+        (accepted,) = slot_entry(prompt, source.path)[SlotKey.ACCEPTS]
+        assert accepted == WorldHandles(view=view).accepted
+        assert accepted[AcceptKey.TYPE] == AcceptedType.STRING
+        assert view.handles.handle_of(body) in prompt
 
     def test_many_candidates_are_counted_rather_than_listed(self):
         view = WorldView()

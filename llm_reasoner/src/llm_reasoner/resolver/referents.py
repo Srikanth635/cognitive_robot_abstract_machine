@@ -20,9 +20,12 @@ from llm_reasoner.resolver.exceptions import (
 )
 from llm_reasoner.resolver.prompt_format import (
     AcceptedType,
+    AcceptKey,
     CandidateKey,
+    CandidateReference,
     PromptRule,
     RuleName,
+    SlotKey,
 )
 from llm_reasoner.resolver.reflection import Slot
 from llm_reasoner.world.classes import identifier_of
@@ -60,8 +63,8 @@ class ReferentAnswerKey(StrEnum):
 
 NO_FITTING_CANDIDATE_RULE = PromptRule(
     name=RuleName.NO_FITTING_CANDIDATE,
-    text="when no candidate of a slot is what the request asks for, or none can do what "
-    "the slot is for in this object, answer the slot with "
+    text=f'when no candidate of a slot with "{SlotKey.CANDIDATES}" is what the request '
+    "asks for, or none can do what the slot is for in this object, answer the slot with "
     f'{{"{ReferentAnswerKey.NO_FITTING_CANDIDATE}": "<why none fits>"}} instead of a '
     "near miss.",
 )
@@ -71,10 +74,11 @@ The rule letting the model say that no candidate fits.
 
 EQUALLY_FITTING_RULE = PromptRule(
     name=RuleName.EQUALLY_FITTING,
-    text="when several candidates of a slot fit equally and nothing in the request "
-    "prefers one, answer the slot with "
-    f'{{"{ReferentAnswerKey.EQUALLY_FITTING}": [<each of them>], '
-    f'"{ReferentAnswerKey.WHY}": "<why none is preferred>"}} instead of picking.',
+    text=f'when several "{SlotKey.CANDIDATES}" of a slot fit equally and nothing in the '
+    "request prefers one, answer the slot with "
+    f'{{"{ReferentAnswerKey.EQUALLY_FITTING}": [<each of them, as "{SlotKey.ACCEPTS}" '
+    f'names one>], "{ReferentAnswerKey.WHY}": "<why none is preferred>"}} instead of '
+    "picking.",
 )
 """
 The rule letting the model say that several candidates fit equally.
@@ -115,9 +119,10 @@ class ReferentNaming(ABC):
 
     @property
     @abstractmethod
-    def accepted_type(self) -> AcceptedType:
+    def accepted(self) -> Dict[str, Any]:
         """
-        What a referent slot is answered with.
+        What a referent slot is answered with: the JSON type of the value and what it
+        names.
         """
 
     @abstractmethod
@@ -182,13 +187,17 @@ class IntegerTokens(ReferentNaming):
     def answer_rule(self) -> PromptRule:
         return PromptRule(
             name=RuleName.REFERENT_SLOT,
-            text=f'a slot accepting "{self.accepted_type}" takes the "{CandidateKey.TOKEN}" '
-            f'of one of its listed "{CandidateKey.LISTED}" candidates.',
+            text=f'a slot whose "{SlotKey.ACCEPTS}" {AcceptKey.HOLDS} '
+            f'"{CandidateReference.TOKEN}" takes the "{CandidateKey.TOKEN}" of one of its '
+            f'"{CandidateKey.LISTED}" candidates, as a JSON {AcceptedType.NUMBER}.',
         )
 
     @property
-    def accepted_type(self) -> AcceptedType:
-        return AcceptedType.TOKEN
+    def accepted(self) -> Dict[str, Any]:
+        return {
+            AcceptKey.TYPE: AcceptedType.NUMBER,
+            AcceptKey.HOLDS: CandidateReference.TOKEN,
+        }
 
     def candidates(
         self, slot: Slot, expression: Match, renderer: CandidateRenderer
@@ -238,9 +247,11 @@ class WorldHandles(ReferentNaming):
     def answer_rule(self) -> PromptRule:
         return PromptRule(
             name=RuleName.REFERENT_SLOT,
-            text=f'a slot accepting "{self.accepted_type}" takes the handle of one of its '
-            f'candidates, written "<Kind>{HANDLE_SEPARATOR}<n>"; a handle exists only once '
-            "a tool has returned it, so never write one you were not given.",
+            text=f'a slot whose "{SlotKey.ACCEPTS}" {AcceptKey.HOLDS} '
+            f'"{CandidateReference.HANDLE}" takes the handle of one of its candidates as a '
+            f'JSON {AcceptedType.STRING}, written "<Kind>{HANDLE_SEPARATOR}<n>"; a handle '
+            "exists only once a tool has returned it, so never write one you were not "
+            "given.",
         )
 
     @property
@@ -260,8 +271,11 @@ class WorldHandles(ReferentNaming):
         )
 
     @property
-    def accepted_type(self) -> AcceptedType:
-        return AcceptedType.HANDLE
+    def accepted(self) -> Dict[str, Any]:
+        return {
+            AcceptKey.TYPE: AcceptedType.STRING,
+            AcceptKey.HOLDS: CandidateReference.HANDLE,
+        }
 
     def candidates(
         self, slot: Slot, expression: Match, renderer: CandidateRenderer
