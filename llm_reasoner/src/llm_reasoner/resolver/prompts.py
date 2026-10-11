@@ -35,8 +35,10 @@ Reading the request:
 
 Rules:
 - Answer with a JSON array only. No prose, no markdown fences, no trailing commas.
-- Each array element is an object whose keys are exactly the slot paths given to you.
-- Fill every listed slot in every element. Add no other keys.
+- Each array element is an object whose keys are exactly the slot paths given to you
+  and "{why}".
+- Fill every listed slot in every element, and give "{why}" one sentence on why you
+  chose what the request left open. Add no other keys.
 - Enum slots take the member name as a string.
 - Kind slots take the integer token of one of the listed kinds.
 {mode_rules}
@@ -56,6 +58,12 @@ class RequestAnswerKey(StrEnum):
     UNSATISFIABLE = "unsatisfiable"
     """
     Says that the request's conditions cannot all hold together, and why.
+    """
+
+    WHY = "why"
+    """
+    Says, in one sentence, why an element's values were chosen; it is kept with the
+    answer for people to read and never decoded.
     """
 
 
@@ -168,7 +176,10 @@ class PromptBuilder:
             "## Output\n\n"
             f"A JSON array of {number_of_candidates} object(s). "
             "Keys of each object, exactly: "
-            + ", ".join(f'"{slot.path}"' for slot in open_slots)
+            + ", ".join(
+                [f'"{slot.path}"' for slot in open_slots]
+                + [f'"{RequestAnswerKey.WHY}"']
+            )
             + "."
         )
         return "\n\n".join(sections)
@@ -334,9 +345,10 @@ class PromptBuilder:
             candidates are named.
         """
         return SYSTEM_PROMPT_TEMPLATE.format(
+            why=RequestAnswerKey.WHY,
             mode_rules="\n".join(
                 [*self.referent_naming.rules, UNSATISFIABLE_RULE, *further_rules]
-            )
+            ),
         )
 
     @staticmethod
