@@ -104,6 +104,26 @@ class TestRunning:
         (found,) = result["individuals"]
         assert found["reached"]["identifier"] == view.handles.handle_of(annotation.body)
 
+    def test_a_condition_may_compare_with_an_individual_named_by_its_handle(
+        self, view, toolbox
+    ):
+        bread = WorldBody(name="bread")
+        knife = WorldBody(name="knife", attached_to=bread)
+        condition = {
+            "path": "attached_to",
+            "comparison": Comparison.EQUAL,
+            "value": {"handle": view.handles.handle_of(bread)},
+        }
+        result = parsed(
+            toolbox.call(
+                WorldToolName.FIND_INDIVIDUALS,
+                {"kind": identifier_of(WorldBody), "conditions": [condition]},
+            )
+        )
+        assert [found["handle"] for found in result["individuals"]] == [
+            view.handles.handle_of(knife)
+        ]
+
     def test_a_description_is_written_for_reading(self, view, toolbox):
         annotation = VesselAnnotation(body=body_with_geometry())
         handle = view.handles.handle_of(annotation)
@@ -156,6 +176,20 @@ class TestUnanswerableCalls:
         outcome = toolbox.call(WorldToolName.DESCRIBE_KIND, {"kind": "NoSuchKind"})
         assert outcome.is_error
         assert "NoSuchKind" in outcome.content
+
+    def test_a_comparison_the_values_reached_cannot_take_is_reported(self, toolbox):
+        body = body_with_geometry()
+        condition = {
+            "path": "inertial",
+            "comparison": Comparison.CONTAINS,
+            "value": "mass",
+        }
+        outcome = toolbox.call(
+            WorldToolName.FIND_INDIVIDUALS,
+            {"kind": identifier_of(WorldBody), "conditions": [condition]},
+        )
+        assert outcome.is_error
+        assert type(body.inertial).__name__ in outcome.content
 
     def test_a_call_breaking_its_schema_is_reported_without_running(self, toolbox):
         outcome = toolbox.call(WorldToolName.FOLLOW_PATH, {"handle": "WorldBody#1"})

@@ -22,6 +22,7 @@ from llm_reasoner.world.describer import WalkLimits
 from llm_reasoner.world.exceptions import (
     AmbiguousKind,
     ExpiredHandle,
+    InapplicableComparison,
     MissingArgument,
     UnknownField,
     UnknownHandle,
@@ -201,6 +202,40 @@ class TestFinding:
         assert [summary.handle for summary in found.individuals] == [
             view.handles.handle_of(jug)
         ]
+
+    def test_a_comparison_no_value_reached_can_take_is_refused(self, view):
+        body = body_with_geometry()
+        condition = Condition(
+            path="inertial", comparison=Comparison.CONTAINS, value="mass"
+        )
+        with pytest.raises(InapplicableComparison) as raised:
+            view.find(identifier_of(WorldBody), [condition])
+        assert raised.value.reached_type_name == type(body.inertial).__name__
+
+    def test_an_individual_without_a_value_does_not_meet_an_ordering(self, view):
+        unplaced = WorldBody(name="unplaced")
+        condition = Condition(path="position", comparison=Comparison.LESS, value=1.0)
+        found = view.find(identifier_of(WorldBody), [condition])
+        assert unplaced.position is None
+        assert found.total == 0
+
+    def test_a_condition_may_pass_through_a_field_holding_nothing(self, view):
+        bread = WorldBody(name="bread")
+        knife = WorldBody(name="knife", attached_to=bread)
+        condition = Condition(
+            path="attached_to.name", comparison=Comparison.EQUAL, value=bread.name
+        )
+        found = view.find(identifier_of(WorldBody), [condition])
+        assert [summary.handle for summary in found.individuals] == [
+            view.handles.handle_of(knife)
+        ]
+
+    def test_a_condition_on_a_field_the_kind_lacks_is_refused(self, view):
+        body = body_with_geometry()
+        condition = Condition(path="volume", comparison=Comparison.EQUAL, value=1.0)
+        with pytest.raises(UnknownField) as raised:
+            view.find(identifier_of(WorldBody), [condition])
+        assert raised.value.type_name == type(body).__name__
 
     def test_a_search_may_follow_a_path_from_each_individual_found(self, view):
         annotations = [VesselAnnotation(body=body_with_geometry()) for _ in range(2)]

@@ -182,7 +182,7 @@ class FindIndividuals(WorldTool):
             Condition(
                 path=condition[WorldToolKey.PATH],
                 comparison=Comparison(condition[WorldToolKey.COMPARISON]),
-                value=condition[WorldToolKey.VALUE],
+                value=self.compared_value(condition[WorldToolKey.VALUE]),
             )
             for condition in arguments.get(WorldToolKey.CONDITIONS, [])
         ]
@@ -192,6 +192,15 @@ class FindIndividuals(WorldTool):
             limit=arguments.get(WorldToolKey.LIMIT, FIND_LIMIT),
             path=arguments.get(WorldToolKey.PATH),
         )
+
+    def compared_value(self, given: Any) -> Any:
+        """
+        :return: The value a condition compares with: the individual a given handle
+            names, or the plain value given.
+        """
+        if isinstance(given, Mapping):
+            return self.view.handles.individual_of(given[WorldToolKey.HANDLE])
+        return given
 
 
 @dataclass

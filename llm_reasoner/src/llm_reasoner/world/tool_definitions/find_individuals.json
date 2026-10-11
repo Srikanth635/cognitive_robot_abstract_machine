@@ -29,16 +29,32 @@
                 "greater or equal",
                 "contains"
               ],
-              "description": "How the value at the path is compared with the given value; 'contains' finds a name containing a word."
+              "description": "How the value at the path is compared with the given value; 'contains' finds a text containing a word, or a collection containing a value or an individual."
             },
             "value": {
-              "type": [
-                "string",
-                "number",
-                "boolean",
-                "null"
+              "anyOf": [
+                {
+                  "type": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "null"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "handle": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "handle"
+                  ],
+                  "additionalProperties": false
+                }
               ],
-              "description": "The value compared with."
+              "description": "The value compared with; an individual as {\"handle\": ...}, such as {\"handle\": \"Body#2\"} to find what holds or names that body."
             }
           },
           "required": [

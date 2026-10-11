@@ -125,6 +125,52 @@ class UnknownField(WorldQuestionError):
 
 
 @dataclass
+class InapplicableComparison(WorldQuestionError):
+    """
+    A condition's comparison applies to none of the values its path reaches, such as a
+    word looked for in a value that is neither text nor a collection.
+    """
+
+    path: str
+    """
+    The path of the condition.
+    """
+
+    comparison: str
+    """
+    The comparison asked for.
+    """
+
+    reached_type_name: str
+    """
+    The kind of value the path reaches.
+    """
+
+    given_type_name: str
+    """
+    The kind of value compared with.
+    """
+
+    reached_fields: List[str]
+    """
+    The fields the value reached holds, which the path may continue to.
+    """
+
+    def __post_init__(self):
+        continuation = (
+            f"; a {self.reached_type_name} holds the fields {self.reached_fields}, "
+            "which the path may continue to"
+            if self.reached_fields
+            else ""
+        )
+        super().__init__(
+            f"{self.path!r} reaches a {self.reached_type_name}, which cannot be "
+            f"compared as '{self.comparison}' with a {self.given_type_name}"
+            f"{continuation}"
+        )
+
+
+@dataclass
 class UnknownArgument(WorldQuestionError):
     """
     An argument given to a predicate is not one it takes.
