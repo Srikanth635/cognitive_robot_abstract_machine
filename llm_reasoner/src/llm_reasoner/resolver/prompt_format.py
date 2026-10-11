@@ -329,6 +329,11 @@ class AcceptKey(StrEnum):
     The names of the enum members accepted.
     """
 
+    HOLDS = "holds"
+    """
+    What an accepted value names, such as a candidate's handle.
+    """
+
 
 class AcceptedType(StrEnum):
     """
@@ -355,14 +360,20 @@ class AcceptedType(StrEnum):
     Nothing, leaving the slot empty.
     """
 
+
+class CandidateReference(StrEnum):
+    """
+    How an answer names one of a slot's candidates.
+    """
+
     TOKEN = "token"
     """
-    The integer token of a listed candidate.
+    By the integer token it is listed under.
     """
 
     HANDLE = "handle"
     """
-    The handle of a candidate, as the world tools give it out.
+    By its handle, as the world tools give it out.
     """
 
 

@@ -24,6 +24,7 @@ from llm_reasoner.resolver.prompt_format import (
     AcceptedType,
     AcceptKey,
     BlockAttribute,
+    CandidateKey,
     PromptBlock,
     PromptRule,
     PromptSection,
@@ -114,9 +115,10 @@ The rule stating which keys each element holds.
 
 VALUE_SLOT_RULE = PromptRule(
     name=RuleName.VALUE_SLOT,
-    text=f'answer a slot with a value its "{SlotKey.ACCEPTS}" lists: an enum member by '
-    f"its name, a {AcceptedType.NUMBER}, {AcceptedType.STRING} or "
-    f"{AcceptedType.BOOLEAN} as JSON, and {AcceptedType.NULL} only where listed.",
+    text=f'answer a slot without "{SlotKey.CANDIDATES}" with one value its '
+    f'"{SlotKey.ACCEPTS}" lists: an enum member by its name, a {AcceptedType.NUMBER}, '
+    f"{AcceptedType.STRING} or {AcceptedType.BOOLEAN} as JSON, and "
+    f"{AcceptedType.NULL} only where listed; never a JSON object.",
 )
 """
 The rule stating how a slot taking a plain value is answered.
@@ -141,8 +143,8 @@ The rule stating how a slot accepting several types is answered.
 
 KIND_SLOT_RULE = PromptRule(
     name=RuleName.KIND_SLOT,
-    text=f'a slot whose "{SlotKey.TYPE}" is a kind takes the "{AcceptedType.TOKEN}" of '
-    "one of its listed kinds.",
+    text=f'a slot whose "{SlotKey.TYPE}" is a kind takes the "{CandidateKey.TOKEN}" of '
+    f'one of its "{CandidateKey.LISTED}" kinds, as a JSON {AcceptedType.NUMBER}.',
 )
 """
 The rule stating how a slot asking for a kind is answered.
@@ -438,14 +440,14 @@ class PromptBuilder:
         if slot.group_path is not None:
             entry[SlotKey.WITHIN] = self.group_entry(slot)
         if slot.kind is SlotKind.SORTAL:
-            entry[SlotKey.ACCEPTS] = [{AcceptKey.TYPE: AcceptedType.TOKEN}]
+            entry[SlotKey.ACCEPTS] = [IntegerTokens().accepted]
             entry[SlotKey.CANDIDATES] = IntegerTokens().candidates(
                 slot, expression, self.renderer
             )
             return entry
         if slot.selects_from_domain:
             entry[SlotKey.ACCEPTS] = [
-                {AcceptKey.TYPE: self.referent_naming.accepted_type},
+                self.referent_naming.accepted,
                 *self.emptiness(slot),
             ]
             entry[SlotKey.CANDIDATES] = self.referent_naming.candidates(
