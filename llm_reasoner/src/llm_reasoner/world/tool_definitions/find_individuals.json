@@ -85,5 +85,72 @@
       "kind"
     ],
     "additionalProperties": false
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "query_in_english": {
+        "type": "string"
+      },
+      "total": {
+        "type": "integer"
+      },
+      "kinds": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "type_name": {
+              "type": "string"
+            },
+            "count": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "type_name",
+            "count"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "individuals": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "handle": {
+              "type": "string"
+            },
+            "type_name": {
+              "type": "string"
+            },
+            "reached": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/FieldValue"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "handle",
+            "type_name",
+            "reached"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "query_in_english",
+      "total",
+      "kinds",
+      "individuals"
+    ],
+    "additionalProperties": false
   }
 }

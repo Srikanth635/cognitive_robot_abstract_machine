@@ -25,6 +25,11 @@ from llm_reasoner.world.paths import FieldPath
 from llm_reasoner.world.sources import WorldSource
 from llm_reasoner.world.values import FieldValue
 
+FIND_LIMIT = 20
+"""
+How many individuals a search names unless asked for another number.
+"""
+
 
 class Comparison(StrEnum):
     """

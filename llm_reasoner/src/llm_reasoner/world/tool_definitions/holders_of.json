@@ -18,5 +18,11 @@
       "handle"
     ],
     "additionalProperties": false
+  },
+  "output_schema": {
+    "type": "array",
+    "items": {
+      "$ref": "#/$defs/Holder"
+    }
   }
 }

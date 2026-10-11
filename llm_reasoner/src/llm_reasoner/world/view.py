@@ -7,12 +7,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 
-from typing_extensions import List, Mapping, Optional, Sequence
+from typing_extensions import Any, List, Mapping, Optional, Sequence
+
+from llm_reasoner.clients.tools import Tool
+from llm_reasoner.world.access import WorldAccess
 
 from llm_reasoner.world.classes import DocumentedClass
 from llm_reasoner.world.describer import IndividualDescriber, WalkLimits
 from llm_reasoner.world.description import IndividualDescription
-from llm_reasoner.world.finding import Condition, FoundIndividuals, IndividualFinder
+from llm_reasoner.world.finding import (
+    FIND_LIMIT,
+    Condition,
+    FoundIndividuals,
+    IndividualFinder,
+)
 from llm_reasoner.world.holders import Holder, HolderIndex
 from llm_reasoner.world.kinds import (
     KindCatalogue,
@@ -28,16 +36,12 @@ from llm_reasoner.world.predicates import (
     PredicateDefinition,
 )
 from llm_reasoner.world.sources import SymbolGraphSource, WorldSource
+from llm_reasoner.world.tools import world_tools
 from llm_reasoner.world.values import FieldValue
-
-FIND_LIMIT = 20
-"""
-How many individuals a search names unless asked for another number.
-"""
 
 
 @dataclass
-class WorldView:
+class WorldView(WorldAccess):
     """
     Questions about the live world: which kinds and individuals it has, what they are,
     what holds them, what their fields reach, and what the world model's predicates say
@@ -162,6 +166,18 @@ class WorldView:
                 individual
             )
         ]
+
+    def handle_of(self, individual: Any) -> str:
+        return self.handles.handle_of(individual)
+
+    def individual_of(self, handle: str) -> Any:
+        return self.handles.individual_of(handle)
+
+    def is_live(self, handle: str) -> bool:
+        return self.handles.is_live(handle)
+
+    def tools(self) -> List[Tool]:
+        return world_tools(self)
 
     def follow(self, handle: str, path: str) -> FieldValue:
         """

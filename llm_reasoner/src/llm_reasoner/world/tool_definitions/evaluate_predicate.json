@@ -48,5 +48,8 @@
       "arguments"
     ],
     "additionalProperties": false
+  },
+  "output_schema": {
+    "$ref": "#/$defs/FieldValue"
   }
 }

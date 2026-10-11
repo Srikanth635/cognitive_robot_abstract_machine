@@ -12,16 +12,19 @@ from enum import StrEnum
 from functools import cache
 from pathlib import Path
 
-from typing_extensions import Any, List, Mapping
+from typing_extensions import TYPE_CHECKING, Any, List, Mapping
 
 from llm_reasoner.clients.tools import Tool, ToolDefinition, ToolOutcome
+from llm_reasoner.world.access import WorldToolName
 from llm_reasoner.world.encoding import AnswerEncoder
 from llm_reasoner.world.exceptions import WorldQuestionError
-from llm_reasoner.world.finding import Comparison, Condition
+from llm_reasoner.world.finding import FIND_LIMIT, Comparison, Condition
 from llm_reasoner.world.kinds import KindListing
 from llm_reasoner.world.predicates import Argument, IndividualArgument, PlainArgument
 from llm_reasoner.world.rendering import IndividualRenderer
-from llm_reasoner.world.view import FIND_LIMIT, WorldView
+
+if TYPE_CHECKING:
+    from llm_reasoner.world.view import WorldView
 
 DEFINITIONS_DIRECTORY = Path(__file__).parent / "tool_definitions"
 """
@@ -33,20 +36,25 @@ DEFINITION_SUFFIX = ".json"
 The suffix of a tool definition file.
 """
 
+SHARED_DEFINITIONS_FILE = (
+    DEFINITIONS_DIRECTORY / f"shared_definitions{DEFINITION_SUFFIX}"
+)
+"""
+Where the definitions the answer shapes of several tools share are stored.
+"""
 
-class WorldToolName(StrEnum):
-    """
-    The world injector's tools, each named for the question it answers.
-    """
+SCHEMA_DEFINITIONS = "$defs"
+"""
+The JSON schema keyword under which a schema holds the definitions it refers to.
+"""
 
-    LIST_KINDS = "list_kinds"
-    DESCRIBE_KIND = "describe_kind"
-    FIND_INDIVIDUALS = "find_individuals"
-    DESCRIBE_INDIVIDUAL = "describe_individual"
-    HOLDERS_OF = "holders_of"
-    FOLLOW_PATH = "follow_path"
-    LIST_PREDICATES = "list_predicates"
-    EVALUATE_PREDICATE = "evaluate_predicate"
+
+@cache
+def shared_definitions() -> Mapping[str, Any]:
+    """
+    :return: The definitions the answer shapes of several tools share, read once.
+    """
+    return json.loads(SHARED_DEFINITIONS_FILE.read_text())
 
 
 class WorldToolKey(StrEnum):
@@ -106,10 +114,18 @@ class WorldTool(Tool, ABC):
     @cache
     def definition_named(name: WorldToolName) -> ToolDefinition:
         """
-        :return: The definition stored for a tool, read once.
+        :return: The definition stored for a tool, read once, its answer shape holding
+            the definitions it shares with other tools.
         """
-        return ToolDefinition.from_file(
+        definition = ToolDefinition.from_file(
             DEFINITIONS_DIRECTORY / f"{name}{DEFINITION_SUFFIX}"
+        )
+        return replace(
+            definition,
+            output_schema={
+                **definition.output_schema,
+                SCHEMA_DEFINITIONS: shared_definitions(),
+            },
         )
 
     def run(self, arguments: Mapping[str, Any]) -> ToolOutcome:

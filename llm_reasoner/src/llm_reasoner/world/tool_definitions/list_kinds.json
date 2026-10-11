@@ -24,5 +24,36 @@
       }
     },
     "additionalProperties": false
+  },
+  "output_schema": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "identifier": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "individual_count": {
+          "type": "integer"
+        },
+        "own_individual_count": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "identifier",
+        "name",
+        "summary",
+        "individual_count",
+        "own_individual_count"
+      ],
+      "additionalProperties": false
+    }
   }
 }

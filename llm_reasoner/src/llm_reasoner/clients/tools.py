@@ -27,6 +27,7 @@ class ToolDefinitionKey(StrEnum):
     NAME = "name"
     DESCRIPTION = "description"
     INPUT_SCHEMA = "input_schema"
+    OUTPUT_SCHEMA = "output_schema"
 
 
 class ToolDescriptionKey(StrEnum):
@@ -129,6 +130,12 @@ class ToolDefinition:
     The JSON schema of the input the tool takes.
     """
 
+    output_schema: Optional[Mapping[str, Any]] = None
+    """
+    The JSON schema of the answers the tool gives when it succeeds, if declared; it is a
+    contract for the tool's users and is not sent to the model.
+    """
+
     @classmethod
     def from_file(cls, path: Path) -> ToolDefinition:
         """
@@ -141,6 +148,7 @@ class ToolDefinition:
                 stored[ToolDefinitionKey.DESCRIPTION]
             ),
             input_schema=stored[ToolDefinitionKey.INPUT_SCHEMA],
+            output_schema=stored.get(ToolDefinitionKey.OUTPUT_SCHEMA),
         )
 
     def as_request(self) -> Dict[str, Any]:
@@ -178,6 +186,19 @@ class ToolErrorKey(StrEnum):
     """
     Each way the input breaks the tool's schema.
     """
+
+
+TOOL_ERROR_SCHEMA_FILE = Path(__file__).parent / "tool_error_schema.json"
+"""
+Where the JSON schema every tool error follows is stored.
+"""
+
+
+def tool_error_schema() -> Mapping[str, Any]:
+    """
+    :return: The JSON schema every error a tool call returns follows.
+    """
+    return json.loads(TOOL_ERROR_SCHEMA_FILE.read_text())
 
 
 class ToolErrorKind(StrEnum):

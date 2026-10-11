@@ -18,7 +18,8 @@ from llm_reasoner.world.kinds import KindListing
 from llm_reasoner.world.naming import HANDLE_SEPARATOR
 from llm_reasoner.world.classes import identifier_of
 from llm_reasoner.world.rendering import IndividualRenderer
-from llm_reasoner.world.tools import WorldToolName, world_tools
+from llm_reasoner.world.access import WorldToolName
+from llm_reasoner.world.tools import world_tools
 from llm_reasoner.world.view import WorldView
 
 from .world_mimics import VesselAnnotation, WorldBody, body_with_geometry

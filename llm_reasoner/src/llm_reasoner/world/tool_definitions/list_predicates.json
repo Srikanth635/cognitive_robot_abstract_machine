@@ -14,5 +14,35 @@
       }
     },
     "additionalProperties": false
+  },
+  "output_schema": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "identifier": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "arguments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FieldDefinition"
+          }
+        }
+      },
+      "required": [
+        "identifier",
+        "name",
+        "summary",
+        "arguments"
+      ],
+      "additionalProperties": false
+    }
   }
 }

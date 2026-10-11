@@ -38,7 +38,7 @@ from llm_reasoner.resolver.prompt_format import (
 )
 from llm_reasoner.world.classes import identifier_of
 from llm_reasoner.world.naming import HANDLE_SEPARATOR
-from llm_reasoner.world.tools import WorldToolName
+from llm_reasoner.world.access import WorldToolName
 from llm_reasoner.world.view import WorldView
 
 from .prompt_sections import bodies, slot_entry
@@ -81,7 +81,7 @@ def search_for(kind: type) -> list:
 
 def world_backend(view: WorldView, tool_turns: list) -> LanguageModelBackend:
     return LanguageModelBackend.with_world_tools(
-        client=ScriptedClient(tool_turns=tool_turns), view=view
+        client=ScriptedClient(tool_turns=tool_turns), world=view
     )
 
 
@@ -94,7 +94,7 @@ class TestPrompt:
         body = body_with_geometry()
         annotation = VesselAnnotation(body=body)
         prompt = world_backend(view, []).describe(tilt_query())
-        entry = WorldHandles(view=view).candidate_entry(body)
+        entry = WorldHandles(world=view).candidate_entry(body)
         (source,) = [
             slot
             for slot in reflect_slots(tilt_query())
@@ -117,7 +117,7 @@ class TestPrompt:
             if slot.attribute_name == "source"
         ]
         (accepted,) = slot_entry(prompt, source.path)[SlotKey.ACCEPTS]
-        assert accepted == WorldHandles(view=view).accepted
+        assert accepted == WorldHandles(world=view).accepted
         assert accepted[AcceptKey.TYPE] == AcceptedType.STRING
         assert view.handles.handle_of(body) in prompt
 
@@ -136,10 +136,10 @@ class TestPrompt:
 
     def test_the_rules_say_how_world_individuals_are_answered(self):
         view = WorldView()
-        assert WorldHandles(view=view).answer_rule in world_backend(view, []).rules
+        assert WorldHandles(world=view).answer_rule in world_backend(view, []).rules
         plain = LanguageModelBackend(client=ScriptedClient())
         assert IntegerTokens().answer_rule in plain.rules
-        assert WorldHandles(view=view).answer_rule not in plain.rules
+        assert WorldHandles(world=view).answer_rule not in plain.rules
 
     def test_the_rules_show_no_handle_a_world_could_give_out(self):
         handle = re.compile(rf"\w{re.escape(HANDLE_SEPARATOR)}\d")
