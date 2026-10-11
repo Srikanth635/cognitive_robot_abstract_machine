@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from typing_extensions import List
+from typing_extensions import List, Optional
 
 from llm_reasoner.exceptions import LLMReasonerError
 
@@ -82,10 +82,21 @@ class UnknownHandle(WorldQuestionError):
     The handle asked for.
     """
 
+    kind_name: Optional[str] = None
+    """
+    The kind the handle is written for, when it is written as handles are.
+    """
+
     def __post_init__(self):
+        search = (
+            f"; a search for the kind {self.kind_name!r} gives out the handles of its "
+            "individuals"
+            if self.kind_name is not None
+            else ""
+        )
         super().__init__(
             f"No individual was ever given the handle {self.handle!r}; handles are "
-            "given out only by answers that name individuals, such as a search"
+            f"given out only by answers that name individuals, such as a search{search}"
         )
 
 
