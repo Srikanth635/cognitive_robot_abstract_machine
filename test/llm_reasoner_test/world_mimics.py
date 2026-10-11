@@ -8,6 +8,7 @@ reach llm_reasoner.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum
 from uuid import UUID, uuid4
 
 from krrood.entity_query_language.predicate import Predicate, RenderedFields, Symbol
@@ -130,6 +131,24 @@ class ActionWithBodyAndValueSlots(Symbol):
 
     angle: float = 0.5
     """The angle to tilt the body to, in radians."""
+
+
+class Side(Enum):
+    """Which side of a body an action works on."""
+
+    LEFT = 1
+    RIGHT = 2
+
+
+@dataclass(eq=False)
+class ActionWithADefaultChoice(Symbol):
+    """Work on one side of a body, a side being conventional."""
+
+    source: WorldBody
+    """The body worked on."""
+
+    side: Side = Side.RIGHT
+    """The side of the body worked on."""
 
 
 @dataclass(eq=False)
