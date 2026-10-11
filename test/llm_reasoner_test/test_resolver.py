@@ -37,6 +37,7 @@ from .world_mimics import (
     ActionPlannedByItsParent,
     ActionWithADefaultChoice,
     ActionWithBodyAndValueSlots,
+    Side,
     WorldBody,
     body_with_geometry,
 )
@@ -99,6 +100,15 @@ class TestPrompt:
         prompt = prompt_for(query, SchemaOnlyContextProvider())
         assert json.dumps(side.default.name) in prompt
         assert repr(side.default) not in prompt
+
+    def test_a_given_value_is_shown_as_an_answer_would_write_it(self):
+        body_with_geometry()
+        query = the(ActionWithADefaultChoice)(
+            source=variable(WorldBody), side=Side.LEFT
+        )
+        prompt = prompt_for(query, SchemaOnlyContextProvider())
+        assert json.dumps(Side.LEFT.name) in prompt
+        assert repr(Side.LEFT) not in prompt
 
 
 class TestSourceShown:

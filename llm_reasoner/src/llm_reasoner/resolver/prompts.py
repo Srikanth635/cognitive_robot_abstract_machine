@@ -17,6 +17,7 @@ from llm_reasoner.resolver.referents import (
     ReferentNaming,
 )
 from llm_reasoner.resolver.reflection import Slot, SlotKind
+from llm_reasoner.world.classes import is_individual
 
 # %% system prompt
 
@@ -134,7 +135,7 @@ class PromptBuilder:
                 + "\n".join(
                     self.hanging(
                         f"{slot.path} = ",
-                        self.renderer.render(slot.bound_value, expression),
+                        self.render_given(slot.bound_value, expression),
                     )
                     for slot in bound_slots
                 )
@@ -320,6 +321,17 @@ class PromptBuilder:
             PromptBuilder.hint_for_type(candidate_type)
             for candidate_type in slot.decodable_types
         )
+
+    def render_given(self, value: Any, expression: Match) -> str:
+        """
+        :param value: A value the query gives for a slot.
+        :param expression: The match being resolved, passed to the renderer.
+        :return: The value described when it is an individual or a kind, any other value
+            as an answer writes it.
+        """
+        if isinstance(value, type) or is_individual(value):
+            return self.renderer.render(value, expression)
+        return self.answer_form(value)
 
     @staticmethod
     def answer_form(value: Any) -> str:
