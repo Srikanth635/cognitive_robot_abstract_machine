@@ -59,9 +59,22 @@ Last updated: 2026-10-11, at commit `6743d6116` on `main`.
   tool ends the conversation instead of sending an empty message (`ea44fdbac`).
 
 ### Knowledge component
-- Predictive-manipulation ontology and pipeline (`fb9ca0830` … `43f8db702`): generated
-  vocabulary, acceptance rules moved into the ontology and SHACL shapes, patch repairs,
-  HermiT consistency, the cram_viz integration and Ontology Graph tab.
+- The predictive-manipulation ontology (`core`, `object-dynamics`, `prehension`,
+  `pouring`, `gaze`) linked to CRAM-AICOR and DUL, and the Python vocabulary generated
+  from it with a drift test (`fb9ca0830`).
+- The pipeline: generation as fragments, closed-world acceptance, open-world HermiT
+  consistency with contradiction localisation, records and the store, views and the
+  graph projection (`fb9ca0830`, `199245d89`).
+- Acceptance moved from hand-written rules into the ontology's restrictions and SHACL
+  shapes (`172ae748e`, `4419248ce`, `cf72116a6`, `d0a5c1bd3`, `243359ff0`); calibrated
+  against a complete reference structure (`64795fc29`); the full pouring phase sequence
+  required (`09af95ccc`); a guarded grasp required in every holding phase (`43f8db702`).
+- Repairs by patch on the answer with the fewest problems (`a89518ca6`); structured
+  completion with Sonnet 5.5 (`da4d20a33`); the type catalogue cached in the system
+  prompt (`25b0b9269`); concept references checked against the linked ontologies
+  (`aa3f6dc3a`).
+- cram_viz: Hypothesis Graph and Ontology Graph tabs, the open-world check when the
+  linked ontologies are configured (`5846a6fa5`, `7e84563bc`).
 
 ## 3. Live testing
 
@@ -121,7 +134,8 @@ of 28, two repairs and $1.04; its findings led to `ea44fdbac` and `6743d6116`.
 | Item | Why | State |
 |---|---|---|
 | Computed world values: poses, reachability, contact, which gripper holds what | Grounds the arm and geometry choices the model now calls arbitrary | Deferred; options: (a) a registry in krrood's `@symbolic_function`, (b) SDT moves the functions to class form, (c) SDT marks its properties with krrood field metadata, (d) `llm_reasoner` reads zero-argument properties generically. No choice yet |
-| Linking the knowledge component to the resolver and the world injector | Lets the resolver use action knowledge | Deferred |
+| Linking the knowledge component to the resolver and the world injector | Lets the resolver use action knowledge | Deferred; questions below |
+| Structured prompts for the knowledge component | Its system, initial and repair prompts are prose built in Python, unlike the resolver's tagged sections | Proposed |
 | Designator slots supplied from the SDT world (containers, arms) | Replaces hand-written bindings | Deferred |
 | Choosing smaller pouring structures from the world state | The full 12-phase pouring structure is always required | Deferred |
 | An MCP server over the world-access contract | For consumers outside the resolver's process | When a second consumer needs it |
@@ -129,6 +143,27 @@ of 28, two repairs and $1.04; its findings led to `ea44fdbac` and `6743d6116`.
 | Fewer wasted calls (opening `list_kinds`, listing many bodies, `name` before `name.name`) | Cost only; results are correct | Open |
 | An explicit "either arm" answer | Arbitrary arm choices are stated only in `why` | Open; would change the action interface |
 | Research direction: language-model commonsense checked against the ontology for designator resolution | Long-term | Open |
+
+### Open questions for linking the knowledge component
+
+1. **How the resolver consumes knowledge.** As another context section of the request
+   (for example the phases and world assumptions of pouring), as constraints on slots,
+   or both?
+2. **Which hypothesis answers which query.** How a resolver query on an action
+   designator (a coraplex `PouringAction`) finds the matching hypothesis (a
+   `PouringPhaseStructure` for `aicor:Pouring`): by the designator's class, a CRAM-AICOR
+   concept, or a mapping kept beside the ontology?
+3. **Roles and slots.** Whether ontology roles (source, target, the pouring lip) map
+   onto designator slots, as the cram_viz Designator tab sketches by tagging slots with
+   pouring roles.
+4. **Whether knowledge may read the world.** The knowledge is world-independent by
+   design; choosing a smaller pouring structure from the world state (above) would need
+   `WorldAccess`.
+5. **Scope beyond the Flanagan microworld.** The research direction names FrameNet
+   frames and image schemas linked to `cram-aicor-ontology.ttl`; only the Flanagan
+   microworld exists.
+6. **Generation on demand or in advance.** Whether the resolver may trigger generation
+   (minutes, with repairs and HermiT) or only reads stored hypotheses.
 
 ## 7. Known issues
 
