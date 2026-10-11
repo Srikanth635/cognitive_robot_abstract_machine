@@ -1,6 +1,11 @@
 {
   "name": "list_kinds",
-  "description": "List kinds of thing in the world, each with its identifier, a one-line summary, how many live individuals it has with its specialisations, and how many of exactly its kind. By default only the kinds with individuals of their own are listed: what the world actually contains. Ask for 'present' to add the general kinds those specialise, or 'all' for the world model's whole vocabulary; narrow any listing with 'within'. To find the candidates of a kind you already know, search it with find_individuals instead.",
+  "description": {
+    "purpose": "List the kinds of thing in the world.",
+    "returns": "Each kind's identifier, one-line summary, how many live individuals it has with its specialisations, and how many of exactly its kind.",
+    "use_when": "Exploring what the world contains: by default the kinds with individuals of their own; 'present' adds the general kinds those specialise, 'all' the world model's whole vocabulary; 'within' narrows any listing.",
+    "avoid": "Finding the candidates of a kind you already know; search it with find_individuals instead."
+  },
   "input_schema": {
     "type": "object",
     "properties": {

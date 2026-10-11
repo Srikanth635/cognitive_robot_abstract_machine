@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import json
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field, replace
+from dataclasses import asdict, dataclass, field, replace
 from enum import StrEnum
 from functools import cache
 from pathlib import Path
@@ -69,6 +69,7 @@ class WorldToolKey(StrEnum):
     PREDICATE = "predicate"
     ARGUMENTS = "arguments"
     DESCRIPTION = "description"
+    MESSAGE = "message"
 
 
 # %% tools
@@ -113,8 +114,8 @@ class WorldTool(Tool, ABC):
 
     def run(self, arguments: Mapping[str, Any]) -> ToolOutcome:
         """
-        :return: The answer as JSON, or what the world lacks when the question names
-            something it does not have.
+        :return: The answer as JSON, or, as JSON too, what the world lacks when the
+            question names something it does not have.
 
         .. note:: A question about something the world lacks is the model's mistake to
             correct, not a failure of the program, so it is the one error turned into
@@ -123,7 +124,10 @@ class WorldTool(Tool, ABC):
         try:
             answer = self.answer(arguments)
         except WorldQuestionError as error:
-            return ToolOutcome(content=str(error), is_error=True)
+            return ToolOutcome.error(
+                type(error).__name__,
+                {**asdict(error), WorldToolKey.MESSAGE: str(error)},
+            )
         return ToolOutcome(content=json.dumps(self.encoder.encode(answer)))
 
     @abstractmethod

@@ -1,3 +1,9 @@
+"""
+The prompts a model resolves a query from: the system prompt stating its role, what each
+section of a request means and the rules it answers by, and the request itself, made of
+tagged sections whose data is JSON.
+"""
+
 from __future__ import annotations
 
 import enum
@@ -9,44 +15,39 @@ from enum import StrEnum
 from krrood.entity_query_language.backends import QueryBackend
 from krrood.entity_query_language.query.match import Match
 from krrood.entity_query_language.verbalization.pipeline import verbalize_expression
-from typing_extensions import Any, List, Optional, Sequence, Tuple
+from typing_extensions import Any, Dict, List, Optional, Sequence
 
-from llm_reasoner.resolver.context import CandidateRenderer, SectionTitle
-from llm_reasoner.resolver.referents import (
-    SLOT_NOTE_INDENT,
-    IntegerTokens,
-    ReferentNaming,
+from llm_reasoner.resolver.context import CandidateRenderer
+from llm_reasoner.resolver.exceptions import RetryableModelFailure
+from llm_reasoner.resolver.prompt_format import (
+    SECTION_SEPARATOR,
+    AcceptedType,
+    AcceptKey,
+    BlockAttribute,
+    PromptBlock,
+    PromptRule,
+    PromptSection,
+    RuleName,
+    SchemaKey,
+    SchemaType,
+    SlotKey,
+    render_blocks,
 )
+from llm_reasoner.resolver.referents import IntegerTokens, ReferentNaming
 from llm_reasoner.resolver.reflection import Slot, SlotKind
 from llm_reasoner.world.classes import is_individual
 
-# %% system prompt
-
-SYSTEM_PROMPT_TEMPLATE = """\
-You fill in the missing parameters of a partially specified object.
-
-Reading the request:
-- The request is stated in English, followed by a table of the slots you must fill.
-- The word "Ellipsis" in the request marks a blank you must fill. It is not a value,
-  and you must never answer with it.
-- A section headed "{task}" states what the caller is trying to achieve. Treat it as
-  intent to be served, not as fact about the world.
-- A section headed "{situation}" states what is currently true. Treat it as fact.
-
-Rules:
-- Answer with a JSON array only. No prose, no markdown fences, no trailing commas.
-- Each array element is an object whose keys are exactly the slot paths given to you
-  and "{why}".
-- Fill every listed slot in every element, and give "{why}" one sentence on why you
-  chose what the request left open. Add no other keys.
-- Enum slots take the member name as a string.
-- Kind slots take the integer token of one of the listed kinds.
-{mode_rules}
-- A slot offering several types accepts a value of any one of them; choose the type
-  that fits the situation.
-- Respect every stated constraint. When a constraint forces a slot's value, use the
-  forced value rather than something merely plausible.
+JSON_INDENT = 2
 """
+The indentation of the JSON data a prompt holds.
+"""
+
+REJECTED_ANSWER_LENGTH = 2000
+"""
+The most characters of a rejected answer a repair repeats.
+"""
+
+# %% answer keys
 
 
 class RequestAnswerKey(StrEnum):
@@ -66,39 +67,159 @@ class RequestAnswerKey(StrEnum):
     """
 
 
-UNSATISFIABLE_RULE = (
-    "- When the request's conditions cannot all hold together, never answer something "
-    "breaking one of them: answer with "
-    f'[{{"{RequestAnswerKey.UNSATISFIABLE}": "<why they cannot all hold>"}}].'
+# %% system prompt
+
+ROLE = "Fill the open slots of a partially specified object."
+"""
+What the model is asked to do.
+"""
+
+INPUT_MEANINGS = {
+    PromptSection.REQUEST: 'the query in English; "Ellipsis" marks an open slot, never a '
+    "value.",
+    PromptSection.TASK: "what the caller is trying to achieve: intent to serve, not fact "
+    "about the world.",
+    PromptSection.SITUATION: "what is currently true: fact.",
+    PromptSection.SOURCE: "the definition of a type holding slots, showing what it does "
+    "with each value.",
+    PromptSection.DESCRIPTION: "the docstring of a type holding slots.",
+    PromptSection.SLOTS: "one entry per open slot: its path, type, meaning, what it "
+    "accepts, its default and its candidates.",
+    PromptSection.GIVEN: "the values the query fixes.",
+    PromptSection.OUTPUT: "the JSON schema the answer follows.",
+    PromptSection.REJECTED_ANSWER: "an earlier answer that was refused.",
+    PromptSection.REJECTION: "why that answer was refused.",
+}
+"""
+What each section of a request means, in the order a request may hold them.
+"""
+
+ANSWER_FORMAT_RULE = PromptRule(
+    name=RuleName.ANSWER_FORMAT,
+    text=f"reply with one JSON array following <{PromptSection.OUTPUT}>; no prose, no "
+    "markdown fences, no trailing commas.",
+)
+"""
+The rule stating how the answer is written as a whole.
+"""
+
+ELEMENT_KEYS_RULE = PromptRule(
+    name=RuleName.ELEMENT_KEYS,
+    text=f'each element holds every "{SlotKey.PATH}" of <{PromptSection.SLOTS}> and '
+    f'"{RequestAnswerKey.WHY}", and no other key.',
+)
+"""
+The rule stating which keys each element holds.
+"""
+
+VALUE_SLOT_RULE = PromptRule(
+    name=RuleName.VALUE_SLOT,
+    text=f'answer a slot with a value its "{SlotKey.ACCEPTS}" lists: an enum member by '
+    f"its name, a {AcceptedType.NUMBER}, {AcceptedType.STRING} or "
+    f"{AcceptedType.BOOLEAN} as JSON, and {AcceptedType.NULL} only where listed.",
+)
+"""
+The rule stating how a slot taking a plain value is answered.
+"""
+
+DEFAULT_RULE = PromptRule(
+    name=RuleName.DEFAULT,
+    text=f'a slot\'s "{SlotKey.DEFAULT}" is the value its class uses when none is given.',
+)
+"""
+The rule stating what a slot's default stands for.
+"""
+
+UNION_RULE = PromptRule(
+    name=RuleName.UNION,
+    text=f'a slot whose "{SlotKey.ACCEPTS}" lists several types takes a value of any one '
+    "of them; choose the one that fits the situation.",
+)
+"""
+The rule stating how a slot accepting several types is answered.
+"""
+
+KIND_SLOT_RULE = PromptRule(
+    name=RuleName.KIND_SLOT,
+    text=f'a slot whose "{SlotKey.TYPE}" is a kind takes the "{AcceptedType.TOKEN}" of '
+    "one of its listed kinds.",
+)
+"""
+The rule stating how a slot asking for a kind is answered.
+"""
+
+UNSATISFIABLE_RULE = PromptRule(
+    name=RuleName.UNSATISFIABLE,
+    text=f"when the conditions of <{PromptSection.REQUEST}> cannot all hold together, "
+    f'answer [{{"{RequestAnswerKey.UNSATISFIABLE}": "<why they cannot all hold>"}}] '
+    "instead of breaking one.",
 )
 """
 The rule letting the model say that the request's conditions cannot all hold.
 """
 
-FEWER_CANDIDATES_RULE = (
-    "- Make the elements genuinely different from one another, best first. When fewer "
-    "good answers exist than asked for, give only those; never add an element only to "
-    "differ."
+CONDITIONS_RULE = PromptRule(
+    name=RuleName.CONDITIONS,
+    text=f"respect every condition of <{PromptSection.REQUEST}>; a condition forcing a "
+    "slot's value decides it.",
+)
+"""
+The rule stating how the request's conditions bind the answer.
+"""
+
+GIVEN_RULE = PromptRule(
+    name=RuleName.GIVEN,
+    text=f"the values in <{PromptSection.GIVEN}> are fixed; let them inform your choices "
+    "and never restate them.",
+)
+"""
+The rule stating how the values the query fixes are used.
+"""
+
+FEWER_CANDIDATES_RULE = PromptRule(
+    name=RuleName.CANDIDATES,
+    text="make the elements genuinely different from one another, best first; when "
+    "fewer good answers exist than asked for, give only those.",
 )
 """
 The rule asking for distinct candidates while letting the model give fewer than asked.
 """
+
+WHY_RULE = PromptRule(
+    name=RuleName.WHY,
+    text=f'"{RequestAnswerKey.WHY}" holds one sentence on why you chose what the request '
+    "left open.",
+)
+"""
+The rule stating what the explanation of an element says.
+"""
+
+REPAIR_RULE = PromptRule(
+    name=RuleName.REPAIR,
+    text=f"when <{PromptSection.REJECTED_ANSWER}> and <{PromptSection.REJECTION}> "
+    "follow the request, answer again with what the rejection names corrected.",
+)
+"""
+The rule stating how a refused answer is answered again.
+"""
+
+# %% type descriptions
 
 
 class SourceDetail(enum.Enum):
     """How much of the target type's definition is put in the prompt."""
 
     NONE = enum.auto()
-    """Nothing. The slot table alone describes what must be produced."""
+    """Nothing. The slots section alone describes what must be produced."""
 
     SIGNATURE = enum.auto()
     """
     The docstring of every class contributing a slot.
 
-    The slot table already carries each field's name, type, docstring and default, so
+    The slots section already carries each field's name, type, docstring and default, so
     the full definition would repeat all of it and bury the repetition in method bodies
     describing how the type is *used* rather than how to choose its values. What the
-    table cannot carry is what each class *is*, which matters most for nested
+    slots cannot carry is what each class *is*, which matters most for nested
     descriptions where the outer type alone explains little.
     """
 
@@ -116,11 +237,11 @@ class SourceDetail(enum.Enum):
 @dataclass
 class PromptBuilder:
     """
-    Assembles the prompt from three layers.
+    Assembles the prompts from three layers.
 
-    The request and the schema are derived from the query alone; the context sections
-    carry everything from outside it, each under its own heading so that intent and
-    world state are not read as the same kind of claim.
+    The request and the slots are derived from the query alone; the context sections
+    carry everything from outside it, each in its own section so that intent and world
+    state are not read as the same kind of claim.
     """
 
     renderer: CandidateRenderer
@@ -132,67 +253,110 @@ class PromptBuilder:
     source_detail: SourceDetail = SourceDetail.SIGNATURE
     """How much of the target type's definition to include."""
 
+    # %% the system prompt
+
+    def rules(self, further_rules: Sequence[PromptRule] = ()) -> List[PromptRule]:
+        """
+        :param further_rules: Rules of how the model is asked, such as where its answer
+            goes when it may call tools.
+        :return: Every rule the model answers by, the referent rules matching how
+            candidates are named.
+        """
+        return [
+            ANSWER_FORMAT_RULE,
+            ELEMENT_KEYS_RULE,
+            VALUE_SLOT_RULE,
+            DEFAULT_RULE,
+            UNION_RULE,
+            KIND_SLOT_RULE,
+            *self.referent_naming.rules,
+            UNSATISFIABLE_RULE,
+            CONDITIONS_RULE,
+            GIVEN_RULE,
+            FEWER_CANDIDATES_RULE,
+            WHY_RULE,
+            REPAIR_RULE,
+            *further_rules,
+        ]
+
+    def system_prompt(self, further_rules: Sequence[PromptRule] = ()) -> str:
+        """
+        :param further_rules: Rules of how the model is asked.
+        :return: The system prompt: the model's role, what each section of a request
+            means, and the rules it answers by.
+        """
+        return render_blocks(
+            [
+                PromptBlock(section=PromptSection.ROLE, body=ROLE),
+                PromptBlock(
+                    section=PromptSection.INPUTS,
+                    body="\n".join(
+                        f"- <{section}>: {meaning}"
+                        for section, meaning in INPUT_MEANINGS.items()
+                    ),
+                ),
+                PromptBlock(
+                    section=PromptSection.RULES,
+                    body="\n".join(rule.render() for rule in self.rules(further_rules)),
+                ),
+            ]
+        )
+
+    # %% the request
+
     def build(
         self,
         expression: Match,
         slots: Sequence[Slot],
-        context_sections: Sequence[Tuple[str, str]],
+        context_sections: Sequence[PromptBlock],
         number_of_candidates: int,
         backend: Optional[QueryBackend] = None,
     ) -> str:
         """
         :param expression: The match being resolved.
         :param slots: Every reflected slot, bound and open.
-        :param context_sections: Title and text pairs from the context providers, in
-            the order they should be read.
-        :param number_of_candidates: How many alternatives to request.
+        :param context_sections: The sections from the context providers, in the order
+            they should be read.
+        :param number_of_candidates: How many alternatives to request at most.
         :param backend: Decides the verb the request is verbalized with.
         :return: The user prompt.
         """
-        target_type = expression.type
         open_slots = [slot for slot in slots if slot.kind is not SlotKind.BOUND]
         bound_slots = [slot for slot in slots if slot.kind is SlotKind.BOUND]
-
-        sections: List[str] = [
-            f"Generate {number_of_candidates} candidate "
-            f"{target_type.__name__} object(s)."
+        blocks = [
+            *self.describe_types(expression.type, slots),
+            PromptBlock(
+                section=PromptSection.REQUEST,
+                body=self.verbalize_request(expression, backend),
+            ),
+            *context_sections,
+            PromptBlock(
+                section=PromptSection.SLOTS,
+                body=self.as_json(
+                    [self.slot_entry(slot, expression) for slot in open_slots]
+                ),
+            ),
         ]
-        description = self.describe_types(target_type, slots)
-        if description:
-            sections.append(description)
-        request = self.verbalize_request(expression, backend)
-        if request:
-            sections.append("## The request\n\n" + request)
-        sections.extend(f"## {title}\n\n{text}" for title, text in context_sections)
-        sections.append(
-            "## Slots to fill\n\n" + self.render_slots(open_slots, expression)
-        )
         if bound_slots:
-            sections.append(
-                "## Already known\n\n"
-                + "\n".join(
-                    self.hanging(
-                        f"{slot.path} = ",
-                        self.render_given(slot.bound_value, expression),
-                    )
-                    for slot in bound_slots
+            blocks.append(
+                PromptBlock(
+                    section=PromptSection.GIVEN,
+                    body=self.as_json(
+                        [self.given_entry(slot, expression) for slot in bound_slots]
+                    ),
                 )
-                + "\n\nThese are given. Let them inform your choices; do not restate "
-                "them."
             )
-        sections.append(
-            "## Output\n\n"
-            f"A JSON array of at most {number_of_candidates} object(s). "
-            "Keys of each object, exactly: "
-            + ", ".join(
-                [f'"{slot.path}"' for slot in open_slots]
-                + [f'"{RequestAnswerKey.WHY}"']
+        blocks.append(
+            PromptBlock(
+                section=PromptSection.OUTPUT,
+                body=self.as_json(self.output_schema(open_slots, number_of_candidates)),
             )
-            + "."
         )
-        return "\n\n".join(sections)
+        return render_blocks(blocks)
 
-    def describe_types(self, target_type: type, slots: Sequence[Slot]) -> Optional[str]:
+    def describe_types(
+        self, target_type: type, slots: Sequence[Slot]
+    ) -> List[PromptBlock]:
         """
         Account for every type the model has to fill fields on.
 
@@ -203,29 +367,30 @@ class PromptBuilder:
 
         :param target_type: The type being constructed.
         :param slots: Every reflected slot.
-        :return: The prompt's account of the types, or ``None`` when none is wanted.
+        :return: One section per type described, none when no account is wanted.
         """
         if self.source_detail is SourceDetail.NONE:
-            return None
+            return []
         if self.source_detail is SourceDetail.FULL:
-            return "\n\n".join(
-                f"## Source of {described.__name__}\n\n```python\n"
-                + inspect.getsource(described).rstrip()
-                + "\n```"
+            return [
+                PromptBlock(
+                    section=PromptSection.SOURCE,
+                    body="```python\n"
+                    + inspect.getsource(described).rstrip()
+                    + "\n```",
+                    attributes={BlockAttribute.TYPE: described.__name__},
+                )
                 for described in self.types_with_their_family(target_type, slots)
+            ]
+        return [
+            PromptBlock(
+                section=PromptSection.DESCRIPTION,
+                body=inspect.getdoc(described).strip(),
+                attributes={BlockAttribute.TYPE: described.__name__},
             )
-        described_types = [
-            (described, inspect.getdoc(described))
             for described in self.types_to_describe(target_type, slots)
+            if inspect.getdoc(described)
         ]
-        paragraphs = [
-            f"**{described.__name__}** -- {docstring.strip()}"
-            for described, docstring in described_types
-            if docstring
-        ]
-        if not paragraphs:
-            return None
-        return "## What these are\n\n" + "\n\n".join(paragraphs)
 
     @staticmethod
     def types_to_describe(target_type: type, slots: Sequence[Slot]) -> List[type]:
@@ -258,139 +423,122 @@ class PromptBuilder:
                     family.append(member)
         return family
 
-    def render_slots(self, slots: Sequence[Slot], expression: Match) -> str:
+    # %% the slots
+
+    def slot_entry(self, slot: Slot, expression: Match) -> Dict[str, Any]:
         """
-        Render the slot table, gathering the slots of each nested description under a
-        heading of their own.
-
-        The nesting attribute contributes no slot, so its type and docstring would
-        otherwise never reach the prompt -- which is where the sentence explaining what
-        the nested description is *for* usually lives.
-
-        :param slots: The slots the model must answer for, in reflection order.
+        :param slot: An open slot.
         :param expression: The match being resolved, passed to the renderer.
-        :return: The rendered table.
+        :return: The slot as data: its path, type, meaning, what it accepts, its default
+            and its candidates.
         """
-        blocks: List[str] = []
-        current_group: Optional[str] = ""
-        for slot in slots:
-            if slot.group_path != current_group:
-                current_group = slot.group_path
-                heading = self.render_group_heading(slot)
-                if heading:
-                    blocks.append(heading)
-            blocks.append(self.render_slot(slot, expression))
-        return "\n\n".join(blocks)
-
-    @staticmethod
-    def render_group_heading(slot: Slot) -> Optional[str]:
-        """
-        :param slot: The first slot of a nested description.
-        :return: The heading introducing that description, or ``None`` for slots
-            sitting directly on the constructed type.
-        """
-        if slot.group_path is None:
-            return None
-        lines = [f"{slot.group_path}   ({slot.group_type.__name__})"]
-        if slot.group_docstring:
-            lines.append(f'    "{slot.group_docstring}"')
-        lines.append("    filled through the slots below:")
-        return "\n".join(lines)
-
-    def render_slot(self, slot: Slot, expression: Match) -> str:
-        """
-        :param slot: The slot to render.
-        :param expression: The match being resolved, passed to the renderer.
-        :return: The slot's prompt block.
-        """
-        lines = [f"{slot.path}   ({slot.type_name})"]
+        entry: Dict[str, Any] = {SlotKey.PATH: slot.path, SlotKey.TYPE: slot.type_name}
         if slot.docstring:
-            lines.append(f'    "{slot.docstring}"')
+            entry[SlotKey.MEANING] = slot.docstring
+        if slot.group_path is not None:
+            entry[SlotKey.WITHIN] = self.group_entry(slot)
         if slot.kind is SlotKind.SORTAL:
-            lines.append(f"{SLOT_NOTE_INDENT}choose one kind by its integer token:")
-            lines.extend(
-                IntegerTokens().candidate_lines(slot, expression, self.renderer)
+            entry[SlotKey.ACCEPTS] = [{AcceptKey.TYPE: AcceptedType.TOKEN}]
+            entry[SlotKey.CANDIDATES] = IntegerTokens().candidates(
+                slot, expression, self.renderer
             )
-            return "\n".join(lines)
+            return entry
         if slot.selects_from_domain:
-            lines.append(self.referent_naming.candidate_heading)
-            lines.extend(
-                self.referent_naming.candidate_lines(slot, expression, self.renderer)
+            entry[SlotKey.ACCEPTS] = [
+                {AcceptKey.TYPE: self.referent_naming.accepted_type},
+                *self.emptiness(slot),
+            ]
+            entry[SlotKey.CANDIDATES] = self.referent_naming.candidates(
+                slot, expression, self.renderer
             )
-            if slot.may_be_empty:
-                lines.append(
-                    f"{SLOT_NOTE_INDENT}or {self.answer_form(None)}, leaving it empty"
-                )
-            return "\n".join(lines)
-        hint = self.value_hint(slot)
+            return entry
+        entry[SlotKey.ACCEPTS] = self.accepts(slot)
         if slot.has_default:
-            hint += f"    (conventionally {self.answer_form(slot.default)})"
-        lines.append(f"    {hint}")
-        return "\n".join(lines)
+            entry[SlotKey.DEFAULT] = self.answer_value(slot.default)
+        return entry
 
     @staticmethod
-    def candidate_prefix(token: int) -> str:
+    def group_entry(slot: Slot) -> Dict[str, Any]:
         """
-        :param token: The integer token a candidate is chosen by.
-        :return: What precedes the description of that candidate.
+        :param slot: A slot sitting inside a nested description.
+        :return: The nested description it is filled through: its path, type and
+            meaning.
         """
-        return IntegerTokens.candidate_prefix(token)
+        group: Dict[str, Any] = {
+            SlotKey.PATH: slot.group_path,
+            SlotKey.TYPE: slot.group_type.__name__,
+        }
+        if slot.group_docstring:
+            group[SlotKey.MEANING] = slot.group_docstring
+        return group
 
     @staticmethod
-    def hanging(prefix: str, text: str) -> str:
+    def accepts(slot: Slot) -> List[Dict[str, Any]]:
         """
-        :param prefix: What precedes the first line.
-        :param text: Text that may span several lines.
-        :return: The text after the prefix, its later lines aligned with the first.
+        :param slot: A slot whose value is to be generated.
+        :return: What the slot may be answered with, one entry per branch of a union,
+            and nothing when the slot may be left empty.
         """
-        return IntegerTokens.hanging(prefix, text)
+        return [
+            PromptBuilder.accepted(candidate_type)
+            for candidate_type in slot.decodable_types
+        ] + PromptBuilder.emptiness(slot)
 
-    def system_prompt(self, further_rules: Sequence[str] = ()) -> str:
+    @staticmethod
+    def accepted(candidate_type: type) -> Dict[str, Any]:
         """
-        :param further_rules: Rules of how the model is asked, such as where its answer
-            goes when it may call tools.
-        :return: The system prompt, its rule for referent slots matching how their
-            candidates are named.
+        :param candidate_type: One type a value may take.
+        :return: What a value of that type is answered with.
         """
-        return SYSTEM_PROMPT_TEMPLATE.format(
-            task=SectionTitle.TASK,
-            situation=SectionTitle.SITUATION,
-            why=RequestAnswerKey.WHY,
-            mode_rules="\n".join(
-                [
-                    *self.referent_naming.rules,
-                    UNSATISFIABLE_RULE,
-                    FEWER_CANDIDATES_RULE,
-                    *further_rules,
-                ]
-            ),
-        )
+        if issubclass(candidate_type, enum.Enum):
+            return {AcceptKey.ENUM: [member.name for member in candidate_type]}
+        if candidate_type is bool:
+            return {AcceptKey.TYPE: AcceptedType.BOOLEAN}
+        if candidate_type in (int, float):
+            return {AcceptKey.TYPE: AcceptedType.NUMBER}
+        return {AcceptKey.TYPE: AcceptedType.STRING}
+
+    @staticmethod
+    def emptiness(slot: Slot) -> List[Dict[str, Any]]:
+        """
+        :param slot: A slot.
+        :return: The entry accepting nothing when the slot may be left empty, else
+            none.
+        """
+        if not slot.may_be_empty:
+            return []
+        return [{AcceptKey.TYPE: AcceptedType.NULL}]
 
     @staticmethod
     def value_hint(slot: Slot) -> str:
         """
         :param slot: A slot whose value is to be generated.
-        :return: The expected JSON shape, listing every branch of a union, and nothing
-            when the slot may be left empty.
+        :return: What the slot accepts, written as in the slots section.
         """
-        shapes = [
-            PromptBuilder.hint_for_type(candidate_type)
-            for candidate_type in slot.decodable_types
-        ]
-        if slot.may_be_empty:
-            shapes.append(PromptBuilder.answer_form(None))
-        return " or ".join(shapes)
+        return json.dumps(PromptBuilder.accepts(slot))
 
-    def render_given(self, value: Any, expression: Match) -> str:
+    def given_entry(self, slot: Slot, expression: Match) -> Dict[str, Any]:
         """
-        :param value: A value the query gives for a slot.
+        :param slot: A slot the query fixes.
         :param expression: The match being resolved, passed to the renderer.
-        :return: The value described when it is an individual or a kind, any other value
-            as an answer writes it.
+        :return: The slot's path and value as data: an individual or a kind described
+            line by line, any other value as an answer writes it.
         """
+        value = slot.bound_value
         if isinstance(value, type) or is_individual(value):
-            return self.renderer.render(value, expression)
-        return self.answer_form(value)
+            given = self.renderer.render(value, expression).splitlines()
+        else:
+            given = self.answer_value(value)
+        return {SlotKey.PATH: slot.path, SlotKey.VALUE: given}
+
+    @staticmethod
+    def answer_value(value: Any) -> Any:
+        """
+        :param value: A value a slot may take, such as its default.
+        :return: The value as an answer gives it: an enum member by its name, a value
+            JSON cannot hold by its representation, any other value as it is.
+        """
+        return json.loads(PromptBuilder.answer_form(value))
 
     @staticmethod
     def answer_form(value: Any) -> str:
@@ -403,30 +551,53 @@ class PromptBuilder:
             value.name if isinstance(value, enum.Enum) else value, default=repr
         )
 
+    # %% the output
+
     @staticmethod
-    def hint_for_type(candidate_type: type) -> str:
+    def output_schema(
+        open_slots: Sequence[Slot], number_of_candidates: int
+    ) -> Dict[str, Any]:
         """
-        :param candidate_type: One type a value may take.
-        :return: The expected JSON shape for it.
+        :param open_slots: The slots the model must answer for.
+        :param number_of_candidates: How many alternatives to request at most.
+        :return: The JSON schema of the answer: an array of at most that many objects,
+            each holding every slot path and the explanation.
         """
-        if issubclass(candidate_type, enum.Enum):
-            return "one of: " + " | ".join(member.name for member in candidate_type)
-        if candidate_type is bool:
-            return "a JSON boolean"
-        if candidate_type in (int, float):
-            return "a JSON number"
-        return "a JSON string"
+        return {
+            SchemaKey.TYPE: SchemaType.ARRAY,
+            SchemaKey.MIN_ITEMS: 1,
+            SchemaKey.MAX_ITEMS: number_of_candidates,
+            SchemaKey.ITEMS: {
+                SchemaKey.TYPE: SchemaType.OBJECT,
+                SchemaKey.PROPERTIES: {
+                    **{slot.path: {} for slot in open_slots},
+                    RequestAnswerKey.WHY: {SchemaKey.TYPE: SchemaType.STRING},
+                },
+                SchemaKey.REQUIRED: [slot.path for slot in open_slots]
+                + [RequestAnswerKey.WHY],
+                SchemaKey.ADDITIONAL_PROPERTIES: False,
+            },
+        }
+
+    @staticmethod
+    def as_json(data: Any) -> str:
+        """
+        :return: Data as the JSON a prompt holds.
+        """
+        return json.dumps(data, indent=JSON_INDENT)
+
+    # %% the request in English, and repairs
 
     @staticmethod
     def verbalize_request(
         expression: Match, backend: Optional[QueryBackend] = None
-    ) -> Optional[str]:
+    ) -> str:
         """
         Render the whole query in English, constraints included.
 
         Unfilled leaves are rendered by krrood as the literal word "Ellipsis". The
-        system prompt glosses that word as a blank rather than a value, so the request
-        can be shown in full instead of stripped down to its conditions.
+        system prompt glosses that word as an open slot rather than a value, so the
+        request can be shown in full instead of stripped down to its conditions.
 
         :param expression: The match being resolved.
         :param backend: Decides the opening verb.
@@ -435,18 +606,27 @@ class PromptBuilder:
         return verbalize_expression(expression.expression, backend=backend)
 
     @staticmethod
-    def build_repair(previous_prompt: str, raw_response: str, error: Exception) -> str:
+    def build_repair(
+        previous_prompt: str, raw_response: str, error: RetryableModelFailure
+    ) -> str:
         """
         :param previous_prompt: The prompt that produced the rejected response.
         :param raw_response: The rejected response.
         :param error: Why it was rejected.
-        :return: A prompt asking for a corrected response.
+        :return: The prompt followed by the rejected answer and, as data, why it was
+            rejected.
         """
-        return (
-            previous_prompt
-            + "\n\n## Your previous answer was rejected\n\n```\n"
-            + raw_response[:2000]
-            + "\n```\n\nReason: "
-            + str(error)
-            + "\n\nAnswer again, correcting this. JSON array only."
+        repair = render_blocks(
+            [
+                PromptBlock(
+                    section=PromptSection.REJECTED_ANSWER,
+                    body=raw_response[:REJECTED_ANSWER_LENGTH],
+                ),
+                PromptBlock(
+                    section=PromptSection.REJECTION,
+                    body=PromptBuilder.as_json(error.details()),
+                    attributes={BlockAttribute.KIND: type(error).__name__},
+                ),
+            ]
         )
+        return previous_prompt + SECTION_SEPARATOR + repair

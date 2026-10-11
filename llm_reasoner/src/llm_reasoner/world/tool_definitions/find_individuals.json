@@ -1,6 +1,11 @@
 {
   "name": "find_individuals",
-  "description": "Find the live individuals of a kind whose fields meet every condition. A search for a kind also finds its specialisations, so search the most general kind that fits once rather than each specialisation. Returns the search stated in English, how many individuals meet it, how many of each kind they are, and the handles of the first ones, written '<Kind>#<n>'. Narrow a large result with a more specific kind or a condition rather than a higher limit. Handles stay the same for the whole conversation; pass them to the other tools.",
+  "description": {
+    "purpose": "Find the live individuals of a kind whose fields meet every condition; a search for a kind also finds its specialisations.",
+    "returns": "The search in English, how many individuals meet it, how many of each kind, and the handles of the first ones, written '<Kind>#<n>', which stay the same for the whole conversation; with 'path', what that path reaches from each.",
+    "use_when": "Finding candidates: search the most general kind that fits once rather than each specialisation; one search with 'path' answers 'the <field> of each <Kind>'.",
+    "avoid": "Raising the limit to see more; narrow with a more specific kind or a condition instead."
+  },
   "input_schema": {
     "type": "object",
     "properties": {

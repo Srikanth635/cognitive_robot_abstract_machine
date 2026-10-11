@@ -3,11 +3,15 @@ from __future__ import annotations
 import inspect
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from enum import StrEnum
 
 from krrood.entity_query_language.query.match import Match
-from typing_extensions import Any, List, Tuple
+from typing_extensions import Any, List
 
+from llm_reasoner.resolver.prompt_format import (
+    PromptBlock,
+    PromptSection,
+    render_blocks,
+)
 from llm_reasoner.world.classes import is_individual
 from llm_reasoner.world.describer import IndividualDescriber
 from llm_reasoner.world.rendering import IndividualRenderer
@@ -17,23 +21,6 @@ CANDIDATE_LINE_BUDGET = 15
 The most lines one candidate is described in, so that a slot offering many candidates
 keeps the prompt readable.
 """
-
-
-class SectionTitle(StrEnum):
-    """
-    The headings the knowledge from outside the query appears under.
-    """
-
-    SITUATION = "Situation"
-    """
-    What is currently true.
-    """
-
-    TASK = "The task"
-    """
-    What the caller is trying to achieve.
-    """
-
 
 # %% situational knowledge
 
@@ -46,7 +33,7 @@ class PromptContextProvider(ABC):
     Implementations that read a world live wherever the world lives and are injected
     into the backend, which keeps this package free of world dependencies.
 
-    A provider names the section its text appears under, because the knowledge reaching
+    A provider names the section its text appears in, because the knowledge reaching
     a model is not all of one kind: what is currently true and what the caller is trying
     to achieve answer different questions and are needed for different slots. Collapsing
     them into one block invites the model to read intent as fact.
@@ -60,9 +47,9 @@ class PromptContextProvider(ABC):
         """
 
     @property
-    def title(self) -> str:
-        """:return: The heading this provider's text appears under."""
-        return SectionTitle.SITUATION
+    def section(self) -> PromptSection:
+        """:return: The section this provider's text appears in."""
+        return PromptSection.SITUATION
 
 
 @dataclass
@@ -107,8 +94,8 @@ class TaskContextProvider(PromptContextProvider):
         return "\n\n".join(part.strip() for part in parts)
 
     @property
-    def title(self) -> str:
-        return SectionTitle.TASK
+    def section(self) -> PromptSection:
+        return PromptSection.TASK
 
 
 # %% composition
@@ -124,7 +111,7 @@ class CompositeContextProvider(PromptContextProvider):
     they compose instead of each needing its own place on the backend.
 
     Providers are kept in order, and one contributing nothing is omitted rather than
-    leaving an empty heading.
+    leaving an empty section.
     """
 
     providers: List[PromptContextProvider] = field(default_factory=list)
@@ -133,16 +120,14 @@ class CompositeContextProvider(PromptContextProvider):
     """
 
     def context_for(self, expression: Match) -> str:
-        return "\n\n".join(
-            f"## {title}\n\n{text}" for title, text in self.sections_for(expression)
-        )
+        return render_blocks(self.sections_for(expression))
 
-    def sections_for(self, expression: Match) -> List[Tuple[str, str]]:
+    def sections_for(self, expression: Match) -> List[PromptBlock]:
         """
         :param expression: The match being resolved.
-        :return: One title and text pair per provider that has something to say.
+        :return: One section per provider that has something to say.
         """
-        sections: List[Tuple[str, str]] = []
+        sections: List[PromptBlock] = []
         for provider in self.providers:
             sections.extend(context_sections(provider, expression))
         return sections
@@ -150,7 +135,7 @@ class CompositeContextProvider(PromptContextProvider):
 
 def context_sections(
     provider: PromptContextProvider, expression: Match
-) -> List[Tuple[str, str]]:
+) -> List[PromptBlock]:
     """
     Flatten a provider into the sections it contributes.
 
@@ -159,14 +144,14 @@ def context_sections(
 
     :param provider: The provider to consult.
     :param expression: The match being resolved.
-    :return: One title and text pair per contributing provider, empty ones dropped.
+    :return: One section per contributing provider, empty ones dropped.
     """
     if isinstance(provider, CompositeContextProvider):
         return provider.sections_for(expression)
     text = provider.context_for(expression)
     if not text.strip():
         return []
-    return [(provider.title, text.strip())]
+    return [PromptBlock(section=provider.section, body=text.strip())]
 
 
 # %% candidate description

@@ -1,8 +1,13 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 
-from typing_extensions import Any, List, Optional
+from typing_extensions import Any, Dict, List, Optional
+
+RESPONSE_REASON = "reason"
+"""
+The key under which an unparseable response's reason is shown to the model.
+"""
 
 # %% base
 
@@ -17,6 +22,12 @@ class LanguageModelBackendError(Exception):
 class RetryableModelFailure(LanguageModelBackendError):
     """A failure caused by the model's output, which asking again may fix."""
 
+    def details(self) -> Dict[str, Any]:
+        """
+        :return: What the failure found, as data a repair shows the model.
+        """
+        return asdict(self)
+
 
 @dataclass
 class ModelResponseUnparseable(RetryableModelFailure):
@@ -30,6 +41,9 @@ class ModelResponseUnparseable(RetryableModelFailure):
 
     def __str__(self) -> str:
         return f"{self.reason}\n--- raw response ---\n{self.raw_response[:2000]}"
+
+    def details(self) -> Dict[str, Any]:
+        return {RESPONSE_REASON: self.reason}
 
 
 @dataclass

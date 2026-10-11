@@ -41,9 +41,16 @@ from llm_reasoner.resolver.prompts import (
     PromptBuilder,
     RequestAnswerKey,
 )
+from llm_reasoner.resolver.prompt_format import (
+    AcceptedType,
+    AcceptKey,
+    PromptSection,
+    SlotKey,
+)
 from llm_reasoner.resolver.reflection import reflect_slots
 from llm_reasoner.world.view import WorldView
 
+from .prompt_sections import bodies, slot_entry, text_outside_sections
 from .world_mimics import (
     ActionInheritingItsPlan,
     ActionPlannedByItsParent,
@@ -96,9 +103,10 @@ class TestPrompt:
 
     def test_the_task_is_stated_only_when_the_caller_gives_one(self):
         task = TaskContextProvider(goal="Pour slowly; the glass is nearly full.")
-        assert task.goal in prompt_for(tilt_query(), task)
-        assert f"## {task.title}" not in prompt_for(
-            tilt_query(), SchemaOnlyContextProvider()
+        assert bodies(prompt_for(tilt_query(), task), task.section) == [task.goal]
+        assert (
+            bodies(prompt_for(tilt_query(), SchemaOnlyContextProvider()), task.section)
+            == []
         )
 
     def test_a_default_is_shown_as_an_answer_would_write_it(self):
@@ -129,6 +137,50 @@ class TestPrompt:
             slot for slot in reflect_slots(query) if slot.path.endswith("depth")
         ]
         assert PromptBuilder.answer_form(None) in PromptBuilder.value_hint(depth)
+
+
+class TestStructure:
+    def test_every_prompt_is_made_only_of_tagged_sections(self):
+        body = body_with_geometry()
+        backend = LanguageModelBackend(
+            client=ScriptedClient(
+                responses=[
+                    answer("prose_instead_of_json.txt"),
+                    answer("body_and_angle_chosen.json"),
+                ]
+            )
+        )
+        (action,) = tilt_query().evaluate(backend=backend)
+        prompts = [backend.system_prompt] + [exchange.user for exchange in backend.log]
+        assert action.source is body
+        assert [text_outside_sections(prompt) for prompt in prompts] == [""] * 3
+
+    def test_a_rejection_is_stated_as_data(self):
+        body = body_with_geometry()
+        backend = LanguageModelBackend(
+            client=ScriptedClient(
+                responses=[
+                    answer("prose_instead_of_json.txt"),
+                    answer("body_and_angle_chosen.json"),
+                ]
+            )
+        )
+        (action,) = tilt_query().evaluate(backend=backend)
+        (rejection,) = bodies(backend.log[1].user, PromptSection.REJECTION)
+        assert action.source is body
+        assert isinstance(json.loads(rejection), dict)
+
+    def test_a_value_slot_is_stated_as_data_from_its_definition(self):
+        body_with_geometry()
+        (angle,) = [
+            declared
+            for declared in dataclasses.fields(ActionWithBodyAndValueSlots)
+            if declared.name == "angle"
+        ]
+        prompt = prompt_for(tilt_query(), SchemaOnlyContextProvider())
+        entry = slot_entry(prompt, f"{ActionWithBodyAndValueSlots.__name__}.angle")
+        assert entry[SlotKey.DEFAULT] == angle.default
+        assert entry[SlotKey.ACCEPTS] == [{AcceptKey.TYPE: AcceptedType.NUMBER}]
 
 
 class TestSourceShown:
@@ -183,7 +235,7 @@ class TestResolution:
         (action,) = query.evaluate(backend=backend)
         assert action.source is body
         assert [exchange.attempt for exchange in backend.log] == [0]
-        assert FEWER_CANDIDATES_RULE in backend.system_prompt
+        assert FEWER_CANDIDATES_RULE in backend.rules
 
     def test_an_unusable_answer_is_sent_back_for_repair_once(self):
         body = body_with_geometry()
@@ -258,7 +310,7 @@ class TestResolution:
             list(query.evaluate(backend=backend))
         assert [exchange.attempt for exchange in backend.log] == [0]
         assert body.name in backend.log[0].user
-        assert UNSATISFIABLE_RULE in backend.system_prompt
+        assert UNSATISFIABLE_RULE in backend.rules
 
     def test_a_token_answer_may_say_no_candidate_fits(self):
         body = body_with_geometry()

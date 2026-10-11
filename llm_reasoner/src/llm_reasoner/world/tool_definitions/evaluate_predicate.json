@@ -1,6 +1,10 @@
 {
   "name": "evaluate_predicate",
-  "description": "Evaluate a predicate or value function the world model declares, as the world model itself computes it. Pass each argument by name, an individual as {\"handle\": ...} and a plain value as {\"value\": ...}.",
+  "description": {
+    "purpose": "Evaluate a predicate or value function as the world model computes it.",
+    "returns": "What it says about the arguments.",
+    "use_when": "Checking a relation or computing a value the fields do not hold; pass each argument by name, an individual as {\"handle\": ...} and a plain value as {\"value\": ...}."
+  },
   "input_schema": {
     "type": "object",
     "properties": {
@@ -15,21 +19,34 @@
           "oneOf": [
             {
               "type": "object",
-              "properties": {"handle": {"type": "string"}},
-              "required": ["handle"],
+              "properties": {
+                "handle": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "handle"
+              ],
               "additionalProperties": false
             },
             {
               "type": "object",
-              "properties": {"value": {}},
-              "required": ["value"],
+              "properties": {
+                "value": {}
+              },
+              "required": [
+                "value"
+              ],
               "additionalProperties": false
             }
           ]
         }
       }
     },
-    "required": ["predicate", "arguments"],
+    "required": [
+      "predicate",
+      "arguments"
+    ],
     "additionalProperties": false
   }
 }

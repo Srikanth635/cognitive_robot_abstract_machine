@@ -35,6 +35,7 @@ from llm_reasoner.resolver.exceptions import (
     UnknownSlotInResponse,
     UnsatisfiableRequest,
 )
+from llm_reasoner.resolver.prompt_format import PromptRule
 from llm_reasoner.resolver.prompts import PromptBuilder, RequestAnswerKey, SourceDetail
 from llm_reasoner.resolver.referents import IntegerTokens, ReferentNaming, WorldHandles
 from llm_reasoner.resolver.reflection import Slot, SlotKind, reflect_slots
@@ -156,6 +157,14 @@ class LanguageModelBackend(GenerativeBackend):
         named and how the model is asked.
         """
         return self._prompt_builder().system_prompt(self.completion.answer_rules)
+
+    @property
+    def rules(self) -> List[PromptRule]:
+        """
+        The rules the system prompt states, matching how the candidates of referent
+        slots are named and how the model is asked.
+        """
+        return self._prompt_builder().rules(self.completion.answer_rules)
 
     # %% evaluation
 
