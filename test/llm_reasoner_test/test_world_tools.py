@@ -7,6 +7,7 @@ and a scripted conversation in which a model asks several of them in turn.
 from __future__ import annotations
 
 import json
+import re
 
 import pytest
 
@@ -14,6 +15,7 @@ from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.clients.tools import ScriptedToolRequest, ToolBox
 from llm_reasoner.world.finding import Comparison
 from llm_reasoner.world.kinds import KindListing
+from llm_reasoner.world.naming import HANDLE_SEPARATOR
 from llm_reasoner.world.classes import identifier_of
 from llm_reasoner.world.rendering import IndividualRenderer
 from llm_reasoner.world.tools import WorldToolName, world_tools
@@ -57,6 +59,12 @@ class TestDefinitions:
         conditions = find.definition.input_schema["properties"]["conditions"]
         offered = conditions["items"]["properties"]["comparison"]["enum"]
         assert offered == [comparison.value for comparison in Comparison]
+
+    def test_no_definition_shows_a_handle_a_world_could_give_out(self, view):
+        handle = re.compile(rf"\w{re.escape(HANDLE_SEPARATOR)}\d")
+        for tool in world_tools(view):
+            written = json.dumps(tool.definition.as_request())
+            assert not handle.search(written), tool.definition.name
 
     def test_the_listings_offered_are_those_the_view_understands(self, view):
         (list_kinds,) = [

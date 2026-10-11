@@ -11,7 +11,7 @@ from krrood.entity_query_language.query.match import Match
 from krrood.entity_query_language.verbalization.pipeline import verbalize_expression
 from typing_extensions import Any, List, Optional, Sequence, Tuple
 
-from llm_reasoner.resolver.context import CandidateRenderer
+from llm_reasoner.resolver.context import CandidateRenderer, SectionTitle
 from llm_reasoner.resolver.referents import (
     SLOT_NOTE_INDENT,
     IntegerTokens,
@@ -29,9 +29,9 @@ Reading the request:
 - The request is stated in English, followed by a table of the slots you must fill.
 - The word "Ellipsis" in the request marks a blank you must fill. It is not a value,
   and you must never answer with it.
-- A section headed "The task" states what the caller is trying to achieve. Treat it as
+- A section headed "{task}" states what the caller is trying to achieve. Treat it as
   intent to be served, not as fact about the world.
-- A section headed "Situation" states what is currently true. Treat it as fact.
+- A section headed "{situation}" states what is currently true. Treat it as fact.
 
 Rules:
 - Answer with a JSON array only. No prose, no markdown fences, no trailing commas.
@@ -353,6 +353,8 @@ class PromptBuilder:
             candidates are named.
         """
         return SYSTEM_PROMPT_TEMPLATE.format(
+            task=SectionTitle.TASK,
+            situation=SectionTitle.SITUATION,
             why=RequestAnswerKey.WHY,
             mode_rules="\n".join(
                 [

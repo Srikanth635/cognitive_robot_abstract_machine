@@ -1,16 +1,16 @@
 {
   "name": "follow_path",
-  "description": "Read the value a path of fields reaches from an individual. A plain value is given with whether it is the declared default; a value depending on the world state, such as a joint position, with the state variables it depends on and its current numbers; an individual reached, by its handle.",
+  "description": "Read the value a path of fields reaches from an individual. A plain value is given with whether it is the declared default; a value depending on the world state, with the state variables it depends on and its current numbers; an individual reached, by its handle.",
   "input_schema": {
     "type": "object",
     "properties": {
       "handle": {
         "type": "string",
-        "description": "The individual's handle, exactly as a tool's answer gave it, such as 'Cup#1'."
+        "description": "The individual's handle, exactly as a tool's answer gave it, written '<Kind>#<n>'."
       },
       "path": {
         "type": "string",
-        "description": "Field names separated by dots, such as 'root.inertial.mass'."
+        "description": "Field names separated by dots, written '<field>.<field>'."
       }
     },
     "required": [

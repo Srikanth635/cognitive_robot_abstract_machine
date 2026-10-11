@@ -8,6 +8,7 @@ naming no candidate sent back for repair.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -17,6 +18,7 @@ from krrood.entity_query_language.factories import the, variable
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.clients.tools import ScriptedToolRequest
 from llm_reasoner.resolver.backend import LanguageModelBackend
+from llm_reasoner.resolver.context import SchemaOnlyContextProvider, TaskContextProvider
 from llm_reasoner.resolver.exceptions import AmbiguousReferent, NoFittingReferent
 from llm_reasoner.resolver.referents import (
     EQUALLY_FITTING_RULE,
@@ -28,6 +30,7 @@ from llm_reasoner.resolver.referents import (
 )
 from llm_reasoner.resolver.reflection import reflect_slots
 from llm_reasoner.world.classes import identifier_of
+from llm_reasoner.world.naming import HANDLE_SEPARATOR
 from llm_reasoner.world.tools import WorldToolName
 from llm_reasoner.world.view import WorldView
 
@@ -105,6 +108,15 @@ class TestPrompt:
         plain = LanguageModelBackend(client=ScriptedClient())
         assert IntegerTokens().answer_rule in plain.system_prompt
         assert WorldHandles(view=view).answer_rule not in plain.system_prompt
+
+    def test_the_rules_show_no_handle_a_world_could_give_out(self):
+        handle = re.compile(rf"\w{re.escape(HANDLE_SEPARATOR)}\d")
+        assert not handle.search(world_backend(WorldView(), []).system_prompt)
+
+    def test_the_rules_name_the_sections_the_providers_write(self):
+        system_prompt = LanguageModelBackend(client=ScriptedClient()).system_prompt
+        for provider in (TaskContextProvider(), SchemaOnlyContextProvider()):
+            assert f'"{provider.title}"' in system_prompt
 
     def test_in_a_conversation_with_tools_the_answer_is_written_as_text(self):
         view = WorldView()

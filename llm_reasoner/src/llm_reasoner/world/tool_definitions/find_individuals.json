@@ -1,6 +1,6 @@
 {
   "name": "find_individuals",
-  "description": "Find the live individuals of a kind whose fields meet every condition. A search for a kind also finds its specialisations, so search the most general kind that fits once rather than each specialisation. Returns the search stated in English, how many individuals meet it, how many of each kind they are, and the handles of the first ones, such as 'Cup#1'. Narrow a large result with a more specific kind or a condition rather than a higher limit. Handles stay the same for the whole conversation; pass them to the other tools.",
+  "description": "Find the live individuals of a kind whose fields meet every condition. A search for a kind also finds its specialisations, so search the most general kind that fits once rather than each specialisation. Returns the search stated in English, how many individuals meet it, how many of each kind they are, and the handles of the first ones, written '<Kind>#<n>'. Narrow a large result with a more specific kind or a condition rather than a higher limit. Handles stay the same for the whole conversation; pass them to the other tools.",
   "input_schema": {
     "type": "object",
     "properties": {
@@ -16,7 +16,7 @@
           "properties": {
             "path": {
               "type": "string",
-              "description": "Field names separated by dots, leading from the individual to the compared value, such as 'inertial.mass'."
+              "description": "Field names separated by dots, leading from the individual to the compared value, written '<field>.<field>'."
             },
             "comparison": {
               "type": "string",
@@ -54,7 +54,7 @@
                   "additionalProperties": false
                 }
               ],
-              "description": "The value compared with; an individual as {\"handle\": ...}, such as {\"handle\": \"Body#2\"} to find what holds or names that body."
+              "description": "The value compared with; an individual as {\"handle\": ...}, to find the individuals whose field holds that individual."
             }
           },
           "required": [
@@ -73,7 +73,7 @@
       },
       "path": {
         "type": "string",
-        "description": "Field names separated by dots, followed from each individual named to what it reaches, such as 'root' for the body of each annotation; each individual is then given with what the path reaches, an individual by its handle. One search then answers 'the X of each Y'."
+        "description": "Field names separated by dots, followed from each individual named to what it reaches, written '<field>.<field>'; each individual is then given with what the path reaches, an individual by its handle. One search then answers 'the X of each Y'."
       }
     },
     "required": [
