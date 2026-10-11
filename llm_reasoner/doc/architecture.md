@@ -151,25 +151,83 @@ of its parents declared in the same module; `SIGNATURE`: docstrings; `NONE`),
 
 ### 2.3 Knowledge component (`ontologies/` … `hypotheses/`)
 
-**Role.** Generate and keep description-level knowledge about kinds of action — what an
-action normally requires, its phases, forces, failures and corrections — written in the
-terms of the predictive-manipulation ontology and independent of any world or episode.
+**Role.** Generate commonsense knowledge about *kinds* of action with a language model,
+and keep it consistent and queryable through an ontology: what an action normally
+involves — its phases, roles, conditions, forces, sensory predictions, failures and
+corrections — in the terms of the predictive-manipulation framework of Johansson and
+Flanagan, linked to CRAM-AICOR and DUL (the scientific contract is
+[`flanagan_scientific_contract.md`](flanagan_scientific_contract.md)).
 
-**Input.** An instruction and a krrood query over the ontology's generated classes.
-**Output.** A hypothesis admitted only if it meets the acceptance rules (EQL and SHACL)
-and, optionally, is consistent under HermiT; stored and read through `HypothesisView`.
+**Does not:** name individuals of a world, robot or episode (a hypothesis says what
+pouring involves, never which bowl or which arm), resolve designators, or read the live
+world.
 
-| Package | Responsibility |
+**Input.**
+
+| Input | Form |
 |---|---|
-| `ontologies/` | The ontology modules (Turtle) and the Python vocabulary generated from them |
-| `ontology_translation/` | Generating that vocabulary with krrood's code generator |
-| `acceptance/` | Closed-world acceptance rules and shapes |
-| `generation/` | `HypothesisBackend`: a model answers a query; answers breaking the rules are repaired |
-| `admission/` | RDF, HermiT consistency (`HermitCheck`), records, `HypothesisStore` |
-| `hypotheses/` | `KnowledgeService`, `HypothesisView`, the graph projection |
+| An instruction | Text naming what the knowledge is for, such as "pour milk from the carton into the bowl"; it keys the stored hypothesis |
+| A query | A krrood `Match` on a generated vocabulary class, such as `the(pouring.PouringPhaseStructure)(decomposes_task=ConceptReference(iri=CRAM_AICOR_NAMESPACE + "Pouring"))`; the fields it fixes are given, the rest is generated |
 
-How it is used is shown in the [README](../README.md). **Its link to the resolver and
-the world injector is deferred** (see `status.md`).
+**Output.** An admitted *hypothesis*: instances of the generated vocabulary (one root
+structure and the fragments making it up), stored as Turtle with a record of how it was
+made, and read through `HypothesisView`. `HypothesisRejected` (with the remaining
+problems and every exchange) when no answer is admitted within the repair budget.
+
+**The pipeline.**
+
+```
+instruction + query ──► 1 generation ──► 2 acceptance ──► 3 admission ──► 4 store ──► 5 reading
+                         (fragments)      (closed world)    (open world)    (Turtle +   (HypothesisView,
+                              ▲                 │                │            record)     graph)
+                              └──── patch repair (up to 2) ◄─────┘
+```
+
+| Stage | Package | What happens |
+|---|---|---|
+| 0 Vocabulary | `ontologies/`, `ontology_translation/` | The Turtle modules (`core`, `object-dynamics`, `prehension`, `pouring`, `gaze`) are the source of truth; Python vocabulary modules are generated from them with krrood's code generator (`python -m llm_reasoner.ontology_translation`) and checked in; a test fails when they differ from the ontology. Every class carries its IRI and its OWL restrictions |
+| 1 Generation | `generation/` | `HypothesisBackend`, a krrood `GenerativeBackend` like the resolver. `GenerationSchema` reads every vocabulary class reachable from the queried type; the model answers with a structured completion (`complete_structured`) shaped by that schema; `FragmentDecoder` turns the answer into vocabulary instances |
+| 2 Acceptance | `acceptance/` | Closed-world checks — what is missing is an error, since a model tends to generate too little: `restrictions_hold` (each fragment meets its classes' OWL restrictions), `ranges_hold` (every linked value has the type its property allows), `shapes_hold` (SHACL shapes for rules across fragments, such as transitions connecting all phases), `components_declared` (everything a structure reaches, it declares), plus the values the query fixes. Violations are errors or warnings; warnings are kept with the hypothesis |
+| 3 Admission | `admission/` | Optionally (`consistency=HermitCheck(...)`), the hypothesis is written as RDF and checked in the open world against the ontology, CRAM-AICOR and DUL with HermiT; `ContradictionLocaliser` names the fragments that together contradict them. Concept references are checked against the linked ontologies (`linked_terms`) |
+| Repair | `generation/` | Errors from stages 1–3 are shown to the model, which answers with a *patch* (fragments added or changed, identifiers removed) applied to the answer with the fewest problems so far (`max_repairs = 2`) |
+| 4 Store | `admission/` | `HypothesisRecord` (instruction, root type, fixed values, client, every exchange, warnings, consistency verdict, ontology module versions) and the hypothesis as Turtle, one directory per hypothesis in `HypothesisStore`. A request is answered from the store when a record has the same instruction, root type and fixed values under the current module versions; otherwise it is generated |
+| 5 Reading | `hypotheses/` | `KnowledgeService.view_for(instruction, query)` returns the stored or newly generated hypothesis as a `HypothesisView`, which answers questions crossing fragments: `phases`, `next_phases`, `requirements_of`, `world_assumptions`, `gaze_fixations_for`, `force_couplings_in`, `failure_events`, `corrections_at`, `force_dynamics`. Every fragment is cited by the IRI it is stored under (`Citation`). `HypothesisGraphProjector` projects a hypothesis into the graph cram_viz shows |
+
+**The answer format.** A flat list of fragments that refer to each other by
+identifier, since phases and events form cycles that nesting cannot express:
+
+```json
+{"fragments": [
+  {"id": "pouring", "type": "PouringPhaseStructure", "decomposes_task": "aicor:Pouring",
+   "defines_component": ["tilting", "flow_onset", …], …},
+  {"id": "tilting", "type": "ActionPhase", "initiated_by": "flow_onset",
+   "is_optional": false, …}]}
+```
+
+A field holds, by its kind: the `id` of another fragment, an enumeration member, a
+concept as a prefixed term (`aicor:<Name>`, `dul:<Name>`, or `hypothesis:<Name>` for a
+concept CRAM-AICOR and DUL lack), a number, a truth value or text.
+
+A repair answers `{"fragments": [<added or changed>], "remove": [<identifiers>]}`.
+Fragments are created first and linked second; a malformed answer is not an exception
+but a list of problems shown to the model.
+
+**Components inside, by responsibility.**
+
+| Module | Responsibility |
+|---|---|
+| `ontologies/__init__.py`, `linked.py`, `terms.py` | The ontology files, the linked ontologies (CRAM-AICOR, DUL) and concept references |
+| `ontology_translation/reading.py`, `declarations.py`, `writing.py` | Ontology → declarations → Python modules |
+| `generation/schema.py`, `prompts.py`, `wire.py`, `backend.py` | Output shape, prompts, decoding and merging patches, the generation loop |
+| `acceptance/rules.py`, `restrictions.py`, `derived.py`, `shapes.py`, `core.py`, `suite.py`, `vocabulary.py` | Rules and violations, closed-world class membership, the microworld's suite |
+| `admission/rdf.py`, `consistency.py`, `hermit.py`, `record.py`, `store.py`, `citation.py` | RDF in and out, consistency, records, the store, citations |
+| `hypotheses/service.py`, `view.py`, `graph.py` | The service, cross-fragment questions, the graph projection |
+
+**How it relates to the resolver.** Both are krrood generative backends answering an
+underspecified query with a model, checks and repairs. The resolver produces one
+resolved instance grounded in the live world; the knowledge component produces reusable
+description knowledge checked by an ontology. The link between them is deferred; the
+questions it must answer are listed in `status.md`.
 
 ### 2.4 Clients (`clients/`)
 
@@ -310,9 +368,12 @@ conversation with its text as the answer.
 
 ### 3.5 Knowledge component ↔ the others
 
-Not connected yet. The knowledge component uses `clients` for structured completions;
-how the resolver will consult its knowledge, and how it will read the world through
-`WorldAccess`, is open (see `status.md`).
+| Link | State |
+|---|---|
+| Knowledge component → clients | `LanguageModelClient.complete_structured(system, user, json_schema)`; no tools |
+| Caller → knowledge component | `KnowledgeService.view_for(instruction, query)`; cram_viz's Hypothesis Graph and Designator tabs read it |
+| Knowledge component ↔ resolver | Not connected; open questions in `status.md` |
+| Knowledge component ↔ world injector | Not connected; the knowledge is world-independent by design |
 
 ## 4. Decisions that shape behaviour
 
