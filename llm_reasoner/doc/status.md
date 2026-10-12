@@ -140,8 +140,13 @@ of 28, two repairs and $1.04; its findings led to `ea44fdbac` and `6743d6116`.
   with a new `representation/` layer and a test of the layers (`bf7858d06`). Stored hypotheses were migrated: the
   cram_viz sample and the 4 current records in `~/.cram_viz/hypotheses` (backup in
   `~/.cram_viz/hypotheses.backup-2026-10-12`; 5 older records there use paths of code
-  removed on 2026-10-07 and were left as they were). Next, on approval: splitting
-  `HypothesisBackend` by responsibility.
+  removed on 2026-10-07 and were left as they were). Then `HypothesisBackend` split by
+  responsibility, its interface unchanged: `HypothesisRequest` (`c041e3c5b`),
+  `HypothesisAssessor` (`b9cd77467`), `GenerationDialogue` (`3fee61653`) and
+  `HypothesisRecorder` with the backend left to orchestrate (`c4bb49ec9`). The
+  reorganisation adds no functionality; next is designing the request from the resolver
+  (K3) with situation features (option A), the knowledge tools and structured
+  generation prompts.
 - `doc/drafts/object_qualities/` is an uncommitted draft on object qualities in the
   ontology (affordances, dispositions after DUL). It waits for decisions on where the
   module lives and on changes to `core.ttl`.
