@@ -177,20 +177,22 @@ body{
 .kb-status{font-size:12px;color:var(--faint)}
 .kb-status.ready{color:var(--accent)}
 .query-box{padding:14px 16px;border-bottom:1px solid var(--line);background:var(--panel2)}
-.nl-row{display:flex;gap:8px;margin-bottom:9px}
-#nl-input{
-  flex:1;background:var(--bg);border:1px solid var(--line2);border-radius:4px;
-  color:var(--ink);font-size:13px;padding:0 13px;height:36px;outline:none
-}
-#nl-input:focus{border-color:var(--accent)}
-#nl-input::placeholder{color:var(--faint)}
-#nl-run,#nl-execute{
+#nl-execute{
   background:var(--bg);border:1px solid var(--line2);color:var(--ink);
   font-weight:600;font-size:12px;padding:0 16px;border-radius:4px;cursor:pointer;
-  white-space:nowrap
+  white-space:nowrap;height:30px
 }
-#nl-run:hover:not(:disabled),#nl-execute:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
-#nl-run:disabled,#nl-execute:disabled{opacity:.55;cursor:default}
+#nl-execute:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+#nl-execute:disabled{opacity:.55;cursor:default}
+.designator-row{display:flex;gap:8px;align-items:flex-start;margin-top:11px}
+.designators{display:flex;flex-wrap:wrap;gap:7px;flex:1;max-height:96px;overflow-y:auto}
+.designator{
+  font-size:12px;color:var(--ink);background:var(--bg);border:1px solid var(--accent);
+  padding:6px 11px;border-radius:4px;cursor:pointer;transition:.15s
+}
+.designator:hover{background:var(--accent);color:#04121a}
+.designator.unavailable{border-color:var(--line2);color:var(--faint);cursor:not-allowed}
+.designator.unavailable:hover{background:var(--bg);color:var(--faint)}
 .query-row{display:flex;gap:8px}
 #query-input{
   flex:1;background:var(--bg);border:1px solid var(--line2);border-radius:4px;

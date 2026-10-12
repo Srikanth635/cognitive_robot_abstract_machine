@@ -12,6 +12,8 @@ Serves three things from one port (default 8711):
       GET  /api/kb/expand?node= drill-down subgraph for one node
       POST /api/eql             run an EQL query string
       POST /api/hypothesis/generate  generate a hypothesis for an instruction
+      GET  /api/designators?scene=   the predefined designators the scene offers
+      POST /api/designator/resolve   resolve one with llm_reasoner in the scene
       POST /api/execute         launch the hardcoded demo under the live bridge
 
 The API needs krrood (EQL). Without it the server still serves the viewer and
@@ -164,6 +166,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             name = (self._query().get("name") or ["knowledge"])[0]
             selected_scene = self._selected_scene()
             return self._guarded(lambda: kb_module.view_payload(name, selected_scene))
+        if route == "/api/designators":
+            selected_scene = self._selected_scene()
+            return self._guarded(lambda: _offered_designators(selected_scene))
         if route == "/api/kb/expand":
             node = (self._query().get("node") or [""])[0]
             selected_scene = self._selected_scene()
@@ -185,6 +190,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         route = self.path.split("?")[0]
         if route == "/api/hypothesis/generate":
             return self._generate_hypothesis()
+        if route == "/api/designator/resolve":
+            return self._resolve_designator()
         if route == "/api/execute":
             return self._execute_demo()
         if route != "/api/eql":
@@ -235,6 +242,43 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         payload["instruction"] = instruction
         return self._json(payload)
 
+    def _resolve_designator(self) -> None:
+        """
+        Resolve a predefined designator in a scene with llm_reasoner, show the
+        hypothesis it consulted, and return the resolution with the refreshed graph.
+
+        Serialised behind the EQL lock: it reads the scene's world from the symbol graph
+        and swaps the knowledge every query and view reads from.
+        """
+        if kb_module is None:
+            return self._json(_no_eql_error())
+        length = int(self.headers.get("Content-Length") or 0)
+        request = json.loads(self.rfile.read(length) or b"{}")
+        selected_scene = request.get("scene")
+        try:
+            from cram_viz import hypothesis_knowledge
+            from cram_viz.resolution.designators import variant_named
+
+            variant = variant_named(request.get("variant") or "")
+            with _EQL_LOCK:
+                resolver = _designator_resolver()
+                resolved = resolver.resolve(
+                    variant,
+                    kb_module.scene_name(selected_scene),
+                    Path(kb_module.scene_dir(selected_scene)),
+                )
+                hypothesis_knowledge.activate_resolution(resolved, resolver.knowledge)
+                kb_module.reset_kb()
+                hypothesis = kb_module.view_payload("hypothesis", selected_scene)
+        except Exception as ex:
+            logger.exception("designator resolution failed")
+            return self._json(
+                {"ok": False, "error": "%s: %s" % (type(ex).__name__, ex)}
+            )
+        return self._json(
+            {"ok": True, "resolution": resolved.payload(), "hypothesis": hypothesis}
+        )
+
     def _execute_demo(self) -> None:
         """
         Launch the viewer's hardcoded demo under the live bridge, in the background,
@@ -268,6 +312,49 @@ def _hypothesis_generation_service():
     )
 
     return HypothesisGenerationService(source=ModelHypothesisSource())
+
+
+@cache
+def _scene_worlds():
+    """
+    The world of the scene last offered or resolved in, shared by the designator menu
+    and the resolver so a scene's world is built once.
+    """
+    from cram_viz.resolution.scene_world import SceneWorlds
+
+    return SceneWorlds()
+
+
+@cache
+def _designator_resolver():
+    """
+    The shared designator resolver, built on first use so starting the viewer never
+    needs credentials.
+    """
+    from cram_viz.hypothesis_knowledge.generation import ModelHypothesisSource
+    from cram_viz.resolution.resolver import DesignatorResolver
+
+    return DesignatorResolver.for_viewer(ModelHypothesisSource(), _scene_worlds())
+
+
+def _offered_designators(selected_scene: Optional[str]) -> Dict[str, Any]:
+    """
+    The predefined designators the selected scene offers, each available or naming the
+    objects the scene lacks.
+    """
+    from dataclasses import asdict
+
+    from cram_viz.resolution.designators import POURING_VARIANTS, SceneQueries
+
+    name = kb_module.scene_name(selected_scene)
+    with _EQL_LOCK:
+        queries = SceneQueries(
+            world=_scene_worlds().world_for(
+                name, Path(kb_module.scene_dir(selected_scene))
+            )
+        )
+        offered = [asdict(variant.offered_in(queries)) for variant in POURING_VARIANTS]
+    return {"ok": True, "scene": name, "designators": offered}
 
 
 @cache

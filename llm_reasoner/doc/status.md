@@ -183,6 +183,13 @@ $0.03–0.05. One hypothesis was generated, which the per-case costs leave out: 
 the cup into the sink") chose LIQUID and SOURCE_EXHAUSTED; emptying is stated, the liquid
 is inferred from the sink rather than stated.
 
+**cram_viz resolving its designators (2026-10-12):** in the viewer's simple_pouring
+scene, "pour from the vessel into the bowl" resolved live in about a minute for $0.075:
+source and target given, RIGHT and 1.85 rad chosen, resting on the bowl's and the cup's
+handles and the knowledge's flow-regulation phase ("inside the 90–120° regulation range
+of the pouring knowledge"); the knowledge was cram_viz's stored plain pouring hypothesis.
+The Designator tab showed the resolved slots, the explanation and the grounds.
+
 **Seen but not yet acted on (R7):** the request resolved every case alike (RIGHT, the default
 tilt of 1.85 rad), whatever the task, since it does not read the hypothesis yet; and
 the world does not say what the cup holds, so the material came from the task alone.

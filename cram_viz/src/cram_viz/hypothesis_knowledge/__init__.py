@@ -20,16 +20,20 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from llm_reasoner.knowledge.access import (
+    KnowledgeService,
     HypothesisGraph,
     HypothesisGraphPresentation,
     HypothesisGraphProjector,
     HypothesisStore,
     HypothesisView,
 )
-from typing_extensions import Any, Dict, Optional
+from typing_extensions import TYPE_CHECKING, Any, Dict, Optional
 
 from cram_viz import paths
 from cram_viz.hypothesis_knowledge.phase_hierarchy import PhaseHierarchyOverlay
+
+if TYPE_CHECKING:
+    from cram_viz.resolution.resolver import ResolvedDesignator
 
 SAMPLE_RECORD_ID = "pour_milk_sample"
 """
@@ -85,6 +89,12 @@ class HypothesisKnowledge:
     Whether a model produced this hypothesis, as opposed to the checked-in sample.
     """
 
+    resolution: Optional[ResolvedDesignator] = None
+    """
+    The resolution of a predefined designator that consulted this hypothesis, when one
+    did.
+    """
+
     node_identifier_by_object_id: Dict[int, str] = field(
         default_factory=dict, init=False
     )
@@ -101,12 +111,21 @@ class HypothesisKnowledge:
 
     @classmethod
     def from_view(
-        cls, view: HypothesisView, generated: bool = False
+        cls,
+        view: HypothesisView,
+        generated: bool = False,
+        resolution: Optional[ResolvedDesignator] = None,
     ) -> HypothesisKnowledge:
         """
-        :return: The knowledge of a stored hypothesis, projected for display.
+        :return: The knowledge of a stored hypothesis, projected for display, with the
+            resolution that consulted it when there is one.
         """
-        return cls(view=view, projection=build_projection(view), generated=generated)
+        return cls(
+            view=view,
+            projection=build_projection(view),
+            generated=generated,
+            resolution=resolution,
+        )
 
     def node_identifier_for(self, fragment: Any) -> Optional[str]:
         """
@@ -142,6 +161,24 @@ def activate(
     global _active
     _active = knowledge
     return _active
+
+
+def activate_resolution(
+    resolution: ResolvedDesignator, service: KnowledgeService
+) -> Optional[HypothesisKnowledge]:
+    """
+    Display the hypothesis a designator's resolution consulted, with the resolution;
+    nothing changes when no knowledge described the action.
+
+    The caller is responsible for resetting :mod:`cram_viz.kb` afterwards.
+    """
+    if resolution.record_id is None:
+        return _active
+    return activate(
+        HypothesisKnowledge.from_view(
+            service.view(resolution.record_id), generated=True, resolution=resolution
+        )
+    )
 
 
 def activate_sample() -> HypothesisKnowledge:

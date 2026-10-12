@@ -1640,13 +1640,17 @@ def _designator_view(kb: KB) -> Dict[str, Any]:
     ontology properties (see :mod:`cram_viz.designator_description`). The frontend
     (``designator.js``) shows it as Lisp or as JSON, collapsible.
 
-    Static and illustrative: no live World is touched and no resolver is called; a
+    Once a predefined designator has been resolved, the slots hold the values the
+    resolver chose, with why and what they rest on. Before that it is illustrative: a
     container slot names the scene object reading like the hypothesis's filler of its
     role.
     """
     active_hypothesis = hypothesis_knowledge.active()
     view = active_hypothesis.view if active_hypothesis else None
-    knowledge = designator_knowledge.reflect_pouring_action(kb.objects, view)
+    resolution = active_hypothesis.resolution if active_hypothesis else None
+    knowledge = designator_knowledge.reflect_pouring_action(
+        kb.objects, view, resolution
+    )
     return {
         "ok": True,
         "crumb": "%s designator" % knowledge.designator_name,

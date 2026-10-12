@@ -4,6 +4,7 @@ End-to-end tests of the HTTP server: static frontend, scenes and JSON API.
 
 import importlib
 import json
+import shutil
 import threading
 import urllib.request
 
@@ -215,3 +216,126 @@ class TestSceneScopedKnowledge:
 
         assert "pouring_bowl" in node_ids
         assert "transport_milk" not in node_ids
+
+
+# %% predefined designators
+
+
+@pytest.fixture()
+def pouring_server(fixture_scene, pouring_bundle):
+    """
+    The real server on an ephemeral port, offering the fixture scene and, beside it, a
+    scene with a bowl and a pouring vessel and one with the bowl alone.
+    """
+    from cram_viz import server as server_module
+    from cram_viz.resolution.scene_world import SCENE_FILE, SceneKey
+
+    scenes = fixture_scene / "scenes"
+    shutil.copytree(pouring_bundle, scenes / "pouring")
+    shutil.copytree(pouring_bundle, scenes / "bowl_only")
+    scene_file = scenes / "bowl_only" / SCENE_FILE
+    scene = json.loads(scene_file.read_text())
+    scene[SceneKey.OBJECTS] = [
+        entry
+        for entry in scene[SceneKey.OBJECTS]
+        if entry[SceneKey.IDENTIFIER] != "Static_MilkPitcher"
+    ]
+    scene_file.write_text(json.dumps(scene))
+    (scenes / "index.json").write_text(
+        json.dumps(
+            {"default": "fixture", "scenes": ["fixture", "pouring", "bowl_only"]}
+        )
+    )
+    importlib.reload(server_module)
+    httpd = server_module.make_server(0)
+    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    thread.start()
+    yield "http://localhost:%d" % httpd.server_address[1]
+    httpd.shutdown()
+
+
+def post_json(url, payload, timeout=60):
+    request = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode(),
+        headers={"Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        return json.loads(response.read())
+
+
+class TestDesignators:
+    def test_a_scene_with_a_pouring_vessel_offers_every_designator(
+        self, pouring_server
+    ):
+        from cram_viz.resolution.designators import POURING_VARIANTS
+
+        payload = get_json(pouring_server + "/api/designators?scene=pouring")
+        assert [entry["identifier"] for entry in payload["designators"]] == [
+            variant.identifier for variant in POURING_VARIANTS
+        ]
+        assert all(entry["available"] for entry in payload["designators"])
+
+    def test_a_scene_without_a_pouring_vessel_says_what_it_lacks(self, pouring_server):
+        from semantic_digital_twin.semantic_annotations.semantic_annotations import (
+            PouringCup,
+        )
+
+        payload = get_json(pouring_server + "/api/designators?scene=bowl_only")
+        assert all(
+            not entry["available"] and PouringCup.__name__ in entry["missing"]
+            for entry in payload["designators"]
+        )
+
+    def test_resolving_a_designator_returns_its_resolution(
+        self, pouring_server, monkeypatch, tmp_path
+    ):
+        from llm_reasoner.knowledge.access import HypothesisStore
+
+        from cram_viz import server as server_module
+
+        from .resolutions import resolver_replaying
+
+        resolver = resolver_replaying(
+            "vessel_into_bowl", HypothesisStore(directory=tmp_path / "store")
+        )
+        monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
+        payload = post_json(
+            pouring_server + "/api/designator/resolve",
+            {"variant": "vessel_into_bowl", "scene": "pouring"},
+        )
+        (action,) = payload["resolution"]["actions"]
+        assert {slot["name"]: slot["value"] for slot in action["slots"]}[
+            "target_container"
+        ] == "bowl.stl"
+        assert payload["hypothesis"]["ok"] is True
+
+    def test_after_resolving_the_designator_tab_shows_why(
+        self, pouring_server, monkeypatch, tmp_path
+    ):
+        from llm_reasoner.knowledge.access import HypothesisStore
+
+        from cram_viz import server as server_module
+
+        from .resolutions import resolver_replaying
+
+        resolver = resolver_replaying(
+            "vessel_into_bowl", HypothesisStore(directory=tmp_path / "store")
+        )
+        monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
+        payload = post_json(
+            pouring_server + "/api/designator/resolve",
+            {"variant": "vessel_into_bowl", "scene": "pouring"},
+        )
+        view = get_json(pouring_server + "/api/kb/view?name=designator&scene=pouring")
+        keys = [entry["key"] for entry in view["designator"]["properties"]]
+        assert "why" in keys
+        assert payload["resolution"]["actions"][0]["why"] in json.dumps(view)
+
+    def test_an_unknown_designator_is_reported(self, pouring_server):
+        payload = post_json(
+            pouring_server + "/api/designator/resolve",
+            {"variant": "no_such_designator", "scene": "pouring"},
+        )
+        assert payload["ok"] is False
+        assert "no_such_designator" in payload["error"]

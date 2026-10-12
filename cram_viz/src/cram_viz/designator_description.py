@@ -23,6 +23,7 @@ from llm_reasoner.knowledge.access import (
     is_inferred,
     PropertyTerm,
 )
+from llm_reasoner.resolver.reflection import SlotKind
 from typing_extensions import Any, Optional, Union
 
 from cram_viz.designator_knowledge import DesignatorKnowledge, DesignatorSlot
@@ -248,6 +249,7 @@ class DesignatorDescriber:
             and structure when there is a hypothesis.
         """
         properties = [self.slot_property(slot) for slot in knowledge.slots]
+        properties.extend(self.resolution_properties(knowledge))
         if self.view is not None:
             properties.append(
                 DesignatorProperty(
@@ -287,7 +289,14 @@ class DesignatorDescriber:
             )
         if slot.resolved_candidate is not None:
             notes.append(f"scene object {slot.resolved_candidate.label}, illustrative")
-        if text.startswith("?"):
+        if slot.resolved_value is not None:
+            notes.append("resolved by the resolver")
+            kind = (
+                ValueKind.OBJECT
+                if slot.kind is SlotKind.REFERENT
+                else ValueKind.LITERAL
+            )
+        elif text.startswith("?"):
             kind = ValueKind.VARIABLE
         elif slot.resolved_candidate is not None:
             kind = ValueKind.OBJECT
@@ -299,12 +308,52 @@ class DesignatorDescriber:
                 DesignatorValue(
                     kind=kind,
                     text=text,
-                    data=slot.default if kind is ValueKind.LITERAL else text,
+                    data=(
+                        slot.default
+                        if kind is ValueKind.LITERAL and slot.resolved_value is None
+                        else text
+                    ),
                     reference=reference,
                     note="; ".join(notes),
                 )
             ],
         )
+
+    def resolution_properties(
+        self, knowledge: DesignatorKnowledge
+    ) -> list[DesignatorProperty]:
+        """
+        :return: What the resolver's resolution states beyond the slots: the
+            designator resolved, the task, why the values were chosen and what they rest
+            on; nothing without a resolution.
+        """
+        resolution = knowledge.resolution
+        if resolution is None or not resolution.actions:
+            return []
+        action, *_ = resolution.actions
+        properties = [
+            DesignatorProperty(
+                key="resolved-from", values=[self.literal(resolution.label)]
+            )
+        ]
+        if resolution.task:
+            properties.append(
+                DesignatorProperty(key="task", values=[self.literal(resolution.task)])
+            )
+        properties.append(
+            DesignatorProperty(key="why", values=[self.literal(action.why)])
+        )
+        properties.append(
+            DesignatorProperty(
+                key="rests-on",
+                values=[
+                    self.literal(f"{ground.source}: {ground.name}")
+                    for ground in action.grounds
+                ],
+                many=True,
+            )
+        )
+        return properties
 
     def filler_of(self, slot: DesignatorSlot) -> Optional[DescriptionEntity]:
         """

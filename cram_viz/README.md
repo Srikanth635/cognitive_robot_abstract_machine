@@ -80,13 +80,23 @@ between the built-in panels:
 | panel         | shows                                                        |
 | ------------- | ------------------------------------------------------------ |
 | `robot-scene` | three.js scene: environment, robot, draggable objects, playback + live controls |
-| `eql`         | EQL query console + entity answer panel                      |
+| `eql`         | EQL query console, predefined designators + answer panel     |
 | `graph`       | tabs: Knowledge / Live Knowledge / Hypothesis Graph / Ontology Graph / Designator / Kinematics / Plan / Statechart |
 
-The Hypothesis Graph tab shows the knowledge `llm_reasoner` generated for the
-instruction entered in the Generate bar; the Ontology Graph tab shows the same
-graph with the ontology class of every node and the ontology property of every
-link beneath their labels.
+Below the EQL query box are predefined, underspecified pouring designators
+(`cram_viz.resolution`): each gives some slots of coraplex's `PouringAction` and
+leaves the others open, some with a task such as "until the bowl is half full".
+Clicking one has `llm_reasoner`'s resolver resolve it in the selected scene: the
+server builds the scene's semantic_digital_twin world from its bundle (objects
+typed by `resolution/object_annotations.json`), the resolver reads it with the
+world tools and consults the knowledge component, and the answer panel shows the
+slots it chose, why, and what they rest on. A designator the scene lacks the
+objects for is greyed out with the reason. The consulted hypothesis is what the
+Hypothesis Graph tab shows; the Ontology Graph tab shows the same graph with the
+ontology class of every node and the ontology property of every link beneath
+their labels; the Designator tab shows the resolved designator. Resolving needs
+an Anthropic API key (read from `.env` as for generation) and costs a few cents a
+click, plus a few minutes and tens of cents once for each situation not yet stored.
 
 On the Plan and Statechart tabs the node border is its execution status —
 running (amber), succeeded/done (green), failed (red), paused (blue),

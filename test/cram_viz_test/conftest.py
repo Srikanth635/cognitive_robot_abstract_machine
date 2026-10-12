@@ -9,7 +9,10 @@ instead of a real (huge, generated) bundle.
 
 import json
 import os
+import shutil
+from pathlib import Path
 
+import coraplex
 import pytest
 
 SCENE = {
@@ -191,3 +194,39 @@ def fixture_scene(tmp_path, monkeypatch):
         kb.reset_kb()
     except ImportError:
         pass
+
+
+# %% the pouring scene
+
+POURING_SCENE = Path(__file__).parent / "scenes" / "pouring"
+"""
+The pouring scene bundle the tests build worlds from, its meshes copied in.
+"""
+
+OBJECT_MESHES = Path(coraplex.__file__).parents[2] / "resources" / "objects"
+"""
+The repository's object meshes the fixture scene's objects are made of.
+"""
+
+MESH_SOURCES = {
+    "bowl.stl": "bowl.stl",
+    "Static_MilkPitcher.stl": "jeroen_cup.stl",
+    "mystery.stl": "spoon.stl",
+}
+"""
+The repository mesh each fixture object's mesh is copied from.
+"""
+
+
+@pytest.fixture
+def pouring_bundle(tmp_path) -> Path:
+    """
+    The pouring scene bundle, its meshes copied from the repository's objects.
+    """
+    bundle = tmp_path / "pouring"
+    shutil.copytree(POURING_SCENE, bundle)
+    meshes = bundle / "meshes" / "objects"
+    meshes.mkdir(parents=True)
+    for name, source in MESH_SOURCES.items():
+        shutil.copy(OBJECT_MESHES / source, meshes / name)
+    return bundle

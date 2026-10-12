@@ -159,8 +159,8 @@ class TestJsUnits:
         """
         self.run_node("test_graph_panel_hypothesis_graph.js")
 
-    def test_eql_panel_generation_bar(self) -> None:
+    def test_eql_panel_designators(self) -> None:
         """
-        Run the EQL panel's natural-language generation bar tests.
+        Run the EQL panel's predefined designator tests.
         """
-        self.run_node("test_eql_panel_generation.js")
+        self.run_node("test_eql_panel_designators.js")
