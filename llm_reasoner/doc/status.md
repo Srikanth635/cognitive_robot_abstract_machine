@@ -14,7 +14,7 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
 | World injector (`world/`) | Built and tested; eight tools; world-access contract 1.0 with declared answer shapes |
 | Resolver (`resolver/`) | Built and tested; structured prompts; verified live on a PR2 kitchen (28 of 28 cases as expected) |
 | Clients (`clients/`) | Anthropic tool loop with caching and usage; OpenAI plain completion; scripted client |
-| Knowledge component | Built and tested on its own (ontology, generation, admission, views); **not yet linked** to the resolver or the world injector |
+| Knowledge component | Built and tested on its own (ontology, generation, admission, storage, views), reorganised into `knowledge/` with one public module; **not yet linked** to the resolver |
 | Offline tests | `python -m pytest test/llm_reasoner_test`: 385 passed, 2 skipped |
 
 ## 2. Completed
@@ -132,8 +132,15 @@ of 28, two repairs and $1.04; its findings led to `ea44fdbac` and `6743d6116`.
 
 ## 5. In progress
 
-- Reorganising the knowledge component into `knowledge/` (decision of 2026-10-12): pure
-  moves in dependency order, each step committed with both test suites passing.
+- Reorganising the knowledge component (decision of 2026-10-12). Done: the pure moves
+  into `knowledge/`, lowest layer first, each committed with both test suites passing
+  (`ebc93d9fa` ontologies, `274542e2c` ontology translation, `5149984fe` acceptance,
+  `b22e1f7e9` storage split from admission, `52c0273f3` generation, `9dca1ed56`
+  hypotheses, `5da11b5d5` the public `access.py`). Stored hypotheses were migrated: the
+  cram_viz sample and the 4 current records in `~/.cram_viz/hypotheses` (backup in
+  `~/.cram_viz/hypotheses.backup-2026-10-12`; 5 older records there use paths of code
+  removed on 2026-10-07 and were left as they were). Next, on approval: splitting
+  `HypothesisBackend` by responsibility.
 - `doc/drafts/object_qualities/` is an uncommitted draft on object qualities in the
   ontology (affordances, dispositions after DUL). It waits for decisions on where the
   module lives and on changes to `core.ttl`.

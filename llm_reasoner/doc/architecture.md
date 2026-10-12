@@ -35,7 +35,7 @@ flowchart LR
     subgraph llm_reasoner
         resolver["Resolver<br/>resolver/"]
         world["World injector<br/>world/"]
-        knowledge["Knowledge component<br/>ontologies/ … hypotheses/"]
+        knowledge["Knowledge component<br/>knowledge/"]
         clients["Clients<br/>clients/"]
     end
     resolver -- "WorldAccess<br/>(handles, holders, tools)" --> world
@@ -50,7 +50,7 @@ flowchart LR
 |---|---|---|
 | World injector | `world/` | Answers questions about the live world, using krrood alone |
 | Resolver | `resolver/` | Turns an underspecified krrood query into a resolved instance, choosing what the query leaves open |
-| Knowledge component | `ontologies/`, `ontology_translation/`, `acceptance/`, `generation/`, `admission/`, `hypotheses/` | Generates and stores ontology-backed, world-independent action knowledge |
+| Knowledge component | `knowledge/` | Generates and stores ontology-backed, world-independent action knowledge |
 | Clients | `clients/` | Talk to language models, and define the vendor-neutral tool interface |
 
 ### 2.1 World injector (`world/`)
@@ -153,7 +153,7 @@ limit), `max_repairs` (1), `source_detail` (`FULL`: the source of the queried ty
 of its parents declared in the same module; `SIGNATURE`: docstrings; `NONE`),
 `context_provider` (none by default), `candidate_renderer` (structural description).
 
-### 2.3 Knowledge component (`ontologies/` … `hypotheses/`)
+### 2.3 Knowledge component (`knowledge/`)
 
 **Role.** Generate commonsense knowledge about *kinds* of action with a language model,
 and keep it consistent and queryable through an ontology: what an action normally
@@ -194,7 +194,7 @@ instruction + query ──► 1 generation ──► 2 acceptance ──► 3 ad
 | 2 Acceptance | `acceptance/` | Closed-world checks — what is missing is an error, since a model tends to generate too little: `restrictions_hold` (each fragment meets its classes' OWL restrictions), `ranges_hold` (every linked value has the type its property allows), `shapes_hold` (SHACL shapes for rules across fragments, such as transitions connecting all phases), `components_declared` (everything a structure reaches, it declares), plus the values the query fixes. Violations are errors or warnings; warnings are kept with the hypothesis |
 | 3 Admission | `admission/` | Optionally (`consistency=HermitCheck(...)`), the hypothesis is written as RDF and checked in the open world against the ontology, CRAM-AICOR and DUL with HermiT; `ContradictionLocaliser` names the fragments that together contradict them. Concept references are checked against the linked ontologies (`linked_terms`) |
 | Repair | `generation/` | Errors from stages 1–3 are shown to the model, which answers with a *patch* (fragments added or changed, identifiers removed) applied to the answer with the fewest problems so far (`max_repairs = 2`) |
-| 4 Store | `admission/` | `HypothesisRecord` (instruction, root type, fixed values, client, every exchange, warnings, consistency verdict, ontology module versions) and the hypothesis as Turtle, one directory per hypothesis in `HypothesisStore`. A request is answered from the store when a record has the same instruction, root type and fixed values under the current module versions; otherwise it is generated |
+| 4 Store | `storage/` | `HypothesisRecord` (instruction, root type, fixed values, client, every exchange, warnings, consistency verdict, ontology module versions) and the hypothesis as Turtle, one directory per hypothesis in `HypothesisStore`. A request is answered from the store when a record has the same instruction, root type and fixed values under the current module versions; otherwise it is generated |
 | 5 Reading | `hypotheses/` | `KnowledgeService.view_for(instruction, query)` returns the stored or newly generated hypothesis as a `HypothesisView`, which answers questions crossing fragments: `phases`, `next_phases`, `requirements_of`, `world_assumptions`, `gaze_fixations_for`, `force_couplings_in`, `failure_events`, `corrections_at`, `force_dynamics`. Every fragment is cited by the IRI it is stored under (`Citation`). `HypothesisGraphProjector` projects a hypothesis into the graph cram_viz shows |
 
 **The answer format.** A flat list of fragments that refer to each other by
@@ -216,16 +216,22 @@ A repair answers `{"fragments": [<added or changed>], "remove": [<identifiers>]}
 Fragments are created first and linked second; a malformed answer is not an exception
 but a list of problems shown to the model.
 
-**Components inside, by responsibility.**
+**Components inside, by responsibility** (all under `knowledge/`, from the lowest layer
+up; each depends only on those above it in the table):
 
-| Module | Responsibility |
-|---|---|
-| `ontologies/__init__.py`, `linked.py`, `terms.py` | The ontology files, the linked ontologies (CRAM-AICOR, DUL) and concept references |
-| `ontology_translation/reading.py`, `declarations.py`, `writing.py` | Ontology → declarations → Python modules |
-| `generation/schema.py`, `prompts.py`, `wire.py`, `backend.py` | Output shape, prompts, decoding and merging patches, the generation loop |
-| `acceptance/rules.py`, `restrictions.py`, `derived.py`, `shapes.py`, `core.py`, `suite.py`, `vocabulary.py` | Rules and violations, closed-world class membership, the microworld's suite |
-| `admission/rdf.py`, `consistency.py`, `hermit.py`, `record.py`, `store.py`, `citation.py` | RDF in and out, consistency, records, the store, citations |
-| `hypotheses/service.py`, `view.py`, `graph.py` | The service, cross-fragment questions, the graph projection |
+| Package | Modules | Responsibility |
+|---|---|---|
+| `ontologies/` | `__init__.py`, `terms.py`, `linked.py`, `predictive_manipulation/` | The ontology files, the shared terms, the linked ontologies (CRAM-AICOR, DUL) and the generated vocabulary |
+| `ontology_translation/` | `reading.py`, `declarations.py`, `writing.py`, `templates/` | Ontology → declarations → Python modules |
+| `acceptance/` | `rules.py`, `restrictions.py`, `derived.py`, `shapes.py`, `core.py`, `suite.py`, `vocabulary.py` | Rules and violations, closed-world class membership, the microworld's suite |
+| `admission/` | `rdf.py`, `consistency.py`, `hermit.py` | RDF in and out, open-world consistency with HermiT |
+| `storage/` | `record.py`, `store.py`, `citation.py` | Records of admitted hypotheses, the store, citations of stored fragments |
+| `generation/` | `schema.py`, `prompts.py`, `wire.py`, `backend.py` | Output shape, prompts, decoding and merging patches, the generation loop |
+| `hypotheses/` | `service.py`, `view.py`, `graph.py` | The service, cross-fragment questions, the graph projection |
+| `access.py` | — | **The public module**: every name another package may use; cram_viz imports only from it (a test checks) |
+
+Records store Python module paths (the record class and the root type), so moving a
+module that a record names requires migrating stored records.
 
 **How it relates to the resolver.** Both are krrood generative backends answering an
 underspecified query with a model, checks and repairs. The resolver produces one
