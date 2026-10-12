@@ -184,6 +184,23 @@ class TestKnowledgeService:
     The service answers a request from the store when it can, and generates otherwise.
     """
 
+    def test_a_request_is_served_by_the_identifier_of_its_stored_hypothesis(
+        self, tmp_path
+    ):
+        store = HypothesisStore(directory=tmp_path)
+        service = service_answering(store, GenerationCase.LIFT_AND_POUR)
+        identifier = service.serve(pouring_query(), INSTRUCTION)
+        assert [record.record_id for record in store.records()] == [identifier]
+
+    def test_a_repeated_request_is_served_without_the_model(self, tmp_path):
+        service = service_answering(
+            HypothesisStore(directory=tmp_path), GenerationCase.LIFT_AND_POUR
+        )
+        first = service.serve(pouring_query())
+        second = service.serve(pouring_query())
+        assert second == first
+        assert len(service.backend.client.calls) == 1
+
     def test_generated_hypothesis_is_stored(self, tmp_path):
         store = HypothesisStore(directory=tmp_path)
         service = service_answering(store, GenerationCase.LIFT_AND_POUR)

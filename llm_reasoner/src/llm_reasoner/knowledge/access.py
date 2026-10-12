@@ -33,6 +33,10 @@ from llm_reasoner.knowledge.ontologies import (
     LinkedOntologyVariable,
     PredictiveManipulationOntologyFile,
 )
+from llm_reasoner.knowledge.ontologies.described_actions import (
+    DescribedAction,
+    DescribedActions,
+)
 from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms, OntologyFiles
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     core,
@@ -40,6 +44,10 @@ from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     object_dynamics,
     pouring,
     prehension,
+)
+from llm_reasoner.knowledge.ontologies.situation import (
+    SituationFeature,
+    SituationFeatures,
 )
 from llm_reasoner.knowledge.ontologies.terms import (
     ConceptReference,
@@ -53,15 +61,19 @@ from llm_reasoner.knowledge.storage.store import HypothesisStore
 
 __all__ = [
     "AcceptanceSuite",
-    "CONCEPT_PREFIXES",
-    "CRAM_AICOR_NAMESPACE",
     "ClosedWorldMembership",
     "ConceptReference",
+    "CONCEPT_PREFIXES",
     "ConsistencyCheck",
-    "DUL_NAMESPACE",
+    "core",
+    "CRAM_AICOR_NAMESPACE",
+    "described",
+    "DescribedAction",
+    "DescribedActions",
     "DescriptionEntity",
+    "DUL_NAMESPACE",
+    "gaze",
     "GraphReader",
-    "HYPOTHESIS_CONCEPT_NAMESPACE",
     "HermitCheck",
     "HypothesisBackend",
     "HypothesisGraph",
@@ -73,22 +85,22 @@ __all__ = [
     "HypothesisRejected",
     "HypothesisStore",
     "HypothesisView",
+    "HYPOTHESIS_CONCEPT_NAMESPACE",
+    "is_inferred",
     "KnowledgeService",
     "LinkedOntologyTerms",
     "LinkedOntologyVariable",
-    "OntologyFiles",
-    "PREDICTIVE_MANIPULATION_NAMESPACE_ROOT",
-    "PredictiveManipulationOntologyFile",
-    "PropertyTerm",
-    "Severity",
-    "SyntheticHypothesisRelation",
-    "Vocabulary",
-    "core",
-    "described",
-    "gaze",
-    "is_inferred",
     "object_dynamics",
+    "OntologyFiles",
     "pouring",
+    "PredictiveManipulationOntologyFile",
+    "PREDICTIVE_MANIPULATION_NAMESPACE_ROOT",
     "predictive_manipulation_suite",
     "prehension",
+    "PropertyTerm",
+    "Severity",
+    "SituationFeature",
+    "SituationFeatures",
+    "SyntheticHypothesisRelation",
+    "Vocabulary",
 ]

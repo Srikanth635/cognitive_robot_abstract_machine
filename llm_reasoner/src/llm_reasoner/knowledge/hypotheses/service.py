@@ -49,20 +49,32 @@ class KnowledgeService:
         """
         return self.backend.store
 
-    def view_for(self, query: Match, instruction: str = "") -> HypothesisView:
+    def serve(self, query: Match, instruction: str = "") -> str:
         """
+        Serve the hypothesis answering a request, generating, admitting and storing it
+        first when the store holds none for it.
+
         :param query: The underspecified match on a vocabulary class, its fixed values
             the request's situation.
         :param instruction: The action the hypothesis is generated for, recorded as
-            provenance when one is generated; it does not decide which stored
-            hypothesis answers the query.
-        :return: The view of the stored hypothesis answering the query, generated and
-            stored first when there is none.
+            provenance when one is generated; it does not decide which stored hypothesis
+            answers the query.
+        :return: The record identifier of the hypothesis answering the query.
         :raises HypothesisRejected: If no generated answer is admitted.
         """
         backend = replace(self.backend, instruction=instruction)
         list(query.evaluate(backend=backend))
-        return self.view(backend.last_record.record_id)
+        return backend.last_record.record_id
+
+    def view_for(self, query: Match, instruction: str = "") -> HypothesisView:
+        """
+        :param query: The underspecified match on a vocabulary class.
+        :param instruction: The action the hypothesis is generated for, as provenance.
+        :return: The view of the stored hypothesis answering the query, generated and
+            stored first when there is none.
+        :raises HypothesisRejected: If no generated answer is admitted.
+        """
+        return self.view(self.serve(query, instruction))
 
     def view(self, record_id: str) -> HypothesisView:
         """
