@@ -25,10 +25,8 @@ from llm_reasoner.knowledge.admission.consistency import (
 from llm_reasoner.knowledge.storage.record import ConsistencyVerdict
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.clients.base import ScriptedClient
-from llm_reasoner.knowledge.generation.backend import (
-    HypothesisBackend,
-    HypothesisRejected,
-)
+from llm_reasoner.knowledge.generation.backend import HypothesisBackend
+from llm_reasoner.knowledge.generation.dialogue import HypothesisRejected
 from llm_reasoner.knowledge.generation.prompts import (
     GenerationPrompt,
     described_violation,
@@ -43,6 +41,7 @@ from llm_reasoner.knowledge.generation.schema import (
     type_schema_for,
 )
 from llm_reasoner.knowledge.generation.assessment import HypothesisAssessor
+from llm_reasoner.knowledge.generation.dialogue import GenerationDialogue
 from llm_reasoner.knowledge.generation.request import (
     HypothesisRequest,
     UnsupportedFixedValue,
@@ -688,6 +687,54 @@ class ConflictWith(ConsistencyCheck):
         return not any(
             str(subject).endswith("#" + self.identifier) for subject in graph.subjects()
         )
+
+
+def loop_checking_dialogue(
+    *cases: GenerationCase, max_repairs: int
+) -> GenerationDialogue:
+    """
+    Return a dialogue whose model gives the scripted answers in turn, checked only for
+    looping transitions.
+    """
+    return GenerationDialogue(
+        client=ScriptedClient(responses=[case.text for case in cases]),
+        assessor=HypothesisAssessor(
+            suite=AcceptanceSuite(
+                rules=[
+                    ShapesHold(
+                        checked_shapes=frozenset({CORE_SHAPES.TransitionIsNotALoop})
+                    )
+                ]
+            )
+        ),
+        max_repairs=max_repairs,
+    )
+
+
+class TestGenerationDialogue:
+    """
+    Asking the model, and repairing a rejected answer by patch.
+    """
+
+    def test_a_patched_answer_is_admitted_with_every_exchange_kept(self):
+        dialogue = loop_checking_dialogue(
+            GenerationCase.LOOPING_STRUCTURE,
+            GenerationCase.LOOP_REPLACED_PATCH,
+            max_repairs=1,
+        )
+        request = HypothesisRequest.from_match(pouring_query(), instruction="pour")
+        outcome = dialogue.generate(request)
+        assert outcome.exchanges == dialogue.exchanges
+        assert [exchange.attempt for exchange in dialogue.exchanges] == [0, 1]
+
+    def test_no_admissible_answer_within_the_budget_is_rejected(self):
+        dialogue = loop_checking_dialogue(
+            GenerationCase.LOOPING_STRUCTURE, max_repairs=0
+        )
+        request = HypothesisRequest.from_match(pouring_query(), instruction="pour")
+        with pytest.raises(HypothesisRejected) as rejected:
+            dialogue.generate(request)
+        assert rejected.value.exchanges == dialogue.exchanges
 
 
 class TestHypothesisAssessor:

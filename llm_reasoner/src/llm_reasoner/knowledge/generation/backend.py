@@ -18,7 +18,7 @@ from krrood.entity_query_language.backends import GenerativeBackend
 from krrood.entity_query_language.query.match import Match
 from typing_extensions import Iterable, Optional, TypeVar
 
-from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite, Violation
+from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite
 from llm_reasoner.knowledge.storage.citation import Citation
 from llm_reasoner.knowledge.admission.consistency import ConsistencyCheck
 from llm_reasoner.knowledge.representation.rdf import GraphReader, GraphWriter
@@ -31,87 +31,24 @@ from llm_reasoner.knowledge.storage.record import (
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.knowledge.acceptance.suite import predictive_manipulation_suite
 from llm_reasoner.clients.base import Exchange, LanguageModelClient
-from llm_reasoner.exceptions import LLMReasonerError
 from llm_reasoner.knowledge.generation.prompts import (
     GenerationPrompt,
     described_violation,
 )
 from llm_reasoner.knowledge.generation.assessment import HypothesisAssessor
+from llm_reasoner.knowledge.generation.dialogue import (
+    GenerationDialogue,
+    GenerationOutcome,
+)
 from llm_reasoner.knowledge.generation.request import HypothesisRequest
-from llm_reasoner.knowledge.generation.schema import GenerationSchema
 from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms
-from llm_reasoner.knowledge.generation.wire import FragmentDecoder
-from llm_reasoner.knowledge.representation.hypothesis import DecodedHypothesis
 
 T = TypeVar("T")
 
 # %% exceptions
 
 
-@dataclass
-class HypothesisRejected(LLMReasonerError):
-    """
-    No answer was admitted within the repair budget.
-    """
-
-    problems: list[str]
-    """
-    What was wrong with the last answer.
-    """
-
-    exchanges: list[Exchange]
-    """
-    Every exchange of the generation, in order.
-    """
-
-    def __post_init__(self):
-        super().__init__(
-            f"no admissible hypothesis after {len(self.exchanges)} answers; the last "
-            f"had {len(self.problems)} problems, the first being: "
-            + (self.problems[0] if self.problems else "none")
-        )
-
-
 # %% outcome
-
-
-@dataclass
-class GenerationOutcome:
-    """
-    An admitted hypothesis, with what it took to get it.
-    """
-
-    hypothesis: DecodedHypothesis
-    """
-    The admitted hypothesis.
-    """
-
-    warnings: list[Violation]
-    """
-    The violations of warning severity it was admitted with.
-    """
-
-    exchanges: list[Exchange]
-    """
-    Every exchange of the generation, repairs included.
-    """
-
-
-@dataclass
-class AnswerUnderRepair:
-    """
-    The answer repairs are applied to: the one with the fewest problems so far.
-    """
-
-    answer: str
-    """
-    The answer, in full, with every repair applied to it.
-    """
-
-    problems: list[str]
-    """
-    What is wrong with it.
-    """
 
 
 # %% backend
@@ -196,56 +133,17 @@ class HypothesisBackend(GenerativeBackend):
             self.last_record = stored.record
             yield GraphReader().read(stored.graph).root_of(expression.type)
             return
-        schema = GenerationSchema.for_root(expression.type)
-        decoder = FragmentDecoder(schema, linked_terms=self.linked_terms)
-        assessor = HypothesisAssessor(suite=self.suite, consistency=self.consistency)
-        system_prompt = self.prompt.system(schema)
-        initial_prompt = self.prompt.initial(schema, instruction, fixed)
-        prompt = initial_prompt
-        self.log = []
-        under_repair: Optional[AnswerUnderRepair] = None
-        for attempt in range(self.max_repairs + 1):
-            raw_response = self.client.complete_structured(
-                system_prompt, prompt, schema.json_schema()
-            )
-            self.log.append(
-                Exchange(
-                    system=system_prompt,
-                    user=prompt,
-                    raw_response=raw_response,
-                    client_identity=self.client.identity,
-                    attempt=attempt,
-                )
-            )
-            answer = (
-                raw_response
-                if under_repair is None
-                else decoder.merged(under_repair.answer, raw_response)
-            )
-            assessment = assessor.assess(decoder.decode(answer), request)
-            if assessment.hypothesis is not None:
-                self.last_outcome = GenerationOutcome(
-                    hypothesis=assessment.hypothesis,
-                    warnings=assessment.warnings,
-                    exchanges=list(self.log),
-                )
-                self.admit(
-                    self.last_outcome, instruction, expression.type, written_fixed
-                )
-                yield assessment.hypothesis.root
-                return
-            if under_repair is None or len(assessment.problems) <= len(
-                under_repair.problems
-            ):
-                under_repair = AnswerUnderRepair(
-                    answer=answer, problems=assessment.problems
-                )
-            prompt = self.prompt.repair(
-                initial_prompt, under_repair.answer, under_repair.problems
-            )
-        raise HypothesisRejected(
-            problems=under_repair.problems, exchanges=list(self.log)
+        dialogue = GenerationDialogue(
+            client=self.client,
+            assessor=HypothesisAssessor(suite=self.suite, consistency=self.consistency),
+            prompt=self.prompt,
+            max_repairs=self.max_repairs,
+            linked_terms=self.linked_terms,
         )
+        self.log = dialogue.exchanges
+        self.last_outcome = dialogue.generate(request)
+        self.admit(self.last_outcome, instruction, expression.type, written_fixed)
+        yield self.last_outcome.hypothesis.root
 
     def admit(
         self,
