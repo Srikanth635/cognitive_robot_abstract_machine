@@ -19,10 +19,8 @@ from experiments.llm_reasoner_kitchen.cases import (
     pours_from_the_cup_into_the_bowl,
 )
 from experiments.llm_reasoner_kitchen.live import LiveCheck, LiveCheckVariable
-from experiments.llm_reasoner_kitchen.resolution import (
-    SONNET_PRICES,
-    KitchenResolver,
-)
+from experiments.llm_reasoner_kitchen.resolution import KitchenResolver
+from llm_reasoner.clients.usage import SONNET_5_5_PRICES
 
 LIVE = LiveCheck()
 """
@@ -66,7 +64,7 @@ def identifier_of_case(case: ResolutionCase | KnowledgeCase) -> str:
 )
 def test_a_case_resolves_to_what_it_expects(case, kitchen, store):
     resolution = resolver(store).resolve(case.query(kitchen), case.task)
-    print(f"{case.identifier}: ${resolution.cost(SONNET_PRICES):.4f}")
+    print(f"{case.identifier}: ${resolution.cost(SONNET_5_5_PRICES):.4f}")
     assert case.meets(resolution.actions)
 
 
@@ -79,7 +77,7 @@ def test_a_case_among_the_furniture_resolves_to_what_it_expects(
     case, furnished_kitchen, store
 ):
     resolution = resolver(store).resolve(case.query(furnished_kitchen), case.task)
-    print(f"{case.identifier}: ${resolution.cost(SONNET_PRICES):.4f}")
+    print(f"{case.identifier}: ${resolution.cost(SONNET_5_5_PRICES):.4f}")
     assert case.meets(resolution.actions)
 
 
@@ -98,7 +96,7 @@ def test_a_task_consults_the_knowledge_for_its_situation(case, kitchen, store):
     resolution = resolver(store).resolve(
         kitchen.pour_from_the_cup_into_the_bowl(), case.task
     )
-    print(f"{case.identifier}: ${resolution.cost(SONNET_PRICES):.4f}")
+    print(f"{case.identifier}: ${resolution.cost(SONNET_5_5_PRICES):.4f}")
     assert set(resolution.backend.consultation.situation.values()) == set(
         case.situation
     )

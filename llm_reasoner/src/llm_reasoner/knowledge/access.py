@@ -63,10 +63,12 @@ from llm_reasoner.knowledge.ontologies.terms import (
 )
 from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.knowledge.representation.rdf import GraphReader
+from llm_reasoner.knowledge.storage.citation import Citation
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 
 __all__ = [
     "AcceptanceSuite",
+    "Citation",
     "ClosedWorldMembership",
     "ConceptReference",
     "CONCEPT_PREFIXES",
