@@ -142,6 +142,40 @@ class FragmentReference(KnowledgeAnswer):
 
 
 @dataclass(frozen=True)
+class FragmentSummary(KnowledgeAnswer):
+    """
+    A fragment with the values it states, the fragments holding only values that it
+    links to written in place, and the names of the other fragments it links to.
+    """
+
+    name: str
+    """
+    The fragment's name in its hypothesis.
+    """
+
+    kind: str
+    """
+    The name of the fragment's class.
+    """
+
+    values: dict[str, Any]
+    """
+    The values the fragment states, by field name: values as JSON writes them, and a
+    linked fragment holding only values as an object of its own values.
+    """
+
+    links: dict[str, list[str]] = field(default_factory=dict)
+    """
+    The names of the other fragments it links to, by field name.
+    """
+
+    label: Optional[str] = None
+    """
+    The fragment's human-readable name, when it has one.
+    """
+
+
+@dataclass(frozen=True)
 class PhaseSummary(KnowledgeAnswer):
     """
     A phase the action goes through.
@@ -165,6 +199,16 @@ class PhaseSummary(KnowledgeAnswer):
     aims_for: Optional[str] = None
     """
     The name of the subgoal the phase aims for, when it states one.
+    """
+
+    parameters: list[FragmentSummary] = field(default_factory=list)
+    """
+    The parameters in force during the phase, with the values they hold.
+    """
+
+    requirements: list[FragmentSummary] = field(default_factory=list)
+    """
+    What the phase demands of the world, with the values that say when and how.
     """
 
 
@@ -343,6 +387,14 @@ class KnowledgeQuestions:
                     aims_for=(
                         None if phase.aims_for is None else self.name_of(phase.aims_for)
                     ),
+                    parameters=[
+                        self.summary(parameter)
+                        for parameter in phase.has_active_parameter
+                    ],
+                    requirements=[
+                        self.summary(requirement)
+                        for requirement in phase.has_condition_requirement
+                    ],
                 )
                 for phase in self.hypothesis.phases()
             ],
@@ -426,6 +478,64 @@ class KnowledgeQuestions:
             label=fragment.label or None,
         )
 
+    def summary(self, fragment: DescriptionEntity) -> FragmentSummary:
+        """
+        :return: A fragment with the values it states, the fragments holding only
+            values that it links to written in place, and the names of the other
+            fragments it links to.
+        """
+        values: dict[str, Any] = {}
+        links: dict[str, list[str]] = {}
+        for field_name, value in self.stated_values(fragment).items():
+            held = self.listed(value)
+            if not any(isinstance(linked, DescriptionEntity) for linked in held):
+                values[field_name] = self.written_value(value)
+            elif all(self.holds_only_values(linked) for linked in held):
+                values[field_name] = (
+                    [self.own_values(linked) for linked in held]
+                    if isinstance(value, list)
+                    else self.own_values(value)
+                )
+            else:
+                links[field_name] = [self.name_of(linked) for linked in held]
+        return FragmentSummary(
+            name=self.name_of(fragment),
+            kind=type(fragment).__name__,
+            label=fragment.label or None,
+            values=values,
+            links=links,
+        )
+
+    def holds_only_values(self, fragment: Any) -> bool:
+        """
+        :return: Whether a fragment states values and links to no other fragment, as a
+            range of magnitudes does.
+        """
+        stated = self.stated_values(fragment)
+        return bool(stated) and not any(
+            isinstance(held, DescriptionEntity)
+            for value in stated.values()
+            for held in self.listed(value)
+        )
+
+    def own_values(self, fragment: DescriptionEntity) -> dict[str, Any]:
+        """
+        :return: The values a fragment holding only values states, by field name.
+        """
+        return {
+            field_name: self.written_value(value)
+            for field_name, value in self.stated_values(fragment).items()
+        }
+
+    def written_value(self, value: Any) -> Any:
+        """
+        :return: A field's value as JSON writes it, a list for a property taking
+            several values.
+        """
+        if isinstance(value, list):
+            return [self.written(held) for held in value]
+        return self.written(value)
+
     @staticmethod
     def stated_values(fragment: DescriptionEntity) -> dict[str, Any]:
         """
@@ -466,13 +576,7 @@ class KnowledgeQuestions:
                 fragments=[self.name_of(held) for held in values],
             )
         return FieldStatement(
-            field_name=field_name,
-            meaning=meaning,
-            value=(
-                [self.written(held) for held in values]
-                if isinstance(value, list)
-                else self.written(value)
-            ),
+            field_name=field_name, meaning=meaning, value=self.written_value(value)
         )
 
     @staticmethod

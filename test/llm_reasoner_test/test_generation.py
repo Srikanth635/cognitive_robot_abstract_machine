@@ -204,6 +204,12 @@ class GenerationCase(StrEnum):
     A pouring structure for a liquid, and nothing else.
     """
 
+    PHASE_WITH_A_TILT_SETPOINT = "phase_with_a_tilt_setpoint.json"
+    """
+    A pouring structure whose one phase tilts the cup to a setpoint with a range of
+    degrees, requiring the cup to stay upright throughout.
+    """
+
     @property
     def text(self) -> str:
         """

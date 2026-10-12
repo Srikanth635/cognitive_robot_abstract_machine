@@ -33,5 +33,38 @@
       "kind"
     ],
     "additionalProperties": false
+  },
+  "fragment_summary": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "kind": {
+        "type": "string"
+      },
+      "label": {
+        "type": "string"
+      },
+      "values": {
+        "type": "object"
+      },
+      "links": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "required": [
+      "name",
+      "kind",
+      "values",
+      "links"
+    ],
+    "additionalProperties": false
   }
 }

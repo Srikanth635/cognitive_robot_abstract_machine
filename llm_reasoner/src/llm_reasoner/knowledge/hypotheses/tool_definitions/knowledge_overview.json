@@ -2,7 +2,7 @@
   "name": "knowledge_overview",
   "description": {
     "purpose": "Summarise the knowledge describing the action being resolved.",
-    "returns": "The IRI of the action concept; the class of the structure describing the action and what it means; the situation the knowledge was generated for, each situation feature by the name of its value, unknown features absent; the phases in the order the action goes through them, each with its name, its class and what that class means, its label and the name of the subgoal it aims for; and the roles taking part.",
+    "returns": "The IRI of the action concept; the class of the structure describing the action and what it means; the situation the knowledge was generated for, each situation feature by the name of its value, unknown features absent; the phases in the order the action goes through them, each with its name, its class and what that class means, its label, the name of the subgoal it aims for, its parameters and its requirements, each of these with its name, class, label and the values it states (a linked fragment holding only values, such as a range, written in place) and the names of the other fragments it links to; and the roles taking part.",
     "use_when": "Starting to use the knowledge: it says what the action goes through and what for, and names the fragments find_fragments and describe_fragment take.",
     "avoid": "Calling it more than once; its answer does not change within a request."
   },
@@ -42,6 +42,18 @@
             },
             "aims_for": {
               "type": "string"
+            },
+            "parameters": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/fragment_summary"
+              }
+            },
+            "requirements": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/fragment_summary"
+              }
             }
           },
           "required": [
