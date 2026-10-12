@@ -8,9 +8,11 @@ never finished starting.
 
 import logging
 import re
+import runpy
 import subprocess
 import sys
 import time
+from importlib.metadata import entry_points
 
 import pytest
 
@@ -73,6 +75,38 @@ class TestEntryPointReportsItIsServing:
     def test_banner_reports_the_port_that_was_actually_bound(self, server_banner):
         port = int(re.search(r"localhost:(\d+)", server_banner).group(1))
         assert port != 0
+
+
+ENTRY_MODULES = sorted(
+    {
+        entry_point.module
+        for entry_point in entry_points(group="console_scripts")
+        if entry_point.dist.name == "cram_viz"
+    }
+)
+"""
+The modules cram_viz's console entry points run.
+"""
+
+RUN_NAME = "entry"
+"""
+A name to run an entry module under other than its own, as ``python -m`` runs it as
+``__main__``, without running its main function.
+"""
+
+
+class TestEntryModulesLogUnderTheirOwnName:
+    """
+    Run with ``python -m``, an entry module's ``__name__`` is ``__main__``; its logger
+    must still be cram_viz's, or the level the entry point sets never reaches it.
+    """
+
+    @pytest.mark.parametrize("module", ENTRY_MODULES)
+    def test_the_logger_is_named_for_the_module_under_any_run_name(self, module):
+        namespace = runpy.run_module(module, run_name=RUN_NAME)
+        if "logger" not in namespace:
+            pytest.skip(f"{module} keeps no logger")
+        assert namespace["logger"].name == module
 
 
 class TestPackageImportLeavesLoggingToTheEntryPoint:

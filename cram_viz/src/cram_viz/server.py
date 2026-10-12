@@ -42,7 +42,11 @@ from urllib.parse import parse_qs, urlparse
 
 from cram_viz import configure_console_logging, paths
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__spec__.name)
+"""
+This module's logger, named for the module even when ``python -m`` runs it as
+``__main__``, so the level :func:`configure_console_logging` sets reaches it.
+"""
 
 DEFAULT_PORT = 8711
 
