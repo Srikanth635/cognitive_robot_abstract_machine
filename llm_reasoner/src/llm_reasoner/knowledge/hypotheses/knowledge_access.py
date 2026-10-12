@@ -9,10 +9,11 @@ from abc import ABC, abstractmethod
 from enum import StrEnum
 
 from krrood.entity_query_language.query.match import Match
+from typing_extensions import Optional
 
 from llm_reasoner.clients.tools import Tool
 
-KNOWLEDGE_ACCESS_VERSION = "1.0"
+KNOWLEDGE_ACCESS_VERSION = "1.1"
 """
 The version of this contract: of the operations below and of the definitions and answer
 shapes of the knowledge tools.
@@ -69,6 +70,15 @@ class KnowledgeAccess(ABC):
         """
         :return: The tools a language model reads the hypothesis with the given record
             identifier with, named by :class:`KnowledgeToolName`.
+        """
+
+    @abstractmethod
+    def citation(self, record_id: str, name: str) -> Optional[str]:
+        """
+        :param record_id: The record identifier of a stored hypothesis.
+        :param name: The name of a fragment, as the knowledge tools name it.
+        :return: The IRI citing the named fragment of the hypothesis, ``None`` when the
+            hypothesis has no fragment of that name.
         """
 
     @abstractmethod

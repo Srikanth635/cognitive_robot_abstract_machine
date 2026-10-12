@@ -411,8 +411,15 @@ searches them with the world tools.
 are offered: read `knowledge_overview` first, follow what bears on the open slots, ground
 the choices on it and name the fragments relied on in `why`).
 
-**The answer** is one JSON array of at most N elements, each holding every slot path
-and `"why"` (one sentence, logged, never decoded):
+**The answer** is one JSON array of at most N elements, each holding every slot path,
+`"why"` (one sentence) and, when there is a source to name, `"grounds"`: what the
+choices rest on, each as `{"world": "<handle>"}` (when candidates are named by world
+handles) or `{"knowledge": "<fragment name>"}` (when the knowledge tools are offered).
+Each ground is checked against its source (`grounds.py`: `WorldGrounds` by
+`WorldAccess.is_live`, `KnowledgeGrounds` by `KnowledgeAccess.citation`); one naming
+nothing is sent back for repair (`UnknownGround`). The backend keeps a `Justification`
+per accepted instance in `justifications`: the instance, the `why`, and its `Ground`s,
+each a source and a stable identifier (a handle, or the IRI citing a fragment).
 
 | Slot | Answer |
 |---|---|
@@ -544,7 +551,7 @@ property (`matched_with`) holds both ways. A hypothesis is therefore built, admi
 read in any process, whatever krrood's symbol graph knows, including one that loaded a
 world first (I1; the first R7 run failed on exactly that).
 
-### 3.7 Resolver → knowledge component: the knowledge-access contract (version 1.0)
+### 3.7 Resolver → knowledge component: the knowledge-access contract (version 1.1)
 
 The resolver reads the knowledge component's own graph through `KnowledgeAccess`
 (`hypotheses/knowledge_access.py`, exported by `access.py`), as it reads the world
@@ -554,6 +561,7 @@ through `WorldAccess`. `KnowledgeService` fulfils it.
 |---|---|
 | `serve(query, instruction="")` | The record identifier of the hypothesis for a request (§3.6) |
 | `tools(record_id)` | The knowledge tools over that hypothesis, named by `KnowledgeToolName` |
+| `citation(record_id, name)` | The IRI citing a fragment of the hypothesis by the name the tools gave it, `None` when it has none (version 1.1) |
 | `instances_of(kind)` | The stored fragments of a vocabulary class: an EQL domain |
 | `is_vocabulary_class(kind)` | Whether a class's instances are knowledge rather than parts of the world |
 

@@ -23,6 +23,7 @@ from llm_reasoner.knowledge.access import (
     KnowledgeToolName,
     SituationFeatures,
 )
+from llm_reasoner.resolver.grounds import GroundKey, GroundSource
 from llm_reasoner.resolver.prompt_format import PromptRule, RuleName
 from llm_reasoner.resolver.prompts import RequestAnswerKey
 from llm_reasoner.world.access import identifier_of
@@ -34,8 +35,8 @@ KNOWLEDGE_RULE = PromptRule(
     "stereotypical knowledge of the requested action in its situation: its phases, "
     f"their subgoals and conditions, and its roles. Read "
     f"{KnowledgeToolName.KNOWLEDGE_OVERVIEW} first, follow what bears on the open "
-    "slots, ground your choices on it, and name the fragments you relied on in "
-    f'"{RequestAnswerKey.WHY}".',
+    "slots, ground your choices on it, and list the fragments you relied on in "
+    f'"{RequestAnswerKey.GROUNDS}".',
 )
 """
 The rule stating how the knowledge about the requested action is read and used, when
@@ -65,6 +66,34 @@ class KnowledgeConsultation:
     The identifier of the stored hypothesis served for the situation, ``None`` when no
     knowledge describes the designator.
     """
+
+
+@dataclass(frozen=True)
+class KnowledgeGrounds(GroundSource):
+    """
+    The fragments of a consulted hypothesis, named as the knowledge tools name them.
+    """
+
+    service: KnowledgeAccess
+    """
+    The knowledge component holding the hypothesis.
+    """
+
+    record_id: str
+    """
+    The record identifier of the hypothesis.
+    """
+
+    @property
+    def key(self) -> GroundKey:
+        return GroundKey.KNOWLEDGE
+
+    @property
+    def name_form(self) -> str:
+        return "a fragment name, as the knowledge tools give it"
+
+    def identify(self, name: str) -> Optional[str]:
+        return self.service.citation(self.record_id, name)
 
 
 @dataclass
@@ -121,6 +150,17 @@ class KnowledgeRequester:
         if consultation.record_id is None:
             return []
         return self.service.tools(consultation.record_id)
+
+    def grounds_in(self, consultation: KnowledgeConsultation) -> list[GroundSource]:
+        """
+        :return: The fragments of the hypothesis a consultation obtained, as what an
+            answer may rest on; none when no knowledge describes its designator.
+        """
+        if consultation.record_id is None:
+            return []
+        return [
+            KnowledgeGrounds(service=self.service, record_id=consultation.record_id)
+        ]
 
     def situation_of(
         self, described: DescribedAction, situation_backend: GenerativeBackend

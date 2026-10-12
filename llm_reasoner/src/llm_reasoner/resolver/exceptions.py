@@ -75,6 +75,20 @@ class MissingSlotInResponse(RetryableModelFailure):
 
 
 @dataclass
+class UnknownGround(RetryableModelFailure):
+    """Raised when an answer rests on something its source does not have."""
+
+    source: str
+    """The source the answer named it in."""
+
+    name: str
+    """The name the answer gave."""
+
+    def __str__(self) -> str:
+        return f"Response rests on {self.name!r}, which {self.source!r} does not have."
+
+
+@dataclass
 class SlotValueRejected(RetryableModelFailure):
     """Raised when a value cannot be decoded into its slot's declared type."""
 

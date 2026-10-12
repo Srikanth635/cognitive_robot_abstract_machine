@@ -261,6 +261,11 @@ class RuleName(StrEnum):
     How the knowledge about the requested action is read and used.
     """
 
+    GROUNDS = "grounds"
+    """
+    How an element names what its choices rest on.
+    """
+
 
 @dataclass(frozen=True)
 class PromptRule:
@@ -476,6 +481,11 @@ class SchemaKey(StrEnum):
     ADDITIONAL_PROPERTIES = "additionalProperties"
     """
     Whether an object may hold keys not named.
+    """
+
+    ANY_OF = "anyOf"
+    """
+    The schemas a value may match, any one of them.
     """
 
 
