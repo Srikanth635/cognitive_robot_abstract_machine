@@ -162,6 +162,16 @@ variation; the lasting limit is that the knowledge's tilt range is wide and hold
 default, while the parameters it states more narrowly (tilt rate 5–30°/s, transferred
 quantity) have no field on coraplex's `PouringAction` to choose.
 
+**Structured generation prompts (2026-10-12):** K8 ("…until I tell you to stop") chose
+LIQUID and INSTRUCTED_STOP, a combination not yet stored, and the hypothesis generated
+with the structured prompts was admitted on its second attempt, like K4 and K5 under
+the prose prompts; the answer and patch were of the same size (about 30k characters,
+then a patch of a few hundred). Generation cost $0.51 against $0.30–0.41 before: the
+system prompt carries the types as indented JSON, 130k characters against 81k, on every
+attempt. It is paid once per situation, since the hypothesis is then stored. K7 (honey)
+was judged LIQUID and served the stored liquid hypothesis, so it did not exercise the
+generation.
+
 **Seen but not yet acted on (R7):** the request resolved every case alike (RIGHT, the default
 tilt of 1.85 rad), whatever the task, since it does not read the hypothesis yet; and
 the world does not say what the cup holds, so the material came from the task alone.
@@ -253,7 +263,7 @@ approval.
 | Computed world values: poses, reachability, contact, which gripper holds what | Grounds the arm and geometry choices the model now calls arbitrary | Deferred; options: (a) a registry in krrood's `@symbolic_function`, (b) SDT moves the functions to class form, (c) SDT marks its properties with krrood field metadata, (d) `llm_reasoner` reads zero-argument properties generically. No choice yet |
 | Linking the knowledge component to the resolver and the world injector | Lets the resolver use action knowledge | The request is built (R1–R6, `architecture.md` §3.6): the resolver obtains the hypothesis before every request to its model. Reading it, as knowledge tools (`architecture.md` §2.3), is next after R7 |
 | Representing knowledge for tools | Several perspectives, organised by action concept, addressable fragments, objectives and consequences first-class | Requirements K1–K4 recorded below; design next |
-| Structured prompts for the knowledge component | Its system, initial and repair prompts are prose built in Python, unlike the resolver's tagged sections | Proposed |
+| Structured prompts for the knowledge component | Its system, initial and repair prompts were prose built in Python, unlike the resolver's tagged sections | **Done** 2026-10-12 (`architecture.md` §3.2): tagged sections, JSON data and named rules; the system prompt grew from about 80k to 130k characters (the types as indented JSON) |
 | Designator slots supplied from the SDT world (containers, arms) | Replaces hand-written bindings | Deferred |
 | Choosing smaller pouring structures from the world state | The full 12-phase pouring structure is always required | Deferred |
 | An MCP server over the world-access contract | For consumers outside the resolver's process | When a second consumer needs it |
