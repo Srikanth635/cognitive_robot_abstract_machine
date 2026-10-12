@@ -38,6 +38,7 @@ from llm_reasoner.world.values import (
     WorldStateDependentValue,
 )
 from llm_reasoner.world.holders import Holder
+from llm_reasoner.world.sources import FOUNDATION_PACKAGE, SymbolGraphSource
 from llm_reasoner.world.view import WorldView
 
 from . import world_mimics_sharing_a_name
@@ -76,6 +77,27 @@ class TestKinds:
         ]
         assert summary.summary == WorldBody.__doc__
         assert summary.individual_count == len(bodies)
+
+    def test_an_excluded_package_holds_neither_kinds_nor_individuals_of_the_world(
+        self,
+    ):
+        other_vessel = world_mimics_sharing_a_name.VesselAnnotation()
+        source = SymbolGraphSource(
+            excluded_packages=(
+                FOUNDATION_PACKAGE,
+                world_mimics_sharing_a_name.__name__,
+            )
+        )
+        assert type(other_vessel) not in source.kinds()
+        assert not any(found is other_vessel for found in source.individuals())
+        assert source.individuals_of(type(other_vessel)) == []
+
+    def test_by_default_only_the_symbol_graphs_own_package_is_excluded(self):
+        other_vessel = world_mimics_sharing_a_name.VesselAnnotation()
+        source = SymbolGraphSource()
+        assert source.excluded_packages == (FOUNDATION_PACKAGE,)
+        assert type(other_vessel) in source.kinds()
+        assert any(found is other_vessel for found in source.individuals())
 
     def test_kinds_within_a_kind_are_the_kind_and_its_specialisations(self, view):
         names = {kind.name for kind in view.kinds(within=identifier_of(BodyAnnotation))}
