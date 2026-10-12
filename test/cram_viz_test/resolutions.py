@@ -25,6 +25,7 @@ from cram_viz.resolution.resolver import (
     ResolvedSlot,
     ShownGround,
 )
+from cram_viz.resolution.runs import ResolutionRuns
 
 
 def objects_given() -> ResolvedDesignator:
@@ -59,6 +60,7 @@ def objects_given() -> ResolvedDesignator:
         situation={},
         record_id=None,
         cost=0.05,
+        run="a-run",
     )
 
 
@@ -75,24 +77,33 @@ def recorded(name: str) -> dict:
     return json.loads((CASES / f"{name}.json").read_text())
 
 
-def resolver_replaying(name: str, store: HypothesisStore) -> DesignatorResolver:
+def resolver_replaying(
+    name: str, store: HypothesisStore, runs: Path, times: int = 1
+) -> DesignatorResolver:
     """
-    :return: A resolver whose models replay the recording.
+    :param name: The recording to replay.
+    :param store: The knowledge store every run starts from.
+    :param runs: Where the runs are kept.
+    :param times: How many runs the recording is replayed for.
+    :return: A resolver whose models replay the recording in each run.
     """
     recording = recorded(name)
     return DesignatorResolver(
         client=ScriptedClient(
             tool_turns=[json.dumps(turn["answer"]) for turn in recording["turns"]]
+            * times
         ),
-        knowledge=KnowledgeService(
+        baseline=KnowledgeService(
             backend=HypothesisBackend(
                 client=ScriptedClient(
                     responses=[
                         json.dumps(answer) for answer in recording["generations"]
                     ]
+                    * times
                 ),
                 suite=AcceptanceSuite(rules=[]),
                 store=store,
             )
         ),
+        runs=ResolutionRuns(directory=runs),
     )

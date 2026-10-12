@@ -58,6 +58,14 @@ def hypothesis_store_dir() -> Path:
     return data_dir() / "hypotheses"
 
 
+def resolution_runs_dir() -> Path:
+    """
+    Where every resolution run is kept: the knowledge it consulted and generated, and
+    what it resolved, apart from every other run's.
+    """
+    return data_dir() / "runs"
+
+
 #: the optional cram-scenes submodule checkout (``<member dir>/scenes``)
 SCENES_SUBMODULE = WEB_ROOT.parents[2] / "scenes"
 

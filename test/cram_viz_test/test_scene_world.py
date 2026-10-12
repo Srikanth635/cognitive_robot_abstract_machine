@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import weakref
 from pathlib import Path
 
 import numpy as np
@@ -92,6 +93,20 @@ class TestSceneWorlds:
         second = worlds.world_for("other", other)
         assert second is not first
         assert worlds.world is second
+
+    def test_the_initial_world_is_built_anew_every_time_it_is_asked_for(
+        self, pouring_bundle
+    ):
+        worlds = SceneWorlds()
+        first = weakref.ref(worlds.initial_world_for("pouring", pouring_bundle))
+        second = worlds.initial_world_for("pouring", pouring_bundle)
+        assert first() is None
+        assert worlds.world is second
+        assert list(SymbolGraph().get_instances_of_type(PouringCup)) == [
+            annotation
+            for annotation in second.semantic_annotations
+            if isinstance(annotation, PouringCup)
+        ]
 
     def test_a_replaced_world_leaves_none_of_its_objects_in_the_symbol_graph(
         self, pouring_bundle, tmp_path

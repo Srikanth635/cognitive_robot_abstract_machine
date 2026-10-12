@@ -79,6 +79,7 @@ function resolvedPayload() {
         grounds: [{ source: 'knowledge', name: 'ph_tilt' }],
       }],
       situation: { has_material_regime: 'LIQUID' }, record_id: 'abc', cost: 0.05,
+      run: 'run-1',
     },
     hypothesis: {
       ok: true, crumb: 'hypothesis graph', root: 'g0',
@@ -258,6 +259,16 @@ test('a resolution shows the match query it resolved', async function () {
 
   const answer = panel.elements['#answer'].innerHTML;
   assert.ok(answer.includes(resolvedPayload().resolution.query.split('\n')[0]));
+});
+
+test('a resolution names the run it was made in', async function () {
+  const panel = loadEqlPanel();
+  await settle();
+
+  chips(panel)[0].listeners.click();
+  await settle();
+
+  assert.ok(panel.elements['#answer'].innerHTML.includes(resolvedPayload().resolution.run));
 });
 
 test('a resolution refreshes the presets, since the new knowledge changes them', async function () {
