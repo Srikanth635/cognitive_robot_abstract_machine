@@ -36,7 +36,7 @@ from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     pouring,
     prehension,
 )
-from llm_reasoner.hypotheses.graph import (
+from llm_reasoner.knowledge.hypotheses.graph import (
     HypothesisGraphNode,
 )
 from llm_reasoner.knowledge.ontologies.terms import ConceptReference, DescriptionEntity

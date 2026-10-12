@@ -17,7 +17,7 @@ from enum import StrEnum
 from operator import attrgetter
 
 from llm_reasoner.knowledge.generation.schema import is_inferred
-from llm_reasoner.hypotheses.view import HypothesisView
+from llm_reasoner.knowledge.hypotheses.view import HypothesisView
 from llm_reasoner.knowledge.ontologies.terms import (
     ConceptReference,
     DescriptionEntity,

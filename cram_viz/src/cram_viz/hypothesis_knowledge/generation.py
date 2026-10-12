@@ -2,7 +2,7 @@
 Turning a natural-language instruction into displayed, queryable knowledge.
 
 An instruction is answered by ``llm_reasoner``'s
-:class:`~llm_reasoner.hypotheses.service.KnowledgeService`: a stored hypothesis for the
+:class:`~llm_reasoner.knowledge.hypotheses.service.KnowledgeService`: a stored hypothesis for the
 same instruction is reused, and otherwise a model generates one, which is checked
 against the acceptance rules, repaired when it breaks them, and stored. The resulting
 view becomes the viewer's active knowledge -- projected and exposed as EQL domains
@@ -35,8 +35,8 @@ from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.clients import AnthropicClient
 from llm_reasoner.clients.base import LanguageModelClient
 from llm_reasoner.knowledge.generation.backend import HypothesisBackend
-from llm_reasoner.hypotheses.service import KnowledgeService
-from llm_reasoner.hypotheses.view import HypothesisView
+from llm_reasoner.knowledge.hypotheses.service import KnowledgeService
+from llm_reasoner.knowledge.hypotheses.view import HypothesisView
 from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE
 from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import pouring

@@ -2,8 +2,8 @@
 Real, EQL-queryable pouring knowledge for the Hypothesis Graph tab.
 
 A stored hypothesis is read through ``llm_reasoner``'s
-:class:`~llm_reasoner.hypotheses.view.HypothesisView`, projected through its
-:class:`~llm_reasoner.hypotheses.graph.HypothesisGraphProjector`, and presented phase
+:class:`~llm_reasoner.knowledge.hypotheses.view.HypothesisView`, projected through its
+:class:`~llm_reasoner.knowledge.hypotheses.graph.HypothesisGraphProjector`, and presented phase
 first by :class:`.phase_hierarchy.PhaseHierarchyOverlay`.
 
 The hypothesis comes either from the checked-in sample store (:func:`sample_view`) or
@@ -20,12 +20,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from llm_reasoner.knowledge.storage.store import HypothesisStore
-from llm_reasoner.hypotheses.graph import (
+from llm_reasoner.knowledge.hypotheses.graph import (
     HypothesisGraph,
     HypothesisGraphPresentation,
     HypothesisGraphProjector,
 )
-from llm_reasoner.hypotheses.view import HypothesisView
+from llm_reasoner.knowledge.hypotheses.view import HypothesisView
 from typing_extensions import Any, Dict, Optional
 
 from cram_viz import paths
