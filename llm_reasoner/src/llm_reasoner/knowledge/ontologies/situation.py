@@ -11,6 +11,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, fields
 from enum import StrEnum
+from operator import attrgetter
+
+from typing_extensions import Optional
 
 from krrood.entity_query_language.verbalization.rendering.source_documentation import (
     _attribute_docstrings,
@@ -56,6 +59,13 @@ class SituationFeature:
     """
     The variant of the structure each value defines, for the values that define one.
     """
+
+    def value_in(self, structure: DescriptionEntity) -> Optional[StrEnum]:
+        """
+        :param structure: A structure of the class the feature belongs to.
+        :return: The structure's value of the feature, ``None`` when it has none.
+        """
+        return attrgetter(self.field_name)(structure)
 
 
 @dataclass

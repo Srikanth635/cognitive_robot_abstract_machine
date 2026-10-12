@@ -65,3 +65,18 @@ class TestSituationFeatures:
 
     def test_a_structure_without_variants_by_value_has_no_features(self):
         assert SituationFeatures().of(core.ActionPhaseStructure) == []
+
+    def test_a_feature_reads_its_value_from_a_structure(self):
+        material = features_by_field(pouring.PouringPhaseStructure)[
+            "has_material_regime"
+        ]
+        structure = pouring.PouringPhaseStructure(
+            has_material_regime=pouring.MaterialRegime.COHESIVE
+        )
+        assert material.value_in(structure) is pouring.MaterialRegime.COHESIVE
+
+    def test_a_feature_left_unset_reads_as_nothing(self):
+        material = features_by_field(pouring.PouringPhaseStructure)[
+            "has_material_regime"
+        ]
+        assert material.value_in(pouring.PouringPhaseStructure()) is None
