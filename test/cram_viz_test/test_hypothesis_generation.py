@@ -15,16 +15,16 @@ from pathlib import Path
 
 import pytest
 
-from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite
-from llm_reasoner.knowledge.admission.hermit import HermitCheck
-from llm_reasoner.clients.base import ScriptedClient
-from llm_reasoner.knowledge.generation.backend import HypothesisRejected
-from llm_reasoner.knowledge.hypotheses.view import HypothesisView
-from llm_reasoner.knowledge.ontologies import (
+from llm_reasoner.knowledge.access import (
+    AcceptanceSuite,
     CRAM_AICOR_NAMESPACE,
+    HermitCheck,
+    HypothesisRejected,
+    HypothesisView,
     LinkedOntologyVariable,
+    pouring,
 )
-from llm_reasoner.knowledge.ontologies.predictive_manipulation import pouring
+from llm_reasoner.clients.base import ScriptedClient
 
 from cram_viz import hypothesis_knowledge
 from cram_viz.hypothesis_knowledge.generation import (

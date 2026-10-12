@@ -10,18 +10,16 @@ import pytest
 
 krrood = pytest.importorskip("krrood", reason="EQL requires krrood")
 
-from llm_reasoner.knowledge.acceptance.derived import described  # noqa: E402
-from llm_reasoner.knowledge.acceptance.vocabulary import Vocabulary  # noqa: E402
-from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE  # noqa: E402
-from llm_reasoner.knowledge.ontologies.predictive_manipulation import (  # noqa: E402
+from llm_reasoner.knowledge.access import (  # noqa: E402
+    ConceptReference,
     core,
+    CRAM_AICOR_NAMESPACE,
+    described,
+    DescriptionEntity,
     pouring,
     prehension,
-)
-from llm_reasoner.knowledge.ontologies.terms import (  # noqa: E402
-    ConceptReference,
-    DescriptionEntity,
     PropertyTerm,
+    Vocabulary,
 )
 
 from cram_viz import hypothesis_knowledge  # noqa: E402

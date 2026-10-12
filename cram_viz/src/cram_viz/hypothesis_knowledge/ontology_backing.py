@@ -9,8 +9,8 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
 
-from llm_reasoner.knowledge.generation.wire import CONCEPT_PREFIXES
-from llm_reasoner.knowledge.ontologies import (
+from llm_reasoner.knowledge.access import (
+    CONCEPT_PREFIXES,
     CRAM_AICOR_NAMESPACE,
     DUL_NAMESPACE,
     HYPOTHESIS_CONCEPT_NAMESPACE,

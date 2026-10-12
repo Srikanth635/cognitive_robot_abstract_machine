@@ -13,20 +13,18 @@ from enum import StrEnum
 from functools import cache
 from operator import attrgetter
 
-from llm_reasoner.knowledge.acceptance.derived import described
-from llm_reasoner.knowledge.acceptance.restrictions import ClosedWorldMembership
-from llm_reasoner.knowledge.acceptance.vocabulary import Vocabulary
-from llm_reasoner.knowledge.generation.schema import is_inferred
-from llm_reasoner.knowledge.hypotheses.view import HypothesisView
-from llm_reasoner.knowledge.ontologies import (
+from llm_reasoner.knowledge.access import (
+    ClosedWorldMembership,
+    ConceptReference,
+    described,
+    DescriptionEntity,
+    HypothesisView,
+    is_inferred,
+    OntologyFiles,
     PREDICTIVE_MANIPULATION_NAMESPACE_ROOT,
     PredictiveManipulationOntologyFile,
-)
-from llm_reasoner.knowledge.ontologies.linked import OntologyFiles
-from llm_reasoner.knowledge.ontologies.terms import (
-    ConceptReference,
-    DescriptionEntity,
     PropertyTerm,
+    Vocabulary,
 )
 from rdflib import OWL, RDF, RDFS, Graph, URIRef
 from rdflib.collection import Collection

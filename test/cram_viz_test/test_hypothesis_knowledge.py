@@ -7,17 +7,13 @@ import pytest
 
 krrood = pytest.importorskip("krrood", reason="EQL requires krrood")
 
-from llm_reasoner.knowledge.acceptance.rules import Severity  # noqa: E402
-from llm_reasoner.knowledge.acceptance.suite import (  # noqa: E402
-    predictive_manipulation_suite,
-)
-from llm_reasoner.knowledge.admission.rdf import GraphReader  # noqa: E402
-from llm_reasoner.knowledge.storage.store import HypothesisStore  # noqa: E402
-from llm_reasoner.knowledge.hypotheses.graph import (  # noqa: E402
+from llm_reasoner.knowledge.access import (  # noqa: E402
+    GraphReader,
     HypothesisGraphNodeKind,
-)
-from llm_reasoner.knowledge.ontologies.predictive_manipulation import (  # noqa: E402
+    HypothesisStore,
     pouring,
+    predictive_manipulation_suite,
+    Severity,
 )
 
 from cram_viz import hypothesis_knowledge, paths  # noqa: E402

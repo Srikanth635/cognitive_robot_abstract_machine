@@ -7,7 +7,7 @@ import pytest
 
 krrood = pytest.importorskip("krrood", reason="EQL requires krrood")
 
-from llm_reasoner.knowledge.ontologies.predictive_manipulation import (  # noqa: E402
+from llm_reasoner.knowledge.access import (  # noqa: E402
     pouring,
 )
 

@@ -19,13 +19,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from llm_reasoner.knowledge.storage.store import HypothesisStore
-from llm_reasoner.knowledge.hypotheses.graph import (
+from llm_reasoner.knowledge.access import (
     HypothesisGraph,
     HypothesisGraphPresentation,
     HypothesisGraphProjector,
+    HypothesisStore,
+    HypothesisView,
 )
-from llm_reasoner.knowledge.hypotheses.view import HypothesisView
 from typing_extensions import Any, Dict, Optional
 
 from cram_viz import paths

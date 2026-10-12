@@ -8,10 +8,11 @@ import rustworkx as rx
 
 krrood = pytest.importorskip("krrood", reason="EQL requires krrood")
 
-from llm_reasoner.knowledge.hypotheses.graph import (  # noqa: E402
+from llm_reasoner.knowledge.access import (  # noqa: E402
     HypothesisGraphNodeKind,
     HypothesisGraphPresentation,
     HypothesisGraphProjector,
+    PropertyTerm,
     SyntheticHypothesisRelation,
 )
 
@@ -22,7 +23,6 @@ from cram_viz.hypothesis_knowledge.phase_hierarchy import (  # noqa: E402
     PhaseHierarchyOverlay,
     PhaseHierarchyRelation,
 )
-from llm_reasoner.knowledge.ontologies.terms import PropertyTerm  # noqa: E402
 
 # %% helpers
 

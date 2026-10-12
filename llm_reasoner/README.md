@@ -54,13 +54,15 @@ from pathlib import Path
 
 from krrood.entity_query_language.factories import the
 
-from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.clients import AnthropicClient
-from llm_reasoner.knowledge.generation.backend import HypothesisBackend
-from llm_reasoner.knowledge.hypotheses.service import KnowledgeService
-from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE
-from llm_reasoner.knowledge.ontologies.predictive_manipulation import pouring
-from llm_reasoner.knowledge.ontologies.terms import ConceptReference
+from llm_reasoner.knowledge.access import (
+    CRAM_AICOR_NAMESPACE,
+    ConceptReference,
+    HypothesisBackend,
+    HypothesisStore,
+    KnowledgeService,
+    pouring,
+)
 
 service = KnowledgeService(
     backend=HypothesisBackend(
