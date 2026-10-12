@@ -42,6 +42,7 @@ from llm_reasoner.knowledge.generation.schema import (
     GenerationSchema,
     type_schema_for,
 )
+from llm_reasoner.knowledge.generation.assessment import HypothesisAssessor
 from llm_reasoner.knowledge.generation.request import (
     HypothesisRequest,
     UnsupportedFixedValue,
@@ -687,6 +688,31 @@ class ConflictWith(ConsistencyCheck):
         return not any(
             str(subject).endswith("#" + self.identifier) for subject in graph.subjects()
         )
+
+
+class TestHypothesisAssessor:
+    """
+    Judging one decoded answer: closed world first, then open world.
+    """
+
+    def test_an_answer_meeting_the_request_and_the_rules_is_admitted(self):
+        decoded = structure_decoder().decode(GenerationCase.CHAINED_STRUCTURE.text)
+        request = HypothesisRequest.from_match(pouring_query(), instruction="pour")
+        assessment = HypothesisAssessor(suite=AcceptanceSuite(rules=[])).assess(
+            decoded, request
+        )
+        assert assessment.problems == []
+        assert assessment.hypothesis is decoded.hypothesis
+
+    def test_an_open_world_contradiction_is_a_problem_naming_its_check(self):
+        decoded = structure_decoder().decode(GenerationCase.LOOPING_STRUCTURE.text)
+        request = HypothesisRequest.from_match(pouring_query(), instruction="pour")
+        assessor = HypothesisAssessor(
+            suite=AcceptanceSuite(rules=[]),
+            consistency=ConflictWith(identifier="back_to_tilt"),
+        )
+        (problem,) = assessor.assess(decoded, request).problems
+        assert str(OpenWorldCheck.CONSISTENT_WITH_ONTOLOGY) in problem
 
 
 class TestAdmission:

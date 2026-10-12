@@ -13,24 +13,15 @@ repair budget is spent.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from operator import attrgetter
 
 from krrood.entity_query_language.backends import GenerativeBackend
 from krrood.entity_query_language.query.match import Match
-from typing_extensions import Any, Iterable, Optional, TypeVar
+from typing_extensions import Iterable, Optional, TypeVar
 
-from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite, Severity, Violation
+from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite, Violation
 from llm_reasoner.knowledge.storage.citation import Citation
-from llm_reasoner.knowledge.admission.consistency import (
-    ConsistencyCheck,
-    ContradictionLocaliser,
-    OpenWorldCheck,
-)
-from llm_reasoner.knowledge.representation.rdf import (
-    HYPOTHESIS_NAMESPACE_ROOT,
-    GraphReader,
-    GraphWriter,
-)
+from llm_reasoner.knowledge.admission.consistency import ConsistencyCheck
+from llm_reasoner.knowledge.representation.rdf import GraphReader, GraphWriter
 from llm_reasoner.knowledge.storage.record import (
     ConsistencyVerdict,
     HypothesisRecord,
@@ -44,23 +35,15 @@ from llm_reasoner.exceptions import LLMReasonerError
 from llm_reasoner.knowledge.generation.prompts import (
     GenerationPrompt,
     described_violation,
-    written_value,
 )
+from llm_reasoner.knowledge.generation.assessment import HypothesisAssessor
 from llm_reasoner.knowledge.generation.request import HypothesisRequest
 from llm_reasoner.knowledge.generation.schema import GenerationSchema
 from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms
-from llm_reasoner.knowledge.generation.wire import (
-    DecodedHypothesis,
-    DecodingResult,
-    FragmentDecoder,
-)
+from llm_reasoner.knowledge.generation.wire import FragmentDecoder
+from llm_reasoner.knowledge.representation.hypothesis import DecodedHypothesis
 
 T = TypeVar("T")
-
-DRAFT_NAMESPACE = HYPOTHESIS_NAMESPACE_ROOT + "draft#"
-"""
-The namespace an answer is written in while the reasoner checks it.
-"""
 
 # %% exceptions
 
@@ -131,29 +114,6 @@ class AnswerUnderRepair:
     """
 
 
-@dataclass
-class Assessment:
-    """
-    The judgement of one answer: admitted with its warnings, or rejected for its
-    problems.
-    """
-
-    problems: list[str] = field(default_factory=list)
-    """
-    What is wrong with the answer, as the model is told.
-    """
-
-    hypothesis: Optional[DecodedHypothesis] = None
-    """
-    The hypothesis, when the answer was admitted.
-    """
-
-    warnings: list[Violation] = field(default_factory=list)
-    """
-    The violations of warning severity, when the answer was admitted.
-    """
-
-
 # %% backend
 
 
@@ -170,8 +130,8 @@ class HypothesisBackend(GenerativeBackend):
 
     instruction: str = ""
     """
-    The action to describe, in plain words, such as "pour milk from the carton into
-    the bowl"; the type being generated when empty.
+    The action to describe, in plain words, such as "pour milk from the carton into the
+    bowl"; the type being generated when empty.
     """
 
     suite: AcceptanceSuite = field(default_factory=predictive_manipulation_suite)
@@ -197,8 +157,8 @@ class HypothesisBackend(GenerativeBackend):
 
     linked_terms: Optional[LinkedOntologyTerms] = field(kw_only=True, default=None)
     """
-    The terms CRAM-AICOR and DUL declare, which concepts named in their namespaces
-    must be among; without them such concepts are not checked.
+    The terms CRAM-AICOR and DUL declare, which concepts named in their namespaces must
+    be among; without them such concepts are not checked.
     """
 
     store: Optional[HypothesisStore] = field(kw_only=True, default=None)
@@ -238,6 +198,7 @@ class HypothesisBackend(GenerativeBackend):
             return
         schema = GenerationSchema.for_root(expression.type)
         decoder = FragmentDecoder(schema, linked_terms=self.linked_terms)
+        assessor = HypothesisAssessor(suite=self.suite, consistency=self.consistency)
         system_prompt = self.prompt.system(schema)
         initial_prompt = self.prompt.initial(schema, instruction, fixed)
         prompt = initial_prompt
@@ -261,7 +222,7 @@ class HypothesisBackend(GenerativeBackend):
                 if under_repair is None
                 else decoder.merged(under_repair.answer, raw_response)
             )
-            assessment = self.assess(decoder.decode(answer), fixed)
+            assessment = assessor.assess(decoder.decode(answer), request)
             if assessment.hypothesis is not None:
                 self.last_outcome = GenerationOutcome(
                     hypothesis=assessment.hypothesis,
@@ -285,74 +246,6 @@ class HypothesisBackend(GenerativeBackend):
         raise HypothesisRejected(
             problems=under_repair.problems, exchanges=list(self.log)
         )
-
-    def assess(self, decoded: DecodingResult, fixed: dict[str, Any]) -> Assessment:
-        """
-        :return: Whether a decoded answer is admitted, with its warnings, or what is
-            wrong with it.
-        """
-        if decoded.hypothesis is None:
-            return Assessment(problems=decoded.problems + self.rule_problems(decoded))
-        hypothesis = decoded.hypothesis
-        problems = [
-            f"the root fragment '{hypothesis.identifier_of(hypothesis.root)}' must have "
-            f"{name} = {written_value(value)}"
-            for name, value in fixed.items()
-            if not self.agrees(attrgetter(name)(hypothesis.root), value)
-        ]
-        violations = self.suite.violations(hypothesis.fragments)
-        problems.extend(
-            described_violation(violation, hypothesis.identifier_of)
-            for violation in violations
-            if violation.severity == Severity.ERROR
-        )
-        if not problems and self.consistency is not None:
-            conflict = ContradictionLocaliser(self.consistency).conflict(
-                GraphWriter(namespace=DRAFT_NAMESPACE).write(hypothesis)
-            )
-            if conflict:
-                problems.append(
-                    f"[{OpenWorldCheck.CONSISTENT_WITH_ONTOLOGY}] fragments "
-                    + ", ".join(
-                        f"'{str(node).removeprefix(DRAFT_NAMESPACE)}'"
-                        for node in conflict
-                    )
-                    + " together contradict the ontology, CRAM-AICOR or DUL"
-                )
-        if problems:
-            return Assessment(problems=problems)
-        return Assessment(
-            hypothesis=hypothesis,
-            warnings=[
-                violation
-                for violation in violations
-                if violation.severity == Severity.WARNING
-            ],
-        )
-
-    def rule_problems(self, decoded: DecodingResult) -> list[str]:
-        """
-        :return: The rule errors of what could be linked of an answer with problems,
-            so a repair corrects both at once; none when not even the root could be
-            linked.
-        """
-        partial = decoded.partial
-        if partial is None:
-            return []
-        return [
-            described_violation(violation, partial.identifier_of)
-            for violation in self.suite.violations(partial.fragments)
-            if violation.severity == Severity.ERROR
-        ]
-
-    @staticmethod
-    def agrees(stated: Any, fixed: Any) -> bool:
-        """
-        :return: Whether the value an answer states is the value the query fixes.
-        """
-        if isinstance(fixed, (list, tuple)):
-            return list(stated) == list(fixed)
-        return stated == fixed
 
     def admit(
         self,
