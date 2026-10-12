@@ -15,7 +15,7 @@ from llm_reasoner.knowledge.acceptance.rules import (
     TypedRule,
     Violation,
 )
-from llm_reasoner.knowledge.acceptance.vocabulary import Vocabulary
+from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
 from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity, PropertyTerm
 

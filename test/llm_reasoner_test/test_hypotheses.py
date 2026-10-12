@@ -15,11 +15,11 @@ from krrood.entity_query_language.factories import the
 
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite
 from llm_reasoner.knowledge.storage.citation import Citation, NotAHypothesisCitation
-from llm_reasoner.knowledge.admission.rdf import HYPOTHESIS_NAMESPACE_ROOT
+from llm_reasoner.knowledge.representation.rdf import HYPOTHESIS_NAMESPACE_ROOT
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.knowledge.generation.backend import HypothesisBackend
-from llm_reasoner.knowledge.generation.schema import is_inferred
+from llm_reasoner.knowledge.ontologies.terms import is_inferred
 from llm_reasoner.knowledge.hypotheses.graph import (
     HypothesisGraph,
     HypothesisGraphNodeKind,

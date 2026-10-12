@@ -17,10 +17,10 @@ from rdflib import OWL, RDF, RDFS, XSD, Graph, Literal, URIRef
 from rdflib.term import Node
 from typing_extensions import Any, Optional, Sequence
 
-from llm_reasoner.knowledge.acceptance.vocabulary import Vocabulary
+from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.exceptions import LLMReasonerError
-from llm_reasoner.knowledge.generation.schema import is_inferred
-from llm_reasoner.knowledge.generation.wire import DecodedHypothesis
+from llm_reasoner.knowledge.ontologies.terms import is_inferred
+from llm_reasoner.knowledge.representation.hypothesis import DecodedHypothesis
 from llm_reasoner.knowledge.ontologies import PREDICTIVE_MANIPULATION_NAMESPACE_ROOT
 from llm_reasoner.knowledge.ontologies.terms import (
     ConceptReference,

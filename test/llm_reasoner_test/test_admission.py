@@ -24,7 +24,7 @@ from llm_reasoner.knowledge.admission.consistency import (
     OpenWorldCheck,
 )
 from llm_reasoner.knowledge.admission.hermit import HermitCheck
-from llm_reasoner.knowledge.admission.rdf import GraphReader, GraphWriter
+from llm_reasoner.knowledge.representation.rdf import GraphReader, GraphWriter
 from llm_reasoner.knowledge.storage.record import (
     ConsistencyVerdict,
     HypothesisRecord,
@@ -35,7 +35,8 @@ from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.clients.base import Exchange, ScriptedClient
 from llm_reasoner.knowledge.generation.backend import HypothesisBackend
 from llm_reasoner.knowledge.generation.schema import GenerationSchema
-from llm_reasoner.knowledge.generation.wire import DecodedHypothesis, FragmentDecoder
+from llm_reasoner.knowledge.generation.wire import FragmentDecoder
+from llm_reasoner.knowledge.representation.hypothesis import DecodedHypothesis
 from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_NAMESPACE,
     LinkedOntologyVariable,

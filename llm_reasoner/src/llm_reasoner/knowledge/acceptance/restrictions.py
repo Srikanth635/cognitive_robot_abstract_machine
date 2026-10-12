@@ -25,7 +25,7 @@ from krrood.entity_query_language.factories import (
 from rdflib import XSD
 from typing_extensions import Any, Iterable, Sequence
 
-from llm_reasoner.knowledge.acceptance.vocabulary import Vocabulary
+from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.exceptions import LLMReasonerError
 from llm_reasoner.knowledge.ontologies.terms import (
     ClassExpression,

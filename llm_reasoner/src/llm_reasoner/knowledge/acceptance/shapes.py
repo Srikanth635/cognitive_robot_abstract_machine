@@ -22,8 +22,8 @@ from typing_extensions import Any, Iterable, Optional, Sequence
 
 from llm_reasoner.knowledge.acceptance.derived import DerivedRule
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceRule, Severity, Violation
-from llm_reasoner.knowledge.acceptance.vocabulary import Vocabulary
-from llm_reasoner.knowledge.admission.rdf import GraphWriter
+from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
+from llm_reasoner.knowledge.representation.rdf import GraphWriter
 from llm_reasoner.knowledge.ontologies import (
     PREDICTIVE_MANIPULATION_SHAPES_NAMESPACE_ROOT,
     PredictiveManipulationOntologyFile,

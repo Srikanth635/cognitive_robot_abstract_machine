@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from llm_reasoner.knowledge.admission.rdf import HYPOTHESIS_NAMESPACE_ROOT
+from llm_reasoner.knowledge.representation.rdf import HYPOTHESIS_NAMESPACE_ROOT
 from llm_reasoner.exceptions import LLMReasonerError
 
 NAMESPACE_SEPARATOR = "#"
