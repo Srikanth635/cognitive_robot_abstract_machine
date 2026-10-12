@@ -17,7 +17,7 @@ from rdflib import Graph, Namespace
 from llm_reasoner.knowledge.acceptance.derived import described
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite
 from llm_reasoner.knowledge.acceptance.shapes import ShapesHold, StructureShapes
-from llm_reasoner.knowledge.acceptance.vocabulary import Vocabulary
+from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.knowledge.admission.consistency import (
     ConsistencyCheck,
     OpenWorldCheck,

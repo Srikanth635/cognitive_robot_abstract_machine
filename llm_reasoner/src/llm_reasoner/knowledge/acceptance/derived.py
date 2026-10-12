@@ -18,7 +18,7 @@ from typing_extensions import Any, Sequence
 
 from llm_reasoner.knowledge.acceptance.restrictions import ClosedWorldMembership
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceRule, Violation
-from llm_reasoner.knowledge.acceptance.vocabulary import Vocabulary
+from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.knowledge.ontologies.terms import (
     ClassExpression,
     ComplementOf,

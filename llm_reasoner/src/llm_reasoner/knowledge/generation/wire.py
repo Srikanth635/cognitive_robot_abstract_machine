@@ -17,13 +17,14 @@ from enum import Enum
 
 from typing_extensions import Any, Mapping, Optional
 
-from llm_reasoner.knowledge.acceptance.vocabulary import Vocabulary
+from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.knowledge.generation.schema import (
     AnswerKey,
     FieldKind,
     FieldSchema,
     GenerationSchema,
 )
+from llm_reasoner.knowledge.representation.hypothesis import DecodedHypothesis
 from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_NAMESPACE,
     DUL_NAMESPACE,
@@ -59,35 +60,6 @@ def prefixed_name(iri: str) -> str:
 
 
 # %% results
-
-
-@dataclass
-class DecodedHypothesis:
-    """
-    The fragments of one answer, linked into instances of the vocabulary.
-    """
-
-    root: DescriptionEntity
-    """
-    The fragment of the type being generated.
-    """
-
-    fragments: list[DescriptionEntity]
-    """
-    Every fragment, in the order the answer lists them.
-    """
-
-    identifiers: dict[int, str] = field(default_factory=dict)
-    """
-    The answer's identifier of each fragment, keyed by the fragment's identity.
-    """
-
-    def identifier_of(self, fragment: Any) -> str:
-        """
-        :return: The answer's identifier of a fragment, or an empty string for a value
-            the answer did not list.
-        """
-        return self.identifiers.get(id(fragment), "")
 
 
 @dataclass

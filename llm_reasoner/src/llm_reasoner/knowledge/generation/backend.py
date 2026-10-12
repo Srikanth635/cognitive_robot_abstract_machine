@@ -26,7 +26,7 @@ from llm_reasoner.knowledge.admission.consistency import (
     ContradictionLocaliser,
     OpenWorldCheck,
 )
-from llm_reasoner.knowledge.admission.rdf import (
+from llm_reasoner.knowledge.representation.rdf import (
     HYPOTHESIS_NAMESPACE_ROOT,
     GraphReader,
     GraphWriter,

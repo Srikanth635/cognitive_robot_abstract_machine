@@ -9,15 +9,12 @@ from llm_reasoner.knowledge.acceptance.derived import described
 from llm_reasoner.knowledge.acceptance.restrictions import ClosedWorldMembership
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite, Severity
 from llm_reasoner.knowledge.acceptance.suite import predictive_manipulation_suite
-from llm_reasoner.knowledge.acceptance.vocabulary import Vocabulary
 from llm_reasoner.knowledge.admission.consistency import ConsistencyCheck
 from llm_reasoner.knowledge.admission.hermit import HermitCheck
-from llm_reasoner.knowledge.admission.rdf import GraphReader
 from llm_reasoner.knowledge.generation.backend import (
     HypothesisBackend,
     HypothesisRejected,
 )
-from llm_reasoner.knowledge.generation.schema import is_inferred
 from llm_reasoner.knowledge.generation.wire import CONCEPT_PREFIXES
 from llm_reasoner.knowledge.hypotheses.graph import (
     HypothesisGraph,
@@ -50,7 +47,10 @@ from llm_reasoner.knowledge.ontologies.terms import (
     ConceptReference,
     DescriptionEntity,
     PropertyTerm,
+    is_inferred,
 )
+from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
+from llm_reasoner.knowledge.representation.rdf import GraphReader
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 
 __all__ = [

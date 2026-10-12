@@ -13,12 +13,12 @@ from krrood.class_diagrams.class_diagram import WrappedClass
 from krrood.entity_query_language.verbalization.rendering.source_documentation import (
     _attribute_docstrings,
 )
-from krrood.ontomatic.property_descriptor.property_descriptor import PropertyDescriptor
 from krrood.utils import recursive_subclasses
 from typing_extensions import Any
 
-from llm_reasoner.knowledge.acceptance.vocabulary import Vocabulary
+from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.knowledge.ontologies.terms import (
+    is_inferred,
     ConceptReference,
     DescriptionEntity,
     PropertyTerm,
@@ -299,17 +299,6 @@ def type_schema_for(python_type: type[DescriptionEntity]) -> TypeSchema:
         python_type=python_type,
         description=inspect.getdoc(python_type) or "",
         fields=tuple(fields),
-    )
-
-
-def is_inferred(python_type: type[DescriptionEntity], name: str) -> bool:
-    """
-    :return: Whether krrood fills the field from its sub-properties, so a model never
-        states it: its descriptor stands for a property other properties specialise.
-    """
-    descriptor = inspect.getattr_static(python_type, name, None)
-    return isinstance(descriptor, PropertyDescriptor) and bool(
-        type(descriptor).__subclasses__()
     )
 
 

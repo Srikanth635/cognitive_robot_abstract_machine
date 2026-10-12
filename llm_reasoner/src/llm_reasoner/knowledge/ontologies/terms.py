@@ -9,11 +9,13 @@ the ontology term it instantiates.
 
 from __future__ import annotations
 
+import inspect
 import re
 from abc import ABC
 from dataclasses import dataclass
 from enum import StrEnum
 
+from krrood.ontomatic.property_descriptor.property_descriptor import PropertyDescriptor
 from krrood.patterns.field_metadata import FieldMetadata
 from krrood.symbol_graph.symbol_graph import Symbol
 from typing_extensions import ClassVar, Optional, Union
@@ -276,3 +278,14 @@ class DescriptionEntity(Symbol):
     """
     A human-readable name for the entity.
     """
+
+
+def is_inferred(python_type: type[DescriptionEntity], name: str) -> bool:
+    """
+    :return: Whether krrood fills the field from its sub-properties, so a model never
+        states it: its descriptor stands for a property other properties specialise.
+    """
+    descriptor = inspect.getattr_static(python_type, name, None)
+    return isinstance(descriptor, PropertyDescriptor) and bool(
+        type(descriptor).__subclasses__()
+    )
