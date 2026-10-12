@@ -1,7 +1,8 @@
 """
 The world a scene bundle stands for: its models and its objects as a
-semantic_digital_twin world, each object annotated as what it is, so llm_reasoner's
-resolver reads the scene the viewer shows.
+semantic_digital_twin world, each object annotated as what it is, the robot on a drive
+over its surroundings where the recording starts, so llm_reasoner's resolver reads the
+scene the viewer shows and coraplex can act in it.
 
 A bundle's objects carry no semantic type, so which annotation each one gets is kept as
 data, by the object's identifier.
@@ -27,11 +28,17 @@ from semantic_digital_twin.adapters.urdf import URDFParser
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
 from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
 from semantic_digital_twin.world import World
+from semantic_digital_twin.world_description.connections import OmniDrive
 from typing_extensions import Any, Mapping, Optional, Sequence
 
 OBJECT_ANNOTATIONS_FILE = Path(__file__).parent / "object_annotations.json"
 """
 Which annotation class each scene object is, by the object's identifier.
+"""
+
+ROBOT_ANNOTATIONS_FILE = Path(__file__).parent / "robot_annotations.json"
+"""
+Which robot class each scene robot is, by the robot's name.
 """
 
 SCENE_FILE = "scene.json"
@@ -47,42 +54,83 @@ class SceneKey(StrEnum):
 
     MODELS = "models"
     URDF = "urdf"
+    ROBOT = "robot"
+    NAME = "name"
+    TRAJECTORY = "trajectory"
     OBJECTS = "objects"
     IDENTIFIER = "id"
     MESH = "mesh"
     SPAWN = "spawn"
 
 
-@dataclass(frozen=True)
-class SceneObjectAnnotations:
+class TrajectoryKey(StrEnum):
     """
-    The annotation class of each scene object that has one, by the object's identifier.
+    The keys of a scene's recorded trajectory.
     """
 
-    by_object: Mapping[str, type[HasRootBody]]
+    BASE = "base"
+
+
+@dataclass
+class UnknownRobot(LookupError):
     """
-    The annotation class, by the identifier of the object it annotates.
+    No robot class is kept for the scene's robot.
+    """
+
+    name: str
+    """
+    The robot's name in the scene.
+    """
+
+    def __post_init__(self):
+        super().__init__(f"no robot class is kept for the scene's robot '{self.name}'")
+
+
+@dataclass(frozen=True)
+class AnnotationClasses:
+    """
+    The annotation class of each scene object or robot that has one, by its name in the
+    scene.
+    """
+
+    by_name: Mapping[str, type]
+    """
+    The annotation class, by the name of what it annotates.
     """
 
     @classmethod
-    def shipped(cls) -> SceneObjectAnnotations:
+    def read(cls, path: Path) -> AnnotationClasses:
         """
-        :return: The annotations kept as data beside this module.
+        :return: The annotation classes kept as data in the file.
         """
-        stored = json.loads(OBJECT_ANNOTATIONS_FILE.read_text())
+        stored = json.loads(path.read_text())
         return cls(
-            by_object={
-                identifier: resolve_class_from_full_name(class_name)
-                for identifier, class_name in stored.items()
+            by_name={
+                name: resolve_class_from_full_name(class_name)
+                for name, class_name in stored.items()
             }
         )
 
-    def annotation_for(self, identifier: str) -> Optional[type[HasRootBody]]:
+    @classmethod
+    def of_objects(cls) -> AnnotationClasses:
         """
-        :return: The annotation class of the object with the given identifier, ``None``
-            when it has none.
+        :return: The annotation class of each scene object, by its identifier.
         """
-        return self.by_object.get(identifier)
+        return cls.read(OBJECT_ANNOTATIONS_FILE)
+
+    @classmethod
+    def of_robots(cls) -> AnnotationClasses:
+        """
+        :return: The robot class of each scene robot, by its name.
+        """
+        return cls.read(ROBOT_ANNOTATIONS_FILE)
+
+    def annotation_for(self, name: str) -> Optional[type]:
+        """
+        :return: The annotation class of what has the given name, ``None`` when it has
+            none.
+        """
+        return self.by_name.get(name)
 
 
 @dataclass
@@ -91,24 +139,27 @@ class SceneWorldBuilder:
     Builds the world a scene bundle stands for.
     """
 
-    annotations: SceneObjectAnnotations = field(
-        default_factory=SceneObjectAnnotations.shipped
-    )
+    annotations: AnnotationClasses = field(default_factory=AnnotationClasses.of_objects)
     """
     Which annotation each scene object gets.
+    """
+
+    robot_annotations: AnnotationClasses = field(
+        default_factory=AnnotationClasses.of_robots
+    )
+    """
+    Which robot class the scene's robot is.
     """
 
     def build(self, bundle: Path) -> World:
         """
         :param bundle: The directory of a scene bundle.
-        :return: The bundle's models merged into one world, with every object at its
-            spawn pose and annotated as what it is.
+        :return: The bundle's models in one world, the robot on a drive over its
+            surroundings where the recording starts, with every object at its spawn pose
+            and annotated as what it is.
         """
         scene = json.loads((bundle / SCENE_FILE).read_text())
-        models = [self.model(bundle, model) for model in scene[SceneKey.MODELS]]
-        world = models[0]
-        for model in models[1:]:
-            world.merge_world(model)
+        world = self.models_world(bundle, scene)
         objects = scene.get(SceneKey.OBJECTS) or []
         for entry in objects:
             world.merge_world_at_pose(
@@ -117,6 +168,80 @@ class SceneWorldBuilder:
             )
         self.annotate(world, objects)
         return world
+
+    def annotate_robot(self, world: World, bundle: Path) -> Any:
+        """
+        Annotate the scene's robot as the robot class kept for its name.
+
+        :param world: The scene's world.
+        :param bundle: The scene's bundle directory.
+        :return: The robot's annotation.
+        :raises UnknownRobot: When no robot class is kept for the robot.
+        """
+        scene = json.loads((bundle / SCENE_FILE).read_text())
+        name = scene[SceneKey.ROBOT][SceneKey.NAME]
+        robot_class = self.robot_annotations.annotation_for(name)
+        if robot_class is None:
+            raise UnknownRobot(name=name)
+        return robot_class.from_world(world)
+
+    def models_world(self, bundle: Path, scene: Mapping[str, Any]) -> World:
+        """
+        :return: The scene's models in one world: the surroundings merged, the robot on
+            a drive over them at its recorded starting pose; a scene of a robot alone is
+            the robot's world.
+        """
+        models = scene[SceneKey.MODELS]
+        surroundings = [
+            self.model(bundle, model)
+            for model in models
+            if not model.get(SceneKey.ROBOT)
+        ]
+        robots = [
+            self.model(bundle, model) for model in models if model.get(SceneKey.ROBOT)
+        ]
+        if not surroundings:
+            return self.merged(robots)
+        world = self.merged(surroundings)
+        for robot in robots:
+            self.drive(world, robot, self.starting_base_pose(bundle, scene, world))
+        return world
+
+    @staticmethod
+    def merged(worlds: Sequence[World]) -> World:
+        """
+        :return: The worlds merged into the first.
+        """
+        world, *others = worlds
+        for other in others:
+            world.merge_world(other)
+        return world
+
+    @staticmethod
+    def drive(
+        world: World, robot: World, pose: HomogeneousTransformationMatrix
+    ) -> None:
+        """
+        Merge a robot into the world on a drive over its root, standing at the pose.
+        """
+        with world.modify_world():
+            drive = OmniDrive.create_with_dofs(
+                parent=world.root, child=robot.root, world=world
+            )
+            world.merge_world(robot, drive)
+            drive.origin = pose
+
+    @staticmethod
+    def starting_base_pose(
+        bundle: Path, scene: Mapping[str, Any], world: World
+    ) -> HomogeneousTransformationMatrix:
+        """
+        :return: The robot's base pose in the first frame of the scene's recording.
+        """
+        trajectory = json.loads((bundle / scene[SceneKey.TRAJECTORY]).read_text())
+        return HomogeneousTransformationMatrix.from_xyz_quaternion(
+            *trajectory[TrajectoryKey.BASE][0], reference_frame=world.root
+        )
 
     @staticmethod
     def model(bundle: Path, model: Mapping[str, Any]) -> World:
