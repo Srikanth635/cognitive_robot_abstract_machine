@@ -462,6 +462,34 @@ conversation with its text as the answer.
 | Knowledge component ↔ resolver | Not connected; to be knowledge tools through a `KnowledgeAccess` contract (§2.3) |
 | Knowledge component ↔ world injector | None, by design: world facts reach the knowledge only through the resolver; the two keep separate sources |
 
+### 3.6 Resolver → knowledge component: the knowledge request (designed 2026-10-12; not built)
+
+The resolver asks the knowledge component with a krrood query on the knowledge
+vocabulary, never with an instruction:
+
+```
+resolver query  the(PouringAction)(…)  [+ optional task]
+  ① mapping kept as data: PouringAction → aicor:Pouring, pouring.PouringPhaseStructure
+  ② situation features the knowledge accepts, derived from the ontology:
+       has_material_regime ∈ {Liquid, Granular, Cohesive}, has_termination_reason ∈ {…}
+  ③ the resolver fills them from the world and the task, in a first short resolution of
+       the(PouringPhaseStructure)(decomposes_task=aicor:Pouring,
+                                  has_material_regime=..., has_termination_reason=...)
+  ④ the knowledge request: that query with the features fixed
+  ⑤ the knowledge component serves the stored hypothesis for (root class, fixed values,
+     ontology versions), or generates, admits and stores it once
+```
+
+| Part | Design |
+|---|---|
+| Request | A krrood `Match` on the knowledge vocabulary: the action concept and the situation features as fixed values; an instruction is optional provenance only |
+| Designator → knowledge | A mapping kept as data, by identifiers (strings), so `llm_reasoner` imports no designator package; later possibly in the ontology or on the action |
+| Situation features | Derived from the ontology: the root class's functional properties whose values define its subclasses (such as `GranularPouringStructure ≡ PouringPhaseStructure ⊓ hasMaterialRegime value Granular`); no hand-written list |
+| Filling them | The resolver, in a first resolution of the feature query with its world tools and the optional task, each choice with its reason; a feature left empty is unknown |
+| Store key | Root class, fixed values (features included) and ontology module versions; the instruction is no longer part of the key |
+| Generation | On a miss, once per feature combination, then served from the store |
+| Not in the request | The designator's slots and the task text; the resolver keeps them |
+
 ## 4. Decisions that shape behaviour
 
 | Decision | Consequence |
