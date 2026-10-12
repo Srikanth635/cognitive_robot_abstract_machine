@@ -1,0 +1,92 @@
+{
+  "name": "describe_fragment",
+  "description": {
+    "purpose": "Describe a fragment of the knowledge.",
+    "returns": "Its class and what that class means, its label, what it states for each ontology property it gives a value for (the field, what the field means, and either the names of the fragments it links to or its value: an enumeration member by its name, a concept by its IRI, a list for a property taking several values), and the fragments linking to it, each with the field it links through.",
+    "use_when": "Learning what a phase, event, condition or role of the knowledge requires, expects or leads to, to ground a choice on it.",
+    "avoid": "Describing every fragment; follow the links that bear on the slots being chosen."
+  },
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "The fragment's name, exactly as a knowledge answer gave it."
+      }
+    },
+    "required": [
+      "name"
+    ],
+    "additionalProperties": false
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "kind": {
+        "$ref": "#/$defs/kind_summary"
+      },
+      "label": {
+        "type": "string"
+      },
+      "statements": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "field_name": {
+              "type": "string"
+            },
+            "meaning": {
+              "type": "string"
+            },
+            "fragments": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "value": {}
+          },
+          "required": [
+            "field_name",
+            "meaning"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "linked_from": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "field_name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "kind",
+            "field_name"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "name",
+      "kind",
+      "statements",
+      "linked_from"
+    ],
+    "additionalProperties": false
+  }
+}

@@ -12,6 +12,9 @@ from operator import attrgetter
 from types import ModuleType
 
 from krrood.class_diagrams.class_diagram import WrappedClass
+from krrood.entity_query_language.verbalization.rendering.source_documentation import (
+    _attribute_docstrings,
+)
 from typing_extensions import Any, Optional
 
 from llm_reasoner.knowledge.ontologies import PredictiveManipulationOntologyFile
@@ -192,6 +195,28 @@ class Vocabulary:
             and issubclass(definition, DescriptionEntity)
             and definition.__module__ == module.__name__
         ]
+
+    def class_named(self, name: str) -> Optional[type[DescriptionEntity]]:
+        """
+        :param name: The name of a generated class, such as ``LiftPhase``.
+        :return: The generated class of that name, ``None`` when there is none.
+        """
+        return next(
+            (generated for generated in self.classes if generated.__name__ == name),
+            None,
+        )
+
+    @staticmethod
+    def field_meanings(python_type: type[DescriptionEntity]) -> dict[str, str]:
+        """
+        :return: The docstrings of a generated class's fields, by field name, a more
+            specific class's docstring replacing a more general one's.
+        """
+        meanings: dict[str, str] = {}
+        for owner in reversed(python_type.__mro__):
+            if isinstance(owner, type) and issubclass(owner, DescriptionEntity):
+                meanings.update(_attribute_docstrings(owner))
+        return meanings
 
     @cached_property
     def defined_classes(self) -> list[type[DescriptionEntity]]:

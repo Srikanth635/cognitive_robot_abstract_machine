@@ -1,0 +1,37 @@
+{
+  "kind_summary": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "meaning": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "name",
+      "meaning"
+    ],
+    "additionalProperties": false
+  },
+  "fragment_reference": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "kind": {
+        "type": "string"
+      },
+      "label": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "name",
+      "kind"
+    ],
+    "additionalProperties": false
+  }
+}

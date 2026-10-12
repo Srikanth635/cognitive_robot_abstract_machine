@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import StrEnum
 from pathlib import Path
 
@@ -151,6 +151,17 @@ class ToolDefinition:
             output_schema=stored.get(ToolDefinitionKey.OUTPUT_SCHEMA),
         )
 
+    def sharing(self, definitions: Mapping[str, Any]) -> ToolDefinition:
+        """
+        :param definitions: Schema definitions the answers of several tools share.
+        :return: The definition, its answer shape holding the shared definitions it
+            refers to.
+        """
+        return replace(
+            self,
+            output_schema={**self.output_schema, SCHEMA_DEFINITIONS: definitions},
+        )
+
     def as_request(self) -> Dict[str, Any]:
         """
         :return: The definition as a request offers it to the model.
@@ -187,6 +198,11 @@ class ToolErrorKey(StrEnum):
     Each way the input breaks the tool's schema.
     """
 
+
+SCHEMA_DEFINITIONS = "$defs"
+"""
+The JSON schema keyword under which a schema holds the definitions it refers to.
+"""
 
 TOOL_ERROR_SCHEMA_FILE = Path(__file__).parent / "tool_error_schema.json"
 """
