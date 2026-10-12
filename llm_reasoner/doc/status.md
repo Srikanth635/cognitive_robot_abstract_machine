@@ -14,7 +14,7 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
 | World injector (`world/`) | Built and tested; eight tools; world-access contract 1.0 with declared answer shapes |
 | Resolver (`resolver/`) | Built and tested; structured prompts; verified live on a PR2 kitchen (28 of 28 cases as expected) |
 | Clients (`clients/`) | Anthropic tool loop with caching and usage; OpenAI plain completion; scripted client |
-| Knowledge component | Built and tested on its own (ontology, generation, admission, storage, views), reorganised into `knowledge/` with one public module; **not yet linked** to the resolver |
+| Knowledge component | Built and tested (ontology, generation, admission, storage, views), reorganised into `knowledge/` with one public module; consulted by the resolver before every request to its model (R1–R7, verified live), but its hypotheses are **not yet read** by the resolver's request (knowledge tools are next) |
 | Offline tests | `python -m pytest test/llm_reasoner_test`: 385 passed, 2 skipped |
 
 ## 2. Completed
@@ -109,6 +109,34 @@ of 28, two repairs and $1.04; its findings led to `ea44fdbac` and `6743d6116`.
   `name` search corrected to `name.name`; five runs listed many bodies before searching
   sensibly; eight opened with `list_kinds`.
 
+**The knowledge request (R7, 2026-10-12, at `9a0b09687`):** one `PouringAction` from the
+cup into the bowl, arm and tilt open, six cases; hypotheses in a scratch store, HermiT not
+configured (closed-world acceptance only).
+
+| Case | Task | Situation chosen | Hypothesis |
+|---|---|---|---|
+| K1 | none | both unknown | generated, 1 attempt |
+| K2 | "Pour the milk from the cup into the bowl." | LIQUID | generated, 1 attempt |
+| K3 | "Pour the cereal …" | GRANULAR | generated, 1 attempt |
+| K4 | "… milk … until the bowl is half full." | LIQUID, TARGET_QUANTITY_ATTAINED | generated, 2 attempts |
+| K5 | "Pour all the cereal …" | GRANULAR, SOURCE_EXHAUSTED | generated, 2 attempts |
+| K6 | as K2 | LIQUID | served from the store (K2's record), 9 s, $0.04 |
+
+All six as expected; $2.02 in total (a generation $0.30–0.41 and about 3 minutes, a
+situation pass $0.005–0.016, the request $0.04–0.06); five stored hypotheses, one per
+combination. The situation pass named its evidence and left the rest `null` ("nothing
+… says what ends the transfer, so the termination reason stays null").
+
+The first run ($1.93) found two problems, both fixed before the rerun: every hypothesis
+failed to be built because krrood's symbol graph, created with the kitchen, did not know
+the vocabulary (§7; `bf6c786d8` now refuses before asking the model), and the situation
+pass filled features by convention ("I chose the usual pouring case") where nothing
+established them (`9a0b09687`: open values as facts).
+
+**Seen but not yet acted on:** the request resolved every case alike (RIGHT, the default
+tilt of 1.85 rad), whatever the task, since it does not read the hypothesis yet; and
+the world does not say what the cup holds, so the material came from the task alone.
+
 ## 4. Decisions
 
 | Date | Decision |
@@ -129,11 +157,16 @@ of 28, two repairs and $1.04; its findings led to `ea44fdbac` and `6743d6116`.
 | 2026-10-12 | Naming: a *hypothesis* is one generated, admitted structure; *knowledge* is what the component provides and its contract |
 | 2026-10-12 | Option A for K4: the knowledge component declares the situation features it accepts in ontology terms, and the resolver derives them from the world |
 | 2026-10-12 | The knowledge request (`architecture.md` §3.6): D1 a krrood query on the knowledge vocabulary with the action concept and situation features fixed, no instruction; D2 designator → knowledge by a mapping kept as data; D3 situation features derived from the ontology's defined subclasses; D4 the resolver fills them in a first resolution with its world tools and the task; D5 the store keyed by root class, fixed values and ontology versions, generating once per feature combination on a miss |
+| 2026-10-12 | The resolver consults the knowledge component before every request to its model (served from the store, else generated); `Reasoner` assembles the system with it always on, while the bare backend keeps it optional |
+| 2026-10-12 | A situation feature is a fact: the first pass answers only what the action, the given values, the task, the situation or the world establishes, and `null` otherwise (`OpenValueMeaning.FACT`) |
+| 2026-10-12 | Live checks with Sonnet 5.5 may run when needed, without asking per run; their outcome and cost are recorded in §3 |
 | 2026-10-12 | Reorganisation first, without new functionality: one `knowledge/` package (`ontologies`, `ontology_translation`, `acceptance`, `storage`, `admission`, `generation`, `hypotheses`) with one public module, moved lowest layer first; stored hypotheses (the cram_viz sample and `~/.cram_viz/hypotheses`, backed up) are migrated with each move that changes a stored module path |
 
 ## 5. In progress
 
-- The knowledge request, steps R1–R7 (planned below): R1–R6 done; R7, the live check, waits for approval.
+- The knowledge request, steps R1–R7 (planned below): all done; R7's results are in §3.
+  Next: the knowledge tools (`KnowledgeAccess`), so the resolver's request reads the
+  hypothesis it obtained.
 - Reorganising the knowledge component (decision of 2026-10-12). Done: the pure moves
   into `knowledge/`, lowest layer first, each committed with both test suites passing
   (`ebc93d9fa` ontologies, `274542e2c` ontology translation, `5149984fe` acceptance,
@@ -169,7 +202,7 @@ approval.
 | R6a | The world's symbol-graph source excludes packages, so the knowledge component's symbols are not shown as the world — **done** (`d54c36db7`, `SymbolGraphSource.excluded_packages`) | world | none |
 | R6b | `KnowledgeRequester` and `KnowledgeConsultation` (`resolver/knowledge.py`), the `<action>` section (`ActionContextProvider`), and the knowledge side's `DescribedAction.query` and `SituationFeature.value_in` (`f83690eb9`) — **done**; a test checks the resolver imports only `knowledge.access` | resolver, knowledge | none |
 | R6c | Always on, as the user asked on 2026-10-12: the resolver consults the knowledge component before every request to its model, served from the store when the situation was met before, generated otherwise — **done**: `LanguageModelBackend.knowledge`, `consultation`, `situation_backend` and `situation_backend_for`; `reasoner.py`'s `Reasoner` assembles the system, its world leaving out the knowledge package, and always gives the backend a knowledge requester. The bare backend keeps the requester optional, so it stays usable on its own; the main request does not read the hypothesis until the knowledge tools exist | resolver, `reasoner.py` | none: the requester is a new optional setting |
-| R7 | Live check (with approval): pouring from the cup of milk (Liquid) and of cereal (Granular), with and without a stopping task; the features chosen and their reasons, and one generation per combination | — | — |
+| R7 | Live check (with approval): pouring from the cup of milk (Liquid) and of cereal (Granular), with and without a stopping task; the features chosen and their reasons, and one generation per combination — **done** (§3): six of six as expected after two fixes | — | — |
 
 ## 6. Proposed and deferred
 
@@ -243,6 +276,16 @@ beyond the Flanagan microworld* (several perspectives); see §4.
 - `clients/anthropic_client.py` reads `stop_reason` with `getattr` in one place, which
   the code rules forbid.
 
+- Hypotheses cannot be built or read in a process whose krrood symbol graph was
+  created before `llm_reasoner.knowledge` was imported, which includes any process that
+  loads a world first: krrood builds the graph's class diagram once, and setting a
+  vocabulary field needs it. `HypothesisBackend` refuses with
+  `VocabularyUnknownToSymbolGraph` before asking the model. Rebuilding the graph after
+  all imports and before loading the world works (cram_viz and the live scripts do it);
+  a process already holding a world has no remedy until krrood can map classes imported
+  after its graph was made. Open decision: change krrood (outside `llm_reasoner`), or
+  require the rebuild at a process's start.
+
 **Outside `llm_reasoner`** (to report to their owners, not to change here):
 - krrood's verbalizer writes contradictory bounds as "between 0.01 and 0.005" and enum
   lists as `[<CuttingTechnique.SLICE: 1>, …]`.
@@ -258,5 +301,6 @@ beyond the Flanagan microworld* (several perspectives); see §4.
 1. Read `architecture.md` for how things fit, then this file for where they stand.
 2. Run the offline tests: `python -m pytest test/llm_reasoner_test`, and
    `scripts/format_docstrings.py` on changed files.
-3. Ask before any live run; record its outcome and cost in §3.
+3. Live checks with Sonnet 5.5 may run when needed (decision of 2026-10-12); record
+   each one's outcome and cost in §3.
 4. Record decisions in §4 and move items between §5 and §6 as they change.
