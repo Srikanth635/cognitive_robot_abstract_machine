@@ -1,7 +1,7 @@
 """
 Gaze in manipulation: fixations of contact and avoidance landmarks, held until the phase goal, and visual control points.
 
-Generated from ``gaze.ttl`` by ``python -m llm_reasoner.ontology_translation``. Regenerate rather than edit.
+Generated from ``gaze.ttl`` by ``python -m llm_reasoner.knowledge.ontology_translation``. Regenerate rather than edit.
 """
 
 from __future__ import annotations

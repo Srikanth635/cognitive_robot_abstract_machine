@@ -30,7 +30,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
     NamedClass,
     UnionOf,
 )
-from llm_reasoner.ontology_translation.declarations import (
+from llm_reasoner.knowledge.ontology_translation.declarations import (
     ClassDeclaration,
     DescriptorDeclaration,
     FieldDeclaration,
@@ -38,7 +38,7 @@ from llm_reasoner.ontology_translation.declarations import (
     PythonName,
     ValueKind,
 )
-from llm_reasoner.ontology_translation.reading import OntologyReader
+from llm_reasoner.knowledge.ontology_translation.reading import OntologyReader
 
 # %% constants
 

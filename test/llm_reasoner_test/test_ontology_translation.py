@@ -30,13 +30,13 @@ from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     prehension,
 )
 from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity, PropertyTerm
-from llm_reasoner.ontology_translation.reading import (
+from llm_reasoner.knowledge.ontology_translation.reading import (
     ConflictingPythonNames,
     FieldTypeOutOfReach,
     MissingPropertyRange,
     OntologyReader,
 )
-from llm_reasoner.ontology_translation.writing import VocabularyWriter
+from llm_reasoner.knowledge.ontology_translation.writing import VocabularyWriter
 
 VOCABULARY_MODULES: dict[PredictiveManipulationOntologyFile, ModuleType] = {
     PredictiveManipulationOntologyFile.CORE: core,

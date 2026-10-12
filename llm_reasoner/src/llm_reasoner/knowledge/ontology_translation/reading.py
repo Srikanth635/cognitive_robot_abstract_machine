@@ -35,7 +35,7 @@ from llm_reasoner.knowledge.ontologies.terms import (
     UnionOf,
     python_attribute_name,
 )
-from llm_reasoner.ontology_translation.declarations import (
+from llm_reasoner.knowledge.ontology_translation.declarations import (
     AttachmentDeclaration,
     ClassDeclaration,
     DescriptorDeclaration,

@@ -29,7 +29,7 @@ where = ["src"]
 include = ["llm_reasoner*"]
 
 [tool.setuptools.package-data]
-llm_reasoner = ["knowledge/ontologies/predictive_manipulation/*.ttl", "knowledge/ontologies/predictive_manipulation/shapes/*.ttl", "ontology_translation/templates/*.jinja", "world/tool_definitions/*.json", "clients/*.json"]
+llm_reasoner = ["knowledge/ontologies/predictive_manipulation/*.ttl", "knowledge/ontologies/predictive_manipulation/shapes/*.ttl", "knowledge/ontology_translation/templates/*.jinja", "world/tool_definitions/*.json", "clients/*.json"]
 
 [tool.setuptools.dynamic]
 version = { attr = "llm_reasoner._version.__version__" }

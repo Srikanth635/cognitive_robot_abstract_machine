@@ -1,7 +1,7 @@
 """
 Substance transfer as an engineering extension, tied to CRAM-AICOR's pouring model: aicor:Pouring, the roles of aicor:PouringIntention, the states of aicor:PouringTemplate and aicor:EffluxOnsetEvent.
 
-Generated from ``pouring.ttl`` by ``python -m llm_reasoner.ontology_translation``. Regenerate rather than edit.
+Generated from ``pouring.ttl`` by ``python -m llm_reasoner.knowledge.ontology_translation``. Regenerate rather than edit.
 """
 
 from __future__ import annotations
