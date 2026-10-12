@@ -49,10 +49,15 @@ class KnowledgeService:
         """
         return self.backend.store
 
-    def view_for(self, instruction: str, query: Match) -> HypothesisView:
+    def view_for(self, query: Match, instruction: str = "") -> HypothesisView:
         """
-        :return: The view of the stored hypothesis answering the query for the
-            instruction, generated and stored first when there is none.
+        :param query: The underspecified match on a vocabulary class, its fixed values
+            the request's situation.
+        :param instruction: The action the hypothesis is generated for, recorded as
+            provenance when one is generated; it does not decide which stored
+            hypothesis answers the query.
+        :return: The view of the stored hypothesis answering the query, generated and
+            stored first when there is none.
         :raises HypothesisRejected: If no generated answer is admitted.
         """
         backend = replace(self.backend, instruction=instruction)

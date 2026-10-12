@@ -53,8 +53,11 @@ class HypothesisBackend(GenerativeBackend):
 
     instruction: str = ""
     """
-    The action to describe, in plain words, such as "pour milk from the carton into the
-    bowl"; the type being generated when empty.
+    The action the hypothesis is generated for, in plain words, such as "pour milk from
+    the carton into the bowl"; recorded as provenance and stated to the model, but not
+    part of what the store finds a hypothesis by.
+
+    The type being generated when empty.
     """
 
     suite: AcceptanceSuite = field(default_factory=predictive_manipulation_suite)
@@ -109,9 +112,7 @@ class HypothesisBackend(GenerativeBackend):
         request = HypothesisRequest.from_match(expression, self.instruction)
         stored = (
             self.store.find(
-                request.instruction,
-                qualified_name(request.root_type),
-                request.written_fixed_values,
+                qualified_name(request.root_type), request.written_fixed_values
             )
             if self.store is not None
             else None

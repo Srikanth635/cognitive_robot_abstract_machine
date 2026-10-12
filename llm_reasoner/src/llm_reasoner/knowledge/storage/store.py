@@ -96,16 +96,19 @@ class HypothesisStore:
         return sorted(records, key=lambda record: record.created_at)
 
     def find(
-        self, instruction: str, root_type: str, fixed_values: dict[str, str]
+        self, root_type: str, fixed_values: dict[str, str]
     ) -> Optional[StoredHypothesis]:
         """
+        :param root_type: The qualified name of the vocabulary class requested.
+        :param fixed_values: The values the request fixes, as written.
         :return: The newest stored hypothesis answering the request under the current
-            ontology versions, or ``None`` when there is none.
+            ontology versions, whatever instruction it was generated for, or ``None``
+            when there is none.
         """
         answering = [
             record
             for record in self.records()
-            if record.answers(instruction, root_type, fixed_values)
+            if record.answers(root_type, fixed_values)
         ]
         if not answering:
             return None

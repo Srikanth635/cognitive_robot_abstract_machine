@@ -47,6 +47,7 @@ from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     pouring,
     prehension,
 )
+from llm_reasoner.knowledge.generation.prompts import written_value
 from llm_reasoner.knowledge.ontologies.terms import ConceptReference, PropertyTerm
 
 from .test_generation import GenerationCase
@@ -430,11 +431,20 @@ class TestHypothesisStore:
         record = record_of()
         store.put(record, written(chained_structure()))
         found = store.find(
-            instruction=record.instruction,
             root_type=record.root_type,
             fixed_values=record.fixed_values,
         )
         assert found.record == record
+
+    def test_hypothesis_for_other_fixed_values_is_not_found(self, tmp_path):
+        store = HypothesisStore(directory=tmp_path)
+        record = record_of()
+        store.put(record, written(chained_structure()))
+        granular = {
+            **record.fixed_values,
+            "has_material_regime": written_value(pouring.MaterialRegime.GRANULAR),
+        }
+        assert store.find(root_type=record.root_type, fixed_values=granular) is None
 
     def test_hypothesis_of_older_ontology_versions_is_not_found(self, tmp_path):
         store = HypothesisStore(directory=tmp_path)
@@ -443,7 +453,6 @@ class TestHypothesisStore:
         store.put(record, written(chained_structure()))
         assert (
             store.find(
-                instruction=record.instruction,
                 root_type=record.root_type,
                 fixed_values=record.fixed_values,
             )
