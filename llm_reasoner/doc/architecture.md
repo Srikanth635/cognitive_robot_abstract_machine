@@ -22,6 +22,10 @@ ontology is [`flanagan_scientific_contract.md`](flanagan_scientific_contract.md)
   follows from types, fields, defaults, docstrings and the query.
 - **Accuracy over token cost.** A little extra cost is preferred to any loss of
   accuracy, precision or structure that would cause repairs or reruns.
+- **The ontology is the single source of truth for knowledge.** Knowledge has a working
+  form, krrood objects that EQL queries in the closed world, and a reasoning form, RDF
+  that HermiT checks in the open world; both are generated or derived from the
+  ontology, never written by hand.
 
 ## 2. Components
 
