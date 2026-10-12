@@ -458,7 +458,7 @@ conversation with its text as the answer.
 | Link | State |
 |---|---|
 | Knowledge component → clients | `LanguageModelClient.complete_structured(system, user, json_schema)`; no tools |
-| Caller → knowledge component | `KnowledgeService.view_for(query, instruction)`; cram_viz's Hypothesis Graph and Designator tabs read it |
+| Caller → knowledge component | `KnowledgeService.serve(query, instruction)` returns the record identifier of the hypothesis answering a request, generating it first when none is stored; `view_for(query, instruction)` returns its view. cram_viz's Hypothesis Graph and Designator tabs read it |
 | Knowledge component ↔ resolver | Not connected; to be knowledge tools through a `KnowledgeAccess` contract (§2.3) |
 | Knowledge component ↔ world injector | None, by design: world facts reach the knowledge only through the resolver; the two keep separate sources |
 
