@@ -221,7 +221,7 @@ each package imports only the packages above it in this table, which a test chec
 
 | Package | Modules | Responsibility |
 |---|---|---|
-| `ontologies/` | `__init__.py`, `terms.py`, `linked.py`, `vocabulary.py`, `predictive_manipulation/` | The ontology files, the shared terms, the linked ontologies (CRAM-AICOR, DUL), the generated vocabulary and the lookup from IRIs to its classes |
+| `ontologies/` | `__init__.py`, `terms.py`, `linked.py`, `vocabulary.py`, `situation.py`, `described_actions.py` and `.json`, `predictive_manipulation/` | The ontology files, the shared terms, the linked ontologies (CRAM-AICOR, DUL), the generated vocabulary and the lookup from IRIs to its classes, the situation features a structure accepts, and which structure describes which action designator |
 | `ontology_translation/` | `reading.py`, `declarations.py`, `writing.py`, `templates/` | Ontology → declarations → Python modules |
 | `representation/` | `hypothesis.py`, `rdf.py` | A hypothesis in memory as vocabulary instances, and as RDF in the ontology's terms (written and read back) |
 | `acceptance/` | `rules.py`, `restrictions.py`, `derived.py`, `shapes.py`, `core.py`, `suite.py` | Rules and violations, closed-world class membership, the microworld's suite |
