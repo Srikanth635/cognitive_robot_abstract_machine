@@ -127,10 +127,13 @@ of 28, two repairs and $1.04; its findings led to `ea44fdbac` and `6743d6116`.
 | 2026-10-12 | The ontology is the single source of truth for knowledge; krrood objects are its working form (EQL, closed world) and RDF its reasoning form (HermiT, open world); both are generated or derived from the ontology, never hand-written |
 | 2026-10-12 | The knowledge component is reorganised and redesigned first, with the Flanagan representation only; cram_viz is updated along with it |
 | 2026-10-12 | Naming: a *hypothesis* is one generated, admitted structure; *knowledge* is what the component provides and its contract |
+| 2026-10-12 | Option A for K4: the knowledge component declares the situation features it accepts in ontology terms, and the resolver derives them from the world |
+| 2026-10-12 | Reorganisation first, without new functionality: one `knowledge/` package (`ontologies`, `ontology_translation`, `acceptance`, `storage`, `admission`, `generation`, `hypotheses`) with one public module, moved lowest layer first; stored hypotheses (the cram_viz sample and `~/.cram_viz/hypotheses`, backed up) are migrated with each move that changes a stored module path |
 
 ## 5. In progress
 
-- No code change is in progress.
+- Reorganising the knowledge component into `knowledge/` (decision of 2026-10-12): pure
+  moves in dependency order, each step committed with both test suites passing.
 - `doc/drafts/object_qualities/` is an uncommitted draft on object qualities in the
   ontology (affordances, dispositions after DUL). It waits for decisions on where the
   module lives and on changes to `core.ttl`.
