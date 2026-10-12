@@ -11,7 +11,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from functools import cached_property
 
-from typing_extensions import Optional
+from typing_extensions import Optional, TypeVar
 
 from krrood.utils import resolve_class_from_full_name
 
@@ -26,6 +26,11 @@ from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     prehension,
 )
 from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity
+
+Fragment = TypeVar("Fragment", bound=DescriptionEntity)
+"""
+The vocabulary class of the fragments asked for.
+"""
 
 
 @dataclass
@@ -119,6 +124,13 @@ class HypothesisView:
             fragment for fragment in self.fragments if isinstance(fragment, root_type)
         ]
         return root
+
+    def instances_of(self, kind: type[Fragment]) -> list[Fragment]:
+        """
+        :param kind: A vocabulary class.
+        :return: The hypothesis's fragments that are instances of the class, in order.
+        """
+        return [fragment for fragment in self.fragments if isinstance(fragment, kind)]
 
     # %% citations
 

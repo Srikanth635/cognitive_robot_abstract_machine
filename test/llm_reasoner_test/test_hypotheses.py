@@ -11,7 +11,7 @@ from dataclasses import fields
 import pytest
 import rustworkx as rx
 
-from krrood.entity_query_language.factories import the
+from krrood.entity_query_language.factories import an, entity, the, variable
 
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite
 from llm_reasoner.knowledge.storage.citation import Citation, NotAHypothesisCitation
@@ -27,6 +27,7 @@ from llm_reasoner.knowledge.hypotheses.graph import (
     HypothesisGraphProjector,
     SyntheticHypothesisRelation,
 )
+from llm_reasoner.knowledge.hypotheses.knowledge_graph import KnowledgeGraph
 from llm_reasoner.knowledge.hypotheses.service import KnowledgeService, StoreRequired
 from llm_reasoner.knowledge.hypotheses.view import HypothesisView, UnknownCitation
 from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE
@@ -61,6 +62,15 @@ def pouring_query() -> object:
     Return a query for one phase structure of the pouring task, all else open.
     """
     return the(core.ActionPhaseStructure)(decomposes_task=POURING)
+
+
+def granular_query() -> object:
+    """
+    Return a query for one phase structure of pouring a granular substance.
+    """
+    return the(pouring.PouringPhaseStructure)(
+        decomposes_task=POURING, has_material_regime=pouring.MaterialRegime.GRANULAR
+    )
 
 
 def service_answering(
@@ -364,3 +374,66 @@ class TestHypothesisGraphProjector:
             graph.graph[index].identifier for index in fragment_indices - reachable
         }
         assert unreachable == set()
+
+
+# %% the knowledge component's own graph
+
+
+class TestKnowledgeGraph:
+    """
+    The knowledge component's own graph holds the fragments of its stored hypotheses,
+    each hypothesis read once, and gives EQL its domains over knowledge.
+    """
+
+    def test_a_hypothesis_is_read_into_the_graph_once(self, tmp_path):
+        store = HypothesisStore(directory=tmp_path)
+        identifier = service_answering(store, GenerationCase.LIFT_AND_POUR).serve(
+            pouring_query()
+        )
+        graph = KnowledgeGraph(store=store)
+        assert graph.hypothesis(identifier) is graph.hypothesis(identifier)
+
+    def test_the_instances_of_a_class_come_from_every_stored_hypothesis(self, tmp_path):
+        store = HypothesisStore(directory=tmp_path)
+        service = service_answering(
+            store, GenerationCase.LIFT_AND_POUR, GenerationCase.GRANULAR_POURING
+        )
+        identifiers = [service.serve(pouring_query()), service.serve(granular_query())]
+        graph = KnowledgeGraph(store=store)
+        roots = [graph.hypothesis(identifier).root for identifier in identifiers]
+        assert sorted(map(id, graph.instances_of(core.ActionPhaseStructure))) == sorted(
+            map(id, roots)
+        )
+
+    def test_the_instances_of_a_class_include_those_of_its_subclasses(self, tmp_path):
+        store = HypothesisStore(directory=tmp_path)
+        identifier = service_answering(store, GenerationCase.LIFT_AND_POUR).serve(
+            pouring_query()
+        )
+        graph = KnowledgeGraph(store=store)
+        lift = fragment_named(graph.hypothesis(identifier), "lift")
+        assert any(phase is lift for phase in graph.instances_of(core.ActionPhase))
+
+    def test_the_instances_of_a_class_in_one_hypothesis_are_its_fragments(self, view):
+        assert view.instances_of(prehension.LiftPhase) == [fragment_named(view, "lift")]
+
+    def test_knowledge_is_queried_with_eql_over_the_graph(self, tmp_path):
+        store = HypothesisStore(directory=tmp_path)
+        identifier = service_answering(store, GenerationCase.LIFT_AND_POUR).serve(
+            pouring_query()
+        )
+        graph = KnowledgeGraph(store=store)
+        carton = fragment_named(graph.hypothesis(identifier), "carton")
+        role = variable(
+            core.ManipulationRole, domain=graph.instances_of(core.ManipulationRole)
+        )
+        assert list(an(entity(role)).where(role.label == carton.label).evaluate()) == [
+            carton
+        ]
+
+    def test_the_service_reads_hypotheses_through_its_graph(self, tmp_path):
+        service = service_answering(
+            HypothesisStore(directory=tmp_path), GenerationCase.LIFT_AND_POUR
+        )
+        identifier = service.serve(pouring_query())
+        assert service.view(identifier) is service.graph.hypothesis(identifier)

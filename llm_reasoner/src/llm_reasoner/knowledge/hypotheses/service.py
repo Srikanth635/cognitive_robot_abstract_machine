@@ -5,7 +5,7 @@ when the store holds none for the request.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 
 from krrood.entity_query_language.query.match import Match
 
@@ -13,6 +13,7 @@ from llm_reasoner.knowledge.storage.citation import Citation
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.exceptions import LLMReasonerError
 from llm_reasoner.knowledge.generation.backend import HypothesisBackend
+from llm_reasoner.knowledge.hypotheses.knowledge_graph import KnowledgeGraph
 from llm_reasoner.knowledge.hypotheses.view import HypothesisView
 from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity
 
@@ -38,9 +39,16 @@ class KnowledgeService:
     The backend generating and storing a hypothesis when none is stored for a request.
     """
 
+    graph: KnowledgeGraph = field(init=False)
+    """
+    The knowledge component's own graph over the backend's store, which hypotheses are
+    read through.
+    """
+
     def __post_init__(self):
         if self.backend.store is None:
             raise StoreRequired()
+        self.graph = KnowledgeGraph(store=self.backend.store)
 
     @property
     def store(self) -> HypothesisStore:
@@ -78,9 +86,10 @@ class KnowledgeService:
 
     def view(self, record_id: str) -> HypothesisView:
         """
-        :return: The view of the stored hypothesis with the given record identifier.
+        :return: The view of the stored hypothesis with the given record identifier,
+            read once into the knowledge graph.
         """
-        return HypothesisView.of(self.store.get(record_id))
+        return self.graph.hypothesis(record_id)
 
     def fragment_cited(self, citation: Citation) -> DescriptionEntity:
         """

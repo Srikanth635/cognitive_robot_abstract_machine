@@ -23,6 +23,7 @@ from llm_reasoner.knowledge.hypotheses.graph import (
     HypothesisGraphRelation,
     SyntheticHypothesisRelation,
 )
+from llm_reasoner.knowledge.hypotheses.knowledge_graph import KnowledgeGraph
 from llm_reasoner.knowledge.hypotheses.service import KnowledgeService
 from llm_reasoner.knowledge.hypotheses.view import HypothesisView
 from llm_reasoner.knowledge.ontologies import (
@@ -87,6 +88,7 @@ __all__ = [
     "HypothesisView",
     "HYPOTHESIS_CONCEPT_NAMESPACE",
     "is_inferred",
+    "KnowledgeGraph",
     "KnowledgeService",
     "LinkedOntologyTerms",
     "LinkedOntologyVariable",
