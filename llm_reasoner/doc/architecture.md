@@ -486,6 +486,7 @@ resolver query  the(PouringAction)(…)  [+ optional task]
 | Designator → knowledge | A mapping kept as data, by identifiers (strings), so `llm_reasoner` imports no designator package; later possibly in the ontology or on the action |
 | Situation features | Derived from the ontology: the root class's functional properties whose values define its subclasses (such as `GranularPouringStructure ≡ PouringPhaseStructure ⊓ hasMaterialRegime value Granular`); no hand-written list |
 | Filling them | The resolver, in a first resolution of the feature query with its world tools and the optional task, each choice with its reason; a feature left empty is unknown |
+| Enforcing the variant | Already in place: closed-world acceptance classifies a structure by its feature values into the variants they define (such as `GranularPouringStructure`) and applies their restrictions; HermiT checks them open-world when configured; the generation prompt states each variant's definition and requirements |
 | Store key | Root class, fixed values (features included) and ontology module versions; the instruction is no longer part of the key |
 | Generation | On a miss, once per feature combination, then served from the store |
 | Not in the request | The designator's slots and the task text; the resolver keeps them |

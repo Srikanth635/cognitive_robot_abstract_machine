@@ -14,7 +14,7 @@ import pytest
 from krrood.entity_query_language.factories import the
 from rdflib import Graph, Namespace
 
-from llm_reasoner.knowledge.acceptance.derived import described
+from llm_reasoner.knowledge.acceptance.derived import RestrictionsHold, described
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite
 from llm_reasoner.knowledge.acceptance.shapes import ShapesHold, StructureShapes
 from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
@@ -50,7 +50,8 @@ from llm_reasoner.knowledge.generation.request import (
     HypothesisRequest,
     UnsupportedFixedValue,
 )
-from llm_reasoner.knowledge.generation.wire import FragmentDecoder
+from llm_reasoner.knowledge.generation.wire import DecodingResult, FragmentDecoder
+from llm_reasoner.knowledge.representation.hypothesis import DecodedHypothesis
 from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_NAMESPACE,
     HYPOTHESIS_CONCEPT_NAMESPACE,
@@ -754,6 +755,36 @@ class TestHypothesisAssessor:
         )
         assert assessment.problems == []
         assert assessment.hypothesis is decoded.hypothesis
+
+    def test_an_answer_breaking_the_variant_its_fixed_feature_defines_is_a_problem(
+        self,
+    ):
+        structure = pouring.PouringPhaseStructure(
+            decomposes_task=POURING,
+            has_material_regime=pouring.MaterialRegime.GRANULAR,
+            defines_parameter=[pouring.DynamicViscosityEstimate()],
+        )
+        decoded = DecodingResult(
+            hypothesis=DecodedHypothesis(root=structure, fragments=[structure])
+        )
+        request = HypothesisRequest.from_match(
+            the(pouring.PouringPhaseStructure)(
+                decomposes_task=POURING,
+                has_material_regime=pouring.MaterialRegime.GRANULAR,
+            ),
+            instruction="pour",
+        )
+        rules = AcceptanceSuite(rules=[RestrictionsHold()])
+        (broken_variant,) = [
+            violation
+            for violation in RestrictionsHold().violations([structure])
+            if violation.owner is pouring.GranularPouringStructure
+        ]
+        problems = HypothesisAssessor(suite=rules).assess(decoded, request).problems
+        assert (
+            described_violation(broken_variant, decoded.hypothesis.identifier_of)
+            in problems
+        )
 
     def test_an_open_world_contradiction_is_a_problem_naming_its_check(self):
         decoded = structure_decoder().decode(GenerationCase.LOOPING_STRUCTURE.text)
