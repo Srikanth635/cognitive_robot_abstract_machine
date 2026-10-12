@@ -37,7 +37,11 @@ from llm_reasoner.resolver.exceptions import (
     UnknownSlotInResponse,
     UnsatisfiableRequest,
 )
-from llm_reasoner.resolver.knowledge import KnowledgeConsultation, KnowledgeRequester
+from llm_reasoner.resolver.knowledge import (
+    KNOWLEDGE_RULE,
+    KnowledgeConsultation,
+    KnowledgeRequester,
+)
 from llm_reasoner.resolver.prompt_format import PromptRule
 from llm_reasoner.resolver.prompts import (
     OpenValueMeaning,
@@ -155,6 +159,12 @@ class LanguageModelBackend(GenerativeBackend):
     own log and conversations.
     """
 
+    knowledge_tools: List[Tool] = field(default_factory=list, init=False)
+    """
+    The knowledge tools reading the hypothesis the latest consultation obtained; none
+    before one, or when no knowledge describes the queried action.
+    """
+
     def __post_init__(self) -> None:
         if not self.tools:
             self.completion = PlainCompletion(client=self.client)
@@ -182,20 +192,50 @@ class LanguageModelBackend(GenerativeBackend):
         )
 
     @property
+    def offers_knowledge(self) -> bool:
+        """
+        Whether the model is offered the knowledge tools: when the backend asks with
+        tools and the latest consultation obtained knowledge.
+        """
+        return bool(self.tools) and bool(self.knowledge_tools)
+
+    @property
+    def request_completion(self) -> Completion:
+        """
+        How the model is asked for the current request: with the knowledge tools beside
+        the backend's own when it is offered knowledge.
+        """
+        if not self.offers_knowledge:
+            return self.completion
+        return ToolCompletion(
+            client=self.client, tools=[*self.tools, *self.knowledge_tools]
+        )
+
+    @property
     def system_prompt(self) -> str:
         """
         The system prompt, its rules matching how the candidates of referent slots are
-        named and how the model is asked.
+        named, how the model is asked and whether it is offered knowledge.
         """
-        return self._prompt_builder().system_prompt(self.completion.answer_rules)
+        return self._prompt_builder().system_prompt(self._further_rules())
 
     @property
     def rules(self) -> List[PromptRule]:
         """
         The rules the system prompt states, matching how the candidates of referent
-        slots are named and how the model is asked.
+        slots are named, how the model is asked and whether it is offered knowledge.
         """
-        return self._prompt_builder().rules(self.completion.answer_rules)
+        return self._prompt_builder().rules(self._further_rules())
+
+    def _further_rules(self) -> List[PromptRule]:
+        """
+        :return: The rules of how the model is asked for the current request, and of
+            reading the knowledge when it is offered.
+        """
+        rules = list(self.request_completion.answer_rules)
+        if self.offers_knowledge:
+            rules.append(KNOWLEDGE_RULE)
+        return rules
 
     # %% evaluation
 
@@ -270,9 +310,10 @@ class LanguageModelBackend(GenerativeBackend):
             backend=self,
         )
 
+        completion = self.request_completion
         last_error: Optional[Exception] = None
         for attempt in range(self.max_repairs + 1):
-            conversation = self.completion.complete(self.system_prompt, prompt)
+            conversation = completion.complete(self.system_prompt, prompt)
             raw_response = conversation.answer
             self.conversations.append(conversation)
             self.log.append(
@@ -280,7 +321,7 @@ class LanguageModelBackend(GenerativeBackend):
                     system=self.system_prompt,
                     user=prompt,
                     raw_response=raw_response,
-                    client_identity=self.completion.identity,
+                    client_identity=completion.identity,
                     attempt=attempt,
                 )
             )
@@ -297,7 +338,7 @@ class LanguageModelBackend(GenerativeBackend):
     def _consult(self, expression: Match[T]) -> None:
         """
         Consult the knowledge component about the queried action, when there is a
-        knowledge requester.
+        knowledge requester, and keep the tools reading what it obtained.
 
         :param expression: The match being resolved.
         """
@@ -305,6 +346,7 @@ class LanguageModelBackend(GenerativeBackend):
             return
         self.situation_backend = self.situation_backend_for(expression)
         self.consultation = self.knowledge.consult(expression, self.situation_backend)
+        self.knowledge_tools = self.knowledge.tools_for(self.consultation)
 
     def situation_backend_for(self, action: Match) -> LanguageModelBackend:
         """

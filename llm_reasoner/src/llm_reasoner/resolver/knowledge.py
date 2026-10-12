@@ -15,13 +15,32 @@ from krrood.entity_query_language.backends import GenerativeBackend
 from krrood.entity_query_language.query.match import Match
 from typing_extensions import Optional
 
+from llm_reasoner.clients.tools import Tool
 from llm_reasoner.knowledge.access import (
     DescribedAction,
     DescribedActions,
-    KnowledgeService,
+    KnowledgeAccess,
+    KnowledgeToolName,
     SituationFeatures,
 )
+from llm_reasoner.resolver.prompt_format import PromptRule, RuleName
+from llm_reasoner.resolver.prompts import RequestAnswerKey
 from llm_reasoner.world.access import identifier_of
+
+KNOWLEDGE_RULE = PromptRule(
+    name=RuleName.KNOWLEDGE,
+    text=f"the knowledge tools ({KnowledgeToolName.KNOWLEDGE_OVERVIEW}, "
+    f"{KnowledgeToolName.FIND_FRAGMENTS}, {KnowledgeToolName.DESCRIBE_FRAGMENT}) hold "
+    "stereotypical knowledge of the requested action in its situation: its phases, "
+    f"their subgoals and conditions, and its roles. Read "
+    f"{KnowledgeToolName.KNOWLEDGE_OVERVIEW} first, follow what bears on the open "
+    "slots, ground your choices on it, and name the fragments you relied on in "
+    f'"{RequestAnswerKey.WHY}".',
+)
+"""
+The rule stating how the knowledge about the requested action is read and used, when
+the model is offered the knowledge tools.
+"""
 
 
 @dataclass
@@ -55,9 +74,10 @@ class KnowledgeRequester:
     for, in the situation the action is performed in.
     """
 
-    service: KnowledgeService
+    service: KnowledgeAccess
     """
-    Serves a stored hypothesis for a request, or generates and stores it.
+    The knowledge component: serves a stored hypothesis for a request, or generates and
+    stores it, and offers the tools reading it.
     """
 
     described_actions: DescribedActions = field(default_factory=DescribedActions)
@@ -92,6 +112,15 @@ class KnowledgeRequester:
                 described.query(situation), instruction=designator
             ),
         )
+
+    def tools_for(self, consultation: KnowledgeConsultation) -> list[Tool]:
+        """
+        :return: The knowledge tools reading the hypothesis a consultation obtained;
+            none when no knowledge describes its designator.
+        """
+        if consultation.record_id is None:
+            return []
+        return self.service.tools(consultation.record_id)
 
     def situation_of(
         self, described: DescribedAction, situation_backend: GenerativeBackend

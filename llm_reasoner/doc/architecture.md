@@ -143,8 +143,10 @@ meeting the query's `where`-conditions; or one of these outcomes:
    knowledge requester and the model is to be asked: a first resolution chooses the
    situation features, and the knowledge component serves the hypothesis for them,
    generating it on a store miss. The consultation is kept on the backend
-   (`consultation`, `situation_backend`); the request below does not read the
-   hypothesis yet, which waits for the knowledge tools.
+   (`consultation`, `situation_backend`), and the knowledge tools over the hypothesis
+   (`knowledge_tools`, §3.7) are offered to the request below beside the world tools
+   when the backend asks with tools, with the `knowledge` rule saying how to read and
+   cite them. A backend asking without tools is offered no knowledge.
 3. **Build the prompts** (`prompts.py`, `prompt_format.py`; §3.2).
 4. **Ask** through a `Completion` (`completion.py`): `PlainCompletion` (one completion,
    candidates listed by integer token) or `ToolCompletion` (a conversation in which the
@@ -405,7 +407,9 @@ searches them with the world tools.
 `union`, `kind_slot`, `referent_slot`, `finding_candidates`, `known_candidate`,
 `meaning_holder` (the last three with world tools only), `no_fitting_candidate`,
 `equally_fitting`, `unsatisfiable`, `conditions`, `given`, `candidates`, `why`,
-`repair`, `text_answer` (with tools only).
+`repair`, `text_answer` (with tools only), `knowledge` (only when the knowledge tools
+are offered: read `knowledge_overview` first, follow what bears on the open slots, ground
+the choices on it and name the fragments relied on in `why`).
 
 **The answer** is one JSON array of at most N elements, each holding every slot path
 and `"why"` (one sentence, logged, never decoded):
@@ -485,7 +489,7 @@ conversation with its text as the answer.
 |---|---|
 | Knowledge component → clients | `LanguageModelClient.complete_structured(system, user, json_schema)`; no tools |
 | Caller → knowledge component | `KnowledgeService.serve(query, instruction)` returns the record identifier of the hypothesis answering a request, generating it first when none is stored; `view_for(query, instruction)` returns its view. cram_viz's Hypothesis Graph and Designator tabs read it |
-| Resolver → knowledge component | The knowledge request (§3.6), through `knowledge/access.py` only (a test checks this): before every request to the model, the hypothesis for the action's situation is served or generated. The resolver does not read it yet; knowledge tools through a `KnowledgeAccess` contract come next (§2.3) |
+| Resolver → knowledge component | Through `knowledge/access.py` only (a test checks this): the knowledge request (§3.6) before every request to the model, serving or generating the hypothesis for the action's situation, and the knowledge-access contract (§3.7), whose tools the request's model reads that hypothesis with |
 | Knowledge component ↔ world injector | None, by design: world facts reach the knowledge only through the resolver; the two keep separate sources |
 
 ### 3.6 Resolver → knowledge component: the knowledge request (designed and built 2026-10-12)

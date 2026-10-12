@@ -256,6 +256,11 @@ class RuleName(StrEnum):
     Where the answer goes when the model may call tools.
     """
 
+    KNOWLEDGE = "knowledge"
+    """
+    How the knowledge about the requested action is read and used.
+    """
+
 
 @dataclass(frozen=True)
 class PromptRule:
