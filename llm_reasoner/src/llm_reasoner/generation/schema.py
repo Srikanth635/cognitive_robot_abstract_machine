@@ -17,7 +17,7 @@ from krrood.ontomatic.property_descriptor.property_descriptor import PropertyDes
 from krrood.utils import recursive_subclasses
 from typing_extensions import Any
 
-from llm_reasoner.acceptance.vocabulary import Vocabulary
+from llm_reasoner.knowledge.acceptance.vocabulary import Vocabulary
 from llm_reasoner.knowledge.ontologies.terms import (
     ConceptReference,
     DescriptionEntity,

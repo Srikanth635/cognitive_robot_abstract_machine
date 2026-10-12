@@ -27,8 +27,8 @@ from pathlib import Path
 
 from krrood.entity_query_language.factories import the
 from krrood.entity_query_language.query.match import Match
-from llm_reasoner.acceptance.rules import AcceptanceSuite
-from llm_reasoner.acceptance.suite import predictive_manipulation_suite
+from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite
+from llm_reasoner.knowledge.acceptance.suite import predictive_manipulation_suite
 from llm_reasoner.admission.consistency import ConsistencyCheck
 from llm_reasoner.admission.hermit import HermitCheck
 from llm_reasoner.admission.store import HypothesisStore

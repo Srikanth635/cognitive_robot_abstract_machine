@@ -14,10 +14,10 @@ import pytest
 from krrood.entity_query_language.factories import the
 from rdflib import Graph, Namespace
 
-from llm_reasoner.acceptance.derived import described
-from llm_reasoner.acceptance.rules import AcceptanceSuite
-from llm_reasoner.acceptance.shapes import ShapesHold, StructureShapes
-from llm_reasoner.acceptance.vocabulary import Vocabulary
+from llm_reasoner.knowledge.acceptance.derived import described
+from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite
+from llm_reasoner.knowledge.acceptance.shapes import ShapesHold, StructureShapes
+from llm_reasoner.knowledge.acceptance.vocabulary import Vocabulary
 from llm_reasoner.admission.consistency import ConsistencyCheck, OpenWorldCheck
 from llm_reasoner.admission.record import ConsistencyVerdict
 from llm_reasoner.admission.store import HypothesisStore

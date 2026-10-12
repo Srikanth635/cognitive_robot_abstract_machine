@@ -11,16 +11,16 @@ import pytest
 from rdflib import Namespace, URIRef
 from krrood.utils import recursive_subclasses
 
-from llm_reasoner.acceptance.core import ComponentsDeclared
-from llm_reasoner.acceptance.derived import (
+from llm_reasoner.knowledge.acceptance.core import ComponentsDeclared
+from llm_reasoner.knowledge.acceptance.derived import (
     DerivedRule,
     RangesHold,
     RestrictionsHold,
     described,
 )
-from llm_reasoner.acceptance.rules import AcceptanceRule, Severity
-from llm_reasoner.acceptance.shapes import ShapesHold, StructureShapes
-from llm_reasoner.acceptance.suite import predictive_manipulation_suite
+from llm_reasoner.knowledge.acceptance.rules import AcceptanceRule, Severity
+from llm_reasoner.knowledge.acceptance.shapes import ShapesHold, StructureShapes
+from llm_reasoner.knowledge.acceptance.suite import predictive_manipulation_suite
 from llm_reasoner.knowledge.ontologies import PredictiveManipulationOntologyFile
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     core,
@@ -1734,7 +1734,7 @@ class TestPredictiveManipulationSuite:
             rule
             for rule in recursive_subclasses(AcceptanceRule)
             if not inspect.isabstract(rule)
-            and rule.__module__.startswith("llm_reasoner.acceptance")
+            and rule.__module__.startswith("llm_reasoner.knowledge.acceptance")
         }
         assert {
             type(rule) for rule in predictive_manipulation_suite().rules

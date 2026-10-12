@@ -4,10 +4,10 @@ The acceptance suite of the predictive manipulation microworld.
 
 from __future__ import annotations
 
-from llm_reasoner.acceptance import core
-from llm_reasoner.acceptance.derived import RangesHold, RestrictionsHold
-from llm_reasoner.acceptance.rules import AcceptanceSuite
-from llm_reasoner.acceptance.shapes import ShapesHold
+from llm_reasoner.knowledge.acceptance import core
+from llm_reasoner.knowledge.acceptance.derived import RangesHold, RestrictionsHold
+from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite
+from llm_reasoner.knowledge.acceptance.shapes import ShapesHold
 
 
 def predictive_manipulation_suite() -> AcceptanceSuite:

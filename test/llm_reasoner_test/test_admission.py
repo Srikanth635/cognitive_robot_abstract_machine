@@ -17,7 +17,7 @@ from rdflib.compare import isomorphic
 
 from krrood.entity_query_language.factories import the
 
-from llm_reasoner.acceptance.rules import AcceptanceSuite
+from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite
 from llm_reasoner.admission.consistency import (
     ConsistencyCheck,
     ContradictionLocaliser,

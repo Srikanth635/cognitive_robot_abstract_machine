@@ -11,11 +11,11 @@ from operator import attrgetter
 
 from typing_extensions import Sequence
 
-from llm_reasoner.acceptance.rules import (
+from llm_reasoner.knowledge.acceptance.rules import (
     TypedRule,
     Violation,
 )
-from llm_reasoner.acceptance.vocabulary import Vocabulary
+from llm_reasoner.knowledge.acceptance.vocabulary import Vocabulary
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
 from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity, PropertyTerm
 
