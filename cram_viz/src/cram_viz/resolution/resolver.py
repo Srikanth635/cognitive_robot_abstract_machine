@@ -36,7 +36,7 @@ from cram_viz.resolution.designators import (
     QuerySlots,
     SceneNamespace,
 )
-from cram_viz.resolution.runs import ResolutionRuns, RunDirectory
+from cram_viz.resolution.runs import ResolutionRuns, RunDirectory, RunEnvironment
 from cram_viz.resolution.scene_world import SceneWorlds
 
 RESOLVER_MAX_TOKENS = 2048
@@ -67,6 +67,12 @@ class ResolvedSlot:
     """
     Whether the designator's query stated the value rather than leaving it to the
     resolver.
+    """
+
+    serialized: Any
+    """
+    The slot's value as data the run's execution reads back: a world object by its
+    body's name, an enumeration member by its name, any other value as it is.
     """
 
 
@@ -261,12 +267,14 @@ class DesignatorResolver:
         shortfall = designator.shortfall_in(names)
         if not shortfall.is_empty:
             raise DesignatorUnavailable(shortfall=shortfall)
-        run = self.runs.start(self.baseline.backend.store)
+        run = self.runs.start(
+            self.baseline.backend.store, RunEnvironment(scene=scene, bundle=bundle)
+        )
         knowledge = self.knowledge_for(run)
         resolution = self.resolution_in(
             run, designator, designator.query_in(names), knowledge
         )
-        run.keep(resolution.payload())
+        run.keep(resolution)
         return ResolutionRun(resolution=resolution, knowledge=knowledge)
 
     def knowledge_for(self, run: RunDirectory) -> KnowledgeService:
@@ -340,6 +348,7 @@ class DesignatorResolver:
                     name=name,
                     value=self.written(attrgetter(name)(instance)),
                     given=name in slots.given,
+                    serialized=self.serialized(attrgetter(name)(instance)),
                 )
                 for name in slots.names
             ],
@@ -366,6 +375,21 @@ class DesignatorResolver:
             source=ground.source,
             name=f"{ground.identifier} ({self.written(individual)})",
         )
+
+    @staticmethod
+    def serialized(value: Any) -> Any:
+        """
+        :return: A slot's value as data the run's execution reads back: a body by its
+            name, an annotated object by its body's name, an enumeration member by its
+            name, any other value as it is.
+        """
+        if isinstance(value, Body):
+            return value.name.name
+        if isinstance(value, HasRootBody):
+            return value.root.name.name
+        if isinstance(value, Enum):
+            return value.name
+        return value
 
     @staticmethod
     def written(value: Any) -> str:

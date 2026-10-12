@@ -28,7 +28,13 @@ from cram_viz.resolution.designators import (
     QuerySlots,
     SceneNamespace,
 )
-from cram_viz.resolution.runs import ResolutionRuns, RunDirectory, RunFile
+from cram_viz.resolution.runs import (
+    ResolutionRuns,
+    RunDirectory,
+    RunEnvironment,
+    RunFile,
+    UnknownRun,
+)
 from cram_viz.resolution.scene_world import SceneKey, SceneWorldBuilder
 
 from .resolutions import resolver_replaying
@@ -168,6 +174,16 @@ class TestResolution:
             "tilt_angle": "1.85",
         }
 
+    def test_a_resolved_slot_keeps_its_value_as_data(self, pouring_bundle, tmp_path):
+        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        (action,) = run.resolution.actions
+        assert {slot.name: slot.serialized for slot in action.slots} == {
+            "source_container": "Static_MilkPitcher.stl",
+            "target_container": "bowl.stl",
+            "arm": "RIGHT",
+            "tilt_angle": 1.85,
+        }
+
     def test_a_resolution_marks_the_slots_its_query_states_as_given(
         self, pouring_bundle, tmp_path
     ):
@@ -233,7 +249,8 @@ class TestRuns:
         (baseline / "record").mkdir(parents=True)
         (baseline / "record" / "content").write_text("stored")
         run = ResolutionRuns(directory=tmp_path / "runs").start(
-            HypothesisStore(directory=baseline)
+            HypothesisStore(directory=baseline),
+            RunEnvironment(scene="pouring", bundle=tmp_path / "pouring"),
         )
         assert (
             run.knowledge_store.directory / "record" / "content"
@@ -258,11 +275,30 @@ class TestRuns:
             1,
         ]
 
+    def test_a_run_keeps_the_environment_it_started_from(
+        self, pouring_bundle, tmp_path
+    ):
+        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        kept = RunDirectory(directory=tmp_path / "runs" / run.resolution.run)
+        assert kept.environment() == RunEnvironment(
+            scene="pouring", bundle=pouring_bundle
+        )
+
+    def test_a_run_is_found_by_its_name(self, pouring_bundle, tmp_path):
+        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        found = ResolutionRuns(directory=tmp_path / "runs").named(run.resolution.run)
+        assert found.directory == tmp_path / "runs" / run.resolution.run
+
+    @pytest.mark.parametrize("name", ["no-such-run", "../store", ""])
+    def test_a_name_that_is_no_run_is_refused(self, tmp_path, name):
+        (tmp_path / "runs").mkdir()
+        with pytest.raises(UnknownRun):
+            ResolutionRuns(directory=tmp_path / "runs").named(name)
+
     def test_a_run_keeps_its_resolution_beside_its_knowledge(
         self, pouring_bundle, tmp_path
     ):
         (run,) = resolve_objects_given(pouring_bundle, tmp_path)
         kept = RunDirectory(directory=tmp_path / "runs" / run.resolution.run)
-        assert json.loads((kept.directory / RunFile.RESOLUTION).read_text()) == (
-            json.loads(json.dumps(run.resolution.payload()))
-        )
+        assert (kept.directory / RunFile.RESOLUTION).is_file()
+        assert kept.resolution() == run.resolution

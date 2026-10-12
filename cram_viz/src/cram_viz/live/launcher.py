@@ -1,6 +1,6 @@
 """
-Launching a demo under the live bridge from the viewer's "Execute" button,
-instead of a separate ``cram-viz-live path/to/demo.py`` terminal command.
+Launching a demo or a resolution run under the live bridge from the viewer's buttons,
+instead of a separate ``cram-viz-live`` terminal command.
 
 The launched process is the exact same entry point that command runs
 (``python -m cram_viz.live``, i.e. :func:`cram_viz.live.runner.main`), so the
@@ -14,10 +14,30 @@ from __future__ import annotations
 import subprocess
 import sys
 from dataclasses import dataclass, field
+from enum import StrEnum
 from pathlib import Path
-from typing_extensions import Any, Callable, Optional
+from typing_extensions import TYPE_CHECKING, Any, Callable, List, Optional
 
 from cram_viz import paths
+
+if TYPE_CHECKING:
+    from cram_viz.resolution.runs import RunDirectory
+
+LIVE_MODULE = "cram_viz.live"
+"""
+The module the live bridge runs as.
+"""
+
+
+class LiveArgument(StrEnum):
+    """
+    The command-line arguments of the live bridge.
+    """
+
+    RUN = "--run"
+    """
+    Precedes the directory of a resolution run to perform.
+    """
 
 
 @dataclass
@@ -55,13 +75,29 @@ class LiveDemoLauncher:
         """
         if not demo.is_file():
             raise FileNotFoundError(str(demo))
-        self._stop_running_process()
+        self._start([str(demo)])
 
+    def launch_run(self, run: RunDirectory) -> None:
+        """
+        Perform a resolution run in the simulation in the background, from the
+        environment it started from, restarting whatever this launcher started before.
+
+        :param run: The run to perform.
+        """
+        self._start([LiveArgument.RUN, str(run.directory)])
+
+    def _start(self, arguments: List[str]) -> None:
+        """
+        Start the live bridge on the arguments, its output redirected to a log file
+        under :func:`~cram_viz.paths.data_dir`, after stopping this launcher's previous
+        process.
+        """
+        self._stop_running_process()
         log_directory = paths.data_dir()
         log_directory.mkdir(parents=True, exist_ok=True)
         with (log_directory / "live_demo.log").open("w") as log_file:
             self._process = self.spawn(
-                [sys.executable, "-m", "cram_viz.live", str(demo)],
+                [sys.executable, "-m", LIVE_MODULE, *arguments],
                 stdout=log_file,
                 stderr=subprocess.STDOUT,
             )

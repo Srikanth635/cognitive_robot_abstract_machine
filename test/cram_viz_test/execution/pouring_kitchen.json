@@ -1,0 +1,7 @@
+{
+  "robot_start": {"x": 1.75, "y": 2.32, "yaw": -0.19},
+  "objects": [
+    {"mesh": "Static_MilkPitcher.stl", "position": [2.37, 2.2, 1.02239]},
+    {"mesh": "bowl.stl", "position": [2.4, 2.45, 0.99482]}
+  ]
+}

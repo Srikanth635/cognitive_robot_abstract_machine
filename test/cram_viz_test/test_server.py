@@ -172,6 +172,45 @@ class TestApi:
         assert first_payload["ok"] is True and second_payload["ok"] is True
         assert launched == [server_module.paths.default_live_demo()] * 2
 
+    def test_execute_runs_the_named_run_in_the_simulation(
+        self, server, monkeypatch, tmp_path
+    ):
+        from cram_viz import server as server_module
+        from cram_viz.resolution.runs import RunFile
+
+        monkeypatch.setenv("CRAM_VIZ_DATA", str(tmp_path))
+        run = tmp_path / "runs" / "a-run"
+        run.mkdir(parents=True)
+        (run / RunFile.RESOLUTION).write_text("{}")
+        launched = []
+
+        class FakeLauncher:
+            def launch_run(self, run_directory):
+                launched.append(run_directory.directory)
+
+        monkeypatch.setattr(server_module, "_live_demo_launcher", FakeLauncher)
+        request = urllib.request.Request(
+            server + "/api/execute", data=json.dumps({"run": "a-run"}).encode()
+        )
+        with urllib.request.urlopen(request, timeout=10) as response:
+            payload = json.loads(response.read())
+
+        assert payload["ok"] is True
+        assert launched == [run]
+
+    def test_executing_an_unknown_run_is_reported(self, server, monkeypatch, tmp_path):
+        from cram_viz.resolution.runs import UnknownRun
+
+        monkeypatch.setenv("CRAM_VIZ_DATA", str(tmp_path))
+        request = urllib.request.Request(
+            server + "/api/execute", data=json.dumps({"run": "no-such-run"}).encode()
+        )
+        with urllib.request.urlopen(request, timeout=10) as response:
+            payload = json.loads(response.read())
+
+        assert payload["ok"] is False
+        assert payload["error"].startswith(UnknownRun.__name__)
+
     def test_unknown_post_endpoint_is_json_404(self, server):
         request = urllib.request.Request(server + "/api/nope", data=b"{}")
         try:

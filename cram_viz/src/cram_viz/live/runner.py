@@ -1,22 +1,29 @@
 """
-Starting the live bridge: as a library call or as the demo wrapper CLI.
+Starting the live bridge: as a library call, or as the command running a demo script or
+a resolution run under it.
 """
 
 from __future__ import annotations
 
+import argparse
 import logging
 import runpy
 import signal
 import sys
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 
-from typing_extensions import Optional, TYPE_CHECKING
+from typing_extensions import List, Optional, TYPE_CHECKING
 
 from cram_viz import configure_console_logging
 from cram_viz.live import hooks
 from cram_viz.live.bridge import BRIDGE
 from cram_viz.live.http import DEFAULT_PORT, serve
+from cram_viz.live.launcher import LiveArgument
+from cram_viz.resolution.execution import PouringExecution
+from cram_viz.resolution.runs import RunDirectory
 
 if TYPE_CHECKING:
     from semantic_digital_twin.world import World
@@ -52,23 +59,98 @@ def start(
     return server
 
 
+# %% what the bridge runs
+
+
+class LiveTarget(ABC):
+    """
+    What the live bridge runs.
+    """
+
+    @abstractmethod
+    def run(self) -> None:
+        """
+        Run under the live bridge, which attaches to the world on its first executor
+        tick.
+        """
+
+    @staticmethod
+    def from_arguments(arguments: List[str]) -> LiveTarget:
+        """
+        :param arguments: The command line after the program: a demo script, or
+            :attr:`LiveArgument.RUN` and a run's directory.
+        :return: What the arguments name.
+        """
+        parser = argparse.ArgumentParser(
+            prog="cram-viz-live",
+            description="Run a demo script or a resolution run under the live bridge.",
+        )
+        parser.add_argument("demo", nargs="?", type=Path, help="a demo script")
+        parser.add_argument(
+            LiveArgument.RUN, type=Path, help="the directory of a resolution run"
+        )
+        parsed = parser.parse_args(arguments)
+        if parsed.run is not None:
+            return ResolvedRun(directory=parsed.run)
+        if parsed.demo is None:
+            parser.error("name a demo script or a resolution run")
+        return DemoScript(path=parsed.demo)
+
+
+@dataclass(frozen=True)
+class DemoScript(LiveTarget):
+    """
+    A demo script, run as if started directly.
+    """
+
+    path: Path
+    """
+    The script.
+    """
+
+    def run(self) -> None:
+        """
+        Run the script with its own directory on ``sys.path``, so it can import its
+        local helper modules.
+        """
+        demo = self.path.resolve()
+        sys.path.insert(0, str(demo.parent))
+        logger.info("running demo: %s", demo)
+        runpy.run_path(str(demo), run_name="__main__")
+
+
+@dataclass(frozen=True)
+class ResolvedRun(LiveTarget):
+    """
+    A resolution run, its resolved action performed from the environment it started
+    from.
+    """
+
+    directory: Path
+    """
+    The run's directory.
+    """
+
+    def run(self) -> None:
+        """
+        Perform the run's resolved action in the simulation.
+        """
+        logger.info("performing run: %s", self.directory)
+        PouringExecution.of_run(RunDirectory(directory=self.directory)).perform()
+
+
 def main() -> None:
     """
-    ``cram-viz-live path/to/demo.py`` — run a demo with the live bridge.
+    ``cram-viz-live path/to/demo.py`` or ``cram-viz-live --run path/to/run`` — run a
+    demo script or perform a resolution run with the live bridge.
 
-    The demo's own directory is put on ``sys.path`` so the demo can import its local
-    helper modules, exactly as if it were started directly. After the demo finishes the
-    bridge stays up for inspection until Ctrl-C.
+    After it finishes the bridge stays up for inspection until Ctrl-C.
     """
     configure_console_logging()
-    if len(sys.argv) < 2:
-        sys.exit("usage: cram-viz-live path/to/demo.py")
-    demo = Path(sys.argv[1]).resolve()
+    target = LiveTarget.from_arguments(sys.argv[1:])
     start()
-    sys.path.insert(0, str(demo.parent))
-    logger.info("running demo: %s", demo)
-    runpy.run_path(str(demo), run_name="__main__")
-    logger.info("demo finished — bridge stays up for inspection (Ctrl-C to quit)")
+    target.run()
+    logger.info("finished — bridge stays up for inspection (Ctrl-C to quit)")
     try:
         signal.pause()  # wait for Ctrl-C (SIGINT) instead of a sleep loop
     except KeyboardInterrupt:
