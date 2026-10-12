@@ -185,11 +185,11 @@ body{
 #nl-execute:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
 #nl-execute:disabled{opacity:.55;cursor:default}
 .designator-row{display:flex;gap:8px;align-items:flex-start;margin-top:11px}
-.designators{display:flex;flex-wrap:wrap;gap:7px;flex:1;max-height:240px;overflow-y:auto}
+.designators{display:flex;flex-wrap:wrap;gap:6px;flex:1;max-height:150px;overflow-y:auto}
 .designator-query{
-  margin:0;font-family:var(--mono);font-size:11px;line-height:1.45;white-space:pre;
+  margin:0;font-family:var(--mono);font-size:10.5px;line-height:1.35;white-space:pre;
   color:var(--ink);background:var(--bg);border:1px solid var(--accent);
-  padding:6px 10px;border-radius:4px;cursor:pointer;transition:.15s
+  padding:4px 8px;border-radius:4px;cursor:pointer;transition:.15s
 }
 .designator-query:hover{background:var(--accent);color:#04121a}
 .designator-query.unavailable{border-color:var(--line2);color:var(--faint);cursor:not-allowed}
