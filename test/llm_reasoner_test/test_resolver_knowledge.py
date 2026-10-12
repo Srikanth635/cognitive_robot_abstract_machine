@@ -12,6 +12,7 @@ from pathlib import Path
 from krrood.entity_query_language.factories import the
 
 from llm_reasoner.clients.base import ScriptedClient
+from llm_reasoner.clients.tools import ScriptedToolRequest
 from llm_reasoner.knowledge.access import (
     AcceptanceSuite,
     ConceptReference,
@@ -21,6 +22,7 @@ from llm_reasoner.knowledge.access import (
     HypothesisBackend,
     HypothesisStore,
     KnowledgeService,
+    KnowledgeToolName,
     SituationFeature,
     SituationFeatures,
     pouring,
@@ -28,7 +30,7 @@ from llm_reasoner.knowledge.access import (
 from llm_reasoner.resolver.action_context import ActionContextProvider
 from llm_reasoner.resolver.backend import LanguageModelBackend
 from llm_reasoner.resolver.context import StructuralCandidateRenderer
-from llm_reasoner.resolver.knowledge import KnowledgeRequester
+from llm_reasoner.resolver.knowledge import KNOWLEDGE_RULE, KnowledgeRequester
 from llm_reasoner.resolver.prompt_format import PromptSection
 from llm_reasoner.resolver.prompts import (
     ESTABLISHED_VALUES_RULE,
@@ -39,6 +41,7 @@ from llm_reasoner.resolver.prompts import (
 )
 from llm_reasoner.resolver.reflection import SlotKind, reflect_slots
 from llm_reasoner.world.access import identifier_of
+from llm_reasoner.world.view import WorldView
 
 from .prompt_sections import bodies, text_outside_sections
 from .test_generation import GenerationCase
@@ -358,3 +361,64 @@ class TestOpenValueMeaning:
         backend = LanguageModelBackend(client=ScriptedClient())
         assert backend.open_values is OpenValueMeaning.CHOICE
         assert ESTABLISHED_VALUES_RULE not in backend.rules
+
+
+# %% reading the knowledge while resolving
+
+
+def world_backend_consulting(
+    store: HypothesisStore, *turns: object
+) -> LanguageModelBackend:
+    """
+    :return: A backend asking with the world tools that consults the knowledge
+        component about the tilting action described as pouring, its model taking the
+        scripted turns in order: the situation's answer first, then the request's.
+    """
+    return LanguageModelBackend.with_world_tools(
+        client=ScriptedClient(tool_turns=list(turns)),
+        world=WorldView(),
+        knowledge=requester_generating(store, GenerationCase.GRANULAR_POURING),
+    )
+
+
+class TestReadingKnowledge:
+    def test_the_request_reads_the_consulted_hypothesis_with_the_knowledge_tools(
+        self, tmp_path
+    ):
+        body = body_with_geometry()
+        backend = world_backend_consulting(
+            HypothesisStore(directory=tmp_path),
+            answer("situation_granular.json"),
+            [ScriptedToolRequest(KnowledgeToolName.KNOWLEDGE_OVERVIEW, {})],
+            answer("angle_chosen.json"),
+        )
+        list(tilt_of(body).evaluate(backend=backend))
+        (call,) = backend.conversations[0].calls
+        overview = json.loads(call.outcome.content)
+        assert overview["situation"] == {
+            name: value.name for name, value in backend.consultation.situation.items()
+        }
+
+    def test_the_rules_say_how_to_read_the_knowledge_when_it_is_offered(self, tmp_path):
+        backend = world_backend_consulting(
+            HypothesisStore(directory=tmp_path),
+            answer("situation_granular.json"),
+            answer("angle_chosen.json"),
+        )
+        list(tilt_of(body_with_geometry()).evaluate(backend=backend))
+        assert KNOWLEDGE_RULE in backend.rules
+
+    def test_a_backend_asking_without_tools_is_offered_no_knowledge(self, tmp_path):
+        backend = backend_consulting(
+            HypothesisStore(directory=tmp_path),
+            "situation_granular.json",
+            "angle_chosen.json",
+        )
+        list(tilt_of(body_with_geometry()).evaluate(backend=backend))
+        assert KNOWLEDGE_RULE not in backend.rules
+
+    def test_no_knowledge_is_offered_before_a_consultation(self):
+        backend = LanguageModelBackend.with_world_tools(
+            client=ScriptedClient(), world=WorldView()
+        )
+        assert KNOWLEDGE_RULE not in backend.rules

@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from typing_extensions import Any
 
 from llm_reasoner.clients.base import LanguageModelClient
-from llm_reasoner.knowledge.access import KnowledgeService
+from llm_reasoner.knowledge.access import KnowledgeAccess
 from llm_reasoner.resolver.backend import LanguageModelBackend
 from llm_reasoner.resolver.knowledge import KnowledgeRequester
 from llm_reasoner.world.access import WorldAccess
@@ -28,7 +28,7 @@ class Reasoner:
     The language model the resolver asks, which must be able to call tools.
     """
 
-    knowledge: KnowledgeService
+    knowledge: KnowledgeAccess
     """
     Serves the hypothesis about each action resolved, generated once per situation.
     """
