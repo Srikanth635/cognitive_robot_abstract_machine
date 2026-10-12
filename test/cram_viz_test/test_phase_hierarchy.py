@@ -8,7 +8,7 @@ import rustworkx as rx
 
 krrood = pytest.importorskip("krrood", reason="EQL requires krrood")
 
-from llm_reasoner.hypotheses.graph import (  # noqa: E402
+from llm_reasoner.knowledge.hypotheses.graph import (  # noqa: E402
     HypothesisGraphNodeKind,
     HypothesisGraphPresentation,
     HypothesisGraphProjector,
