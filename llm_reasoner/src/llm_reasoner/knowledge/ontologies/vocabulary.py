@@ -11,7 +11,7 @@ from functools import cached_property
 from operator import attrgetter
 from types import ModuleType
 
-from krrood.class_diagrams.class_diagram import WrappedClass
+from krrood.class_diagrams.class_diagram import ClassDiagram, WrappedClass
 from typing_extensions import Any, Optional
 
 from llm_reasoner.knowledge.ontologies import PredictiveManipulationOntologyFile
@@ -180,9 +180,9 @@ class Vocabulary:
         }
 
     @cached_property
-    def defined_classes(self) -> list[type[DescriptionEntity]]:
+    def classes(self) -> list[type[DescriptionEntity]]:
         """
-        Every generated class whose ontology class is defined by a class expression.
+        Every generated class.
         """
         return [
             definition
@@ -191,7 +191,28 @@ class Vocabulary:
             if isinstance(definition, type)
             and issubclass(definition, DescriptionEntity)
             and definition.__module__ == module.__name__
-            and definition.term.definition is not None
+        ]
+
+    def classes_unknown_to(
+        self, class_diagram: ClassDiagram
+    ) -> list[type[DescriptionEntity]]:
+        """
+        :param class_diagram: A krrood class diagram, such as the symbol graph's.
+        :return: The generated classes the diagram does not map, whose fields cannot be
+            set while it is the symbol graph's.
+        """
+        mapped = {wrapped.clazz for wrapped in class_diagram.wrapped_classes}
+        return [generated for generated in self.classes if generated not in mapped]
+
+    @cached_property
+    def defined_classes(self) -> list[type[DescriptionEntity]]:
+        """
+        Every generated class whose ontology class is defined by a class expression.
+        """
+        return [
+            definition
+            for definition in self.classes
+            if definition.term.definition is not None
         ]
 
     def value_of(self, value: Any) -> Any:
