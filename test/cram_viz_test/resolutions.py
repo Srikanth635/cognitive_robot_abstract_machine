@@ -27,12 +27,12 @@ from cram_viz.resolution.resolver import (
 )
 
 
-def pouring_cup_into_bowl() -> ResolvedDesignator:
+def objects_given() -> ResolvedDesignator:
     """
-    :return: Pouring from the pouring cup into the bowl, every slot chosen, resting on a
-        knowledge fragment and the bowl.
+    :return: Pouring from the given pouring cup into the given bowl, the arm and the
+        tilt chosen, resting on a knowledge fragment and the bowl.
     """
-    identifier = PouringDesignator.POURING_CUP_INTO_BOWL
+    identifier = PouringDesignator.OBJECTS_GIVEN
     return ResolvedDesignator(
         identifier=identifier,
         query=DesignatorQuery.shipped(identifier).source.text,
@@ -43,9 +43,9 @@ def pouring_cup_into_bowl() -> ResolvedDesignator:
                     ResolvedSlot(
                         "source_container",
                         "PouringCup (Static_MilkPitcher.stl)",
-                        given=False,
+                        given=True,
                     ),
-                    ResolvedSlot("target_container", "bowl.stl", given=False),
+                    ResolvedSlot("target_container", "bowl.stl", given=True),
                     ResolvedSlot("arm", "RIGHT", given=False),
                     ResolvedSlot("tilt_angle", "1.85", given=False),
                 ],

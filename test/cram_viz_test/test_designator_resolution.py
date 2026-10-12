@@ -80,7 +80,7 @@ class TestDesignators:
         )
 
     def test_a_designator_is_offered_as_its_query_text(self, pouring_bundle):
-        identifier = PouringDesignator.INTO_THE_BOWL
+        identifier = PouringDesignator.OBJECTS_GIVEN
         offered = DesignatorQuery.shipped(identifier).offered_in(
             names_in(pouring_bundle)
         )
@@ -94,9 +94,9 @@ class TestDesignators:
         self, pouring_bundle
     ):
         names = names_in(without_object(pouring_bundle, "Static_MilkPitcher"))
-        offered = DesignatorQuery.shipped(
-            PouringDesignator.FROM_THE_POURING_CUP
-        ).offered_in(names)
+        offered = DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN).offered_in(
+            names
+        )
         assert offered.unbound == [SceneNamespace.name_of(PouringCup)]
         assert offered.available is False
 
@@ -104,7 +104,7 @@ class TestDesignators:
         self, pouring_bundle
     ):
         names = names_in(without_object(pouring_bundle, "Static_MilkPitcher"))
-        offered = DesignatorQuery.shipped(PouringDesignator.EVERYTHING_OPEN).offered_in(
+        offered = DesignatorQuery.shipped(PouringDesignator.OBJECTS_OPEN).offered_in(
             names
         )
         assert offered.without_candidates == ["source_container"]
@@ -116,7 +116,7 @@ class TestDesignators:
 
     def test_a_query_that_is_not_a_match_is_refused(self, pouring_bundle):
         designator = DesignatorQuery(
-            identifier=PouringDesignator.EVERYTHING_OPEN,
+            identifier=PouringDesignator.OBJECTS_OPEN,
             source=QuerySource.read(SOURCES / "not_a_match.py"),
         )
         with pytest.raises(NotAMatchQuery):
@@ -130,7 +130,7 @@ class TestQuerySlots:
     def test_the_slots_are_named_in_the_order_the_query_states_them(
         self, pouring_bundle
     ):
-        query = DesignatorQuery.shipped(PouringDesignator.EVERYTHING_OPEN).query_in(
+        query = DesignatorQuery.shipped(PouringDesignator.OBJECTS_OPEN).query_in(
             names_in(pouring_bundle)
         )
         assert QuerySlots.of(query).names == [
@@ -141,10 +141,10 @@ class TestQuerySlots:
         ]
 
     def test_only_a_value_the_query_states_is_given(self, pouring_bundle):
-        query = DesignatorQuery.shipped(
-            PouringDesignator.LEFT_ARM_GENTLE_TILT
-        ).query_in(names_in(pouring_bundle))
-        assert QuerySlots.of(query).given == ["arm"]
+        query = DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN).query_in(
+            names_in(pouring_bundle)
+        )
+        assert QuerySlots.of(query).given == ["source_container", "target_container"]
 
 
 # %% resolving
@@ -153,10 +153,10 @@ class TestQuerySlots:
 class TestResolution:
     def test_a_resolution_names_the_value_of_every_slot(self, pouring_bundle, tmp_path):
         resolved = resolver_replaying(
-            PouringDesignator.POURING_CUP_INTO_BOWL,
+            PouringDesignator.OBJECTS_GIVEN,
             HypothesisStore(directory=tmp_path / "store"),
         ).resolve(
-            DesignatorQuery.shipped(PouringDesignator.POURING_CUP_INTO_BOWL),
+            DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
             "pouring",
             pouring_bundle,
         )
@@ -168,40 +168,51 @@ class TestResolution:
             "tilt_angle": "1.85",
         }
 
-    def test_a_resolution_states_the_query_it_resolved(self, pouring_bundle, tmp_path):
-        designator = DesignatorQuery.shipped(PouringDesignator.POURING_CUP_INTO_BOWL)
+    def test_a_resolution_marks_the_slots_its_query_states_as_given(
+        self, pouring_bundle, tmp_path
+    ):
+        designator = DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN)
         resolved = resolver_replaying(
-            PouringDesignator.POURING_CUP_INTO_BOWL,
+            PouringDesignator.OBJECTS_GIVEN,
             HypothesisStore(directory=tmp_path / "store"),
         ).resolve(designator, "pouring", pouring_bundle)
-        assert resolved.identifier is PouringDesignator.POURING_CUP_INTO_BOWL
+        (action,) = resolved.actions
+        query = designator.query_in(names_in(pouring_bundle))
+        assert [slot.name for slot in action.slots if slot.given] == (
+            QuerySlots.of(query).given
+        )
+
+    def test_a_resolution_states_the_query_it_resolved(self, pouring_bundle, tmp_path):
+        designator = DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN)
+        resolved = resolver_replaying(
+            PouringDesignator.OBJECTS_GIVEN,
+            HypothesisStore(directory=tmp_path / "store"),
+        ).resolve(designator, "pouring", pouring_bundle)
+        assert resolved.identifier is PouringDesignator.OBJECTS_GIVEN
         assert resolved.query == designator.source.text
 
     def test_a_resolution_names_what_its_answer_rests_on(
         self, pouring_bundle, tmp_path
     ):
         resolved = resolver_replaying(
-            PouringDesignator.POURING_CUP_INTO_BOWL,
+            PouringDesignator.OBJECTS_GIVEN,
             HypothesisStore(directory=tmp_path / "store"),
         ).resolve(
-            DesignatorQuery.shipped(PouringDesignator.POURING_CUP_INTO_BOWL),
+            DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
             "pouring",
             pouring_bundle,
         )
         (action,) = resolved.actions
         assert [(ground.source, ground.name) for ground in action.grounds] == [
             (GroundKey.KNOWLEDGE, "pour"),
-            (GroundKey.WORLD, "Body#1 (bowl.stl)"),
         ]
 
     def test_a_resolution_reports_the_knowledge_it_consulted(
         self, pouring_bundle, tmp_path
     ):
         store = HypothesisStore(directory=tmp_path / "store")
-        resolved = resolver_replaying(
-            PouringDesignator.POURING_CUP_INTO_BOWL, store
-        ).resolve(
-            DesignatorQuery.shipped(PouringDesignator.POURING_CUP_INTO_BOWL),
+        resolved = resolver_replaying(PouringDesignator.OBJECTS_GIVEN, store).resolve(
+            DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
             "pouring",
             pouring_bundle,
         )

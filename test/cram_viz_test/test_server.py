@@ -297,12 +297,12 @@ class TestDesignators:
         from .resolutions import resolver_replaying
 
         resolver = resolver_replaying(
-            "pouring_cup_into_bowl", HypothesisStore(directory=tmp_path / "store")
+            "objects_given", HypothesisStore(directory=tmp_path / "store")
         )
         monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
         payload = post_json(
             pouring_server + "/api/designator/resolve",
-            {"designator": "pouring_cup_into_bowl", "scene": "pouring"},
+            {"designator": "objects_given", "scene": "pouring"},
         )
         (action,) = payload["resolution"]["actions"]
         assert {slot["name"]: slot["value"] for slot in action["slots"]}[
@@ -320,12 +320,12 @@ class TestDesignators:
         from .resolutions import resolver_replaying
 
         resolver = resolver_replaying(
-            "pouring_cup_into_bowl", HypothesisStore(directory=tmp_path / "store")
+            "objects_given", HypothesisStore(directory=tmp_path / "store")
         )
         monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
         payload = post_json(
             pouring_server + "/api/designator/resolve",
-            {"designator": "pouring_cup_into_bowl", "scene": "pouring"},
+            {"designator": "objects_given", "scene": "pouring"},
         )
         view = get_json(pouring_server + "/api/kb/view?name=designator&scene=pouring")
         keys = [entry["key"] for entry in view["designator"]["properties"]]
