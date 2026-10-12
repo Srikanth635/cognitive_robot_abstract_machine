@@ -18,7 +18,7 @@ from operator import attrgetter
 
 from llm_reasoner.generation.schema import is_inferred
 from llm_reasoner.hypotheses.view import HypothesisView
-from llm_reasoner.ontologies.terms import (
+from llm_reasoner.knowledge.ontologies.terms import (
     ConceptReference,
     DescriptionEntity,
     PropertyTerm,

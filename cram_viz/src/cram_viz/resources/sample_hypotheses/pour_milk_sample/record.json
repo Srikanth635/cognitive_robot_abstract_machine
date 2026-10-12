@@ -3,7 +3,7 @@
   "record_id": "pour_milk_sample",
   "created_at": "2026-10-06T00:00:00+00:00",
   "instruction": "pour milk from the carton into the bowl",
-  "root_type": "llm_reasoner.ontologies.predictive_manipulation.pouring.PouringPhaseStructure",
+  "root_type": "llm_reasoner.knowledge.ontologies.predictive_manipulation.pouring.PouringPhaseStructure",
   "fixed_values": {
     "decomposes_task": "aicor:Pouring"
   },

@@ -27,7 +27,7 @@ from typing_extensions import Any, Iterable, Sequence
 
 from llm_reasoner.acceptance.vocabulary import Vocabulary
 from llm_reasoner.exceptions import LLMReasonerError
-from llm_reasoner.ontologies.terms import (
+from llm_reasoner.knowledge.ontologies.terms import (
     ClassExpression,
     ComplementOf,
     DescriptionEntity,

@@ -18,7 +18,7 @@ from krrood.utils import recursive_subclasses
 from typing_extensions import Any
 
 from llm_reasoner.acceptance.vocabulary import Vocabulary
-from llm_reasoner.ontologies.terms import (
+from llm_reasoner.knowledge.ontologies.terms import (
     ConceptReference,
     DescriptionEntity,
     PropertyTerm,

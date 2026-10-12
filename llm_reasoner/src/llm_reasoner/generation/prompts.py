@@ -21,7 +21,7 @@ from llm_reasoner.generation.schema import (
     TypeSchema,
 )
 from llm_reasoner.generation.wire import prefixed_name
-from llm_reasoner.ontologies.terms import ConceptReference
+from llm_reasoner.knowledge.ontologies.terms import ConceptReference
 
 SYSTEM_PROMPT = """\
 You describe how a manipulation action is organised, as a structure of typed fragments

@@ -20,8 +20,12 @@ from llm_reasoner.admission.rdf import GraphReader
 from llm_reasoner.admission.record import HypothesisRecord
 from llm_reasoner.admission.store import StoredHypothesis
 from llm_reasoner.exceptions import LLMReasonerError
-from llm_reasoner.ontologies.predictive_manipulation import core, gaze, prehension
-from llm_reasoner.ontologies.terms import DescriptionEntity
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
+    core,
+    gaze,
+    prehension,
+)
+from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity
 
 
 @dataclass

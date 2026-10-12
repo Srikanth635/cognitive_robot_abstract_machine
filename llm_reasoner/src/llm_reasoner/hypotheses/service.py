@@ -14,7 +14,7 @@ from llm_reasoner.admission.store import HypothesisStore
 from llm_reasoner.exceptions import LLMReasonerError
 from llm_reasoner.generation.backend import HypothesisBackend
 from llm_reasoner.hypotheses.view import HypothesisView
-from llm_reasoner.ontologies.terms import DescriptionEntity
+from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity
 
 
 @dataclass

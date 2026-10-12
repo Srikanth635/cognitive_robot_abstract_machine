@@ -12,7 +12,9 @@ from llm_reasoner.acceptance.suite import predictive_manipulation_suite  # noqa:
 from llm_reasoner.admission.rdf import GraphReader  # noqa: E402
 from llm_reasoner.admission.store import HypothesisStore  # noqa: E402
 from llm_reasoner.hypotheses.graph import HypothesisGraphNodeKind  # noqa: E402
-from llm_reasoner.ontologies.predictive_manipulation import pouring  # noqa: E402
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import (  # noqa: E402
+    pouring,
+)
 
 from cram_viz import hypothesis_knowledge, paths  # noqa: E402
 

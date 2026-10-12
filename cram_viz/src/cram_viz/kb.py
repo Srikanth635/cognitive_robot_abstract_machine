@@ -30,7 +30,7 @@ from functools import cache
 from krrood.entity_query_language import factories as eql_factories
 from krrood.entity_query_language.predicate import HasType
 from krrood.symbol_graph.symbol_graph import SymbolGraph
-from llm_reasoner.ontologies.predictive_manipulation import (
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     core,
     gaze,
     pouring,
@@ -39,7 +39,7 @@ from llm_reasoner.ontologies.predictive_manipulation import (
 from llm_reasoner.hypotheses.graph import (
     HypothesisGraphNode,
 )
-from llm_reasoner.ontologies.terms import ConceptReference, DescriptionEntity
+from llm_reasoner.knowledge.ontologies.terms import ConceptReference, DescriptionEntity
 from typing_extensions import Any, Dict, List, Optional, Tuple
 
 from cram_viz.designator_description import DesignatorDescriber

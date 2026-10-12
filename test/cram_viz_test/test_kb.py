@@ -8,7 +8,7 @@ import pytest
 
 krrood = pytest.importorskip("krrood", reason="EQL requires krrood")
 
-from llm_reasoner.ontologies.predictive_manipulation import (  # noqa: E402
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import (  # noqa: E402
     core,
     prehension,
 )
@@ -23,8 +23,8 @@ from cram_viz.hypothesis_knowledge.ontology_backing import (  # noqa: E402
 from cram_viz.hypothesis_knowledge.ontology_class_graph import (  # noqa: E402
     OntologyClassGraph,
 )
-from llm_reasoner.ontologies import CRAM_AICOR_NAMESPACE  # noqa: E402
-from llm_reasoner.ontologies.terms import ConceptReference  # noqa: E402
+from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE  # noqa: E402
+from llm_reasoner.knowledge.ontologies.terms import ConceptReference  # noqa: E402
 
 
 @pytest.fixture()

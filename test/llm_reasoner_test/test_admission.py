@@ -36,13 +36,17 @@ from llm_reasoner.clients.base import Exchange, ScriptedClient
 from llm_reasoner.generation.backend import HypothesisBackend
 from llm_reasoner.generation.schema import GenerationSchema
 from llm_reasoner.generation.wire import DecodedHypothesis, FragmentDecoder
-from llm_reasoner.ontologies import (
+from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_NAMESPACE,
     LinkedOntologyVariable,
     PredictiveManipulationOntologyFile,
 )
-from llm_reasoner.ontologies.predictive_manipulation import core, pouring, prehension
-from llm_reasoner.ontologies.terms import ConceptReference, PropertyTerm
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
+    core,
+    pouring,
+    prehension,
+)
+from llm_reasoner.knowledge.ontologies.terms import ConceptReference, PropertyTerm
 
 from .test_generation import GenerationCase
 

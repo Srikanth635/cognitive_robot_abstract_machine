@@ -11,9 +11,9 @@ from enum import StrEnum
 
 from typing_extensions import ClassVar, List, Optional
 
-from llm_reasoner.ontologies.predictive_manipulation import core
-from llm_reasoner.ontologies.predictive_manipulation import prehension
-from llm_reasoner.ontologies.terms import (
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import prehension
+from llm_reasoner.knowledge.ontologies.terms import (
     ClassTerm,
     ComplementOf,
     ConceptReference,

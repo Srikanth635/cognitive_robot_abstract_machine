@@ -42,7 +42,7 @@ from llm_reasoner.resolver.reflection import (
 
 from coraplex.robot_plans.actions.composite.tool_based import PouringAction
 from llm_reasoner.hypotheses.view import HypothesisView
-from llm_reasoner.ontologies.predictive_manipulation import core, pouring
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import core, pouring
 
 if TYPE_CHECKING:
     from cram_viz.kb import BenchObject

@@ -32,19 +32,19 @@ from llm_reasoner.generation.prompts import (
 )
 from llm_reasoner.generation.schema import FieldKind, GenerationSchema, type_schema_for
 from llm_reasoner.generation.wire import FragmentDecoder
-from llm_reasoner.ontologies import (
+from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_NAMESPACE,
     HYPOTHESIS_CONCEPT_NAMESPACE,
     PredictiveManipulationOntologyFile,
 )
-from llm_reasoner.ontologies.linked import LinkedOntologyTerms, OntologyFiles
-from llm_reasoner.ontologies.predictive_manipulation import (
+from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms, OntologyFiles
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     core,
     gaze,
     pouring,
     prehension,
 )
-from llm_reasoner.ontologies.terms import ConceptReference
+from llm_reasoner.knowledge.ontologies.terms import ConceptReference
 
 LINKED_EXCERPTS = OntologyFiles(
     paths=[

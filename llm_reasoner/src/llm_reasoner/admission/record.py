@@ -19,7 +19,7 @@ from krrood.adapters.json_serializer import SubclassJSONSerializer
 from typing_extensions import Any, Dict, Self
 
 from llm_reasoner.clients.base import Exchange
-from llm_reasoner.ontologies import PredictiveManipulationOntologyFile
+from llm_reasoner.knowledge.ontologies import PredictiveManipulationOntologyFile
 
 VERSION_INFO = re.compile(r'owl:versionInfo\s+"([^"]+)"')
 """

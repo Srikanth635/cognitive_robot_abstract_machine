@@ -20,8 +20,8 @@ from typing_extensions import Optional, Sequence
 
 from llm_reasoner.admission.consistency import ConsistencyCheck
 from llm_reasoner.exceptions import LLMReasonerError
-from llm_reasoner.ontologies import PredictiveManipulationOntologyFile
-from llm_reasoner.ontologies.linked import OntologyFiles
+from llm_reasoner.knowledge.ontologies import PredictiveManipulationOntologyFile
+from llm_reasoner.knowledge.ontologies.linked import OntologyFiles
 
 # %% constants
 

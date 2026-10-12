@@ -21,8 +21,8 @@ from krrood.code_generation.generator import CodeGenerator
 from typing_extensions import Optional, Sequence
 
 from llm_reasoner.exceptions import LLMReasonerError
-from llm_reasoner.ontologies import PredictiveManipulationOntologyFile
-from llm_reasoner.ontologies.terms import (
+from llm_reasoner.knowledge.ontologies import PredictiveManipulationOntologyFile
+from llm_reasoner.knowledge.ontologies.terms import (
     ClassExpression,
     ComplementOf,
     EnumeratedClass,

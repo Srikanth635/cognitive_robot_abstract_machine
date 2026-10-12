@@ -29,13 +29,13 @@ from llm_reasoner.hypotheses.graph import (
 )
 from llm_reasoner.hypotheses.service import KnowledgeService, StoreRequired
 from llm_reasoner.hypotheses.view import HypothesisView, UnknownCitation
-from llm_reasoner.ontologies import CRAM_AICOR_NAMESPACE
-from llm_reasoner.ontologies.predictive_manipulation import (
+from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     core,
     pouring,
     prehension,
 )
-from llm_reasoner.ontologies.terms import (
+from llm_reasoner.knowledge.ontologies.terms import (
     ConceptReference,
     DescriptionEntity,
     PropertyTerm,

@@ -24,13 +24,13 @@ from llm_reasoner.generation.schema import (
     FieldSchema,
     GenerationSchema,
 )
-from llm_reasoner.ontologies import (
+from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_NAMESPACE,
     DUL_NAMESPACE,
     HYPOTHESIS_CONCEPT_NAMESPACE,
 )
-from llm_reasoner.ontologies.linked import LinkedOntologyTerms
-from llm_reasoner.ontologies.terms import ConceptReference, DescriptionEntity
+from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms
+from llm_reasoner.knowledge.ontologies.terms import ConceptReference, DescriptionEntity
 
 JSON_OBJECT = re.compile(r"\{.*}", re.DOTALL)
 """

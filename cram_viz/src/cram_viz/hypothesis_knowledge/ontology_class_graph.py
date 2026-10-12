@@ -18,12 +18,12 @@ from llm_reasoner.acceptance.restrictions import ClosedWorldMembership
 from llm_reasoner.acceptance.vocabulary import Vocabulary
 from llm_reasoner.generation.schema import is_inferred
 from llm_reasoner.hypotheses.view import HypothesisView
-from llm_reasoner.ontologies import (
+from llm_reasoner.knowledge.ontologies import (
     PREDICTIVE_MANIPULATION_NAMESPACE_ROOT,
     PredictiveManipulationOntologyFile,
 )
-from llm_reasoner.ontologies.linked import OntologyFiles
-from llm_reasoner.ontologies.terms import (
+from llm_reasoner.knowledge.ontologies.linked import OntologyFiles
+from llm_reasoner.knowledge.ontologies.terms import (
     ConceptReference,
     DescriptionEntity,
     PropertyTerm,
