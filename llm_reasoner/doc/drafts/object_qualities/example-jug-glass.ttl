@@ -1,0 +1,66 @@
+@prefix :      <http://www.ease-crc.org/ont/llm_reasoner/example/jug-glass#> .
+@prefix hyp:   <http://www.ease-crc.org/ont/llm_reasoner/hypothesis/7ce5be81758b4f15a8dc50ed3d622478#> .
+@prefix sit:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/situation#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix pour:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#> .
+@prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
+@prefix dul:   <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+# DRAFT EXAMPLE - illustrative values, not measurements.
+#
+# A situation for the stored hypothesis "pour water from the jug into the glass"
+# (record 7ce5be81758b4f15a8dc50ed3d622478): its roles hyp:src, hyp:tgt and hyp:sub bound
+# to a jug, a glass and the water in the jug, with the qualities the world would supply.
+
+:situation a owl:NamedIndividual , sit:ManipulationSituation ;
+    dul:satisfies hyp:struct ;
+    sit:hasBinding :sourceBinding , :targetBinding , :substanceBinding .
+
+:sourceBinding a owl:NamedIndividual , aicor:RoleBinding ; aicor:bindsSlot hyp:src ; aicor:bindsFiller :jug .
+:targetBinding a owl:NamedIndividual , aicor:RoleBinding ; aicor:bindsSlot hyp:tgt ; aicor:bindsFiller :glass .
+:substanceBinding a owl:NamedIndividual , aicor:RoleBinding ; aicor:bindsSlot hyp:sub ; aicor:bindsFiller :water .
+
+# %% the jug
+
+:jug a owl:NamedIndividual , aicor:Container , dul:PhysicalObject ;
+    rdfs:label "the jug"@en ;
+    dul:hasQuality :jugMass , :jugCapacity , :jugOpening , :jugHeight , :jugRigidity , :jugContents .
+:jugMass a owl:NamedIndividual , sit:ObjectMass ; dul:hasRegion :jugMassValue .
+:jugMassValue a owl:NamedIndividual , core:MagnitudeRange ; core:lowerBound "0.4"^^xsd:double ; core:upperBound "0.4"^^xsd:double ; core:hasUnit core:Kilogram .
+:jugCapacity a owl:NamedIndividual , sit:Capacity ; dul:hasRegion :jugCapacityValue .
+:jugCapacityValue a owl:NamedIndividual , core:MagnitudeRange ; core:lowerBound "1.5"^^xsd:double ; core:upperBound "1.5"^^xsd:double ; core:hasUnit core:Litre .
+:jugOpening a owl:NamedIndividual , sit:OpeningWidth ; dul:hasRegion :jugOpeningValue .
+:jugOpeningValue a owl:NamedIndividual , core:MagnitudeRange ; core:lowerBound "9.0"^^xsd:double ; core:upperBound "9.0"^^xsd:double ; core:hasUnit core:Centimetre .
+:jugHeight a owl:NamedIndividual , sit:InteriorHeight ; dul:hasRegion :jugHeightValue .
+:jugHeightValue a owl:NamedIndividual , core:MagnitudeRange ; core:lowerBound "20.0"^^xsd:double ; core:upperBound "20.0"^^xsd:double ; core:hasUnit core:Centimetre .
+:jugRigidity a owl:NamedIndividual , sit:Rigidity ; dul:hasRegion :jugRigidityValue .
+:jugRigidityValue a owl:NamedIndividual , core:CategoricalValue ; core:hasCategory sit:Rigid .
+:jugContents a owl:NamedIndividual , sit:ContainedQuantity ; dul:hasRegion :jugContentsValue .
+:jugContentsValue a owl:NamedIndividual , core:MagnitudeRange ; core:lowerBound "1000.0"^^xsd:double ; core:upperBound "1000.0"^^xsd:double ; core:hasUnit core:Millilitre .
+
+# %% the glass
+
+:glass a owl:NamedIndividual , aicor:Container , dul:PhysicalObject ;
+    rdfs:label "the glass"@en ;
+    dul:hasQuality :glassCapacity , :glassOpening , :glassContents .
+:glassCapacity a owl:NamedIndividual , sit:Capacity ; dul:hasRegion :glassCapacityValue .
+:glassCapacityValue a owl:NamedIndividual , core:MagnitudeRange ; core:lowerBound "300.0"^^xsd:double ; core:upperBound "300.0"^^xsd:double ; core:hasUnit core:Millilitre .
+:glassOpening a owl:NamedIndividual , sit:OpeningWidth ; dul:hasRegion :glassOpeningValue .
+:glassOpeningValue a owl:NamedIndividual , core:MagnitudeRange ; core:lowerBound "7.0"^^xsd:double ; core:upperBound "7.0"^^xsd:double ; core:hasUnit core:Centimetre .
+:glassContents a owl:NamedIndividual , sit:ContainedQuantity ; dul:hasRegion :glassContentsValue .
+:glassContentsValue a owl:NamedIndividual , core:MagnitudeRange ; core:lowerBound "0.0"^^xsd:double ; core:upperBound "0.0"^^xsd:double ; core:hasUnit core:Millilitre .
+
+# %% the water
+
+:water a owl:NamedIndividual , aicor:Substance , dul:PhysicalObject ;
+    rdfs:label "the water"@en ;
+    dul:hasQuality :waterCategory , :waterViscosity , :waterDensity .
+:waterCategory a owl:NamedIndividual , sit:MaterialCategory ; dul:hasRegion :waterCategoryValue .
+:waterCategoryValue a owl:NamedIndividual , core:CategoricalValue ; core:hasCategory pour:Liquid .
+:waterViscosity a owl:NamedIndividual , sit:Viscosity ; dul:hasRegion :waterViscosityValue .
+:waterViscosityValue a owl:NamedIndividual , core:MagnitudeRange ; core:lowerBound "1.0"^^xsd:double ; core:upperBound "1.0"^^xsd:double ; core:hasUnit core:Centipoise .
+:waterDensity a owl:NamedIndividual , sit:Density ; dul:hasRegion :waterDensityValue .
+:waterDensityValue a owl:NamedIndividual , core:MagnitudeRange ; core:lowerBound "1.0"^^xsd:double ; core:upperBound "1.0"^^xsd:double ; core:hasUnit core:GramPerMillilitre .

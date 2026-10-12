@@ -1,0 +1,55 @@
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+# DRAFT - proposed additions to core.ttl, not loaded by the package.
+#
+# Comparing an object's actual qualities with the ranges a hypothesis states needs two
+# things core lacks: a density, to turn a contained volume into a mass, and a factor per
+# unit, to compare values given in different units of one dimension.
+#
+# core.ttl enumerates its dimensions and units with owl:oneOf and owl:AllDifferent, so
+# adopting this file means adding core:Density to the oneOf and AllDifferent lists of
+# core:PhysicalDimension, and core:GramPerMillilitre to those of core:MeasurementUnit.
+# Declaring them here without that edit makes the ontology inconsistent.
+
+# %% density
+
+core:Density a owl:NamedIndividual , core:PhysicalDimension ;
+    rdfs:label "density"@en ;
+    rdfs:comment "Mass per unit volume of a material."@en .
+
+core:GramPerMillilitre a owl:NamedIndividual , core:MeasurementUnit ;
+    core:measuresDimension core:Density ;
+    rdfs:label "gram per millilitre"@en ;
+    rdfs:comment "Gram per millilitre, a unit of density."@en .
+
+# %% conversion to base units
+
+core:factorToBaseUnit a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:domain core:MeasurementUnit ;
+    rdfs:range xsd:double ;
+    rdfs:label "factor to base unit"@en ;
+    rdfs:comment "The factor that converts a value in this unit into the SI base unit of its dimension, so that values given in different units of one dimension can be compared."@en .
+
+core:Kilogram core:factorToBaseUnit "1.0"^^xsd:double .
+core:Gram core:factorToBaseUnit "0.001"^^xsd:double .
+core:KilogramPerSecond core:factorToBaseUnit "1.0"^^xsd:double .
+core:Newton core:factorToBaseUnit "1.0"^^xsd:double .
+core:NewtonPerSecond core:factorToBaseUnit "1.0"^^xsd:double .
+core:NewtonMetre core:factorToBaseUnit "1.0"^^xsd:double .
+core:Metre core:factorToBaseUnit "1.0"^^xsd:double .
+core:Centimetre core:factorToBaseUnit "0.01"^^xsd:double .
+core:Millimetre core:factorToBaseUnit "0.001"^^xsd:double .
+core:Degree core:factorToBaseUnit "0.017453292519943295"^^xsd:double .
+core:DegreePerSecond core:factorToBaseUnit "0.017453292519943295"^^xsd:double .
+core:Litre core:factorToBaseUnit "0.001"^^xsd:double .
+core:Millilitre core:factorToBaseUnit "0.000001"^^xsd:double .
+core:MillilitrePerSecond core:factorToBaseUnit "0.000001"^^xsd:double .
+core:Centipoise core:factorToBaseUnit "0.001"^^xsd:double .
+core:Hertz core:factorToBaseUnit "1.0"^^xsd:double .
+core:Second core:factorToBaseUnit "1.0"^^xsd:double .
+core:Millisecond core:factorToBaseUnit "0.001"^^xsd:double .
+core:Ratio core:factorToBaseUnit "1.0"^^xsd:double .
+core:GramPerMillilitre core:factorToBaseUnit "1000.0"^^xsd:double .
