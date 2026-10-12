@@ -80,14 +80,9 @@ DESCRIPTION_ENTITY_BASE = "DescriptionEntity"
 The base class of a generated class that has no microworld superclass.
 """
 
-PROPERTY_DESCRIPTOR_BASE = "PropertyDescriptor"
+PROPERTY_DESCRIPTOR_BASE = "ObjectPropertyDescriptor"
 """
 The base class of a descriptor whose property has no microworld super-property.
-"""
-
-INVERSE_PROPERTY_BASE = "HasInverseProperty"
-"""
-The krrood mixin of a descriptor whose property has an inverse.
 """
 
 CONCEPT_REFERENCE_TYPE = "ConceptReference"
@@ -212,8 +207,6 @@ class ModuleRendering:
         bases = [self.reference(base) for base in descriptor.super_descriptors] or [
             PROPERTY_DESCRIPTOR_BASE
         ]
-        if descriptor.symmetric:
-            bases.append(INVERSE_PROPERTY_BASE)
         return ", ".join(bases)
 
     def value_type(self, declared: FieldDeclaration) -> str:

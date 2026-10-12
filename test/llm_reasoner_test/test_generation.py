@@ -27,10 +27,7 @@ from llm_reasoner.knowledge.admission.consistency import (
 from llm_reasoner.knowledge.storage.record import ConsistencyVerdict, qualified_name
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.clients.base import ScriptedClient
-from llm_reasoner.knowledge.generation.backend import (
-    HypothesisBackend,
-    VocabularyUnknownToSymbolGraph,
-)
+from llm_reasoner.knowledge.generation.backend import HypothesisBackend
 from llm_reasoner.knowledge.generation.prompts import (
     GenerationPrompt,
     described_violation,
@@ -569,26 +566,14 @@ class TestHypothesisBackend:
         assert isinstance(structure, core.ActionPhaseStructure)
         assert len(backend.log) == 1
 
-    def test_a_symbol_graph_unaware_of_the_vocabulary_is_refused_before_asking(self):
+    def test_a_hypothesis_is_admitted_while_the_symbol_graph_knows_no_vocabulary(
+        self,
+    ):
         SymbolGraph.clear_instance()
         SymbolGraph(_class_diagram=ClassDiagram([]))
         backend = backend_answering(GenerationCase.CHAINED_STRUCTURE)
-        with pytest.raises(VocabularyUnknownToSymbolGraph):
-            list(pouring_query().evaluate(backend=backend))
-        assert backend.client.calls == []
-
-    def test_the_refusal_names_the_vocabulary_classes_the_graph_lacks(self):
-        SymbolGraph.clear_instance()
-        SymbolGraph(_class_diagram=ClassDiagram([core.ActionPhaseStructure]))
-        backend = backend_answering(GenerationCase.CHAINED_STRUCTURE)
-        with pytest.raises(VocabularyUnknownToSymbolGraph) as refused:
-            list(pouring_query().evaluate(backend=backend))
-        assert qualified_name(core.ActionPhaseStructure) not in (
-            refused.value.unknown_classes
-        )
-        assert qualified_name(pouring.PouringPhaseStructure) in (
-            refused.value.unknown_classes
-        )
+        (structure,) = pouring_query().evaluate(backend=backend)
+        assert isinstance(structure, core.ActionPhaseStructure)
 
     def test_rejected_answer_is_returned_with_the_violation_to_repair(self):
         backend = backend_answering(

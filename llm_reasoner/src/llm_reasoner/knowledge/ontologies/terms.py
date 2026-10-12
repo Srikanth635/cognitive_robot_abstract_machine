@@ -15,10 +15,10 @@ from abc import ABC
 from dataclasses import dataclass
 from enum import StrEnum
 
-from krrood.ontomatic.property_descriptor.property_descriptor import PropertyDescriptor
 from krrood.patterns.field_metadata import FieldMetadata
-from krrood.symbol_graph.symbol_graph import Symbol
 from typing_extensions import ClassVar, Optional, Union
+
+from llm_reasoner.knowledge.ontologies.properties import ObjectPropertyDescriptor
 
 # %% naming
 
@@ -263,10 +263,13 @@ class ConceptReference:
 
 
 @dataclass(eq=False)
-class DescriptionEntity(Symbol):
+class DescriptionEntity:
     """
     Base of every generated vocabulary class: a description-level entity, such as a
     phase concept or an event type, never an occurrence.
+
+    Description entities live in the knowledge component's own graph, never in krrood's
+    symbol graph.
     """
 
     term: ClassVar[ClassTerm]
@@ -282,10 +285,11 @@ class DescriptionEntity(Symbol):
 
 def is_inferred(python_type: type[DescriptionEntity], name: str) -> bool:
     """
-    :return: Whether krrood fills the field from its sub-properties, so a model never
-        states it: its descriptor stands for a property other properties specialise.
+    :return: Whether the field takes its values from its sub-properties, so a model
+        never states it: its descriptor stands for a property other properties
+        specialise.
     """
     descriptor = inspect.getattr_static(python_type, name, None)
-    return isinstance(descriptor, PropertyDescriptor) and bool(
-        type(descriptor).__subclasses__()
+    return (
+        isinstance(descriptor, ObjectPropertyDescriptor) and descriptor.is_specialised()
     )

@@ -9,10 +9,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import StrEnum
 
-from krrood.ontomatic.property_descriptor.property_descriptor import PropertyDescriptor
 from typing_extensions import ClassVar, List, Optional
 
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
+from llm_reasoner.knowledge.ontologies.properties import ObjectPropertyDescriptor
 from llm_reasoner.knowledge.ontologies.terms import (
     ClassTerm,
     ComplementOf,
@@ -300,21 +300,21 @@ class DefinesGazeFixation(core.DefinesComponent):
 
 
 @dataclass
-class FixatesRole(PropertyDescriptor):
+class FixatesRole(ObjectPropertyDescriptor):
     """
     The participant whose location is the landmark.
     """
 
 
 @dataclass
-class MaintainedUntil(PropertyDescriptor):
+class MaintainedUntil(ObjectPropertyDescriptor):
     """
     The event at whose predicted time gaze leaves the landmark.
     """
 
 
 @dataclass
-class ServesPhase(PropertyDescriptor):
+class ServesPhase(ObjectPropertyDescriptor):
     """
     The phase whose goal the fixation supports.
     """

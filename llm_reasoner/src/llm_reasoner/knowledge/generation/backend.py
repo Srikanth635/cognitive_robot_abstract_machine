@@ -18,11 +18,9 @@ from dataclasses import dataclass, field
 
 from krrood.entity_query_language.backends import GenerativeBackend
 from krrood.entity_query_language.query.match import Match
-from krrood.symbol_graph.symbol_graph import SymbolGraph
 from typing_extensions import Iterable, Optional, TypeVar
 
 from llm_reasoner.clients.base import Exchange, LanguageModelClient
-from llm_reasoner.exceptions import LLMReasonerError
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite
 from llm_reasoner.knowledge.acceptance.suite import predictive_manipulation_suite
 from llm_reasoner.knowledge.admission.consistency import ConsistencyCheck
@@ -35,32 +33,11 @@ from llm_reasoner.knowledge.generation.prompts import GenerationPrompt
 from llm_reasoner.knowledge.generation.recording import HypothesisRecorder
 from llm_reasoner.knowledge.generation.request import HypothesisRequest
 from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms
-from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 from llm_reasoner.knowledge.representation.rdf import GraphReader
 from llm_reasoner.knowledge.storage.record import HypothesisRecord, qualified_name
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 
 T = TypeVar("T")
-
-
-@dataclass
-class VocabularyUnknownToSymbolGraph(LLMReasonerError):
-    """
-    Krrood's symbol graph was created before the knowledge vocabulary was imported, so
-    its class diagram lacks vocabulary classes and no hypothesis can be built or read.
-    """
-
-    unknown_classes: list[str]
-    """
-    The module and class name of every vocabulary class the graph lacks.
-    """
-
-    def __post_init__(self):
-        super().__init__(
-            f"krrood's symbol graph lacks {len(self.unknown_classes)} knowledge "
-            f"vocabulary classes, such as {self.unknown_classes[0]}; create the graph "
-            "after importing llm_reasoner.knowledge"
-        )
 
 
 @dataclass
@@ -132,11 +109,6 @@ class HypothesisBackend(GenerativeBackend):
     """
 
     def _evaluate(self, expression: Match[T]) -> Iterable[T]:
-        unknown = Vocabulary().classes_unknown_to(SymbolGraph().class_diagram)
-        if unknown:
-            raise VocabularyUnknownToSymbolGraph(
-                unknown_classes=[qualified_name(generated) for generated in unknown]
-            )
         request = HypothesisRequest.from_match(expression, self.instruction)
         stored = (
             self.store.find(

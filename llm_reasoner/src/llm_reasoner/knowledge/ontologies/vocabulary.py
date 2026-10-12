@@ -11,7 +11,7 @@ from functools import cached_property
 from operator import attrgetter
 from types import ModuleType
 
-from krrood.class_diagrams.class_diagram import ClassDiagram, WrappedClass
+from krrood.class_diagrams.class_diagram import WrappedClass
 from typing_extensions import Any, Optional
 
 from llm_reasoner.knowledge.ontologies import PredictiveManipulationOntologyFile
@@ -102,8 +102,8 @@ class Vocabulary:
             which the others specialise, is left out.
         """
         return {
-            declared.name: self.value_type_of(
-                structure_type, declared.name, descriptor.range
+            declared.name: self.definition_named(
+                PropertyTerm.of_field(structure_type, declared.name).range
             )
             for declared in fields(structure_type)
             for descriptor in [
@@ -192,17 +192,6 @@ class Vocabulary:
             and issubclass(definition, DescriptionEntity)
             and definition.__module__ == module.__name__
         ]
-
-    def classes_unknown_to(
-        self, class_diagram: ClassDiagram
-    ) -> list[type[DescriptionEntity]]:
-        """
-        :param class_diagram: A krrood class diagram, such as the symbol graph's.
-        :return: The generated classes the diagram does not map, whose fields cannot be
-            set while it is the symbol graph's.
-        """
-        mapped = {wrapped.clazz for wrapped in class_diagram.wrapped_classes}
-        return [generated for generated in self.classes if generated not in mapped]
 
     @cached_property
     def defined_classes(self) -> list[type[DescriptionEntity]]:
