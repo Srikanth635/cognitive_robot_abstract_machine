@@ -52,7 +52,11 @@ if TYPE_CHECKING:
 T0 = time.time()
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__spec__.name)
+"""
+This module's logger, named for the module even when ``python -m`` runs it as
+``__main__``, so the level :func:`configure_console_logging` sets reaches it.
+"""
 
 
 def log(*parts: object) -> None:
