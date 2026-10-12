@@ -16,7 +16,7 @@ from enum import StrEnum
 from krrood.patterns.subclass_safe_generic import SubClassSafeGeneric
 from typing_extensions import Any, Generic, Sequence, TypeVar
 
-from llm_reasoner.ontologies.terms import DescriptionEntity
+from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity
 
 T = TypeVar("T", bound=DescriptionEntity)
 """

@@ -19,7 +19,7 @@ from typing_extensions import Any, Sequence
 from llm_reasoner.acceptance.restrictions import ClosedWorldMembership
 from llm_reasoner.acceptance.rules import AcceptanceRule, Violation
 from llm_reasoner.acceptance.vocabulary import Vocabulary
-from llm_reasoner.ontologies.terms import (
+from llm_reasoner.knowledge.ontologies.terms import (
     ClassExpression,
     ComplementOf,
     DescriptionEntity,

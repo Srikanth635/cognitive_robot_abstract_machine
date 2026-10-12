@@ -22,7 +22,7 @@ from cram_viz.hypothesis_knowledge.phase_hierarchy import (  # noqa: E402
     PhaseHierarchyOverlay,
     PhaseHierarchyRelation,
 )
-from llm_reasoner.ontologies.terms import PropertyTerm  # noqa: E402
+from llm_reasoner.knowledge.ontologies.terms import PropertyTerm  # noqa: E402
 
 # %% helpers
 

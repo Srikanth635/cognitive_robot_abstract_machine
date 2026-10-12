@@ -29,8 +29,8 @@ from llm_reasoner.hypotheses.graph import (
     SyntheticHypothesisRelation,
 )
 from llm_reasoner.hypotheses.view import HypothesisView
-from llm_reasoner.ontologies.predictive_manipulation import core
-from llm_reasoner.ontologies.terms import DescriptionEntity, PropertyTerm
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
+from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity, PropertyTerm
 from typing_extensions import Callable, Optional
 
 ROOT_LABEL = "Phase Structure"

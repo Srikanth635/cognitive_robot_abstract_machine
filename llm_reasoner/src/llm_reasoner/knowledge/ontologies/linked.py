@@ -13,7 +13,7 @@ from pathlib import Path
 from rdflib import RDF, Graph
 from typing_extensions import Optional, Sequence
 
-from llm_reasoner.ontologies import (
+from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_NAMESPACE,
     DUL_NAMESPACE,
     LinkedOntologyVariable,

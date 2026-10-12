@@ -20,9 +20,9 @@ from krrood.ontomatic.property_descriptor.property_descriptor import PropertyDes
 from typing_extensions import ClassVar, List, Optional
 
 {% for referenced in module.referenced_modules %}
-from llm_reasoner.ontologies.predictive_manipulation import {{ referenced }}
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import {{ referenced }}
 {% endfor %}
-from llm_reasoner.ontologies.terms import (
+from llm_reasoner.knowledge.ontologies.terms import (
     ClassTerm,
     ComplementOf,
     ConceptReference,

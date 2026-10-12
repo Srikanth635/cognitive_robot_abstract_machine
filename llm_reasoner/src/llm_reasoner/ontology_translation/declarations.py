@@ -10,7 +10,7 @@ from enum import StrEnum
 
 from typing_extensions import Optional
 
-from llm_reasoner.ontologies.terms import ClassExpression
+from llm_reasoner.knowledge.ontologies.terms import ClassExpression
 
 # %% value kinds
 

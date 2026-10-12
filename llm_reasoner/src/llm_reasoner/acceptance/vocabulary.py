@@ -14,15 +14,15 @@ from types import ModuleType
 from krrood.class_diagrams.class_diagram import WrappedClass
 from typing_extensions import Any, Optional
 
-from llm_reasoner.ontologies import PredictiveManipulationOntologyFile
-from llm_reasoner.ontologies.predictive_manipulation import (
+from llm_reasoner.knowledge.ontologies import PredictiveManipulationOntologyFile
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     core,
     gaze,
     object_dynamics,
     pouring,
     prehension,
 )
-from llm_reasoner.ontologies.terms import (
+from llm_reasoner.knowledge.ontologies.terms import (
     ClassExpression,
     ConceptReference,
     DescriptionEntity,

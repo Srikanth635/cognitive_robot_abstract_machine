@@ -20,8 +20,11 @@ from llm_reasoner.admission.hermit import HermitCheck
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.generation.backend import HypothesisRejected
 from llm_reasoner.hypotheses.view import HypothesisView
-from llm_reasoner.ontologies import CRAM_AICOR_NAMESPACE, LinkedOntologyVariable
-from llm_reasoner.ontologies.predictive_manipulation import pouring
+from llm_reasoner.knowledge.ontologies import (
+    CRAM_AICOR_NAMESPACE,
+    LinkedOntologyVariable,
+)
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import pouring
 
 from cram_viz import hypothesis_knowledge
 from cram_viz.hypothesis_knowledge.generation import (

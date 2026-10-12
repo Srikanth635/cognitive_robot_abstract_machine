@@ -7,12 +7,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from llm_reasoner.ontologies import (
+from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_NAMESPACE,
     DUL_NAMESPACE,
     LinkedOntologyVariable,
 )
-from llm_reasoner.ontologies.linked import LinkedOntologyTerms, OntologyFiles
+from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms, OntologyFiles
 
 CASES = Path(__file__).parent / "linked_ontology_cases"
 """

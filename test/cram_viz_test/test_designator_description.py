@@ -7,7 +7,7 @@ import pytest
 
 krrood = pytest.importorskip("krrood", reason="EQL requires krrood")
 
-from llm_reasoner.ontologies.terms import DescriptionEntity  # noqa: E402
+from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity  # noqa: E402
 
 from cram_viz import designator_knowledge, hypothesis_knowledge  # noqa: E402
 from cram_viz.designator_description import (  # noqa: E402

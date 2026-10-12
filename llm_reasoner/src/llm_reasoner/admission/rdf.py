@@ -21,8 +21,8 @@ from llm_reasoner.acceptance.vocabulary import Vocabulary
 from llm_reasoner.exceptions import LLMReasonerError
 from llm_reasoner.generation.schema import is_inferred
 from llm_reasoner.generation.wire import DecodedHypothesis
-from llm_reasoner.ontologies import PREDICTIVE_MANIPULATION_NAMESPACE_ROOT
-from llm_reasoner.ontologies.terms import (
+from llm_reasoner.knowledge.ontologies import PREDICTIVE_MANIPULATION_NAMESPACE_ROOT
+from llm_reasoner.knowledge.ontologies.terms import (
     ConceptReference,
     DescriptionEntity,
     PropertyTerm,

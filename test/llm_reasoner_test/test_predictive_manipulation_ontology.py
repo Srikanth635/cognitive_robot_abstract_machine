@@ -21,7 +21,7 @@ import pytest
 from rdflib import OWL, RDF, RDFS, XSD, Graph, Namespace, URIRef
 from typing_extensions import Any, Callable
 
-from llm_reasoner.ontologies import (
+from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_NAMESPACE,
     CRAM_AICOR_ONTOLOGY_IRI,
     DUL_NAMESPACE,

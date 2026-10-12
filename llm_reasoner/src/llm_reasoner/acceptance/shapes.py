@@ -24,12 +24,12 @@ from llm_reasoner.acceptance.derived import DerivedRule
 from llm_reasoner.acceptance.rules import AcceptanceRule, Severity, Violation
 from llm_reasoner.acceptance.vocabulary import Vocabulary
 from llm_reasoner.admission.rdf import GraphWriter
-from llm_reasoner.ontologies import (
+from llm_reasoner.knowledge.ontologies import (
     PREDICTIVE_MANIPULATION_SHAPES_NAMESPACE_ROOT,
     PredictiveManipulationOntologyFile,
 )
-from llm_reasoner.ontologies.linked import OntologyFiles
-from llm_reasoner.ontologies.terms import DescriptionEntity, PropertyTerm
+from llm_reasoner.knowledge.ontologies.linked import OntologyFiles
+from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity, PropertyTerm
 
 CHECKED_NAMESPACE = PREDICTIVE_MANIPULATION_SHAPES_NAMESPACE_ROOT + "checked#"
 """

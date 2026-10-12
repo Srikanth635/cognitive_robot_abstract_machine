@@ -20,11 +20,11 @@ from rdflib.term import Node
 from typing_extensions import Iterable, Optional
 
 from llm_reasoner.exceptions import LLMReasonerError
-from llm_reasoner.ontologies import (
+from llm_reasoner.knowledge.ontologies import (
     PREDICTIVE_MANIPULATION_NAMESPACE_ROOT,
     PredictiveManipulationOntologyFile,
 )
-from llm_reasoner.ontologies.terms import (
+from llm_reasoner.knowledge.ontologies.terms import (
     ClassExpression,
     ComplementOf,
     EnumeratedClass,

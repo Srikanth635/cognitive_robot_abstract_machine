@@ -16,8 +16,8 @@ from llm_reasoner.acceptance.rules import (
     Violation,
 )
 from llm_reasoner.acceptance.vocabulary import Vocabulary
-from llm_reasoner.ontologies.predictive_manipulation import core
-from llm_reasoner.ontologies.terms import DescriptionEntity, PropertyTerm
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
+from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity, PropertyTerm
 
 # %% rule names
 

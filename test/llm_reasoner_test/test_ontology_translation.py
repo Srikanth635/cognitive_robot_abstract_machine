@@ -16,20 +16,20 @@ from rdflib import OWL, RDF, RDFS, Graph, URIRef
 from krrood.class_diagrams.class_diagram import WrappedClass
 from typing_extensions import Any, List, Optional
 
-from llm_reasoner.ontologies import (
+from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_NAMESPACE,
     DUL_NAMESPACE,
     PREDICTIVE_MANIPULATION_NAMESPACE_ROOT,
     PredictiveManipulationOntologyFile,
 )
-from llm_reasoner.ontologies.predictive_manipulation import (
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     core,
     gaze,
     object_dynamics,
     pouring,
     prehension,
 )
-from llm_reasoner.ontologies.terms import DescriptionEntity, PropertyTerm
+from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity, PropertyTerm
 from llm_reasoner.ontology_translation.reading import (
     ConflictingPythonNames,
     FieldTypeOutOfReach,

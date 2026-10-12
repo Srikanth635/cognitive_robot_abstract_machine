@@ -20,7 +20,7 @@ ontology under a reasoner.
 
 ## The predictive-manipulation ontology
 
-`ontologies/predictive_manipulation` represents the predictive organization of object
+`knowledge/ontologies/predictive_manipulation` represents the predictive organization of object
 manipulation described by Johansson and Flanagan. It imports CRAM-AICOR and DUL and
 links its concepts to both; neither is changed. The scientific authority, claim
 statuses and semantic distinctions are recorded in
@@ -58,9 +58,9 @@ from llm_reasoner.admission.store import HypothesisStore
 from llm_reasoner.clients import AnthropicClient
 from llm_reasoner.generation.backend import HypothesisBackend
 from llm_reasoner.hypotheses.service import KnowledgeService
-from llm_reasoner.ontologies import CRAM_AICOR_NAMESPACE
-from llm_reasoner.ontologies.predictive_manipulation import pouring
-from llm_reasoner.ontologies.terms import ConceptReference
+from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import pouring
+from llm_reasoner.knowledge.ontologies.terms import ConceptReference
 
 service = KnowledgeService(
     backend=HypothesisBackend(

@@ -37,10 +37,10 @@ from llm_reasoner.clients.base import LanguageModelClient
 from llm_reasoner.generation.backend import HypothesisBackend
 from llm_reasoner.hypotheses.service import KnowledgeService
 from llm_reasoner.hypotheses.view import HypothesisView
-from llm_reasoner.ontologies import CRAM_AICOR_NAMESPACE
-from llm_reasoner.ontologies.linked import LinkedOntologyTerms
-from llm_reasoner.ontologies.predictive_manipulation import pouring
-from llm_reasoner.ontologies.terms import ConceptReference
+from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE
+from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import pouring
+from llm_reasoner.knowledge.ontologies.terms import ConceptReference
 from typing_extensions import Optional
 
 from cram_viz import paths

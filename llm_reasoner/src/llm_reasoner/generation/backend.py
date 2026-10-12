@@ -47,7 +47,7 @@ from llm_reasoner.generation.prompts import (
     written_value,
 )
 from llm_reasoner.generation.schema import GenerationSchema
-from llm_reasoner.ontologies.linked import LinkedOntologyTerms
+from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms
 from llm_reasoner.generation.wire import (
     DecodedHypothesis,
     DecodingResult,
