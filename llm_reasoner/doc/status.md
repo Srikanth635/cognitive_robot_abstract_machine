@@ -151,6 +151,17 @@ answer cited the fragments it relied on. The overview names phases and subgoals 
 values, so numeric ranges are found only by describing fragments. The arm stays an
 arbitrary choice: neither the world nor the knowledge says which gripper holds the cup.
 
+**Grounds and values in the overview (2026-10-12, at `1d75290bd`):** K1–K5 again,
+$0.32 in total. Every answer named its grounds, all checked: the bowl's and the cup's
+handles and one or two knowledge fragments (the tilt phase, the flow-onset threshold).
+With the ranges in the overview, no request described a fragment for them; each quoted
+the range of the hypothesis it read ("about 106°, inside the 30–120° tilt range") and
+kept the default tilt of 1.85 rad, K4 included, which in the previous run had described
+seven fragments and chosen 1.5. One run each, so some of the difference is run-to-run
+variation; the lasting limit is that the knowledge's tilt range is wide and holds the
+default, while the parameters it states more narrowly (tilt rate 5–30°/s, transferred
+quantity) have no field on coraplex's `PouringAction` to choose.
+
 **Seen but not yet acted on (R7):** the request resolved every case alike (RIGHT, the default
 tilt of 1.85 rad), whatever the task, since it does not read the hypothesis yet; and
 the world does not say what the cup holds, so the material came from the task alone.
