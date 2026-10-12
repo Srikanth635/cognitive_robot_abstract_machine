@@ -1,19 +1,19 @@
 """
-The structure every prompt to a model is written in: tagged sections, each holding text
-or data, and rules each stated once under its own name.
+The resolver's prompt vocabulary: the sections its prompts are made of, the rules its
+model answers by, and the keys of the data its prompts hold, written in the structure
+:mod:`llm_reasoner.prompt_structure` defines.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from enum import StrEnum
 
-from typing_extensions import Dict, List
-
-SECTION_SEPARATOR = "\n\n"
-"""
-What separates two sections of a prompt.
-"""
+from llm_reasoner.prompt_structure import (  # noqa: F401 (the resolver's names for them)
+    SECTION_SEPARATOR,
+    PromptBlock,
+    PromptRule,
+    render_blocks,
+)
 
 # %% sections
 
@@ -108,44 +108,6 @@ class BlockAttribute(StrEnum):
     """
     The kind of rejection a section states.
     """
-
-
-@dataclass(frozen=True)
-class PromptBlock:
-    """
-    One tagged section of a prompt.
-    """
-
-    section: PromptSection
-    """
-    The section, which names the tag.
-    """
-
-    body: str
-    """
-    What the section holds.
-    """
-
-    attributes: Dict[BlockAttribute, str] = field(default_factory=dict)
-    """
-    Attributes of the tag, such as the type a source belongs to.
-    """
-
-    def render(self) -> str:
-        """
-        :return: The section as its tag enclosing its body.
-        """
-        attributes = "".join(
-            f' {name}="{value}"' for name, value in self.attributes.items()
-        )
-        return f"<{self.section}{attributes}>\n{self.body}\n</{self.section}>"
-
-
-def render_blocks(blocks: List[PromptBlock]) -> str:
-    """
-    :return: The blocks as one prompt, in order.
-    """
-    return SECTION_SEPARATOR.join(block.render() for block in blocks)
 
 
 # %% rules
@@ -265,29 +227,6 @@ class RuleName(StrEnum):
     """
     How an element names what its choices rest on.
     """
-
-
-@dataclass(frozen=True)
-class PromptRule:
-    """
-    One rule a model answers by.
-    """
-
-    name: RuleName
-    """
-    What the rule governs.
-    """
-
-    text: str
-    """
-    The rule, as one instruction.
-    """
-
-    def render(self) -> str:
-        """
-        :return: The rule as one line of the rules section.
-        """
-        return f"- {self.name}: {self.text}"
 
 
 # %% data keys

@@ -163,7 +163,7 @@ meeting the query's `where`-conditions; or one of these outcomes:
 | `backend.py` | Orchestration: ask, decode, construct, validate, repair; `log`, `conversations`, `rules` |
 | `reflection.py` | Slots of a query: kind, type, docstring, default, domain |
 | `prompts.py` | System prompt, request, repair; the general rules |
-| `prompt_format.py` | The prompt structure: sections, rules, data keys |
+| `prompt_format.py` | The resolver's prompt vocabulary: its sections, rules and data keys, written in the shared structure of `llm_reasoner/prompt_structure.py` (`PromptBlock`, `PromptRule`, `render_blocks`) |
 | `referents.py` | How candidates are named and answered: `IntegerTokens`, `WorldHandles`; verdict rules |
 | `context.py` | Context providers (task, situation, composite) and candidate renderers |
 | `action_context.py` | `ActionContextProvider`: states the action a resolution serves, as its own `<request>` and `<given>` in an `<action>` section |
@@ -378,8 +378,20 @@ krrood does not enforce one written over a variable declared outside the match.
 
 ### 3.2 Resolver → language model (the prompt protocol)
 
-Every prompt is tagged sections only (`<section attribute="…">body</section>`), checked
-by a test that no text lies outside them.
+Every prompt of `llm_reasoner`, the resolver's and the knowledge component's, is tagged
+sections only (`<section attribute="…">body</section>`), written with the shared
+`prompt_structure.py` and checked by tests that no text lies outside them.
+
+The knowledge component's generation prompts (`knowledge/generation/prompts.py`) have
+their own sections and rules (`GenerationSection`, `GenerationRuleName`): a system
+prompt of `<role>`, `<inputs>`, `<rules>` (content, roles, quantities, root,
+answer_format, fragment_keys, references, types_and_fields, specific_type,
+defined_type, enumerations, concepts, absent_fields, fixed_values, repair), `<types>`
+(each type as JSON: name, kind_of, meaning, defined, requires, and its fields with what
+each takes — a fragment type, an enum, a concept or a literal — whether it takes
+several values and its meaning), `<structure_rules>` (JSON) and `<output>` (the answer's
+JSON schema); a request of `<instruction>` and `<fixed_values>` (JSON); and a repair
+adding `<rejected_answer>` and `<problems>` (JSON).
 
 | Prompt | Sections |
 |---|---|

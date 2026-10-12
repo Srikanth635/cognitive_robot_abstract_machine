@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
+import json
+
 import pytest
 from krrood.class_diagrams.class_diagram import ClassDiagram
 from krrood.entity_query_language.factories import the
@@ -30,10 +32,13 @@ from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.knowledge.generation.backend import HypothesisBackend
 from llm_reasoner.knowledge.generation.prompts import (
     GenerationPrompt,
+    GenerationSection,
+    TakesKey,
+    TypeKey,
     described_violation,
-    field_hint,
-    rendered_shape,
-    rendered_type,
+    field_takes,
+    structure_rule_entry,
+    type_entry,
     written_value,
 )
 from llm_reasoner.knowledge.generation.schema import (
@@ -67,6 +72,8 @@ from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     prehension,
 )
 from llm_reasoner.knowledge.ontologies.terms import ConceptReference
+
+from .prompt_sections import bodies, text_outside_sections
 
 LINKED_EXCERPTS = OntologyFiles(
     paths=[
@@ -301,24 +308,35 @@ class TestGenerationSchema:
         assert structure.field_named("defines_gaze_fixation") is None
 
     def test_type_is_shown_with_what_it_requires(self):
-        rendered = rendered_type(type_schema_for(pouring.PouringPhaseStructure))
+        entry = type_entry(type_schema_for(pouring.PouringPhaseStructure))
         assert all(
-            described(restriction, False) in rendered
+            described(restriction, False) in entry[TypeKey.REQUIRES]
             for restriction in pouring.PouringPhaseStructure.term.restrictions
         )
 
     def test_defined_type_is_shown_with_its_definition(self):
-        rendered = rendered_type(type_schema_for(core.ForceRateParameter))
-        assert described(core.ForceRateParameter.term.definition, False) in rendered
+        entry = type_entry(type_schema_for(core.ForceRateParameter))
+        assert entry[TypeKey.DEFINED] == described(
+            core.ForceRateParameter.term.definition, False
+        )
 
     def test_structural_rules_of_the_generated_types_are_in_the_system_prompt(self):
         system = GenerationPrompt().system(
             GenerationSchema.for_root(pouring.PouringPhaseStructure)
         )
+        (rules,) = bodies(system, GenerationSection.STRUCTURE_RULES)
         assert all(
-            rendered_shape(shape) in system
+            structure_rule_entry(shape) in json.loads(rules)
             for shape in StructureShapes.shipped().shapes
         )
+
+    def test_every_generation_prompt_is_made_only_of_tagged_sections(self):
+        backend = backend_answering(
+            GenerationCase.LOOPING_STRUCTURE, GenerationCase.LOOP_REPLACED_PATCH
+        )
+        list(pouring_query().evaluate(backend=backend))
+        prompts = [backend.log[0].system] + [exchange.user for exchange in backend.log]
+        assert [text_outside_sections(prompt) for prompt in prompts] == [""] * 3
 
     def test_inferred_super_property_is_not_asked_for(self):
         schema = GenerationSchema.for_root(core.ActionPhaseStructure)
@@ -664,17 +682,19 @@ class TestHypothesisBackend:
         )
         list(pouring_query().evaluate(backend=backend))
         (first_system, first_user), (repair_system, _) = backend.client.calls
-        catalogue_entry = rendered_type(type_schema_for(pouring.TiltToFlowPhase))
+        catalogue_entry = type_entry(type_schema_for(pouring.TiltToFlowPhase))
+        (types,) = bodies(first_system, GenerationSection.TYPES)
         assert first_system == repair_system
-        assert catalogue_entry in first_system
-        assert catalogue_entry not in first_user
+        assert catalogue_entry in json.loads(types)
+        assert bodies(first_user, GenerationSection.TYPES) == []
 
     def test_fixed_values_and_instruction_are_stated(self):
         backend = backend_answering(GenerationCase.CHAINED_STRUCTURE)
         list(pouring_query().evaluate(backend=backend))
         prompt = backend.log[0].user
-        assert backend.instruction in prompt
-        assert "decomposes_task = aicor:Pouring" in prompt
+        (fixed,) = bodies(prompt, GenerationSection.FIXED_VALUES)
+        assert bodies(prompt, GenerationSection.INSTRUCTION) == [backend.instruction]
+        assert json.loads(fixed) == {"decomposes_task": written_value(POURING)}
 
     def test_concept_the_linked_ontologies_lack_is_returned_to_repair(self):
         backend = backend_answering(GenerationCase.CONCEPTS_LINKED_AND_LOCAL)
@@ -691,7 +711,7 @@ class TestHypothesisBackend:
     def test_concept_fields_offer_concepts_of_the_hypothesis(self):
         schema = GenerationSchema.for_root(core.ActionPhaseStructure)
         category = schema.get("CategoricalValue").field_named("has_category")
-        assert "hypothesis:" in field_hint(category)
+        assert "hypothesis:" in field_takes(category)[TakesKey.CONCEPT]
 
     def test_no_admissible_answer_within_the_budget_is_refused(self):
         backend = backend_answering(*[GenerationCase.LOOPING_STRUCTURE] * 3)

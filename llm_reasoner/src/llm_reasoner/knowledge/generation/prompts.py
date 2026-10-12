@@ -1,14 +1,16 @@
 """
 What a language model is told when it is asked for a hypothesis, and when it is asked to
-correct one.
+correct one: tagged sections holding text or data, and rules each stated once under its
+own name, as every prompt of llm_reasoner is written.
 """
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import Enum, StrEnum
 
-from typing_extensions import Any, Callable, Mapping, Sequence
+from typing_extensions import Any, Callable, Dict, List, Mapping, Sequence
 
 from llm_reasoner.knowledge.acceptance.derived import described
 from llm_reasoner.knowledge.acceptance.rules import Violation
@@ -22,40 +24,289 @@ from llm_reasoner.knowledge.generation.schema import (
 )
 from llm_reasoner.knowledge.generation.wire import prefixed_name
 from llm_reasoner.knowledge.ontologies.terms import ConceptReference
+from llm_reasoner.prompt_structure import (
+    SECTION_SEPARATOR,
+    PromptBlock,
+    PromptRule,
+    render_blocks,
+)
 
-SYSTEM_PROMPT = """\
-You describe how a manipulation action is organised, as a structure of typed fragments
-drawn from an ontology of predictive manipulation.
+JSON_INDENT = 2
+"""
+The indentation of the JSON data a prompt holds.
+"""
 
-What you produce:
-- The phases of the action, the subgoal each phase pursues and the events that end it,
-  the participants by their roles, the forces and conditions involved, what the
-  controller predicts at each event, how it compares and corrects, and the quantities.
-- Participants are roles such as "the source container", never particular objects.
-  Quantities are ranges with units, never single measurements you have not made.
+# %% sections
 
-How to answer:
-- Emit one JSON object with the key "fragments", whose value is a list.
-- Every fragment is an object with "id", "type" and the fields of that type. Any
-  fragment may also have a "label" naming it in plain words.
-- "id" is a short string unique within your answer. Fragments refer to one another by
-  these ids, never by nesting.
-- Use only the types and fields listed. A field holding many values takes a list.
-- Choose the most specific type that fits; a label never replaces a type.
-- A type marked "Defined" is met by its fields: a fragment of another type that states
-  what the definition requires belongs to it as well. An estimate whose physical
-  dimension is a force rate is therefore also a force rate parameter.
-- Enumeration fields take the member name. Concept fields take a prefixed term:
-  aicor:<Name> or dul:<Name> for a term CRAM-AICOR or DUL declares, such as
-  aicor:Pouring, and hypothesis:<Name> for a concept they lack, such as a category of
-  grasp. Never invent an aicor: or dul: term.
-- Leave out a field you cannot fill rather than writing null.
 
-Answer with the JSON object only, without prose or code fences.
+class GenerationSection(StrEnum):
+    """
+    The sections the prompts of a generation are made of, each named by its tag.
+    """
+
+    ROLE = "role"
+    """
+    What the model is asked to do.
+    """
+
+    INPUTS = "inputs"
+    """
+    What each section of a request means.
+    """
+
+    RULES = "rules"
+    """
+    How the model answers.
+    """
+
+    TYPES = "types"
+    """
+    The fragment types an answer may use, as data.
+    """
+
+    STRUCTURE_RULES = "structure_rules"
+    """
+    The rules relating several fragments, as data.
+    """
+
+    OUTPUT = "output"
+    """
+    The shape of the answer.
+    """
+
+    INSTRUCTION = "instruction"
+    """
+    The action to describe, in plain words.
+    """
+
+    FIXED_VALUES = "fixed_values"
+    """
+    The values the root fragment must have, as data.
+    """
+
+    REJECTED_ANSWER = "rejected_answer"
+    """
+    The answer so far, which is being corrected.
+    """
+
+    PROBLEMS = "problems"
+    """
+    What is wrong with the answer so far, as data.
+    """
+
+
+INPUT_MEANINGS = {
+    GenerationSection.TYPES: "the fragment types an answer may use: each type's name, "
+    "the types it is a kind of, its meaning, its definition when it has one, what it "
+    "requires, and the fields it adds, each with what it takes, whether it takes "
+    "several values, and its meaning.",
+    GenerationSection.STRUCTURE_RULES: "rules relating several fragments, each with "
+    "the type it constrains.",
+    GenerationSection.OUTPUT: "the shape of the answer.",
+    GenerationSection.INSTRUCTION: "the action to describe, in plain words.",
+    GenerationSection.FIXED_VALUES: "the values the root fragment must have, by field.",
+    GenerationSection.REJECTED_ANSWER: "your answer so far, which is being corrected.",
+    GenerationSection.PROBLEMS: "what is wrong with that answer, each naming the "
+    "fragment at fault.",
+}
+"""
+What each section of a generation's prompts means, in the order they may appear.
+"""
+
+ROLE = (
+    "Describe how a manipulation action is organised, as one structure of typed "
+    "fragments drawn from an ontology of predictive manipulation."
+)
+"""
+What the model is asked to do.
+"""
+
+# %% rules
+
+
+class GenerationRuleName(StrEnum):
+    """
+    The rules a generation's answer follows, each named for what it governs.
+    """
+
+    CONTENT = "content"
+    ROLES = "roles"
+    QUANTITIES = "quantities"
+    ROOT = "root"
+    ANSWER_FORMAT = "answer_format"
+    FRAGMENT_KEYS = "fragment_keys"
+    REFERENCES = "references"
+    TYPES_AND_FIELDS = "types_and_fields"
+    SPECIFIC_TYPE = "specific_type"
+    DEFINED_TYPE = "defined_type"
+    ENUMERATIONS = "enumerations"
+    CONCEPTS = "concepts"
+    ABSENT_FIELDS = "absent_fields"
+    FIXED_VALUES = "fixed_values"
+    REPAIR = "repair"
+
+
+class TypeKey(StrEnum):
+    """
+    The keys of a type in the types section.
+    """
+
+    NAME = "name"
+    KIND_OF = "kind_of"
+    MEANING = "meaning"
+    DEFINED = "defined"
+    REQUIRES = "requires"
+    FIELDS = "fields"
+
+
+class FieldKey(StrEnum):
+    """
+    The keys of a field of a type in the types section.
+    """
+
+    NAME = "name"
+    TAKES = "takes"
+    MANY = "many"
+    MEANING = "meaning"
+
+
+class TakesKey(StrEnum):
+    """
+    The keys saying what one value of a field is.
+    """
+
+    FRAGMENT = "fragment"
+    """
+    The id of a fragment of the named type or of a more specific one.
+    """
+
+    ENUM = "enum"
+    """
+    One of the listed member names.
+    """
+
+    CONCEPT = "concept"
+    """
+    A prefixed term, in the listed forms.
+    """
+
+    LITERAL = "literal"
+    """
+    A JSON value of the named kind.
+    """
+
+
+class StructureRuleKey(StrEnum):
+    """
+    The keys of a rule in the structure rules section.
+    """
+
+    TYPE = "type"
+    RULE = "rule"
+
+
+CONCEPT_FORMS = "aicor:<Name> | dul:<Name> | hypothesis:<Name>"
+"""
+The forms a concept field's value takes.
 """
 
 
-# %% rendering
+def generation_rules(root: str) -> List[PromptRule]:
+    """
+    :param root: The name of the type generated.
+    :return: Every rule a generation's answer follows.
+    """
+    return [
+        PromptRule(
+            GenerationRuleName.CONTENT,
+            "describe the phases of the action, the subgoal each phase pursues and the "
+            "events that end it, the participants by their roles, the forces and "
+            "conditions involved, what the controller predicts at each event, how it "
+            "compares and corrects, and the quantities.",
+        ),
+        PromptRule(
+            GenerationRuleName.ROLES,
+            'participants are roles such as "the source container", never particular '
+            "objects.",
+        ),
+        PromptRule(
+            GenerationRuleName.QUANTITIES,
+            "quantities are ranges with units, never single measurements you have not "
+            "made.",
+        ),
+        PromptRule(
+            GenerationRuleName.ROOT,
+            f"produce exactly one fragment of type {root}, with the fragments that "
+            f"make it up; every fragment you write is part of the {root}, so it does "
+            "not list them.",
+        ),
+        PromptRule(
+            GenerationRuleName.ANSWER_FORMAT,
+            f"reply with one JSON object following <{GenerationSection.OUTPUT}>; no "
+            "prose, no code fences.",
+        ),
+        PromptRule(
+            GenerationRuleName.FRAGMENT_KEYS,
+            f'every fragment is an object with "{AnswerKey.IDENTIFIER}", '
+            f'"{AnswerKey.TYPE}" and the fields of that type, and may have a "label" '
+            "naming it in plain words.",
+        ),
+        PromptRule(
+            GenerationRuleName.REFERENCES,
+            f'"{AnswerKey.IDENTIFIER}" is a short string unique within your answer; '
+            "fragments refer to one another by these ids, never by nesting.",
+        ),
+        PromptRule(
+            GenerationRuleName.TYPES_AND_FIELDS,
+            f"use only the types and fields <{GenerationSection.TYPES}> lists; a field "
+            f'whose "{FieldKey.MANY}" is true takes a list, and a field taking a '
+            f'"{TakesKey.FRAGMENT}" takes the id of a fragment of that type or of a '
+            "more specific one.",
+        ),
+        PromptRule(
+            GenerationRuleName.SPECIFIC_TYPE,
+            "choose the most specific type that fits; a label never replaces a type.",
+        ),
+        PromptRule(
+            GenerationRuleName.DEFINED_TYPE,
+            f'a type with "{TypeKey.DEFINED}" is met by its fields: a fragment of '
+            "another type that states what the definition requires belongs to it as "
+            "well, so an estimate whose physical dimension is a force rate is also a "
+            "force rate parameter.",
+        ),
+        PromptRule(
+            GenerationRuleName.ENUMERATIONS,
+            f'a field taking an "{TakesKey.ENUM}" takes one of its member names.',
+        ),
+        PromptRule(
+            GenerationRuleName.CONCEPTS,
+            f'a field taking a "{TakesKey.CONCEPT}" takes a prefixed term: '
+            "aicor:<Name> or dul:<Name> for a term CRAM-AICOR or DUL declares, such as "
+            "aicor:Pouring, and hypothesis:<Name> for a concept they lack, such as a "
+            "category of grasp; never invent an aicor: or dul: term.",
+        ),
+        PromptRule(
+            GenerationRuleName.ABSENT_FIELDS,
+            "leave out a field you cannot fill rather than writing null.",
+        ),
+        PromptRule(
+            GenerationRuleName.FIXED_VALUES,
+            f"the {root} fragment has every value <{GenerationSection.FIXED_VALUES}> "
+            "states.",
+        ),
+        PromptRule(
+            GenerationRuleName.REPAIR,
+            f"when <{GenerationSection.REJECTED_ANSWER}> and "
+            f"<{GenerationSection.PROBLEMS}> follow the request, correct the answer "
+            f'with a patch: a JSON object whose "{AnswerKey.FRAGMENTS}" list holds '
+            "only the fragments you add or change, each written in full with all its "
+            f'fields, and whose "{AnswerKey.REMOVE}" list holds the ids of the '
+            "fragments to delete; every fragment you do not mention stays as it is.",
+        ),
+    ]
+
+
+# %% types and rules as data
 
 
 def written_value(value: Any) -> str:
@@ -71,60 +322,69 @@ def written_value(value: Any) -> str:
     return repr(value)
 
 
-def field_hint(field_schema: FieldSchema) -> str:
+def field_takes(field_schema: FieldSchema) -> Dict[str, Any]:
     """
-    :return: What one value of a field looks like, in words.
+    :return: What one value of a field is, as data.
     """
     if field_schema.kind == FieldKind.FRAGMENT:
-        hint = f"id of a {field_schema.value_type.__name__} or a more specific type"
-    elif field_schema.kind == FieldKind.ENUMERATION:
-        hint = "one of " + " | ".join(field_schema.options)
-    elif field_schema.kind == FieldKind.CONCEPT:
-        hint = (
-            "a prefixed term: aicor:<Name> or dul:<Name> that CRAM-AICOR or DUL "
-            "declares, or hypothesis:<Name> for a concept they lack"
-        )
-    else:
-        hint = f"a {field_schema.kind}"
-    return f"list of {hint}" if field_schema.many else hint
+        return {TakesKey.FRAGMENT: field_schema.value_type.__name__}
+    if field_schema.kind == FieldKind.ENUMERATION:
+        return {TakesKey.ENUM: list(field_schema.options)}
+    if field_schema.kind == FieldKind.CONCEPT:
+        return {TakesKey.CONCEPT: CONCEPT_FORMS}
+    return {TakesKey.LITERAL: field_schema.kind}
 
 
-def rendered_type(type_schema: TypeSchema) -> str:
+def type_entry(type_schema: TypeSchema) -> Dict[str, Any]:
     """
-    :return: A fragment type, its meaning, what the ontology requires of it beyond its
+    :return: A fragment type as data: its name, the types it is a kind of, its meaning,
+        its definition when it has one, what the ontology requires of it beyond its
         bases, and the fields it adds to them.
     """
-    bases = [
-        base.__name__
-        for base in type_schema.python_type.__bases__
-        if "term" in vars(base)
-    ]
-    heading = f"### {type_schema.name}" + (
-        f" (a kind of {', '.join(bases)})" if bases else ""
-    )
+    term = type_schema.python_type.term
     own = vars(type_schema.python_type).get("__annotations__", {})
-    lines = [heading, type_schema.description]
-    definition = type_schema.python_type.term.definition
-    if definition is not None:
-        lines.append(f"Defined: {described(definition, False)}.")
-    lines.extend(
-        f"Requires: {described(restriction, False)}."
-        for restriction in type_schema.python_type.term.restrictions
-    )
-    lines.extend(
-        f"- {field_schema.name}: {field_hint(field_schema)}. {field_schema.description}"
+    entry: Dict[str, Any] = {
+        TypeKey.NAME: type_schema.name,
+        TypeKey.KIND_OF: [
+            base.__name__
+            for base in type_schema.python_type.__bases__
+            if "term" in vars(base)
+        ],
+        TypeKey.MEANING: type_schema.description,
+    }
+    if term.definition is not None:
+        entry[TypeKey.DEFINED] = described(term.definition, False)
+    entry[TypeKey.REQUIRES] = [
+        described(restriction, False) for restriction in term.restrictions
+    ]
+    entry[TypeKey.FIELDS] = [
+        {
+            FieldKey.NAME: field_schema.name,
+            FieldKey.TAKES: field_takes(field_schema),
+            FieldKey.MANY: field_schema.many,
+            FieldKey.MEANING: field_schema.description,
+        }
         for field_schema in type_schema.fields
         if field_schema.name in own
-    )
-    return "\n".join(line for line in lines if line)
+    ]
+    return entry
 
 
-def rendered_shape(shape: StructureShape) -> str:
+def structure_rule_entry(shape: StructureShape) -> Dict[str, str]:
     """
-    :return: A structural rule as the model reads it: the type it constrains and what it
-        requires.
+    :return: A structural rule as data: the type it constrains and what it requires.
     """
-    return f"- {shape.target.__name__}: {shape.description}"
+    return {
+        StructureRuleKey.TYPE: shape.target.__name__,
+        StructureRuleKey.RULE: shape.description,
+    }
+
+
+def as_json(data: Any) -> str:
+    """
+    :return: Data as the JSON a prompt holds.
+    """
+    return json.dumps(data, indent=JSON_INDENT)
 
 
 # %% prompts
@@ -148,27 +408,44 @@ class GenerationPrompt:
             stays the same for every attempt and every instruction and can be cached.
         """
         root = schema.root.__name__
-        return "\n\n".join(
+        return render_blocks(
             [
-                SYSTEM_PROMPT,
-                f"Produce exactly one fragment of type {root}, together with the "
-                "fragments that make it up. Every fragment you write is part of the "
-                f"{root}, so it does not list them.",
-                "## Types you may use\n\n"
-                + "\n\n".join(
-                    rendered_type(type_schema)
-                    for _, type_schema in sorted(schema.types.items())
+                PromptBlock(section=GenerationSection.ROLE, body=ROLE),
+                PromptBlock(
+                    section=GenerationSection.INPUTS,
+                    body="\n".join(
+                        f"- <{section}>: {meaning}"
+                        for section, meaning in INPUT_MEANINGS.items()
+                    ),
                 ),
-                "## Rules across fragments\n\n"
-                "Each rule relates several fragments, so it is stated here rather "
-                "than with one type.\n\n"
-                + "\n".join(
-                    rendered_shape(shape)
-                    for shape in self.shapes.applicable_to(
-                        type_schema.python_type for type_schema in schema.types.values()
-                    )
+                PromptBlock(
+                    section=GenerationSection.RULES,
+                    body="\n".join(rule.render() for rule in generation_rules(root)),
                 ),
-                '## Output\n\n{"fragments": [{"id": "...", "type": "...", ...}, ...]}',
+                PromptBlock(
+                    section=GenerationSection.TYPES,
+                    body=as_json(
+                        [
+                            type_entry(type_schema)
+                            for _, type_schema in sorted(schema.types.items())
+                        ]
+                    ),
+                ),
+                PromptBlock(
+                    section=GenerationSection.STRUCTURE_RULES,
+                    body=as_json(
+                        [
+                            structure_rule_entry(shape)
+                            for shape in self.shapes.applicable_to(
+                                type_schema.python_type
+                                for type_schema in schema.types.values()
+                            )
+                        ]
+                    ),
+                ),
+                PromptBlock(
+                    section=GenerationSection.OUTPUT, body=as_json(schema.json_schema())
+                ),
             ]
         )
 
@@ -184,17 +461,20 @@ class GenerationPrompt:
         :param fixed_values: Values the root fragment must have, by field name.
         :return: The prompt asking for a hypothesis of the instruction.
         """
-        root = schema.root.__name__
-        sections = [f"Describe the organisation of this action: {instruction}"]
+        blocks = [PromptBlock(section=GenerationSection.INSTRUCTION, body=instruction)]
         if fixed_values:
-            sections.append(
-                f"## Fixed values\n\nThe {root} fragment must have:\n"
-                + "\n".join(
-                    f"- {name} = {written_value(value)}"
-                    for name, value in fixed_values.items()
+            blocks.append(
+                PromptBlock(
+                    section=GenerationSection.FIXED_VALUES,
+                    body=as_json(
+                        {
+                            name: written_value(value)
+                            for name, value in fixed_values.items()
+                        }
+                    ),
                 )
             )
-        return "\n\n".join(sections)
+        return render_blocks(blocks)
 
     @staticmethod
     def repair(initial_prompt: str, answer: str, problems: Sequence[str]) -> str:
@@ -207,17 +487,20 @@ class GenerationPrompt:
             fault.
         :return: The prompt asking the model for a patch correcting the answer.
         """
-        return "\n\n".join(
+        return SECTION_SEPARATOR.join(
             [
                 initial_prompt,
-                "## Your answer so far\n\n" + answer,
-                "These problems were found:\n"
-                + "\n".join(f"- {problem}" for problem in problems),
-                "Correct them with a patch rather than a new answer: a JSON object "
-                f'whose "{AnswerKey.FRAGMENTS}" list holds only the fragments you add '
-                "or change, each written in full with all its fields, and whose "
-                f'"{AnswerKey.REMOVE}" list holds the ids of the fragments to delete. '
-                "Every fragment you do not mention stays as it is. JSON object only.",
+                render_blocks(
+                    [
+                        PromptBlock(
+                            section=GenerationSection.REJECTED_ANSWER, body=answer
+                        ),
+                        PromptBlock(
+                            section=GenerationSection.PROBLEMS,
+                            body=as_json(list(problems)),
+                        ),
+                    ]
+                ),
             ]
         )
 
