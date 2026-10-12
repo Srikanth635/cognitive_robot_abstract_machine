@@ -12,17 +12,23 @@ import weakref
 from pathlib import Path
 
 import numpy as np
+import pytest
 from krrood.symbol_graph.symbol_graph import SymbolGraph
+from semantic_digital_twin.robots.pr2 import PR2
+from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
+from semantic_digital_twin.world_description.connections import OmniDrive
 from semantic_digital_twin.semantic_annotations.semantic_annotations import (
     Bowl,
     PouringCup,
 )
 
 from cram_viz.resolution.scene_world import (
+    AnnotationClasses,
     SceneKey,
-    SceneObjectAnnotations,
     SceneWorldBuilder,
     SceneWorlds,
+    TrajectoryKey,
+    UnknownRobot,
 )
 
 # %% helpers
@@ -42,6 +48,29 @@ def body_of(world, bundle: Path, identifier: str):
     """
     mesh = scene_objects(bundle)[identifier][SceneKey.MESH]
     return world.get_body_by_name(Path(mesh).name)
+
+
+def recorded_start(bundle: Path) -> list:
+    """
+    :return: The robot's base pose in the recording's first frame, as the bundle states
+        it.
+    """
+    scene = json.loads((bundle / "scene.json").read_text())
+    trajectory = json.loads((bundle / scene[SceneKey.TRAJECTORY]).read_text())
+    return trajectory[TrajectoryKey.BASE][0]
+
+
+def without_surroundings(bundle: Path) -> Path:
+    """
+    :return: The bundle with only its robot model left.
+    """
+    scene_file = bundle / "scene.json"
+    scene = json.loads(scene_file.read_text())
+    scene[SceneKey.MODELS] = [
+        model for model in scene[SceneKey.MODELS] if model.get(SceneKey.ROBOT)
+    ]
+    scene_file.write_text(json.dumps(scene))
+    return bundle
 
 
 class TestSceneWorld:
@@ -74,9 +103,45 @@ class TestSceneWorld:
         )
 
     def test_the_mapping_names_an_annotation_class_for_each_entry(self):
-        annotations = SceneObjectAnnotations.shipped()
+        annotations = AnnotationClasses.of_objects()
         assert annotations.annotation_for("Static_MilkPitcher") is PouringCup
         assert annotations.annotation_for("no_such_object") is None
+
+
+class TestRobotAnnotation:
+    def test_the_robot_mapping_names_a_robot_class_for_each_entry(self):
+        assert AnnotationClasses.of_robots().annotation_for("pr2") is PR2
+
+    def test_a_robot_without_a_mapping_is_refused(self, pouring_bundle):
+        builder = SceneWorldBuilder()
+        world = builder.build(pouring_bundle)
+        with pytest.raises(UnknownRobot):
+            builder.annotate_robot(world, pouring_bundle)
+
+
+class TestRobotInItsSurroundings:
+    def test_the_robot_stands_where_the_recording_starts(self, pouring_bundle):
+        world = SceneWorldBuilder().build(pouring_bundle)
+        expected = HomogeneousTransformationMatrix.from_xyz_quaternion(
+            *recorded_start(pouring_bundle), reference_frame=world.root
+        )
+        assert np.allclose(
+            world.compute_forward_kinematics_np(
+                world.root, world.get_body_by_name("base_link")
+            ),
+            expected.to_np(),
+        )
+
+    def test_the_robot_moves_over_its_surroundings_on_a_drive(self, pouring_bundle):
+        world = SceneWorldBuilder().build(pouring_bundle)
+        drive = world.get_body_by_name("base_link").parent_connection
+        assert isinstance(drive, OmniDrive)
+        assert drive.parent is world.get_body_by_name("floor")
+        assert world.root is drive.parent
+
+    def test_a_scene_of_a_robot_alone_is_the_robot_world(self, pouring_bundle):
+        world = SceneWorldBuilder().build(without_surroundings(pouring_bundle))
+        assert world.root is world.get_body_by_name("base_link")
 
 
 class TestSceneWorlds:

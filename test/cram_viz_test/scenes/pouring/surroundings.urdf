@@ -1,0 +1,3 @@
+<robot name="surroundings">
+  <link name="floor"/>
+</robot>

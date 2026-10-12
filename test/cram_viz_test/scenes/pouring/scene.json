@@ -3,7 +3,8 @@
   "fps": 30,
   "trajectory": "trajectory.json",
   "models": [
-    {"name": "robot", "urdf": "robot.urdf", "prefix": "robot", "robot": true}
+    {"name": "robot", "urdf": "robot.urdf", "prefix": "robot", "robot": true},
+    {"name": "surroundings", "urdf": "surroundings.urdf", "prefix": "surroundings"}
   ],
   "robot": {"name": "robot", "prefix": "robot", "parts": {}},
   "objects": [
