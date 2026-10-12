@@ -1,0 +1,4 @@
+{"turns": [
+  {"tools": [{"name": "find_individuals", "arguments": {"kind": "semantic_digital_twin.semantic_annotations.semantic_annotations.Bread", "path": "root"}}]},
+  {"answer": [{"CuttingAction.object_to_cut": "Body#1", "CuttingAction.tool": "CuttingKnife#1", "CuttingAction.arm": "RIGHT", "CuttingAction.technique": "HALVING", "CuttingAction.slice_thickness": null, "why": "The task asks to cut the bread in half.", "grounds": [{"world": "Body#1"}]}]}
+]}

@@ -80,8 +80,11 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
 
 Live runs use Claude Sonnet 5.5 on the PR2 in the IAI apartment (the repository's
 `_apartment_world_setup`) with a bowl, a pouring cup, bread and a cutting knife added,
-and optionally SDT's furniture annotations (109 annotations). The run scripts are kept
-outside the repository; every run needs the user's approval.
+and optionally SDT's furniture annotations (109 annotations). Until 2026-10-12 the run
+scripts were kept outside the repository; the cases now live in
+`experiments/llm_reasoner_kitchen` and run as tests with `LLM_REASONER_LIVE=1`
+(`architecture.md` §5), on the repository's own PR2 in the apartment rather than
+cram_viz's PR2 scene.
 
 **The suite** (C = `CuttingAction`, P = `PouringAction`, T = with a task):
 
@@ -171,6 +174,14 @@ system prompt carries the types as indented JSON, 130k characters against 81k, o
 attempt. It is paid once per situation, since the hypothesis is then stored. K7 (honey)
 was judged LIQUID and served the stored liquid hypothesis, so it did not exercise the
 generation.
+
+**The ported suite (2026-10-12):** `experiments/llm_reasoner_kitchen` live, all 34
+tests passed in 10 minutes (26 resolutions, 2 refusals, 6 knowledge consultations), on
+the repository's PR2 in the apartment and with R7's stored hypotheses; $1.81 for the
+resolvers' conversations, pouring cases $0.05–0.09 with their consultation, cutting cases
+$0.03–0.05. One hypothesis was generated, which the per-case costs leave out: T6 ("Empty
+the cup into the sink") chose LIQUID and SOURCE_EXHAUSTED; emptying is stated, the liquid
+is inferred from the sink rather than stated.
 
 **Seen but not yet acted on (R7):** the request resolved every case alike (RIGHT, the default
 tilt of 1.85 rad), whatever the task, since it does not read the hypothesis yet; and
@@ -267,7 +278,7 @@ approval.
 | Designator slots supplied from the SDT world (containers, arms) | Replaces hand-written bindings | Deferred |
 | Choosing smaller pouring structures from the world state | The full 12-phase pouring structure is always required | Deferred |
 | An MCP server over the world-access contract | For consumers outside the resolver's process | When a second consumer needs it |
-| Live tests in the repository | The live suite now lives in scripts outside the repository | Proposed: skipped in CI, each paired with a scripted test |
+| Live tests in the repository | The live suite lived in scripts outside the repository | **Done** 2026-10-12 (`architecture.md` §5): `experiments/llm_reasoner_kitchen` with its tests; the live tests run only when opted in, five cases have scripted twins run with the experiments suite. `llm_reasoner`'s own tests are not yet in CI (the user's decision of 2026-10-12) |
 | Fewer wasted calls (opening `list_kinds`, listing many bodies, `name` before `name.name`) | Cost only; results are correct | Open |
 | An explicit "either arm" answer | Arbitrary arm choices are stated only in `why` | Open; would change the action interface |
 | Research direction: language-model commonsense checked against the ontology for designator resolution | Long-term | Open |

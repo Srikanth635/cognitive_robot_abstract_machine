@@ -13,6 +13,7 @@ dependencies = [
     "coraplex",
     "giskardpy",
     "krrood",
+    "llm_reasoner",
     "probabilistic_model",
     "pymysql",
     "random_events",
@@ -31,6 +32,7 @@ workspace = [
     "coraplex",
     "giskardpy",
     "krrood",
+    "llm_reasoner",
     "random_events",
     "semantic_digital_twin",
 ]
