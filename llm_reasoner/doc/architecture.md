@@ -245,7 +245,7 @@ explicit to ground its choices on, so that it can say *why* it decided a paramet
 | Component | Knows | Kind of truth |
 |---|---|---|
 | World injector | What *is* in this world now | Fact |
-| Knowledge component | What an action *normally* involves, and how that applies to this world | Stereotype, grounded in the world through the world injector |
+| Knowledge component | What an action *normally* involves, given situation features in its own terms | Stereotype, independent of any world |
 | Resolver | What to do *here* for one query | A decision with its reasons |
 
 | Perspective | What it contributes (pouring as the example) |
@@ -276,12 +276,19 @@ answer: slot values and reasons citing both (world handles, knowledge identifier
 | Consistent under ontological reasoning (HermiT) | Each hypothesis written as RDF in the ontology's terms and checked in the open world |
 | Queryable with krrood's EQL | Vocabulary classes are krrood `Symbol` dataclasses (`DescriptionEntity`), so loaded knowledge is first-class krrood objects that EQL queries directly |
 | Requested by the resolver, not by a natural-language instruction | To build: the knowledge component answers the resolver's request for an action and generates for it |
-| Grounded in world facts | To build: the knowledge component reads the world through `WorldAccess` |
+| Independent of the world | Kept: it imports and calls no world; situational facts it needs come in the resolver's request, in ontology terms |
 
-The dependencies then run one way: the world injector depends on neither, the knowledge
-component on the world injector (`WorldAccess`), the resolver on both
-(`WorldAccess`, `KnowledgeAccess`). How stereotypical and grounded knowledge are kept
-apart is open (`status.md`).
+The resolver is the only component reading the world, and the only one grounding roles
+in world individuals:
+
+```
+world injector  ◄── resolver ──►  knowledge component
+ (WorldAccess)      (reads the world;   (no world; accepts situation
+                     grounds roles)      features in its own terms)
+```
+
+Which situation features the knowledge accepts, and how the resolver derives them, is
+open (`status.md`).
 
 **Design points this implies** (to be designed with the representation requirements):
 
@@ -446,7 +453,7 @@ conversation with its text as the answer.
 | Knowledge component → clients | `LanguageModelClient.complete_structured(system, user, json_schema)`; no tools |
 | Caller → knowledge component | `KnowledgeService.view_for(instruction, query)`; cram_viz's Hypothesis Graph and Designator tabs read it |
 | Knowledge component ↔ resolver | Not connected; to be knowledge tools through a `KnowledgeAccess` contract (§2.3) |
-| Knowledge component → world injector | Not connected; to read world facts through `WorldAccess` to ground knowledge, from a source kept separate from the knowledge's own |
+| Knowledge component ↔ world injector | None, by design: world facts reach the knowledge only through the resolver; the two keep separate sources |
 
 ## 4. Decisions that shape behaviour
 
