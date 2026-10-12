@@ -1,7 +1,7 @@
 """
 Prehensile manipulation: reach, load, lift, hold, transport, replace, unload and release, with their contact events, grip and load forces and corrective programmes.
 
-Generated from ``prehension.ttl`` by ``python -m llm_reasoner.ontology_translation``. Regenerate rather than edit.
+Generated from ``prehension.ttl`` by ``python -m llm_reasoner.knowledge.ontology_translation``. Regenerate rather than edit.
 """
 
 from __future__ import annotations

@@ -38,7 +38,7 @@ Each module has a Python counterpart next to it (`core.py`, ...), generated and 
 in. After changing a module, regenerate them:
 
 ```text
-python -m llm_reasoner.ontology_translation
+python -m llm_reasoner.knowledge.ontology_translation
 ```
 
 A test fails when the checked-in vocabulary differs from what the ontology generates.

@@ -1,7 +1,7 @@
 """
 Represented object and limb dynamics: efference copies, dynamics models, prediction sources, sensorimotor memory and transfer between perturbation contexts.
 
-Generated from ``object-dynamics.ttl`` by ``python -m llm_reasoner.ontology_translation``. Regenerate rather than edit.
+Generated from ``object-dynamics.ttl`` by ``python -m llm_reasoner.knowledge.ontology_translation``. Regenerate rather than edit.
 """
 
 from __future__ import annotations

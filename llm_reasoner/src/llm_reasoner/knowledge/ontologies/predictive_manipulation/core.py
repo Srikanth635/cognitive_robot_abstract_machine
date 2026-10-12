@@ -5,7 +5,7 @@ A task is a sensory plan: a sequence of subgoals, each signalled by predicted se
 
 Classes classify description-level individuals, the knowledge a language model generates; executions are described with CRAM-AICOR occurrences, occasions and role bindings. Each concept is linked to CRAM-AICOR and to DUL in the same DUL category, and CRAM-AICOR's dul_* copies are never equated with DUL. Axioms are read under the open-world assumption.
 
-Generated from ``core.ttl`` by ``python -m llm_reasoner.ontology_translation``. Regenerate rather than edit.
+Generated from ``core.ttl`` by ``python -m llm_reasoner.knowledge.ontology_translation``. Regenerate rather than edit.
 """
 
 from __future__ import annotations
