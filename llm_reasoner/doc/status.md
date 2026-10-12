@@ -192,9 +192,13 @@ The Designator tab showed the resolved slots, the explanation and the grounds.
 
 **cram_viz's designators as match queries (2026-10-12):** the chips show the krrood
 match queries the resolver receives, each read from a file of its own, in place of
-natural-language labels; the three chips with a natural-language task are gone. A
-chip is offered when the scene binds every name its query reads and has a candidate for
-every slot it leaves to choose. Switching scenes now removes the previous scene's world
+natural-language labels and tasks. Two remain: `objects_given` binds the pouring cup and
+the bowl's body directly and leaves the arm and the tilt open; `objects_open` leaves every
+slot open. A chip is offered when the scene binds every name its query reads and has a
+candidate for every slot it leaves to choose. Live, `objects_given` resolved in
+simple_pouring for $0.068 (RIGHT, 1.85 rad, citing the tilt phase and its set-point);
+the situation pass read the bound `Static_MilkPitcher` as liquid, so a liquid pouring
+hypothesis was generated once, at a cost not recorded. Switching scenes now removes the previous scene's world
 from krrood's symbol graph (collected, then `remove_dead_instances`), so an open
 `variable(Tool)` never offers another scene's objects.
 

@@ -61,13 +61,15 @@ class PouringDesignator(StrEnum):
     the viewer offers them.
     """
 
-    EVERYTHING_OPEN = "everything_open"
-    INTO_THE_BOWL = "into_the_bowl"
-    FROM_THE_POURING_CUP = "from_the_pouring_cup"
-    POURING_CUP_INTO_BOWL = "pouring_cup_into_bowl"
-    LEFT_ARM_GENTLE_TILT = "left_arm_gentle_tilt"
-    THREE_ALTERNATIVES = "three_alternatives"
-    POURING_GEOMETRY_OPEN = "pouring_geometry_open"
+    OBJECTS_GIVEN = "objects_given"
+    """
+    The pouring cup and the bowl given; the arm and the tilt left open.
+    """
+
+    OBJECTS_OPEN = "objects_open"
+    """
+    Every slot left open, the source and the target included.
+    """
 
 
 @dataclass
