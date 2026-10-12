@@ -133,7 +133,7 @@ of 28, two repairs and $1.04; its findings led to `ea44fdbac` and `6743d6116`.
 
 ## 5. In progress
 
-- The knowledge request, steps R1–R7 (planned below): R1–R5 done.
+- The knowledge request, steps R1–R7 (planned below): R1–R5, R6a and R6b done; R6c next.
 - Reorganising the knowledge component (decision of 2026-10-12). Done: the pure moves
   into `knowledge/`, lowest layer first, each committed with both test suites passing
   (`ebc93d9fa` ontologies, `274542e2c` ontology translation, `5149984fe` acceptance,
@@ -166,6 +166,9 @@ approval.
 | R4 | The designator → knowledge mapping as data, and the lookup of the knowledge describing a designator class — **done** (`ontologies/described_actions.json` and `.py`; one entry: coraplex's `PouringAction` → `aicor:Pouring`, `PouringPhaseStructure`, matched by identifier and structure IRI) | knowledge | none |
 | R5 | The knowledge component's entry for a request: serve the stored hypothesis or generate it, in its public module — **done**: `KnowledgeService.serve(query, instruction="")` returns the record identifier (`view_for` is `view(serve(...))`), and `access.py` exports `DescribedActions` and `SituationFeatures` for the resolver | knowledge, `access.py` | none |
 | R6 | The resolver's first pass: map the designator, build the feature query, resolve it with world tools and the task, and send the request through the public module only | resolver | the resolver depends on the knowledge component's public module |
+| R6a | The world's symbol-graph source excludes packages, so the knowledge component's symbols are not shown as the world — **done** (`d54c36db7`, `SymbolGraphSource.excluded_packages`) | world | none |
+| R6b | `KnowledgeRequester` and `KnowledgeConsultation` (`resolver/knowledge.py`), the `<action>` section (`ActionContextProvider`), and the knowledge side's `DescribedAction.query` and `SituationFeature.value_in` (`f83690eb9`) — **done**; a test checks the resolver imports only `knowledge.access` | resolver, knowledge | none |
+| R6c | Always on, as the user asked on 2026-10-12: the resolver consults the knowledge component at the start of every evaluation, served from the store when the situation was met before, generated otherwise; one place assembles the system, its world excluding the knowledge package | resolver | `with_world_tools` needs a knowledge service |
 | R7 | Live check (with approval): pouring from the cup of milk (Liquid) and of cereal (Granular), with and without a stopping task; the features chosen and their reasons, and one generation per combination | — | — |
 
 ## 6. Proposed and deferred

@@ -81,6 +81,9 @@ INPUT_MEANINGS = {
     PromptSection.TASK: "what the caller is trying to achieve: intent to serve, not fact "
     "about the world.",
     PromptSection.SITUATION: "what is currently true: fact.",
+    PromptSection.ACTION: "the action the requested values are for, as its own "
+    f"<{PromptSection.REQUEST}> and <{PromptSection.GIVEN}>: context to read, not slots "
+    "to answer.",
     PromptSection.SOURCE: "the definition of a type holding slots, showing what it does "
     "with each value.",
     PromptSection.DESCRIPTION: "the docstring of a type holding slots.",
