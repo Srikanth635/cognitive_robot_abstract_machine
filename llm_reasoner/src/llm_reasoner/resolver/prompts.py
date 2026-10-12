@@ -128,6 +128,17 @@ VALUE_SLOT_RULE = PromptRule(
 The rule stating how a slot taking a plain value is answered.
 """
 
+ESTABLISHED_VALUES_RULE = PromptRule(
+    name=RuleName.ESTABLISHED_VALUES,
+    text="the values asked for are facts, not choices: answer each value slot with what "
+    f"<{PromptSection.ACTION}>, <{PromptSection.GIVEN}>, <{PromptSection.TASK}>, "
+    f"<{PromptSection.SITUATION}> or the world establishes, and {AcceptedType.NULL} "
+    "where nothing does; never fill one by convention or as the usual case.",
+)
+"""
+The rule stating that value slots ask for what is established, and nothing else.
+"""
+
 DEFAULT_RULE = PromptRule(
     name=RuleName.DEFAULT,
     text=f'a slot\'s "{SlotKey.DEFAULT}" is the value its class uses when none is given.',
@@ -213,6 +224,33 @@ The rule stating how a refused answer is answered again.
 # %% type descriptions
 
 
+class OpenValueMeaning(enum.Enum):
+    """What the model's answer to an open value slot stands for."""
+
+    CHOICE = enum.auto()
+    """A value chosen to serve the request."""
+
+    FACT = enum.auto()
+    """
+    A value the request, its context or the world establishes, nothing where none does.
+    """
+
+    @property
+    def rules(self) -> List[PromptRule]:
+        """:return: The rules stating how slots of this meaning are answered."""
+        return OPEN_VALUE_RULES[self]
+
+
+OPEN_VALUE_RULES: Dict[OpenValueMeaning, List[PromptRule]] = {
+    OpenValueMeaning.CHOICE: [],
+    OpenValueMeaning.FACT: [ESTABLISHED_VALUES_RULE],
+}
+"""
+The rules stating how open value slots of each meaning are answered, beyond the rule
+for every value slot.
+"""
+
+
 class SourceDetail(enum.Enum):
     """How much of the target type's definition is put in the prompt."""
 
@@ -260,6 +298,9 @@ class PromptBuilder:
     source_detail: SourceDetail = SourceDetail.SIGNATURE
     """How much of the target type's definition to include."""
 
+    open_values: OpenValueMeaning = OpenValueMeaning.CHOICE
+    """What an answer to an open value slot stands for."""
+
     # %% the system prompt
 
     def rules(self, further_rules: Sequence[PromptRule] = ()) -> List[PromptRule]:
@@ -273,6 +314,7 @@ class PromptBuilder:
             ANSWER_FORMAT_RULE,
             ELEMENT_KEYS_RULE,
             VALUE_SLOT_RULE,
+            *self.open_values.rules,
             DEFAULT_RULE,
             UNION_RULE,
             KIND_SLOT_RULE,
