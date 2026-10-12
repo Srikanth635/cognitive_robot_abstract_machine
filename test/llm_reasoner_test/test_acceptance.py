@@ -22,6 +22,7 @@ from llm_reasoner.knowledge.acceptance.rules import AcceptanceRule, Severity
 from llm_reasoner.knowledge.acceptance.shapes import ShapesHold, StructureShapes
 from llm_reasoner.knowledge.acceptance.suite import predictive_manipulation_suite
 from llm_reasoner.knowledge.ontologies import PredictiveManipulationOntologyFile
+from llm_reasoner.knowledge.ontologies.situation import SituationFeatures
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     core,
     gaze,
@@ -1386,6 +1387,19 @@ def pouring_structure(**fields: object) -> pouring.PouringPhaseStructure:
     }
     defaults.update(fields)
     return pouring.PouringPhaseStructure(**defaults)
+
+
+class TestSituationVariants:
+    """
+    A structure's situation features decide, closed-world, the variants whose
+    restrictions it must meet.
+    """
+
+    def test_every_feature_value_classifies_a_structure_into_its_variant(self):
+        for feature in SituationFeatures().of(pouring.PouringPhaseStructure):
+            for value, variant in feature.variants.items():
+                structure = pouring.PouringPhaseStructure(**{feature.field_name: value})
+                assert variant in RestrictionsHold().owners([structure])
 
 
 class TestPouringPhaseRequirements:

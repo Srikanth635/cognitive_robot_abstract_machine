@@ -133,7 +133,7 @@ of 28, two repairs and $1.04; its findings led to `ea44fdbac` and `6743d6116`.
 
 ## 5. In progress
 
-- The knowledge request, steps R1–R7 (planned below): R1 done.
+- The knowledge request, steps R1–R7 (planned below): R1 and R2 done.
 - Reorganising the knowledge component (decision of 2026-10-12). Done: the pure moves
   into `knowledge/`, lowest layer first, each committed with both test suites passing
   (`ebc93d9fa` ontologies, `274542e2c` ontology translation, `5149984fe` acceptance,
@@ -161,7 +161,7 @@ approval.
 | Step | What | Where | Changes for others |
 |---|---|---|---|
 | R1 | Declare the situation features of a root class, derived from the ontology's defined subclasses (property, allowed values, meaning) — **done** (`7d74e9f99`, `ontologies/situation.py`; pouring has two: material regime, termination reason) | knowledge, `ontologies/` | none |
-| R2 | Verify how a fixed feature's variant is enforced: closed-world acceptance applying the defined class's restrictions, or HermiT only; decide with a test either way | knowledge, `acceptance/` | none unless acceptance must change |
+| R2 | Verify how a fixed feature's variant is enforced — **done**: closed-world acceptance already classifies a structure by its feature values into every variant they define and applies its restrictions, HermiT adds the open-world check when configured, and the generation prompt states each variant's definition and requirements; acceptance needs no change, two tests pin the behaviour | knowledge, `acceptance/` | none |
 | R3 | Key the store by root class, fixed values and ontology versions; the instruction becomes optional provenance (`KnowledgeService.view_for` takes the query first) | knowledge, `storage/`, `hypotheses/` | cram_viz: one hypothesis per concept and features, no longer per instruction |
 | R4 | The designator → knowledge mapping as data, and the lookup of the knowledge describing a designator class | knowledge | none |
 | R5 | The knowledge component's entry for a request: serve the stored hypothesis or generate it, in its public module | knowledge, `access.py` | none |
