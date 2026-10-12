@@ -208,7 +208,12 @@ facts rule has the model read the world about the individuals the action involve
 cram_viz every resolution is a run of its own (`cram_viz.resolution.runs`): the scene's
 world built anew, the knowledge consulted over a copy of the viewer's store in
 `~/.cram_viz/runs/<run>/hypotheses`, and the resolution kept beside it as
-`resolution.json`; no run reads what another generated. Switching scenes now removes the previous scene's world
+`resolution.json`; no run reads what another generated. Live, each from the same nine
+stored hypotheses: both designators now read the pitcher in the world as liquid; each run
+generated its own liquid pouring hypothesis (about 3.5 minutes, cost not recorded), and
+the two differ (a tilt range of 0–120° against 40–120°, 176 against 172 typed nodes),
+while both resolved to the cup, the bowl, RIGHT and 1.85 rad; the resolvers cost $0.103
+(`objects_given`) and $0.078 (`objects_open`). Switching scenes now removes the previous scene's world
 from krrood's symbol graph (collected, then `remove_dead_instances`), so an open
 `variable(Tool)` never offers another scene's objects.
 
