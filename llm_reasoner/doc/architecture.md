@@ -573,7 +573,7 @@ error in the shared error shape. Fragments are named as their citations name the
 
 | Tool | Input | Answer |
 |---|---|---|
-| `knowledge_overview` | none | The action concept's IRI; the structure's class and meaning; the situation (feature → value name, unknown features absent); the phases in order, each with name, class and meaning, label and the subgoal it aims for; the roles |
+| `knowledge_overview` | none | The action concept's IRI; the structure's class and meaning; the situation (feature → value name, unknown features absent); the phases in order, each with name, class and meaning, label, the subgoal it aims for, and its parameters and requirements, each summarised with its values (a linked fragment holding only values, such as a range, written in place) and the names of its other links; the roles |
 | `find_fragments` | `kind`: a vocabulary class name | The fragments of that class and its subclasses, each with name, class and label |
 | `describe_fragment` | `name`: a fragment name | Its class and meaning, label, a statement per ontology property it gives a value for (field, meaning, and linked fragment names or its value), and the fragments linking to it with their field |
 

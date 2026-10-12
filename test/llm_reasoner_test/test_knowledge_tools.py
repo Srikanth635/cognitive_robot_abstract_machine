@@ -206,6 +206,100 @@ class TestOverview:
         }
 
 
+# %% values in the overview
+
+
+@pytest.fixture
+def setpoint_toolbox(tmp_path) -> ToolBox:
+    """
+    The knowledge tools over a hypothesis whose one phase tilts to a setpoint with a
+    range and requires the cup to stay upright.
+    """
+    service = service_answering(
+        HypothesisStore(directory=tmp_path), GenerationCase.PHASE_WITH_A_TILT_SETPOINT
+    )
+    return ToolBox(tools=service.tools(service.serve(pouring_query())))
+
+
+def stated_values(description: dict) -> dict:
+    """
+    :return: The values a fragment's description states, by field, leaving out its
+        links to fragments.
+    """
+    return {
+        statement["field_name"]: statement["value"]
+        for statement in description["statements"]
+        if "value" in statement
+    }
+
+
+class TestOverviewValues:
+    def test_a_parameter_states_the_values_of_the_range_it_links_to(
+        self, setpoint_toolbox
+    ):
+        overview = asked(setpoint_toolbox, KnowledgeToolName.KNOWLEDGE_OVERVIEW, {})
+        ((setpoint,),) = [phase["parameters"] for phase in overview["phases"]]
+        tilt_range = asked(
+            setpoint_toolbox,
+            KnowledgeToolName.DESCRIBE_FRAGMENT,
+            {"name": "tilt_range"},
+        )
+        assert setpoint["values"]["has_parameter_range"] == stated_values(tilt_range)
+
+    def test_a_parameter_states_its_own_values(self, setpoint_toolbox):
+        overview = asked(setpoint_toolbox, KnowledgeToolName.KNOWLEDGE_OVERVIEW, {})
+        ((setpoint,),) = [phase["parameters"] for phase in overview["phases"]]
+        described = asked(
+            setpoint_toolbox,
+            KnowledgeToolName.DESCRIBE_FRAGMENT,
+            {"name": setpoint["name"]},
+        )
+        assert stated_values(described).items() <= setpoint["values"].items()
+
+    def test_a_parameter_names_the_fragments_it_links_to_beyond_values(
+        self, setpoint_toolbox
+    ):
+        overview = asked(setpoint_toolbox, KnowledgeToolName.KNOWLEDGE_OVERVIEW, {})
+        ((setpoint,),) = [phase["parameters"] for phase in overview["phases"]]
+        described = asked(
+            setpoint_toolbox,
+            KnowledgeToolName.DESCRIBE_FRAGMENT,
+            {"name": setpoint["name"]},
+        )
+        assert setpoint["links"] == {
+            statement["field_name"]: statement["fragments"]
+            for statement in described["statements"]
+            if "fragments" in statement
+            and statement["field_name"] not in setpoint["values"]
+        }
+
+    def test_a_phase_states_its_requirements_with_their_values(self, setpoint_toolbox):
+        overview = asked(setpoint_toolbox, KnowledgeToolName.KNOWLEDGE_OVERVIEW, {})
+        ((requirement,),) = [phase["requirements"] for phase in overview["phases"]]
+        described = asked(
+            setpoint_toolbox,
+            KnowledgeToolName.DESCRIBE_FRAGMENT,
+            {"name": requirement["name"]},
+        )
+        assert requirement["values"] == stated_values(described)
+        assert requirement["label"] == described["label"]
+
+    def test_a_requirement_names_the_condition_it_demands(self, setpoint_toolbox):
+        overview = asked(setpoint_toolbox, KnowledgeToolName.KNOWLEDGE_OVERVIEW, {})
+        ((requirement,),) = [phase["requirements"] for phase in overview["phases"]]
+        described = asked(
+            setpoint_toolbox,
+            KnowledgeToolName.DESCRIBE_FRAGMENT,
+            {"name": requirement["name"]},
+        )
+        (condition,) = [
+            statement["fragments"]
+            for statement in described["statements"]
+            if statement["field_name"] == "has_condition_type"
+        ]
+        assert requirement["links"]["has_condition_type"] == condition
+
+
 # %% finding and describing fragments
 
 

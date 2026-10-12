@@ -1,0 +1,13 @@
+{"fragments": [
+  {"id": "pour", "type": "PouringPhaseStructure", "decomposes_task": "aicor:Pouring",
+   "defines_role": ["source"],
+   "defines_phase": ["tilt"],
+   "defines_parameter": ["tilt_setpoint"],
+   "defines_condition_type": ["upright"]},
+  {"id": "source", "type": "SourceContainer", "label": "cup"},
+  {"id": "tilt", "type": "TiltToFlowPhase", "has_active_parameter": ["tilt_setpoint"], "has_condition_requirement": ["upright_throughout"]},
+  {"id": "tilt_setpoint", "type": "TiltAngleSetpoint", "has_physical_dimension": "ANGLE", "has_parameter_range": "tilt_range", "parameter_on_role": "source"},
+  {"id": "tilt_range", "type": "MagnitudeRange", "has_unit": "DEGREE", "lower_bound": 30.0, "upper_bound": 120.0},
+  {"id": "upright", "type": "SourceUpright"},
+  {"id": "upright_throughout", "type": "InvariantRequirement", "label": "the cup stays upright", "has_condition_mode": "THROUGHOUT", "has_condition_polarity": "MUST_HOLD", "has_condition_type": "upright"}
+]}
