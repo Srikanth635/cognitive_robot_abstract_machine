@@ -167,7 +167,10 @@ meeting the query's `where`-conditions; or one of these outcomes:
 limit), `max_repairs` (1), `source_detail` (`FULL`: the source of the queried type and
 of its parents declared in the same module; `SIGNATURE`: docstrings; `NONE`),
 `context_provider` (none by default), `candidate_renderer` (structural description),
-`knowledge` (a `KnowledgeRequester`; none by default, always one from `Reasoner`).
+`open_values` (`CHOICE`: open values are chosen to serve the request, the default;
+`FACT`: only what the action, the given values, the task, the situation or the world
+establishes, `null` otherwise), `knowledge` (a `KnowledgeRequester`; none by default,
+always one from `Reasoner`).
 
 ### 2.3 Knowledge component (`knowledge/`)
 
@@ -391,7 +394,8 @@ A slot entry in `<slots>`:
 Up to 10 candidates are listed (`LISTED_CANDIDATES`); more are counted, and the model
 searches them with the world tools.
 
-**The rules** (`RuleName`): `answer_format`, `element_keys`, `value_slot`, `default`,
+**The rules** (`RuleName`): `answer_format`, `element_keys`, `value_slot`,
+`established_values` (only when open values are facts, `OpenValueMeaning.FACT`), `default`,
 `union`, `kind_slot`, `referent_slot`, `finding_candidates`, `known_candidate`,
 `meaning_holder` (the last three with world tools only), `no_fitting_candidate`,
 `equally_fitting`, `unsatisfiable`, `conditions`, `given`, `candidates`, `why`,
@@ -516,9 +520,20 @@ the backend given, one structure, each feature read back with
 features left out; ⑤ `KnowledgeService.serve(request, instruction=<designator>)`. The
 backend filling the features is `LanguageModelBackend.situation_backend_for(action)`:
 the resolver's own model, tools and context, the action stated first in an `<action>`
-section, `SourceDetail.SIGNATURE`, one candidate and no consultation of its own. The
+section, `SourceDetail.SIGNATURE`, one candidate, `OpenValueMeaning.FACT` (a feature
+nothing establishes is `null`, never the usual case) and no consultation of its own. The
 resolver consults before every request to its model; a query leaving nothing open asks
 no model and consults nothing.
+
+**The symbol graph must know the vocabulary.** Building or reading a hypothesis sets
+fields whose ontology properties krrood records in its symbol graph, and krrood builds
+the graph's class diagram once, from the symbol classes imported by then. A process that
+creates the graph before importing `llm_reasoner.knowledge` (any process loading a world
+first) cannot build hypotheses: `HypothesisBackend` refuses with
+`VocabularyUnknownToSymbolGraph` before asking the model. cram_viz and the scratch live
+checks rebuild the graph after all imports and before loading the world
+(`SymbolGraph.clear(); SymbolGraph()`); a process already holding a world has no remedy
+yet (`status.md`, known issues).
 
 ## 4. Decisions that shape behaviour
 
