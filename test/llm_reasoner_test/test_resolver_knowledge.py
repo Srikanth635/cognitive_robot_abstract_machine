@@ -235,3 +235,95 @@ class TestKnowledgeRequester:
         liquid = requester.consult(action, situation_backend("situation_liquid.json"))
         assert liquid.record_id != granular.record_id
         assert len(requester.service.backend.client.calls) == 2
+
+
+# %% consulting before every request to the model
+
+
+def backend_consulting(store: HypothesisStore, *answers: str) -> LanguageModelBackend:
+    """
+    :return: A backend consulting the knowledge component about the tilting action
+        described as pouring, whose model gives the scripted answers in turn.
+    """
+    return LanguageModelBackend(
+        client=ScriptedClient(responses=[answer(name) for name in answers]),
+        knowledge=requester_generating(store, GenerationCase.GRANULAR_POURING),
+    )
+
+
+class TestConsultingBackend:
+    def test_the_knowledge_component_is_consulted_before_the_model_is_asked(
+        self, tmp_path
+    ):
+        store = HypothesisStore(directory=tmp_path)
+        backend = backend_consulting(
+            store, "situation_granular.json", "angle_chosen.json"
+        )
+        list(tilt_of(body_with_geometry()).evaluate(backend=backend))
+        assert [record.record_id for record in store.records()] == [
+            backend.consultation.record_id
+        ]
+
+    def test_the_situation_is_chosen_by_a_backend_stating_the_action(self, tmp_path):
+        body = body_with_geometry()
+        backend = backend_consulting(
+            HypothesisStore(directory=tmp_path),
+            "situation_granular.json",
+            "angle_chosen.json",
+        )
+        list(tilt_of(body).evaluate(backend=backend))
+        (exchange,) = backend.situation_backend.log
+        (action,) = bodies(exchange.user, PromptSection.ACTION)
+        assert bodies(action, PromptSection.REQUEST) == [
+            PromptBuilder.verbalize_request(tilt_of(body))
+        ]
+
+    def test_the_situation_is_one_structure_described_by_its_docstrings(self, tmp_path):
+        backend = backend_consulting(
+            HypothesisStore(directory=tmp_path),
+            "situation_granular.json",
+            "angle_chosen.json",
+        )
+        list(tilt_of(body_with_geometry()).evaluate(backend=backend))
+        assert backend.situation_backend.number_of_candidates == 1
+        assert backend.situation_backend.source_detail is SourceDetail.SIGNATURE
+
+    def test_choosing_the_situation_consults_nothing_itself(self, tmp_path):
+        backend = backend_consulting(
+            HypothesisStore(directory=tmp_path),
+            "situation_granular.json",
+            "angle_chosen.json",
+        )
+        list(tilt_of(body_with_geometry()).evaluate(backend=backend))
+        assert backend.situation_backend.knowledge is None
+
+    def test_the_request_to_the_model_follows_the_consultation(self, tmp_path):
+        backend = backend_consulting(
+            HypothesisStore(directory=tmp_path),
+            "situation_granular.json",
+            "angle_chosen.json",
+        )
+        (action,) = tilt_of(body_with_geometry()).evaluate(backend=backend)
+        assert (
+            action.angle
+            == json.loads(answer("angle_chosen.json"))[0][
+                "ActionWithBodyAndValueSlots.angle"
+            ]
+        )
+        assert len(backend.log) == 1
+
+    def test_a_query_leaving_nothing_open_consults_nothing(self, tmp_path):
+        store = HypothesisStore(directory=tmp_path)
+        backend = backend_consulting(store)
+        query = the(ActionWithBodyAndValueSlots)(source=body_with_geometry(), angle=0.8)
+        list(query.evaluate(backend=backend))
+        assert backend.consultation is None
+        assert store.records() == []
+
+    def test_a_backend_without_a_requester_consults_nothing(self):
+        backend = LanguageModelBackend(
+            client=ScriptedClient(responses=[answer("angle_chosen.json")])
+        )
+        list(tilt_of(body_with_geometry()).evaluate(backend=backend))
+        assert backend.consultation is None
+        assert backend.situation_backend is None

@@ -43,7 +43,7 @@ flowchart LR
     knowledge -- "structured completion" --> clients
     clients -- "API" --> llm["Language model"]
     world -- "reads" --> graph["krrood SymbolGraph<br/>(the live world)"]
-    knowledge -. "link deferred" .- resolver
+    resolver -- "knowledge request<br/>(access.py only)" --> knowledge
 ```
 
 | Component | Package | Role in one sentence |
@@ -52,6 +52,12 @@ flowchart LR
 | Resolver | `resolver/` | Turns an underspecified krrood query into a resolved instance, choosing what the query leaves open |
 | Knowledge component | `knowledge/` | Generates and stores ontology-backed, world-independent action knowledge |
 | Clients | `clients/` | Talk to language models, and define the vendor-neutral tool interface |
+
+`reasoner.py` assembles the system in one place: `Reasoner(client, knowledge)` holds the
+resolver's model, a `KnowledgeService` and a world (by default a `WorldView` whose
+symbol-graph source leaves out `krrood` and `llm_reasoner.knowledge`), and
+`Reasoner.backend(**settings)` gives a backend with the world tools that consults the
+knowledge component about every action it resolves.
 
 ### 2.1 World injector (`world/`)
 
@@ -109,6 +115,7 @@ belong to the plan), or construct the action itself (krrood does).
 | The query | A krrood `Match`; `variable(Kind)` marks a slot choosing an individual, `...` a value to generate; `where(...)` adds conditions; `an(...)` with `expression.limit(n)` asks for up to n alternatives |
 | Optional task | `TaskContextProvider(goal=…, constraints=…)`, intent, never fact |
 | The world | A `WorldAccess` (§3.3), given through `LanguageModelBackend.with_world_tools(client, world, …)` |
+| The knowledge component | A `KnowledgeRequester` (§3.6), given as the `knowledge` setting; `Reasoner.backend` always gives one |
 
 **Output.** The resolved instances of the queried type, constructed by krrood and
 meeting the query's `where`-conditions; or one of these outcomes:
@@ -126,15 +133,21 @@ meeting the query's `where`-conditions; or one of these outcomes:
 1. **Reflect the slots** (`reflection.py`): each field of the query is `BOUND` (given),
    `VALUE` (`...`: a number, text, boolean or enum), `REFERENT` (an individual of a
    domain) or `SORTAL` (a kind). Optional fields defaulting to `None` may be left empty.
-2. **Build the prompts** (`prompts.py`, `prompt_format.py`; §3.2).
-3. **Ask** through a `Completion` (`completion.py`): `PlainCompletion` (one completion,
+2. **Consult the knowledge component** (`knowledge.py`; §3.6), when the backend has a
+   knowledge requester and the model is to be asked: a first resolution chooses the
+   situation features, and the knowledge component serves the hypothesis for them,
+   generating it on a store miss. The consultation is kept on the backend
+   (`consultation`, `situation_backend`); the request below does not read the
+   hypothesis yet, which waits for the knowledge tools.
+3. **Build the prompts** (`prompts.py`, `prompt_format.py`; §3.2).
+4. **Ask** through a `Completion` (`completion.py`): `PlainCompletion` (one completion,
    candidates listed by integer token) or `ToolCompletion` (a conversation in which the
    model may call the world tools, candidates named by handle).
-4. **Decode** the JSON answer: handles back to live individuals through `WorldAccess`,
+5. **Decode** the JSON answer: handles back to live individuals through `WorldAccess`,
    enum names to members, `null` where allowed; verdicts become the outcomes above.
-5. **Construct and check**: values are written into the query, krrood constructs the
+6. **Construct and check**: values are written into the query, krrood constructs the
    instances, and the query's `where`-conditions are checked.
-6. **Repair once** (`max_repairs = 1`) when an answer is unusable or breaks a
+7. **Repair once** (`max_repairs = 1`) when an answer is unusable or breaks a
    condition: a fresh conversation with the rejected answer and the rejection as data.
 
 | Module | Responsibility |
@@ -153,7 +166,8 @@ meeting the query's `where`-conditions; or one of these outcomes:
 **Settings** (`LanguageModelBackend`): `number_of_candidates` (3 unless the query sets a
 limit), `max_repairs` (1), `source_detail` (`FULL`: the source of the queried type and
 of its parents declared in the same module; `SIGNATURE`: docstrings; `NONE`),
-`context_provider` (none by default), `candidate_renderer` (structural description).
+`context_provider` (none by default), `candidate_renderer` (structural description),
+`knowledge` (a `KnowledgeRequester`; none by default, always one from `Reasoner`).
 
 ### 2.3 Knowledge component (`knowledge/`)
 
@@ -461,10 +475,10 @@ conversation with its text as the answer.
 |---|---|
 | Knowledge component → clients | `LanguageModelClient.complete_structured(system, user, json_schema)`; no tools |
 | Caller → knowledge component | `KnowledgeService.serve(query, instruction)` returns the record identifier of the hypothesis answering a request, generating it first when none is stored; `view_for(query, instruction)` returns its view. cram_viz's Hypothesis Graph and Designator tabs read it |
-| Knowledge component ↔ resolver | Not connected; to be knowledge tools through a `KnowledgeAccess` contract (§2.3) |
+| Resolver → knowledge component | The knowledge request (§3.6), through `knowledge/access.py` only (a test checks this): before every request to the model, the hypothesis for the action's situation is served or generated. The resolver does not read it yet; knowledge tools through a `KnowledgeAccess` contract come next (§2.3) |
 | Knowledge component ↔ world injector | None, by design: world facts reach the knowledge only through the resolver; the two keep separate sources |
 
-### 3.6 Resolver → knowledge component: the knowledge request (designed 2026-10-12; being built)
+### 3.6 Resolver → knowledge component: the knowledge request (designed and built 2026-10-12)
 
 The resolver asks the knowledge component with a krrood query on the knowledge
 vocabulary, never with an instruction:
@@ -493,16 +507,18 @@ resolver query  the(PouringAction)(…)  [+ optional task]
 | Generation | On a miss, once per feature combination, then served from the store |
 | Not in the request | The designator's slots and the task text; the resolver keeps them |
 
-**Built so far.** `KnowledgeRequester.consult(action, situation_backend)` in
+**As built.** `KnowledgeRequester.consult(action, situation_backend)` in
 `resolver/knowledge.py`: ① `DescribedActions.describing(identifier_of(action.type))`,
 and without knowledge for the designator a consultation without a hypothesis; ②
 `SituationFeatures.of(structure)`; ③ `DescribedAction.query({feature: ...})` resolved by
 the backend given, one structure, each feature read back with
 `SituationFeature.value_in`; ④ `DescribedAction.query(situation)` with the unknown
 features left out; ⑤ `KnowledgeService.serve(request, instruction=<designator>)`. The
-backend filling the features is the caller's: the resolver's own settings, with
-`SourceDetail.SIGNATURE`, one candidate and an `ActionContextProvider` stating the
-action.
+backend filling the features is `LanguageModelBackend.situation_backend_for(action)`:
+the resolver's own model, tools and context, the action stated first in an `<action>`
+section, `SourceDetail.SIGNATURE`, one candidate and no consultation of its own. The
+resolver consults before every request to its model; a query leaving nothing open asks
+no model and consults nothing.
 
 ## 4. Decisions that shape behaviour
 
