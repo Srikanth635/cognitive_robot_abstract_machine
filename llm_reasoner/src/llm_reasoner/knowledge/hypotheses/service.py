@@ -9,11 +9,15 @@ from dataclasses import dataclass, field, replace
 
 from krrood.entity_query_language.query.match import Match
 
+from llm_reasoner.clients.tools import Tool
 from llm_reasoner.knowledge.storage.citation import Citation
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.exceptions import LLMReasonerError
 from llm_reasoner.knowledge.generation.backend import HypothesisBackend
+from llm_reasoner.knowledge.hypotheses.knowledge_access import KnowledgeAccess
 from llm_reasoner.knowledge.hypotheses.knowledge_graph import KnowledgeGraph
+from llm_reasoner.knowledge.hypotheses.questions import KnowledgeQuestions
+from llm_reasoner.knowledge.hypotheses.tools import KNOWLEDGE_TOOL_KINDS
 from llm_reasoner.knowledge.hypotheses.view import HypothesisView
 from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity
 
@@ -29,9 +33,10 @@ class StoreRequired(LLMReasonerError):
 
 
 @dataclass
-class KnowledgeService:
+class KnowledgeService(KnowledgeAccess):
     """
-    Views of stored hypotheses, by request or by record.
+    Views of stored hypotheses, by request or by record, and the knowledge-access
+    contract over them.
     """
 
     backend: HypothesisBackend
@@ -73,6 +78,16 @@ class KnowledgeService:
         backend = replace(self.backend, instruction=instruction)
         list(query.evaluate(backend=backend))
         return backend.last_record.record_id
+
+    def tools(self, record_id: str) -> list[Tool]:
+        questions = KnowledgeQuestions(hypothesis=self.view(record_id))
+        return [kind(questions=questions) for kind in KNOWLEDGE_TOOL_KINDS]
+
+    def instances_of(self, kind: type) -> list:
+        return self.graph.instances_of(kind)
+
+    def is_vocabulary_class(self, kind: type) -> bool:
+        return isinstance(kind, type) and issubclass(kind, DescriptionEntity)
 
     def view_for(self, query: Match, instruction: str = "") -> HypothesisView:
         """

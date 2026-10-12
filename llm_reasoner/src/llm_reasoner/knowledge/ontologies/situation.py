@@ -15,10 +15,6 @@ from operator import attrgetter
 
 from typing_extensions import Optional
 
-from krrood.entity_query_language.verbalization.rendering.source_documentation import (
-    _attribute_docstrings,
-)
-
 from llm_reasoner.knowledge.ontologies.terms import (
     DescriptionEntity,
     IntersectionOf,
@@ -99,7 +95,7 @@ class SituationFeatures:
                     continue
                 value = self.vocabulary.value_of(restriction.value)
                 variants.setdefault(name, {})[value] = defined
-        docstrings = self.docstrings_of(root_type)
+        meanings = self.vocabulary.field_meanings(root_type)
         features = []
         for property_iri, name in properties.items():
             if name not in variants:
@@ -109,7 +105,7 @@ class SituationFeatures:
                 SituationFeature(
                     field_name=name,
                     property_iri=property_iri,
-                    meaning=docstrings.get(name, ""),
+                    meaning=meanings.get(name, ""),
                     values=values,
                     variants={
                         value: variants[name][value]
@@ -150,15 +146,3 @@ class SituationFeatures:
             if isinstance(operand, PropertyRestriction)
             and operand.quantifier == Quantifier.VALUE
         ]
-
-    @staticmethod
-    def docstrings_of(root_type: type[DescriptionEntity]) -> dict[str, str]:
-        """
-        :return: The docstrings of a structure's fields, a more specific class's
-            docstring replacing a more general one's.
-        """
-        docstrings: dict[str, str] = {}
-        for owner in reversed(root_type.__mro__):
-            if isinstance(owner, type) and issubclass(owner, DescriptionEntity):
-                docstrings.update(_attribute_docstrings(owner))
-        return docstrings

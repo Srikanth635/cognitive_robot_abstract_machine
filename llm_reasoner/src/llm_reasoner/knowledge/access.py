@@ -23,6 +23,11 @@ from llm_reasoner.knowledge.hypotheses.graph import (
     HypothesisGraphRelation,
     SyntheticHypothesisRelation,
 )
+from llm_reasoner.knowledge.hypotheses.knowledge_access import (
+    KNOWLEDGE_ACCESS_VERSION,
+    KnowledgeAccess,
+    KnowledgeToolName,
+)
 from llm_reasoner.knowledge.hypotheses.knowledge_graph import KnowledgeGraph
 from llm_reasoner.knowledge.hypotheses.service import KnowledgeService
 from llm_reasoner.knowledge.hypotheses.view import HypothesisView
@@ -88,7 +93,10 @@ __all__ = [
     "HypothesisView",
     "HYPOTHESIS_CONCEPT_NAMESPACE",
     "is_inferred",
+    "KNOWLEDGE_ACCESS_VERSION",
+    "KnowledgeAccess",
     "KnowledgeGraph",
+    "KnowledgeToolName",
     "KnowledgeService",
     "LinkedOntologyTerms",
     "LinkedOntologyVariable",

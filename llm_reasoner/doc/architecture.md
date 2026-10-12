@@ -253,7 +253,7 @@ each package imports only the packages above it in this table, which a test chec
 | `admission/` | `consistency.py`, `hermit.py` | Open-world consistency with HermiT, and locating contradictions |
 | `storage/` | `record.py`, `store.py`, `citation.py` | Records of admitted hypotheses, the store, citations of stored fragments |
 | `generation/` | `request.py`, `schema.py`, `prompts.py`, `wire.py`, `assessment.py`, `dialogue.py`, `recording.py`, `backend.py` | The request a query makes; output shape, prompts, decoding and merging patches; judging an answer (`HypothesisAssessor`); asking and repairing (`GenerationDialogue`); recording and storing (`HypothesisRecorder`); `HypothesisBackend` orchestrating them as a krrood generative backend |
-| `hypotheses/` | `service.py`, `knowledge_graph.py`, `view.py`, `graph.py` | The service; the knowledge component's own graph (`KnowledgeGraph`: every stored hypothesis read once, so fragments keep their identity, and `instances_of(kind)` as EQL's domain over knowledge); cross-fragment questions (`HypothesisView`, with `instances_of` within one hypothesis); the graph projection drawn by cram_viz |
+| `hypotheses/` | `service.py`, `knowledge_access.py`, `questions.py`, `tools.py` and `tool_definitions/`, `knowledge_graph.py`, `view.py`, `graph.py` | The service, which fulfils the knowledge-access contract (`KnowledgeAccess`, version 1.0: `serve`, `tools(record_id)`, `instances_of`, `is_vocabulary_class`); the knowledge tools (§3.7); the knowledge component's own graph (`KnowledgeGraph`: every stored hypothesis read once, so fragments keep their identity, and `instances_of(kind)` as EQL's domain over knowledge); cross-fragment questions (`HypothesisView`, with `instances_of` within one hypothesis); the graph projection drawn by cram_viz |
 | `access.py` | — | **The public module**: every name another package may use; cram_viz imports only from it (a test checks) |
 
 Records store Python module paths (the record class and the root type), so moving a
@@ -539,6 +539,31 @@ super-properties (`defines_component` holds every declared component), and a sym
 property (`matched_with`) holds both ways. A hypothesis is therefore built, admitted and
 read in any process, whatever krrood's symbol graph knows, including one that loaded a
 world first (I1; the first R7 run failed on exactly that).
+
+### 3.7 Resolver → knowledge component: the knowledge-access contract (version 1.0)
+
+The resolver reads the knowledge component's own graph through `KnowledgeAccess`
+(`hypotheses/knowledge_access.py`, exported by `access.py`), as it reads the world
+through `WorldAccess`. `KnowledgeService` fulfils it.
+
+| Operation | Answers |
+|---|---|
+| `serve(query, instruction="")` | The record identifier of the hypothesis for a request (§3.6) |
+| `tools(record_id)` | The knowledge tools over that hypothesis, named by `KnowledgeToolName` |
+| `instances_of(kind)` | The stored fragments of a vocabulary class: an EQL domain |
+| `is_vocabulary_class(kind)` | Whether a class's instances are knowledge rather than parts of the world |
+
+The knowledge tools follow the world tools' conventions: one JSON definition each
+(`hypotheses/tool_definitions/`, a description with purpose, returns, use_when and
+avoid, an input schema and a declared answer shape sharing `shared_definitions.json`),
+answers as JSON, and a question naming something the hypothesis lacks answered as an
+error in the shared error shape. Fragments are named as their citations name them.
+
+| Tool | Input | Answer |
+|---|---|---|
+| `knowledge_overview` | none | The action concept's IRI; the structure's class and meaning; the situation (feature → value name, unknown features absent); the phases in order, each with name, class and meaning, label and the subgoal it aims for; the roles |
+| `find_fragments` | `kind`: a vocabulary class name | The fragments of that class and its subclasses, each with name, class and label |
+| `describe_fragment` | `name`: a fragment name | Its class and meaning, label, a statement per ontology property it gives a value for (field, meaning, and linked fragment names or its value), and the fragments linking to it with their field |
 
 ## 4. Decisions that shape behaviour
 

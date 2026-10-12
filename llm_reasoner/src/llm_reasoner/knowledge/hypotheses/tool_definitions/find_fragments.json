@@ -1,0 +1,41 @@
+{
+  "name": "find_fragments",
+  "description": {
+    "purpose": "Find the fragments of the knowledge that belong to a vocabulary class.",
+    "returns": "The class asked about and its fragments, each with its name, its class and its label, in the order the knowledge holds them; fragments of more specific classes are included.",
+    "use_when": "Looking for knowledge of one sort, such as the failure events or the condition requirements, without going through the phases.",
+    "avoid": "Guessing class names; take them from the classes other knowledge answers name."
+  },
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "kind": {
+        "type": "string",
+        "description": "The name of a vocabulary class, exactly as a knowledge answer named a class."
+      }
+    },
+    "required": [
+      "kind"
+    ],
+    "additionalProperties": false
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "kind": {
+        "type": "string"
+      },
+      "fragments": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/fragment_reference"
+        }
+      }
+    },
+    "required": [
+      "kind",
+      "fragments"
+    ],
+    "additionalProperties": false
+  }
+}

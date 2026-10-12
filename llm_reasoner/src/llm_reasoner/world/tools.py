@@ -43,11 +43,6 @@ SHARED_DEFINITIONS_FILE = (
 Where the definitions the answer shapes of several tools share are stored.
 """
 
-SCHEMA_DEFINITIONS = "$defs"
-"""
-The JSON schema keyword under which a schema holds the definitions it refers to.
-"""
-
 
 @cache
 def shared_definitions() -> Mapping[str, Any]:
@@ -117,16 +112,9 @@ class WorldTool(Tool, ABC):
         :return: The definition stored for a tool, read once, its answer shape holding
             the definitions it shares with other tools.
         """
-        definition = ToolDefinition.from_file(
+        return ToolDefinition.from_file(
             DEFINITIONS_DIRECTORY / f"{name}{DEFINITION_SUFFIX}"
-        )
-        return replace(
-            definition,
-            output_schema={
-                **definition.output_schema,
-                SCHEMA_DEFINITIONS: shared_definitions(),
-            },
-        )
+        ).sharing(shared_definitions())
 
     def run(self, arguments: Mapping[str, Any]) -> ToolOutcome:
         """
