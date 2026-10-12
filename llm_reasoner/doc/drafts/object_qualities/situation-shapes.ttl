@@ -1,0 +1,200 @@
+@prefix :      <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/situation#> .
+@prefix sit:   <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/situation#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:    <http://www.w3.org/ns/shacl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+# DRAFT - not loaded by the package.
+#
+# Rules relating a hypothesis to the situation it is applied to: the parameters a
+# hypothesis states must answer to the actual qualities of the objects filling its roles.
+#
+# A rule whose subject is a fact of the world - what a container holds, what a substance
+# is - is a violation. A rule comparing an estimate with the actual value is a warning,
+# since a prediction that disagrees with reality is a prediction error, not a
+# contradiction. A rule is silent when the situation does not state the quality it needs.
+
+<http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/situation> a owl:Ontology ;
+    owl:versionInfo "0.1.0-draft" ;
+    rdfs:comment "Closed-world rules relating a hypothesis to the actual qualities of the objects filling its roles."@en ;
+    sh:declare
+        [ sh:prefix "core" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#"^^xsd:anyURI ] ,
+        [ sh:prefix "dyn" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/object-dynamics#"^^xsd:anyURI ] ,
+        [ sh:prefix "pre" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/prehension#"^^xsd:anyURI ] ,
+        [ sh:prefix "pour" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#"^^xsd:anyURI ] ,
+        [ sh:prefix "sit" ; sh:namespace "http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/situation#"^^xsd:anyURI ] ,
+        [ sh:prefix "aicor" ; sh:namespace "http://aicor.knowledge/l2-ontology.owl#"^^xsd:anyURI ] ,
+        [ sh:prefix "dul" ; sh:namespace "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#"^^xsd:anyURI ] ,
+        [ sh:prefix "rdf" ; sh:namespace "http://www.w3.org/1999/02/22-rdf-syntax-ns#"^^xsd:anyURI ] ,
+        [ sh:prefix "rdfs" ; sh:namespace "http://www.w3.org/2000/01/rdf-schema#"^^xsd:anyURI ] .
+
+# %% material
+
+:MaterialRegimeOfSubstance a sh:NodeShape ;
+    sh:targetClass sit:ManipulationSituation ;
+    rdfs:comment "A pouring structure states the material regime of the substance actually poured: liquid, granular or cohesive is a fact of the substance, not a choice of the hypothesis."@en ;
+    sh:sparql [
+        sh:message "the material regime differs from the material category of the substance bound to the poured substance role" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/situation> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this dul:satisfies ?structure ;
+                    sit:hasBinding ?binding .
+                ?structure pour:hasMaterialRegime ?value .
+                ?binding aicor:bindsSlot ?role ;
+                    aicor:bindsFiller ?substance .
+                ?role rdf:type/rdfs:subClassOf* pour:PouredSubstance .
+                ?substance dul:hasQuality ?quality .
+                ?quality rdf:type sit:MaterialCategory ;
+                    dul:hasRegion/core:hasCategory ?category .
+                FILTER (?value != ?category)
+            }
+        """ ;
+    ] .
+
+# %% quantity
+
+:TransferWithinSourceContents a sh:NodeShape ;
+    sh:targetClass sit:ManipulationSituation ;
+    rdfs:comment "A pouring structure that sets out to transfer more than the source holds ends because the source is exhausted, not because the target quantity is attained."@en ;
+    sh:sparql [
+        sh:message "the transferred quantity exceeds what the source container holds, but the structure does not end with the source exhausted" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/situation> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this dul:satisfies ?structure ;
+                    sit:hasBinding ?binding .
+                ?structure core:definesParameter ?value .
+                ?value rdf:type/rdfs:subClassOf* pour:TransferredQuantitySetpoint ;
+                    core:hasParameterRange ?requested .
+                ?requested core:lowerBound ?requestedLow ;
+                    core:hasUnit ?requestedUnit .
+                ?requestedUnit core:factorToBaseUnit ?requestedFactor ;
+                    core:measuresDimension ?dimension .
+                ?binding aicor:bindsSlot ?role ;
+                    aicor:bindsFiller ?source .
+                ?role rdf:type/rdfs:subClassOf* pour:SourceContainer .
+                ?source dul:hasQuality ?contents .
+                ?contents rdf:type sit:ContainedQuantity ;
+                    dul:hasRegion ?held .
+                ?held core:upperBound ?heldHigh ;
+                    core:hasUnit ?heldUnit .
+                ?heldUnit core:factorToBaseUnit ?heldFactor ;
+                    core:measuresDimension ?dimension .
+                FILTER (?requestedLow * ?requestedFactor > ?heldHigh * ?heldFactor)
+                FILTER NOT EXISTS { ?structure pour:hasTerminationReason pour:SourceExhausted }
+            }
+        """ ;
+    ] .
+
+:TransferWithinTargetSpace a sh:NodeShape ;
+    sh:targetClass sit:ManipulationSituation ;
+    rdfs:comment "A pouring structure never sets out to transfer more than the target receptacle has room for; a receptacle with no stated contents is taken to be empty."@en ;
+    sh:sparql [
+        sh:message "the transferred quantity exceeds the room left in the target receptacle" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/situation> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this dul:satisfies ?structure ;
+                    sit:hasBinding ?binding .
+                ?structure core:definesParameter ?value .
+                ?value rdf:type/rdfs:subClassOf* pour:TransferredQuantitySetpoint ;
+                    core:hasParameterRange ?requested .
+                ?requested core:lowerBound ?requestedLow ;
+                    core:hasUnit ?requestedUnit .
+                ?requestedUnit core:factorToBaseUnit ?requestedFactor ;
+                    core:measuresDimension core:Volume .
+                ?binding aicor:bindsSlot ?role ;
+                    aicor:bindsFiller ?target .
+                ?role rdf:type/rdfs:subClassOf* pour:TargetReceptacle .
+                ?target dul:hasQuality ?capacityQuality .
+                ?capacityQuality rdf:type sit:Capacity ;
+                    dul:hasRegion ?capacity .
+                ?capacity core:upperBound ?capacityHigh ;
+                    core:hasUnit/core:factorToBaseUnit ?capacityFactor .
+                OPTIONAL {
+                    ?target dul:hasQuality ?contents .
+                    ?contents rdf:type sit:ContainedQuantity ;
+                        dul:hasRegion ?held .
+                    ?held core:lowerBound ?heldLow ;
+                        core:hasUnit ?heldUnit .
+                    ?heldUnit core:factorToBaseUnit ?heldFactor ;
+                        core:measuresDimension core:Volume .
+                }
+                BIND (COALESCE(?heldLow * ?heldFactor, 0.0) AS ?occupied)
+                FILTER (?requestedLow * ?requestedFactor > ?capacityHigh * ?capacityFactor - ?occupied)
+            }
+        """ ;
+    ] .
+
+# %% load
+
+:HeldLoadPredicted a sh:NodeShape ;
+    sh:targetClass sit:ManipulationSituation ;
+    sh:severity sh:Warning ;
+    rdfs:comment "The estimates scaling grip force predict the load the source container will actually present: an expected mass excluding its actual mass with contents, or a load force estimate staying below its weight, predicts a different object."@en ;
+    sh:sparql [
+        sh:message "an estimate of the held object's mass or load does not cover its actual mass or weight" ;
+        sh:prefixes <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/shapes/situation> ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this dul:satisfies ?structure ;
+                    sit:hasBinding ?sourceBinding .
+                ?sourceBinding aicor:bindsSlot ?sourceRole ;
+                    aicor:bindsFiller ?source .
+                ?sourceRole rdf:type/rdfs:subClassOf* pour:SourceContainer .
+                ?source dul:hasQuality ?massQuality .
+                ?massQuality rdf:type sit:ObjectMass ;
+                    dul:hasRegion ?mass .
+                ?mass core:lowerBound ?massLow ;
+                    core:upperBound ?massHigh ;
+                    core:hasUnit/core:factorToBaseUnit ?massFactor .
+                ?source dul:hasQuality ?contents .
+                ?contents rdf:type sit:ContainedQuantity ;
+                    dul:hasRegion ?held .
+                ?held core:lowerBound ?heldLow ;
+                    core:upperBound ?heldHigh ;
+                    core:hasUnit ?heldUnit .
+                ?heldUnit core:factorToBaseUnit ?heldFactor ;
+                    core:measuresDimension ?heldDimension .
+                OPTIONAL {
+                    $this sit:hasBinding ?substanceBinding .
+                    ?substanceBinding aicor:bindsSlot ?substanceRole ;
+                        aicor:bindsFiller ?substance .
+                    ?substanceRole rdf:type/rdfs:subClassOf* pour:PouredSubstance .
+                    ?substance dul:hasQuality ?densityQuality .
+                    ?densityQuality rdf:type sit:Density ;
+                        dul:hasRegion ?density .
+                    ?density core:lowerBound ?densityLow ;
+                        core:upperBound ?densityHigh ;
+                        core:hasUnit/core:factorToBaseUnit ?densityFactor .
+                }
+                BIND (IF(?heldDimension = core:Mass, 1.0, ?densityLow * ?densityFactor) AS ?lowFactor)
+                BIND (IF(?heldDimension = core:Mass, 1.0, ?densityHigh * ?densityFactor) AS ?highFactor)
+                BIND (?massLow * ?massFactor + ?heldLow * ?heldFactor * ?lowFactor AS ?actualLow)
+                BIND (?massHigh * ?massFactor + ?heldHigh * ?heldFactor * ?highFactor AS ?actualHigh)
+                BIND (9.80665 AS ?standardGravity)
+                ?structure core:definesParameter ?value .
+                ?value core:parameterOnRole ?sourceRole ;
+                    core:hasParameterRange ?estimate .
+                ?estimate core:lowerBound ?estimateLow ;
+                    core:upperBound ?estimateHigh ;
+                    core:hasUnit/core:factorToBaseUnit ?estimateFactor .
+                {
+                    ?value rdf:type/rdfs:subClassOf* pre:ExpectedMass .
+                    BIND (pre:ExpectedMass AS ?estimated)
+                } UNION {
+                    ?value rdf:type/rdfs:subClassOf* dyn:LoadForceEstimate .
+                    BIND (dyn:LoadForceEstimate AS ?estimated)
+                }
+                FILTER (
+                    (?estimated = pre:ExpectedMass
+                        && (?estimateHigh * ?estimateFactor < ?actualLow
+                            || ?estimateLow * ?estimateFactor > ?actualHigh))
+                    || (?estimated = dyn:LoadForceEstimate
+                        && ?estimateHigh * ?estimateFactor < ?actualLow * ?standardGravity)
+                )
+            }
+        """ ;
+    ] .

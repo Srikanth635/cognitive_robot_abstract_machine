@@ -1,0 +1,189 @@
+@prefix :      <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/situation#> .
+@prefix core:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/core#> .
+@prefix pour:  <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring#> .
+@prefix aicor: <http://aicor.knowledge/l2-ontology.owl#> .
+@prefix dul:   <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+# DRAFT - not loaded by the package.
+#
+# The occurrence-level model the scientific contract calls for: the microworld describes
+# how an action is organised, and a situation binds that description to the world - which
+# objects fill its roles and what their qualities actually are. It follows DUL's
+# Description and Situation pattern: a situation satisfies a description, and an object
+# has qualities whose values are regions.
+#
+# The qualities are what the world supplies (the scene description now, the semantic
+# digital twin later). The estimates in a hypothesis stay separate from them: a
+# prediction may disagree with the actual value, which is what a prediction error is.
+
+<http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/situation> a owl:Ontology ;
+    owl:versionInfo "0.1.0-draft" ;
+    owl:imports <http://www.ease-crc.org/ont/llm_reasoner/predictive-manipulation/pouring> ;
+    rdfs:label "Predictive manipulation: situation"@en ;
+    rdfs:comment "The occurrence level: the world objects bound to the roles of an action phase structure, and their actual qualities."@en .
+
+# %% situation
+
+:ManipulationSituation a owl:Class ;
+    rdfs:subClassOf dul:Situation ,
+        [ a owl:Restriction ; owl:onProperty dul:satisfies ; owl:someValuesFrom core:ActionPhaseStructure ] ,
+        [ a owl:Restriction ; owl:onProperty :hasBinding ; owl:someValuesFrom aicor:RoleBinding ] ;
+    rdfs:label "manipulation situation"@en ;
+    rdfs:comment "The actual setting an action phase structure is applied to: which world objects fill its roles."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:hasBinding a owl:ObjectProperty ;
+    rdfs:subPropertyOf dul:isSettingFor ;
+    rdfs:domain :ManipulationSituation ;
+    rdfs:range aicor:RoleBinding ;
+    rdfs:label "has binding"@en ;
+    rdfs:comment "A binding of a role of the satisfied structure to the world object filling it."@en .
+
+# %% qualities
+
+:ObjectQuality a owl:Class ;
+    rdfs:subClassOf dul:Quality ,
+        [ a owl:Restriction ; owl:onProperty dul:isQualityOf ; owl:someValuesFrom dul:PhysicalObject ] ,
+        [ a owl:Restriction ; owl:onProperty dul:hasRegion ; owl:someValuesFrom [ a owl:Class ; owl:unionOf ( core:MagnitudeRange core:CategoricalValue ) ] ] ;
+    rdfs:label "object quality"@en ;
+    rdfs:comment "An actual quality of a world object, with its value as a range or a category. An exact value is a range whose bounds are equal."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:ObjectPropertyQuality a owl:Class ;
+    rdfs:subClassOf :ObjectQuality ;
+    rdfs:label "object property quality"@en ;
+    rdfs:comment "A comparatively stable quality, such as a container's capacity."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:ObjectStateQuality a owl:Class ;
+    rdfs:subClassOf :ObjectQuality ;
+    rdfs:label "object state quality"@en ;
+    rdfs:comment "A quality that changes as the action proceeds, such as how much a container holds."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+[ a owl:AllDisjointClasses ; owl:members ( :ObjectPropertyQuality :ObjectStateQuality ) ] .
+
+# %% qualities of objects
+
+:ObjectMass a owl:Class ;
+    rdfs:subClassOf :ObjectPropertyQuality ,
+        [ a owl:Restriction ; owl:onProperty dul:hasRegion ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:measuresDimension ; owl:hasValue core:Mass ] ] ] ;
+    rdfs:label "object mass"@en ;
+    rdfs:comment "The mass of an object without what it contains."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:Rigidity a owl:Class ;
+    rdfs:subClassOf :ObjectPropertyQuality ,
+        [ a owl:Restriction ; owl:onProperty dul:hasRegion ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:hasCategory ; owl:allValuesFrom :RigidityCategory ] ] ;
+    rdfs:label "rigidity"@en ;
+    rdfs:comment "Whether an object keeps its shape under grip force."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:RigidityCategory a owl:Class ;
+    rdfs:subClassOf dul:Concept ;
+    owl:equivalentClass [ a owl:Class ; owl:oneOf ( :Rigid :Deformable ) ] ;
+    rdfs:label "rigidity category"@en ;
+    rdfs:comment "How an object responds to grip force."@en .
+:Rigid a owl:NamedIndividual , :RigidityCategory ; rdfs:label "rigid"@en ;
+    rdfs:comment "Keeps its shape under the grip forces of manipulation."@en .
+:Deformable a owl:NamedIndividual , :RigidityCategory ; rdfs:label "deformable"@en ;
+    rdfs:comment "Yields under grip force, such as a carton or a plastic bottle."@en .
+[ a owl:AllDifferent ; owl:distinctMembers ( :Rigid :Deformable ) ] .
+
+# %% qualities of containers
+
+:Capacity a owl:Class ;
+    rdfs:subClassOf :ObjectPropertyQuality ,
+        [ a owl:Restriction ; owl:onProperty dul:isQualityOf ; owl:allValuesFrom aicor:Container ] ,
+        [ a owl:Restriction ; owl:onProperty dul:hasRegion ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:measuresDimension ; owl:hasValue core:Volume ] ] ] ;
+    rdfs:label "capacity"@en ;
+    rdfs:comment "The volume a container holds when full."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:OpeningWidth a owl:Class ;
+    rdfs:subClassOf :ObjectPropertyQuality ,
+        [ a owl:Restriction ; owl:onProperty dul:isQualityOf ; owl:allValuesFrom aicor:Container ] ,
+        [ a owl:Restriction ; owl:onProperty dul:hasRegion ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:measuresDimension ; owl:hasValue core:Length ] ] ] ;
+    rdfs:label "opening width"@en ;
+    rdfs:comment "The width of the opening through which a container is filled or emptied."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:InteriorHeight a owl:Class ;
+    rdfs:subClassOf :ObjectPropertyQuality ,
+        [ a owl:Restriction ; owl:onProperty dul:isQualityOf ; owl:allValuesFrom aicor:Container ] ,
+        [ a owl:Restriction ; owl:onProperty dul:hasRegion ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:measuresDimension ; owl:hasValue core:Length ] ] ] ;
+    rdfs:label "interior height"@en ;
+    rdfs:comment "The height from a container's inner floor to the rim of its opening."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:ContainedQuantity a owl:Class ;
+    rdfs:subClassOf :ObjectStateQuality ,
+        [ a owl:Restriction ; owl:onProperty dul:isQualityOf ; owl:allValuesFrom aicor:Container ] ,
+        [ a owl:Restriction ; owl:onProperty dul:hasRegion ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:measuresDimension ; owl:someValuesFrom [ a owl:Class ; owl:oneOf ( core:Volume core:Mass ) ] ] ] ] ;
+    rdfs:label "contained quantity"@en ;
+    rdfs:comment "The volume or mass of substance a container currently holds."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+# %% qualities of substances
+
+:MaterialCategory a owl:Class ;
+    rdfs:subClassOf :ObjectPropertyQuality , aicor:MaterialProperty ,
+        [ a owl:Restriction ; owl:onProperty dul:isQualityOf ; owl:allValuesFrom aicor:Substance ] ,
+        [ a owl:Restriction ; owl:onProperty dul:hasRegion ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:hasCategory ; owl:allValuesFrom pour:MaterialRegime ] ] ;
+    rdfs:label "material category"@en ;
+    rdfs:comment "Whether a substance flows as a liquid, as grains, or cohesively. Its values are the material regimes of pouring."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:Viscosity a owl:Class ;
+    rdfs:subClassOf :ObjectPropertyQuality , aicor:MaterialProperty ,
+        [ a owl:Restriction ; owl:onProperty dul:isQualityOf ; owl:allValuesFrom aicor:Substance ] ,
+        [ a owl:Restriction ; owl:onProperty dul:hasRegion ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:measuresDimension ; owl:hasValue core:DynamicViscosity ] ] ] ;
+    rdfs:label "viscosity"@en ;
+    rdfs:comment "The dynamic viscosity of a liquid or cohesive substance."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:Density a owl:Class ;
+    rdfs:subClassOf :ObjectPropertyQuality , aicor:MaterialProperty ,
+        [ a owl:Restriction ; owl:onProperty dul:isQualityOf ; owl:allValuesFrom aicor:Substance ] ,
+        [ a owl:Restriction ; owl:onProperty dul:hasRegion ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:hasUnit ; owl:allValuesFrom [ a owl:Restriction ; owl:onProperty core:measuresDimension ; owl:hasValue core:Density ] ] ] ;
+    rdfs:label "density"@en ;
+    rdfs:comment "The mass per unit volume of a substance, by which a contained volume has a mass."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+# %% objects classified by their qualities
+
+:DeformableContainer a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( aicor:Container
+        [ a owl:Restriction ; owl:onProperty dul:hasQuality ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( :Rigidity
+            [ a owl:Restriction ; owl:onProperty dul:hasRegion ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasCategory ; owl:hasValue :Deformable ] ] ) ] ] ) ] ;
+    rdfs:label "deformable container"@en ;
+    rdfs:comment "A container that yields under grip force."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:LiquidSubstance a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( aicor:Substance
+        [ a owl:Restriction ; owl:onProperty dul:hasQuality ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( :MaterialCategory
+            [ a owl:Restriction ; owl:onProperty dul:hasRegion ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasCategory ; owl:hasValue pour:Liquid ] ] ) ] ] ) ] ;
+    rdfs:label "liquid substance"@en ;
+    rdfs:comment "A substance that flows as a liquid."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:GranularSubstance a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( aicor:Substance
+        [ a owl:Restriction ; owl:onProperty dul:hasQuality ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( :MaterialCategory
+            [ a owl:Restriction ; owl:onProperty dul:hasRegion ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasCategory ; owl:hasValue pour:Granular ] ] ) ] ] ) ] ;
+    rdfs:label "granular substance"@en ;
+    rdfs:comment "A substance that flows as grains."@en ;
+    core:evidenceStatus core:EngineeringExtension .
+
+:CohesiveSubstance a owl:Class ;
+    owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( aicor:Substance
+        [ a owl:Restriction ; owl:onProperty dul:hasQuality ; owl:someValuesFrom [ a owl:Class ; owl:intersectionOf ( :MaterialCategory
+            [ a owl:Restriction ; owl:onProperty dul:hasRegion ; owl:someValuesFrom [ a owl:Restriction ; owl:onProperty core:hasCategory ; owl:hasValue pour:Cohesive ] ] ) ] ] ) ] ;
+    rdfs:label "cohesive substance"@en ;
+    rdfs:comment "A substance that flows cohesively, delayed or intermittently."@en ;
+    core:evidenceStatus core:EngineeringExtension .
