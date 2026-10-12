@@ -89,8 +89,8 @@ INPUT_MEANINGS = {
     "about the world.",
     PromptSection.SITUATION: "what is currently true: fact.",
     PromptSection.ACTION: "the action the requested values are for, as its own "
-    f"<{PromptSection.REQUEST}> and <{PromptSection.GIVEN}>: context to read, not slots "
-    "to answer.",
+    f"<{PromptSection.REQUEST}>, <{PromptSection.SLOTS}> and <{PromptSection.GIVEN}>: "
+    "context to read, not slots to answer.",
     PromptSection.SOURCE: "the definition of a type holding slots, showing what it does "
     "with each value.",
     PromptSection.DESCRIPTION: "the docstring of a type holding slots.",
@@ -140,7 +140,10 @@ ESTABLISHED_VALUES_RULE = PromptRule(
     text="the values asked for are facts, not choices: answer each value slot with what "
     f"<{PromptSection.ACTION}>, <{PromptSection.GIVEN}>, <{PromptSection.TASK}>, "
     f"<{PromptSection.SITUATION}> or the world establishes, and {AcceptedType.NULL} "
-    "where nothing does; never fill one by convention or as the usual case.",
+    "where nothing does; never fill one by convention or as the usual case. Read the "
+    "world about the individuals the action involves, finding out what they are before "
+    f"answering: those named in <{PromptSection.ACTION}>'s <{PromptSection.GIVEN}> and "
+    f"the candidates of <{PromptSection.ACTION}>'s <{PromptSection.SLOTS}>.",
 )
 """
 The rule stating that value slots ask for what is established, and nothing else.

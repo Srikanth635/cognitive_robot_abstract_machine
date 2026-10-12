@@ -166,7 +166,7 @@ meeting the query's `where`-conditions; or one of these outcomes:
 | `prompt_format.py` | The resolver's prompt vocabulary: its sections, rules and data keys, written in the shared structure of `llm_reasoner/prompt_structure.py` (`PromptBlock`, `PromptRule`, `render_blocks`) |
 | `referents.py` | How candidates are named and answered: `IntegerTokens`, `WorldHandles`; verdict rules |
 | `context.py` | Context providers (task, situation, composite) and candidate renderers |
-| `action_context.py` | `ActionContextProvider`: states the action a resolution serves, as its own `<request>` and `<given>` in an `<action>` section |
+| `action_context.py` | `ActionContextProvider`: states the action a resolution serves, as its own `<request>`, `<slots>` (its open slots with their candidates in the world) and `<given>` in an `<action>` section |
 | `knowledge.py` | `KnowledgeRequester`: consults the knowledge component, through its public module only, about the action a query asks for (§3.6); `KnowledgeConsultation`: the designator, the situation chosen and the identifier of the hypothesis served |
 | `completion.py` | Plain and tool-using completion; the text-answer rule |
 | `exceptions.py` | Retryable failures and outcomes |
@@ -396,7 +396,7 @@ adding `<rejected_answer>` and `<problems>` (JSON).
 | Prompt | Sections |
 |---|---|
 | System | `<role>`, `<inputs>` (what each request section means), `<rules>` (one named rule per line, `- name: text`) |
-| Request | `<source type="…">` per type (or `<description>`), `<request>` (the query in English; `Ellipsis` marks an open slot), `<task>` / `<situation>` / `<action>` (from context providers; `<action>` holds the action a resolution serves as its own `<request>` and `<given>`), `<slots>` (JSON), `<given>` (JSON, values the query fixes), `<output>` (JSON schema of the answer) |
+| Request | `<source type="…">` per type (or `<description>`), `<request>` (the query in English; `Ellipsis` marks an open slot), `<task>` / `<situation>` / `<action>` (from context providers; `<action>` holds the action a resolution serves as its own `<request>`, `<slots>` and `<given>`), `<slots>` (JSON), `<given>` (JSON, values the query fixes), `<output>` (JSON schema of the answer) |
 | Repair | The request, then `<rejected_answer>` and `<rejection kind="…">` (the failure's fields as JSON) |
 
 A slot entry in `<slots>`:
@@ -551,7 +551,13 @@ features left out; ⑤ `KnowledgeService.serve(request, instruction=<designator>
 backend filling the features is `LanguageModelBackend.situation_backend_for(action)`:
 the resolver's own model, tools and context, the action stated first in an `<action>`
 section, `SourceDetail.SIGNATURE`, one candidate, `OpenValueMeaning.FACT` (a feature
-nothing establishes is `null`, never the usual case) and no consultation of its own. The
+nothing establishes is `null`, never the usual case) and no consultation of its own.
+The features come from the world: `<action>` lists the action's open slots with their
+candidates, written as the action's own resolution writes them, and the
+`established_values` rule has the model read the world about the individuals the action
+involves, the ones its `<given>` names and its slots' candidates, before answering. A
+query binding an object and a query leaving it open to the only candidate therefore see
+the same facts. The
 resolver consults before every request to its model; a query leaving nothing open asks
 no model and consults nothing.
 

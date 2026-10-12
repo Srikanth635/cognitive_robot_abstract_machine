@@ -1,7 +1,8 @@
 """
 The action a resolution serves, stated in that resolution's prompt: a resolution
 choosing what describes an action, such as the situation the action is performed in,
-reads the action's own request and the values its query fixes.
+reads the action's own request, the slots its query leaves open with their candidates in
+the world, and the values its query fixes.
 """
 
 from __future__ import annotations
@@ -23,8 +24,9 @@ from llm_reasoner.resolver.reflection import SlotKind, reflect_slots
 @dataclass
 class ActionContextProvider(PromptContextProvider):
     """
-    States the action a resolution serves: its query in English and the values the query
-    fixes, written as the action's own resolution writes them.
+    States the action a resolution serves: its query in English, the slots the query
+    leaves open and the values it fixes, written as the action's own resolution writes
+    them, so the individuals the action involves can be read in the world.
     """
 
     action: Match
@@ -34,21 +36,33 @@ class ActionContextProvider(PromptContextProvider):
 
     builder: PromptBuilder
     """
-    Writes the action's request and given values.
+    Writes the action's request, open slots and given values.
     """
 
     def context_for(self, expression: Match) -> str:
+        slots = reflect_slots(self.action)
+        open_slots = [
+            self.builder.slot_entry(slot, self.action)
+            for slot in slots
+            if slot.kind is not SlotKind.BOUND
+        ]
+        given = [
+            self.builder.given_entry(slot, self.action)
+            for slot in slots
+            if slot.kind is SlotKind.BOUND
+        ]
         blocks = [
             PromptBlock(
                 section=PromptSection.REQUEST,
                 body=self.builder.verbalize_request(self.action),
             )
         ]
-        given = [
-            self.builder.given_entry(slot, self.action)
-            for slot in reflect_slots(self.action)
-            if slot.kind is SlotKind.BOUND
-        ]
+        if open_slots:
+            blocks.append(
+                PromptBlock(
+                    section=PromptSection.SLOTS, body=self.builder.as_json(open_slots)
+                )
+            )
         if given:
             blocks.append(
                 PromptBlock(

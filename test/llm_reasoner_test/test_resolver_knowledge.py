@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 
 from jsonschema import Draft202012Validator
-from krrood.entity_query_language.factories import the
+from krrood.entity_query_language.factories import the, variable
 
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.clients.tools import ScriptedToolRequest
@@ -49,7 +49,7 @@ from llm_reasoner.world.view import WorldView
 
 from .prompt_sections import bodies, text_outside_sections
 from .test_generation import GenerationCase
-from .world_mimics import ActionWithBodyAndValueSlots, body_with_geometry
+from .world_mimics import ActionWithBodyAndValueSlots, WorldBody, body_with_geometry
 
 CASES = Path(__file__).parent / "resolver_cases"
 """
@@ -153,6 +153,37 @@ class TestActionContext:
             for slot in reflect_slots(action)
             if slot.kind is SlotKind.BOUND
         ]
+
+    def test_the_action_states_its_open_slots_as_its_own_resolution_writes_them(
+        self,
+    ):
+        body = body_with_geometry()
+        action = the(ActionWithBodyAndValueSlots)(
+            source=variable(WorldBody, domain=[body]), angle=...
+        )
+        (slots,) = bodies(
+            ActionContextProvider(action=action, builder=builder()).context_for(action),
+            PromptSection.SLOTS,
+        )
+        assert json.loads(slots) == [
+            builder().slot_entry(slot, action)
+            for slot in reflect_slots(action)
+            if slot.kind is not SlotKind.BOUND
+        ]
+
+    def test_an_action_whose_query_fixes_every_slot_states_no_slots(self):
+        action = the(ActionWithBodyAndValueSlots)(
+            source=body_with_geometry(), angle=1.0
+        )
+        assert (
+            bodies(
+                ActionContextProvider(action=action, builder=builder()).context_for(
+                    action
+                ),
+                PromptSection.SLOTS,
+            )
+            == []
+        )
 
     def test_the_action_is_a_section_of_the_prompt_of_the_resolution_it_serves(self):
         body = body_with_geometry()
