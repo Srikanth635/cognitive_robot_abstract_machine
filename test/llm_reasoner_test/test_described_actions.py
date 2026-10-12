@@ -6,7 +6,10 @@ identifiers, so that llm_reasoner imports no designator package.
 from __future__ import annotations
 
 from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE
-from llm_reasoner.knowledge.ontologies.described_actions import DescribedActions
+from llm_reasoner.knowledge.ontologies.described_actions import (
+    DescribedAction,
+    DescribedActions,
+)
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import pouring
 from llm_reasoner.knowledge.ontologies.terms import ConceptReference, DescriptionEntity
 
@@ -35,3 +38,28 @@ class TestDescribedActions:
 
     def test_a_designator_no_knowledge_describes_is_described_by_nothing(self):
         assert DescribedActions().describing("some.module.UndescribedAction") is None
+
+    def test_a_mapping_given_explicitly_replaces_the_one_kept_as_data(self):
+        described = DescribedAction(
+            designator="some.module.DescribedAction",
+            concept=ConceptReference(iri=CRAM_AICOR_NAMESPACE + "Pouring"),
+            structure=pouring.PouringPhaseStructure,
+        )
+        actions = DescribedActions(entries=[described])
+        assert actions.describing(described.designator) is described
+        assert actions.describing(POURING_DESIGNATOR) is None
+
+
+class TestStructureQuery:
+    def test_the_query_is_for_the_structure_decomposing_the_described_concept(self):
+        described = DescribedActions().describing(POURING_DESIGNATOR)
+        query = described.query({})
+        assert query.type is described.structure
+        assert query.construct_instance().decomposes_task == described.concept
+
+    def test_the_query_fixes_the_values_given(self):
+        described = DescribedActions().describing(POURING_DESIGNATOR)
+        structure = described.query(
+            {"has_material_regime": pouring.MaterialRegime.GRANULAR}
+        ).construct_instance()
+        assert structure.has_material_regime is pouring.MaterialRegime.GRANULAR

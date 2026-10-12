@@ -14,9 +14,12 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
 
+from krrood.entity_query_language.factories import the
+from krrood.entity_query_language.query.match import Match
 from typing_extensions import Any, Mapping, Optional
 
-from llm_reasoner.knowledge.ontologies.terms import ConceptReference, DescriptionEntity
+from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
+from llm_reasoner.knowledge.ontologies.terms import ConceptReference
 from llm_reasoner.knowledge.ontologies.vocabulary import Vocabulary
 
 DESCRIBED_ACTIONS_FILE = Path(__file__).parent / "described_actions.json"
@@ -62,10 +65,19 @@ class DescribedAction:
     The action concept the designator performs, such as CRAM-AICOR's pouring.
     """
 
-    structure: type[DescriptionEntity]
+    structure: type[core.ActionPhaseStructure]
     """
-    The generated class of the knowledge structure describing the action.
+    The generated class of the phase structure describing the action.
     """
+
+    def query(self, values: Mapping[str, Any]) -> Match:
+        """
+        :param values: Values of fields of the structure, by field name; ``...`` leaves
+            a field open for a backend to fill.
+        :return: A query for the one structure decomposing this action's concept, with
+            the values given.
+        """
+        return the(self.structure)(decomposes_task=self.concept, **values)
 
     @classmethod
     def from_json(
@@ -85,23 +97,27 @@ class DescribedAction:
 @dataclass
 class DescribedActions:
     """
-    The action designators knowledge describes, read from the mapping kept as data.
+    The action designators knowledge describes.
     """
 
-    vocabulary: Vocabulary = field(default_factory=Vocabulary)
+    entries: list[DescribedAction] = field(
+        default_factory=lambda: DescribedActions.read(DESCRIBED_ACTIONS_FILE)
+    )
     """
-    Resolves the IRIs of knowledge structures to their generated classes.
-    """
-
-    entries: list[DescribedAction] = field(init=False)
-    """
-    Every described action designator, in the order the mapping lists them.
+    Every described action designator, by default as the mapping kept as data lists
+    them.
     """
 
-    def __post_init__(self):
-        self.entries = [
-            DescribedAction.from_json(stored, self.vocabulary)
-            for stored in json.loads(DESCRIBED_ACTIONS_FILE.read_text())
+    @staticmethod
+    def read(path: Path) -> list[DescribedAction]:
+        """
+        :param path: A JSON file listing described action designators.
+        :return: Its entries, in order, their structures resolved to generated classes.
+        """
+        vocabulary = Vocabulary()
+        return [
+            DescribedAction.from_json(stored, vocabulary)
+            for stored in json.loads(path.read_text())
         ]
 
     def describing(self, designator: str) -> Optional[DescribedAction]:
