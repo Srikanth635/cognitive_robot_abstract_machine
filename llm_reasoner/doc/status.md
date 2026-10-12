@@ -213,7 +213,18 @@ stored hypotheses: both designators now read the pitcher in the world as liquid;
 generated its own liquid pouring hypothesis (about 3.5 minutes, cost not recorded), and
 the two differ (a tilt range of 0–120° against 40–120°, 176 against 172 typed nodes),
 while both resolved to the cup, the bowl, RIGHT and 1.85 rad; the resolvers cost $0.103
-(`objects_given`) and $0.078 (`objects_open`). Switching scenes now removes the previous scene's world
+(`objects_given`) and $0.078 (`objects_open`).
+
+**cram_viz: Generate and Execute (2026-10-13):** a chip copies its match query into the
+search bar and Generate resolves whatever query the search bar holds. Execute performs
+the resolved action in coraplex's simulation, in a process under the live bridge, from
+the run's environment: the scene's world (its robot now on a drive over the surroundings
+at the recording's first base pose, annotated as the robot class kept for its name),
+park arms, torso LOW, navigate to face the source at the recorded 0.63 m, pick up with
+the resolved arm, pour. With the torso HIGH or MID the PR2 cannot reach the pitcher on
+the counter, and coraplex's `giskard_reachability_location` found no standing pose in
+the scene, so the standing pose is computed directly. The fixed demo stays behind a Demo
+button, but it no longer imports with the current semantic_digital_twin (`BoundingBox`). Switching scenes now removes the previous scene's world
 from krrood's symbol graph (collected, then `remove_dead_instances`), so an open
 `variable(Tool)` never offers another scene's objects.
 

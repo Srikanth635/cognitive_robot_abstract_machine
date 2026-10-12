@@ -14,7 +14,8 @@ Serves three things from one port (default 8711):
       POST /api/hypothesis/generate  generate a hypothesis for an instruction
       GET  /api/designators?scene=   the predefined designators the scene offers
       POST /api/designator/resolve   resolve a designator query in the scene
-      POST /api/execute         launch the hardcoded demo under the live bridge
+      POST /api/execute         run a resolution run ({"run": name}) or the hardcoded
+                                demo under the live bridge
 
 The API needs krrood (EQL). Without it the server still serves the viewer and
 answers API calls with ``{"ok": false, "error": ...}`` so the frontend can say
@@ -197,7 +198,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if route == "/api/designator/resolve":
             return self._resolve_designator()
         if route == "/api/execute":
-            return self._execute_demo()
+            return self._execute()
         if route != "/api/eql":
             return self._json({"ok": False, "error": "unknown endpoint"}, 404)
         if kb_module is None:
@@ -290,19 +291,39 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             }
         )
 
-    def _execute_demo(self) -> None:
+    def _execute(self) -> None:
         """
-        Launch the viewer's hardcoded demo under the live bridge, in the background,
-        restarting it if it was already running.
-
-        Independent of any generated hypothesis and of EQL/krrood.
+        Run a resolution run in the simulation under the live bridge, or, when the
+        request names no run, the viewer's hardcoded demo; in the background, restarting
+        whatever was already running.
         """
+        length = int(self.headers.get("Content-Length") or 0)
+        request = json.loads(self.rfile.read(length) or b"{}")
+        if request.get("run") is not None:
+            return self._execute_run(request["run"])
         try:
             _live_demo_launcher().launch(paths.default_live_demo())
         except FileNotFoundError as ex:
             return self._json({"ok": False, "error": "demo not found: %s" % ex})
         except OSError as ex:
             logger.exception("demo launch failed")
+            return self._json(
+                {"ok": False, "error": "%s: %s" % (type(ex).__name__, ex)}
+            )
+        return self._json({"ok": True})
+
+    def _execute_run(self, name: str) -> None:
+        """
+        Perform the resolution run of the given name in the simulation, from the
+        environment it started from.
+        """
+        from cram_viz.resolution.runs import ResolutionRuns, UnknownRun
+
+        try:
+            run = ResolutionRuns(directory=paths.resolution_runs_dir()).named(name)
+            _live_demo_launcher().launch_run(run)
+        except (UnknownRun, OSError) as ex:
+            logger.exception("run execution failed")
             return self._json(
                 {"ok": False, "error": "%s: %s" % (type(ex).__name__, ex)}
             )

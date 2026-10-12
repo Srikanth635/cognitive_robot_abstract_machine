@@ -13,7 +13,8 @@ import sys
 
 import pytest
 
-from cram_viz.live.launcher import LiveDemoLauncher
+from cram_viz.live.launcher import LiveArgument, LiveDemoLauncher
+from cram_viz.resolution.runs import RunDirectory
 
 
 class FakeProcess:
@@ -99,6 +100,37 @@ class TestLaunch:
         command, kwargs = spawn.calls[0]
         assert command == [sys.executable, "-m", "cram_viz.live", str(demo)]
         assert kwargs["stderr"] is not None
+
+    def test_launches_a_run_under_the_live_bridge_module(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("CRAM_VIZ_DATA", str(tmp_path / "data"))
+        spawn = FakeSpawn(FakeProcess(poll_result=None))
+        launcher = LiveDemoLauncher(spawn=spawn)
+        run = RunDirectory(directory=tmp_path / "runs" / "a-run")
+
+        launcher.launch_run(run)
+
+        ((command, _),) = spawn.calls
+        assert command == [
+            sys.executable,
+            "-m",
+            "cram_viz.live",
+            LiveArgument.RUN,
+            str(run.directory),
+        ]
+
+    def test_launching_a_run_while_a_demo_runs_restarts_the_simulation(
+        self, demo, tmp_path, monkeypatch
+    ):
+        monkeypatch.setenv("CRAM_VIZ_DATA", str(tmp_path / "data"))
+        first_process = FakeProcess(poll_result=None)
+        spawn = FakeSpawn([first_process, FakeProcess(poll_result=None)])
+        launcher = LiveDemoLauncher(spawn=spawn)
+
+        launcher.launch(demo)
+        launcher.launch_run(RunDirectory(directory=tmp_path / "runs" / "a-run"))
+
+        assert first_process.terminated
+        assert len(spawn.calls) == 2
 
     def test_a_missing_demo_is_rejected_before_spawning(self, tmp_path, monkeypatch):
         monkeypatch.setenv("CRAM_VIZ_DATA", str(tmp_path / "data"))

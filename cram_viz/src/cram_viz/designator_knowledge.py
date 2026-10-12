@@ -215,7 +215,7 @@ def _default_for(declared_field: dataclasses.Field) -> tuple:
     return None, False
 
 
-def _resolved_type(owner: type, attribute_name: str) -> Any:
+def resolved_field_type(owner: type, attribute_name: str) -> Any:
     """
     Resolve one field's annotation to a real type, without evaluating any other
     field's annotation on the class or its bases.
@@ -334,7 +334,7 @@ def reflect_pouring_action(
     field_docstrings = _attribute_docstrings(designator_type)
     slots = []
     for name in _direct_field_names(designator_type):
-        declared_type = _resolved_type(designator_type, name)
+        declared_type = resolved_field_type(designator_type, name)
         alternatives = union_alternatives(declared_type)
         kind = _classify(declared_type, alternatives)
         default, has_default = _default_for(fields_by_name[name])

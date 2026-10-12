@@ -84,28 +84,39 @@ between the built-in panels:
 | `graph`       | tabs: Knowledge / Live Knowledge / Hypothesis Graph / Ontology Graph / Designator / Kinematics / Plan / Statechart |
 
 Below the EQL query box are predefined, underspecified pouring designators
-(`cram_viz.resolution`), each shown as the krrood match query the resolver receives,
-written in a file of its own under `resolution/designator_queries/`: it states some
-slots of coraplex's `PouringAction` and leaves the others open (`...`, or a variable
-such as `variable(Tool)`). A query reads krrood's factories, `PouringAction`, `Arms`,
-`Tool` and `Body`, and the scene's objects, each by its kind in snake case
-(`pouring_cup`, `bowl`). Clicking one has `llm_reasoner`'s resolver resolve it in the
-selected scene: the server builds the scene's semantic_digital_twin world from its
-bundle (objects typed by `resolution/object_annotations.json`), evaluates the query
-on it, the resolver reads the world with the world tools and consults the knowledge
-component, and the answer panel shows the slots it chose, why, and what they rest on.
-A designator is greyed out, with the reason, when the scene has no object of a name
-its query reads or no candidate for a slot it leaves to choose. Every click is a run of
-its own from the same initial environment: the scene's world is built anew, and the
-knowledge is consulted over a copy of the store in `~/.cram_viz/runs/<run>/hypotheses`,
-so what one run generates no other run reads; the run's resolution is kept beside it as
-`resolution.json`, and the answer panel names the run. A new designator is a
-new query file and a member of `PouringDesignator`. The consulted hypothesis is what the
-Hypothesis Graph tab shows; the Ontology Graph tab shows the same graph with the
-ontology class of every node and the ontology property of every link beneath
-their labels; the Designator tab shows the resolved designator. Resolving needs
-an Anthropic API key (read from `.env` as for generation) and costs a few cents a
-click, plus a few minutes and tens of cents once for each situation not yet stored.
+(`cram_viz.resolution`), each shown as a krrood match query written in a file of its
+own under `resolution/designator_queries/`: it states some slots of coraplex's
+`PouringAction` and leaves the others open (`...`, or a variable such as
+`variable(Tool)`). A query reads krrood's factories, `PouringAction`, `Arms`, `Tool` and
+`Body`, and the scene's objects, each by its kind in snake case (`pouring_cup`, `bowl`).
+Clicking one copies its query into the search bar, where it may be edited; **Generate**
+resolves the query in the search bar with `llm_reasoner`'s resolver in the selected
+scene: the server builds the scene's semantic_digital_twin world from its bundle (the
+robot on a drive over its surroundings where the recording starts, objects typed by
+`resolution/object_annotations.json`), evaluates the query on it, the resolver reads
+the world with the world tools and consults the knowledge component, and the answer
+panel shows the slots it chose, why, and what they rest on. A designator is greyed
+out, with the reason, when the scene has no object of a name its query reads or no
+candidate for a slot it leaves to choose. A new designator is a new query file and a
+member of `PouringDesignator`.
+
+Every resolution is a run of its own from the same initial environment: the scene's
+world is built anew, and the knowledge is consulted over a copy of the store in
+`~/.cram_viz/runs/<run>/hypotheses`, so what one run generates no other run reads; the
+run keeps the environment it started from (`environment.json`) and its resolution
+(`resolution.json`) beside it, and the answer panel names the run. The consulted
+hypothesis is what the Hypothesis Graph tab shows; the Ontology Graph tab shows the same
+graph with the ontology class of every node and the ontology property of every link
+beneath their labels; the Designator tab shows the resolved designator. Resolving needs
+an Anthropic API key (read from `.env` as for generation) and costs about ten cents a
+click, plus a few minutes and tens of cents for the knowledge each run generates.
+
+**Execute** performs the last resolution in the simulation (`resolution/execution.py`):
+in the world of the run's scene, built anew, with its robot annotated as the class
+`resolution/robot_annotations.json` keeps for it, the robot parks its arms, lowers its
+torso, faces the source container, picks it up with the resolved arm and pours as
+resolved, under the live bridge — the 3D scene's Live button shows it running. **Demo**
+launches the fixed demo instead, independent of the designators.
 
 On the Plan and Statechart tabs the node border is its execution status —
 running (amber), succeeded/done (green), failed (red), paused (blue),
