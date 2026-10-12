@@ -9,7 +9,7 @@ view becomes the viewer's active knowledge -- projected and exposed as EQL domai
 exactly like the checked-in sample.
 
 A generation that is never admitted raises
-:class:`~llm_reasoner.generation.backend.HypothesisRejected`, naming the problems of the
+:class:`~llm_reasoner.knowledge.generation.backend.HypothesisRejected`, naming the problems of the
 last answer, and the previously active knowledge stays displayed.
 
 .. note::
@@ -34,7 +34,7 @@ from llm_reasoner.knowledge.admission.hermit import HermitCheck
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.clients import AnthropicClient
 from llm_reasoner.clients.base import LanguageModelClient
-from llm_reasoner.generation.backend import HypothesisBackend
+from llm_reasoner.knowledge.generation.backend import HypothesisBackend
 from llm_reasoner.hypotheses.service import KnowledgeService
 from llm_reasoner.hypotheses.view import HypothesisView
 from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE

@@ -56,7 +56,7 @@ from krrood.entity_query_language.factories import the
 
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.clients import AnthropicClient
-from llm_reasoner.generation.backend import HypothesisBackend
+from llm_reasoner.knowledge.generation.backend import HypothesisBackend
 from llm_reasoner.hypotheses.service import KnowledgeService
 from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import pouring
