@@ -206,16 +206,14 @@ class HypothesisRecord(SubclassJSONSerializer):
             module_versions=data[RecordField.MODULE_VERSIONS],
         )
 
-    def answers(
-        self, instruction: str, root_type: str, fixed_values: dict[str, str]
-    ) -> bool:
+    def answers(self, root_type: str, fixed_values: dict[str, str]) -> bool:
         """
-        :return: Whether the record answers the given request under the current
-            versions of the ontology.
+        :return: Whether the record answers a request for the root type with the fixed
+            values under the current versions of the ontology; the instruction it was
+            generated for is provenance and plays no part.
         """
         return (
-            self.instruction == instruction
-            and self.root_type == root_type
+            self.root_type == root_type
             and self.fixed_values == fixed_values
             and self.module_versions == current_module_versions()
         )

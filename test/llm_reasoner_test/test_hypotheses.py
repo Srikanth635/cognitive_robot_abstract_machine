@@ -87,7 +87,7 @@ def view(tmp_path) -> HypothesisView:
     service = service_answering(
         HypothesisStore(directory=tmp_path), GenerationCase.LIFT_AND_POUR
     )
-    return service.view_for(INSTRUCTION, pouring_query())
+    return service.view_for(pouring_query(), INSTRUCTION)
 
 
 def names(view: HypothesisView, fragments: list[DescriptionEntity]) -> list[str]:
@@ -187,22 +187,22 @@ class TestKnowledgeService:
     def test_generated_hypothesis_is_stored(self, tmp_path):
         store = HypothesisStore(directory=tmp_path)
         service = service_answering(store, GenerationCase.LIFT_AND_POUR)
-        view = service.view_for(INSTRUCTION, pouring_query())
+        view = service.view_for(pouring_query(), INSTRUCTION)
         assert store.records() == [view.record]
 
     def test_repeated_request_is_answered_from_the_store(self, tmp_path):
         service = service_answering(
             HypothesisStore(directory=tmp_path), GenerationCase.LIFT_AND_POUR
         )
-        first = service.view_for(INSTRUCTION, pouring_query())
-        second = service.view_for(INSTRUCTION, pouring_query())
+        first = service.view_for(pouring_query(), INSTRUCTION)
+        second = service.view_for(pouring_query(), INSTRUCTION)
         assert second.record == first.record
 
     def test_cited_fragment_is_found_in_its_stored_hypothesis(self, tmp_path):
         service = service_answering(
             HypothesisStore(directory=tmp_path), GenerationCase.LIFT_AND_POUR
         )
-        view = service.view_for(INSTRUCTION, pouring_query())
+        view = service.view_for(pouring_query(), INSTRUCTION)
         citation = view.citation_of(fragment_named(view, "lift"))
         cited = service.fragment_cited(citation)
         assert type(cited) is prehension.LiftPhase
@@ -211,7 +211,7 @@ class TestKnowledgeService:
         service = service_answering(
             HypothesisStore(directory=tmp_path), GenerationCase.LIFT_AND_POUR
         )
-        view = service.view_for(INSTRUCTION, pouring_query())
+        view = service.view_for(pouring_query(), INSTRUCTION)
         with pytest.raises(UnknownCitation):
             service.fragment_cited(
                 Citation(record_id=view.record.record_id, fragment_name="absent")

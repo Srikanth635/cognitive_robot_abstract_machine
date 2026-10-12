@@ -71,17 +71,20 @@ service = KnowledgeService(
     )
 )
 view = service.view_for(
-    "pour milk from the carton into the bowl",
     the(pouring.PouringPhaseStructure)(
-        decomposes_task=ConceptReference(iri=CRAM_AICOR_NAMESPACE + "Pouring")
+        decomposes_task=ConceptReference(iri=CRAM_AICOR_NAMESPACE + "Pouring"),
+        has_material_regime=pouring.MaterialRegime.LIQUID,
     ),
+    instruction="pour milk from the carton into the bowl",
 )
 phases = view.phases()
 forces = view.force_dynamics()
 ```
 
-The service answers from the store when it holds a hypothesis for the same instruction,
-query and ontology versions, and generates one otherwise. Passing a
+The service answers from the store when it holds a hypothesis for the same query — the
+vocabulary class and the values it fixes, such as the material regime — under the same
+ontology versions, and generates one otherwise; the instruction is recorded as
+provenance only. Passing a
 `consistency=HermitCheck(...)` to the backend also checks each answer against the
 ontology, CRAM-AICOR and DUL with HermiT (the optional `reasoning` extra), and locates
 the fragments of a contradicting answer for the repair prompt.

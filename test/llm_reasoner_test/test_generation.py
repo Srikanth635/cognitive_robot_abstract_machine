@@ -852,6 +852,17 @@ class TestAdmission:
         list(pouring_query().evaluate(backend=backend))
         assert backend.last_record.consistency == ConsistencyVerdict.CONSISTENT
 
+    def test_a_hypothesis_is_served_for_the_same_query_whatever_its_instruction(
+        self, tmp_path
+    ):
+        backend = backend_answering(GenerationCase.CHAINED_STRUCTURE)
+        backend.store = HypothesisStore(directory=tmp_path)
+        list(pouring_query().evaluate(backend=backend))
+        backend.instruction = "tip the carton until the bowl is full"
+        (served,) = pouring_query().evaluate(backend=backend)
+        assert len(backend.client.calls) == 1
+        assert len(served.defines_phase) == 2
+
     def test_admitted_hypothesis_is_served_again_without_the_model(self, tmp_path):
         backend = backend_answering(GenerationCase.CHAINED_STRUCTURE)
         backend.store = HypothesisStore(directory=tmp_path)

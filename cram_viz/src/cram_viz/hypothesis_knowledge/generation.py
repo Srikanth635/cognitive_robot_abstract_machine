@@ -219,7 +219,7 @@ class ModelHypothesisSource(HypothesisSource):
             raise MissingCredentialsError(ANTHROPIC_API_KEY_NAME, environment_file)
 
     def view_for(self, instruction: str) -> HypothesisView:
-        return self._knowledge_service().view_for(instruction, pouring_query())
+        return self._knowledge_service().view_for(pouring_query(), instruction)
 
     def client_for_generation(self) -> LanguageModelClient:
         """

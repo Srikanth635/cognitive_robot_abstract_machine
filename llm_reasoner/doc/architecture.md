@@ -170,7 +170,7 @@ world.
 
 | Input | Form |
 |---|---|
-| An instruction | Text naming what the knowledge is for, such as "pour milk from the carton into the bowl"; it keys the stored hypothesis |
+| An instruction (optional) | Text naming what the knowledge is for, such as "pour milk from the carton into the bowl"; stated to the model and recorded as provenance, not part of the store's key |
 | A query | A krrood `Match` on a generated vocabulary class, such as `the(pouring.PouringPhaseStructure)(decomposes_task=ConceptReference(iri=CRAM_AICOR_NAMESPACE + "Pouring"))`; the fields it fixes are given, the rest is generated |
 
 **Output.** An admitted *hypothesis*: instances of the generated vocabulary (one root
@@ -194,8 +194,8 @@ instruction + query ──► 1 generation ──► 2 acceptance ──► 3 ad
 | 2 Acceptance | `acceptance/` | Closed-world checks — what is missing is an error, since a model tends to generate too little: `restrictions_hold` (each fragment meets its classes' OWL restrictions), `ranges_hold` (every linked value has the type its property allows), `shapes_hold` (SHACL shapes for rules across fragments, such as transitions connecting all phases), `components_declared` (everything a structure reaches, it declares), plus the values the query fixes. Violations are errors or warnings; warnings are kept with the hypothesis |
 | 3 Admission | `admission/`, `representation/` | Optionally (`consistency=HermitCheck(...)`), the hypothesis is written as RDF and checked in the open world against the ontology, CRAM-AICOR and DUL with HermiT; `ContradictionLocaliser` names the fragments that together contradict them. Concept references are checked against the linked ontologies (`linked_terms`) |
 | Repair | `generation/` | Errors from stages 1–3 are shown to the model, which answers with a *patch* (fragments added or changed, identifiers removed) applied to the answer with the fewest problems so far (`max_repairs = 2`) |
-| 4 Store | `storage/` | `HypothesisRecord` (instruction, root type, fixed values, client, every exchange, warnings, consistency verdict, ontology module versions) and the hypothesis as Turtle, one directory per hypothesis in `HypothesisStore`. A request is answered from the store when a record has the same instruction, root type and fixed values under the current module versions; otherwise it is generated |
-| 5 Reading | `hypotheses/` | `KnowledgeService.view_for(instruction, query)` returns the stored or newly generated hypothesis as a `HypothesisView`, which answers questions crossing fragments: `phases`, `next_phases`, `requirements_of`, `world_assumptions`, `gaze_fixations_for`, `force_couplings_in`, `failure_events`, `corrections_at`, `force_dynamics`. Every fragment is cited by the IRI it is stored under (`Citation`). `HypothesisGraphProjector` projects a hypothesis into the graph cram_viz shows |
+| 4 Store | `storage/` | `HypothesisRecord` (instruction, root type, fixed values, client, every exchange, warnings, consistency verdict, ontology module versions) and the hypothesis as Turtle, one directory per hypothesis in `HypothesisStore`. A request is answered from the store when a record has the same root type and fixed values (situation features included) under the current module versions, whatever instruction it was generated for; otherwise it is generated |
+| 5 Reading | `hypotheses/` | `KnowledgeService.view_for(query, instruction)` returns the stored or newly generated hypothesis as a `HypothesisView`, which answers questions crossing fragments: `phases`, `next_phases`, `requirements_of`, `world_assumptions`, `gaze_fixations_for`, `force_couplings_in`, `failure_events`, `corrections_at`, `force_dynamics`. Every fragment is cited by the IRI it is stored under (`Citation`). `HypothesisGraphProjector` projects a hypothesis into the graph cram_viz shows |
 
 **The answer format.** A flat list of fragments that refer to each other by
 identifier, since phases and events form cycles that nesting cannot express:
@@ -458,7 +458,7 @@ conversation with its text as the answer.
 | Link | State |
 |---|---|
 | Knowledge component → clients | `LanguageModelClient.complete_structured(system, user, json_schema)`; no tools |
-| Caller → knowledge component | `KnowledgeService.view_for(instruction, query)`; cram_viz's Hypothesis Graph and Designator tabs read it |
+| Caller → knowledge component | `KnowledgeService.view_for(query, instruction)`; cram_viz's Hypothesis Graph and Designator tabs read it |
 | Knowledge component ↔ resolver | Not connected; to be knowledge tools through a `KnowledgeAccess` contract (§2.3) |
 | Knowledge component ↔ world injector | None, by design: world facts reach the knowledge only through the resolver; the two keep separate sources |
 
