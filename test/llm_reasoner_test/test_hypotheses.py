@@ -13,7 +13,7 @@ import rustworkx as rx
 
 from krrood.entity_query_language.factories import the
 
-from llm_reasoner.acceptance.rules import AcceptanceSuite
+from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite
 from llm_reasoner.admission.citation import Citation, NotAHypothesisCitation
 from llm_reasoner.admission.rdf import HYPOTHESIS_NAMESPACE_ROOT
 from llm_reasoner.admission.store import HypothesisStore

@@ -17,7 +17,7 @@ from enum import Enum
 
 from typing_extensions import Any, Mapping, Optional
 
-from llm_reasoner.acceptance.vocabulary import Vocabulary
+from llm_reasoner.knowledge.acceptance.vocabulary import Vocabulary
 from llm_reasoner.generation.schema import (
     AnswerKey,
     FieldKind,
