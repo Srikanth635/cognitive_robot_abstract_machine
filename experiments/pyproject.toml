@@ -15,6 +15,7 @@ dependencies = [
     "giskardpy>=26.10.0",
     "krrood>=26.10.0",
     "probabilistic_model>=26.10.0",
+    "llm_reasoner",
     "pymysql",
     "random_events>=26.10.0",
     "semantic_digital_twin>=26.10.0",
@@ -35,6 +36,7 @@ workspace = [
     "giskardpy",
     "krrood",
     "krrood_spatial_math",
+    "llm_reasoner",
     "random_events",
     "semantic_digital_twin",
 ]

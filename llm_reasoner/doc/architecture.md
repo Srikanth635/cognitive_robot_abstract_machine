@@ -605,5 +605,13 @@ error in the shared error shape. Fragments are named as their citations name the
 `test/llm_reasoner_test` runs offline with mocked and scripted clients
 (`python -m pytest test/llm_reasoner_test`). Mimic world classes live in
 `world_mimics.py`; scripted answers in `resolver_cases/`; prompt sections are read back
-as data with `prompt_sections.py`. Live runs against a model are made only with the
-user's approval and are recorded in `status.md`.
+as data with `prompt_sections.py`.
+
+The kitchen cases live in the `experiments` package (`experiments/llm_reasoner_kitchen`:
+the breakfast scene, the 28 resolver cases and 6 knowledge cases, each with what a
+correct resolution satisfies, and a resolver as a CRAM process would run it), since they
+need SDT and coraplex and `llm_reasoner`'s own tests must not. Their tests are in
+`test/experiments_test/llm_reasoner_kitchen_test`: scripted twins replaying recorded
+answers (`recordings/`) run with the experiments suite, and the live tests run only with
+`LLM_REASONER_LIVE=1` and an API key (`LLM_REASONER_KNOWLEDGE_STORE` names a store whose
+hypotheses later runs reuse). Live outcomes and costs are recorded in `status.md`.
