@@ -224,7 +224,15 @@ park arms, torso LOW, navigate to face the source at the recorded 0.63 m, pick u
 the resolved arm, pour. With the torso HIGH or MID the PR2 cannot reach the pitcher on
 the counter, and coraplex's `giskard_reachability_location` found no standing pose in
 the scene, so the standing pose is computed directly. The fixed demo stays behind a Demo
-button, but it no longer imports with the current semantic_digital_twin (`BoundingBox`). Switching scenes now removes the previous scene's world
+button, but it no longer imports with the current semantic_digital_twin (`BoundingBox`).
+Live in the viewer: the `objects_given` chip copied into the search bar, Generate
+resolved it ($0.101, LIQUID read from the world, this run's own hypothesis generated, the
+objects given, RIGHT and 1.85 rad chosen), and Execute performed the run under the live
+bridge without a failed step, the pitcher held and tilted 106°. Measured as the
+recording demo measures it, though, the pitcher's mouth ends 0.188 m from the bowl's rim
+centre (rim radius 0.070 m, mouth 0.087 m above the rim): with its default pour
+geometry (`pour_side_offset`, `pour_approach_offset`, `pour_height`), coraplex's
+`PouringAction` parks the pitcher beside the bowl rather than over it. Switching scenes now removes the previous scene's world
 from krrood's symbol graph (collected, then `remove_dead_instances`), so an open
 `variable(Tool)` never offers another scene's objects.
 
