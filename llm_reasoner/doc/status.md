@@ -136,7 +136,8 @@ of 28, two repairs and $1.04; its findings led to `ea44fdbac` and `6743d6116`.
   into `knowledge/`, lowest layer first, each committed with both test suites passing
   (`ebc93d9fa` ontologies, `274542e2c` ontology translation, `5149984fe` acceptance,
   `b22e1f7e9` storage split from admission, `52c0273f3` generation, `9dca1ed56`
-  hypotheses, `5da11b5d5` the public `access.py`). Stored hypotheses were migrated: the
+  hypotheses, `5da11b5d5` the public `access.py`), and the cycle between packages broken
+  with a new `representation/` layer and a test of the layers (`bf7858d06`). Stored hypotheses were migrated: the
   cram_viz sample and the 4 current records in `~/.cram_viz/hypotheses` (backup in
   `~/.cram_viz/hypotheses.backup-2026-10-12`; 5 older records there use paths of code
   removed on 2026-10-07 and were left as they were). Next, on approval: splitting

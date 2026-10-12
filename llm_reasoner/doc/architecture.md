@@ -192,7 +192,7 @@ instruction + query ──► 1 generation ──► 2 acceptance ──► 3 ad
 | 0 Vocabulary | `ontologies/`, `ontology_translation/` | The Turtle modules (`core`, `object-dynamics`, `prehension`, `pouring`, `gaze`) are the source of truth; Python vocabulary modules are generated from them with krrood's code generator (`python -m llm_reasoner.ontology_translation`) and checked in; a test fails when they differ from the ontology. Every class carries its IRI and its OWL restrictions |
 | 1 Generation | `generation/` | `HypothesisBackend`, a krrood `GenerativeBackend` like the resolver. `GenerationSchema` reads every vocabulary class reachable from the queried type; the model answers with a structured completion (`complete_structured`) shaped by that schema; `FragmentDecoder` turns the answer into vocabulary instances |
 | 2 Acceptance | `acceptance/` | Closed-world checks — what is missing is an error, since a model tends to generate too little: `restrictions_hold` (each fragment meets its classes' OWL restrictions), `ranges_hold` (every linked value has the type its property allows), `shapes_hold` (SHACL shapes for rules across fragments, such as transitions connecting all phases), `components_declared` (everything a structure reaches, it declares), plus the values the query fixes. Violations are errors or warnings; warnings are kept with the hypothesis |
-| 3 Admission | `admission/` | Optionally (`consistency=HermitCheck(...)`), the hypothesis is written as RDF and checked in the open world against the ontology, CRAM-AICOR and DUL with HermiT; `ContradictionLocaliser` names the fragments that together contradict them. Concept references are checked against the linked ontologies (`linked_terms`) |
+| 3 Admission | `admission/`, `representation/` | Optionally (`consistency=HermitCheck(...)`), the hypothesis is written as RDF and checked in the open world against the ontology, CRAM-AICOR and DUL with HermiT; `ContradictionLocaliser` names the fragments that together contradict them. Concept references are checked against the linked ontologies (`linked_terms`) |
 | Repair | `generation/` | Errors from stages 1–3 are shown to the model, which answers with a *patch* (fragments added or changed, identifiers removed) applied to the answer with the fewest problems so far (`max_repairs = 2`) |
 | 4 Store | `storage/` | `HypothesisRecord` (instruction, root type, fixed values, client, every exchange, warnings, consistency verdict, ontology module versions) and the hypothesis as Turtle, one directory per hypothesis in `HypothesisStore`. A request is answered from the store when a record has the same instruction, root type and fixed values under the current module versions; otherwise it is generated |
 | 5 Reading | `hypotheses/` | `KnowledgeService.view_for(instruction, query)` returns the stored or newly generated hypothesis as a `HypothesisView`, which answers questions crossing fragments: `phases`, `next_phases`, `requirements_of`, `world_assumptions`, `gaze_fixations_for`, `force_couplings_in`, `failure_events`, `corrections_at`, `force_dynamics`. Every fragment is cited by the IRI it is stored under (`Citation`). `HypothesisGraphProjector` projects a hypothesis into the graph cram_viz shows |
@@ -216,15 +216,16 @@ A repair answers `{"fragments": [<added or changed>], "remove": [<identifiers>]}
 Fragments are created first and linked second; a malformed answer is not an exception
 but a list of problems shown to the model.
 
-**Components inside, by responsibility** (all under `knowledge/`, from the lowest layer
-up; each depends only on those above it in the table):
+**Components inside, by responsibility** (all under `knowledge/`, lowest layer first;
+each package imports only the packages above it in this table, which a test checks):
 
 | Package | Modules | Responsibility |
 |---|---|---|
-| `ontologies/` | `__init__.py`, `terms.py`, `linked.py`, `predictive_manipulation/` | The ontology files, the shared terms, the linked ontologies (CRAM-AICOR, DUL) and the generated vocabulary |
+| `ontologies/` | `__init__.py`, `terms.py`, `linked.py`, `vocabulary.py`, `predictive_manipulation/` | The ontology files, the shared terms, the linked ontologies (CRAM-AICOR, DUL), the generated vocabulary and the lookup from IRIs to its classes |
 | `ontology_translation/` | `reading.py`, `declarations.py`, `writing.py`, `templates/` | Ontology → declarations → Python modules |
-| `acceptance/` | `rules.py`, `restrictions.py`, `derived.py`, `shapes.py`, `core.py`, `suite.py`, `vocabulary.py` | Rules and violations, closed-world class membership, the microworld's suite |
-| `admission/` | `rdf.py`, `consistency.py`, `hermit.py` | RDF in and out, open-world consistency with HermiT |
+| `representation/` | `hypothesis.py`, `rdf.py` | A hypothesis in memory as vocabulary instances, and as RDF in the ontology's terms (written and read back) |
+| `acceptance/` | `rules.py`, `restrictions.py`, `derived.py`, `shapes.py`, `core.py`, `suite.py` | Rules and violations, closed-world class membership, the microworld's suite |
+| `admission/` | `consistency.py`, `hermit.py` | Open-world consistency with HermiT, and locating contradictions |
 | `storage/` | `record.py`, `store.py`, `citation.py` | Records of admitted hypotheses, the store, citations of stored fragments |
 | `generation/` | `schema.py`, `prompts.py`, `wire.py`, `backend.py` | Output shape, prompts, decoding and merging patches, the generation loop |
 | `hypotheses/` | `service.py`, `view.py`, `graph.py` | The service, cross-fragment questions, the graph projection |
