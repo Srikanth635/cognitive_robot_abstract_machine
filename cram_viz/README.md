@@ -84,14 +84,19 @@ between the built-in panels:
 | `graph`       | tabs: Knowledge / Live Knowledge / Hypothesis Graph / Ontology Graph / Designator / Kinematics / Plan / Statechart |
 
 Below the EQL query box are predefined, underspecified pouring designators
-(`cram_viz.resolution`): each gives some slots of coraplex's `PouringAction` and
-leaves the others open, some with a task such as "until the bowl is half full".
-Clicking one has `llm_reasoner`'s resolver resolve it in the selected scene: the
-server builds the scene's semantic_digital_twin world from its bundle (objects
-typed by `resolution/object_annotations.json`), the resolver reads it with the
-world tools and consults the knowledge component, and the answer panel shows the
-slots it chose, why, and what they rest on. A designator the scene lacks the
-objects for is greyed out with the reason. The consulted hypothesis is what the
+(`cram_viz.resolution`), each shown as the krrood match query the resolver receives,
+written in a file of its own under `resolution/designator_queries/`: it states some
+slots of coraplex's `PouringAction` and leaves the others open (`...`, or a variable
+such as `variable(Tool)`). A query reads krrood's factories, `PouringAction`, `Arms`,
+`Tool` and `Body`, and the scene's objects, each by its kind in snake case
+(`pouring_cup`, `bowl`). Clicking one has `llm_reasoner`'s resolver resolve it in the
+selected scene: the server builds the scene's semantic_digital_twin world from its
+bundle (objects typed by `resolution/object_annotations.json`), evaluates the query
+on it, the resolver reads the world with the world tools and consults the knowledge
+component, and the answer panel shows the slots it chose, why, and what they rest on.
+A designator is greyed out, with the reason, when the scene has no object of a name
+its query reads or no candidate for a slot it leaves to choose. A new designator is a
+new query file and a member of `PouringDesignator`. The consulted hypothesis is what the
 Hypothesis Graph tab shows; the Ontology Graph tab shows the same graph with the
 ontology class of every node and the ontology property of every link beneath
 their labels; the Designator tab shows the resolved designator. Resolving needs

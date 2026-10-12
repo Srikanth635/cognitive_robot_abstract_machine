@@ -9,11 +9,13 @@ data, by the object's identifier.
 
 from __future__ import annotations
 
+import gc
 import json
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
 
+from krrood.symbol_graph.symbol_graph import SymbolGraph
 from krrood.utils import resolve_class_from_full_name
 from semantic_digital_twin.adapters.mesh import STLParser
 from semantic_digital_twin.adapters.package_resolver import (
@@ -164,6 +166,11 @@ class SceneWorlds:
     """
     Keeps the world of the scene last asked for, and only it, so the resolver never
     reads two scenes at once.
+
+    .. note::
+        krrood's symbol graph holds a world's individuals weakly and keeps their entries
+        until it is pruned, and a world refers to itself, so a replaced world leaves the
+        graph only once it is collected and the graph pruned.
     """
 
     builder: SceneWorldBuilder = field(default_factory=SceneWorldBuilder)
@@ -186,9 +193,12 @@ class SceneWorlds:
         :param scene: The scene's name.
         :param bundle: The scene's bundle directory.
         :return: The scene's world, built the first time it is asked for after another
-            scene's.
+            scene's, whose world is removed from the symbol graph first.
         """
         if self.scene != scene or self.world is None:
+            self.world = None
+            gc.collect()
+            SymbolGraph().remove_dead_instances()
             self.world = self.builder.build(bundle)
             self.scene = scene
         return self.world

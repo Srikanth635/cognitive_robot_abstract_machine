@@ -44,6 +44,7 @@ from typing_extensions import Any, Dict, List, Optional, Tuple
 from cram_viz.designator_description import DesignatorDescriber
 from cram_viz.hypothesis_knowledge.ontology_backing import OntologyBacking
 from cram_viz.hypothesis_knowledge.ontology_class_graph import OntologyClassGraph
+from cram_viz.query_source import QuerySource
 from cram_viz import (
     configure_console_logging,
     designator_knowledge,
@@ -1206,20 +1207,7 @@ def run_query(
     :param limit: Maximum number of result rows to return.
     :param selected_scene: Scene whose entities form the query domain.
     """
-    namespace = fresh_namespace(selected_scene)
-    tree = ast.parse(code, mode="exec")
-    if not tree.body:
-        raise ValueError("empty query")
-    last = tree.body[-1]
-    if isinstance(last, ast.Expr):
-        if len(tree.body) > 1:
-            preamble = ast.Module(body=tree.body[:-1], type_ignores=[])
-            exec(compile(preamble, "<eql>", "exec"), namespace)
-        result = eval(compile(ast.Expression(last.value), "<eql>", "eval"), namespace)
-    else:
-        exec(compile(tree, "<eql>", "exec"), namespace)
-        result = namespace.get("result")
-
+    result = QuerySource(text=code).value_in(fresh_namespace(selected_scene))
     if hasattr(result, "evaluate"):
         result = result.evaluate()
     rows, highlight, more = _result_rows(result, limit)

@@ -257,13 +257,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         selected_scene = request.get("scene")
         try:
             from cram_viz import hypothesis_knowledge
-            from cram_viz.resolution.designators import variant_named
+            from cram_viz.resolution.designators import DesignatorQuery
 
-            variant = variant_named(request.get("variant") or "")
+            designator = DesignatorQuery.named(request.get("designator") or "")
             with _EQL_LOCK:
                 resolver = _designator_resolver()
                 resolved = resolver.resolve(
-                    variant,
+                    designator,
                     kb_module.scene_name(selected_scene),
                     Path(kb_module.scene_dir(selected_scene)),
                 )
@@ -339,21 +339,26 @@ def _designator_resolver():
 
 def _offered_designators(selected_scene: Optional[str]) -> Dict[str, Any]:
     """
-    The predefined designators the selected scene offers, each available or naming the
-    objects the scene lacks.
+    The predefined designators the selected scene offers, each as its match query,
+    available or stating what the scene lacks.
     """
-    from dataclasses import asdict
-
-    from cram_viz.resolution.designators import POURING_VARIANTS, SceneQueries
+    from cram_viz.resolution.designators import (
+        DesignatorQuery,
+        PouringDesignator,
+        SceneNamespace,
+    )
 
     name = kb_module.scene_name(selected_scene)
     with _EQL_LOCK:
-        queries = SceneQueries(
+        names = SceneNamespace(
             world=_scene_worlds().world_for(
                 name, Path(kb_module.scene_dir(selected_scene))
             )
-        )
-        offered = [asdict(variant.offered_in(queries)) for variant in POURING_VARIANTS]
+        ).names()
+        offered = [
+            DesignatorQuery.shipped(identifier).offered_in(names).payload()
+            for identifier in PouringDesignator
+        ]
     return {"ok": True, "scene": name, "designators": offered}
 
 

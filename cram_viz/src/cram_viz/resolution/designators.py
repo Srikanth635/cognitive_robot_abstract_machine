@@ -1,127 +1,73 @@
 """
-The predefined, underspecified pouring designators the viewer offers: each a query on
-coraplex's pouring action written on the scene's world, giving some slots and leaving
-the others for the resolver, some with a task stating what the pouring is for.
+The predefined, underspecified designators the viewer offers: krrood match queries on
+coraplex's pouring action, each written in a file of its own and evaluated on the
+scene's world, stating some slots and leaving the others for the resolver.
+
+A query reads krrood's factories, the classes in :data:`QUERY_VOCABULARY`, and the
+scene's objects, each by its kind in snake case (``pouring_cup``, ``bowl``).
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import builtins
+from dataclasses import dataclass
 from enum import StrEnum
+from pathlib import Path
 
 from coraplex.datastructures.enums import Arms
 from coraplex.robot_plans.actions.composite.tool_based import PouringAction
-from krrood.entity_query_language.factories import an, and_, the, variable
+from krrood.code_generation.naming import to_snake_case
+from krrood.entity_query_language.factories import a, an, and_, not_, or_, the, variable
 from krrood.entity_query_language.query.match import Match
-from llm_reasoner.resolver.reflection import reflect_slots
-from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
-from semantic_digital_twin.semantic_annotations.semantic_annotations import (
-    Bowl,
-    PouringCup,
-    Tool,
-)
+from llm_reasoner.resolver.reflection import Slot, SlotKind, reflect_slots
+from semantic_digital_twin.semantic_annotations.semantic_annotations import Tool
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.world_entity import Body
-from typing_extensions import Any, Callable, Dict, List, Optional, Tuple
+from typing_extensions import Any, Dict, List
 
-SEVERAL = 3
-"""
-How many alternatives a variant asking for several ways to pour asks for.
-"""
+from cram_viz.query_source import QuerySource
 
-GEOMETRY_SLOTS = (
-    "pour_side",
-    "pour_side_offset",
-    "pour_approach_offset",
-    "pour_height",
-)
+DESIGNATOR_DIRECTORY = Path(__file__).parent / "designator_queries"
 """
-The pouring action's fields stating where the pour happens, left open by the variant
-asking for the pouring geometry.
+The directory holding the predefined designators' queries.
 """
 
-GENTLE_TILT = (1.0, 1.5)
+QUERY_SUFFIX = ".py"
 """
-The tilt angles, in radians, a variant asking for a gentle tilt allows.
+The suffix of a designator's query file.
 """
 
-# %% queries on the scene
+QUERY_FACTORIES = (a, an, the, variable, and_, or_, not_)
+"""
+The krrood factories a designator's query reads, each by its name.
+"""
+
+QUERY_VOCABULARY = (PouringAction, Arms, Tool, Body)
+"""
+The classes a designator's query reads, each by its name.
+"""
+
+BUILTIN_NAMES = frozenset(dir(builtins))
+"""
+The names every query reads without a scene binding them.
+"""
+
+# %% the designators
 
 
-@dataclass(frozen=True)
-class SceneQueries:
+class PouringDesignator(StrEnum):
     """
-    Writes pouring queries on a scene's world.
-    """
-
-    world: World
-    """
-    The scene's world.
-    """
-
-    def has(self, kind: type[HasRootBody]) -> bool:
-        """
-        :return: Whether the scene holds an object annotated as the given kind.
-        """
-        return any(
-            isinstance(annotation, kind)
-            for annotation in self.world.semantic_annotations
-        )
-
-    def annotation(self, kind: type[HasRootBody]) -> HasRootBody:
-        """
-        :return: The scene's first object annotated as the given kind.
-        """
-        return next(
-            annotation
-            for annotation in self.world.semantic_annotations
-            if isinstance(annotation, kind)
-        )
-
-    def vessel(self) -> Any:
-        """
-        :return: A variable over the scene's pouring vessel.
-        """
-        return variable(Tool, domain=[self.annotation(PouringCup)])
-
-    def bowl(self) -> Any:
-        """
-        :return: A variable over the body of the scene's bowl.
-        """
-        return variable(Body, domain=[self.annotation(Bowl).root])
-
-    @staticmethod
-    def pouring_slots() -> Dict[str, Any]:
-        """
-        :return: A pouring action's usual open slots: any body as the target, any tool
-            as the source, the arm and the tilt angle.
-        """
-        return dict(
-            target_container=variable(Body),
-            source_container=variable(Tool),
-            arm=...,
-            tilt_angle=...,
-        )
-
-
-# %% the variants
-
-
-class PouringVariant(StrEnum):
-    """
-    The predefined pouring designators, each named for what it gives.
+    The predefined pouring designators, each named for its query's file, in the order
+    the viewer offers them.
     """
 
+    EVERYTHING_OPEN = "everything_open"
     INTO_THE_BOWL = "into_the_bowl"
-    FROM_THE_VESSEL = "from_the_vessel"
-    VESSEL_INTO_BOWL = "vessel_into_bowl"
-    ANYTHING = "anything"
+    FROM_THE_POURING_CUP = "from_the_pouring_cup"
+    POURING_CUP_INTO_BOWL = "pouring_cup_into_bowl"
     LEFT_ARM_GENTLE_TILT = "left_arm_gentle_tilt"
-    SEVERAL_WAYS = "several_ways"
-    GEOMETRY = "geometry"
-    UNTIL_HALF_FULL = "until_half_full"
-    ALL_OF_IT = "all_of_it"
-    UNTIL_TOLD_TO_STOP = "until_told_to_stop"
+    THREE_ALTERNATIVES = "three_alternatives"
+    POURING_GEOMETRY_OPEN = "pouring_geometry_open"
 
 
 @dataclass
@@ -140,9 +86,9 @@ class UnknownDesignator(ValueError):
 
 
 @dataclass
-class DesignatorUnavailable(ValueError):
+class NotAMatchQuery(TypeError):
     """
-    The scene lacks objects a predefined designator needs.
+    A designator's query evaluates to something other than a krrood match.
     """
 
     identifier: str
@@ -150,14 +96,35 @@ class DesignatorUnavailable(ValueError):
     The designator's name.
     """
 
-    missing: List[str]
+    value: Any
     """
-    The kinds of object the scene lacks.
+    What its query evaluated to.
     """
 
     def __post_init__(self):
         super().__init__(
-            f"'{self.identifier}' needs {', '.join(self.missing)}, which the scene lacks"
+            f"'{self.identifier}' evaluates to {type(self.value).__name__}, not a match"
+        )
+
+
+@dataclass
+class DesignatorUnavailable(ValueError):
+    """
+    The scene cannot resolve a designator.
+    """
+
+    offered: OfferedDesignator
+    """
+    The designator as the scene offers it, stating what the scene lacks.
+    """
+
+    def __post_init__(self):
+        lacks = [
+            *(f"an object named {name}" for name in self.offered.unbound),
+            *(f"a candidate for {slot}" for slot in self.offered.without_candidates),
+        ]
+        super().__init__(
+            f"'{self.offered.identifier}' needs {', '.join(lacks)}, which the scene lacks"
         )
 
 
@@ -167,265 +134,194 @@ class OfferedDesignator:
     A predefined designator as the viewer offers it in one scene.
     """
 
-    identifier: PouringVariant
+    identifier: PouringDesignator
     """
     The designator's name.
     """
 
-    label: str
+    query: str
     """
-    What the designator is, as its chip reads.
-    """
-
-    task: str
-    """
-    What the pouring is for, none when empty.
+    The designator's match query, as written.
     """
 
-    available: bool
+    unbound: List[str]
     """
-    Whether the scene holds every object the designator needs.
-    """
-
-    missing: List[str]
-    """
-    The kinds of object the designator needs that the scene lacks.
+    The names the query reads that the scene binds to no object.
     """
 
-    given: List[str]
+    without_candidates: List[str]
     """
-    The slots the designator gives, empty when it is unavailable.
-    """
-
-    left_open: List[str]
-    """
-    The slots the designator leaves open, empty when it is unavailable.
+    The slots the query leaves to choose from candidates of which the scene has none.
     """
 
-
-@dataclass(frozen=True)
-class SlotSplit:
-    """
-    Which slots of a query are given and which are left open.
-    """
-
-    given: List[str]
-    """
-    The slots given, by field name: a value, or one individual to take.
-    """
-
-    left_open: List[str]
-    """
-    The slots left for the resolver, by field name.
-    """
-
-
-def gentle_tilt(action: Any) -> List[Any]:
-    """
-    :return: The conditions of a gentle tilt on a pouring action's variable.
-    """
-    return [
-        and_(
-            action.tilt_angle >= GENTLE_TILT[0],
-            action.tilt_angle <= GENTLE_TILT[1],
-        )
-    ]
-
-
-@dataclass(frozen=True)
-class DesignatorVariant:
-    """
-    A predefined, underspecified pouring designator: the slots it gives, the slots it
-    leaves open beyond the usual, the conditions it sets, and what the pouring is for.
-    """
-
-    identifier: PouringVariant
-    """
-    The variant's name.
-    """
-
-    label: str
-    """
-    What the variant is, as its chip reads.
-    """
-
-    gives: Callable[[SceneQueries], Dict[str, Any]] = field(default=lambda q: {})
-    """
-    The slots the variant gives on a scene, by field name.
-    """
-
-    also_open: Tuple[str, ...] = ()
-    """
-    Fields left open beyond a pouring action's usual open slots.
-    """
-
-    conditions: Optional[Callable[[Any], List[Any]]] = None
-    """
-    Writes the conditions the variant sets on the action's variable, none when absent.
-    """
-
-    alternatives: int = 1
-    """
-    How many alternative actions the variant asks for.
-    """
-
-    requires: Tuple[type[HasRootBody], ...] = field(default=(PouringCup,))
-    """
-    The kinds of object the scene must hold for the variant to be resolved.
-    """
-
-    task: str = ""
-    """
-    What the pouring is for, none when empty.
-    """
-
-    def query(self, queries: SceneQueries) -> Match:
+    @property
+    def available(self) -> bool:
         """
-        :return: The variant's query on a scene: the usual open slots, the ones it also
-            leaves open, and the ones it gives.
+        :return: Whether the scene can resolve the designator.
         """
-        slots = {
-            **queries.pouring_slots(),
-            **{name: ... for name in self.also_open},
-            **self.gives(queries),
-        }
-        if self.alternatives > 1:
-            query = an(PouringAction)(**slots)
-            query.expression.limit(self.alternatives)
-        else:
-            query = the(PouringAction)(**slots)
-        if self.conditions is None:
-            return query
-        return query.where(*self.conditions(query.variable))
+        return not self.unbound and not self.without_candidates
 
-    def missing_in(self, queries: SceneQueries) -> List[type[HasRootBody]]:
+    def payload(self) -> Dict[str, Any]:
         """
-        :return: The kinds of object the variant needs that the scene lacks.
+        :return: The offer as JSON data.
         """
-        return [kind for kind in self.requires if not queries.has(kind)]
-
-    def offered_in(self, queries: SceneQueries) -> OfferedDesignator:
-        """
-        :return: The designator as the viewer offers it in the scene.
-        """
-        missing = [kind.__name__ for kind in self.missing_in(queries)]
-        split = SlotSplit(given=[], left_open=[]) if missing else self.slots(queries)
-        return OfferedDesignator(
+        return dict(
             identifier=self.identifier,
-            label=self.label,
-            task=self.task,
-            available=not missing,
-            missing=missing,
-            given=split.given,
-            left_open=split.left_open,
+            query=self.query,
+            available=self.available,
+            unbound=self.unbound,
+            without_candidates=self.without_candidates,
         )
 
-    def slots(self, queries: SceneQueries) -> SlotSplit:
+
+@dataclass(frozen=True)
+class QuerySlots:
+    """
+    The slots of a designator's query, in the order the query states them.
+    """
+
+    names: List[str]
+    """
+    Every slot, by field name.
+    """
+
+    given: List[str]
+    """
+    The slots the query states a value for.
+    """
+
+    without_candidates: List[str]
+    """
+    The slots left to choose from candidates of which there are none.
+    """
+
+    @classmethod
+    def of(cls, query: Match) -> QuerySlots:
         """
-        :return: Which slots of the variant's query it gives and which it leaves open.
+        :return: The slots of a match query.
         """
-        given = list(self.gives(queries))
-        return SlotSplit(
-            given=given,
-            left_open=[
-                slot.attribute_name
-                for slot in reflect_slots(self.query(queries))
-                if slot.attribute_name not in given
+        slots = reflect_slots(query)
+        return cls(
+            names=[slot.attribute_name for slot in slots],
+            given=[
+                slot.attribute_name for slot in slots if slot.kind is SlotKind.BOUND
+            ],
+            without_candidates=[
+                slot.attribute_name for slot in slots if cls.has_no_candidate(slot)
             ],
         )
 
+    @staticmethod
+    def has_no_candidate(slot: Slot) -> bool:
+        """
+        :return: Whether a slot is left to choose from candidates of which there are
+            none.
+        """
+        return slot.kind is SlotKind.REFERENT and slot.domain == []
 
-def into_the_bowl(queries: SceneQueries) -> Dict[str, Any]:
+
+@dataclass(frozen=True)
+class SceneNamespace:
     """
-    :return: The bowl as the target.
+    The names a designator's query is evaluated with on a scene.
     """
-    return dict(target_container=queries.bowl())
 
-
-def from_the_vessel(queries: SceneQueries) -> Dict[str, Any]:
+    world: World
     """
-    :return: The pouring vessel as the source.
+    The scene's world.
     """
-    return dict(source_container=queries.vessel())
+
+    @staticmethod
+    def name_of(kind: type) -> str:
+        """
+        :return: The name a scene object of the given kind is read by.
+        """
+        return to_snake_case(kind.__name__)
+
+    def names(self) -> Dict[str, Any]:
+        """
+        :return: krrood's factories and the vocabulary, each by its name, and the
+            scene's objects, each by its kind; of several objects of one kind, the
+            first.
+        """
+        objects: Dict[str, Any] = {}
+        for annotation in self.world.semantic_annotations:
+            objects.setdefault(self.name_of(type(annotation)), annotation)
+        return {
+            **objects,
+            **{item.__name__: item for item in (*QUERY_FACTORIES, *QUERY_VOCABULARY)},
+        }
 
 
-def from_the_vessel_into_the_bowl(queries: SceneQueries) -> Dict[str, Any]:
+@dataclass(frozen=True)
+class DesignatorQuery:
     """
-    :return: The pouring vessel as the source and the bowl as the target.
+    A predefined designator: an underspecified krrood match query written in a file of
+    its own.
     """
-    return {**from_the_vessel(queries), **into_the_bowl(queries)}
 
-
-POURING_VARIANTS = (
-    DesignatorVariant(
-        PouringVariant.INTO_THE_BOWL,
-        "pour into the bowl",
-        gives=into_the_bowl,
-        requires=(PouringCup, Bowl),
-    ),
-    DesignatorVariant(
-        PouringVariant.FROM_THE_VESSEL,
-        "pour from the pouring vessel",
-        gives=from_the_vessel,
-    ),
-    DesignatorVariant(
-        PouringVariant.VESSEL_INTO_BOWL,
-        "pour from the vessel into the bowl",
-        gives=from_the_vessel_into_the_bowl,
-        requires=(PouringCup, Bowl),
-    ),
-    DesignatorVariant(PouringVariant.ANYTHING, "pour, everything open"),
-    DesignatorVariant(
-        PouringVariant.LEFT_ARM_GENTLE_TILT,
-        "pour with the left arm, tilting gently",
-        gives=lambda q: dict(arm=Arms.LEFT),
-        conditions=gentle_tilt,
-    ),
-    DesignatorVariant(
-        PouringVariant.SEVERAL_WAYS, "three ways to pour", alternatives=SEVERAL
-    ),
-    DesignatorVariant(
-        PouringVariant.GEOMETRY,
-        "pouring geometry open",
-        gives=from_the_vessel_into_the_bowl,
-        also_open=GEOMETRY_SLOTS,
-        requires=(PouringCup, Bowl),
-    ),
-    DesignatorVariant(
-        PouringVariant.UNTIL_HALF_FULL,
-        "into the bowl until it is half full",
-        gives=from_the_vessel_into_the_bowl,
-        requires=(PouringCup, Bowl),
-        task="Pour the milk into the bowl until the bowl is half full.",
-    ),
-    DesignatorVariant(
-        PouringVariant.ALL_OF_IT,
-        "into the bowl, all of it",
-        gives=from_the_vessel_into_the_bowl,
-        requires=(PouringCup, Bowl),
-        task="Pour all of the milk into the bowl.",
-    ),
-    DesignatorVariant(
-        PouringVariant.UNTIL_TOLD_TO_STOP,
-        "into the bowl until told to stop",
-        gives=from_the_vessel_into_the_bowl,
-        requires=(PouringCup, Bowl),
-        task="Pour the milk into the bowl until I tell you to stop.",
-    ),
-)
-"""
-Every predefined pouring designator, in the order the viewer offers them.
-"""
-
-
-def variant_named(identifier: str) -> DesignatorVariant:
+    identifier: PouringDesignator
     """
-    :return: The predefined designator of the given name.
-    :raises UnknownDesignator: When none has that name.
+    The designator's name.
     """
-    named = [
-        variant for variant in POURING_VARIANTS if variant.identifier == identifier
-    ]
-    if not named:
-        raise UnknownDesignator(identifier=identifier)
-    return named[0]
+
+    source: QuerySource
+    """
+    The designator's query.
+    """
+
+    @classmethod
+    def shipped(cls, identifier: PouringDesignator) -> DesignatorQuery:
+        """
+        :return: The predefined designator of the given name, read from its file.
+        """
+        return cls(
+            identifier=identifier,
+            source=QuerySource.read(
+                DESIGNATOR_DIRECTORY / f"{identifier}{QUERY_SUFFIX}"
+            ),
+        )
+
+    @classmethod
+    def named(cls, name: str) -> DesignatorQuery:
+        """
+        :return: The predefined designator of the given name.
+        :raises UnknownDesignator: When none has that name.
+        """
+        if name not in PouringDesignator:
+            raise UnknownDesignator(identifier=name)
+        return cls.shipped(PouringDesignator(name))
+
+    def query_in(self, names: Dict[str, Any]) -> Match:
+        """
+        :param names: The names the scene binds.
+        :return: The designator's query on the scene.
+        :raises NotAMatchQuery: When the query evaluates to something else.
+        """
+        query = self.source.value_in(dict(names))
+        if not isinstance(query, Match):
+            raise NotAMatchQuery(identifier=self.identifier, value=query)
+        return query
+
+    def unbound_in(self, names: Dict[str, Any]) -> List[str]:
+        """
+        :return: The names the query reads that the scene does not bind.
+        """
+        return sorted(self.source.names_read() - names.keys() - BUILTIN_NAMES)
+
+    def offered_in(self, names: Dict[str, Any]) -> OfferedDesignator:
+        """
+        :param names: The names the scene binds.
+        :return: The designator as the viewer offers it in the scene.
+        """
+        unbound = self.unbound_in(names)
+        return OfferedDesignator(
+            identifier=self.identifier,
+            query=self.source.text,
+            unbound=unbound,
+            without_candidates=(
+                []
+                if unbound
+                else QuerySlots.of(self.query_in(names)).without_candidates
+            ),
+        )

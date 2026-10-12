@@ -17,11 +17,7 @@ from llm_reasoner.clients.anthropic_client import AnthropicClient
 from llm_reasoner.knowledge.access import Citation, KnowledgeService
 from llm_reasoner.reasoner import Reasoner
 from llm_reasoner.resolver.backend import LanguageModelBackend
-from llm_reasoner.resolver.context import (
-    PromptContextProvider,
-    SchemaOnlyContextProvider,
-    TaskContextProvider,
-)
+from llm_reasoner.resolver.context import SchemaOnlyContextProvider
 from llm_reasoner.resolver.grounds import Ground, GroundKey, Justification
 from llm_reasoner.resolver.prompts import SourceDetail
 from llm_reasoner.world.view import WorldView
@@ -31,10 +27,11 @@ from typing_extensions import Any, Dict, List, Optional
 
 from cram_viz.hypothesis_knowledge.generation import ModelHypothesisSource
 from cram_viz.resolution.designators import (
+    DesignatorQuery,
     DesignatorUnavailable,
-    DesignatorVariant,
-    PouringVariant,
-    SceneQueries,
+    PouringDesignator,
+    QuerySlots,
+    SceneNamespace,
 )
 from cram_viz.resolution.scene_world import SceneWorlds
 
@@ -64,7 +61,8 @@ class ResolvedSlot:
 
     given: bool
     """
-    Whether the designator gave the value rather than leaving it to the resolver.
+    Whether the designator's query stated the value rather than leaving it to the
+    resolver.
     """
 
 
@@ -113,19 +111,14 @@ class ResolvedDesignator:
     What resolving a predefined designator produced.
     """
 
-    variant: PouringVariant
+    identifier: PouringDesignator
     """
     The designator resolved.
     """
 
-    label: str
+    query: str
     """
-    What the designator is, as its chip reads.
-    """
-
-    task: str
-    """
-    What the pouring was for, none when empty.
+    The designator's match query, as written.
     """
 
     designator: str
@@ -212,31 +205,29 @@ class DesignatorResolver:
         )
 
     def resolve(
-        self, variant: DesignatorVariant, scene: str, bundle: Path
+        self, designator: DesignatorQuery, scene: str, bundle: Path
     ) -> ResolvedDesignator:
         """
-        :param variant: The designator to resolve.
+        :param designator: The designator to resolve.
         :param scene: The name of the scene to resolve it in.
         :param bundle: The scene's bundle directory.
         :return: What the resolution chose, why, and what it rests on.
+        :raises DesignatorUnavailable: When the scene cannot resolve the designator.
         """
-        queries = SceneQueries(world=self.worlds.world_for(scene, bundle))
-        missing = variant.missing_in(queries)
-        if missing:
-            raise DesignatorUnavailable(
-                identifier=variant.identifier,
-                missing=[kind.__name__ for kind in missing],
-            )
-        split = variant.slots(queries)
+        names = SceneNamespace(world=self.worlds.world_for(scene, bundle)).names()
+        offered = designator.offered_in(names)
+        if not offered.available:
+            raise DesignatorUnavailable(offered=offered)
+        query = designator.query_in(names)
+        slots = QuerySlots.of(query)
         view = WorldView()
         backend = Reasoner(
             client=self.client, knowledge=self.knowledge, world=view
         ).backend(
-            context_provider=self.context_for(variant.task),
+            context_provider=SchemaOnlyContextProvider(),
             number_of_candidates=1,
             source_detail=SourceDetail.FULL,
         )
-        query = variant.query(queries)
         instances = list(query.evaluate(backend=backend))
         justifications = {
             id(justification.instance): justification
@@ -244,14 +235,11 @@ class DesignatorResolver:
         }
         consultation = backend.consultation
         return ResolvedDesignator(
-            variant=variant.identifier,
-            label=variant.label,
-            task=variant.task,
+            identifier=designator.identifier,
+            query=designator.source.text,
             designator=query.type.__name__,
             actions=[
-                self.resolved_action(
-                    instance, split.given, split.left_open, justifications, view
-                )
+                self.resolved_action(instance, slots, justifications, view)
                 for instance in instances
             ],
             situation=(
@@ -268,8 +256,7 @@ class DesignatorResolver:
     def resolved_action(
         self,
         instance: Any,
-        given: List[str],
-        left_open: List[str],
+        slots: QuerySlots,
         justifications: Dict[int, Justification],
         view: WorldView,
     ) -> ResolvedAction:
@@ -282,9 +269,9 @@ class DesignatorResolver:
                 ResolvedSlot(
                     name=name,
                     value=self.written(attrgetter(name)(instance)),
-                    given=name in given,
+                    given=name in slots.given,
                 )
-                for name in [*given, *left_open]
+                for name in slots.names
             ],
             why="" if justification is None else justification.why,
             grounds=(
@@ -323,15 +310,6 @@ class DesignatorResolver:
         if isinstance(value, Enum):
             return value.name
         return str(value)
-
-    @staticmethod
-    def context_for(task: str) -> PromptContextProvider:
-        """
-        :return: The task as context, or no context when there is none.
-        """
-        if not task:
-            return SchemaOnlyContextProvider()
-        return TaskContextProvider(goal=task)
 
     def cost_of(self, backend: LanguageModelBackend) -> float:
         """

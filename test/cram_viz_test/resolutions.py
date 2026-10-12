@@ -17,7 +17,7 @@ from llm_reasoner.knowledge.access import (
 )
 from llm_reasoner.resolver.grounds import GroundKey
 
-from cram_viz.resolution.designators import PouringVariant
+from cram_viz.resolution.designators import DesignatorQuery, PouringDesignator
 from cram_viz.resolution.resolver import (
     DesignatorResolver,
     ResolvedAction,
@@ -27,25 +27,25 @@ from cram_viz.resolution.resolver import (
 )
 
 
-def vessel_into_bowl() -> ResolvedDesignator:
+def pouring_cup_into_bowl() -> ResolvedDesignator:
     """
-    :return: Pouring from the vessel into the bowl, the arm and the tilt chosen, resting
-        on a knowledge fragment and the bowl.
+    :return: Pouring from the pouring cup into the bowl, every slot chosen, resting on a
+        knowledge fragment and the bowl.
     """
+    identifier = PouringDesignator.POURING_CUP_INTO_BOWL
     return ResolvedDesignator(
-        variant=PouringVariant.VESSEL_INTO_BOWL,
-        label="pour from the vessel into the bowl",
-        task="",
+        identifier=identifier,
+        query=DesignatorQuery.shipped(identifier).source.text,
         designator="PouringAction",
         actions=[
             ResolvedAction(
                 slots=[
-                    ResolvedSlot("target_container", "bowl.stl", given=True),
                     ResolvedSlot(
                         "source_container",
                         "PouringCup (Static_MilkPitcher.stl)",
-                        given=True,
+                        given=False,
                     ),
+                    ResolvedSlot("target_container", "bowl.stl", given=False),
                     ResolvedSlot("arm", "RIGHT", given=False),
                     ResolvedSlot("tilt_angle", "1.85", given=False),
                 ],

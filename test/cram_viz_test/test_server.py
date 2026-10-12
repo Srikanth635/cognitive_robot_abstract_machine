@@ -265,27 +265,27 @@ def post_json(url, payload, timeout=60):
 
 
 class TestDesignators:
-    def test_a_scene_with_a_pouring_vessel_offers_every_designator(
-        self, pouring_server
-    ):
-        from cram_viz.resolution.designators import POURING_VARIANTS
+    def test_a_scene_with_a_pouring_cup_offers_every_designator(self, pouring_server):
+        from cram_viz.resolution.designators import PouringDesignator
 
         payload = get_json(pouring_server + "/api/designators?scene=pouring")
-        assert [entry["identifier"] for entry in payload["designators"]] == [
-            variant.identifier for variant in POURING_VARIANTS
-        ]
+        assert [entry["identifier"] for entry in payload["designators"]] == list(
+            PouringDesignator
+        )
         assert all(entry["available"] for entry in payload["designators"])
 
-    def test_a_scene_without_a_pouring_vessel_says_what_it_lacks(self, pouring_server):
-        from semantic_digital_twin.semantic_annotations.semantic_annotations import (
-            PouringCup,
-        )
+    def test_a_designator_is_offered_as_its_match_query(self, pouring_server):
+        from cram_viz.resolution.designators import DesignatorQuery, PouringDesignator
 
+        payload = get_json(pouring_server + "/api/designators?scene=pouring")
+        assert [entry["query"] for entry in payload["designators"]] == [
+            DesignatorQuery.shipped(identifier).source.text
+            for identifier in PouringDesignator
+        ]
+
+    def test_a_scene_without_a_pouring_cup_offers_none(self, pouring_server):
         payload = get_json(pouring_server + "/api/designators?scene=bowl_only")
-        assert all(
-            not entry["available"] and PouringCup.__name__ in entry["missing"]
-            for entry in payload["designators"]
-        )
+        assert not any(entry["available"] for entry in payload["designators"])
 
     def test_resolving_a_designator_returns_its_resolution(
         self, pouring_server, monkeypatch, tmp_path
@@ -297,12 +297,12 @@ class TestDesignators:
         from .resolutions import resolver_replaying
 
         resolver = resolver_replaying(
-            "vessel_into_bowl", HypothesisStore(directory=tmp_path / "store")
+            "pouring_cup_into_bowl", HypothesisStore(directory=tmp_path / "store")
         )
         monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
         payload = post_json(
             pouring_server + "/api/designator/resolve",
-            {"variant": "vessel_into_bowl", "scene": "pouring"},
+            {"designator": "pouring_cup_into_bowl", "scene": "pouring"},
         )
         (action,) = payload["resolution"]["actions"]
         assert {slot["name"]: slot["value"] for slot in action["slots"]}[
@@ -320,12 +320,12 @@ class TestDesignators:
         from .resolutions import resolver_replaying
 
         resolver = resolver_replaying(
-            "vessel_into_bowl", HypothesisStore(directory=tmp_path / "store")
+            "pouring_cup_into_bowl", HypothesisStore(directory=tmp_path / "store")
         )
         monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
         payload = post_json(
             pouring_server + "/api/designator/resolve",
-            {"variant": "vessel_into_bowl", "scene": "pouring"},
+            {"designator": "pouring_cup_into_bowl", "scene": "pouring"},
         )
         view = get_json(pouring_server + "/api/kb/view?name=designator&scene=pouring")
         keys = [entry["key"] for entry in view["designator"]["properties"]]
@@ -335,7 +335,7 @@ class TestDesignators:
     def test_an_unknown_designator_is_reported(self, pouring_server):
         payload = post_json(
             pouring_server + "/api/designator/resolve",
-            {"variant": "no_such_designator", "scene": "pouring"},
+            {"designator": "no_such_designator", "scene": "pouring"},
         )
         assert payload["ok"] is False
         assert "no_such_designator" in payload["error"]
