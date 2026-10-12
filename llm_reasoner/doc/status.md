@@ -158,10 +158,12 @@ of 28, two repairs and $1.04; its findings led to `ea44fdbac` and `6743d6116`.
 | K1 | Generation backed by an ontology linked to CRAM-AICOR, so that language-model knowledge stays consistent, structured and reasonable | Met: the Flanagan ontology links CRAM-AICOR and DUL; acceptance and HermiT enforce it |
 | K2 | Knowledge as first-class krrood symbols, queryable with EQL | Met: the vocabulary classes are krrood `Symbol` dataclasses |
 | K3 | Requests come from the resolver, not as a natural-language instruction; knowledge is generated for that input | Not met: `KnowledgeService.view_for(instruction, query)` takes an instruction, which also keys the store |
-| K4 | The knowledge component retrieves world facts through the world injector, to ground the knowledge | Not met: it reads no world; the documents called it world-independent by design |
+| K4 | The knowledge component is independent of the world; situational facts it needs (such as a material's flow regime, whether a target is open, sizes, or poses as values) reach it only through the resolver, in the ontology's terms | Met for independence (it imports no world); not met for receiving situational facts |
 
-K3 and K4 supersede two earlier proposals: that the resolver only reads stored
-knowledge (it now triggers generation), and that knowledge never reads the world.
+K3 supersedes the earlier proposal that the resolver only reads stored knowledge: the
+resolver's request now triggers generation. K4 was first stated as the knowledge
+component reading the world itself, and corrected the same day: the resolver is the
+only component that reads the world.
 
 ### Open questions for linking the knowledge component
 
@@ -174,19 +176,20 @@ beyond the Flanagan microworld* (several perspectives); see §4.
 2. **The `KnowledgeAccess` contract.** Its tools, identifiers and answer shapes, and how
    much of the world injector's generic machinery it reuses over a knowledge source.
 3. **Separate sources.** Keeping knowledge fragments, which are krrood symbols too, out
-   of what the world injector shows as the world, while the knowledge component reads
-   the world through `WorldAccess` (K4).
+   of what the world injector shows as the world.
 4. **Which knowledge answers which query.** How a resolver query on an action designator
    (a coraplex `PouringAction`) reaches the knowledge about its action concept
    (`aicor:Pouring`): a mapping kept as data, or the action declaring its concept; and a
    store lookup by concept rather than by instruction.
 5. **Roles and slots.** Whether ontology roles (source, target, the pouring lip) map onto
    designator slots, as the cram_viz Designator tab sketches.
-6. **Stereotype and grounding (from K4).** Grounded knowledge refers to this world's
-   individuals, while stereotypical knowledge is reusable across worlds. Whether they
-   are kept as two layers — for example a DUL *Description* (the stereotype, cached per
-   action concept) and a DUL *Situation* satisfying it (the grounding, per request,
-   classifying world individuals in its roles) — or as one structure.
+6. **Situation features (from K4).** Proposed: the knowledge component declares the
+   situation features it accepts, in ontology terms (a material's flow regime, an open
+   or narrow target, a fill level, sizes or poses as values), and the resolver derives
+   them from the world; knowledge is then cached by action concept and features. The
+   alternatives were an abstract situation port implemented by the resolver, or passing
+   the world tools (rejected: world handles would leak into the knowledge). The
+   resolver, not the knowledge component, grounds roles in world individuals.
 7. **The request from the resolver (from K3).** What the resolver sends: the action
    designator's class, its given and open slots, the query's conditions, the optional
    task; and what of it is generated per request versus reused.
