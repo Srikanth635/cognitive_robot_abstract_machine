@@ -3,7 +3,7 @@ from __future__ import annotations
 import enum
 import json
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from krrood.entity_query_language.backends import GenerativeBackend
 from krrood.entity_query_language.factories import entity
@@ -14,9 +14,11 @@ from typing_extensions import Any, Dict, Iterable, List, Optional, Sequence, Typ
 
 from llm_reasoner.clients.base import Exchange, LanguageModelClient
 from llm_reasoner.clients.tools import Tool, ToolConversation, ToolUsingClient
+from llm_reasoner.resolver.action_context import ActionContextProvider
 from llm_reasoner.resolver.completion import Completion, PlainCompletion, ToolCompletion
 from llm_reasoner.resolver.context import (
     CandidateRenderer,
+    CompositeContextProvider,
     PromptContextProvider,
     SchemaOnlyContextProvider,
     StructuralCandidateRenderer,
@@ -35,6 +37,7 @@ from llm_reasoner.resolver.exceptions import (
     UnknownSlotInResponse,
     UnsatisfiableRequest,
 )
+from llm_reasoner.resolver.knowledge import KnowledgeConsultation, KnowledgeRequester
 from llm_reasoner.resolver.prompt_format import PromptRule
 from llm_reasoner.resolver.prompts import PromptBuilder, RequestAnswerKey, SourceDetail
 from llm_reasoner.resolver.referents import IntegerTokens, ReferentNaming, WorldHandles
@@ -107,6 +110,12 @@ class LanguageModelBackend(GenerativeBackend):
     How the candidates of referent slots are named and answered.
     """
 
+    knowledge: Optional[KnowledgeRequester] = field(kw_only=True, default=None)
+    """
+    Consulted about the queried action before the model is asked; no consultation when
+    absent.
+    """
+
     completion: Completion = field(init=False)
     """
     How the model is asked, with the tools when there are any.
@@ -121,6 +130,18 @@ class LanguageModelBackend(GenerativeBackend):
     """
     The conversation of every exchange, in the same order, with the tool calls made in
     it and the tokens it consumed.
+    """
+
+    consultation: Optional[KnowledgeConsultation] = field(default=None, init=False)
+    """
+    The latest consultation of the knowledge component, ``None`` before the model was
+    first asked or without a knowledge requester.
+    """
+
+    situation_backend: Optional[LanguageModelBackend] = field(default=None, init=False)
+    """
+    The backend that chose the situation features in the latest consultation, with its
+    own log and conversations.
     """
 
     def __post_init__(self) -> None:
@@ -229,6 +250,7 @@ class LanguageModelBackend(GenerativeBackend):
         :param number_of_candidates: How many alternatives to request.
         :return: The instances built from the answer that meet the where-conditions.
         """
+        self._consult(expression)
         prompt = self._prompt_builder().build(
             expression=expression,
             slots=slots,
@@ -259,6 +281,40 @@ class LanguageModelBackend(GenerativeBackend):
 
         raise RepairBudgetExhausted(
             attempts=self.max_repairs + 1, last_error=last_error
+        )
+
+    def _consult(self, expression: Match[T]) -> None:
+        """
+        Consult the knowledge component about the queried action, when there is a
+        knowledge requester.
+
+        :param expression: The match being resolved.
+        """
+        if self.knowledge is None:
+            return
+        self.situation_backend = self.situation_backend_for(expression)
+        self.consultation = self.knowledge.consult(expression, self.situation_backend)
+
+    def situation_backend_for(self, action: Match) -> LanguageModelBackend:
+        """
+        :param action: The query for an action.
+        :return: A backend choosing the situation features of the knowledge describing
+            the action: this backend's model, tools and context with the action stated,
+            one structure described by its docstrings, and no consultation of its own.
+        """
+        return replace(
+            self,
+            context_provider=CompositeContextProvider(
+                providers=[
+                    ActionContextProvider(
+                        action=action, builder=self._prompt_builder()
+                    ),
+                    self.context_provider,
+                ]
+            ),
+            source_detail=SourceDetail.SIGNATURE,
+            number_of_candidates=1,
+            knowledge=None,
         )
 
     def _accept(

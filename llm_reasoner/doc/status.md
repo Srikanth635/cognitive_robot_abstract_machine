@@ -133,7 +133,7 @@ of 28, two repairs and $1.04; its findings led to `ea44fdbac` and `6743d6116`.
 
 ## 5. In progress
 
-- The knowledge request, steps R1–R7 (planned below): R1–R5, R6a and R6b done; R6c next.
+- The knowledge request, steps R1–R7 (planned below): R1–R6 done; R7, the live check, waits for approval.
 - Reorganising the knowledge component (decision of 2026-10-12). Done: the pure moves
   into `knowledge/`, lowest layer first, each committed with both test suites passing
   (`ebc93d9fa` ontologies, `274542e2c` ontology translation, `5149984fe` acceptance,
@@ -168,7 +168,7 @@ approval.
 | R6 | The resolver's first pass: map the designator, build the feature query, resolve it with world tools and the task, and send the request through the public module only | resolver | the resolver depends on the knowledge component's public module |
 | R6a | The world's symbol-graph source excludes packages, so the knowledge component's symbols are not shown as the world — **done** (`d54c36db7`, `SymbolGraphSource.excluded_packages`) | world | none |
 | R6b | `KnowledgeRequester` and `KnowledgeConsultation` (`resolver/knowledge.py`), the `<action>` section (`ActionContextProvider`), and the knowledge side's `DescribedAction.query` and `SituationFeature.value_in` (`f83690eb9`) — **done**; a test checks the resolver imports only `knowledge.access` | resolver, knowledge | none |
-| R6c | Always on, as the user asked on 2026-10-12: the resolver consults the knowledge component at the start of every evaluation, served from the store when the situation was met before, generated otherwise; one place assembles the system, its world excluding the knowledge package | resolver | `with_world_tools` needs a knowledge service |
+| R6c | Always on, as the user asked on 2026-10-12: the resolver consults the knowledge component before every request to its model, served from the store when the situation was met before, generated otherwise — **done**: `LanguageModelBackend.knowledge`, `consultation`, `situation_backend` and `situation_backend_for`; `reasoner.py`'s `Reasoner` assembles the system, its world leaving out the knowledge package, and always gives the backend a knowledge requester. The bare backend keeps the requester optional, so it stays usable on its own; the main request does not read the hypothesis until the knowledge tools exist | resolver, `reasoner.py` | none: the requester is a new optional setting |
 | R7 | Live check (with approval): pouring from the cup of milk (Liquid) and of cereal (Granular), with and without a stopping task; the features chosen and their reasons, and one generation per combination | — | — |
 
 ## 6. Proposed and deferred
@@ -176,7 +176,7 @@ approval.
 | Item | Why | State |
 |---|---|---|
 | Computed world values: poses, reachability, contact, which gripper holds what | Grounds the arm and geometry choices the model now calls arbitrary | Deferred; options: (a) a registry in krrood's `@symbolic_function`, (b) SDT moves the functions to class form, (c) SDT marks its properties with krrood field metadata, (d) `llm_reasoner` reads zero-argument properties generically. No choice yet |
-| Linking the knowledge component to the resolver and the world injector | Lets the resolver use action knowledge | Direction agreed (knowledge tools, `architecture.md` §2.3); design waits for the representation requirements |
+| Linking the knowledge component to the resolver and the world injector | Lets the resolver use action knowledge | The request is built (R1–R6, `architecture.md` §3.6): the resolver obtains the hypothesis before every request to its model. Reading it, as knowledge tools (`architecture.md` §2.3), is next after R7 |
 | Representing knowledge for tools | Several perspectives, organised by action concept, addressable fragments, objectives and consequences first-class | Requirements K1–K4 recorded below; design next |
 | Structured prompts for the knowledge component | Its system, initial and repair prompts are prose built in Python, unlike the resolver's tagged sections | Proposed |
 | Designator slots supplied from the SDT world (containers, arms) | Replaces hand-written bindings | Deferred |
@@ -212,11 +212,14 @@ beyond the Flanagan microworld* (several perspectives); see §4.
 2. **The `KnowledgeAccess` contract.** Its tools, identifiers and answer shapes, and how
    much of the world injector's generic machinery it reuses over a knowledge source.
 3. **Separate sources.** Keeping knowledge fragments, which are krrood symbols too, out
-   of what the world injector shows as the world.
+   of what the world injector shows as the world. *Answered by R6a and R6c:* the
+   symbol-graph source leaves out excluded packages, and `Reasoner` excludes the
+   knowledge package.
 4. **Which knowledge answers which query.** How a resolver query on an action designator
    (a coraplex `PouringAction`) reaches the knowledge about its action concept
    (`aicor:Pouring`): a mapping kept as data, or the action declaring its concept; and a
-   store lookup by concept rather than by instruction.
+   store lookup by concept rather than by instruction. *Answered by R3 and R4:* a mapping
+   kept as data, and the store keyed by root class, fixed values and ontology versions.
 5. **Roles and slots.** Whether ontology roles (source, target, the pouring lip) map onto
    designator slots, as the cram_viz Designator tab sketches.
 6. **Situation features (from K4).** Proposed: the knowledge component declares the
