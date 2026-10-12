@@ -22,11 +22,10 @@ from llm_reasoner.knowledge.admission.consistency import (
     ConsistencyCheck,
     OpenWorldCheck,
 )
-from llm_reasoner.knowledge.storage.record import ConsistencyVerdict
+from llm_reasoner.knowledge.storage.record import ConsistencyVerdict, qualified_name
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.knowledge.generation.backend import HypothesisBackend
-from llm_reasoner.knowledge.generation.dialogue import HypothesisRejected
 from llm_reasoner.knowledge.generation.prompts import (
     GenerationPrompt,
     described_violation,
@@ -41,7 +40,12 @@ from llm_reasoner.knowledge.generation.schema import (
     type_schema_for,
 )
 from llm_reasoner.knowledge.generation.assessment import HypothesisAssessor
-from llm_reasoner.knowledge.generation.dialogue import GenerationDialogue
+from llm_reasoner.knowledge.generation.dialogue import (
+    GenerationDialogue,
+    GenerationOutcome,
+    HypothesisRejected,
+)
+from llm_reasoner.knowledge.generation.recording import HypothesisRecorder
 from llm_reasoner.knowledge.generation.request import (
     HypothesisRequest,
     UnsupportedFixedValue,
@@ -760,6 +764,39 @@ class TestHypothesisAssessor:
         )
         (problem,) = assessor.assess(decoded, request).problems
         assert str(OpenWorldCheck.CONSISTENT_WITH_ONTOLOGY) in problem
+
+
+def admitted_chained_structure() -> GenerationOutcome:
+    """
+    Return an admitted outcome holding the chained pouring structure.
+    """
+    decoded = structure_decoder().decode(GenerationCase.CHAINED_STRUCTURE.text)
+    return GenerationOutcome(hypothesis=decoded.hypothesis, warnings=[], exchanges=[])
+
+
+class TestHypothesisRecorder:
+    """
+    Recording an admitted hypothesis, and storing it when there is a store.
+    """
+
+    def test_the_record_states_what_was_requested(self):
+        request = HypothesisRequest.from_match(pouring_query(), instruction="pour")
+        record = HypothesisRecorder(
+            client_identity="scripted", consistency_checked=False
+        ).record(admitted_chained_structure(), request)
+        assert record.instruction == request.instruction
+        assert record.root_type == qualified_name(request.root_type)
+        assert record.fixed_values == request.written_fixed_values
+        assert record.consistency == ConsistencyVerdict.NOT_CHECKED
+
+    def test_a_recorded_hypothesis_is_stored(self, tmp_path):
+        store = HypothesisStore(directory=tmp_path)
+        request = HypothesisRequest.from_match(pouring_query(), instruction="pour")
+        record = HypothesisRecorder(
+            client_identity="scripted", consistency_checked=True, store=store
+        ).record(admitted_chained_structure(), request)
+        assert [stored.record_id for stored in store.records()] == [record.record_id]
+        assert record.consistency == ConsistencyVerdict.CONSISTENT
 
 
 class TestAdmission:
