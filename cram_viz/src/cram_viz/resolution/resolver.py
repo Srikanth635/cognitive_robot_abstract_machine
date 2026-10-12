@@ -33,7 +33,6 @@ from cram_viz.hypothesis_knowledge.generation import ModelHypothesisSource
 from cram_viz.resolution.designators import (
     DesignatorQuery,
     DesignatorUnavailable,
-    PouringDesignator,
     QuerySlots,
     SceneNamespace,
 )
@@ -116,11 +115,6 @@ class ResolvedDesignator:
     What resolving a predefined designator produced.
     """
 
-    identifier: PouringDesignator
-    """
-    The designator resolved.
-    """
-
     query: str
     """
     The designator's match query, as written.
@@ -159,6 +153,14 @@ class ResolvedDesignator:
     The name of the run it was made in, whose directory holds the knowledge it consulted
     and generated.
     """
+
+    @property
+    def query_on_one_line(self) -> str:
+        """
+        :return: The match query with its line breaks and indentation folded into
+            single spaces.
+        """
+        return " ".join(self.query.split())
 
     def payload(self) -> Dict[str, Any]:
         """
@@ -256,9 +258,9 @@ class DesignatorResolver:
         names = SceneNamespace(
             world=self.worlds.initial_world_for(scene, bundle)
         ).names()
-        offered = designator.offered_in(names)
-        if not offered.available:
-            raise DesignatorUnavailable(offered=offered)
+        shortfall = designator.shortfall_in(names)
+        if not shortfall.is_empty:
+            raise DesignatorUnavailable(shortfall=shortfall)
         run = self.runs.start(self.baseline.backend.store)
         knowledge = self.knowledge_for(run)
         resolution = self.resolution_in(
@@ -303,7 +305,6 @@ class DesignatorResolver:
         }
         consultation = backend.consultation
         return ResolvedDesignator(
-            identifier=designator.identifier,
             query=designator.source.text,
             designator=query.type.__name__,
             actions=[

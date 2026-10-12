@@ -1,7 +1,8 @@
 // Tests the predefined designators in the EQL panel: chips reading the scene's
-// underspecified pouring designators as krrood match queries, each resolved by
-// llm_reasoner in the scene on a click, the resolution shown in the answer panel and the
-// consulted hypothesis published on the bus; and the Execute button beside them.
+// underspecified pouring designators as krrood match queries, copied into the search bar
+// on a click; Generate resolving the query in the search bar with llm_reasoner, the
+// resolution shown in the answer panel and the consulted hypothesis published on the
+// bus; Execute running the resolved designator in the simulation; and the fixed demo.
 'use strict';
 
 const test = require('node:test');
@@ -93,7 +94,7 @@ function loadEqlPanel(options) {
   const elements = {};
   const names = [
     '#kb-status', '#answer', '#query-input', '#query-run', '#presets',
-    '#designators', '#nl-execute',
+    '#designators', '#query-generate', '#designator-execute', '#demo-execute',
   ];
   names.forEach(function (name) { elements[name] = element(); });
 
@@ -132,7 +133,7 @@ function loadEqlPanel(options) {
       return { status: 200, json: async function () { return resolvedPayload(); } };
     }
     if (url === '/api/execute') {
-      if (settings.executeFails) {
+      if (settings.executeFails && JSON.parse(init.body).run === undefined) {
         return {
           status: 200,
           json: async function () {
@@ -182,6 +183,7 @@ test('the panel offers designators below the EQL query box', async function () {
 
   assert.ok(panel.root.innerHTML.includes('id="designators"'));
   assert.ok(panel.root.innerHTML.includes('id="query-input"'));
+  assert.ok(panel.root.innerHTML.includes('id="query-generate"'));
   assert.ok(!panel.root.innerHTML.includes('id="nl-input"'));
 });
 
@@ -220,18 +222,35 @@ test('a designator with nothing in the scene to take for a slot says so', async 
   ));
 });
 
-// %% resolving
-test('clicking a designator asks the server to resolve it in the scene', async function () {
+// %% from a chip to the search bar
+test('clicking a designator copies its query into the search bar and resolves nothing', async function () {
   const panel = loadEqlPanel();
   await settle();
 
   chips(panel)[0].listeners.click();
   await settle();
 
+  assert.strictEqual(panel.elements['#query-input'].value, designatorsPayload().designators[0].query);
+  assert.ok(!panel.requests.some(function (r) { return r.url === '/api/designator/resolve'; }));
+});
+
+// %% generating: resolving the query in the search bar
+function generate(panel, query) {
+  panel.elements['#query-input'].value = query;
+  panel.elements['#query-generate'].listeners.click();
+}
+
+test('Generate resolves the query in the search bar in the scene', async function () {
+  const panel = loadEqlPanel();
+  await settle();
+
+  generate(panel, designatorsPayload().designators[0].query);
+  await settle();
+
   const call = panel.requests.find(function (r) { return r.url === '/api/designator/resolve'; });
   assert.ok(call);
   assert.deepStrictEqual(JSON.parse(call.init.body), {
-    designator: designatorsPayload().designators[0].identifier, scene: 'simple_pouring',
+    query: designatorsPayload().designators[0].query, scene: 'simple_pouring',
   });
 });
 
@@ -239,7 +258,7 @@ test('a resolution publishes the consulted hypothesis and shows why', async func
   const panel = loadEqlPanel();
   await settle();
 
-  chips(panel)[0].listeners.click();
+  generate(panel, designatorsPayload().designators[0].query);
   await settle();
 
   const published = emittedEvents(panel, 'hypothesis:generated');
@@ -254,7 +273,7 @@ test('a resolution shows the match query it resolved', async function () {
   const panel = loadEqlPanel();
   await settle();
 
-  chips(panel)[0].listeners.click();
+  generate(panel, designatorsPayload().designators[0].query);
   await settle();
 
   const answer = panel.elements['#answer'].innerHTML;
@@ -265,7 +284,7 @@ test('a resolution names the run it was made in', async function () {
   const panel = loadEqlPanel();
   await settle();
 
-  chips(panel)[0].listeners.click();
+  generate(panel, designatorsPayload().designators[0].query);
   await settle();
 
   assert.ok(panel.elements['#answer'].innerHTML.includes(resolvedPayload().resolution.run));
@@ -276,7 +295,7 @@ test('a resolution refreshes the presets, since the new knowledge changes them',
   await settle();
   const before = panel.requests.filter(function (r) { return r.url === '/api/kb'; }).length;
 
-  chips(panel)[0].listeners.click();
+  generate(panel, designatorsPayload().designators[0].query);
   await settle();
 
   const after = panel.requests.filter(function (r) { return r.url === '/api/kb'; }).length;
@@ -287,52 +306,98 @@ test('a failed resolution reports the error and publishes nothing', async functi
   const panel = loadEqlPanel({ resolutionFails: true });
   await settle();
 
-  chips(panel)[0].listeners.click();
+  generate(panel, designatorsPayload().designators[0].query);
   await settle();
 
   assert.strictEqual(emittedEvents(panel, 'hypothesis:generated').length, 0);
   assert.ok(panel.elements['#answer'].innerHTML.includes('NoFittingReferent'));
 });
 
-// %% executing -- independent of the designators beside it
-test('clicking Execute posts to the execute endpoint', async function () {
+// %% executing the resolved designator in the simulation
+test('Execute waits for a resolution', async function () {
   const panel = loadEqlPanel();
   await settle();
 
-  panel.elements['#nl-execute'].listeners.click();
+  assert.strictEqual(panel.elements['#designator-execute'].disabled, true);
+});
+
+test('Execute runs the resolution in the simulation, by its run', async function () {
+  const panel = loadEqlPanel();
+  await settle();
+  generate(panel, designatorsPayload().designators[0].query);
+  await settle();
+
+  assert.strictEqual(panel.elements['#designator-execute'].disabled, false);
+  panel.elements['#designator-execute'].listeners.click();
+  await settle();
+
+  const call = panel.requests.find(function (r) { return r.url === '/api/execute'; });
+  assert.deepStrictEqual(JSON.parse(call.init.body), { run: resolvedPayload().resolution.run });
+});
+
+test('a started execution names its run and says to watch it live', async function () {
+  const panel = loadEqlPanel();
+  await settle();
+  generate(panel, designatorsPayload().designators[0].query);
+  await settle();
+
+  panel.elements['#designator-execute'].listeners.click();
+  await settle();
+
+  const answer = panel.elements['#answer'].innerHTML;
+  assert.ok(answer.includes(resolvedPayload().resolution.run));
+  assert.ok(answer.includes('Live'));
+});
+
+test('a failed resolution leaves nothing to execute', async function () {
+  const panel = loadEqlPanel({ resolutionFails: true });
+  await settle();
+  generate(panel, designatorsPayload().designators[0].query);
+  await settle();
+
+  assert.strictEqual(panel.elements['#designator-execute'].disabled, true);
+});
+
+// %% the fixed demo, kept as an option beside the designators
+test('the demo button launches the fixed demo', async function () {
+  const panel = loadEqlPanel();
+  await settle();
+
+  panel.elements['#demo-execute'].listeners.click();
   await settle();
 
   const call = panel.requests.find(function (r) { return r.url === '/api/execute'; });
   assert.ok(call);
   assert.strictEqual(call.init.method, 'POST');
+  assert.deepStrictEqual(JSON.parse(call.init.body), {});
 });
 
-test('a successful execute reports the demo was launched', async function () {
+test('a launched demo is reported', async function () {
   const panel = loadEqlPanel();
   await settle();
 
-  panel.elements['#nl-execute'].listeners.click();
+  panel.elements['#demo-execute'].listeners.click();
   await settle();
 
   assert.ok(panel.elements['#answer'].innerHTML.includes('demo launched'));
 });
 
-test('a failed execute reports the error', async function () {
+test('a failed demo launch reports the error', async function () {
   const panel = loadEqlPanel({ executeFails: true });
   await settle();
 
-  panel.elements['#nl-execute'].listeners.click();
+  panel.elements['#demo-execute'].listeners.click();
   await settle();
 
   assert.ok(panel.elements['#answer'].innerHTML.includes('DemoAlreadyRunningError'));
 });
 
-test('executing resolves nothing and does not reload the presets', async function () {
+test('launching the demo resolves nothing and does not reload the presets', async function () {
   const panel = loadEqlPanel();
   await settle();
   const kbCallsBefore = panel.requests.filter(function (r) { return r.url === '/api/kb'; }).length;
 
-  panel.elements['#nl-execute'].listeners.click();
+  panel.elements['#demo-execute'].listeners.click();
   await settle();
 
   assert.ok(!panel.requests.some(function (r) { return r.url === '/api/designator/resolve'; }));

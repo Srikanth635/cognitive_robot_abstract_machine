@@ -24,11 +24,15 @@ Panels.define('eql', function (root, bus) {
     '<div class="query-box">' +
     '  <div class="query-row">' +
     '    <textarea id="query-input" rows="2" spellcheck="false" placeholder="the(entity(obj).where(obj.name == \'milk\'))   —  vars: obj, ep, arm, j, rob"></textarea>' +
-    '    <button id="query-run">Run</button>' +
+    '    <button id="query-run" title="Run the EQL query on the knowledge base">Run</button>' +
+    '    <button id="query-generate" title="Resolve the designator query in the search bar with llm_reasoner in this scene">Generate</button>' +
     '  </div>' +
     '  <div class="designator-row">' +
-    '    <div id="designators" class="designators" title="Predefined, underspecified pouring designators as krrood match queries: click one to have llm_reasoner resolve it in this scene"></div>' +
-    '    <button id="nl-execute" title="Launch the demo under the live bridge — hardcoded for now, independent of the designators">Execute</button>' +
+    '    <div id="designators" class="designators" title="Predefined, underspecified pouring designators as krrood match queries: click one to copy it into the search bar, then Generate"></div>' +
+    '    <div class="designator-actions">' +
+    '      <button id="designator-execute" title="Run the resolved designator in the simulation, under the live bridge" disabled>Execute</button>' +
+    '      <button id="demo-execute" title="Launch the fixed demo under the live bridge, independent of the designators">Demo</button>' +
+    '    </div>' +
     '  </div>' +
     '  <div id="presets" class="presets"></div>' +
     '</div>' +
@@ -40,7 +44,10 @@ Panels.define('eql', function (root, bus) {
   const runBtn = root.querySelector('#query-run');
   const presetsEl = root.querySelector('#presets');
   const designatorsEl = root.querySelector('#designators');
-  const nlExecuteBtn = root.querySelector('#nl-execute');
+  const generateBtn = root.querySelector('#query-generate');
+  const designatorExecuteBtn = root.querySelector('#designator-execute');
+  const demoExecuteBtn = root.querySelector('#demo-execute');
+  designatorExecuteBtn.disabled = true;  // nothing to execute before a resolution
 
   let kb = null;   // /api/kb overview (presets + entity details)
 
@@ -129,12 +136,8 @@ Panels.define('eql', function (root, bus) {
   }
 
   // ---- predefined designators ----------------------------------------------------
-  // Underspecified pouring designators, each a krrood match query the resolver completes
-  // in the scene shown: it reads the scene's world, consults the knowledge component, and
-  // the answer panel shows
-  // what it chose, why and what that rests on. The consulted hypothesis replaces what the
-  // Hypothesis Graph, Ontology Graph and Designator tabs show, and every EQL variable over
-  // it, so the presets are reloaded alongside it.
+  // Underspecified pouring designators, each a krrood match query: a click copies it
+  // into the search bar, where it can be edited before Generate resolves it.
   async function loadDesignators() {
     try {
       const response = await fetch(SceneSelection.apiUrl('/api/designators', window.location.search));
@@ -156,7 +159,7 @@ Panels.define('eql', function (root, bus) {
       chip.textContent = designator.query;
       chip.title = designatorHint(designator);
       if (designator.available) {
-        chip.addEventListener('click', function () { resolve(designator); });
+        chip.addEventListener('click', function () { input.value = designator.query; });
       }
       designatorsEl.appendChild(chip);
     });
@@ -164,7 +167,7 @@ Panels.define('eql', function (root, bus) {
 
   function designatorHint(designator) {
     if (designator.available) {
-      return designator.identifier + ': click to resolve it in this scene';
+      return designator.identifier + ': click to copy it into the search bar, then Generate';
     }
     const lacks = designator.unbound.map(function (name) {
       return 'an object named ' + name;
@@ -174,32 +177,43 @@ Panels.define('eql', function (root, bus) {
     return designator.identifier + ' needs ' + lacks.join(', ') + ', which this scene lacks';
   }
 
+  // ---- generating: resolving the query in the search bar ---------------------------
+  // The resolver reads the scene's world, consults the knowledge component, and the
+  // answer panel shows what it chose, why and what that rests on. The consulted
+  // hypothesis replaces what the Hypothesis Graph, Ontology Graph and Designator tabs
+  // show, and every EQL variable over it, so the presets are reloaded alongside it. The
+  // run the resolution was made in is what Execute performs.
   let resolving = false;
-  async function resolve(designator) {
-    if (resolving) return;
+  let resolvedRun = null;
+  async function resolve(query) {
+    if (!(query || '').trim() || resolving) return;
     resolving = true;
+    resolvedRun = null;
+    designatorExecuteBtn.disabled = true;
+    generateBtn.textContent = '…';
     answerEl.innerHTML =
-      '<div class="goal">resolving · ' + esc(designator.identifier) + '</div>' +
-      queryHtml(designator.query) +
+      '<div class="goal">resolving</div>' + queryHtml(query) +
       '<p class="hint-txt">The resolver reads the scene and consults the knowledge ' +
-      'component about the action. Knowledge for a situation met before is served from ' +
-      'the store; a new situation is generated once, which takes a few minutes.</p>';
+      'component about the action. Each resolution is a run of its own from the same ' +
+      'initial environment, generating the knowledge it needs, which takes a few minutes.</p>';
     try {
       const response = await fetch('/api/designator/resolve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          designator: designator.identifier,
+          query: query,
           scene: SceneSelection.nameFromSearch(window.location.search),
         }),
       });
       const payload = await response.json();
       if (!payload.ok) {
         answerEl.innerHTML =
-          '<div class="goal">resolution failed · ' + esc(designator.identifier) + '</div>' +
+          '<div class="goal">resolution failed</div>' + queryHtml(query) +
           '<div class="qerr">' + esc(payload.error || 'resolution failed') + '</div>';
       } else {
         answerEl.innerHTML = resolutionHtml(payload.resolution);
+        resolvedRun = payload.resolution.run;
+        designatorExecuteBtn.disabled = false;
         bus.emit('hypothesis:generated', payload.hypothesis);
         await reloadKnowledgeBase();
       }
@@ -208,16 +222,18 @@ Panels.define('eql', function (root, bus) {
         '<div class="goal">resolution failed</div>' +
         '<div class="qerr">' + esc(String(err)) + '</div>';
     }
+    generateBtn.textContent = 'Generate';
     resolving = false;
   }
+
+  generateBtn.addEventListener('click', function () { resolve(input.value); });
 
   function queryHtml(query) {
     return '<pre class="resolved-query">' + esc(query) + '</pre>';
   }
 
   function resolutionHtml(resolution) {
-    let html = '<div class="goal">resolved · ' + esc(resolution.identifier) + '</div>' +
-      queryHtml(resolution.query);
+    let html = '<div class="goal">resolved</div>' + queryHtml(resolution.query);
     resolution.actions.forEach(function (action) {
       html += '<div class="ansub">' + esc(resolution.designator) + '</div>';
       action.slots.forEach(function (slot) {
@@ -253,42 +269,52 @@ Panels.define('eql', function (root, bus) {
     bus.emit('kb:ready', { payload: payload });
   }
 
-  // ---- execute the hardcoded demo under the live bridge -------------------------
-  // Independent of the designators and the hypothesis above -- for now this
-  // always launches the same fixed demo script. Nothing further is wired here to
-  // show it running: the 3D scene panel already polls the live bridge's /info
-  // endpoint every few seconds and shows its own "Live" button the moment one
-  // answers, exactly as if the demo had been started from a terminal.
+  // ---- executing under the live bridge ---------------------------------------------
+  // Execute performs the last resolution's run in the simulation; Demo launches the
+  // fixed demo, independent of the designators. Nothing further is wired here to show
+  // either running: the 3D scene panel already polls the live bridge's /info endpoint
+  // every few seconds and shows its own "Live" button the moment one answers.
   let executing = false;
-  async function execute() {
+  async function launch(button, label, request, launchedHtml) {
     if (executing) return;
     executing = true;
-    nlExecuteBtn.textContent = '…';
-    nlExecuteBtn.disabled = true;
+    button.textContent = '…';
+    button.disabled = true;
     try {
-      const response = await fetch('/api/execute', { method: 'POST' });
+      const response = await fetch('/api/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request),
+      });
       const payload = await response.json();
-      if (!payload.ok) {
-        answerEl.innerHTML =
-          '<div class="goal">execution failed</div>' +
-          '<div class="qerr">' + esc(payload.error || 'execution failed') + '</div>';
-      } else {
-        answerEl.innerHTML =
-          '<div class="goal">demo launched</div>' +
-          '<p class="hint-txt">Starting under the live bridge. Once it comes up, ' +
-          'the 3D scene\'s own Live button will appear — click it to attach.</p>';
-      }
+      answerEl.innerHTML = payload.ok ? launchedHtml :
+        '<div class="goal">execution failed</div>' +
+        '<div class="qerr">' + esc(payload.error || 'execution failed') + '</div>';
     } catch (err) {
       answerEl.innerHTML =
         '<div class="goal">execution failed</div>' +
         '<div class="qerr">' + esc(String(err)) + '</div>';
     }
     executing = false;
-    nlExecuteBtn.textContent = 'Execute';
-    nlExecuteBtn.disabled = false;
+    button.textContent = label;
+    button.disabled = false;
   }
 
-  nlExecuteBtn.addEventListener('click', execute);
+  designatorExecuteBtn.addEventListener('click', function () {
+    if (!resolvedRun) return;
+    launch(designatorExecuteBtn, 'Execute', { run: resolvedRun },
+      '<div class="goal">executing run ' + esc(resolvedRun) + '</div>' +
+      '<p class="hint-txt">Starting the simulation from the run\'s initial environment ' +
+      'under the live bridge. Once it comes up, the 3D scene\'s own Live button will ' +
+      'appear — click it to watch.</p>');
+  });
+
+  demoExecuteBtn.addEventListener('click', function () {
+    launch(demoExecuteBtn, 'Demo', {},
+      '<div class="goal">demo launched</div>' +
+      '<p class="hint-txt">Starting under the live bridge. Once it comes up, ' +
+      'the 3D scene\'s own Live button will appear — click it to attach.</p>');
+  });
 
   // ---- run an EQL query --------------------------------------------------------
   let running = false;

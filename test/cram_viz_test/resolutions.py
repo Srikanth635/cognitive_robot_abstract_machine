@@ -33,10 +33,8 @@ def objects_given() -> ResolvedDesignator:
     :return: Pouring from the given pouring cup into the given bowl, the arm and the
         tilt chosen, resting on a knowledge fragment and the bowl.
     """
-    identifier = PouringDesignator.OBJECTS_GIVEN
     return ResolvedDesignator(
-        identifier=identifier,
-        query=DesignatorQuery.shipped(identifier).source.text,
+        query=DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN).source.text,
         designator="PouringAction",
         actions=[
             ResolvedAction(

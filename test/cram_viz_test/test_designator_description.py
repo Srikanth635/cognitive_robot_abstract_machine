@@ -197,12 +197,12 @@ class TestHypothesis:
 
 
 class TestResolution:
-    def test_a_resolution_names_the_designator_it_resolved(self, view):
+    def test_a_resolution_names_the_query_it_resolved(self, view):
         resolution = objects_given()
         knowledge = designator_knowledge.reflect_pouring_action([], view, resolution)
         action = DesignatorDescriber(view=view).describe(knowledge)
         ((resolved_from,),) = [property_values(action, "resolved-from")]
-        assert resolved_from.data == resolution.identifier
+        assert resolved_from.data == resolution.query_on_one_line
 
     def test_a_resolution_states_why_it_chose_what_it_chose(self, view):
         resolution = objects_given()

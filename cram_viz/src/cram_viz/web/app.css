@@ -177,13 +177,14 @@ body{
 .kb-status{font-size:12px;color:var(--faint)}
 .kb-status.ready{color:var(--accent)}
 .query-box{padding:14px 16px;border-bottom:1px solid var(--line);background:var(--panel2)}
-#nl-execute{
+.designator-actions{display:flex;flex-direction:column;gap:6px}
+.designator-actions button{
   background:var(--bg);border:1px solid var(--line2);color:var(--ink);
   font-weight:600;font-size:12px;padding:0 16px;border-radius:4px;cursor:pointer;
   white-space:nowrap;height:30px
 }
-#nl-execute:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
-#nl-execute:disabled{opacity:.55;cursor:default}
+.designator-actions button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.designator-actions button:disabled{opacity:.55;cursor:default}
 .designator-row{display:flex;gap:8px;align-items:flex-start;margin-top:11px}
 .designators{display:flex;flex-wrap:wrap;gap:6px;flex:1;max-height:150px;overflow-y:auto}
 .designator-query{
@@ -205,11 +206,11 @@ body{
   resize:vertical;min-height:44px;line-height:1.45
 }
 #query-input:focus{border-color:var(--accent)}
-#query-run{
+#query-run,#query-generate{
   background:linear-gradient(135deg,var(--accent),var(--accent2));border:0;color:#04121a;
   font-weight:700;font-size:13px;padding:0 20px;border-radius:4px;cursor:pointer
 }
-#query-run:active{transform:translateY(1px)}
+#query-run:active,#query-generate:active{transform:translateY(1px)}
 .presets{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px;max-height:92px;overflow-y:auto}
 .preset{
   font-size:12px;color:var(--muted);background:var(--bg2);border:1px solid var(--line2);
