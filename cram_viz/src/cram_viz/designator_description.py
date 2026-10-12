@@ -16,11 +16,11 @@ from dataclasses import dataclass, field, fields
 from enum import StrEnum
 from operator import attrgetter
 
-from llm_reasoner.knowledge.generation.schema import is_inferred
-from llm_reasoner.knowledge.hypotheses.view import HypothesisView
-from llm_reasoner.knowledge.ontologies.terms import (
+from llm_reasoner.knowledge.access import (
     ConceptReference,
     DescriptionEntity,
+    HypothesisView,
+    is_inferred,
     PropertyTerm,
 )
 from typing_extensions import Any, Optional, Union

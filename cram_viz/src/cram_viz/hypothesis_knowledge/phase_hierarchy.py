@@ -21,16 +21,17 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 import rustworkx as rx
-from llm_reasoner.knowledge.hypotheses.graph import (
+from llm_reasoner.knowledge.access import (
+    core,
+    DescriptionEntity,
     HypothesisGraph,
     HypothesisGraphNode,
     HypothesisGraphNodeKind,
     HypothesisGraphRelation,
+    HypothesisView,
+    PropertyTerm,
     SyntheticHypothesisRelation,
 )
-from llm_reasoner.knowledge.hypotheses.view import HypothesisView
-from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
-from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity, PropertyTerm
 from typing_extensions import Callable, Optional
 
 ROOT_LABEL = "Phase Structure"

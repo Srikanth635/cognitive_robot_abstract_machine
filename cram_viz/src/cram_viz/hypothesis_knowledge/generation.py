@@ -27,20 +27,22 @@ from pathlib import Path
 
 from krrood.entity_query_language.factories import the
 from krrood.entity_query_language.query.match import Match
-from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite
-from llm_reasoner.knowledge.acceptance.suite import predictive_manipulation_suite
-from llm_reasoner.knowledge.admission.consistency import ConsistencyCheck
-from llm_reasoner.knowledge.admission.hermit import HermitCheck
-from llm_reasoner.knowledge.storage.store import HypothesisStore
+from llm_reasoner.knowledge.access import (
+    AcceptanceSuite,
+    ConceptReference,
+    ConsistencyCheck,
+    CRAM_AICOR_NAMESPACE,
+    HermitCheck,
+    HypothesisBackend,
+    HypothesisStore,
+    HypothesisView,
+    KnowledgeService,
+    LinkedOntologyTerms,
+    pouring,
+    predictive_manipulation_suite,
+)
 from llm_reasoner.clients import AnthropicClient
 from llm_reasoner.clients.base import LanguageModelClient
-from llm_reasoner.knowledge.generation.backend import HypothesisBackend
-from llm_reasoner.knowledge.hypotheses.service import KnowledgeService
-from llm_reasoner.knowledge.hypotheses.view import HypothesisView
-from llm_reasoner.knowledge.ontologies import CRAM_AICOR_NAMESPACE
-from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms
-from llm_reasoner.knowledge.ontologies.predictive_manipulation import pouring
-from llm_reasoner.knowledge.ontologies.terms import ConceptReference
 from typing_extensions import Optional
 
 from cram_viz import paths
