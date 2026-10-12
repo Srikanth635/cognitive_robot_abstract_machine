@@ -128,10 +128,12 @@ of 28, two repairs and $1.04; its findings led to `ea44fdbac` and `6743d6116`.
 | 2026-10-12 | The knowledge component is reorganised and redesigned first, with the Flanagan representation only; cram_viz is updated along with it |
 | 2026-10-12 | Naming: a *hypothesis* is one generated, admitted structure; *knowledge* is what the component provides and its contract |
 | 2026-10-12 | Option A for K4: the knowledge component declares the situation features it accepts in ontology terms, and the resolver derives them from the world |
+| 2026-10-12 | The knowledge request (`architecture.md` §3.6): D1 a krrood query on the knowledge vocabulary with the action concept and situation features fixed, no instruction; D2 designator → knowledge by a mapping kept as data; D3 situation features derived from the ontology's defined subclasses; D4 the resolver fills them in a first resolution with its world tools and the task; D5 the store keyed by root class, fixed values and ontology versions, generating once per feature combination on a miss |
 | 2026-10-12 | Reorganisation first, without new functionality: one `knowledge/` package (`ontologies`, `ontology_translation`, `acceptance`, `storage`, `admission`, `generation`, `hypotheses`) with one public module, moved lowest layer first; stored hypotheses (the cram_viz sample and `~/.cram_viz/hypotheses`, backed up) are migrated with each move that changes a stored module path |
 
 ## 5. In progress
 
+- Next: the knowledge request, steps R1–R7 (planned below).
 - Reorganising the knowledge component (decision of 2026-10-12). Done: the pure moves
   into `knowledge/`, lowest layer first, each committed with both test suites passing
   (`ebc93d9fa` ontologies, `274542e2c` ontology translation, `5149984fe` acceptance,
@@ -150,6 +152,21 @@ of 28, two repairs and $1.04; its findings led to `ea44fdbac` and `6743d6116`.
 - `doc/drafts/object_qualities/` is an uncommitted draft on object qualities in the
   ontology (affordances, dispositions after DUL). It waits for decisions on where the
   module lives and on changes to `core.ttl`.
+
+### Planned: the knowledge request (D1–D5), lowest layer first
+
+Each step test-first and committed with both test suites passing; live runs only with
+approval.
+
+| Step | What | Where | Changes for others |
+|---|---|---|---|
+| R1 | Declare the situation features of a root class, derived from the ontology's defined subclasses (property, allowed values, meaning) | knowledge, `ontologies/` | none |
+| R2 | Verify how a fixed feature's variant is enforced: closed-world acceptance applying the defined class's restrictions, or HermiT only; decide with a test either way | knowledge, `acceptance/` | none unless acceptance must change |
+| R3 | Key the store by root class, fixed values and ontology versions; the instruction becomes optional provenance (`KnowledgeService.view_for` takes the query first) | knowledge, `storage/`, `hypotheses/` | cram_viz: one hypothesis per concept and features, no longer per instruction |
+| R4 | The designator → knowledge mapping as data, and the lookup of the knowledge describing a designator class | knowledge | none |
+| R5 | The knowledge component's entry for a request: serve the stored hypothesis or generate it, in its public module | knowledge, `access.py` | none |
+| R6 | The resolver's first pass: map the designator, build the feature query, resolve it with world tools and the task, and send the request through the public module only | resolver | the resolver depends on the knowledge component's public module |
+| R7 | Live check (with approval): pouring from the cup of milk (Liquid) and of cereal (Granular), with and without a stopping task; the features chosen and their reasons, and one generation per combination | — | — |
 
 ## 6. Proposed and deferred
 
