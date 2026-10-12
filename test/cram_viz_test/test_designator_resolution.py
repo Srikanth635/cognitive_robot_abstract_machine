@@ -27,6 +27,7 @@ from cram_viz.resolution.designators import (
     SceneNamespace,
     UnknownDesignator,
 )
+from cram_viz.resolution.runs import ResolutionRuns, RunDirectory, RunFile
 from cram_viz.resolution.scene_world import SceneKey, SceneWorldBuilder
 
 from .resolutions import resolver_replaying
@@ -150,17 +151,26 @@ class TestQuerySlots:
 # %% resolving
 
 
+def resolve_objects_given(bundle: Path, tmp_path: Path, times: int = 1) -> list:
+    """
+    :return: The runs of resolving the designator giving the objects, the given number
+        of times in turn, each replaying the recording from the empty store at
+        ``tmp_path / "store"``.
+    """
+    resolver = resolver_replaying(
+        PouringDesignator.OBJECTS_GIVEN,
+        HypothesisStore(directory=tmp_path / "store"),
+        tmp_path / "runs",
+        times=times,
+    )
+    designator = DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN)
+    return [resolver.resolve(designator, "pouring", bundle) for _ in range(times)]
+
+
 class TestResolution:
     def test_a_resolution_names_the_value_of_every_slot(self, pouring_bundle, tmp_path):
-        resolved = resolver_replaying(
-            PouringDesignator.OBJECTS_GIVEN,
-            HypothesisStore(directory=tmp_path / "store"),
-        ).resolve(
-            DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
-            "pouring",
-            pouring_bundle,
-        )
-        (action,) = resolved.actions
+        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        (action,) = run.resolution.actions
         assert {slot.name: slot.value for slot in action.slots} == {
             "target_container": "bowl.stl",
             "source_container": "PouringCup (Static_MilkPitcher.stl)",
@@ -171,38 +181,26 @@ class TestResolution:
     def test_a_resolution_marks_the_slots_its_query_states_as_given(
         self, pouring_bundle, tmp_path
     ):
-        designator = DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN)
-        resolved = resolver_replaying(
-            PouringDesignator.OBJECTS_GIVEN,
-            HypothesisStore(directory=tmp_path / "store"),
-        ).resolve(designator, "pouring", pouring_bundle)
-        (action,) = resolved.actions
-        query = designator.query_in(names_in(pouring_bundle))
+        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        (action,) = run.resolution.actions
+        query = DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN).query_in(
+            names_in(pouring_bundle)
+        )
         assert [slot.name for slot in action.slots if slot.given] == (
             QuerySlots.of(query).given
         )
 
     def test_a_resolution_states_the_query_it_resolved(self, pouring_bundle, tmp_path):
+        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
         designator = DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN)
-        resolved = resolver_replaying(
-            PouringDesignator.OBJECTS_GIVEN,
-            HypothesisStore(directory=tmp_path / "store"),
-        ).resolve(designator, "pouring", pouring_bundle)
-        assert resolved.identifier is PouringDesignator.OBJECTS_GIVEN
-        assert resolved.query == designator.source.text
+        assert run.resolution.identifier is designator.identifier
+        assert run.resolution.query == designator.source.text
 
     def test_a_resolution_names_what_its_answer_rests_on(
         self, pouring_bundle, tmp_path
     ):
-        resolved = resolver_replaying(
-            PouringDesignator.OBJECTS_GIVEN,
-            HypothesisStore(directory=tmp_path / "store"),
-        ).resolve(
-            DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
-            "pouring",
-            pouring_bundle,
-        )
-        (action,) = resolved.actions
+        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        (action,) = run.resolution.actions
         assert [(ground.source, ground.name) for ground in action.grounds] == [
             (GroundKey.KNOWLEDGE, "pour"),
         ]
@@ -210,12 +208,51 @@ class TestResolution:
     def test_a_resolution_reports_the_knowledge_it_consulted(
         self, pouring_bundle, tmp_path
     ):
-        store = HypothesisStore(directory=tmp_path / "store")
-        resolved = resolver_replaying(PouringDesignator.OBJECTS_GIVEN, store).resolve(
-            DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
-            "pouring",
-            pouring_bundle,
+        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        (record,) = run.knowledge.backend.store.records()
+        assert run.resolution.record_id == record.record_id
+        assert run.resolution.situation == {}
+
+
+# %% runs kept apart
+
+
+class TestRuns:
+    def test_a_run_starts_from_a_copy_of_the_baseline_store(self, tmp_path):
+        baseline = tmp_path / "store"
+        (baseline / "record").mkdir(parents=True)
+        (baseline / "record" / "content").write_text("stored")
+        run = ResolutionRuns(directory=tmp_path / "runs").start(
+            HypothesisStore(directory=baseline)
         )
-        (record,) = store.records()
-        assert resolved.record_id == record.record_id
-        assert resolved.situation == {}
+        assert (
+            run.knowledge_store.directory / "record" / "content"
+        ).read_text() == "stored"
+
+    def test_what_a_run_generates_stays_out_of_the_baseline_store(
+        self, pouring_bundle, tmp_path
+    ):
+        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        assert HypothesisStore(directory=tmp_path / "store").records() == []
+        assert len(run.knowledge.backend.store.records()) == 1
+
+    def test_every_run_starts_from_the_same_baseline_store(
+        self, pouring_bundle, tmp_path
+    ):
+        first, second = resolve_objects_given(pouring_bundle, tmp_path, times=2)
+        assert first.resolution.run != second.resolution.run
+        assert [
+            len(run.knowledge.backend.store.records()) for run in (first, second)
+        ] == [
+            1,
+            1,
+        ]
+
+    def test_a_run_keeps_its_resolution_beside_its_knowledge(
+        self, pouring_bundle, tmp_path
+    ):
+        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        kept = RunDirectory(directory=tmp_path / "runs" / run.resolution.run)
+        assert json.loads((kept.directory / RunFile.RESOLUTION).read_text()) == (
+            json.loads(json.dumps(run.resolution.payload()))
+        )

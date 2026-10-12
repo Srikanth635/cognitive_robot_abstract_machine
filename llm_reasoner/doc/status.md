@@ -198,7 +198,17 @@ slot open. A chip is offered when the scene binds every name its query reads and
 candidate for every slot it leaves to choose. Live, `objects_given` resolved in
 simple_pouring for $0.068 (RIGHT, 1.85 rad, citing the tilt phase and its set-point);
 the situation pass read the bound `Static_MilkPitcher` as liquid, so a liquid pouring
-hypothesis was generated once, at a cost not recorded. Switching scenes now removes the previous scene's world
+hypothesis was generated once, at a cost not recorded.
+
+**Situation from the world, runs kept apart (2026-10-12):** the situation pass saw only
+the values a query binds, so `objects_open` (the cup only a candidate) was served the
+plain pouring knowledge and `objects_given` the liquid one in the same scene. Its
+`<action>` section now also lists the action's open slots with their candidates, and the
+facts rule has the model read the world about the individuals the action involves. In
+cram_viz every resolution is a run of its own (`cram_viz.resolution.runs`): the scene's
+world built anew, the knowledge consulted over a copy of the viewer's store in
+`~/.cram_viz/runs/<run>/hypotheses`, and the resolution kept beside it as
+`resolution.json`; no run reads what another generated. Switching scenes now removes the previous scene's world
 from krrood's symbol graph (collected, then `remove_dead_instances`), so an open
 `variable(Tool)` never offers another scene's objects.
 

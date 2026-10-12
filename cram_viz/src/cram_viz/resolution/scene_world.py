@@ -193,12 +193,32 @@ class SceneWorlds:
         :param scene: The scene's name.
         :param bundle: The scene's bundle directory.
         :return: The scene's world, built the first time it is asked for after another
-            scene's, whose world is removed from the symbol graph first.
+            scene's.
         """
         if self.scene != scene or self.world is None:
-            self.world = None
-            gc.collect()
-            SymbolGraph().remove_dead_instances()
-            self.world = self.builder.build(bundle)
-            self.scene = scene
+            self.replace_with(scene, bundle)
         return self.world
+
+    def initial_world_for(self, scene: str, bundle: Path) -> World:
+        """
+        :param scene: The scene's name.
+        :param bundle: The scene's bundle directory.
+        :return: The scene's world as its bundle sets it out, built anew, so nothing done
+            in the world kept carries over.
+        """
+        self.replace_with(scene, bundle)
+        return self.world
+
+    def replace_with(self, scene: str, bundle: Path) -> None:
+        """
+        Keep a newly built world of the scene in place of the world kept, which is
+        removed from the symbol graph first.
+
+        :param scene: The scene's name.
+        :param bundle: The scene's bundle directory.
+        """
+        self.world = None
+        gc.collect()
+        SymbolGraph().remove_dead_instances()
+        self.world = self.builder.build(bundle)
+        self.scene = scene

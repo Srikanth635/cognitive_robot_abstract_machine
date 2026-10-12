@@ -1,16 +1,19 @@
 """
-Resolving a predefined designator in a scene with llm_reasoner: the scene's world read
-through the world injector, the knowledge component consulted about the action, and what
-the resolution chose, why, and what it rests on, written for display.
+Resolving a predefined designator in a scene with llm_reasoner, each resolution a run of
+its own from the same initial environment: the scene's world built anew and read through
+the world injector, the knowledge component consulted about the action over a copy of
+the viewer's store, and what the resolution chose, why, and what it rests on, written
+for display and kept with the run.
 """
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from enum import Enum
 from operator import attrgetter
 from pathlib import Path
 
+from krrood.entity_query_language.query.match import Match
 from llm_reasoner.clients.base import LanguageModelClient
 from llm_reasoner.clients.usage import SONNET_5_5_PRICES, TokenPrices
 from llm_reasoner.clients.anthropic_client import AnthropicClient
@@ -25,6 +28,7 @@ from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
 from semantic_digital_twin.world_description.world_entity import Body
 from typing_extensions import Any, Dict, List, Optional
 
+from cram_viz import paths
 from cram_viz.hypothesis_knowledge.generation import ModelHypothesisSource
 from cram_viz.resolution.designators import (
     DesignatorQuery,
@@ -33,6 +37,7 @@ from cram_viz.resolution.designators import (
     QuerySlots,
     SceneNamespace,
 )
+from cram_viz.resolution.runs import ResolutionRuns, RunDirectory
 from cram_viz.resolution.scene_world import SceneWorlds
 
 RESOLVER_MAX_TOKENS = 2048
@@ -149,11 +154,35 @@ class ResolvedDesignator:
     not included.
     """
 
+    run: str
+    """
+    The name of the run it was made in, whose directory holds the knowledge it consulted
+    and generated.
+    """
+
     def payload(self) -> Dict[str, Any]:
         """
         :return: The resolution as JSON data.
         """
         return asdict(self)
+
+
+@dataclass(frozen=True)
+class ResolutionRun:
+    """
+    One resolution run: what it resolved and the knowledge it consulted, which no other
+    run reads.
+    """
+
+    resolution: ResolvedDesignator
+    """
+    What the run resolved.
+    """
+
+    knowledge: KnowledgeService
+    """
+    The knowledge component over the run's own store.
+    """
 
 
 # %% resolving
@@ -170,10 +199,15 @@ class DesignatorResolver:
     The language model the resolver asks, which must be able to call tools.
     """
 
-    knowledge: KnowledgeService
+    baseline: KnowledgeService
     """
-    The knowledge component consulted about the action, whose hypotheses the viewer
-    shows.
+    The knowledge every run starts from: each run consults it over a copy of its store,
+    never the store itself.
+    """
+
+    runs: ResolutionRuns
+    """
+    Where the runs are kept.
     """
 
     worlds: SceneWorlds = field(default_factory=SceneWorlds)
@@ -194,36 +228,70 @@ class DesignatorResolver:
         :param source: The viewer's knowledge source, with its credentials, model and
             store.
         :param worlds: The scene worlds the viewer shares with its designator menu.
-        :return: A resolver asking the source's model, consulting the source's
-            knowledge.
+        :return: A resolver asking the source's model, every run starting from the
+            source's knowledge, the runs kept in the viewer's runs directory.
         """
         source.load_credentials()
         return cls(
             client=AnthropicClient(model=source.model, max_tokens=RESOLVER_MAX_TOKENS),
-            knowledge=source.knowledge_service(),
+            baseline=source.knowledge_service(),
+            runs=ResolutionRuns(directory=paths.resolution_runs_dir()),
             worlds=worlds,
         )
 
     def resolve(
         self, designator: DesignatorQuery, scene: str, bundle: Path
-    ) -> ResolvedDesignator:
+    ) -> ResolutionRun:
         """
+        Resolve a designator in a run of its own: the scene's world built anew, the
+        knowledge consulted over a copy of the baseline's store.
+
         :param designator: The designator to resolve.
         :param scene: The name of the scene to resolve it in.
         :param bundle: The scene's bundle directory.
-        :return: What the resolution chose, why, and what it rests on.
+        :return: The run: what the resolution chose, why, and what it rests on, and the
+            knowledge it consulted.
         :raises DesignatorUnavailable: When the scene cannot resolve the designator.
         """
-        names = SceneNamespace(world=self.worlds.world_for(scene, bundle)).names()
+        names = SceneNamespace(
+            world=self.worlds.initial_world_for(scene, bundle)
+        ).names()
         offered = designator.offered_in(names)
         if not offered.available:
             raise DesignatorUnavailable(offered=offered)
-        query = designator.query_in(names)
+        run = self.runs.start(self.baseline.backend.store)
+        knowledge = self.knowledge_for(run)
+        resolution = self.resolution_in(
+            run, designator, designator.query_in(names), knowledge
+        )
+        run.keep(resolution.payload())
+        return ResolutionRun(resolution=resolution, knowledge=knowledge)
+
+    def knowledge_for(self, run: RunDirectory) -> KnowledgeService:
+        """
+        :return: The baseline's knowledge component over the run's own store.
+        """
+        return KnowledgeService(
+            backend=replace(self.baseline.backend, store=run.knowledge_store)
+        )
+
+    def resolution_in(
+        self,
+        run: RunDirectory,
+        designator: DesignatorQuery,
+        query: Match,
+        knowledge: KnowledgeService,
+    ) -> ResolvedDesignator:
+        """
+        :param run: The run resolving.
+        :param designator: The designator resolved.
+        :param query: The designator's query on the scene.
+        :param knowledge: The knowledge component the run consults.
+        :return: What resolving the query chose, why, and what it rests on.
+        """
         slots = QuerySlots.of(query)
         view = WorldView()
-        backend = Reasoner(
-            client=self.client, knowledge=self.knowledge, world=view
-        ).backend(
+        backend = Reasoner(client=self.client, knowledge=knowledge, world=view).backend(
             context_provider=SchemaOnlyContextProvider(),
             number_of_candidates=1,
             source_detail=SourceDetail.FULL,
@@ -251,6 +319,7 @@ class DesignatorResolver:
             ),
             record_id=None if consultation is None else consultation.record_id,
             cost=self.cost_of(backend),
+            run=run.name,
         )
 
     def resolved_action(

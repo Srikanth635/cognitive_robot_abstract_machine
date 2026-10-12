@@ -297,7 +297,9 @@ class TestDesignators:
         from .resolutions import resolver_replaying
 
         resolver = resolver_replaying(
-            "objects_given", HypothesisStore(directory=tmp_path / "store")
+            "objects_given",
+            HypothesisStore(directory=tmp_path / "store"),
+            tmp_path / "runs",
         )
         monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
         payload = post_json(
@@ -310,6 +312,29 @@ class TestDesignators:
         ] == "bowl.stl"
         assert payload["hypothesis"]["ok"] is True
 
+    def test_a_resolution_names_the_run_it_was_made_in(
+        self, pouring_server, monkeypatch, tmp_path
+    ):
+        from llm_reasoner.knowledge.access import HypothesisStore
+
+        from cram_viz import server as server_module
+
+        from .resolutions import resolver_replaying
+
+        resolver = resolver_replaying(
+            "objects_given",
+            HypothesisStore(directory=tmp_path / "store"),
+            tmp_path / "runs",
+        )
+        monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
+        payload = post_json(
+            pouring_server + "/api/designator/resolve",
+            {"designator": "objects_given", "scene": "pouring"},
+        )
+        assert [path.name for path in (tmp_path / "runs").iterdir()] == [
+            payload["resolution"]["run"]
+        ]
+
     def test_after_resolving_the_designator_tab_shows_why(
         self, pouring_server, monkeypatch, tmp_path
     ):
@@ -320,7 +345,9 @@ class TestDesignators:
         from .resolutions import resolver_replaying
 
         resolver = resolver_replaying(
-            "objects_given", HypothesisStore(directory=tmp_path / "store")
+            "objects_given",
+            HypothesisStore(directory=tmp_path / "store"),
+            tmp_path / "runs",
         )
         monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
         payload = post_json(

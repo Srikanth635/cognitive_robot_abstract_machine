@@ -95,7 +95,11 @@ bundle (objects typed by `resolution/object_annotations.json`), evaluates the qu
 on it, the resolver reads the world with the world tools and consults the knowledge
 component, and the answer panel shows the slots it chose, why, and what they rest on.
 A designator is greyed out, with the reason, when the scene has no object of a name
-its query reads or no candidate for a slot it leaves to choose. A new designator is a
+its query reads or no candidate for a slot it leaves to choose. Every click is a run of
+its own from the same initial environment: the scene's world is built anew, and the
+knowledge is consulted over a copy of the store in `~/.cram_viz/runs/<run>/hypotheses`,
+so what one run generates no other run reads; the run's resolution is kept beside it as
+`resolution.json`, and the answer panel names the run. A new designator is a
 new query file and a member of `PouringDesignator`. The consulted hypothesis is what the
 Hypothesis Graph tab shows; the Ontology Graph tab shows the same graph with the
 ontology class of every node and the ontology property of every link beneath

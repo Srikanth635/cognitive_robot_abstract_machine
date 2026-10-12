@@ -265,13 +265,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
             designator = DesignatorQuery.named(request.get("designator") or "")
             with _EQL_LOCK:
-                resolver = _designator_resolver()
-                resolved = resolver.resolve(
+                run = _designator_resolver().resolve(
                     designator,
                     kb_module.scene_name(selected_scene),
                     Path(kb_module.scene_dir(selected_scene)),
                 )
-                hypothesis_knowledge.activate_resolution(resolved, resolver.knowledge)
+                hypothesis_knowledge.activate_resolution(run.resolution, run.knowledge)
                 kb_module.reset_kb()
                 hypothesis = kb_module.view_payload("hypothesis", selected_scene)
         except Exception as ex:
@@ -280,7 +279,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 {"ok": False, "error": "%s: %s" % (type(ex).__name__, ex)}
             )
         return self._json(
-            {"ok": True, "resolution": resolved.payload(), "hypothesis": hypothesis}
+            {
+                "ok": True,
+                "resolution": run.resolution.payload(),
+                "hypothesis": hypothesis,
+            }
         )
 
     def _execute_demo(self) -> None:

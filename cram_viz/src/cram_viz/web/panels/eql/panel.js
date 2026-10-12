@@ -239,6 +239,7 @@ Panels.define('eql', function (root, bus) {
       esc(situation.length ? situation.join(', ') : 'an unknown situation') +
       (resolution.record_id ? ' (hypothesis ' + esc(resolution.record_id) + ')' : '') +
       ' · resolver cost $' + resolution.cost.toFixed(3) +
+      ' · run ' + esc(resolution.run) +
       ' · shown in the Hypothesis Graph, Ontology Graph and Designator tabs</p>';
     return html;
   }
