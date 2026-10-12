@@ -5,9 +5,11 @@ backend.
 The query is an underspecified match on a vocabulary class, such as
 ``the(PouringPhaseStructure)(decomposes_task=ConceptReference(...))``: the fields it fixes
 are stated to the model as fixed values, everything else is for the model to fill. The
-answer is decoded into vocabulary instances and checked by the acceptance suite; what is
-wrong is shown to the model, which answers again, until the hypothesis is admitted or the
-repair budget is spent.
+backend answers from the store when it holds a hypothesis for the request; otherwise a
+:class:`~llm_reasoner.knowledge.generation.dialogue.GenerationDialogue` asks the model,
+judging each answer and returning a rejected one for repair, and a
+:class:`~llm_reasoner.knowledge.generation.recording.HypothesisRecorder` records and
+stores the admitted hypothesis.
 """
 
 from __future__ import annotations
@@ -18,40 +20,24 @@ from krrood.entity_query_language.backends import GenerativeBackend
 from krrood.entity_query_language.query.match import Match
 from typing_extensions import Iterable, Optional, TypeVar
 
-from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite
-from llm_reasoner.knowledge.storage.citation import Citation
-from llm_reasoner.knowledge.admission.consistency import ConsistencyCheck
-from llm_reasoner.knowledge.representation.rdf import GraphReader, GraphWriter
-from llm_reasoner.knowledge.storage.record import (
-    ConsistencyVerdict,
-    HypothesisRecord,
-    current_module_versions,
-    qualified_name,
-)
-from llm_reasoner.knowledge.storage.store import HypothesisStore
-from llm_reasoner.knowledge.acceptance.suite import predictive_manipulation_suite
 from llm_reasoner.clients.base import Exchange, LanguageModelClient
-from llm_reasoner.knowledge.generation.prompts import (
-    GenerationPrompt,
-    described_violation,
-)
+from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite
+from llm_reasoner.knowledge.acceptance.suite import predictive_manipulation_suite
+from llm_reasoner.knowledge.admission.consistency import ConsistencyCheck
 from llm_reasoner.knowledge.generation.assessment import HypothesisAssessor
 from llm_reasoner.knowledge.generation.dialogue import (
     GenerationDialogue,
     GenerationOutcome,
 )
+from llm_reasoner.knowledge.generation.prompts import GenerationPrompt
+from llm_reasoner.knowledge.generation.recording import HypothesisRecorder
 from llm_reasoner.knowledge.generation.request import HypothesisRequest
 from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms
+from llm_reasoner.knowledge.representation.rdf import GraphReader
+from llm_reasoner.knowledge.storage.record import HypothesisRecord, qualified_name
+from llm_reasoner.knowledge.storage.store import HypothesisStore
 
 T = TypeVar("T")
-
-# %% exceptions
-
-
-# %% outcome
-
-
-# %% backend
 
 
 @dataclass
@@ -121,17 +107,18 @@ class HypothesisBackend(GenerativeBackend):
 
     def _evaluate(self, expression: Match[T]) -> Iterable[T]:
         request = HypothesisRequest.from_match(expression, self.instruction)
-        fixed = request.fixed_values
-        instruction = request.instruction
-        written_fixed = request.written_fixed_values
         stored = (
-            self.store.find(instruction, qualified_name(expression.type), written_fixed)
+            self.store.find(
+                request.instruction,
+                qualified_name(request.root_type),
+                request.written_fixed_values,
+            )
             if self.store is not None
             else None
         )
         if stored is not None:
             self.last_record = stored.record
-            yield GraphReader().read(stored.graph).root_of(expression.type)
+            yield GraphReader().read(stored.graph).root_of(request.root_type)
             return
         dialogue = GenerationDialogue(
             client=self.client,
@@ -142,39 +129,9 @@ class HypothesisBackend(GenerativeBackend):
         )
         self.log = dialogue.exchanges
         self.last_outcome = dialogue.generate(request)
-        self.admit(self.last_outcome, instruction, expression.type, written_fixed)
-        yield self.last_outcome.hypothesis.root
-
-    def admit(
-        self,
-        outcome: GenerationOutcome,
-        instruction: str,
-        root_type: type,
-        fixed_values: dict[str, str],
-    ) -> None:
-        """
-        Record an admitted hypothesis, and store it when there is a store.
-        """
-        hypothesis = outcome.hypothesis
-        self.last_record = HypothesisRecord(
-            instruction=instruction,
-            root_type=qualified_name(root_type),
-            fixed_values=fixed_values,
+        self.last_record = HypothesisRecorder(
             client_identity=self.client.identity,
-            exchanges=outcome.exchanges,
-            warnings=[
-                described_violation(warning, hypothesis.identifier_of)
-                for warning in outcome.warnings
-            ],
-            consistency=(
-                ConsistencyVerdict.CONSISTENT
-                if self.consistency is not None
-                else ConsistencyVerdict.NOT_CHECKED
-            ),
-            module_versions=current_module_versions(),
-        )
-        if self.store is not None:
-            namespace = Citation.namespace_of(self.last_record.record_id)
-            self.store.put(
-                self.last_record, GraphWriter(namespace=namespace).write(hypothesis)
-            )
+            consistency_checked=self.consistency is not None,
+            store=self.store,
+        ).record(self.last_outcome, request)
+        yield self.last_outcome.hypothesis.root
