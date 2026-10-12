@@ -13,9 +13,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import StrEnum
 
-from krrood.ontomatic.property_descriptor.property_descriptor import PropertyDescriptor
 from typing_extensions import ClassVar, List, Optional
 
+from llm_reasoner.knowledge.ontologies.properties import ObjectPropertyDescriptor
 from llm_reasoner.knowledge.ontologies.terms import (
     ClassTerm,
     ComplementOf,
@@ -5549,119 +5549,119 @@ class WorldAssumption(ConditionRequirement):
 
 
 @dataclass
-class ActsOnRole(PropertyDescriptor):
+class ActsOnRole(ObjectPropertyDescriptor):
     """
     The participant the force acts on.
     """
 
 
 @dataclass
-class AimsFor(PropertyDescriptor):
+class AimsFor(ObjectPropertyDescriptor):
     """
     The single subgoal that individuates the phase.
     """
 
 
 @dataclass
-class AtEventType(PropertyDescriptor):
+class AtEventType(ObjectPropertyDescriptor):
     """
     The mechanical event at which comparisons are performed; never a pose, setpoint or external event.
     """
 
 
 @dataclass
-class AttainmentSignalledBy(PropertyDescriptor):
+class AttainmentSignalledBy(ObjectPropertyDescriptor):
     """
     The event whose registration is evidence that the subgoal is reached.
     """
 
 
 @dataclass
-class AttainsSetpoint(PropertyDescriptor):
+class AttainsSetpoint(ObjectPropertyDescriptor):
     """
     A setpoint whose attainment constitutes the event.
     """
 
 
 @dataclass
-class BasedOnObservation(PropertyDescriptor):
+class BasedOnObservation(ObjectPropertyDescriptor):
     """
     An observation supporting the state estimate.
     """
 
 
 @dataclass
-class CausedByEvent(PropertyDescriptor):
+class CausedByEvent(ObjectPropertyDescriptor):
     """
     The event expected to produce the sensory consequence.
     """
 
 
 @dataclass
-class ComparedWith(PropertyDescriptor):
+class ComparedWith(ObjectPropertyDescriptor):
     """
     The observation type continuously compared with the prediction.
     """
 
 
 @dataclass
-class ComparesObservation(PropertyDescriptor):
+class ComparesObservation(ObjectPropertyDescriptor):
     """
     The received observation, absent only when the error is an absent event.
     """
 
 
 @dataclass
-class ComparesPrediction(PropertyDescriptor):
+class ComparesPrediction(ObjectPropertyDescriptor):
     """
     The sensory prediction being evaluated.
     """
 
 
 @dataclass
-class ConditionOnRole(PropertyDescriptor):
+class ConditionOnRole(ObjectPropertyDescriptor):
     """
     A role the condition is about. Without it the condition cannot be bound to the world.
     """
 
 
 @dataclass
-class ConfirmsSubgoal(PropertyDescriptor):
+class ConfirmsSubgoal(ObjectPropertyDescriptor):
     """
     The subgoal a successful comparison confirms.
     """
 
 
 @dataclass
-class ControlledBy(PropertyDescriptor):
+class ControlledBy(ObjectPropertyDescriptor):
     """
     The action-phase controller that executes the phase.
     """
 
 
 @dataclass
-class ControlsSetpoint(PropertyDescriptor):
+class ControlsSetpoint(ObjectPropertyDescriptor):
     """
     The setpoint adjusted from the comparison error.
     """
 
 
 @dataclass
-class CorrectionTerminatedBy(PropertyDescriptor):
+class CorrectionTerminatedBy(ObjectPropertyDescriptor):
     """
     An event that ends a corrective programme, such as lift-off ending probing force increases.
     """
 
 
 @dataclass
-class CrossesThreshold(PropertyDescriptor):
+class CrossesThreshold(ObjectPropertyDescriptor):
     """
     The threshold crossed at the event.
     """
 
 
 @dataclass
-class DefinesComponent(PropertyDescriptor):
+class DefinesComponent(ObjectPropertyDescriptor):
     """
     A fragment the structure declares; a structure refers only to fragments it declares.
     """
@@ -5815,455 +5815,455 @@ class DefinesTransition(DefinesComponent):
 
 
 @dataclass
-class EndsForce(PropertyDescriptor):
+class EndsForce(ObjectPropertyDescriptor):
     """
     A force that stops acting at the event, such as the grip force at release.
     """
 
 
 @dataclass
-class EstimatesCondition(PropertyDescriptor):
+class EstimatesCondition(ObjectPropertyDescriptor):
     """
     A condition estimated to hold at phase entry.
     """
 
 
 @dataclass
-class ExemptsEvent(PropertyDescriptor):
+class ExemptsEvent(ObjectPropertyDescriptor):
     """
     The phase boundary intentionally represented without a control point.
     """
 
 
 @dataclass
-class ExertedByRole(PropertyDescriptor):
+class ExertedByRole(ObjectPropertyDescriptor):
     """
     The participant exerting the force; absent for weight and inertia.
     """
 
 
 @dataclass
-class ExpectedOnRole(PropertyDescriptor):
+class ExpectedOnRole(ObjectPropertyDescriptor):
     """
     A participant role at which the consequence is expected.
     """
 
 
 @dataclass
-class ForPhase(PropertyDescriptor):
+class ForPhase(ObjectPropertyDescriptor):
     """
     The phase whose initial state is estimated.
     """
 
 
 @dataclass
-class FromPhase(PropertyDescriptor):
+class FromPhase(ObjectPropertyDescriptor):
     """
     The phase control leaves.
     """
 
 
 @dataclass
-class GatedBy(PropertyDescriptor):
+class GatedBy(ObjectPropertyDescriptor):
     """
     A boundary event that releases the transition.
     """
 
 
 @dataclass
-class GovernedBy(PropertyDescriptor):
+class GovernedBy(ObjectPropertyDescriptor):
     """
     An internal model the controller uses to predict and to generate commands.
     """
 
 
 @dataclass
-class HasActiveParameter(PropertyDescriptor):
+class HasActiveParameter(ObjectPropertyDescriptor):
     """
     A parameter in force during the phase, which its controller is parameterised by in advance.
     """
 
 
 @dataclass
-class HasCategoricalValue(PropertyDescriptor):
+class HasCategoricalValue(ObjectPropertyDescriptor):
     """
     The value of a categorical parameter.
     """
 
 
 @dataclass
-class HasComparison(PropertyDescriptor):
+class HasComparison(ObjectPropertyDescriptor):
     """
     A possible match or mismatch outcome at the control point.
     """
 
 
 @dataclass
-class HasConditionRequirement(PropertyDescriptor):
+class HasConditionRequirement(ObjectPropertyDescriptor):
     """
     What the phase demands of the world at entry, throughout or at exit.
     """
 
 
 @dataclass
-class HasContinuousPrediction(PropertyDescriptor):
+class HasContinuousPrediction(ObjectPropertyDescriptor):
     """
     A continuous sensory prediction the controller compares throughout its phase.
     """
 
 
 @dataclass
-class HasCorrectiveProgram(PropertyDescriptor):
+class HasCorrectiveProgram(ObjectPropertyDescriptor):
     """
     A corrective programme the controller runs when a matching mismatch is detected.
     """
 
 
 @dataclass
-class HasDiscrepancy(PropertyDescriptor):
+class HasDiscrepancy(ObjectPropertyDescriptor):
     """
     The size of the discrepancy, when the error is quantitative.
     """
 
 
 @dataclass
-class HasDrivingForce(PropertyDescriptor):
+class HasDrivingForce(ObjectPropertyDescriptor):
     """
     The force that prevails once the event has occurred.
     """
 
 
 @dataclass
-class HasExpectedMagnitude(PropertyDescriptor):
+class HasExpectedMagnitude(ObjectPropertyDescriptor):
     """
     The expected magnitude, when the prediction is quantitative.
     """
 
 
 @dataclass
-class HasExpectedRange(PropertyDescriptor):
+class HasExpectedRange(ObjectPropertyDescriptor):
     """
     The range the feature traverses or stays within.
     """
 
 
 @dataclass
-class HasExpectedTiming(PropertyDescriptor):
+class HasExpectedTiming(ObjectPropertyDescriptor):
     """
     The interval in which the consequence or trajectory is expected.
     """
 
 
 @dataclass
-class HasObservedMagnitude(PropertyDescriptor):
+class HasObservedMagnitude(ObjectPropertyDescriptor):
     """
     The observed magnitude, when the observation is quantitative.
     """
 
 
 @dataclass
-class HasParameterRange(PropertyDescriptor):
+class HasParameterRange(ObjectPropertyDescriptor):
     """
     The value of a quantitative parameter.
     """
 
 
 @dataclass
-class HasPrediction(PropertyDescriptor):
+class HasPrediction(ObjectPropertyDescriptor):
     """
     A sensory consequence expected at the event, which the control point checks.
     """
 
 
 @dataclass
-class HasPredictionError(PropertyDescriptor):
+class HasPredictionError(ObjectPropertyDescriptor):
     """
     An error a mismatching comparison is classified as.
     """
 
 
 @dataclass
-class HasResistingForce(PropertyDescriptor):
+class HasResistingForce(ObjectPropertyDescriptor):
     """
     The force that prevails until the event; the event's threshold is its limit.
     """
 
 
 @dataclass
-class HasResponseLatency(PropertyDescriptor):
+class HasResponseLatency(ObjectPropertyDescriptor):
     """
     The delay before the response changes the motor output: about 100 ms for tactile, over 200 ms for visual triggers in humans.
     """
 
 
 @dataclass
-class HasSignalFeature(PropertyDescriptor):
+class HasSignalFeature(ObjectPropertyDescriptor):
     """
     The sensory feature whose evolution is described.
     """
 
 
 @dataclass
-class HasTolerance(PropertyDescriptor):
+class HasTolerance(ObjectPropertyDescriptor):
     """
     The admissible deviation from the predicted magnitude or trajectory.
     """
 
 
 @dataclass
-class HoldsEstimate(PropertyDescriptor):
+class HoldsEstimate(ObjectPropertyDescriptor):
     """
     An estimate stored as content of the representation.
     """
 
 
 @dataclass
-class InitiatedBy(PropertyDescriptor):
+class InitiatedBy(ObjectPropertyDescriptor):
     """
     An event that begins the phase. The first phase of a structure has none.
     """
 
 
 @dataclass
-class IntendedEffect(PropertyDescriptor):
+class IntendedEffect(ObjectPropertyDescriptor):
     """
     A condition the correction is meant to establish or preserve.
     """
 
 
 @dataclass
-class InvokesCorrection(PropertyDescriptor):
+class InvokesCorrection(ObjectPropertyDescriptor):
     """
     A corrective response a mismatch releases.
     """
 
 
 @dataclass
-class InvolvesRole(PropertyDescriptor):
+class InvolvesRole(ObjectPropertyDescriptor):
     """
     A participant role taking part in the phase.
     """
 
 
 @dataclass
-class MarginOn(PropertyDescriptor):
+class MarginOn(ObjectPropertyDescriptor):
     """
     The motor setpoint carrying the safety margin.
     """
 
 
 @dataclass
-class MarginOver(PropertyDescriptor):
+class MarginOver(ObjectPropertyDescriptor):
     """
     The threshold below the setpoint.
     """
 
 
 @dataclass
-class ObservedAt(PropertyDescriptor):
+class ObservedAt(ObjectPropertyDescriptor):
     """
     The interval in which the observation occurs.
     """
 
 
 @dataclass
-class ObservedOnRole(PropertyDescriptor):
+class ObservedOnRole(ObjectPropertyDescriptor):
     """
     A participant role involved in the observation.
     """
 
 
 @dataclass
-class ObservesEvent(PropertyDescriptor):
+class ObservesEvent(ObjectPropertyDescriptor):
     """
     The observed event.
     """
 
 
 @dataclass
-class ObservesFeature(PropertyDescriptor):
+class ObservesFeature(ObjectPropertyDescriptor):
     """
     The observed feature.
     """
 
 
 @dataclass
-class ParameterOnRole(PropertyDescriptor):
+class ParameterOnRole(ObjectPropertyDescriptor):
     """
     A participant role to which the parameter applies.
     """
 
 
 @dataclass
-class PermittedBy(PropertyDescriptor):
+class PermittedBy(ObjectPropertyDescriptor):
     """
     A successful comparison required in addition to the event gates.
     """
 
 
 @dataclass
-class PredictsEvent(PropertyDescriptor):
+class PredictsEvent(ObjectPropertyDescriptor):
     """
     The expected event.
     """
 
 
 @dataclass
-class PredictsFeature(PropertyDescriptor):
+class PredictsFeature(ObjectPropertyDescriptor):
     """
     The expected signal feature.
     """
 
 
 @dataclass
-class PredictsSensoryEvent(PropertyDescriptor):
+class PredictsSensoryEvent(ObjectPropertyDescriptor):
     """
     A sensory event the controller predicts, in particular those that signify attainment of its subgoal.
     """
 
 
 @dataclass
-class PredictsTrajectory(PropertyDescriptor):
+class PredictsTrajectory(ObjectPropertyDescriptor):
     """
     The structured feature change expected during the phase.
     """
 
 
 @dataclass
-class ProducesModelUpdate(PropertyDescriptor):
+class ProducesModelUpdate(ObjectPropertyDescriptor):
     """
     A representation update a mismatch supports.
     """
 
 
 @dataclass
-class RateOf(PropertyDescriptor):
+class RateOf(ObjectPropertyDescriptor):
     """
     The force setpoint whose rate of change is commanded.
     """
 
 
 @dataclass
-class ResolvesOpposition(PropertyDescriptor):
+class ResolvesOpposition(ObjectPropertyDescriptor):
     """
     The force opposition whose driving force overcomes its resisting force at the event.
     """
 
 
 @dataclass
-class ScalesSetpoint(PropertyDescriptor):
+class ScalesSetpoint(ObjectPropertyDescriptor):
     """
     A motor setpoint the estimate scales feedforward, before any sensory confirmation is available.
     """
 
 
 @dataclass
-class SignalsSubgoal(PropertyDescriptor):
+class SignalsSubgoal(ObjectPropertyDescriptor):
     """
     The subgoal whose attainment the predicted sensory event signifies.
     """
 
 
 @dataclass
-class StartsForce(PropertyDescriptor):
+class StartsForce(ObjectPropertyDescriptor):
     """
     A force that begins to act at the event, such as the support reaction at touchdown.
     """
 
 
 @dataclass
-class SuppliesStateEstimate(PropertyDescriptor):
+class SuppliesStateEstimate(ObjectPropertyDescriptor):
     """
     The next phase's initial state supplied by a successful comparison.
     """
 
 
 @dataclass
-class TargetsCondition(PropertyDescriptor):
+class TargetsCondition(ObjectPropertyDescriptor):
     """
     The condition the phase is meant to bring about.
     """
 
 
 @dataclass
-class TargetsSetpoint(PropertyDescriptor):
+class TargetsSetpoint(ObjectPropertyDescriptor):
     """
     A motor setpoint the response changes.
     """
 
 
 @dataclass
-class TerminatedBy(PropertyDescriptor):
+class TerminatedBy(ObjectPropertyDescriptor):
     """
     An event that ends the phase. A phase without a boundary is not a phase.
     """
 
 
 @dataclass
-class TerminatesStateType(PropertyDescriptor):
+class TerminatesStateType(ObjectPropertyDescriptor):
     """
     A condition that stops holding when an event of this type occurs. The counterpart of aicor:initiatesStateType.
     """
 
 
 @dataclass
-class ToPhase(PropertyDescriptor):
+class ToPhase(ObjectPropertyDescriptor):
     """
     The phase control enters.
     """
 
 
 @dataclass
-class TriggeredByError(PropertyDescriptor):
+class TriggeredByError(ObjectPropertyDescriptor):
     """
     A prediction error that releases the response or supplies evidence for the update.
     """
 
 
 @dataclass
-class UpdatesEstimate(PropertyDescriptor):
+class UpdatesEstimate(ObjectPropertyDescriptor):
     """
     An estimate the revision changes.
     """
 
 
 @dataclass
-class UpdatesRepresentation(PropertyDescriptor):
+class UpdatesRepresentation(ObjectPropertyDescriptor):
     """
     The representation in which the content is changed.
     """
 
 
 @dataclass
-class ViolationSignalledBy(PropertyDescriptor):
+class ViolationSignalledBy(ObjectPropertyDescriptor):
     """
     The failure event that registers the condition ceasing to hold.
     """
 
 
 @dataclass
-class BetweenRoleFillers(PropertyDescriptor):
+class BetweenRoleFillers(ObjectPropertyDescriptor):
     """
     The linked ontology property http://aicor.knowledge/l2-ontology.owl#betweenRoleFillers.
     """
 
 
 @dataclass
-class GeneratedBy(PropertyDescriptor):
+class GeneratedBy(ObjectPropertyDescriptor):
     """
     The linked ontology property http://aicor.knowledge/l2-ontology.owl#generatedBy.
     """
 
 
 @dataclass
-class HasConditionType(PropertyDescriptor):
+class HasConditionType(ObjectPropertyDescriptor):
     """
     The linked ontology property http://aicor.knowledge/l2-ontology.owl#hasConditionType.
     """
 
 
 @dataclass
-class InitiatesStateType(PropertyDescriptor):
+class InitiatesStateType(ObjectPropertyDescriptor):
     """
     The linked ontology property http://aicor.knowledge/l2-ontology.owl#initiatesStateType.
     """

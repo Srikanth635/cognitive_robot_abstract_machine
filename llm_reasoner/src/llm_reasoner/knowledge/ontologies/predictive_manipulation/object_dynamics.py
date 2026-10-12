@@ -9,11 +9,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import StrEnum
 
-from krrood.ontomatic.property_descriptor.mixins import HasInverseProperty
-from krrood.ontomatic.property_descriptor.property_descriptor import PropertyDescriptor
 from typing_extensions import ClassVar, List, Optional
 
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
+from llm_reasoner.knowledge.ontologies.properties import ObjectPropertyDescriptor
 from llm_reasoner.knowledge.ontologies.terms import (
     ClassTerm,
     ComplementOf,
@@ -1162,21 +1161,21 @@ class SensorimotorMemory(DescriptionEntity):
 
 
 @dataclass
-class AffectsModel(PropertyDescriptor):
+class AffectsModel(ObjectPropertyDescriptor):
     """
     The object or limb dynamics subjected to the perturbation.
     """
 
 
 @dataclass
-class CommandsSetpoint(PropertyDescriptor):
+class CommandsSetpoint(ObjectPropertyDescriptor):
     """
     A motor setpoint the command specifies.
     """
 
 
 @dataclass
-class CopiesCommand(PropertyDescriptor):
+class CopiesCommand(ObjectPropertyDescriptor):
     """
     The outgoing command the copy represents.
     """
@@ -1239,126 +1238,124 @@ class DefinesSensorimotorMemory(core.DefinesComponent):
 
 
 @dataclass
-class DesiredCondition(PropertyDescriptor):
+class DesiredCondition(ObjectPropertyDescriptor):
     """
     A condition whose establishment defines the desired state.
     """
 
 
 @dataclass
-class FromPerturbation(PropertyDescriptor):
+class FromPerturbation(ObjectPropertyDescriptor):
     """
     The context in which adaptation was acquired.
     """
 
 
 @dataclass
-class HasPerceptualRepresentation(PropertyDescriptor):
+class HasPerceptualRepresentation(ObjectPropertyDescriptor):
     """
     The representation used for conscious judgment.
     """
 
 
 @dataclass
-class HasSensorimotorRepresentation(PropertyDescriptor):
+class HasSensorimotorRepresentation(ObjectPropertyDescriptor):
     """
     The representation used for motor prediction and scaling.
     """
 
 
 @dataclass
-class MatchedWith(PropertyDescriptor, HasInverseProperty):
+class MatchedWith(ObjectPropertyDescriptor):
     """
     A perturbation matched physically with this one for a transfer comparison.
     """
 
-    @classmethod
-    def get_inverse(cls) -> type[PropertyDescriptor]:
-        """
-        The property is symmetric, so it is its own inverse.
-        """
-        return cls
+    symmetric: ClassVar[bool] = True
+    """
+    The property is symmetric, so a value's field holds the instance in turn.
+    """
 
 
 @dataclass
-class PerceptualEstimate(PropertyDescriptor):
+class PerceptualEstimate(ObjectPropertyDescriptor):
     """
     The biased estimate held by the perceptual representation.
     """
 
 
 @dataclass
-class PersistsIn(PropertyDescriptor):
+class PersistsIn(ObjectPropertyDescriptor):
     """
     The memory in which the revised representation is retained.
     """
 
 
 @dataclass
-class PredictsMechanicalConsequence(PropertyDescriptor):
+class PredictsMechanicalConsequence(ObjectPropertyDescriptor):
     """
     A mechanical event the composition predicts.
     """
 
 
 @dataclass
-class PredictsSensoryConsequence(PropertyDescriptor):
+class PredictsSensoryConsequence(ObjectPropertyDescriptor):
     """
     A sensory consequence the forward model generates.
     """
 
 
 @dataclass
-class PursuesState(PropertyDescriptor):
+class PursuesState(ObjectPropertyDescriptor):
     """
     The desired state the command is intended to establish.
     """
 
 
 @dataclass
-class RepresentsRole(PropertyDescriptor):
+class RepresentsRole(ObjectPropertyDescriptor):
     """
     A participant role whose properties or dynamics are represented.
     """
 
 
 @dataclass
-class SensorimotorEstimate(PropertyDescriptor):
+class SensorimotorEstimate(ObjectPropertyDescriptor):
     """
     The accurate estimate held by the sensorimotor representation.
     """
 
 
 @dataclass
-class StoresRepresentation(PropertyDescriptor):
+class StoresRepresentation(ObjectPropertyDescriptor):
     """
     A representation the memory retains.
     """
 
 
 @dataclass
-class ToPerturbation(PropertyDescriptor):
+class ToPerturbation(ObjectPropertyDescriptor):
     """
     The context in which transfer was assessed.
     """
 
 
 @dataclass
-class UsesDynamicsModel(PropertyDescriptor):
+class UsesDynamicsModel(ObjectPropertyDescriptor):
     """
     The object or limb dynamics used to interpret the command copy.
     """
 
 
 @dataclass
-class UsesEfferenceCopy(PropertyDescriptor):
+class UsesEfferenceCopy(ObjectPropertyDescriptor):
     """
     An outgoing command copy used to predict the load the command will meet.
     """
 
 
 @dataclass
-class UsesForwardModel(PropertyDescriptor):
+class UsesForwardModel(ObjectPropertyDescriptor):
     """
     The model that generates the predicted consequences.
     """

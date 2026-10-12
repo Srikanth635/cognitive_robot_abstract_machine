@@ -11,17 +11,14 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 {% endif %}
 
-{% if module.has_symmetric_descriptor %}
-from krrood.ontomatic.property_descriptor.mixins import HasInverseProperty
-{% endif %}
-{% if module.descriptors %}
-from krrood.ontomatic.property_descriptor.property_descriptor import PropertyDescriptor
-{% endif %}
 from typing_extensions import ClassVar, List, Optional
 
 {% for referenced in module.referenced_modules %}
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import {{ referenced }}
 {% endfor %}
+{% if module.descriptors %}
+from llm_reasoner.knowledge.ontologies.properties import ObjectPropertyDescriptor
+{% endif %}
 from llm_reasoner.knowledge.ontologies.terms import (
     ClassTerm,
     ComplementOf,
@@ -121,12 +118,10 @@ class {{ descriptor.python_name.name }}({{ super_descriptors(descriptor) }}):
     """
 {% if descriptor.symmetric %}
 
-    @classmethod
-    def get_inverse(cls) -> type[PropertyDescriptor]:
-        """
-        The property is symmetric, so it is its own inverse.
-        """
-        return cls
+    symmetric: ClassVar[bool] = True
+    """
+    The property is symmetric, so a value's field holds the instance in turn.
+    """
 {% endif %}
 {% endfor %}
 {% endif %}

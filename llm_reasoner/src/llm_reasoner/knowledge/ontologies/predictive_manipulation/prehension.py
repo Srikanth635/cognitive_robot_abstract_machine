@@ -9,11 +9,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import StrEnum
 
-from krrood.ontomatic.property_descriptor.property_descriptor import PropertyDescriptor
 from typing_extensions import ClassVar, List, Optional
 
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import core
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import object_dynamics
+from llm_reasoner.knowledge.ontologies.properties import ObjectPropertyDescriptor
 from llm_reasoner.knowledge.ontologies.terms import (
     ClassTerm,
     ComplementOf,
@@ -2095,28 +2095,28 @@ class WithdrawalDistanceSetpoint(core.LengthParameter, core.MotorSetpoint):
 
 
 @dataclass
-class AdjustmentActiveIn(PropertyDescriptor):
+class AdjustmentActiveIn(ObjectPropertyDescriptor):
     """
     A phase during which the anticipatory change is active.
     """
 
 
 @dataclass
-class AdjustsGripForce(PropertyDescriptor):
+class AdjustsGripForce(ObjectPropertyDescriptor):
     """
     The grip-force target changed before the predicted event.
     """
 
 
 @dataclass
-class BoundsSetpoint(PropertyDescriptor):
+class BoundsSetpoint(ObjectPropertyDescriptor):
     """
     A motor setpoint whose admissible values the corridor bounds.
     """
 
 
 @dataclass
-class CouplingActiveIn(PropertyDescriptor):
+class CouplingActiveIn(ObjectPropertyDescriptor):
     """
     A phase in which grip and load stay functionally coupled.
     """
@@ -2137,77 +2137,77 @@ class DefinesForceCoupling(core.DefinesComponent):
 
 
 @dataclass
-class DefinesGripForceCorridor(PropertyDescriptor):
+class DefinesGripForceCorridor(ObjectPropertyDescriptor):
     """
     The admissible grip-force range declared by the structure.
     """
 
 
 @dataclass
-class FollowsLoadPrediction(PropertyDescriptor):
+class FollowsLoadPrediction(ObjectPropertyDescriptor):
     """
     A predicted load trajectory the grip force follows while the load changes, as when substance flows out of a held container.
     """
 
 
 @dataclass
-class FrictionEstimate(PropertyDescriptor):
+class FrictionEstimate(ObjectPropertyDescriptor):
     """
     The estimated friction of the grasp interface that limits tangential force.
     """
 
 
 @dataclass
-class GripForceResponse(PropertyDescriptor):
+class GripForceResponse(ObjectPropertyDescriptor):
     """
     The grip-force target the relation produces.
     """
 
 
 @dataclass
-class HasSafetyMargin(PropertyDescriptor):
+class HasSafetyMargin(ObjectPropertyDescriptor):
     """
     The additional grip force kept above the slip threshold.
     """
 
 
 @dataclass
-class PredictedLoad(PropertyDescriptor):
+class PredictedLoad(ObjectPropertyDescriptor):
     """
     The represented tangential load for which grip force is scaled.
     """
 
 
 @dataclass
-class TemporalCoupling(PropertyDescriptor):
+class TemporalCoupling(ObjectPropertyDescriptor):
     """
     The admissible timing between the load and the grip response.
     """
 
 
 @dataclass
-class TriggeredByPrediction(PropertyDescriptor):
+class TriggeredByPrediction(ObjectPropertyDescriptor):
     """
     The predicted event consequence that schedules the adjustment.
     """
 
 
 @dataclass
-class WeightSupportedBy(PropertyDescriptor):
+class WeightSupportedBy(ObjectPropertyDescriptor):
     """
     A support role bearing the manipulandum's weight once forces are unloaded.
     """
 
 
 @dataclass
-class LowerEdge(PropertyDescriptor):
+class LowerEdge(ObjectPropertyDescriptor):
     """
     The linked ontology property http://aicor.knowledge/l2-ontology.owl#lowerEdge.
     """
 
 
 @dataclass
-class UpperEdge(PropertyDescriptor):
+class UpperEdge(ObjectPropertyDescriptor):
     """
     The linked ontology property http://aicor.knowledge/l2-ontology.owl#upperEdge.
     """

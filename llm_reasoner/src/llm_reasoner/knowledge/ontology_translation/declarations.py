@@ -209,7 +209,7 @@ class DescriptorDeclaration:
 
     symmetric: bool = False
     """
-    Whether the property is symmetric, so krrood infers each relation in the other
+    Whether the property is symmetric, so each relation holds in the other
     direction as well.
     """
 
@@ -384,13 +384,6 @@ class ModuleDeclaration:
     """
     The property descriptor classes, every class after its super-properties.
     """
-
-    @property
-    def has_symmetric_descriptor(self) -> bool:
-        """
-        :return: Whether a descriptor of the module stands for a symmetric property.
-        """
-        return any(descriptor.symmetric for descriptor in self.descriptors)
 
     attachments: list[AttachmentDeclaration] = field(default_factory=list)
     """

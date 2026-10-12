@@ -13,7 +13,8 @@ from types import ModuleType
 
 import pytest
 from rdflib import OWL, RDF, RDFS, Graph, URIRef
-from krrood.class_diagrams.class_diagram import WrappedClass
+from krrood.class_diagrams.class_diagram import ClassDiagram, WrappedClass
+from krrood.symbol_graph.symbol_graph import SymbolGraph
 from typing_extensions import Any, List, Optional
 
 from llm_reasoner.knowledge.ontologies import (
@@ -368,3 +369,49 @@ class TestPropertyDescriptors:
         phase = core.ActionPhase()
         structure = core.ActionPhaseStructure(defines_phase=[phase])
         assert phase in structure.defines_component
+
+    def test_a_component_set_after_construction_is_one_of_the_components(self):
+        transition = core.PhaseTransition()
+        structure = core.ActionPhaseStructure()
+        structure.defines_transition = [transition]
+        assert transition in structure.defines_component
+
+    def test_a_component_stated_directly_stays_a_component(self):
+        stated, phase = core.ActionPhase(), core.ActionPhase()
+        structure = core.ActionPhaseStructure(
+            defines_component=[stated], defines_phase=[phase]
+        )
+        assert [
+            any(component is expected for component in structure.defines_component)
+            for expected in (stated, phase)
+        ] == [True, True]
+
+
+# %% independence from krrood's symbol graph
+
+
+class TestIndependenceFromTheSymbolGraph:
+    """
+    Knowledge lives in the knowledge component's own graph: building it never touches
+    krrood's symbol graph, which may know none of the vocabulary's classes.
+    """
+
+    @pytest.fixture(autouse=True)
+    def symbol_graph_knowing_no_vocabulary(self):
+        SymbolGraph.clear_instance()
+        SymbolGraph(_class_diagram=ClassDiagram([]))
+
+    def test_a_structure_is_built_while_the_graph_knows_no_vocabulary_class(self):
+        phase = core.ActionPhase()
+        structure = core.ActionPhaseStructure(defines_phase=[phase])
+        assert phase in structure.defines_component
+
+    def test_a_symmetric_property_holds_both_ways_without_the_graph(self):
+        first = object_dynamics.DynamicsPerturbation()
+        second = object_dynamics.DynamicsPerturbation()
+        first.matched_with = [second]
+        assert first in second.matched_with
+
+    def test_knowledge_is_not_part_of_the_symbol_graph(self):
+        structure = core.ActionPhaseStructure(defines_phase=[core.ActionPhase()])
+        assert SymbolGraph().get_wrapped_instance(structure) is None

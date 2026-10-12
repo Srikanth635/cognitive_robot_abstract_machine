@@ -9,20 +9,12 @@ from dataclasses import dataclass, field
 
 from typing_extensions import Any
 
-import llm_reasoner.knowledge
 from llm_reasoner.clients.base import LanguageModelClient
 from llm_reasoner.knowledge.access import KnowledgeService
 from llm_reasoner.resolver.backend import LanguageModelBackend
 from llm_reasoner.resolver.knowledge import KnowledgeRequester
 from llm_reasoner.world.access import WorldAccess
-from llm_reasoner.world.sources import FOUNDATION_PACKAGE, SymbolGraphSource
 from llm_reasoner.world.view import WorldView
-
-PACKAGES_OUTSIDE_THE_WORLD = (FOUNDATION_PACKAGE, llm_reasoner.knowledge.__name__)
-"""
-The packages whose symbols are not the world: the symbol graph's own machinery and the
-knowledge component's vocabulary.
-"""
 
 
 @dataclass
@@ -41,14 +33,10 @@ class Reasoner:
     Serves the hypothesis about each action resolved, generated once per situation.
     """
 
-    world: WorldAccess = field(
-        default_factory=lambda: WorldView(
-            source=SymbolGraphSource(excluded_packages=PACKAGES_OUTSIDE_THE_WORLD)
-        )
-    )
+    world: WorldAccess = field(default_factory=WorldView)
     """
-    The world the resolver reads, by default the symbol graph without the knowledge
-    component's symbols.
+    The world the resolver reads, by default krrood's symbol graph, which holds no
+    knowledge: that lives in the knowledge component's own graph.
     """
 
     def backend(self, **settings: Any) -> LanguageModelBackend:
