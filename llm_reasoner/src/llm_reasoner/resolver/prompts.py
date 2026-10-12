@@ -19,6 +19,7 @@ from typing_extensions import Any, Dict, List, Optional, Sequence
 
 from llm_reasoner.resolver.context import CandidateRenderer
 from llm_reasoner.resolver.exceptions import RetryableModelFailure
+from llm_reasoner.resolver.grounds import GroundSource
 from llm_reasoner.resolver.prompt_format import (
     SECTION_SEPARATOR,
     AcceptedType,
@@ -64,7 +65,13 @@ class RequestAnswerKey(StrEnum):
     WHY = "why"
     """
     Says, in one sentence, why an element's values were chosen; it is kept with the
-    answer for people to read and never decoded.
+    answer for people to read.
+    """
+
+    GROUNDS = "grounds"
+    """
+    Names what an element's choices rest on, each part in its source; every name is
+    checked, and the answer keeps what they identify.
     """
 
 
@@ -360,12 +367,14 @@ class PromptBuilder:
         context_sections: Sequence[PromptBlock],
         number_of_candidates: int,
         backend: Optional[QueryBackend] = None,
+        ground_sources: Sequence[GroundSource] = (),
     ) -> str:
         """
         :param expression: The match being resolved.
         :param slots: Every reflected slot, bound and open.
         :param context_sections: The sections from the context providers, in the order
             they should be read.
+        :param ground_sources: The sources an element may name what it rests on in.
         :param number_of_candidates: How many alternatives to request at most.
         :param backend: Decides the verb the request is verbalized with.
         :return: The user prompt.
@@ -398,7 +407,9 @@ class PromptBuilder:
         blocks.append(
             PromptBlock(
                 section=PromptSection.OUTPUT,
-                body=self.as_json(self.output_schema(open_slots, number_of_candidates)),
+                body=self.as_json(
+                    self.output_schema(open_slots, number_of_candidates, ground_sources)
+                ),
             )
         )
         return render_blocks(blocks)
@@ -604,29 +615,79 @@ class PromptBuilder:
 
     @staticmethod
     def output_schema(
-        open_slots: Sequence[Slot], number_of_candidates: int
+        open_slots: Sequence[Slot],
+        number_of_candidates: int,
+        ground_sources: Sequence[GroundSource] = (),
     ) -> Dict[str, Any]:
         """
         :param open_slots: The slots the model must answer for.
         :param number_of_candidates: How many alternatives to request at most.
+        :param ground_sources: The sources an element may name what it rests on in;
+            none asks for no grounds.
         :return: The JSON schema of the answer: an array of at most that many objects,
-            each holding every slot path and the explanation.
+            each holding every slot path, the explanation and, when there are sources,
+            the grounds.
         """
+        properties: Dict[str, Any] = {
+            **{slot.path: {} for slot in open_slots},
+            RequestAnswerKey.WHY: {SchemaKey.TYPE: SchemaType.STRING},
+        }
+        required = [slot.path for slot in open_slots] + [RequestAnswerKey.WHY]
+        if ground_sources:
+            properties[RequestAnswerKey.GROUNDS] = PromptBuilder.grounds_schema(
+                ground_sources
+            )
+            required.append(RequestAnswerKey.GROUNDS)
         return {
             SchemaKey.TYPE: SchemaType.ARRAY,
             SchemaKey.MIN_ITEMS: 1,
             SchemaKey.MAX_ITEMS: number_of_candidates,
             SchemaKey.ITEMS: {
                 SchemaKey.TYPE: SchemaType.OBJECT,
-                SchemaKey.PROPERTIES: {
-                    **{slot.path: {} for slot in open_slots},
-                    RequestAnswerKey.WHY: {SchemaKey.TYPE: SchemaType.STRING},
-                },
-                SchemaKey.REQUIRED: [slot.path for slot in open_slots]
-                + [RequestAnswerKey.WHY],
+                SchemaKey.PROPERTIES: properties,
+                SchemaKey.REQUIRED: required,
                 SchemaKey.ADDITIONAL_PROPERTIES: False,
             },
         }
+
+    @staticmethod
+    def grounds_schema(ground_sources: Sequence[GroundSource]) -> Dict[str, Any]:
+        """
+        :param ground_sources: The sources an element may name what it rests on in.
+        :return: The JSON schema of an element's grounds: a list of objects, each
+            naming one part of one source under that source's key.
+        """
+        return {
+            SchemaKey.TYPE: SchemaType.ARRAY,
+            SchemaKey.ITEMS: {
+                SchemaKey.ANY_OF: [
+                    {
+                        SchemaKey.TYPE: SchemaType.OBJECT,
+                        SchemaKey.PROPERTIES: {
+                            source.key: {SchemaKey.TYPE: SchemaType.STRING}
+                        },
+                        SchemaKey.REQUIRED: [source.key],
+                        SchemaKey.ADDITIONAL_PROPERTIES: False,
+                    }
+                    for source in ground_sources
+                ]
+            },
+        }
+
+    @staticmethod
+    def grounds_rule(ground_sources: Sequence[GroundSource]) -> PromptRule:
+        """
+        :param ground_sources: The sources an element may name what it rests on in.
+        :return: The rule stating how an element names what its choices rest on.
+        """
+        forms = " or ".join(
+            f'{{"{source.key}": "<{source.name_form}>"}}' for source in ground_sources
+        )
+        return PromptRule(
+            name=RuleName.GROUNDS,
+            text=f'"{RequestAnswerKey.GROUNDS}" lists what your choices rest on beyond '
+            f"the request, each as {forms}; [] when the request alone decides them.",
+        )
 
     @staticmethod
     def as_json(data: Any) -> str:

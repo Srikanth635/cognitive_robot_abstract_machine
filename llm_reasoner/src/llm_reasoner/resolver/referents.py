@@ -13,6 +13,7 @@ from krrood.entity_query_language.query.match import Match
 from typing_extensions import Any, Dict, List, Mapping, Tuple
 
 from llm_reasoner.resolver.context import CandidateRenderer
+from llm_reasoner.resolver.grounds import GroundSource, WorldGrounds
 from llm_reasoner.resolver.exceptions import (
     AmbiguousReferent,
     NoFittingReferent,
@@ -92,6 +93,14 @@ class ReferentNaming(ABC):
     Names the candidates of referent slots in the prompt and reads the answer for one:
     a candidate, or the verdict that none fits or that several fit equally.
     """
+
+    @property
+    def ground_sources(self) -> Tuple[GroundSource, ...]:
+        """
+        The sources whose parts an answer may name as what its choices rest on, by
+        the names these candidates are offered under; none by default.
+        """
+        return ()
 
     @property
     def rules(self) -> Tuple[PromptRule, ...]:
@@ -244,6 +253,10 @@ class WorldHandles(ReferentNaming):
     """
     The world giving out the handles the model answers with.
     """
+
+    @property
+    def ground_sources(self) -> Tuple[GroundSource, ...]:
+        return (WorldGrounds(world=self.world),)
 
     @property
     def answer_rule(self) -> PromptRule:

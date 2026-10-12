@@ -26,6 +26,7 @@ from llm_reasoner.resolver.context import (
 )
 from llm_reasoner.resolver.exceptions import (
     ClientCannotUseTools,
+    UnknownGround,
     MissingSlotInResponse,
     ModelResponseUnparseable,
     NoCandidateReferents,
@@ -36,6 +37,12 @@ from llm_reasoner.resolver.exceptions import (
     SlotValueRejected,
     UnknownSlotInResponse,
     UnsatisfiableRequest,
+)
+from llm_reasoner.resolver.grounds import (
+    Ground,
+    GroundKey,
+    GroundSource,
+    Justification,
 )
 from llm_reasoner.resolver.knowledge import (
     KNOWLEDGE_RULE,
@@ -59,6 +66,31 @@ JSON_ARRAY = re.compile(r"\[.*]", re.DOTALL)
 """
 Locates the JSON array inside a response that may carry surrounding text.
 """
+
+# %% decoded answers
+
+
+@dataclass(frozen=True)
+class DecodedElement:
+    """
+    One element of an answer, decoded and checked.
+    """
+
+    assignment: Dict[str, Any]
+    """
+    The values for the open slots, by access path.
+    """
+
+    why: str
+    """
+    The model's explanation of the element.
+    """
+
+    grounds: List[Ground]
+    """
+    What the element's choices rest on, each checked against its source.
+    """
+
 
 # %% backend
 
@@ -165,6 +197,11 @@ class LanguageModelBackend(GenerativeBackend):
     before one, or when no knowledge describes the queried action.
     """
 
+    justifications: List[Justification] = field(default_factory=list, init=False)
+    """
+    Why each instance of the latest resolution was chosen and what its choices rest on.
+    """
+
     def __post_init__(self) -> None:
         if not self.tools:
             self.completion = PlainCompletion(client=self.client)
@@ -227,19 +264,35 @@ class LanguageModelBackend(GenerativeBackend):
         """
         return self._prompt_builder().rules(self._further_rules())
 
+    @property
+    def ground_sources(self) -> List[GroundSource]:
+        """
+        The sources an answer to the current request may name what it rests on in: the
+        world when candidates are named by its handles, and the consulted knowledge when
+        it is offered.
+        """
+        sources = list(self.referent_naming.ground_sources)
+        if self.offers_knowledge:
+            sources.extend(self.knowledge.grounds_in(self.consultation))
+        return sources
+
     def _further_rules(self) -> List[PromptRule]:
         """
-        :return: The rules of how the model is asked for the current request, and of
-            reading the knowledge when it is offered.
+        :return: The rules of how the model is asked for the current request, of
+            reading the knowledge when it is offered, and of naming what an answer rests
+            on when there is a source to name it in.
         """
         rules = list(self.request_completion.answer_rules)
         if self.offers_knowledge:
             rules.append(KNOWLEDGE_RULE)
+        if self.ground_sources:
+            rules.append(PromptBuilder.grounds_rule(self.ground_sources))
         return rules
 
     # %% evaluation
 
     def _evaluate(self, expression: Match[T]) -> Iterable[T]:
+        self.justifications = []
         slots = reflect_slots(expression)
         self._reject_unresolvable(slots)
 
@@ -308,6 +361,7 @@ class LanguageModelBackend(GenerativeBackend):
             context_sections=context_sections(self.context_provider, expression),
             number_of_candidates=number_of_candidates,
             backend=self,
+            ground_sources=self.ground_sources,
         )
 
         completion = self.request_completion
@@ -379,14 +433,21 @@ class LanguageModelBackend(GenerativeBackend):
         :param expression: The match being resolved.
         :param raw_response: The response text.
         :param open_slots: The slots the model was asked to fill.
-        :return: The instances built from the response that meet the where-conditions.
+        :return: The instances built from the response that meet the where-conditions,
+            each kept with its justification.
         :raises NoValidCandidates: When none of them does.
         """
+        decoded = self._decode(raw_response, open_slots)
         constructed = [
-            self._construct(expression, assignment)
-            for assignment in self._decode(raw_response, open_slots)
+            self._construct(expression, element.assignment) for element in decoded
         ]
-        return self._validate(expression, constructed)
+        accepted = self._validate(expression, constructed)
+        self.justifications = [
+            Justification(instance=instance, why=element.why, grounds=element.grounds)
+            for instance, element in zip(constructed, decoded)
+            if any(instance is kept for kept in accepted)
+        ]
+        return accepted
 
     def _prompt_builder(self) -> PromptBuilder:
         """:return: A builder configured from this backend's seams."""
@@ -401,13 +462,14 @@ class LanguageModelBackend(GenerativeBackend):
 
     def _decode(
         self, raw_response: str, open_slots: Sequence[Slot]
-    ) -> List[Dict[str, Any]]:
+    ) -> List[DecodedElement]:
         """
-        Turn a response into assignments, checked against the reflected schema.
+        Turn a response into decoded elements, checked against the reflected schema and
+        against the sources of their grounds.
 
         :param raw_response: The response text.
         :param open_slots: The slots the model was asked to fill.
-        :return: One assignment per candidate.
+        :return: One decoded element per candidate.
         """
         payload = self._parse_array(raw_response)
         slots_by_path = {slot.path: slot for slot in open_slots}
@@ -444,12 +506,12 @@ class LanguageModelBackend(GenerativeBackend):
         element: Any,
         slots_by_path: Dict[str, Slot],
         raw_response: str,
-    ) -> Dict[str, Any]:
+    ) -> DecodedElement:
         """
         :param element: One element of the response array.
         :param slots_by_path: The slots the model was asked to fill.
         :param raw_response: The response text, for error reporting.
-        :return: The decoded assignment.
+        :return: The decoded element.
         """
         if not isinstance(element, dict):
             raise ModelResponseUnparseable(
@@ -458,17 +520,51 @@ class LanguageModelBackend(GenerativeBackend):
         if RequestAnswerKey.UNSATISFIABLE in element:
             raise UnsatisfiableRequest(reason=element[RequestAnswerKey.UNSATISFIABLE])
         for key in element:
-            if key not in slots_by_path and key != RequestAnswerKey.WHY:
+            if key not in slots_by_path and key not in (
+                RequestAnswerKey.WHY,
+                RequestAnswerKey.GROUNDS,
+            ):
                 raise UnknownSlotInResponse(
                     slot_path=key, known_paths=list(slots_by_path)
                 )
         for path in slots_by_path:
             if path not in element:
                 raise MissingSlotInResponse(slot_path=path)
-        return {
-            path: self._decode_value(slot, element[path])
-            for path, slot in slots_by_path.items()
-        }
+        return DecodedElement(
+            assignment={
+                path: self._decode_value(slot, element[path])
+                for path, slot in slots_by_path.items()
+            },
+            why=element.get(RequestAnswerKey.WHY, ""),
+            grounds=[
+                self._decode_ground(stated, raw_response)
+                for stated in element.get(RequestAnswerKey.GROUNDS, [])
+            ],
+        )
+
+    def _decode_ground(self, stated: Any, raw_response: str) -> Ground:
+        """
+        :param stated: One entry of an element's grounds.
+        :param raw_response: The response text, for error reporting.
+        :return: What the entry names, identified by its source.
+        :raises UnknownGround: When no source offered has what it names.
+        """
+        if not isinstance(stated, dict) or len(stated) != 1:
+            raise ModelResponseUnparseable(
+                raw_response=raw_response,
+                reason="Each ground must be an object with exactly one key, its "
+                "source.",
+            )
+        ((key, name),) = stated.items()
+        sources = {source.key: source for source in self.ground_sources}
+        identifier = (
+            sources[key].identify(name)
+            if key in sources and isinstance(name, str)
+            else None
+        )
+        if identifier is None:
+            raise UnknownGround(source=str(key), name=str(name))
+        return Ground(source=GroundKey(key), identifier=identifier)
 
     def _decode_value(self, slot: Slot, value: Any) -> Any:
         """
@@ -625,4 +721,5 @@ class LanguageModelBackend(GenerativeBackend):
             number_of_candidates=expression.expression._limit_
             or self.number_of_candidates,
             backend=self,
+            ground_sources=self.ground_sources,
         )

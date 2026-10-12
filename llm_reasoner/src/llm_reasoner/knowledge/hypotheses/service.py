@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 
 from krrood.entity_query_language.query.match import Match
+from typing_extensions import Optional
 
 from llm_reasoner.clients.tools import Tool
 from llm_reasoner.knowledge.storage.citation import Citation
@@ -82,6 +83,10 @@ class KnowledgeService(KnowledgeAccess):
     def tools(self, record_id: str) -> list[Tool]:
         questions = KnowledgeQuestions(hypothesis=self.view(record_id))
         return [kind(questions=questions) for kind in KNOWLEDGE_TOOL_KINDS]
+
+    def citation(self, record_id: str, name: str) -> Optional[str]:
+        cited = Citation(record_id=record_id, fragment_name=name)
+        return cited.iri if self.view(record_id).cites(cited) else None
 
     def instances_of(self, kind: type) -> list:
         return self.graph.instances_of(kind)

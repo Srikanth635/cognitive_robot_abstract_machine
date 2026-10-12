@@ -110,6 +110,18 @@ class TestContract:
         assert service.is_vocabulary_class(core.ActionPhase)
         assert not service.is_vocabulary_class(WorldBody)
 
+    def test_a_fragment_is_cited_by_its_name(self, service):
+        identifier = service.serve(pouring_query())
+        view = service.view(identifier)
+        assert (
+            service.citation(identifier, "lift")
+            == view.citation_of(fragment_named(view, "lift")).iri
+        )
+
+    def test_a_name_no_fragment_has_is_cited_by_nothing(self, service):
+        identifier = service.serve(pouring_query())
+        assert service.citation(identifier, "no_such_fragment") is None
+
     def test_the_instances_of_a_class_come_from_the_knowledge_graph(self, service):
         service.serve(pouring_query())
         assert service.instances_of(core.ActionPhase) == service.graph.instances_of(

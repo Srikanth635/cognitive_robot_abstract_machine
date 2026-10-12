@@ -140,6 +140,15 @@ class HypothesisView:
         """
         return Citation.from_iri(self.identifiers[id(fragment)])
 
+    def cites(self, citation: Citation) -> bool:
+        """
+        :return: Whether a citation names a fragment of this hypothesis.
+        """
+        return any(
+            self.identifiers[id(fragment)] == citation.iri
+            for fragment in self.fragments
+        )
+
     def fragment_cited(self, citation: Citation) -> DescriptionEntity:
         """
         :return: The fragment a citation names.

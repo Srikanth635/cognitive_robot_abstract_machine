@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from jsonschema import Draft202012Validator
 from krrood.entity_query_language.factories import the
 
 from llm_reasoner.clients.base import ScriptedClient
@@ -30,6 +31,8 @@ from llm_reasoner.knowledge.access import (
 from llm_reasoner.resolver.action_context import ActionContextProvider
 from llm_reasoner.resolver.backend import LanguageModelBackend
 from llm_reasoner.resolver.context import StructuralCandidateRenderer
+from llm_reasoner.resolver.exceptions import UnknownGround
+from llm_reasoner.resolver.grounds import Ground, GroundKey
 from llm_reasoner.resolver.knowledge import KNOWLEDGE_RULE, KnowledgeRequester
 from llm_reasoner.resolver.prompt_format import PromptSection
 from llm_reasoner.resolver.prompts import (
@@ -37,6 +40,7 @@ from llm_reasoner.resolver.prompts import (
     INPUT_MEANINGS,
     OpenValueMeaning,
     PromptBuilder,
+    RequestAnswerKey,
     SourceDetail,
 )
 from llm_reasoner.resolver.reflection import SlotKind, reflect_slots
@@ -422,3 +426,85 @@ class TestReadingKnowledge:
             client=ScriptedClient(), world=WorldView()
         )
         assert KNOWLEDGE_RULE not in backend.rules
+
+
+# %% what an answer rests on
+
+
+def grounds_schema(backend: LanguageModelBackend) -> dict:
+    """
+    :return: The schema the latest request's output gives the grounds of an element.
+    """
+    (output,) = bodies(backend.log[-1].user, PromptSection.OUTPUT)
+    return json.loads(output)["items"]["properties"][RequestAnswerKey.GROUNDS]
+
+
+class TestGrounds:
+    def test_an_answer_grounded_on_knowledge_is_justified_by_its_citation(
+        self, tmp_path
+    ):
+        backend = world_backend_consulting(
+            HypothesisStore(directory=tmp_path),
+            answer("situation_granular.json"),
+            answer("angle_grounded_on_knowledge.json"),
+        )
+        (action,) = tilt_of(body_with_geometry()).evaluate(backend=backend)
+        view = backend.knowledge.service.view(backend.consultation.record_id)
+        (justification,) = backend.justifications
+        assert justification.instance is action
+        assert justification.grounds == [
+            Ground(
+                source=GroundKey.KNOWLEDGE, identifier=view.citation_of(view.root).iri
+            )
+        ]
+
+    def test_an_answer_grounded_on_a_world_individual_is_justified_by_its_handle(
+        self,
+    ):
+        view = WorldView()
+        body = body_with_geometry()
+        handle = view.handle_of(body)
+        stated = json.loads(answer("angle_grounded_on_the_body.json"))[0]
+        backend = LanguageModelBackend.with_world_tools(
+            client=ScriptedClient(
+                tool_turns=[answer("angle_grounded_on_the_body.json")]
+            ),
+            world=view,
+        )
+        list(tilt_of(body).evaluate(backend=backend))
+        (justification,) = backend.justifications
+        assert stated[RequestAnswerKey.GROUNDS] == [{GroundKey.WORLD: handle}]
+        assert justification.grounds == [
+            Ground(source=GroundKey.WORLD, identifier=handle)
+        ]
+        assert justification.why == stated[RequestAnswerKey.WHY]
+
+    def test_a_ground_naming_no_fragment_is_sent_back_for_repair(self, tmp_path):
+        backend = world_backend_consulting(
+            HypothesisStore(directory=tmp_path),
+            answer("situation_granular.json"),
+            answer("angle_grounded_on_no_fragment.json"),
+            answer("angle_grounded_on_knowledge.json"),
+        )
+        list(tilt_of(body_with_geometry()).evaluate(backend=backend))
+        assert len(backend.log) == 2
+        assert f'kind="{UnknownGround.__name__}"' in backend.log[1].user
+
+    def test_the_answer_may_rest_on_the_knowledge_when_it_is_offered(self, tmp_path):
+        backend = world_backend_consulting(
+            HypothesisStore(directory=tmp_path),
+            answer("situation_granular.json"),
+            answer("angle_chosen.json"),
+        )
+        list(tilt_of(body_with_geometry()).evaluate(backend=backend))
+        Draft202012Validator(grounds_schema(backend)).validate(
+            [{GroundKey.KNOWLEDGE: "pour"}, {GroundKey.WORLD: "WorldBody#1"}]
+        )
+
+    def test_an_answer_without_a_source_to_rest_on_is_asked_for_no_grounds(self):
+        backend = LanguageModelBackend(
+            client=ScriptedClient(responses=[answer("angle_chosen.json")])
+        )
+        list(tilt_of(body_with_geometry()).evaluate(backend=backend))
+        (output,) = bodies(backend.log[0].user, PromptSection.OUTPUT)
+        assert RequestAnswerKey.GROUNDS not in json.loads(output)["items"]["properties"]

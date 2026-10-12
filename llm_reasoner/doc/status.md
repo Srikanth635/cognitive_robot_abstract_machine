@@ -301,7 +301,9 @@ beyond the Flanagan microworld* (several perspectives); see §4.
    designator's class, its given and open slots, the query's conditions, the optional
    task; and what of it is generated per request versus reused.
 8. **Reasons as data.** Whether the resolver's `why` becomes reasons citing knowledge
-   identifiers and world handles.
+   identifiers and world handles. *Answered 2026-10-12:* each answer element carries
+   `grounds`, checked against the world and the knowledge, kept as
+   `LanguageModelBackend.justifications`.
 9. **Inferred knowledge.** HermiT checks consistency only; whether facts it infers (such
    as a fragment's inferred types) are written back so EQL queries see them.
 
