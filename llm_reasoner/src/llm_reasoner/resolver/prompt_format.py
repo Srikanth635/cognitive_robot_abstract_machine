@@ -53,6 +53,11 @@ class PromptSection(StrEnum):
     What is currently true.
     """
 
+    ACTION = "action"
+    """
+    The action a request serves, stated as its own request and given values.
+    """
+
     SOURCE = "source"
     """
     The definition of a type holding slots.

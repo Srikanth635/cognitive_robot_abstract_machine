@@ -1,0 +1,3 @@
+{"fragments": [
+  {"id": "pour", "type": "PouringPhaseStructure", "decomposes_task": "aicor:Pouring", "has_material_regime": "GRANULAR"}
+]}

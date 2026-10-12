@@ -145,6 +145,8 @@ meeting the query's `where`-conditions; or one of these outcomes:
 | `prompt_format.py` | The prompt structure: sections, rules, data keys |
 | `referents.py` | How candidates are named and answered: `IntegerTokens`, `WorldHandles`; verdict rules |
 | `context.py` | Context providers (task, situation, composite) and candidate renderers |
+| `action_context.py` | `ActionContextProvider`: states the action a resolution serves, as its own `<request>` and `<given>` in an `<action>` section |
+| `knowledge.py` | `KnowledgeRequester`: consults the knowledge component, through its public module only, about the action a query asks for (§3.6); `KnowledgeConsultation`: the designator, the situation chosen and the identifier of the hypothesis served |
 | `completion.py` | Plain and tool-using completion; the text-answer rule |
 | `exceptions.py` | Retryable failures and outcomes |
 
@@ -357,7 +359,7 @@ by a test that no text lies outside them.
 | Prompt | Sections |
 |---|---|
 | System | `<role>`, `<inputs>` (what each request section means), `<rules>` (one named rule per line, `- name: text`) |
-| Request | `<source type="…">` per type (or `<description>`), `<request>` (the query in English; `Ellipsis` marks an open slot), `<task>` / `<situation>` (from context providers), `<slots>` (JSON), `<given>` (JSON, values the query fixes), `<output>` (JSON schema of the answer) |
+| Request | `<source type="…">` per type (or `<description>`), `<request>` (the query in English; `Ellipsis` marks an open slot), `<task>` / `<situation>` / `<action>` (from context providers; `<action>` holds the action a resolution serves as its own `<request>` and `<given>`), `<slots>` (JSON), `<given>` (JSON, values the query fixes), `<output>` (JSON schema of the answer) |
 | Repair | The request, then `<rejected_answer>` and `<rejection kind="…">` (the failure's fields as JSON) |
 
 A slot entry in `<slots>`:
@@ -462,7 +464,7 @@ conversation with its text as the answer.
 | Knowledge component ↔ resolver | Not connected; to be knowledge tools through a `KnowledgeAccess` contract (§2.3) |
 | Knowledge component ↔ world injector | None, by design: world facts reach the knowledge only through the resolver; the two keep separate sources |
 
-### 3.6 Resolver → knowledge component: the knowledge request (designed 2026-10-12; not built)
+### 3.6 Resolver → knowledge component: the knowledge request (designed 2026-10-12; being built)
 
 The resolver asks the knowledge component with a krrood query on the knowledge
 vocabulary, never with an instruction:
@@ -490,6 +492,17 @@ resolver query  the(PouringAction)(…)  [+ optional task]
 | Store key | Root class, fixed values (features included) and ontology module versions; the instruction is no longer part of the key |
 | Generation | On a miss, once per feature combination, then served from the store |
 | Not in the request | The designator's slots and the task text; the resolver keeps them |
+
+**Built so far.** `KnowledgeRequester.consult(action, situation_backend)` in
+`resolver/knowledge.py`: ① `DescribedActions.describing(identifier_of(action.type))`,
+and without knowledge for the designator a consultation without a hypothesis; ②
+`SituationFeatures.of(structure)`; ③ `DescribedAction.query({feature: ...})` resolved by
+the backend given, one structure, each feature read back with
+`SituationFeature.value_in`; ④ `DescribedAction.query(situation)` with the unknown
+features left out; ⑤ `KnowledgeService.serve(request, instruction=<designator>)`. The
+backend filling the features is the caller's: the resolver's own settings, with
+`SourceDetail.SIGNATURE`, one candidate and an `ActionContextProvider` stating the
+action.
 
 ## 4. Decisions that shape behaviour
 

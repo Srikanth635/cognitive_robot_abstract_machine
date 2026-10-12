@@ -192,6 +192,16 @@ class GenerationCase(StrEnum):
     off, a control point there, a gaze fixation and a grip-load coupling.
     """
 
+    GRANULAR_POURING = "granular_pouring.json"
+    """
+    A pouring structure for a substance flowing as grains, and nothing else.
+    """
+
+    LIQUID_POURING = "liquid_pouring.json"
+    """
+    A pouring structure for a liquid, and nothing else.
+    """
+
     @property
     def text(self) -> str:
         """
