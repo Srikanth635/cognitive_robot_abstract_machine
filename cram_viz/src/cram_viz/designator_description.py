@@ -333,7 +333,7 @@ class DesignatorDescriber:
         action, *_ = resolution.actions
         return [
             DesignatorProperty(
-                key="resolved-from", values=[self.literal(resolution.identifier)]
+                key="resolved-from", values=[self.literal(resolution.query_on_one_line)]
             ),
             DesignatorProperty(key="why", values=[self.literal(action.why)]),
             DesignatorProperty(

@@ -7,6 +7,7 @@ import json
 import shutil
 import threading
 import urllib.request
+from pathlib import Path
 
 import pytest
 
@@ -264,6 +265,22 @@ def post_json(url, payload, timeout=60):
         return json.loads(response.read())
 
 
+QUERY_SOURCES = Path(__file__).parent / "query_sources"
+"""
+The query sources the tests read.
+"""
+
+
+def objects_given_query() -> str:
+    """
+    :return: The match query of the designator giving the objects, as its chip copies it
+        into the search bar.
+    """
+    from cram_viz.resolution.designators import DesignatorQuery, PouringDesignator
+
+    return DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN).source.text
+
+
 class TestDesignators:
     def test_a_scene_with_a_pouring_cup_offers_every_designator(self, pouring_server):
         from cram_viz.resolution.designators import PouringDesignator
@@ -304,7 +321,7 @@ class TestDesignators:
         monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
         payload = post_json(
             pouring_server + "/api/designator/resolve",
-            {"designator": "objects_given", "scene": "pouring"},
+            {"query": objects_given_query(), "scene": "pouring"},
         )
         (action,) = payload["resolution"]["actions"]
         assert {slot["name"]: slot["value"] for slot in action["slots"]}[
@@ -329,7 +346,7 @@ class TestDesignators:
         monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
         payload = post_json(
             pouring_server + "/api/designator/resolve",
-            {"designator": "objects_given", "scene": "pouring"},
+            {"query": objects_given_query(), "scene": "pouring"},
         )
         assert [path.name for path in (tmp_path / "runs").iterdir()] == [
             payload["resolution"]["run"]
@@ -352,17 +369,22 @@ class TestDesignators:
         monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
         payload = post_json(
             pouring_server + "/api/designator/resolve",
-            {"designator": "objects_given", "scene": "pouring"},
+            {"query": objects_given_query(), "scene": "pouring"},
         )
         view = get_json(pouring_server + "/api/kb/view?name=designator&scene=pouring")
         keys = [entry["key"] for entry in view["designator"]["properties"]]
         assert "why" in keys
         assert payload["resolution"]["actions"][0]["why"] in json.dumps(view)
 
-    def test_an_unknown_designator_is_reported(self, pouring_server):
+    def test_a_query_that_is_not_a_match_is_reported(self, pouring_server):
+        from cram_viz.resolution.designators import NotAMatchQuery
+
         payload = post_json(
             pouring_server + "/api/designator/resolve",
-            {"designator": "no_such_designator", "scene": "pouring"},
+            {
+                "query": (QUERY_SOURCES / "not_a_match.py").read_text(),
+                "scene": "pouring",
+            },
         )
         assert payload["ok"] is False
-        assert "no_such_designator" in payload["error"]
+        assert payload["error"].startswith(NotAMatchQuery.__name__)

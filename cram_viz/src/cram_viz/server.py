@@ -13,7 +13,7 @@ Serves three things from one port (default 8711):
       POST /api/eql             run an EQL query string
       POST /api/hypothesis/generate  generate a hypothesis for an instruction
       GET  /api/designators?scene=   the predefined designators the scene offers
-      POST /api/designator/resolve   resolve one with llm_reasoner in the scene
+      POST /api/designator/resolve   resolve a designator query in the scene
       POST /api/execute         launch the hardcoded demo under the live bridge
 
 The API needs krrood (EQL). Without it the server still serves the viewer and
@@ -248,8 +248,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def _resolve_designator(self) -> None:
         """
-        Resolve a predefined designator in a scene with llm_reasoner, show the
-        hypothesis it consulted, and return the resolution with the refreshed graph.
+        Resolve the designator query in the search bar in a scene with llm_reasoner,
+        show the hypothesis it consulted, and return the resolution with the refreshed
+        graph.
 
         Serialised behind the EQL lock: it reads the scene's world from the symbol graph
         and swaps the knowledge every query and view reads from.
@@ -261,9 +262,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         selected_scene = request.get("scene")
         try:
             from cram_viz import hypothesis_knowledge
+            from cram_viz.query_source import QuerySource
             from cram_viz.resolution.designators import DesignatorQuery
 
-            designator = DesignatorQuery.named(request.get("designator") or "")
+            designator = DesignatorQuery(
+                source=QuerySource(text=request.get("query") or "")
+            )
             with _EQL_LOCK:
                 run = _designator_resolver().resolve(
                     designator,
@@ -350,7 +354,7 @@ def _offered_designators(selected_scene: Optional[str]) -> Dict[str, Any]:
     available or stating what the scene lacks.
     """
     from cram_viz.resolution.designators import (
-        DesignatorQuery,
+        OfferedDesignator,
         PouringDesignator,
         SceneNamespace,
     )
@@ -363,7 +367,7 @@ def _offered_designators(selected_scene: Optional[str]) -> Dict[str, Any]:
             )
         ).names()
         offered = [
-            DesignatorQuery.shipped(identifier).offered_in(names).payload()
+            OfferedDesignator.in_scene(identifier, names).payload()
             for identifier in PouringDesignator
         ]
     return {"ok": True, "scene": name, "designators": offered}

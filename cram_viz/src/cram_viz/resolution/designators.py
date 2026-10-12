@@ -73,77 +73,26 @@ class PouringDesignator(StrEnum):
 
 
 @dataclass
-class UnknownDesignator(ValueError):
-    """
-    No predefined designator has the name asked for.
-    """
-
-    identifier: str
-    """
-    The name asked for.
-    """
-
-    def __post_init__(self):
-        super().__init__(f"no predefined designator is named '{self.identifier}'")
-
-
-@dataclass
 class NotAMatchQuery(TypeError):
     """
     A designator's query evaluates to something other than a krrood match.
     """
 
-    identifier: str
-    """
-    The designator's name.
-    """
-
     value: Any
     """
-    What its query evaluated to.
+    What the query evaluated to.
     """
 
     def __post_init__(self):
         super().__init__(
-            f"'{self.identifier}' evaluates to {type(self.value).__name__}, not a match"
-        )
-
-
-@dataclass
-class DesignatorUnavailable(ValueError):
-    """
-    The scene cannot resolve a designator.
-    """
-
-    offered: OfferedDesignator
-    """
-    The designator as the scene offers it, stating what the scene lacks.
-    """
-
-    def __post_init__(self):
-        lacks = [
-            *(f"an object named {name}" for name in self.offered.unbound),
-            *(f"a candidate for {slot}" for slot in self.offered.without_candidates),
-        ]
-        super().__init__(
-            f"'{self.offered.identifier}' needs {', '.join(lacks)}, which the scene lacks"
+            f"the query evaluates to {type(self.value).__name__}, not a match"
         )
 
 
 @dataclass(frozen=True)
-class OfferedDesignator:
+class Shortfall:
     """
-    A predefined designator as the viewer offers it in one scene.
-    """
-
-    identifier: PouringDesignator
-    """
-    The designator's name.
-    """
-
-    query: str
-    """
-    The designator's match query, as written.
+    What a scene lacks to resolve a designator's query.
     """
 
     unbound: List[str]
@@ -157,23 +106,30 @@ class OfferedDesignator:
     """
 
     @property
-    def available(self) -> bool:
+    def is_empty(self) -> bool:
         """
-        :return: Whether the scene can resolve the designator.
+        :return: Whether the scene lacks nothing.
         """
         return not self.unbound and not self.without_candidates
 
-    def payload(self) -> Dict[str, Any]:
-        """
-        :return: The offer as JSON data.
-        """
-        return dict(
-            identifier=self.identifier,
-            query=self.query,
-            available=self.available,
-            unbound=self.unbound,
-            without_candidates=self.without_candidates,
-        )
+
+@dataclass
+class DesignatorUnavailable(ValueError):
+    """
+    The scene cannot resolve a designator's query.
+    """
+
+    shortfall: Shortfall
+    """
+    What the scene lacks.
+    """
+
+    def __post_init__(self):
+        lacks = [
+            *(f"an object named {name}" for name in self.shortfall.unbound),
+            *(f"a candidate for {slot}" for slot in self.shortfall.without_candidates),
+        ]
+        super().__init__(f"the query needs {', '.join(lacks)}, which the scene lacks")
 
 
 @dataclass(frozen=True)
@@ -258,18 +214,12 @@ class SceneNamespace:
 @dataclass(frozen=True)
 class DesignatorQuery:
     """
-    A predefined designator: an underspecified krrood match query written in a file of
-    its own.
-    """
-
-    identifier: PouringDesignator
-    """
-    The designator's name.
+    An underspecified krrood match query on an action, as written.
     """
 
     source: QuerySource
     """
-    The designator's query.
+    The query.
     """
 
     @classmethod
@@ -278,31 +228,20 @@ class DesignatorQuery:
         :return: The predefined designator of the given name, read from its file.
         """
         return cls(
-            identifier=identifier,
             source=QuerySource.read(
                 DESIGNATOR_DIRECTORY / f"{identifier}{QUERY_SUFFIX}"
-            ),
+            )
         )
-
-    @classmethod
-    def named(cls, name: str) -> DesignatorQuery:
-        """
-        :return: The predefined designator of the given name.
-        :raises UnknownDesignator: When none has that name.
-        """
-        if name not in PouringDesignator:
-            raise UnknownDesignator(identifier=name)
-        return cls.shipped(PouringDesignator(name))
 
     def query_in(self, names: Dict[str, Any]) -> Match:
         """
         :param names: The names the scene binds.
-        :return: The designator's query on the scene.
+        :return: The query on the scene.
         :raises NotAMatchQuery: When the query evaluates to something else.
         """
         query = self.source.value_in(dict(names))
         if not isinstance(query, Match):
-            raise NotAMatchQuery(identifier=self.identifier, value=query)
+            raise NotAMatchQuery(value=query)
         return query
 
     def unbound_in(self, names: Dict[str, Any]) -> List[str]:
@@ -311,19 +250,89 @@ class DesignatorQuery:
         """
         return sorted(self.source.names_read() - names.keys() - BUILTIN_NAMES)
 
-    def offered_in(self, names: Dict[str, Any]) -> OfferedDesignator:
+    def shortfall_in(self, names: Dict[str, Any]) -> Shortfall:
         """
         :param names: The names the scene binds.
-        :return: The designator as the viewer offers it in the scene.
+        :return: What the scene lacks to resolve the query.
         """
         unbound = self.unbound_in(names)
-        return OfferedDesignator(
-            identifier=self.identifier,
-            query=self.source.text,
+        return Shortfall(
             unbound=unbound,
             without_candidates=(
                 []
                 if unbound
                 else QuerySlots.of(self.query_in(names)).without_candidates
             ),
+        )
+
+
+@dataclass(frozen=True)
+class OfferedDesignator:
+    """
+    A predefined designator as the viewer offers it in one scene.
+    """
+
+    identifier: PouringDesignator
+    """
+    The designator's name.
+    """
+
+    query: str
+    """
+    The designator's match query, as written.
+    """
+
+    shortfall: Shortfall
+    """
+    What the scene lacks to resolve the designator.
+    """
+
+    @classmethod
+    def in_scene(
+        cls, identifier: PouringDesignator, names: Dict[str, Any]
+    ) -> OfferedDesignator:
+        """
+        :param identifier: The predefined designator.
+        :param names: The names the scene binds.
+        :return: The designator as the viewer offers it in the scene.
+        """
+        designator = DesignatorQuery.shipped(identifier)
+        return cls(
+            identifier=identifier,
+            query=designator.source.text,
+            shortfall=designator.shortfall_in(names),
+        )
+
+    @property
+    def unbound(self) -> List[str]:
+        """
+        :return: The names the query reads that the scene binds to no object.
+        """
+        return self.shortfall.unbound
+
+    @property
+    def without_candidates(self) -> List[str]:
+        """
+        :return: The slots the query leaves to choose from candidates of which the
+            scene has none.
+        """
+        return self.shortfall.without_candidates
+
+    @property
+    def available(self) -> bool:
+        """
+        :return: Whether the scene can resolve the designator.
+        """
+        return self.shortfall.is_empty
+
+    def payload(self) -> Dict[str, Any]:
+        """
+        :return: The offer as JSON data.
+        """
+        return dict(
+            identifier=self.identifier,
+            query=self.query,
+            available=self.available,
+            unbound=self.unbound,
+            without_candidates=self.without_candidates,
         )

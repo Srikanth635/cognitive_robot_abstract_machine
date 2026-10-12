@@ -21,11 +21,12 @@ from cram_viz.resolution.designators import (
     DESIGNATOR_DIRECTORY,
     QUERY_SUFFIX,
     DesignatorQuery,
+    DesignatorUnavailable,
     NotAMatchQuery,
+    OfferedDesignator,
     PouringDesignator,
     QuerySlots,
     SceneNamespace,
-    UnknownDesignator,
 )
 from cram_viz.resolution.runs import ResolutionRuns, RunDirectory, RunFile
 from cram_viz.resolution.scene_world import SceneKey, SceneWorldBuilder
@@ -82,9 +83,7 @@ class TestDesignators:
 
     def test_a_designator_is_offered_as_its_query_text(self, pouring_bundle):
         identifier = PouringDesignator.OBJECTS_GIVEN
-        offered = DesignatorQuery.shipped(identifier).offered_in(
-            names_in(pouring_bundle)
-        )
+        offered = OfferedDesignator.in_scene(identifier, names_in(pouring_bundle))
         assert (
             offered.query
             == (DESIGNATOR_DIRECTORY / f"{identifier}{QUERY_SUFFIX}").read_text()
@@ -95,9 +94,7 @@ class TestDesignators:
         self, pouring_bundle
     ):
         names = names_in(without_object(pouring_bundle, "Static_MilkPitcher"))
-        offered = DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN).offered_in(
-            names
-        )
+        offered = OfferedDesignator.in_scene(PouringDesignator.OBJECTS_GIVEN, names)
         assert offered.unbound == [SceneNamespace.name_of(PouringCup)]
         assert offered.available is False
 
@@ -105,20 +102,13 @@ class TestDesignators:
         self, pouring_bundle
     ):
         names = names_in(without_object(pouring_bundle, "Static_MilkPitcher"))
-        offered = DesignatorQuery.shipped(PouringDesignator.OBJECTS_OPEN).offered_in(
-            names
-        )
+        offered = OfferedDesignator.in_scene(PouringDesignator.OBJECTS_OPEN, names)
         assert offered.without_candidates == ["source_container"]
         assert offered.available is False
 
-    def test_an_unknown_designator_is_refused(self):
-        with pytest.raises(UnknownDesignator):
-            DesignatorQuery.named("no_such_designator")
-
     def test_a_query_that_is_not_a_match_is_refused(self, pouring_bundle):
         designator = DesignatorQuery(
-            identifier=PouringDesignator.OBJECTS_OPEN,
-            source=QuerySource.read(SOURCES / "not_a_match.py"),
+            source=QuerySource.read(SOURCES / "not_a_match.py")
         )
         with pytest.raises(NotAMatchQuery):
             designator.query_in(names_in(pouring_bundle))
@@ -193,8 +183,28 @@ class TestResolution:
     def test_a_resolution_states_the_query_it_resolved(self, pouring_bundle, tmp_path):
         (run,) = resolve_objects_given(pouring_bundle, tmp_path)
         designator = DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN)
-        assert run.resolution.identifier is designator.identifier
         assert run.resolution.query == designator.source.text
+
+    def test_a_resolution_folds_its_query_onto_one_line(self, pouring_bundle, tmp_path):
+        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        one_line = run.resolution.query_on_one_line
+        assert "\n" not in one_line
+        assert one_line.split() == run.resolution.query.split()
+
+    def test_a_query_the_scene_cannot_resolve_is_refused(
+        self, pouring_bundle, tmp_path
+    ):
+        resolver = resolver_replaying(
+            PouringDesignator.OBJECTS_GIVEN,
+            HypothesisStore(directory=tmp_path / "store"),
+            tmp_path / "runs",
+        )
+        with pytest.raises(DesignatorUnavailable):
+            resolver.resolve(
+                DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
+                "pouring",
+                without_object(pouring_bundle, "Static_MilkPitcher"),
+            )
 
     def test_a_resolution_names_what_its_answer_rests_on(
         self, pouring_bundle, tmp_path
