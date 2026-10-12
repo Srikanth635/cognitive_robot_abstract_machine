@@ -30,7 +30,13 @@ from llm_reasoner.resolver.backend import LanguageModelBackend
 from llm_reasoner.resolver.context import StructuralCandidateRenderer
 from llm_reasoner.resolver.knowledge import KnowledgeRequester
 from llm_reasoner.resolver.prompt_format import PromptSection
-from llm_reasoner.resolver.prompts import INPUT_MEANINGS, PromptBuilder, SourceDetail
+from llm_reasoner.resolver.prompts import (
+    ESTABLISHED_VALUES_RULE,
+    INPUT_MEANINGS,
+    OpenValueMeaning,
+    PromptBuilder,
+    SourceDetail,
+)
 from llm_reasoner.resolver.reflection import SlotKind, reflect_slots
 from llm_reasoner.world.access import identifier_of
 
@@ -288,6 +294,15 @@ class TestConsultingBackend:
         assert backend.situation_backend.number_of_candidates == 1
         assert backend.situation_backend.source_detail is SourceDetail.SIGNATURE
 
+    def test_the_situation_is_answered_with_facts(self, tmp_path):
+        backend = backend_consulting(
+            HypothesisStore(directory=tmp_path),
+            "situation_granular.json",
+            "angle_chosen.json",
+        )
+        list(tilt_of(body_with_geometry()).evaluate(backend=backend))
+        assert backend.situation_backend.open_values is OpenValueMeaning.FACT
+
     def test_choosing_the_situation_consults_nothing_itself(self, tmp_path):
         backend = backend_consulting(
             HypothesisStore(directory=tmp_path),
@@ -327,3 +342,19 @@ class TestConsultingBackend:
         list(tilt_of(body_with_geometry()).evaluate(backend=backend))
         assert backend.consultation is None
         assert backend.situation_backend is None
+
+
+# %% values that are facts rather than choices
+
+
+class TestOpenValueMeaning:
+    def test_a_backend_answering_with_facts_states_the_rule_for_them(self):
+        backend = LanguageModelBackend(
+            client=ScriptedClient(), open_values=OpenValueMeaning.FACT
+        )
+        assert ESTABLISHED_VALUES_RULE in backend.rules
+
+    def test_a_backend_answers_with_choices_by_default(self):
+        backend = LanguageModelBackend(client=ScriptedClient())
+        assert backend.open_values is OpenValueMeaning.CHOICE
+        assert ESTABLISHED_VALUES_RULE not in backend.rules

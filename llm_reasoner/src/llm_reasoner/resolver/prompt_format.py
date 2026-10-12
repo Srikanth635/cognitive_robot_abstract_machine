@@ -171,6 +171,11 @@ class RuleName(StrEnum):
     How a slot taking a plain value is answered.
     """
 
+    ESTABLISHED_VALUES = "established_values"
+    """
+    How value slots asking for facts rather than choices are answered.
+    """
+
     DEFAULT = "default"
     """
     What a slot's default stands for.

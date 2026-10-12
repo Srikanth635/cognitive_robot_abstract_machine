@@ -39,7 +39,12 @@ from llm_reasoner.resolver.exceptions import (
 )
 from llm_reasoner.resolver.knowledge import KnowledgeConsultation, KnowledgeRequester
 from llm_reasoner.resolver.prompt_format import PromptRule
-from llm_reasoner.resolver.prompts import PromptBuilder, RequestAnswerKey, SourceDetail
+from llm_reasoner.resolver.prompts import (
+    OpenValueMeaning,
+    PromptBuilder,
+    RequestAnswerKey,
+    SourceDetail,
+)
 from llm_reasoner.resolver.referents import IntegerTokens, ReferentNaming, WorldHandles
 from llm_reasoner.resolver.reflection import Slot, SlotKind, reflect_slots
 from llm_reasoner.world.access import WorldAccess
@@ -98,6 +103,12 @@ class LanguageModelBackend(GenerativeBackend):
     How much of the target type's definition is put in the prompt: by default its whole
     source, which shows what the type does with each value its docstrings may leave
     unsaid.
+    """
+
+    open_values: OpenValueMeaning = field(kw_only=True, default=OpenValueMeaning.CHOICE)
+    """
+    What an answer to an open value slot stands for: by default a value chosen to serve
+    the request.
     """
 
     tools: Sequence[Tool] = field(kw_only=True, default=())
@@ -300,7 +311,8 @@ class LanguageModelBackend(GenerativeBackend):
         :param action: The query for an action.
         :return: A backend choosing the situation features of the knowledge describing
             the action: this backend's model, tools and context with the action stated,
-            one structure described by its docstrings, and no consultation of its own.
+            one structure described by its docstrings, its values facts rather than
+            choices, and no consultation of its own.
         """
         return replace(
             self,
@@ -314,6 +326,7 @@ class LanguageModelBackend(GenerativeBackend):
             ),
             source_detail=SourceDetail.SIGNATURE,
             number_of_candidates=1,
+            open_values=OpenValueMeaning.FACT,
             knowledge=None,
         )
 
@@ -339,6 +352,7 @@ class LanguageModelBackend(GenerativeBackend):
             renderer=self.candidate_renderer,
             referent_naming=self.referent_naming,
             source_detail=self.source_detail,
+            open_values=self.open_values,
         )
 
     # %% decoding
