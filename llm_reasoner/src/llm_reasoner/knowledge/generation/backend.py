@@ -46,6 +46,7 @@ from llm_reasoner.knowledge.generation.prompts import (
     described_violation,
     written_value,
 )
+from llm_reasoner.knowledge.generation.request import HypothesisRequest
 from llm_reasoner.knowledge.generation.schema import GenerationSchema
 from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms
 from llm_reasoner.knowledge.generation.wire import (
@@ -85,25 +86,6 @@ class HypothesisRejected(LLMReasonerError):
             f"no admissible hypothesis after {len(self.exchanges)} answers; the last "
             f"had {len(self.problems)} problems, the first being: "
             + (self.problems[0] if self.problems else "none")
-        )
-
-
-@dataclass
-class UnsupportedFixedValue(LLMReasonerError):
-    """
-    The query fixes a field to a nested match, which cannot be stated to the model as
-    a value.
-    """
-
-    field_name: str
-    """
-    The field the query fixes.
-    """
-
-    def __post_init__(self):
-        super().__init__(
-            f"field '{self.field_name}' is fixed to a nested match; fix it to a value "
-            "or leave it open"
         )
 
 
@@ -241,9 +223,10 @@ class HypothesisBackend(GenerativeBackend):
     """
 
     def _evaluate(self, expression: Match[T]) -> Iterable[T]:
-        fixed = self.fixed_values(expression)
-        instruction = self.instruction or expression.type.__name__
-        written_fixed = {name: written_value(value) for name, value in fixed.items()}
+        request = HypothesisRequest.from_match(expression, self.instruction)
+        fixed = request.fixed_values
+        instruction = request.instruction
+        written_fixed = request.written_fixed_values
         stored = (
             self.store.find(instruction, qualified_name(expression.type), written_fixed)
             if self.store is not None
@@ -302,20 +285,6 @@ class HypothesisBackend(GenerativeBackend):
         raise HypothesisRejected(
             problems=under_repair.problems, exchanges=list(self.log)
         )
-
-    @staticmethod
-    def fixed_values(expression: Match[T]) -> dict[str, Any]:
-        """
-        :return: The values the query fixes, by field name; fields left open are absent.
-        """
-        fixed = {}
-        for name, value in expression.kwargs.items():
-            if value is Ellipsis:
-                continue
-            if isinstance(value, Match):
-                raise UnsupportedFixedValue(field_name=name)
-            fixed[name] = value
-        return fixed
 
     def assess(self, decoded: DecodingResult, fixed: dict[str, Any]) -> Assessment:
         """

@@ -35,11 +35,16 @@ from llm_reasoner.knowledge.generation.prompts import (
     field_hint,
     rendered_shape,
     rendered_type,
+    written_value,
 )
 from llm_reasoner.knowledge.generation.schema import (
     FieldKind,
     GenerationSchema,
     type_schema_for,
+)
+from llm_reasoner.knowledge.generation.request import (
+    HypothesisRequest,
+    UnsupportedFixedValue,
 )
 from llm_reasoner.knowledge.generation.wire import FragmentDecoder
 from llm_reasoner.knowledge.ontologies import (
@@ -505,6 +510,32 @@ class TestFragmentDecoder:
 
 
 # %% backend
+
+
+class TestHypothesisRequest:
+    """
+    What a query asks to be generated.
+    """
+
+    def test_the_values_a_query_fixes_are_read_and_open_ones_left_out(self):
+        query = the(core.ActionPhaseStructure)(decomposes_task=POURING, label=...)
+        request = HypothesisRequest.from_match(query, instruction="pour")
+        assert request.root_type is core.ActionPhaseStructure
+        assert request.fixed_values == {"decomposes_task": POURING}
+        assert request.written_fixed_values == {
+            "decomposes_task": written_value(POURING)
+        }
+
+    def test_a_query_without_an_instruction_is_asked_for_by_its_type(self):
+        request = HypothesisRequest.from_match(pouring_query(), instruction="")
+        assert request.instruction == core.ActionPhaseStructure.__name__
+
+    def test_a_field_fixed_to_a_nested_match_is_refused(self):
+        query = the(core.ActionPhaseStructure)(
+            defines_phase=the(core.ActionPhase)(label="lift")
+        )
+        with pytest.raises(UnsupportedFixedValue):
+            HypothesisRequest.from_match(query, instruction="")
 
 
 class TestHypothesisBackend:
