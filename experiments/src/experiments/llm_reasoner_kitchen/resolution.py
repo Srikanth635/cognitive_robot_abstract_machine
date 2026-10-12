@@ -9,7 +9,7 @@ from dataclasses import dataclass
 
 from krrood.entity_query_language.query.match import Match
 from llm_reasoner.clients.tools import ToolConversation
-from llm_reasoner.clients.usage import TokenUsage
+from llm_reasoner.clients.usage import TokenPrices
 from llm_reasoner.reasoner import Reasoner
 from llm_reasoner.resolver.backend import LanguageModelBackend
 from llm_reasoner.resolver.context import (
@@ -19,60 +19,6 @@ from llm_reasoner.resolver.context import (
 )
 from llm_reasoner.resolver.prompts import SourceDetail
 from typing_extensions import Any, List
-
-TOKENS_PER_PRICE = 1_000_000
-"""
-How many tokens a price is stated for.
-"""
-
-
-@dataclass(frozen=True)
-class TokenPrices:
-    """
-    What a model charges, in dollars per million tokens.
-    """
-
-    input_tokens: float
-    """
-    For input tokens read without a cache.
-    """
-
-    output_tokens: float
-    """
-    For output tokens.
-    """
-
-    cache_creation_input_tokens: float
-    """
-    For input tokens written to the cache.
-    """
-
-    cache_read_input_tokens: float
-    """
-    For input tokens read from the cache.
-    """
-
-    def cost_of(self, usage: TokenUsage) -> float:
-        """
-        :return: What the usage cost, in dollars.
-        """
-        return (
-            usage.input_tokens * self.input_tokens
-            + usage.output_tokens * self.output_tokens
-            + usage.cache_creation_input_tokens * self.cache_creation_input_tokens
-            + usage.cache_read_input_tokens * self.cache_read_input_tokens
-        ) / TOKENS_PER_PRICE
-
-
-SONNET_PRICES = TokenPrices(
-    input_tokens=2.0,
-    output_tokens=10.0,
-    cache_creation_input_tokens=2.5,
-    cache_read_input_tokens=0.2,
-)
-"""
-Claude Sonnet 5.5's prices.
-"""
 
 
 @dataclass
@@ -118,8 +64,8 @@ class Resolution:
 @dataclass
 class KitchenResolver:
     """
-    Resolves queries with a reasoner: the task as context, one answer asked for, and
-    the source of the queried type shown to the model.
+    Resolves queries with a reasoner: the task as context, one answer asked for, and the
+    source of the queried type shown to the model.
     """
 
     reasoner: Reasoner
