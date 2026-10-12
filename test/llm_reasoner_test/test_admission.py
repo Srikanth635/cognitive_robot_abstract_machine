@@ -33,9 +33,9 @@ from llm_reasoner.knowledge.storage.record import (
 )
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.clients.base import Exchange, ScriptedClient
-from llm_reasoner.generation.backend import HypothesisBackend
-from llm_reasoner.generation.schema import GenerationSchema
-from llm_reasoner.generation.wire import DecodedHypothesis, FragmentDecoder
+from llm_reasoner.knowledge.generation.backend import HypothesisBackend
+from llm_reasoner.knowledge.generation.schema import GenerationSchema
+from llm_reasoner.knowledge.generation.wire import DecodedHypothesis, FragmentDecoder
 from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_NAMESPACE,
     LinkedOntologyVariable,

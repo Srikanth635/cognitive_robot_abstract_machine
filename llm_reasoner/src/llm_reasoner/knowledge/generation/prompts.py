@@ -13,14 +13,14 @@ from typing_extensions import Any, Callable, Mapping, Sequence
 from llm_reasoner.knowledge.acceptance.derived import described
 from llm_reasoner.knowledge.acceptance.rules import Violation
 from llm_reasoner.knowledge.acceptance.shapes import StructureShape, StructureShapes
-from llm_reasoner.generation.schema import (
+from llm_reasoner.knowledge.generation.schema import (
     AnswerKey,
     FieldKind,
     FieldSchema,
     GenerationSchema,
     TypeSchema,
 )
-from llm_reasoner.generation.wire import prefixed_name
+from llm_reasoner.knowledge.generation.wire import prefixed_name
 from llm_reasoner.knowledge.ontologies.terms import ConceptReference
 
 SYSTEM_PROMPT = """\

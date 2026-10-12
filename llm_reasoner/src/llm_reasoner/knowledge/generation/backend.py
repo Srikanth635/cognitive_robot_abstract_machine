@@ -41,14 +41,14 @@ from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.knowledge.acceptance.suite import predictive_manipulation_suite
 from llm_reasoner.clients.base import Exchange, LanguageModelClient
 from llm_reasoner.exceptions import LLMReasonerError
-from llm_reasoner.generation.prompts import (
+from llm_reasoner.knowledge.generation.prompts import (
     GenerationPrompt,
     described_violation,
     written_value,
 )
-from llm_reasoner.generation.schema import GenerationSchema
+from llm_reasoner.knowledge.generation.schema import GenerationSchema
 from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms
-from llm_reasoner.generation.wire import (
+from llm_reasoner.knowledge.generation.wire import (
     DecodedHypothesis,
     DecodingResult,
     FragmentDecoder,

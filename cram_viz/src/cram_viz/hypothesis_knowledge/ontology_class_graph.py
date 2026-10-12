@@ -16,7 +16,7 @@ from operator import attrgetter
 from llm_reasoner.knowledge.acceptance.derived import described
 from llm_reasoner.knowledge.acceptance.restrictions import ClosedWorldMembership
 from llm_reasoner.knowledge.acceptance.vocabulary import Vocabulary
-from llm_reasoner.generation.schema import is_inferred
+from llm_reasoner.knowledge.generation.schema import is_inferred
 from llm_reasoner.hypotheses.view import HypothesisView
 from llm_reasoner.knowledge.ontologies import (
     PREDICTIVE_MANIPULATION_NAMESPACE_ROOT,

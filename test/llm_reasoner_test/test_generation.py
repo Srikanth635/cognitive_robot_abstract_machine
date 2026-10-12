@@ -25,16 +25,23 @@ from llm_reasoner.knowledge.admission.consistency import (
 from llm_reasoner.knowledge.storage.record import ConsistencyVerdict
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.clients.base import ScriptedClient
-from llm_reasoner.generation.backend import HypothesisBackend, HypothesisRejected
-from llm_reasoner.generation.prompts import (
+from llm_reasoner.knowledge.generation.backend import (
+    HypothesisBackend,
+    HypothesisRejected,
+)
+from llm_reasoner.knowledge.generation.prompts import (
     GenerationPrompt,
     described_violation,
     field_hint,
     rendered_shape,
     rendered_type,
 )
-from llm_reasoner.generation.schema import FieldKind, GenerationSchema, type_schema_for
-from llm_reasoner.generation.wire import FragmentDecoder
+from llm_reasoner.knowledge.generation.schema import (
+    FieldKind,
+    GenerationSchema,
+    type_schema_for,
+)
+from llm_reasoner.knowledge.generation.wire import FragmentDecoder
 from llm_reasoner.knowledge.ontologies import (
     CRAM_AICOR_NAMESPACE,
     HYPOTHESIS_CONCEPT_NAMESPACE,
