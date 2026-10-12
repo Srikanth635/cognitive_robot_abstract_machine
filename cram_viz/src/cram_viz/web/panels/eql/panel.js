@@ -27,7 +27,7 @@ Panels.define('eql', function (root, bus) {
     '    <button id="query-run">Run</button>' +
     '  </div>' +
     '  <div class="designator-row">' +
-    '    <div id="designators" class="designators" title="Predefined, underspecified pouring designators: click one to have llm_reasoner resolve it in this scene"></div>' +
+    '    <div id="designators" class="designators" title="Predefined, underspecified pouring designators as krrood match queries: click one to have llm_reasoner resolve it in this scene"></div>' +
     '    <button id="nl-execute" title="Launch the demo under the live bridge — hardcoded for now, independent of the designators">Execute</button>' +
     '  </div>' +
     '  <div id="presets" class="presets"></div>' +
@@ -129,8 +129,9 @@ Panels.define('eql', function (root, bus) {
   }
 
   // ---- predefined designators ----------------------------------------------------
-  // Underspecified pouring designators the resolver completes in the scene shown: it
-  // reads the scene's world, consults the knowledge component, and the answer panel shows
+  // Underspecified pouring designators, each a krrood match query the resolver completes
+  // in the scene shown: it reads the scene's world, consults the knowledge component, and
+  // the answer panel shows
   // what it chose, why and what that rests on. The consulted hypothesis replaces what the
   // Hypothesis Graph, Ontology Graph and Designator tabs show, and every EQL variable over
   // it, so the presets are reloaded alongside it.
@@ -150,9 +151,9 @@ Panels.define('eql', function (root, bus) {
       return;
     }
     payload.designators.forEach(function (designator) {
-      const chip = document.createElement('div');
-      chip.className = 'designator' + (designator.available ? '' : ' unavailable');
-      chip.textContent = designator.label;
+      const chip = document.createElement('pre');
+      chip.className = 'designator-query' + (designator.available ? '' : ' unavailable');
+      chip.textContent = designator.query;
       chip.title = designatorHint(designator);
       if (designator.available) {
         chip.addEventListener('click', function () { resolve(designator); });
@@ -162,13 +163,15 @@ Panels.define('eql', function (root, bus) {
   }
 
   function designatorHint(designator) {
-    if (!designator.available) {
-      return 'needs ' + designator.missing.join(', ') + ', which this scene lacks';
+    if (designator.available) {
+      return designator.identifier + ': click to resolve it in this scene';
     }
-    let hint = 'gives: ' + (designator.given.join(', ') || 'nothing') +
-      '\nleft open: ' + designator.left_open.join(', ');
-    if (designator.task) hint += '\ntask: ' + designator.task;
-    return hint;
+    const lacks = designator.unbound.map(function (name) {
+      return 'an object named ' + name;
+    }).concat(designator.without_candidates.map(function (slot) {
+      return 'a candidate for ' + slot;
+    }));
+    return designator.identifier + ' needs ' + lacks.join(', ') + ', which this scene lacks';
   }
 
   let resolving = false;
@@ -176,7 +179,8 @@ Panels.define('eql', function (root, bus) {
     if (resolving) return;
     resolving = true;
     answerEl.innerHTML =
-      '<div class="goal">resolving · ' + esc(designator.label) + '</div>' +
+      '<div class="goal">resolving · ' + esc(designator.identifier) + '</div>' +
+      queryHtml(designator.query) +
       '<p class="hint-txt">The resolver reads the scene and consults the knowledge ' +
       'component about the action. Knowledge for a situation met before is served from ' +
       'the store; a new situation is generated once, which takes a few minutes.</p>';
@@ -185,14 +189,14 @@ Panels.define('eql', function (root, bus) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          variant: designator.identifier,
+          designator: designator.identifier,
           scene: SceneSelection.nameFromSearch(window.location.search),
         }),
       });
       const payload = await response.json();
       if (!payload.ok) {
         answerEl.innerHTML =
-          '<div class="goal">resolution failed · ' + esc(designator.label) + '</div>' +
+          '<div class="goal">resolution failed · ' + esc(designator.identifier) + '</div>' +
           '<div class="qerr">' + esc(payload.error || 'resolution failed') + '</div>';
       } else {
         answerEl.innerHTML = resolutionHtml(payload.resolution);
@@ -207,11 +211,13 @@ Panels.define('eql', function (root, bus) {
     resolving = false;
   }
 
+  function queryHtml(query) {
+    return '<pre class="resolved-query">' + esc(query) + '</pre>';
+  }
+
   function resolutionHtml(resolution) {
-    let html = '<div class="goal">resolved · ' + esc(resolution.label) + '</div>';
-    if (resolution.task) {
-      html += '<p class="hint-txt">task: ' + esc(resolution.task) + '</p>';
-    }
+    let html = '<div class="goal">resolved · ' + esc(resolution.identifier) + '</div>' +
+      queryHtml(resolution.query);
     resolution.actions.forEach(function (action) {
       html += '<div class="ansub">' + esc(resolution.designator) + '</div>';
       action.slots.forEach(function (slot) {

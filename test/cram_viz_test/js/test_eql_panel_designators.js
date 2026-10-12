@@ -1,7 +1,7 @@
-// Tests the predefined designators in the EQL panel: chips for the scene's underspecified
-// pouring designators, each resolved by llm_reasoner in the scene on a click, the
-// resolution shown in the answer panel and the consulted hypothesis published on the
-// bus; and the Execute button beside them.
+// Tests the predefined designators in the EQL panel: chips reading the scene's
+// underspecified pouring designators as krrood match queries, each resolved by
+// llm_reasoner in the scene on a click, the resolution shown in the answer panel and the
+// consulted hypothesis published on the bus; and the Execute button beside them.
 'use strict';
 
 const test = require('node:test');
@@ -45,14 +45,19 @@ function designatorsPayload() {
     scene: 'simple_pouring',
     designators: [
       {
-        identifier: 'vessel_into_bowl', label: 'pour from the vessel into the bowl',
-        task: '', available: true, missing: [],
-        given: ['target_container', 'source_container'], left_open: ['arm', 'tilt_angle'],
+        identifier: 'pouring_cup_into_bowl',
+        query: 'the(PouringAction)(\n    source_container=variable(Tool, domain=[pouring_cup]),\n)\n',
+        available: true, unbound: [], without_candidates: [],
       },
       {
-        identifier: 'until_half_full', label: 'into the bowl until it is half full',
-        task: 'Pour the milk into the bowl until the bowl is half full.', available: false,
-        missing: ['PouringCup'], given: [], left_open: [],
+        identifier: 'from_the_pouring_cup',
+        query: 'the(PouringAction)(\n    source_container=variable(Tool, domain=[pouring_cup]),\n)\n',
+        available: false, unbound: ['pouring_cup'], without_candidates: [],
+      },
+      {
+        identifier: 'everything_open',
+        query: 'the(PouringAction)(\n    source_container=variable(Tool),\n)\n',
+        available: false, unbound: [], without_candidates: ['source_container'],
       },
     ],
   };
@@ -62,7 +67,8 @@ function resolvedPayload() {
   return {
     ok: true,
     resolution: {
-      variant: 'vessel_into_bowl', label: 'pour from the vessel into the bowl', task: '',
+      identifier: 'pouring_cup_into_bowl',
+      query: 'the(PouringAction)(\n    source_container=variable(Tool, domain=[pouring_cup]),\n)\n',
       designator: 'PouringAction',
       actions: [{
         slots: [
@@ -182,24 +188,35 @@ function chips(panel) {
   return panel.elements['#designators'].children;
 }
 
-test('each designator of the scene becomes a chip reading its label', async function () {
+test('each designator of the scene becomes a chip reading its match query', async function () {
   const panel = loadEqlPanel();
   await settle();
 
   assert.deepStrictEqual(
     chips(panel).map(function (chip) { return chip.textContent; }),
-    designatorsPayload().designators.map(function (d) { return d.label; }),
+    designatorsPayload().designators.map(function (d) { return d.query; }),
   );
 });
 
-test('an unavailable designator says what the scene lacks and resolves nothing', async function () {
+test('a designator naming an object the scene lacks says so and resolves nothing', async function () {
   const panel = loadEqlPanel();
   await settle();
 
   const unavailable = chips(panel)[1];
   assert.ok(unavailable.className.includes('unavailable'));
-  assert.ok(unavailable.title.includes('PouringCup'));
+  assert.ok(unavailable.title.includes(designatorsPayload().designators[1].unbound[0]));
   assert.strictEqual(unavailable.listeners.click, undefined);
+});
+
+test('a designator with nothing in the scene to take for a slot says so', async function () {
+  const panel = loadEqlPanel();
+  await settle();
+
+  const unavailable = chips(panel)[2];
+  assert.ok(unavailable.className.includes('unavailable'));
+  assert.ok(unavailable.title.includes(
+    designatorsPayload().designators[2].without_candidates[0],
+  ));
 });
 
 // %% resolving
@@ -213,7 +230,7 @@ test('clicking a designator asks the server to resolve it in the scene', async f
   const call = panel.requests.find(function (r) { return r.url === '/api/designator/resolve'; });
   assert.ok(call);
   assert.deepStrictEqual(JSON.parse(call.init.body), {
-    variant: 'vessel_into_bowl', scene: 'simple_pouring',
+    designator: designatorsPayload().designators[0].identifier, scene: 'simple_pouring',
   });
 });
 
@@ -230,6 +247,17 @@ test('a resolution publishes the consulted hypothesis and shows why', async func
   const answer = panel.elements['#answer'].innerHTML;
   assert.ok(answer.includes(resolvedPayload().resolution.actions[0].why));
   assert.ok(answer.includes('ph_tilt'));
+});
+
+test('a resolution shows the match query it resolved', async function () {
+  const panel = loadEqlPanel();
+  await settle();
+
+  chips(panel)[0].listeners.click();
+  await settle();
+
+  const answer = panel.elements['#answer'].innerHTML;
+  assert.ok(answer.includes(resolvedPayload().resolution.query.split('\n')[0]));
 });
 
 test('a resolution refreshes the presets, since the new knowledge changes them', async function () {

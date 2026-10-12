@@ -11,6 +11,7 @@ import shutil
 from pathlib import Path
 
 import numpy as np
+from krrood.symbol_graph.symbol_graph import SymbolGraph
 from semantic_digital_twin.semantic_annotations.semantic_annotations import (
     Bowl,
     PouringCup,
@@ -91,3 +92,17 @@ class TestSceneWorlds:
         second = worlds.world_for("other", other)
         assert second is not first
         assert worlds.world is second
+
+    def test_a_replaced_world_leaves_none_of_its_objects_in_the_symbol_graph(
+        self, pouring_bundle, tmp_path
+    ):
+        other = tmp_path / "other"
+        shutil.copytree(pouring_bundle, other)
+        worlds = SceneWorlds()
+        worlds.world_for("pouring", pouring_bundle)
+        second = worlds.world_for("other", other)
+        assert list(SymbolGraph().get_instances_of_type(PouringCup)) == [
+            annotation
+            for annotation in second.semantic_annotations
+            if isinstance(annotation, PouringCup)
+        ]

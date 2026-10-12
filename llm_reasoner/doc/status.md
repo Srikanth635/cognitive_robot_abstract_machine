@@ -190,6 +190,14 @@ handles and the knowledge's flow-regulation phase ("inside the 90–120° regula
 of the pouring knowledge"); the knowledge was cram_viz's stored plain pouring hypothesis.
 The Designator tab showed the resolved slots, the explanation and the grounds.
 
+**cram_viz's designators as match queries (2026-10-12):** the chips show the krrood
+match queries the resolver receives, each read from a file of its own, in place of
+natural-language labels; the three chips with a natural-language task are gone. A
+chip is offered when the scene binds every name its query reads and has a candidate for
+every slot it leaves to choose. Switching scenes now removes the previous scene's world
+from krrood's symbol graph (collected, then `remove_dead_instances`), so an open
+`variable(Tool)` never offers another scene's objects.
+
 **Seen but not yet acted on (R7):** the request resolved every case alike (RIGHT, the default
 tilt of 1.85 rad), whatever the task, since it does not read the hypothesis yet; and
 the world does not say what the cup holds, so the material came from the task alone.

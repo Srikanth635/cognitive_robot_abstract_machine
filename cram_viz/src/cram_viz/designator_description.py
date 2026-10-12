@@ -324,26 +324,18 @@ class DesignatorDescriber:
     ) -> list[DesignatorProperty]:
         """
         :return: What the resolver's resolution states beyond the slots: the
-            designator resolved, the task, why the values were chosen and what they rest
-            on; nothing without a resolution.
+            designator resolved, why the values were chosen and what they rest on;
+            nothing without a resolution.
         """
         resolution = knowledge.resolution
         if resolution is None or not resolution.actions:
             return []
         action, *_ = resolution.actions
-        properties = [
+        return [
             DesignatorProperty(
-                key="resolved-from", values=[self.literal(resolution.label)]
-            )
-        ]
-        if resolution.task:
-            properties.append(
-                DesignatorProperty(key="task", values=[self.literal(resolution.task)])
-            )
-        properties.append(
-            DesignatorProperty(key="why", values=[self.literal(action.why)])
-        )
-        properties.append(
+                key="resolved-from", values=[self.literal(resolution.identifier)]
+            ),
+            DesignatorProperty(key="why", values=[self.literal(action.why)]),
             DesignatorProperty(
                 key="rests-on",
                 values=[
@@ -351,9 +343,8 @@ class DesignatorDescriber:
                     for ground in action.grounds
                 ],
                 many=True,
-            )
-        )
-        return properties
+            ),
+        ]
 
     def filler_of(self, slot: DesignatorSlot) -> Optional[DescriptionEntity]:
         """

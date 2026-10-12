@@ -1,6 +1,6 @@
 """
-Tests of resolving the viewer's predefined pouring designators in a scene: what each
-variant gives and leaves open, which scenes it can be resolved in, and what a resolution
+Tests of the viewer's predefined designators: krrood match queries read from their files
+and evaluated on a scene's world, which scenes offer them, and what a resolution
 reports, replayed from recorded answers.
 """
 
@@ -9,19 +9,32 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+from krrood.entity_query_language.query.match import Match
 from llm_reasoner.knowledge.access import HypothesisStore
 from llm_reasoner.resolver.grounds import GroundKey
 from semantic_digital_twin.semantic_annotations.semantic_annotations import PouringCup
+from typing_extensions import Any, Dict
 
+from cram_viz.query_source import QuerySource
 from cram_viz.resolution.designators import (
-    POURING_VARIANTS,
-    PouringVariant,
-    SceneQueries,
-    variant_named,
+    DESIGNATOR_DIRECTORY,
+    QUERY_SUFFIX,
+    DesignatorQuery,
+    NotAMatchQuery,
+    PouringDesignator,
+    QuerySlots,
+    SceneNamespace,
+    UnknownDesignator,
 )
 from cram_viz.resolution.scene_world import SceneKey, SceneWorldBuilder
 
 from .resolutions import resolver_replaying
+
+SOURCES = Path(__file__).parent / "query_sources"
+"""
+The query sources the tests read.
+"""
 
 # %% helpers
 
@@ -41,36 +54,97 @@ def without_object(bundle: Path, identifier: str) -> Path:
     return bundle
 
 
-# %% the variants
+def names_in(bundle: Path) -> Dict[str, Any]:
+    """
+    :return: The names a designator is evaluated with on the bundle's scene.
+    """
+    return SceneNamespace(world=SceneWorldBuilder().build(bundle)).names()
 
 
-class TestVariants:
-    def test_every_variant_is_written_on_a_scene_with_a_pouring_vessel(
+# %% the designators
+
+
+class TestDesignators:
+    def test_every_query_file_is_a_designator(self):
+        assert sorted(
+            path.stem for path in DESIGNATOR_DIRECTORY.glob(f"*{QUERY_SUFFIX}")
+        ) == sorted(PouringDesignator)
+
+    def test_every_designator_is_a_match_query_on_a_scene_with_a_pouring_cup(
         self, pouring_bundle
     ):
-        queries = SceneQueries(world=SceneWorldBuilder().build(pouring_bundle))
-        assert [variant.missing_in(queries) for variant in POURING_VARIANTS] == [
-            []
-        ] * len(POURING_VARIANTS)
-        for variant in POURING_VARIANTS:
-            variant.query(queries)
-
-    def test_a_variant_without_a_pouring_vessel_names_what_is_missing(
-        self, pouring_bundle
-    ):
-        world = SceneWorldBuilder().build(
-            without_object(pouring_bundle, "Static_MilkPitcher")
+        names = names_in(pouring_bundle)
+        assert all(
+            isinstance(DesignatorQuery.shipped(identifier).query_in(names), Match)
+            for identifier in PouringDesignator
         )
-        variant = variant_named(PouringVariant.VESSEL_INTO_BOWL)
-        assert variant.missing_in(SceneQueries(world=world)) == [PouringCup]
 
-    def test_a_variant_states_what_it_gives_and_what_it_leaves_open(
+    def test_a_designator_is_offered_as_its_query_text(self, pouring_bundle):
+        identifier = PouringDesignator.INTO_THE_BOWL
+        offered = DesignatorQuery.shipped(identifier).offered_in(
+            names_in(pouring_bundle)
+        )
+        assert (
+            offered.query
+            == (DESIGNATOR_DIRECTORY / f"{identifier}{QUERY_SUFFIX}").read_text()
+        )
+        assert offered.available is True
+
+    def test_a_scene_lacking_an_object_the_query_names_cannot_offer_it(
         self, pouring_bundle
     ):
-        queries = SceneQueries(world=SceneWorldBuilder().build(pouring_bundle))
-        slots = variant_named(PouringVariant.INTO_THE_BOWL).slots(queries)
-        assert slots.given == ["target_container"]
-        assert slots.left_open == ["source_container", "arm", "tilt_angle"]
+        names = names_in(without_object(pouring_bundle, "Static_MilkPitcher"))
+        offered = DesignatorQuery.shipped(
+            PouringDesignator.FROM_THE_POURING_CUP
+        ).offered_in(names)
+        assert offered.unbound == [SceneNamespace.name_of(PouringCup)]
+        assert offered.available is False
+
+    def test_a_scene_with_nothing_to_take_for_a_slot_cannot_offer_it(
+        self, pouring_bundle
+    ):
+        names = names_in(without_object(pouring_bundle, "Static_MilkPitcher"))
+        offered = DesignatorQuery.shipped(PouringDesignator.EVERYTHING_OPEN).offered_in(
+            names
+        )
+        assert offered.without_candidates == ["source_container"]
+        assert offered.available is False
+
+    def test_an_unknown_designator_is_refused(self):
+        with pytest.raises(UnknownDesignator):
+            DesignatorQuery.named("no_such_designator")
+
+    def test_a_query_that_is_not_a_match_is_refused(self, pouring_bundle):
+        designator = DesignatorQuery(
+            identifier=PouringDesignator.EVERYTHING_OPEN,
+            source=QuerySource.read(SOURCES / "not_a_match.py"),
+        )
+        with pytest.raises(NotAMatchQuery):
+            designator.query_in(names_in(pouring_bundle))
+
+
+# %% the slots
+
+
+class TestQuerySlots:
+    def test_the_slots_are_named_in_the_order_the_query_states_them(
+        self, pouring_bundle
+    ):
+        query = DesignatorQuery.shipped(PouringDesignator.EVERYTHING_OPEN).query_in(
+            names_in(pouring_bundle)
+        )
+        assert QuerySlots.of(query).names == [
+            "source_container",
+            "target_container",
+            "arm",
+            "tilt_angle",
+        ]
+
+    def test_only_a_value_the_query_states_is_given(self, pouring_bundle):
+        query = DesignatorQuery.shipped(
+            PouringDesignator.LEFT_ARM_GENTLE_TILT
+        ).query_in(names_in(pouring_bundle))
+        assert QuerySlots.of(query).given == ["arm"]
 
 
 # %% resolving
@@ -79,9 +153,12 @@ class TestVariants:
 class TestResolution:
     def test_a_resolution_names_the_value_of_every_slot(self, pouring_bundle, tmp_path):
         resolved = resolver_replaying(
-            "vessel_into_bowl", HypothesisStore(directory=tmp_path / "store")
+            PouringDesignator.POURING_CUP_INTO_BOWL,
+            HypothesisStore(directory=tmp_path / "store"),
         ).resolve(
-            variant_named(PouringVariant.VESSEL_INTO_BOWL), "pouring", pouring_bundle
+            DesignatorQuery.shipped(PouringDesignator.POURING_CUP_INTO_BOWL),
+            "pouring",
+            pouring_bundle,
         )
         (action,) = resolved.actions
         assert {slot.name: slot.value for slot in action.slots} == {
@@ -91,13 +168,25 @@ class TestResolution:
             "tilt_angle": "1.85",
         }
 
+    def test_a_resolution_states_the_query_it_resolved(self, pouring_bundle, tmp_path):
+        designator = DesignatorQuery.shipped(PouringDesignator.POURING_CUP_INTO_BOWL)
+        resolved = resolver_replaying(
+            PouringDesignator.POURING_CUP_INTO_BOWL,
+            HypothesisStore(directory=tmp_path / "store"),
+        ).resolve(designator, "pouring", pouring_bundle)
+        assert resolved.identifier is PouringDesignator.POURING_CUP_INTO_BOWL
+        assert resolved.query == designator.source.text
+
     def test_a_resolution_names_what_its_answer_rests_on(
         self, pouring_bundle, tmp_path
     ):
         resolved = resolver_replaying(
-            "vessel_into_bowl", HypothesisStore(directory=tmp_path / "store")
+            PouringDesignator.POURING_CUP_INTO_BOWL,
+            HypothesisStore(directory=tmp_path / "store"),
         ).resolve(
-            variant_named(PouringVariant.VESSEL_INTO_BOWL), "pouring", pouring_bundle
+            DesignatorQuery.shipped(PouringDesignator.POURING_CUP_INTO_BOWL),
+            "pouring",
+            pouring_bundle,
         )
         (action,) = resolved.actions
         assert [(ground.source, ground.name) for ground in action.grounds] == [
@@ -109,8 +198,12 @@ class TestResolution:
         self, pouring_bundle, tmp_path
     ):
         store = HypothesisStore(directory=tmp_path / "store")
-        resolved = resolver_replaying("vessel_into_bowl", store).resolve(
-            variant_named(PouringVariant.VESSEL_INTO_BOWL), "pouring", pouring_bundle
+        resolved = resolver_replaying(
+            PouringDesignator.POURING_CUP_INTO_BOWL, store
+        ).resolve(
+            DesignatorQuery.shipped(PouringDesignator.POURING_CUP_INTO_BOWL),
+            "pouring",
+            pouring_bundle,
         )
         (record,) = store.records()
         assert resolved.record_id == record.record_id
