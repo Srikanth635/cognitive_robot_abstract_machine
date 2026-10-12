@@ -18,9 +18,12 @@ from llm_reasoner.knowledge.acceptance.derived import described
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite
 from llm_reasoner.knowledge.acceptance.shapes import ShapesHold, StructureShapes
 from llm_reasoner.knowledge.acceptance.vocabulary import Vocabulary
-from llm_reasoner.admission.consistency import ConsistencyCheck, OpenWorldCheck
-from llm_reasoner.admission.record import ConsistencyVerdict
-from llm_reasoner.admission.store import HypothesisStore
+from llm_reasoner.knowledge.admission.consistency import (
+    ConsistencyCheck,
+    OpenWorldCheck,
+)
+from llm_reasoner.knowledge.storage.record import ConsistencyVerdict
+from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.generation.backend import HypothesisBackend, HypothesisRejected
 from llm_reasoner.generation.prompts import (

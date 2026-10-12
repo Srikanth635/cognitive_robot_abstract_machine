@@ -20,24 +20,24 @@ from krrood.entity_query_language.query.match import Match
 from typing_extensions import Any, Iterable, Optional, TypeVar
 
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite, Severity, Violation
-from llm_reasoner.admission.citation import Citation
-from llm_reasoner.admission.consistency import (
+from llm_reasoner.knowledge.storage.citation import Citation
+from llm_reasoner.knowledge.admission.consistency import (
     ConsistencyCheck,
     ContradictionLocaliser,
     OpenWorldCheck,
 )
-from llm_reasoner.admission.rdf import (
+from llm_reasoner.knowledge.admission.rdf import (
     HYPOTHESIS_NAMESPACE_ROOT,
     GraphReader,
     GraphWriter,
 )
-from llm_reasoner.admission.record import (
+from llm_reasoner.knowledge.storage.record import (
     ConsistencyVerdict,
     HypothesisRecord,
     current_module_versions,
     qualified_name,
 )
-from llm_reasoner.admission.store import HypothesisStore
+from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.knowledge.acceptance.suite import predictive_manipulation_suite
 from llm_reasoner.clients.base import Exchange, LanguageModelClient
 from llm_reasoner.exceptions import LLMReasonerError

@@ -11,8 +11,8 @@ from llm_reasoner.knowledge.acceptance.rules import Severity  # noqa: E402
 from llm_reasoner.knowledge.acceptance.suite import (  # noqa: E402
     predictive_manipulation_suite,
 )
-from llm_reasoner.admission.rdf import GraphReader  # noqa: E402
-from llm_reasoner.admission.store import HypothesisStore  # noqa: E402
+from llm_reasoner.knowledge.admission.rdf import GraphReader  # noqa: E402
+from llm_reasoner.knowledge.storage.store import HypothesisStore  # noqa: E402
 from llm_reasoner.hypotheses.graph import HypothesisGraphNodeKind  # noqa: E402
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import (  # noqa: E402
     pouring,

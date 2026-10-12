@@ -15,10 +15,10 @@ from typing_extensions import Optional
 
 from krrood.utils import resolve_class_from_full_name
 
-from llm_reasoner.admission.citation import Citation
-from llm_reasoner.admission.rdf import GraphReader
-from llm_reasoner.admission.record import HypothesisRecord
-from llm_reasoner.admission.store import StoredHypothesis
+from llm_reasoner.knowledge.storage.citation import Citation
+from llm_reasoner.knowledge.admission.rdf import GraphReader
+from llm_reasoner.knowledge.storage.record import HypothesisRecord
+from llm_reasoner.knowledge.storage.store import StoredHypothesis
 from llm_reasoner.exceptions import LLMReasonerError
 from llm_reasoner.knowledge.ontologies.predictive_manipulation import (
     core,
