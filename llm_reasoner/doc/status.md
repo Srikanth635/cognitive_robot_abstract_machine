@@ -133,7 +133,25 @@ the vocabulary (§7; `bf6c786d8` now refuses before asking the model), and the s
 pass filled features by convention ("I chose the usual pouring case") where nothing
 established them (`9a0b09687`: open values as facts).
 
-**Seen but not yet acted on:** the request resolved every case alike (RIGHT, the default
+**Reading the knowledge (I5, 2026-10-12, at `c44d3dd7a`):** the same cases K1–K5, the
+hypotheses served from R7's store, in a process holding the kitchen without rebuilding
+krrood's symbol graph (knowledge no longer needs it). Every request read
+`knowledge_overview` first; $0.29 in total ($0.04–0.07 a case, nothing generated).
+
+| Case | Knowledge read | Result | Grounding stated |
+|---|---|---|---|
+| K1 | overview | RIGHT, 1.85 | "the knowledge's LiquidPouringStructure and its ph_tilt phase set no other angle" |
+| K2 | overview | RIGHT, 1.85 | follows the tilt-to-flow phase (ph_tilt) |
+| K3 | overview, `find_fragments` (condition requirements) | RIGHT, 1.85 | the granular structure gives no tilt value |
+| K4 (half full) | overview and 7 descriptions (sg_tilt, ph_tilt, sp_tilt, th_flow, r_tilt, r_flow_th, role_eff) | RIGHT, **1.5** | inside sp_tilt's 30–120° setpoint range and above th_flow's 40–110° flow onset, "so the milk flows but gently, which suits stopping at half full" |
+| K5 (all of it) | overview | RIGHT, 1.85 | GRANULAR, SOURCE_EXHAUSTED: tilt until the cereal has flowed out |
+
+The knowledge changed a choice only where the task asked for nuance (K4), and every
+answer cited the fragments it relied on. The overview names phases and subgoals but no
+values, so numeric ranges are found only by describing fragments. The arm stays an
+arbitrary choice: neither the world nor the knowledge says which gripper holds the cup.
+
+**Seen but not yet acted on (R7):** the request resolved every case alike (RIGHT, the default
 tilt of 1.85 rad), whatever the task, since it does not read the hypothesis yet; and
 the world does not say what the cup holds, so the material came from the task alone.
 
@@ -165,9 +183,9 @@ the world does not say what the cup holds, so the material came from the task al
 
 ## 5. In progress
 
-- The knowledge request, steps R1–R7 (planned below): all done; R7's results are in §3.
-  Next: the knowledge tools (`KnowledgeAccess`), so the resolver's request reads the
-  hypothesis it obtained.
+- The knowledge request, steps R1–R7: all done; R7's results are in §3.
+- Knowledge in its own graph, steps I1–I5: done, except I4's domains for slots of a
+  knowledge class (waiting for a use and a decision on whose fragments form the domain).
 - Reorganising the knowledge component (decision of 2026-10-12). Done: the pure moves
   into `knowledge/`, lowest layer first, each committed with both test suites passing
   (`ebc93d9fa` ontologies, `274542e2c` ontology translation, `5149984fe` acceptance,
@@ -197,7 +215,7 @@ Each step test-first and committed with both test suites passing.
 | I2 | **Done** (`da2a3051b`: `KnowledgeGraph` in `hypotheses/knowledge_graph.py`, exported by `access.py`; `KnowledgeService` reads hypotheses through it, so each is read once and its fragments keep their identity) — The knowledge component's local graph: the admitted hypotheses' fragments, loaded from the store, giving EQL its domains (every fragment of a class) and the hypothesis each belongs to | knowledge | none |
 | I3 | **Done** (option B, knowledge-shaped tools, chosen 2026-10-12; `architecture.md` §3.7) — `KnowledgeAccess`, the contract the resolver reads the local graph through: domains for knowledge classes and knowledge tools for the model, declared like the world tools | knowledge, `access.py` | none |
 | I4 | **Done in part** — the request's model gets the knowledge tools over the consulted hypothesis beside the world tools, with the `knowledge` rule, when the backend asks with tools (`LanguageModelBackend.knowledge_tools`, `request_completion`); the requester depends on `KnowledgeAccess`. **Not built:** slots of a knowledge class taking their domain from the knowledge graph, which no action designator has today and which needs a decision on whose fragments form the domain (every stored hypothesis, or the consulted one). Planned: The resolver answers a query from both graphs: a slot or variable of a knowledge class takes its domain from `KnowledgeAccess`, one of a world class from `WorldAccess`; the model gets the knowledge tools beside the world tools, so the request reads the hypothesis the consultation obtained | resolver, `reasoner.py` | none |
-| I5 | Live check: the R7 cases, the request now reading the knowledge | — | — |
+| I5 | Live check: the R7 cases, the request now reading the knowledge — **done** (§3): every request read the knowledge, K4 chose its tilt from it | — | — |
 
 ### Done: the knowledge request (D1–D5), lowest layer first
 
