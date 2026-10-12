@@ -1,13 +1,16 @@
 /* ============================================================================
  * panels/eql/panel.js — the EQL (Entity Query Language) console.
  *
- * Query box + presets + answer panel. Queries are executed server-side
- * (POST /api/eql) against the episode knowledge base; the KB overview
- * (GET /api/kb) provides presets and per-entity details.
+ * Query box + predefined designators + presets + answer panel. Queries are executed
+ * server-side (POST /api/eql) against the episode knowledge base; the KB overview
+ * (GET /api/kb) provides presets and per-entity details. The scene's predefined,
+ * underspecified designators (GET /api/designators) are resolved by llm_reasoner in the
+ * scene on a click (POST /api/designator/resolve).
  *
  * Bus events:
  *   emits    kb:ready {payload}          the /api/kb overview, once loaded
  *   emits    entity:highlight {ids, focus?}   results / described entity
+ *   emits    hypothesis:generated {payload}   the hypothesis a resolution consulted
  *   listens  scene:part-clicked {id}     describe the clicked part
  *   listens  scene:step {step}           describe the running episode
  *   listens  entity:select {id, detail, relations}   node clicked in a graph
@@ -19,14 +22,13 @@ Panels.define('eql', function (root, bus) {
     '  <span id="kb-status" class="kb-status">loading knowledge base…</span>' +
     '</div>' +
     '<div class="query-box">' +
-    '  <div class="nl-row">' +
-    '    <input id="nl-input" spellcheck="false" placeholder="Enter the instruction">' +
-    '    <button id="nl-run" title="Generate a hypothesis for this instruction and show it in the Hypothesis Graph tab">Generate</button>' +
-    '    <button id="nl-execute" title="Launch the demo under the live bridge — hardcoded for now, independent of the instruction above">Execute</button>' +
-    '  </div>' +
     '  <div class="query-row">' +
     '    <textarea id="query-input" rows="2" spellcheck="false" placeholder="the(entity(obj).where(obj.name == \'milk\'))   —  vars: obj, ep, arm, j, rob"></textarea>' +
     '    <button id="query-run">Run</button>' +
+    '  </div>' +
+    '  <div class="designator-row">' +
+    '    <div id="designators" class="designators" title="Predefined, underspecified pouring designators: click one to have llm_reasoner resolve it in this scene"></div>' +
+    '    <button id="nl-execute" title="Launch the demo under the live bridge — hardcoded for now, independent of the designators">Execute</button>' +
     '  </div>' +
     '  <div id="presets" class="presets"></div>' +
     '</div>' +
@@ -37,8 +39,7 @@ Panels.define('eql', function (root, bus) {
   const input = root.querySelector('#query-input');
   const runBtn = root.querySelector('#query-run');
   const presetsEl = root.querySelector('#presets');
-  const nlInput = root.querySelector('#nl-input');
-  const nlRunBtn = root.querySelector('#nl-run');
+  const designatorsEl = root.querySelector('#designators');
   const nlExecuteBtn = root.querySelector('#nl-execute');
 
   let kb = null;   // /api/kb overview (presets + entity details)
@@ -63,6 +64,7 @@ Panels.define('eql', function (root, bus) {
     buildPresets(payload.presets || []);
     welcome();
     bus.emit('kb:ready', { payload: payload });
+    loadDesignators();
   }
 
   function welcome() {
@@ -126,51 +128,113 @@ Panels.define('eql', function (root, bus) {
     });
   }
 
-  // ---- generate knowledge from a natural-language instruction ------------------
-  // The instruction goes to llm_reasoner, which produces a Flanagan structure; the
-  // server projects it with the action-frame and image-schema representations and
-  // returns the refreshed graph. Generation replaces what every EQL variable ranges
-  // over, so the presets are reloaded alongside it.
-  let generating = false;
-  async function generate(instruction) {
-    instruction = (instruction || '').trim();
-    if (!instruction || generating) return;
-    generating = true;
-    nlRunBtn.textContent = '…';
-    nlRunBtn.disabled = true;
-    answerEl.innerHTML =
-      '<div class="goal">generating · ' + esc(instruction) + '</div>' +
-      '<p class="hint-txt">Asking the model for the stereotypical structure of this ' +
-      'action. A repeated instruction is served from the store instead.</p>';
+  // ---- predefined designators ----------------------------------------------------
+  // Underspecified pouring designators the resolver completes in the scene shown: it
+  // reads the scene's world, consults the knowledge component, and the answer panel shows
+  // what it chose, why and what that rests on. The consulted hypothesis replaces what the
+  // Hypothesis Graph, Ontology Graph and Designator tabs show, and every EQL variable over
+  // it, so the presets are reloaded alongside it.
+  async function loadDesignators() {
     try {
-      const response = await fetch('/api/hypothesis/generate', {
+      const response = await fetch(SceneSelection.apiUrl('/api/designators', window.location.search));
+      buildDesignators(await response.json());
+    } catch (err) {
+      designatorsEl.textContent = 'designators unavailable: ' + String(err);
+    }
+  }
+
+  function buildDesignators(payload) {
+    designatorsEl.innerHTML = '';
+    if (!payload.ok) {
+      designatorsEl.textContent = 'designators unavailable: ' + (payload.error || 'unknown error');
+      return;
+    }
+    payload.designators.forEach(function (designator) {
+      const chip = document.createElement('div');
+      chip.className = 'designator' + (designator.available ? '' : ' unavailable');
+      chip.textContent = designator.label;
+      chip.title = designatorHint(designator);
+      if (designator.available) {
+        chip.addEventListener('click', function () { resolve(designator); });
+      }
+      designatorsEl.appendChild(chip);
+    });
+  }
+
+  function designatorHint(designator) {
+    if (!designator.available) {
+      return 'needs ' + designator.missing.join(', ') + ', which this scene lacks';
+    }
+    let hint = 'gives: ' + (designator.given.join(', ') || 'nothing') +
+      '\nleft open: ' + designator.left_open.join(', ');
+    if (designator.task) hint += '\ntask: ' + designator.task;
+    return hint;
+  }
+
+  let resolving = false;
+  async function resolve(designator) {
+    if (resolving) return;
+    resolving = true;
+    answerEl.innerHTML =
+      '<div class="goal">resolving · ' + esc(designator.label) + '</div>' +
+      '<p class="hint-txt">The resolver reads the scene and consults the knowledge ' +
+      'component about the action. Knowledge for a situation met before is served from ' +
+      'the store; a new situation is generated once, which takes a few minutes.</p>';
+    try {
+      const response = await fetch('/api/designator/resolve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ instruction: instruction }),
+        body: JSON.stringify({
+          variant: designator.identifier,
+          scene: SceneSelection.nameFromSearch(window.location.search),
+        }),
       });
       const payload = await response.json();
       if (!payload.ok) {
         answerEl.innerHTML =
-          '<div class="goal">generation failed</div>' +
-          '<div class="qerr">' + esc(payload.error || 'generation failed') + '</div>';
+          '<div class="goal">resolution failed · ' + esc(designator.label) + '</div>' +
+          '<div class="qerr">' + esc(payload.error || 'resolution failed') + '</div>';
       } else {
-        bus.emit('hypothesis:generated', payload);
-        answerEl.innerHTML =
-          '<div class="goal">generated · ' + esc(instruction) + '</div>' +
-          '<p class="headline"><b>' + (payload.nodes || []).length + '</b> nodes across ' +
-          'the phase structure, action frame and image-schema profile.</p>' +
-          '<p class="hint-txt">Shown in the Hypothesis Graph tab. Every pouring_* EQL ' +
-          'variable now ranges over this structure.</p>';
+        answerEl.innerHTML = resolutionHtml(payload.resolution);
+        bus.emit('hypothesis:generated', payload.hypothesis);
         await reloadKnowledgeBase();
       }
     } catch (err) {
       answerEl.innerHTML =
-        '<div class="goal">generation failed</div>' +
+        '<div class="goal">resolution failed</div>' +
         '<div class="qerr">' + esc(String(err)) + '</div>';
     }
-    generating = false;
-    nlRunBtn.textContent = 'Generate';
-    nlRunBtn.disabled = false;
+    resolving = false;
+  }
+
+  function resolutionHtml(resolution) {
+    let html = '<div class="goal">resolved · ' + esc(resolution.label) + '</div>';
+    if (resolution.task) {
+      html += '<p class="hint-txt">task: ' + esc(resolution.task) + '</p>';
+    }
+    resolution.actions.forEach(function (action) {
+      html += '<div class="ansub">' + esc(resolution.designator) + '</div>';
+      action.slots.forEach(function (slot) {
+        html += '<div class="ansrow"><span class="tag">' + (slot.given ? 'given' : 'chosen') +
+          '</span><div class="body"><span class="name">' + esc(slot.name) + ' = ' +
+          esc(slot.value) + '</span></div></div>';
+      });
+      html += '<div class="ansrow"><div class="body"><span class="sub">why: ' +
+        esc(action.why) + '</span></div></div>';
+      action.grounds.forEach(function (ground) {
+        html += '<div class="ansrow"><div class="body"><span class="sub">rests on ' +
+          esc(ground.source) + ': ' + esc(ground.name) + '</span></div></div>';
+      });
+    });
+    const situation = Object.keys(resolution.situation).map(function (feature) {
+      return feature + ' = ' + resolution.situation[feature];
+    });
+    html += '<p class="hint-txt">knowledge consulted for ' +
+      esc(situation.length ? situation.join(', ') : 'an unknown situation') +
+      (resolution.record_id ? ' (hypothesis ' + esc(resolution.record_id) + ')' : '') +
+      ' · resolver cost $' + resolution.cost.toFixed(3) +
+      ' · shown in the Hypothesis Graph, Ontology Graph and Designator tabs</p>';
+    return html;
   }
 
   async function reloadKnowledgeBase() {
@@ -182,13 +246,8 @@ Panels.define('eql', function (root, bus) {
     bus.emit('kb:ready', { payload: payload });
   }
 
-  nlRunBtn.addEventListener('click', function () { generate(nlInput.value); });
-  nlInput.addEventListener('keydown', function (event) {
-    if (event.key === 'Enter') { event.preventDefault(); generate(nlInput.value); }
-  });
-
   // ---- execute the hardcoded demo under the live bridge -------------------------
-  // Independent of the instruction/generated hypothesis above -- for now this
+  // Independent of the designators and the hypothesis above -- for now this
   // always launches the same fixed demo script. Nothing further is wired here to
   // show it running: the 3D scene panel already polls the live bridge's /info
   // endpoint every few seconds and shows its own "Live" button the moment one

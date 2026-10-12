@@ -19,6 +19,8 @@ from cram_viz.designator_description import (  # noqa: E402
 )
 from cram_viz.hypothesis_knowledge.ontology_backing import OntologyBacking  # noqa: E402
 
+from .resolutions import vessel_into_bowl  # noqa: E402
+
 # %% helpers
 
 
@@ -192,3 +194,28 @@ class TestHypothesis:
             for entry in nested.properties
             for value in entry.values
         )
+
+
+class TestResolution:
+    def test_a_resolution_states_why_it_chose_what_it_chose(self, view):
+        resolution = vessel_into_bowl()
+        knowledge = designator_knowledge.reflect_pouring_action([], view, resolution)
+        action = DesignatorDescriber(view=view).describe(knowledge)
+        ((why,),) = [property_values(action, "why")]
+        assert why.data == resolution.actions[0].why
+
+    def test_a_resolution_states_what_it_rests_on(self, view):
+        resolution = vessel_into_bowl()
+        knowledge = designator_knowledge.reflect_pouring_action([], view, resolution)
+        action = DesignatorDescriber(view=view).describe(knowledge)
+        assert [value.data for value in property_values(action, "rests-on")] == [
+            f"{ground.source}: {ground.name}"
+            for ground in resolution.actions[0].grounds
+        ]
+
+    def test_a_chosen_slot_is_written_as_the_value_chosen(self, view):
+        resolution = vessel_into_bowl()
+        knowledge = designator_knowledge.reflect_pouring_action([], view, resolution)
+        action = DesignatorDescriber(view=view).describe(knowledge)
+        ((tilt,),) = [property_values(action, "tilt-angle")]
+        assert tilt.text == "1.85"

@@ -15,6 +15,8 @@ from cram_viz import hypothesis_knowledge  # noqa: E402
 from cram_viz.designator_knowledge import reflect_pouring_action  # noqa: E402
 from cram_viz.kb import BenchObject, Position  # noqa: E402
 
+from .resolutions import vessel_into_bowl  # noqa: E402
+
 
 def bench_objects() -> list[BenchObject]:
     """
@@ -90,3 +92,26 @@ class TestResolution:
     def test_a_scene_without_objects_resolves_nothing(self):
         knowledge = reflect_pouring_action([], hypothesis_knowledge.active().view)
         assert slot_named(knowledge, "source_container").resolved_candidate is None
+
+
+class TestResolvedByTheResolver:
+    def test_a_resolved_slot_holds_the_value_the_resolver_chose(self):
+        resolution = vessel_into_bowl()
+        knowledge = reflect_pouring_action(bench_objects(), None, resolution)
+        (action,) = resolution.actions
+        assert {
+            slot.name: slot_named(knowledge, slot.name).lisp_value
+            for slot in action.slots
+        } == {slot.name: slot.value for slot in action.slots}
+
+    def test_a_resolved_slot_offers_no_illustrative_candidates(self):
+        knowledge = reflect_pouring_action(bench_objects(), None, vessel_into_bowl())
+        assert slot_named(knowledge, "target_container").candidates == []
+
+    def test_a_slot_the_resolution_does_not_name_stays_as_reflected(self):
+        resolved = reflect_pouring_action(bench_objects(), None, vessel_into_bowl())
+        reflected = reflect_pouring_action(bench_objects(), None)
+        assert (
+            slot_named(resolved, "pour_side").lisp_value
+            == slot_named(reflected, "pour_side").lisp_value
+        )

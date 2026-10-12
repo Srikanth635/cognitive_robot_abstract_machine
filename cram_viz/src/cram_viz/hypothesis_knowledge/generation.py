@@ -219,7 +219,7 @@ class ModelHypothesisSource(HypothesisSource):
             raise MissingCredentialsError(ANTHROPIC_API_KEY_NAME, environment_file)
 
     def view_for(self, instruction: str) -> HypothesisView:
-        return self._knowledge_service().view_for(pouring_query(), instruction)
+        return self.knowledge_service().view_for(pouring_query(), instruction)
 
     def client_for_generation(self) -> LanguageModelClient:
         """
@@ -227,7 +227,7 @@ class ModelHypothesisSource(HypothesisSource):
         """
         return self.client or AnthropicClient(model=self.model)
 
-    def _knowledge_service(self) -> KnowledgeService:
+    def knowledge_service(self) -> KnowledgeService:
         """
         Build the service on first use, so importing costs no credentials.
         """

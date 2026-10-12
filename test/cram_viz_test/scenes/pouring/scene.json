@@ -1,0 +1,20 @@
+{
+  "name": "pouring",
+  "fps": 30,
+  "trajectory": "trajectory.json",
+  "models": [
+    {"name": "robot", "urdf": "robot.urdf", "prefix": "robot", "robot": true}
+  ],
+  "robot": {"name": "robot", "prefix": "robot", "parts": {}},
+  "objects": [
+    {"id": "bowl", "key": "bowl.stl", "mesh": "meshes/objects/bowl.stl", "spawn": [2.4, 2.2, 1.0, 0.0, 0.0, 0.0, 1.0], "color": "#c03030"},
+    {"id": "Static_MilkPitcher", "key": "Static_MilkPitcher.stl", "mesh": "meshes/objects/Static_MilkPitcher.stl", "spawn": [2.37, 1.6, 1.02, 0.0, 0.0, 0.0, 1.0], "color": "#b8bcc4"},
+    {"id": "mystery", "key": "mystery.stl", "mesh": "meshes/objects/mystery.stl", "spawn": [1.0, 1.0, 1.0], "color": "#888888"}
+  ],
+  "segments": [],
+  "actions": [],
+  "planTrees": [],
+  "placeTarget": {"pos": [2.4, 2.2], "z": 1.0, "bounds": {"minX": 2.0, "maxX": 3.0, "minY": 2.0, "maxY": 3.0}},
+  "dragBounds": {"minX": 0, "maxX": 6, "minY": 0, "maxY": 6},
+  "missingAssets": []
+}

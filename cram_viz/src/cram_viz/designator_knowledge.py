@@ -19,6 +19,10 @@ real ``Body``/``Tool`` individuals.
 A referent slot that fills a role of the pouring ontology is tagged with the role's
 class, and resolved illustratively to the scene object whose label reads closest to the
 active hypothesis's filler of that role -- still not a live resolver run.
+
+Once the resolver has resolved one of the viewer's predefined designators
+(:mod:`cram_viz.resolution`), each slot it resolved holds the value it chose instead, and
+no illustrative candidates are offered for it.
 """
 
 from __future__ import annotations
@@ -26,7 +30,7 @@ from __future__ import annotations
 import dataclasses
 import inspect
 from dataclasses import dataclass, field
-from typing_extensions import TYPE_CHECKING, Any, List, Optional, Sequence
+from typing_extensions import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
 
 from krrood.entity_query_language.verbalization.rendering.source_documentation import (
     _attribute_docstrings,
@@ -49,6 +53,7 @@ from llm_reasoner.knowledge.access import (
 
 if TYPE_CHECKING:
     from cram_viz.kb import BenchObject
+    from cram_viz.resolution.resolver import ResolvedDesignator
 
 
 # %% slot table
@@ -102,6 +107,12 @@ class DesignatorSlot:
     The ontology role this slot fills, when it fills one.
     """
 
+    resolved_value: Optional[str] = None
+    """
+    The value the resolver chose for this slot, written for reading, when a resolution
+    chose one.
+    """
+
     @property
     def resolved_candidate(self) -> Optional[IllustrativeCandidate]:
         """:return: This slot's candidate resolved for the active hypothesis, if any."""
@@ -120,6 +131,8 @@ class DesignatorSlot:
             open (a referent slot, or a value slot with no default), otherwise the
             conventional default.
         """
+        if self.resolved_value is not None:
+            return self.resolved_value
         resolved = self.resolved_candidate
         if resolved is not None:
             return resolved.identifier
@@ -145,6 +158,11 @@ class DesignatorKnowledge:
     """
     The instruction of the hypothesis a slot's :attr:`~DesignatorSlot.resolved_candidate`
     was chosen for, or ``None`` when there was none.
+    """
+
+    resolution: Optional[ResolvedDesignator] = None
+    """
+    The resolver's resolution of the designator, when one was made.
     """
 
 
@@ -290,17 +308,26 @@ def _classify(declared_type: Any, alternatives: Optional[List[type]]) -> SlotKin
 
 
 def reflect_pouring_action(
-    objects: Sequence[BenchObject], view: Optional[HypothesisView]
+    objects: Sequence[BenchObject],
+    view: Optional[HypothesisView],
+    resolution: Optional[ResolvedDesignator] = None,
 ) -> DesignatorKnowledge:
     """
-    Reflect :class:`PouringAction` into a static slot table.
+    Reflect :class:`PouringAction` into a slot table.
 
     :param objects: The scene's bench objects, offered as illustrative candidates for
-        referent slots.
+        referent slots the resolution does not resolve.
     :param view: The active hypothesis, whose role fillers resolve the referent
-        slots, or ``None`` when there is none.
+        slots illustratively, or ``None`` when there is none.
+    :param resolution: The resolver's resolution, whose first action's values the
+        slots it resolved hold, or ``None`` when there is none.
     :return: The reflected designator.
     """
+    chosen: Dict[str, str] = (
+        {}
+        if resolution is None or not resolution.actions
+        else {slot.name: slot.value for slot in resolution.actions[0].slots}
+    )
     designator_type = PouringAction
     docstrings = inspect.getdoc(designator_type)
     fields_by_name = {f.name: f for f in dataclasses.fields(designator_type)}
@@ -314,7 +341,7 @@ def reflect_pouring_action(
         role = _ROLE_BY_FIELD_NAME.get(name)
         candidates = (
             _candidates_for_role(role, view, objects)
-            if kind is SlotKind.REFERENT
+            if kind is SlotKind.REFERENT and name not in chosen
             else []
         )
         slots.append(
@@ -327,6 +354,7 @@ def reflect_pouring_action(
                 has_default=has_default,
                 candidates=candidates,
                 role=role,
+                resolved_value=chosen.get(name),
             )
         )
     return DesignatorKnowledge(
@@ -334,4 +362,5 @@ def reflect_pouring_action(
         docstring=docstrings,
         slots=slots,
         resolved_for_instruction=view.record.instruction if view is not None else None,
+        resolution=resolution,
     )

@@ -1,10 +1,9 @@
 """
-Tests for launching a demo under the live bridge from the viewer's "Execute"
-button, instead of a separate ``cram-viz-live path/to/demo.py`` terminal command.
+Tests for launching a demo under the live bridge from the viewer's "Execute" button,
+instead of a separate ``cram-viz-live path/to/demo.py`` terminal command.
 
-``spawn`` is stubbed throughout: nothing here starts a real subprocess or binds
-the live bridge's port, so these run without coraplex/giskardpy and never touch
-a real demo.
+``spawn`` is stubbed throughout: nothing here starts a real subprocess or binds the live
+bridge's port, so these run without coraplex/giskardpy and never touch a real demo.
 """
 
 from __future__ import annotations
@@ -18,7 +17,9 @@ from cram_viz.live.launcher import LiveDemoLauncher
 
 
 class FakeProcess:
-    """A process handle whose ``poll()`` reports running or exited, on demand."""
+    """
+    A process handle whose ``poll()`` reports running or exited, on demand.
+    """
 
     def __init__(self, poll_result=None, hangs_on_terminate=False):
         self.poll_result = poll_result
@@ -51,9 +52,9 @@ class FakeSpawn:
     """
     Records each command it is asked to run and returns a preset process.
 
-    Accepts either a single process (returned for every call, for tests where the
-    exact process identity doesn't matter) or a list of processes (returned one per
-    call, in order, for tests that need to tell the old and new processes apart).
+    Accepts either a single process (returned for every call, for tests where the exact
+    process identity doesn't matter) or a list of processes (returned one per call, in
+    order, for tests that need to tell the old and new processes apart).
     """
 
     def __init__(self, process):

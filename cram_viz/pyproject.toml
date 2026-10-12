@@ -33,7 +33,7 @@ include = ["cram_viz*"]
 
 [tool.setuptools.package-data]
 # the web frontend ships with the package (all local assets, no CDN)
-cram_viz = ["web/**/*", "resources/**/*"]
+cram_viz = ["web/**/*", "resources/**/*", "resolution/*.json"]
 
 [tool.setuptools.dynamic]
 version = { attr = "cram_viz.__version__" }
