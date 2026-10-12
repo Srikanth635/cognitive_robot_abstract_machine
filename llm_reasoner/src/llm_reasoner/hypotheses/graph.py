@@ -12,7 +12,7 @@ from operator import attrgetter
 import rustworkx as rx
 from typing_extensions import Any, Optional
 
-from llm_reasoner.admission.citation import Citation
+from llm_reasoner.knowledge.storage.citation import Citation
 from llm_reasoner.generation.schema import is_inferred
 from llm_reasoner.hypotheses.view import HypothesisView
 from llm_reasoner.knowledge.ontologies.terms import DescriptionEntity, PropertyTerm

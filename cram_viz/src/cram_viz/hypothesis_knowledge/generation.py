@@ -29,9 +29,9 @@ from krrood.entity_query_language.factories import the
 from krrood.entity_query_language.query.match import Match
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite
 from llm_reasoner.knowledge.acceptance.suite import predictive_manipulation_suite
-from llm_reasoner.admission.consistency import ConsistencyCheck
-from llm_reasoner.admission.hermit import HermitCheck
-from llm_reasoner.admission.store import HypothesisStore
+from llm_reasoner.knowledge.admission.consistency import ConsistencyCheck
+from llm_reasoner.knowledge.admission.hermit import HermitCheck
+from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.clients import AnthropicClient
 from llm_reasoner.clients.base import LanguageModelClient
 from llm_reasoner.generation.backend import HypothesisBackend

@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 from llm_reasoner.knowledge.acceptance.rules import AcceptanceSuite
-from llm_reasoner.admission.hermit import HermitCheck
+from llm_reasoner.knowledge.admission.hermit import HermitCheck
 from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.generation.backend import HypothesisRejected
 from llm_reasoner.hypotheses.view import HypothesisView

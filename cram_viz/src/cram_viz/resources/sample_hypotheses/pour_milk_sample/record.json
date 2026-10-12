@@ -1,5 +1,5 @@
 {
-  "__json_type__": "llm_reasoner.admission.record.HypothesisRecord",
+  "__json_type__": "llm_reasoner.knowledge.storage.record.HypothesisRecord",
   "record_id": "pour_milk_sample",
   "created_at": "2026-10-06T00:00:00+00:00",
   "instruction": "pour milk from the carton into the bowl",

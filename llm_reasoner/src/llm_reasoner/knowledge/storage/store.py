@@ -13,7 +13,7 @@ from pathlib import Path
 from rdflib import Graph
 from typing_extensions import Optional
 
-from llm_reasoner.admission.record import HypothesisRecord
+from llm_reasoner.knowledge.storage.record import HypothesisRecord
 
 
 class StoredFile(StrEnum):

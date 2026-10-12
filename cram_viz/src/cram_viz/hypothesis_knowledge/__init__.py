@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from llm_reasoner.admission.store import HypothesisStore
+from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.hypotheses.graph import (
     HypothesisGraph,
     HypothesisGraphPresentation,

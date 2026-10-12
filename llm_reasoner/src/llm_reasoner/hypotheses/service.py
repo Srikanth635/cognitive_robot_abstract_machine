@@ -9,8 +9,8 @@ from dataclasses import dataclass, replace
 
 from krrood.entity_query_language.query.match import Match
 
-from llm_reasoner.admission.citation import Citation
-from llm_reasoner.admission.store import HypothesisStore
+from llm_reasoner.knowledge.storage.citation import Citation
+from llm_reasoner.knowledge.storage.store import HypothesisStore
 from llm_reasoner.exceptions import LLMReasonerError
 from llm_reasoner.generation.backend import HypothesisBackend
 from llm_reasoner.hypotheses.view import HypothesisView
