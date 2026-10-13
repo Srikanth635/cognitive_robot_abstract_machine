@@ -240,7 +240,20 @@ choice puts the mouth over the bowl. Live, it kept every default (offsets 0, hei
 0.13 m, the side of the arm, "nothing in the request calls for changing them"), so the
 executed pour ended exactly as before, 0.188 m off: nothing the resolver reads says
 where the pitcher's mouth ends for a given geometry ($0.100, LIQUID, its own hypothesis
-generated). Switching scenes now removes the previous scene's world
+generated).
+
+**Scene geometry in the prompt (2026-10-13):** every resolution prompt now states, as a
+fact of the situation, each annotated object's origin, world-frame bounding box and top
+centre and where each robot base stands and faces (`cram_viz.resolution.scene_geometry`,
+through llm_reasoner's context-provider seam). Live, `pour_geometry_open` then reasoned
+from the positions (the pitcher on the robot's right, so the right arm and side; 0.13 m
+clears the rim) but, reading `PouringAction`'s source, trusted its built-in
+`sin(tilt) × mouth height` side offset and kept the extra offsets at 0, so the pour
+again ended 0.188 m off ($0.091 and $0.087 in two runs). Probed without the model, a
+`pour_side_offset` of −0.188 m puts the mouth 0.005 m from the bowl's centre, 0.089 m
+above its rim: coraplex's offset moves the tool sideways while the tilt does not bring
+the mouth back. Choosing the cancelling offset needs either that fixed in coraplex or
+feedback to the resolver from a simulated pour. Switching scenes now removes the previous scene's world
 from krrood's symbol graph (collected, then `remove_dead_instances`), so an open
 `variable(Tool)` never offers another scene's objects.
 
