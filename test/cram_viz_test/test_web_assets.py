@@ -53,21 +53,22 @@ class TestAssetConsistency:
         for panel_js in WEB_ROOT.glob("panels/*/panel.js"):
             assert "'static/" not in panel_js.read_text(), panel_js.name
 
-    def test_live_knowledge_is_wired_to_the_graph_panel(self) -> None:
+    def test_the_graph_panel_offers_no_live_knowledge_tab(self) -> None:
         """
-        Ensure the live semantic projection is loaded and polled.
+        The running plan is followed on the Plan tab; no separate live projection of
+        knowledge is loaded or offered.
         """
-        html = read("index.html")
-        panel = read("panels/graph/panel.js")
+        assert "live-knowledge" not in read("index.html")
+        assert "live-knowledge" not in read("panels/graph/panel.js")
+        assert not (WEB_ROOT / "panels/graph/live-knowledge.js").exists()
 
-        assert "panels/graph/live-knowledge.js" in html
-        assert "LiveKnowledgeGraph" in panel
-        assert "/info" in panel
-        assert 'data-view="live-knowledge"' in panel
-        assert "'live-knowledge'" in panel
-        assert "if (tab === 'knowledge') return 'knowledge';" not in panel
+    def test_the_plan_and_statechart_follow_the_live_bridge(self) -> None:
+        """
+        Ensure the live plan and motion statechart are polled from the bridge.
+        """
+        panel = read("panels/graph/panel.js")
+        assert "liveState.url + (source === 'plan' ? '/plan' : '/chart')" in panel
         assert "spacing: payload.spacing" in panel
-        assert "applyLiveKnowledgeHighlight(payload, true)" in panel
         assert "const LIVE_STATUS_INTERVAL_MILLISECONDS = 100;" in panel
 
     def test_hypothesis_graph_is_wired_to_the_graph_panel(self) -> None:
@@ -119,18 +120,6 @@ class TestJsUnits:
 
     def test_graph_status_rendering(self):
         self.run_node("test_graph_status.js")
-
-    def test_live_knowledge_rendering(self) -> None:
-        """
-        Run the live semantic-projection JavaScript tests.
-        """
-        self.run_node("test_live_knowledge.js")
-
-    def test_live_knowledge_panel_separation(self) -> None:
-        """
-        Run the static-versus-live Knowledge tab routing tests.
-        """
-        self.run_node("test_graph_panel_live_knowledge.js")
 
     def test_scene_selection(self):
         self.run_node("test_scene_selection.js")

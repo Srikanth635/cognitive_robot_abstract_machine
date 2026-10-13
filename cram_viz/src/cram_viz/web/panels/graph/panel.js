@@ -1,8 +1,7 @@
 /* ============================================================================
- * panels/graph/panel.js — the graph view with eight tabs.
+ * panels/graph/panel.js — the graph view with seven tabs.
  *
  *   Knowledge        the scene-backed entity graph + CRAM architecture
- *   Live Knowledge   semantic entities projected from the attached live execution
  *   Hypothesis Graph llm_reasoner's cereal-pouring knowledge graph, rendered by its
  *                    own dedicated engine (see hypothesis-graph.js) instead of
  *                    graph.js's shared window.Graph
@@ -15,8 +14,8 @@
  *   Plan             the executed plan tree, node border = execution status
  *   Statechart       the giskardpy motion statechart of the running motion group
  *
- * Live Knowledge, Plan and Statechart take data from the cram-viz-live bridge
- * while it is attached. The scene-backed Knowledge graph remains independent.
+ * Plan and Statechart take data from the cram-viz-live bridge while it is attached.
+ * The scene-backed Knowledge graph remains independent.
  *
  * Bus events:
  *   emits    entity:select {id, detail, relations}   node clicked
@@ -36,7 +35,6 @@ Panels.define('graph', function (root, bus) {
     '<div class="graph-wrap">' +
     '  <div class="graph-tabs" id="graph-tabs">' +
     '    <button data-view="knowledge" class="active" title="the entity graph (EQL / knowledge base)">Knowledge</button>' +
-    '    <button data-view="live-knowledge" title="semantic entities and actions projected from the attached live demo">Live Knowledge</button>' +
     '    <button data-view="hypothesis" title="llm_reasoner\'s cereal-pouring knowledge graph — click a node to expand it, double-click to collapse its branch">Hypothesis Graph</button>' +
     '    <button data-view="ontology" title="the ontology behind the hypothesis: the classes it instantiates, what they specialise up to CRAM-AICOR and DUL, and how the hypothesis links them — click a class for its definition">Ontology Graph</button>' +
     '    <button data-view="designator" title="the action designator: coraplex\'s action slots followed by the generated hypothesis, as Lisp or JSON — click ▸ to unfold a description, #id to jump to it">Designator</button>' +
@@ -83,7 +81,6 @@ Panels.define('graph', function (root, bus) {
   // ---- tabs -------------------------------------------------------------------
   const TABS = {
     knowledge:  { url: '/api/kb' },
-    'live-knowledge': { live: 'knowledge' },
     hypothesis: { url: '/api/kb/view?name=hypothesis' },
     ontology:   { url: '/api/kb/view?name=ontology' },
     designator: { url: '/api/kb/view?name=designator' },
@@ -151,7 +148,6 @@ Panels.define('graph', function (root, bus) {
     }
   }
   async function drill(id) {
-    if (tab === 'live-knowledge') return;
     if (!view.details[id]) return;
     try {
       const r = await fetch(SceneSelection.apiUrl(
@@ -173,13 +169,6 @@ Panels.define('graph', function (root, bus) {
   }
   navUp.addEventListener('click', goBack);
   navHome.addEventListener('click', goHome);
-
-  function liveKnowledgePlaceholder() {
-    const payload = new LiveKnowledgeGraph(null, null).build();
-    payload.live = 'knowledge';
-    payload.empty = 'Attach a running demo, then open Live Knowledge to follow it.';
-    return payload;
-  }
 
   async function showTab(name) {
     if (!TABS[name]) return;
@@ -250,9 +239,6 @@ Panels.define('graph', function (root, bus) {
       }
       HypothesisGraph.showLegend();
       return;
-    }
-    if (!base[name] && TABS[name].live) {
-      base[name] = liveKnowledgePlaceholder();
     }
     if (!base[name]) {
       emptyEl.style.display = '';
@@ -413,23 +399,13 @@ Panels.define('graph', function (root, bus) {
     { group: 'event', label: 'End / cancel motion' },
   ];
   const LIVE_STATUS_INTERVAL_MILLISECONDS = 100;
-  const liveSig = { knowledge: '', plan: '', chart: '' };
-  let liveHighlightSignature = '';
+  const liveSig = { plan: '', chart: '' };
   let liveTimer = null;
   let liveState = { on: false, url: '' };
 
   function liveSource() {
-    if (TABS[tab].live) return TABS[tab].live;
     const payload = shown[tab] || base[tab];
     return (payload && payload.live) || null;
-  }
-
-  function applyLiveKnowledgeHighlight(payload, force) {
-    const identifiers = payload.highlight || [];
-    const signature = identifiers.join('|');
-    if (!force && signature === liveHighlightSignature) return;
-    liveHighlightSignature = signature;
-    if (identifiers.length) Graph.highlight(identifiers); else Graph.reset();
   }
 
   function planPayload(live) {
@@ -482,30 +458,17 @@ Panels.define('graph', function (root, bus) {
     let payload;
     let signature;
     try {
-      if (source === 'knowledge') {
-        const responses = await Promise.all([
-          fetch(liveState.url + '/plan'),
-          fetch(liveState.url + '/info'),
-        ]);
-        const plan = await responses[0].json();
-        const information = await responses[1].json();
-        payload = new LiveKnowledgeGraph(plan, information).build();
-        if (!payload.nodes.length) return;
-        signature = payload.sig;
-      } else {
-        const live = await fetch(
-          liveState.url + (source === 'plan' ? '/plan' : '/chart'),
-        ).then(function (response) { return response.json(); });
-        if (!live || !live.nodes) return;
-        payload = source === 'plan' ? planPayload(live) : chartPayload(live);
-        signature = live.sig;
-      }
+      const live = await fetch(
+        liveState.url + (source === 'plan' ? '/plan' : '/chart'),
+      ).then(function (response) { return response.json(); });
+      if (!live || !live.nodes) return;
+      payload = source === 'plan' ? planPayload(live) : chartPayload(live);
+      signature = live.sig;
     } catch (error) { return; }
     if (force || signature !== liveSig[source]) {
       liveSig[source] = signature;
-      if (source !== 'knowledge') base[tab] = payload;
+      base[tab] = payload;
       setView(payload);
-      if (source === 'knowledge') applyLiveKnowledgeHighlight(payload, true);
       return;
     }
     const statusByIdentifier = {};
@@ -513,14 +476,12 @@ Panels.define('graph', function (root, bus) {
       if (node.status) statusByIdentifier[node.id] = node.status;
     });
     if (!Graph.setStatuses(statusByIdentifier)) {
-      if (source !== 'knowledge') base[tab] = payload;
+      base[tab] = payload;
       setView(payload);
-      if (source === 'knowledge') applyLiveKnowledgeHighlight(payload, true);
       return;
     }
-    if (source !== 'knowledge') base[tab] = payload;
+    base[tab] = payload;
     if (view && view.details) view.details = payload.details;
-    if (source === 'knowledge') applyLiveKnowledgeHighlight(payload);
   }
 
   bus.on('live:changed', function (p) {
@@ -534,18 +495,14 @@ Panels.define('graph', function (root, bus) {
       liveRefresh(true);
     } else {
       liveBadge.classList.remove('on');
-      liveSig.knowledge = liveSig.plan = liveSig.chart = '';
-      liveHighlightSignature = '';
+      liveSig.plan = liveSig.chart = '';
       // drop live payloads so every tab falls back to the recorded bundle
       ['plan', 'chart'].forEach(function (viewName) {
         delete base[viewName];
         delete shown[viewName];
         stacks[viewName] = [];
       });
-      delete base['live-knowledge'];
-      delete shown['live-knowledge'];
-      stacks['live-knowledge'] = [];
-      if (tab === 'live-knowledge' || tab === 'plan' || tab === 'chart') showTab(tab);
+      if (tab === 'plan' || tab === 'chart') showTab(tab);
     }
   });
 

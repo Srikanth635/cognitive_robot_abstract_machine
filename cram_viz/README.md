@@ -81,7 +81,7 @@ between the built-in panels:
 | ------------- | ------------------------------------------------------------ |
 | `robot-scene` | three.js scene: environment, robot, draggable objects, playback + live controls |
 | `eql`         | EQL query console, predefined designators + answer panel     |
-| `graph`       | tabs: Knowledge / Live Knowledge / Hypothesis Graph / Ontology Graph / Designator / Kinematics / Plan / Statechart |
+| `graph`       | tabs: Knowledge / Hypothesis Graph / Ontology Graph / Designator / Kinematics / Plan / Statechart |
 
 Below the EQL query box are predefined, underspecified pouring designators
 (`cram_viz.resolution`), each shown as a krrood match query written in a file of its

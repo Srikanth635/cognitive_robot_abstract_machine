@@ -77,7 +77,6 @@ function loadGraphPanel(options) {
   const settings = options || {};
   const viewNames = [
     'knowledge',
-    'live-knowledge',
     'hypothesis',
     'ontology',
     'kinematics',
@@ -175,13 +174,6 @@ function loadGraphPanel(options) {
       };
     }
     throw new Error('Unexpected fetch: ' + url);
-  };
-  global.LiveKnowledgeGraph = class {
-    build() {
-      return {
-        ok: true, crumb: 'live', nodes: [], edges: [], details: {}, key: 'knowledge-live', sig: '', highlight: [],
-      };
-    }
   };
   global.SceneSelection = { apiUrl(url) { return url; } };
   global.window = { location: { search: '' } };
