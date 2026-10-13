@@ -10,10 +10,18 @@ instead of a real (huge, generated) bundle.
 import json
 import os
 import shutil
+from copy import deepcopy
 from pathlib import Path
 
 import coraplex
 import pytest
+from semantic_digital_twin.adapters.mesh import STLParser
+from semantic_digital_twin.semantic_annotations.semantic_annotations import (
+    Bowl,
+    PouringCup,
+)
+from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
+from semantic_digital_twin.world import World
 
 SCENE = {
     "name": "fixture",
@@ -230,3 +238,41 @@ def pouring_bundle(tmp_path) -> Path:
     for name, source in MESH_SOURCES.items():
         shutil.copy(OBJECT_MESHES / source, meshes / name)
     return bundle
+
+
+# %% the PR2 kitchen the simple_pouring scene records
+
+KITCHEN = Path(__file__).parent / "execution" / "pouring_kitchen.json"
+"""
+Where the simple_pouring scene's recording starts the robot and places its objects.
+"""
+
+
+@pytest.fixture()
+def pouring_kitchen(pr2_apartment_world) -> World:
+    """
+    :return: A copy of the PR2 in the apartment, at the start the simple_pouring scene
+        records, with the pitcher and the bowl where the scene places them.
+    """
+    world = deepcopy(pr2_apartment_world)
+    kitchen = json.loads(KITCHEN.read_text())
+    for entry in kitchen["objects"]:
+        world.merge_world_at_pose(
+            STLParser(str(OBJECT_MESHES / entry["mesh"])).parse(),
+            HomogeneousTransformationMatrix.from_xyz_rpy(
+                *entry["position"], reference_frame=world.root
+            ),
+        )
+    with world.modify_world():
+        world.add_semantic_annotations(
+            [
+                PouringCup(root=world.get_body_by_name("Static_MilkPitcher.stl")),
+                Bowl(root=world.get_body_by_name("bowl.stl")),
+            ]
+        )
+        world.get_body_by_name("base_footprint").parent_connection.origin = (
+            HomogeneousTransformationMatrix.from_xyz_rpy(
+                **kitchen["robot_start"], reference_frame=world.root
+            )
+        )
+    return world

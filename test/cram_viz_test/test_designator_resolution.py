@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 from krrood.entity_query_language.query.match import Match
 from llm_reasoner.knowledge.access import HypothesisStore
+from llm_reasoner.resolver.exceptions import OutcomeFellShort
 from llm_reasoner.resolver.grounds import GroundKey
 from semantic_digital_twin.semantic_annotations.semantic_annotations import PouringCup
 from typing_extensions import Any, Dict
@@ -38,7 +39,7 @@ from cram_viz.resolution.runs import (
 from cram_viz.resolution.scene_geometry import SceneGeometry
 from cram_viz.resolution.scene_world import SceneKey, SceneWorldBuilder
 
-from .resolutions import resolver_replaying
+from .resolutions import LANDS, MISSES, resolver_replaying
 
 SOURCES = Path(__file__).parent / "query_sources"
 """
@@ -281,6 +282,47 @@ class TestResolution:
         (record,) = run.knowledge.backend.store.records()
         assert run.resolution.record_id == record.record_id
         assert run.resolution.situation == {}
+
+
+# %% trying pours in the simulation
+
+
+class TestTrials:
+    def test_a_pour_that_misses_is_resolved_again_with_its_outcome(
+        self, pouring_bundle, tmp_path
+    ):
+        resolver = resolver_replaying(
+            "objects_given_retried",
+            HypothesisStore(directory=tmp_path / "store"),
+            tmp_path / "runs",
+            trial_outcomes=[MISSES, LANDS],
+        )
+        resolver.resolve(
+            DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
+            "pouring",
+            pouring_bundle,
+        )
+        _, retried = resolver.client.calls[-1]
+        assert f'kind="{OutcomeFellShort.__name__}"' in retried
+        assert json.dumps({"outcome": MISSES}, indent=2) in retried
+
+    def test_a_resolution_keeps_the_pours_it_tried(self, pouring_bundle, tmp_path):
+        resolver = resolver_replaying(
+            "objects_given_retried",
+            HypothesisStore(directory=tmp_path / "store"),
+            tmp_path / "runs",
+            trial_outcomes=[MISSES, LANDS],
+        )
+        run = resolver.resolve(
+            DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
+            "pouring",
+            pouring_bundle,
+        )
+        (action,) = run.resolution.actions
+        assert [trial.outcome for trial in run.resolution.trials] == [MISSES, LANDS]
+        assert run.resolution.trials[-1].values == {
+            slot.name: slot.serialized for slot in action.slots
+        }
 
 
 # %% runs kept apart

@@ -8,7 +8,6 @@ resolved arm, and the pouring performed as resolved.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
 
 import numpy as np
 from coraplex.datastructures.dataclasses import Context
@@ -22,19 +21,20 @@ from coraplex.robot_plans.actions.core.navigation import NavigateAction
 from coraplex.robot_plans.actions.core.pick_up import PickUpAction
 from coraplex.robot_plans.actions.core.robot_body import MoveTorsoAction, ParkArmsAction
 from coraplex.view_manager import ViewManager
-from llm_reasoner.resolver.reflection import union_alternatives
 from semantic_digital_twin.datastructures.definitions import TorsoState
 from semantic_digital_twin.robots.robot_parts import AbstractRobot
-from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
 from semantic_digital_twin.spatial_types import Pose
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.world_entity import Body
-from typing_extensions import Any
+from typing_extensions import TYPE_CHECKING, Any, Dict
 
 from cram_viz.designator_knowledge import resolved_field_type
-from cram_viz.resolution.resolver import ResolvedDesignator
 from cram_viz.resolution.runs import RunDirectory
 from cram_viz.resolution.scene_world import SceneWorldBuilder
+from cram_viz.resolution.slot_data import SlotData
+
+if TYPE_CHECKING:
+    from cram_viz.resolution.resolver import ResolvedDesignator
 
 REACHING_TORSO = TorsoState.LOW
 """
@@ -76,26 +76,6 @@ class NoRobotInWorld(LookupError):
         super().__init__("the world holds no robot to perform the action")
 
 
-@dataclass
-class NoObjectInWorld(LookupError):
-    """
-    The world holds no object of the kind the resolution names.
-    """
-
-    kind: type
-    """
-    The kind of object asked for.
-    """
-
-    name: str
-    """
-    The name of the object's body.
-    """
-
-    def __post_init__(self):
-        super().__init__(f"the world holds no {self.kind.__name__} named {self.name}")
-
-
 # %% where the robot stands
 
 
@@ -135,14 +115,25 @@ class PouringExecution:
     The world the action is performed in.
     """
 
-    resolution: ResolvedDesignator
+    values: Dict[str, Any]
     """
-    The resolution whose first action is performed.
+    The resolved slots' values as data, by field name.
     """
 
-    def __post_init__(self):
-        if self.resolution.designator != PouringAction.__name__:
-            raise NotAPouring(designator=self.resolution.designator)
+    @classmethod
+    def for_resolution(
+        cls, world: World, resolution: ResolvedDesignator
+    ) -> PouringExecution:
+        """
+        :return: The execution of a resolution's first action in the world.
+        :raises NotAPouring: When the resolution is of another action.
+        """
+        if resolution.designator != PouringAction.__name__:
+            raise NotAPouring(designator=resolution.designator)
+        resolved, *_ = resolution.actions
+        return cls(
+            world=world, values={slot.name: slot.serialized for slot in resolved.slots}
+        )
 
     @classmethod
     def of_run(cls, run: RunDirectory) -> PouringExecution:
@@ -150,11 +141,9 @@ class PouringExecution:
         :return: The execution of a run's resolution, in the world of the scene the run
             started from, built anew, its robot annotated as what it is.
         """
-        builder = SceneWorldBuilder()
-        bundle = run.environment().bundle
-        world = builder.build(bundle)
-        builder.annotate_robot(world, bundle)
-        return cls(world=world, resolution=run.resolution())
+        return cls.for_resolution(
+            SceneWorldBuilder.robot_world(run.environment().bundle), run.resolution()
+        )
 
     @property
     def robot(self) -> AbstractRobot:
@@ -169,49 +158,16 @@ class PouringExecution:
 
     def action(self) -> PouringAction:
         """
-        :return: The pouring action the resolution resolved, its values found again in
-            the world.
+        :return: The pouring action resolved, its values found again in the world.
         """
-        resolved, *_ = self.resolution.actions
         return PouringAction(
             **{
-                slot.name: self.value_in_world(
-                    resolved_field_type(PouringAction, slot.name), slot.serialized
+                name: SlotData.to_value(
+                    self.world, resolved_field_type(PouringAction, name), data
                 )
-                for slot in resolved.slots
+                for name, data in self.values.items()
             }
         )
-
-    def value_in_world(self, kind: Any, serialized: Any) -> Any:
-        """
-        :param kind: The type the slot declares.
-        :param serialized: The slot's value as the run keeps it.
-        :return: The value: a body by its name, an annotated object by its body's name,
-            an enumeration member by its name, nothing for an optional slot left empty,
-            any other value as it is.
-        :raises NoObjectInWorld: When the world holds no such object.
-        """
-        if serialized is None:
-            return None
-        alternatives = union_alternatives(kind)
-        if alternatives is not None and len(alternatives) == 1:
-            return self.value_in_world(alternatives[0], serialized)
-        if not isinstance(kind, type):
-            return serialized
-        if issubclass(kind, Body):
-            return self.world.get_body_by_name(serialized)
-        if issubclass(kind, Enum):
-            return kind[serialized]
-        if not issubclass(kind, HasRootBody):
-            return serialized
-        found = [
-            annotation
-            for annotation in self.world.get_semantic_annotations_by_type(kind)
-            if annotation.root.name.name == serialized
-        ]
-        if not found:
-            raise NoObjectInWorld(kind=kind, name=serialized)
-        return found[0]
 
     def plan(self) -> SequentialNode:
         """

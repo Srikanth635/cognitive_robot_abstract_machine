@@ -96,6 +96,25 @@ function resolvedPayload() {
       }],
       situation: { has_material_regime: 'LIQUID' }, record_id: 'abc', cost: 0.05,
       run: 'run-1',
+      trials: [
+        {
+          values: { pour_side_offset: 0.0 },
+          outcome: {
+            lands_in_opening: false, mouth_distance_from_opening_centre: 0.188,
+            mouth_ahead_of_opening_centre: 0.002, mouth_right_of_opening_centre: 0.188,
+            mouth_above_opening: 0.087,
+          },
+        },
+        {
+          values: { pour_side_offset: -0.188 },
+          outcome: {
+            lands_in_opening: true, mouth_distance_from_opening_centre: 0.005,
+            mouth_ahead_of_opening_centre: 0.003, mouth_right_of_opening_centre: 0.004,
+            mouth_above_opening: 0.089,
+          },
+        },
+        { values: { pour_side_offset: -0.5 }, outcome: { lands_in_opening: false, motion_failed: 'MotionDidNotFinish: out of reach' } },
+      ],
     },
     hypothesis: {
       ok: true, crumb: 'hypothesis graph', root: 'g0',
@@ -334,6 +353,22 @@ test('a resolution shows the match query it resolved', async function () {
 
   const answer = panel.elements['#answer'].innerHTML;
   assert.ok(answer.includes(resolvedPayload().resolution.query.split('\n')[0]));
+});
+
+test('a resolution shows every pour it tried in the simulation', async function () {
+  const panel = loadEqlPanel();
+  await settle();
+
+  generate(panel, designatorsPayload().designators[0].query);
+  await settle();
+
+  const answer = panel.elements['#answer'].innerHTML;
+  const [missed, landed, failed] = resolvedPayload().resolution.trials;
+  assert.ok(answer.includes('missed'));
+  assert.ok(answer.includes(String(missed.outcome.mouth_distance_from_opening_centre)));
+  assert.ok(answer.includes('landed'));
+  assert.ok(answer.includes(String(landed.outcome.mouth_distance_from_opening_centre)));
+  assert.ok(answer.includes(failed.outcome.motion_failed));
 });
 
 test('a resolution names the run it was made in', async function () {

@@ -268,6 +268,7 @@ Panels.define('eql', function (root, bus) {
           esc(ground.source) + ': ' + esc(ground.name) + '</span></div></div>';
       });
     });
+    html += trialsHtml(resolution.trials || []);
     const situation = Object.keys(resolution.situation).map(function (feature) {
       return feature + ' = ' + resolution.situation[feature];
     });
@@ -278,6 +279,27 @@ Panels.define('eql', function (root, bus) {
       ' · run ' + esc(resolution.run) +
       ' · shown in the Hypothesis Graph, Ontology Graph and Designator tabs</p>';
     return html;
+  }
+
+  // the pours a resolution tried in the simulation before one was accepted: where each
+  // left the source container's mouth against the target's opening
+  function trialsHtml(trials) {
+    if (!trials.length) return '';
+    let html = '<div class="ansub">tried in the simulation</div>';
+    trials.forEach(function (trial, index) {
+      html += '<div class="ansrow"><span class="tag">' + (index + 1) + '</span>' +
+        '<div class="body"><span class="sub">' + esc(trialText(trial.outcome)) + '</span></div></div>';
+    });
+    return html;
+  }
+
+  function trialText(outcome) {
+    if (outcome.motion_failed) return 'the motion failed: ' + outcome.motion_failed;
+    return (outcome.lands_in_opening ? 'landed' : 'missed') + ': the mouth ' +
+      outcome.mouth_distance_from_opening_centre + ' m from the opening\'s centre (' +
+      outcome.mouth_ahead_of_opening_centre + ' m ahead, ' +
+      outcome.mouth_right_of_opening_centre + ' m right), ' +
+      outcome.mouth_above_opening + ' m above it';
   }
 
   async function reloadKnowledgeBase() {
