@@ -6,23 +6,14 @@ plan performed from the robot's start in the kitchen the simple_pouring scene re
 
 from __future__ import annotations
 
-import json
 from dataclasses import replace
-from pathlib import Path
 
-import coraplex
 import numpy as np
 import pytest
 from coraplex.datastructures.enums import Arms
 from coraplex.view_manager import ViewManager
-from semantic_digital_twin.adapters.mesh import STLParser
 from semantic_digital_twin.robots.pr2 import PR2
-from semantic_digital_twin.semantic_annotations.semantic_annotations import (
-    Bowl,
-    PouringCup,
-)
-from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
-from semantic_digital_twin.world import World
+from semantic_digital_twin.semantic_annotations.semantic_annotations import PouringCup
 
 from cram_viz.resolution.execution import (
     PICK_UP_DISTANCE,
@@ -34,47 +25,7 @@ from cram_viz.resolution.scene_world import SceneWorldBuilder
 
 from .resolutions import objects_given
 
-KITCHEN = Path(__file__).parent / "execution" / "pouring_kitchen.json"
-"""
-Where the simple_pouring scene's recording starts the robot and places its objects.
-"""
-
-OBJECT_MESHES = Path(coraplex.__file__).parents[2] / "resources" / "objects"
-"""
-The repository's object meshes.
-"""
-
-# %% the kitchen
-
-
-@pytest.fixture()
-def pouring_kitchen(pr2_apartment_world) -> World:
-    """
-    :return: The PR2 in the apartment, at the start the simple_pouring scene records,
-        with the pitcher and the bowl where the scene places them.
-    """
-    world = pr2_apartment_world
-    kitchen = json.loads(KITCHEN.read_text())
-    for entry in kitchen["objects"]:
-        world.merge_world_at_pose(
-            STLParser(str(OBJECT_MESHES / entry["mesh"])).parse(),
-            HomogeneousTransformationMatrix.from_xyz_rpy(
-                *entry["position"], reference_frame=world.root
-            ),
-        )
-    with world.modify_world():
-        world.add_semantic_annotations(
-            [
-                PouringCup(root=world.get_body_by_name("Static_MilkPitcher.stl")),
-                Bowl(root=world.get_body_by_name("bowl.stl")),
-            ]
-        )
-        world.get_body_by_name("base_footprint").parent_connection.origin = (
-            HomogeneousTransformationMatrix.from_xyz_rpy(
-                **kitchen["robot_start"], reference_frame=world.root
-            )
-        )
-    return world
+# %% helpers
 
 
 def resolved_values() -> dict:
@@ -93,7 +44,7 @@ class TestAction:
         self, pouring_bundle
     ):
         world = SceneWorldBuilder().build(pouring_bundle)
-        action = PouringExecution(world=world, resolution=objects_given()).action()
+        action = PouringExecution.for_resolution(world, objects_given()).action()
         values = resolved_values()
         assert action.source_container.root is world.get_body_by_name(
             values["source_container"]
@@ -129,7 +80,7 @@ class TestAction:
                 )
             ],
         )
-        action = PouringExecution(world=world, resolution=with_side).action()
+        action = PouringExecution.for_resolution(world, with_side).action()
         assert action.pour_side is (None if pour_side is None else Arms[pour_side])
 
 
@@ -159,7 +110,7 @@ class TestStandingPose:
 
 class TestPerforming:
     def test_performing_leaves_the_source_in_the_resolved_hand(self, pouring_kitchen):
-        execution = PouringExecution(world=pouring_kitchen, resolution=objects_given())
+        execution = PouringExecution.for_resolution(pouring_kitchen, objects_given())
         execution.perform()
         robot = pouring_kitchen.get_semantic_annotations_by_type(PR2)[0]
         tool_frame = ViewManager.get_end_effector_view(

@@ -8,11 +8,13 @@ resolution chose, why, and what it rests on, written for display and kept with t
 
 from __future__ import annotations
 
+import subprocess
 from dataclasses import asdict, dataclass, field, replace
 from enum import Enum
 from operator import attrgetter
 from pathlib import Path
 
+from coraplex.robot_plans.actions.composite.tool_based import PouringAction
 from krrood.entity_query_language.query.match import Match
 from llm_reasoner.clients.base import LanguageModelClient
 from llm_reasoner.clients.usage import SONNET_5_5_PRICES, TokenPrices
@@ -25,7 +27,7 @@ from llm_reasoner.resolver.prompts import SourceDetail
 from llm_reasoner.world.view import WorldView
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
 from semantic_digital_twin.world_description.world_entity import Body
-from typing_extensions import Any, Dict, List, Optional
+from typing_extensions import Any, Callable, Dict, List, Optional
 
 from cram_viz import paths
 from cram_viz.hypothesis_knowledge.generation import ModelHypothesisSource
@@ -38,11 +40,19 @@ from cram_viz.resolution.designators import (
 )
 from cram_viz.resolution.runs import ResolutionRuns, RunDirectory, RunEnvironment
 from cram_viz.resolution.scene_geometry import SceneGeometry
+from cram_viz.resolution.slot_data import SlotData
+from cram_viz.resolution.trial import SimulatedPouring, TriedPour
 from cram_viz.resolution.scene_world import SceneWorlds
 
 RESOLVER_MAX_TOKENS = 2048
 """
 The most tokens the resolver's model may answer one turn with.
+"""
+
+POUR_TRIALS = 3
+"""
+How many pours a resolution tries in the simulation; the last is accepted whatever it
+brings about.
 """
 
 # %% what a resolution shows
@@ -161,6 +171,11 @@ class ResolvedDesignator:
     and generated.
     """
 
+    trials: List[TriedPour] = field(default_factory=list)
+    """
+    The pours tried in the simulation before the resolution was accepted, in order.
+    """
+
     @property
     def query_on_one_line(self) -> str:
         """
@@ -229,6 +244,11 @@ class DesignatorResolver:
     What the model charges, to report a resolution's cost.
     """
 
+    simulate: Callable[..., Any] = subprocess.run
+    """
+    Runs the process trying a pour in the simulation.
+    """
+
     @classmethod
     def for_viewer(
         cls, source: ModelHypothesisSource, worlds: SceneWorlds
@@ -277,6 +297,7 @@ class DesignatorResolver:
             designator.query_in(names),
             knowledge,
             SceneGeometry(world=world),
+            bundle,
         )
         run.keep(resolution)
         return ResolutionRun(resolution=resolution, knowledge=knowledge)
@@ -296,6 +317,7 @@ class DesignatorResolver:
         query: Match,
         knowledge: KnowledgeService,
         geometry: SceneGeometry,
+        bundle: Path,
     ) -> ResolvedDesignator:
         """
         :param run: The run resolving.
@@ -303,14 +325,19 @@ class DesignatorResolver:
         :param query: The designator's query on the scene.
         :param knowledge: The knowledge component the run consults.
         :param geometry: The scene's geometry, stated as a fact of the situation.
-        :return: What resolving the query chose, why, and what it rests on.
+        :param bundle: The scene's bundle directory, from which a pour is tried.
+        :return: What resolving the query chose, why, what it rests on, and the pours it
+            tried in the simulation.
         """
         slots = QuerySlots.of(query)
+        trials = self.trials_for(query, slots, bundle)
         view = WorldView()
         backend = Reasoner(client=self.client, knowledge=knowledge, world=view).backend(
             context_provider=geometry,
             number_of_candidates=1,
             source_detail=SourceDetail.FULL,
+            outcome_check=trials,
+            max_repairs=POUR_TRIALS,
         )
         instances = list(query.evaluate(backend=backend))
         justifications = {
@@ -335,6 +362,23 @@ class DesignatorResolver:
             record_id=None if consultation is None else consultation.record_id,
             cost=self.cost_of(backend),
             run=run.name,
+            trials=[] if trials is None else trials.trials,
+        )
+
+    def trials_for(
+        self, query: Match, slots: QuerySlots, bundle: Path
+    ) -> Optional[SimulatedPouring]:
+        """
+        :return: The check trying a pouring in the simulation before it is accepted, or
+            none for any other action.
+        """
+        if query.type is not PouringAction:
+            return None
+        return SimulatedPouring(
+            bundle=bundle,
+            slots=slots.names,
+            allowed_trials=POUR_TRIALS,
+            run=self.simulate,
         )
 
     def resolved_action(
@@ -354,7 +398,7 @@ class DesignatorResolver:
                     name=name,
                     value=self.written(attrgetter(name)(instance)),
                     given=name in slots.given,
-                    serialized=self.serialized(attrgetter(name)(instance)),
+                    serialized=SlotData.from_value(attrgetter(name)(instance)),
                 )
                 for name in slots.names
             ],
@@ -381,21 +425,6 @@ class DesignatorResolver:
             source=ground.source,
             name=f"{ground.identifier} ({self.written(individual)})",
         )
-
-    @staticmethod
-    def serialized(value: Any) -> Any:
-        """
-        :return: A slot's value as data the run's execution reads back: a body by its
-            name, an annotated object by its body's name, an enumeration member by its
-            name, any other value as it is.
-        """
-        if isinstance(value, Body):
-            return value.name.name
-        if isinstance(value, HasRootBody):
-            return value.root.name.name
-        if isinstance(value, Enum):
-            return value.name
-        return value
 
     @staticmethod
     def written(value: Any) -> str:

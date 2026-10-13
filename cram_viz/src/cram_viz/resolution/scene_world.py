@@ -169,6 +169,17 @@ class SceneWorldBuilder:
         self.annotate(world, objects)
         return world
 
+    @classmethod
+    def robot_world(cls, bundle: Path) -> World:
+        """
+        :return: The scene's world built anew, its robot annotated as what it is, so
+            coraplex can act in it.
+        """
+        builder = cls()
+        world = builder.build(bundle)
+        builder.annotate_robot(world, bundle)
+        return world
+
     def annotate_robot(self, world: World, bundle: Path) -> Any:
         """
         Annotate the scene's robot as the robot class kept for its name.
