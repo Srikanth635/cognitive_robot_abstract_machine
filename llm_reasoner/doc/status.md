@@ -41,6 +41,10 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   it needs a simulation). The robot and camera functions appear once the scene's robot
   is annotated and their module, `semantic_digital_twin.reasoning.robot_predicates`, is
   loaded.
+- The modules of a world model are named in `SymbolGraphSource(world_model_modules=...)`
+  and imported when the source is made. With the robot predicates' module named, the
+  simple_pouring world with its robot annotated offers 14 predicates instead of 8, the
+  six robot ones answering through the tools.
 
 ### Resolver
 - Candidates described by walking their fields (`4e534d505`); tests, static situation
@@ -307,6 +311,7 @@ the world does not say what the cup holds, so the material came from the task al
 | 2026-10-12 | Two graphs: krrood's symbol graph is the universal one (the world, created once); the knowledge component keeps its own local graph, independent of krrood's; the resolver answers a query from both, the world through `WorldAccess` and the knowledge through `KnowledgeAccess`. Knowledge objects stop being krrood `Symbol`s, and the two closed-world inferences krrood made for them (a sub-property's values in its super-property, symmetric properties) move into the knowledge component's own property descriptors. K2 reworded accordingly |
 | 2026-10-12 | Reorganisation first, without new functionality: one `knowledge/` package (`ontologies`, `ontology_translation`, `acceptance`, `storage`, `admission`, `generation`, `hypotheses`) with one public module, moved lowest layer first; stored hypotheses (the cram_viz sample and `~/.cram_viz/hypotheses`, backed up) are migrated with each move that changes a stored module path |
 | 2026-10-13 | Functions declared with `symbolic_function` are predicates of the world, found by the world injector alone (krrood's wrapper recognised among the loaded modules; no change to krrood, SDT or coraplex), offered when each required argument is a plain value or an individual the world holds; a failing one is answered as `PredicateFailed`, at `WorldFunction.call`, the one place the injector catches an error |
+| 2026-10-13 | The modules a world model's functions are declared in are named by the caller (`SymbolGraphSource(world_model_modules=...)`), never by `llm_reasoner`, and imported when the source is made |
 
 ## 5. In progress
 
@@ -366,7 +371,7 @@ approval.
 
 | Item | Why | State |
 |---|---|---|
-| Computed world values: poses, reachability, contact, which gripper holds what | Grounds the arm and geometry choices the model now calls arbitrary | Functions: met for those taking individuals and plain values (contact, support, and the robot and camera ones once cram_viz annotates the robot in the resolver's world and loads their module); not met for those taking a pose, a vector, an array or a list. Properties (poses, bounding boxes): deferred; options (c) SDT marks its properties with krrood field metadata, (d) `llm_reasoner` reads zero-argument properties generically. No choice yet |
+| Computed world values: poses, reachability, contact, which gripper holds what | Grounds the arm and geometry choices the model now calls arbitrary | Functions: met for those taking individuals and plain values (contact, support, and the robot and camera ones once cram_viz annotates the robot in the resolver's world and names their module); not met for those taking a pose, a vector, an array or a list. Properties (poses, bounding boxes): deferred; options (c) SDT marks its properties with krrood field metadata, (d) `llm_reasoner` reads zero-argument properties generically. No choice yet |
 | Linking the knowledge component to the resolver and the world injector | Lets the resolver use action knowledge | The request is built (R1–R6, `architecture.md` §3.6): the resolver obtains the hypothesis before every request to its model. Reading it, as knowledge tools (`architecture.md` §2.3), is next after R7 |
 | Representing knowledge for tools | Several perspectives, organised by action concept, addressable fragments, objectives and consequences first-class | Requirements K1–K4 recorded below; design next |
 | Structured prompts for the knowledge component | Its system, initial and repair prompts were prose built in Python, unlike the resolver's tagged sections | **Done** 2026-10-12 (`architecture.md` §3.2): tagged sections, JSON data and named rules; the system prompt grew from about 80k to 130k characters (the types as indented JSON) |
@@ -375,7 +380,7 @@ approval.
 | An MCP server over the world-access contract | For consumers outside the resolver's process | When a second consumer needs it |
 | Live tests in the repository | The live suite lived in scripts outside the repository | **Done** 2026-10-12 (`architecture.md` §5): `experiments/llm_reasoner_kitchen` with its tests; the live tests run only when opted in, five cases have scripted twins run with the experiments suite. `llm_reasoner`'s own tests are not yet in CI (the user's decision of 2026-10-12) |
 | Making the model aware of the predicates the world offers and what they do | Nothing in the resolver's prompt names a predicate; the model finds one only by calling `list_predicates` from its tool description, so it may never use `contact` or the support checks | Open, long-term; options: a prompt rule telling it to look for a predicate when it checks a relation, or stating the predicates offered for the kinds a request involves, as the candidates of a slot are |
-| Loading the modules that declare a world model's functions (such as `semantic_digital_twin.reasoning.robot_predicates`) | The function scan reads only loaded modules, so a function in a module nobody imported is never offered | Open; `llm_reasoner` could take module names as a setting and import them by name, staying independent of any world model |
+| Loading the modules that declare a world model's functions (such as `semantic_digital_twin.reasoning.robot_predicates`) | The function scan reads only loaded modules, so a function in a module nobody imported is never offered | **Done** 2026-10-13: `SymbolGraphSource(world_model_modules=...)`. A caller still has to pass the names and, for the robot ones, annotate the robot in the world |
 | Fewer wasted calls (opening `list_kinds`, listing many bodies, `name` before `name.name`) | Cost only; results are correct | Open |
 | An explicit "either arm" answer | Arbitrary arm choices are stated only in `why` | Open; would change the action interface |
 | Research direction: language-model commonsense checked against the ontology for designator resolution | Long-term | Open |

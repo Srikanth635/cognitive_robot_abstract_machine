@@ -5,6 +5,7 @@ the functions its world model declares.
 
 from __future__ import annotations
 
+import importlib
 import sys
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -68,6 +69,17 @@ class SymbolGraphSource(WorldSource):
     graph's own machinery or a component's description-level knowledge, which are
     symbols too but not things in the world.
     """
+
+    world_model_modules: Tuple[str, ...] = ()
+    """
+    The names of modules of the world model, imported when the source is made so that the
+    kinds and functions they declare are found: a function is found only once its module
+    is loaded, and nothing else loads it.
+    """
+
+    def __post_init__(self) -> None:
+        for name in self.world_model_modules:
+            importlib.import_module(name)
 
     def excludes(self, kind: type) -> bool:
         """
