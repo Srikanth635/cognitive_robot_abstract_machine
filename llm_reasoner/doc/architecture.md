@@ -116,6 +116,13 @@ function that raises is reported as `PredicateFailed` with the error and what it
 `WorldFunction.call` is the one place the injector catches an error, since it runs the
 world model's code there.
 
+A function is found only once its module is loaded, and the source loads nothing by
+itself. The caller names the modules of its world model in
+`SymbolGraphSource(world_model_modules=(...))`, which imports them when the source is
+made (an unknown name raises `ModuleNotFoundError` then, not during a conversation).
+`llm_reasoner` names no world model; imports are process-wide, and a module also brings
+the kinds it declares.
+
 **Limits.** It reads dataclass fields, krrood predicate classes and the functions above.
 Values a world model computes in properties (poses, bounding boxes) are not reachable
 yet, and a function appears only once its module is loaded (see `status.md`).

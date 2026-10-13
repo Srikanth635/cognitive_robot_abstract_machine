@@ -8,9 +8,11 @@ from __future__ import annotations
 
 import gc
 import inspect
+import sys
 from dataclasses import fields
 
 import pytest
+from typing_extensions import Iterator
 
 from krrood.entity_query_language.predicate import HasType, Symbol
 from krrood.entity_query_language.verbalization.pipeline import verbalize_expression
@@ -424,6 +426,23 @@ def listed_identifiers(view: WorldView) -> list:
     return [predicate.identifier for predicate in view.predicates()]
 
 
+LOADED_ON_REQUEST = f"{__package__}.world_mimics_loaded_on_request"
+"""
+The module of a world model that nothing imports unless a source is told to.
+"""
+
+
+@pytest.fixture
+def unloaded_module() -> Iterator[str]:
+    """
+    :return: The name of a module no test has imported; it is unloaded again after the
+        test, so no test sees what another loaded.
+    """
+    sys.modules.pop(LOADED_ON_REQUEST, None)
+    yield LOADED_ON_REQUEST
+    sys.modules.pop(LOADED_ON_REQUEST, None)
+
+
 def handle_argument(view: WorldView, individual) -> IndividualArgument:
     """
     :return: The individual passed to a predicate by its handle.
@@ -557,8 +576,48 @@ class TestFunctionPredicates:
         )
         assert result == PlainValue(value=True, is_default=False)
 
+    def test_a_function_of_a_module_the_world_is_told_to_load_is_listed(
+        self, unloaded_module
+    ):
+        view = WorldView(
+            source=SymbolGraphSource(world_model_modules=(unloaded_module,))
+        )
+        declared = sys.modules[unloaded_module].is_below_limit
+        assert identifier_of(declared) in listed_identifiers(view)
+
+    def test_a_function_of_a_module_the_world_is_told_to_load_is_evaluated(
+        self, unloaded_module
+    ):
+        view = WorldView(
+            source=SymbolGraphSource(world_model_modules=(unloaded_module,))
+        )
+        declared = sys.modules[unloaded_module].is_below_limit
+        result = view.evaluate(
+            identifier_of(declared),
+            {"value": PlainArgument(value=1.0), "limit": PlainArgument(value=2.0)},
+        )
+        assert result == PlainValue(value=True, is_default=False)
+
 
 class TestFunctionSource:
+    def test_a_function_in_a_module_nobody_loaded_is_not_found(self, unloaded_module):
+        found = SymbolGraphSource().functions()
+        assert not any(
+            function.identifier.startswith(f"{unloaded_module}.") for function in found
+        )
+
+    def test_a_function_in_a_module_the_source_is_told_to_load_is_found(
+        self, unloaded_module
+    ):
+        source = SymbolGraphSource(world_model_modules=(unloaded_module,))
+        declared = sys.modules[unloaded_module].is_below_limit
+        found = {function.identifier for function in source.functions()}
+        assert identifier_of(declared) in found
+
+    def test_a_module_that_does_not_exist_is_refused_when_the_source_is_made(self):
+        with pytest.raises(ModuleNotFoundError):
+            SymbolGraphSource(world_model_modules=(f"{__package__}.no_such_module",))
+
     def test_only_functions_declared_symbolic_are_found(self):
         found = {function.identifier for function in SymbolGraphSource().functions()}
         assert identifier_of(weighs_less_than) in found
