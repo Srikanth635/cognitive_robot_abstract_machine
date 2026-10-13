@@ -37,6 +37,13 @@ class TestEvaluation:
 # %% reading
 
 
+class TestOneLine:
+    def test_a_source_on_one_line_keeps_every_token_and_no_line_break(self):
+        source = QuerySource.read(SOURCES / "reads_and_assigns.py")
+        assert "\n" not in source.on_one_line
+        assert source.on_one_line.split() == source.text.split()
+
+
 class TestNamesRead:
     def test_the_names_read_leave_out_those_the_source_assigns(self):
         source = QuerySource.read(SOURCES / "reads_and_assigns.py")

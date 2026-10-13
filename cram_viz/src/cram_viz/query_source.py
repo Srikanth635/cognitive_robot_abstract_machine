@@ -70,6 +70,14 @@ class QuerySource:
         """
         return cls(text=path.read_text(), origin=str(path))
 
+    @property
+    def on_one_line(self) -> str:
+        """
+        :return: The source with its line breaks and indentation folded into single
+            spaces.
+        """
+        return " ".join(self.text.split())
+
     @cached_property
     def statements(self) -> List[ast.stmt]:
         """
