@@ -93,8 +93,11 @@ Clicking one copies its query into the search bar, where it may be edited; **Gen
 resolves the query in the search bar with `llm_reasoner`'s resolver in the selected
 scene: the server builds the scene's semantic_digital_twin world from its bundle (the
 robot on a drive over its surroundings where the recording starts, objects typed by
-`resolution/object_annotations.json`), evaluates the query on it, the resolver reads
-the world with the world tools and consults the knowledge component, and the answer
+`resolution/object_annotations.json`, and the robot typed by
+`resolution/robot_annotations.json` when a class is kept for it), evaluates the query
+on it, the resolver reads the world with the world tools, among them the predicates of
+the world model (contact and support between bodies, and, with the robot annotated, who
+holds what and what a camera sees) and consults the knowledge component, and the answer
 panel shows the slots it chose, why, and what they rest on. A designator is greyed
 out, with the reason, when the scene has no object of a name its query reads or no
 candidate for a slot it leaves to choose. A new designator is a new query file and a

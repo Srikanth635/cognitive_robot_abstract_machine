@@ -24,6 +24,7 @@ from llm_reasoner.reasoner import Reasoner
 from llm_reasoner.resolver.backend import LanguageModelBackend
 from llm_reasoner.resolver.grounds import Ground, GroundKey, Justification
 from llm_reasoner.resolver.prompts import SourceDetail
+from llm_reasoner.world.sources import SymbolGraphSource
 from llm_reasoner.world.view import WorldView
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
 from semantic_digital_twin.world_description.world_entity import Body
@@ -47,6 +48,12 @@ from cram_viz.resolution.scene_world import SceneWorlds
 RESOLVER_MAX_TOKENS = 2048
 """
 The most tokens the resolver's model may answer one turn with.
+"""
+
+WORLD_MODEL_MODULES = ("semantic_digital_twin.reasoning.robot_predicates",)
+"""
+The modules of the semantic_digital_twin world model whose functions the resolver's
+model may ask about; nothing else in the viewer loads them.
 """
 
 POUR_TRIALS = 3
@@ -302,6 +309,16 @@ class DesignatorResolver:
         run.keep(resolution)
         return ResolutionRun(resolution=resolution, knowledge=knowledge)
 
+    @staticmethod
+    def world_view() -> WorldView:
+        """
+        :return: A view of the live world that also loads the modules of the world
+            model, so the functions they declare are found.
+        """
+        return WorldView(
+            source=SymbolGraphSource(world_model_modules=WORLD_MODEL_MODULES)
+        )
+
     def knowledge_for(self, run: RunDirectory) -> KnowledgeService:
         """
         :return: The baseline's knowledge component over the run's own store.
@@ -331,7 +348,7 @@ class DesignatorResolver:
         """
         slots = QuerySlots.of(query)
         trials = self.trials_for(query, slots, bundle)
-        view = WorldView()
+        view = self.world_view()
         backend = Reasoner(client=self.client, knowledge=knowledge, world=view).backend(
             context_provider=geometry,
             number_of_candidates=1,

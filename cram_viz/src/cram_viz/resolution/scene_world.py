@@ -189,12 +189,32 @@ class SceneWorldBuilder:
         :return: The robot's annotation.
         :raises UnknownRobot: When no robot class is kept for the robot.
         """
-        scene = json.loads((bundle / SCENE_FILE).read_text())
-        name = scene[SceneKey.ROBOT][SceneKey.NAME]
+        name = self.robot_name(bundle)
         robot_class = self.robot_annotations.annotation_for(name)
         if robot_class is None:
             raise UnknownRobot(name=name)
         return robot_class.from_world(world)
+
+    def annotate_known_robot(self, world: World, bundle: Path) -> Optional[Any]:
+        """
+        Annotate the scene's robot when a robot class is kept for its name, so the world
+        holds the robot as what it is; a robot with none kept is left as it is.
+
+        :param world: The scene's world.
+        :param bundle: The scene's bundle directory.
+        :return: The robot's annotation, ``None`` when no robot class is kept for it.
+        """
+        if self.robot_annotations.annotation_for(self.robot_name(bundle)) is None:
+            return None
+        return self.annotate_robot(world, bundle)
+
+    @staticmethod
+    def robot_name(bundle: Path) -> str:
+        """
+        :return: The name of the scene's robot.
+        """
+        scene = json.loads((bundle / SCENE_FILE).read_text())
+        return scene[SceneKey.ROBOT][SceneKey.NAME]
 
     def models_world(self, bundle: Path, scene: Mapping[str, Any]) -> World:
         """
@@ -301,7 +321,9 @@ class SceneWorldBuilder:
 class SceneWorlds:
     """
     Keeps the world of the scene last asked for, and only it, so the resolver never
-    reads two scenes at once.
+    reads two scenes at once. The scene's robot is annotated as what it is when a robot
+    class is kept for it, so the world holds the robot's parts and what its model says
+    about them.
 
     .. note::
         krrood's symbol graph holds a world's individuals weakly and keeps their entries
@@ -356,5 +378,7 @@ class SceneWorlds:
         self.world = None
         gc.collect()
         SymbolGraph().remove_dead_instances()
-        self.world = self.builder.build(bundle)
+        world = self.builder.build(bundle)
+        self.builder.annotate_known_robot(world, bundle)
+        self.world = world
         self.scene = scene
