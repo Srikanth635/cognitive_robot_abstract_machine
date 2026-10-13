@@ -43,10 +43,13 @@
   const MATCHES_LISTED = 30;
   const INITIAL_LEVEL = 1;
 
-  // force layout with cooling, as in the L2 ontology graph
-  const REPULSION = 1700, LINK_LENGTH = 92, SPRING = 0.02, GRAVITY = 0.0019;
-  const DAMPING = 0.9, SPEED_LIMIT = 26, REPULSION_LIMIT = 45;
+  // force layout with cooling, as in the L2 ontology graph; strong repulsion, long links
+  // and a weak pull to the centre spread the classes out so their labels stay readable
+  const REPULSION = 6000, LINK_LENGTH = 150, SPRING = 0.02, GRAVITY = 0.0006;
+  const DAMPING = 0.9, SPEED_LIMIT = 26, REPULSION_LIMIT = 120;
   const ALPHA_MINIMUM = 0.004, ALPHA_DECAY = 0.02;
+  // room kept around the outermost classes when the view is fitted to them, in pixels
+  const FIT_MARGIN = 60;
 
   function escapeHtml(text) {
     return String(text).replace(/[&<>"']/g, function (character) {
@@ -310,11 +313,24 @@
       });
       draw();
     }
+    let fitted = false;
     function loop() {
       alpha += (0 - alpha) * ALPHA_DECAY;
       tick();
-      if (alpha > ALPHA_MINIMUM) frame = requestAnimationFrame(loop);
-      else { alpha = 0; frame = null; }
+      if (alpha > ALPHA_MINIMUM) { frame = requestAnimationFrame(loop); return; }
+      alpha = 0; frame = null;
+      if (!fitted) { fitted = true; fitToNodes(); }
+    }
+    // once the first layout settles, zoom out just enough to show every visible class
+    function fitToNodes() {
+      const live = visibleNodes();
+      if (!live.length) return;
+      const xs = live.map((node) => positions[node.id].x), ys = live.map((node) => positions[node.id].y);
+      const minX = Math.min(...xs) - FIT_MARGIN, maxX = Math.max(...xs) + FIT_MARGIN;
+      const minY = Math.min(...ys) - FIT_MARGIN, maxY = Math.max(...ys) + FIT_MARGIN;
+      const scale = Math.max((maxX - minX) / width, (maxY - minY) / height, 1);
+      viewBox = { x: (minX + maxX - width * scale) / 2, y: (minY + maxY - height * scale) / 2, w: width * scale, h: height * scale };
+      applyViewBox();
     }
     function reheat(value) {
       alpha = Math.max(alpha, value === undefined ? 0.7 : value);
