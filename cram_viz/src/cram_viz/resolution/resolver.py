@@ -1,9 +1,9 @@
 """
 Resolving a predefined designator in a scene with llm_reasoner, each resolution a run of
-its own from the same initial environment: the scene's world built anew and read through
-the world injector, the knowledge component consulted about the action over a copy of
-the viewer's store, and what the resolution chose, why, and what it rests on, written
-for display and kept with the run.
+its own from the same initial environment: the scene's world built anew, read through
+the world injector and its geometry stated as a fact of the situation, the knowledge
+component consulted about the action over a copy of the viewer's store, and what the
+resolution chose, why, and what it rests on, written for display and kept with the run.
 """
 
 from __future__ import annotations
@@ -20,7 +20,6 @@ from llm_reasoner.clients.anthropic_client import AnthropicClient
 from llm_reasoner.knowledge.access import Citation, KnowledgeService
 from llm_reasoner.reasoner import Reasoner
 from llm_reasoner.resolver.backend import LanguageModelBackend
-from llm_reasoner.resolver.context import SchemaOnlyContextProvider
 from llm_reasoner.resolver.grounds import Ground, GroundKey, Justification
 from llm_reasoner.resolver.prompts import SourceDetail
 from llm_reasoner.world.view import WorldView
@@ -37,6 +36,7 @@ from cram_viz.resolution.designators import (
     SceneNamespace,
 )
 from cram_viz.resolution.runs import ResolutionRuns, RunDirectory, RunEnvironment
+from cram_viz.resolution.scene_geometry import SceneGeometry
 from cram_viz.resolution.scene_world import SceneWorlds
 
 RESOLVER_MAX_TOKENS = 2048
@@ -261,9 +261,8 @@ class DesignatorResolver:
             knowledge it consulted.
         :raises DesignatorUnavailable: When the scene cannot resolve the designator.
         """
-        names = SceneNamespace(
-            world=self.worlds.initial_world_for(scene, bundle)
-        ).names()
+        world = self.worlds.initial_world_for(scene, bundle)
+        names = SceneNamespace(world=world).names()
         shortfall = designator.shortfall_in(names)
         if not shortfall.is_empty:
             raise DesignatorUnavailable(shortfall=shortfall)
@@ -272,7 +271,11 @@ class DesignatorResolver:
         )
         knowledge = self.knowledge_for(run)
         resolution = self.resolution_in(
-            run, designator, designator.query_in(names), knowledge
+            run,
+            designator,
+            designator.query_in(names),
+            knowledge,
+            SceneGeometry(world=world),
         )
         run.keep(resolution)
         return ResolutionRun(resolution=resolution, knowledge=knowledge)
@@ -291,18 +294,20 @@ class DesignatorResolver:
         designator: DesignatorQuery,
         query: Match,
         knowledge: KnowledgeService,
+        geometry: SceneGeometry,
     ) -> ResolvedDesignator:
         """
         :param run: The run resolving.
         :param designator: The designator resolved.
         :param query: The designator's query on the scene.
         :param knowledge: The knowledge component the run consults.
+        :param geometry: The scene's geometry, stated as a fact of the situation.
         :return: What resolving the query chose, why, and what it rests on.
         """
         slots = QuerySlots.of(query)
         view = WorldView()
         backend = Reasoner(client=self.client, knowledge=knowledge, world=view).backend(
-            context_provider=SchemaOnlyContextProvider(),
+            context_provider=geometry,
             number_of_candidates=1,
             source_detail=SourceDetail.FULL,
         )
