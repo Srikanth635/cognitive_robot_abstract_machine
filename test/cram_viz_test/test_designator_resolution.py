@@ -97,6 +97,13 @@ class TestDesignators:
         )
         assert offered.available is True
 
+    def test_a_designator_is_offered_on_one_line_too(self, pouring_bundle):
+        identifier = PouringDesignator.OBJECTS_GIVEN
+        offered = OfferedDesignator.in_scene(identifier, names_in(pouring_bundle))
+        assert offered.payload()["query_on_one_line"] == (
+            DesignatorQuery.shipped(identifier).source.on_one_line
+        )
+
     def test_a_scene_lacking_an_object_the_query_names_cannot_offer_it(
         self, pouring_bundle
     ):

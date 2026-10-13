@@ -29,6 +29,7 @@ from typing_extensions import Any, Dict, List, Optional
 
 from cram_viz import paths
 from cram_viz.hypothesis_knowledge.generation import ModelHypothesisSource
+from cram_viz.query_source import QuerySource
 from cram_viz.resolution.designators import (
     DesignatorQuery,
     DesignatorUnavailable,
@@ -166,7 +167,7 @@ class ResolvedDesignator:
         :return: The match query with its line breaks and indentation folded into
             single spaces.
         """
-        return " ".join(self.query.split())
+        return QuerySource(text=self.query).on_one_line
 
     def payload(self) -> Dict[str, Any]:
         """

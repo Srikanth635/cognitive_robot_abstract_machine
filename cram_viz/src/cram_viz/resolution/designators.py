@@ -338,6 +338,7 @@ class OfferedDesignator:
         return dict(
             identifier=self.identifier,
             query=self.query,
+            query_on_one_line=QuerySource(text=self.query).on_one_line,
             available=self.available,
             unbound=self.unbound,
             without_candidates=self.without_candidates,

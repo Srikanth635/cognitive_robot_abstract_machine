@@ -1658,11 +1658,11 @@ def _hypothesis_node_lines(node: HypothesisGraphNode) -> List[str]:
 
 
 NOTHING_GENERATED = (
-    "Nothing generated yet — enter an instruction in the Generate bar above the EQL "
-    "query box."
+    "Nothing generated yet — pick a designator below the search bar and click "
+    "Generate."
 )
 """
-What the knowledge tabs say before an instruction has been generated.
+What the knowledge tabs say before a designator has been resolved.
 """
 
 

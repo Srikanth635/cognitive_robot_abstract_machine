@@ -22,19 +22,22 @@ Panels.define('eql', function (root, bus) {
     '  <span id="kb-status" class="kb-status">loading knowledge base…</span>' +
     '</div>' +
     '<div class="query-box">' +
-    '  <div class="query-row">' +
-    '    <textarea id="query-input" rows="2" spellcheck="false" placeholder="the(entity(obj).where(obj.name == \'milk\'))   —  vars: obj, ep, arm, j, rob"></textarea>' +
-    '    <button id="query-run" title="Run the EQL query on the knowledge base">Run</button>' +
-    '    <button id="query-generate" title="Resolve the designator query in the search bar with llm_reasoner in this scene">Generate</button>' +
+    '  <textarea id="query-input" rows="2" spellcheck="false" placeholder="the(entity(obj).where(obj.name == \'milk\'))   —  vars: obj, ep, arm, j, rob"></textarea>' +
+    '  <div class="query-actions">' +
+    '    <button id="query-run" class="primary" title="Run the EQL query in the search bar on the knowledge base">Run</button>' +
+    '    <button id="query-generate" class="primary" title="Resolve the designator query in the search bar with llm_reasoner in this scene">Generate</button>' +
+    '    <button id="designator-execute" title="Run the resolved designator in the simulation, under the live bridge" disabled>Execute</button>' +
+    '    <span class="query-actions-gap"></span>' +
+    '    <button id="demo-execute" class="quiet" title="Launch the fixed demo under the live bridge, independent of the designators">Demo</button>' +
     '  </div>' +
-    '  <div class="designator-row">' +
-    '    <div id="designators" class="designators" title="Predefined, underspecified pouring designators as krrood match queries: click one to copy it into the search bar, then Generate"></div>' +
-    '    <div class="designator-actions">' +
-    '      <button id="designator-execute" title="Run the resolved designator in the simulation, under the live bridge" disabled>Execute</button>' +
-    '      <button id="demo-execute" title="Launch the fixed demo under the live bridge, independent of the designators">Demo</button>' +
+    '  <div class="query-sources">' +
+    '    <div class="source-tabs">' +
+    '      <button id="source-designators" title="Underspecified designators as krrood match queries: click one to copy it into the search bar, then Generate">Designators</button>' +
+    '      <button id="source-questions" title="Questions about the knowledge base: click one to run its EQL query">Questions</button>' +
     '    </div>' +
+    '    <div id="designators" class="designators"></div>' +
+    '    <div id="presets" class="presets"></div>' +
     '  </div>' +
-    '  <div id="presets" class="presets"></div>' +
     '</div>' +
     '<div id="answer" class="answer"><div class="answer-empty">Loading the episode knowledge base…</div></div>';
 
@@ -48,6 +51,22 @@ Panels.define('eql', function (root, bus) {
   const designatorExecuteBtn = root.querySelector('#designator-execute');
   const demoExecuteBtn = root.querySelector('#demo-execute');
   designatorExecuteBtn.disabled = true;  // nothing to execute before a resolution
+
+  // ---- the two lists below the search bar, one shown at a time ----------------------
+  const sources = [
+    { tab: root.querySelector('#source-designators'), list: designatorsEl },
+    { tab: root.querySelector('#source-questions'), list: presetsEl },
+  ];
+  function showSource(shown) {
+    sources.forEach(function (source) {
+      source.tab.classList.toggle('on', source === shown);
+      source.list.classList.toggle('hidden', source !== shown);
+    });
+  }
+  sources.forEach(function (source) {
+    source.tab.addEventListener('click', function () { showSource(source); });
+  });
+  showSource(sources[0]);
 
   let kb = null;   // /api/kb overview (presets + entity details)
 
@@ -156,8 +175,8 @@ Panels.define('eql', function (root, bus) {
     payload.designators.forEach(function (designator) {
       const chip = document.createElement('pre');
       chip.className = 'designator-query' + (designator.available ? '' : ' unavailable');
-      chip.textContent = designator.query;
-      chip.title = designatorHint(designator);
+      chip.textContent = designator.query_on_one_line;
+      chip.title = designator.query + '\n' + designatorHint(designator);
       if (designator.available) {
         chip.addEventListener('click', function () { input.value = designator.query; });
       }
@@ -222,6 +241,7 @@ Panels.define('eql', function (root, bus) {
         '<div class="goal">resolution failed</div>' +
         '<div class="qerr">' + esc(String(err)) + '</div>';
     }
+    answerEl.scrollTop = 0;  // a new answer is read from its top
     generateBtn.textContent = 'Generate';
     resolving = false;
   }
@@ -335,6 +355,7 @@ Panels.define('eql', function (root, bus) {
     } catch (err) {
       render(code, { ok: false, error: String(err) });
     }
+    answerEl.scrollTop = 0;  // a new answer is read from its top
     running = false;
     runBtn.textContent = 'Run';
   }

@@ -15,7 +15,7 @@ const WEB_ROOT = path.join(
 );
 
 function element() {
-  return {
+  const created = {
     innerHTML: '',
     textContent: '',
     value: '',
@@ -25,10 +25,22 @@ function element() {
     title: '',
     children: [],
     listeners: {},
-    classList: { add() {}, remove() {}, toggle() {} },
+    classes: new Set(),
+    classList: {
+      add(name) { this.owner.classes.add(name); },
+      remove(name) { this.owner.classes.delete(name); },
+      toggle(name, force) {
+        const on = force === undefined ? !this.owner.classes.has(name) : force;
+        if (on) this.owner.classes.add(name); else this.owner.classes.delete(name);
+      },
+      contains(name) { return this.owner.classes.has(name); },
+    },
     addEventListener(event, listener) { this.listeners[event] = listener; },
     appendChild(child) { this.children.push(child); },
+    scrollTop: 0,
   };
+  created.classList.owner = created;
+  return created;
 }
 
 function kbPayload() {
@@ -48,16 +60,19 @@ function designatorsPayload() {
       {
         identifier: 'pouring_cup_into_bowl',
         query: 'the(PouringAction)(\n    source_container=variable(Tool, domain=[pouring_cup]),\n)\n',
+        query_on_one_line: 'the(PouringAction)( source_container=variable(Tool, domain=[pouring_cup]), )',
         available: true, unbound: [], without_candidates: [],
       },
       {
         identifier: 'from_the_pouring_cup',
         query: 'the(PouringAction)(\n    source_container=variable(Tool, domain=[pouring_cup]),\n)\n',
+        query_on_one_line: 'the(PouringAction)( source_container=variable(Tool, domain=[pouring_cup]), )',
         available: false, unbound: ['pouring_cup'], without_candidates: [],
       },
       {
         identifier: 'everything_open',
         query: 'the(PouringAction)(\n    source_container=variable(Tool),\n)\n',
+        query_on_one_line: 'the(PouringAction)( source_container=variable(Tool), )',
         available: false, unbound: [], without_candidates: ['source_container'],
       },
     ],
@@ -95,6 +110,7 @@ function loadEqlPanel(options) {
   const names = [
     '#kb-status', '#answer', '#query-input', '#query-run', '#presets',
     '#designators', '#query-generate', '#designator-execute', '#demo-execute',
+    '#source-designators', '#source-questions',
   ];
   names.forEach(function (name) { elements[name] = element(); });
 
@@ -191,14 +207,21 @@ function chips(panel) {
   return panel.elements['#designators'].children;
 }
 
-test('each designator of the scene becomes a chip reading its match query', async function () {
+test('each designator of the scene becomes a chip reading its match query on one line', async function () {
   const panel = loadEqlPanel();
   await settle();
 
   assert.deepStrictEqual(
     chips(panel).map(function (chip) { return chip.textContent; }),
-    designatorsPayload().designators.map(function (d) { return d.query; }),
+    designatorsPayload().designators.map(function (d) { return d.query_on_one_line; }),
   );
+});
+
+test('a chip shows its whole match query on hover', async function () {
+  const panel = loadEqlPanel();
+  await settle();
+
+  assert.ok(chips(panel)[0].title.includes(designatorsPayload().designators[0].query));
 });
 
 test('a designator naming an object the scene lacks says so and resolves nothing', async function () {
@@ -220,6 +243,28 @@ test('a designator with nothing in the scene to take for a slot says so', async 
   assert.ok(unavailable.title.includes(
     designatorsPayload().designators[2].without_candidates[0],
   ));
+});
+
+// %% the two lists: designators and questions
+test('the designators show first and the questions are a tab away', async function () {
+  const panel = loadEqlPanel();
+  await settle();
+
+  assert.ok(!panel.elements['#designators'].classes.has('hidden'));
+  assert.ok(panel.elements['#presets'].classes.has('hidden'));
+  assert.ok(panel.elements['#source-designators'].classes.has('on'));
+});
+
+test('the questions tab shows the questions in place of the designators', async function () {
+  const panel = loadEqlPanel();
+  await settle();
+
+  panel.elements['#source-questions'].listeners.click();
+
+  assert.ok(panel.elements['#designators'].classes.has('hidden'));
+  assert.ok(!panel.elements['#presets'].classes.has('hidden'));
+  assert.ok(panel.elements['#source-questions'].classes.has('on'));
+  assert.ok(!panel.elements['#source-designators'].classes.has('on'));
 });
 
 // %% from a chip to the search bar
@@ -267,6 +312,17 @@ test('a resolution publishes the consulted hypothesis and shows why', async func
   const answer = panel.elements['#answer'].innerHTML;
   assert.ok(answer.includes(resolvedPayload().resolution.actions[0].why));
   assert.ok(answer.includes('ph_tilt'));
+});
+
+test('a resolution is shown from the top of the answer', async function () {
+  const panel = loadEqlPanel();
+  await settle();
+  panel.elements['#answer'].scrollTop = 240;
+
+  generate(panel, designatorsPayload().designators[0].query);
+  await settle();
+
+  assert.strictEqual(panel.elements['#answer'].scrollTop, 0);
 });
 
 test('a resolution shows the match query it resolved', async function () {
