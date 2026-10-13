@@ -2,6 +2,9 @@
 Tests for the scene-driven knowledge base and its graph-panel payloads.
 """
 
+import shutil
+import warnings
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -25,6 +28,11 @@ from cram_viz.hypothesis_knowledge.ontology_backing import (  # noqa: E402
 from cram_viz.hypothesis_knowledge.ontology_class_graph import (  # noqa: E402
     OntologyClassGraph,
 )
+
+ARCHITECTURE_SOURCES = Path(__file__).parent / "architecture_sources"
+"""
+Modules the architecture scan reads in the tests.
+"""
 
 
 @pytest.fixture()
@@ -54,6 +62,24 @@ class TestKB:
         names = {p.name for p in fresh_kb.packages}
         assert {"coraplex", "krrood"} <= names
         assert any(c.name == "Plan" for c in fresh_kb.classes)
+
+    def test_the_architecture_scan_reads_a_module_with_an_invalid_escape_silently(
+        self, tmp_path, monkeypatch
+    ):
+        package = tmp_path / "package_with_escapes"
+        package.mkdir()
+        shutil.copy(
+            ARCHITECTURE_SOURCES / "escaped_docstring.py", package / "module.py"
+        )
+        monkeypatch.setenv("CRAM_VIZ_ARCHITECTURE", str(tmp_path))
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            packages, _, _ = kb.scan_architecture()
+        assert [
+            warning for warning in caught if issubclass(warning.category, SyntaxWarning)
+        ] == []
+        (scanned,) = [entry for entry in packages if entry["name"] == package.name]
+        assert scanned["module_count"] == 1
 
 
 class TestQueries:

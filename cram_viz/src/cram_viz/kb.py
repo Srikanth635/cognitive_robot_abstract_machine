@@ -22,6 +22,7 @@ import json
 import logging
 import os
 import re
+import warnings
 from collections import Counter, defaultdict
 from enum import StrEnum
 from dataclasses import dataclass, fields, is_dataclass
@@ -516,6 +517,20 @@ def _first_readme_line(directory: str) -> str:
     return ""
 
 
+def _parsed_module(path: str) -> ast.Module:
+    """
+    :return: The syntax tree of the module in the file, named for the file. Syntax
+        warnings about the module's own source, such as an invalid escape in a
+        docstring, are left to whoever compiles it: the scan only reads its structure.
+    """
+    with (
+        open(path, encoding="utf-8", errors="replace") as source,
+        warnings.catch_warnings(),
+    ):
+        warnings.simplefilter("ignore", SyntaxWarning)
+        return ast.parse(source.read(), filename=path)
+
+
 def scan_architecture() -> (
     Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[Tuple[str, str]]]
 ):
@@ -560,9 +575,7 @@ def scan_architecture() -> (
                     continue
                 path = os.path.join(dirpath, filename)
                 try:
-                    tree = ast.parse(
-                        open(path, encoding="utf-8", errors="replace").read()
-                    )
+                    tree = _parsed_module(path)
                 except SyntaxError:
                     continue
                 module_count += 1
