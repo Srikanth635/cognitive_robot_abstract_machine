@@ -253,7 +253,19 @@ again ended 0.188 m off ($0.091 and $0.087 in two runs). Probed without the mode
 `pour_side_offset` of −0.188 m puts the mouth 0.005 m from the bowl's centre, 0.089 m
 above its rim: coraplex's offset moves the tool sideways while the tilt does not bring
 the mouth back. Choosing the cancelling offset needs either that fixed in coraplex or
-feedback to the resolver from a simulated pour. Switching scenes now removes the previous scene's world
+feedback to the resolver from a simulated pour.
+
+**Simulated pours fed back to the resolver (2026-10-13):** the resolver may now be given
+an `OutcomeCheck` (`resolver/outcomes.py`) trying each answer before it is accepted; a
+refusal (`OutcomeFellShort`) goes back through the repair round as a structured
+rejection holding the outcome. cram_viz's `SimulatedPouring` performs every pouring
+answer from the scene's initial world in a process of its own and measures where the
+pitcher's mouth ends against the bowl's opening, ahead and right as seen from the robot,
+up to three trials. Live, `pour_geometry_open`: the first answer kept the defaults and
+missed (0.188 m, 0.184 m right of the opening's centre); reading that, the resolver set
+`pour_side_offset` to −0.188 m ("a pour_side_offset of -0.188 cancels it"), and the
+second pour landed 0.005 m from the centre. $0.139 for the resolver, about four minutes
+with the run's knowledge generation and both trials. Switching scenes now removes the previous scene's world
 from krrood's symbol graph (collected, then `remove_dead_instances`), so an open
 `variable(Tool)` never offers another scene's objects.
 

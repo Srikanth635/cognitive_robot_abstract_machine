@@ -155,8 +155,13 @@ meeting the query's `where`-conditions; or one of these outcomes:
    enum names to members, `null` where allowed; verdicts become the outcomes above.
 6. **Construct and check**: values are written into the query, krrood constructs the
    instances, and the query's `where`-conditions are checked.
-7. **Repair once** (`max_repairs = 1`) when an answer is unusable or breaks a
-   condition: a fresh conversation with the rejected answer and the rejection as data.
+7. **Try** (`outcomes.py`), when the backend has an `OutcomeCheck`: the caller performs
+   what the answer constructs, in a simulation for instance, and refuses the answer with
+   `OutcomeFellShort`, holding the outcome as data, when it falls short. The situation
+   pass is never checked.
+8. **Repair once** (`max_repairs = 1`) when an answer is unusable, breaks a condition or
+   falls short when tried: a fresh conversation with the rejected answer and the
+   rejection as data, its kind naming the failure.
 
 | Module | Responsibility |
 |---|---|
@@ -169,6 +174,7 @@ meeting the query's `where`-conditions; or one of these outcomes:
 | `action_context.py` | `ActionContextProvider`: states the action a resolution serves, as its own `<request>`, `<slots>` (its open slots with their candidates in the world) and `<given>` in an `<action>` section |
 | `knowledge.py` | `KnowledgeRequester`: consults the knowledge component, through its public module only, about the action a query asks for (§3.6); `KnowledgeConsultation`: the designator, the situation chosen and the identifier of the hypothesis served |
 | `completion.py` | Plain and tool-using completion; the text-answer rule |
+| `outcomes.py` | `OutcomeCheck`: tries the instances an answer constructs before they are accepted |
 | `exceptions.py` | Retryable failures and outcomes |
 
 **Settings** (`LanguageModelBackend`): `number_of_candidates` (3 unless the query sets a
@@ -508,7 +514,7 @@ conversation with its text as the answer.
 |---|---|
 | Knowledge component → clients | `LanguageModelClient.complete_structured(system, user, json_schema)`; no tools |
 | Caller → knowledge component | `KnowledgeService.serve(query, instruction)` returns the record identifier of the hypothesis answering a request, generating it first when none is stored; `view_for(query, instruction)` returns its view. cram_viz's Hypothesis Graph and Designator tabs read it |
-| cram_viz → the system | cram_viz shows the system at work: its predefined pouring designators (`cram_viz.resolution`), each an underspecified krrood match query shown as written, are resolved by a `Reasoner` over a semantic_digital_twin world built from the selected scene bundle, consulting cram_viz's knowledge store; the answer panel shows the chosen slots, the explanation and the grounds, and the consulted hypothesis is displayed with the resolution in the Hypothesis Graph, Ontology Graph and Designator tabs. A chip copies its query into the search bar, Generate resolves the query there, and Execute performs the resolved action in coraplex's simulation from the run's own initial environment |
+| cram_viz → the system | cram_viz shows the system at work: its predefined pouring designators (`cram_viz.resolution`), each an underspecified krrood match query shown as written, are resolved by a `Reasoner` over a semantic_digital_twin world built from the selected scene bundle, consulting cram_viz's knowledge store; the answer panel shows the chosen slots, the explanation and the grounds, and the consulted hypothesis is displayed with the resolution in the Hypothesis Graph, Ontology Graph and Designator tabs. A chip copies its query into the search bar, Generate resolves the query there, and Execute performs the resolved action in coraplex's simulation from the run's own initial environment. Before a pouring resolution is accepted, `SimulatedPouring` (an `OutcomeCheck`) performs it in a process of its own and sends a pour whose mouth misses the target's opening back to the resolver with where it ended, up to three trials |
 | Resolver → knowledge component | Through `knowledge/access.py` only (a test checks this): the knowledge request (§3.6) before every request to the model, serving or generating the hypothesis for the action's situation, and the knowledge-access contract (§3.7), whose tools the request's model reads that hypothesis with |
 | Knowledge component ↔ world injector | None, by design: world facts reach the knowledge only through the resolver; the two keep separate sources |
 
