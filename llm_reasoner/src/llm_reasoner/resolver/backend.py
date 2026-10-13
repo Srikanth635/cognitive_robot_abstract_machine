@@ -49,6 +49,7 @@ from llm_reasoner.resolver.knowledge import (
     KnowledgeConsultation,
     KnowledgeRequester,
 )
+from llm_reasoner.resolver.outcomes import OutcomeCheck
 from llm_reasoner.resolver.prompt_format import PromptRule
 from llm_reasoner.resolver.prompts import (
     OpenValueMeaning,
@@ -132,6 +133,12 @@ class LanguageModelBackend(GenerativeBackend):
     max_repairs: int = field(kw_only=True, default=1)
     """
     How often an unusable response is fed back before giving up.
+    """
+
+    outcome_check: Optional[OutcomeCheck] = field(kw_only=True, default=None)
+    """
+    Tries the instances an answer constructs before they are accepted, refusing the
+    answer with its outcome when they fall short; none tries nothing.
     """
 
     source_detail: SourceDetail = field(kw_only=True, default=SourceDetail.FULL)
@@ -408,7 +415,7 @@ class LanguageModelBackend(GenerativeBackend):
         :return: A backend choosing the situation features of the knowledge describing
             the action: this backend's model, tools and context with the action stated,
             one structure described by its docstrings, its values facts rather than
-            choices, and no consultation of its own.
+            choices, and neither a consultation nor an outcome check of its own.
         """
         return replace(
             self,
@@ -424,6 +431,7 @@ class LanguageModelBackend(GenerativeBackend):
             number_of_candidates=1,
             open_values=OpenValueMeaning.FACT,
             knowledge=None,
+            outcome_check=None,
         )
 
     def _accept(
@@ -436,12 +444,15 @@ class LanguageModelBackend(GenerativeBackend):
         :return: The instances built from the response that meet the where-conditions,
             each kept with its justification.
         :raises NoValidCandidates: When none of them does.
+        :raises OutcomeFellShort: When trying them falls short.
         """
         decoded = self._decode(raw_response, open_slots)
         constructed = [
             self._construct(expression, element.assignment) for element in decoded
         ]
         accepted = self._validate(expression, constructed)
+        if self.outcome_check is not None:
+            self.outcome_check.check(accepted)
         self.justifications = [
             Justification(instance=instance, why=element.why, grounds=element.grounds)
             for instance, element in zip(constructed, decoded)

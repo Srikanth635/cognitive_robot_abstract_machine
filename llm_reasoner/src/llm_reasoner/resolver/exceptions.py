@@ -210,6 +210,21 @@ class NoValidCandidates(RetryableModelFailure):
         )
 
 
+@dataclass
+class OutcomeFellShort(RetryableModelFailure):
+    """
+    Trying an answer showed that what it does falls short of what it is for.
+    """
+
+    outcome: Dict[str, Any]
+    """
+    What trying the answer brought about, as data the model reads to answer again.
+    """
+
+    def __post_init__(self):
+        super().__init__(f"trying the answer fell short: {self.outcome}")
+
+
 # %% verdicts
 
 
