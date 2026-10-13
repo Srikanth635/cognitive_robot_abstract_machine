@@ -81,7 +81,9 @@ class WorldView(WorldAccess):
     def __post_init__(self):
         self.catalogue = KindCatalogue(source=self.source)
         self.finder = IndividualFinder(source=self.source, handles=self.handles)
-        self.predicate_catalogue = PredicateCatalogue(source=self.source)
+        self.predicate_catalogue = PredicateCatalogue(
+            source=self.source, kinds=self.catalogue
+        )
 
     # %% kinds
 
@@ -208,8 +210,6 @@ class WorldView(WorldAccess):
         :param arguments: What it is passed, by argument name.
         :return: What it says about the arguments.
         """
-        result = self.predicate_catalogue.evaluate(
-            self.catalogue.resolve(predicate), arguments, self.handles
-        )
+        result = self.predicate_catalogue.evaluate(predicate, arguments, self.handles)
         describer = IndividualDescriber(limits=self.limits, source=self.source)
         return describer.value_of(result, naming=self.handles)

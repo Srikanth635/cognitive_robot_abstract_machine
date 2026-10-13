@@ -1,15 +1,20 @@
 """
-Where the world injector finds the kinds a world has and the individuals living in it.
+Where the world injector finds the kinds a world has, the individuals living in it, and
+the functions its world model declares.
 """
 
 from __future__ import annotations
 
+import sys
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from types import ModuleType
 
 from krrood.symbol_graph.symbol_graph import Symbol, SymbolGraph
 from krrood.utils import recursive_subclasses
-from typing_extensions import Any, List, Tuple
+from typing_extensions import Any, Dict, List, Tuple
+
+from llm_reasoner.world.functions import WorldFunction
 
 FOUNDATION_PACKAGE = "krrood"
 """
@@ -20,7 +25,7 @@ of any world.
 
 class WorldSource(ABC):
     """
-    The kinds and individuals a world has.
+    The kinds and individuals a world has, and the functions its world model declares.
     """
 
     @abstractmethod
@@ -41,13 +46,20 @@ class WorldSource(ABC):
         :return: The live individuals of a kind and of the kinds specialising it.
         """
 
+    @abstractmethod
+    def functions(self) -> List[WorldFunction]:
+        """
+        :return: Every function the world model declares, each once.
+        """
+
 
 @dataclass(frozen=True)
 class SymbolGraphSource(WorldSource):
     """
     The world as krrood's symbol graph holds it: every loaded symbol class declared
-    outside the excluded packages is a kind, and every live symbol of such a kind an
-    individual.
+    outside the excluded packages is a kind, every live symbol of such a kind an
+    individual, and every function declared outside them with ``symbolic_function`` a
+    function of the world model.
     """
 
     excluded_packages: Tuple[str, ...] = (FOUNDATION_PACKAGE,)
@@ -61,8 +73,14 @@ class SymbolGraphSource(WorldSource):
         """
         :return: Whether a class is declared in one of the excluded packages.
         """
+        return self.excludes_module(kind.__module__)
+
+    def excludes_module(self, module_name: str) -> bool:
+        """
+        :return: Whether a module is one of the excluded packages or inside one.
+        """
         return any(
-            kind.__module__ == package or kind.__module__.startswith(f"{package}.")
+            module_name == package or module_name.startswith(f"{package}.")
             for package in self.excluded_packages
         )
 
@@ -87,3 +105,17 @@ class SymbolGraphSource(WorldSource):
             for individual in SymbolGraph().get_instances_of_type(kind)
             if individual is not None and not self.excludes(type(individual))
         ]
+
+    def functions(self) -> List[WorldFunction]:
+        declared: Dict[str, WorldFunction] = {}
+        for module in list(sys.modules.values()):
+            if not isinstance(module, ModuleType):
+                continue
+            for member in list(vars(module).values()):
+                if not WorldFunction.is_declared(member):
+                    continue
+                if self.excludes_module(member.__module__):
+                    continue
+                function = WorldFunction.of(member)
+                declared[function.identifier] = function
+        return list(declared.values())

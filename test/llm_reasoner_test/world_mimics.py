@@ -1,7 +1,7 @@
 """
 A small world of krrood symbols for the world injector: a body with geometry, inertial
-properties and a pose, annotations referring to it, a predicate about bodies, and an
-action with a slot for a body. It imports only krrood, as a world built on krrood would
+properties and a pose, annotations referring to it, a predicate and functions about
+bodies, and an action with a slot for a body. It imports only krrood, as a world built on krrood would
 reach llm_reasoner.
 """
 
@@ -11,7 +11,12 @@ from dataclasses import dataclass, field
 from enum import Enum
 from uuid import UUID, uuid4
 
-from krrood.entity_query_language.predicate import Predicate, RenderedFields, Symbol
+from krrood.entity_query_language.predicate import (
+    Predicate,
+    RenderedFields,
+    Symbol,
+    symbolic_function,
+)
 from krrood.entity_query_language.verbalization.vocabulary.parts_of_speech import (
     Noun,
     predicate_clause,
@@ -174,6 +179,85 @@ class ActionPlannedByItsParent(Symbol):
 @dataclass(eq=False)
 class ActionInheritingItsPlan(ActionPlannedByItsParent):
     """An action declaring nothing but what it inherits."""
+
+
+# %% functions the world model declares
+
+MARGIN_MEANING = "How much less it must weigh, in kilograms."
+"""
+What the docstring of :func:`weighs_less_than` says its margin is.
+"""
+
+UNSUPPORTED_REASON = "Needs a simulation"
+"""
+Why :func:`is_stable` cannot say.
+"""
+
+
+@dataclass(eq=False)
+class DetachedPart(Symbol):
+    """A part of the world that exists only where a test attaches one."""
+
+    attached_to: Optional[WorldBody] = None
+    """The body this part is attached to."""
+
+
+@symbolic_function
+def weighs_less_than(body: WorldBody, other: WorldBody, margin: float = 0.0) -> bool:
+    """
+    Whether a body weighs less than another.
+
+    :param body: The body that may weigh less.
+    :param other: The body it is compared with.
+    :param margin: How much less it must weigh, in kilograms.
+    :return: Whether the body weighs less than the other by the margin.
+    """
+    return body.inertial.mass + margin < other.inertial.mass
+
+
+@symbolic_function
+def is_attached(part: DetachedPart) -> bool:
+    """
+    Whether a part is attached to a body.
+
+    :param part: The part asked about.
+    :return: Whether the part is attached.
+    """
+    return part.attached_to is not None
+
+
+@symbolic_function
+def is_stable(body: WorldBody) -> bool:
+    """
+    Whether a body stays where it is.
+
+    :param body: The body asked about.
+    :return: Whether the body stays.
+    """
+    raise NotImplementedError(UNSUPPORTED_REASON)
+
+
+@symbolic_function
+def fits_inside(body: WorldBody, box: BoxShape) -> bool:
+    """
+    Whether a body fits inside a box, which is no individual of the world.
+
+    :param body: The body asked about.
+    :param box: The box it must fit inside.
+    :return: Whether the body fits.
+    """
+    return any(shape.width <= box.width for shape in body.shapes)
+
+
+def weighs_more_than(body: WorldBody, other: WorldBody) -> bool:
+    """
+    Whether a body weighs more than another, a function nobody declared symbolic.
+
+    :param body: The body that may weigh more.
+    :param other: The body it is compared with.
+    :return: Whether the body weighs more.
+    """
+    return body.inertial.mass > other.inertial.mass
 
 
 def body_with_geometry() -> WorldBody:

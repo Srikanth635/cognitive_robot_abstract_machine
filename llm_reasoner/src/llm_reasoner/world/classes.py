@@ -15,7 +15,16 @@ from krrood.entity_query_language.verbalization.rendering.source_documentation i
     _attribute_docstrings,
 )
 from krrood.patterns.field_metadata import JSONMetadata
-from typing_extensions import Any, Dict, List, Optional, Tuple
+from typing_extensions import (
+    Any,
+    Callable,
+    Dict,
+    FrozenSet,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
 from llm_reasoner.world.description import ClassSummary
 
@@ -82,12 +91,24 @@ def is_individual(value: Any) -> bool:
     return is_dataclass(value) and not isinstance(value, type)
 
 
-def identifier_of(kind: type) -> str:
+def identifier_of(declaration: Union[type, Callable[..., Any]]) -> str:
     """
-    :return: The module and qualified name of a class, which tell it from others of its
-        name.
+    :return: The module and qualified name of a class or function, which tell it from
+        others of its name.
     """
-    return f"{kind.__module__}.{kind.__qualname__}"
+    return f"{declaration.__module__}.{declaration.__qualname__}"
+
+
+def written_type(annotation: Any) -> str:
+    """
+    :return: A type annotation as written: the text of one given as text, the name of a
+        class, and the representation of anything else.
+    """
+    if isinstance(annotation, str):
+        return annotation
+    if isinstance(annotation, type):
+        return annotation.__name__
+    return str(annotation)
 
 
 @dataclass(frozen=True)
@@ -227,24 +248,39 @@ class DocumentedClass:
         """
         :return: The type a field declares, as written.
         """
-        if isinstance(declared.type, str):
-            return declared.type
-        if isinstance(declared.type, type):
-            return declared.type.__name__
-        return str(declared.type)
+        return written_type(declared.type)
+
+    @cached_property
+    def specialised_classes(self) -> Tuple[type, ...]:
+        """
+        The class and the classes it specialises, most specific first, without the
+        foundation every class shares.
+        """
+        foundation = {module.value for module in FoundationModule}
+        return tuple(
+            ancestor
+            for ancestor in self.described.__mro__
+            if ancestor.__module__ not in foundation
+        )
+
+    @cached_property
+    def lineage_names(self) -> FrozenSet[str]:
+        """
+        The names of the class and of every class it specialises, without the foundation
+        every class shares.
+        """
+        return frozenset(ancestor.__name__ for ancestor in self.specialised_classes)
 
     def lineage(self, length: int) -> List[ClassSummary]:
         """
         :return: The class and the classes it specialises, most specific first, without
             the foundation every class shares.
         """
-        foundation = {module.value for module in FoundationModule}
         return [
             ClassSummary(
                 identifier=identifier_of(ancestor),
                 name=ancestor.__name__,
                 summary=DocumentedClass.of(ancestor).summary,
             )
-            for ancestor in self.described.__mro__
-            if ancestor.__module__ not in foundation
+            for ancestor in self.specialised_classes
         ][:length]
