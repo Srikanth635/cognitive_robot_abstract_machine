@@ -33,6 +33,14 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
 - The world-access contract: `world/access.py` (`WorldAccess`, version 1.0), the
   resolver importing nothing else of the world injector, declared answer shapes for
   every tool and one error shape, all checked by tests (`709d0ef8a`).
+- Functions declared with `symbolic_function` are predicates of the world: found in the
+  loaded modules by krrood's wrapper, offered when everything they require is a plain
+  value or an individual the world holds, evaluated through `evaluate_predicate`, and a
+  failing one answered as `PredicateFailed`. In the pouring scene the resolver's world
+  offers `contact`, `is_supported_by`, `is_supporting` and `stable` (which fails, saying
+  it needs a simulation). The robot and camera functions appear once the scene's robot
+  is annotated and their module, `semantic_digital_twin.reasoning.robot_predicates`, is
+  loaded.
 
 ### Resolver
 - Candidates described by walking their fields (`4e534d505`); tests, static situation
@@ -298,6 +306,7 @@ the world does not say what the cup holds, so the material came from the task al
 | 2026-10-12 | Live checks with Sonnet 5.5 may run when needed, without asking per run; their outcome and cost are recorded in §3 |
 | 2026-10-12 | Two graphs: krrood's symbol graph is the universal one (the world, created once); the knowledge component keeps its own local graph, independent of krrood's; the resolver answers a query from both, the world through `WorldAccess` and the knowledge through `KnowledgeAccess`. Knowledge objects stop being krrood `Symbol`s, and the two closed-world inferences krrood made for them (a sub-property's values in its super-property, symmetric properties) move into the knowledge component's own property descriptors. K2 reworded accordingly |
 | 2026-10-12 | Reorganisation first, without new functionality: one `knowledge/` package (`ontologies`, `ontology_translation`, `acceptance`, `storage`, `admission`, `generation`, `hypotheses`) with one public module, moved lowest layer first; stored hypotheses (the cram_viz sample and `~/.cram_viz/hypotheses`, backed up) are migrated with each move that changes a stored module path |
+| 2026-10-13 | Functions declared with `symbolic_function` are predicates of the world, found by the world injector alone (krrood's wrapper recognised among the loaded modules; no change to krrood, SDT or coraplex), offered when each required argument is a plain value or an individual the world holds; a failing one is answered as `PredicateFailed`, at `WorldFunction.call`, the one place the injector catches an error |
 
 ## 5. In progress
 
@@ -357,7 +366,7 @@ approval.
 
 | Item | Why | State |
 |---|---|---|
-| Computed world values: poses, reachability, contact, which gripper holds what | Grounds the arm and geometry choices the model now calls arbitrary | Deferred; options: (a) a registry in krrood's `@symbolic_function`, (b) SDT moves the functions to class form, (c) SDT marks its properties with krrood field metadata, (d) `llm_reasoner` reads zero-argument properties generically. No choice yet |
+| Computed world values: poses, reachability, contact, which gripper holds what | Grounds the arm and geometry choices the model now calls arbitrary | Functions: met for those taking individuals and plain values (contact, support, and the robot and camera ones once cram_viz annotates the robot in the resolver's world and loads their module); not met for those taking a pose, a vector, an array or a list. Properties (poses, bounding boxes): deferred; options (c) SDT marks its properties with krrood field metadata, (d) `llm_reasoner` reads zero-argument properties generically. No choice yet |
 | Linking the knowledge component to the resolver and the world injector | Lets the resolver use action knowledge | The request is built (R1–R6, `architecture.md` §3.6): the resolver obtains the hypothesis before every request to its model. Reading it, as knowledge tools (`architecture.md` §2.3), is next after R7 |
 | Representing knowledge for tools | Several perspectives, organised by action concept, addressable fragments, objectives and consequences first-class | Requirements K1–K4 recorded below; design next |
 | Structured prompts for the knowledge component | Its system, initial and repair prompts were prose built in Python, unlike the resolver's tagged sections | **Done** 2026-10-12 (`architecture.md` §3.2): tagged sections, JSON data and named rules; the system prompt grew from about 80k to 130k characters (the types as indented JSON) |

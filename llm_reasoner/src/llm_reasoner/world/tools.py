@@ -122,8 +122,9 @@ class WorldTool(Tool, ABC):
             question names something it does not have.
 
         .. note:: A question about something the world lacks is the model's mistake to
-            correct, not a failure of the program, so it is the one error turned into
-            an answer.
+            correct, and a function of the world model failing is something the model
+            can ask around, neither being a failure of the program, so these are the
+            errors turned into an answer.
         """
         try:
             answer = self.answer(arguments)

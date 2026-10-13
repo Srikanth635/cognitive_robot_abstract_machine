@@ -7,6 +7,7 @@ model's own predicates say about them.
 from __future__ import annotations
 
 import gc
+import inspect
 from dataclasses import fields
 
 import pytest
@@ -21,9 +22,12 @@ from llm_reasoner.world.classes import DocumentedClass
 from llm_reasoner.world.describer import WalkLimits
 from llm_reasoner.world.exceptions import (
     AmbiguousKind,
+    AmbiguousPredicate,
     ExpiredHandle,
     InapplicableComparison,
     MissingArgument,
+    PredicateFailed,
+    UnknownArgument,
     UnknownField,
     UnknownHandle,
     UnknownKind,
@@ -43,7 +47,10 @@ from llm_reasoner.world.view import WorldView
 
 from . import world_mimics_sharing_a_name
 from .world_mimics import (
+    MARGIN_MEANING,
+    UNSUPPORTED_REASON,
     BodyAnnotation,
+    DetachedPart,
     InertialProperties,
     IsHeavierThan,
     SymbolFillingFieldsLater,
@@ -52,6 +59,11 @@ from .world_mimics import (
     WorldBody,
     body_moved_by_a_readable_joint,
     body_with_geometry,
+    fits_inside,
+    is_attached,
+    is_stable,
+    weighs_more_than,
+    weighs_less_than,
 )
 
 # %% helpers
@@ -400,3 +412,173 @@ class TestPredicates:
                 identifier_of(IsHeavierThan),
                 {"body": IndividualArgument(handle=view.handles.handle_of(body))},
             )
+
+
+# %% functions the world model declares
+
+
+def listed_identifiers(view: WorldView) -> list:
+    """
+    :return: The identifiers of the predicates the view lists.
+    """
+    return [predicate.identifier for predicate in view.predicates()]
+
+
+def handle_argument(view: WorldView, individual) -> IndividualArgument:
+    """
+    :return: The individual passed to a predicate by its handle.
+    """
+    return IndividualArgument(handle=view.handles.handle_of(individual))
+
+
+class TestFunctionPredicates:
+    def test_a_function_is_listed_with_what_it_takes(self, view):
+        bodies = [WorldBody(name="first"), WorldBody(name="second")]
+        (definition,) = [
+            predicate
+            for predicate in view.predicates()
+            if predicate.identifier == identifier_of(weighs_less_than)
+        ]
+        margin = inspect.signature(weighs_less_than).parameters["margin"]
+        assert definition.name == weighs_less_than.__name__
+        assert definition.summary == inspect.getdoc(weighs_less_than).splitlines()[0]
+        assert [argument.name for argument in definition.arguments] == [
+            "body",
+            "other",
+            "margin",
+        ]
+        assert definition.arguments[0].type_name == WorldBody.__name__
+        assert definition.arguments[2].meaning == MARGIN_MEANING
+        assert definition.arguments[2].default == repr(margin.default)
+
+    def test_a_function_imported_by_other_modules_is_listed_once(self, view):
+        bodies = [WorldBody(name="first")]
+        assert listed_identifiers(view).count(identifier_of(weighs_less_than)) == 1
+
+    def test_a_function_is_listed_among_the_predicates_about_a_kind(self, view):
+        bodies = [WorldBody(name="first")]
+        about = {
+            predicate.identifier
+            for predicate in view.predicates(about=identifier_of(WorldBody))
+        }
+        assert identifier_of(weighs_less_than) in about
+
+    def test_a_function_is_listed_only_while_the_world_has_what_it_takes(self, view):
+        gc.collect()
+        assert identifier_of(is_attached) not in listed_identifiers(view)
+        part = DetachedPart()
+        assert identifier_of(is_attached) in listed_identifiers(view)
+
+    def test_a_function_taking_what_no_individual_is_cannot_be_listed(self, view):
+        bodies = [WorldBody(name="first")]
+        assert identifier_of(fits_inside) not in listed_identifiers(view)
+
+    def test_a_function_nobody_declared_symbolic_is_not_listed(self, view):
+        bodies = [WorldBody(name="first")]
+        assert identifier_of(weighs_more_than) not in listed_identifiers(view)
+
+    def test_a_function_is_evaluated_on_individuals(self, view):
+        light = WorldBody(name="light", inertial=InertialProperties(mass=1.0))
+        heavy = WorldBody(name="heavy", inertial=InertialProperties(mass=2.0))
+        result = view.evaluate(
+            identifier_of(weighs_less_than),
+            {
+                "body": handle_argument(view, light),
+                "other": handle_argument(view, heavy),
+            },
+        )
+        assert result == PlainValue(value=True, is_default=False)
+
+    def test_a_function_is_evaluated_with_a_value_it_takes_by_default(self, view):
+        light = WorldBody(name="light", inertial=InertialProperties(mass=1.0))
+        heavy = WorldBody(name="heavy", inertial=InertialProperties(mass=2.0))
+        result = view.evaluate(
+            identifier_of(weighs_less_than),
+            {
+                "body": handle_argument(view, light),
+                "other": handle_argument(view, heavy),
+                "margin": PlainArgument(value=heavy.inertial.mass),
+            },
+        )
+        assert result == PlainValue(value=False, is_default=False)
+
+    def test_a_function_is_evaluated_by_its_plain_name(self, view):
+        part = DetachedPart()
+        result = view.evaluate(
+            is_attached.__name__, {"part": handle_argument(view, part)}
+        )
+        assert result == PlainValue(value=False, is_default=False)
+
+    def test_a_function_missing_an_argument_is_refused(self, view):
+        body = WorldBody(name="first")
+        with pytest.raises(MissingArgument) as refusal:
+            view.evaluate(
+                identifier_of(weighs_less_than), {"body": handle_argument(view, body)}
+            )
+        assert refusal.value.argument == "other"
+
+    def test_a_function_given_an_argument_it_does_not_take_is_refused(self, view):
+        body = WorldBody(name="first")
+        with pytest.raises(UnknownArgument) as refusal:
+            view.evaluate(
+                identifier_of(is_stable),
+                {
+                    "body": handle_argument(view, body),
+                    "box": PlainArgument(value=1.0),
+                },
+            )
+        assert refusal.value.argument == "box"
+
+    def test_a_function_that_fails_is_reported_with_what_went_wrong(self, view):
+        body = WorldBody(name="first")
+        with pytest.raises(PredicateFailed) as failure:
+            view.evaluate(
+                identifier_of(is_stable), {"body": handle_argument(view, body)}
+            )
+        assert failure.value.predicate == identifier_of(is_stable)
+        assert failure.value.error_type == NotImplementedError.__name__
+        assert failure.value.reason == UNSUPPORTED_REASON
+
+    def test_functions_sharing_a_plain_name_are_told_apart_by_their_identifiers(
+        self, view
+    ):
+        bodies = [WorldBody(name="first")]
+        with pytest.raises(AmbiguousPredicate) as ambiguity:
+            view.evaluate(weighs_less_than.__name__, {})
+        assert ambiguity.value.identifiers == sorted(
+            [
+                identifier_of(weighs_less_than),
+                identifier_of(world_mimics_sharing_a_name.weighs_less_than),
+            ]
+        )
+        result = view.evaluate(
+            identifier_of(world_mimics_sharing_a_name.weighs_less_than),
+            {"mass": PlainArgument(value=1.0), "other_mass": PlainArgument(value=2.0)},
+        )
+        assert result == PlainValue(value=True, is_default=False)
+
+
+class TestFunctionSource:
+    def test_only_functions_declared_symbolic_are_found(self):
+        found = {function.identifier for function in SymbolGraphSource().functions()}
+        assert identifier_of(weighs_less_than) in found
+        assert identifier_of(weighs_more_than) not in found
+
+    def test_an_excluded_package_declares_no_functions_of_the_world(self):
+        source = SymbolGraphSource(
+            excluded_packages=(
+                FOUNDATION_PACKAGE,
+                world_mimics_sharing_a_name.__name__,
+            )
+        )
+        found = {function.identifier for function in source.functions()}
+        assert identifier_of(world_mimics_sharing_a_name.weighs_less_than) not in found
+
+    def test_by_default_the_functions_of_the_symbol_graphs_own_package_are_left_out(
+        self,
+    ):
+        found = SymbolGraphSource().functions()
+        assert not any(
+            function.identifier.startswith(f"{FOUNDATION_PACKAGE}.")
+            for function in found
+        )

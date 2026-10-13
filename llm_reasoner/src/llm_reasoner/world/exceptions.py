@@ -14,7 +14,8 @@ from llm_reasoner.exceptions import LLMReasonerError
 
 class WorldQuestionError(LLMReasonerError):
     """
-    A question about the world that names something the world does not have.
+    A question about the world that cannot be answered as asked: it names something the
+    world does not have, or the world model's own code fails answering it.
     """
 
 
@@ -53,6 +54,29 @@ class AmbiguousKind(WorldQuestionError):
     def __post_init__(self):
         super().__init__(
             f"{self.name!r} names several kinds; ask for one of {self.identifiers}"
+        )
+
+
+@dataclass
+class AmbiguousPredicate(WorldQuestionError):
+    """
+    Several predicates or value functions share the given plain name, so only an
+    identifier tells them apart.
+    """
+
+    name: str
+    """
+    The plain name asked for.
+    """
+
+    identifiers: List[str]
+    """
+    The identifiers of the predicates sharing it.
+    """
+
+    def __post_init__(self):
+        super().__init__(
+            f"{self.name!r} names several predicates; ask for one of {self.identifiers}"
         )
 
 
@@ -219,3 +243,30 @@ class MissingArgument(WorldQuestionError):
 
     def __post_init__(self):
         super().__init__(f"{self.predicate} requires the argument {self.argument!r}")
+
+
+@dataclass
+class PredicateFailed(WorldQuestionError):
+    """
+    A function the world model declares failed while computing its answer.
+    """
+
+    predicate: str
+    """
+    The identifier of the function.
+    """
+
+    error_type: str
+    """
+    The name of the error it raised.
+    """
+
+    reason: str
+    """
+    What the error said.
+    """
+
+    def __post_init__(self):
+        super().__init__(
+            f"{self.predicate} failed with {self.error_type}: {self.reason}"
+        )

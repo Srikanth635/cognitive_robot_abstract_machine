@@ -19,10 +19,19 @@ from llm_reasoner.world.naming import HANDLE_SEPARATOR
 from llm_reasoner.world.classes import identifier_of
 from llm_reasoner.world.rendering import IndividualRenderer
 from llm_reasoner.world.access import WorldToolName
+from llm_reasoner.world.exceptions import PredicateFailed
 from llm_reasoner.world.tools import world_tools
 from llm_reasoner.world.view import WorldView
 
-from .world_mimics import VesselAnnotation, WorldBody, body_with_geometry
+from .world_mimics import (
+    DetachedPart,
+    VesselAnnotation,
+    WorldBody,
+    body_with_geometry,
+    is_attached,
+    is_stable,
+    weighs_less_than,
+)
 
 # %% helpers
 
@@ -159,6 +168,32 @@ class TestRunning:
         )
         assert result["value"] is True
 
+    def test_the_functions_a_world_declares_are_listed_as_predicates(
+        self, view, toolbox
+    ):
+        body = body_with_geometry()
+        listed = parsed(
+            toolbox.call(
+                WorldToolName.LIST_PREDICATES, {"about": identifier_of(WorldBody)}
+            )
+        )
+        assert identifier_of(weighs_less_than) in [
+            predicate["identifier"] for predicate in listed
+        ]
+
+    def test_a_function_is_evaluated_on_a_handle(self, view, toolbox):
+        part = DetachedPart()
+        result = parsed(
+            toolbox.call(
+                WorldToolName.EVALUATE_PREDICATE,
+                {
+                    "predicate": is_attached.__name__,
+                    "arguments": {"part": {"handle": view.handles.handle_of(part)}},
+                },
+            )
+        )
+        assert result["value"] is False
+
 
 # %% calls that cannot be answered
 
@@ -185,6 +220,18 @@ class TestUnanswerableCalls:
         outcome = toolbox.call(WorldToolName.DESCRIBE_KIND, {"kind": "NoSuchKind"})
         assert outcome.is_error
         assert "NoSuchKind" in outcome.content
+
+    def test_a_function_that_fails_is_reported_as_an_answer(self, view, toolbox):
+        body = body_with_geometry()
+        outcome = toolbox.call(
+            WorldToolName.EVALUATE_PREDICATE,
+            {
+                "predicate": identifier_of(is_stable),
+                "arguments": {"body": {"handle": view.handles.handle_of(body)}},
+            },
+        )
+        assert outcome.is_error
+        assert json.loads(outcome.content)["error"] == PredicateFailed.__name__
 
     def test_a_comparison_the_values_reached_cannot_take_is_reported(self, toolbox):
         body = body_with_geometry()

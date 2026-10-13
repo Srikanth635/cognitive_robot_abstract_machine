@@ -75,7 +75,9 @@ knowledge component and to any later component.
 **Does not:** change the world, plan, or know any world model by name.
 
 **Input.** The live symbol graph (`sources.py`, `SymbolGraphSource`; every loaded
-`Symbol` class outside krrood is a kind, every live symbol an individual).
+`Symbol` class outside krrood is a kind, every live symbol an individual) and the loaded
+modules, whose functions declared with krrood's `symbolic_function` are the world
+model's functions.
 
 **Output.** Typed answers (dataclasses in `values.py`, `description.py`, `kinds.py`,
 `finding.py`, `holders.py`, `predicates.py`), and the same answers as JSON for a model.
@@ -90,18 +92,33 @@ knowledge component and to any later component.
 | `kinds.py` | Listing, describing and resolving kinds by identifier or unique name |
 | `finding.py`, `paths.py` | Searches as krrood EQL queries with conditions; following field paths |
 | `holders.py` | Which individuals hold an individual, and in which field |
-| `predicates.py` | Listing and evaluating krrood `Predicate` / `SymbolicFunction` classes |
+| `predicates.py` | Listing, resolving and evaluating the predicates a world model declares: krrood `Predicate` / `SymbolicFunction` classes and functions (`DeclaredPredicate`) |
+| `functions.py` | `WorldFunction`: a function declared with `symbolic_function`, what it takes and says, and calling it |
 | `tools.py`, `tool_definitions/` | The eight questions as tools for a model (§3.3) |
 | `encoding.py`, `exceptions.py` | Answers as JSON; `WorldQuestionError` and its kinds |
 
-**Errors.** A question naming something the world lacks raises a `WorldQuestionError`
-(`UnknownKind`, `AmbiguousKind`, `UnknownHandle`, `ExpiredHandle`, `UnknownField`,
-`InapplicableComparison`, `NotAPredicate`, `UnknownArgument`, `MissingArgument`). As a
-tool, it becomes an error answer the model can correct, never a crash.
+**Errors.** A question naming something the world lacks, or a function of the world
+model failing, raises a `WorldQuestionError` (`UnknownKind`, `AmbiguousKind`,
+`UnknownHandle`, `ExpiredHandle`, `UnknownField`, `InapplicableComparison`,
+`NotAPredicate`, `AmbiguousPredicate`, `UnknownArgument`, `MissingArgument`,
+`PredicateFailed`). As a tool, it becomes an error answer the model can correct or ask
+around, never a crash.
 
-**Limits.** It reads dataclass fields and krrood predicate classes. Values a world model
-computes in properties or plain `@symbolic_function`s (poses, reachability, contact) are
-not reachable yet (see `status.md`).
+**Functions of the world model.** krrood keeps no record of the functions declared with
+`symbolic_function`, so the source recognises krrood's wrapper among the members of the
+loaded modules outside the excluded packages, the way it finds kinds among loaded
+classes. A function is a predicate of the world when each argument it must be passed is
+a plain value (`bool`, `int`, `float`, `str`) or an individual of a kind the world holds
+or of a kind those specialise, judged by the type name its annotation writes. Others are
+neither listed nor evaluated: a function taking a pose, an array or a list, one taking a
+camera while the world holds none. They appear as the world gains such individuals. A
+function that raises is reported as `PredicateFailed` with the error and what it said;
+`WorldFunction.call` is the one place the injector catches an error, since it runs the
+world model's code there.
+
+**Limits.** It reads dataclass fields, krrood predicate classes and the functions above.
+Values a world model computes in properties (poses, bounding boxes) are not reachable
+yet, and a function appears only once its module is loaded (see `status.md`).
 
 ### 2.2 Resolver (`resolver/`)
 
@@ -478,7 +495,7 @@ against the output schemas by tests; `output_schema` is not sent to the model.
 | `describe_individual` | `handle`, `depth` | The individual as readable text, holders first |
 | `holders_of` | `handle` | Holders with field and summary |
 | `follow_path` | `handle`, `path` | The value reached, with its form |
-| `list_predicates` | `about` | Predicates and value functions with their arguments |
+| `list_predicates` | `about` | Predicates and value functions (krrood classes and `symbolic_function`s) with their arguments |
 | `evaluate_predicate` | `predicate`, `arguments` | What it says |
 
 Comparisons: `equal`, `not equal`, `less`, `less or equal`, `greater`,
@@ -493,7 +510,8 @@ Values carry a `"form"`: `PlainValue`, `NumericValue`, `WorldStateDependentValue
 **Errors** are JSON following `clients/tool_error_schema.json`:
 `{"error": "<kind>", …fields, "message": "<one sentence>"}` — world errors
 (`UnknownHandle` with the kind whose search gives such handles, `InapplicableComparison`
-with the fields the path may continue to, …) and tool-box errors (`UnknownTool`,
+with the fields the path may continue to, `PredicateFailed` with the error a function of
+the world model raised, …) and tool-box errors (`UnknownTool`,
 `InputBreaksSchema`).
 
 **Why not MCP yet.** The tools are shaped like MCP tools (name, description, input and
