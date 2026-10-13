@@ -281,6 +281,20 @@ with the run's knowledge generation and both trials. Switching scenes now remove
 from krrood's symbol graph (collected, then `remove_dead_instances`), so an open
 `variable(Tool)` never offers another scene's objects.
 
+**Robot predicates offered in the viewer (2026-10-13):** the resolver's world now has
+the scene's robot annotated when a robot class is kept for it (a scene whose robot has
+none, such as the garmi apartment, is resolved as before, without the robot predicates;
+Execute still refuses it), the resolver names `semantic_digital_twin.reasoning.robot_predicates`
+in `WORLD_MODEL_MODULES` so `llm_reasoner` loads it, and the prompt's scene geometry
+leaves the robot and its parts out of `objects` (annotated, they made it fail on bodies
+without a shape, and they are stated by `robot_bases`). Checked on the simple_pouring
+scene with a scripted model through the viewer's resolver, no live call: `list_predicates`
+now offers `robot_holds_body`, `is_body_in_gripper`, `is_gripper_holding_something`,
+`bodies_in_gripper`, `is_body_gripped`, `robot_in_collision` beside `contact`, the support
+and camera functions, and the class predicates (`IsReachableBy`, `GripperIsFree`, …);
+`robot_holds_body` answered `false` for the pitcher, and a call that fails answered as
+`PredicateFailed`. Whether a live model uses them is not yet checked.
+
 **Seen but not yet acted on (R7):** the request resolved every case alike (RIGHT, the default
 tilt of 1.85 rad), whatever the task, since it does not read the hypothesis yet; and
 the world does not say what the cup holds, so the material came from the task alone.
@@ -371,7 +385,7 @@ approval.
 
 | Item | Why | State |
 |---|---|---|
-| Computed world values: poses, reachability, contact, which gripper holds what | Grounds the arm and geometry choices the model now calls arbitrary | Functions: met for those taking individuals and plain values (contact, support, and the robot and camera ones once cram_viz annotates the robot in the resolver's world and names their module); not met for those taking a pose, a vector, an array or a list. Properties (poses, bounding boxes): deferred; options (c) SDT marks its properties with krrood field metadata, (d) `llm_reasoner` reads zero-argument properties generically. No choice yet |
+| Computed world values: poses, reachability, contact, which gripper holds what | Grounds the arm and geometry choices the model now calls arbitrary | Functions: met for those taking individuals and plain values (contact, support, and the robot and camera ones, which the viewer's resolver now has: it annotates the robot and names their module); not met for those taking a pose, a vector, an array or a list. Properties (poses, bounding boxes): deferred; options (c) SDT marks its properties with krrood field metadata, (d) `llm_reasoner` reads zero-argument properties generically. No choice yet |
 | Linking the knowledge component to the resolver and the world injector | Lets the resolver use action knowledge | The request is built (R1–R6, `architecture.md` §3.6): the resolver obtains the hypothesis before every request to its model. Reading it, as knowledge tools (`architecture.md` §2.3), is next after R7 |
 | Representing knowledge for tools | Several perspectives, organised by action concept, addressable fragments, objectives and consequences first-class | Requirements K1–K4 recorded below; design next |
 | Structured prompts for the knowledge component | Its system, initial and repair prompts were prose built in Python, unlike the resolver's tagged sections | **Done** 2026-10-12 (`architecture.md` §3.2): tagged sections, JSON data and named rules; the system prompt grew from about 80k to 130k characters (the types as indented JSON) |
@@ -380,7 +394,7 @@ approval.
 | An MCP server over the world-access contract | For consumers outside the resolver's process | When a second consumer needs it |
 | Live tests in the repository | The live suite lived in scripts outside the repository | **Done** 2026-10-12 (`architecture.md` §5): `experiments/llm_reasoner_kitchen` with its tests; the live tests run only when opted in, five cases have scripted twins run with the experiments suite. `llm_reasoner`'s own tests are not yet in CI (the user's decision of 2026-10-12) |
 | Making the model aware of the predicates the world offers and what they do | Nothing in the resolver's prompt names a predicate; the model finds one only by calling `list_predicates` from its tool description, so it may never use `contact` or the support checks | Open, long-term; options: a prompt rule telling it to look for a predicate when it checks a relation, or stating the predicates offered for the kinds a request involves, as the candidates of a slot are |
-| Loading the modules that declare a world model's functions (such as `semantic_digital_twin.reasoning.robot_predicates`) | The function scan reads only loaded modules, so a function in a module nobody imported is never offered | **Done** 2026-10-13: `SymbolGraphSource(world_model_modules=...)`. A caller still has to pass the names and, for the robot ones, annotate the robot in the world |
+| Loading the modules that declare a world model's functions (such as `semantic_digital_twin.reasoning.robot_predicates`) | The function scan reads only loaded modules, so a function in a module nobody imported is never offered | **Done** 2026-10-13: `SymbolGraphSource(world_model_modules=...)`, named by cram_viz's resolver (§3) |
 | Fewer wasted calls (opening `list_kinds`, listing many bodies, `name` before `name.name`) | Cost only; results are correct | Open |
 | An explicit "either arm" answer | Arbitrary arm choices are stated only in `why` | Open; would change the action interface |
 | Research direction: language-model commonsense checked against the ontology for designator resolution | Long-term | Open |

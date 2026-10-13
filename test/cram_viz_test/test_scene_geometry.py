@@ -11,6 +11,7 @@ from pathlib import Path
 
 import numpy as np
 from llm_reasoner.resolver.prompt_format import PromptSection
+from semantic_digital_twin.robots.robot_parts import AbstractRobot, AbstractRobotPart
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
 
 from cram_viz.resolution.scene_geometry import (
@@ -97,6 +98,17 @@ class TestObjects:
             [*(0.5 * (lowest[:2] + highest[:2])), highest[2]],
             atol=TOLERANCE,
         )
+
+    def test_the_robot_and_its_parts_are_not_objects(self, pouring_kitchen):
+        robot_bodies = {
+            annotation.root.name.name
+            for kind in (AbstractRobot, AbstractRobotPart)
+            for annotation in pouring_kitchen.get_semantic_annotations_by_type(kind)
+        }
+        geometry = json.loads(SceneGeometry(world=pouring_kitchen).as_json_text())
+        described = {entry[GeometryKey.NAME] for entry in geometry[GeometryKey.OBJECTS]}
+        assert robot_bodies
+        assert not described & robot_bodies
 
 
 # %% the robot

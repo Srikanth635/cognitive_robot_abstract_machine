@@ -7,6 +7,7 @@ reports, replayed from recorded answers.
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -29,6 +30,7 @@ from cram_viz.resolution.designators import (
     QuerySlots,
     SceneNamespace,
 )
+from cram_viz.resolution.resolver import WORLD_MODEL_MODULES
 from cram_viz.resolution.runs import (
     ResolutionRuns,
     RunDirectory,
@@ -250,6 +252,19 @@ class TestResolution:
         one_line = run.resolution.query_on_one_line
         assert "\n" not in one_line
         assert one_line.split() == run.resolution.query.split()
+
+    def test_the_resolvers_world_view_loads_the_modules_of_the_world_model(
+        self, tmp_path, monkeypatch
+    ):
+        resolver = resolver_replaying(
+            PouringDesignator.OBJECTS_GIVEN,
+            HypothesisStore(directory=tmp_path / "store"),
+            tmp_path / "runs",
+        )
+        for name in WORLD_MODEL_MODULES:
+            monkeypatch.delitem(sys.modules, name, raising=False)
+        resolver.world_view()
+        assert all(name in sys.modules for name in WORLD_MODEL_MODULES)
 
     def test_a_query_the_scene_cannot_resolve_is_refused(
         self, pouring_bundle, tmp_path

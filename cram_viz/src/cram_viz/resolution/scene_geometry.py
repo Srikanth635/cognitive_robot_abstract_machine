@@ -12,6 +12,7 @@ from enum import StrEnum
 
 from krrood.entity_query_language.query.match import Match
 from llm_reasoner.resolver.context import PromptContextProvider
+from semantic_digital_twin.robots.robot_parts import AbstractRobot, AbstractRobotPart
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connections import OmniDrive
@@ -21,6 +22,12 @@ from typing_extensions import Any, Dict, List, Optional
 COORDINATE_DIGITS = 3
 """
 The decimals a coordinate is stated with: millimetres.
+"""
+
+ROBOT_KINDS = (AbstractRobot, AbstractRobotPart)
+"""
+The annotations of a robot and of its parts, which are not objects of the scene: the
+robot is stated by where its base stands.
 """
 
 GEOMETRY_HEADING = (
@@ -84,6 +91,7 @@ class SceneGeometry(PromptContextProvider):
                     for annotation in self.world.get_semantic_annotations_by_type(
                         HasRootBody
                     )
+                    if not isinstance(annotation, ROBOT_KINDS)
                 ],
                 GeometryKey.ROBOT_BASES: [
                     self.base_geometry(connection.child)

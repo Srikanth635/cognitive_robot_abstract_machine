@@ -9,13 +9,16 @@ from __future__ import annotations
 import json
 import shutil
 import weakref
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 import pytest
 from krrood.symbol_graph.symbol_graph import SymbolGraph
 from semantic_digital_twin.robots.pr2 import PR2
+from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
 from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
+from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connections import OmniDrive
 from semantic_digital_twin.semantic_annotations.semantic_annotations import (
     Bowl,
@@ -58,6 +61,32 @@ def recorded_start(bundle: Path) -> list:
     scene = json.loads((bundle / "scene.json").read_text())
     trajectory = json.loads((bundle / scene[SceneKey.TRAJECTORY]).read_text())
     return trajectory[TrajectoryKey.BASE][0]
+
+
+@dataclass(eq=False)
+class BaseAnnotatingRobot(HasRootBody):
+    """
+    A robot class kept for a scene's robot: it annotates the robot's base.
+    """
+
+    @classmethod
+    def from_world(cls, world: World) -> BaseAnnotatingRobot:
+        """
+        :return: The annotation of the world's robot base.
+        """
+        annotation = cls(root=world.get_body_by_name("base_link"))
+        with world.modify_world():
+            world.add_semantic_annotations([annotation])
+        return annotation
+
+
+def builder_keeping_the_robot() -> SceneWorldBuilder:
+    """
+    :return: A builder that has a robot class kept for the pouring scene's robot.
+    """
+    return SceneWorldBuilder(
+        robot_annotations=AnnotationClasses(by_name={"robot": BaseAnnotatingRobot})
+    )
 
 
 def without_surroundings(bundle: Path) -> Path:
@@ -118,6 +147,24 @@ class TestRobotAnnotation:
         with pytest.raises(UnknownRobot):
             builder.annotate_robot(world, pouring_bundle)
 
+    def test_a_robot_with_a_mapping_is_annotated_when_its_scene_is_resolved(
+        self, pouring_bundle
+    ):
+        builder = builder_keeping_the_robot()
+        world = builder.build(pouring_bundle)
+        annotation = builder.annotate_known_robot(world, pouring_bundle)
+        assert isinstance(annotation, BaseAnnotatingRobot)
+        assert annotation in world.semantic_annotations
+
+    def test_a_robot_without_a_mapping_is_left_unannotated_when_its_scene_is_resolved(
+        self, pouring_bundle
+    ):
+        builder = SceneWorldBuilder()
+        world = builder.build(pouring_bundle)
+        annotated = list(world.semantic_annotations)
+        assert builder.annotate_known_robot(world, pouring_bundle) is None
+        assert list(world.semantic_annotations) == annotated
+
 
 class TestRobotInItsSurroundings:
     def test_the_robot_stands_where_the_recording_starts(self, pouring_bundle):
@@ -172,6 +219,30 @@ class TestSceneWorlds:
             for annotation in second.semantic_annotations
             if isinstance(annotation, PouringCup)
         ]
+
+    def test_the_initial_world_has_its_robot_annotated_when_a_class_is_kept_for_it(
+        self, pouring_bundle
+    ):
+        worlds = SceneWorlds(builder=builder_keeping_the_robot())
+        world = worlds.initial_world_for("pouring", pouring_bundle)
+        assert any(
+            isinstance(annotation, BaseAnnotatingRobot)
+            for annotation in world.semantic_annotations
+        )
+
+    def test_the_world_kept_has_its_robot_annotated_when_a_class_is_kept_for_it(
+        self, pouring_bundle
+    ):
+        worlds = SceneWorlds(builder=builder_keeping_the_robot())
+        world = worlds.world_for("pouring", pouring_bundle)
+        assert any(
+            isinstance(annotation, BaseAnnotatingRobot)
+            for annotation in world.semantic_annotations
+        )
+
+    def test_a_scene_whose_robot_has_no_class_kept_is_still_built(self, pouring_bundle):
+        world = SceneWorlds().initial_world_for("pouring", pouring_bundle)
+        assert world.get_body_by_name("base_link") is not None
 
     def test_a_replaced_world_leaves_none_of_its_objects_in_the_symbol_graph(
         self, pouring_bundle, tmp_path
