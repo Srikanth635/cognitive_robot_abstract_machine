@@ -22,6 +22,7 @@ from coraplex.robot_plans.actions.core.navigation import NavigateAction
 from coraplex.robot_plans.actions.core.pick_up import PickUpAction
 from coraplex.robot_plans.actions.core.robot_body import MoveTorsoAction, ParkArmsAction
 from coraplex.view_manager import ViewManager
+from llm_reasoner.resolver.reflection import union_alternatives
 from semantic_digital_twin.datastructures.definitions import TorsoState
 from semantic_digital_twin.robots.robot_parts import AbstractRobot
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
@@ -186,9 +187,15 @@ class PouringExecution:
         :param kind: The type the slot declares.
         :param serialized: The slot's value as the run keeps it.
         :return: The value: a body by its name, an annotated object by its body's name,
-            an enumeration member by its name, any other value as it is.
+            an enumeration member by its name, nothing for an optional slot left empty,
+            any other value as it is.
         :raises NoObjectInWorld: When the world holds no such object.
         """
+        if serialized is None:
+            return None
+        alternatives = union_alternatives(kind)
+        if alternatives is not None and len(alternatives) == 1:
+            return self.value_in_world(alternatives[0], serialized)
         if not isinstance(kind, type):
             return serialized
         if issubclass(kind, Body):

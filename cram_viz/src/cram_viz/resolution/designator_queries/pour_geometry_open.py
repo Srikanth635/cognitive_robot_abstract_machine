@@ -1,0 +1,10 @@
+the(PouringAction)(
+    source_container=pouring_cup,
+    target_container=bowl.root,
+    arm=...,
+    tilt_angle=...,
+    pour_side=...,
+    pour_side_offset=...,
+    pour_approach_offset=...,
+    pour_height=...,
+)

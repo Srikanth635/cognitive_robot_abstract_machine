@@ -232,7 +232,11 @@ bridge without a failed step, the pitcher held and tilted 106°. Measured as the
 recording demo measures it, though, the pitcher's mouth ends 0.188 m from the bowl's rim
 centre (rim radius 0.070 m, mouth 0.087 m above the rim): with its default pour
 geometry (`pour_side_offset`, `pour_approach_offset`, `pour_height`), coraplex's
-`PouringAction` parks the pitcher beside the bowl rather than over it. Switching scenes now removes the previous scene's world
+`PouringAction` parks the pitcher beside the bowl rather than over it. A third
+predefined designator, `pour_geometry_open`, gives the cup and the bowl and leaves the
+arm, the tilt and the pour geometry (`pour_side`, `pour_side_offset`,
+`pour_approach_offset`, `pour_height`) to the resolver, to test whether the resolver's
+choice puts the mouth over the bowl. Switching scenes now removes the previous scene's world
 from krrood's symbol graph (collected, then `remove_dead_instances`), so an open
 `variable(Tool)` never offers another scene's objects.
 
