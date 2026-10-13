@@ -111,6 +111,13 @@ beneath their labels; the Designator tab shows the resolved designator. Resolvin
 an Anthropic API key (read from `.env` as for generation) and costs about ten cents a
 click, plus a few minutes and tens of cents for the knowledge each run generates.
 
+Before a pouring resolution is accepted, it is tried in the simulation
+(`resolution/trial.py`): the pour is performed from the scene's initial world in a
+process of its own and measured by where the pitcher's mouth ends against the bowl's
+opening, as seen from the robot. A pour that misses goes back to the resolver with that
+outcome as structured data, and the resolver answers again, up to three trials, the last
+accepted whatever it brings about; the answer panel lists every pour tried.
+
 **Execute** performs the last resolution in the simulation (`resolution/execution.py`):
 in the world of the run's scene, built anew, with its robot annotated as the class
 `resolution/robot_annotations.json` keeps for it, the robot parks its arms, lowers its
