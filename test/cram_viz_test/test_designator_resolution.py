@@ -137,6 +137,23 @@ class TestQuerySlots:
             "tilt_angle",
         ]
 
+    def test_the_pour_geometry_designator_leaves_the_geometry_to_the_resolver(
+        self, pouring_bundle
+    ):
+        query = DesignatorQuery.shipped(PouringDesignator.POUR_GEOMETRY_OPEN).query_in(
+            names_in(pouring_bundle)
+        )
+        slots = QuerySlots.of(query)
+        assert slots.given == ["source_container", "target_container"]
+        assert [name for name in slots.names if name not in slots.given] == [
+            "arm",
+            "tilt_angle",
+            "pour_side",
+            "pour_side_offset",
+            "pour_approach_offset",
+            "pour_height",
+        ]
+
     def test_only_a_value_the_query_states_is_given(self, pouring_bundle):
         query = DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN).query_in(
             names_in(pouring_bundle)

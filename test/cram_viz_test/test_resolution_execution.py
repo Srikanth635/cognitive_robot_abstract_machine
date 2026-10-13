@@ -7,6 +7,7 @@ plan performed from the robot's start in the kitchen the simple_pouring scene re
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import coraplex
@@ -28,6 +29,7 @@ from cram_viz.resolution.execution import (
     PouringExecution,
     standing_pose,
 )
+from cram_viz.resolution.resolver import ResolvedSlot
 from cram_viz.resolution.scene_world import SceneWorldBuilder
 
 from .resolutions import objects_given
@@ -102,6 +104,33 @@ class TestAction:
         )
         assert action.arm is Arms[values["arm"]]
         assert action.tilt_angle == values["tilt_angle"]
+
+    @pytest.mark.parametrize("pour_side", [Arms.LEFT.name, None])
+    def test_an_optional_slot_holds_its_member_or_nothing(
+        self, pouring_bundle, pour_side
+    ):
+        world = SceneWorldBuilder().build(pouring_bundle)
+        resolution = objects_given()
+        (resolved,) = resolution.actions
+        with_side = replace(
+            resolution,
+            actions=[
+                replace(
+                    resolved,
+                    slots=[
+                        *resolved.slots,
+                        ResolvedSlot(
+                            "pour_side",
+                            str(pour_side),
+                            given=False,
+                            serialized=pour_side,
+                        ),
+                    ],
+                )
+            ],
+        )
+        action = PouringExecution(world=world, resolution=with_side).action()
+        assert action.pour_side is (None if pour_side is None else Arms[pour_side])
 
 
 # %% where the robot stands

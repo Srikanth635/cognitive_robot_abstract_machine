@@ -71,6 +71,12 @@ class PouringDesignator(StrEnum):
     Every slot left open, the source and the target included.
     """
 
+    POUR_GEOMETRY_OPEN = "pour_geometry_open"
+    """
+    The pouring cup and the bowl given; the arm, the tilt, and the side, offsets and
+    height of the pour left open.
+    """
+
 
 @dataclass
 class NotAMatchQuery(TypeError):
