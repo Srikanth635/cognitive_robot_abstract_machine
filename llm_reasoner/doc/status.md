@@ -236,7 +236,11 @@ geometry (`pour_side_offset`, `pour_approach_offset`, `pour_height`), coraplex's
 predefined designator, `pour_geometry_open`, gives the cup and the bowl and leaves the
 arm, the tilt and the pour geometry (`pour_side`, `pour_side_offset`,
 `pour_approach_offset`, `pour_height`) to the resolver, to test whether the resolver's
-choice puts the mouth over the bowl. Switching scenes now removes the previous scene's world
+choice puts the mouth over the bowl. Live, it kept every default (offsets 0, height
+0.13 m, the side of the arm, "nothing in the request calls for changing them"), so the
+executed pour ended exactly as before, 0.188 m off: nothing the resolver reads says
+where the pitcher's mouth ends for a given geometry ($0.100, LIQUID, its own hypothesis
+generated). Switching scenes now removes the previous scene's world
 from krrood's symbol graph (collected, then `remove_dead_instances`), so an open
 `variable(Tool)` never offers another scene's objects.
 
