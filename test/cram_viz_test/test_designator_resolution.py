@@ -35,6 +35,7 @@ from cram_viz.resolution.runs import (
     RunFile,
     UnknownRun,
 )
+from cram_viz.resolution.scene_geometry import SceneGeometry
 from cram_viz.resolution.scene_world import SceneKey, SceneWorldBuilder
 
 from .resolutions import resolver_replaying
@@ -211,6 +212,24 @@ class TestResolution:
         )
         assert [slot.name for slot in action.slots if slot.given] == (
             QuerySlots.of(query).given
+        )
+
+    def test_the_resolver_reads_the_scene_geometry(self, pouring_bundle, tmp_path):
+        resolver = resolver_replaying(
+            PouringDesignator.OBJECTS_GIVEN,
+            HypothesisStore(directory=tmp_path / "store"),
+            tmp_path / "runs",
+        )
+        resolver.resolve(
+            DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
+            "pouring",
+            pouring_bundle,
+        )
+        geometry = SceneGeometry(
+            world=SceneWorldBuilder().build(pouring_bundle)
+        ).context_for(None)
+        assert [geometry in user for _, user in resolver.client.calls] == [True] * len(
+            resolver.client.calls
         )
 
     def test_a_resolution_states_the_query_it_resolved(self, pouring_bundle, tmp_path):
