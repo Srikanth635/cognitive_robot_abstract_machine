@@ -382,10 +382,31 @@ tool interface the world injector implements and the clients run.
 |---|---|
 | `LanguageModelClient` | `complete(system, user) -> str` |
 | `ToolUsingClient` | `complete_with_tools(system, user, tools) -> ToolConversation` (answer, every `ToolCall`, `TokenUsage`) |
-| `AnthropicClient` | Both; a written-out tool loop (`max_tool_turns = 10`), prompt caching of the system prompt and of the growing conversation |
+| `AnthropicClient` | Both, and `UsageReporting`; a written-out tool loop (`max_tool_turns = 10`), prompt caching of the system prompt and of the growing conversation |
+| `UsageReporting` | `latest_usage`: the tokens of the latest plain or structured completion made in the calling thread, which a completion returning only text cannot carry |
 | `OpenAIClient` | `complete` only |
 | `ScriptedClient` | Replays recorded answers and tool requests, for tests |
 | `Tool`, `ToolDefinition`, `ToolDescription`, `ToolBox`, `ToolOutcome` | The tool interface (§3.3) |
+
+### 2.5 Observation (`observation/`)
+
+**Role.** Let a viewer follow the system at work, without the components knowing one is
+there: who asked what of whom, and what came back, as events written as plain JSON.
+
+**Does not:** change what a component does. Nothing here is imported by the components;
+a wrapper reports their calls from outside, and the default is to report nowhere.
+
+| Module | Responsibility |
+|---|---|
+| `events.py` | `Event` and its kinds: `ModelAsked`, `ModelAnswered`, `ModelFailed`, `ToolCalled`, `ToolReturned`, `ToolFailed`; `Component`, `CompletionStyle`. A call's two events share an identifier. |
+| `sinks.py` | `EventSink`: `NullSink`, `MemorySink`, and `JsonLinesSink`, which appends one line per event to a log with a single write so writers in several processes share it |
+| `observed.py` | `ObservedClient` and `ObservedToolClient` wrap a `LanguageModelClient` and report each completion with its prompts, schema, answer, duration, tokens and cost; `ObservedTool` reports each call a model makes of a tool. A wrapper has the identity and abilities of what it wraps, so a client that cannot let a model call tools still cannot. |
+
+An event holds the prompts and answers in full and never a credential: the wrappers see
+only what a client is given and returns. A tool the tool box refuses before running it
+(an unknown tool, input breaking its schema) is not reported yet.
+
+The viewer that reads these logs is planned (`status.md`).
 
 ## 3. How the components communicate
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -242,6 +243,86 @@ class TestAnthropicCompletionContract:
         )
 
         assert harness.client.complete("system", "user") == "first second"
+
+
+# %% Usage of a completion
+
+
+USED = UsageMimic(
+    input_tokens=11,
+    output_tokens=7,
+    cache_creation_input_tokens=3,
+    cache_read_input_tokens=5,
+)
+"""
+The tokens a response says it consumed.
+"""
+
+USED_AS_REPORTED = TokenUsage(
+    input_tokens=USED.input_tokens,
+    output_tokens=USED.output_tokens,
+    cache_creation_input_tokens=USED.cache_creation_input_tokens,
+    cache_read_input_tokens=USED.cache_read_input_tokens,
+)
+"""
+The same tokens as the client reports them.
+"""
+
+
+class TestAnthropicUsageReporting:
+    """A completion says what it used, so what it cost can be told."""
+
+    def test_no_tokens_are_reported_before_a_completion(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        harness = build_client_harness(
+            monkeypatch, AnthropicResponseMimic([TextBlockMimic("answer")])
+        )
+
+        assert harness.client.latest_usage == TokenUsage()
+
+    def test_a_plain_completion_reports_the_tokens_it_used(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        harness = build_client_harness(
+            monkeypatch, AnthropicResponseMimic([TextBlockMimic("answer")], usage=USED)
+        )
+
+        harness.client.complete("system", "user")
+
+        assert harness.client.latest_usage == USED_AS_REPORTED
+
+    def test_a_structured_completion_reports_the_tokens_it_used(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        harness = build_client_harness(
+            monkeypatch,
+            AnthropicResponseMimic(
+                [ToolUseBlockMimic(name="emit_hypothesis", input={})], usage=USED
+            ),
+        )
+
+        harness.client.complete_structured("system", "user", {"type": "object"})
+
+        assert harness.client.latest_usage == USED_AS_REPORTED
+
+    def test_a_completion_in_another_thread_does_not_change_what_this_thread_reads(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        harness = build_client_harness(
+            monkeypatch, AnthropicResponseMimic([TextBlockMimic("answer")], usage=USED)
+        )
+        harness.client.complete("system", "user")
+        harness.service.messages.response = AnthropicResponseMimic(
+            [TextBlockMimic("other")], usage=UsageMimic(input_tokens=1, output_tokens=1)
+        )
+        worker = threading.Thread(
+            target=harness.client.complete, args=("system", "user")
+        )
+        worker.start()
+        worker.join()
+
+        assert harness.client.latest_usage == USED_AS_REPORTED
 
 
 # %% Structured completion contract
