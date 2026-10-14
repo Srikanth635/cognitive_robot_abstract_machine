@@ -18,10 +18,12 @@ from pathlib import Path
 from typing_extensions import List, Optional, TYPE_CHECKING
 
 from cram_viz import configure_console_logging
+from cram_viz.events import reporting_execution
 from cram_viz.live import hooks
 from cram_viz.live.bridge import BRIDGE
 from cram_viz.live.http import DEFAULT_PORT, serve
 from cram_viz.live.launcher import LiveArgument
+from cram_viz.live.steps import PlanStepReporter, following_plan
 from cram_viz.resolution.execution import PouringExecution
 from cram_viz.resolution.runs import RunDirectory
 
@@ -45,6 +47,7 @@ def start(
     """
     hooks.install_mesh_hook()  # before the demo parses its objects
     hooks.install_plan_hooks()
+    hooks.install_root_node_hook()
     if world is not None:
         BRIDGE.world = world
         BRIDGE._bind()
@@ -136,7 +139,13 @@ class ResolvedRun(LiveTarget):
         Perform the run's resolved action in the simulation.
         """
         logger.info("performing run: %s", self.directory)
-        PouringExecution.of_run(RunDirectory(directory=self.directory)).perform()
+        run = RunDirectory(directory=self.directory)
+        sink = run.events
+        reporter = PlanStepReporter(sink=sink, run=run.name)
+        with reporting_execution(sink, run.name), following_plan(
+            BRIDGE, reporter.observe
+        ):
+            PouringExecution.of_run(run).perform()
 
 
 def main() -> None:

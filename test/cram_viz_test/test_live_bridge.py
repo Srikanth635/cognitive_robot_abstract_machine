@@ -13,9 +13,11 @@ import types
 
 import pytest
 from coraplex.plans.executables import GiskardExecutable
+from coraplex.language import SequentialNode
 from coraplex.plans.plan import Plan
+from coraplex.plans.plan_node import PlanNode
 from cram_viz.live import hooks
-from cram_viz.live.bridge import BRIDGE, Bridge
+from cram_viz.live.bridge import BRIDGE, STATUS_ALIASES, Bridge
 
 
 class _Status:
@@ -124,6 +126,56 @@ class TestPlanSnapshot:
         assert bridge.get_plan()["sig"] == sig1
 
 
+class TestPlanStatusNames:
+    """
+    A plan node is published under the names the viewer knows, whatever its status is
+    called in coraplex.
+    """
+
+    NOT_STARTED = "NOT_STARTED"
+    PAUSED = "PAUSED"
+
+    @staticmethod
+    def plan_of(status: str):
+        """
+        :return: A bridge bound to a root, an action and a motion, the action and the
+            motion in the given status, with the motion and the action.
+        """
+        bridge = Bridge()
+        motion = make_node("MotionNode", status=status)
+        action = make_node("ActionNode", status=status, children=[motion])
+        root = make_node("SequentialNode", status="SUCCEEDED", children=[action])
+        bridge._plan = types.SimpleNamespace(root=root)
+        return bridge, motion
+
+    def test_a_node_not_started_is_published_as_the_viewer_names_it(self):
+        bridge, _ = self.plan_of(self.NOT_STARTED)
+        bridge.snapshot_plan()
+        assert (
+            by_kind(bridge)["ActionNode"]["status"] == STATUS_ALIASES[self.NOT_STARTED]
+        )
+
+    def test_a_paused_node_is_published_as_the_viewer_names_it(self):
+        bridge, _ = self.plan_of(self.PAUSED)
+        bridge.snapshot_plan()
+        assert by_kind(bridge)["ActionNode"]["status"] == STATUS_ALIASES[self.PAUSED]
+
+    def test_a_running_task_bubbles_up_through_nodes_not_started(self):
+        bridge, motion = self.plan_of(self.NOT_STARTED)
+        bridge._motion_tasks[id(motion)] = _Task(1)  # RUNNING
+        bridge.snapshot_plan()
+        nodes = by_kind(bridge)
+        assert nodes["MotionNode"]["status"] == "RUNNING"
+        assert nodes["MotionNode"]["derived"] is True
+        assert nodes["ActionNode"]["status"] == "RUNNING"
+
+    def test_a_finished_task_makes_its_node_succeeded_though_it_was_not_started(self):
+        bridge, motion = self.plan_of(self.NOT_STARTED)
+        bridge._frozen[id(motion)] = "SUCCEEDED"
+        bridge.snapshot_plan()
+        assert by_kind(bridge)["ActionNode"]["status"] == "SUCCEEDED"
+
+
 class TestFreezeSemantics:
     def test_freeze_pins_status_and_releases_tasks(self, plan_bridge):
         bridge, root, action, condition, motion = plan_bridge
@@ -165,6 +217,68 @@ class TestPlanHookSnapshots:
 
         assert plan.perform() == "completed"
         assert snapshots == ["snapshot", "snapshot"]
+
+
+class TestRootNodeHook:
+    """
+    A plan performed through its root node, as a resolution run's is, reaches the bridge
+    all the same.
+    """
+
+    @staticmethod
+    def root_of_a_plan(monkeypatch: pytest.MonkeyPatch):
+        """
+        :return: A root node that performs by returning, with the plan it belongs to,
+            the bridge's snapshots of the plan noted in the list returned beside them.
+        """
+        snapshots: list = []
+        root = object.__new__(SequentialNode)
+        plan = types.SimpleNamespace(root=root)
+        root.plan = plan
+        monkeypatch.setattr(PlanNode, "perform", lambda self: "performed")
+        monkeypatch.setattr(BRIDGE, "_plan", None)
+        monkeypatch.setattr(
+            BRIDGE, "snapshot_plan", lambda: snapshots.append(BRIDGE._plan)
+        )
+        hooks.install_root_node_hook()
+        return root, plan, snapshots
+
+    def test_the_plan_of_a_root_node_performed_is_published(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        root, plan, snapshots = self.root_of_a_plan(monkeypatch)
+
+        assert root.perform() == "performed"
+
+        assert BRIDGE._plan is plan
+        assert snapshots == [plan, plan]
+
+    def test_a_node_below_the_root_does_not_take_the_place_of_its_plan(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        root, plan, snapshots = self.root_of_a_plan(monkeypatch)
+        child = object.__new__(SequentialNode)
+        child.plan = plan
+
+        assert child.perform() == "performed"
+
+        assert BRIDGE._plan is None
+        assert snapshots == []
+
+    def test_a_root_node_that_fails_publishes_the_plan_as_it_ended(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        root, plan, snapshots = self.root_of_a_plan(monkeypatch)
+
+        def failing(self):
+            raise RuntimeError("the motion failed")
+
+        monkeypatch.setattr(PlanNode, "perform", failing)
+        hooks.install_root_node_hook()
+        with pytest.raises(RuntimeError, match="motion failed"):
+            root.perform()
+
+        assert snapshots[-1] is plan
 
 
 # ---- statechart -------------------------------------------------------------

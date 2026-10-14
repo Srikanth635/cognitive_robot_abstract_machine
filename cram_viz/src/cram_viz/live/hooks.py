@@ -16,6 +16,7 @@ from typing import Any
 
 from coraplex.plans.executables import GiskardExecutable
 from coraplex.plans.plan import Plan
+from coraplex.plans.plan_node import PlanNode
 from giskardpy.executor import Executor
 from semantic_digital_twin.adapters.mesh import MeshParser
 from semantic_digital_twin.world import World
@@ -102,6 +103,34 @@ def install_plan_hooks() -> None:
         return result
 
     GiskardExecutable.execute = execute
+
+
+def install_root_node_hook() -> None:
+    """
+    Follow a coraplex plan that is performed through its root node, as a resolution
+    run's is, which never calls :meth:`Plan.perform`.
+
+    The hook fires on the thread that runs the plan, like those of
+    :func:`install_plan_hooks`, and publishes the plan when its root starts performing
+    and as it ended, however it ended.
+    """
+    original_perform = PlanNode.perform
+
+    def perform(self, *args: Any, **kwargs: Any) -> Any:
+        """
+        Capture the plan when its root starts performing, and publish it when it ends.
+        """
+        plan = self.plan
+        if plan is None or plan.root is not self:
+            return original_perform(self, *args, **kwargs)
+        BRIDGE._plan = plan
+        BRIDGE.snapshot_plan()
+        try:
+            return original_perform(self, *args, **kwargs)
+        finally:
+            BRIDGE.snapshot_plan()
+
+    PlanNode.perform = perform
 
 
 def install_mesh_hook() -> None:

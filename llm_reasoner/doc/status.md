@@ -89,6 +89,16 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   model, the world and knowledge calls, the attempts, the hypothesis generated, and each
   pour tried in the simulation (`SimulatedPouring.observer`). A replayed resolution writes
   about 36 events, 210 KB, the prompts being most of it. Step V3, the log (first part).
+- Execute logs too: that the run started to be performed and how it ended, and each step
+  of the plan when its status changes (`StepChanged`, from the plan snapshots the bridge
+  takes, `PlanStepReporter`). Checked on a real Execute of a stored run (12 s): park arms
+  +2.0 s, torso +4.3 s, navigate +4.3 s, pick up +4.6 s, pour +7.8 s, ended +12.3 s. It
+  needed two corrections to the bridge, which also give the Plan tab the plan of an
+  executed run: a plan performed through its root node, as `PouringExecution` does, never
+  reached the bridge (`install_root_node_hook`), and coraplex's `NOT_STARTED` and `PAUSED`
+  were not the `CREATED` and `PAUSE` the bridge derives progress from (`STATUS_ALIASES`),
+  so no node ever showed progress. An action still reads `RUNNING` until the plan ends,
+  its conditions not being evaluated in these runs. Step V3, the log (second part).
 
 ### Knowledge component
 - The predictive-manipulation ontology (`core`, `object-dynamics`, `prehension`,

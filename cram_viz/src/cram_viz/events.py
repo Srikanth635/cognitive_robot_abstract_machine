@@ -8,13 +8,42 @@ They are written to the run's log (see :mod:`llm_reasoner.observation`).
 
 from __future__ import annotations
 
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
 from time import perf_counter
 
 from llm_reasoner.observation.events import Event
 from llm_reasoner.observation.sinks import EventSink
-from typing_extensions import Any, Iterator, Mapping
+from typing_extensions import Any, Callable, Iterator, Mapping
+
+# %% reporting what begins and ends
+
+
+@contextmanager
+def reported(
+    sink: EventSink,
+    started: Event,
+    finished: Callable[[float], Event],
+    failed: Callable[[Exception, float], Event],
+) -> Iterator[None]:
+    """
+    Report something as started, and as finished or, if it raises, as failed, which then
+    goes on.
+
+    :param sink: Where it is reported.
+    :param started: The event saying it began.
+    :param finished: The event saying it ended, given how long it took.
+    :param failed: The event saying it failed, given the error and how long it ran.
+    """
+    sink.emit(started)
+    began = perf_counter()
+    try:
+        yield
+    except Exception as error:
+        sink.emit(failed(error, perf_counter() - began))
+        raise
+    sink.emit(finished(perf_counter() - began))
+
 
 # %% a run
 
@@ -85,32 +114,27 @@ class RunFailed(Event):
     """
 
 
-@contextmanager
-def reporting_run(sink: EventSink, run: str, query: str, scene: str) -> Iterator[None]:
+def reporting_run(
+    sink: EventSink, run: str, query: str, scene: str
+) -> AbstractContextManager[None]:
     """
-    Report a run as started, and as finished or, if it raises, as failed, which then
-    goes on.
-
     :param sink: Where the run is reported.
     :param run: The name of the run.
     :param query: The designator's match query, as written.
     :param scene: The scene it is resolved in.
+    :return: What reports a run as started, and as finished or failed.
     """
-    sink.emit(RunStarted(run=run, query=query, scene=scene))
-    started = perf_counter()
-    try:
-        yield
-    except Exception as error:
-        sink.emit(
-            RunFailed(
-                run=run,
-                error_type=type(error).__name__,
-                reason=str(error),
-                seconds=perf_counter() - started,
-            )
-        )
-        raise
-    sink.emit(RunFinished(run=run, seconds=perf_counter() - started))
+    return reported(
+        sink,
+        RunStarted(run=run, query=query, scene=scene),
+        lambda seconds: RunFinished(run=run, seconds=seconds),
+        lambda error, seconds: RunFailed(
+            run=run,
+            error_type=type(error).__name__,
+            reason=str(error),
+            seconds=seconds,
+        ),
+    )
 
 
 # %% a pour tried in the simulation
@@ -153,3 +177,103 @@ class TrialFinished(Event):
     """
     How long the trial took.
     """
+
+
+# %% performing a run in the simulation
+
+
+@dataclass
+class ExecutionStarted(Event):
+    """
+    A run's resolved action began to be performed in the simulation.
+    """
+
+    run: str
+    """
+    The name of the run.
+    """
+
+
+@dataclass
+class ExecutionFinished(Event):
+    """
+    A run's resolved action was performed.
+    """
+
+    run: str
+    """
+    The name of the run.
+    """
+
+    seconds: float
+    """
+    How long it took.
+    """
+
+
+@dataclass
+class ExecutionFailed(Event):
+    """
+    Performing a run's resolved action ended by raising an error.
+    """
+
+    run: str
+    """
+    The name of the run.
+    """
+
+    error_type: str
+    """
+    The name of the error raised.
+    """
+
+    reason: str
+    """
+    What the error said.
+    """
+
+    seconds: float
+    """
+    How long it ran before it failed.
+    """
+
+
+@dataclass
+class StepChanged(Event):
+    """
+    A step of the plan performing a run's action changed status.
+    """
+
+    run: str
+    """
+    The name of the run.
+    """
+
+    step: str
+    """
+    The action the step performs.
+    """
+
+    status: str
+    """
+    The status it changed to, as the plan names it.
+    """
+
+
+def reporting_execution(sink: EventSink, run: str) -> AbstractContextManager[None]:
+    """
+    :param sink: Where the execution is reported.
+    :param run: The name of the run being performed.
+    :return: What reports a run as started to be performed, and as finished or failed.
+    """
+    return reported(
+        sink,
+        ExecutionStarted(run=run),
+        lambda seconds: ExecutionFinished(run=run, seconds=seconds),
+        lambda error, seconds: ExecutionFailed(
+            run=run,
+            error_type=type(error).__name__,
+            reason=str(error),
+            seconds=seconds,
+        ),
+    )

@@ -22,9 +22,10 @@ import threading
 import time
 import urllib.parse
 from dataclasses import dataclass, field
+from enum import StrEnum
 from pathlib import Path
 
-from typing_extensions import Any, Dict, List, Optional, TYPE_CHECKING
+from typing_extensions import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 
 from semantic_digital_twin.robots.robot_parts import AbstractRobot
 from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
@@ -56,6 +57,20 @@ PALETTE = [
     "#d0c86b",
 ]
 
+
+class PlanNodeKey(StrEnum):
+    """
+    The keys of a plan node in the bridge's snapshot of the plan.
+    """
+
+    ID = "id"
+    PARENT = "parent"
+    KIND = "kind"
+    LABEL = "label"
+    STATUS = "status"
+    DERIVED = "derived"
+
+
 #: giskardpy ``LifeCycleValues`` ordinal → its name, for the statechart view
 LIFE_CYCLE_NAME = {0: "NOT_STARTED", 1: "RUNNING", 2: "PAUSED", 3: "DONE", 4: "FAILED"}
 
@@ -67,6 +82,13 @@ LIFE_CYCLE_TO_STATUS = {
     2: "PAUSE",
     3: "SUCCEEDED",
     4: "FAILED",
+}
+
+#: the names coraplex gives a plan node's life cycle that the bridge publishes under the
+#: names the viewer's legend knows
+STATUS_ALIASES = {
+    "NOT_STARTED": "CREATED",
+    "PAUSED": "PAUSE",
 }
 
 #: for bottom-up aggregation in the plan tree: the higher rank wins
@@ -132,6 +154,14 @@ class Bridge:
     plan_state: Dict[str, Any] = field(default_factory=lambda: {"sig": "", "nodes": []})
     """
     The newest plan-tree snapshot (see :meth:`snapshot_plan`).
+    """
+
+    plan_observers: List[Callable[[List[Dict[str, Any]]], None]] = field(
+        default_factory=list
+    )
+    """
+    Told the nodes of every plan snapshot, on the simulation thread; they must not touch
+    the world.
     """
 
     chart_state: Dict[str, Any] = field(
@@ -515,6 +545,8 @@ class Bridge:
         self._serialize_plan_node(root, None, nodes, order)
         with self._lock:
             self.plan_state = {"sig": "|".join(order), "nodes": nodes}
+        for observer in self.plan_observers:
+            observer(nodes)
 
     def _serialize_plan_node(
         self,
@@ -528,18 +560,18 @@ class Bridge:
         """
         node_id = "p%d" % id(node)
         designator = node.designator if hasattr(node, "designator") else None
-        own_status = node.status.name
+        own_status = STATUS_ALIASES.get(node.status.name, node.status.name)
         entry: Dict[str, Any] = {
-            "id": node_id,
-            "parent": parent_id,
-            "kind": type(node).__name__,
-            "label": (
+            PlanNodeKey.ID: node_id,
+            PlanNodeKey.PARENT: parent_id,
+            PlanNodeKey.KIND: type(node).__name__,
+            PlanNodeKey.LABEL: (
                 type(designator).__name__
                 if designator is not None
                 else type(node).__name__
             ),
-            "status": own_status,
-            "derived": False,
+            PlanNodeKey.STATUS: own_status,
+            PlanNodeKey.DERIVED: False,
         }
         self._add_designator_metadata(entry, designator)
         nodes.append(entry)
@@ -559,9 +591,9 @@ class Bridge:
                 child_best if child_best != "CREATED" else None
             )
             if derived:
-                entry["status"] = derived
-                entry["derived"] = True
-        return entry["status"]
+                entry[PlanNodeKey.STATUS] = derived
+                entry[PlanNodeKey.DERIVED] = True
+        return entry[PlanNodeKey.STATUS]
 
     def _add_designator_metadata(
         self, entry: Dict[str, Any], designator: Optional[Any]
