@@ -3,6 +3,7 @@ from __future__ import annotations
 import enum
 import json
 import re
+from contextlib import contextmanager
 from dataclasses import dataclass, field, replace
 
 from krrood.entity_query_language.backends import GenerativeBackend
@@ -10,10 +11,33 @@ from krrood.entity_query_language.factories import entity
 from krrood.entity_query_language.query.match import Match
 from krrood.entity_query_language.query.quantifiers import An
 from krrood.entity_query_language.verbalization.pipeline import verbalize_expression
-from typing_extensions import Any, Dict, Iterable, List, Optional, Sequence, TypeVar
+from typing_extensions import (
+    Any,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    TypeVar,
+)
 
 from llm_reasoner.clients.base import Exchange, LanguageModelClient
 from llm_reasoner.clients.tools import Tool, ToolConversation, ToolUsingClient
+from llm_reasoner.observation.events import (
+    AttemptRejected,
+    AttemptStarted,
+    GroundSummary,
+    JustificationSummary,
+    KnowledgeConsulted,
+    ResolutionFailed,
+    ResolutionFinished,
+    ResolutionPurpose,
+    ResolutionStarted,
+    SlotSummary,
+    new_call,
+)
+from llm_reasoner.observation.sinks import EventSink, NullSink
 from llm_reasoner.resolver.action_context import ActionContextProvider
 from llm_reasoner.resolver.completion import Completion, PlainCompletion, ToolCompletion
 from llm_reasoner.resolver.context import (
@@ -59,7 +83,7 @@ from llm_reasoner.resolver.prompts import (
 )
 from llm_reasoner.resolver.referents import IntegerTokens, ReferentNaming, WorldHandles
 from llm_reasoner.resolver.reflection import Slot, SlotKind, reflect_slots
-from llm_reasoner.world.access import WorldAccess
+from llm_reasoner.world.access import WorldAccess, identifier_of
 
 T = TypeVar("T")
 
@@ -139,6 +163,18 @@ class LanguageModelBackend(GenerativeBackend):
     """
     Tries the instances an answer constructs before they are accepted, refusing the
     answer with its outcome when they fall short; none tries nothing.
+    """
+
+    observer: EventSink = field(kw_only=True, default_factory=NullSink)
+    """
+    Where the resolution is reported to as it goes: each attempt at the model's answer,
+    why one is rejected and how the resolution ends; nowhere by default.
+    """
+
+    purpose: ResolutionPurpose = field(kw_only=True, default=ResolutionPurpose.ACTION)
+    """
+    What the resolution is for, which tells the resolution of the action from the choice
+    of the situation features of the knowledge describing it in what is reported.
     """
 
     source_detail: SourceDetail = field(kw_only=True, default=SourceDetail.FULL)
@@ -301,17 +337,94 @@ class LanguageModelBackend(GenerativeBackend):
     def _evaluate(self, expression: Match[T]) -> Iterable[T]:
         self.justifications = []
         slots = reflect_slots(expression)
-        self._reject_unresolvable(slots)
+        with self._reporting(expression, slots) as resolution:
+            self._reject_unresolvable(slots)
 
-        open_slots = [slot for slot in slots if slot.kind is not SlotKind.BOUND]
-        if not open_slots:
-            yield from self._validate(expression, [expression.construct_instance()])
-            return
+            open_slots = [slot for slot in slots if slot.kind is not SlotKind.BOUND]
+            if not open_slots:
+                accepted = self._validate(expression, [expression.construct_instance()])
+                self._finished(resolution, 0, accepted)
+                yield from accepted
+                return
 
-        number_of_candidates = (
-            expression.expression._limit_ or self.number_of_candidates
+            number_of_candidates = (
+                expression.expression._limit_ or self.number_of_candidates
+            )
+            yield from self._ask(
+                expression, slots, open_slots, number_of_candidates, resolution
+            )
+
+    @contextmanager
+    def _reporting(self, expression: Match[T], slots: Sequence[Slot]) -> Iterator[str]:
+        """
+        Report a resolution as started, and as failed if it ends by raising, which then
+        goes on.
+
+        :param expression: The match being resolved.
+        :param slots: Every reflected slot.
+        :return: The identifier of the resolution, which its events repeat.
+        """
+        resolution = new_call()
+        self.observer.emit(
+            ResolutionStarted(
+                resolution=resolution,
+                purpose=self.purpose,
+                action=identifier_of(expression.type),
+                slots=[
+                    SlotSummary(
+                        path=slot.path,
+                        kind=slot.kind.name,
+                        type_name=slot.type_name,
+                        candidates=(
+                            len(slot.domain)
+                            if slot.selects_from_domain and slot.domain is not None
+                            else None
+                        ),
+                    )
+                    for slot in slots
+                ],
+                max_repairs=self.max_repairs,
+            )
         )
-        yield from self._ask(expression, slots, open_slots, number_of_candidates)
+        try:
+            yield resolution
+        except Exception as error:
+            self.observer.emit(
+                ResolutionFailed(
+                    resolution=resolution,
+                    error_type=type(error).__name__,
+                    reason=str(error),
+                )
+            )
+            raise
+
+    def _finished(self, resolution: str, attempts: int, accepted: Sequence[T]) -> None:
+        """
+        Report a resolution as finished, with why each instance was chosen.
+
+        :param resolution: The identifier of the resolution.
+        :param attempts: How many answers it took.
+        :param accepted: The instances resolved.
+        """
+        self.observer.emit(
+            ResolutionFinished(
+                resolution=resolution,
+                attempts=attempts,
+                instances=[type(instance).__name__ for instance in accepted],
+                justifications=[
+                    JustificationSummary(
+                        why=justification.why,
+                        grounds=[
+                            GroundSummary(
+                                source=ground.source, identifier=ground.identifier
+                            )
+                            for ground in justification.grounds
+                        ],
+                    )
+                    for justification in self.justifications
+                ],
+            )
+        )
 
     @staticmethod
     def _reject_unresolvable(slots: Sequence[Slot]) -> None:
@@ -347,6 +460,7 @@ class LanguageModelBackend(GenerativeBackend):
         slots: Sequence[Slot],
         open_slots: Sequence[Slot],
         number_of_candidates: int,
+        resolution: str,
     ) -> List[T]:
         """
         Request every slot in a single completion, repairing on rejection, including an
@@ -359,9 +473,11 @@ class LanguageModelBackend(GenerativeBackend):
         :param slots: Every reflected slot.
         :param open_slots: The slots the model must answer for.
         :param number_of_candidates: How many alternatives to request.
+        :param resolution: The identifier of the resolution, which what is reported
+            repeats.
         :return: The instances built from the answer that meet the where-conditions.
         """
-        self._consult(expression)
+        self._consult(expression, resolution)
         prompt = self._prompt_builder().build(
             expression=expression,
             slots=slots,
@@ -374,6 +490,7 @@ class LanguageModelBackend(GenerativeBackend):
         completion = self.request_completion
         last_error: Optional[Exception] = None
         for attempt in range(self.max_repairs + 1):
+            self.observer.emit(AttemptStarted(resolution=resolution, attempt=attempt))
             conversation = completion.complete(self.system_prompt, prompt)
             raw_response = conversation.answer
             self.conversations.append(conversation)
@@ -387,27 +504,52 @@ class LanguageModelBackend(GenerativeBackend):
                 )
             )
             try:
-                return self._accept(expression, raw_response, open_slots)
+                accepted = self._accept(expression, raw_response, open_slots)
             except RetryableModelFailure as error:
                 last_error = error
+                self.observer.emit(
+                    AttemptRejected(
+                        resolution=resolution,
+                        attempt=attempt,
+                        kind=type(error).__name__,
+                        details=error.details(),
+                        answer=raw_response,
+                    )
+                )
                 prompt = PromptBuilder.build_repair(prompt, raw_response, error)
+                continue
+            self._finished(resolution, attempt + 1, accepted)
+            return accepted
 
         raise RepairBudgetExhausted(
             attempts=self.max_repairs + 1, last_error=last_error
         )
 
-    def _consult(self, expression: Match[T]) -> None:
+    def _consult(self, expression: Match[T], resolution: str) -> None:
         """
         Consult the knowledge component about the queried action, when there is a
         knowledge requester, and keep the tools reading what it obtained.
 
         :param expression: The match being resolved.
+        :param resolution: The identifier of the resolution, which the consultation is
+            reported with.
         """
         if self.knowledge is None:
             return
         self.situation_backend = self.situation_backend_for(expression)
         self.consultation = self.knowledge.consult(expression, self.situation_backend)
         self.knowledge_tools = self.knowledge.tools_for(self.consultation)
+        self.observer.emit(
+            KnowledgeConsulted(
+                resolution=resolution,
+                designator=self.consultation.designator,
+                situation={
+                    name: feature.value
+                    for name, feature in self.consultation.situation.items()
+                },
+                record_id=self.consultation.record_id,
+            )
+        )
 
     def situation_backend_for(self, action: Match) -> LanguageModelBackend:
         """
@@ -432,6 +574,7 @@ class LanguageModelBackend(GenerativeBackend):
             open_values=OpenValueMeaning.FACT,
             knowledge=None,
             outcome_check=None,
+            purpose=ResolutionPurpose.SITUATION,
         )
 
     def _accept(
