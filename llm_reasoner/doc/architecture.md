@@ -429,7 +429,12 @@ its backend's observer.
 An event holds the prompts and answers in full and never a credential: the wrappers see
 only what a client is given and returns.
 
-The viewer that reads these logs is planned (`status.md`).
+The viewer that reads these logs is the package `llm_reasoner_viz` (`llm-reasoner-viz`, port
+8721, read-only, standard library only): a server listing the runs that have a log and
+following one as it grows, as a batch or as server-sent events whose ids are offsets in the
+log, so a reader resumes where it stopped; its page, so far, shows each event as a row.
+cram_viz's answer panel links to it by run (`LLM_REASONER_VIZ_URL`). The viewer spells the
+events' names as the writers do, which its tests check.
 
 ## 3. How the components communicate
 

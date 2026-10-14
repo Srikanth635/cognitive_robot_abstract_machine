@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llm_reasoner_viz"
+description = "A browser viewer for llm_reasoner at work: its components, their calls and the prompts exchanged, followed live and replayed from a run's log."
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+keywords = ["robotics", "visualization", "language models"]
+dynamic = ["version", "dependencies"]
+license = "LGPL-3.0-only"
+
+[project.scripts]
+llm-reasoner-viz = "llm_reasoner_viz.server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["llm_reasoner_viz*"]
+
+[tool.setuptools.package-data]
+# the web frontend ships with the package (all local assets, no CDN)
+llm_reasoner_viz = ["web/**/*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "llm_reasoner_viz.__version__" }
+dependencies = { file = "requirements.txt" }
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0,<8.0.0",
+]

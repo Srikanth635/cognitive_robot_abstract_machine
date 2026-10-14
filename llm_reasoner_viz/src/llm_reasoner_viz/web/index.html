@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>llm_reasoner viewer</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <header>
+    <h1>llm_reasoner viewer</h1>
+    <span class="muted">the system at work, run by run</span>
+    <span id="connection">no run selected</span>
+  </header>
+  <main>
+    <aside>
+      <h2>Runs</h2>
+      <ul id="run-list"></ul>
+    </aside>
+    <section>
+      <div id="run-head">
+        <h2 id="run-title">Events</h2>
+        <div id="run-summary"></div>
+        <pre id="run-query" hidden></pre>
+      </div>
+      <ol id="events"><li class="empty">Pick a run on the left, or resolve a designator in cram-viz.</li></ol>
+    </section>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>
