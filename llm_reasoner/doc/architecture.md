@@ -412,6 +412,20 @@ with why each instance was chosen and what that rests on, or `ResolutionFailed`.
 resolution has a purpose: the action asked for, or the choice of the situation features
 of the knowledge describing it (`ResolutionPurpose`).
 
+The knowledge generation reports the same way (`HypothesisBackend.observer`, passed on to
+the dialogue): `HypothesisRequested` with the vocabulary class and the values the request
+fixes, `GenerationAttemptStarted`, `GenerationAttemptRejected` with the problems found,
+and `GenerationFailed`, or `HypothesisServed` saying whether the store held the
+hypothesis or generating it took so many answers, and with what warnings it was admitted.
+
+`Reasoner(sink=..., prices=...)` assembles all of it: the resolver's model, world and
+knowledge component wrapped to report to the sink as the resolver's, the backend's
+observer set, and each tool of the model attributed to the world injector or the
+knowledge component. Without a sink nothing is wrapped. The knowledge component's own
+model client is not reachable from there; whoever builds it wraps its client as the
+knowledge component's (`ObservedClient.of(client, sink, Component.KNOWLEDGE)`) and sets
+its backend's observer.
+
 An event holds the prompts and answers in full and never a credential: the wrappers see
 only what a client is given and returns.
 
