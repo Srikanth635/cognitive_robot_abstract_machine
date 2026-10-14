@@ -279,6 +279,21 @@ class DesignatorResolver:
             worlds=worlds,
         )
 
+    def reopen(self, name: str) -> ResolutionRun:
+        """
+        :param name: The name of a run this resolver kept.
+        :return: The run: what it resolved, and the knowledge component over its own
+            store.
+        :raises UnknownRun: When no run of that name is kept.
+        """
+        run = self.runs.named(name)
+        return ResolutionRun(
+            resolution=run.resolution(),
+            knowledge=KnowledgeService(
+                backend=replace(self.baseline.backend, store=run.knowledge_store)
+            ),
+        )
+
     def resolve(
         self, designator: DesignatorQuery, scene: str, bundle: Path
     ) -> ResolutionRun:

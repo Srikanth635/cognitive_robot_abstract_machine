@@ -191,6 +191,17 @@ def resolve_objects_given(bundle: Path, tmp_path: Path, times: int = 1) -> list:
     return [resolver.resolve(designator, "pouring", bundle) for _ in range(times)]
 
 
+def reopening_resolver(tmp_path: Path):
+    """
+    :return: A resolver over the runs ``resolve_objects_given`` keeps in ``tmp_path``.
+    """
+    return resolver_replaying(
+        PouringDesignator.OBJECTS_GIVEN,
+        HypothesisStore(directory=tmp_path / "store"),
+        tmp_path / "runs",
+    )
+
+
 class TestResolution:
     def test_a_resolution_names_the_value_of_every_slot(self, pouring_bundle, tmp_path):
         (run,) = resolve_objects_given(pouring_bundle, tmp_path)
@@ -394,6 +405,24 @@ class TestRuns:
         (tmp_path / "runs").mkdir()
         with pytest.raises(UnknownRun):
             ResolutionRuns(directory=tmp_path / "runs").named(name)
+
+    def test_a_run_is_reopened_with_what_it_resolved(self, pouring_bundle, tmp_path):
+        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        reopened = reopening_resolver(tmp_path).reopen(run.resolution.run)
+        assert reopened.resolution == run.resolution
+
+    def test_a_reopened_run_consults_its_own_store(self, pouring_bundle, tmp_path):
+        (run,) = resolve_objects_given(pouring_bundle, tmp_path)
+        reopened = reopening_resolver(tmp_path).reopen(run.resolution.run)
+        assert reopened.knowledge.backend.store == run.knowledge.backend.store
+        assert reopened.knowledge.backend.store.records() == (
+            run.knowledge.backend.store.records()
+        )
+
+    def test_a_run_that_is_not_kept_cannot_be_reopened(self, tmp_path):
+        (tmp_path / "runs").mkdir()
+        with pytest.raises(UnknownRun):
+            reopening_resolver(tmp_path).reopen("no-such-run")
 
     def test_a_run_keeps_its_resolution_beside_its_knowledge(
         self, pouring_bundle, tmp_path

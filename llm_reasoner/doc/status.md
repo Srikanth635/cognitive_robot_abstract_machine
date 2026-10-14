@@ -147,8 +147,15 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   inspector shows the plan for a pour (that one marked) and for a resolution. A card, a point
   and a bar open one another. Checked in a browser on a replayed resolution whose two trials
   carry measured positions (the scratch copy of a real log; a real one comes with the live
-  check). The outcome keys are in one place, `OUTCOME` in `model.mjs`. Not yet: links from the
-  viewer to cram-viz.
+  check). The outcome keys are in one place, `OUTCOME` in `model.mjs`.
+- The viewer, step V6d, cram-viz's half: a run kept earlier can be reopened. The resolver's
+  `reopen(name)` returns the run's resolution with the knowledge component over the run's own
+  store; `GET /api/designator/run?name=` answers as a resolution just made does (resolution,
+  consulted hypothesis, link to the viewer); the EQL panel, opened with `?run=<run>`, shows it
+  after booting (query in the search bar, hypothesis on the bus, Execute for that run) without
+  resolving. Opening needs the same credentials as resolving, the resolver being built the
+  same way. Checked on the real run of 13 October (which predates logs) against a sandbox
+  server. Not yet: the viewer's link.
 
 ### Knowledge component
 - The predictive-manipulation ontology (`core`, `object-dynamics`, `prehension`,

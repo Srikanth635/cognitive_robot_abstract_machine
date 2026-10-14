@@ -91,6 +91,7 @@ Panels.define('eql', function (root, bus) {
     welcome();
     bus.emit('kb:ready', { payload: payload });
     loadDesignators();
+    openRunNamedInAddress();
   }
 
   function welcome() {
@@ -230,11 +231,7 @@ Panels.define('eql', function (root, bus) {
           '<div class="goal">resolution failed</div>' + queryHtml(query) +
           '<div class="qerr">' + esc(payload.error || 'resolution failed') + '</div>';
       } else {
-        answerEl.innerHTML = resolutionHtml(payload.resolution, payload.viewer);
-        resolvedRun = payload.resolution.run;
-        designatorExecuteBtn.disabled = false;
-        bus.emit('hypothesis:generated', payload.hypothesis);
-        await reloadKnowledgeBase();
+        await showResolution(payload);
       }
     } catch (err) {
       answerEl.innerHTML =
@@ -247,6 +244,42 @@ Panels.define('eql', function (root, bus) {
   }
 
   generateBtn.addEventListener('click', function () { resolve(input.value); });
+
+  // The answer a resolution gave, whether it has just been made or is opened from a run
+  // kept earlier: the answer panel, the hypothesis it consulted, and Execute for its run.
+  async function showResolution(payload) {
+    answerEl.innerHTML = resolutionHtml(payload.resolution, payload.viewer);
+    resolvedRun = payload.resolution.run;
+    designatorExecuteBtn.disabled = false;
+    bus.emit('hypothesis:generated', payload.hypothesis);
+    await reloadKnowledgeBase();
+  }
+
+  // A page opened with ?run=<run>, as the llm_reasoner viewer links to it, shows what that
+  // run resolved, with its query in the search bar, without resolving again.
+  async function openRun(name) {
+    answerEl.innerHTML = '<div class="goal">opening run ' + esc(name) + '</div>';
+    try {
+      const response = await fetch(SceneSelection.apiUrl(
+        '/api/designator/run?name=' + encodeURIComponent(name), window.location.search));
+      const payload = await response.json();
+      if (!payload.ok) {
+        answerEl.innerHTML = '<div class="goal">run could not be opened</div>' +
+          '<div class="qerr">' + esc(payload.error || 'unknown error') + '</div>';
+        return;
+      }
+      input.value = payload.resolution.query;
+      await showResolution(payload);
+    } catch (err) {
+      answerEl.innerHTML = '<div class="goal">run could not be opened</div>' +
+        '<div class="qerr">' + esc(String(err)) + '</div>';
+    }
+  }
+
+  function openRunNamedInAddress() {
+    const name = new URLSearchParams(window.location.search).get('run');
+    if (name) openRun(name);
+  }
 
   function queryHtml(query) {
     return '<pre class="resolved-query">' + esc(query) + '</pre>';

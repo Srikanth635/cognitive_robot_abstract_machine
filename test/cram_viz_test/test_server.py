@@ -390,6 +390,58 @@ class TestDesignators:
         )
         assert payload["viewer"] == paths.viewer_url(payload["resolution"]["run"])
 
+    def test_a_run_is_reopened_with_its_resolution_and_hypothesis(
+        self, pouring_server, monkeypatch, tmp_path
+    ):
+        from llm_reasoner.knowledge.access import HypothesisStore
+
+        from cram_viz import paths
+        from cram_viz import server as server_module
+
+        from .resolutions import resolver_replaying
+
+        resolver = resolver_replaying(
+            "objects_given",
+            HypothesisStore(directory=tmp_path / "store"),
+            tmp_path / "runs",
+        )
+        monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
+        resolved = post_json(
+            pouring_server + "/api/designator/resolve",
+            {"query": objects_given_query(), "scene": "pouring"},
+        )
+        run = resolved["resolution"]["run"]
+        reopened = get_json(
+            pouring_server + f"/api/designator/run?name={run}&scene=pouring"
+        )
+        assert reopened["ok"] is True
+        assert reopened["resolution"] == resolved["resolution"]
+        assert reopened["hypothesis"]["ok"] is True
+        assert reopened["viewer"] == paths.viewer_url(run)
+
+    def test_a_run_that_is_not_kept_is_reported_when_reopened(
+        self, pouring_server, monkeypatch, tmp_path
+    ):
+        from llm_reasoner.knowledge.access import HypothesisStore
+
+        from cram_viz import server as server_module
+        from cram_viz.resolution.runs import UnknownRun
+
+        from .resolutions import resolver_replaying
+
+        (tmp_path / "runs").mkdir()
+        resolver = resolver_replaying(
+            "objects_given",
+            HypothesisStore(directory=tmp_path / "store"),
+            tmp_path / "runs",
+        )
+        monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
+        payload = get_json(
+            pouring_server + "/api/designator/run?name=no-such-run&scene=pouring"
+        )
+        assert payload["ok"] is False
+        assert payload["error"].startswith(UnknownRun.__name__)
+
     def test_a_resolution_names_the_run_it_was_made_in(
         self, pouring_server, monkeypatch, tmp_path
     ):
