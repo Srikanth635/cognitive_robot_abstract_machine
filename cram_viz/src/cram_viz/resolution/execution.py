@@ -7,7 +7,7 @@ resolved arm, and the pouring performed as resolved.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 from coraplex.datastructures.dataclasses import Context
@@ -26,9 +26,10 @@ from semantic_digital_twin.robots.robot_parts import AbstractRobot
 from semantic_digital_twin.spatial_types import Pose
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.world_entity import Body
-from typing_extensions import TYPE_CHECKING, Any, Dict
+from typing_extensions import TYPE_CHECKING, Any, Dict, Optional
 
 from cram_viz.designator_knowledge import resolved_field_type
+from cram_viz.neem import NeemRecorder, NoNeemRecorder
 from cram_viz.resolution.runs import RunDirectory
 from cram_viz.resolution.scene_world import SceneWorldBuilder
 from cram_viz.resolution.slot_data import SlotData
@@ -120,9 +121,17 @@ class PouringExecution:
     The resolved slots' values as data, by field name.
     """
 
+    recorder: NeemRecorder = field(default_factory=NoNeemRecorder)
+    """
+    Keeps the plan performed as a NEEM; nothing is kept by default.
+    """
+
     @classmethod
     def for_resolution(
-        cls, world: World, resolution: ResolvedDesignator
+        cls,
+        world: World,
+        resolution: ResolvedDesignator,
+        recorder: Optional[NeemRecorder] = None,
     ) -> PouringExecution:
         """
         :return: The execution of a resolution's first action in the world.
@@ -132,17 +141,23 @@ class PouringExecution:
             raise NotAPouring(designator=resolution.designator)
         resolved, *_ = resolution.actions
         return cls(
-            world=world, values={slot.name: slot.serialized for slot in resolved.slots}
+            world=world,
+            values={slot.name: slot.serialized for slot in resolved.slots},
+            recorder=recorder or NoNeemRecorder(),
         )
 
     @classmethod
-    def of_run(cls, run: RunDirectory) -> PouringExecution:
+    def of_run(
+        cls, run: RunDirectory, recorder: Optional[NeemRecorder] = None
+    ) -> PouringExecution:
         """
         :return: The execution of a run's resolution, in the world of the scene the run
             started from, built anew, its robot annotated as what it is.
         """
         return cls.for_resolution(
-            SceneWorldBuilder.robot_world(run.environment().bundle), run.resolution()
+            SceneWorldBuilder.robot_world(run.environment().bundle),
+            run.resolution(),
+            recorder,
         )
 
     @property
@@ -196,7 +211,12 @@ class PouringExecution:
 
     def perform(self) -> None:
         """
-        Perform the plan in the simulation.
+        Perform the plan in the simulation, and have the recorder keep the plan however
+        it ended.
         """
-        with simulated_robot:
-            self.plan().perform()
+        root = self.plan()
+        try:
+            with simulated_robot:
+                root.perform()
+        finally:
+            self.recorder.record(root.plan)
