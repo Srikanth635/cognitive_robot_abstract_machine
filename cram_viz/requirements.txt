@@ -2,3 +2,6 @@
 # servable on machines without the full CRAM stack. krrood (EQL), coraplex and
 # giskardpy are imported lazily and only needed for the knowledge panel, the
 # onboarder and the live bridge hooks — inside this workspace they are present.
+
+# Keeps two processes from creating the tables of the NEEM database at once.
+filelock

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
+from enum import StrEnum
 from time import perf_counter
 
 from llm_reasoner.observation.events import Event
@@ -257,6 +258,84 @@ class StepChanged(Event):
     status: str
     """
     The status it changed to, as the plan names it.
+    """
+
+
+# %% what the simulation performed, kept as a NEEM
+
+
+class NeemKind(StrEnum):
+    """
+    What a NEEM is the episode of.
+    """
+
+    TRIAL = "trial"
+    """
+    A pour tried in the simulation before it is accepted.
+    """
+
+    EXECUTION = "execution"
+    """
+    A run's resolved action, performed in the simulation.
+    """
+
+
+@dataclass
+class NeemRecorded(Event):
+    """
+    The plan a simulation performed was kept as a NEEM.
+    """
+
+    kind: NeemKind
+    """
+    What the NEEM is the episode of.
+    """
+
+    episode: str
+    """
+    The trial or the run the NEEM is of: the identifier of the trial, or the name of the run.
+    """
+
+    database: str
+    """
+    The database it is kept in.
+    """
+
+    database_id: int
+    """
+    The identifier the database gave it.
+    """
+
+    seconds: float
+    """
+    How long it took to keep.
+    """
+
+
+@dataclass
+class NeemNotRecorded(Event):
+    """
+    The plan a simulation performed could not be kept as a NEEM.
+    """
+
+    kind: NeemKind
+    """
+    What the NEEM would have been the episode of.
+    """
+
+    episode: str
+    """
+    The trial or the run the NEEM would have been of.
+    """
+
+    error_type: str
+    """
+    The name of the error raised.
+    """
+
+    reason: str
+    """
+    What the error said.
     """
 
 

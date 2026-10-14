@@ -58,6 +58,29 @@ def hypothesis_store_dir() -> Path:
     return data_dir() / "hypotheses"
 
 
+NEEM_DATABASE_ENVIRONMENT = "CRAM_VIZ_NEEM_DATABASE"
+"""
+The environment variable that names the database the NEEMs of the simulations are kept
+in.
+"""
+
+NEEM_DATABASE_FILE = "neems.sqlite"
+"""
+The name of the database the NEEMs are kept in, in the data directory.
+"""
+
+
+def neem_database_path() -> Path:
+    """
+    :return: The one database every NEEM, of every run, is kept in: the one the
+        environment names, else :data:`NEEM_DATABASE_FILE` in the data directory.
+    """
+    env = os.environ.get(NEEM_DATABASE_ENVIRONMENT)
+    if env:
+        return Path(env).expanduser()
+    return data_dir() / NEEM_DATABASE_FILE
+
+
 VIEWER_URL_ENVIRONMENT = "LLM_REASONER_VIZ_URL"
 """
 The environment variable that sets where the llm_reasoner viewer is served.
