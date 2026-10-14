@@ -85,12 +85,13 @@ export class TimelineView {
       el('div', { class: 'lane-track', style: 'width:' + width + 'px' }, ticks));
   }
 
-  // Draws the run as of ``view.now``; ``view`` also says which span is chosen, which
-  // component's row to single out, and whether the run is still going.
+  // Draws the run as of ``view.now``, on an axis that reaches to ``view.until``; ``view``
+  // also says which span is chosen, which component's row to single out, and whether the
+  // run is going on.
   render(model, view) {
     this.drawn = { model: model, view: view };
     const origin = model.firstAt === null ? view.now : model.firstAt;
-    const duration = Math.max(view.now - origin, 0.001);
+    const duration = Math.max(view.until - origin, 0.001);
     const available = (this.scroller.clientWidth || FALLBACK_WIDTH) - LABEL_WIDTH - RIGHT_MARGIN;
     this.pixelsPerSecond = this.zoom === null
       ? fitScale(duration, available, LEAST_PIXELS_PER_SECOND_WHEN_FITTED) : this.zoom;
@@ -120,7 +121,7 @@ export class TimelineView {
         el('div', { class: 'lane-label' }, row.label),
         el('div', { class: 'lane-track', style: 'width:' + width + 'px;height:' + (tracks * ROW_HEIGHT + LANE_PADDING) + 'px' }, bars));
     });
-    const now = view.live ? el('div', { class: 'now-line', style: 'left:' + (LABEL_WIDTH + duration * this.pixelsPerSecond) + 'px' }) : null;
+    const now = view.live ? el('div', { class: 'now-line', style: 'left:' + (LABEL_WIDTH + (view.now - origin) * this.pixelsPerSecond) + 'px' }) : null;
     this.canvas.style.width = LABEL_WIDTH + width + RIGHT_MARGIN + 'px';
     this.canvas.replaceChildren(this.axis(duration, width), ...lanes, ...(now ? [now] : []));
     this.followButton.classList.toggle('on', this.follows);

@@ -123,8 +123,16 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   an address (`?run=…&span=…`), so a link returns to it. Checked in a browser on the replayed
   resolution (every kind of span opened), a real Execute's log, a log written in real time
   while the page followed it (bars grow, the run settles to the same spans as loading the
-  finished log), light and dark themes and a narrow window. Not yet: the attempts strip, the
-  pour-trial view, replay, filters, links from the viewer to cram-viz.
+  finished log), light and dark themes and a narrow window.
+- The viewer, step V6a: replay. `replay.mjs` (node tests) says what a run looked like at any
+  moment (the events written by then, rebuilt into spans, so what was going on is open) and
+  how a replay moves (play, pause, step to the next or previous event, speeds 1/4/16/64,
+  clamped to the run, stopping at the end, starting over from the end); `replay_view.mjs`
+  draws the controls. While replaying, the three views show the run as of the replay's moment
+  and the timeline's axis keeps the length of the whole run. Not available while a run is going
+  on. Checked in a browser on the 13-second stretched replay: scrubbing, stepping, speeds,
+  the end, leaving the replay. Not yet: filters, the attempts strip, the pour-trial view,
+  links from the viewer to cram-viz.
 
 ### Knowledge component
 - The predictive-manipulation ontology (`core`, `object-dynamics`, `prehension`,
@@ -393,8 +401,8 @@ the world does not say what the cup holds, so the material came from the task al
   client and tool wrappers (done); V2 wrappers for the world and knowledge calls, and
   hooks for the resolver's attempts and rejections and the knowledge generation (done); V3 the
   log in cram-viz with trial and Execute events and a link from the answer panel (done); V4 the
-  viewer server (done); V5 the screen: map, timeline, inspector (done); V6 attempts, trials, replay,
-  filters, links both ways, a live check.
+  viewer server (done); V5 the screen: map, timeline, inspector (done); V6 replay (done), filters, attempts
+  strip, pour-trial view, links both ways, a live check.
 - The knowledge request, steps R1–R7: all done; R7's results are in §3.
 - Knowledge in its own graph, steps I1–I5: done, except I4's domains for slots of a
   knowledge class (waiting for a use and a decision on whose fragments form the domain).
