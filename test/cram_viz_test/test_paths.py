@@ -48,3 +48,17 @@ class TestDefaultLiveDemo:
             / "cram_viz"
             / "kitchen_counter_pouring.py"
         )
+
+
+class TestViewerUrl:
+    def test_a_run_is_shown_by_the_viewer_at_its_default_address(self, monkeypatch):
+        monkeypatch.delenv(paths.VIEWER_URL_ENVIRONMENT, raising=False)
+        assert paths.viewer_url("a-run") == f"{paths.DEFAULT_VIEWER_URL}/?run=a-run"
+
+    def test_the_address_of_the_viewer_can_be_set(self, monkeypatch):
+        monkeypatch.setenv(paths.VIEWER_URL_ENVIRONMENT, "http://viewer.example:9000")
+        assert paths.viewer_url("a-run") == "http://viewer.example:9000/?run=a-run"
+
+    def test_a_trailing_slash_in_the_address_makes_no_difference(self, monkeypatch):
+        monkeypatch.setenv(paths.VIEWER_URL_ENVIRONMENT, "http://viewer.example:9000/")
+        assert paths.viewer_url("a-run") == "http://viewer.example:9000/?run=a-run"

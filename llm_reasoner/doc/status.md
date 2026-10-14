@@ -99,6 +99,9 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   were not the `CREATED` and `PAUSE` the bridge derives progress from (`STATUS_ALIASES`),
   so no node ever showed progress. An action still reads `RUNNING` until the plan ends,
   its conditions not being evaluated in these runs. Step V3, the log (second part).
+- The answer panel links to the viewer of the run (`paths.viewer_url`, `http://localhost:8721`
+  or `LLM_REASONER_VIZ_URL`); the server returns the address with the resolution. Step V3
+  complete.
 
 ### Knowledge component
 - The predictive-manipulation ontology (`core`, `object-dynamics`, `prehension`,
@@ -366,7 +369,7 @@ the world does not say what the cup holds, so the material came from the task al
   to cram-viz by run id. Steps, each test-first and committed: V1 events, sinks and the
   client and tool wrappers (done); V2 wrappers for the world and knowledge calls, and
   hooks for the resolver's attempts and rejections and the knowledge generation (done); V3 the
-  log in cram-viz with trial and Execute events and a link from the answer panel; V4 the
+  log in cram-viz with trial and Execute events and a link from the answer panel (done); V4 the
   viewer server; V5 the screen (map, timeline, inspector); V6 attempts, trials, replay,
   filters, links both ways, a live check.
 - The knowledge request, steps R1–R7: all done; R7's results are in §3.

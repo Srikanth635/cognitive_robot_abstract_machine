@@ -368,6 +368,28 @@ class TestDesignators:
         ] == "bowl.stl"
         assert payload["hypothesis"]["ok"] is True
 
+    def test_a_resolution_links_to_the_viewer_of_its_run(
+        self, pouring_server, monkeypatch, tmp_path
+    ):
+        from llm_reasoner.knowledge.access import HypothesisStore
+
+        from cram_viz import paths
+        from cram_viz import server as server_module
+
+        from .resolutions import resolver_replaying
+
+        resolver = resolver_replaying(
+            "objects_given",
+            HypothesisStore(directory=tmp_path / "store"),
+            tmp_path / "runs",
+        )
+        monkeypatch.setattr(server_module, "_designator_resolver", lambda: resolver)
+        payload = post_json(
+            pouring_server + "/api/designator/resolve",
+            {"query": objects_given_query(), "scene": "pouring"},
+        )
+        assert payload["viewer"] == paths.viewer_url(payload["resolution"]["run"])
+
     def test_a_resolution_names_the_run_it_was_made_in(
         self, pouring_server, monkeypatch, tmp_path
     ):
