@@ -2,17 +2,17 @@
 The viewer's HTTP server: the front page, the runs and the events of a run as JSON, and
 a stream that follows a run's log as it grows.
 
-GET /api/runs                       the runs that have a log, newest first GET
-/api/runs/<run>/events          the events of a run in one batch; ``?after=<offset>``
-goes on from where a reader stopped, ``?limit=<n>``
-takes at most that many GET /api/runs/<run>/stream          the events of a run as
-server-sent events, those                                     written so far and then
-those written next;                                     ``?after=<offset>`` or the
-``Last-Event-ID`` header                                     goes on from where a reader
-stopped
+The requests it answers:
 
-llm-reasoner-viz            # console script python -m llm_reasoner_viz.server --port
-8721
+- ``GET /api/config``: where cram_viz is, for the page to link to.
+- ``GET /api/runs``: the runs that have a log, newest first.
+- ``GET /api/runs/<run>/events``: the events of a run in one batch; ``?after=<offset>``
+  goes on from where a reader stopped, ``?limit=<n>`` takes at most that many.
+- ``GET /api/runs/<run>/stream``: the events of a run as server-sent events, those written
+  so far and then those written next; ``?after=<offset>`` or the ``Last-Event-ID`` header
+  goes on from where a reader stopped.
+
+Started with ``llm-reasoner-viz`` or ``python -m llm_reasoner_viz.server --port 8721``.
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 from typing_extensions import Any, Callable, Dict, List, Optional
 
 from llm_reasoner_viz import configure_console_logging
-from llm_reasoner_viz.paths import default_runs_directory
+from llm_reasoner_viz.paths import cram_viz_url, default_runs_directory
 from llm_reasoner_viz.runs import RunLibrary, UnknownRun
 from llm_reasoner_viz.stream import EventStream
 
@@ -62,6 +62,7 @@ FRONT_PAGE = "index.html"
 The page served for the root address.
 """
 
+CONFIG_PATH = re.compile(r"/api/config")
 RUNS_PATH = re.compile(r"/api/runs")
 EVENTS_PATH = re.compile(r"/api/runs/(?P<run>[^/]+)/events")
 STREAM_PATH = re.compile(r"/api/runs/(?P<run>[^/]+)/stream")
@@ -112,6 +113,7 @@ class ViewerRequestHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         query = parse_qs(parsed.query)
         routes: List[tuple] = [
+            (CONFIG_PATH, self.config),
             (RUNS_PATH, self.runs),
             (EVENTS_PATH, self.events),
             (STREAM_PATH, self.stream),
@@ -137,6 +139,12 @@ class ViewerRequestHandler(BaseHTTPRequestHandler):
             self.send_json({"ok": False, "error": str(error)}, code=400)
 
     # %% the API
+
+    def config(self, query: Query) -> None:
+        """
+        Send where cram_viz is, for the page to link to.
+        """
+        self.send_json({"ok": True, "cram_viz_url": cram_viz_url()})
 
     def runs(self, query: Query) -> None:
         """

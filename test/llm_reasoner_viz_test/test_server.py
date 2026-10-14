@@ -19,6 +19,8 @@ import pytest
 from typing_extensions import Any, Dict, Iterator, List
 
 from llm_reasoner_viz.paths import (
+    CRAM_VIZ_ENVIRONMENT,
+    DEFAULT_CRAM_VIZ_URL,
     DATA_ENVIRONMENT,
     RUNS_ENVIRONMENT,
     default_runs_directory,
@@ -211,6 +213,23 @@ class TestStream:
 
     def test_a_stream_of_a_run_that_is_not_kept_is_not_found(self, viewer):
         assert status_of(viewer.url + "/api/runs/no-such-run/stream") == 404
+
+
+# %% where cram-viz is
+
+
+class TestConfiguration:
+    def test_the_viewer_says_where_cram_viz_is(self, viewer, monkeypatch):
+        monkeypatch.delenv(CRAM_VIZ_ENVIRONMENT, raising=False)
+        payload = get_json(viewer.url + "/api/config")
+        assert payload == {"ok": True, "cram_viz_url": DEFAULT_CRAM_VIZ_URL}
+
+    def test_where_cram_viz_is_can_be_set_without_a_trailing_slash(
+        self, viewer, monkeypatch
+    ):
+        monkeypatch.setenv(CRAM_VIZ_ENVIRONMENT, "http://elsewhere:9000/")
+        payload = get_json(viewer.url + "/api/config")
+        assert payload["cram_viz_url"] == "http://elsewhere:9000"
 
 
 # %% the pages
