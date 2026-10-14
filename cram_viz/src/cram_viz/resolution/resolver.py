@@ -49,9 +49,13 @@ from cram_viz.resolution.slot_data import SlotData
 from cram_viz.resolution.trial import SimulatedPouring, TriedPour
 from cram_viz.resolution.scene_world import SceneWorlds
 
-RESOLVER_MAX_TOKENS = 2048
+RESOLVER_MAX_TOKENS = 8192
 """
-The most tokens the resolver's model may answer one turn with.
+The most tokens the resolver's model may answer one turn with: a ceiling, paid for only
+as far as the model writes.
+
+A second attempt, with the outcome of the first in its prompt, was cut off at 2048
+tokens.
 """
 
 WORLD_MODEL_MODULES = ("semantic_digital_twin.reasoning.robot_predicates",)

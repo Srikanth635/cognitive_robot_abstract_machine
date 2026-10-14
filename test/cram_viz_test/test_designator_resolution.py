@@ -8,16 +8,23 @@ from __future__ import annotations
 
 import json
 import sys
+from dataclasses import fields
 from pathlib import Path
 
 import pytest
 from krrood.entity_query_language.query.match import Match
+from llm_reasoner.clients.anthropic_client import AnthropicClient
+from llm_reasoner.clients.base import ScriptedClient
 from llm_reasoner.knowledge.access import HypothesisStore
 from llm_reasoner.resolver.exceptions import OutcomeFellShort
 from llm_reasoner.resolver.grounds import GroundKey
 from semantic_digital_twin.semantic_annotations.semantic_annotations import PouringCup
 from typing_extensions import Any, Dict
 
+from cram_viz.hypothesis_knowledge.generation import (
+    ANTHROPIC_API_KEY_NAME,
+    ModelHypothesisSource,
+)
 from cram_viz.query_source import QuerySource
 from cram_viz.resolution.designators import (
     DESIGNATOR_DIRECTORY,
@@ -30,7 +37,11 @@ from cram_viz.resolution.designators import (
     QuerySlots,
     SceneNamespace,
 )
-from cram_viz.resolution.resolver import WORLD_MODEL_MODULES
+from cram_viz.resolution.resolver import (
+    RESOLVER_MAX_TOKENS,
+    WORLD_MODEL_MODULES,
+    DesignatorResolver,
+)
 from cram_viz.resolution.runs import (
     ResolutionRuns,
     RunDirectory,
@@ -39,7 +50,7 @@ from cram_viz.resolution.runs import (
     UnknownRun,
 )
 from cram_viz.resolution.scene_geometry import SceneGeometry
-from cram_viz.resolution.scene_world import SceneKey, SceneWorldBuilder
+from cram_viz.resolution.scene_world import SceneKey, SceneWorldBuilder, SceneWorlds
 
 from .resolutions import LANDS, MISSES, resolver_replaying
 
@@ -431,3 +442,33 @@ class TestRuns:
         kept = RunDirectory(directory=tmp_path / "runs" / run.resolution.run)
         assert (kept.directory / RunFile.RESOLUTION).is_file()
         assert kept.resolution() == run.resolution
+
+
+# %% what the resolver's model may answer with
+
+
+class TestResolverTokenCeiling:
+    @staticmethod
+    def viewer_resolver(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
+        """
+        :return: The resolver the viewer builds, its credentials stood in for.
+        """
+        monkeypatch.setenv(ANTHROPIC_API_KEY_NAME, "a-key-for-the-test")
+        source = ModelHypothesisSource(
+            client=ScriptedClient(), store_directory=tmp_path / "store"
+        )
+        return DesignatorResolver.for_viewer(source, SceneWorlds())
+
+    def test_the_resolvers_model_is_asked_with_the_ceiling_it_is_given(
+        self, monkeypatch, tmp_path
+    ):
+        resolver = self.viewer_resolver(monkeypatch, tmp_path)
+        assert resolver.client.max_tokens == RESOLVER_MAX_TOKENS
+
+    def test_the_ceiling_is_above_that_of_an_ordinary_completion(self):
+        ordinary = next(
+            field.default
+            for field in fields(AnthropicClient)
+            if field.name == "max_tokens"
+        )
+        assert RESOLVER_MAX_TOKENS > ordinary

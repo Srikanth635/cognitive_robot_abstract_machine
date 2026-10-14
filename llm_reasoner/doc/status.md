@@ -174,8 +174,11 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   tokens apart from `input_tokens`, which the viewer had summed alone (6 shown for 21,323 read);
   all three are now input. The run, shortened, is the fixture `failed_run.json`; its tests cover
   the failure chain, the cards of the attempts, the plan of a real pour and the tokens.
-  Open in cram_viz: `RESOLVER_MAX_TOKENS` is too low for a second attempt that has the first's
-  outcome in its prompt; a failed call has no cost.
+  `RESOLVER_MAX_TOKENS` was then raised from 2048 to 8192 (a per-turn ceiling, paid for only as
+  far as the model writes; the SDK accepts it without streaming). The cut-off is intermittent, so
+  this is not proven until a few live runs pass. Still open in cram_viz: a cut-off answer fails the
+  run rather than being repaired (the error is a plain `RuntimeError`, its message talks of a
+  structured budget this path does not use), and a failed call carries no usage or cost.
 
 ### Knowledge component
 - The predictive-manipulation ontology (`core`, `object-dynamics`, `prehension`,
