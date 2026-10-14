@@ -42,6 +42,11 @@ modules with no build step and no library loaded from elsewhere.
   rejected (an attempt that went back to the model, a pour that missed) and one outlined in
   red failed. *fit* shows the whole run, *−* and *+* zoom, *follow* keeps the newest work in
   view.
+- **NEEMs**: a pour tried in the simulation and the performed run each keep their plan as a
+  NEEM in a database (see cram_viz's README). A bar that has one carries a dot; the inspector
+  of the trial or the execution says which plan it is, where it is kept and how long saving it
+  took, with the `sqlite3` command that reads it, or why it could not be kept; the top bar
+  counts the NEEMs saved. The viewer reports them; it does not open the database.
 - **Attempts** (bottom): the attempts of the resolution the chosen span belongs to (the one
   asked for until something else is chosen), a card each: what it chose slot by slot, why
   the model chose it, the pour that was tried and how it ended, and what it was rejected

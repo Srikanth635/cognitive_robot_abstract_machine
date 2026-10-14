@@ -112,6 +112,7 @@ export class TimelineView {
         const classes = ['bar', 'status-' + span.status, 'kind-' + span.kind];
         if (span.id === view.chosenId) classes.push('chosen');
         if (related.has(span.id)) classes.push('related');
+        if (span.data.neem) classes.push('has-neem');
         if (view.matches !== null && !view.matches.has(span.id)) classes.push('unmatched');
         return el('div', { class: classes.join(' '), 'data-id': span.id, title: barTitle(span, view.now),
           style: 'left:' + one.x + 'px;top:' + (LANE_PADDING / 2 + one.track * ROW_HEIGHT) + 'px;width:' + one.width + 'px' },

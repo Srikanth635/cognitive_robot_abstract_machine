@@ -82,6 +82,8 @@ class KnownEvent(StrEnum):
     EXECUTION_FINISHED = "ExecutionFinished"
     EXECUTION_FAILED = "ExecutionFailed"
     MODEL_ANSWERED = "ModelAnswered"
+    NEEM_RECORDED = "NeemRecorded"
+    NEEM_NOT_RECORDED = "NeemNotRecorded"
 
     UNREADABLE = "Unreadable"
     """

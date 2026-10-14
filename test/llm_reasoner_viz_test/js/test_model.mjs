@@ -2,7 +2,7 @@
 // how it ended.
 import test from 'node:test';
 import assert from 'node:assert';
-import { RunModel, LANE, STATUS, KIND, EVENT, USAGE, edgeKey, spanEnd, humanize } from '../../../llm_reasoner_viz/src/llm_reasoner_viz/web/model.mjs';
+import { RunModel, LANE, STATUS, KIND, EVENT, NEEM_KIND, USAGE, edgeKey, spanEnd, humanize } from '../../../llm_reasoner_viz/src/llm_reasoner_viz/web/model.mjs';
 import { actionResolution, eventOf, loadFixture, modelOf, situationResolution, spansOfKind } from './support.mjs';
 
 const of = spansOfKind;
@@ -278,4 +278,62 @@ test('the tokens read from and written to the cache are input tokens too', funct
   ]);
   assert.strictEqual(model.totals.inputTokens, 6 + 13572 + 7745);
   assert.strictEqual(model.totals.outputTokens, 389);
+});
+
+// %% NEEMs kept of what the simulation performed
+
+const neemRun = loadFixture('neem_run.json');
+
+function neemKept(kind, episode, fields) {
+  return eventOf(EVENT.NEEM_RECORDED, 3, Object.assign({ kind: kind, episode: episode, database: '/data/neems.sqlite', database_id: 7, seconds: 5.5 }, fields || {}));
+}
+
+test('the NEEM kept of an execution is kept with the execution', function () {
+  const model = modelOf(neemRun);
+  const [execution] = of(model, KIND.EXECUTION);
+  const kept = neemRun.find(function (event) { return event.event === EVENT.NEEM_RECORDED; });
+  assert.strictEqual(execution.data.neem, kept);
+  assert.ok(execution.events.includes(kept));
+});
+
+test('the NEEM kept of a pour tried is kept with the trial', function () {
+  const model = modelOf([
+    eventOf(EVENT.TRIAL_STARTED, 1, { trial: 't1', values: {} }),
+    neemKept(NEEM_KIND.TRIAL, 't1'),
+    eventOf(EVENT.TRIAL_FINISHED, 5, { trial: 't1', outcome: { lands_in_opening: true }, seconds: 4 }),
+  ]);
+  const [trial] = of(model, KIND.TRIAL);
+  assert.strictEqual(trial.data.neem.database_id, 7);
+  assert.strictEqual(trial.status, STATUS.OK);
+});
+
+test('the NEEMs kept are counted with the run', function () {
+  const model = modelOf([
+    eventOf(EVENT.TRIAL_STARTED, 1, { trial: 't1', values: {} }),
+    neemKept(NEEM_KIND.TRIAL, 't1'),
+    eventOf(EVENT.TRIAL_STARTED, 4, { trial: 't2', values: {} }),
+    neemKept(NEEM_KIND.TRIAL, 't2'),
+  ]);
+  assert.strictEqual(model.neems.length, 2);
+  assert.strictEqual(model.neemFailures.length, 0);
+});
+
+test('a NEEM that could not be kept is kept with its span and counted apart', function () {
+  const failure = eventOf(EVENT.NEEM_NOT_RECORDED, 3, { kind: NEEM_KIND.TRIAL, episode: 't1', error_type: 'DiskIsFull', reason: 'no space left' });
+  const model = modelOf([eventOf(EVENT.TRIAL_STARTED, 1, { trial: 't1', values: {} }), failure]);
+  const [trial] = of(model, KIND.TRIAL);
+  assert.strictEqual(trial.data.neemFailure, failure);
+  assert.strictEqual(trial.data.neem, undefined);
+  assert.strictEqual(model.neems.length, 0);
+  assert.strictEqual(model.neemFailures.length, 1);
+});
+
+test('a NEEM of an episode the log does not hold is counted and attached to nothing', function () {
+  const model = modelOf([neemKept(NEEM_KIND.EXECUTION, 'a-run-the-log-never-started')]);
+  assert.strictEqual(model.neems.length, 1);
+  assert.strictEqual(model.spans.length, 0);
+});
+
+test('a run that kept no NEEM has none', function () {
+  assert.strictEqual(modelOf(resolved).neems.length, 0);
 });

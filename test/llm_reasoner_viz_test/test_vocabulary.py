@@ -9,6 +9,8 @@ from cram_viz.events import (
     ExecutionFailed,
     ExecutionFinished,
     ExecutionStarted,
+    NeemNotRecorded,
+    NeemRecorded,
     RunFailed,
     RunFinished,
     RunStarted,
@@ -52,3 +54,7 @@ class TestVocabulary:
             EventField.CACHE_CREATION_INPUT_TOKENS,
             EventField.CACHE_READ_INPUT_TOKENS,
         } <= reported
+
+    def test_the_events_of_keeping_a_neem_are_named_as_cram_viz_names_them(self):
+        assert KnownEvent.NEEM_RECORDED == NeemRecorded.__name__
+        assert KnownEvent.NEEM_NOT_RECORDED == NeemNotRecorded.__name__

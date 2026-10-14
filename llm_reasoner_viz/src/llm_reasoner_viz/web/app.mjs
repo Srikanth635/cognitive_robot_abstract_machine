@@ -307,6 +307,7 @@ class Viewer {
       formatCost(cost),
       formatDuration(elapsed),
     ];
+    if (model.neems.length > 0) parts.splice(3, 0, model.neems.length + (model.neems.length === 1 ? ' NEEM saved' : ' NEEMs saved'));
     this.totals.textContent = parts.join(' · ');
   }
 

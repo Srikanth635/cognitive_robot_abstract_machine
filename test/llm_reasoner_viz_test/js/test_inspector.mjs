@@ -1,7 +1,7 @@
 // Tests of what the inspector shows of a span: its facts and the blocks of detail.
 import test from 'node:test';
 import assert from 'node:assert';
-import { KIND, LANE, STATUS, EVENT, OUTCOME, USAGE } from '../../../llm_reasoner_viz/src/llm_reasoner_viz/web/model.mjs';
+import { KIND, LANE, STATUS, EVENT, NEEM_KIND, OUTCOME, USAGE } from '../../../llm_reasoner_viz/src/llm_reasoner_viz/web/model.mjs';
 import { BLOCK, describeSpan, trialText } from '../../../llm_reasoner_viz/src/llm_reasoner_viz/web/inspector.mjs';
 import { actionResolution, loadFixture, modelOf, pourEvents, pourOutcome, spansOfKind } from './support.mjs';
 
@@ -226,4 +226,62 @@ test('a model call that used no cache says nothing of it', function () {
   assert.strictEqual(fact(view, 'input tokens'), 100);
   assert.strictEqual(fact(view, 'read from the cache'), undefined);
   assert.strictEqual(fact(view, 'written to the cache'), undefined);
+});
+
+// %% the NEEM kept of what the simulation performed
+
+const neemRun = loadFixture('neem_run.json');
+
+function trialModel(kept) {
+  return modelOf([
+    { event: EVENT.TRIAL_STARTED, at: 1, trial: 't1', values: {} },
+    kept,
+    { event: EVENT.TRIAL_FINISHED, at: 5, trial: 't1', outcome: { [OUTCOME.LANDS_IN_OPENING]: true }, seconds: 4 },
+  ]);
+}
+
+const keptOfTrial = {
+  event: EVENT.NEEM_RECORDED, at: 3, kind: NEEM_KIND.TRIAL, episode: 't1', database: '/data/neems.sqlite', database_id: 7, seconds: 5.5,
+};
+
+test('a pour whose NEEM was kept says so, and where', function () {
+  const model = trialModel(keptOfTrial);
+  const view = describeSpan(spanOf(model, KIND.TRIAL), model);
+  assert.ok(fact(view, 'NEEM').includes(String(keptOfTrial.database_id)));
+  const neem = block(view, 'NEEM');
+  assert.strictEqual(neem.kind, BLOCK.FACTS);
+  assert.deepStrictEqual(neem.facts.find(function (row) { return row[0] === 'database'; })[1], keptOfTrial.database);
+  assert.deepStrictEqual(neem.facts.find(function (row) { return row[0] === 'plan'; })[1], keptOfTrial.database_id);
+});
+
+test('a NEEM that was kept comes with a command that reads it', function () {
+  const model = trialModel(keptOfTrial);
+  const read = block(describeSpan(spanOf(model, KIND.TRIAL), model), 'Read it');
+  assert.strictEqual(read.kind, BLOCK.TEXT);
+  assert.ok(read.text.includes(keptOfTrial.database));
+  assert.ok(read.text.includes('database_id = ' + keptOfTrial.database_id));
+});
+
+test('the NEEM kept of an execution is shown the same way', function () {
+  const model = modelOf(neemRun);
+  const kept = neemRun.find(function (event) { return event.event === EVENT.NEEM_RECORDED; });
+  const view = describeSpan(spanOf(model, KIND.EXECUTION), model);
+  assert.ok(fact(view, 'NEEM').includes(String(kept.database_id)));
+  assert.strictEqual(block(view, 'NEEM').kind, BLOCK.FACTS);
+});
+
+test('a NEEM that could not be kept says why', function () {
+  const failure = { event: EVENT.NEEM_NOT_RECORDED, at: 3, kind: NEEM_KIND.TRIAL, episode: 't1', error_type: 'DiskIsFull', reason: 'no space left on device' };
+  const model = trialModel(failure);
+  const view = describeSpan(spanOf(model, KIND.TRIAL), model);
+  assert.ok(fact(view, 'NEEM').includes(failure.error_type));
+  assert.strictEqual(block(view, 'NEEM not saved').text, failure.reason);
+  assert.strictEqual(block(view, 'Read it'), undefined);
+});
+
+test('a pour that kept no NEEM says nothing of one', function () {
+  const model = modelOfPours();
+  const view = describeSpan(spansOfKind(model, KIND.TRIAL)[0], model);
+  assert.strictEqual(fact(view, 'NEEM'), undefined);
+  assert.strictEqual(block(view, 'NEEM'), undefined);
 });

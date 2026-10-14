@@ -144,6 +144,29 @@ bridge until the plan ends, since the conditions it would turn `SUCCEEDED` on ar
 evaluated in these runs, so a step is over when the next starts. **Demo** launches the
 fixed demo instead, independent of the designators.
 
+### NEEMs of the simulations
+
+Every plan the simulation performs is kept as a NEEM, the executed plan saved through
+coraplex's ORM: each pour tried in the simulation while a resolution is made, and the
+run Execute performs, whether the motion finished or failed. They all go into **one
+database**, `~/.cram_viz/neems.sqlite` (`CRAM_VIZ_NEEM_DATABASE` names another), and the
+run's `events.jsonl` says which plan is which (`NeemRecorded`: whether it is of a trial or of
+the execution, the trial or the run, the database, the identifier it was given and how long
+saving it took; `NeemNotRecorded` says why one could not be kept, and never hides how the
+performance went). The llm_reasoner viewer shows them (see its README).
+
+What it costs: the database's tables, over a thousand, are made when the first NEEM is kept,
+which takes about 40 seconds once (a lock keeps two processes from making them together);
+after that each NEEM takes 5 to 9 seconds to save, in the process of the trial or of
+Execute, and about a megabyte of disk. A resolution tries up to three pours, so it takes
+around twenty seconds longer than before. There is no switch to turn the recording off yet.
+To read a NEEM, the plan of the NEEM with identifier `N` is the row of the table
+`PlanMappingDAO` with `database_id = N`:
+
+```bash
+sqlite3 ~/.cram_viz/neems.sqlite "select * from PlanMappingDAO where database_id = 1;"
+```
+
 On the Plan and Statechart tabs the node border is its execution status —
 running (amber), succeeded/done (green), failed (red), paused (blue),
 interrupted (orange), not started (dim, dashed) — streamed live from the
