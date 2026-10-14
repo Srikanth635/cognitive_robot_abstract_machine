@@ -110,7 +110,8 @@ run keeps the environment it started from (`environment.json`), its resolution
 (`resolution.json`) and a log of what it did (`events.jsonl`: every question to the
 model with its prompts and answer, the world and knowledge calls, the attempts and why
 one was rejected, the knowledge generated, each pour tried in the simulation) beside it,
-and the answer panel names the run. The consulted
+and the answer panel names the run and links to the llm_reasoner viewer of it (served at
+`http://localhost:8721` unless `LLM_REASONER_VIZ_URL` says otherwise). The consulted
 hypothesis is what the Hypothesis Graph tab shows; the Ontology Graph tab shows the same
 graph with the ontology class of every node and the ontology property of every link
 beneath their labels; the Designator tab shows the resolved designator. Resolving needs

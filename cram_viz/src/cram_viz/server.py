@@ -13,7 +13,8 @@ Serves three things from one port (default 8711):
       POST /api/eql             run an EQL query string
       POST /api/hypothesis/generate  generate a hypothesis for an instruction
       GET  /api/designators?scene=   the predefined designators the scene offers
-      POST /api/designator/resolve   resolve a designator query in the scene
+      POST /api/designator/resolve   resolve a designator query in the scene; the
+                                answer links to the llm_reasoner viewer of its run
       POST /api/execute         run a resolution run ({"run": name}) or the hardcoded
                                 demo under the live bridge
 
@@ -288,6 +289,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 "ok": True,
                 "resolution": run.resolution.payload(),
                 "hypothesis": hypothesis,
+                "viewer": paths.viewer_url(run.resolution.run),
             }
         )
 

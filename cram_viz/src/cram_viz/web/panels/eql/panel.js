@@ -230,7 +230,7 @@ Panels.define('eql', function (root, bus) {
           '<div class="goal">resolution failed</div>' + queryHtml(query) +
           '<div class="qerr">' + esc(payload.error || 'resolution failed') + '</div>';
       } else {
-        answerEl.innerHTML = resolutionHtml(payload.resolution);
+        answerEl.innerHTML = resolutionHtml(payload.resolution, payload.viewer);
         resolvedRun = payload.resolution.run;
         designatorExecuteBtn.disabled = false;
         bus.emit('hypothesis:generated', payload.hypothesis);
@@ -252,7 +252,7 @@ Panels.define('eql', function (root, bus) {
     return '<pre class="resolved-query">' + esc(query) + '</pre>';
   }
 
-  function resolutionHtml(resolution) {
+  function resolutionHtml(resolution, viewer) {
     let html = '<div class="goal">resolved</div>' + queryHtml(resolution.query);
     resolution.actions.forEach(function (action) {
       html += '<div class="ansub">' + esc(resolution.designator) + '</div>';
@@ -277,6 +277,8 @@ Panels.define('eql', function (root, bus) {
       (resolution.record_id ? ' (hypothesis ' + esc(resolution.record_id) + ')' : '') +
       ' · resolver cost $' + resolution.cost.toFixed(3) +
       ' · run ' + esc(resolution.run) +
+      (viewer ? ' · <a href="' + attributeText(viewer) + '" target="_blank" rel="noopener">' +
+        'inspect it in the llm_reasoner viewer</a>' : '') +
       ' · shown in the Hypothesis Graph, Ontology Graph and Designator tabs</p>';
     return html;
   }
@@ -440,4 +442,6 @@ Panels.define('eql', function (root, bus) {
   };
   function groupColor(g) { return GROUP_COLOR[g] || '#5b8cff'; }
   function esc(s) { return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+  // text inside a double-quoted attribute
+  function attributeText(s) { return esc(s).replace(/"/g, '&quot;'); }
 });

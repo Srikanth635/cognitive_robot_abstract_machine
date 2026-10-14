@@ -58,6 +58,28 @@ def hypothesis_store_dir() -> Path:
     return data_dir() / "hypotheses"
 
 
+VIEWER_URL_ENVIRONMENT = "LLM_REASONER_VIZ_URL"
+"""
+The environment variable that sets where the llm_reasoner viewer is served.
+"""
+
+DEFAULT_VIEWER_URL = "http://localhost:8721"
+"""
+Where the llm_reasoner viewer is served unless told otherwise.
+"""
+
+
+def viewer_url(run: str) -> str:
+    """
+    :param run: The name of a resolution run.
+    :return: The address at which the llm_reasoner viewer shows the run, the viewer
+        being served at :data:`DEFAULT_VIEWER_URL` unless
+        :data:`VIEWER_URL_ENVIRONMENT` says otherwise.
+    """
+    base = os.environ.get(VIEWER_URL_ENVIRONMENT, DEFAULT_VIEWER_URL).rstrip("/")
+    return f"{base}/?run={run}"
+
+
 def resolution_runs_dir() -> Path:
     """
     Where every resolution run is kept: the knowledge it consulted and generated, and

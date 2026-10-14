@@ -82,6 +82,7 @@ function designatorsPayload() {
 function resolvedPayload() {
   return {
     ok: true,
+    viewer: 'http://localhost:8721/?run=run-1',
     resolution: {
       identifier: 'pouring_cup_into_bowl',
       query: 'the(PouringAction)(\n    source_container=variable(Tool, domain=[pouring_cup]),\n)\n',
@@ -165,7 +166,10 @@ function loadEqlPanel(options) {
           },
         };
       }
-      return { status: 200, json: async function () { return resolvedPayload(); } };
+      return {
+        status: 200,
+        json: async function () { return settings.resolved || resolvedPayload(); },
+      };
     }
     if (url === '/api/execute') {
       if (settings.executeFails && JSON.parse(init.body).run === undefined) {
@@ -379,6 +383,29 @@ test('a resolution names the run it was made in', async function () {
   await settle();
 
   assert.ok(panel.elements['#answer'].innerHTML.includes(resolvedPayload().resolution.run));
+});
+
+test('a resolution links to the viewer of the system at work on its run', async function () {
+  const panel = loadEqlPanel();
+  await settle();
+
+  generate(panel, designatorsPayload().designators[0].query);
+  await settle();
+
+  assert.ok(panel.elements['#answer'].innerHTML.includes(
+    'href="' + resolvedPayload().viewer + '"'));
+});
+
+test('a resolution the server gives no viewer for shows no link', async function () {
+  const payload = resolvedPayload();
+  delete payload.viewer;
+  const panel = loadEqlPanel({ resolved: payload });
+  await settle();
+
+  generate(panel, designatorsPayload().designators[0].query);
+  await settle();
+
+  assert.ok(!panel.elements['#answer'].innerHTML.includes('<a '));
 });
 
 test('a resolution refreshes the presets, since the new knowledge changes them', async function () {
