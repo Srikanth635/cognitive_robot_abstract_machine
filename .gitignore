@@ -177,3 +177,6 @@ CLAUDE.local.md
 
 # Some robokudo annotators have default models downloaded
 robokudo/src/robokudo/models/
+# A .env file holds credentials, such as the model API key. It is never tracked, so that a
+# blanket `git add` cannot commit it.
+.env
