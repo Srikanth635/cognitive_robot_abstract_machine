@@ -4,6 +4,8 @@ The tokens a completion consumed, which is what it costs.
 
 from __future__ import annotations
 
+import threading
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 
@@ -97,3 +99,30 @@ SONNET_5_5_PRICES = TokenPrices(
 """
 Claude Sonnet 5.5's prices.
 """
+
+
+class LatestUsage(threading.local):
+    """
+    The tokens of the latest completion, kept for each thread on its own, so completions
+    running at once do not read each other's.
+    """
+
+    usage: TokenUsage = TokenUsage()
+    """
+    The tokens of the latest completion made in this thread, none before there was one.
+    """
+
+
+class UsageReporting(ABC):
+    """
+    A client that says what its latest completion used, which a completion returning
+    only its text cannot.
+    """
+
+    @property
+    @abstractmethod
+    def latest_usage(self) -> TokenUsage:
+        """
+        The tokens of the latest plain or structured completion made in the calling
+        thread.
+        """

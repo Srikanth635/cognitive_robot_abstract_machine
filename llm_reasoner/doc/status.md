@@ -14,6 +14,7 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
 | World injector (`world/`) | Built and tested; eight tools; world-access contract 1.0 with declared answer shapes |
 | Resolver (`resolver/`) | Built and tested; structured prompts; verified live on a PR2 kitchen (28 of 28 cases as expected) |
 | Clients (`clients/`) | Anthropic tool loop with caching and usage; OpenAI plain completion; scripted client |
+| Observation (`observation/`) | Events, sinks and the client and tool wrappers built and tested; the viewer on top of them is being built |
 | Knowledge component | Built and tested (ontology, generation, admission, storage, views), reorganised into `knowledge/` with one public module; consulted by the resolver before every request to its model (R1–R7, verified live), but its hypotheses are **not yet read** by the resolver's request (knowledge tools are next) |
 | Offline tests | `python -m pytest test/llm_reasoner_test`: 385 passed, 2 skipped |
 
@@ -69,6 +70,14 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
 - The tool interface and Anthropic tool loop (`ca31d29c1`, `df54039fa`); tool
   descriptions as labelled parts and errors as JSON (`6126cdd3a`); a turn calling no
   tool ends the conversation instead of sending an empty message (`ea44fdbac`).
+
+### Observation
+- Events about the system's calls (`ModelAsked`, `ModelAnswered`, `ToolCalled`, …) as plain
+  JSON, sinks (none, memory, an append-only JSON-lines log shared by several processes), and
+  wrappers reporting a client's completions and a model's tool calls from outside
+  (`ObservedClient`, `ObservedToolClient`, `ObservedTool`); `AnthropicClient` reports the
+  tokens of its plain and structured completions per thread (`UsageReporting`), so their
+  cost can be told. Step V1 of the viewer.
 
 ### Knowledge component
 - The predictive-manipulation ontology (`core`, `object-dynamics`, `prehension`,
@@ -326,9 +335,19 @@ the world does not say what the cup holds, so the material came from the task al
 | 2026-10-12 | Reorganisation first, without new functionality: one `knowledge/` package (`ontologies`, `ontology_translation`, `acceptance`, `storage`, `admission`, `generation`, `hypotheses`) with one public module, moved lowest layer first; stored hypotheses (the cram_viz sample and `~/.cram_viz/hypotheses`, backed up) are migrated with each move that changes a stored module path |
 | 2026-10-13 | Functions declared with `symbolic_function` are predicates of the world, found by the world injector alone (krrood's wrapper recognised among the loaded modules; no change to krrood, SDT or coraplex), offered when each required argument is a plain value or an individual the world holds; a failing one is answered as `PredicateFailed`, at `WorldFunction.call`, the one place the injector catches an error |
 | 2026-10-13 | The modules a world model's functions are declared in are named by the caller (`SymbolGraphSource(world_model_modules=...)`), never by `llm_reasoner`, and imported when the source is made |
+| 2026-10-14 | A viewer for the system at work is a package of its own (`llm_reasoner_viz`, port 8721), read-only at first; it reads a log of events per run that every process working on the run appends to, so it can follow a run live and replay a finished one; the components report through wrappers and optional hooks and do not know the viewer; past runs have no events; prompts are shown in full |
 
 ## 5. In progress
 
+- A viewer for the system at work, in a package of its own (`llm_reasoner_viz`, port
+  8721, read-only), fed by a log of events per run (`~/.cram_viz/runs/<run>/events.jsonl`)
+  that the cram-viz server, the trial process and the live runner append to, and linked
+  to cram-viz by run id. Steps, each test-first and committed: V1 events, sinks and the
+  client and tool wrappers (done); V2 wrappers for the world and knowledge calls, and
+  hooks for the resolver's attempts and rejections and the knowledge generation; V3 the
+  log in cram-viz with trial and Execute events and a link from the answer panel; V4 the
+  viewer server; V5 the screen (map, timeline, inspector); V6 attempts, trials, replay,
+  filters, links both ways, a live check.
 - The knowledge request, steps R1–R7: all done; R7's results are in §3.
 - Knowledge in its own graph, steps I1–I5: done, except I4's domains for slots of a
   knowledge class (waiting for a use and a decision on whose fragments form the domain).

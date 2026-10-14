@@ -8,7 +8,7 @@ import anthropic
 from typing_extensions import Any, Dict, List, Mapping, Optional, Sequence
 
 from llm_reasoner.clients.base import LanguageModelClient
-from llm_reasoner.clients.usage import TokenUsage
+from llm_reasoner.clients.usage import LatestUsage, TokenUsage, UsageReporting
 from llm_reasoner.clients.tools import (
     Tool,
     ToolBox,
@@ -95,7 +95,7 @@ _STRUCTURED_TOOL_INSTRUCTION = (
 
 
 @dataclass
-class AnthropicClient(LanguageModelClient, ToolUsingClient):
+class AnthropicClient(LanguageModelClient, ToolUsingClient, UsageReporting):
     """Completes prompts with an Anthropic model."""
 
     model: str = "claude-haiku-4-5"
@@ -124,6 +124,11 @@ class AnthropicClient(LanguageModelClient, ToolUsingClient):
     _client: anthropic.Anthropic = field(default=None, init=False, repr=False)
     """The underlying vendor client."""
 
+    _latest: LatestUsage = field(
+        default_factory=LatestUsage, init=False, repr=False, compare=False
+    )
+    """The tokens of the latest plain or structured completion, for each thread."""
+
     def __post_init__(self) -> None:
         self._client = anthropic.Anthropic(
             api_key=self.api_key or os.environ.get("ANTHROPIC_API_KEY")
@@ -138,6 +143,7 @@ class AnthropicClient(LanguageModelClient, ToolUsingClient):
             system=system,
             messages=[{MessageKey.ROLE: MessageRole.USER, MessageKey.CONTENT: user}],
         )
+        self._latest.usage = self._usage_of(response)
         return self._extract_text(response)
 
     # -- structured -----------------------------------------------------
@@ -195,6 +201,7 @@ class AnthropicClient(LanguageModelClient, ToolUsingClient):
             tool_choice={"type": "auto", "disable_parallel_tool_use": True},
         ) as stream:
             response = stream.get_final_message()
+        self._latest.usage = self._usage_of(response)
         self._check_truncation(response)
         return self._extract_tool_input(response)
 
@@ -277,6 +284,10 @@ class AnthropicClient(LanguageModelClient, ToolUsingClient):
                 "_structured_token_budget -- if it does, the schema is larger "
                 "than estimated and the budgeting heuristic needs revisiting."
             )
+
+    @property
+    def latest_usage(self) -> TokenUsage:
+        return self._latest.usage
 
     @staticmethod
     def _usage_of(response: Any) -> TokenUsage:
