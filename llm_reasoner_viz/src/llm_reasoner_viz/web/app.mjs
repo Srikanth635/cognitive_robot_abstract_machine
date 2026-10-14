@@ -2,6 +2,8 @@
 // components, the timeline and the inspector in step with them.
 
 import { formatCost, formatDuration } from './format.mjs';
+import { attemptCards, cardOfChoice, resolutionOfChoice } from './attempts.mjs';
+import { AttemptsView } from './attempts_view.mjs';
 import { describeSpan } from './inspector.mjs';
 import { EventsView } from './events_view.mjs';
 import { FilterView } from './filter_view.mjs';
@@ -10,6 +12,7 @@ import { InspectorView } from './inspector_view.mjs';
 import { mapState } from './map.mjs';
 import { MapView } from './map_view.mjs';
 import { KIND, RunModel, STATUS } from './model.mjs';
+import { plotOfTrials, triedPours } from './pour.mjs';
 import { Replay } from './replay.mjs';
 import { ReplayView } from './replay_view.mjs';
 import { TimelineView } from './timeline_view.mjs';
@@ -72,6 +75,7 @@ class Viewer {
     this.timeline = new TimelineView(find('timeline'), (id) => this.choose(id));
     this.inspector = new InspectorView(find('inspector'), (id) => this.choose(id));
     this.events = new EventsView(find('events'));
+    this.attempts = new AttemptsView(find('attempts-panel'), (id) => this.choose(id));
     this.filter = new SpanFilter();
     this.filterView = new FilterView(find('filters'), this.filter, () => this.render(), () => this.chooseNextMatch());
     const parameters = new URLSearchParams(window.location.search);
@@ -318,6 +322,16 @@ class Viewer {
     this.timeline.render(model, { now: now, until: until, live: live, chosenId: this.chosenId, chosenLane: this.chosenLane,
       matches: matching === null ? null : new Set(matching.map((span) => span.id)) });
     this.showInspector(model);
+    this.showAttempts(model);
+  }
+
+  // The attempts of the resolution the chosen span belongs to, with where the pours tried
+  // during them ended.
+  showAttempts(model) {
+    const resolution = resolutionOfChoice(model, this.chosenId);
+    const cards = attemptCards(model, resolution);
+    this.attempts.show(resolution === null ? '' : 'Attempts at ' + resolution.label, cards,
+      plotOfTrials(triedPours(model, resolution)), cardOfChoice(model, cards, this.chosenId));
   }
 }
 

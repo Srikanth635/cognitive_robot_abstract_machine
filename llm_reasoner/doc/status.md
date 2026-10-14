@@ -137,7 +137,18 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   rejected or failed, alone or together, and finds the next match in time, going round;
   `filter_view.mjs` draws a search box, *problems only*, the count and *next*. The timeline
   fades the bars that do not match. Checked in a browser on the replayed resolution.
-  Not yet: the attempts strip, the pour-trial view, links from the viewer to cram-viz.
+- The viewer, step V6c: the attempts strip and the pour-trial view. `attempts.mjs` (node
+  tests) makes a card per attempt of a resolution (what it chose, from the answer it was
+  rejected with or the last the model gave; why; what it was rejected for; the pour tried)
+  and says which resolution to show for the chosen span; `pour.mjs` makes a plan of where
+  pours ended from the outcomes (the opening as a circle of its radius, ahead up, right
+  right, only pours that were measured, scaled to hold the furthest) and lists the pours tried
+  during a resolution. The strip sits at the bottom with the plan beside the cards; the
+  inspector shows the plan for a pour (that one marked) and for a resolution. A card, a point
+  and a bar open one another. Checked in a browser on a replayed resolution whose two trials
+  carry measured positions (the scratch copy of a real log; a real one comes with the live
+  check). The outcome keys are in one place, `OUTCOME` in `model.mjs`. Not yet: links from the
+  viewer to cram-viz.
 
 ### Knowledge component
 - The predictive-manipulation ontology (`core`, `object-dynamics`, `prehension`,
@@ -406,8 +417,8 @@ the world does not say what the cup holds, so the material came from the task al
   client and tool wrappers (done); V2 wrappers for the world and knowledge calls, and
   hooks for the resolver's attempts and rejections and the knowledge generation (done); V3 the
   log in cram-viz with trial and Execute events and a link from the answer panel (done); V4 the
-  viewer server (done); V5 the screen: map, timeline, inspector (done); V6 replay and filters (done), attempts
-  strip, pour-trial view, links both ways, a live check.
+  viewer server (done); V5 the screen: map, timeline, inspector (done); V6 replay, filters, attempts strip and
+  pour-trial view (done), links both ways, a live check.
 - The knowledge request, steps R1–R7: all done; R7's results are in §3.
 - Knowledge in its own graph, steps I1–I5: done, except I4's domains for slots of a
   knowledge class (waiting for a use and a decision on whose fragments form the domain).

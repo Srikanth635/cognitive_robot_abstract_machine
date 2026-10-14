@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { EVENT, KIND, RunModel } from '../../../llm_reasoner_viz/src/llm_reasoner_viz/web/model.mjs';
+import { EVENT, KIND, OUTCOME, RunModel } from '../../../llm_reasoner_viz/src/llm_reasoner_viz/web/model.mjs';
 
 const FIXTURES = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures');
 
@@ -42,4 +42,26 @@ export function actionResolution(model, events) {
 // The choice of the situation, which the resolution of the action starts next.
 export function situationResolution(model, events) {
   return resolutionStartedBy(model, events, 1);
+}
+
+// The outcome of a pour as the simulation reports it when it measured where the mouth ended.
+export function pourOutcome(where) {
+  return {
+    [OUTCOME.LANDS_IN_OPENING]: Math.hypot(where.ahead, where.right) <= where.radius && where.above > 0,
+    [OUTCOME.OPENING_RADIUS]: where.radius,
+    [OUTCOME.DISTANCE]: Math.hypot(where.ahead, where.right),
+    [OUTCOME.AHEAD]: where.ahead,
+    [OUTCOME.RIGHT]: where.right,
+    [OUTCOME.ABOVE]: where.above,
+  };
+}
+
+// The events of pours tried one after the other, with the outcome of each.
+export function pourEvents(outcomes) {
+  return outcomes.flatMap(function (outcome, index) {
+    return [
+      eventOf(EVENT.TRIAL_STARTED, 10 * index + 1, { trial: 'pour' + index, values: { tilt_angle: 1 + index } }),
+      eventOf(EVENT.TRIAL_FINISHED, 10 * index + 2, { trial: 'pour' + index, outcome: outcome, seconds: 1 }),
+    ];
+  });
 }
