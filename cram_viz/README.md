@@ -128,8 +128,15 @@ accepted whatever it brings about; the answer panel lists every pour tried.
 in the world of the run's scene, built anew, with its robot annotated as the class
 `resolution/robot_annotations.json` keeps for it, the robot parks its arms, lowers its
 torso, faces the source container, picks it up with the resolved arm and pours as
-resolved, under the live bridge — the 3D scene's Live button shows it running. **Demo**
-launches the fixed demo instead, independent of the designators.
+resolved, under the live bridge — the 3D scene's Live button shows it running, and the
+Plan tab shows the plan of the run (the bridge follows a plan performed through its root
+node as well as through `Plan.perform`, and publishes coraplex's `NOT_STARTED` and
+`PAUSED` as the `CREATED` and `PAUSE` its legend names). Execute also appends to the
+run's `events.jsonl`: that it started and ended or failed, and each step of the plan,
+the actions below its root, when its status changes. An action stays `RUNNING` in the
+bridge until the plan ends, since the conditions it would turn `SUCCEEDED` on are not
+evaluated in these runs, so a step is over when the next starts. **Demo** launches the
+fixed demo instead, independent of the designators.
 
 On the Plan and Statechart tabs the node border is its execution status —
 running (amber), succeeded/done (green), failed (red), paused (blue),
