@@ -36,6 +36,7 @@ from typing_extensions import Any, Callable, Dict, List, Optional
 from cram_viz import paths
 from cram_viz.events import reporting_run
 from cram_viz.hypothesis_knowledge.generation import ModelHypothesisSource
+from cram_viz.neem import NeemRecording
 from cram_viz.query_source import QuerySource
 from cram_viz.resolution.designators import (
     DesignatorQuery,
@@ -259,6 +260,11 @@ class DesignatorResolver:
     What the model charges, to report a resolution's cost.
     """
 
+    neem_database: Optional[Path] = None
+    """
+    The database the NEEMs of the pours tried are kept in; none are kept without one.
+    """
+
     simulate: Callable[..., Any] = subprocess.run
     """
     Runs the process trying a pour in the simulation.
@@ -281,6 +287,7 @@ class DesignatorResolver:
             baseline=source.knowledge_service(),
             runs=ResolutionRuns(directory=paths.resolution_runs_dir()),
             worlds=worlds,
+            neem_database=paths.neem_database_path(),
         )
 
     def reopen(self, name: str) -> ResolutionRun:
@@ -388,7 +395,7 @@ class DesignatorResolver:
             tried in the simulation.
         """
         slots = QuerySlots.of(query)
-        trials = self.trials_for(query, slots, bundle, sink)
+        trials = self.trials_for(query, slots, bundle, sink, self.neems_of(run))
         view = self.world_view()
         backend = Reasoner(
             client=self.client,
@@ -429,10 +436,25 @@ class DesignatorResolver:
             trials=[] if trials is None else trials.trials,
         )
 
+    def neems_of(self, run: RunDirectory) -> Optional[NeemRecording]:
+        """
+        :return: Where the NEEMs of the run's trials are kept and reported: the database,
+            and the run's log; none when no database is given.
+        """
+        if self.neem_database is None:
+            return None
+        return NeemRecording(database=self.neem_database, events=run.events.path)
+
     def trials_for(
-        self, query: Match, slots: QuerySlots, bundle: Path, sink: EventSink
+        self,
+        query: Match,
+        slots: QuerySlots,
+        bundle: Path,
+        sink: EventSink,
+        neems: Optional[NeemRecording],
     ) -> Optional[SimulatedPouring]:
         """
+        :param neems: Where the NEEM of each trial is kept and reported.
         :return: The check trying a pouring in the simulation before it is accepted,
             each trial reported to the sink, or none for any other action.
         """
@@ -444,6 +466,7 @@ class DesignatorResolver:
             allowed_trials=POUR_TRIALS,
             run=self.simulate,
             observer=sink,
+            neems=neems,
         )
 
     def resolved_action(

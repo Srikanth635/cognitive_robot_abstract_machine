@@ -25,6 +25,8 @@ from cram_viz.hypothesis_knowledge.generation import (
     ANTHROPIC_API_KEY_NAME,
     ModelHypothesisSource,
 )
+from cram_viz import paths
+from cram_viz.neem import NeemOption
 from cram_viz.query_source import QuerySource
 from cram_viz.resolution.designators import (
     DESIGNATOR_DIRECTORY,
@@ -472,3 +474,59 @@ class TestResolverTokenCeiling:
             if field.name == "max_tokens"
         )
         assert RESOLVER_MAX_TOKENS > ordinary
+
+
+# %% keeping the NEEMs of the trials
+
+
+class TestResolverNeems:
+    def test_the_viewers_resolver_keeps_the_neems_where_the_data_directory_says(
+        self, monkeypatch, tmp_path
+    ):
+        monkeypatch.setenv(ANTHROPIC_API_KEY_NAME, "a-key-for-the-test")
+        monkeypatch.setenv("CRAM_VIZ_DATA", str(tmp_path / "data"))
+        monkeypatch.delenv(paths.NEEM_DATABASE_ENVIRONMENT, raising=False)
+        source = ModelHypothesisSource(
+            client=ScriptedClient(), store_directory=tmp_path / "store"
+        )
+        resolver = DesignatorResolver.for_viewer(source, SceneWorlds())
+        assert resolver.neem_database == paths.neem_database_path()
+
+    def test_a_resolver_given_a_database_tells_each_trial_where_to_keep_its_neem_in_the_run_log(
+        self, pouring_bundle, tmp_path
+    ):
+        resolver = resolver_replaying(
+            PouringDesignator.OBJECTS_GIVEN,
+            HypothesisStore(directory=tmp_path / "store"),
+            tmp_path / "runs",
+        )
+        resolver.neem_database = tmp_path / "neems.sqlite"
+        run = resolver.resolve(
+            DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
+            "pouring",
+            pouring_bundle,
+        )
+        (command,) = resolver.simulate.commands
+        options = command[command.index(NeemOption.DATABASE) :]
+        assert options[:4] == [
+            NeemOption.DATABASE,
+            str(tmp_path / "neems.sqlite"),
+            NeemOption.EVENTS,
+            str(tmp_path / "runs" / run.resolution.run / RunFile.EVENTS),
+        ]
+
+    def test_a_resolver_given_no_database_tells_its_trials_to_keep_nothing(
+        self, pouring_bundle, tmp_path
+    ):
+        resolver = resolver_replaying(
+            PouringDesignator.OBJECTS_GIVEN,
+            HypothesisStore(directory=tmp_path / "store"),
+            tmp_path / "runs",
+        )
+        resolver.resolve(
+            DesignatorQuery.shipped(PouringDesignator.OBJECTS_GIVEN),
+            "pouring",
+            pouring_bundle,
+        )
+        (command,) = resolver.simulate.commands
+        assert NeemOption.DATABASE not in command
