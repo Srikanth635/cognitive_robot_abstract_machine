@@ -89,6 +89,20 @@ const STEP_STATUS = Object.freeze({
   INTERRUPTED: 'INTERRUPTED',
 });
 
+// The keys of the tokens a model answered with: the input read without the cache, the tokens
+// generated, and those written to the cache and read from it.
+export const USAGE = Object.freeze({
+  INPUT: 'input_tokens',
+  OUTPUT: 'output_tokens',
+  CACHE_WRITTEN: 'cache_creation_input_tokens',
+  CACHE_READ: 'cache_read_input_tokens',
+});
+
+// Everything the model read: the input, with what went to the cache and came from it.
+export function inputTokens(usage) {
+  return (usage[USAGE.INPUT] || 0) + (usage[USAGE.CACHE_WRITTEN] || 0) + (usage[USAGE.CACHE_READ] || 0);
+}
+
 const ACTION_SUFFIX = /Action$/;
 const WORD_BOUNDARY = /([a-z])([A-Z])/g;
 
@@ -339,8 +353,8 @@ export class RunModel {
     this.totals.modelCalls += 1;
     this.totals.cost += event.cost || 0;
     if (event.usage) {
-      this.totals.inputTokens += event.usage.input_tokens || 0;
-      this.totals.outputTokens += event.usage.output_tokens || 0;
+      this.totals.inputTokens += inputTokens(event.usage);
+      this.totals.outputTokens += event.usage[USAGE.OUTPUT] || 0;
     }
     const span = this.byId.get('model:' + event.call);
     if (!span) return;

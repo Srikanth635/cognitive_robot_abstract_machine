@@ -1,7 +1,7 @@
 // Tests of what the inspector shows of a span: its facts and the blocks of detail.
 import test from 'node:test';
 import assert from 'node:assert';
-import { KIND, LANE, STATUS, EVENT, OUTCOME } from '../../../llm_reasoner_viz/src/llm_reasoner_viz/web/model.mjs';
+import { KIND, LANE, STATUS, EVENT, OUTCOME, USAGE } from '../../../llm_reasoner_viz/src/llm_reasoner_viz/web/model.mjs';
 import { BLOCK, describeSpan, trialText } from '../../../llm_reasoner_viz/src/llm_reasoner_viz/web/inspector.mjs';
 import { actionResolution, loadFixture, modelOf, pourEvents, pourOutcome, spansOfKind } from './support.mjs';
 
@@ -200,4 +200,30 @@ test('a resolution shows the plan of the pours tried during its attempts', funct
 test('a resolution that tried no pour has no plan of them', function () {
   const model = modelOf(resolved);
   assert.strictEqual(block(describeSpan(actionResolution(model, resolved), model), 'Pours tried'), undefined);
+});
+
+// %% what a model call read
+
+test('a model call shows all the tokens it read, and how many came from the cache and went to it', function () {
+  const usage = { [USAGE.INPUT]: 6, [USAGE.OUTPUT]: 389, [USAGE.CACHE_WRITTEN]: 13572, [USAGE.CACHE_READ]: 7745 };
+  const model = modelOf([
+    { event: EVENT.MODEL_ASKED, at: 1, call: 'm', source: LANE.RESOLVER, style: 'plain', identity: 'i', system: '', user: '', tools: [] },
+    { event: EVENT.MODEL_ANSWERED, at: 2, call: 'm', answer: 'a', seconds: 1, usage: usage, cost: 0.04 },
+  ]);
+  const view = describeSpan(spanOf(model, KIND.MODEL), model);
+  assert.strictEqual(fact(view, 'input tokens'), usage[USAGE.INPUT] + usage[USAGE.CACHE_WRITTEN] + usage[USAGE.CACHE_READ]);
+  assert.strictEqual(fact(view, 'read from the cache'), usage[USAGE.CACHE_READ]);
+  assert.strictEqual(fact(view, 'written to the cache'), usage[USAGE.CACHE_WRITTEN]);
+  assert.strictEqual(fact(view, 'output tokens'), usage[USAGE.OUTPUT]);
+});
+
+test('a model call that used no cache says nothing of it', function () {
+  const model = modelOf([
+    { event: EVENT.MODEL_ASKED, at: 1, call: 'm', source: LANE.RESOLVER, style: 'plain', identity: 'i', system: '', user: '', tools: [] },
+    { event: EVENT.MODEL_ANSWERED, at: 2, call: 'm', answer: 'a', seconds: 1, usage: { [USAGE.INPUT]: 100, [USAGE.OUTPUT]: 20 }, cost: 0.01 },
+  ]);
+  const view = describeSpan(spanOf(model, KIND.MODEL), model);
+  assert.strictEqual(fact(view, 'input tokens'), 100);
+  assert.strictEqual(fact(view, 'read from the cache'), undefined);
+  assert.strictEqual(fact(view, 'written to the cache'), undefined);
 });

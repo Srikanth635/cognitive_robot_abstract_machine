@@ -1,7 +1,7 @@
 // The screen: follows one run's events as they are written and keeps the map of the
 // components, the timeline and the inspector in step with them.
 
-import { formatCost, formatDuration } from './format.mjs';
+import { formatCost, formatCount, formatDuration } from './format.mjs';
 import { attemptCards, cardOfChoice, resolutionOfChoice } from './attempts.mjs';
 import { AttemptsView } from './attempts_view.mjs';
 import { describeSpan } from './inspector.mjs';
@@ -303,7 +303,7 @@ class Viewer {
     const elapsed = model.firstAt === null ? 0 : now - model.firstAt;
     const parts = [
       modelCalls + (modelCalls === 1 ? ' model call' : ' model calls'),
-      inputTokens + ' tokens in, ' + outputTokens + ' out',
+      formatCount(inputTokens) + ' tokens in, ' + formatCount(outputTokens) + ' out',
       formatCost(cost),
       formatDuration(elapsed),
     ];

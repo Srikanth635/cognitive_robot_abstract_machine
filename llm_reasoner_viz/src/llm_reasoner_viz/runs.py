@@ -18,6 +18,16 @@ from typing_extensions import Any, Dict, Iterable, List, Optional, Tuple
 
 from llm_reasoner_viz.vocabulary import EventField, KnownEvent
 
+INPUT_TOKEN_KEYS = (
+    EventField.INPUT_TOKENS,
+    EventField.CACHE_CREATION_INPUT_TOKENS,
+    EventField.CACHE_READ_INPUT_TOKENS,
+)
+"""
+The parts of what a completion read: the tokens read without the cache, and those
+written to it and read from it.
+"""
+
 LOG_FILE = "events.jsonl"
 """
 The name of a run's log in its directory.
@@ -200,7 +210,8 @@ class RunSummary:
 
     input_tokens: int = 0
     """
-    The input tokens the completions used, read without the cache.
+    The input tokens the completions used: those read without the cache, and those
+    written to it and read from it.
     """
 
     output_tokens: int = 0
@@ -255,7 +266,7 @@ class RunSummary:
                 self.model_calls += 1
                 self.cost += event.get(EventField.COST) or 0.0
                 usage = event.get(EventField.USAGE) or {}
-                self.input_tokens += usage.get(EventField.INPUT_TOKENS, 0)
+                self.input_tokens += sum(usage.get(key, 0) for key in INPUT_TOKEN_KEYS)
                 self.output_tokens += usage.get(EventField.OUTPUT_TOKENS, 0)
 
 

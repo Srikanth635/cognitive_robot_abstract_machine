@@ -2,7 +2,7 @@
 // the prompts of a model call, laid out as the sections they are made of.
 
 import { formatCost, formatDuration } from './format.mjs';
-import { KIND, OUTCOME, STATUS, shortName } from './model.mjs';
+import { KIND, OUTCOME, STATUS, USAGE, inputTokens, shortName } from './model.mjs';
 import { plotOfTrials, triedPours } from './pour.mjs';
 import { isJson, parseSections } from './prompts.mjs';
 
@@ -106,7 +106,12 @@ function describeModel(span, model) {
   const usage = answered && answered.usage;
   const facts = [['asked by', asked.source], ['model', asked.identity], ['style', asked.style]];
   if (answered) facts.push(['took', formatDuration(answered.seconds)]);
-  if (usage) facts.push(['input tokens', usage.input_tokens], ['output tokens', usage.output_tokens]);
+  if (usage) {
+    facts.push(['input tokens', inputTokens(usage)]);
+    if (usage[USAGE.CACHE_READ]) facts.push(['read from the cache', usage[USAGE.CACHE_READ]]);
+    if (usage[USAGE.CACHE_WRITTEN]) facts.push(['written to the cache', usage[USAGE.CACHE_WRITTEN]]);
+    facts.push(['output tokens', usage[USAGE.OUTPUT]]);
+  }
   if (answered && typeof answered.cost === 'number') facts.push(['cost', formatCost(answered.cost)]);
   facts.push(...failureFacts(failure));
   return view(span, 'Model call by the ' + asked.source, facts, [

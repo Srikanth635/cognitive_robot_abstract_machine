@@ -31,7 +31,7 @@ modules with no build step and no library loaded from elsewhere.
 ## The screen
 
 - **Top bar**: the run (a picker of the runs that have a log), how it stands (running,
-  finished, failed), the model calls, tokens and cost so far, and whether the viewer is
+  finished, failed), the model calls, tokens (all the models read, the cache included) and cost so far, and whether the viewer is
   following the log. *events* opens a drawer with the raw events.
 - **System** (left): the resolver, simulation, world injector, language model and
   knowledge component, with the number of calls over each connection, what a component is
@@ -61,7 +61,7 @@ modules with no build step and no library loaded from elsewhere.
   and pause, a step to the next or the previous event, a speed of 1, 4, 16 or 64 times, and
   a slider along the run, which is how to get past a model call that took minutes.
 - **Inspector** (right): what a bar is. A model call shows who asked, which model, how it
-  went, and its system and user prompt as the tagged sections they are made of (each opens
+  went (the tokens it read, split into those that came from the cache and those written to it, and the tokens it wrote), and its system and user prompt as the tagged sections they are made of (each opens
   and closes, and copies), the schema, the tools offered, the tool calls made during it, and
   the answer; a resolution its slots, the knowledge it consulted, its attempts and why it
   answered as it did; an attempt why it was rejected; a hypothesis what was asked and how it

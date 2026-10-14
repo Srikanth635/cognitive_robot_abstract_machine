@@ -54,6 +54,16 @@ class EventField(StrEnum):
     The tokens a completion generated.
     """
 
+    CACHE_CREATION_INPUT_TOKENS = "cache_creation_input_tokens"
+    """
+    The input tokens of a completion that were written to the cache.
+    """
+
+    CACHE_READ_INPUT_TOKENS = "cache_read_input_tokens"
+    """
+    The input tokens of a completion that were read from the cache.
+    """
+
     LINE = "line"
     """
     The text of a line of the log that is not an event.

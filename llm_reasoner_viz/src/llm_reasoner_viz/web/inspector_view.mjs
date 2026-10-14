@@ -2,6 +2,7 @@
 // blocks of detail, such as the prompts of a model call as the sections they are made of.
 
 import { el } from './dom.mjs';
+import { formatCount } from './format.mjs';
 import { BLOCK } from './inspector.mjs';
 import { drawPlot } from './pour_view.mjs';
 import { isJson, prettyJson } from './prompts.mjs';
@@ -68,7 +69,7 @@ function tableBlock(block) {
 
 function factsList(facts) {
   return el('dl', { class: 'facts' }, facts.map(function ([name, value]) {
-    return [el('dt', {}, name), el('dd', {}, String(value))];
+    return [el('dt', {}, name), el('dd', {}, typeof value === 'number' ? formatCount(value) : String(value))];
   }));
 }
 

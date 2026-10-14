@@ -13,6 +13,9 @@ from cram_viz.events import (
     RunFinished,
     RunStarted,
 )
+from dataclasses import fields
+
+from llm_reasoner.clients.usage import TokenUsage
 from llm_reasoner.observation.events import EventKey, ModelAnswered
 
 from llm_reasoner_viz.vocabulary import EventField, KnownEvent
@@ -40,3 +43,12 @@ class TestVocabulary:
         assert started[EventField.QUERY] == "the(...)"
         assert started[EventField.SCENE] == "pouring"
         assert EventField.AT in started
+
+    def test_the_fields_of_the_tokens_used_are_those_llm_reasoner_reports(self):
+        reported = {field.name for field in fields(TokenUsage)}
+        assert {
+            EventField.INPUT_TOKENS,
+            EventField.OUTPUT_TOKENS,
+            EventField.CACHE_CREATION_INPUT_TOKENS,
+            EventField.CACHE_READ_INPUT_TOKENS,
+        } <= reported

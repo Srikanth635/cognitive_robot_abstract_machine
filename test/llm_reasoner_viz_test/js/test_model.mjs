@@ -2,7 +2,7 @@
 // how it ended.
 import test from 'node:test';
 import assert from 'node:assert';
-import { RunModel, LANE, STATUS, KIND, EVENT, edgeKey, spanEnd, humanize } from '../../../llm_reasoner_viz/src/llm_reasoner_viz/web/model.mjs';
+import { RunModel, LANE, STATUS, KIND, EVENT, USAGE, edgeKey, spanEnd, humanize } from '../../../llm_reasoner_viz/src/llm_reasoner_viz/web/model.mjs';
 import { actionResolution, eventOf, loadFixture, modelOf, situationResolution, spansOfKind } from './support.mjs';
 
 const of = spansOfKind;
@@ -268,4 +268,14 @@ test('a line of the log that is not an event is kept and gives the run no date',
   assert.strictEqual(model.events.length, 2);
   assert.strictEqual(model.firstAt, 5);
   assert.strictEqual(model.lastAt, 5);
+});
+
+test('the tokens read from and written to the cache are input tokens too', function () {
+  const model = modelOf([
+    eventOf(EVENT.MODEL_ASKED, 1, { call: 'a', source: LANE.RESOLVER, style: 'plain', identity: 'i', system: '', user: '', tools: [] }),
+    eventOf(EVENT.MODEL_ANSWERED, 2, { call: 'a', answer: 'x', seconds: 1, cost: 0.1,
+      usage: { [USAGE.INPUT]: 6, [USAGE.OUTPUT]: 389, [USAGE.CACHE_WRITTEN]: 13572, [USAGE.CACHE_READ]: 7745 } }),
+  ]);
+  assert.strictEqual(model.totals.inputTokens, 6 + 13572 + 7745);
+  assert.strictEqual(model.totals.outputTokens, 389);
 });
