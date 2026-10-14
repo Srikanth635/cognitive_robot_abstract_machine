@@ -15,9 +15,11 @@ from pathlib import Path
 import numpy as np
 import pytest
 from coraplex.datastructures.enums import Arms
+from llm_reasoner.observation.sinks import MemorySink
 from llm_reasoner.resolver.exceptions import OutcomeFellShort
 from typing_extensions import Any, Dict, List
 
+from cram_viz.events import TrialFinished, TrialStarted
 from cram_viz.resolution.trial import (
     TRIAL_MODULE,
     OutcomeKey,
@@ -55,15 +57,22 @@ class PourAnswer:
     """
 
 
-def checking(outcomes: List[Any], allowed_trials: int = 3) -> SimulatedPouring:
+def checking(
+    outcomes: List[Any],
+    allowed_trials: int = 3,
+    observer: MemorySink | None = None,
+) -> SimulatedPouring:
     """
-    :return: A check whose trials report the outcomes in turn.
+    :return: A check whose trials report the outcomes in turn, and the trials to the
+        observer when there is one.
     """
+    settings = {} if observer is None else {"observer": observer}
     return SimulatedPouring(
         bundle=Path("pouring"),
         slots=["arm", "tilt_angle"],
         allowed_trials=allowed_trials,
         run=ScriptedTrials(outcomes=outcomes),
+        **settings,
     )
 
 
@@ -136,4 +145,42 @@ class TestSimulatedPouring:
             TRIAL_MODULE,
             str(check.bundle),
             json.dumps({"arm": Arms.RIGHT.name, "tilt_angle": 1.85}),
+        ]
+
+
+# %% reporting the trials
+
+
+class TestObservedTrials:
+    def test_a_trial_is_reported_with_the_values_tried_and_what_they_brought_about(
+        self,
+    ):
+        sink = MemorySink()
+        check = checking([LANDS], observer=sink)
+        check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+        started, finished = sink.events
+        assert (type(started), type(finished)) == (TrialStarted, TrialFinished)
+        assert started.values == {"arm": Arms.RIGHT.name, "tilt_angle": 1.85}
+        assert finished.outcome == LANDS
+        assert finished.trial == started.trial
+        assert finished.seconds >= 0.0
+
+    def test_a_failed_simulation_is_reported_as_a_trial_with_its_failure(self):
+        sink = MemorySink()
+        check = checking([None], observer=sink)
+        with pytest.raises(OutcomeFellShort):
+            check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+        assert OutcomeKey.MOTION_FAILED in sink.events[-1].outcome
+
+    def test_every_trial_is_reported(self):
+        sink = MemorySink()
+        check = checking([MISSES, LANDS], observer=sink)
+        with pytest.raises(OutcomeFellShort):
+            check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+        check.check([PourAnswer(arm=Arms.LEFT, tilt_angle=1.6)])
+        assert [type(event) for event in sink.events] == [
+            TrialStarted,
+            TrialFinished,
+            TrialStarted,
+            TrialFinished,
         ]

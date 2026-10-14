@@ -106,8 +106,11 @@ member of `PouringDesignator`.
 Every resolution is a run of its own from the same initial environment: the scene's
 world is built anew, and the knowledge is consulted over a copy of the store in
 `~/.cram_viz/runs/<run>/hypotheses`, so what one run generates no other run reads; the
-run keeps the environment it started from (`environment.json`) and its resolution
-(`resolution.json`) beside it, and the answer panel names the run. The consulted
+run keeps the environment it started from (`environment.json`), its resolution
+(`resolution.json`) and a log of what it did (`events.jsonl`: every question to the
+model with its prompts and answer, the world and knowledge calls, the attempts and why
+one was rejected, the knowledge generated, each pour tried in the simulation) beside it,
+and the answer panel names the run. The consulted
 hypothesis is what the Hypothesis Graph tab shows; the Ontology Graph tab shows the same
 graph with the ontology class of every node and the ontology property of every link
 beneath their labels; the Designator tab shows the resolved designator. Resolving needs

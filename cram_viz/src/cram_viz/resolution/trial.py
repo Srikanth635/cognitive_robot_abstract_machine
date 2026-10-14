@@ -16,11 +16,14 @@ import subprocess
 import sys
 import tempfile
 from dataclasses import dataclass, field
+from time import perf_counter
 from enum import StrEnum
 from operator import attrgetter
 from pathlib import Path
 
 import numpy as np
+from llm_reasoner.observation.events import new_call
+from llm_reasoner.observation.sinks import EventSink, NullSink
 from llm_reasoner.resolver.exceptions import OutcomeFellShort
 from llm_reasoner.resolver.outcomes import OutcomeCheck
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
@@ -29,6 +32,7 @@ from semantic_digital_twin.world_description.world_entity import Body
 from typing_extensions import Any, Callable, Dict, List, Sequence
 
 from cram_viz import configure_console_logging
+from cram_viz.events import TrialFinished, TrialStarted
 from cram_viz.resolution.execution import PouringExecution
 from cram_viz.resolution.scene_world import SceneWorldBuilder
 from cram_viz.resolution.slot_data import SlotData
@@ -287,6 +291,11 @@ class SimulatedPouring(OutcomeCheck):
     The pours tried, in order.
     """
 
+    observer: EventSink = field(default_factory=NullSink)
+    """
+    Where each trial is reported to; nowhere by default.
+    """
+
     def check(self, instances: Sequence[Any]) -> None:
         instance, *_ = instances
         values = {
@@ -304,6 +313,21 @@ class SimulatedPouring(OutcomeCheck):
         """
         :return: The outcome of performing the pouring with the values, or of the
             simulation failing.
+        """
+        trial = new_call()
+        self.observer.emit(TrialStarted(trial=trial, values=values))
+        started = perf_counter()
+        outcome = self.trial_outcome(values)
+        self.observer.emit(
+            TrialFinished(
+                trial=trial, outcome=outcome, seconds=perf_counter() - started
+            )
+        )
+        return outcome
+
+    def trial_outcome(self, values: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        :return: The outcome of the process performing the pouring with the values.
         """
         with tempfile.TemporaryDirectory() as directory:
             outcome_file = Path(directory) / OUTCOME_FILE

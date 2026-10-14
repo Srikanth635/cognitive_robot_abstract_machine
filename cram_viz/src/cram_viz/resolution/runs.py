@@ -20,6 +20,7 @@ from krrood.adapters.json_serializer import (
     to_json,
 )
 from llm_reasoner.knowledge.access import HypothesisStore
+from llm_reasoner.observation.sinks import JsonLinesSink
 from typing_extensions import Any, Dict, Self
 
 
@@ -41,6 +42,12 @@ class RunFile(StrEnum):
     ENVIRONMENT = "environment.json"
     """
     The environment the run started from.
+    """
+
+    EVENTS = "events.jsonl"
+    """
+    The log of what the run did, one JSON line per event, which every process working on
+    the run appends to.
     """
 
 
@@ -123,6 +130,13 @@ class RunDirectory:
         :return: The run's own knowledge store.
         """
         return HypothesisStore(directory=self.directory / RunFile.KNOWLEDGE)
+
+    @property
+    def events(self) -> JsonLinesSink:
+        """
+        :return: The sink appending to the run's log.
+        """
+        return JsonLinesSink(path=self.directory / RunFile.EVENTS)
 
     def environment(self) -> RunEnvironment:
         """

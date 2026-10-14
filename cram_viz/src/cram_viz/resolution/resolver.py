@@ -20,6 +20,9 @@ from llm_reasoner.clients.base import LanguageModelClient
 from llm_reasoner.clients.usage import SONNET_5_5_PRICES, TokenPrices
 from llm_reasoner.clients.anthropic_client import AnthropicClient
 from llm_reasoner.knowledge.access import Citation, KnowledgeService
+from llm_reasoner.observation.events import Component
+from llm_reasoner.observation.observed import ObservedClient
+from llm_reasoner.observation.sinks import EventSink
 from llm_reasoner.reasoner import Reasoner
 from llm_reasoner.resolver.backend import LanguageModelBackend
 from llm_reasoner.resolver.grounds import Ground, GroundKey, Justification
@@ -31,6 +34,7 @@ from semantic_digital_twin.world_description.world_entity import Body
 from typing_extensions import Any, Callable, Dict, List, Optional
 
 from cram_viz import paths
+from cram_viz.events import reporting_run
 from cram_viz.hypothesis_knowledge.generation import ModelHypothesisSource
 from cram_viz.query_source import QuerySource
 from cram_viz.resolution.designators import (
@@ -297,16 +301,19 @@ class DesignatorResolver:
         run = self.runs.start(
             self.baseline.backend.store, RunEnvironment(scene=scene, bundle=bundle)
         )
-        knowledge = self.knowledge_for(run)
-        resolution = self.resolution_in(
-            run,
-            designator,
-            designator.query_in(names),
-            knowledge,
-            SceneGeometry(world=world),
-            bundle,
-        )
-        run.keep(resolution)
+        sink = run.events
+        with reporting_run(sink, run.name, designator.source.text, scene):
+            knowledge = self.knowledge_for(run, sink)
+            resolution = self.resolution_in(
+                run,
+                designator,
+                designator.query_in(names),
+                knowledge,
+                SceneGeometry(world=world),
+                bundle,
+                sink,
+            )
+            run.keep(resolution)
         return ResolutionRun(resolution=resolution, knowledge=knowledge)
 
     @staticmethod
@@ -319,12 +326,25 @@ class DesignatorResolver:
             source=SymbolGraphSource(world_model_modules=WORLD_MODEL_MODULES)
         )
 
-    def knowledge_for(self, run: RunDirectory) -> KnowledgeService:
+    def knowledge_for(self, run: RunDirectory, sink: EventSink) -> KnowledgeService:
         """
-        :return: The baseline's knowledge component over the run's own store.
+        :param run: The run consulting the knowledge.
+        :param sink: Where the knowledge component reports what it does for the run.
+        :return: The baseline's knowledge component over the run's own store, its
+            model's completions and its generation reported to the sink.
         """
         return KnowledgeService(
-            backend=replace(self.baseline.backend, store=run.knowledge_store)
+            backend=replace(
+                self.baseline.backend,
+                client=ObservedClient.of(
+                    self.baseline.backend.client,
+                    sink,
+                    Component.KNOWLEDGE,
+                    prices=self.prices,
+                ),
+                store=run.knowledge_store,
+                observer=sink,
+            )
         )
 
     def resolution_in(
@@ -335,6 +355,7 @@ class DesignatorResolver:
         knowledge: KnowledgeService,
         geometry: SceneGeometry,
         bundle: Path,
+        sink: EventSink,
     ) -> ResolvedDesignator:
         """
         :param run: The run resolving.
@@ -343,13 +364,20 @@ class DesignatorResolver:
         :param knowledge: The knowledge component the run consults.
         :param geometry: The scene's geometry, stated as a fact of the situation.
         :param bundle: The scene's bundle directory, from which a pour is tried.
+        :param sink: Where the resolution is reported.
         :return: What resolving the query chose, why, what it rests on, and the pours it
             tried in the simulation.
         """
         slots = QuerySlots.of(query)
-        trials = self.trials_for(query, slots, bundle)
+        trials = self.trials_for(query, slots, bundle, sink)
         view = self.world_view()
-        backend = Reasoner(client=self.client, knowledge=knowledge, world=view).backend(
+        backend = Reasoner(
+            client=self.client,
+            knowledge=knowledge,
+            world=view,
+            sink=sink,
+            prices=self.prices,
+        ).backend(
             context_provider=geometry,
             number_of_candidates=1,
             source_detail=SourceDetail.FULL,
@@ -383,11 +411,11 @@ class DesignatorResolver:
         )
 
     def trials_for(
-        self, query: Match, slots: QuerySlots, bundle: Path
+        self, query: Match, slots: QuerySlots, bundle: Path, sink: EventSink
     ) -> Optional[SimulatedPouring]:
         """
-        :return: The check trying a pouring in the simulation before it is accepted, or
-            none for any other action.
+        :return: The check trying a pouring in the simulation before it is accepted,
+            each trial reported to the sink, or none for any other action.
         """
         if query.type is not PouringAction:
             return None
@@ -396,6 +424,7 @@ class DesignatorResolver:
             slots=slots.names,
             allowed_trials=POUR_TRIALS,
             run=self.simulate,
+            observer=sink,
         )
 
     def resolved_action(
