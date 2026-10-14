@@ -398,13 +398,13 @@ a wrapper reports their calls from outside, and the default is to report nowhere
 
 | Module | Responsibility |
 |---|---|
-| `events.py` | `Event` and its kinds: `ModelAsked`, `ModelAnswered`, `ModelFailed`, `ToolCalled`, `ToolReturned`, `ToolFailed`; `Component`, `CompletionStyle`. A call's two events share an identifier. |
+| `events.py` | `Event` and its kinds: `ModelAsked`, `ModelAnswered`, `ModelFailed`, `ToolCalled`, `ToolReturned`, `ToolFailed`, `ToolRefused`, `ComponentCalled`, `ComponentReturned`, `ComponentFailed`; `Component`, `CompletionStyle`. A call's two events share an identifier. |
 | `sinks.py` | `EventSink`: `NullSink`, `MemorySink`, and `JsonLinesSink`, which appends one line per event to a log with a single write so writers in several processes share it |
-| `observed.py` | `ObservedClient` and `ObservedToolClient` wrap a `LanguageModelClient` and report each completion with its prompts, schema, answer, duration, tokens and cost; `ObservedTool` reports each call a model makes of a tool. A wrapper has the identity and abilities of what it wraps, so a client that cannot let a model call tools still cannot. |
+| `observed.py` | `ObservedClient` and `ObservedToolClient` wrap a `LanguageModelClient` and report each completion with its prompts, schema, answer, duration, tokens and cost; `ObservedTool` reports each call a model makes of a tool, and the calls the tool box refused before running (unknown tool, input breaking its schema) are reported after the conversation, as `ToolRefused` just before the call run next. A wrapper has the identity and abilities of what it wraps, so a client that cannot let a model call tools still cannot. |
+| `components.py` | `ObservedWorld` and `ObservedKnowledge` wrap `WorldAccess` and `KnowledgeAccess` and report each call between components with the operation, what it asks about and what it answers, an individual or a collection reported by its kind or its size |
 
 An event holds the prompts and answers in full and never a credential: the wrappers see
-only what a client is given and returns. A tool the tool box refuses before running it
-(an unknown tool, input breaking its schema) is not reported yet.
+only what a client is given and returns.
 
 The viewer that reads these logs is planned (`status.md`).
 

@@ -35,6 +35,7 @@ from llm_reasoner.observation.events import (
     ModelFailed,
     ToolCalled,
     ToolFailed,
+    ToolRefused,
     ToolReturned,
 )
 from llm_reasoner.observation.observed import (
@@ -83,6 +84,24 @@ class ToolThatFails(ToolAnsweringWithItsInput):
 
     def run(self, arguments: Mapping[str, Any]) -> ToolOutcome:
         raise RuntimeError(FAILURE)
+
+
+class ToolNeedingAName(ToolAnsweringWithItsInput):
+    """
+    A tool whose input must name something, so an input without a name is refused.
+    """
+
+    @property
+    def definition(self) -> ToolDefinition:
+        return ToolDefinition(
+            name=ECHO,
+            description=ToolDescription(purpose="Needs a name.", returns="The name."),
+            input_schema={
+                "type": "object",
+                "properties": {"name": {"type": "string"}},
+                "required": ["name"],
+            },
+        )
 
 
 @dataclass
@@ -291,6 +310,63 @@ class TestToolCompletions:
         assert failed.error_type == RuntimeError.__name__
         assert failed.reason == FAILURE
         assert failed.call == sink.events[1].call
+
+
+# %% calls the tool box refuses
+
+
+class TestRefusedToolCalls:
+    def test_a_call_with_input_breaking_the_schema_is_reported_as_refused(self):
+        client, sink = observing(
+            ScriptedClient(tool_turns=[[ScriptedToolRequest(ECHO, {})], "done"])
+        )
+        conversation = client.complete_with_tools(
+            "system", "user", [ToolNeedingAName()]
+        )
+        assert kinds(sink) == [ModelAsked, ToolRefused, ModelAnswered]
+        asked, refused, _ = sink.events
+        assert refused.tool == ECHO
+        assert refused.arguments == {}
+        assert refused.content == conversation.calls[0].outcome.content
+        assert refused.parent == asked.call
+
+    def test_a_call_to_a_tool_that_is_not_offered_is_reported_as_refused(self):
+        client, sink = observing(
+            ScriptedClient(
+                tool_turns=[[ScriptedToolRequest("no_such_tool", {})], "done"]
+            )
+        )
+        client.complete_with_tools("system", "user", [ToolAnsweringWithItsInput()])
+        assert kinds(sink) == [ModelAsked, ToolRefused, ModelAnswered]
+        assert sink.events[1].tool == "no_such_tool"
+
+    def test_a_refused_call_is_reported_before_the_call_the_tool_box_ran_after_it(self):
+        client, sink = observing(
+            ScriptedClient(
+                tool_turns=[
+                    [
+                        ScriptedToolRequest(ECHO, {}),
+                        ScriptedToolRequest(ECHO, {"name": "jug"}),
+                    ],
+                    "done",
+                ]
+            )
+        )
+        client.complete_with_tools("system", "user", [ToolNeedingAName()])
+        (refused,) = [event for event in sink.events if type(event) is ToolRefused]
+        (called,) = [event for event in sink.events if type(event) is ToolCalled]
+        assert refused.arguments == {}
+        assert called.arguments == {"name": "jug"}
+        assert refused.at < called.at
+
+    def test_a_call_the_tool_box_ran_is_not_reported_as_refused(self):
+        client, sink = observing(
+            ScriptedClient(
+                tool_turns=[[ScriptedToolRequest(ECHO, {"name": "jug"})], "done"]
+            )
+        )
+        client.complete_with_tools("system", "user", [ToolNeedingAName()])
+        assert ToolRefused not in kinds(sink)
 
 
 # %% tokens and cost
