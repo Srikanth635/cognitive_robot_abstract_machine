@@ -12,7 +12,8 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 keywords = ["robotics", "visualization", "language models"]
-dynamic = ["version", "dependencies"]
+dynamic = ["version"]
+dependencies = []  # the standard library only
 license = "LGPL-3.0-only"
 
 [project.scripts]
@@ -28,7 +29,6 @@ llm_reasoner_viz = ["web/**/*"]
 
 [tool.setuptools.dynamic]
 version = { attr = "llm_reasoner_viz.__version__" }
-dependencies = { file = "requirements.txt" }
 
 [project.optional-dependencies]
 dev = [
