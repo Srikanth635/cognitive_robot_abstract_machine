@@ -1,5 +1,5 @@
 """
-Where the runs the viewer shows are kept.
+Where the runs the viewer shows are kept, and where cram_viz, which it links to, is.
 """
 
 from __future__ import annotations
@@ -15,6 +15,16 @@ The environment variable that names the directory of runs to show.
 DATA_ENVIRONMENT = "CRAM_VIZ_DATA"
 """
 The environment variable that names cram_viz's data directory, in which it keeps runs.
+"""
+
+CRAM_VIZ_ENVIRONMENT = "CRAM_VIZ_URL"
+"""
+The environment variable that names the address cram_viz is served at.
+"""
+
+DEFAULT_CRAM_VIZ_URL = "http://localhost:8711"
+"""
+The address cram_viz is served at unless told otherwise.
 """
 
 RUNS_DIRECTORY = "runs"
@@ -40,3 +50,11 @@ def default_runs_directory() -> Path:
     if data:
         return Path(data).expanduser() / RUNS_DIRECTORY
     return Path.home() / USER_DATA_DIRECTORY / RUNS_DIRECTORY
+
+
+def cram_viz_url() -> str:
+    """
+    :return: The address cram_viz is served at: the one the environment names, else the
+        default, without a closing slash.
+    """
+    return os.environ.get(CRAM_VIZ_ENVIRONMENT, DEFAULT_CRAM_VIZ_URL).rstrip("/")

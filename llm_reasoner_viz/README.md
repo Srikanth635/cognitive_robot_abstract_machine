@@ -19,7 +19,10 @@ python -m llm_reasoner_viz.server      # without installing the command
 ```
 
 cram-viz links to the viewer from the answer of every resolution (`LLM_REASONER_VIZ_URL`
-sets the address it links to).
+sets the address it links to), and the viewer links back: *open in cram-viz* in the top bar
+opens cram-viz at the run's scene with `?run=<run>`, which shows what the run resolved, the
+hypothesis it consulted, and can perform it there, the viewer following the steps in the
+run's log. `CRAM_VIZ_URL` sets the address of cram-viz (`http://localhost:8711`).
 
 The viewer listens on this machine only (`--host` changes that): the events hold prompts
 in full. It needs the Python standard library only, and its page is plain JavaScript
@@ -72,6 +75,7 @@ at what it points to.
 
 | Request | Answer |
 |---|---|
+| `GET /api/config` | Where cram-viz is, for the page to link to |
 | `GET /api/runs` | The runs that have a log, newest first, each summed up: its query, scene, how resolving and performing went, how many events and model calls, tokens and cost |
 | `GET /api/runs/<run>/events` | The events of a run as one batch, with `next`, the offset to go on from; `?after=<offset>`, `?limit=<n>` |
 | `GET /api/runs/<run>/stream` | The events as server-sent events, those written so far and then those written next; each frame's `id` is where its event ends in the log, so `?after=<offset>` or the `Last-Event-ID` header resumes a stream |
@@ -90,6 +94,7 @@ src/llm_reasoner_viz/
         prompts.mjs     a prompt read as its tagged sections
         replay.mjs      what a run looked like at any moment, and how a replay moves
         filters.mjs     picking out the spans that say some words or went wrong
+        links.mjs       the address that opens a run in cram-viz
         attempts.mjs    the cards of the attempts of a resolution
         pour.mjs        the plan of where pours ended
         layout.mjs      spans packed into rows of the timeline

@@ -155,7 +155,13 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   after booting (query in the search bar, hypothesis on the bus, Execute for that run) without
   resolving. Opening needs the same credentials as resolving, the resolver being built the
   same way. Checked on the real run of 13 October (which predates logs) against a sandbox
-  server. Not yet: the viewer's link.
+  server.
+- The viewer, step V6d, the viewer's half: `GET /api/config` says where cram-viz is
+  (`CRAM_VIZ_URL`, default `http://localhost:8711`), and the top bar's *open in cram-viz* link
+  (`links.mjs`, node tests) opens cram-viz at the run's scene and run. Checked in a browser with
+  both servers: the link, then the reopened run in cram-viz with its link back. The sandbox
+  machine has no `pouring` scene bundle, so cram-viz's designator menu and 3D scene showed their
+  errors there, which reopening does not depend on.
 
 ### Knowledge component
 - The predictive-manipulation ontology (`core`, `object-dynamics`, `prehension`,
@@ -424,8 +430,8 @@ the world does not say what the cup holds, so the material came from the task al
   client and tool wrappers (done); V2 wrappers for the world and knowledge calls, and
   hooks for the resolver's attempts and rejections and the knowledge generation (done); V3 the
   log in cram-viz with trial and Execute events and a link from the answer panel (done); V4 the
-  viewer server (done); V5 the screen: map, timeline, inspector (done); V6 replay, filters, attempts strip and
-  pour-trial view (done), links both ways, a live check.
+  viewer server (done); V5 the screen: map, timeline, inspector (done); V6 replay, filters, attempts strip,
+  pour-trial view and links both ways (done), a live check.
 - The knowledge request, steps R1–R7: all done; R7's results are in §3.
 - Knowledge in its own graph, steps I1–I5: done, except I4's domains for slots of a
   knowledge class (waiting for a use and a decision on whose fragments form the domain).

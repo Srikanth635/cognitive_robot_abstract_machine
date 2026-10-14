@@ -9,6 +9,7 @@ import { EventsView } from './events_view.mjs';
 import { FilterView } from './filter_view.mjs';
 import { SpanFilter } from './filters.mjs';
 import { InspectorView } from './inspector_view.mjs';
+import { cramVizAddress } from './links.mjs';
 import { mapState } from './map.mjs';
 import { MapView } from './map_view.mjs';
 import { KIND, RunModel, STATUS } from './model.mjs';
@@ -26,6 +27,7 @@ const FRAME_MILLISECONDS = 33;
 const LONGEST_FRAME_SECONDS = 0.25;
 
 const Address = Object.freeze({
+  CONFIG: '/api/config',
   RUNS: '/api/runs',
   stream: function (run) { return '/api/runs/' + encodeURIComponent(run) + '/stream'; },
 });
@@ -68,6 +70,8 @@ class Viewer {
     this.connection = find('connection');
     this.drawer = find('events-drawer');
     this.eventsToggle = find('events-toggle');
+    this.cramVizLink = find('cram-viz-link');
+    this.cramVizUrl = null;
     this.replayToggle = find('replay-toggle');
     this.replayBar = find('replay-bar');
     this.replayView = new ReplayView(this.replayBar, () => this.replayChanged());
@@ -103,12 +107,32 @@ class Viewer {
       this.eventsToggle.classList.toggle('on', !this.drawer.hidden);
     });
     this.replayToggle.addEventListener('click', () => this.toggleReplay());
+    this.loadConfig();
     this.loadRuns();
     setInterval(() => this.loadRuns(), RUN_POLL_MILLISECONDS);
     setInterval(() => { if (this.changed || this.isLive()) this.render(); }, REFRESH_MILLISECONDS);
   }
 
   // %% runs
+
+  // Learns where cram-viz is, so the page can link to it.
+  async loadConfig() {
+    const response = await fetch(Address.CONFIG).catch(() => null);
+    if (response === null) return;
+    const payload = await response.json();
+    if (payload.ok) this.cramVizUrl = payload.cram_viz_url;
+    this.changed = true;
+  }
+
+  // Points the link to cram-viz at the scene and the run being shown.
+  showCramVizLink(model) {
+    this.cramVizLink.hidden = this.cramVizUrl === null || this.run === null;
+    if (this.cramVizLink.hidden) return;
+    const started = model.spans.find((span) => span.kind === KIND.RUN);
+    const summary = this.runs.find((run) => run.run === this.run);
+    const scene = started ? started.data.started.scene : (summary ? summary.scene : '');
+    this.cramVizLink.href = cramVizAddress(this.cramVizUrl, scene, this.run);
+  }
 
   async loadRuns() {
     const response = await fetch(Address.RUNS).catch(() => null);
@@ -311,6 +335,7 @@ class Viewer {
     const status = this.statusOf(model, live);
     this.statusBadge.textContent = status;
     this.statusBadge.className = 'badge status-' + status;
+    this.showCramVizLink(model);
     this.replayBar.hidden = this.replay === null;
     this.replayToggle.classList.toggle('on', this.replay !== null);
     this.replayToggle.disabled = this.replay === null && (this.isLive() || this.model.events.length === 0);
