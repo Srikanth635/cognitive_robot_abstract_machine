@@ -20,6 +20,12 @@ from llm_reasoner.knowledge.generation.schema import GenerationSchema
 from llm_reasoner.knowledge.generation.wire import FragmentDecoder
 from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms
 from llm_reasoner.knowledge.representation.hypothesis import DecodedHypothesis
+from llm_reasoner.observation.events import (
+    GenerationAttemptRejected,
+    GenerationAttemptStarted,
+    GenerationFailed,
+)
+from llm_reasoner.observation.sinks import EventSink, NullSink
 
 # %% exceptions
 
@@ -126,6 +132,11 @@ class GenerationDialogue:
     be among; without them such concepts are not checked.
     """
 
+    observer: EventSink = field(default_factory=NullSink)
+    """
+    Where each attempt and why one is rejected are reported to; nowhere by default.
+    """
+
     exchanges: list[Exchange] = field(default_factory=list, init=False)
     """
     Every exchange of the dialogue, in order.
@@ -145,6 +156,7 @@ class GenerationDialogue:
         prompt = initial_prompt
         under_repair: Optional[AnswerUnderRepair] = None
         for attempt in range(self.max_repairs + 1):
+            self.observer.emit(GenerationAttemptStarted(attempt=attempt))
             raw_response = self.client.complete_structured(
                 system_prompt, prompt, schema.json_schema()
             )
@@ -169,6 +181,9 @@ class GenerationDialogue:
                     warnings=assessment.warnings,
                     exchanges=list(self.exchanges),
                 )
+            self.observer.emit(
+                GenerationAttemptRejected(attempt=attempt, problems=assessment.problems)
+            )
             if under_repair is None or len(assessment.problems) <= len(
                 under_repair.problems
             ):
@@ -178,6 +193,11 @@ class GenerationDialogue:
             prompt = self.prompt.repair(
                 initial_prompt, under_repair.answer, under_repair.problems
             )
+        self.observer.emit(
+            GenerationFailed(
+                attempts=len(self.exchanges), problems=under_repair.problems
+            )
+        )
         raise HypothesisRejected(
             problems=under_repair.problems, exchanges=list(self.exchanges)
         )

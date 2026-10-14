@@ -14,7 +14,7 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
 | World injector (`world/`) | Built and tested; eight tools; world-access contract 1.0 with declared answer shapes |
 | Resolver (`resolver/`) | Built and tested; structured prompts; verified live on a PR2 kitchen (28 of 28 cases as expected) |
 | Clients (`clients/`) | Anthropic tool loop with caching and usage; OpenAI plain completion; scripted client |
-| Observation (`observation/`) | Events, sinks and the client and tool wrappers built and tested; the viewer on top of them is being built |
+| Observation (`observation/`) | Events, sinks, wrappers for the client, tools, world and knowledge component, and hooks in the resolver and the knowledge generation built and tested; the viewer on top of them is being built |
 | Knowledge component | Built and tested (ontology, generation, admission, storage, views), reorganised into `knowledge/` with one public module; consulted by the resolver before every request to its model (R1–R7, verified live), but its hypotheses are **not yet read** by the resolver's request (knowledge tools are next) |
 | Offline tests | `python -m pytest test/llm_reasoner_test`: 385 passed, 2 skipped |
 
@@ -77,7 +77,13 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   wrappers reporting a client's completions and a model's tool calls from outside
   (`ObservedClient`, `ObservedToolClient`, `ObservedTool`); `AnthropicClient` reports the
   tokens of its plain and structured completions per thread (`UsageReporting`), so their
-  cost can be told. Step V1 of the viewer.
+  cost can be told. Step V1 of the viewer (`c7fa16fa8`).
+- Wrappers reporting the calls between components (`ObservedWorld`, `ObservedKnowledge`),
+  the tool calls the tool box refuses, the resolver's start, consultation of the
+  knowledge, attempts, rejections and end (`LanguageModelBackend.observer`), the knowledge
+  generation's request, attempts, failure and hypothesis served
+  (`HypothesisBackend.observer`), and `Reasoner(sink=...)` assembling them. Step V2
+  (`41d06eef4`, `45555d376`, and the commit after them).
 
 ### Knowledge component
 - The predictive-manipulation ontology (`core`, `object-dynamics`, `prehension`,
@@ -344,7 +350,7 @@ the world does not say what the cup holds, so the material came from the task al
   that the cram-viz server, the trial process and the live runner append to, and linked
   to cram-viz by run id. Steps, each test-first and committed: V1 events, sinks and the
   client and tool wrappers (done); V2 wrappers for the world and knowledge calls, and
-  hooks for the resolver's attempts and rejections and the knowledge generation; V3 the
+  hooks for the resolver's attempts and rejections and the knowledge generation (done); V3 the
   log in cram-viz with trial and Execute events and a link from the answer panel; V4 the
   viewer server; V5 the screen (map, timeline, inspector); V6 attempts, trials, replay,
   filters, links both ways, a live check.

@@ -34,6 +34,8 @@ from llm_reasoner.knowledge.generation.recording import HypothesisRecorder
 from llm_reasoner.knowledge.generation.request import HypothesisRequest
 from llm_reasoner.knowledge.ontologies.linked import LinkedOntologyTerms
 from llm_reasoner.knowledge.representation.rdf import GraphReader
+from llm_reasoner.observation.events import HypothesisRequested, HypothesisServed
+from llm_reasoner.observation.sinks import EventSink, NullSink
 from llm_reasoner.knowledge.storage.record import HypothesisRecord, qualified_name
 from llm_reasoner.knowledge.storage.store import HypothesisStore
 
@@ -93,6 +95,12 @@ class HypothesisBackend(GenerativeBackend):
     storing when absent.
     """
 
+    observer: EventSink = field(kw_only=True, default_factory=NullSink)
+    """
+    Where a request, each attempt at the model's answer and the hypothesis served are
+    reported to; nowhere by default.
+    """
+
     log: list[Exchange] = field(default_factory=list, init=False)
     """
     Every exchange of the most recent generation, in order.
@@ -110,6 +118,13 @@ class HypothesisBackend(GenerativeBackend):
 
     def _evaluate(self, expression: Match[T]) -> Iterable[T]:
         request = HypothesisRequest.from_match(expression, self.instruction)
+        self.observer.emit(
+            HypothesisRequested(
+                root_type=qualified_name(request.root_type),
+                fixed_values=request.written_fixed_values,
+                instruction=self.instruction,
+            )
+        )
         stored = (
             self.store.find(
                 qualified_name(request.root_type), request.written_fixed_values
@@ -119,6 +134,11 @@ class HypothesisBackend(GenerativeBackend):
         )
         if stored is not None:
             self.last_record = stored.record
+            self.observer.emit(
+                HypothesisServed(
+                    record_id=stored.record.record_id, from_store=True, attempts=0
+                )
+            )
             yield GraphReader().read(stored.graph).root_of(request.root_type)
             return
         dialogue = GenerationDialogue(
@@ -127,6 +147,7 @@ class HypothesisBackend(GenerativeBackend):
             prompt=self.prompt,
             max_repairs=self.max_repairs,
             linked_terms=self.linked_terms,
+            observer=self.observer,
         )
         self.log = dialogue.exchanges
         self.last_outcome = dialogue.generate(request)
@@ -135,4 +156,15 @@ class HypothesisBackend(GenerativeBackend):
             consistency_checked=self.consistency is not None,
             store=self.store,
         ).record(self.last_outcome, request)
+        self.observer.emit(
+            HypothesisServed(
+                record_id=self.last_record.record_id,
+                from_store=False,
+                attempts=len(self.last_outcome.exchanges),
+                warnings=[
+                    f"{warning.rule}: {warning.reason}"
+                    for warning in self.last_outcome.warnings
+                ],
+            )
+        )
         yield self.last_outcome.hypothesis.root

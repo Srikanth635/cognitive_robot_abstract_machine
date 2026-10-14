@@ -625,3 +625,103 @@ class ResolutionFailed(Event):
     """
     What it said.
     """
+
+
+# %% the knowledge component
+
+
+@dataclass
+class HypothesisRequested(Event):
+    """
+    The knowledge component was asked for a hypothesis.
+    """
+
+    root_type: str
+    """
+    The module and name of the vocabulary class the hypothesis is an instance of.
+    """
+
+    fixed_values: Mapping[str, str]
+    """
+    The values the request fixes, as the model is told them and the store keys them.
+    """
+
+    instruction: str
+    """
+    The action the hypothesis is for, recorded as provenance.
+    """
+
+
+@dataclass
+class GenerationAttemptStarted(Event):
+    """
+    The knowledge component asked the model for a hypothesis.
+    """
+
+    attempt: int
+    """
+    Which attempt this is, counting from zero; every one after the first repairs the one
+    before.
+    """
+
+
+@dataclass
+class GenerationAttemptRejected(Event):
+    """
+    The knowledge component found a hypothesis the model gave inadmissible and sent it
+    back.
+    """
+
+    attempt: int
+    """
+    The attempt whose answer was rejected.
+    """
+
+    problems: List[str]
+    """
+    What was wrong with the answer.
+    """
+
+
+@dataclass
+class GenerationFailed(Event):
+    """
+    No hypothesis was admitted within the repair budget.
+    """
+
+    attempts: int
+    """
+    How many answers were tried.
+    """
+
+    problems: List[str]
+    """
+    What was wrong with the answer closest to admissible.
+    """
+
+
+@dataclass
+class HypothesisServed(Event):
+    """
+    The knowledge component served a hypothesis.
+    """
+
+    record_id: str
+    """
+    The identifier of the stored hypothesis.
+    """
+
+    from_store: bool
+    """
+    Whether the store held it, rather than it being generated for the request.
+    """
+
+    attempts: int
+    """
+    How many answers generating it took; none when the store held it.
+    """
+
+    warnings: List[str] = field(default_factory=list)
+    """
+    What it was admitted with despite.
+    """
