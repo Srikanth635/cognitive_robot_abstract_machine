@@ -14,7 +14,7 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
 | World injector (`world/`) | Built and tested; eight tools; world-access contract 1.0 with declared answer shapes |
 | Resolver (`resolver/`) | Built and tested; structured prompts; verified live on a PR2 kitchen (28 of 28 cases as expected) |
 | Clients (`clients/`) | Anthropic tool loop with caching and usage; OpenAI plain completion; scripted client |
-| Observation (`observation/`) | Events, sinks, wrappers for the client, tools, world and knowledge component, and hooks in the resolver and the knowledge generation built and tested; the viewer on top of them is being built |
+| Observation (`observation/`) | Events, sinks, wrappers for the client, tools, world and knowledge component, and hooks in the resolver and the knowledge generation built and tested; cram_viz logs every run; the viewer (`llm_reasoner_viz`) serves the logs, its screen is being built |
 | Knowledge component | Built and tested (ontology, generation, admission, storage, views), reorganised into `knowledge/` with one public module; consulted by the resolver before every request to its model (R1–R7, verified live), but its hypotheses are **not yet read** by the resolver's request (knowledge tools are next) |
 | Offline tests | `python -m pytest test/llm_reasoner_test`: 385 passed, 2 skipped |
 
@@ -102,6 +102,14 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
 - The answer panel links to the viewer of the run (`paths.viewer_url`, `http://localhost:8721`
   or `LLM_REASONER_VIZ_URL`); the server returns the address with the resolution. Step V3
   complete.
+- The viewer, step V4: the package `llm_reasoner_viz` with its server on port 8721 (this
+  machine only), listing the runs that have a log, newest first, each summed up (query,
+  scene, how resolving and performing went, events, model calls, tokens, cost), the events
+  of a run as a batch, and a stream following a log as it grows, resumable by offset; a first
+  page showing each event as a row, coloured by the component it belongs to. Checked in a
+  browser on the replayed resolution, on a real Execute's log, and on a log written slowly
+  while the page followed it. Its tests are not in CI, like those of `llm_reasoner` and
+  `cram_viz`.
 
 ### Knowledge component
 - The predictive-manipulation ontology (`core`, `object-dynamics`, `prehension`,
@@ -370,7 +378,7 @@ the world does not say what the cup holds, so the material came from the task al
   client and tool wrappers (done); V2 wrappers for the world and knowledge calls, and
   hooks for the resolver's attempts and rejections and the knowledge generation (done); V3 the
   log in cram-viz with trial and Execute events and a link from the answer panel (done); V4 the
-  viewer server; V5 the screen (map, timeline, inspector); V6 attempts, trials, replay,
+  viewer server (done); V5 the screen (map, timeline, inspector); V6 attempts, trials, replay,
   filters, links both ways, a live check.
 - The knowledge request, steps R1–R7: all done; R7's results are in §3.
 - Knowledge in its own graph, steps I1–I5: done, except I4's domains for slots of a
