@@ -188,3 +188,7 @@ CLAUDE.local.md
 # Tracking a generated file made every branch switch fail while a checkout held its own
 # copy, which is what git refuses to overwrite.
 **/ormatic_interface.py
+
+# A .env file holds credentials, such as the model API key. It is never tracked, so that a
+# blanket `git add` cannot commit it.
+.env
