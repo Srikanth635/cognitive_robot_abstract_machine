@@ -111,7 +111,12 @@ run keeps the environment it started from (`environment.json`), its resolution
 model with its prompts and answer, the world and knowledge calls, the attempts and why
 one was rejected, the knowledge generated, each pour tried in the simulation) beside it,
 and the answer panel names the run and links to the llm_reasoner viewer of it (served at
-`http://localhost:8721` unless `LLM_REASONER_VIZ_URL` says otherwise). The consulted
+`http://localhost:8721` unless `LLM_REASONER_VIZ_URL` says otherwise). The link goes both ways: a
+page opened with `?scene=<scene>&run=<run>`, as the viewer's *open in cram-viz* link does,
+shows what that run resolved (`GET /api/designator/run?name=<run>`, the answer a resolution
+gave) without resolving again, with its query in the search bar, the hypothesis it consulted
+in the graph tabs, and Execute performing that run. It builds the resolver as resolving does,
+so it needs the same credentials. The consulted
 hypothesis is what the Hypothesis Graph tab shows; the Ontology Graph tab shows the same
 graph with the ontology class of every node and the ontology property of every link
 beneath their labels; the Designator tab shows the resolved designator. Resolving needs

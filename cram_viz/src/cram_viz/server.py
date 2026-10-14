@@ -15,6 +15,8 @@ Serves three things from one port (default 8711):
       GET  /api/designators?scene=   the predefined designators the scene offers
       POST /api/designator/resolve   resolve a designator query in the scene; the
                                 answer links to the llm_reasoner viewer of its run
+      GET  /api/designator/run?name=  show a run kept earlier as a resolution just made
+                                is shown: the same answer, without resolving
       POST /api/execute         run a resolution run ({"run": name}) or the hardcoded
                                 demo under the live bridge
 
@@ -175,6 +177,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if route == "/api/designators":
             selected_scene = self._selected_scene()
             return self._guarded(lambda: _offered_designators(selected_scene))
+        if route == "/api/designator/run":
+            name = (self._query().get("name") or [""])[0]
+            selected_scene = self._selected_scene()
+            return self._guarded(lambda: _open_run(name, selected_scene))
         if route == "/api/kb/expand":
             node = (self._query().get("node") or [""])[0]
             selected_scene = self._selected_scene()
@@ -263,7 +269,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         request = json.loads(self.rfile.read(length) or b"{}")
         selected_scene = request.get("scene")
         try:
-            from cram_viz import hypothesis_knowledge
             from cram_viz.query_source import QuerySource
             from cram_viz.resolution.designators import DesignatorQuery
 
@@ -276,22 +281,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     kb_module.scene_name(selected_scene),
                     Path(kb_module.scene_dir(selected_scene)),
                 )
-                hypothesis_knowledge.activate_resolution(run.resolution, run.knowledge)
-                kb_module.reset_kb()
-                hypothesis = kb_module.view_payload("hypothesis", selected_scene)
+                payload = _show_run(run, selected_scene)
         except Exception as ex:
             logger.exception("designator resolution failed")
             return self._json(
                 {"ok": False, "error": "%s: %s" % (type(ex).__name__, ex)}
             )
-        return self._json(
-            {
-                "ok": True,
-                "resolution": run.resolution.payload(),
-                "hypothesis": hypothesis,
-                "viewer": paths.viewer_url(run.resolution.run),
-            }
-        )
+        return self._json(payload)
 
     def _execute(self) -> None:
         """
@@ -369,6 +365,34 @@ def _designator_resolver():
     from cram_viz.resolution.resolver import DesignatorResolver
 
     return DesignatorResolver.for_viewer(ModelHypothesisSource(), _scene_worlds())
+
+
+def _show_run(run: Any, selected_scene: Optional[str]) -> Dict[str, Any]:
+    """
+    Make the hypothesis a run's resolution consulted what the viewer displays and
+    queries, and answer with the resolution and that hypothesis.
+
+    Called with the EQL lock held: it swaps the knowledge every query and view reads.
+    """
+    from cram_viz import hypothesis_knowledge
+
+    hypothesis_knowledge.activate_resolution(run.resolution, run.knowledge)
+    kb_module.reset_kb()
+    return {
+        "ok": True,
+        "resolution": run.resolution.payload(),
+        "hypothesis": kb_module.view_payload("hypothesis", selected_scene),
+        "viewer": paths.viewer_url(run.resolution.run),
+    }
+
+
+def _open_run(name: str, selected_scene: Optional[str]) -> Dict[str, Any]:
+    """
+    :param name: The name of a resolution run kept earlier.
+    :return: The answer a resolution of that run gave, shown as it was then.
+    """
+    with _EQL_LOCK:
+        return _show_run(_designator_resolver().reopen(name), selected_scene)
 
 
 def _offered_designators(selected_scene: Optional[str]) -> Dict[str, Any]:

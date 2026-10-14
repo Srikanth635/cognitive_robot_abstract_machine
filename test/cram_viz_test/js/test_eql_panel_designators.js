@@ -171,6 +171,18 @@ function loadEqlPanel(options) {
         json: async function () { return settings.resolved || resolvedPayload(); },
       };
     }
+    if (url === '/api/designator/run?name=run-1') {
+      if (settings.openFails) {
+        return {
+          status: 200,
+          json: async function () { return { ok: false, error: 'UnknownRun: no run of that name' }; },
+        };
+      }
+      return {
+        status: 200,
+        json: async function () { return settings.resolved || resolvedPayload(); },
+      };
+    }
     if (url === '/api/execute') {
       if (settings.executeFails && JSON.parse(init.body).run === undefined) {
         return {
@@ -190,7 +202,7 @@ function loadEqlPanel(options) {
     apiUrl(url) { return url; },
     nameFromSearch() { return 'simple_pouring'; },
   };
-  global.window = { location: { search: '' } };
+  global.window = { location: { search: settings.search || '' } };
 
   let factory = null;
   global.Panels = {
@@ -521,4 +533,56 @@ test('launching the demo resolves nothing and does not reload the presets', asyn
   assert.ok(!panel.requests.some(function (r) { return r.url === '/api/designator/resolve'; }));
   const kbCallsAfter = panel.requests.filter(function (r) { return r.url === '/api/kb'; }).length;
   assert.strictEqual(kbCallsAfter, kbCallsBefore);
+});
+
+// %% opening a run from the address
+test('a page opened with a run shows what the run resolved, without resolving again', async function () {
+  const panel = loadEqlPanel({ search: '?scene=simple_pouring&run=run-1' });
+  await settle();
+
+  assert.ok(panel.requests.some(function (request) { return request.url === '/api/designator/run?name=run-1'; }));
+  assert.ok(!panel.requests.some(function (request) { return request.url === '/api/designator/resolve'; }));
+  assert.ok(panel.elements['#answer'].innerHTML.includes(resolvedPayload().resolution.actions[0].why));
+  assert.ok(panel.elements['#answer'].innerHTML.includes(resolvedPayload().viewer));
+});
+
+test('the query of the run opened is put in the search bar', async function () {
+  const panel = loadEqlPanel({ search: '?run=run-1' });
+  await settle();
+
+  assert.strictEqual(panel.elements['#query-input'].value, resolvedPayload().resolution.query);
+});
+
+test('the hypothesis the run consulted is published on the bus', async function () {
+  const panel = loadEqlPanel({ search: '?run=run-1' });
+  await settle();
+
+  const [published] = emittedEvents(panel, 'hypothesis:generated');
+  assert.deepStrictEqual(published.payload, resolvedPayload().hypothesis);
+});
+
+test('the run opened is the one Execute performs', async function () {
+  const panel = loadEqlPanel({ search: '?run=run-1' });
+  await settle();
+
+  assert.strictEqual(panel.elements['#designator-execute'].disabled, false);
+  panel.elements['#designator-execute'].listeners.click();
+  await settle();
+  const launch = panel.requests.find(function (request) { return request.url === '/api/execute'; });
+  assert.deepStrictEqual(JSON.parse(launch.init.body), { run: 'run-1' });
+});
+
+test('a run that cannot be opened says why and leaves Execute off', async function () {
+  const panel = loadEqlPanel({ search: '?run=run-1', openFails: true });
+  await settle();
+
+  assert.ok(panel.elements['#answer'].innerHTML.includes('UnknownRun'));
+  assert.strictEqual(panel.elements['#designator-execute'].disabled, true);
+});
+
+test('a page opened with no run asks for none', async function () {
+  const panel = loadEqlPanel();
+  await settle();
+
+  assert.ok(!panel.requests.some(function (request) { return request.url.startsWith('/api/designator/run'); }));
 });
