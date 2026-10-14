@@ -83,7 +83,7 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   knowledge, attempts, rejections and end (`LanguageModelBackend.observer`), the knowledge
   generation's request, attempts, failure and hypothesis served
   (`HypothesisBackend.observer`), and `Reasoner(sink=...)` assembling them. Step V2
-  (`41d06eef4`, `45555d376`, and the commit after them).
+  (`41d06eef4`, `45555d376`, `f297aee73`).
 
 ### Knowledge component
 - The predictive-manipulation ontology (`core`, `object-dynamics`, `prehension`,
