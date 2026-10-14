@@ -86,8 +86,8 @@ export class TimelineView {
   }
 
   // Draws the run as of ``view.now``, on an axis that reaches to ``view.until``; ``view``
-  // also says which span is chosen, which component's row to single out, and whether the
-  // run is going on.
+  // also says which span is chosen, which component's row to single out, which spans are
+  // wanted (null when all are) and whether the run is going on.
   render(model, view) {
     this.drawn = { model: model, view: view };
     const origin = model.firstAt === null ? view.now : model.firstAt;
@@ -112,6 +112,7 @@ export class TimelineView {
         const classes = ['bar', 'status-' + span.status, 'kind-' + span.kind];
         if (span.id === view.chosenId) classes.push('chosen');
         if (related.has(span.id)) classes.push('related');
+        if (view.matches !== null && !view.matches.has(span.id)) classes.push('unmatched');
         return el('div', { class: classes.join(' '), 'data-id': span.id, title: barTitle(span, view.now),
           style: 'left:' + one.x + 'px;top:' + (LANE_PADDING / 2 + one.track * ROW_HEIGHT) + 'px;width:' + one.width + 'px' },
         one.width >= LABEL_FITS_FROM ? span.label : null);

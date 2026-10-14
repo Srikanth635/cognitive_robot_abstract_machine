@@ -39,6 +39,11 @@ modules with no build step and no library loaded from elsewhere.
   rejected (an attempt that went back to the model, a pour that missed) and one outlined in
   red failed. *fit* shows the whole run, *−* and *+* zoom, *follow* keeps the newest work in
   view.
+- **Filters** (above the timeline): a search through what spans are called and everything
+  their events hold, prompts and answers included, and *problems only* for what was
+  rejected or failed. Matching bars stay bright and the others fade, so the shape of the run
+  stays; the count says how many match, and *next* (or Enter in the search) goes to the next
+  match in time.
 - **Replay**: *replay* in the top bar (not available while a run is going on) shows a run
   again as it happened. The map, the timeline and the inspector show the run as of the
   moment of the replay, on a timeline whose axis stays the length of the whole run. Play
@@ -76,6 +81,7 @@ src/llm_reasoner_viz/
         model.mjs       the spans of a run, built from its events one at a time
         prompts.mjs     a prompt read as its tagged sections
         replay.mjs      what a run looked like at any moment, and how a replay moves
+        filters.mjs     picking out the spans that say some words or went wrong
         layout.mjs      spans packed into rows of the timeline
         inspector.mjs   what the inspector shows of a span
         map.mjs         the components, their connections and what each is doing

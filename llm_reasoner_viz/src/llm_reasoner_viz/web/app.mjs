@@ -4,6 +4,8 @@
 import { formatCost, formatDuration } from './format.mjs';
 import { describeSpan } from './inspector.mjs';
 import { EventsView } from './events_view.mjs';
+import { FilterView } from './filter_view.mjs';
+import { SpanFilter } from './filters.mjs';
 import { InspectorView } from './inspector_view.mjs';
 import { mapState } from './map.mjs';
 import { MapView } from './map_view.mjs';
@@ -70,6 +72,8 @@ class Viewer {
     this.timeline = new TimelineView(find('timeline'), (id) => this.choose(id));
     this.inspector = new InspectorView(find('inspector'), (id) => this.choose(id));
     this.events = new EventsView(find('events'));
+    this.filter = new SpanFilter();
+    this.filterView = new FilterView(find('filters'), this.filter, () => this.render(), () => this.chooseNextMatch());
     const parameters = new URLSearchParams(window.location.search);
     this.wantedRun = parameters.get(Parameter.RUN);
     this.wantedSpan = parameters.get(Parameter.SPAN);
@@ -206,6 +210,11 @@ class Viewer {
     this.render();
   }
 
+  chooseNextMatch() {
+    const next = this.filter.next(this.moment().model, this.chosenId);
+    if (next !== null) this.choose(next);
+  }
+
   chooseLane(lane) {
     this.chosenLane = this.chosenLane === lane ? null : lane;
     this.render();
@@ -303,8 +312,11 @@ class Viewer {
     this.replayToggle.disabled = this.replay === null && (this.isLive() || this.model.events.length === 0);
     if (this.replay !== null) this.replayView.show(this.replay);
     this.showTotals(model, now);
+    const matching = this.filter.active ? this.filter.matching(model) : null;
+    this.filterView.show(matching, model.spans.length);
     this.map.update(mapState(model, live ? now : Number.POSITIVE_INFINITY), this.chosenLane);
-    this.timeline.render(model, { now: now, until: until, live: live, chosenId: this.chosenId, chosenLane: this.chosenLane });
+    this.timeline.render(model, { now: now, until: until, live: live, chosenId: this.chosenId, chosenLane: this.chosenLane,
+      matches: matching === null ? null : new Set(matching.map((span) => span.id)) });
     this.showInspector(model);
   }
 }
