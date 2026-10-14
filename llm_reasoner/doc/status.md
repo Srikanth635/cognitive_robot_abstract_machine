@@ -84,6 +84,11 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   generation's request, attempts, failure and hypothesis served
   (`HypothesisBackend.observer`), and `Reasoner(sink=...)` assembling them. Step V2
   (`41d06eef4`, `45555d376`, `f297aee73`).
+- Every cram_viz run logs its work to `events.jsonl` in its directory: the run starting
+  and ending or failing, the resolver's and the knowledge component's questions to the
+  model, the world and knowledge calls, the attempts, the hypothesis generated, and each
+  pour tried in the simulation (`SimulatedPouring.observer`). A replayed resolution writes
+  about 36 events, 210 KB, the prompts being most of it. Step V3, the log (first part).
 
 ### Knowledge component
 - The predictive-manipulation ontology (`core`, `object-dynamics`, `prehension`,
