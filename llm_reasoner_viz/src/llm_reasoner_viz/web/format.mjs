@@ -3,6 +3,11 @@
 const SECONDS_PER_MINUTE = 60;
 const MILLISECONDS_PER_SECOND = 1000;
 
+// A whole number with its thousands set apart.
+export function formatCount(count) {
+  return count.toLocaleString('en-US');
+}
+
 export function formatDuration(seconds) {
   if (seconds < 0.5 / MILLISECONDS_PER_SECOND) return '<1 ms';
   if (seconds < 1) return Math.round(seconds * MILLISECONDS_PER_SECOND) + ' ms';

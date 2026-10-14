@@ -180,6 +180,20 @@ class TestRunSummary:
         assert summary.input_tokens == 2000
         assert summary.output_tokens == 400
 
+    def test_the_tokens_read_from_and_written_to_the_cache_are_input_too(
+        self, tmp_path: Path
+    ):
+        answer = answered()
+        answer["usage"] = {
+            "input_tokens": 6,
+            "output_tokens": 389,
+            "cache_creation_input_tokens": 13572,
+            "cache_read_input_tokens": 7745,
+        }
+        summary = self.summary(tmp_path, [started(), answer])
+        assert summary.input_tokens == 6 + 13572 + 7745
+        assert summary.output_tokens == 389
+
     def test_an_answer_without_a_known_cost_adds_none(self, tmp_path: Path):
         summary = self.summary(tmp_path, [started(), answered(cost=None)])
         assert summary.cost == 0.0
