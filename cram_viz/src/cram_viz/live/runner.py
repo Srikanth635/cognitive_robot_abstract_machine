@@ -17,13 +17,14 @@ from pathlib import Path
 
 from typing_extensions import List, Optional, TYPE_CHECKING
 
-from cram_viz import configure_console_logging
-from cram_viz.events import reporting_execution
+from cram_viz import configure_console_logging, paths
+from cram_viz.events import NeemKind, reporting_execution
 from cram_viz.live import hooks
 from cram_viz.live.bridge import BRIDGE
 from cram_viz.live.http import DEFAULT_PORT, serve
 from cram_viz.live.launcher import LiveArgument
 from cram_viz.live.steps import PlanStepReporter, following_plan
+from cram_viz.neem import NeemRecorder, NeemRecording, NoNeemRecorder
 from cram_viz.resolution.execution import PouringExecution
 from cram_viz.resolution.runs import RunDirectory
 
@@ -94,7 +95,9 @@ class LiveTarget(ABC):
         )
         parsed = parser.parse_args(arguments)
         if parsed.run is not None:
-            return ResolvedRun(directory=parsed.run)
+            return ResolvedRun(
+                directory=parsed.run, neem_database=paths.neem_database_path()
+            )
         if parsed.demo is None:
             parser.error("name a demo script or a resolution run")
         return DemoScript(path=parsed.demo)
@@ -134,9 +137,15 @@ class ResolvedRun(LiveTarget):
     The run's directory.
     """
 
+    neem_database: Optional[Path] = None
+    """
+    The database the NEEM of the performance is kept in; none is kept without one.
+    """
+
     def run(self) -> None:
         """
-        Perform the run's resolved action in the simulation.
+        Perform the run's resolved action in the simulation, keep its plan as a NEEM
+        when there is a database, and report it to the run's log.
         """
         logger.info("performing run: %s", self.directory)
         run = RunDirectory(directory=self.directory)
@@ -145,7 +154,19 @@ class ResolvedRun(LiveTarget):
         with reporting_execution(sink, run.name), following_plan(
             BRIDGE, reporter.observe
         ):
-            PouringExecution.of_run(run).perform()
+            PouringExecution.of_run(run, self.recorder(sink.path, run.name)).perform()
+
+    def recorder(self, events: Path, run: str) -> NeemRecorder:
+        """
+        :param events: The run's log.
+        :param run: The name of the run.
+        :return: What keeps the NEEM of the performance, and reports it to the log.
+        """
+        if self.neem_database is None:
+            return NoNeemRecorder()
+        return NeemRecording(database=self.neem_database, events=events).recorder(
+            NeemKind.EXECUTION, run
+        )
 
 
 def main() -> None:

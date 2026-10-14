@@ -11,10 +11,11 @@ from pathlib import Path
 
 import pytest
 from llm_reasoner.observation.events import EventKey
-from llm_reasoner.observation.sinks import MemorySink
+from llm_reasoner.observation.sinks import JsonLinesSink, MemorySink
 from typing_extensions import Any, Dict, List
 
 from cram_viz.events import (
+    NeemKind,
     ExecutionFailed,
     ExecutionFinished,
     ExecutionStarted,
@@ -23,6 +24,7 @@ from cram_viz.events import (
 from cram_viz.live.bridge import BRIDGE, Bridge, PlanNodeKey
 from cram_viz.live.runner import ResolvedRun
 from cram_viz.live.steps import NOT_STARTED, PlanStepReporter
+from cram_viz.neem import DatabaseNeemRecorder, NoNeemRecorder, SqliteNeemStore
 from cram_viz.resolution.execution import PouringExecution
 from cram_viz.resolution.runs import RunFile
 
@@ -167,8 +169,29 @@ def performing(monkeypatch: pytest.MonkeyPatch, execution: StubExecution) -> Non
     Make the performing of any run perform the stub execution.
     """
     monkeypatch.setattr(
-        PouringExecution, "of_run", classmethod(lambda cls, run: execution)
+        PouringExecution,
+        "of_run",
+        classmethod(lambda cls, run, recorder=None: execution),
     )
+
+
+def performing_and_keeping_recorders(
+    monkeypatch: pytest.MonkeyPatch, execution: StubExecution
+) -> List[Any]:
+    """
+    Make the performing of any run perform the stub execution.
+
+    :return: The recorders the runs asked the execution to keep their NEEMs with, which
+        fills as they are performed.
+    """
+    recorders: List[Any] = []
+
+    def of_run(cls, run, recorder=None):
+        recorders.append(recorder)
+        return execution
+
+    monkeypatch.setattr(PouringExecution, "of_run", classmethod(of_run))
+    return recorders
 
 
 def logged(directory: Path) -> List[Dict[str, Any]]:
@@ -233,6 +256,32 @@ class TestResolvedRun:
         assert kinds(events) == [ExecutionStarted.__name__, ExecutionFailed.__name__]
         assert events[-1]["error_type"] == RuntimeError.__name__
         assert events[-1]["reason"] == "the arm cannot reach"
+
+    def test_a_run_given_a_database_has_its_execution_keep_its_neem_there(
+        self, tmp_path, monkeypatch
+    ):
+        recorders = performing_and_keeping_recorders(
+            monkeypatch, StubExecution(snapshots=[])
+        )
+        database = tmp_path / "neems.sqlite"
+        ResolvedRun(directory=tmp_path, neem_database=database).run()
+        assert recorders == [
+            DatabaseNeemRecorder(
+                store=SqliteNeemStore(path=database),
+                kind=NeemKind.EXECUTION,
+                episode=tmp_path.name,
+                observer=JsonLinesSink(path=tmp_path / RunFile.EVENTS),
+            )
+        ]
+
+    def test_a_run_given_no_database_has_its_execution_keep_nothing(
+        self, tmp_path, monkeypatch
+    ):
+        recorders = performing_and_keeping_recorders(
+            monkeypatch, StubExecution(snapshots=[])
+        )
+        ResolvedRun(directory=tmp_path).run()
+        assert recorders == [NoNeemRecorder()]
 
     def test_the_steps_are_followed_only_while_the_run_is_performed(
         self, tmp_path, monkeypatch
