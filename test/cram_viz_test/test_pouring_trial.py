@@ -6,6 +6,7 @@ resolver when a pour misses.
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from copy import deepcopy
@@ -17,10 +18,20 @@ import pytest
 from coraplex.datastructures.enums import Arms
 from llm_reasoner.observation.sinks import MemorySink
 from llm_reasoner.resolver.exceptions import OutcomeFellShort
-from typing_extensions import Any, Dict, List
+from llm_reasoner.observation.sinks import JsonLinesSink
+from typing_extensions import Any, Dict, List, Optional
 
-from cram_viz.events import TrialFinished, TrialStarted
+from cram_viz.events import NeemKind, TrialFinished, TrialStarted
+from cram_viz.neem import (
+    DatabaseNeemRecorder,
+    IncompleteNeemOptions,
+    NeemOption,
+    NeemRecording,
+    NoNeemRecorder,
+    SqliteNeemStore,
+)
 from cram_viz.resolution.trial import (
+    OUTCOME_FILE,
     TRIAL_MODULE,
     OutcomeKey,
     PouringTrial,
@@ -28,6 +39,7 @@ from cram_viz.resolution.trial import (
 )
 
 from .resolutions import LANDS, MISSES, ScriptedTrials, objects_given
+from .test_neem import PlanCollectingRecorder
 
 # %% helpers
 
@@ -61,13 +73,15 @@ def checking(
     outcomes: List[Any],
     allowed_trials: int = 3,
     observer: MemorySink | None = None,
+    neems: Optional[NeemRecording] = None,
 ) -> SimulatedPouring:
     """
-    :return: A check whose trials report the outcomes in turn, and the trials to the
-        observer when there is one.
+    :return: A check whose trials report the outcomes in turn, the trials to the
+        observer when there is one, and keep their NEEMs as the recording says.
     """
     settings = {} if observer is None else {"observer": observer}
     return SimulatedPouring(
+        neems=neems,
         bundle=Path("pouring"),
         slots=["arm", "tilt_angle"],
         allowed_trials=allowed_trials,
@@ -184,3 +198,103 @@ class TestObservedTrials:
             TrialStarted,
             TrialFinished,
         ]
+
+
+# %% keeping the NEEMs of the trials
+
+
+def neem_options_of(command: List[str]) -> Dict[str, str]:
+    """
+    :return: What a trial's command line says about its NEEM, by option.
+    """
+    return {
+        option: command[command.index(option) + 1]
+        for option in NeemOption
+        if option in command
+    }
+
+
+def trial_options(recording: NeemRecording, trial: str) -> argparse.Namespace:
+    """
+    :return: What a trial process reads from the options it is given for its NEEM.
+    """
+    parser = argparse.ArgumentParser()
+    NeemRecording.add_options(parser)
+    return parser.parse_args(recording.options(trial))
+
+
+class TestKeepingTheNeemsOfTheTrials:
+    def test_a_check_with_no_recording_asks_its_trials_to_keep_nothing(self):
+        check = checking([LANDS])
+        check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+        (command,) = check.run.commands
+        assert neem_options_of(command) == {}
+
+    def test_a_trial_is_told_where_to_keep_its_neem_and_which_trial_it_is(
+        self, tmp_path
+    ):
+        recording = NeemRecording(
+            database=tmp_path / "neems.sqlite", events=tmp_path / "events.jsonl"
+        )
+        sink = MemorySink()
+        check = checking([LANDS], observer=sink, neems=recording)
+        check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+        (command,) = check.run.commands
+        started, _ = sink.events
+        assert neem_options_of(command) == {
+            NeemOption.DATABASE: str(recording.database),
+            NeemOption.EVENTS: str(recording.events),
+            NeemOption.EPISODE: started.trial,
+        }
+
+    def test_the_outcome_is_still_written_where_the_last_argument_says(self, tmp_path):
+        recording = NeemRecording(
+            database=tmp_path / "neems.sqlite", events=tmp_path / "events.jsonl"
+        )
+        check = checking([LANDS], neems=recording)
+        check.check([PourAnswer(arm=Arms.RIGHT, tilt_angle=1.85)])
+        (command,) = check.run.commands
+        assert command[:5] == [
+            sys.executable,
+            "-m",
+            TRIAL_MODULE,
+            str(check.bundle),
+            json.dumps({"arm": Arms.RIGHT.name, "tilt_angle": 1.85}),
+        ]
+        assert command[-1].endswith(OUTCOME_FILE)
+
+    def test_a_trial_process_given_nothing_to_keep_keeps_nothing(self):
+        parser = argparse.ArgumentParser()
+        NeemRecording.add_options(parser)
+        recorder = NeemRecording.recorder_from(parser.parse_args([]), NeemKind.TRIAL)
+        assert isinstance(recorder, NoNeemRecorder)
+
+    def test_a_trial_process_keeps_its_neem_where_it_is_told_and_reports_it_there(
+        self, tmp_path
+    ):
+        recording = NeemRecording(
+            database=tmp_path / "neems.sqlite", events=tmp_path / "events.jsonl"
+        )
+        recorder = NeemRecording.recorder_from(
+            trial_options(recording, "a-trial"), NeemKind.TRIAL
+        )
+        assert recorder == DatabaseNeemRecorder(
+            store=SqliteNeemStore(path=recording.database),
+            kind=NeemKind.TRIAL,
+            episode="a-trial",
+            observer=JsonLinesSink(path=recording.events),
+        )
+
+    def test_options_that_name_a_database_but_not_the_rest_are_refused(self):
+        parser = argparse.ArgumentParser()
+        NeemRecording.add_options(parser)
+        with pytest.raises(IncompleteNeemOptions):
+            NeemRecording.recorder_from(
+                parser.parse_args([NeemOption.DATABASE, "neems.sqlite"]),
+                NeemKind.TRIAL,
+            )
+
+    def test_a_trial_performed_hands_its_plan_to_the_recorder(self, pouring_kitchen):
+        recorder = PlanCollectingRecorder()
+        PouringTrial.outcome_in(pouring_kitchen, resolved_values(), recorder)
+        assert len(recorder.plans) == 1

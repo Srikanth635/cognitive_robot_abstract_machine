@@ -7,17 +7,19 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
+from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass, field
+from enum import StrEnum
 from pathlib import Path
 from time import perf_counter
 
 from filelock import FileLock
 from krrood.ormatic.data_access_objects.helper import to_dao
 from krrood.ormatic.utils import create_engine
-from llm_reasoner.observation.sinks import EventSink, NullSink
+from llm_reasoner.observation.sinks import EventSink, JsonLinesSink, NullSink
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
-from typing_extensions import TYPE_CHECKING
+from typing_extensions import TYPE_CHECKING, List
 
 from cram_viz.events import NeemKind, NeemNotRecorded, NeemRecorded
 
@@ -170,3 +172,119 @@ class DatabaseNeemRecorder(NeemRecorder):
                 seconds=perf_counter() - began,
             )
         )
+
+
+# %% telling another process where to record
+
+
+class NeemOption(StrEnum):
+    """
+    The options of a process that tries a pour, which say where to keep its NEEM.
+    """
+
+    DATABASE = "--neem-database"
+    """
+    The database to keep the NEEM in.
+    """
+
+    EVENTS = "--neem-events"
+    """
+    The log to report the NEEM to.
+    """
+
+    EPISODE = "--neem-episode"
+    """
+    The trial the NEEM is of.
+    """
+
+
+@dataclass
+class IncompleteNeemOptions(ValueError):
+    """
+    Some of the options that say where to keep a NEEM were given, and not all.
+    """
+
+    missing: List[str]
+    """
+    The options that were not given.
+    """
+
+    def __post_init__(self):
+        super().__init__(
+            f"the options {', '.join(self.missing)} are needed with the others that "
+            "say where to keep a NEEM"
+        )
+
+
+@dataclass(frozen=True)
+class NeemRecording:
+    """
+    Where the NEEMs of the pours tried in processes of their own are kept and reported.
+    """
+
+    database: Path
+    """
+    The database every NEEM is kept in.
+    """
+
+    events: Path
+    """
+    The log of the run that tries the pours, which the NEEMs are reported to.
+    """
+
+    def recorder(self, kind: NeemKind, episode: str) -> DatabaseNeemRecorder:
+        """
+        :return: A recorder keeping the plan of an episode in the database and reporting
+            it to the log.
+        """
+        return DatabaseNeemRecorder(
+            store=SqliteNeemStore(path=self.database),
+            kind=kind,
+            episode=episode,
+            observer=JsonLinesSink(path=self.events),
+        )
+
+    def options(self, trial: str) -> List[str]:
+        """
+        :return: What a process trying a pour is given, to keep the NEEM of the trial.
+        """
+        return [
+            NeemOption.DATABASE,
+            str(self.database),
+            NeemOption.EVENTS,
+            str(self.events),
+            NeemOption.EPISODE,
+            trial,
+        ]
+
+    @staticmethod
+    def add_options(parser: ArgumentParser) -> None:
+        """
+        Let a process read the options that say where to keep its NEEM, all of which it
+        may leave out.
+        """
+        for option in NeemOption:
+            parser.add_argument(option, default=None)
+
+    @classmethod
+    def recorder_from(cls, arguments: Namespace, kind: NeemKind) -> NeemRecorder:
+        """
+        :param arguments: What a process read, with the options of :meth:`add_options`.
+        :param kind: What the process's NEEM is the episode of.
+        :return: The recorder those options name, or one that keeps nothing when the
+            process was given none.
+        :raises IncompleteNeemOptions: When it was given some of them.
+        """
+        given = {
+            NeemOption.DATABASE: arguments.neem_database,
+            NeemOption.EVENTS: arguments.neem_events,
+            NeemOption.EPISODE: arguments.neem_episode,
+        }
+        if all(value is None for value in given.values()):
+            return NoNeemRecorder()
+        missing = [option for option, value in given.items() if value is None]
+        if missing:
+            raise IncompleteNeemOptions(missing=missing)
+        return cls(
+            database=Path(arguments.neem_database), events=Path(arguments.neem_events)
+        ).recorder(kind, arguments.neem_episode)

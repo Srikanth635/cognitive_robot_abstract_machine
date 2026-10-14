@@ -5,11 +5,13 @@ container's mouth ends against the target's opening, and a pour that misses refu
 that outcome, so the resolver reads it and answers again.
 
 Run as ``python -m cram_viz.resolution.trial <bundle> <values> <outcome file>`` it
-performs one trial and writes its outcome to the file.
+performs one trial and writes its outcome to the file; given the options of
+:class:`cram_viz.neem.NeemOption` it also keeps the plan it performed as a NEEM.
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import logging
 import subprocess
@@ -29,10 +31,11 @@ from llm_reasoner.resolver.outcomes import OutcomeCheck
 from semantic_digital_twin.semantic_annotations.mixins import HasRootBody
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.world_entity import Body
-from typing_extensions import Any, Callable, Dict, List, Sequence
+from typing_extensions import Any, Callable, Dict, List, Optional, Sequence
 
 from cram_viz import configure_console_logging
-from cram_viz.events import TrialFinished, TrialStarted
+from cram_viz.events import NeemKind, TrialFinished, TrialStarted
+from cram_viz.neem import NeemRecorder, NeemRecording, NoNeemRecorder
 from cram_viz.resolution.execution import PouringExecution
 from cram_viz.resolution.scene_world import SceneWorldBuilder
 from cram_viz.resolution.slot_data import SlotData
@@ -211,13 +214,18 @@ class PouringTrial:
     """
 
     @staticmethod
-    def outcome_in(world: World, values: Dict[str, Any]) -> Dict[str, Any]:
+    def outcome_in(
+        world: World, values: Dict[str, Any], recorder: Optional[NeemRecorder] = None
+    ) -> Dict[str, Any]:
         """
         :param world: A world the robot can act in, its robot annotated.
         :param values: The resolved slots' values as data, by field name.
+        :param recorder: Keeps the plan performed as a NEEM; nothing is kept without one.
         :return: The outcome of performing the pouring there.
         """
-        execution = PouringExecution(world=world, values=values)
+        execution = PouringExecution(
+            world=world, values=values, recorder=recorder or NoNeemRecorder()
+        )
         action = execution.action()
         execution.perform()
         return PourOutcome.measure(
@@ -230,11 +238,18 @@ def main() -> None:
     Perform one trial from a scene's initial world and write its outcome to a file.
     """
     configure_console_logging()
-    bundle, values, outcome_file = sys.argv[1:4]
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("bundle", type=Path)
+    parser.add_argument("values")
+    parser.add_argument("outcome_file", type=Path)
+    NeemRecording.add_options(parser)
+    arguments = parser.parse_intermixed_args()
     outcome = PouringTrial.outcome_in(
-        SceneWorldBuilder.robot_world(Path(bundle)), json.loads(values)
+        SceneWorldBuilder.robot_world(arguments.bundle),
+        json.loads(arguments.values),
+        NeemRecording.recorder_from(arguments, NeemKind.TRIAL),
     )
-    Path(outcome_file).write_text(json.dumps(outcome))
+    arguments.outcome_file.write_text(json.dumps(outcome))
     logger.info("trial outcome: %s", outcome)
 
 
@@ -296,6 +311,11 @@ class SimulatedPouring(OutcomeCheck):
     Where each trial is reported to; nowhere by default.
     """
 
+    neems: Optional[NeemRecording] = None
+    """
+    Where the NEEM of each trial is kept and reported; none is kept by default.
+    """
+
     def check(self, instances: Sequence[Any]) -> None:
         instance, *_ = instances
         values = {
@@ -317,7 +337,7 @@ class SimulatedPouring(OutcomeCheck):
         trial = new_call()
         self.observer.emit(TrialStarted(trial=trial, values=values))
         started = perf_counter()
-        outcome = self.trial_outcome(values)
+        outcome = self.trial_outcome(values, trial)
         self.observer.emit(
             TrialFinished(
                 trial=trial, outcome=outcome, seconds=perf_counter() - started
@@ -325,8 +345,9 @@ class SimulatedPouring(OutcomeCheck):
         )
         return outcome
 
-    def trial_outcome(self, values: Dict[str, Any]) -> Dict[str, Any]:
+    def trial_outcome(self, values: Dict[str, Any], trial: str) -> Dict[str, Any]:
         """
+        :param trial: The trial, which its NEEM is reported as the episode of.
         :return: The outcome of the process performing the pouring with the values.
         """
         with tempfile.TemporaryDirectory() as directory:
@@ -338,6 +359,7 @@ class SimulatedPouring(OutcomeCheck):
                     TRIAL_MODULE,
                     str(self.bundle),
                     json.dumps(values),
+                    *(self.neems.options(trial) if self.neems else []),
                     str(outcome_file),
                 ],
                 capture_output=True,
