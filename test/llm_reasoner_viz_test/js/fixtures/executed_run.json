@@ -1,0 +1,48 @@
+[
+ {
+  "event": "ExecutionStarted",
+  "at": 1791969838.9660726,
+  "run": "538af068ba854fee80920ccd721f937d"
+ },
+ {
+  "event": "StepChanged",
+  "at": 1791969841.0097632,
+  "run": "538af068ba854fee80920ccd721f937d",
+  "step": "ParkArmsAction",
+  "status": "RUNNING"
+ },
+ {
+  "event": "StepChanged",
+  "at": 1791969843.2963543,
+  "run": "538af068ba854fee80920ccd721f937d",
+  "step": "MoveTorsoAction",
+  "status": "RUNNING"
+ },
+ {
+  "event": "StepChanged",
+  "at": 1791969843.2964127,
+  "run": "538af068ba854fee80920ccd721f937d",
+  "step": "NavigateAction",
+  "status": "RUNNING"
+ },
+ {
+  "event": "StepChanged",
+  "at": 1791969843.5641081,
+  "run": "538af068ba854fee80920ccd721f937d",
+  "step": "PickUpAction",
+  "status": "RUNNING"
+ },
+ {
+  "event": "StepChanged",
+  "at": 1791969846.7648082,
+  "run": "538af068ba854fee80920ccd721f937d",
+  "step": "PouringAction",
+  "status": "RUNNING"
+ },
+ {
+  "event": "ExecutionFinished",
+  "at": 1791969851.2478514,
+  "run": "538af068ba854fee80920ccd721f937d",
+  "seconds": 12.281698692007922
+ }
+]

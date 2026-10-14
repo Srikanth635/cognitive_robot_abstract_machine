@@ -1,0 +1,495 @@
+[
+ {
+  "event": "RunStarted",
+  "at": 1791970749.9194384,
+  "run": "06ec86f74b2446b3ad4735d9bbeb1994",
+  "query": "the(PouringAction)(\n    source_container=pouring_cup,\n    target_container=bowl.root,\n    arm=...,\n    tilt_angle=...,\n)\n",
+  "scene": "pouring"
+ },
+ {
+  "event": "ComponentCalled",
+  "at": 1791970749.9205587,
+  "call": "d6c152017e664571b574b02927c9b0b2",
+  "source": "resolver",
+  "target": "world_injector",
+  "operation": "tools",
+  "arguments": {}
+ },
+ {
+  "event": "ComponentReturned",
+  "at": 1791970749.9208758,
+  "call": "d6c152017e664571b574b02927c9b0b2",
+  "result": [
+   "list_kinds",
+   "describe_kind",
+   "find_individuals",
+   "describe_individual",
+   "holders_of",
+   "follow_path",
+   "list_predicates",
+   "evaluate_predicate"
+  ],
+  "seconds": 0.0002775900065898895
+ },
+ {
+  "event": "ResolutionStarted",
+  "at": 1791970749.9209685,
+  "resolution": "fa898d0ff7cc415da04422a696c3184e",
+  "purpose": "action",
+  "action": "coraplex.robot_plans.actions.composite.tool_based.PouringAction",
+  "slots": [
+   {
+    "path": "PouringAction.source_container",
+    "kind": "BOUND",
+    "type_name": "Tool",
+    "candidates": null
+   },
+   {
+    "path": "PouringAction.target_container",
+    "kind": "BOUND",
+    "type_name": "Body",
+    "candidates": null
+   },
+   {
+    "path": "PouringAction.arm",
+    "kind": "VALUE",
+    "type_name": "Arms",
+    "candidates": null
+   },
+   {
+    "path": "PouringAction.tilt_angle",
+    "kind": "VALUE",
+    "type_name": "float",
+    "candidates": null
+   }
+  ],
+  "max_repairs": 3
+ },
+ {
+  "event": "ResolutionStarted",
+  "at": 1791970749.9475474,
+  "resolution": "fac7b3f344e447f9ae7e9046a0da14aa",
+  "purpose": "situation",
+  "action": "llm_reasoner.knowledge.ontologies.predictive_manipulation.pouring.PouringPhaseStructure",
+  "slots": [
+   {
+    "path": "PouringPhaseStructure.decomposes_task",
+    "kind": "BOUND",
+    "type_name": "ConceptReference",
+    "candidates": null
+   },
+   {
+    "path": "PouringPhaseStructure.has_material_regime",
+    "kind": "VALUE",
+    "type_name": "MaterialRegime",
+    "candidates": null
+   },
+   {
+    "path": "PouringPhaseStructure.has_termination_reason",
+    "kind": "VALUE",
+    "type_name": "TransferTerminationReason",
+    "candidates": null
+   }
+  ],
+  "max_repairs": 3
+ },
+ {
+  "event": "AttemptStarted",
+  "at": 1791970750.0315218,
+  "resolution": "fac7b3f344e447f9ae7e9046a0da14aa",
+  "attempt": 0
+ },
+ {
+  "event": "ModelAsked",
+  "at": 1791970750.031625,
+  "call": "5b7a3dd7bcbd4512b769ed56cb4e6103",
+  "source": "resolver",
+  "style": "with_tools",
+  "identity": "scripted",
+  "system": "<role>\nFill the open slots of a partially specified object.\n</role>\n\n<inputs>\n- <request>: the query in English; \"Ellipsis\" marks an open slot, never a value.\n- <task>: what the caller is trying to achieve: intent to serve, not fact about t\u2026",
+  "user": "<description type=\"PouringPhaseStructure\">\nA substance-transfer phase structure composed with prehension: the source is reached, grasped, loaded, lifted and transported, aligned and tilted until the substance flows, regulated and stopped, r\u2026",
+  "schema": null,
+  "tools": [
+   "list_kinds",
+   "describe_kind",
+   "find_individuals",
+   "describe_individual",
+   "holders_of",
+   "follow_path",
+   "list_predicates",
+   "evaluate_predicate"
+  ]
+ },
+ {
+  "event": "ModelAnswered",
+  "at": 1791970750.0317535,
+  "call": "5b7a3dd7bcbd4512b769ed56cb4e6103",
+  "answer": "[{\"PouringPhaseStructure.has_material_regime\": null, \"PouringPhaseStructure.has_termination_reason\": null, \"why\": \"Nothing says what the vessel holds or when to stop.\", \"grounds\": []}]",
+  "seconds": 0.00012918299762532115,
+  "usage": {
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_creation_input_tokens": 0,
+   "cache_read_input_tokens": 0
+  },
+  "cost": 0.0
+ },
+ {
+  "event": "ResolutionFinished",
+  "at": 1791970750.0326517,
+  "resolution": "fac7b3f344e447f9ae7e9046a0da14aa",
+  "attempts": 1,
+  "instances": [
+   "PouringPhaseStructure"
+  ],
+  "justifications": [
+   {
+    "why": "Nothing says what the vessel holds or when to stop.",
+    "grounds": []
+   }
+  ]
+ },
+ {
+  "event": "ComponentCalled",
+  "at": 1791970750.032751,
+  "call": "91003e91847c429794f7666676aa1e6d",
+  "source": "resolver",
+  "target": "knowledge",
+  "operation": "serve",
+  "arguments": {
+   "query": "llm_reasoner.knowledge.ontologies.predictive_manipulation.pouring.PouringPhaseStructure",
+   "instruction": "coraplex.robot_plans.actions.composite.tool_based.PouringAction"
+  }
+ },
+ {
+  "event": "HypothesisRequested",
+  "at": 1791970750.0327954,
+  "root_type": "llm_reasoner.knowledge.ontologies.predictive_manipulation.pouring.PouringPhaseStructure",
+  "fixed_values": {
+   "decomposes_task": "aicor:Pouring"
+  },
+  "instruction": "coraplex.robot_plans.actions.composite.tool_based.PouringAction"
+ },
+ {
+  "event": "GenerationAttemptStarted",
+  "at": 1791970751.608057,
+  "attempt": 0
+ },
+ {
+  "event": "ModelAsked",
+  "at": 1791970751.6081421,
+  "call": "73c4bf4dc3e24e8fb3060868d5a98f04",
+  "source": "knowledge",
+  "style": "structured",
+  "identity": "scripted",
+  "system": "<role>\nDescribe how a manipulation action is organised, as one structure of typed fragments drawn from an ontology of predictive manipulation.\n</role>\n\n<inputs>\n- <types>: the fragment types an answer may use: each type's name, the types it\u2026",
+  "user": "<instruction>\ncoraplex.robot_plans.actions.composite.tool_based.PouringAction\n</instruction>\n\n<fixed_values>\n{\n  \"decomposes_task\": \"aicor:Pouring\"\n}\n</fixed_values>",
+  "schema": {
+   "type": "object",
+   "required": [
+    "fragments"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "fragments": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "type"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "type": {
+        "type": "string",
+        "enum": [
+         "AbsentEventComparison",
+         "ActionPhase",
+         "ActionPhaseController",
+         "Actor",
+         "AlignmentErrorEstimate",
+         "AlignmentPhase",
+         "AngleParameter",
+         "AngularRateParameter",
+         "AnticipatoryGripAdjustment",
+         "BoundaryControlExemption",
+         "CategoricalParameter",
+         "CategoricalValue"
+        ]
+       }
+      }
+     }
+    },
+    "remove": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "tools": []
+ },
+ {
+  "event": "ModelAnswered",
+  "at": 1791970751.6087587,
+  "call": "73c4bf4dc3e24e8fb3060868d5a98f04",
+  "answer": "{\"fragments\": [{\"id\": \"pour\", \"type\": \"PouringPhaseStructure\", \"decomposes_task\": \"aicor:Pouring\"}]}",
+  "seconds": 0.0006199529743753374,
+  "usage": null,
+  "cost": null
+ },
+ {
+  "event": "HypothesisServed",
+  "at": 1791970751.611,
+  "record_id": "0c8d549ea6594304944dde592e768b71",
+  "from_store": false,
+  "attempts": 1,
+  "warnings": []
+ },
+ {
+  "event": "ComponentReturned",
+  "at": 1791970751.6110342,
+  "call": "91003e91847c429794f7666676aa1e6d",
+  "result": "0c8d549ea6594304944dde592e768b71",
+  "seconds": 1.5782553580356762
+ },
+ {
+  "event": "ComponentCalled",
+  "at": 1791970751.6110656,
+  "call": "b659d8506895414ea8e06ef837c6071c",
+  "source": "resolver",
+  "target": "knowledge",
+  "operation": "tools",
+  "arguments": {
+   "record": "0c8d549ea6594304944dde592e768b71"
+  }
+ },
+ {
+  "event": "ComponentReturned",
+  "at": 1791970751.6121166,
+  "call": "b659d8506895414ea8e06ef837c6071c",
+  "result": [
+   "knowledge_overview",
+   "find_fragments",
+   "describe_fragment"
+  ],
+  "seconds": 0.0010298830457031727
+ },
+ {
+  "event": "KnowledgeConsulted",
+  "at": 1791970751.6121433,
+  "resolution": "fa898d0ff7cc415da04422a696c3184e",
+  "designator": "coraplex.robot_plans.actions.composite.tool_based.PouringAction",
+  "situation": {},
+  "record_id": "0c8d549ea6594304944dde592e768b71"
+ },
+ {
+  "event": "AttemptStarted",
+  "at": 1791970751.622619,
+  "resolution": "fa898d0ff7cc415da04422a696c3184e",
+  "attempt": 0
+ },
+ {
+  "event": "ModelAsked",
+  "at": 1791970751.6227105,
+  "call": "b136349bf0a5424a9562dde70805ac68",
+  "source": "resolver",
+  "style": "with_tools",
+  "identity": "scripted",
+  "system": "<role>\nFill the open slots of a partially specified object.\n</role>\n\n<inputs>\n- <request>: the query in English; \"Ellipsis\" marks an open slot, never a value.\n- <task>: what the caller is trying to achieve: intent to serve, not fact about t\u2026",
+  "user": "<source type=\"PouringAction\">\n```python\n@dataclass(kw_only=True)\nclass PouringAction(FullBodyControlledAction, HasTcpGoalThresholds):\n    \"\"\"\n    Pour from a held source container into a target container by tilting the source next\n    to th\u2026",
+  "schema": null,
+  "tools": [
+   "list_kinds",
+   "describe_kind",
+   "find_individuals",
+   "describe_individual",
+   "holders_of",
+   "follow_path",
+   "list_predicates",
+   "evaluate_predicate",
+   "knowledge_overview",
+   "find_fragments",
+   "describe_fragment"
+  ]
+ },
+ {
+  "event": "ModelAnswered",
+  "at": 1791970751.6228793,
+  "call": "b136349bf0a5424a9562dde70805ac68",
+  "answer": "[{\"PouringAction.arm\": \"RIGHT\", \"PouringAction.tilt_angle\": 1.85, \"why\": \"Nothing says which arm holds the cup, so RIGHT; the default tilt lets the substance flow.\", \"grounds\": [{\"knowledge\": \"pour\"}]}]",
+  "seconds": 0.00016846199287101626,
+  "usage": {
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_creation_input_tokens": 0,
+   "cache_read_input_tokens": 0
+  },
+  "cost": 0.0
+ },
+ {
+  "event": "ComponentCalled",
+  "at": 1791970751.6229637,
+  "call": "d7f6fd49dcca428faea64296945bd439",
+  "source": "resolver",
+  "target": "knowledge",
+  "operation": "citation",
+  "arguments": {
+   "record": "0c8d549ea6594304944dde592e768b71",
+   "name": "pour"
+  }
+ },
+ {
+  "event": "ComponentReturned",
+  "at": 1791970751.6229942,
+  "call": "d7f6fd49dcca428faea64296945bd439",
+  "result": "http://www.ease-crc.org/ont/llm_reasoner/hypothesis/0c8d549ea6594304944dde592e768b71#pour",
+  "seconds": 7.246038876473904e-06
+ },
+ {
+  "event": "TrialStarted",
+  "at": 1791970751.6237276,
+  "trial": "45a3895f71c442c495671422edafcf79",
+  "values": {
+   "source_container": "Static_MilkPitcher.stl",
+   "target_container": "bowl.stl",
+   "arm": "RIGHT",
+   "tilt_angle": 1.85
+  }
+ },
+ {
+  "event": "TrialFinished",
+  "at": 1791970751.6239593,
+  "trial": "45a3895f71c442c495671422edafcf79",
+  "outcome": {
+   "lands_in_opening": false
+  },
+  "seconds": 0.00019789300858974457
+ },
+ {
+  "event": "AttemptRejected",
+  "at": 1791970751.6239948,
+  "resolution": "fa898d0ff7cc415da04422a696c3184e",
+  "attempt": 0,
+  "kind": "OutcomeFellShort",
+  "details": {
+   "outcome": {
+    "lands_in_opening": false
+   }
+  },
+  "answer": "[{\"PouringAction.arm\": \"RIGHT\", \"PouringAction.tilt_angle\": 1.85, \"why\": \"Nothing says which arm holds the cup, so RIGHT; the default tilt lets the substance flow.\", \"grounds\": [{\"knowledge\": \"pour\"}]}]"
+ },
+ {
+  "event": "AttemptStarted",
+  "at": 1791970751.6240373,
+  "resolution": "fa898d0ff7cc415da04422a696c3184e",
+  "attempt": 1
+ },
+ {
+  "event": "ModelAsked",
+  "at": 1791970751.624094,
+  "call": "9f9f5a7b6de64a24b050ed5fd5aa7d10",
+  "source": "resolver",
+  "style": "with_tools",
+  "identity": "scripted",
+  "system": "<role>\nFill the open slots of a partially specified object.\n</role>\n\n<inputs>\n- <request>: the query in English; \"Ellipsis\" marks an open slot, never a value.\n- <task>: what the caller is trying to achieve: intent to serve, not fact about t\u2026",
+  "user": "<source type=\"PouringAction\">\n```python\n@dataclass(kw_only=True)\nclass PouringAction(FullBodyControlledAction, HasTcpGoalThresholds):\n    \"\"\"\n    Pour from a held source container into a target container by tilting the source next\n    to th\u2026",
+  "schema": null,
+  "tools": [
+   "list_kinds",
+   "describe_kind",
+   "find_individuals",
+   "describe_individual",
+   "holders_of",
+   "follow_path",
+   "list_predicates",
+   "evaluate_predicate",
+   "knowledge_overview",
+   "find_fragments",
+   "describe_fragment"
+  ]
+ },
+ {
+  "event": "ModelAnswered",
+  "at": 1791970751.624235,
+  "call": "9f9f5a7b6de64a24b050ed5fd5aa7d10",
+  "answer": "[{\"PouringAction.arm\": \"RIGHT\", \"PouringAction.tilt_angle\": 1.6, \"why\": \"The first pour missed the opening, so the tilt is lower.\", \"grounds\": [{\"knowledge\": \"pour\"}]}]",
+  "seconds": 0.00014152296353131533,
+  "usage": {
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_creation_input_tokens": 0,
+   "cache_read_input_tokens": 0
+  },
+  "cost": 0.0
+ },
+ {
+  "event": "ComponentCalled",
+  "at": 1791970751.6243074,
+  "call": "d0772c6700934d4baf05f3d15c86b09b",
+  "source": "resolver",
+  "target": "knowledge",
+  "operation": "citation",
+  "arguments": {
+   "record": "0c8d549ea6594304944dde592e768b71",
+   "name": "pour"
+  }
+ },
+ {
+  "event": "ComponentReturned",
+  "at": 1791970751.6243336,
+  "call": "d0772c6700934d4baf05f3d15c86b09b",
+  "result": "http://www.ease-crc.org/ont/llm_reasoner/hypothesis/0c8d549ea6594304944dde592e768b71#pour",
+  "seconds": 5.004985723644495e-06
+ },
+ {
+  "event": "TrialStarted",
+  "at": 1791970751.6247795,
+  "trial": "0434a50e9caa4f4e909ad087af44c370",
+  "values": {
+   "source_container": "Static_MilkPitcher.stl",
+   "target_container": "bowl.stl",
+   "arm": "RIGHT",
+   "tilt_angle": 1.6
+  }
+ },
+ {
+  "event": "TrialFinished",
+  "at": 1791970751.6249425,
+  "trial": "0434a50e9caa4f4e909ad087af44c370",
+  "outcome": {
+   "lands_in_opening": true
+  },
+  "seconds": 0.0001363280462101102
+ },
+ {
+  "event": "ResolutionFinished",
+  "at": 1791970751.6249754,
+  "resolution": "fa898d0ff7cc415da04422a696c3184e",
+  "attempts": 2,
+  "instances": [
+   "PouringAction"
+  ],
+  "justifications": [
+   {
+    "why": "The first pour missed the opening, so the tilt is lower.",
+    "grounds": [
+     {
+      "source": "knowledge",
+      "identifier": "http://www.ease-crc.org/ont/llm_reasoner/hypothesis/0c8d549ea6594304944dde592e768b71#pour"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "event": "RunFinished",
+  "at": 1791970751.625341,
+  "run": "06ec86f74b2446b3ad4735d9bbeb1994",
+  "seconds": 1.7058555510011502
+ }
+]

@@ -223,8 +223,15 @@ class TestPages:
             assert "text/html" in response.headers["Content-Type"]
             assert b"<title>" in response.read()
 
-    def test_a_script_is_served_as_javascript(self, viewer):
-        with get(viewer.url + "/app.js") as response:
+    def test_the_script_of_the_page_is_served_as_javascript(self, viewer):
+        with get(viewer.url + "/app.mjs") as response:
+            assert "javascript" in response.headers["Content-Type"]
+
+    @pytest.mark.parametrize(
+        "module", sorted(WEB_ROOT.glob("*.mjs")), ids=lambda module: module.name
+    )
+    def test_every_module_of_the_page_is_served_as_javascript(self, viewer, module):
+        with get(viewer.url + "/" + module.name) as response:
             assert "javascript" in response.headers["Content-Type"]
 
     def test_a_page_that_is_not_there_is_not_found(self, viewer):

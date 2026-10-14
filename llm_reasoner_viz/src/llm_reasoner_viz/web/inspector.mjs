@@ -1,0 +1,266 @@
+// What the inspector shows of a span: a title, a few facts, and blocks of detail such as
+// the prompts of a model call, laid out as the sections they are made of.
+
+import { formatCost, formatDuration } from './format.mjs';
+import { KIND, OUTCOME, STATUS, shortName } from './model.mjs';
+import { isJson, parseSections } from './prompts.mjs';
+
+// The keys of the outcome of a pour that say where the mouth of the pitcher ended.
+const MOUTH = Object.freeze({
+  DISTANCE: 'mouth_distance_from_opening_centre',
+  AHEAD: 'mouth_ahead_of_opening_centre',
+  RIGHT: 'mouth_right_of_opening_centre',
+  ABOVE: 'mouth_above_opening',
+});
+
+const NO_COMPONENT = 'no component';
+
+// %% blocks
+
+// The kinds of block of detail a view is made of.
+export const BLOCK = Object.freeze({
+  TEXT: 'text',
+  JSON: 'json',
+  LIST: 'list',
+  FACTS: 'facts',
+  TABLE: 'table',
+  SECTIONS: 'sections',
+});
+
+const textBlock = (title, text) => ({ title: title, kind: BLOCK.TEXT, text: text });
+const jsonBlock = (title, value) => ({ title: title, kind: BLOCK.JSON, value: value });
+const listBlock = (title, items) => ({ title: title, kind: BLOCK.LIST, items: items });
+const factsBlock = (title, facts) => ({ title: title, kind: BLOCK.FACTS, facts: facts });
+const tableBlock = (title, columns, rows) => ({ title: title, kind: BLOCK.TABLE, columns: columns, rows: rows });
+const sectionsBlock = (title, text) => Object.assign({ title: title, kind: BLOCK.SECTIONS }, parseSections(text));
+
+// Data as the object it spells when it is JSON, as text otherwise.
+function dataBlock(title, value) {
+  if (typeof value !== 'string') return jsonBlock(title, value);
+  return isJson(value) ? jsonBlock(title, JSON.parse(value)) : textBlock(title, value);
+}
+
+// The name an identifier ends in: the part after the "#" of an address, else its last part.
+function nameOfIdentifier(identifier) {
+  const parts = identifier.split('#');
+  return parts.length > 1 ? parts.pop() : shortName(identifier.split('/').pop());
+}
+
+function linkOf(span) {
+  return { label: span.label, id: span.id, status: span.status };
+}
+
+// The kinds of work whose name alone does not say what they were, among others in a list.
+const WORK_NAMES = new Map([[KIND.MODEL, 'model call'], [KIND.CALL, 'call']]);
+
+function namedLinkOf(span) {
+  const work = WORK_NAMES.get(span.kind);
+  return Object.assign(linkOf(span), { label: work ? work + ' · ' + span.label : span.label });
+}
+
+function linksTo(model, span, kinds, describe = linkOf) {
+  return model.childrenOf(span).filter((child) => kinds.includes(child.kind)).map(describe);
+}
+
+function present(block) {
+  return block !== null && !(block.items && block.items.length === 0);
+}
+
+function lasted(span) {
+  return span.end === null ? [] : [['lasted', formatDuration(span.end - span.start)]];
+}
+
+function failureFacts(failure) {
+  return failure ? [['failed with', failure.error_type]] : [];
+}
+
+function failureBlocks(failure) {
+  return failure ? [textBlock('Failure', failure.reason)] : [];
+}
+
+function view(span, title, facts, blocks) {
+  return { title: title, kind: span.kind, status: span.status, facts: facts, blocks: blocks.filter(present) };
+}
+
+// %% a pour tried in the simulation
+
+// A pour written as it ended: where the mouth of the pitcher was against the opening.
+export function trialText(outcome) {
+  if (outcome[OUTCOME.MOTION_FAILED]) return 'the motion failed: ' + outcome[OUTCOME.MOTION_FAILED];
+  const verdict = outcome[OUTCOME.LANDS_IN_OPENING] ? 'landed' : 'missed';
+  if (outcome[MOUTH.DISTANCE] === undefined) return verdict;
+  return verdict + ': the mouth ' + outcome[MOUTH.DISTANCE] + ' m from the opening\'s centre (' +
+    outcome[MOUTH.AHEAD] + ' m ahead, ' + outcome[MOUTH.RIGHT] + ' m right), ' +
+    outcome[MOUTH.ABOVE] + ' m above it';
+}
+
+// %% views by kind
+
+function describeModel(span, model) {
+  const { asked, answered, failure } = span.data;
+  const usage = answered && answered.usage;
+  const facts = [['asked by', asked.source], ['model', asked.identity], ['style', asked.style]];
+  if (answered) facts.push(['took', formatDuration(answered.seconds)]);
+  if (usage) facts.push(['input tokens', usage.input_tokens], ['output tokens', usage.output_tokens]);
+  if (answered && typeof answered.cost === 'number') facts.push(['cost', formatCost(answered.cost)]);
+  facts.push(...failureFacts(failure));
+  return view(span, 'Model call by the ' + asked.source, facts, [
+    sectionsBlock('System prompt', asked.system),
+    sectionsBlock('User prompt', asked.user),
+    asked.schema ? jsonBlock('Schema', asked.schema) : null,
+    listBlock('Tools offered', asked.tools.map((name) => ({ label: name }))),
+    listBlock('Tool calls', linksTo(model, span, [KIND.TOOL, KIND.REFUSED])),
+    answered ? textBlock('Answer', answered.answer) : null,
+    ...failureBlocks(failure),
+  ].filter((block) => block !== null));
+}
+
+function describeTool(span) {
+  const { called, returned, failure } = span.data;
+  const facts = [['tool', called.tool], ['belongs to', called.owner || NO_COMPONENT]];
+  if (returned) facts.push(['took', formatDuration(returned.seconds)]);
+  facts.push(...failureFacts(failure));
+  return view(span, 'Tool call: ' + called.tool, facts, [
+    jsonBlock('Input', called.arguments),
+    returned ? dataBlock('Returned', returned.content) : null,
+    ...failureBlocks(failure),
+  ].filter((block) => block !== null));
+}
+
+function describeRefusal(span) {
+  const { refused } = span.data;
+  return view(span, 'Tool call refused: ' + refused.tool, [['tool', refused.tool]], [
+    jsonBlock('Input', refused.arguments),
+    dataBlock('Refusal', refused.content),
+  ]);
+}
+
+function describeCall(span) {
+  const { called, returned, failure } = span.data;
+  const facts = [['from', called.source], ['to', called.target], ['operation', called.operation]];
+  if (returned) facts.push(['took', formatDuration(returned.seconds)]);
+  facts.push(...failureFacts(failure));
+  return view(span, called.source + ' calls ' + called.target + ': ' + called.operation, facts, [
+    jsonBlock('Asked', called.arguments),
+    returned ? dataBlock('Answered', returned.result) : null,
+    ...failureBlocks(failure),
+  ].filter((block) => block !== null));
+}
+
+function describeResolution(span, model) {
+  const { started, finished, consulted, failure } = span.data;
+  const facts = [['purpose', started.purpose], ['action', started.action],
+    ['repairs allowed', started.max_repairs]];
+  if (finished) facts.push(['attempts', finished.attempts]);
+  facts.push(...lasted(span), ...failureFacts(failure));
+  const slots = tableBlock('Slots', ['Slot', 'Kind', 'Type', 'Candidates'],
+    started.slots.map((slot) => [slot.path, slot.kind, slot.type_name, slot.candidates === null ? '' : slot.candidates]));
+  const knowledge = consulted && factsBlock('Knowledge consulted', [
+    ['record', consulted.record_id || 'none'],
+    ['designator', consulted.designator],
+    ['situation features', Object.entries(consulted.situation).map(([key, value]) => key + ' = ' + value).join(', ') || 'none'],
+  ]);
+  const why = finished && listBlock('Why', finished.justifications.map((justification) => ({
+    label: justification.why,
+    note: justification.grounds.map((ground) => ground.source + ': ' + nameOfIdentifier(ground.identifier)).join(', '),
+  })));
+  return view(span, 'Resolution of ' + span.label, facts, [
+    slots,
+    knowledge || null,
+    listBlock('Attempts', linksTo(model, span, [KIND.ATTEMPT])),
+    finished ? listBlock('Resolved to', finished.instances.map((name) => ({ label: name }))) : null,
+    why || null,
+    ...failureBlocks(failure),
+  ].filter((block) => block !== null));
+}
+
+function describeAttempt(span, model) {
+  const { rejected } = span.data;
+  const facts = rejected ? [['rejected for', rejected.kind]] : [];
+  facts.push(...lasted(span));
+  return view(span, 'Attempt ' + span.label.replace('attempt ', '') + ' at ' + model.byId.get(span.parent).label, facts, [
+    rejected ? jsonBlock('What the failure found', rejected.details) : null,
+    rejected ? textBlock('Answer rejected', rejected.answer) : null,
+    listBlock('During the attempt', linksTo(model, span, [KIND.MODEL, KIND.CALL, KIND.TRIAL], namedLinkOf)),
+  ].filter((block) => block !== null));
+}
+
+function describeHypothesis(span, model) {
+  const { requested, served, failure } = span.data;
+  const facts = [['kind', shortName(requested.root_type)]];
+  if (served) {
+    facts.push(['from the store', served.from_store ? 'yes' : 'no'], ['record', served.record_id],
+      ['attempts', served.attempts]);
+  }
+  facts.push(...lasted(span), ...failureFacts(failure));
+  return view(span, 'Knowledge of ' + shortName(requested.root_type), facts, [
+    textBlock('Instruction', requested.instruction),
+    jsonBlock('Fixed values', requested.fixed_values),
+    listBlock('Attempts', linksTo(model, span, [KIND.GENERATION_ATTEMPT])),
+    served ? listBlock('Warnings', served.warnings.map((warning) => ({ label: warning }))) : null,
+    failure ? listBlock('Problems', failure.problems.map((problem) => ({ label: problem }))) : null,
+  ].filter((block) => block !== null));
+}
+
+function describeGenerationAttempt(span, model) {
+  const { rejected } = span.data;
+  return view(span, 'Generation ' + span.label, lasted(span), [
+    rejected ? listBlock('Problems found', rejected.problems.map((problem) => ({ label: problem }))) : null,
+    listBlock('During the attempt', linksTo(model, span, [KIND.MODEL], namedLinkOf)),
+  ].filter((block) => block !== null));
+}
+
+function describeTrial(span) {
+  const { started, finished } = span.data;
+  const facts = [];
+  if (finished) facts.push(['result', trialText(finished.outcome)], ['took', formatDuration(finished.seconds)]);
+  return view(span, 'Pour tried in the simulation', facts, [
+    jsonBlock('Values tried', started.values),
+    finished ? jsonBlock('Outcome', finished.outcome) : null,
+  ].filter((block) => block !== null));
+}
+
+function describeStep(span) {
+  return view(span, 'Step: ' + span.label, [['status', span.data.changed.status], ...lasted(span)], []);
+}
+
+function describeExecution(span, model) {
+  const { started, failure } = span.data;
+  return view(span, 'Execution of the plan', [['run', started.run], ...lasted(span), ...failureFacts(failure)], [
+    listBlock('Steps', linksTo(model, span, [KIND.STEP])),
+    ...failureBlocks(failure),
+  ]);
+}
+
+function describeRun(span) {
+  const { started, failure } = span.data;
+  return view(span, 'Run', [['scene', started.scene], ['run', started.run], ...lasted(span), ...failureFacts(failure)], [
+    textBlock('Query', started.query),
+    ...failureBlocks(failure),
+  ]);
+}
+
+function describeUnknown(span) {
+  return view(span, span.label, lasted(span), [jsonBlock('Events', span.events)]);
+}
+
+const DESCRIBERS = new Map([
+  [KIND.MODEL, describeModel],
+  [KIND.TOOL, describeTool],
+  [KIND.REFUSED, describeRefusal],
+  [KIND.CALL, describeCall],
+  [KIND.RESOLUTION, describeResolution],
+  [KIND.ATTEMPT, describeAttempt],
+  [KIND.HYPOTHESIS, describeHypothesis],
+  [KIND.GENERATION_ATTEMPT, describeGenerationAttempt],
+  [KIND.TRIAL, describeTrial],
+  [KIND.STEP, describeStep],
+  [KIND.EXECUTION, describeExecution],
+  [KIND.RUN, describeRun],
+]);
+
+// The view of a span: its title, how it ended, a few facts, and blocks of detail.
+export function describeSpan(span, model) {
+  const describe = DESCRIBERS.get(span.kind) || describeUnknown;
+  return describe(span, model);
+}

@@ -7,25 +7,41 @@
   <link rel="stylesheet" href="/app.css">
 </head>
 <body>
-  <header>
+  <header class="topbar">
     <h1>llm_reasoner viewer</h1>
-    <span class="muted">the system at work, run by run</span>
-    <span id="connection">no run selected</span>
+    <label class="run-picker">
+      <span class="visually-hidden">Run</span>
+      <select id="run-select"><option>no runs yet</option></select>
+    </label>
+    <span id="run-status" class="badge"></span>
+    <div id="totals" class="totals"></div>
+    <span id="connection" class="connection">connecting…</span>
+    <button id="events-toggle" type="button" aria-controls="events-drawer" aria-expanded="false">events</button>
   </header>
-  <main>
-    <aside>
-      <h2>Runs</h2>
-      <ul id="run-list"></ul>
-    </aside>
-    <section>
-      <div id="run-head">
-        <h2 id="run-title">Events</h2>
-        <div id="run-summary"></div>
-        <pre id="run-query" hidden></pre>
-      </div>
-      <ol id="events"><li class="empty">Pick a run on the left, or resolve a designator in cram-viz.</li></ol>
+  <main class="screen">
+    <section class="panel" id="map-panel" aria-label="System">
+      <h2>System</h2>
+      <div id="map"></div>
+      <ul class="legend">
+        <li><span class="swatch status-running"></span>going on now</li>
+        <li><span class="swatch status-ok"></span>done</li>
+        <li><span class="swatch status-rejected"></span>rejected, tried again</li>
+        <li><span class="swatch status-failed"></span>failed</li>
+      </ul>
+      <p class="hint">Click a component to single out its row on the timeline.</p>
     </section>
+    <section class="panel" id="timeline-panel" aria-label="Timeline">
+      <h2>Timeline</h2>
+      <div id="timeline"></div>
+    </section>
+    <aside class="panel" id="inspector-panel" aria-label="Inspector">
+      <h2>Inspector</h2>
+      <div id="inspector"></div>
+    </aside>
   </main>
-  <script src="/app.js"></script>
+  <section id="events-drawer" aria-label="Events" hidden>
+    <div id="events"></div>
+  </section>
+  <script type="module" src="/app.mjs"></script>
 </body>
 </html>

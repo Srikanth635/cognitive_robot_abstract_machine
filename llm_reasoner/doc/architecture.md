@@ -432,9 +432,17 @@ only what a client is given and returns.
 The viewer that reads these logs is the package `llm_reasoner_viz` (`llm-reasoner-viz`, port
 8721, read-only, standard library only): a server listing the runs that have a log and
 following one as it grows, as a batch or as server-sent events whose ids are offsets in the
-log, so a reader resumes where it stopped; its page, so far, shows each event as a row.
-cram_viz's answer panel links to it by run (`LLM_REASONER_VIZ_URL`). The viewer spells the
-events' names as the writers do, which its tests check.
+log, so a reader resumes where it stopped. Its page builds *spans* from the events (a
+model call, a tool call, a call between components, a resolution and its attempts, a
+hypothesis and its generation attempts, a pour tried in the simulation, a step of the
+plan), each with a start, an end and how it ended, nested in what it happened during, and
+shows them three ways: a map of the components with the number of calls over each
+connection and what each is doing, a timeline with a row per component whose bars grow
+while the run goes on, and an inspector with the prompts of a model call as the tagged
+sections they are made of, the tools offered and called, answers, slots, why an attempt was
+rejected, and the outcome of a pour. cram_viz's answer panel links to it by run
+(`LLM_REASONER_VIZ_URL`). The viewer spells the events' names as the writers do, which its
+tests check.
 
 ## 3. How the components communicate
 

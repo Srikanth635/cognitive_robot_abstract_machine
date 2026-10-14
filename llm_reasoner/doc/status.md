@@ -14,7 +14,7 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
 | World injector (`world/`) | Built and tested; eight tools; world-access contract 1.0 with declared answer shapes |
 | Resolver (`resolver/`) | Built and tested; structured prompts; verified live on a PR2 kitchen (28 of 28 cases as expected) |
 | Clients (`clients/`) | Anthropic tool loop with caching and usage; OpenAI plain completion; scripted client |
-| Observation (`observation/`) | Events, sinks, wrappers for the client, tools, world and knowledge component, and hooks in the resolver and the knowledge generation built and tested; cram_viz logs every run; the viewer (`llm_reasoner_viz`) serves the logs, its screen is being built |
+| Observation (`observation/`) | Events, sinks, wrappers for the client, tools, world and knowledge component, and hooks in the resolver and the knowledge generation built and tested; cram_viz logs every run; the viewer (`llm_reasoner_viz`) serves the logs and shows them as a map, a timeline and an inspector |
 | Knowledge component | Built and tested (ontology, generation, admission, storage, views), reorganised into `knowledge/` with one public module; consulted by the resolver before every request to its model (R1–R7, verified live), but its hypotheses are **not yet read** by the resolver's request (knowledge tools are next) |
 | Offline tests | `python -m pytest test/llm_reasoner_test`: 385 passed, 2 skipped |
 
@@ -110,6 +110,21 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   browser on the replayed resolution, on a real Execute's log, and on a log written slowly
   while the page followed it. Its tests are not in CI, like those of `llm_reasoner` and
   `cram_viz`.
+- The viewer, step V5: the screen. The page is ES modules (`web/*.mjs`, no build step); the
+  logic lives in modules with node tests (`prompts` parses a prompt into its tagged
+  sections, `model` builds spans from events one at a time, `layout` packs spans into rows,
+  `inspector` makes the view of a span, `map` counts calls per connection), and the
+  elements are drawn by `*_view` modules checked in a browser. The screen has a top bar (run
+  picker, status, totals, connection), the map of the components on the left (which
+  component is at work and what it does, which connection was just used), the timeline in
+  the middle (a row per component, bars that grow with the run, zoom, fit, follow), and the
+  inspector on the right (prompts as sections, a trail up through what a span happened
+  during, links down to what happened during it); a drawer lists the raw events. A span has
+  an address (`?run=…&span=…`), so a link returns to it. Checked in a browser on the replayed
+  resolution (every kind of span opened), a real Execute's log, a log written in real time
+  while the page followed it (bars grow, the run settles to the same spans as loading the
+  finished log), light and dark themes and a narrow window. Not yet: the attempts strip, the
+  pour-trial view, replay, filters, links from the viewer to cram-viz.
 
 ### Knowledge component
 - The predictive-manipulation ontology (`core`, `object-dynamics`, `prehension`,
@@ -378,7 +393,7 @@ the world does not say what the cup holds, so the material came from the task al
   client and tool wrappers (done); V2 wrappers for the world and knowledge calls, and
   hooks for the resolver's attempts and rejections and the knowledge generation (done); V3 the
   log in cram-viz with trial and Execute events and a link from the answer panel (done); V4 the
-  viewer server (done); V5 the screen (map, timeline, inspector); V6 attempts, trials, replay,
+  viewer server (done); V5 the screen: map, timeline, inspector (done); V6 attempts, trials, replay,
   filters, links both ways, a live check.
 - The knowledge request, steps R1–R7: all done; R7's results are in §3.
 - Knowledge in its own graph, steps I1–I5: done, except I4's domains for slots of a
