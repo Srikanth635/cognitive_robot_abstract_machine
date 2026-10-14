@@ -114,6 +114,7 @@ button { font: inherit; color: inherit; }
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(300px, 380px) minmax(0, 1fr) minmax(340px, 460px);
+  grid-template-rows: minmax(0, 1fr) auto;
   gap: 12px;
   padding: 12px;
 }
@@ -146,6 +147,42 @@ button { font: inherit; color: inherit; }
 .swatch.status-running { background: var(--accent); background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.4) 0 4px, transparent 4px 8px); }
 .swatch.status-rejected { background: transparent; border: 2px dashed var(--warn); }
 .swatch.status-failed { background: transparent; border: 2px solid var(--bad); }
+
+/* the attempts */
+#attempts-panel { grid-column: 1 / -1; }
+#attempts-panel[hidden] { display: none; }
+.strip { display: flex; gap: 10px; padding: 2px 16px 14px; overflow-x: auto; align-items: stretch; }
+.card { flex: none; width: 240px; padding: 8px 12px; border: 1px solid var(--line); border-left-width: 4px; border-radius: 10px; background: var(--bg); text-align: left; cursor: pointer; }
+.card:hover { border-color: var(--accent); }
+.card.status-ok { border-left-color: var(--good); }
+.card.status-rejected { border-left-color: var(--warn); }
+.card.status-failed { border-left-color: var(--bad); }
+.card.status-running { border-left-color: var(--accent); }
+.card.chosen { box-shadow: 0 0 0 2px var(--text); }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.choices { margin: 0; padding: 0; list-style: none; font-size: 12px; }
+.choices li { display: flex; gap: 8px; }
+.choices .slot { color: var(--muted); }
+.choices .value { font-family: var(--mono); overflow-wrap: anywhere; }
+.card p { margin: 4px 0 0; font-size: 12px; }
+.card .why { color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card .rejection { color: var(--warn); }
+.pours { flex: none; width: 200px; }
+.pours .plan { width: 200px; height: 200px; }
+
+/* where pours ended */
+.plan { display: block; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+.plan .axis { stroke: var(--line); stroke-width: 1; }
+.plan .opening { fill: color-mix(in srgb, var(--good) 14%, transparent); stroke: var(--good); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.plan .direction, .plan .scale text { font: 10px system-ui, sans-serif; fill: var(--muted); }
+.plan .scale line { stroke: var(--muted); stroke-width: 2; }
+.plan .pour { cursor: pointer; }
+.plan .pour circle { stroke: var(--panel); stroke-width: 1.5; }
+.plan .pour.lands circle { fill: var(--good); }
+.plan .pour.misses circle { fill: var(--warn); }
+.plan .pour text { font: 600 11px system-ui, sans-serif; fill: var(--text); }
+.plan .pour.emphasised circle { stroke: var(--text); stroke-width: 2.5; }
+.plan-block .plan { width: 100%; max-width: 260px; }
 
 /* the map */
 .map { display: block; width: 100%; height: auto; }

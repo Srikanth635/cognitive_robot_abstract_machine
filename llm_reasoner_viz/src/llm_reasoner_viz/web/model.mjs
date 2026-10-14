@@ -69,10 +69,16 @@ export const EVENT = Object.freeze({
   TRIAL_FINISHED: 'TrialFinished',
 });
 
-// The keys of the outcome of a pour tried in the simulation that decide how it ended.
+// The keys of the outcome of a pour tried in the simulation. Lengths are in metres, as seen
+// from the robot's base: ahead along its heading, right to its right.
 export const OUTCOME = Object.freeze({
   LANDS_IN_OPENING: 'lands_in_opening',
   MOTION_FAILED: 'motion_failed',
+  OPENING_RADIUS: 'opening_radius',
+  DISTANCE: 'mouth_distance_from_opening_centre',
+  AHEAD: 'mouth_ahead_of_opening_centre',
+  RIGHT: 'mouth_right_of_opening_centre',
+  ABOVE: 'mouth_above_opening',
 });
 
 // The statuses of a step of the plan that end it; any other leaves it as it is.

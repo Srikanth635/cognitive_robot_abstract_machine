@@ -1,9 +1,9 @@
 // Tests of what the inspector shows of a span: its facts and the blocks of detail.
 import test from 'node:test';
 import assert from 'node:assert';
-import { KIND, LANE, STATUS, EVENT } from '../../../llm_reasoner_viz/src/llm_reasoner_viz/web/model.mjs';
+import { KIND, LANE, STATUS, EVENT, OUTCOME } from '../../../llm_reasoner_viz/src/llm_reasoner_viz/web/model.mjs';
 import { BLOCK, describeSpan, trialText } from '../../../llm_reasoner_viz/src/llm_reasoner_viz/web/inspector.mjs';
-import { actionResolution, loadFixture, modelOf } from './support.mjs';
+import { actionResolution, loadFixture, modelOf, pourEvents, pourOutcome, spansOfKind } from './support.mjs';
 
 const resolved = loadFixture('resolved_run.json');
 
@@ -120,13 +120,14 @@ test('a pour tried in the simulation says where it ended', function () {
 });
 
 test('a pour is written as landed or missed with where the mouth ended', function () {
-  assert.strictEqual(trialText({ lands_in_opening: true, mouth_distance_from_opening_centre: 0.005,
-    mouth_ahead_of_opening_centre: 0.001, mouth_right_of_opening_centre: 0.004, mouth_above_opening: 0.09 }),
-  'landed: the mouth 0.005 m from the opening\'s centre (0.001 m ahead, 0.004 m right), 0.09 m above it');
-  assert.ok(trialText({ lands_in_opening: false, mouth_distance_from_opening_centre: 0.188,
-    mouth_ahead_of_opening_centre: 0.002, mouth_right_of_opening_centre: 0.188, mouth_above_opening: 0.087 }).startsWith('missed'));
-  assert.strictEqual(trialText({ lands_in_opening: false, motion_failed: 'out of reach' }), 'the motion failed: out of reach');
-  assert.strictEqual(trialText({ lands_in_opening: false }), 'missed');
+  const where = {
+    [OUTCOME.LANDS_IN_OPENING]: true, [OUTCOME.DISTANCE]: 0.005, [OUTCOME.AHEAD]: 0.001,
+    [OUTCOME.RIGHT]: 0.004, [OUTCOME.ABOVE]: 0.09,
+  };
+  assert.strictEqual(trialText(where), 'landed: the mouth 0.005 m from the opening\'s centre (0.001 m ahead, 0.004 m right), 0.09 m above it');
+  assert.ok(trialText(Object.assign({}, where, { [OUTCOME.LANDS_IN_OPENING]: false })).startsWith('missed'));
+  assert.strictEqual(trialText({ [OUTCOME.LANDS_IN_OPENING]: false, [OUTCOME.MOTION_FAILED]: 'out of reach' }), 'the motion failed: out of reach');
+  assert.strictEqual(trialText({ [OUTCOME.LANDS_IN_OPENING]: false }), 'missed');
 });
 
 test('a run shows its query and scene', function () {
@@ -157,4 +158,46 @@ test('what happened during an attempt is listed with the kind of work it was', f
   const during = block(describeSpan(rejected, model), 'During the attempt');
   assert.deepStrictEqual(during.items.map(function (item) { return item.label; }),
     ['model call · resolver', 'call · citation', 'trial 1']);
+});
+
+// %% where pours ended
+
+const POURS = [{ ahead: 0.02, right: 0.18 }, { ahead: 0.005, right: 0.01 }];
+
+function modelOfPours() {
+  return modelOf(pourEvents(POURS.map(function (where) { return pourOutcome(Object.assign({ radius: 0.04, above: 0.09 }, where)); })));
+}
+
+test('a pour shows where the mouth ended on a plan of the opening, with the pours before it', function () {
+  const model = modelOfPours();
+  const [first, second] = spansOfKind(model, KIND.TRIAL);
+  const view = describeSpan(second, model);
+  const plan = block(view, 'Where the mouth ended');
+  assert.strictEqual(plan.kind, BLOCK.PLOT);
+  assert.deepStrictEqual(plan.plot.points.map(function (point) { return point.id; }), [first.id, second.id]);
+  assert.strictEqual(plan.emphasised, second.id);
+});
+
+test('a pour with no place has no plan', function () {
+  const model = modelOf(pourEvents([{ [OUTCOME.LANDS_IN_OPENING]: false, [OUTCOME.MOTION_FAILED]: 'out of reach' }]));
+  assert.strictEqual(block(describeSpan(spansOfKind(model, KIND.TRIAL)[0], model), 'Where the mouth ended'), undefined);
+});
+
+test('a resolution shows the plan of the pours tried during its attempts', function () {
+  const events = [
+    { event: EVENT.RESOLUTION_STARTED, at: 0, resolution: 'r', purpose: 'action', action: 'a.B', slots: [], max_repairs: 1 },
+    { event: EVENT.ATTEMPT_STARTED, at: 0.5, resolution: 'r', attempt: 0 },
+    ...pourEvents(POURS.map(function (where) { return pourOutcome(Object.assign({ radius: 0.04, above: 0.09 }, where)); })),
+    { event: EVENT.RESOLUTION_FINISHED, at: 30, resolution: 'r', attempts: 1, instances: [], justifications: [] },
+  ];
+  const model = modelOf(events);
+  const plan = block(describeSpan(model.byId.get('resolution:r'), model), 'Pours tried');
+  assert.strictEqual(plan.kind, BLOCK.PLOT);
+  assert.strictEqual(plan.plot.points.length, 2);
+  assert.strictEqual(plan.emphasised, null);
+});
+
+test('a resolution that tried no pour has no plan of them', function () {
+  const model = modelOf(resolved);
+  assert.strictEqual(block(describeSpan(actionResolution(model, resolved), model), 'Pours tried'), undefined);
 });

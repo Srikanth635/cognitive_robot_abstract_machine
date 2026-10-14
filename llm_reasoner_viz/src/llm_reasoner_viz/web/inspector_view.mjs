@@ -3,6 +3,7 @@
 
 import { el } from './dom.mjs';
 import { BLOCK } from './inspector.mjs';
+import { drawPlot } from './pour_view.mjs';
 import { isJson, prettyJson } from './prompts.mjs';
 
 const SECTION_OPEN_BELOW = 1200;
@@ -77,6 +78,7 @@ const BLOCKS = new Map([
   [BLOCK.SECTIONS, sectionsBlock],
   [BLOCK.LIST, listBlock],
   [BLOCK.TABLE, tableBlock],
+  [BLOCK.PLOT, function (block, choose) { return el('div', { class: 'plan-block' }, drawPlot(block.plot, block.emphasised, choose)); }],
   [BLOCK.FACTS, function (block) { return factsList(block.facts); }],
 ]);
 

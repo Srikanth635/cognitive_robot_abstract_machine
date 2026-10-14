@@ -39,6 +39,14 @@ modules with no build step and no library loaded from elsewhere.
   rejected (an attempt that went back to the model, a pour that missed) and one outlined in
   red failed. *fit* shows the whole run, *−* and *+* zoom, *follow* keeps the newest work in
   view.
+- **Attempts** (bottom): the attempts of the resolution the chosen span belongs to (the one
+  asked for until something else is chosen), a card each: what it chose slot by slot, why
+  the model chose it, the pour that was tried and how it ended, and what it was rejected
+  for. Beside them, a plan of where the pours ended, seen from above and from the robot's
+  base: the opening of the target as a dashed circle, each pour a numbered point, green
+  where it landed and amber where it missed. A card or a point opens what it stands for.
+  The same plan is shown by the inspector for a pour, with that pour marked, and for a
+  resolution.
 - **Filters** (above the timeline): a search through what spans are called and everything
   their events hold, prompts and answers included, and *problems only* for what was
   rejected or failed. Matching bars stay bright and the others fade, so the shape of the run
@@ -82,10 +90,13 @@ src/llm_reasoner_viz/
         prompts.mjs     a prompt read as its tagged sections
         replay.mjs      what a run looked like at any moment, and how a replay moves
         filters.mjs     picking out the spans that say some words or went wrong
+        attempts.mjs    the cards of the attempts of a resolution
+        pour.mjs        the plan of where pours ended
         layout.mjs      spans packed into rows of the timeline
         inspector.mjs   what the inspector shows of a span
         map.mjs         the components, their connections and what each is doing
-        *_view.mjs      the elements: map, timeline, inspector, events
+        *_view.mjs      the elements: map, timeline, inspector, events, replay, filters,
+                        attempts, plan of the pours
         app.mjs         follows a run and keeps the views in step
 ```
 

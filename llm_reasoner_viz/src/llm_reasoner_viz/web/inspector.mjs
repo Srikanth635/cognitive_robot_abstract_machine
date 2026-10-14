@@ -3,15 +3,8 @@
 
 import { formatCost, formatDuration } from './format.mjs';
 import { KIND, OUTCOME, STATUS, shortName } from './model.mjs';
+import { plotOfTrials, triedPours } from './pour.mjs';
 import { isJson, parseSections } from './prompts.mjs';
-
-// The keys of the outcome of a pour that say where the mouth of the pitcher ended.
-const MOUTH = Object.freeze({
-  DISTANCE: 'mouth_distance_from_opening_centre',
-  AHEAD: 'mouth_ahead_of_opening_centre',
-  RIGHT: 'mouth_right_of_opening_centre',
-  ABOVE: 'mouth_above_opening',
-});
 
 const NO_COMPONENT = 'no component';
 
@@ -25,6 +18,7 @@ export const BLOCK = Object.freeze({
   FACTS: 'facts',
   TABLE: 'table',
   SECTIONS: 'sections',
+  PLOT: 'plot',
 });
 
 const textBlock = (title, text) => ({ title: title, kind: BLOCK.TEXT, text: text });
@@ -32,6 +26,17 @@ const jsonBlock = (title, value) => ({ title: title, kind: BLOCK.JSON, value: va
 const listBlock = (title, items) => ({ title: title, kind: BLOCK.LIST, items: items });
 const factsBlock = (title, facts) => ({ title: title, kind: BLOCK.FACTS, facts: facts });
 const tableBlock = (title, columns, rows) => ({ title: title, kind: BLOCK.TABLE, columns: columns, rows: rows });
+// Where pours ended on a plan of the opening, one of them emphasised (null when none is); no
+// block when none of the pours was measured.
+function plotBlock(title, trials, emphasised) {
+  const plot = plotOfTrials(trials);
+  return plot === null ? null : { title: title, kind: BLOCK.PLOT, plot: plot, emphasised: emphasised };
+}
+
+function finishedTrials(spans) {
+  return spans.filter(function (span) { return span.kind === KIND.TRIAL && span.data.finished; });
+}
+
 const sectionsBlock = (title, text) => Object.assign({ title: title, kind: BLOCK.SECTIONS }, parseSections(text));
 
 // Data as the object it spells when it is JSON, as text otherwise.
@@ -88,10 +93,10 @@ function view(span, title, facts, blocks) {
 export function trialText(outcome) {
   if (outcome[OUTCOME.MOTION_FAILED]) return 'the motion failed: ' + outcome[OUTCOME.MOTION_FAILED];
   const verdict = outcome[OUTCOME.LANDS_IN_OPENING] ? 'landed' : 'missed';
-  if (outcome[MOUTH.DISTANCE] === undefined) return verdict;
-  return verdict + ': the mouth ' + outcome[MOUTH.DISTANCE] + ' m from the opening\'s centre (' +
-    outcome[MOUTH.AHEAD] + ' m ahead, ' + outcome[MOUTH.RIGHT] + ' m right), ' +
-    outcome[MOUTH.ABOVE] + ' m above it';
+  if (outcome[OUTCOME.DISTANCE] === undefined) return verdict;
+  return verdict + ': the mouth ' + outcome[OUTCOME.DISTANCE] + ' m from the opening\'s centre (' +
+    outcome[OUTCOME.AHEAD] + ' m ahead, ' + outcome[OUTCOME.RIGHT] + ' m right), ' +
+    outcome[OUTCOME.ABOVE] + ' m above it';
 }
 
 // %% views by kind
@@ -168,6 +173,7 @@ function describeResolution(span, model) {
     slots,
     knowledge || null,
     listBlock('Attempts', linksTo(model, span, [KIND.ATTEMPT])),
+    plotBlock('Pours tried', triedPours(model, span), null),
     finished ? listBlock('Resolved to', finished.instances.map((name) => ({ label: name }))) : null,
     why || null,
     ...failureBlocks(failure),
@@ -210,11 +216,12 @@ function describeGenerationAttempt(span, model) {
   ].filter((block) => block !== null));
 }
 
-function describeTrial(span) {
+function describeTrial(span, model) {
   const { started, finished } = span.data;
   const facts = [];
   if (finished) facts.push(['result', trialText(finished.outcome)], ['took', formatDuration(finished.seconds)]);
   return view(span, 'Pour tried in the simulation', facts, [
+    finished ? plotBlock('Where the mouth ended', finishedTrials(model.spans), span.id) : null,
     jsonBlock('Values tried', started.values),
     finished ? jsonBlock('Outcome', finished.outcome) : null,
   ].filter((block) => block !== null));
