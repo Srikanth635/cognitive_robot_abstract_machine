@@ -14,7 +14,7 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
 | World injector (`world/`) | Built and tested; eight tools; world-access contract 1.0 with declared answer shapes |
 | Resolver (`resolver/`) | Built and tested; structured prompts; verified live on a PR2 kitchen (28 of 28 cases as expected) |
 | Clients (`clients/`) | Anthropic tool loop with caching and usage; OpenAI plain completion; scripted client |
-| Observation (`observation/`) | Events, sinks, wrappers for the client, tools, world and knowledge component, and hooks in the resolver and the knowledge generation built and tested; cram_viz logs every run; the viewer (`llm_reasoner_viz`) serves the logs and shows them as a map, a timeline and an inspector |
+| Observation (`observation/`) | Events, sinks, wrappers for the client, tools, world and knowledge component, and hooks in the resolver and the knowledge generation built and tested; cram_viz logs every run; the viewer (`llm_reasoner_viz`) serves the logs and shows them as a map, a timeline, an inspector, an attempts strip with a plan of where the pours ended, filters and a replay |
 | Knowledge component | Built and tested (ontology, generation, admission, storage, views), reorganised into `knowledge/` with one public module; consulted by the resolver before every request to its model (R1–R7, verified live), but its hypotheses are **not yet read** by the resolver's request (knowledge tools are next) |
 | Offline tests | `python -m pytest test/llm_reasoner_test`: 385 passed, 2 skipped |
 
@@ -162,6 +162,20 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   both servers: the link, then the reopened run in cram-viz with its link back. The sandbox
   machine has no `pouring` scene bundle, so cram-viz's designator menu and 3D scene showed their
   errors there, which reopening does not depend on.
+- The viewer, step V6e: a live check. One real resolution with Sonnet 5.5 (the designator
+  giving the objects, in `simple_pouring`) through a cram-viz of its own (its own data directory,
+  its store a copy of an earlier run's, so no knowledge was generated) and a viewer of its own,
+  watched as it ran: bars growing, tokens and cost climbing, the simulation's pour. It failed
+  after 40 s, which the viewer showed from the model call up to the run: attempt 1's pour missed
+  (0.188 m from an opening of radius 0.069 m) and attempt 2's answer was cut off at cram_viz's
+  `RESOLVER_MAX_TOKENS` (2048 output tokens). Cost reported $0.0946 for the two answered calls;
+  the cut-off call carries no usage (only answers do), so its cost, roughly 3–8 cents, is in no
+  event. Found and fixed by it: a prompt that comes from and goes to the cache reports those
+  tokens apart from `input_tokens`, which the viewer had summed alone (6 shown for 21,323 read);
+  all three are now input. The run, shortened, is the fixture `failed_run.json`; its tests cover
+  the failure chain, the cards of the attempts, the plan of a real pour and the tokens.
+  Open in cram_viz: `RESOLVER_MAX_TOKENS` is too low for a second attempt that has the first's
+  outcome in its prompt; a failed call has no cost.
 
 ### Knowledge component
 - The predictive-manipulation ontology (`core`, `object-dynamics`, `prehension`,
@@ -431,7 +445,7 @@ the world does not say what the cup holds, so the material came from the task al
   hooks for the resolver's attempts and rejections and the knowledge generation (done); V3 the
   log in cram-viz with trial and Execute events and a link from the answer panel (done); V4 the
   viewer server (done); V5 the screen: map, timeline, inspector (done); V6 replay, filters, attempts strip,
-  pour-trial view and links both ways (done), a live check.
+  pour-trial view, links both ways and a live check (done).
 - The knowledge request, steps R1–R7: all done; R7's results are in §3.
 - Knowledge in its own graph, steps I1–I5: done, except I4's domains for slots of a
   knowledge class (waiting for a use and a decision on whose fragments form the domain).
