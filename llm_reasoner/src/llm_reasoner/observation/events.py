@@ -74,6 +74,22 @@ class CompletionStyle(StrEnum):
     """
 
 
+class ResolutionPurpose(StrEnum):
+    """
+    What a resolution is for.
+    """
+
+    ACTION = "action"
+    """
+    Resolving the action that was asked for.
+    """
+
+    SITUATION = "situation"
+    """
+    Choosing the situation features of the knowledge that describes the action.
+    """
+
+
 def new_call() -> str:
     """
     :return: The identifier of a new call, which ties the event that opens it to the one
@@ -385,4 +401,227 @@ class ComponentReturned(Event):
 class ComponentFailed(CallFailed):
     """
     A call from one component to another failed.
+    """
+
+
+# %% the resolver
+
+
+@dataclass
+class SlotSummary:
+    """
+    A slot of the query the resolver must fill.
+    """
+
+    path: str
+    """
+    Where the slot is in the action, as the model is asked about it.
+    """
+
+    kind: str
+    """
+    What kind of answer the slot takes: a value, an individual, a kind, or none because
+    the query gives it.
+    """
+
+    type_name: str
+    """
+    The type the slot declares.
+    """
+
+    candidates: Optional[int] = None
+    """
+    How many individuals the slot may be filled with, for a slot chosen from some.
+    """
+
+
+@dataclass
+class GroundSummary:
+    """
+    One thing an answer rests on.
+    """
+
+    source: str
+    """
+    Where it is: the world or the knowledge.
+    """
+
+    identifier: str
+    """
+    Its stable identifier there.
+    """
+
+
+@dataclass
+class JustificationSummary:
+    """
+    Why an instance was chosen, as the model stated it.
+    """
+
+    why: str
+    """
+    The model's explanation.
+    """
+
+    grounds: List[GroundSummary] = field(default_factory=list)
+    """
+    What the choice rests on.
+    """
+
+
+@dataclass
+class ResolutionStarted(Event):
+    """
+    The resolver began to resolve a query.
+    """
+
+    resolution: str
+    """
+    Identifies the resolution, which the events that follow repeat.
+    """
+
+    purpose: ResolutionPurpose
+    """
+    What the resolution is for.
+    """
+
+    action: str
+    """
+    The module and name of the action the query asks for.
+    """
+
+    slots: List[SlotSummary]
+    """
+    The slots of the query.
+    """
+
+    max_repairs: int
+    """
+    How often an unusable answer is sent back before the resolution gives up.
+    """
+
+
+@dataclass
+class KnowledgeConsulted(Event):
+    """
+    The resolver consulted the knowledge component about the action.
+    """
+
+    resolution: str
+    """
+    The resolution that consulted it.
+    """
+
+    designator: str
+    """
+    The action the knowledge was asked about.
+    """
+
+    situation: Mapping[str, str]
+    """
+    The situation features chosen for the action.
+    """
+
+    record_id: Optional[str] = None
+    """
+    The hypothesis served, none when no knowledge describes the action.
+    """
+
+
+@dataclass
+class AttemptStarted(Event):
+    """
+    The resolver asked the model for an answer.
+    """
+
+    resolution: str
+    """
+    The resolution the attempt belongs to.
+    """
+
+    attempt: int
+    """
+    Which attempt this is, counting from zero; every one after the first repairs the one
+    before.
+    """
+
+
+@dataclass
+class AttemptRejected(Event):
+    """
+    The resolver found an answer unusable and sent it back to the model.
+    """
+
+    resolution: str
+    """
+    The resolution the attempt belongs to.
+    """
+
+    attempt: int
+    """
+    The attempt whose answer was rejected.
+    """
+
+    kind: str
+    """
+    Why it was rejected, the name of the failure.
+    """
+
+    details: Mapping[str, Any]
+    """
+    What the failure found, as the model is shown it.
+    """
+
+    answer: str
+    """
+    The answer that was rejected.
+    """
+
+
+@dataclass
+class ResolutionFinished(Event):
+    """
+    The resolver resolved the query.
+    """
+
+    resolution: str
+    """
+    The resolution that finished.
+    """
+
+    attempts: int
+    """
+    How many answers it took.
+    """
+
+    instances: List[str]
+    """
+    The kinds of the instances resolved.
+    """
+
+    justifications: List[JustificationSummary] = field(default_factory=list)
+    """
+    Why each instance was chosen.
+    """
+
+
+@dataclass
+class ResolutionFailed(Event):
+    """
+    The resolver could not resolve the query.
+    """
+
+    resolution: str
+    """
+    The resolution that failed.
+    """
+
+    error_type: str
+    """
+    The name of the failure.
+    """
+
+    reason: str
+    """
+    What it said.
     """

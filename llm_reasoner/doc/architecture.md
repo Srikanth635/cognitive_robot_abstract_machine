@@ -403,6 +403,15 @@ a wrapper reports their calls from outside, and the default is to report nowhere
 | `observed.py` | `ObservedClient` and `ObservedToolClient` wrap a `LanguageModelClient` and report each completion with its prompts, schema, answer, duration, tokens and cost; `ObservedTool` reports each call a model makes of a tool, and the calls the tool box refused before running (unknown tool, input breaking its schema) are reported after the conversation, as `ToolRefused` just before the call run next. A wrapper has the identity and abilities of what it wraps, so a client that cannot let a model call tools still cannot. |
 | `components.py` | `ObservedWorld` and `ObservedKnowledge` wrap `WorldAccess` and `KnowledgeAccess` and report each call between components with the operation, what it asks about and what it answers, an individual or a collection reported by its kind or its size |
 
+The resolver reports its own steps through an optional `observer` (a sink, `NullSink` by
+default): `ResolutionStarted` with the slots to fill and, for a slot chosen from
+individuals, how many there are; `KnowledgeConsulted`; `AttemptStarted`;
+`AttemptRejected` with the failure's name, what it found and the rejected answer (so a
+pour that fell short in the simulation shows its outcome); and `ResolutionFinished`,
+with why each instance was chosen and what that rests on, or `ResolutionFailed`. A
+resolution has a purpose: the action asked for, or the choice of the situation features
+of the knowledge describing it (`ResolutionPurpose`).
+
 An event holds the prompts and answers in full and never a credential: the wrappers see
 only what a client is given and returns.
 
