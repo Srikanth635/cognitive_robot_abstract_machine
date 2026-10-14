@@ -7,13 +7,15 @@ the components using them go on as before.
 from __future__ import annotations
 
 from contextlib import contextmanager
-from dataclasses import dataclass
+import time
+from dataclasses import dataclass, field
 from time import perf_counter
 
 from typing_extensions import (
     Any,
-    Callable,
+    Dict,
     Iterator,
+    List,
     Mapping,
     Optional,
     Sequence,
@@ -37,6 +39,7 @@ from llm_reasoner.observation.events import (
     ModelFailed,
     ToolCalled,
     ToolFailed,
+    ToolRefused,
     ToolReturned,
     new_call,
 )
@@ -59,6 +62,35 @@ class ToolOwner:
     component: Component
     """
     The component they belong to.
+    """
+
+
+JUST_BEFORE = 1e-6
+"""
+How long before the call the tool box ran next a refused call is said to have been
+made, in seconds.
+"""
+
+
+@dataclass(frozen=True)
+class ToolRun:
+    """
+    A call of a tool that the tool box ran.
+    """
+
+    tool: str
+    """
+    The name of the tool.
+    """
+
+    arguments: Dict[str, Any]
+    """
+    The input of the call.
+    """
+
+    at: float
+    """
+    When the call was made, in seconds since the epoch.
     """
 
 
@@ -89,20 +121,28 @@ class ObservedTool(Tool):
     The component the tool belongs to, when it is known.
     """
 
+    runs: List[ToolRun] = field(default_factory=list)
+    """
+    Where each call the tool box runs is noted, shared by the tools offered in one
+    completion, so the calls the tool box refused can be told from those it ran.
+    """
+
     @property
     def definition(self) -> ToolDefinition:
         return self.tool.definition
 
     def run(self, arguments: Mapping[str, Any]) -> ToolOutcome:
         call = new_call()
-        self.sink.emit(
-            ToolCalled(
-                call=call,
-                parent=self.parent,
-                tool=self.definition.name,
-                arguments=dict(arguments),
-                owner=self.owner,
-            )
+        called = ToolCalled(
+            call=call,
+            parent=self.parent,
+            tool=self.definition.name,
+            arguments=dict(arguments),
+            owner=self.owner,
+        )
+        self.sink.emit(called)
+        self.runs.append(
+            ToolRun(tool=called.tool, arguments=called.arguments, at=called.at)
         )
         started = perf_counter()
         try:
@@ -330,6 +370,7 @@ class ObservedToolClient(ObservedClient, ToolUsingClient):
             user,
             tools=[tool.definition.name for tool in tools],
         ) as call:
+            runs: List[ToolRun] = []
             conversation = self.client.complete_with_tools(
                 system,
                 user,
@@ -339,9 +380,42 @@ class ObservedToolClient(ObservedClient, ToolUsingClient):
                         sink=self.sink,
                         parent=call.id,
                         owner=self.owner_of(tool),
+                        runs=runs,
                     )
                     for tool in tools
                 ],
             )
+            self._refused(call, conversation, runs)
             self._answered(call, conversation.answer, conversation.usage)
             return conversation
+
+    def _refused(
+        self, call: AskedCall, conversation: ToolConversation, runs: List[ToolRun]
+    ) -> None:
+        """
+        Report the calls of a conversation that the tool box refused: those no tool ran.
+        """
+        ran = iter(runs)
+        next_run = next(ran, None)
+        for made in conversation.calls:
+            if (
+                next_run is not None
+                and next_run.tool == made.name
+                and next_run.arguments == dict(made.arguments)
+            ):
+                next_run = next(ran, None)
+                continue
+            self.sink.emit(
+                ToolRefused(
+                    at=(
+                        next_run.at - JUST_BEFORE
+                        if next_run is not None
+                        else time.time()
+                    ),
+                    call=new_call(),
+                    parent=call.id,
+                    tool=made.name,
+                    arguments=dict(made.arguments),
+                    content=made.outcome.content,
+                )
+            )

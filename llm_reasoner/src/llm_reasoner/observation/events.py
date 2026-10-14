@@ -291,3 +291,98 @@ class ToolFailed(CallFailed):
     """
     A tool raised instead of returning to the model.
     """
+
+
+@dataclass
+class ToolRefused(Event):
+    """
+    The tool box refused a call a model made of a tool, before running it: no such tool
+    was offered, or the input did not fit its schema. When it was refused is not known,
+    so the event stands just before the next call the tool box ran.
+    """
+
+    call: str
+    """
+    Identifies the refused call.
+    """
+
+    parent: str
+    """
+    The call to the model during which the tool was called.
+    """
+
+    tool: str
+    """
+    The name of the tool the model called.
+    """
+
+    arguments: Mapping[str, Any]
+    """
+    The input of the call.
+    """
+
+    content: str
+    """
+    Why the call was refused, as the model was told.
+    """
+
+
+@dataclass
+class ComponentCalled(Event):
+    """
+    One component called another.
+    """
+
+    call: str
+    """
+    Identifies the call, which what it returned repeats.
+    """
+
+    source: Component
+    """
+    The component that called.
+    """
+
+    target: Component
+    """
+    The component that was called.
+    """
+
+    operation: str
+    """
+    What was asked of it.
+    """
+
+    arguments: Mapping[str, Any]
+    """
+    What it was asked about, an individual or a request named by its kind.
+    """
+
+
+@dataclass
+class ComponentReturned(Event):
+    """
+    A component answered a call from another.
+    """
+
+    call: str
+    """
+    The call that was answered.
+    """
+
+    result: Any
+    """
+    What it answered, an individual or a collection named by its kind or its size.
+    """
+
+    seconds: float
+    """
+    How long the call took.
+    """
+
+
+@dataclass
+class ComponentFailed(CallFailed):
+    """
+    A call from one component to another failed.
+    """
