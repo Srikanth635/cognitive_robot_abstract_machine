@@ -8,6 +8,8 @@ import { InspectorView } from './inspector_view.mjs';
 import { mapState } from './map.mjs';
 import { MapView } from './map_view.mjs';
 import { KIND, RunModel, STATUS } from './model.mjs';
+import { Replay } from './replay.mjs';
+import { ReplayView } from './replay_view.mjs';
 import { TimelineView } from './timeline_view.mjs';
 
 const RUN_POLL_MILLISECONDS = 2000;
@@ -15,6 +17,8 @@ const REFRESH_MILLISECONDS = 250;
 const STALE_SECONDS = 900;
 const RUN_NAME_LENGTH = 8;
 const QUERY_LENGTH = 48;
+const FRAME_MILLISECONDS = 33;
+const LONGEST_FRAME_SECONDS = 0.25;
 
 const Address = Object.freeze({
   RUNS: '/api/runs',
@@ -59,6 +63,9 @@ class Viewer {
     this.connection = find('connection');
     this.drawer = find('events-drawer');
     this.eventsToggle = find('events-toggle');
+    this.replayToggle = find('replay-toggle');
+    this.replayBar = find('replay-bar');
+    this.replayView = new ReplayView(this.replayBar, () => this.replayChanged());
     this.map = new MapView(find('map'), (lane) => this.chooseLane(lane));
     this.timeline = new TimelineView(find('timeline'), (id) => this.choose(id));
     this.inspector = new InspectorView(find('inspector'), (id) => this.choose(id));
@@ -75,6 +82,9 @@ class Viewer {
     this.chosenLane = null;
     this.inspected = null;
     this.changed = true;
+    this.replay = null;
+    this.lastFrame = null;
+    this.framing = false;
   }
 
   start() {
@@ -84,6 +94,7 @@ class Viewer {
       this.eventsToggle.setAttribute('aria-expanded', String(!this.drawer.hidden));
       this.eventsToggle.classList.toggle('on', !this.drawer.hidden);
     });
+    this.replayToggle.addEventListener('click', () => this.toggleReplay());
     this.loadRuns();
     setInterval(() => this.loadRuns(), RUN_POLL_MILLISECONDS);
     setInterval(() => { if (this.changed || this.isLive()) this.render(); }, REFRESH_MILLISECONDS);
@@ -125,6 +136,7 @@ class Viewer {
 
   followRun(run) {
     if (this.stream) this.stream.close();
+    this.replay = null;
     this.run = run;
     this.model = new RunModel();
     this.events.clear();
@@ -147,6 +159,45 @@ class Viewer {
     this.showRuns();
   }
 
+  // %% replay
+
+  toggleReplay() {
+    if (this.replay !== null) {
+      this.replay = null;
+    } else {
+      this.replay = new Replay(this.model.events);
+      this.replay.play();
+    }
+    this.replayChanged();
+  }
+
+  replayChanged() {
+    this.render();
+    if (this.replay !== null && this.replay.playing && !this.framing) this.runFrames();
+  }
+
+  // Moves a replay that is playing on with the time that passes, a frame at a time.
+  runFrames() {
+    this.framing = true;
+    this.lastFrame = null;
+    const frame = (timestamp) => {
+      if (this.replay === null || !this.replay.playing) {
+        this.framing = false;
+        return;
+      }
+      const passed = this.lastFrame === null ? 0 : timestamp - this.lastFrame;
+      if (this.lastFrame !== null && passed < FRAME_MILLISECONDS) {
+        requestAnimationFrame(frame);
+        return;
+      }
+      this.lastFrame = timestamp;
+      this.replay.advance(Math.min(passed * SECONDS_PER_MILLISECOND, LONGEST_FRAME_SECONDS));
+      this.render();
+      requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  }
+
   // %% what is chosen
 
   choose(id) {
@@ -160,14 +211,15 @@ class Viewer {
     this.render();
   }
 
-  settleChoice() {
-    const byId = this.model.byId;
-    if (this.wantedSpan !== null && byId.has(this.wantedSpan)) {
+  // Chooses what was asked for in the address once it is there, and a span to start with.
+  // A replay keeps the choice though what is chosen has not happened yet.
+  settleChoice(model) {
+    if (this.wantedSpan !== null && model.byId.has(this.wantedSpan)) {
       this.chosenId = this.wantedSpan;
       this.wantedSpan = null;
     }
-    if (this.chosenId !== null && byId.has(this.chosenId)) return;
-    const first = this.model.spans.find((span) => span.kind === KIND.RUN) || this.model.spans[0];
+    if (this.chosenId !== null && (model.byId.has(this.chosenId) || this.replay !== null)) return;
+    const first = model.spans.find((span) => span.kind === KIND.RUN) || model.spans[0];
     this.chosenId = first ? first.id : null;
   }
 
@@ -191,16 +243,27 @@ class Viewer {
     this.connection.classList.toggle('following', following);
   }
 
-  statusOf(live) {
-    const roots = this.model.spans.filter((span) => span.kind === KIND.RUN || span.kind === KIND.EXECUTION);
+  // What is shown: the run as of a moment, that moment, how far the axis of the timeline
+  // reaches, and whether the run is going on at that moment.
+  moment() {
+    if (this.replay !== null) {
+      return { model: this.replay.modelAt(), now: this.replay.time, until: this.replay.end, live: !this.replay.atEnd };
+    }
+    const live = this.isLive();
+    const now = live ? wallClock() : (this.model.lastAt === null ? 0 : this.model.lastAt);
+    return { model: this.model, now: now, until: now, live: live };
+  }
+
+  statusOf(model, live) {
+    const roots = model.spans.filter((span) => span.kind === KIND.RUN || span.kind === KIND.EXECUTION);
     if (roots.some((span) => span.status === STATUS.FAILED)) return Standing.FAILED;
     if (roots.some((span) => span.end === null)) return live ? Standing.RUNNING : Standing.UNFINISHED;
     return roots.length ? Standing.FINISHED : Standing.NOTHING;
   }
 
-  showTotals(now) {
-    const { modelCalls, cost, inputTokens, outputTokens } = this.model.totals;
-    const elapsed = this.model.firstAt === null ? 0 : now - this.model.firstAt;
+  showTotals(model, now) {
+    const { modelCalls, cost, inputTokens, outputTokens } = model.totals;
+    const elapsed = model.firstAt === null ? 0 : now - model.firstAt;
     const parts = [
       modelCalls + (modelCalls === 1 ? ' model call' : ' model calls'),
       inputTokens + ' tokens in, ' + outputTokens + ' out',
@@ -210,33 +273,39 @@ class Viewer {
     this.totals.textContent = parts.join(' · ');
   }
 
-  showInspector() {
-    const span = this.model.byId.get(this.chosenId);
-    if (!span) return this.inspector.empty('Nothing to inspect yet.');
-    const children = this.model.childrenOf(span);
+  showInspector(model) {
+    const span = model.byId.get(this.chosenId);
+    if (!span) {
+      this.inspected = null;
+      return this.inspector.empty(this.replay === null ? 'Nothing to inspect yet.' : 'This has not happened yet at this point of the replay.');
+    }
+    const children = model.childrenOf(span);
     const signature = [span.id, span.status, span.end, span.events.length, children.length,
       children.map((child) => child.status).join()].join('|');
     if (signature === this.inspected) return;
     this.inspected = signature;
     const trail = [];
-    for (let above = this.model.byId.get(span.parent); above; above = this.model.byId.get(above.parent)) {
+    for (let above = model.byId.get(span.parent); above; above = model.byId.get(above.parent)) {
       trail.unshift({ id: above.id, label: above.label });
     }
-    this.inspector.show(describeSpan(span, this.model), trail);
+    this.inspector.show(describeSpan(span, model), trail);
   }
 
   render() {
     this.changed = false;
-    this.settleChoice();
-    const live = this.isLive();
-    const now = live ? wallClock() : (this.model.lastAt === null ? 0 : this.model.lastAt);
-    const status = this.statusOf(live);
+    const { model, now, until, live } = this.moment();
+    this.settleChoice(model);
+    const status = this.statusOf(model, live);
     this.statusBadge.textContent = status;
     this.statusBadge.className = 'badge status-' + status;
-    this.showTotals(now);
-    this.map.update(mapState(this.model, live ? now : Number.POSITIVE_INFINITY), this.chosenLane);
-    this.timeline.render(this.model, { now: now, live: live, chosenId: this.chosenId, chosenLane: this.chosenLane });
-    this.showInspector();
+    this.replayBar.hidden = this.replay === null;
+    this.replayToggle.classList.toggle('on', this.replay !== null);
+    this.replayToggle.disabled = this.replay === null && (this.isLive() || this.model.events.length === 0);
+    if (this.replay !== null) this.replayView.show(this.replay);
+    this.showTotals(model, now);
+    this.map.update(mapState(model, live ? now : Number.POSITIVE_INFINITY), this.chosenLane);
+    this.timeline.render(model, { now: now, until: until, live: live, chosenId: this.chosenId, chosenLane: this.chosenLane });
+    this.showInspector(model);
   }
 }
 

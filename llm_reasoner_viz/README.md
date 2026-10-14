@@ -39,6 +39,11 @@ modules with no build step and no library loaded from elsewhere.
   rejected (an attempt that went back to the model, a pour that missed) and one outlined in
   red failed. *fit* shows the whole run, *−* and *+* zoom, *follow* keeps the newest work in
   view.
+- **Replay**: *replay* in the top bar (not available while a run is going on) shows a run
+  again as it happened. The map, the timeline and the inspector show the run as of the
+  moment of the replay, on a timeline whose axis stays the length of the whole run. Play
+  and pause, a step to the next or the previous event, a speed of 1, 4, 16 or 64 times, and
+  a slider along the run, which is how to get past a model call that took minutes.
 - **Inspector** (right): what a bar is. A model call shows who asked, which model, how it
   went, and its system and user prompt as the tagged sections they are made of (each opens
   and closes, and copies), the schema, the tools offered, the tool calls made during it, and
@@ -70,6 +75,7 @@ src/llm_reasoner_viz/
     web/            the page: index.html, app.css and ES modules
         model.mjs       the spans of a run, built from its events one at a time
         prompts.mjs     a prompt read as its tagged sections
+        replay.mjs      what a run looked like at any moment, and how a replay moves
         layout.mjs      spans packed into rows of the timeline
         inspector.mjs   what the inspector shows of a span
         map.mjs         the components, their connections and what each is doing
