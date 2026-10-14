@@ -131,8 +131,13 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   draws the controls. While replaying, the three views show the run as of the replay's moment
   and the timeline's axis keeps the length of the whole run. Not available while a run is going
   on. Checked in a browser on the 13-second stretched replay: scrubbing, stepping, speeds,
-  the end, leaving the replay. Not yet: filters, the attempts strip, the pour-trial view,
-  links from the viewer to cram-viz.
+  the end, leaving the replay.
+- The viewer, step V6b: filters. `filters.mjs` (node tests) picks the spans that say some
+  words (name and everything their events hold, case-insensitive) and those that were
+  rejected or failed, alone or together, and finds the next match in time, going round;
+  `filter_view.mjs` draws a search box, *problems only*, the count and *next*. The timeline
+  fades the bars that do not match. Checked in a browser on the replayed resolution.
+  Not yet: the attempts strip, the pour-trial view, links from the viewer to cram-viz.
 
 ### Knowledge component
 - The predictive-manipulation ontology (`core`, `object-dynamics`, `prehension`,
@@ -401,7 +406,7 @@ the world does not say what the cup holds, so the material came from the task al
   client and tool wrappers (done); V2 wrappers for the world and knowledge calls, and
   hooks for the resolver's attempts and rejections and the knowledge generation (done); V3 the
   log in cram-viz with trial and Execute events and a link from the answer panel (done); V4 the
-  viewer server (done); V5 the screen: map, timeline, inspector (done); V6 replay (done), filters, attempts
+  viewer server (done); V5 the screen: map, timeline, inspector (done); V6 replay and filters (done), attempts
   strip, pour-trial view, links both ways, a live check.
 - The knowledge request, steps R1–R7: all done; R7's results are in §3.
 - Knowledge in its own graph, steps I1–I5: done, except I4's domains for slots of a
