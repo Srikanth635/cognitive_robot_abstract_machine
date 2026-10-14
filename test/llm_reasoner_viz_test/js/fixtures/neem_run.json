@@ -1,0 +1,57 @@
+[
+ {
+  "event": "ExecutionStarted",
+  "at": 1791988505.5552948,
+  "run": "a-run"
+ },
+ {
+  "event": "StepChanged",
+  "at": 1791988507.5297868,
+  "run": "a-run",
+  "step": "ParkArmsAction",
+  "status": "RUNNING"
+ },
+ {
+  "event": "StepChanged",
+  "at": 1791988510.0435135,
+  "run": "a-run",
+  "step": "MoveTorsoAction",
+  "status": "RUNNING"
+ },
+ {
+  "event": "StepChanged",
+  "at": 1791988510.0435786,
+  "run": "a-run",
+  "step": "NavigateAction",
+  "status": "RUNNING"
+ },
+ {
+  "event": "StepChanged",
+  "at": 1791988510.3223825,
+  "run": "a-run",
+  "step": "PickUpAction",
+  "status": "RUNNING"
+ },
+ {
+  "event": "StepChanged",
+  "at": 1791988513.5357122,
+  "run": "a-run",
+  "step": "PouringAction",
+  "status": "RUNNING"
+ },
+ {
+  "event": "NeemRecorded",
+  "at": 1791988527.3366737,
+  "kind": "execution",
+  "episode": "a-run",
+  "database": "/home/user/.cram_viz/neems.sqlite",
+  "database_id": 3,
+  "seconds": 9.198894683970138
+ },
+ {
+  "event": "ExecutionFinished",
+  "at": 1791988527.3367505,
+  "run": "a-run",
+  "seconds": 21.781360833963845
+ }
+]

@@ -67,6 +67,20 @@ export const EVENT = Object.freeze({
   HYPOTHESIS_SERVED: 'HypothesisServed',
   TRIAL_STARTED: 'TrialStarted',
   TRIAL_FINISHED: 'TrialFinished',
+  NEEM_RECORDED: 'NeemRecorded',
+  NEEM_NOT_RECORDED: 'NeemNotRecorded',
+});
+
+// What a NEEM, the plan the simulation performed kept in a database, is the episode of; the
+// span of the episode is the one with that identifier.
+export const NEEM_KIND = Object.freeze({
+  TRIAL: 'trial',
+  EXECUTION: 'execution',
+});
+
+const NEEM_SPAN_PREFIX = Object.freeze({
+  [NEEM_KIND.TRIAL]: 'trial:',
+  [NEEM_KIND.EXECUTION]: 'execution:',
 });
 
 // The keys of the outcome of a pour tried in the simulation. Lengths are in metres, as seen
@@ -138,6 +152,9 @@ export class RunModel {
     this.edges = new Map();
     this.edgeLastAt = new Map();
     this.totals = { modelCalls: 0, cost: 0, inputTokens: 0, outputTokens: 0 };
+    // The events of the NEEMs that were kept, and of those that could not be.
+    this.neems = [];
+    this.neemFailures = [];
     this.firstAt = null;
     this.lastAt = null;
     // The spans that work happens inside of, innermost last.
@@ -462,6 +479,28 @@ export class RunModel {
     this.end(hypothesis, event, STATUS.FAILED);
   }
 
+  // %% what the simulation performed, kept as a NEEM
+
+  neemSpan(event) {
+    return this.byId.get(NEEM_SPAN_PREFIX[event.kind] + event.episode);
+  }
+
+  neemRecorded(event) {
+    this.neems.push(event);
+    const span = this.neemSpan(event);
+    if (!span) return;
+    span.data.neem = event;
+    span.events.push(event);
+  }
+
+  neemNotRecorded(event) {
+    this.neemFailures.push(event);
+    const span = this.neemSpan(event);
+    if (!span) return;
+    span.data.neemFailure = event;
+    span.events.push(event);
+  }
+
   // %% the simulation
 
   trialStarted(event) {
@@ -513,4 +552,6 @@ const HANDLERS = new Map([
   [EVENT.HYPOTHESIS_SERVED, RunModel.prototype.hypothesisServed],
   [EVENT.TRIAL_STARTED, RunModel.prototype.trialStarted],
   [EVENT.TRIAL_FINISHED, RunModel.prototype.trialFinished],
+  [EVENT.NEEM_RECORDED, RunModel.prototype.neemRecorded],
+  [EVENT.NEEM_NOT_RECORDED, RunModel.prototype.neemNotRecorded],
 ]);

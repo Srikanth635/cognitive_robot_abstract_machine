@@ -8,6 +8,9 @@ import { isJson, parseSections } from './prompts.mjs';
 
 const NO_COMPONENT = 'no component';
 
+// The table of the NEEM database that holds the plan of each NEEM, which its identifier names.
+const NEEM_PLAN_TABLE = 'PlanMappingDAO';
+
 // %% blocks
 
 // The kinds of block of detail a view is made of.
@@ -85,6 +88,29 @@ function failureBlocks(failure) {
 
 function view(span, title, facts, blocks) {
   return { title: title, kind: span.kind, status: span.status, facts: facts, blocks: blocks.filter(present) };
+}
+
+// %% the NEEM kept of what the simulation performed
+
+function neemFacts(span) {
+  const { neem, neemFailure } = span.data;
+  if (neem) return [['NEEM', 'saved as plan ' + neem.database_id]];
+  if (neemFailure) return [['NEEM', 'not saved: ' + neemFailure.error_type]];
+  return [];
+}
+
+// Where a NEEM is kept and how to read it, or why it was not kept; nothing when none was
+// asked for.
+function neemBlocks(span) {
+  const { neem, neemFailure } = span.data;
+  if (neem) {
+    return [
+      factsBlock('NEEM', [['plan', neem.database_id], ['database', neem.database], ['saved in', formatDuration(neem.seconds)]]),
+      textBlock('Read it', 'sqlite3 "' + neem.database + '" "select * from ' + NEEM_PLAN_TABLE +
+        ' where database_id = ' + neem.database_id + ';"'),
+    ];
+  }
+  return neemFailure ? [textBlock('NEEM not saved', neemFailure.reason)] : [];
 }
 
 // %% a pour tried in the simulation
@@ -225,10 +251,12 @@ function describeTrial(span, model) {
   const { started, finished } = span.data;
   const facts = [];
   if (finished) facts.push(['result', trialText(finished.outcome)], ['took', formatDuration(finished.seconds)]);
+  facts.push(...neemFacts(span));
   return view(span, 'Pour tried in the simulation', facts, [
     finished ? plotBlock('Where the mouth ended', finishedTrials(model.spans), span.id) : null,
     jsonBlock('Values tried', started.values),
     finished ? jsonBlock('Outcome', finished.outcome) : null,
+    ...neemBlocks(span),
   ].filter((block) => block !== null));
 }
 
@@ -238,8 +266,9 @@ function describeStep(span) {
 
 function describeExecution(span, model) {
   const { started, failure } = span.data;
-  return view(span, 'Execution of the plan', [['run', started.run], ...lasted(span), ...failureFacts(failure)], [
+  return view(span, 'Execution of the plan', [['run', started.run], ...lasted(span), ...neemFacts(span), ...failureFacts(failure)], [
     listBlock('Steps', linksTo(model, span, [KIND.STEP])),
+    ...neemBlocks(span),
     ...failureBlocks(failure),
   ]);
 }

@@ -194,6 +194,24 @@ class TestRunSummary:
         assert summary.input_tokens == 6 + 13572 + 7745
         assert summary.output_tokens == 389
 
+    def test_the_neems_kept_are_counted_and_those_that_could_not_be_are_not(
+        self, tmp_path: Path
+    ):
+        summary = self.summary(
+            tmp_path,
+            [
+                started(),
+                of_kind(KnownEvent.NEEM_RECORDED, 101.0, episode="t1"),
+                of_kind(KnownEvent.NEEM_RECORDED, 102.0, episode="r"),
+                of_kind(KnownEvent.NEEM_NOT_RECORDED, 103.0, episode="t2"),
+                finished(),
+            ],
+        )
+        assert summary.neems == 2
+
+    def test_a_run_that_kept_no_neem_has_none(self, tmp_path: Path):
+        assert self.summary(tmp_path, [started(), finished()]).neems == 0
+
     def test_an_answer_without_a_known_cost_adds_none(self, tmp_path: Path):
         summary = self.summary(tmp_path, [started(), answered(cost=None)])
         assert summary.cost == 0.0

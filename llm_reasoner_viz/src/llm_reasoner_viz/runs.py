@@ -219,6 +219,11 @@ class RunSummary:
     The tokens the models generated.
     """
 
+    neems: int = 0
+    """
+    How many plans the simulation performed were kept as NEEMs.
+    """
+
     def to_json(self) -> Dict[str, Any]:
         """
         :return: The summary as plain JSON.
@@ -262,6 +267,8 @@ class RunSummary:
                 self.execution = Stage.FINISHED
             case KnownEvent.EXECUTION_FAILED:
                 self.execution = Stage.FAILED
+            case KnownEvent.NEEM_RECORDED:
+                self.neems += 1
             case KnownEvent.MODEL_ANSWERED:
                 self.model_calls += 1
                 self.cost += event.get(EventField.COST) or 0.0

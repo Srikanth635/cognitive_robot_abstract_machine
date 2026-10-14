@@ -264,6 +264,7 @@ button { font: inherit; color: inherit; }
 .bar.status-rejected { outline: 2px dashed var(--warn); outline-offset: -1px; opacity: 0.8; }
 .bar.status-failed { outline: 2px solid var(--bad); outline-offset: -1px; }
 .bar.unmatched { opacity: 0.2; }
+.bar.has-neem::after { content: ""; position: absolute; right: 3px; top: 3px; width: 5px; height: 5px; border-radius: 50%; background: var(--on-colour); box-shadow: 0 0 0 1px var(--lane-colour); }
 .bar.related { box-shadow: 0 0 0 2px var(--accent); }
 .bar.chosen { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--text); z-index: 1; }
 @keyframes stripes { to { background-position: 17px 0; } }

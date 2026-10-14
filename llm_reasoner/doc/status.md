@@ -162,6 +162,21 @@ Last updated: 2026-10-12; code at commit `6743d6116`.
   both servers: the link, then the reopened run in cram-viz with its link back. The sandbox
   machine has no `pouring` scene bundle, so cram-viz's designator menu and 3D scene showed their
   errors there, which reopening does not depend on.
+- NEEMs of the simulations (14 Oct). The plan every simulation performs is kept as a NEEM, saved
+  through coraplex's ORM into one shared database (`~/.cram_viz/neems.sqlite`,
+  `CRAM_VIZ_NEEM_DATABASE`): each pour tried while a resolution is made (the trial process is
+  told the database, the run's log and the trial through options, and keeps the plan whether or
+  not the motion finished) and the run Execute performs. `cram_viz/neem.py`: a store (SQLite,
+  tables made once under a lock), recorders that report `NeemRecorded` or `NeemNotRecorded` to the
+  run's log without hiding how the performance went, and `NeemRecording` which tells another
+  process where to record. Measured on a real pour: the first NEEM into a new database takes about
+  40 seconds (the 1,724 tables), each later one 5 to 9 seconds and about 0.8 MB, so a resolution
+  of three pours takes around twenty seconds longer. The viewer marks bars that have a NEEM, shows
+  the plan id, database and a `sqlite3` command in the inspector, and counts them in the top bar.
+  Checked with the real trial subprocess (a normal pour and one whose motion fails, both kept),
+  the real Execute on a scratch copy of a run, and the viewer in a browser. One test against the
+  real store is marked `slow`. Not yet: a switch to turn the recording off, a browser of the NEEMs
+  in the viewer, and recording from `cram-viz-live` demo scripts.
 - The viewer, step V6e: a live check. One real resolution with Sonnet 5.5 (the designator
   giving the objects, in `simple_pouring`) through a cram-viz of its own (its own data directory,
   its store a copy of an earlier run's, so no knowledge was generated) and a viewer of its own,
@@ -438,6 +453,7 @@ the world does not say what the cup holds, so the material came from the task al
 | 2026-10-13 | The modules a world model's functions are declared in are named by the caller (`SymbolGraphSource(world_model_modules=...)`), never by `llm_reasoner`, and imported when the source is made |
 | 2026-10-14 | A viewer for the system at work is a package of its own (`llm_reasoner_viz`, port 8721), read-only at first; it reads a log of events per run that every process working on the run appends to, so it can follow a run live and replay a finished one; the components report through wrappers and optional hooks and do not know the viewer; past runs have no events; prompts are shown in full |
 | 2026-10-14 | The untracked `knowledge_updated` prototype (a typed-Python rewrite of the knowledge domain, `ontological/` and `microworlds/flanagan/`, with 47 passing test files) is kept off the main line on the local branch `archive/knowledge-updated` (`d6fec2059`) and was removed from the working tree: nothing in the product imports it, and `llm_reasoner.knowledge` is the knowledge component. Bytecode-only folders left under `knowledge/` by an older layout (`hypothesis`, `microworlds`, `ontological`) were removed |
+| 2026-10-14 | The simulations keep what they perform as NEEMs (the executed plan, saved through coraplex's ORM) in one shared database: every pour tried and the performed run, failed motions included; the viewer links to them by showing which plan is which and how to read it |
 | 2026-10-14 | `.env` files are ignored by the repository (`.gitignore`), so that a blanket `git add` cannot commit the model API key. The untracked notebooks of `llm_reasoner/notebooks/` (written against a layout of the knowledge package that no longer exists) and the earlier `README (1).md`, which no committed README matches, are kept off the main line on the local branch `archive/llm-reasoner-notebooks-and-readme` (`946a60c53`, 12 MB, never to be pushed) and are out of the working tree |
 
 ## 5. In progress
